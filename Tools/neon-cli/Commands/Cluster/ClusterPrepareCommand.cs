@@ -462,7 +462,7 @@ Server Requirements:
 
                 var operation = $"Preparing [{cluster.Definition.Name}] cluster nodes";
 
-                var controller = 
+                var setupController = 
                     new SetupController<NodeDefinition>(operation, cluster.Nodes)
                     {
                         ShowStatus  = !Program.Quiet,
@@ -471,15 +471,14 @@ Server Requirements:
 
                 // Prepare the nodes.
 
-                controller.AddWaitUntilOnlineStep(timeout: TimeSpan.FromMinutes(15));
-                hostingManager.AddPostProvisionSteps(controller);
-                controller.AddNodeStep("node OS verify", CommonSteps.VerifyOS);
-                controller.AddNodeStep("node ssh keys", 
+                setupController.AddWaitUntilOnlineStep(timeout: TimeSpan.FromMinutes(15));
+                setupController.AddNodeStep("node OS verify", CommonSteps.VerifyOS);
+                setupController.AddNodeStep("node ssh keys", 
                     (node, stepDelay) =>
                     {
                         CommonSteps.ConfigureSshKey(node, clusterLogin);
                     });
-                controller.AddNodeStep("node prepare", 
+                setupController.AddNodeStep("node prepare", 
                     (node, stepDelay) =>
                     {
                         Thread.Sleep(stepDelay);
@@ -487,7 +486,14 @@ Server Requirements:
                     },
                     stepStaggerSeconds: cluster.Definition.Setup.StepStaggerSeconds);
             
-                if (!controller.Run())
+                // Some hosting manages may have to some additional work after the node has
+                // been otherwise prepared.
+
+                hostingManager.AddPostPrepareSteps(setupController);
+
+                // Start cluster preparation.
+
+                if (!setupController.Run())
                 {
                     // Write the operation end/failed marker to all cluster node logs.
 

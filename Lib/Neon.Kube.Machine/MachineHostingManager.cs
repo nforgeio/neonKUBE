@@ -314,7 +314,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override void AddPostProvisionSteps(SetupController<NodeDefinition> controller)
+        public override void AddPostPrepareSteps(SetupController<NodeDefinition> setupController)
         {
         }
 

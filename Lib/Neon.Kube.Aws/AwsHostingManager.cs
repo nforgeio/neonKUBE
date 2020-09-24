@@ -56,6 +56,7 @@ using Ec2VolumeType  = Amazon.EC2.VolumeType;
 using ElbAction      = Amazon.ElasticLoadBalancingV2.Model.Action;
 using ElbTag         = Amazon.ElasticLoadBalancingV2.Model.Tag;
 using ElbTargetGroup = Amazon.ElasticLoadBalancingV2.Model.TargetGroup;
+using Remotion.Linq.Clauses.Expressions;
 
 namespace Neon.Kube
 {
@@ -541,6 +542,16 @@ namespace Neon.Kube
         /// Returns the list of supported Ubuntu images from the AWS Marketplace.
         /// </summary>
         private static IReadOnlyList<AwsUbuntuImage> ubuntuImages;
+
+        /// <summary>
+        /// Identifies the target VM block device for the data disk. 
+        /// </summary>
+        private const string dataDeviceName = "/dev/sdb";
+
+        /// <summary>
+        /// Identifies the target VM block device for the OpenEBS oStore disk. 
+        /// </summary>
+        private const string openEBSDeviceName = "/dev/sdc";
 
         /// <summary>
         /// 
@@ -1101,6 +1112,73 @@ namespace Neon.Kube
             }
 
             return await Task.FromResult(true);
+        }
+
+        /// <inheritdoc/>
+        public override void AddPostPrepareSteps(SetupController<NodeDefinition> setupController)
+        {
+            // We need to add any required OpenEBS cStore disks after the node has been otherwise
+            // prepared.  We need to do this here because if we created the data and OpenEBS disks
+            // when the VM is initially created, the disk setup scripts executed during prepare
+            // won't be able to distinguish between the two disks.
+            //
+            // At this point, the data disk should be partitioned, formatted, and mounted so
+            // the OpenEBS disk will be easy to identify as the only unpartitioned disk.
+
+            setupController.AddNodeStep("OpenEBS cStore",
+                async (node, stepDelay) =>
+                {
+                    node.Status = "OpenEBS disk";
+
+                    var volumeName        = $"{node.Name}-openebs";
+                    var awsInstance       = nodeNameToAwsInstance[node.Name];
+                    var openEBSVolumeType = ToEc2VolumeType(awsInstance.Metadata.Aws.OpenEBSVolumeType);
+                    var volumePagenator   = ec2Client.Paginators.DescribeVolumes(new DescribeVolumesRequest());
+                    var volume            = (Volume)null;
+
+                    // Look to see if we've already created the volume.
+
+                    await foreach (var volumeItem in volumePagenator.Volumes)
+                    {
+                        if (volumeItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == volumeName) &&
+                            volumeItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
+                        {
+                            volume = volumeItem;
+                            break;
+                        }
+                    }
+
+                    // Create the volume if it doesn't exist.
+
+                    if (volume == null)
+                    {
+                        var volumeResponse = await ec2Client.CreateVolumeAsync(
+                            new CreateVolumeRequest()
+                            {
+                                AvailabilityZone   = availabilityZone,
+                                VolumeType         = openEBSVolumeType,
+                                Size               = (int)(ByteUnits.Parse(node.Metadata.Aws.OpenEBSVolumeSize) / ByteUnits.GibiBytes),
+                                MultiAttachEnabled = false,
+                                TagSpecifications  = GetTagSpecifications(volumeName, ResourceType.Volume)
+                            });
+
+                        volume = volumeResponse.Volume;
+                    }
+
+                    // Attach the volume to the VM if it's not already attached.
+
+                    if (!volume.Attachments.Any(attachment => attachment.InstanceId == awsInstance.InstanceId))
+                    {
+                        await ec2Client.AttachVolumeAsync(
+                            new AttachVolumeRequest()
+                            {
+                                VolumeId   = volume.VolumeId,
+                                InstanceId = awsInstance.InstanceId,
+                                Device     = openEBSDeviceName
+                            });
+                    }
+                },
+                node => node.Metadata.OpenEBS);
         }
 
         /// <inheritdoc/>
@@ -2560,7 +2638,7 @@ retry:
                         {
                             new BlockDeviceMapping()
                             {
-                                DeviceName = "/dev/sdb",
+                                DeviceName = dataDeviceName,
                                 Ebs        = new EbsBlockDevice()
                                 {
                                     VolumeType          = ToEc2VolumeType(awsNodeOptions.VolumeType),
@@ -2631,6 +2709,15 @@ retry:
                 },
                 timeout:      operationTimeout,
                 pollInterval: operationPollInternal);
+
+            // Create and attach the OpenEBS cStore disk if required by this node.
+
+            if (node.Metadata.OpenEBS)
+            {
+                node.Status = "OpenEBS disk";
+
+                throw new NotImplementedException("$todo(jefflil)");
+            }
         }
 
         /// <summary>

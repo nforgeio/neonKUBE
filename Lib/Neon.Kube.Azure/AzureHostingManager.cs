@@ -39,6 +39,7 @@ using Microsoft.Azure.Management.Fluent;
 using Microsoft.Azure.Management.Network.Fluent;
 using Microsoft.Azure.Management.Network.Fluent.Models;
 using Microsoft.Azure.Management.ResourceManager.Fluent;
+using Microsoft.Azure.Management.ResourceManager.Fluent.Core;
 using Microsoft.Azure.Management.ResourceManager.Fluent.Authentication;
 
 using Newtonsoft;
@@ -54,7 +55,6 @@ using Neon.Time;
 using INetworkSecurityGroup = Microsoft.Azure.Management.Network.Fluent.INetworkSecurityGroup;
 using SecurityRuleProtocol  = Microsoft.Azure.Management.Network.Fluent.Models.SecurityRuleProtocol;
 using TransportProtocol     = Microsoft.Azure.Management.Network.Fluent.Models.TransportProtocol;
-using Microsoft.Azure.Management.ResourceManager.Fluent.Core;
 
 namespace Neon.Kube
 {
@@ -426,6 +426,21 @@ namespace Neon.Kube
         private static IReadOnlyList<Regex> gen2VmSizeAllowedRegex;
 
         /// <summary>
+        /// Logical unit number for a node's boot disk.
+        /// </summary>
+        private const int bootDiskLun = 0;
+
+        /// <summary>
+        /// Logical unit number for a node's data disk.
+        /// </summary>
+        private const int dataDiskLun = 1;
+
+        /// <summary>
+        /// Logical unit number for a node's optional OpenEBS cStore disk.
+        /// </summary>
+        private const int openEBSDiskLun = 2;
+
+        /// <summary>
         /// Static constructor.
         /// </summary>
         static AzureHostingManager()
@@ -569,6 +584,23 @@ namespace Neon.Kube
                 default:
 
                     throw new NotImplementedException();
+            }
+        }
+
+        /// <summary>
+        /// Converts a <see cref="AzureStorageType"/> to the underlying Azure storage type.
+        /// </summary>
+        /// <param name="azureStorageType">The input storage type.</param>
+        /// <returns>The underlying Azure storage type.</returns>
+        private static StorageAccountTypes ToAzureStorageType(AzureStorageType azureStorageType)
+        {
+            switch (azureStorageType)
+            {
+                case AzureStorageType.PremiumSSD:   return StorageAccountTypes.PremiumLRS;
+                case AzureStorageType.StandardHDD:  return StorageAccountTypes.StandardLRS;
+                case AzureStorageType.StandardSSD:  return StorageAccountTypes.StandardSSDLRS;
+                case AzureStorageType.UltraSSD:     return StorageAccountTypes.UltraSSDLRS;
+                default:                            throw new NotImplementedException();
             }
         }
 
@@ -941,6 +973,33 @@ namespace Neon.Kube
             }
 
             return await Task.FromResult(true);
+        }
+
+        /// <inheritdoc/>
+        public override void AddPostPrepareSteps(SetupController<NodeDefinition> setupController)
+        {
+            // We need to add any required OpenEBS cStore disks after the node has been otherwise
+            // prepared.  We need to do this here because if we created the data and OpenEBS disks
+            // when the VM is initially created, the disk setup scripts executed during prepare
+            // won't be able to distinguish between the two disk.
+            //
+            // At this point, the data disk should be partitioned, formatted, and mounted so
+            // the OpenEBS disk will be easy to identify as the only unpartitioned disks.
+
+            setupController.AddNodeStep("OpenEBS cStore",
+                (node, stepDelay) =>
+                {
+                    node.Status = "OpenEBS disk";
+
+                    var azureNode          = nameToVm[node.Name];
+                    var openEBSStorageType = ToAzureStorageType(azureNode.Metadata.Azure.OpenEBSStorageType);
+
+                    azureNode.Vm
+                        .Update()
+                        .WithNewDataDisk((int)(ByteUnits.Parse(node.Metadata.Azure.OpenEBSDiskSize) / ByteUnits.GibiBytes), openEBSDiskLun, CachingTypes.ReadOnly, openEBSStorageType)
+                        .Apply();
+                },
+                node => node.Metadata.OpenEBS);
         }
 
         /// <inheritdoc/>
@@ -1496,37 +1555,10 @@ namespace Neon.Kube
             node.Status = "create: virtual machine";
 
             var azureNodeOptions = azureNode.Node.Metadata.Azure;
-            var azureStorageType = StorageAccountTypes.StandardSSDLRS;
-
-            switch (azureNodeOptions.StorageType)
-            {
-                case AzureStorageType.PremiumSSD:
-
-                    azureStorageType = StorageAccountTypes.PremiumLRS;
-                    break;
-
-                case AzureStorageType.StandardHDD:
-
-                    azureStorageType = StorageAccountTypes.StandardLRS;
-                    break;
-
-                case AzureStorageType.StandardSSD:
-
-                    azureStorageType = StorageAccountTypes.StandardSSDLRS;
-                    break;
-
-                case AzureStorageType.UltraSSD:
-
-                    azureStorageType = StorageAccountTypes.UltraSSDLRS;
-                    break;
-
-                default:
-
-                    throw new NotImplementedException();
-            }
+            var azureStorageType = ToAzureStorageType(azureNodeOptions.StorageType);
 
             // We're going to favor Gen2 images if the VM size supports that and the
-            // user has not overridden the generation for the node.
+            // user has not overridden the VM generation for the node.
 
             var vmGen = azureNodeOptions.VmGen;
 
@@ -1558,11 +1590,9 @@ namespace Neon.Kube
                 .WithRootUsername(nodeUsername)
                 .WithRootPassword(nodePassword)
                 .WithComputerName("ubuntu")
-                .WithDataDiskDefaultStorageAccountType(azureStorageType)
-                .WithNewDataDisk((int)(ByteUnits.Parse(node.Metadata.Azure.DiskSize) / ByteUnits.GibiBytes))
+                .WithNewDataDisk((int)(ByteUnits.Parse(node.Metadata.Azure.DiskSize) / ByteUnits.GibiBytes), dataDiskLun, CachingTypes.ReadOnly, azureStorageType)
                 .WithSize(node.Metadata.Azure.VmSize)
                 .WithExistingAvailabilitySet(nameToAvailabilitySet[azureNode.AvailabilitySetName])
-                .WithTag(neonNodeNameTagKey, azureNode.Metadata.Name)
                 .WithTags(GetTags(new ResourceTag(neonNodeNameTagKey, node.Name)))
                 .Create();
         }

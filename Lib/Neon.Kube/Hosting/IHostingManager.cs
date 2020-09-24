@@ -99,10 +99,10 @@ namespace Neon.Kube
         Task<bool> ProvisionAsync(ClusterLogin clusterLogin, string secureSshPassword, string orgSshPassword = null);
 
         /// <summary>
-        /// Adds any necessary post-provisioning steps to a setup controller.
+        /// Adds any steps to be performed after the node has been otherwise prepared.
         /// </summary>
-        /// <param name="controller">The target setup controller.</param>
-        void AddPostProvisionSteps(SetupController<NodeDefinition> controller);
+        /// <param name="setupController">The target setup controller.</param>
+        void AddPostPrepareSteps(SetupController<NodeDefinition> setupController);
 
         /// <summary>
         /// Returns <c>true</c> if the hosting manage is capable of updating the upstream
