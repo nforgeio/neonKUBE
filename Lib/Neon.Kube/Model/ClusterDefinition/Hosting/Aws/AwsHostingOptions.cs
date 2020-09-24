@@ -46,9 +46,11 @@ namespace Neon.Kube
         /// </summary>
         internal const int MaxPlacementPartitions = 7;
 
-        private const string            defaultInstanceType = "t3a.medium";
-        private const AwsVolumeType     defaultVolumeType   = AwsVolumeType.Gp2;
-        private const string            defaultVolumeSize   = "128 GiB";
+        private const string            defaultInstanceType      = "t3a.medium";
+        private const AwsVolumeType     defaultVolumeType        = AwsVolumeType.Gp2;
+        private const string            defaultVolumeSize        = "128 GiB";
+        private const AwsVolumeType     defaultOpenEBSVolumeType = defaultVolumeType;
+        private const string            defaultOpenEBSVolumeSize = "128 GiB";
 
         /// <summary>
         /// Constructor.
@@ -195,7 +197,7 @@ namespace Neon.Kube
         public string DefaultInstanceType { get; set; } = defaultInstanceType;
 
         /// <summary>
-        /// Specifies the default EBS volume type to use for cluster node disks.  This defaults
+        /// Specifies the default AWS volume type for cluster node primary disks.  This defaults
         /// to <see cref="AwsVolumeType.Gp2"/> which is SSD based and offers a reasonable
         /// compromise between performance and cost.
         /// </summary>
@@ -205,20 +207,44 @@ namespace Neon.Kube
         public AwsVolumeType DefaultVolumeType { get; set; } = defaultVolumeType;
 
         /// <summary>
-        /// Specifies the default AWS disk size to be used when creating a
-        /// node that does not specify a disk size in its <see cref="NodeOptions"/>.
+        /// Specifies the default AWS volume size for the cluster node primary disks.
         /// This defaults to <b>128 GiB</b>.
         /// </summary>
         /// <remarks>
         /// <note>
         /// Node disks smaller than 32 GiB are not supported by neonKUBE.  We'll automatically
-        /// upgrade the disk size when necessary.
+        /// round up the disk size when necessary.
         /// </note>
         /// </remarks>
         [JsonProperty(PropertyName = "DefaultVolumeSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "defaultVolumeSize", ApplyNamingConventions = false)]
         [DefaultValue(defaultVolumeSize)]
         public string DefaultVolumeSize { get; set; } = defaultVolumeSize;
+
+        /// <summary>
+        /// Specifies the default AWS volume type to use for OpenEBS cStore disks.  This defaults
+        /// to <see cref="AwsVolumeType.Gp2"/> which is SSD based and offers a reasonable
+        /// compromise between performance and cost.
+        /// </summary>
+        [JsonProperty(PropertyName = "DefaultOpenEBSVolumeType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "defaultOpenEBSVolumeType", ApplyNamingConventions = false)]
+        [DefaultValue(defaultOpenEBSVolumeType)]
+        public AwsVolumeType DefaultOpenEBSVolumeType { get; set; } = defaultOpenEBSVolumeType;
+
+        /// <summary>
+        /// Specifies the default AWS volume size to be used when creating 
+        /// OpenEBS cStore disks.  This defaults to <b>128 GiB</b>.
+        /// </summary>
+        /// <remarks>
+        /// <note>
+        /// Node disks smaller than 32 GiB are not supported by neonKUBE.  We'll automatically
+        /// round up the disk size when necessary.
+        /// </note>
+        /// </remarks>
+        [JsonProperty(PropertyName = "DefaultOpenEBSVolumeSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "defaultOpenEBSVolumeSize", ApplyNamingConventions = false)]
+        [DefaultValue(defaultOpenEBSVolumeSize)]
+        public string DefaultOpenEBSVolumeSize { get; set; } = defaultVolumeSize;
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
@@ -324,6 +350,18 @@ namespace Neon.Kube
             if (!ByteUnits.TryParse(DefaultVolumeSize, out var volumeSize) || volumeSize <= 0)
             {
                 throw new ClusterDefinitionException($"AWS hosting [{nameof(DefaultVolumeSize)}={DefaultVolumeSize}] is not valid.");
+            }
+
+            // Verify [DefaultOpenEBSVolumeSize].
+
+            if (string.IsNullOrEmpty(DefaultOpenEBSVolumeSize))
+            {
+                DefaultOpenEBSVolumeSize = defaultOpenEBSVolumeSize;
+            }
+
+            if (!ByteUnits.TryParse(DefaultOpenEBSVolumeSize, out var openEbsVolumeSize) || openEbsVolumeSize <= 0)
+            {
+                throw new ClusterDefinitionException($"AWS hosting [{nameof(DefaultOpenEBSVolumeSize)}={DefaultOpenEBSVolumeSize}] is not valid.");
             }
 
             // Check AWS cluster limits.

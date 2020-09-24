@@ -41,8 +41,11 @@ namespace Neon.Kube
     /// </summary>
     public class AzureHostingOptions
     {
-        private const string defaultVmSize   = "Standard_B2S";
-        private const string defaultDiskSize = "128 GiB";
+        private const string            defaultVmSize             = "Standard_B2S";
+        private const AzureStorageType  defaultStorageType        = AzureStorageType.StandardSSD;
+        private const string            defaultDiskSize           = "128 GiB";
+        private const AzureStorageType  defaultOpenEBSStorageType = defaultStorageType;
+        private const string            defaultOpenEBSDiskSize    = "128 GiB";
 
         /// <summary>
         /// Constructor.
@@ -270,18 +273,16 @@ namespace Neon.Kube
         public string DefaultVmSize { get; set; } = defaultVmSize;
 
         /// <summary>
-        /// Specifies the default Azure storage type to be used when creating a
-        /// node that does not specify the storage type in its <see cref="NodeOptions"/>.
+        /// Specifies the default Azure storage type for cluster node primary disks.
         /// This defaults to <see cref="AzureStorageType.StandardSSD"/>.
         /// </summary>
         [JsonProperty(PropertyName = "DefaultStorageType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "defaultStorageType", ApplyNamingConventions = false)]
-        [DefaultValue(AzureStorageType.StandardSSD)]
-        public AzureStorageType DefaultStorageType { get; set; } = AzureStorageType.StandardSSD;
+        [DefaultValue(defaultStorageType)]
+        public AzureStorageType DefaultStorageType { get; set; } = defaultStorageType;
 
         /// <summary>
-        /// Specifies the default Azure disk size to be used when creating a
-        /// node that does not specify a disk size in its <see cref="NodeOptions"/>.
+        /// Specifies the default Azure disk size to be used when cluster node primary disks.
         /// This defaults to <b>128 GiB</b>.
         /// </summary>
         /// <remarks>
@@ -316,6 +317,29 @@ namespace Neon.Kube
         [YamlMember(Alias = "defaultDiskSize", ApplyNamingConventions = false)]
         [DefaultValue(defaultDiskSize)]
         public string DefaultDiskSize { get; set; } = defaultDiskSize;
+
+        /// <summary>
+        /// Specifies the default Azure storage type of be used for the cluster node primary disks.  This defaults
+        /// to <see cref="AzureStorageType.StandardHDD"/> which is a reasonable tradeoff between cost and performance.
+        /// </summary>
+        [JsonProperty(PropertyName = "OpenEBSStorageType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "openEBSStorageType", ApplyNamingConventions = false)]
+        [DefaultValue(defaultOpenEBSStorageType)]
+        public AzureStorageType DefaultOpenEBSStorageType { get; set; } = defaultOpenEBSStorageType;
+
+        /// <summary>
+        /// Specifies the default size for cluster node primary disks.  This defaults to <b>128 GiB</b>.
+        /// </summary>
+        /// <remarks>
+        /// <note>
+        /// Node disks smaller than 32 GiB are not supported by neonKUBE.  We'll automatically
+        /// round up the disk size when necessary.
+        /// </note>
+        /// </remarks>
+        [JsonProperty(PropertyName = "DefaultOpenEBSDiskSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "defaultOpenEBSDiskSize", ApplyNamingConventions = false)]
+        [DefaultValue(defaultOpenEBSDiskSize)]
+        public string DefaultOpenEBSDiskSize { get; set; } = defaultOpenEBSDiskSize;
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
@@ -424,6 +448,18 @@ namespace Neon.Kube
             if (!ByteUnits.TryParse(DefaultDiskSize, out var diskSize) || diskSize <= 0)
             {
                 throw new ClusterDefinitionException($"Azure hosting [{nameof(DefaultDiskSize)}={DefaultDiskSize}] is not valid.");
+            }
+
+            // Verify [DefaultOpenEBSDiskSize].
+
+            if (string.IsNullOrEmpty(DefaultOpenEBSDiskSize))
+            {
+                DefaultOpenEBSDiskSize = defaultOpenEBSDiskSize;
+            }
+
+            if (!ByteUnits.TryParse(DefaultOpenEBSDiskSize, out var openEbsDiskSize) || openEbsDiskSize <= 0)
+            {
+                throw new ClusterDefinitionException($"AWS hosting [{nameof(DefaultOpenEBSDiskSize)}={DefaultOpenEBSDiskSize}] is not valid.");
             }
 
             // Check Azure cluster limits.
