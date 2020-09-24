@@ -505,6 +505,30 @@ namespace Neon.HyperV
         }
 
         /// <summary>
+        /// Creates a new virtual drive and adds it to a virtual machine.
+        /// </summary>
+        /// <param name="machineName">The target virtual machine name.</param>
+        /// <param name="drive">The new drive information.</param>
+        public void AddVmDrive(string machineName, VirtualDrive drive)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName), nameof(machineName));
+            Covenant.Requires<ArgumentNullException>(drive != null, nameof(drive));
+            CheckDisposed();
+
+            // Delete the drive file if it already exists.
+
+            if (File.Exists(drive.Path))
+            {
+                File.Delete(drive.Path);
+            }
+
+            var fixedOrDynamic = drive.IsDynamic ? "-Dynamic" : "-Fixed";
+
+            powershell.Execute($"{hyperVNamespace}New-VHD -Path \"{drive.Path}\" {fixedOrDynamic} -SizeBytes {drive.Size} -BlockSizeBytes 1MB");
+            powershell.Execute($"{hyperVNamespace}Add-VMHardDiskDrive -VMName \"{machineName}\" -Path \"{drive.Path}\"");
+        }
+
+        /// <summary>
         /// Inserts an ISO file as the DVD/CD for a virtual machine, ejecting any
         /// existing disc first.
         /// </summary>

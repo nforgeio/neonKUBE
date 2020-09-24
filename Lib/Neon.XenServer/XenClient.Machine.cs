@@ -102,8 +102,8 @@ namespace Neon.XenServer
             /// <param name="memoryBytes">Optionally specifies the memory assigned to the machine (overriding the template).</param>
             /// <param name="diskBytes">Optionally specifies the disk assigned to the machine (overriding the template).</param>
             /// <param name="snapshot">Optionally specifies that the virtual machine should snapshot the template.  This defaults to <c>false</c>.</param>
-            /// <param name="extraDrives">
-            /// Optionally specifies any additional virtual drives to be created and 
+            /// <param name="extraDisks">
+            /// Optionally specifies any additional virtual disks to be created and 
             /// then attached to the new virtual machine.
             /// </param>
             /// <param name="primaryStorageRepository">
@@ -111,7 +111,7 @@ namespace Neon.XenServer
             /// primary disk will be created.  This defaults to <b>Local storage</b>.
             /// </param>
             /// <param name="extraStorageRespository">
-            /// Optionally specifies the storage repository where any extra drives for
+            /// Optionally specifies the storage repository where any extra disks for
             /// the virtual machine will be created.  This defaults to <b>Local storage</b>.
             /// <note>
             /// The default value assumes that your XenServer pool is <b>NOT CONFIGURED FOR HA</b>.
@@ -134,7 +134,7 @@ namespace Neon.XenServer
                 long                            memoryBytes              = 0, 
                 long                            diskBytes                = 0, 
                 bool                            snapshot                 = false,
-                IEnumerable<XenVirtualDrive>    extraDrives              = null,
+                IEnumerable<XenVirtualDisk>     extraDisks               = null,
                 string                          primaryStorageRepository = "Local storage",
                 string                          extraStorageRespository  = "Local storage")
             {
@@ -290,7 +290,7 @@ namespace Neon.XenServer
 
                 if (diskBytes > 0)
                 {
-                    var disks = client.SafeInvokeItems("vm-disk-list", $"uuid={vmUuid}").Items;
+                    var disks = client.SafeInvokeItems("vm-disk-list", $"vm={vmUuid}").Items;
                     var vdi   = disks.FirstOrDefault(properties => properties.ContainsKey("Disk 0 VDI"));
 
                     if (vdi == null)
@@ -302,19 +302,19 @@ namespace Neon.XenServer
 
                     client.SafeInvoke("vdi-resize", $"uuid={vdiUuid}", $"disk-size={diskBytes}");
 
-                    // Rename the disk to "OS disk".
+                    // Rename the disk to "operating system".
 
                     client.SafeInvoke("vdi-param-set", $"uuid={vdiUuid}", $"name-label=OS disk", $"name-description=Operating system");
                 }
 
                 // Configure any additional disks.
 
-                if (extraDrives != null && extraDrives.Count() > 0)
+                if (extraDisks != null && extraDisks.Count() > 0)
                 {
                     var diskIndex = 1; // The boot disk has index=0 so we'll skip that.
                     var extraSR   = client.Repository.Find(name: extraStorageRespository, mustExist: true);
 
-                    foreach (var disk in extraDrives)
+                    foreach (var disk in extraDisks)
                     {
                         // Create the disk.
 
@@ -322,7 +322,7 @@ namespace Neon.XenServer
 
                         // Set the disk's name and description.
 
-                        var disks = client.SafeInvokeItems("vm-disk-list", $"uuid={vmUuid}").Items;
+                        var disks = client.SafeInvokeItems("vm-disk-list", $"vm={vmUuid}").Items;
                         var vdi   = disks.FirstOrDefault(properties => properties.ContainsKey("name-label") && properties["name-label"] == "Created by xe");
 
                         if (vdi == null)
@@ -394,6 +394,48 @@ namespace Neon.XenServer
                 {
                     client.SafeInvoke("vm-reboot", $"uuid={virtualMachine.Uuid}");
                 }
+            }
+
+            /// <summary>
+            /// <para>
+            /// Adds a new disk to a virtual machine.
+            /// </para>
+            /// <note>
+            /// The virtual machine must be stopped.
+            /// </note>
+            /// </summary>
+            /// <param name="virtualMachine">The target virtual machine.</param>
+            /// <param name="disk">The disk information.</param>
+            public void AddDisk(XenVirtualMachine virtualMachine, XenVirtualDisk disk)
+            {
+                Covenant.Requires<ArgumentNullException>(virtualMachine != null, nameof(virtualMachine));
+                Covenant.Requires<ArgumentNullException>(disk != null, nameof(disk));
+
+                var vmDisks   = client.SafeInvokeItems("vm-disk-list", $"vm={virtualMachine.Uuid}").Items;
+                var diskIndex = vmDisks.Count(disk => disk.TryGetValue("userdevice", out var device));  // Count only VDB (virtual block devices)
+                var extraSR   = client.Repository.Find(name: disk.StorageRepository, mustExist: true);
+
+                // Create the disk.
+
+                client.SafeInvoke("vm-disk-add", $"uuid={virtualMachine.Uuid}", $"sr-uuid={extraSR.Uuid}", $"disk-size={disk.Size}", $"device={diskIndex}");
+
+                // Set the disk's name and description.
+
+                vmDisks = client.SafeInvokeItems("vm-disk-list", $"vm={virtualMachine.Uuid}").Items;
+
+                var vdi = vmDisks.FirstOrDefault(properties => properties.ContainsKey("name-label") && properties["name-label"] == "Created by xe");
+
+                if (vdi == null)
+                {
+                    throw new XenException($"Cannot locate the new node [{disk.Name}] disk.");
+                }
+
+                var vdiUuid = vdi["uuid"];
+
+                var diskName        = disk.Name ?? "disk";
+                var diskDescription = disk.Description ?? string.Empty;
+
+                client.SafeInvoke("vdi-param-set", $"uuid={vdiUuid}", $"name-label={diskName}", $"name-description={diskDescription}");
             }
         }
     }

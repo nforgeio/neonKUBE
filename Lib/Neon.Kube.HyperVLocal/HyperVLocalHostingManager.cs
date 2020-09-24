@@ -248,21 +248,28 @@ namespace Neon.Kube
             // At this point, the data disk should be partitioned, formatted, and mounted so
             // the OpenEBS disk will be easy to identify as the only unpartitioned disk.
 
-            setupController.AddNodeStep("OpenEBS cStore",
+            setupController.AddNodeStep("openebs",
                 (node, stepDelay) =>
                 {
-                    node.Status = "OpenEBS disk";
-
-                    var vmName           = GetVmName(node.Metadata);
-                    var openEbsDiskBytes = node.Metadata.Vm.GetOpenEbsDisk(cluster.Definition);
-
-                    new VirtualDrive()
+                    using (var hyperv = new HyperVClient())
                     {
-                        Path = Path.Combine(vmDriveFolder, $"{vmName}-openebs.vhdx"),
-                        Size = openEbsDiskBytes
-                    };
+                        var vmName   = GetVmName(node.Metadata);
+                        var diskSize = node.Metadata.Vm.GetOpenEbsDisk(cluster.Definition);
 
-                    throw new NotImplementedException();
+                        node.Status = "openebs: stop VM";
+                        hyperv.StopVm(vmName);
+
+                        node.Status = "openebs: add cstore disk";
+                        hyperv.AddVmDrive(vmName, 
+                            new VirtualDrive()
+                            {
+                                Path = Path.Combine(vmDriveFolder, $"{vmName}-openebs.vhdx"),
+                                Size = diskSize
+                            });
+
+                        node.Status = "openebs: restart VM";
+                        hyperv.StartVm(vmName);
+                    }
                 },
                 node => node.Metadata.OpenEBS);
         }
@@ -275,7 +282,6 @@ namespace Neon.Kube
 
         /// <inheritdoc/>
         public override bool RequiresAdminPrivileges => true;
-
 
         /// <inheritdoc/>
         public override string GetDataDevice(SshProxy<NodeDefinition> node)

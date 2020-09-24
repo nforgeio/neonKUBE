@@ -45,9 +45,9 @@ namespace Neon.Kube
         // Private types
 
         /// <summary>
-        /// Used to persist information about downloaded VHD template files.
+        /// Used to persist information about downloaded XVA template files.
         /// </summary>
-        public class DriveTemplateInfo
+        public class DiskTemplateInfo
         {
             /// <summary>
             /// The downloaded file ETAG.
@@ -211,7 +211,7 @@ namespace Neon.Kube
             // Build a list of [SshProxy] instances that map to the specified XenServer
             // hosts.  We'll use the [XenClient] instances as proxy metadata.
 
-            var sshProxies = new List<SshProxy<XenClient>>();
+            var xenSshProxies = new List<SshProxy<XenClient>>();
 
             xenHosts = new List<XenClient>();
 
@@ -230,14 +230,14 @@ namespace Neon.Kube
                 var xenHost = new XenClient(hostAddress, hostUsername, hostPassword, name: host.Name, logFolder: logFolder);
 
                 xenHosts.Add(xenHost);
-                sshProxies.Add(xenHost.SshProxy);
+                xenSshProxies.Add(xenHost.SshProxy);
             }
 
             // We're going to provision the XenServer hosts in parallel to
             // speed up cluster setup.  This works because each XenServer
             // is essentially independent from the others.
 
-            var setupController = new SetupController<XenClient>($"Provisioning [{cluster.Definition.Name}] cluster", sshProxies)
+            var setupController = new SetupController<XenClient>($"Provisioning [{cluster.Definition.Name}] cluster", xenSshProxies)
             {
                 ShowStatus  = this.ShowStatus,
                 MaxParallel = this.MaxParallel
@@ -270,12 +270,42 @@ namespace Neon.Kube
             // At this point, the data disk should be partitioned, formatted, and mounted so
             // the OpenEBS disk will be easy to identify as the only unpartitioned disk.
 
-            setupController.AddNodeStep("OpenEBS cStore",
+            // IMPLEMENTATION NOTE:
+            // --------------------
+            // This is a bit tricky.  The essential problem is that the setup controller passed
+            // is intended for parallel operations on nodes, not XenServer hosts (like we did
+            // above for provisioning).  We still have those XenServer host clients in the [xenHosts]
+            // list field.  Note that XenClients are not thread-safe.
+            // 
+            // We're going to perform these operations in parallel, but require that each node
+            // operation acquire a lock on the XenClient for the node's host before proceeding.
+
+            setupController.AddNodeStep("openebs",
                 (node, stepDelay) =>
                 {
-                    node.Status = "OpenEBS disk";
+                    var xenClient = xenHosts.Single(client => client.Name == node.Metadata.Vm.Host);
 
-                    throw new NotImplementedException();
+                    node.Status = "openebs: waiting for host...";
+
+                    lock (xenClient)
+                    {
+                        var vm   = xenClient.Machine.List().Single(vm => vm.NameLabel == GetVmName(node));
+                        var disk = new XenVirtualDisk()
+                        {
+                            Name        = "openebs",
+                            Size        = node.Metadata.Vm.GetOpenEbsDisk(cluster.Definition),
+                            Description = "OpenEBS cStore"
+                        };
+
+                        node.Status = "openebs: stop VM";
+                        xenClient.Machine.Shutdown(vm);
+
+                        node.Status = "openebs: add cstore disk";
+                        xenClient.Machine.AddDisk(vm, disk);
+
+                        node.Status = "openebs: restart VM";
+                        xenClient.Machine.Start(vm);
+                    }
                 },
                 node => node.Metadata.OpenEBS);
         }
@@ -456,9 +486,9 @@ namespace Neon.Kube
                     node.WaitForBoot();
 
                     // Extend the primary partition and file system to fill 
-                    // the virtual drive.  Note that we're not going to do
-                    // this if the specified drive size is less than or equal
-                    // to the node template's drive size (because that
+                    // the virtual disk.  Note that we're not going to do
+                    // this if the specified disk size is less than or equal
+                    // to the node template's disk size (because that
                     // would fail).
                     //
                     // Note that there should only be one unpartitioned disk at
