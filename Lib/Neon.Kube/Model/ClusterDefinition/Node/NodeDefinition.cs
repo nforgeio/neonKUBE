@@ -177,7 +177,7 @@ namespace Neon.Kube
         /// over masters when possible.
         /// </note>
         /// <note>
-        /// The <see cref="HostingEnvironment.Machine"/> hosting manager works a bit differently
+        /// The <see cref="HostingEnvironment.BareMetal"/> hosting manager works a bit differently
         /// from the others.  It requires that at least one node have <see cref="OpenEBS"/><c>=true</c>
         /// and that node must have an empty unpartitioned block device available to be provisoned
         /// as an cStore.
@@ -316,14 +316,14 @@ namespace Neon.Kube
                     Azure.Validate(clusterDefinition, this.Name);
                     break;
 
+                case HostingEnvironment.BareMetal:
+
+                    // No machine options to check at this time.
+                    break;
+
                 case HostingEnvironment.Google:
 
                     // $todo(jefflill: Implement this
-                    break;
-
-                case HostingEnvironment.Machine:
-
-                    // No machine options to check at this time.
                     break;
 
                 case HostingEnvironment.HyperV:

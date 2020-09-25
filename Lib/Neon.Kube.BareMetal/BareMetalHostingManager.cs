@@ -49,7 +49,7 @@ namespace Neon.Kube
     /// <summary>
     /// Manages cluster provisioning directly on (mostly) bare manually provisioned machines or virtual machines.
     /// </summary>
-    [HostingProvider(HostingEnvironment.Machine)]
+    [HostingProvider(HostingEnvironment.BareMetal)]
     public partial class BareMetalHostingManager : HostingManager
     {
         //---------------------------------------------------------------------

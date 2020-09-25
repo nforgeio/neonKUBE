@@ -185,7 +185,7 @@ Server Requirements:
                 // corrupt the existing cluster and also probably prevent the new cluster from
                 // provisioning correctly.
                 //
-                // Note that we're not going to perform this check for the [Machine] hosting 
+                // Note that we're not going to perform this check for the [BareMetal] hosting 
                 // environment because we're expecting the bare machines to be already running 
                 // with the assigned addresses and we're also not going to do this for cloud
                 // environments because we're assuming that the cluster will run in its own
@@ -194,7 +194,7 @@ Server Requirements:
                 // We also won't do this for cloud deployments because those nodes will be
                 // running in an isolated private network.
 
-                if (cluster.Definition.Hosting.Environment != HostingEnvironment.Machine && 
+                if (cluster.Definition.Hosting.Environment != HostingEnvironment.BareMetal && 
                     !cluster.Definition.Hosting.IsCloudProvider)
                 {
                     Console.WriteLine();

@@ -92,7 +92,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// Specifies the subnet for entire host network for on-premise environments like
-        /// <see cref="HostingEnvironment.Machine"/>, <see cref="HostingEnvironment.HyperVLocal"/> and
+        /// <see cref="HostingEnvironment.BareMetal"/>, <see cref="HostingEnvironment.HyperVLocal"/> and
         /// <see cref="HostingEnvironment.XenServer"/>.  This is required for those environments.
         /// </summary>
         [JsonProperty(PropertyName = "PremiseSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -105,7 +105,7 @@ namespace Neon.Kube
         /// The subnet where the cluster nodes reside.
         /// </para>
         /// <note>
-        /// This property must be configured for the on-premise providers (<see cref="HostingEnvironment.Machine"/>, 
+        /// This property must be configured for the on-premise providers (<see cref="HostingEnvironment.BareMetal"/>, 
         /// <b>HyperV</b>, and <b>XenServer</b>,...).  This defaults to <b>10.100.0.0/16</b> for cloud deployments 
         /// but can be customized as required.
         /// </note>

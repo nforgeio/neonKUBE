@@ -145,25 +145,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public bool IsCloudEnvironment(HostingEnvironment environment)
         {
-            switch (environment)
-            {
-                case HostingEnvironment.Aws:
-                case HostingEnvironment.Azure:
-                case HostingEnvironment.Google:
-
-                    return true;
-
-                case HostingEnvironment.HyperV:
-                case HostingEnvironment.HyperVLocal:
-                case HostingEnvironment.Machine:
-                case HostingEnvironment.XenServer:
-
-                    return false;
-
-                default:
-
-                    throw new NotImplementedException($"Hosting manager for [{environment}] is not implemented.");
-            }
+            return KubeHelper.IsCloudProvider(environment);
         }
 
         /// <inheritdoc/>

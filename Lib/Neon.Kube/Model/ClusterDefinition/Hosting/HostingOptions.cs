@@ -47,8 +47,8 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Static members
 
-        internal const string DefaultVmMemory = "4Gi";
-        internal const string DefaultVmDisk   = "64Gi";
+        internal const string DefaultVmMemory = "4 GiB";
+        internal const string DefaultVmDisk   = "64 GiB";
 
         //---------------------------------------------------------------------
         // Instance members
@@ -61,12 +61,12 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Identifies the cloud or other hosting platform.  This defaults to <see cref="HostingEnvironment.Machine"/>.
+        /// Identifies the cloud or other hosting platform.  This defaults to <see cref="HostingEnvironment.Unknown"/>.
         /// </summary>
         [JsonProperty(PropertyName = "Environment", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "environment", ApplyNamingConventions = false)]
-        [DefaultValue(HostingEnvironment.Machine)]
-        public HostingEnvironment Environment { get; set; } = HostingEnvironment.Machine;
+        [DefaultValue(HostingEnvironment.Unknown)]
+        public HostingEnvironment Environment { get; set; } = HostingEnvironment.Unknown;
 
         /// <summary>
         /// Specifies the Amazon Web Services hosting settings.
@@ -148,31 +148,7 @@ namespace Neon.Kube
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        public bool IsCloudProvider
-        {
-            get
-            {
-                switch (Environment)
-                {
-                    case HostingEnvironment.HyperV:
-                    case HostingEnvironment.HyperVLocal:
-                    case HostingEnvironment.Machine:
-                    case HostingEnvironment.XenServer:
-
-                        return false;
-
-                    case HostingEnvironment.Aws:
-                    case HostingEnvironment.Azure:
-                    case HostingEnvironment.Google:
-
-                        return true;
-
-                    default:
-
-                        throw new NotImplementedException("Unexpected hosting environment.");
-                }
-            }
-        }
+        public bool IsCloudProvider => KubeHelper.IsCloudProvider(Environment);
 
         /// <summary>
         /// Returns <c>true</c> if the cluster will be hosted by an on-premise (non-cloud) provider.
@@ -203,9 +179,9 @@ namespace Neon.Kube
 
                     case HostingEnvironment.Aws:
                     case HostingEnvironment.Azure:
+                    case HostingEnvironment.BareMetal:
                     case HostingEnvironment.Google:
                     case HostingEnvironment.HyperVLocal:
-                    case HostingEnvironment.Machine:
 
                         return false;
 
@@ -255,6 +231,12 @@ namespace Neon.Kube
                     Cloud.Validate(clusterDefinition);
                     break;
 
+                case HostingEnvironment.BareMetal:
+
+                    Machine = Machine ?? new MachineHostingOptions();
+                    Machine.Validate(clusterDefinition);
+                    break;
+
                 case HostingEnvironment.Google:
 
                     if (Google == null)
@@ -287,12 +269,6 @@ namespace Neon.Kube
 
                     Vm = Vm ?? new VmHostingOptions();
                     Vm.Validate(clusterDefinition);
-                    break;
-
-                case HostingEnvironment.Machine:
-
-                    Machine = Machine ?? new MachineHostingOptions();
-                    Machine.Validate(clusterDefinition);
                     break;
 
                 case HostingEnvironment.XenServer:

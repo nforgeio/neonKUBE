@@ -403,6 +403,38 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Determines whether the a cluster hosting environment is cloud based.
+        /// </summary>
+        /// <param name="hostingEnvironment"></param>
+        /// <returns><c>true</c> for cloud environments.</returns>
+        public static bool IsCloudProvider(HostingEnvironment hostingEnvironment)
+        {
+            switch (hostingEnvironment)
+            {
+                // On-premise environments
+
+                case HostingEnvironment.BareMetal:
+                case HostingEnvironment.HyperV:
+                case HostingEnvironment.HyperVLocal:
+                case HostingEnvironment.XenServer:
+
+                    return false;
+
+                // Cloud environments
+
+                case HostingEnvironment.Aws:
+                case HostingEnvironment.Azure:
+                case HostingEnvironment.Google:
+
+                    return true;
+
+                default:
+
+                    throw new NotImplementedException("Unexpected hosting environment.");
+            }
+        }
+
+        /// <summary>
         /// Returns a <see cref="HeadendClient"/>.
         /// </summary>
         public static HeadendClient Headend
@@ -2489,7 +2521,7 @@ usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups roo
         /// Ensures that the cluster has at least one OpenEBS node.
         /// </para>
         /// <note>
-        /// This doesn't work for the <see cref="HostingEnvironment.Machine"/> hosting manager which
+        /// This doesn't work for the <see cref="HostingEnvironment.BareMetal"/> hosting manager which
         /// needs to actually look for unpartitioned block devices that can be used to provision cStore.
         /// </note>
         /// </summary>
@@ -2499,12 +2531,12 @@ usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups roo
         /// in the cluster definition.  Otherwise, it will try to enable this on up to three nodes,
         /// trying to avoid master nodes if possible.
         /// </remarks>
-        /// <exception cref="NotSupportedException">Thrown for the <see cref="HostingEnvironment.Machine"/> hosting manager.</exception>
+        /// <exception cref="NotSupportedException">Thrown for the <see cref="HostingEnvironment.BareMetal"/> hosting manager.</exception>
         public static void EnsureOpenEbsNodes(ClusterDefinition clusterDefinition)
         {
-            if (clusterDefinition.Hosting.Environment == HostingEnvironment.Machine)
+            if (clusterDefinition.Hosting.Environment == HostingEnvironment.BareMetal)
             {
-                throw new NotSupportedException($"[{nameof(EnsureOpenEbsNodes)}()] is not supported for the [{nameof(HostingEnvironment.Machine)}] hosting manager.");
+                throw new NotSupportedException($"[{nameof(EnsureOpenEbsNodes)}()] is not supported for the [{nameof(HostingEnvironment.BareMetal)}] hosting manager.");
             }
 
             if (clusterDefinition.Nodes.Any(node => node.OpenEBS))

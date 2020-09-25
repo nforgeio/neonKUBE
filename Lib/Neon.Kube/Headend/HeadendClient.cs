@@ -97,6 +97,10 @@ namespace Neon.Kube
                     linuxTemplateUri = null;
                     break;
 
+                case HostingEnvironment.BareMetal:
+
+                    break;
+
                 case HostingEnvironment.HyperV:
                 case HostingEnvironment.HyperVLocal:
 
@@ -108,10 +112,6 @@ namespace Neon.Kube
                     {
                         linuxTemplateUri = $"https://s3-us-west-2.amazonaws.com/neonkube/vm-images/hyperv/neon-{clusterDefinition.LinuxDistribution}-{clusterDefinition.LinuxVersion}.vhdx";
                     }
-                    break;
-
-                case HostingEnvironment.Machine:
-
                     break;
 
                 case HostingEnvironment.XenServer:
