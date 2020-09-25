@@ -107,7 +107,7 @@ namespace Neon.Kube
 
         private ClusterProxy                    cluster;
         private KubeSetupInfo                   setupInfo;
-        private SetupController<NodeDefinition> controller;
+        private SetupController<NodeDefinition> setupController;
         private string                          driveTemplatePath;
         private string                          vmDriveFolder;
         private string                          switchName;
@@ -180,6 +180,16 @@ namespace Neon.Kube
                 return true;
             }
 
+            // We'll call this to be consistent with the cloud hosting managers even though
+            // the upstream on-premise router currently needs to be configured manually.
+
+            KubeHelper.EnsureIngressNodes(cluster.Definition);
+
+            // We need to ensure that at least one node will host the OpenEBS
+            // cStore block device.
+
+            KubeHelper.EnsureOpenEbsNodes(cluster.Definition);
+
             // Update the node labels with the actual capabilities of the 
             // virtual machines being provisioned.
 
@@ -208,23 +218,68 @@ namespace Neon.Kube
 
             // Perform the provisioning operations.
 
-            controller = new SetupController<NodeDefinition>($"Provisioning [{cluster.Definition.Name}] cluster", cluster.Nodes)
+            setupController = new SetupController<NodeDefinition>($"Provisioning [{cluster.Definition.Name}] cluster", cluster.Nodes)
             {
                 ShowStatus  = this.ShowStatus,
                 MaxParallel = 1     // We're only going to provision one VM at a time on a local Hyper-V instance.
             };
 
-            controller.AddGlobalStep("prepare hyper-v", () => PrepareHyperV());
-            controller.AddNodeStep("create virtual machines", (node, stepDelay) => ProvisionVM(node));
-            controller.AddGlobalStep(string.Empty, () => Finish(), quiet: true);
+            setupController.AddGlobalStep("prepare hyper-v", () => PrepareHyperV());
+            setupController.AddNodeStep("create virtual machines", (node, stepDelay) => ProvisionVM(node));
+            setupController.AddGlobalStep(string.Empty, () => Finish(), quiet: true);
 
-            if (!controller.Run())
+            if (!setupController.Run())
             {
                 Console.Error.WriteLine("*** ERROR: One or more configuration steps failed.");
                 return await Task.FromResult(false);
             }
 
             return await Task.FromResult(true);
+        }
+
+        /// <inheritdoc/>
+        public override void AddPostPrepareSteps(SetupController<NodeDefinition> setupController)
+        {
+            // We need to add any required OpenEBS cStore disks after the node has been otherwise
+            // prepared.  We need to do this here because if we created the data and OpenEBS disks
+            // when the VM is initially created, the disk setup scripts executed during prepare
+            // won't be able to distinguish between the two disks.
+            //
+            // At this point, the data disk should be partitioned, formatted, and mounted so
+            // the OpenEBS disk will be easy to identify as the only unpartitioned disk.
+
+            setupController.AddNodeStep("openebs",
+                (node, stepDelay) =>
+                {
+                    using (var hyperv = new HyperVClient())
+                    {
+                        var vmName   = GetVmName(node.Metadata);
+                        var diskSize = node.Metadata.Vm.GetOpenEbsDisk(cluster.Definition);
+                        var diskPath = Path.Combine(vmDriveFolder, $"{vmName}-openebs.vhdx");
+
+                        node.Status = "openebs: checking";
+
+                        if (hyperv.GetVmDrives(vmName).Count < 2)
+                        {
+                            // The disk doesn't already exist.
+
+                            node.Status = "openebs: stop VM";
+                            hyperv.StopVm(vmName);
+
+                            node.Status = "openebs: add cstore disk";
+                            hyperv.AddVmDrive(vmName,
+                                new VirtualDrive()
+                                {
+                                    Path = diskPath,
+                                    Size = diskSize
+                                });
+
+                            node.Status = "openebs: restart VM";
+                            hyperv.StartVm(vmName);
+                        }
+                    }
+                },
+                node => node.Metadata.OpenEBS);
         }
 
         /// <inheritdoc/>
@@ -235,7 +290,6 @@ namespace Neon.Kube
 
         /// <inheritdoc/>
         public override bool RequiresAdminPrivileges => true;
-
 
         /// <inheritdoc/>
         public override string GetDataDevice(SshProxy<NodeDefinition> node)
@@ -287,9 +341,9 @@ namespace Neon.Kube
             // Determine where we're going to place the VM hard drive files and
             // ensure that the directory exists.
 
-            if (!string.IsNullOrEmpty(cluster.Definition.Hosting.Vm.DriveFolder))
+            if (!string.IsNullOrEmpty(cluster.Definition.Hosting.Vm.DiskLocation))
             {
-                vmDriveFolder = cluster.Definition.Hosting.Vm.DriveFolder;
+                vmDriveFolder = cluster.Definition.Hosting.Vm.DiskLocation;
             }
             else
             {
@@ -347,7 +401,7 @@ namespace Neon.Kube
 
             if (!driveTemplateIsCurrent)
             {
-                controller.SetOperationStatus($"Download Template VHDX: [{setupInfo.LinuxTemplateUri}]");
+                setupController.SetOperationStatus($"Download Template VHDX: [{setupInfo.LinuxTemplateUri}]");
 
                 Task.Run(
                     async () =>
@@ -400,11 +454,11 @@ namespace Neon.Kube
                                             {
                                                 var percentComplete = (int)(((double)fileStream.Length / (double)contentLength) * 100.0);
 
-                                                controller.SetOperationStatus($"Downloading VHDX: [{percentComplete}%] [{setupInfo.LinuxTemplateUri}]");
+                                                setupController.SetOperationStatus($"Downloading VHDX: [{percentComplete}%] [{setupInfo.LinuxTemplateUri}]");
                                             }
                                             else
                                             {
-                                                controller.SetOperationStatus($"Downloading VHDX: [{fileStream.Length} bytes] [{setupInfo.LinuxTemplateUri}]");
+                                                setupController.SetOperationStatus($"Downloading VHDX: [{fileStream.Length} bytes] [{setupInfo.LinuxTemplateUri}]");
                                             }
                                         }
                                     }
@@ -448,7 +502,7 @@ namespace Neon.Kube
 
                     }).Wait();
 
-                controller.SetOperationStatus();
+                setupController.SetOperationStatus();
             }
 
             // Handle any necessary Hyper-V initialization.
@@ -458,7 +512,7 @@ namespace Neon.Kube
                 // We're going to create an external Hyper-V switch if there
                 // isn't already an external switch.
 
-                controller.SetOperationStatus("Scanning network adapters");
+                setupController.SetOperationStatus("Scanning network adapters");
 
                 var switches       = hyperv.ListVmSwitches();
                 var externalSwitch = switches.FirstOrDefault(s => s.Type == VirtualSwitchType.External);
@@ -476,12 +530,12 @@ namespace Neon.Kube
                 // taking care to issue a warning if any machines already exist 
                 // and we're not doing [force] mode.
 
-                controller.SetOperationStatus("Scanning virtual machines");
+                setupController.SetOperationStatus("Scanning virtual machines");
 
                 var existingMachines = hyperv.ListVms();
                 var conflicts        = string.Empty;
 
-                controller.SetOperationStatus("Stopping virtual machines");
+                setupController.SetOperationStatus("Stopping virtual machines");
 
                 foreach (var machine in existingMachines)
                 {
@@ -507,7 +561,7 @@ namespace Neon.Kube
                     throw new HyperVException($"[{conflicts}] virtual machine(s) already exist.");
                 }
 
-                controller.SetOperationStatus();
+                setupController.SetOperationStatus();
             }
         }
 
@@ -533,7 +587,7 @@ namespace Neon.Kube
 
                 var driveTemplateInfoPath = driveTemplatePath + ".info";
                 var driveTemplateInfo     = NeonHelper.JsonDeserialize<DriveTemplateInfo>(File.ReadAllText(driveTemplateInfoPath));
-                var drivePath             = Path.Combine(vmDriveFolder, $"{vmName}.vhdx");
+                var osDrivePath           = Path.Combine(vmDriveFolder, $"{vmName}.vhdx");
 
                 node.Status = $"create: disk";
 
@@ -541,7 +595,7 @@ namespace Neon.Kube
                 {
                     if (driveTemplateInfo.Compressed)
                     {
-                        using (var output = new FileStream(drivePath, FileMode.Create, FileAccess.ReadWrite))
+                        using (var output = new FileStream(osDrivePath, FileMode.Create, FileAccess.ReadWrite))
                         {
                             using (var decompressor = new GZipStream(input, CompressionMode.Decompress))
                             {
@@ -575,7 +629,7 @@ namespace Neon.Kube
                     }
                     else
                     {
-                        using (var output = new FileStream(drivePath, FileMode.Create, FileAccess.ReadWrite))
+                        using (var output = new FileStream(osDrivePath, FileMode.Create, FileAccess.ReadWrite))
                         {
                             var buffer = new byte[64 * 1024];
                             int cb;
@@ -605,17 +659,17 @@ namespace Neon.Kube
 
                 // Create the virtual machine.
 
-                var processors  = node.Metadata.Vm.GetProcessors(cluster.Definition);
-                var memoryBytes = node.Metadata.Vm.GetMemory(cluster.Definition);
-                var diskBytes   = node.Metadata.Vm.GetDisk(cluster.Definition);
+                var processors       = node.Metadata.Vm.GetProcessors(cluster.Definition);
+                var memoryBytes      = node.Metadata.Vm.GetMemory(cluster.Definition);
+                var osDiskBytes      = node.Metadata.Vm.GetOsDisk(cluster.Definition);
 
                 node.Status = $"create: virtual machine";
                 hyperv.AddVm(
                     vmName,
                     processorCount: processors,
-                    diskSize:       diskBytes.ToString(),
+                    diskSize:       osDiskBytes.ToString(),
                     memorySize:     memoryBytes.ToString(),
-                    drivePath:      drivePath,
+                    drivePath:      osDrivePath,
                     switchName:     switchName);
 
                 // Create a temporary ISO with the [neon-node-prep.sh] script, mount it
@@ -656,12 +710,18 @@ namespace Neon.Kube
                     // this if the specified drive size is less than or equal
                     // to the node template's drive size (because that
                     // would fail).
+                    //
+                    // Note that there should only be one partitioned disk at
+                    // this point: the OS disk.
 
-                    if (diskBytes > KubeConst.NodeTemplateDiskSize)
+                    var partitionedDisks = node.ListPartitionedDisks();
+                    var osDisk           = partitionedDisks.Single();
+
+                    if (osDiskBytes > KubeConst.NodeTemplateDiskSize)
                     {
-                        node.Status = $"resize: primary drive";
-                        node.SudoCommand("growpart /dev/sda 2");
-                        node.SudoCommand("resize2fs /dev/sda2");
+                        node.Status = $"resize: OS disk";
+                        node.SudoCommand($"growpart {osDisk} 2");
+                        node.SudoCommand($"resize2fs {osDisk}2");
                     }
                 }
                 finally

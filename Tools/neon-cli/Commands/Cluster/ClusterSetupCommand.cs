@@ -323,7 +323,7 @@ OPTIONS:
                     //-----------------------------------------------------------------
                     // Kubernetes configuration.
 
-                    controller.AddGlobalStep("etc high-availability", SetupEtcHaProxy);
+                    controller.AddGlobalStep("etc HA", SetupEtcHaProxy);
                     controller.AddNodeStep("setup kubernetes", SetupKubernetes);
                     controller.AddGlobalStep("setup cluster", SetupCluster);
 
@@ -804,7 +804,7 @@ $@"
                 node.InvokeIdempotentAction("setup/setup-etc-ha",
                     () =>
                     {
-                        node.Status = "setup: etc high-availability";
+                        node.Status = "setup: etc HA";
 
                         node.UploadText("/etc/neonkube/neon-etc-proxy.cfg", sbHaProxy);
 
@@ -1836,8 +1836,8 @@ rm /tmp/calico.yaml
 
                             return true;
                         },
-                        timeout: TimeSpan.FromSeconds(120),
-                        pollTime: TimeSpan.FromSeconds(1));
+                        timeout:      TimeSpan.FromSeconds(120),
+                        pollInterval: TimeSpan.FromSeconds(1));
                 });
         }
 

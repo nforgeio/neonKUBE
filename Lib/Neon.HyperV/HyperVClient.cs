@@ -252,31 +252,7 @@ namespace Neon.HyperV
 
             // Resize the VHDX.
 
-            // $hack(jefflill):
-            //
-            // For some reason, the PowerShell [Resize-VHD] command does not like 
-            // hard disk file names formatted as we're doing (e.g. with embedded
-            // square brackets).  We're going to work around this by temporarily
-            // renaming the disk file while we're resizing it.
-
-            var tempDrivePath = Path.Combine(driveFolder, Guid.NewGuid().ToString("d") + ".vhdx");
-
-            File.Move(drivePath, tempDrivePath);
-
-            try
-            {
-                powershell.Execute($"{hyperVNamespace}Resize-VHD -Path \"{tempDrivePath}\" -SizeBytes {diskSize}");
-            }
-            catch (Exception e)
-            {
-                throw new HyperVException(e.Message, e);
-            }
-            finally
-            {
-                // Restore the drive to its original file name.
-
-                File.Move(tempDrivePath, drivePath);
-            }
+            powershell.Execute($"{hyperVNamespace}Resize-VHD -Path \"{drivePath}\" -SizeBytes {diskSize}");
 
             // Create the virtual machine.
 
@@ -526,6 +502,30 @@ namespace Neon.HyperV
             {
                 throw new HyperVException(e.Message, e);
             }
+        }
+
+        /// <summary>
+        /// Creates a new virtual drive and adds it to a virtual machine.
+        /// </summary>
+        /// <param name="machineName">The target virtual machine name.</param>
+        /// <param name="drive">The new drive information.</param>
+        public void AddVmDrive(string machineName, VirtualDrive drive)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName), nameof(machineName));
+            Covenant.Requires<ArgumentNullException>(drive != null, nameof(drive));
+            CheckDisposed();
+
+            // Delete the drive file if it already exists.
+
+            if (File.Exists(drive.Path))
+            {
+                File.Delete(drive.Path);
+            }
+
+            var fixedOrDynamic = drive.IsDynamic ? "-Dynamic" : "-Fixed";
+
+            powershell.Execute($"{hyperVNamespace}New-VHD -Path \"{drive.Path}\" {fixedOrDynamic} -SizeBytes {drive.Size} -BlockSizeBytes 1MB");
+            powershell.Execute($"{hyperVNamespace}Add-VMHardDiskDrive -VMName \"{machineName}\" -Path \"{drive.Path}\"");
         }
 
         /// <summary>

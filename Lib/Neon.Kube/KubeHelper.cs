@@ -2463,11 +2463,6 @@ usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups roo
         /// <param name="clusterDefinition">The cluster definition.</param>
         public static void EnsureIngressNodes(ClusterDefinition clusterDefinition)
         {
-            if (clusterDefinition.Network.IngressRules?.Count() == 0)
-            {
-                return;
-            }
-
             if (!clusterDefinition.Nodes.Any(node => node.Ingress))
             {
                 var workerCount = clusterDefinition.Workers.Count();
@@ -2485,6 +2480,62 @@ usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups roo
                     {
                         worker.Ingress = true;
                     }
+                }
+            }
+        }
+
+        /// <summary>
+        /// <para>
+        /// Ensures that the cluster has at least one OpenEBS node.
+        /// </para>
+        /// <note>
+        /// This doesn't work for the <see cref="HostingEnvironment.Machine"/> hosting manager which
+        /// needs to actually look for unpartitioned block devices that can be used to provision cStore.
+        /// </note>
+        /// </summary>
+        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <remarks>
+        /// This method does nothing if the user has already specified one or more OpenEBS nodes
+        /// in the cluster definition.  Otherwise, it will try to enable this on up to three nodes,
+        /// trying to avoid master nodes if possible.
+        /// </remarks>
+        /// <exception cref="NotSupportedException">Thrown for the <see cref="HostingEnvironment.Machine"/> hosting manager.</exception>
+        public static void EnsureOpenEbsNodes(ClusterDefinition clusterDefinition)
+        {
+            if (clusterDefinition.Hosting.Environment == HostingEnvironment.Machine)
+            {
+                throw new NotSupportedException($"[{nameof(EnsureOpenEbsNodes)}()] is not supported for the [{nameof(HostingEnvironment.Machine)}] hosting manager.");
+            }
+
+            if (clusterDefinition.Nodes.Any(node => node.OpenEBS))
+            {
+                // The user has already selected the nodes.
+
+                return;
+            }
+
+            if (clusterDefinition.Workers.Count() >= 3)
+            {
+                // We have enough workers.
+
+                foreach (var worker in clusterDefinition.SortedWorkerNodes.Take(3))
+                {
+                    worker.OpenEBS = true;
+                }
+            }
+            else
+            {
+                // We don't have enough workers, so select the workers we have and
+                // then fall back to masters.
+
+                foreach (var node in clusterDefinition.Workers)
+                {
+                    node.OpenEBS = true;
+                }
+
+                foreach (var node in clusterDefinition.SortedMasterNodes.Take(3 - clusterDefinition.Workers.Count()))
+                {
+                    node.OpenEBS = true;
                 }
             }
         }

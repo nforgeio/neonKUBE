@@ -63,7 +63,7 @@ namespace Neon.Kube
         /// the current AWS limit for volumes with 4 KiB blocks.  We're also going to
         /// round up to the nearest GiB.
         /// </remarks>
-        public static decimal GetDiskSizeGiB(AwsVolumeType volumeType, decimal driveSizeBytes)
+        public static decimal GetVolumeSizeGiB(AwsVolumeType volumeType, decimal driveSizeBytes)
         {
             var driveSizeGiB = driveSizeBytes / ByteUnits.GibiBytes;
 

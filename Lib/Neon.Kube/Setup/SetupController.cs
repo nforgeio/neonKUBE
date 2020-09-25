@@ -136,7 +136,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// The maximum number of nodes that will execute setup steps in parallel.  This
-        /// defaults to essentially unconstrained.
+        /// defaults to effectively unconstrained.
         /// </summary>
         public int MaxParallel { get; set; } = int.MaxValue;
 
@@ -215,7 +215,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Adds a synchronous global step that waits for nodes to be online.
+        /// Adds a synchronous global step that waits for all nodes to be online.
         /// </summary>
         /// <param name="stepLabel">Brief step summary.</param>
         /// <param name="status">The optional node status.</param>
@@ -1051,7 +1051,7 @@ namespace Neon.Kube
                     // Provisioning cluster nodes on XenServer hosts.
 
                     sbDisplay.AppendLine();
-                    sbDisplay.AppendLine(" Xen Servers:");
+                    sbDisplay.AppendLine(" Hypervisor Hosts:");
 
                     foreach (var node in nodes.OrderBy(n => (n.Metadata as IXenClient).Name, StringComparer.InvariantCultureIgnoreCase))
                     {

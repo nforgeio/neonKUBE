@@ -952,7 +952,7 @@ namespace Neon.Cadence
                                 }
                             },
                             timeout: TimeSpan.FromSeconds(30),
-                            pollTime: TimeSpan.FromMilliseconds(500));
+                            pollInterval: TimeSpan.FromMilliseconds(500));
                     }
 
                     // Send the [InitializeRequest] to the [cadence-proxy] so it will know

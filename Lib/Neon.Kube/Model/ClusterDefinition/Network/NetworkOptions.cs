@@ -76,8 +76,8 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Implementation
 
-        private const string    defaultPodSubnet                = "10.254.0.0/16";
-        private const string    defaultServiceSubnet            = "10.253.0.0/16";
+        private const string    defaultPodSubnet                = KubeConst.DefaultPodSubnet;
+        private const string    defaultServiceSubnet            = KubeConst.DefaultServiceSubnet;
         private const string    defaultCloudNodeSubnet          = "10.100.0.0/16";
         private const int       defaultReservedIngressStartPort = 64000;
         private const int       defaultReservedIngressEndPort   = 64999;
@@ -311,7 +311,14 @@ namespace Neon.Kube
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        public int FirstExternalSshPort => ReservedIngressStartPort + additionalReservedPorts;
+        internal int FirstExternalSshPort => ReservedIngressStartPort + additionalReservedPorts;
+
+        /// <summary>
+        /// Returns the last possible external SSH port.
+        /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
+        internal int LastExternalSshPort => ReservedIngressEndPort;
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
@@ -513,7 +520,7 @@ namespace Neon.Kube
             {
                 if (ReservedIngressStartPort <= reservedPort && reservedPort <= ReservedIngressEndPort)
                 {
-                    throw new ClusterDefinitionException($"The reserved ingress port range of [{ReservedIngressStartPort}...{ReservedIngressEndPort}] cannot include the common reserved port [{reservedPort}].");
+                    throw new ClusterDefinitionException($"The reserved ingress port range of [{ReservedIngressStartPort}...{ReservedIngressEndPort}] cannot include the port [{reservedPort}].");
                 }
             }
         }
@@ -525,7 +532,7 @@ namespace Neon.Kube
         /// <returns><c>true</c> for external SSH ports.</returns>
         internal bool IsExternalSshPort(int port)
         {
-            return FirstExternalSshPort <= port && port <= ReservedIngressEndPort;
+            return FirstExternalSshPort <= port && port <= LastExternalSshPort;
         }
 
         /// <summary>

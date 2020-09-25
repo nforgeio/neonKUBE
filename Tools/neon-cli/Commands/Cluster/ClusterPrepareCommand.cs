@@ -162,7 +162,7 @@ Server Requirements:
 
             if (KubeHelper.Config.GetContext(cluster.Definition.Name) != null)
             {
-                Console.Error.WriteLine($"*** ERROR: A context named [{cluster.Definition.Name}] already exists.");
+                Console.Error.WriteLine($"*** ERROR: A login named [{cluster.Definition.Name}] already exists.");
                 Program.Exit(1);
             }
 
@@ -190,6 +190,9 @@ Server Requirements:
                 // with the assigned addresses and we're also not going to do this for cloud
                 // environments because we're assuming that the cluster will run in its own
                 // private network so there'll be no possibility of conflicts.
+                //
+                // We also won't do this for cloud deployments because those nodes will be
+                // running in an isolated private network.
 
                 if (cluster.Definition.Hosting.Environment != HostingEnvironment.Machine && 
                     !cluster.Definition.Hosting.IsCloudProvider)
@@ -217,7 +220,7 @@ Server Requirements:
                             using (var pinger = new Pinger())
                             {
                                 // We're going to try pinging up to [pingAttempts] times for each node
-                                // just in case the network it sketchy and we're losing reply packets.
+                                // just in case the network is sketchy and we're losing reply packets.
 
                                 for (int i = 0; i < pingAttempts; i++)
                                 {
@@ -459,7 +462,7 @@ Server Requirements:
 
                 var operation = $"Preparing [{cluster.Definition.Name}] cluster nodes";
 
-                var controller = 
+                var setupController = 
                     new SetupController<NodeDefinition>(operation, cluster.Nodes)
                     {
                         ShowStatus  = !Program.Quiet,
@@ -468,15 +471,14 @@ Server Requirements:
 
                 // Prepare the nodes.
 
-                controller.AddWaitUntilOnlineStep(timeout: TimeSpan.FromMinutes(15));
-                hostingManager.AddPostProvisionSteps(controller);
-                controller.AddNodeStep("node OS verify", CommonSteps.VerifyOS);
-                controller.AddNodeStep("node ssh keys", 
+                setupController.AddWaitUntilOnlineStep(timeout: TimeSpan.FromMinutes(15));
+                setupController.AddNodeStep("node OS verify", CommonSteps.VerifyOS);
+                setupController.AddNodeStep("node credentials", 
                     (node, stepDelay) =>
                     {
                         CommonSteps.ConfigureSshKey(node, clusterLogin);
                     });
-                controller.AddNodeStep("node prepare", 
+                setupController.AddNodeStep("node prepare", 
                     (node, stepDelay) =>
                     {
                         Thread.Sleep(stepDelay);
@@ -484,7 +486,14 @@ Server Requirements:
                     },
                     stepStaggerSeconds: cluster.Definition.Setup.StepStaggerSeconds);
             
-                if (!controller.Run())
+                // Some hosting manages may have to some additional work after the node has
+                // been otherwise prepared.
+
+                hostingManager.AddPostPrepareSteps(setupController);
+
+                // Start cluster preparation.
+
+                if (!setupController.Run())
                 {
                     // Write the operation end/failed marker to all cluster node logs.
 
@@ -505,6 +514,8 @@ Server Requirements:
             }
             finally
             {
+                hostingManager?.Dispose();
+
                 if (!failed)
                 {
                     KubeHelper.Desktop.EndOperationAsync($"Cluster [{cluster.Name}] has been prepared and is ready for setup.").Wait();

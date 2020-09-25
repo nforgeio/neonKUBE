@@ -26,6 +26,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.NetworkInformation;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -41,6 +42,7 @@ using Neon.IO;
 using Neon.Net;
 using Neon.Time;
 using Couchbase.IO;
+using Renci.SshNet.Common;
 
 namespace Neon.Kube
 {
@@ -67,7 +69,6 @@ namespace Neon.Kube
 
         private ClusterProxy                    cluster;
         private KubeSetupInfo                   setupInfo;
-        private SetupController<NodeDefinition> controller;
         private string                          orgSshPassword;
         private string                          secureSshPassword;
         private Dictionary<string, string>      nodeToPassword;
@@ -137,26 +138,173 @@ namespace Neon.Kube
             this.secureSshPassword = secureSshPassword;
             this.orgSshPassword    = orgSshPassword;
 
+            //-----------------------------------------------------------------
+            // Ensure that we can connect to all machines specified for cluster nodes.  This
+            // ensures that the machines are running and that their network settings and
+            // credentials are configured correctly.
+            //
+            // Then scan the cluster nodes for unpartitioned block devices and mark those nodes
+            // to host an OpenEBS cStore.  Note that at least one machine in the cluster must
+            // have an unpartitioned block device.
+
+            var checkErrors = new List<Tuple<string, string>>();    // (nodeName, errorMessage)
+
+            using (var pinger = new Pinger())
+            {
+                var checkController = new SetupController<NodeDefinition>($"Provisioning [{cluster.Definition.Name}] cluster", cluster.Nodes)
+                {
+                    ShowStatus = this.ShowStatus
+                };
+
+                checkController.AddNodeStep("machine online status",
+                    (node, stepDelay) =>
+                    {
+                        const int maxAttempts = 5;
+
+                        var timeout = TimeSpan.FromSeconds(2);
+                        var replied = false;
+
+                        node.Status = "pinging";
+
+                        for (int i = 0; i < maxAttempts; i++)
+                        {
+                            var reply = pinger.SendPingAsync(node.Address, (int)timeout.TotalMilliseconds).Result;
+
+                            if (reply.Status == IPStatus.Success)
+                            {
+                                replied = true;
+                                break;
+                            }
+                        }
+
+                        if (replied)
+                        {
+                            node.Status = "online";
+                        }
+                        else
+                        {
+                            var errorMessage = $"Node machine is not online.  It didn't respond to pings.";
+
+                            node.Status = "**ERROR: offline";
+
+                            lock (checkErrors)
+                            {
+                                checkErrors.Add(new Tuple<string, string>(node.Name, errorMessage));
+                            }
+
+                            throw new KubeException(errorMessage);
+                        }
+                    });
+
+                checkController.AddNodeStep("connect machines",
+                    (node, stepDelay) =>
+                    {
+                        node.Status = "connecting...";
+
+                        try
+                        {
+                            node.Connect();
+                        }
+                        catch (SshAuthenticationException)
+                        {
+                            node.Status = "**ERROR: authentication failed";
+
+                            lock (checkErrors)
+                            {
+                                checkErrors.Add(new Tuple<string, string>(node.Name, $"Authentication failed.  Verify the [{KubeConst.SysAdminUsername}] user credentials."));
+                            }
+
+                            throw;
+                        }
+                        catch (SshConnectionException)
+                        {
+                            node.Status = "**ERROR: connect failed";
+
+                            lock (checkErrors)
+                            {
+                                checkErrors.Add(new Tuple<string, string>(node.Name, "Connection failed.  Verify the network configuration and that OpenSSH is running."));
+                            }
+
+                            throw;
+                        }
+                        catch (Exception e)
+                        {
+                            node.Status = $"**ERROR: unexpected exception: [{e.GetType().FullName}]";
+
+                            lock (checkErrors)
+                            {
+                                checkErrors.Add(new Tuple<string, string>(node.Name, $"**Unexpected exception: [{e.GetType().FullName}]"));
+                            }
+                            throw;
+                        }
+                    });
+
+                var openEbsNodeCount = 0;
+
+                checkController.AddNodeStep("OpenEBS block device scan",
+                    (node, stepDelay) =>
+                    {
+                        // NOTE: Nodes should still be connected from the last step.
+
+                        if (node.ListUnpartitionedDisks().Count() > 0)
+                        {
+                            node.Metadata.OpenEBS = true;
+
+                            Interlocked.Increment(ref openEbsNodeCount);
+                        }
+                    });
+
+                if (!checkController.Run())
+                {
+                    Console.WriteLine();
+                    Console.WriteLine();
+                    Console.WriteLine("One or more of the cluster machines are not ready for provisioning:");
+                    Console.WriteLine();
+
+                    var maxNameChars = checkErrors.Max(error => error.Item1.Length);
+
+                    foreach (var error in checkErrors.OrderBy(error => error.Item1.ToUpperInvariant()))
+                    {
+                        var rightFill = new string(' ', maxNameChars - error.Item1.Length);
+
+                        Console.Error.WriteLine($"{error.Item1}: {rightFill}{error.Item2}");
+                    }
+
+                    return false;
+                }
+
+                if (openEbsNodeCount == 0)
+                {
+                    Console.WriteLine();
+                    Console.WriteLine();
+                    Console.WriteLine("ERROR: neonKUBE requires at least one node with an unpartitioned block device");
+                    Console.WriteLine("       for the OpenEBS.  Please add a hard drive to at least one machines.");
+
+                    return false;
+                }
+            }
+
+            //-----------------------------------------------------------------
             // Perform the provisioning operations.
 
-            controller = new SetupController<NodeDefinition>($"Provisioning [{cluster.Definition.Name}] cluster", cluster.Nodes)
+            var setupController = new SetupController<NodeDefinition>($"Provisioning [{cluster.Definition.Name}] cluster", cluster.Nodes)
             {
                 ShowStatus  = this.ShowStatus,
                 MaxParallel = this.MaxParallel
             };
 
-            controller.AddNodeStep("connect nodes", (node, stepDelay) => Connect(node));
-            controller.AddNodeStep("verify OS", (node, stepDelay) => KubeHelper.VerifyNodeOperatingSystem(node));
-            controller.AddNodeStep("configure nodes", (node, stepDelay) => Congfigure(node));
+            setupController.AddNodeStep("connect nodes", (node, stepDelay) => Connect(node));
+            setupController.AddNodeStep("verify operating system", (node, stepDelay) => KubeHelper.VerifyNodeOperatingSystem(node));
+            setupController.AddNodeStep("configure nodes", (node, stepDelay) => Congfigure(node));
 
             if (secureSshPassword != orgSshPassword)
             {
-                controller.AddNodeStep("secure node passwords", (node, stepDelay) => SetSecurePassword(node));
+                setupController.AddNodeStep("secure node passwords", (node, stepDelay) => SetSecurePassword(node));
             }
 
-            controller.AddNodeStep("detect node labels", (node, stepDelay) => DetectLabels(node));
+            setupController.AddNodeStep("detect node labels", (node, stepDelay) => DetectLabels(node));
 
-            if (!controller.Run())
+            if (!setupController.Run())
             {
                 Console.Error.WriteLine("*** ERROR: One or more configuration steps failed.");
                 return await Task.FromResult(false);
@@ -166,7 +314,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override void AddPostProvisionSteps(SetupController<NodeDefinition> controller)
+        public override void AddPostPrepareSteps(SetupController<NodeDefinition> setupController)
         {
         }
 

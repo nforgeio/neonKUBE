@@ -3277,19 +3277,26 @@ echo $? > {cmdFolder}/exit
         }
 
         /// <summary>
-        /// Returns the names of the node's unpartitioned disk block devices.  This can
-        /// be useful for identifying newly attached data disks during cluster setup.
+        /// <para>
+        /// Returns a dictionary mapping block device names to a boolean indicating
+        /// whether the device is partitioned or not.
+        /// </para>
+        /// <note>
+        /// We're going to exclude any floppy disks from the list.
+        /// </note>
         /// </summary>
-        /// <returns>The list of unpartitioned Linux disk names.</returns>
-        public IEnumerable<string> ListUnpartitionedDisks()
+        /// <returns>The device dictionary.</returns>
+        private Dictionary<string, bool> ListDisks()
         {
             // Linux does not guarentee that the device names for specific devices
             // will remain the same across reboots or even first boot.  This is a
             // problem for cluster setup when a data disk has been attached, which
             // current applies only to cloud environments.
             //
-            // We need to be able to identify the data disk so that we can partition
-            // and then create and mount a file system.
+            // We need to be able to identify the OS for the on-premise hypervisor 
+            // hosting environments so we can resize the OS disk that was created 
+            // with the original size of the node image to the required size as
+            // well as to identify the OpenEBS cStore device for all environments.
             //
             // This method uses the Linux [lsblk] to list the block devices and then
             // look for disks that haven't been partitioned.  The command output
@@ -3323,21 +3330,25 @@ echo $? > {cmdFolder}/exit
             {
                 var columns = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
+                if (columns[0].StartsWith("fd"))
+                {
+                    continue;   // Exclude floppy disks
+                }
+
                 devices.Add(new Tuple<string, string>(columns[0].Trim(), columns[1].Trim()));
             }
 
             // Iterate through the devices and add the disks to a dictionary.
 
-            var diskNameToIsPartitioned = new Dictionary<string, bool>();
+            var deviceNameToIsPartitioned = new Dictionary<string, bool>();
 
             foreach (var device in devices.Where(d => d.Item2 == "disk"))
             {
-                diskNameToIsPartitioned.Add(device.Item1, false);
+                deviceNameToIsPartitioned.Add(device.Item1, false);
             }
 
             // Iterate through the partitions, extract the parent disk name
-            // and then mark those disks that have any partitions.  Then the
-            // unpartitioned disks will be easy to identify.
+            // and then mark those disks that are partitioned.
 
             foreach (var device in devices.Where(d => d.Item2 == "part"))
             {
@@ -3366,13 +3377,39 @@ echo $? > {cmdFolder}/exit
 
                 var diskName = deviceName.Substring(0, firstDigitPos);
 
-                if (diskNameToIsPartitioned.ContainsKey(diskName))
+                if (deviceNameToIsPartitioned.ContainsKey(diskName))
                 {
-                    diskNameToIsPartitioned[diskName] = true;
+                    deviceNameToIsPartitioned[diskName] = true;
                 }
             }
 
-            return diskNameToIsPartitioned
+            return deviceNameToIsPartitioned;
+        }
+
+        /// <summary>
+        /// Returns the names of the node's partitioned disks.  At first boot, the only
+        /// partitioned disk should be the operating system disk.
+        /// </summary>
+        /// <returns>The list of partitioned disk names (like "/dev/sda").</returns>
+        public IEnumerable<string> ListPartitionedDisks()
+        {
+            var deviceNameToIsPartitioned = ListDisks();
+
+            return deviceNameToIsPartitioned
+                .Where(keyValue => keyValue.Value)
+                .Select(keyValue => $"/dev/{keyValue.Key}");
+        }
+
+        /// <summary>
+        /// Returns the names of the node's unpartitioned disk block devices.  This can
+        /// be useful for identifying newly attached data disks during cluster setup.
+        /// </summary>
+        /// <returns>The list of unpartitioned Linux disk names (like "/dev/sda").</returns>
+        public IEnumerable<string> ListUnpartitionedDisks()
+        {
+            var deviceNameToIsPartitioned = ListDisks();
+
+            return deviceNameToIsPartitioned
                 .Where(keyValue => !keyValue.Value)
                 .Select(keyValue => $"/dev/{keyValue.Key}");
         }

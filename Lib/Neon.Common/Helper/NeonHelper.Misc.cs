@@ -386,35 +386,36 @@ namespace Neon.Common
         /// <summary>
         /// Waits for a boolean function to return <c>true</c>.
         /// </summary>
-        /// <param name="action">The boolean delegate.</param>
-        /// <param name="timeout">The maximum time to wait.</param>
-        /// <param name="pollTime">The time to wait between polling or <c>null</c> for a reasonable default.</param>
+        /// <param name="predicate">The boolean predicate.</param>
+        /// <param name="timeout">Optionally specifies the maximum time to wait.</param>
+        /// <param name="pollInterval">Optionally specifies time to wait between each predicate call or <c>null</c> for a reasonable default.</param>
+        /// <param name="timeoutMessage">Optionally overrides the <see cref="TimeoutException"/> message.</param>
         /// <exception cref="TimeoutException">Thrown if the never returned <c>true</c> before the timeout.</exception>
         /// <remarks>
-        /// This method periodically calls <paramref name="action"/> until it
+        /// This method periodically calls <paramref name="predicate"/> until it
         /// returns <c>true</c> or <pararef name="timeout"/> exceeded.
         /// </remarks>
-        public static void WaitFor(Func<bool> action, TimeSpan timeout, TimeSpan? pollTime = null)
+        public static void WaitFor(Func<bool> predicate, TimeSpan timeout, TimeSpan? pollInterval = null, string timeoutMessage = null)
         {
             var timeLimit = DateTimeOffset.UtcNow + timeout;
 
-            if (!pollTime.HasValue)
+            if (!pollInterval.HasValue)
             {
-                pollTime = TimeSpan.FromMilliseconds(250);
+                pollInterval = TimeSpan.FromMilliseconds(250);
             }
 
             while (true)
             {
-                if (action())
+                if (predicate())
                 {
                     return;
                 }
 
-                Thread.Sleep(pollTime.Value);
+                Thread.Sleep(pollInterval.Value);
 
                 if (DateTimeOffset.UtcNow >= timeLimit)
                 {
-                    throw new TimeoutException();
+                    throw new TimeoutException(timeoutMessage ?? "Timeout waiting for the predicate to return TRUE.");
                 }
             }
         }
@@ -422,37 +423,38 @@ namespace Neon.Common
         /// <summary>
         /// Asynchronously waits for a boolean function to return <c>true</c>.
         /// </summary>
-        /// <param name="action">The boolean delegate.</param>
-        /// <param name="timeout">The maximum time to wait.</param>
-        /// <param name="pollTime">The time to wait between polling or <c>null</c> for a reasonable default.</param>
+        /// <param name="predicate">The boolean predicate.</param>
+        /// <param name="timeout">Optionally specifies the maximum time to wait.</param>
+        /// <param name="pollInterval">Optionally specifies time to wait between each predicate call or <c>null</c> for a reasonable default.</param>
+        /// <param name="timeoutMessage">Optionally overrides the <see cref="TimeoutException"/> message.</param>
         /// <exception cref="TimeoutException">Thrown if the never returned <c>true</c> before the timeout.</exception>
         /// <remarks>
-        /// This method periodically calls <paramref name="action"/> until it
+        /// This method periodically calls <paramref name="predicate"/> until it
         /// returns <c>true</c> or <pararef name="timeout"/> exceeded.
         /// </remarks>
-        public static async Task WaitForAsync(Func<Task<bool>> action, TimeSpan timeout, TimeSpan? pollTime = null)
+        public static async Task WaitForAsync(Func<Task<bool>> predicate, TimeSpan timeout, TimeSpan? pollInterval = null, string timeoutMessage = null)
         {
             await SyncContext.ClearAsync;
 
             var timeLimit = DateTimeOffset.UtcNow + timeout;
 
-            if (!pollTime.HasValue)
+            if (!pollInterval.HasValue)
             {
-                pollTime = TimeSpan.FromMilliseconds(250);
+                pollInterval = TimeSpan.FromMilliseconds(250);
             }
 
             while (true)
             {
-                if (await action())
+                if (await predicate())
                 {
                     return;
                 }
 
-                await Task.Delay(pollTime.Value);
+                await Task.Delay(pollInterval.Value);
 
                 if (DateTimeOffset.UtcNow >= timeLimit)
                 {
-                    throw new TimeoutException();
+                    throw new TimeoutException(timeoutMessage ?? "Timeout waiting for the predicate to return TRUE.");
                 }
             }
         }

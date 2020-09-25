@@ -173,8 +173,8 @@ namespace Couchbase
                         return false;
                     }
                 },
-                timeout: timeout,
-                pollTime: TimeSpan.FromSeconds(0.5));
+                timeout:      timeout,
+                pollInterval: TimeSpan.FromSeconds(0.5));
 
             //-----------------------------------------------------------------
             // Open the bucket.  Note that we're going to recreate the bucket after
@@ -203,8 +203,8 @@ namespace Couchbase
                         return false;
                     }
                 },
-                timeout: timeout,
-                pollTime: TimeSpan.FromSeconds(0.5));
+                timeout:      timeout,
+                pollInterval: TimeSpan.FromSeconds(0.5));
 
             //-----------------------------------------------------------------
             // Wait until the bucket can perform a simple read operation without
