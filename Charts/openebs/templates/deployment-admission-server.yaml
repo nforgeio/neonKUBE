@@ -59,6 +59,8 @@ spec:
                   fieldPath: metadata.namespace
             - name: ADMISSION_WEBHOOK_FAILURE_POLICY
               value: "{{ .Values.webhook.failurePolicy }}"
+            - name: ADMISSION_WEBHOOK_NAME
+              value: {{ template "openebs.fullname" . }}-admission-server
           # Process name used for matching is limited to the 15 characters
           # present in the pgrep output.
           # So fullname can't be used here with pgrep (>15 chars).A regular expression
