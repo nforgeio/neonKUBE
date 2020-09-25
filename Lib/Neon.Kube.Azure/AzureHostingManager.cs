@@ -621,20 +621,20 @@ namespace Neon.Kube
         private NetworkOptions                          networkOptions;
         private string                                  region;
         private IAzure                                  azure;
+        private readonly Dictionary<string, AzureVm>    nameToVm;
 
         // These names will be used to identify the cluster resources.
 
-        private string                                  resourceGroupName;
-        private string                                  publicAddressName;
-        private string                                  vnetName;
-        private string                                  subnetName;
-        private string                                  proximityPlacementGroupName;
-        private string                                  loadbalancerName;
-        private string                                  loadbalancerFrontendName;
-        private string                                  loadbalancerIngressBackendName;
-        private string                                  loadbalancerMasterBackendName;
-        private string                                  subnetNsgName;
-        private Dictionary<string, AzureVm>             nameToVm;
+        private readonly string                         resourceGroupName;
+        private readonly string                         publicAddressName;
+        private readonly string                         vnetName;
+        private readonly string                         subnetName;
+        private readonly string                         proximityPlacementGroupName;
+        private readonly string                         loadbalancerName;
+        private readonly string                         loadbalancerFrontendName;
+        private readonly string                         loadbalancerIngressBackendName;
+        private readonly string                         loadbalancerMasterBackendName;
+        private readonly string                         subnetNsgName;
 
         // These reference the Azure resources.
 
