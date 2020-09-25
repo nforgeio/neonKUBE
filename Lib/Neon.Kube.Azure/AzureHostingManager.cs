@@ -1439,9 +1439,9 @@ namespace Neon.Kube
                     .Define(vnetName)
                     .WithRegion(region)
                     .WithExistingResourceGroup(resourceGroupName)
-                    .WithAddressSpace(networkOptions.NodeSubnet)
+                    .WithAddressSpace(azureOptions.VnetSubnet)
                     .DefineSubnet(subnetName)
-                        .WithAddressPrefix(networkOptions.NodeSubnet)
+                        .WithAddressPrefix(azureOptions.NodeSubnet)
                         .WithExistingNetworkSecurityGroup(subnetNsg.Id)
                         .Attach();
 

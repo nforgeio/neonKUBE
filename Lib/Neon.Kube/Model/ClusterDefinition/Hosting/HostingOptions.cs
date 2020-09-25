@@ -148,7 +148,7 @@ namespace Neon.Kube
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        public bool IsCloudProvider => KubeHelper.IsCloudProvider(Environment);
+        public bool IsCloudProvider => KubeHelper.IsCloudEnvironment(Environment);
 
         /// <summary>
         /// Returns <c>true</c> if the cluster will be hosted by an on-premise (non-cloud) provider.

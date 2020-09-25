@@ -145,7 +145,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public bool IsCloudEnvironment(HostingEnvironment environment)
         {
-            return KubeHelper.IsCloudProvider(environment);
+            return KubeHelper.IsCloudEnvironment(environment);
         }
 
         /// <inheritdoc/>

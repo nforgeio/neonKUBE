@@ -403,11 +403,11 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Determines whether the a cluster hosting environment is cloud based.
+        /// Determines whether a cluster hosting environment deploys to the cloud.
         /// </summary>
-        /// <param name="hostingEnvironment"></param>
+        /// <param name="hostingEnvironment">The hosting environment.</param>
         /// <returns><c>true</c> for cloud environments.</returns>
-        public static bool IsCloudProvider(HostingEnvironment hostingEnvironment)
+        public static bool IsCloudEnvironment(HostingEnvironment hostingEnvironment)
         {
             switch (hostingEnvironment)
             {
@@ -432,6 +432,16 @@ namespace Neon.Kube
 
                     throw new NotImplementedException("Unexpected hosting environment.");
             }
+        }
+
+        /// <summary>
+        /// Determines whether a cluster hosting environment deploys on-premise.
+        /// </summary>
+        /// <param name="hostingEnvironment">The hosting environment.</param>
+        /// <returns><c>true</c> for on-premise environments.</returns>
+        public static bool IsOnPremiseEnvironment(HostingEnvironment hostingEnvironment)
+        {
+            return !IsCloudEnvironment(hostingEnvironment);
         }
 
         /// <summary>

@@ -183,8 +183,8 @@ namespace Neon.Kube
         /// as an cStore.
         /// </note>
         /// </summary>
-        [JsonProperty(PropertyName = "OpenEBS", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "openEBS", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "OpenEbs", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "openEbs", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public bool OpenEBS { get; set; } = false;
 

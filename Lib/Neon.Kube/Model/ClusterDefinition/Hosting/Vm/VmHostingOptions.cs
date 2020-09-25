@@ -46,8 +46,8 @@ namespace Neon.Kube
         // Static members
 
         internal const string DefaultMemory      = "4 GiB";
-        internal const string DefaultOsDisk      = "64 GiB";
-        internal const string DefaultOpenEbsDisk = "64 GiB";
+        internal const string DefaultOsDisk      = "128 GiB";
+        internal const string DefaultOpenEbsDisk = "128 GiB";
 
         //---------------------------------------------------------------------
         // Instance members
@@ -111,7 +111,7 @@ namespace Neon.Kube
         /// <summary>
         /// Specifies the default size of the operating system disk for cluster virtual machines.  This is specified as a string
         /// that can be a long byte count or a byte count or a number with units like <b>512MiB</b>, <b>0.5GiB</b>, <b>2GiB</b>, 
-        /// or <b>1TiB</b>.  This defaults to <b>64GiB</b>.
+        /// or <b>1TiB</b>.  This defaults to <b>128GiB</b>.
         /// </summary>
         [JsonProperty(PropertyName = "OsDisk", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "osDisk", ApplyNamingConventions = false)]
@@ -122,7 +122,7 @@ namespace Neon.Kube
         /// Specifies the default size of the second block device to be created for nodes enabled for
         /// OpenEBS.  This is specified as a string that can be a byte count or a number with 
         /// units like <b>512MiB</b>, <b>0.5GiB</b>, <b>2iGB</b>, or <b>1TiB</b>.  This defaults
-        /// to <b>64GiB</b>.
+        /// to <b>128GiB</b>.
         /// </summary>
         [JsonProperty(PropertyName = "OpenEbsDisk", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "openEbsDisk", ApplyNamingConventions = false)]
