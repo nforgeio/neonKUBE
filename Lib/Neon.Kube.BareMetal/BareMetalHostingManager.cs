@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    MachineHostingManager.cs
+// FILE:	    BareMetalHostingManager.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -36,21 +36,21 @@ using Newtonsoft;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
+using Renci.SshNet.Common;
+
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
 using Neon.Net;
 using Neon.Time;
-using Couchbase.IO;
-using Renci.SshNet.Common;
 
 namespace Neon.Kube
 {
     /// <summary>
-    /// Manages cluster provisioning directly on manually provisioned machines or virtual machines.
+    /// Manages cluster provisioning directly on (mostly) bare manually provisioned machines or virtual machines.
     /// </summary>
     [HostingProvider(HostingEnvironment.Machine)]
-    public partial class MachineHostingManager : HostingManager
+    public partial class BareMetalHostingManager : HostingManager
     {
         //---------------------------------------------------------------------
         // Static members
@@ -77,7 +77,7 @@ namespace Neon.Kube
         /// Creates an instance that is only capable of validating the hosting
         /// related options in the cluster definition.
         /// </summary>
-        public MachineHostingManager()
+        public BareMetalHostingManager()
         {
         }
 
@@ -91,7 +91,7 @@ namespace Neon.Kube
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
-        public MachineHostingManager(ClusterProxy cluster, KubeSetupInfo setupInfo, string logFolder = null)
+        public BareMetalHostingManager(ClusterProxy cluster, KubeSetupInfo setupInfo, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
             Covenant.Requires<ArgumentNullException>(setupInfo != null, nameof(setupInfo));
@@ -133,7 +133,7 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(clusterLogin != null, nameof(clusterLogin));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secureSshPassword), nameof(secureSshPassword));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(orgSshPassword), nameof(orgSshPassword));
-            Covenant.Assert(cluster != null, $"[{nameof(MachineHostingManager)}] was created with the wrong constructor.");
+            Covenant.Assert(cluster != null, $"[{nameof(BareMetalHostingManager)}] was created with the wrong constructor.");
 
             this.secureSshPassword = secureSshPassword;
             this.orgSshPassword    = orgSshPassword;

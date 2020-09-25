@@ -48,7 +48,7 @@ namespace Neon.Kube
         // Static members
 
         private static readonly object                          syncLock = new object();
-        private static Dictionary<HostingEnvironment, Type>    environmentToHostingManager;
+        private static Dictionary<HostingEnvironment, Type>     environmentToHostingManager;
 
         /// <summary>
         /// <para>
@@ -98,10 +98,10 @@ namespace Neon.Kube
 
                 AwsHostingManager.Load();
                 AzureHostingManager.Load();
+                BareMetalHostingManager.Load();
                 GoogleHostingManager.Load();
                 HyperVHostingManager.Load();
                 HyperVLocalHostingManager.Load();
-                MachineHostingManager.Load();
                 XenServerHostingManager.Load();
 
                 // We're going to reflect all loaded assemblies for classes that implement
