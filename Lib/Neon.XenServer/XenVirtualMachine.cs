@@ -70,17 +70,17 @@ namespace Neon.XenServer
         }
 
         /// <summary>
-        /// Returns the repository unique ID.
+        /// Returns the virtual machine ID.
         /// </summary>
         public string Uuid { get; private set; }
 
         /// <summary>
-        /// Returns the repository name.
+        /// Returns the virtual machine name.
         /// </summary>
         public string NameLabel { get; private set; }
 
         /// <summary>
-        /// Returns the repository description.
+        /// Returns the virtual machine state.
         /// </summary>
         public string PowerState { get; private set; }
 

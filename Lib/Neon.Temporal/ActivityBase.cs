@@ -160,7 +160,7 @@ namespace Neon.Temporal
         /// Called internally to execute the activity.
         /// </summary>
         /// <param name="args">The encoded activity arguments.</param>
-        /// <returns>Thye activity results.</returns>
+        /// <returns>The activity results.</returns>
         internal async Task<byte[]> OnInvokeAsync(byte[] args)
         {
             // Capture the activity context details.

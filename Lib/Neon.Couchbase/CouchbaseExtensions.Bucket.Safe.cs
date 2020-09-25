@@ -1608,7 +1608,7 @@ namespace Couchbase
                     return index.State == state;
                 },
                 timeout: TimeSpan.FromDays(365),
-                pollTime: TimeSpan.FromMilliseconds(250));
+                pollInterval: TimeSpan.FromMilliseconds(250));
         }
     }
 }

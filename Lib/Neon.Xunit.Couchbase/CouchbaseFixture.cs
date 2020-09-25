@@ -489,8 +489,8 @@ namespace Neon.Xunit.Couchbase
 
                     return indexes.Count == expectedCount && docCount == 0;
                 },
-                timeout: NeonBucket.ReadyTimeout,
-                pollTime: retryDelay);
+                timeout:      NeonBucket.ReadyTimeout,
+                pollInterval: retryDelay);
         }
 
         /// <summary>

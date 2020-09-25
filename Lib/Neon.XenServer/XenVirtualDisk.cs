@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    XenVirtualDrive.cs
+// FILE:	    XenVirtualDisk.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -29,13 +29,31 @@ using Neon.Common;
 namespace Neon.XenServer
 {
     /// <summary>
-    /// Specifies virtual drive creation parameters.
+    /// Specifies virtual disk creation parameters.
     /// </summary>
-    public class XenVirtualDrive
+    public class XenVirtualDisk
     {
         /// <summary>
-        /// The drive size in bytes.
+        /// Optionally specifies the disk name.
+        /// </summary>
+        public string Name { get; set; }
+
+        /// <summary>
+        /// Optionally specifies the disk description.
+        /// </summary>
+        public string Description { get; set; }
+
+        /// <summary>
+        /// The disk size in bytes.
         /// </summary>
         public decimal Size { get; set; }
+
+        /// <summary>
+        /// Identifies the storage repository where the disk will be
+        /// created.  This defaults to <b>"Local storage"</b> indicating
+        /// that the disk will be created on the XenServer host's local 
+        /// file system.
+        /// </summary>
+        public string StorageRepository { get; set; } = "Local storage";
     }
 }

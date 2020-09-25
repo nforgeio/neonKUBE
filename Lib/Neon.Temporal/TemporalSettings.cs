@@ -1054,7 +1054,7 @@ namespace Neon.Temporal
         /// <summary>
         /// Returns a copy of the current instance.
         /// </summary>
-        /// <returns>Thye cloned <see cref="TemporalSettings"/>.</returns>
+        /// <returns>The cloned <see cref="TemporalSettings"/>.</returns>
         public TemporalSettings Clone()
         {
             return new TemporalSettings()
