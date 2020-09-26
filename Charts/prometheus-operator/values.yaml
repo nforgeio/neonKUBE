@@ -1394,9 +1394,7 @@ prometheus:
     ## Namespaces to be selected for ServiceMonitor discovery.
     ## See https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#namespaceselector for usage
     ##
-    serviceMonitorNamespaceSelector:
-      matchNames:
-      - monitoring
+    serviceMonitorNamespaceSelector: {}
 
     ## How long to retain metrics
     ##
