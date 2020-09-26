@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 
@@ -44,61 +45,71 @@ namespace Neon.Kube
         /// <summary>
         /// 
         /// </summary>
-        [JsonProperty(PropertyName = "compliance")]
+        [JsonProperty(PropertyName = "compliance", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
         public string Compliance { get; set; }
 
         /// <summary>
         /// The device type.
         /// </summary>
-        [JsonProperty(PropertyName = "deviceType")]
+        [JsonProperty(PropertyName = "deviceType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
         public BlockDeviceType? DeviceType { get; set; }
 
         /// <summary>
         /// The drive type.
         /// </summary>
-        [JsonProperty(PropertyName = "driveType")]
+        [JsonProperty(PropertyName = "driveType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
         public DriveType? DriveType { get; set; }
 
         /// <summary>
         /// The Firmware revision.
         /// </summary>
-        [JsonProperty(PropertyName = "firmwareRevision")]
+        [JsonProperty(PropertyName = "firmwareRevision", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
         public string FirmwareRevision { get; set; }
 
         /// <summary>
         /// The hardware sector size.
         /// </summary>
-        [JsonProperty(PropertyName = "hardwareSectorSize")]
+        [JsonProperty(PropertyName = "hardwareSectorSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
         public long? HardwareSectorSize { get; set; }
 
         /// <summary>
         /// The logical block size.
         /// </summary>
-        [JsonProperty(PropertyName = "logicalBlockSize")]
+        [JsonProperty(PropertyName = "logicalBlockSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
         public long? LogicalBlockSize { get; set; }
 
         /// <summary>
         /// The disk model.
         /// </summary>
-        [JsonProperty(PropertyName = "model")]
+        [JsonProperty(PropertyName = "model", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
         public string Model { get; set; }
 
         /// <summary>
         /// The physical block size.
         /// </summary>
-        [JsonProperty(PropertyName = "physicalBlockSize")]
+        [JsonProperty(PropertyName = "physicalBlockSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
         public long? PhysicalBlockSize { get; set; }
 
         /// <summary>
         /// The drive serial number.
         /// </summary>
-        [JsonProperty(PropertyName = "serial")]
+        [JsonProperty(PropertyName = "serial", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
         public string Serial { get; set; }
 
         /// <summary>
         /// The drive vendor.
         /// </summary>
-        [JsonProperty(PropertyName = "vendor")]
+        [JsonProperty(PropertyName = "vendor", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
         public string Vendor { get; set; }
     }
 }

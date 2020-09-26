@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    BlockDeviceCapacity.cs
+// FILE:	    V1CStorBlockDeviceRef.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -19,9 +19,8 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Numerics;
 using System.Text;
-
+using Couchbase.Configuration.Client;
 using k8s;
 using k8s.Models;
 
@@ -34,34 +33,33 @@ namespace Neon.Kube
     /// <summary>
     /// 
     /// </summary>
-    public partial class BlockDeviceCapacity
+    public partial class V1CStorBlockDeviceRef
     {
         /// <summary>
-        /// Initializes a new instance of the BlockDeviceCapacity class.
+        /// Initializes a new instance of the V1CStorBlockDeviceRef class.
         /// </summary>
-        public BlockDeviceCapacity()
+        public V1CStorBlockDeviceRef()
         {
         }
 
         /// <summary>
-        /// The logical sector size.
+        /// The name of the block device.
         /// </summary>
-        [JsonProperty(PropertyName = "logicalSectorSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public long? LogicalSectorSize { get; set; }
+        [JsonProperty(PropertyName = "blockDeviceName", Required = Required.Always)]
+        public string BlockDeviceName { get; set; }
 
         /// <summary>
-        /// The physical sector size.
+        /// The capacity of block device.
         /// </summary>
-        [JsonProperty(PropertyName = "physicalSectorSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "capacity", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public long? PhysicalSectorSize { get; set; }
+        public BlockDeviceCapacity capacity { get; set; }
 
         /// <summary>
-        /// The storage size.
+        /// The dev link for the block device.
         /// </summary>
-        [JsonProperty(PropertyName = "storage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "devLink", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public long? Storage { get; set; }
+        public string DevLink { get; set; }
     }
 }

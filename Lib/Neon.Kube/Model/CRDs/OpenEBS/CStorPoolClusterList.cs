@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    V1CStorBlockDevice.cs
+// FILE:	    V1CStorPoolClusterList.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -32,20 +32,18 @@ namespace Neon.Kube
     /// <summary>
     /// 
     /// </summary>
-    [KubernetesEntity(Group = "openebs.io", Kind = "BlockDevice", ApiVersion = "v1alpha1", PluralName = "blockdevices")]
-    public partial class V1CStorBlockDevice : IKubernetesObject<V1ObjectMeta>, ISpec<V1CStorBlockDeviceSpec>, IValidate
+    [KubernetesEntity(Group = "openebs.io", Kind = "PoolClusterList", ApiVersion = "v1alpha1", PluralName = "PoolClusters")]
+    public partial class V1CStorPoolClusterList : IKubernetesObject<V1ListMeta>, IItems<V1CStorPoolCluster>, IValidate
     {
         /// <summary>
-        /// Initializes a new instance of the V1CStorBlockDevice class.
+        /// Initializes a new instance of the V1CStorPoolClusterList class.
         /// </summary>
-        public V1CStorBlockDevice()
+        public V1CStorPoolClusterList()
         {
-            ApiVersion = $"{KubeGroup}/{KubeApiVersion}";
-            Kind = KubeKind;
         }
 
         public const string KubeApiVersion = "v1alpha1";
-        public const string KubeKind = "BlockDevice";
+        public const string KubeKind = "PoolClusterList";
         public const string KubeGroup = "openebs.io";
 
         /// <summary>
@@ -59,6 +57,12 @@ namespace Neon.Kube
         public string ApiVersion { get; set; }
 
         /// <summary>
+        /// Gets or sets items is the list of cStor block devices.
+        /// </summary>
+        [JsonProperty(PropertyName = "items")]
+        public IList<V1CStorPoolCluster> Items { get; set; }
+
+        /// <summary>
         /// Gets or sets kind is a string value representing the REST resource
         /// this object represents. Servers may infer this from the endpoint
         /// the client submits requests to. Cannot be updated. In CamelCase.
@@ -69,17 +73,10 @@ namespace Neon.Kube
         public string Kind { get; set; }
 
         /// <summary>
-        /// Gets or sets standard object metadata.
+        /// Gets or sets standard list metadata.
         /// </summary>
         [JsonProperty(PropertyName = "metadata")]
-        public V1ObjectMeta Metadata { get; set; }
-
-        /// <summary>
-        /// Gets or sets specification of the desired behavior of the
-        /// Block device.
-        /// </summary>
-        [JsonProperty(PropertyName = "spec")]
-        public V1CStorBlockDeviceSpec Spec { get; set; }
+        public V1ListMeta Metadata { get; set; }
 
         /// <summary>
         /// Validate the object.

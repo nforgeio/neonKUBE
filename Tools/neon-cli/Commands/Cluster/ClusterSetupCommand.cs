@@ -2166,42 +2166,33 @@ rm -rf {chartName}*
                                 Name = "openebs",
                                 Labels = new Dictionary<string, string>()
                                 {
-                                    { "istio-injection", "enabled" }
+                                    { "istio-injection", "disabled" }
                                 }
                             }
                         });
                     });
 
-            master.InvokeIdempotentAction("setup/openebs-install",
+            master.InvokeIdempotentAction("setup/neon-storage-openebs-install",
                   () =>
                   {
-                      //var values = new List<KeyValuePair<string, object>>();
+                      var values = new List<KeyValuePair<string, object>>();
 
-                      //if (cluster.Definition.Workers.Count() >= 3)
-                      //{
-                      //    var replicas = Math.Max(2, cluster.Definition.Workers.Count() / 3);
-                      //    values.Add(new KeyValuePair<string, object>($"apiserver.replicas", replicas));
-                      //    values.Add(new KeyValuePair<string, object>($"provisioner.replicas", replicas));
-                      //    values.Add(new KeyValuePair<string, object>($"localprovisioner.replicas", replicas));
-                      //    values.Add(new KeyValuePair<string, object>($"snapshotOperator.replicas", replicas));
-                      //    values.Add(new KeyValuePair<string, object>($"ndmOperator.replicas", 1));
-                      //    values.Add(new KeyValuePair<string, object>($"webhook.replicas", replicas));
-                      //}
+                      if (cluster.Definition.Workers.Count() >= 3)
+                      {
+                          var replicas = Math.Max(2, cluster.Definition.Workers.Count() / 3);
+                          values.Add(new KeyValuePair<string, object>($"apiserver.replicas", replicas));
+                          values.Add(new KeyValuePair<string, object>($"provisioner.replicas", replicas));
+                          values.Add(new KeyValuePair<string, object>($"localprovisioner.replicas", replicas));
+                          values.Add(new KeyValuePair<string, object>($"snapshotOperator.replicas", replicas));
+                          values.Add(new KeyValuePair<string, object>($"ndmOperator.replicas", replicas));
+                          values.Add(new KeyValuePair<string, object>($"webhook.replicas", replicas));
+                      }
 
-                      //await InstallHelmChartAsync(master, "openebs", releaseName: "neon-storage", values: values, @namespace: "openebs", wait: false);
-
-                      // hack until I can figure out what the difference is between their broken
-                      // helm chart and the yaml below.
-                      var script =
-$@"#!/bin/bash
-
-kubectl apply -f https://openebs.github.io/charts/openebs-operator.yaml
-";
-                      master.SudoCommand(CommandBundle.FromScript(script));
+                      InstallHelmChartAsync(master, "openebs", releaseName: "neon-storage", values: values, @namespace: "openebs").Wait();
                   });
 
 
-            master.InvokeIdempotentAction("setup/openebs-ready",
+            master.InvokeIdempotentAction("setup/neon-storage-openebs-install-ready",
                    () =>
                    {
                        NeonHelper.WaitFor(
@@ -2213,10 +2204,10 @@ kubectl apply -f https://openebs.github.io/charts/openebs-operator.yaml
                                     return false;
                                 }
 
-                                return deployments.Items.Any(p => p.Status.ReadyReplicas.Value != p.Status.Replicas.Value);
+                                return deployments.Items.All(p => p.Status.AvailableReplicas == p.Status.Replicas);
                             }, 
                             timeout: TimeSpan.FromMinutes(10),
-                            pollTime: TimeSpan.FromSeconds(10));
+                            pollInterval: TimeSpan.FromSeconds(10));
 
                         NeonHelper.WaitFor(
                             () =>
@@ -2227,12 +2218,91 @@ kubectl apply -f https://openebs.github.io/charts/openebs-operator.yaml
                                     return false;
                                 }
 
-                                return daemonsets.Items.Any(p => p.Status.NumberAvailable.Value != p.Status.DesiredNumberScheduled);
+                                return daemonsets.Items.All(p => p.Status.NumberAvailable == p.Status.DesiredNumberScheduled);
                             },
                             timeout: TimeSpan.FromMinutes(10),
-                            pollTime: TimeSpan.FromSeconds(10));
+                            pollInterval: TimeSpan.FromSeconds(10));
                    });
 
+            master.InvokeIdempotentAction("setup/neon-storage-openebs-cstor-poolcluster",
+                   () =>
+                   {
+                       var cStorPoolCluster = new V1CStorPoolCluster()
+                       {
+                           Metadata = new V1ObjectMeta()
+                           {
+                               Name = "cspc-stripe",
+                               NamespaceProperty = "openebs"
+                           },
+                           Spec = new V1CStorPoolClusterSpec()
+                           {
+                               Pools = new List<V1CStorPoolSpec>()
+                           }
+                       };
+
+                       var blockDevices = ((JObject)k8sClient.ListNamespacedCustomObjectAsync("openebs.io", "v1alpha1", "openebs", "blockdevices").Result).ToObject<V1CStorBlockDeviceList>();
+
+                       foreach (var n in cluster.Definition.Nodes)
+                       {
+                           if (blockDevices.Items.Any(bd => bd.Spec.NodeAttributes.GetValueOrDefault("nodeName") == n.Name))
+                           {
+                               var pool = new V1CStorPoolSpec()
+                                   {
+                                       NodeSelector = new Dictionary<string, string>()
+                                       {
+                                           { "kubernetes.io/hostname", n.Name }
+                                       },
+                                       DataRaidGroups = new List<V1CStorDataRaidGroup>()
+                                       {
+                                           new V1CStorDataRaidGroup()
+                                           {
+                                               BlockDevices = new List<V1CStorBlockDeviceRef>()
+                                           }
+                                       },
+                                       PoolConfig = new V1CStorPoolConfig()
+                                       {
+                                           DataRaidGroupType = DataRaidGroupType.Stripe
+                                       }
+                                   };
+
+                               foreach (var bd in blockDevices.Items.Where(bd => bd.Spec.NodeAttributes.GetValueOrDefault("nodeName") == n.Name))
+                               {
+                                   pool.DataRaidGroups.FirstOrDefault().BlockDevices.Add(
+                                       new V1CStorBlockDeviceRef()
+                                       {
+                                           BlockDeviceName = bd.Metadata.Name
+                                       });
+                               }
+
+                               cStorPoolCluster.Spec.Pools.Add(pool);
+                           }
+                       }
+
+                       var result = k8sClient.CreateNamespacedCustomObject(JObject.FromObject(cStorPoolCluster), V1CStorPoolCluster.KubeGroup, V1CStorPoolCluster.KubeApiVersion, "openebs", "cstorpoolclusters");
+                   });
+
+            master.InvokeIdempotentAction("setup/neon-storage-openebs-cstor-storageclass",
+                   () =>
+                   {
+                       var storageClass = new V1StorageClass()
+                       {
+                           Metadata = new V1ObjectMeta()
+                           {
+                               Name = "cstor-csi-stripe"
+                           },
+                           Provisioner = "cstor.csi.openebs.io",
+                           AllowVolumeExpansion = true,
+                           Parameters = new Dictionary<string, string>()
+                           {
+                               { "cas-type", "cstor" },
+                               { "cstorPoolCluster", "cspc-stripe" },
+                               { "replicaCount", "3" }
+                           }
+                       };
+                       k8sClient.CreateStorageClass(storageClass);
+                   });
+
+            await Task.CompletedTask;
         }
 
         /// <summary>
@@ -2284,10 +2354,10 @@ kubectl apply -f https://openebs.github.io/charts/openebs-operator.yaml
                                    return false;
                                }
 
-                               return deployments.Items.Any(p => p.Status.ReadyReplicas.Value != p.Status.Replicas.Value);
+                               return deployments.Items.All(p => p.Status.AvailableReplicas == p.Status.Replicas);
                            },
                            timeout: TimeSpan.FromMinutes(10),
-                           pollTime: TimeSpan.FromSeconds(10));
+                           pollInterval: TimeSpan.FromSeconds(10));
                    });
 
             await Task.CompletedTask;
@@ -2334,10 +2404,10 @@ kubectl apply -f https://openebs.github.io/charts/openebs-operator.yaml
                                 return false;
                             }
 
-                            return statefulsets.Items.Any(p => p.Status.Replicas != p.Status.CurrentReplicas);
+                            return statefulsets.Items.All(p => p.Status.Replicas == p.Status.CurrentReplicas);
                         },
                         timeout: TimeSpan.FromMinutes(10),
-                        pollTime: TimeSpan.FromSeconds(10));
+                        pollInterval: TimeSpan.FromSeconds(10));
                 });
 
             await Task.CompletedTask;
@@ -2392,10 +2462,10 @@ kubectl apply -f https://openebs.github.io/charts/openebs-operator.yaml
                                 return false;
                             }
 
-                            return deployments.Items.Any(p => p.Status.ReadyReplicas.Value != p.Status.Replicas.Value);
+                            return deployments.Items.All(p => p.Status.AvailableReplicas == p.Status.Replicas);
                         },
                         timeout: TimeSpan.FromMinutes(10),
-                        pollTime: TimeSpan.FromSeconds(10));
+                        pollInterval: TimeSpan.FromSeconds(10));
 
                     NeonHelper.WaitFor(
                         () =>
@@ -2406,10 +2476,10 @@ kubectl apply -f https://openebs.github.io/charts/openebs-operator.yaml
                                 return false;
                             }
 
-                            return daemonsets.Items.Any(p => p.Status.NumberAvailable.Value != p.Status.DesiredNumberScheduled);
+                            return daemonsets.Items.All(p => p.Status.NumberAvailable == p.Status.DesiredNumberScheduled);
                         },
                         timeout: TimeSpan.FromMinutes(10),
-                        pollTime: TimeSpan.FromSeconds(10));
+                        pollInterval: TimeSpan.FromSeconds(10));
 
                     NeonHelper.WaitFor(
                         () =>
@@ -2420,10 +2490,10 @@ kubectl apply -f https://openebs.github.io/charts/openebs-operator.yaml
                                 return false;
                             }
 
-                            return statefulsets.Items.Any(p => p.Status.Replicas != p.Status.CurrentReplicas);
+                            return statefulsets.Items.All(p => p.Status.Replicas == p.Status.CurrentReplicas);
                         },
                         timeout: TimeSpan.FromMinutes(10),
-                        pollTime: TimeSpan.FromSeconds(10));
+                        pollInterval: TimeSpan.FromSeconds(10));
                 });
 
             if (cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count() > 1)
@@ -2479,10 +2549,10 @@ kubectl apply -f https://openebs.github.io/charts/openebs-operator.yaml
                                 return false;
                             }
 
-                            return deployments.Items.Any(p => p.Status.ReadyReplicas.Value != p.Status.Replicas.Value);
+                            return deployments.Items.All(p => p.Status.AvailableReplicas == p.Status.Replicas);
                         },
                         timeout: TimeSpan.FromMinutes(10),
-                        pollTime: TimeSpan.FromSeconds(10));
+                        pollInterval: TimeSpan.FromSeconds(10));
                 });
 
             master.InvokeIdempotentAction("deploy/istio-prometheus",
@@ -2524,10 +2594,10 @@ kubectl apply -f https://openebs.github.io/charts/openebs-operator.yaml
                                 return false;
                             }
 
-                            return deployments.Items.Any(p => p.Status.ReadyReplicas.Value != p.Status.Replicas.Value);
+                            return deployments.Items.All(p => p.Status.AvailableReplicas == p.Status.Replicas);
                         },
                         timeout: TimeSpan.FromMinutes(10),
-                        pollTime: TimeSpan.FromSeconds(10));
+                        pollInterval: TimeSpan.FromSeconds(10));
                 });
 
             await Task.CompletedTask;
@@ -2584,10 +2654,10 @@ kubectl apply -f https://openebs.github.io/charts/openebs-operator.yaml
                                 return false;
                             }
 
-                            return statefulsets.Items.Any(p => p.Status.Replicas != p.Status.CurrentReplicas);
+                            return statefulsets.Items.All(p => p.Status.Replicas == p.Status.CurrentReplicas);
                         },
                         timeout: TimeSpan.FromMinutes(10),
-                        pollTime: TimeSpan.FromSeconds(10));
+                        pollInterval: TimeSpan.FromSeconds(10));
                 });
 
             await Task.CompletedTask;
@@ -2660,10 +2730,10 @@ kubectl apply -f https://openebs.github.io/charts/openebs-operator.yaml
                                 return false;
                             }
 
-                            return statefulsets.Items.Any(p => p.Status.Replicas != p.Status.CurrentReplicas);
+                            return statefulsets.Items.All(p => p.Status.Replicas == p.Status.CurrentReplicas);
                         },
                         timeout: TimeSpan.FromMinutes(10),
-                        pollTime: TimeSpan.FromSeconds(10));
+                        pollInterval: TimeSpan.FromSeconds(10));
                 });
 
             await Task.CompletedTask;
@@ -2706,10 +2776,10 @@ kubectl apply -f https://openebs.github.io/charts/openebs-operator.yaml
                                    return false;
                                }
 
-                               return daemonsets.Items.Any(p => p.Status.NumberAvailable.Value != p.Status.DesiredNumberScheduled);
+                               return daemonsets.Items.All(p => p.Status.NumberAvailable == p.Status.DesiredNumberScheduled);
                            },
                            timeout: TimeSpan.FromMinutes(10),
-                           pollTime: TimeSpan.FromSeconds(10));
+                           pollInterval: TimeSpan.FromSeconds(10));
                    });
 
             await Task.CompletedTask;
@@ -2754,10 +2824,10 @@ kubectl apply -f https://openebs.github.io/charts/openebs-operator.yaml
                                    return false;
                                }
 
-                               return statefulsets.Items.Any(p => p.Status.Replicas != p.Status.CurrentReplicas);
+                               return statefulsets.Items.All(p => p.Status.Replicas == p.Status.CurrentReplicas);
                            },
                          timeout: TimeSpan.FromMinutes(10),
-                         pollTime: TimeSpan.FromSeconds(10));
+                         pollInterval: TimeSpan.FromSeconds(10));
                    });
 
             await Task.CompletedTask;
@@ -2800,11 +2870,13 @@ kubectl apply -f https://openebs.github.io/charts/openebs-operator.yaml
                                 return false;
                             }
 
-                            return deployments.Items.Any(p => p.Status.ReadyReplicas.Value != p.Status.Replicas.Value);
+                            return deployments.Items.All(p => p.Status.AvailableReplicas == p.Status.Replicas);
                         },
                         timeout: TimeSpan.FromMinutes(10),
-                        pollTime: TimeSpan.FromSeconds(10));
+                        pollInterval: TimeSpan.FromSeconds(10));
             });
+
+            await Task.CompletedTask;
         }
 
         /// <summary>
@@ -2844,11 +2916,13 @@ kubectl apply -f https://openebs.github.io/charts/openebs-operator.yaml
                                    return false;
                                }
 
-                               return deployments.Items.Any(p => p.Status.ReadyReplicas.Value != p.Status.Replicas.Value);
+                               return deployments.Items.All(p => p.Status.AvailableReplicas == p.Status.Replicas);
                            },
                             timeout: TimeSpan.FromMinutes(10),
-                            pollTime: TimeSpan.FromSeconds(10));
+                            pollInterval: TimeSpan.FromSeconds(10));
                    });
+
+            await Task.CompletedTask;
         }
 
         /// <summary>
@@ -2877,10 +2951,10 @@ kubectl apply -f https://openebs.github.io/charts/openebs-operator.yaml
                                 return false;
                             }
 
-                            return deployments.Items.Any(p => p.Status.ReadyReplicas.Value != p.Status.Replicas.Value);
+                            return deployments.Items.All(p => p.Status.AvailableReplicas == p.Status.Replicas);
                         },
                         timeout: TimeSpan.FromMinutes(10),
-                        pollTime: TimeSpan.FromSeconds(10));
+                        pollInterval: TimeSpan.FromSeconds(10));
                 });
 
             await Task.CompletedTask;
@@ -2924,10 +2998,10 @@ kubectl apply -f https://openebs.github.io/charts/openebs-operator.yaml
                                 return false;
                             }
 
-                            return statefulsets.Items.Any(p => p.Status.Replicas != p.Status.CurrentReplicas);
+                            return statefulsets.Items.All(p => p.Status.Replicas == p.Status.CurrentReplicas);
                         },
                         timeout: TimeSpan.FromMinutes(10),
-                        pollTime: TimeSpan.FromSeconds(10));
+                        pollInterval: TimeSpan.FromSeconds(10));
 
                     NeonHelper.WaitFor(
                         () =>
@@ -2938,10 +3012,10 @@ kubectl apply -f https://openebs.github.io/charts/openebs-operator.yaml
                                 return false;
                             }
 
-                            return deployments.Items.Any(p => p.Status.ReadyReplicas.Value != p.Status.Replicas.Value);
+                            return deployments.Items.All(p => p.Status.AvailableReplicas == p.Status.Replicas);
                         },
                         timeout: TimeSpan.FromMinutes(10),
-                        pollTime: TimeSpan.FromSeconds(10));
+                        pollInterval: TimeSpan.FromSeconds(10));
                 });
 
             await Task.CompletedTask;

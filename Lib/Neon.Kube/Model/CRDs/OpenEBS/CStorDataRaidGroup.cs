@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    BlockDeviceCapacity.cs
+// FILE:	    V1CStorDataRaidGroup.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -19,9 +19,8 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Numerics;
 using System.Text;
-
+using Couchbase.Configuration.Client;
 using k8s;
 using k8s.Models;
 
@@ -34,34 +33,20 @@ namespace Neon.Kube
     /// <summary>
     /// 
     /// </summary>
-    public partial class BlockDeviceCapacity
+    public partial class V1CStorDataRaidGroup
     {
         /// <summary>
-        /// Initializes a new instance of the BlockDeviceCapacity class.
+        /// Initializes a new instance of the V1CStorDataRaidGroup class.
         /// </summary>
-        public BlockDeviceCapacity()
+        public V1CStorDataRaidGroup()
         {
         }
 
         /// <summary>
-        /// The logical sector size.
+        /// The list of block devices.
         /// </summary>
-        [JsonProperty(PropertyName = "logicalSectorSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "blockDevices", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public long? LogicalSectorSize { get; set; }
-
-        /// <summary>
-        /// The physical sector size.
-        /// </summary>
-        [JsonProperty(PropertyName = "physicalSectorSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public long? PhysicalSectorSize { get; set; }
-
-        /// <summary>
-        /// The storage size.
-        /// </summary>
-        [JsonProperty(PropertyName = "storage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public long? Storage { get; set; }
+        public List<V1CStorBlockDeviceRef> BlockDevices { get; set; }
     }
 }

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    BlockDeviceCapacity.cs
+// FILE:	    V1CStorPoolSpec.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -17,11 +17,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
-using System.Numerics;
 using System.Text;
-
+using Couchbase.Configuration.Client;
 using k8s;
 using k8s.Models;
 
@@ -34,34 +32,32 @@ namespace Neon.Kube
     /// <summary>
     /// 
     /// </summary>
-    public partial class BlockDeviceCapacity
+    public partial class V1CStorPoolSpec
     {
         /// <summary>
-        /// Initializes a new instance of the BlockDeviceCapacity class.
+        /// Initializes a new instance of the V1CStorPoolSpec class.
         /// </summary>
-        public BlockDeviceCapacity()
+        public V1CStorPoolSpec()
         {
         }
 
         /// <summary>
-        /// The logical sector size.
+        /// 
         /// </summary>
-        [JsonProperty(PropertyName = "logicalSectorSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public long? LogicalSectorSize { get; set; }
+        [JsonProperty(PropertyName = "nodeSelector", Required = Required.Always)]
+        public Dictionary<string, string> NodeSelector { get; set; }
 
         /// <summary>
-        /// The physical sector size.
+        /// 
         /// </summary>
-        [JsonProperty(PropertyName = "physicalSectorSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public long? PhysicalSectorSize { get; set; }
+        [JsonProperty(PropertyName = "dataRaidGroups", Required = Required.Always)]
+        public List<V1CStorDataRaidGroup> DataRaidGroups { get; set; }
 
         /// <summary>
-        /// The storage size.
+        /// 
         /// </summary>
-        [JsonProperty(PropertyName = "storage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public long? Storage { get; set; }
+        [JsonProperty(PropertyName = "poolConfig", Required = Required.Always)]
+        public V1CStorPoolConfig PoolConfig { get; set; }
+
     }
 }

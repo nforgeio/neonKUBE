@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    V1CStorBlockDevice.cs
+// FILE:	    V1CStorPoolCluster.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -32,21 +32,21 @@ namespace Neon.Kube
     /// <summary>
     /// 
     /// </summary>
-    [KubernetesEntity(Group = "openebs.io", Kind = "BlockDevice", ApiVersion = "v1alpha1", PluralName = "blockdevices")]
-    public partial class V1CStorBlockDevice : IKubernetesObject<V1ObjectMeta>, ISpec<V1CStorBlockDeviceSpec>, IValidate
+    [KubernetesEntity(Group = "cstor.openebs.io", Kind = "CStorPoolCluster", ApiVersion = "v1", PluralName = "cstorpoolclusters")]
+    public partial class V1CStorPoolCluster : IKubernetesObject<V1ObjectMeta>, ISpec<V1CStorPoolClusterSpec>, IValidate
     {
         /// <summary>
-        /// Initializes a new instance of the V1CStorBlockDevice class.
+        /// Initializes a new instance of the V1CStorPoolCluster class.
         /// </summary>
-        public V1CStorBlockDevice()
+        public V1CStorPoolCluster()
         {
             ApiVersion = $"{KubeGroup}/{KubeApiVersion}";
-            Kind = KubeKind;
+            Kind       = KubeKind;
         }
 
-        public const string KubeApiVersion = "v1alpha1";
-        public const string KubeKind = "BlockDevice";
-        public const string KubeGroup = "openebs.io";
+        public const string KubeApiVersion = "v1";
+        public const string KubeKind = "CStorPoolCluster";
+        public const string KubeGroup = "cstor.openebs.io";
 
         /// <summary>
         /// Gets or sets APIVersion defines the versioned schema of this
@@ -79,7 +79,7 @@ namespace Neon.Kube
         /// Block device.
         /// </summary>
         [JsonProperty(PropertyName = "spec")]
-        public V1CStorBlockDeviceSpec Spec { get; set; }
+        public V1CStorPoolClusterSpec Spec { get; set; }
 
         /// <summary>
         /// Validate the object.
