@@ -41,7 +41,7 @@ metadata:
 type: Opaque
 data:
 {{- $rootCA := buildCustomCert $root.Values.tls.rootCA.cert $root.Values.tls.rootCA.key -}}
-{{- $replicas := (eq .name "yb-masters") | ternary $root.Values.replicas.master $root.Values.replicas.tserver -}}
+{{- $replicas := (eq .name printf "%s-yb-masters" $root.Release.Name) | ternary $root.Values.replicas.master $root.Values.replicas.tserver -}}
 {{- range $index := until ( int ( $replicas ) ) }}
 {{- $node := printf "%s-%d.%s.%s.svc.%s" $service.label $index $service.name $root.Release.Namespace $root.Values.domainName }}
 {{- $dns1 := printf "*.*.%s" $root.Release.Namespace }}
@@ -126,12 +126,12 @@ metadata:
 spec:
   serviceName: "{{ $root.Release.Name }}-{{ .name }}"
   podManagementPolicy: {{ $root.Values.PodManagementPolicy }}
-  {{ if eq .name "yb-masters" }}
+  {{ if eq .name printf "%s-yb-masters" $root.Release.Name }}
   replicas: {{ $root.Values.replicas.master }}
   {{ else }}
   replicas: {{ $root.Values.replicas.tserver  }}
   {{ end }}
-  {{- $storageInfo := (eq .name "yb-masters") | ternary $root.Values.storage.master $root.Values.storage.tserver -}}
+  {{- $storageInfo := (eq .name printf "%s-yb-masters" $root.Release.Name ) | ternary $root.Values.storage.master $root.Values.storage.tserver -}}
   {{ if not $root.Values.storage.ephemeral }}
   volumeClaimTemplates:
     {{- range $index := until (int ($storageInfo.count )) }}
@@ -162,7 +162,7 @@ spec:
   updateStrategy:
     type: RollingUpdate
     rollingUpdate:
-      {{ if eq .name "yb-masters" }}
+      {{ if eq .name printf "%s-yb-masters" $root.Release.Name }}
       partition: {{ $root.Values.partition.master }}
       {{ else }}
       partition: {{ $root.Values.partition.tserver }}
@@ -173,7 +173,7 @@ spec:
   template:
     metadata:
       annotations:
-      {{ if eq .name "yb-masters" }}
+      {{ if eq .name printf "%s-yb-masters" $root.Release.Name }}
         traffic.sidecar.istio.io/excludeInboundPorts: '7000'
         traffic.sidecar.istio.io/excludeOutboundPorts: '7000'
       {{ else }}
@@ -261,7 +261,7 @@ spec:
             fieldRef:
               fieldPath: metadata.namespace
         resources:
-        {{ if eq .name "yb-masters" }}
+        {{ if eq .name printf "%s-yb-masters" $root.Release.Name }}
 {{ toYaml $root.Values.resource.master | indent 10 }}
         {{ else }}
 {{ toYaml $root.Values.resource.tserver | indent 10 }}
@@ -272,7 +272,7 @@ spec:
         # https://github.com/yugabyte/charts/issues/11
         workingDir: "/mnt/disk0"
         command:
-        {{ if eq .name "yb-masters" }}
+        {{ if eq .name printf "%s-yb-masters" $root.Release.Name }}
           - "/home/yugabyte/bin/yb-master"
           {{ if not $root.Values.storage.ephemeral }}
           - "--fs_data_dirs={{ template "yugabyte.fs_data_dirs" $storageInfo }}"
