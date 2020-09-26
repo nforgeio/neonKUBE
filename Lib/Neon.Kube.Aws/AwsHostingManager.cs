@@ -72,7 +72,7 @@ namespace Neon.Kube
         //
         //      * VPC (virtual private cloud, equivilant to an Azure VNET)
         //
-        //      * Public subnet where the network load balancer and internet
+        //      * Public subnet where the network load balancer, internet
         //        gateway and NAT gateway will be deployed to manage internet 
         //        traffic.
         //
@@ -527,22 +527,27 @@ namespace Neon.Kube
         /// <summary>
         /// The default deny everything network ACL rule number.
         /// </summary>
-        private const int aclDenyAllRuleNumber = 32767;
+        private const int denyAllAclRuleNumber = 32767;
 
         /// <summary>
-        /// The first NSG rule priority to use for temporary SSH rules.
+        /// The first network ACL rule number for internal rules.
         /// </summary>
-        private const int firstSshRuleNumber = 1000;
+        private const int firstInternalAclRuleNumber = 1;
 
         /// <summary>
-        /// The first NSG rule priority to use for ingress rules.
+        /// The first network ACL rule numberm for temporary SSH rules.
         /// </summary>
-        private const int firstIngressRuleNumber = 2000;
+        private const int firstSshAclRuleNumber = 1000;
 
         /// <summary>
-        /// The first NSG rule priority to use for egress rules.
+        /// The network ACL rule number for ingress rules.
         /// </summary>
-        private const int firstEgressRuleNumber = 2000;
+        private const int firstIngressAclRuleNumber = 2000;
+
+        /// <summary>
+        /// The network ACL rule number for egress rules.
+        /// </summary>
+        private const int firstEgressAclRuleNumber = 2000;
 
         /// <summary>
         /// Returns the list of supported Ubuntu images from the AWS Marketplace.
@@ -765,7 +770,7 @@ namespace Neon.Kube
         private readonly string                     egressAddressName;
         private readonly string                     vpcName;
         private readonly string                     dhcpOptionName;
-        private readonly string                     sgAllowAllName;
+        private readonly string                     securityGroupName;
         private readonly string                     publicSubnetName;
         private readonly string                     nodeSubnetName;
         private readonly string                     publicRouteTableName;
@@ -788,7 +793,7 @@ namespace Neon.Kube
         private Address                             egressAddress;
         private Vpc                                 vpc;
         private DhcpOptions                         dhcpOptions;
-        private SecurityGroup                       sgAllowAll;
+        private SecurityGroup                       securityGroup;
         private Subnet                              publicSubnet;
         private Subnet                              nodeSubnet;
         private RouteTable                          publicRouteTable;
@@ -871,7 +876,7 @@ namespace Neon.Kube
             egressAddressName        = GetResourceName("egress-address");
             vpcName                  = GetResourceName("vpc");
             dhcpOptionName           = GetResourceName("dhcp-opt");
-            sgAllowAllName           = GetResourceName("sg-allow-all");
+            securityGroupName        = GetResourceName("security-group");
             publicSubnetName         = GetResourceName("public-subnet");
             nodeSubnetName           = GetResourceName("node-subnet");
             publicRouteTableName     = GetResourceName("public-route-table");
@@ -1121,6 +1126,7 @@ namespace Neon.Kube
             controller.AddGlobalStep("ssh key", ImportKeyPairAsync);
             controller.AddNodeStep("node instances", CreateNodeInstanceAsync);
             controller.AddGlobalStep("load balancer", ConfigureLoadBalancerAsync);
+            controller.AddNodeStep("load balancer targets", WaitForSshTargetAsync);
             controller.AddGlobalStep("internet routing", async () => await UpdateNetworkAsync(NetworkOperations.InternetRouting | NetworkOperations.EnableSsh));
             //controller.AddGlobalStep("nic tags", ConfigureNicTags);   // <-- This doesn't work yet
             controller.AddNodeStep("node ssh config", ConfigureNodeSsh);
@@ -1227,7 +1233,7 @@ namespace Neon.Kube
                 subnetAcl = networkAcl2;
             }
 
-            if (subnetAcl.Entries.Any(entry => entry.RuleNumber == firstSshRuleNumber))
+            if (subnetAcl.Entries.Any(entry => entry.RuleNumber == firstSshAclRuleNumber))
             {
                 operations |= NetworkOperations.EnableSsh;
             }
@@ -1408,10 +1414,10 @@ namespace Neon.Kube
 
             await foreach (var securityGroupItem in securityGroupPagenator.SecurityGroups)
             {
-                if (securityGroupItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == sgAllowAllName) &&
+                if (securityGroupItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == securityGroupName) &&
                     securityGroupItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
                 {
-                    sgAllowAll = securityGroupItem;
+                    securityGroup = securityGroupItem;
                     break;
                 }
             }
@@ -2349,15 +2355,15 @@ retry:
 
             // Create the ALLOW-ALL security group if it doesn't exist.
 
-            if (sgAllowAll == null)
+            if (securityGroup == null)
             {
                 var securityGroupResponse = await ec2Client.CreateSecurityGroupAsync(
                     new CreateSecurityGroupRequest()
                     {
-                        GroupName         = sgAllowAllName,
+                        GroupName         = securityGroupName,
                         Description       = "Allow all traffic",
                         VpcId             = vpc.VpcId,
-                        TagSpecifications = GetTagSpecifications(sgAllowAllName, ResourceType.SecurityGroup)
+                        TagSpecifications = GetTagSpecifications(securityGroupName, ResourceType.SecurityGroup)
                     });
 
                 var securityGroupId        = securityGroupResponse.GroupId;
@@ -2367,24 +2373,24 @@ retry:
                 {
                     if (securityGroupItem.GroupId == securityGroupId)
                     {
-                        sgAllowAll = securityGroupItem;
+                        securityGroup = securityGroupItem;
                         break;
                     }
                 }
 
-                Covenant.Assert(sgAllowAll != null);
+                Covenant.Assert(securityGroup != null);
 
                 // Security groups are created with an ALLOW-ALL egress rule.  We need to add
                 // the same for ingress.   Note that this is not a security vulnerablity because
                 // the load balancer only forwards traffic for explicit listeners and we also
                 // use network ACLs to secure the network.
 
-                if (sgAllowAll.IpPermissions.Count == 0)
+                if (securityGroup.IpPermissions.Count == 0)
                 {
                     await ec2Client.AuthorizeSecurityGroupIngressAsync(
                         new AuthorizeSecurityGroupIngressRequest()
                         {
-                            GroupId       = sgAllowAll.GroupId,
+                            GroupId       = securityGroup.GroupId,
                             IpPermissions = new List<IpPermission>
                             {
                                 new IpPermission()
@@ -2515,7 +2521,7 @@ retry:
                     });
             }
 
-            // Create the NAT gateway and attach it to the node subnet.  Note that it
+            // Create the NAT gateway and attach it to the public subnet.  Note that it
             // can take some time for the NAT Gateway be be available, so we'll have
             // to wait.
 
@@ -2524,7 +2530,7 @@ retry:
                 var natGatewayResponse = await ec2Client.CreateNatGatewayAsync(
                     new CreateNatGatewayRequest()
                     {
-                        SubnetId          = nodeSubnet.SubnetId,
+                        SubnetId          = publicSubnet.SubnetId,
                         AllocationId      = egressAddress.AllocationId,
                         TagSpecifications = GetTagSpecifications(natGatewayName, ResourceType.Natgateway)
                     });
@@ -2556,7 +2562,7 @@ retry:
             // Add a default route to the node subnet that sends traffic to
             // the NAT gateway.
 
-            if (!nodeRouteTable.Routes.Any(route => route.GatewayId == natGateway.NatGatewayId))
+            if (!nodeRouteTable.Routes.Any(route => route.NatGatewayId == natGateway.NatGatewayId))
             {
                 await ec2Client.CreateRouteAsync(
                     new CreateRouteRequest()
@@ -2648,6 +2654,57 @@ retry:
             // Configure the ingress/egress listeners and target groups.
 
             await UpdateNetworkAsync(NetworkOperations.InternetRouting | NetworkOperations.EnableSsh);
+        }
+
+        /// <summary>
+        /// Waits for the load balancer SSH target group for the node to become healthy.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task WaitForSshTargetAsync(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
+        {
+            node.Status = "waiting...";
+
+            // Locate the SSH load balancer target for this node.
+            
+            // $hack(jefflill):
+            //
+            // This is a bit of a hack; I'm going to rely on the fact that the SSH target group
+            // names end with the "-EXTERNALPORT" for the target node.
+
+            var awsInstance       = nodeNameToAwsInstance[node.Name];
+            var targetGroupSuffix = $"-{awsInstance.ExternalSshPort}";
+            var targetGroup       = nameToTargetGroup.Values.Single(targetGroup => targetGroup.Protocol == ProtocolEnum.TCP && 
+                                                                                   targetGroup.Port == NetworkPorts.SSH && 
+                                                                                   targetGroup.TargetGroupName.EndsWith(targetGroupSuffix));
+            await NeonHelper.WaitForAsync(
+                async () =>
+                {
+                    var targetHealthResponse = await elbClient.DescribeTargetHealthAsync(
+                        new DescribeTargetHealthRequest()
+                        {
+                            TargetGroupArn = targetGroup.TargetGroupArn
+                        });
+
+                    var targetHealthState = targetHealthResponse.TargetHealthDescriptions.Single().TargetHealth.State;
+
+                    node.Status = $"status: {targetHealthState}";
+
+                    if (targetHealthState == TargetHealthStateEnum.Healthy)
+                    {
+                        return true;        // Healthy
+                    }
+
+                    if (targetHealthState == TargetHealthStateEnum.Initial || targetHealthState == TargetHealthStateEnum.Unhealthy)
+                    {
+                        return false;       // Unhealthy
+                    }
+
+                    // Report unexpected target health states.
+
+                    throw new KubeException($"Unexpected target group health state: [{targetHealthState}]");
+                },
+                timeout:      operationTimeout,
+                pollInterval: operationPollInternal);
         }
 
         /// <summary>
@@ -2784,7 +2841,7 @@ retry:
                         KeyName          = keyPairName,
                         SubnetId         = nodeSubnet.SubnetId,
                         PrivateIpAddress = node.Address.ToString(),
-                        SecurityGroupIds = new List<string>() { sgAllowAll.GroupId },
+                        SecurityGroupIds = new List<string>() { securityGroup.GroupId },
                         Placement        = new Placement()
                         {
                             AvailabilityZone = awsOptions.AvailabilityZone,
@@ -3155,7 +3212,7 @@ systemctl restart sshd
             // Remove any existing entries from the ACL we'll be assigning next.  Note
             // that we need to leave the last ingress/egress DENY-ALL entries alone.
 
-            var existingEntries = updateAcl.Entries.Where(entry => entry.RuleNumber != aclDenyAllRuleNumber).ToList();
+            var existingEntries = updateAcl.Entries.Where(entry => entry.RuleNumber != denyAllAclRuleNumber).ToList();
 
             foreach (var entry in existingEntries)
             {
@@ -3168,9 +3225,25 @@ systemctl restart sshd
                     });
             }
 
+            // Add an ingress rule allowing traffic from any private VPC address.
+
+            var internalRuleNumber = firstInternalAclRuleNumber;
+
+            await ec2Client.CreateNetworkAclEntryAsync(
+                new CreateNetworkAclEntryRequest()
+                {
+                    NetworkAclId = updateAcl.NetworkAclId,
+                    RuleNumber   = internalRuleNumber++,
+                    Protocol     = ToNetworkAclEntryProtocol(IngressProtocol.Tcp),
+                    Egress       = false,
+                    CidrBlock    = awsOptions.VpcSubnet,
+                    PortRange    = new PortRange() { From = 0, To = ushort.MaxValue },
+                    RuleAction   = RuleAction.Allow
+                });
+
             // Add the external SSH rules source address rules.
 
-            var sshRuleNumber = firstSshRuleNumber;
+            var sshRuleNumber = firstSshAclRuleNumber;
 
             if (networkOptions.ManagementAddressRules.Count == 0)
             {
@@ -3230,7 +3303,7 @@ systemctl restart sshd
 
             // Add any network ACLs related to ingress rules from the cluster definition.
 
-            var ingressRuleNumber = firstIngressRuleNumber;
+            var ingressRuleNumber = firstIngressAclRuleNumber;
 
             foreach (var ingressRule in ingressRules)
             {
@@ -3296,7 +3369,7 @@ systemctl restart sshd
 
             if (networkOptions.EgressAddressRules.Count() > 0)
             {
-                var egressRuleNumber = firstIngressRuleNumber;
+                var egressRuleNumber = firstIngressAclRuleNumber;
 
                 foreach (var egressAddressRule in networkOptions.EgressAddressRules)
                 {
@@ -3339,7 +3412,7 @@ systemctl restart sshd
                     new CreateNetworkAclEntryRequest()
                     {
                         NetworkAclId = updateAcl.NetworkAclId,
-                        RuleNumber   = firstIngressRuleNumber,
+                        RuleNumber   = firstIngressAclRuleNumber,
                         Protocol     = "-1",      // "-1" means ANY protocol
                         Egress       = true,
                         PortRange    = new PortRange() { From = 0, To = ushort.MaxValue },

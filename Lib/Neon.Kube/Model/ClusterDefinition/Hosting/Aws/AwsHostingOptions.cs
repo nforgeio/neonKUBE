@@ -54,7 +54,7 @@ namespace Neon.Kube
         private const string            defaultOpenEBSVolumeSize = "128 GiB";
         private const string            defaultVpcSubnet         = "10.100.0.0/16";
         private const string            defaultPrivateSubnet     = "10.100.0.0/24";
-        private const string            defaultPublicSubnet      = "10.100.1.0/24";
+        private const string            defaultPublicSubnet      = "10.100.255.0/24";
 
         /// <summary>
         /// Constructor.
@@ -251,9 +251,9 @@ namespace Neon.Kube
         public string DefaultOpenEBSVolumeSize { get; set; } = defaultVolumeSize;
 
         /// <summary>
-        /// Specifies the subnet to used for AWS VPC (virtual private cloud) provisioned
+        /// Specifies the subnet CIDR to used for AWS VPC (virtual private cloud) provisioned
         /// for the cluster.  This must surround the <see cref="NodeSubnet"/> and
-        /// <see cref="PublicSubnet"/> subnets.
+        /// <see cref="PublicSubnet"/> subnets.  This defaults to <b>10.100.0.0/16</b>.
         /// </summary>
         [JsonProperty(PropertyName = "VpcSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "vpcSubnet", ApplyNamingConventions = false)]
@@ -261,8 +261,8 @@ namespace Neon.Kube
         public string VpcSubnet { get; set; } = defaultVpcSubnet;
 
         /// <summary>
-        /// Specifies the private subnet within <see cref="VpcSubnet"/> for the private subnet
-        /// where the cluster node instances will be provisioned.
+        /// Specifies the private subnet CIDR within <see cref="VpcSubnet"/> for the private subnet
+        /// where the cluster node instances will be provisioned.  This defaults to <b>10.100.0.0/24</b>.
         /// </summary>
         [JsonProperty(PropertyName = "PrivateSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "privateSubnet", ApplyNamingConventions = false)]
@@ -270,8 +270,9 @@ namespace Neon.Kube
         public string NodeSubnet { get; set; } = defaultPrivateSubnet;
 
         /// <summary>
-        /// Specifies the public subnet within <see cref="VpcSubnet"/> for the public subnet where
+        /// Specifies the public subnet CIDR within <see cref="VpcSubnet"/> for the public subnet where
         /// the AWS network load balancer will be provisioned to manage inbound cluster traffic.
+        /// This defaults to <b>10.100.255.0/16</b>.
         /// </summary>
         [JsonProperty(PropertyName = "PublicSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "publicSubnet", ApplyNamingConventions = false)]
