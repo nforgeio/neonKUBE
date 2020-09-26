@@ -307,6 +307,7 @@ plugins:
   - xginn8-pagerduty-datasource
   - camptocamp-prometheus-alertmanager-datasource
   - grafana-piechart-panel
+  - novatec-sdg-panel
 
 ## Configure grafana datasources
 ## ref: http://docs.grafana.org/administration/provisioning/#datasources
