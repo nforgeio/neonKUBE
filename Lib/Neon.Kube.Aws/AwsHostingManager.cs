@@ -598,37 +598,6 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// <para>
-        /// Converts an <see cref="IngressProtocol"/> into the corresponding string AWS
-        /// uses to identify the protocol for a network ACL entry.
-        /// </para>
-        /// <note>
-        /// The values returned are internet protocol numbers as strings.  AWS also supports
-        ///<b> "-1"</b> which means <b>any</b> protocol, but we don't use that.
-        /// </note>
-        /// </summary>
-        /// <param name="protocol">The input protocol.</param>
-        /// <returns>The corresponding AWS protocol string.</returns>
-        private static string ToNetworkAclEntryProtocol(IngressProtocol protocol)
-        {
-            switch (protocol)
-            {
-                case IngressProtocol.Http:
-                case IngressProtocol.Https:
-                case IngressProtocol.Tcp:
-
-                    // We're deploying a network load balancer, so all of these
-                    // protocols map to TCP.
-
-                    return "6";     // TCP
-
-                default:
-
-                    throw new NotImplementedException();
-            }
-        }
-
-        /// <summary>
         /// Converts an <see cref="IngressProtocol"/> value into a <see cref="ProtocolEnum"/>.
         /// </summary>
         /// <param name="protocol">The ingress protocol.</param>
@@ -780,8 +749,6 @@ namespace Neon.Kube
         private readonly string                     nodeSubnetName;
         private readonly string                     publicRouteTableName;
         private readonly string                     nodeRouteTableName;
-        private readonly string                     networkAclName1;
-        private readonly string                     networkAclName2;
         private readonly string                     internetGatewayName;
         private readonly string                     natGatewayName;
         private readonly string                     loadBalancerName;
@@ -803,8 +770,6 @@ namespace Neon.Kube
         private Subnet                              nodeSubnet;
         private RouteTable                          publicRouteTable;
         private RouteTable                          nodeRouteTable;
-        private NetworkAcl                          networkAcl1;
-        private NetworkAcl                          networkAcl2;
         private InternetGateway                     internetGateway;
         private NatGateway                          natGateway;
         private LoadBalancer                        loadBalancer;
@@ -886,8 +851,6 @@ namespace Neon.Kube
             nodeSubnetName           = GetResourceName("node-subnet");
             publicRouteTableName     = GetResourceName("public-route-table");
             nodeRouteTableName       = GetResourceName("node-route-table");
-            networkAclName1          = GetResourceName("network-acl-1");
-            networkAclName2          = GetResourceName("network-acl-2");
             internetGatewayName      = GetResourceName("internet-gateway");
             natGatewayName           = GetResourceName("nat-gateway");
             loadBalancerName         = GetResourceName("load-balancer");
@@ -1222,26 +1185,28 @@ namespace Neon.Kube
         {
             var operations = NetworkOperations.InternetRouting;
 
-            // We need to update the SSH rules too if it looks like SSH is
-            // currently enabled.  We'll tell by inspecting the subnet
-            // network ACL, looking for the entry allowing SSH traffic
-            // from the reserved port range.
+            // Update the SSH listeners if there are any SSH listeners already.  This will
+            // be important after we support dynamically adding and removing cluster nodes.
 
-            var subnetAcl = (NetworkAcl)null;
+            var listenerPagenator = elbClient.Paginators.DescribeListeners(
+                new DescribeListenersRequest()
+                {
+                    LoadBalancerArn = loadBalancer.LoadBalancerArn
+                });
 
-            if (networkAcl1.Associations.Any(association => association.SubnetId == publicSubnet.SubnetId))
+            var listeners = new List<Listener>();
+
+            await foreach (var listenerItem in listenerPagenator.Listeners)
             {
-                subnetAcl = networkAcl1;
-            }
-            else if (networkAcl2.Associations.Any(association => association.SubnetId == publicSubnet.SubnetId))
-            {
-                subnetAcl = networkAcl2;
+                listeners.Add(listenerItem);
             }
 
-            if (subnetAcl.Entries.Any(entry => entry.RuleNumber == firstSshAclRuleNumber))
+            if (listeners.Any(listener => networkOptions.FirstExternalSshPort <= listener.Port && listener.Port < networkOptions.LastExternalSshPort))
             {
                 operations |= NetworkOperations.EnableSsh;
             }
+
+            // Perform the update.
 
             await UpdateNetworkAsync(operations);
         }
@@ -1270,7 +1235,7 @@ namespace Neon.Kube
 
             Covenant.Assert(awsInstance.ExternalSshPort != 0, $"Node [{nodeName}] does not have an external SSH port assignment.");
 
-            return (Address: cluster.GetNode(nodeName).Address.ToString(), Port: awsInstance.ExternalSshPort);
+            return (Address: ingressAddress.PublicIp, Port: awsInstance.ExternalSshPort);
         }
 
         /// <inheritdoc/>
@@ -1473,13 +1438,6 @@ namespace Neon.Kube
                 }
             }
 
-            // Network ACLs
-            //
-            // Note that subnets are created with a default network ACL assigned.  We'll identify this
-            // as [networkAcl1].
-
-            await IdentifyPublicNetworkAclsAsync();
-
             // Internet and NAT Gateways
 
             internetGateway = await GetInternetGatewayAsync();
@@ -1569,134 +1527,6 @@ namespace Neon.Kube
                         awsInstance.ExternalSshPort = sshPort;
                     }
                 }
-            }
-        }
-
-        /// <summary>
-        /// Attempts to identify the two subnet network ACLs we'll be using to secure the subnet.
-        /// </summary>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task IdentifyPublicNetworkAclsAsync()
-        {
-            if (vpc == null || publicSubnet == null)
-            {
-                // There can't be any network ACLs until the VPC and subnet exist.
-
-                return;
-            }
-
-retry:
-            var networkAclPagenator = ec2Client.Paginators.DescribeNetworkAcls(new DescribeNetworkAclsRequest());
-            var networkAcls         = new List<NetworkAcl>();
-            var haveSubnetAcl       = false;
-
-            await foreach (var networkAclItem in networkAclPagenator.NetworkAcls)
-            {
-                if (networkAclItem.VpcId == vpc.VpcId)
-                {
-                    networkAcls.Add(networkAclItem);
-                }
-            }
-
-            foreach (var networkAclItem in networkAcls)
-            {
-                if (networkAclItem.Associations.Any(association => association.SubnetId == publicSubnet.SubnetId))
-                {
-                    haveSubnetAcl = true;
-
-                    // This must be the default ACL assigned to the subnet.  We'll rename
-                    // this to be [networkAcl1] if it's not already assigned a name. 
-
-                    var aclName = networkAclItem.Tags.FirstOrDefault(tag => tag.Key == nameTagKey)?.Value;
-
-                    if (aclName != networkAclName1 && aclName != networkAclName2)
-                    {
-                        await ec2Client.CreateTagsAsync(
-                            new CreateTagsRequest()
-                            {
-                                Resources = new List<string>() { networkAclItem.NetworkAclId },
-                                Tags      = GetTags<Ec2Tag>(networkAclName1)
-                            });
-
-                        networkAcl1 = await GetNetworkAclAsync(networkAclItem.NetworkAclId);
-
-                        continue;
-                    }
-                }
-
-                if (networkAclItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
-                {
-                    if (networkAclItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
-                    {
-                        if (networkAclItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == networkAclName1))
-                        {
-                            networkAcl1 = networkAclItem;
-                        }
-                        else if (networkAclItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == networkAclName2))
-                        {
-                            networkAcl2 = networkAclItem;
-                        }
-                    }
-                }
-            }
-
-            // Note that one of the network ACLs must be associated with the subnet.  This may not be the
-            // case if the subnet for a previous cluster with the same name was deleted but the network
-            // ACLs were not.  This shouldn't really happen in production if the cluster was deprovisioned
-            // via the hosting manager but may happen when testing and debugging.
-            //
-            // We're going to address this situation by removing both network ACLs and then looping to
-            // relocate the subnet associated ACL.
-
-            if (!haveSubnetAcl)
-            {
-                // Delete both ACLs (if they exist) and try to locate the default subnet ACL again.
-
-                if (networkAcl1 != null)
-                {
-                    await ec2Client.DeleteNetworkAclAsync(
-                        new DeleteNetworkAclRequest()
-                        {
-                            NetworkAclId = networkAcl1.NetworkAclId
-                        });
-                }
-
-                if (networkAcl2 != null)
-                {
-                    await ec2Client.DeleteNetworkAclAsync(
-                        new DeleteNetworkAclRequest()
-                        {
-                            NetworkAclId = networkAcl2.NetworkAclId
-                        });
-                }
-
-                goto retry;     // YAY: A GOTO!  I haven't coded one of those for a while.
-            }
-
-            // Ensure that both ACLs exist.
-
-            if (networkAcl1 == null)
-            {
-                var networkAclResponse = await ec2Client.CreateNetworkAclAsync(
-                    new CreateNetworkAclRequest()
-                    {
-                         VpcId             = vpc.VpcId,
-                         TagSpecifications = GetTagSpecifications(networkAclName1, ResourceType.NetworkAcl)
-                    });
-
-                networkAcl1 = networkAclResponse.NetworkAcl;
-            }
-
-            if (networkAcl2 == null)
-            {
-                var networkAclResponse = await ec2Client.CreateNetworkAclAsync(
-                    new CreateNetworkAclRequest()
-                    {
-                         VpcId             = vpc.VpcId,
-                         TagSpecifications = GetTagSpecifications(networkAclName2, ResourceType.NetworkAcl)
-                    });
-
-                networkAcl2 = networkAclResponse.NetworkAcl;
             }
         }
 
@@ -2577,34 +2407,6 @@ retry:
                         DestinationCidrBlock = "0.0.0.0/0"
                     });
             }
-
-            // Identify/create the two network ACLs we'll use for securing the subnet.
-
-            await IdentifyPublicNetworkAclsAsync();
-
-            if (networkAcl1 == null)
-            {
-                var networkAclResponse = await ec2Client.CreateNetworkAclAsync(
-                    new CreateNetworkAclRequest()
-                    {
-                        VpcId             = vpc.VpcId,
-                        TagSpecifications = GetTagSpecifications(networkAclName1, ResourceType.NetworkAcl)
-                    });
-
-                networkAcl1 = networkAclResponse.NetworkAcl;
-            }
-
-            if (networkAcl2 == null)
-            {
-                var networkAclResponse = await ec2Client.CreateNetworkAclAsync(
-                    new CreateNetworkAclRequest()
-                    {
-                        VpcId             = vpc.VpcId,
-                        TagSpecifications = GetTagSpecifications(networkAclName2, ResourceType.NetworkAcl)
-                    });
-
-                networkAcl2 = networkAclResponse.NetworkAcl;
-            }
         }
 
         /// <summary>
@@ -2694,7 +2496,7 @@ retry:
 
                     if (targetHealthState == TargetHealthStateEnum.Initial)
                     {
-                        node.Status = $"target: ELB initializing...";
+                        node.Status = $"ELB initializing...";
                         return false;
                     }
                     else if (targetHealthState == TargetHealthStateEnum.Unhealthy)
@@ -3180,270 +2982,6 @@ systemctl restart sshd
                 };
 
             var ingressRules = networkOptions.IngressRules.Union(clusterRules).ToArray();
-
-            //-----------------------------------------------------------------
-            // Update the subnet network ACL.
-
-            // Determine whether either of the two network ACLs are associated with
-            // the subnet.  If one is assigned, then we'll modify the other one
-            // and then associate that one with the subnet to complete the operation.
-            //
-            // The idea here is that we're going to alternate between assigning
-            // the two ACLs so we can make a bunch of effective rule changes in
-            // one atomic operation.
-
-            NetworkAcl              updateAcl;
-            NetworkAclAssociation   association;
-
-            association = networkAcl1.Associations.SingleOrDefault(association => association.SubnetId == publicSubnet.SubnetId);
-
-            if (association != null)
-            {
-                updateAcl = networkAcl2;
-            }
-            else
-            {
-                association = networkAcl2.Associations.SingleOrDefault(association => association.SubnetId == publicSubnet.SubnetId);
-
-                if (association != null)
-                {
-                    updateAcl = networkAcl1;
-                }
-                else
-                {
-                    Covenant.Assert(false, "Cannot locate the current subnet network ACL.");
-
-                    association = null;
-                    updateAcl   = null;
-                }
-            }
-
-            // Remove any existing entries from the ACL we'll be assigning next.  Note
-            // that we need to leave the last ingress/egress DENY-ALL entries alone.
-
-            var existingEntries = updateAcl.Entries.Where(entry => entry.RuleNumber != denyAllAclRuleNumber).ToList();
-
-            foreach (var entry in existingEntries)
-            {
-                await ec2Client.DeleteNetworkAclEntryAsync(
-                    new DeleteNetworkAclEntryRequest()
-                    {
-                        NetworkAclId = updateAcl.NetworkAclId,
-                        RuleNumber   = entry.RuleNumber,
-                        Egress       = entry.Egress
-                    });
-            }
-
-            // Add an ingress rule allowing traffic from any private VPC address.
-
-            var internalRuleNumber = firstInternalAclRuleNumber;
-
-            await ec2Client.CreateNetworkAclEntryAsync(
-                new CreateNetworkAclEntryRequest()
-                {
-                    NetworkAclId = updateAcl.NetworkAclId,
-                    RuleNumber   = internalRuleNumber++,
-                    Protocol     = ToNetworkAclEntryProtocol(IngressProtocol.Tcp),
-                    Egress       = false,
-                    CidrBlock    = awsOptions.VpcSubnet,
-                    PortRange    = new PortRange() { From = 0, To = ushort.MaxValue },
-                    RuleAction   = RuleAction.Allow
-                });
-
-            // Add the external SSH rules source address rules.
-
-            var sshRuleNumber = firstSshAclRuleNumber;
-
-            if (networkOptions.ManagementAddressRules.Count == 0)
-            {
-                // There are no management source address constraints so we're going
-                // default to allowing traffic from all sources.
-
-                await ec2Client.CreateNetworkAclEntryAsync(
-                    new CreateNetworkAclEntryRequest()
-                    {
-                        NetworkAclId = updateAcl.NetworkAclId,
-                        RuleNumber   = sshRuleNumber++,
-                        Protocol     = ToNetworkAclEntryProtocol(IngressProtocol.Tcp),
-                        Egress       = false,
-                        CidrBlock    = "0.0.0.0/0",
-                        PortRange    = new PortRange() { From = networkOptions.FirstExternalSshPort, To = networkOptions.LastExternalSshPort },
-                        RuleAction   = RuleAction.Allow
-                    });
-            }
-            else
-            {
-                // We have some management source address constraints, so we'll 
-                // create a new network ACL entry for each constraint.
-
-                foreach (var addressRule in networkOptions.ManagementAddressRules)
-                {
-                    var sourceCidr = (string)null;
-
-                    if (addressRule.IsAny)
-                    {
-                        sourceCidr = "0.0.0.0/0";
-                    }
-                    else
-                    {
-                        sourceCidr = addressRule.AddressOrSubnet;
-
-                        if (!sourceCidr.Contains('/'))
-                        {
-                            // Convert a single IP address into a one address CIDR.
-
-                            sourceCidr += "/32";
-                        }
-                    }
-
-                    await ec2Client.CreateNetworkAclEntryAsync(
-                        new CreateNetworkAclEntryRequest()
-                        {
-                            NetworkAclId = updateAcl.NetworkAclId,
-                            RuleNumber   = sshRuleNumber++,
-                            Protocol     = ToNetworkAclEntryProtocol(IngressProtocol.Tcp),
-                            Egress       = false,
-                            PortRange    = new PortRange() { From = NetworkPorts.SSH, To = NetworkPorts.SSH },
-                            CidrBlock    = sourceCidr,
-                            RuleAction   = addressRule.Action == AddressRuleAction.Allow ? RuleAction.Allow : RuleAction.Deny
-                        });
-                }
-            }
-
-            // Add any network ACLs related to ingress rules from the cluster definition.
-
-            var ingressRuleNumber = firstIngressAclRuleNumber;
-
-            foreach (var ingressRule in ingressRules)
-            {
-                if (ingressRule.AddressRules.Count() == 0)
-                {
-                    // The ingress rule has no source address constraints.
-
-                    await ec2Client.CreateNetworkAclEntryAsync(
-                        new CreateNetworkAclEntryRequest()
-                        {
-                            NetworkAclId = updateAcl.NetworkAclId,
-                            RuleNumber   = ingressRuleNumber++,
-                            Protocol     = ToNetworkAclEntryProtocol(ingressRule.Protocol),
-                            Egress       = false,
-                            CidrBlock    = "0.0.0.0/0",
-                            PortRange    = new PortRange() { From = ingressRule.ExternalPort, To = ingressRule.ExternalPort },
-                            RuleAction   = RuleAction.Allow
-                        });
-                }
-                else
-                {
-                    // The ingress rule has source address constraints, so we'll 
-                    // create a new network ACL entry for each constraint.
-
-                    foreach (var addressRule in ingressRule.AddressRules)
-                    {
-                        var sourceCidr = (string)null;
-
-                        if (addressRule.IsAny)
-                        {
-                            sourceCidr = "0.0.0.0/0";
-                        }
-                        else
-                        {
-                            sourceCidr = addressRule.AddressOrSubnet;
-
-                            if (!sourceCidr.Contains('/'))
-                            {
-                                // Convert a single IP address into a one address CIDR.
-
-                                sourceCidr += "/32";
-                            }
-                        }
-
-                        await ec2Client.CreateNetworkAclEntryAsync(
-                            new CreateNetworkAclEntryRequest()
-                            {
-                                NetworkAclId = updateAcl.NetworkAclId,
-                                RuleNumber   = ingressRuleNumber++,
-                                Protocol     = ToNetworkAclEntryProtocol(ingressRule.Protocol),
-                                Egress       = false,
-                                PortRange    = new PortRange() { From = ingressRule.ExternalPort, To = ingressRule.ExternalPort },
-                                CidrBlock    = sourceCidr,
-                                RuleAction   = addressRule.Action == AddressRuleAction.Allow ? RuleAction.Allow : RuleAction.Deny
-                            });
-                    }
-                }
-            }
-
-            // Add any egress related destination address rules.  Note that when
-            // there are no egress rules defined, we need to insert an ALLOW-ALL 
-            // entry just before the default DENY-ALL entry.
-
-            if (networkOptions.EgressAddressRules.Count() > 0)
-            {
-                var egressRuleNumber = firstIngressAclRuleNumber;
-
-                foreach (var egressAddressRule in networkOptions.EgressAddressRules)
-                {
-                    var destinationCidr = (string)null;
-
-                    if (egressAddressRule.IsAny)
-                    {
-                        destinationCidr = "0.0.0.0/0";
-                    }
-                    else
-                    {
-                        destinationCidr = egressAddressRule.AddressOrSubnet;
-
-                        if (!destinationCidr.Contains('/'))
-                        {
-                            // Convert a single IP address into a one address CIDR.
-
-                            destinationCidr += "/32";
-                        }
-                    }
-
-                    await ec2Client.CreateNetworkAclEntryAsync(
-                        new CreateNetworkAclEntryRequest()
-                        {
-                            NetworkAclId = updateAcl.NetworkAclId,
-                            RuleNumber   = egressRuleNumber++,
-                            Protocol     = "-1",      // "-1" means any protocol
-                            Egress       = true,
-                            PortRange    = new PortRange() { From = 0, To = ushort.MaxValue },
-                            CidrBlock    = destinationCidr,
-                            RuleAction   = egressAddressRule.Action == AddressRuleAction.Allow ? RuleAction.Allow : RuleAction.Deny
-                        });
-                }
-            }
-            else
-            {
-                // Insert an ALLOW-ALL rule when the user defines no egress rules.
-
-                await ec2Client.CreateNetworkAclEntryAsync(
-                    new CreateNetworkAclEntryRequest()
-                    {
-                        NetworkAclId = updateAcl.NetworkAclId,
-                        RuleNumber   = firstIngressAclRuleNumber,
-                        Protocol     = "-1",      // "-1" means ANY protocol
-                        Egress       = true,
-                        PortRange    = new PortRange() { From = 0, To = ushort.MaxValue },
-                        CidrBlock    = "0.0.0.0/0",
-                        RuleAction   = RuleAction.Allow
-                    });
-            }
-
-            // The new network ACL is ready so associate it with the subnet, replacing
-            // the previous ACL (if any).
-
-            await ec2Client.ReplaceNetworkAclAssociationAsync(
-                new ReplaceNetworkAclAssociationRequest()
-                {
-                    AssociationId = association.NetworkAclAssociationId,
-                    NetworkAclId  = updateAcl.NetworkAclId
-                });
-
-            // We need to reload the network ACLs to pick up the subnet association change.
-
-            networkAcl1 = await GetNetworkAclAsync(networkAcl1.NetworkAclId);
-            networkAcl2 = await GetNetworkAclAsync(networkAcl2.NetworkAclId);
 
             //-----------------------------------------------------------------
             // Load target groups.
