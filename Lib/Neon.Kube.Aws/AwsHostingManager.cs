@@ -565,10 +565,15 @@ namespace Neon.Kube
         private const string openEBSDeviceName = "/dev/sdc";
 
         /// <summary>
-        /// 
+        /// Some AWS operations (like creating a NAT gateway or waiting for a load balancer
+        /// target group to initialize and transition to healthy) can take a very long time 
+        /// to complete.
         /// </summary>
-        private static readonly TimeSpan operationTimeout = TimeSpan.FromMinutes(5);
+        private static readonly TimeSpan operationTimeout = TimeSpan.FromMinutes(10);
 
+        /// <summary>
+        /// Polling interval for slow operations.
+        /// </summary>
         private static readonly TimeSpan operationPollInternal = TimeSpan.FromSeconds(5);
 
         /// <summary>
@@ -770,7 +775,7 @@ namespace Neon.Kube
         private readonly string                     egressAddressName;
         private readonly string                     vpcName;
         private readonly string                     dhcpOptionName;
-        private readonly string                     securityGroupName;
+        private readonly string                      securityGroupName;
         private readonly string                     publicSubnetName;
         private readonly string                     nodeSubnetName;
         private readonly string                     publicRouteTableName;
@@ -2366,7 +2371,7 @@ retry:
                         TagSpecifications = GetTagSpecifications(securityGroupName, ResourceType.SecurityGroup)
                     });
 
-                var securityGroupId        = securityGroupResponse.GroupId;
+                var securityGroupId = securityGroupResponse.GroupId;
                 var securityGroupPagenator = ec2Client.Paginators.DescribeSecurityGroups(new DescribeSecurityGroupsRequest());
 
                 await foreach (var securityGroupItem in securityGroupPagenator.SecurityGroups)
@@ -2687,16 +2692,20 @@ retry:
 
                     var targetHealthState = targetHealthResponse.TargetHealthDescriptions.Single().TargetHealth.State;
 
-                    node.Status = $"status: {targetHealthState}";
-
-                    if (targetHealthState == TargetHealthStateEnum.Healthy)
+                    if (targetHealthState == TargetHealthStateEnum.Initial)
                     {
-                        return true;        // Healthy
+                        node.Status = $"target: ELB initializing...";
+                        return false;
                     }
-
-                    if (targetHealthState == TargetHealthStateEnum.Initial || targetHealthState == TargetHealthStateEnum.Unhealthy)
+                    else if (targetHealthState == TargetHealthStateEnum.Unhealthy)
                     {
-                        return false;       // Unhealthy
+                        node.Status = $"target: checking...";
+                        return false;
+                    }
+                    else if (targetHealthState == TargetHealthStateEnum.Healthy)
+                    {
+                        node.Status = $"target: {targetHealthState}";
+                        return true;
                     }
 
                     // Report unexpected target health states.
