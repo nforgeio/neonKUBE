@@ -56,6 +56,8 @@ using Ec2VolumeType  = Amazon.EC2.VolumeType;
 using ElbAction      = Amazon.ElasticLoadBalancingV2.Model.Action;
 using ElbTag         = Amazon.ElasticLoadBalancingV2.Model.Tag;
 using ElbTargetGroup = Amazon.ElasticLoadBalancingV2.Model.TargetGroup;
+using Renci.SshNet.Common;
+using System.Xml;
 
 namespace Neon.Kube
 {
@@ -753,7 +755,6 @@ namespace Neon.Kube
         private readonly string                     natGatewayName;
         private readonly string                     loadBalancerName;
         private readonly string                     elbName;
-        private readonly string                     keyPairName;
         private readonly string                     masterPlacementGroupName;
         private readonly string                     workerPlacementGroupName;
 
@@ -773,7 +774,6 @@ namespace Neon.Kube
         private InternetGateway                     internetGateway;
         private NatGateway                          natGateway;
         private LoadBalancer                        loadBalancer;
-        private string                              keyPairId;
         private PlacementGroup                      masterPlacementGroup;
         private PlacementGroup                      workerPlacementGroup;
 
@@ -855,7 +855,6 @@ namespace Neon.Kube
             natGatewayName           = GetResourceName("nat-gateway");
             loadBalancerName         = GetResourceName("load-balancer");
             elbName                  = GetLoadBalancerName(clusterName, "elb");
-            keyPairName              = GetResourceName("ssh-keys");
             masterPlacementGroupName = GetResourceName("master-placement");
             workerPlacementGroupName = GetResourceName("worker-placement");
 
@@ -1091,13 +1090,12 @@ namespace Neon.Kube
             controller.AddGlobalStep("placement groups", ConfigurePlacementGroupAsync);
             controller.AddGlobalStep("external ssh ports", AssignExternalSshPorts, quiet: true);
             controller.AddGlobalStep("network", ConfigureNetworkAsync);
-            controller.AddGlobalStep("ssh key", ImportKeyPairAsync);
             controller.AddNodeStep("node instances", CreateNodeInstanceAsync);
             controller.AddGlobalStep("load balancer", ConfigureLoadBalancerAsync);
             controller.AddNodeStep("load balancer targets", WaitForSshTargetAsync);
             controller.AddGlobalStep("internet routing", async () => await UpdateNetworkAsync(NetworkOperations.InternetRouting | NetworkOperations.EnableSsh));
             //controller.AddGlobalStep("nic tags", ConfigureNicTags);   // <-- This doesn't work yet
-            controller.AddNodeStep("node ssh config", ConfigureNodeSsh);
+            controller.AddNodeStep("node user", ConfigureNodeUser);
 
             if (!controller.Run(leaveNodesConnected: false))
             {
@@ -1450,31 +1448,6 @@ namespace Neon.Kube
             // Load balancer target groups.
 
             await LoadElbTargetGroupsAsync();
-
-            // SSH keypair
-
-            try
-            {
-                var keyPairsResponse = await ec2Client.DescribeKeyPairsAsync(
-                    new DescribeKeyPairsRequest()
-                    {
-                        KeyNames = new List<string>() { keyPairName }
-                    });
-
-                keyPairId = keyPairsResponse.KeyPairs.SingleOrDefault(keyPair => keyPair.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))?.KeyPairId;
-            }
-            catch (AmazonServiceException e)
-            {
-                // AWS throw an exception when the named key pair doesn't exist.  We'll
-                // consider this to be normal and set [keyPairId=null].
-
-                if (e.ErrorCode != "InvalidKeyPair.NotFound")
-                {
-                    throw;
-                }
-
-                keyPairId = null;
-            }
 
             // Placement groups
 
@@ -2410,28 +2383,6 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Imports the SSH key pair we'll use for the node security.
-        /// </summary>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task ImportKeyPairAsync()
-        {
-            if (keyPairId == null)
-            {
-                Covenant.Assert(!string.IsNullOrEmpty(sshKey.PublicSSH2));
-
-                var keyPairResponse = await ec2Client.ImportKeyPairAsync(
-                    new ImportKeyPairRequest()
-                    {
-                        KeyName           = keyPairName,
-                        PublicKeyMaterial = Convert.ToBase64String(Encoding.UTF8.GetBytes(sshKey.PublicPUB)),
-                        TagSpecifications = GetTagSpecifications(keyPairName, ResourceType.KeyPair)
-                    });
-
-                keyPairId = keyPairResponse.KeyPairId;
-            }
-        }
-
-        /// <summary>
         /// Configures the load balancer.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
@@ -2638,21 +2589,68 @@ namespace Neon.Kube
                 // Create the instances in the subnet.
                 //
                 // Note that AWS does not support starting new instances with a specific
-                // SSH password; they use an SSH key instead.  So we need to have AWS install
-                // the key when it provisions the VM and then we'll configure the password
-                // afterwards.
+                // SSH password by default; they use an SSH key instead.  I tried to
+                // import a key pair into AWS and login with that but it failed, probably
+                // because we're using the [sysadmin] account rather than [ubuntu].
+                // Rather than logging in as [ubuntu] and fixing this up, I'm going
+                // to run a small script to do this on first boot.  This will be
+                // more resilient against connection failures.
+                //
+                // I'm going to have the instances pass a small script that will run
+                // at first boot to:
+                //
+                //      1. Enable SSH password authentication
+                //      2. Disable [root] login
+                //      3. Set the secure password for [ubuntu]
+                //      4. Create a new [temp] sudo account using same password.
+                //         We'll use this below to rename the [ubuntu] account
+                //         to [sysadmin].
+                //
+                // We'll have to remove the [ubuntu] user post boot below.
 
+                var bootScript =
+$@"#!/bin/bash
+
+# Configure SSHD:
+
+echo """" >> /etc/sshd_config
+echo ""# neonKUBE: Temporary SSHD setting updates:"" >> /etc/sshd_config
+echo """" >> /etc/sshd_config
+echo ""UsePAM yes"" >> /etc/sshd_config
+echo ""PermitRootLogin no"" >>/etc/sshd_config
+
+systemctl restart sshd
+
+# Update the [ubuntu] account password:
+
+echo ""ubuntu:{secureSshPassword}"" | chpasswd
+
+# Create the [temp] user with the UX responses:
+
+cat <<EOF > /etc/sysctl.conf | adduser --no-create-home --disabled-password --quiet temp
+
+
+
+
+y
+EOF
+
+# Give [temp] the same secure password and make it a sudoer:
+
+echo ""temp:{secureSshPassword}"" | chpasswd
+usermod -aG sudo temp
+";
                 var runResponse = await ec2Client.RunInstancesAsync(
                     new RunInstancesRequest()
                     {
                         ImageId          = ami,
-                        InstanceType     = InstanceType.FindValue(awsNodeOptions.InstanceType), 
+                        InstanceType     = InstanceType.FindValue(awsNodeOptions.InstanceType),
                         MinCount         = 1,
                         MaxCount         = 1,
-                        KeyName          = keyPairName,
                         SubnetId         = nodeSubnet.SubnetId,
                         PrivateIpAddress = node.Address.ToString(),
                         SecurityGroupIds = new List<string>() { securityGroup.GroupId },
+                        UserData         = Convert.ToBase64String(Encoding.UTF8.GetBytes(NeonHelper.ToLinuxLineEndings(bootScript))),
                         Placement        = new Placement()
                         {
                             AvailabilityZone = awsOptions.AvailabilityZone,
@@ -2742,59 +2740,59 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="node">The target node.</param>
         /// <param name="stepDelay">The step delay.</param>
-        private void ConfigureNodeSsh(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
+        private void ConfigureNodeUser(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
-            // AWS requires SSH key based authenticated for newly created instances.
+            CommandResponse response;
 
-            node.Status = "connecting...";
+            // We're going to connect with the temporary [temp] account we created
+            // in the first boot script above.  Note that we also enabled SSH password
+            // authentication and the [temp] user has the same password.
+            //
+            // We need to use the [temp] user to rename the [ubuntu] user to
+            // [sysadmin] and then login to as the [sysadmin] user to remove the
+            // [temp] user.
+            //
+            // If authentication fails for the [temp] account, we'll assume that we've
+            // already been through this and the [sysadmin] user is ready.
 
-            node.UpdateCredentials(SshCredentials.FromPrivateKey(KubeConst.SysAdminUsername, sshKey.PrivatePEM));
-            node.WaitForBoot();
+           node.Status = "connect as [temp]";
 
-            // Set the secure [sysadmin] password.
-
-            node.Status = "secure ssh password";
-
-            var passwordScript =
-$@"
-echo '{KubeConst.SysAdminUsername}:{secureSshPassword}' | chpasswd
-";
-            var response = node.SudoCommand(CommandBundle.FromScript(passwordScript));
-
-            if (response.ExitCode != 0)
+            try
             {
-                throw new KubeException($"*** ERROR: Unable to set the strong SSH password [exitcode={response.ExitCode}].");
+                node.UpdateCredentials(SshCredentials.FromUserPassword("temp", secureSshPassword));
+                node.WaitForBoot();
+
+                node.Status = "rename [ubuntu] --> [sysadmin]";
+
+                response = node.RunCommand("usermod -l sysadmin ubuntu && mv /home/ubuntu /home/sysadmin");
+
+                if (response.ExitCode != 0)
+                {
+                    throw new KubeException(response.AllText);
+                }
+            }
+            catch (SshAuthenticationException)
+            {
+                // We're going to assume that the [ubuntu] --> [sysadmin]
+                // renaming has already been completed.
             }
 
-            // We need to reconfure the OpenSSH server to enable PAM (password)
-            // authentication.  We're simply going to append a new setting to
-            // the OpenSSH config file and restart the server.  Note that the
-            // config file will be replaced with the full cluster settings later
-            // on during cluster setup, so this won't result in a mess.
+            // Reconnect as the [sysadmin] user.
 
-            node.Status = "config openssh";
-
-            var sshConfigScript =
-@"
-echo """" >> /etc/ssh/sshd_config
-echo ""UsePAM yes"" >> /etc/ssh/sshd_config
-systemctl restart sshd
-";
-            response = node.SudoCommand(CommandBundle.FromScript(sshConfigScript));
-
-            if (response.ExitCode != 0)
-            {
-                throw new KubeException($"*** ERROR: Unable to reconfigure OpenSSH [exitcode={response.ExitCode}].");
-            }
-
-            // Disconnect and then reconnect the node using password authentication to 
-            // verify that it works.
-
-            node.Status = "reconnect with password";
+            node.Status = "reconnect as [sysadmin]";
 
             node.Disconnect();
             node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUsername, secureSshPassword));
             node.Connect();
+
+            node.Status = "remove [temp] user";
+
+            response = node.RunCommand("deluser temp && rm -r /home/temp");
+
+            if (response.ExitCode != 0)
+            {
+                throw new KubeException(response.AllText);
+            }
         }
 
         /// <summary>
