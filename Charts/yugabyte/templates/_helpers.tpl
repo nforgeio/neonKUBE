@@ -52,9 +52,10 @@ Create chart name and version as used by the chart label.
 {{- define "yugabyte.master_addresses" -}}
 {{- $master_replicas := .Values.replicas.master | int -}}
 {{- $domain_name := .Values.domainName -}}
+{{- $release_name := .Release.Name -}}
   {{- range .Values.Services }}
-    {{- if eq .name printf "%s-yb-masters" .Release.Name }}
-      {{range $index := until $master_replicas }}{{if ne $index 0}},{{end}}yb-master-{{ $index }}.{{ $root.Release.Name }}-yb-masters.$(NAMESPACE).svc.{{ $domain_name }}:7100{{end}}
+    {{- if contains .name "yb-masters" }}
+      {{range $index := until $master_replicas }}{{if ne $index 0}},{{end}}yb-master-{{ $index }}.{{ $release_name }}-yb-masters.$(NAMESPACE).svc.{{ $domain_name }}:7100{{end}}
     {{- end -}}
   {{- end -}}
 {{- end -}}
