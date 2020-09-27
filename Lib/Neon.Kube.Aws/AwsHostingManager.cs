@@ -2646,7 +2646,7 @@ namespace Neon.Kube
                     new RunInstancesRequest()
                     {
                         ImageId          = ami,
-                        InstanceType     = InstanceType.FindValue(awsNodeOptions.InstanceType),
+                        InstanceType     = InstanceType.FindValue(awsNodeOptions.InstanceType), 
                         MinCount         = 1,
                         MaxCount         = 1,
                         KeyName          = keyPairName,
