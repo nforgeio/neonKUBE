@@ -280,7 +280,7 @@ spec:
           - "--fs_data_dirs=/var/yugabyte"
           {{- end }}
           - "--rpc_bind_addresses=0.0.0.0:7100" # {{ printf "$(HOSTNAME).%s.$(NAMESPACE).svc.%s" .name $root.Values.domainName }},127.0.0.1"
-          - "--server_broadcast_addresses={{ printf "$(HOSTNAME).%s.$(NAMESPACE).svc.%s" .name $root.Values.domainName }}:7100"
+          - "--server_broadcast_addresses={{ printf "$(HOSTNAME).%s-%s.$(NAMESPACE).svc.%s" $root.Release.Name .name $root.Values.domainName }}:7100"
           {{ if $root.Values.isMultiAz }}
           - "--master_addresses={{ $root.Values.masterAddresses}}"
           - "--replication_factor={{ $root.Values.replicas.totalMasters }}"
@@ -313,7 +313,7 @@ spec:
         {{ else }}
           - "/home/yugabyte/bin/yb-tserver"
           - "--fs_data_dirs={{ template "yugabyte.fs_data_dirs" $storageInfo }}"
-          - "--server_broadcast_addresses={{ printf "$(HOSTNAME).%s.$(NAMESPACE).svc.%s" .name $root.Values.domainName }}:9100"
+          - "--server_broadcast_addresses={{ printf "$(HOSTNAME).%s-%s.$(NAMESPACE).svc.%s" $root.Release.Name .name $root.Values.domainName }}:9100"
           - "--rpc_bind_addresses=0.0.0.0:9100" # {{ printf "$(HOSTNAME).%s.$(NAMESPACE).svc.%s" .name $root.Values.domainName }},127.0.0.1"
           - "--cql_proxy_bind_address=0.0.0.0:9042"
           {{ if not $root.Values.disableYsql }}
