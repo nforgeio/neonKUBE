@@ -55,7 +55,7 @@ Create chart name and version as used by the chart label.
 {{- $release_name := .Release.Name -}}
   {{- range .Values.Services }}
     {{- if contains .name "yb-masters" }}
-      {{range $index := until $master_replicas }}{{if ne $index 0}},{{end}}yb-master-{{ $index }}.{{ $release_name }}-yb-masters.$(NAMESPACE).svc.{{ $domain_name }}:7100{{end}}
+      {{range $index := until $master_replicas }}{{if ne $index 0}},{{end}}{{ $release_name }}-yb-master-{{ $index }}.{{ $release_name }}-yb-masters.$(NAMESPACE).svc.{{ $domain_name }}:7100{{end}}
     {{- end -}}
   {{- end -}}
 {{- end -}}
