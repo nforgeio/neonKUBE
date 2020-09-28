@@ -39,8 +39,15 @@ using Neon.Net;
 namespace Neon.Kube
 {
     /// <summary>
+    /// <para>
     /// Used to whitelist or blacklist an IP address or subnet within a cluster's
     /// <see cref="NetworkOptions.IngressRules"/> or <see cref="NetworkOptions.EgressAddressRules"/>.
+    /// </para>
+    /// <note>
+    /// This is currently supported only for clusters hosted on Azure.  AWS doesn't support
+    /// this scenario and we currently don't support automatic router configuration for
+    /// on-premise environments.
+    /// </note>
     /// </summary>
     public class AddressRule
     {

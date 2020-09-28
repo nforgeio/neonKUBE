@@ -209,6 +209,11 @@ namespace Neon.Kube
         /// Address rules are processed in order from first to last, so you may consider
         /// putting your blacklist rules before your whitelist rules.
         /// </note>
+        /// <note>
+        /// This is currently supported only for clusters hosted on Azure.  AWS doesn't support
+        /// this scenario and we currently don't support automatic router configuration for
+        /// on-premise environments.
+        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "ManagementAddressRules", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "managementAddressRules", ApplyNamingConventions = false)]

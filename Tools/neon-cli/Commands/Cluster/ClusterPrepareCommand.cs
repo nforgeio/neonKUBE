@@ -73,9 +73,8 @@ Server Requirements:
 --------------------
 
     * Supported version of Linux (server)
-    * Known root SSH credentials
-    * OpenSSH installed (or another SSH server)
-    * [sudo] elevates permissions without a password
+    * Known [sysadmin] sudoer user
+    * OpenSSH installed
 ";
         private const string    logBeginMarker  = "# CLUSTER-BEGIN-PREPARE ##########################################################";
         private const string    logEndMarker    = "# CLUSTER-END-PREPARE-SUCCESS ####################################################";
@@ -350,7 +349,7 @@ Server Requirements:
                 {
                     // Generate a 2048 bit SSH key pair.
 
-                    clusterLogin.SshKey = KubeHelper.GenerateSshKey(cluster.Name, "root");
+                    clusterLogin.SshKey = KubeHelper.GenerateSshKey(cluster.Name, "sysadmin");
 
                     // We're going to use WinSCP (if it's installed) to convert the OpenSSH PEM formatted key
                     // to the PPK format PuTTY/WinSCP requires.

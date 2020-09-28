@@ -50,14 +50,14 @@ using Amazon.ResourceGroups;
 using Amazon.ResourceGroups.Model;
 using Amazon.Runtime;
 
+using Renci.SshNet.Common;
+
 using Ec2Instance    = Amazon.EC2.Model.Instance;
 using Ec2Tag         = Amazon.EC2.Model.Tag;
 using Ec2VolumeType  = Amazon.EC2.VolumeType;
 using ElbAction      = Amazon.ElasticLoadBalancingV2.Model.Action;
 using ElbTag         = Amazon.ElasticLoadBalancingV2.Model.Tag;
 using ElbTargetGroup = Amazon.ElasticLoadBalancingV2.Model.TargetGroup;
-using Renci.SshNet.Common;
-using System.Xml;
 
 namespace Neon.Kube
 {
@@ -521,6 +521,14 @@ namespace Neon.Kube
         private const string neonNodeSshTagKey = neonTagKeyPrefix + "node.ssh-port";
 
         /// <summary>
+        /// Used to tag VM instances with an indication that the user-data passed
+        /// on create has already been cleared.  This data includes the secure SSH
+        /// password and we don't want to leave it around because it can be retrieved
+        /// via the AWS portal.
+        /// </summary>
+        private const string neonNodeUserDataTagKey = neonTagKeyPrefix + "node.user-data";
+
+        /// <summary>
         /// Used to tag VPC instances with a boolean indicating whether external
         /// SSH access to the cluster is currently enabled or disabled.
         /// </summary>
@@ -746,7 +754,7 @@ namespace Neon.Kube
         private readonly string                     egressAddressName;
         private readonly string                     vpcName;
         private readonly string                     dhcpOptionName;
-        private readonly string                      securityGroupName;
+        private readonly string                     securityGroupName;
         private readonly string                     publicSubnetName;
         private readonly string                     nodeSubnetName;
         private readonly string                     publicRouteTableName;
@@ -755,6 +763,7 @@ namespace Neon.Kube
         private readonly string                     natGatewayName;
         private readonly string                     loadBalancerName;
         private readonly string                     elbName;
+        private readonly string                     keyPairName;
         private readonly string                     masterPlacementGroupName;
         private readonly string                     workerPlacementGroupName;
 
@@ -774,6 +783,7 @@ namespace Neon.Kube
         private InternetGateway                     internetGateway;
         private NatGateway                          natGateway;
         private LoadBalancer                        loadBalancer;
+        private string                              keyPairId;
         private PlacementGroup                      masterPlacementGroup;
         private PlacementGroup                      workerPlacementGroup;
 
@@ -855,6 +865,7 @@ namespace Neon.Kube
             natGatewayName           = GetResourceName("nat-gateway");
             loadBalancerName         = GetResourceName("load-balancer");
             elbName                  = GetLoadBalancerName(clusterName, "elb");
+            keyPairName              = GetResourceName("ssh-keys");
             masterPlacementGroupName = GetResourceName("master-placement");
             workerPlacementGroupName = GetResourceName("worker-placement");
 
@@ -1090,12 +1101,19 @@ namespace Neon.Kube
             controller.AddGlobalStep("placement groups", ConfigurePlacementGroupAsync);
             controller.AddGlobalStep("external ssh ports", AssignExternalSshPorts, quiet: true);
             controller.AddGlobalStep("network", ConfigureNetworkAsync);
+            controller.AddGlobalStep("ssh keys", ImportKeyPairAsync);
             controller.AddNodeStep("node instances", CreateNodeInstanceAsync);
+            controller.AddNodeStep("credentials",
+                (node, stepDelay) =>
+                {
+                    // Update the node SSH proxies to use the secure SSH password.
+
+                    node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUsername, secureSshPassword));
+                },
+                quiet: true);
             controller.AddGlobalStep("load balancer", ConfigureLoadBalancerAsync);
             controller.AddNodeStep("load balancer targets", WaitForSshTargetAsync);
             controller.AddGlobalStep("internet routing", async () => await UpdateNetworkAsync(NetworkOperations.InternetRouting | NetworkOperations.EnableSsh));
-            //controller.AddGlobalStep("nic tags", ConfigureNicTags);   // <-- This doesn't work yet
-            controller.AddNodeStep("node user", ConfigureNodeUser);
 
             if (!controller.Run(leaveNodesConnected: false))
             {
@@ -1448,6 +1466,31 @@ namespace Neon.Kube
             // Load balancer target groups.
 
             await LoadElbTargetGroupsAsync();
+
+            // SSH keypair
+
+            try
+            {
+                var keyPairsResponse = await ec2Client.DescribeKeyPairsAsync(
+                    new DescribeKeyPairsRequest()
+                    {
+                        KeyNames = new List<string>() { keyPairName }
+                    });
+
+                keyPairId = keyPairsResponse.KeyPairs.SingleOrDefault(keyPair => keyPair.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))?.KeyPairId;
+            }
+            catch (AmazonServiceException e)
+            {
+                // AWS throw an exception when the named key pair doesn't exist.  We'll
+                // consider this to be normal and set [keyPairId=null].
+
+                if (e.ErrorCode != "InvalidKeyPair.NotFound")
+                {
+                    throw;
+                }
+
+                keyPairId = null;
+            }
 
             // Placement groups
 
@@ -2415,6 +2458,28 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Imports the SSH key pair we'll use for the node security.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task ImportKeyPairAsync()
+        {
+            if (keyPairId == null)
+            {
+                Covenant.Assert(!string.IsNullOrEmpty(sshKey.PublicSSH2));
+
+                var keyPairResponse = await ec2Client.ImportKeyPairAsync(
+                    new ImportKeyPairRequest()
+                    {
+                        KeyName           = keyPairName,
+                        PublicKeyMaterial = Convert.ToBase64String(Encoding.UTF8.GetBytes(sshKey.PublicPUB)),
+                        TagSpecifications = GetTagSpecifications(keyPairName, ResourceType.KeyPair)
+                    });
+
+                keyPairId = keyPairResponse.KeyPairId;
+            }
+        }
+
+        /// <summary>
         /// Waits for the load balancer SSH target group for the node to become healthy.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
@@ -2447,7 +2512,7 @@ namespace Neon.Kube
 
                     if (targetHealthState == TargetHealthStateEnum.Initial)
                     {
-                        node.Status = $"ELB initializing...";
+                        node.Status = $"target: registering...";
                         return false;
                     }
                     else if (targetHealthState == TargetHealthStateEnum.Unhealthy)
@@ -2586,59 +2651,67 @@ namespace Neon.Kube
                 Covenant.Assert(!string.IsNullOrEmpty(placementGroupName));
                 Covenant.Assert(partitionNumber > 0);
 
-                // Create the instances in the subnet.
+                // Create the instance in the node subnet.
                 //
                 // Note that AWS does not support starting new instances with a specific
-                // SSH password by default; they use an SSH key instead.  I tried to
-                // import a key pair into AWS and login with that but it failed, probably
-                // because we're using the [sysadmin] account rather than [ubuntu].
-                // Rather than logging in as [ubuntu] and fixing this up, I'm going
-                // to run a small script to do this on first boot.  This will be
-                // more resilient against connection failures.
+                // SSH password by default; they use an SSH key instead.  We also want
+                // to rename the default [ubuntu] user to our standard [sysadmin].
                 //
-                // I'm going to have the instances pass a small script that will run
-                // at first boot to:
+                // I'm going to address this by passing a first boot script as user data
+                // when creating the instance, which will:
                 //
+                //      1. Remove [ec2-instance-connect]
                 //      1. Enable SSH password authentication
-                //      2. Disable [root] login
-                //      3. Set the secure password for [ubuntu]
-                //      4. Create a new [temp] sudo account using same password.
-                //         We'll use this below to rename the [ubuntu] account
-                //         to [sysadmin].
-                //
-                // We'll have to remove the [ubuntu] user post boot below.
+                //      2. Rename the [ubuntu] user and home directory to [sysadmin]
+                //      3. Set the secure password for [sysadmin]
 
                 var bootScript =
 $@"#!/bin/bash
 
-# Configure SSHD:
+# To enable debugging for this AWS user-script, add the ""-ex"" options to the
+# comment at the top of the file and uncomment the command below.  These cause
+# each command and its output to be logged and can be viewable in the AWS portal.
+#
+# WARNING: Do not leave any of this in production builds to avoid 
+#          leaking the secure SSH password to any logs!
+#          
+# Use: #!/bin/bash -ex
+#
+# exec &> >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
 
-echo """" >> /etc/sshd_config
-echo ""# neonKUBE: Temporary SSHD setting updates:"" >> /etc/sshd_config
-echo """" >> /etc/sshd_config
-echo ""UsePAM yes"" >> /etc/sshd_config
-echo ""PermitRootLogin no"" >>/etc/sshd_config
+#------------------------------------------------------------------------------
+# Install required packagesL
 
-systemctl restart sshd
+apt-get install -yq unzip
 
-# Update the [ubuntu] account password:
+#------------------------------------------------------------------------------
+# Remove: ec2-instance-connect (this could potentially cause SSH auth issues)
 
-echo ""ubuntu:{secureSshPassword}"" | chpasswd
+apt-get remove -qy ec2-instance-connect
 
-# Create the [temp] user with the UX responses:
+#------------------------------------------------------------------------------
+# Overwrite the OpenSSH configuration with a known good one and then 
+# restart OpenSSH.
 
-cat <<EOF > /etc/sysctl.conf | adduser --no-create-home --disabled-password --quiet temp
+sshdConfigPath=/etc/ssh/sshd_config
 
-
-
-
-y
+cat <<EOF > /etc/ssh/sshd_config
+{KubeHelper.OpenSshConfig}
 EOF
 
-# Give [temp] the same secure password and make it a sudoer:
+systemctl restart ssh
 
-echo ""temp:{secureSshPassword}"" | chpasswd
-usermod -aG sudo temp
+#------------------------------------------------------------------------------
+# Update the [ubuntu] user password:
+
+echo 'ubuntu:{secureSshPassword}' | chpasswd
+
+#------------------------------------------------------------------------------
+# Rename the [ubuntu] user and home directory to [sysadmin]
+
+usermod -l sysadmin ubuntu
+mv /home/ubuntu /home/sysadmin
+usermod -d /home/sysadmin sysadmin
 ";
                 var runResponse = await ec2Client.RunInstancesAsync(
                     new RunInstancesRequest()
@@ -2650,6 +2723,7 @@ usermod -aG sudo temp
                         SubnetId         = nodeSubnet.SubnetId,
                         PrivateIpAddress = node.Address.ToString(),
                         SecurityGroupIds = new List<string>() { securityGroup.GroupId },
+                        KeyName          = keyPairName,
                         UserData         = Convert.ToBase64String(Encoding.UTF8.GetBytes(NeonHelper.ToLinuxLineEndings(bootScript))),
                         Placement        = new Placement()
                         {
@@ -2677,14 +2751,19 @@ usermod -aG sudo temp
             }
 
             // Wait for the instance to indicate that it's running.
+            //
+            // NOTE:
+            // ---- 
+            // It's possible that the instance is still stopped when a previous user data 
+            // clearing operation was interrupted (below).  We'll just restart it here
+            // to handle that.
 
-            node.Status = "provisioning...";
+            node.Status = "pending...";
 
             var invalidStates = 
                 new HashSet<int>
                 {
                     InstanceStatusCodes.ShuttingDown,
-                    InstanceStatusCodes.Stopped,
                     InstanceStatusCodes.Stopping,
                     InstanceStatusCodes.Terminated
                 };
@@ -2695,14 +2774,15 @@ usermod -aG sudo temp
                     var statusResponse = await ec2Client.DescribeInstanceStatusAsync(
                         new DescribeInstanceStatusRequest()
                         {
-                            InstanceIds = new List<string>() { awsInstance.InstanceId }
+                            InstanceIds         = new List<string>() { awsInstance.InstanceId },
+                            IncludeAllInstances = true
                         });
 
                     var status = statusResponse.InstanceStatuses.SingleOrDefault();
 
                     if (status == null)
                     {
-                        return false;       // The instance provisioning operation must still be pending.
+                        return false;       // The instance provisioning operation must still be pending?
                     }
 
                     var state = status.InstanceState.Code & 0x00FF;        // Clear the internal AWS status code bits
@@ -2715,6 +2795,16 @@ usermod -aG sudo temp
                     if (state == InstanceStatusCodes.Running)
                     {
                         node.Status = "starting...";
+                    }
+                    else if (state == InstanceStatusCodes.Stopped)
+                    {
+                        node.Status = "restarting...";
+
+                        await ec2Client.StartInstancesAsync(
+                            new StartInstancesRequest()
+                            {
+                                InstanceIds = new List<string>() { awsInstance.InstanceId }
+                            });
                     }
                     else
                     {
@@ -2732,100 +2822,88 @@ usermod -aG sudo temp
                 },
                 timeout:      operationTimeout,
                 pollInterval: operationPollInternal);
-        }
 
-        /// <summary>
-        /// Configures the node to authenticate the [sysadmin] user with the secure SSH password 
-        /// as well as the public key.
-        /// </summary>
-        /// <param name="node">The target node.</param>
-        /// <param name="stepDelay">The step delay.</param>
-        private void ConfigureNodeUser(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
-        {
-            CommandResponse response;
-
-            // We're going to connect with the temporary [temp] account we created
-            // in the first boot script above.  Note that we also enabled SSH password
-            // authentication and the [temp] user has the same password.
+            // We need to clear the instance user data because it can be displayed by
+            // the AWS portal which would expose the secure SSH password.  We'll
+            // need to stop the instance first and then restart it to pick up the change.
             //
-            // We need to use the [temp] user to rename the [ubuntu] user to
-            // [sysadmin] and then login to as the [sysadmin] user to remove the
-            // [temp] user.
-            //
-            // If authentication fails for the [temp] account, we'll assume that we've
-            // already been through this and the [sysadmin] user is ready.
+            // Note that we're only going to do this once.  We'll use a tag to indicate
+            // that the user-data has been cleared for each instance.
 
-           node.Status = "connect as [temp]";
-
-            try
+            if (!awsInstance.Instance.Tags.Any(tag => tag.Key == neonNodeUserDataTagKey && tag.Value == "cleared"))
             {
-                node.UpdateCredentials(SshCredentials.FromUserPassword("temp", secureSshPassword));
-                node.WaitForBoot();
+                node.Status = "user-data: stop instance";
 
-                node.Status = "rename [ubuntu] --> [sysadmin]";
+                await ec2Client.StopInstancesAsync(
+                    new StopInstancesRequest()
+                    {
+                         InstanceIds = new List<string>() { awsInstance.InstanceId }
+                    });
 
-                response = node.RunCommand("usermod -l sysadmin ubuntu && mv /home/ubuntu /home/sysadmin");
+                await NeonHelper.WaitForAsync(
+                    async () =>
+                    {
+                        var statusResponse = await ec2Client.DescribeInstanceStatusAsync(
+                            new DescribeInstanceStatusRequest()
+                            {
+                                InstanceIds         = new List<string>() { awsInstance.InstanceId },
+                                IncludeAllInstances = true
+                            });
 
-                if (response.ExitCode != 0)
-                {
-                    throw new KubeException(response.AllText);
-                }
+                        var status = statusResponse.InstanceStatuses.SingleOrDefault();
+                        var state  = status.InstanceState.Code & 0x00FF;        // Clear the internal AWS status code bits
+
+                        return state == InstanceStatusCodes.Stopped;
+                    },
+                    timeout:      operationTimeout,
+                    pollInterval: operationPollInternal);
+
+                node.Status = "user-data: clear";
+
+                await ec2Client.ModifyInstanceAttributeAsync(
+                    new ModifyInstanceAttributeRequest()
+                    {
+                        InstanceId = awsInstance.InstanceId,
+                        UserData   = string.Empty
+                    });
+
+                node.Status = "user-data: restart instance";
+
+                await ec2Client.StartInstancesAsync(
+                    new StartInstancesRequest()
+                    {
+                        InstanceIds = new List<string>() { awsInstance.InstanceId }
+                    });
+
+                // Wait for the instance to report being ready.
+
+                await NeonHelper.WaitForAsync(
+                    async () =>
+                    {
+                        var statusResponse = await ec2Client.DescribeInstanceStatusAsync(
+                            new DescribeInstanceStatusRequest()
+                            {
+                                InstanceIds         = new List<string>() { awsInstance.InstanceId },
+                                IncludeAllInstances = true
+                            });
+
+                        var status = statusResponse.InstanceStatuses.SingleOrDefault();
+                        var state  = status.InstanceState.Code & 0x00FF;        // Clear the internal AWS status code bits
+
+                        return state == InstanceStatusCodes.Running;
+                    },
+                    timeout: operationTimeout,
+                    pollInterval: operationPollInternal);
+
+                // Indicate that this instance's user-data has been cleared.
+
+                await ec2Client.CreateTagsAsync(
+                    new CreateTagsRequest()
+                    {
+                        Resources = new List<string>() { awsInstance.InstanceId },
+                        Tags      = new List<Ec2Tag> { new Ec2Tag(neonNodeUserDataTagKey, "cleared") }
+                    });
             }
-            catch (SshAuthenticationException)
-            {
-                // We're going to assume that the [ubuntu] --> [sysadmin]
-                // renaming has already been completed.
-            }
-
-            // Reconnect as the [sysadmin] user.
-
-            node.Status = "reconnect as [sysadmin]";
-
-            node.Disconnect();
-            node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUsername, secureSshPassword));
-            node.Connect();
-
-            node.Status = "remove [temp] user";
-
-            response = node.RunCommand("deluser temp && rm -r /home/temp");
-
-            if (response.ExitCode != 0)
-            {
-                throw new KubeException(response.AllText);
-            }
-        }
-
-        /// <summary>
-        /// Sets the tags for the subnet's network interfaces.
-        /// </summary>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task ConfigureNicTags()
-        {
-            // $todo(jefflill):
-            //
-            // I haven't been able to figure out how to tag NICs.  The problem is discovering
-            // a NIC's ARN so we can use it to update the tags.  I think we can live without
-            // this but it would be nice to solve this sometime.
-
-            //var nicPagenator = await ec2Client.DescribeNetworkInterfacesAsync(new DescribeNetworkInterfacesRequest());
-            //var nicArns      = new List<string>();
-
-            //foreach (var nic in nicPagenator.NetworkInterfaces)
-            //{
-            //    if (nic.SubnetId == subnet.SubnetId)
-            //    {
-            //        nicArns.Add(nic.NetworkInterfaceId);    // <-- This is not the NIC ARN
-            //    }
-            //}
-
-            //await elbClient.AddTagsAsync(
-            //    new AddTagsRequest()
-            //    {
-            //        ResourceArns = nicArns,
-            //        Tags         = GetTags<ElbTag>(GetResourceName("nic"))
-            //    });
-
-            await Task.CompletedTask;
         }
 
         /// <summary>

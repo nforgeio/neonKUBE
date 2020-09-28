@@ -51,135 +51,12 @@ namespace NeonCli
         /// </summary>
         /// <param name="node">The target node.</param>
         /// <param name="stepDelayed">Ignored.</param>
-        public static void ConfigureOpenSSH(SshProxy<NodeDefinition> node, TimeSpan stepDelayed)
+        public static void ConfigureOpenSsh(SshProxy<NodeDefinition> node, TimeSpan stepDelayed)
         {
             // Upload the OpenSSH server configuration, restart OpenSSH and
             // then disconnect and wait for the OpenSSH to restart.
 
-            var openSshConfig =
-@"# FILE:	       sshd_config
-# CONTRIBUTOR: Jeff Lill
-# COPYRIGHT:   Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the ""License"");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an ""AS IS"" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
-# This file is written to neonKUBE nodes during cluster preparation.
-#
-# See the sshd_config(5) manpage for details
-
-# Make it easy for operators to customize this config.
-Include /etc/ssh/sshd_config.d/*
-
-# What ports, IPs and protocols we listen for
-# Port 22
-# Use these options to restrict which interfaces/protocols sshd will bind to
-#ListenAddress ::
-#ListenAddress 0.0.0.0
-Protocol 2
-# HostKeys for protocol version 2
-HostKey /etc/ssh/ssh_host_rsa_key
-#HostKey /etc/ssh/ssh_host_dsa_key
-#HostKey /etc/ssh/ssh_host_ecdsa_key
-#HostKey /etc/ssh/ssh_host_ed25519_key
-#Privilege Separation is turned on for security
-UsePrivilegeSeparation yes
-
-# Lifetime and size of ephemeral version 1 server key
-KeyRegenerationInterval 3600
-ServerKeyBits 1024
-
-# Logging
-SyslogFacility AUTH
-LogLevel INFO
-
-# Authentication:
-LoginGraceTime 120
-PermitRootLogin no
-StrictModes yes
-
-RSAAuthentication yes
-PubkeyAuthentication yes
-#AuthorizedKeysFile	%h/.ssh/authorized_keys
-
-# Don't read the user's ~/.rhosts and ~/.shosts files
-IgnoreRhosts yes
-# For this to work you will also need host keys in /etc/ssh_known_hosts
-RhostsRSAAuthentication no
-# similar for protocol version 2
-HostbasedAuthentication no
-# Uncomment if you don't trust ~/.ssh/known_hosts for RhostsRSAAuthentication
-#IgnoreUserKnownHosts yes
-
-# To enable empty passwords, change to yes (NOT RECOMMENDED)
-PermitEmptyPasswords no
-
-# Change to yes to enable challenge-response passwords (beware issues with
-# some PAM modules and threads)
-ChallengeResponseAuthentication no
-
-# Change to no to disable tunnelled clear text passwords
-#PasswordAuthentication yes
-
-# Kerberos options
-#KerberosAuthentication no
-#KerberosGetAFSToken no
-#KerberosOrLocalPasswd yes
-#KerberosTicketCleanup yes
-
-# GSSAPI options
-#GSSAPIAuthentication no
-#GSSAPICleanupCredentials yes
-
-AllowTcpForwarding no
-X11Forwarding no
-X11DisplayOffset 10
-PermitTunnel no
-PrintMotd no
-PrintLastLog yes
-TCPKeepAlive yes
-UsePrivilegeSeparation yes
-#UseLogin no
-
-#MaxStartups 10:30:60
-#Banner /etc/issue.net
-
-# Allow client to pass locale environment variables
-AcceptEnv LANG LC_*
-
-Subsystem sftp /usr/lib/openssh/sftp-server
-
-# Set this to 'yes' to enable PAM authentication, account processing,
-# and session processing. If this is enabled, PAM authentication will
-# be allowed through the ChallengeResponseAuthentication and
-# PasswordAuthentication.  Depending on your PAM configuration,
-# PAM authentication via ChallengeResponseAuthentication may bypass
-# the setting of ""PermitRootLogin without-password"".
-# If you just want the PAM account and session checks to run without
-# PAM authentication, then enable this but set PasswordAuthentication
-# and ChallengeResponseAuthentication to 'no'.
-UsePAM yes
-
-# Allow connections to be idle for up to an 10 minutes (600 seconds)
-# before terminating them.  This configuration pings the client every
-# 30 seconds for up to 20 times without a response:
-#
-#   20*30 = 600 seconds
-
-ClientAliveInterval 30
-ClientAliveCountMax 20
-TCPKeepAlive yes
-";
-            node.UploadText("/etc/ssh/sshd_config", openSshConfig);
+            node.UploadText("/etc/ssh/sshd_config", KubeHelper.OpenSshConfig);
             node.SudoCommand("systemctl restart sshd");
         }
 
@@ -472,7 +349,7 @@ systemctl restart rsyslog.service
 
             node.Status = "configure: openssh";
 
-            ConfigureOpenSSH(node, TimeSpan.Zero);
+            ConfigureOpenSsh(node, TimeSpan.Zero);
 
             node.Status = "upload: prepare files";
 

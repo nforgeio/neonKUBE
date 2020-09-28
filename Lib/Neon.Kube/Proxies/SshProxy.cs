@@ -3317,6 +3317,21 @@ echo $? > {cmdFolder}/exit
             // In this example, [sda] is partitioned and must be the OS disk (because
             // there's no other partitioned disk).  [sdb] is not partitioned, so it
             // must be the new data disk.
+            //
+            // Note that on AWS, the partition numbers are prefixed by a "p", as in:
+            //
+            //      loop0       loop
+            //      loop1       loop
+            //      loop2       loop
+            //      loop3       loop
+            //      nvme1n1     disk
+            //      nvme0n1     disk
+            //      nvme0n1p1   part
+            //
+            // The [nvme0n1p1] partition follows this pattern.  I don't know it there's
+            // a completely general rule here, but I suspect that the "p" was added
+            // here because the disk name ended with a digit.  We'll need to handle
+            // these cases as well.
 
             // List all of the block device names along with their types.
 
@@ -3353,33 +3368,25 @@ echo $? > {cmdFolder}/exit
             foreach (var device in devices.Where(d => d.Item2 == "part"))
             {
                 var deviceName = device.Item1;
+                var diskName   = (string)null;
 
-                // Strip off any trailing digits to obtain the disk name.
+                // Strip off the trailing digit or ("p" + digit) to obtain the disk name.
 
-                var firstDigitPos = -1;
-
-                for (int i = 0; i < deviceName.Length; i++)
+                if (char.IsDigit(deviceName[deviceName.Length - 1]))
                 {
-                    if (char.IsDigit(deviceName[i]))
+                    if (deviceName[deviceName.Length - 2] == 'p')
                     {
-                        firstDigitPos = i;
-                        break;
+                        diskName = deviceName.Substring(0, deviceName.Length - 2);
                     }
-                }
+                    else
+                    {
+                        diskName = deviceName.Substring(0, deviceName.Length - 1);
+                    }
 
-                if (firstDigitPos == -1)
-                {
-                    // I don't think this will ever happen, but we'll ignore this
-                    // device just to be safe.
-
-                    continue;
-                }
-
-                var diskName = deviceName.Substring(0, firstDigitPos);
-
-                if (deviceNameToIsPartitioned.ContainsKey(diskName))
-                {
-                    deviceNameToIsPartitioned[diskName] = true;
+                    if (deviceNameToIsPartitioned.ContainsKey(diskName))
+                    {
+                        deviceNameToIsPartitioned[diskName] = true;
+                    }
                 }
             }
 
