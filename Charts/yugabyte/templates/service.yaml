@@ -41,7 +41,7 @@ metadata:
 type: Opaque
 data:
 {{- $rootCA := buildCustomCert $root.Values.tls.rootCA.cert $root.Values.tls.rootCA.key -}}
-{{- $replicas := (eq .name (printf "%s-yb-masters" $root.Release.Name)) | ternary $root.Values.replicas.master $root.Values.replicas.tserver -}}
+{{- $replicas := (contains .name "yb-masters") | ternary $root.Values.replicas.master $root.Values.replicas.tserver -}}
 {{- range $index := until ( int ( $replicas ) ) }}
 {{- $node := printf "%s-%d.%s.%s.svc.%s" $service.label $index $service.name $root.Release.Namespace $root.Values.domainName }}
 {{- $dns1 := printf "*.*.%s" $root.Release.Namespace }}
@@ -131,7 +131,7 @@ spec:
   {{ else }}
   replicas: {{ $root.Values.replicas.tserver  }}
   {{ end }}
-  {{- $storageInfo := (eq .name (printf "%s-yb-masters" $root.Release.Name) ) | ternary $root.Values.storage.master $root.Values.storage.tserver -}}
+  {{- $storageInfo := (contains .name "yb-masters") | ternary $root.Values.storage.master $root.Values.storage.tserver -}}
   {{ if not $root.Values.storage.ephemeral }}
   volumeClaimTemplates:
     {{- range $index := until (int ($storageInfo.count )) }}
