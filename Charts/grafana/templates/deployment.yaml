@@ -4,6 +4,7 @@ kind: Deployment
 metadata:
   name: {{ template "grafana.fullname" . }}
   namespace: {{ template "grafana.namespace" . }}
+  release: {{ .Release.Name }}
   labels:
     {{- include "grafana.labels" . | nindent 4 }}
 {{- if .Values.labels }}
