@@ -1255,7 +1255,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override string GetDataDevice(SshProxy<NodeDefinition> node)
+        public override string GetDataDisk(SshProxy<NodeDefinition> node)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 
@@ -1269,6 +1269,21 @@ namespace Neon.Kube
             Covenant.Assert(unpartitonedDisks.Count() == 1, "VMs are assumed to have no more than one attached data disk.");
 
             return unpartitonedDisks.Single();
+        }
+
+        /// <inheritdoc/>
+        public override string GetPartitionName(string diskName, int partition)
+        {
+            Covenant.Requires<ArgumentException>(!string.IsNullOrEmpty(diskName), nameof(diskName));
+            Covenant.Requires<ArgumentException>(diskName.StartsWith("/dev/"), nameof(diskName));
+            Covenant.Requires<ArgumentException>(1 <= partition && partition <= 4, nameof(partition));
+
+            // AWS disk partitions are named differently from other environments.
+            // Disks are named something like [/dev/nvme1n1] and the first
+            // partition will end up being named [/dev/nvme1n1p1], with "p1" 
+            // appended to the disk name.
+
+            return $"{diskName}p{partition}";
         }
 
         /// <summary>

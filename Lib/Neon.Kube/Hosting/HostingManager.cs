@@ -132,7 +132,17 @@ namespace Neon.Kube
         public abstract (string Address, int Port) GetSshEndpoint(string nodeName);
 
         /// <inheritdoc/>
-        public abstract string GetDataDevice(SshProxy<NodeDefinition> node);
+        public abstract string GetDataDisk(SshProxy<NodeDefinition> node);
+
+        /// <inheritdoc/>
+        public virtual string GetPartitionName(string diskName, int partition)
+        {
+            Covenant.Requires<ArgumentException>(!string.IsNullOrEmpty(diskName), nameof(diskName));
+            Covenant.Requires<ArgumentException>(diskName.StartsWith("/dev/"), nameof(diskName));
+            Covenant.Requires<ArgumentException>(1 <= partition && partition <= 4, nameof(partition));
+
+            return $"{diskName}{partition}";
+        }
 
         /// <summary>
         /// Used by cloud and potentially other hosting manager implementations to verify the

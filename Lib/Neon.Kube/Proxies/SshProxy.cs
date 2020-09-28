@@ -3365,9 +3365,9 @@ echo $? > {cmdFolder}/exit
             // Iterate through the partitions, extract the parent disk name
             // and then mark those disks that are partitioned.
 
-            foreach (var device in devices.Where(d => d.Item2 == "part"))
+            foreach (var partition in devices.Where(d => d.Item2 == "part"))
             {
-                var deviceName = device.Item1;
+                var deviceName = partition.Item1;
                 var diskName   = (string)null;
 
                 // Strip off the trailing digit or ("p" + digit) to obtain the disk name.

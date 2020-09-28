@@ -3,14 +3,22 @@
 #
 # ARGUMENTS:
 #
-#       DATA_DISK   - This will be passed as "PRIMARY" when there's no
-#                     data disk and node will use the OS disk or the
-#                     name of the uninitialized data disk devicce,
-#                     like "/dev/sda".
+#       DATA_DISK       - This will be passed as "PRIMARY" when there's no
+#                         data disk and node will use the OS disk or the
+#                         name of the uninitialized data disk devicce,
+#                         like "/dev/sda".
+#
+#       PARTITION       - This will be passed as the name of the partition
+#                         that will be created for the disk.  This will
+#                         generally be the name of the disk with "1" appended
+#                         like "/dev/sda1", indicating the partition #1 but
+#                         some environments append something else (AWS appends
+#                         "p1" for partition #1 to the disk name).
 #
 # NOTE: This script must be run under sudo.
 
 DATA_DISK=${1}
+PARTITION=${2}
 
 # Configure Bash strict mode so that the entire script will fail if 
 # any of the commands fail.
@@ -39,11 +47,11 @@ echo "** Initializing data disk(s)                **"
 echo "**********************************************"
 
 #------------------------------------------------------------------------------
-# Creates a partition, filling the specified drive.
+# Creates a disk partition, filling the specified drive.
 
-function partitionDrive {
+function partitionDisk {
 
-    fdisk $1 << EOF
+    fdisk --wipe-partitions always $1 << EOF
 n
 p
 1
@@ -71,8 +79,7 @@ else
 
     # Create the disk partition.
 
-    partitionDrive $DATA_DISK
-    PARTITION="${DATA_DISK}1"
+    partitionDisk $DATA_DISK
 
     # Create an EXT4 file system on the new partition.
 
@@ -96,22 +103,15 @@ if [ "$DATA_DISK" != "PRIMARY" ]; then
     # new file system and then we need to update [/etc/fstab].
     #
     # We're going to do this by listing the device UUIDs and GREPing
-    # out the line for the new device [/dev/sdc1] or [/dev/md127].  Then 
-    # we'll use Bash REGEX to extract the UUID.  Note the device 
-    # listing lines look like:
+    # out the line for the new device.  Then we'll use Bash REGEX to 
+    # extract the UUID.  Note the device listing lines look like:
     #
     #	/dev/sdc1: UUID="3d70d51a-fd8a-4761-b36d-dba5ca889b72" TYPE="ext4"
-    #
-    # or 
-    #
-    #	/dev/md127: UUID="3d70d51a-fd8a-4761-b36d-dba5ca889b72" TYPE="ext4"
-    #
-    # depending on whether we detected a single or multiple disks.
 
     BLOCKID=$(sudo -i blkid | grep $DATA_DEVICE)
     [[ "$BLOCKID" =~ UUID=\"(.*)\"\ TYPE= ]] && UUID=${BASH_REMATCH[1]}
 
-    # Update [/etc/fstab] to ensure that the new drive is mounted after reboots.
+    # Update [/etc/fstab] to ensure that the new drive is mounted after a reboot.
 
     echo UUID=$UUID /mnt-data ext4 defaults,noatime,barrier=0 0 2 | tee -a /etc/fstab
 fi

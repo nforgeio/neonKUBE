@@ -292,7 +292,7 @@ namespace Neon.Kube
         public override bool RequiresAdminPrivileges => true;
 
         /// <inheritdoc/>
-        public override string GetDataDevice(SshProxy<NodeDefinition> node)
+        public override string GetDataDisk(SshProxy<NodeDefinition> node)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 
