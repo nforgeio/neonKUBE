@@ -1233,7 +1233,7 @@ namespace Neon.Kube
                             {
                                 new InstanceBlockDeviceMappingSpecification()
                                 {
-                                    DeviceName = dataDeviceName,
+                                    DeviceName = openEBSDeviceName,
                                     Ebs        = new EbsInstanceBlockDeviceSpecification()
                                     {
                                         DeleteOnTermination = true,
