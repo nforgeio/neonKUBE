@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Chart.Name }}
+  name: {{ template "fullname" . }}
   labels:
     app: {{ .Chart.Name }}
     release: {{ .Release.Name | quote }}

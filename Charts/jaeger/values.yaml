@@ -45,7 +45,7 @@ storage:
       # cassandra.tls.enabled: false
   elasticsearch:
     scheme: http
-    host: elasticsearch-master
+    host: neon-logs-elasticsearch-master
     port: 9200
     user: elastic
     usePassword: false

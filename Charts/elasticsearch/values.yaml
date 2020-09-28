@@ -43,7 +43,7 @@ secretMounts: []
 #    path: /usr/share/elasticsearch/config/certs
 
 image: "docker.elastic.co/elasticsearch/elasticsearch"
-imageTag: "7.5.1"
+imageTag: "7.9.1"
 imagePullPolicy: "IfNotPresent"
 
 podAnnotations: {}
@@ -160,6 +160,9 @@ nodeSelector:
   neonkube.io/monitor.logs: "true"
 tolerations:
   - key: "neonkube.io/logs"
+    operator: "Exists"
+    effect: "NoSchedule"
+  - key: "neonkube.io/metrics"
     operator: "Exists"
     effect: "NoSchedule"
   - key: "node.kubernetes.io/disk-pressure"

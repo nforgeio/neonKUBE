@@ -2,7 +2,7 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ .Chart.Name }}
+  name: {{ template "uname" . }}
   labels:
     heritage: {{ .Release.Service | quote }}
     release: {{ .Release.Name | quote }}
@@ -20,7 +20,7 @@ spec:
   {{- if .Values.persistence.enabled }}
   volumeClaimTemplates:
   - metadata:
-      name: {{ template "uname" . }}
+      name: es-data
     {{- with .Values.persistence.annotations  }}
       annotations:
 {{ toYaml . | indent 8 }}
@@ -176,7 +176,7 @@ spec:
           {{- if eq .Values.roles.master "true" }}
           {{- if ge (int .Values.esMajorVersion) 7 }}
           - name: cluster.initial_master_nodes
-            value: "{{ template "endpoints" .Values }}"
+            value: "{{ template "endpoints" $ }}"
           {{- else }}
           - name: discovery.zen.minimum_master_nodes
             value: "{{ .Values.minimumMasterNodes }}"
@@ -204,7 +204,7 @@ spec:
 {{- end }}
         volumeMounts:
           {{- if .Values.persistence.enabled }}
-          - name: "{{ template "uname" . }}"
+          - name: es-data
             mountPath: /usr/share/elasticsearch/data
           {{- end }}
           {{- range .Values.secretMounts }}
