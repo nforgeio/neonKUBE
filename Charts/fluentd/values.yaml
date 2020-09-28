@@ -12,7 +12,7 @@ image:
 logLevel: info
 
 output:
-  host: elasticsearch-master.monitoring
+  host: neon-logs-elasticsearch-master.monitoring
   port: 9200
   scheme: http
   sslVersion: TLSv1

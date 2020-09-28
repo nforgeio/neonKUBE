@@ -47,7 +47,7 @@ priorityClassName: ""
 backend:
   type: forward
   forward:
-    host: fluentd.monitoring
+    host: neon-log-collector-fluentd.monitoring
     port: 24224
     tls: "off"
     tls_verify: "off"
