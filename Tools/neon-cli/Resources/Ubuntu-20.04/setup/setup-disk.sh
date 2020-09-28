@@ -59,6 +59,11 @@ p
 
 w
 EOF
+
+    # Sleep a bit to allow the change to persist.  I think something
+    # fancy is happening on AWS that requires this.
+
+    sleep 10
 }
 
 #------------------------------------------------------------------------------

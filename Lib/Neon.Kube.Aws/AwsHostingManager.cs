@@ -565,7 +565,12 @@ namespace Neon.Kube
         private static IReadOnlyList<AwsUbuntuImage> ubuntuImages;
 
         /// <summary>
-        /// Identifies the target VM block device for the data disk. 
+        /// Identifies the instance VM block device for the OS disk. 
+        /// </summary>
+        private const string osDeviceName = "/dev/sda1";
+
+        /// <summary>
+        /// Identifies the instance VM block device for the data disk. 
         /// </summary>
         private const string dataDeviceName = "/dev/sdb";
 
@@ -1140,7 +1145,7 @@ namespace Neon.Kube
                 {
                     node.Status = "openebs: checking";
 
-                    var volumeName        = $"{node.Name}-openebs";
+                    var volumeName        = GetResourceName($"{node.Name}-openebs");
                     var awsInstance       = nodeNameToAwsInstance[node.Name];
                     var openEBSVolumeType = ToEc2VolumeType(awsInstance.Metadata.Aws.OpenEBSVolumeType);
                     var volumePagenator   = ec2Client.Paginators.DescribeVolumes(new DescribeVolumesRequest());
@@ -1198,7 +1203,7 @@ namespace Neon.Kube
                                 }
                             }
 
-                            return volume.State == VolumeState.Available;
+                            return volume.State == VolumeState.Available || volume.State == VolumeState.InUse;
                         },
                         timeout:      operationTimeout,
                         pollInterval: operationPollInternal);
@@ -1212,9 +1217,30 @@ namespace Neon.Kube
                             {
                                 VolumeId   = volume.VolumeId,
                                 InstanceId = awsInstance.InstanceId,
-                                Device     = openEBSDeviceName
+                                Device     = openEBSDeviceName,
                             });
                     }
+
+                    // AWS defaults to deleting volumes on termination only for the
+                    // volumes created along with the new instance.  We want the 
+                    // OpenEBS cStore volume to be deleted as well.
+
+                    await ec2Client.ModifyInstanceAttributeAsync(
+                        new ModifyInstanceAttributeRequest()
+                        {
+                            InstanceId          = awsInstance.InstanceId,
+                            BlockDeviceMappings = new List<InstanceBlockDeviceMappingSpecification>()
+                            {
+                                new InstanceBlockDeviceMappingSpecification()
+                                {
+                                    DeviceName = dataDeviceName,
+                                    Ebs        = new EbsInstanceBlockDeviceSpecification()
+                                    {
+                                        DeleteOnTermination = true,
+                                    }
+                                }
+                            }
+                        });
                 },
                 node => node.Metadata.OpenEBS);
         }
@@ -1782,7 +1808,7 @@ namespace Neon.Kube
 
                         if (instanceTypeInfo.VCpuInfo.DefaultVCpus < KubeConst.MinMasterCores)
                         {
-                            throw new KubeException($"Master node [{node.Name}] requests [{nameof(node.Metadata.Aws.InstanceType)}={instanceType}] with [Cores={instanceTypeInfo.VCpuInfo.DefaultVCpus} MiB] which is lower than the required [{KubeConst.MinMasterCores}] cores.]");
+                            throw new KubeException($"Master node [{node.Name}] requests [{nameof(node.Metadata.Aws.InstanceType)}={instanceType}] with [Cores={instanceTypeInfo.VCpuInfo.DefaultVCpus}] which is lower than the required [{KubeConst.MinMasterCores}] cores.]");
                         }
 
                         if (instanceTypeInfo.MemoryInfo.SizeInMiB < KubeConst.MinMasterRamMiB)
@@ -1795,7 +1821,7 @@ namespace Neon.Kube
 
                         if (instanceTypeInfo.VCpuInfo.DefaultVCpus < KubeConst.MinWorkerCores)
                         {
-                            throw new KubeException($"Worker node [{node.Name}] requests [{nameof(node.Metadata.Aws.InstanceType)}={instanceType}] with [Cores={instanceTypeInfo.VCpuInfo.DefaultVCpus} MiB] which is lower than the required [{KubeConst.MinWorkerCores}] cores.]");
+                            throw new KubeException($"Worker node [{node.Name}] requests [{nameof(node.Metadata.Aws.InstanceType)}={instanceType}] with [Cores={instanceTypeInfo.VCpuInfo.DefaultVCpus}] which is lower than the required [{KubeConst.MinWorkerCores}] cores.]");
                         }
 
                         if (instanceTypeInfo.MemoryInfo.SizeInMiB < KubeConst.MinWorkerRamMiB)
@@ -2583,6 +2609,7 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task CreateNodeInstanceAsync(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
+            //-----------------------------------------------------------------
             // Create the instance if it doesn't already exist.
 
             var awsInstance     = nodeNameToAwsInstance[node.Name];
@@ -2692,6 +2719,7 @@ namespace Neon.Kube
                 Covenant.Assert(!string.IsNullOrEmpty(placementGroupName));
                 Covenant.Assert(partitionNumber > 0);
 
+                //-------------------------------------------------------------
                 // Create the instance in the node subnet.
                 //
                 // Note that AWS does not support starting new instances with a specific
@@ -2791,6 +2819,7 @@ usermod -d /home/sysadmin sysadmin
                 awsInstance.Instance = runResponse.Reservation.Instances.Single();
             }
 
+            //-----------------------------------------------------------------
             // Wait for the instance to indicate that it's running.
             //
             // NOTE:
@@ -2864,6 +2893,66 @@ usermod -d /home/sysadmin sysadmin
                 timeout:      operationTimeout,
                 pollInterval: operationPollInternal);
 
+
+            //-----------------------------------------------------------------
+            // Tag the EC2 volumes created for the instance.
+
+            node.Status = "tagging volumes";
+
+            // We need to reload the instance to obtain information on its
+            // attached volumes.
+
+            var instancePagenator = ec2Client.Paginators.DescribeInstances(new DescribeInstancesRequest());
+
+            await foreach (var reservationItem in instancePagenator.Reservations)
+            {
+                if (reservationItem.Instances.Count != 1)
+                {
+                    // We're creating instances one at a time so we can ignore
+                    // reservations with more than one instance.
+
+                    continue;
+                }
+
+                var instanceItem = reservationItem.Instances.Single();
+
+                if (instanceItem.InstanceId == awsInstance.InstanceId)
+                {
+                    awsInstance.Instance = instanceItem;
+                    break;
+                }
+            }
+
+            // So our AWS node instances will have either one or two attached 
+            // volumes.  It will always have the data volume we specified when
+            // we created the instance above.  This will have a well-known device
+            // name.  The node may (always?) also have the boot volume.  I believe
+            // that this might not be present in some situations but I'm not sure.
+            // 
+            // We'll assume that any second volume will be the OS disk.
+
+            var dataVolumeMapping = awsInstance.Instance.BlockDeviceMappings.Single(mapping => mapping.DeviceName == dataDeviceName);
+
+            await ec2Client.CreateTagsAsync(
+                new CreateTagsRequest()
+                {
+                     Resources = new List<string> { dataVolumeMapping.Ebs.VolumeId },
+                     Tags      = GetTags<Ec2Tag>(GetResourceName($"{node.Name}.data"), new ResourceTag(neonNodeNameTagKey, node.Name))
+                });
+
+            var osVolumeMapping = awsInstance.Instance.BlockDeviceMappings.SingleOrDefault(mapping => mapping.DeviceName == osDeviceName);
+
+            if (osVolumeMapping != null)
+            {
+                await ec2Client.CreateTagsAsync(
+                    new CreateTagsRequest()
+                    {
+                        Resources = new List<string> { osVolumeMapping.Ebs.VolumeId },
+                        Tags      = GetTags<Ec2Tag>(GetResourceName($"{node.Name}.os"), new ResourceTag(neonNodeNameTagKey, node.Name))
+                    });
+            }
+
+            //-----------------------------------------------------------------
             // We need to clear the instance user data because it can be displayed by
             // the AWS portal which would expose the secure SSH password.  We'll
             // need to stop the instance first and then restart it to pick up the change.
@@ -2949,7 +3038,7 @@ usermod -d /home/sysadmin sysadmin
 
         /// <summary>
         /// Constructs a target group name by appending the protocol, port and target group type 
-        /// to the base name passed.
+        /// to the base cluster name passed.
         /// </summary>
         /// <param name="clusterName">The cluster name.</param>
         /// <param name="ingressTarget">The neonKUBE target group type.</param>
