@@ -50,12 +50,12 @@ namespace Neon.Kube
         /// <summary>
         /// The minimum number of cores required by master nodes.
         /// </summary>
-        public const int MinMasterCores = 2;
+        public const int MinMasterCores = 4;
 
         /// <summary>
         /// The minimum number of cores required by worker nodes.
         /// </summary>
-        public const int MinWorkerCores = 2;
+        public const int MinWorkerCores = 4;
 
         /// <summary>
         /// The minimum RAM (MiB) required for master nodes.
