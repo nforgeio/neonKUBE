@@ -572,7 +572,7 @@ namespace Neon.Kube
         /// <summary>
         /// Identifies the target VM block device for the OpenEBS oStore disk. 
         /// </summary>
-        private const string openEBSDeviceName = "/dev/sdc";
+        private const string openEBSDeviceName = "/dev/sdf";
 
         /// <summary>
         /// Some AWS operations (like creating a NAT gateway or waiting for a load balancer
@@ -1146,11 +1146,13 @@ namespace Neon.Kube
                     var volumePagenator   = ec2Client.Paginators.DescribeVolumes(new DescribeVolumesRequest());
                     var volume            = (Volume)null;
 
-                    // Look to see if we've already created the volume.
+                    // Check if we've already created the volume.
 
                     await foreach (var volumeItem in volumePagenator.Volumes)
                     {
-                        if (volumeItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == volumeName) &&
+                        if (volumeItem.State != VolumeState.Deleting && 
+                            volumeItem.State != VolumeState.Deleted &&
+                            volumeItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == volumeName) &&
                             volumeItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
                         {
                             volume = volumeItem;
@@ -1162,7 +1164,7 @@ namespace Neon.Kube
 
                     if (volume == null)
                     {
-                        node.Status = "openebs: add cstore disk";
+                        node.Status = "openebs: create cstore volume";
 
                         var volumeResponse = await ec2Client.CreateVolumeAsync(
                             new CreateVolumeRequest()
@@ -1171,11 +1173,35 @@ namespace Neon.Kube
                                 VolumeType         = openEBSVolumeType,
                                 Size               = (int)(ByteUnits.Parse(node.Metadata.Aws.OpenEBSVolumeSize) / ByteUnits.GibiBytes),
                                 MultiAttachEnabled = false,
-                                TagSpecifications  = GetTagSpecifications(volumeName, ResourceType.Volume)
+                                TagSpecifications  = GetTagSpecifications(volumeName, ResourceType.Volume, new ResourceTag(neonNodeNameTagKey, node.Name))
                             });
 
                         volume = volumeResponse.Volume;
                     }
+
+                    // Wait for the volume to become available.
+
+                    await NeonHelper.WaitForAsync(
+                        async () =>
+                        {
+                            node.Status = "openebs: waiting for cstore volume...";
+
+                            var volumePagenator = ec2Client.Paginators.DescribeVolumes(new DescribeVolumesRequest());
+
+                            await foreach (var volumeItem in volumePagenator.Volumes)
+                            {
+                                if (volumeItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == volumeName) &&
+                                    volumeItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
+                                {
+                                    volume = volumeItem;
+                                    break;
+                                }
+                            }
+
+                            return volume.State == VolumeState.Available;
+                        },
+                        timeout:      operationTimeout,
+                        pollInterval: operationPollInternal);
 
                     // Attach the volume to the VM if it's not already attached.
 
