@@ -49,6 +49,7 @@ Selector labels
 {{- define "jaeger.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "jaeger.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
+release: {{ .Release.Name }}
 {{- end -}}
 
 {{/*
