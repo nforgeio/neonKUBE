@@ -27,6 +27,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -1769,6 +1770,14 @@ spec:
                     InstallClusterManagerAsync(firstMaster).Wait();
                 });
 
+            // Setup neon-registry.
+
+            firstMaster.InvokeIdempotentAction("setup/cluster-deploy-neon-registry",
+                () =>
+                {
+                    InstallNeonRegistryAsync(firstMaster).Wait();
+                });
+
             // Setup Kiali.
 
             firstMaster.InvokeIdempotentAction("setup/cluster-deploy-kiali",
@@ -2204,7 +2213,7 @@ rm -rf {chartName}*
                                     return false;
                                 }
 
-                                return deployments.Items.All(p => p.Status.AvailableReplicas == p.Status.Replicas);
+                                return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
                             }, 
                             timeout: TimeSpan.FromMinutes(10),
                             pollInterval: TimeSpan.FromSeconds(10));
@@ -2261,7 +2270,12 @@ rm -rf {chartName}*
                                        },
                                        PoolConfig = new V1CStorPoolConfig()
                                        {
-                                           DataRaidGroupType = DataRaidGroupType.Stripe
+                                           DataRaidGroupType = DataRaidGroupType.Stripe,
+                                           Tolerations = new List<V1Toleration>()
+                                           {
+                                               { new V1Toleration() { Effect = "NoSchedule", OperatorProperty = "Exists" } },
+                                               { new V1Toleration() { Effect = "NoExecute", OperatorProperty = "Exists" } }
+                                           }
                                        }
                                    };
 
@@ -2278,7 +2292,7 @@ rm -rf {chartName}*
                            }
                        }
 
-                       var result = k8sClient.CreateNamespacedCustomObject(JObject.FromObject(cStorPoolCluster), V1CStorPoolCluster.KubeGroup, V1CStorPoolCluster.KubeApiVersion, "openebs", "cstorpoolclusters");
+                       k8sClient.CreateNamespacedCustomObject(cStorPoolCluster, V1CStorPoolCluster.KubeGroup, V1CStorPoolCluster.KubeApiVersion, "openebs", "cstorpoolclusters");
                    });
 
             master.InvokeIdempotentAction("setup/neon-storage-openebs-cstor-storageclass",
@@ -2348,13 +2362,28 @@ rm -rf {chartName}*
                        NeonHelper.WaitFor(
                            () =>
                            {
-                               var deployments = k8sClient.ListNamespacedDeploymentAsync("istio-system", labelSelector: "release=kiali").Result;
+                               var deployments = k8sClient.ListNamespacedDeploymentAsync("istio-system", labelSelector: "app=kiali-operator").Result;
                                if (deployments == null || deployments.Items.Count == 0)
                                {
                                    return false;
                                }
 
-                               return deployments.Items.All(p => p.Status.AvailableReplicas == p.Status.Replicas);
+                               return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
+                           },
+                           timeout: TimeSpan.FromMinutes(10),
+                           pollInterval: TimeSpan.FromSeconds(10));
+
+
+                       NeonHelper.WaitFor(
+                           () =>
+                           {
+                               var deployments = k8sClient.ListNamespacedDeploymentAsync("istio-system", labelSelector: "app=kiali").Result;
+                               if (deployments == null || deployments.Items.Count == 0)
+                               {
+                                   return false;
+                               }
+
+                               return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
                            },
                            timeout: TimeSpan.FromMinutes(10),
                            pollInterval: TimeSpan.FromSeconds(10));
@@ -2404,7 +2433,7 @@ rm -rf {chartName}*
                                 return false;
                             }
 
-                            return statefulsets.Items.All(p => p.Status.Replicas == p.Status.CurrentReplicas);
+                            return statefulsets.Items.All(p => p.Status.ReadyReplicas == p.Spec.Replicas);
                         },
                         timeout: TimeSpan.FromMinutes(10),
                         pollInterval: TimeSpan.FromSeconds(10));
@@ -2433,17 +2462,23 @@ rm -rf {chartName}*
                     int i = 0;
                     foreach (var t in GetTaintsAsync(NodeLabels.LabelMetrics, "true").Result)
                     {
-                        values.Add(new KeyValuePair<string, object>($"alertmanagerSpec.tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
-                        values.Add(new KeyValuePair<string, object>($"alertmanagerSpec.tolerations[{i}].effect", t.Effect));
-                        values.Add(new KeyValuePair<string, object>($"alertmanagerSpec.tolerations[{i}].operator", "Exists"));
+                        values.Add(new KeyValuePair<string, object>($"alertmanager.alertmanagerSpec.tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
+                        values.Add(new KeyValuePair<string, object>($"alertmanager.alertmanagerSpec.tolerations[{i}].effect", t.Effect));
+                        values.Add(new KeyValuePair<string, object>($"alertmanager.alertmanagerSpec.tolerations[{i}].operator", "Exists"));
 
                         values.Add(new KeyValuePair<string, object>($"prometheusOperator.tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
                         values.Add(new KeyValuePair<string, object>($"prometheusOperator.tolerations[{i}].effect", t.Effect));
                         values.Add(new KeyValuePair<string, object>($"prometheusOperator.tolerations[{i}].operator", "Exists"));
 
-                        values.Add(new KeyValuePair<string, object>($"prometheusSpec.tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
-                        values.Add(new KeyValuePair<string, object>($"prometheusSpec.tolerations[{i}].effect", t.Effect));
-                        values.Add(new KeyValuePair<string, object>($"prometheusSpec.tolerations[{i}].operator", "Exists"));
+                        values.Add(new KeyValuePair<string, object>($"prometheusOperator.admissionWebhooks.patch.tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
+                        values.Add(new KeyValuePair<string, object>($"prometheusOperator.admissionWebhooks.patch.tolerations[{i}].effect", t.Effect));
+                        values.Add(new KeyValuePair<string, object>($"prometheusOperator.admissionWebhooks.patch.tolerations[{i}].operator", "Exists"));
+
+                        values.Add(new KeyValuePair<string, object>($"prometheus.prometheusSpec.tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
+                        values.Add(new KeyValuePair<string, object>($"prometheus.prometheusSpec.tolerations[{i}].effect", t.Effect));
+                        values.Add(new KeyValuePair<string, object>($"prometheus.prometheusSpec.tolerations[{i}].operator", "Exists"));
+
+                        
                         i++;
                     }
 
@@ -2462,7 +2497,7 @@ rm -rf {chartName}*
                                 return false;
                             }
 
-                            return deployments.Items.All(p => p.Status.AvailableReplicas == p.Status.Replicas);
+                            return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
                         },
                         timeout: TimeSpan.FromMinutes(10),
                         pollInterval: TimeSpan.FromSeconds(10));
@@ -2485,12 +2520,12 @@ rm -rf {chartName}*
                         () =>
                         {
                             var statefulsets = k8sClient.ListNamespacedStatefulSetAsync("monitoring", labelSelector: "release=neon-metrics-prometheus").Result;
-                            if (statefulsets == null || statefulsets.Items.Count == 0)
+                            if (statefulsets == null || statefulsets.Items.Count < 2)
                             {
                                 return false;
                             }
 
-                            return statefulsets.Items.All(p => p.Status.Replicas == p.Status.CurrentReplicas);
+                            return statefulsets.Items.All(p => p.Status.ReadyReplicas == p.Spec.Replicas);
                         },
                         timeout: TimeSpan.FromMinutes(10),
                         pollInterval: TimeSpan.FromSeconds(10));
@@ -2509,8 +2544,6 @@ rm -rf {chartName}*
             master.InvokeIdempotentAction("deploy/neon-metrics-cortex",
                 () =>
                 {
-                    master.Status = "deploy: neon-metrics-cortex";
-
                     switch (cluster.Definition.Monitor.Metrics.Storage)
                     {
                         case MetricsStorageOptions.Ephemeral:
@@ -2525,6 +2558,8 @@ rm -rf {chartName}*
                             break;
                     }
 
+                    master.Status = "deploy: neon-metrics-cortex";
+
                     int i = 0;
                     foreach (var t in GetTaintsAsync(NodeLabels.LabelMetrics, "true").Result)
                     {
@@ -2533,6 +2568,9 @@ rm -rf {chartName}*
                         cortexValues.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
                         i++;
                     }
+
+                    var replicas = Math.Max((cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count() / 3), 1);
+                    cortexValues.Add(new KeyValuePair<string, object>($"replicas", replicas));
 
                     InstallHelmChartAsync(master, "cortex", releaseName: "neon-metrics-cortex", @namespace: "monitoring", values: cortexValues).Wait();
                 });
@@ -2549,7 +2587,7 @@ rm -rf {chartName}*
                                 return false;
                             }
 
-                            return deployments.Items.All(p => p.Status.AvailableReplicas == p.Status.Replicas);
+                            return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
                         },
                         timeout: TimeSpan.FromMinutes(10),
                         pollInterval: TimeSpan.FromSeconds(10));
@@ -2594,7 +2632,7 @@ rm -rf {chartName}*
                                 return false;
                             }
 
-                            return deployments.Items.All(p => p.Status.AvailableReplicas == p.Status.Replicas);
+                            return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
                         },
                         timeout: TimeSpan.FromMinutes(10),
                         pollInterval: TimeSpan.FromSeconds(10));
@@ -2654,7 +2692,7 @@ rm -rf {chartName}*
                                 return false;
                             }
 
-                            return statefulsets.Items.All(p => p.Status.Replicas == p.Status.CurrentReplicas);
+                            return statefulsets.Items.All(p => p.Status.ReadyReplicas == p.Spec.Replicas);
                         },
                         timeout: TimeSpan.FromMinutes(10),
                         pollInterval: TimeSpan.FromSeconds(10));
@@ -2730,9 +2768,9 @@ rm -rf {chartName}*
                                 return false;
                             }
 
-                            return statefulsets.Items.All(p => p.Status.Replicas == p.Status.CurrentReplicas);
+                            return statefulsets.Items.All(p => p.Status.ReadyReplicas == p.Spec.Replicas);
                         },
-                        timeout: TimeSpan.FromMinutes(10),
+                        timeout: TimeSpan.FromMinutes(30),
                         pollInterval: TimeSpan.FromSeconds(10));
                 });
 
@@ -2819,12 +2857,12 @@ rm -rf {chartName}*
                            () =>
                            {
                                var statefulsets = k8sClient.ListNamespacedStatefulSetAsync("monitoring", labelSelector: "release=neon-log-collector").Result;
-                               if (statefulsets == null || statefulsets.Items.Count < 2)
+                               if (statefulsets == null || statefulsets.Items.Count == 0)
                                {
                                    return false;
                                }
 
-                               return statefulsets.Items.All(p => p.Status.Replicas == p.Status.CurrentReplicas);
+                               return statefulsets.Items.All(p => p.Status.ReadyReplicas == p.Spec.Replicas);
                            },
                          timeout: TimeSpan.FromMinutes(10),
                          pollInterval: TimeSpan.FromSeconds(10));
@@ -2870,7 +2908,7 @@ rm -rf {chartName}*
                                 return false;
                             }
 
-                            return deployments.Items.All(p => p.Status.AvailableReplicas == p.Status.Replicas);
+                            return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
                         },
                         timeout: TimeSpan.FromMinutes(10),
                         pollInterval: TimeSpan.FromSeconds(10));
@@ -2895,9 +2933,25 @@ rm -rf {chartName}*
                        int i = 0;
                        foreach (var t in GetTaintsAsync(NodeLabels.LabelLogs, "true").Result)
                        {
-                           values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
-                           values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", t.Effect));
-                           values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
+                           values.Add(new KeyValuePair<string, object>($"ingester.tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
+                           values.Add(new KeyValuePair<string, object>($"ingester.tolerations[{i}].effect", t.Effect));
+                           values.Add(new KeyValuePair<string, object>($"ingester.tolerations[{i}].operator", "Exists"));
+
+                           values.Add(new KeyValuePair<string, object>($"agent.tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
+                           values.Add(new KeyValuePair<string, object>($"agent.tolerations[{i}].effect", t.Effect));
+                           values.Add(new KeyValuePair<string, object>($"agent.tolerations[{i}].operator", "Exists"));
+
+                           values.Add(new KeyValuePair<string, object>($"collector.tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
+                           values.Add(new KeyValuePair<string, object>($"collector.tolerations[{i}].effect", t.Effect));
+                           values.Add(new KeyValuePair<string, object>($"collector.tolerations[{i}].operator", "Exists"));
+
+                           values.Add(new KeyValuePair<string, object>($"query.tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
+                           values.Add(new KeyValuePair<string, object>($"query.tolerations[{i}].effect", t.Effect));
+                           values.Add(new KeyValuePair<string, object>($"query.tolerations[{i}].operator", "Exists"));
+
+                           values.Add(new KeyValuePair<string, object>($"esIndexCleaner.tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
+                           values.Add(new KeyValuePair<string, object>($"esIndexCleaner.tolerations[{i}].effect", t.Effect));
+                           values.Add(new KeyValuePair<string, object>($"esIndexCleaner.tolerations[{i}].operator", "Exists"));
                            i++;
                        }
 
@@ -2916,7 +2970,7 @@ rm -rf {chartName}*
                                    return false;
                                }
 
-                               return deployments.Items.All(p => p.Status.AvailableReplicas == p.Status.Replicas);
+                               return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
                            },
                             timeout: TimeSpan.FromMinutes(10),
                             pollInterval: TimeSpan.FromSeconds(10));
@@ -2924,6 +2978,12 @@ rm -rf {chartName}*
 
             await Task.CompletedTask;
         }
+
+        private async Task InstallNeonRegistryAsync(SshProxy<NodeDefinition> master)
+        {
+            var cert = TlsCertificate.CreateSelfSigned("");
+        }
+        
 
         /// <summary>
         /// Installs the Neon Cluster Manager.
@@ -2951,7 +3011,7 @@ rm -rf {chartName}*
                                 return false;
                             }
 
-                            return deployments.Items.All(p => p.Status.AvailableReplicas == p.Status.Replicas);
+                            return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
                         },
                         timeout: TimeSpan.FromMinutes(10),
                         pollInterval: TimeSpan.FromSeconds(10));
@@ -2998,7 +3058,7 @@ rm -rf {chartName}*
                                 return false;
                             }
 
-                            return statefulsets.Items.All(p => p.Status.Replicas == p.Status.CurrentReplicas);
+                            return statefulsets.Items.All(p => p.Status.ReadyReplicas == p.Spec.Replicas);
                         },
                         timeout: TimeSpan.FromMinutes(10),
                         pollInterval: TimeSpan.FromSeconds(10));
@@ -3012,7 +3072,7 @@ rm -rf {chartName}*
                                 return false;
                             }
 
-                            return deployments.Items.All(p => p.Status.AvailableReplicas == p.Status.Replicas);
+                            return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
                         },
                         timeout: TimeSpan.FromMinutes(10),
                         pollInterval: TimeSpan.FromSeconds(10));
