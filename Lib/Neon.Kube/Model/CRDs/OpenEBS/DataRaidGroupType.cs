@@ -39,6 +39,7 @@ namespace Neon.Kube
     /// <summary>
     /// Enumerates the possible data raid group types.
     /// </summary>
+    [JsonConverter(typeof(StringEnumConverter))]
     public enum DataRaidGroupType
     {
         /// <summary>

@@ -39,6 +39,7 @@ namespace Neon.Kube
     /// <summary>
     /// Enumerates the possible Block Device types.
     /// </summary>
+    [JsonConverter(typeof(StringEnumConverter))]
     public enum BlockDeviceType
     {
         /// <summary>

@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using Couchbase.Configuration.Client;
@@ -46,5 +47,12 @@ namespace Neon.Kube
         /// </summary>
         [JsonProperty(PropertyName = "dataRaidGroupType", Required = Required.Always)]
         public DataRaidGroupType? DataRaidGroupType { get; set; }
+
+        /// <summary>
+        /// Tolerations to be applied to the CStor Pool pods.
+        /// </summary>
+        [JsonProperty(PropertyName = "dataRaidGroupType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public List<V1Toleration> Tolerations { get; set; }
     }
 }

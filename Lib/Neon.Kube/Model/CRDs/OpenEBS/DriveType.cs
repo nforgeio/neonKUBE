@@ -39,6 +39,7 @@ namespace Neon.Kube
     /// <summary>
     /// Enumerates the possible Drive types.
     /// </summary>
+    [JsonConverter(typeof(StringEnumConverter))]
     public enum DriveType
     {
         /// <summary>
