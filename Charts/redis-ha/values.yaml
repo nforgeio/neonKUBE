@@ -44,7 +44,7 @@ serviceAccount:
   # name:
   ## opt in/out of automounting API credentials into container
   ## https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
-  automountToken: false
+  automountToken: true
 
 ## Enables a HA Proxy for better LoadBalancing / Sentinel Master support. Automatically proxies to Redis master.
 ## Recommend for externally exposed Redis clusters.
@@ -199,7 +199,7 @@ redis:
     rdbcompression: "yes"
     rdbchecksum: "yes"
   livenessProbe:
-    initialDelaySeconds: 15
+    initialDelaySeconds: 30
 
   ## Custom redis.conf files used to override default settings. If this file is
   ## specified then the redis.config above will be ignored.
@@ -260,6 +260,11 @@ securityContext:
 nodeSelector: 
   neonkube.io/neon-system.registry: "true"
 
+tolerations: 
+- key: "node-role.kubernetes.io/master"
+  operator: "Exists"
+  effect: "NoSchedule"
+
 ## Whether the Redis server pods should be forced to run on separate nodes.
 ## This is accomplished by setting their AntiAffinity with requiredDuringSchedulingIgnoredDuringExecution as opposed to preferred.
 ## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#inter-pod-affinity-and-anti-affinity-beta-feature
@@ -307,7 +312,7 @@ affinity: |
 
 # Prometheus exporter specific configuration options
 exporter:
-  enabled: true
+  enabled: false
   image: oliver006/redis_exporter
   tag: v1.3.2
   pullPolicy: IfNotPresent
@@ -369,9 +374,9 @@ exporter:
   # prometheus exporter SCANS redis db which can take some time
   # allow different probe settings to not let container crashloop
   livenessProbe:
-    initialDelaySeconds: 15
+    initialDelaySeconds: 120
     timeoutSeconds: 3
-    periodSeconds: 15
+    periodSeconds: 30
 
 podDisruptionBudget: {}
   # maxUnavailable: 1
