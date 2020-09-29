@@ -259,14 +259,13 @@ namespace Neon.Kube
         /// <para>
         /// Specifies the default Azure virtual machine size.  You the available VM sizes are listed 
         /// <a href="https://docs.microsoft.com/en-us/azure/virtual-machines/sizes-general">here</a>.
-        /// Cluster node VMs will be provisioned with this size unless overridden by <see cref="AzureNodeOptions"/>
-        /// for specific nodes.
         /// </para>
         /// <note>
-        /// This defaults to <b>Standard_A3</b> which includes includes 4 virtual CPUs and 7 GiB RAM.
+        /// This defaults to <b>Standard_A3</b> which includes includes 4 virtual CPUs and 7 GiB RAM but
+        /// you can override this for specific cluster nodfes via <see cref="AzureNodeOptions.VmSize"/>.
         /// </note>
         /// <note>
-        /// neonKUBE clusters cannot be deployed to ARM-based Azure V, sizes.  You must
+        /// neonKUBE clusters cannot be deployed to ARM-based Azure VM sizes.  You must
         /// specify an VM size using a Intel or AMD 64-bit processor.
         /// </note>
         /// <note>
@@ -281,7 +280,8 @@ namespace Neon.Kube
 
         /// <summary>
         /// Specifies the default Azure storage type for cluster node primary disks.
-        /// This defaults to <see cref="AzureStorageType.StandardSSD"/>.
+        /// This defaults to <see cref="AzureStorageType.StandardSSD"/> and be
+        /// overridden for specific cluster nodes via <see cref="AzureNodeOptions.StorageType"/>.
         /// </summary>
         [JsonProperty(PropertyName = "DefaultStorageType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "defaultStorageType", ApplyNamingConventions = false)]
@@ -290,7 +290,8 @@ namespace Neon.Kube
 
         /// <summary>
         /// Specifies the default Azure disk size to be used when cluster node primary disks.
-        /// This defaults to <b>128 GiB</b>.
+        /// This defaults to <b>128 GiB</b> but this can be overridden for specific cluster nodes
+        /// via <see cref="AzureNodeOptions.OpenEBSDiskSize"/>.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -327,7 +328,8 @@ namespace Neon.Kube
 
         /// <summary>
         /// Specifies the default Azure storage type of be used for the cluster node primary disks.  This defaults
-        /// to <see cref="AzureStorageType.StandardHDD"/> which is a reasonable tradeoff between cost and performance.
+        /// to <see cref="AzureStorageType.StandardHDD"/> but this can be overridden for specific cluster
+        /// nodes via <see cref="AzureNodeOptions.OpenEBSStorageType"/>.
         /// </summary>
         [JsonProperty(PropertyName = "OpenEBSStorageType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "openEBSStorageType", ApplyNamingConventions = false)]
@@ -335,7 +337,8 @@ namespace Neon.Kube
         public AzureStorageType DefaultOpenEBSStorageType { get; set; } = defaultOpenEBSStorageType;
 
         /// <summary>
-        /// Specifies the default size for cluster node primary disks.  This defaults to <b>128 GiB</b>.
+        /// Specifies the default size for cluster node primary disks.  This defaults to <b>128 GiB</b>
+        /// but can be overridden for specific cluster nodes via <see cref="AzureNodeOptions.OpenEBSDiskSize"/>.
         /// </summary>
         /// <remarks>
         /// <note>
