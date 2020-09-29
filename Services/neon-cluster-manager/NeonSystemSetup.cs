@@ -31,13 +31,22 @@ namespace NeonClusterManager
 {
     public partial class NeonClusterManager : NeonService
     {
+        private static string connString = "Host=neon-system-db-citus-postgresql.neon-system;Username=postgres;Password=0987654321;Database=postgres";
+
         /// <summary>
         /// Handles setup of neon-system database.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task NeonSystemSetup()
         {
-            await SetupGrafanaAsync();
+            await WaitForCitusAsync();
+
+            var tasks = new List<Task>();
+
+            tasks.Add(SetupGrafanaAsync());
+            tasks.Add(SetupHarborAsync());
+
+            await NeonHelper.WaitAllAsync(tasks);
         }
 
         /// <summary>
@@ -46,14 +55,17 @@ namespace NeonClusterManager
         /// <returns></returns>
         public async Task WaitForCitusAsync()
         {
+            Log.LogInfo("[neon-system-db] Waiting for neon-system database to be ready.");
+
             await NeonHelper.WaitForAsync(
                     async () => 
                     (
                         await k8s.ListNamespacedStatefulSetAsync("neon-system")).Items.Any(
                             s => s.Metadata.Name == "neon-system-db-citus-postgresql-worker"
-                            && s.Status.ReadyReplicas == s.Status.Replicas
+                            && s.Status.ReadyReplicas == s.Spec.Replicas
                     ), 
-                    TimeSpan.FromSeconds(3600)
+                    TimeSpan.FromMinutes(30),
+                    TimeSpan.FromSeconds(10)
                 );
 
             await NeonHelper.WaitForAsync(
@@ -61,10 +73,27 @@ namespace NeonClusterManager
                     (
                         await k8s.ListNamespacedStatefulSetAsync("neon-system")).Items.Any(
                             s => s.Metadata.Name == "neon-system-db-citus-postgresql-master"
-                            && s.Status.ReadyReplicas == s.Status.Replicas
-                    ), 
-                    TimeSpan.FromSeconds(3600)
+                            && s.Status.ReadyReplicas == s.Spec.Replicas
+                    ),
+                    TimeSpan.FromMinutes(30),
+                    TimeSpan.FromSeconds(10)
                 );
+
+            Log.LogInfo("[neon-system-db] neon-system database is ready.");
+        }
+
+        private async Task SetupHarborAsync()
+        {
+            Log.LogInfo("[neon-system-db] Configuring for Harbor.");
+
+            var databases = new string[] { "registry", "clair", "notary_server", "notary_signer" };
+
+            foreach (var db in databases)
+            {
+                await CreateDatabaseAsync(db, "harbor", "harbor");
+            }
+
+            Log.LogInfo("[neon-system-db] Finished setup for Harbor.");
         }
 
         /// <summary>
@@ -73,65 +102,98 @@ namespace NeonClusterManager
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task SetupGrafanaAsync()
         {
-            Log.LogInfo("[neon-system-db] Waiting for neon-system database to be ready.");
-            await WaitForCitusAsync();
-
             Log.LogInfo("[neon-system-db] Configuring for Grafana.");
-            var connString = "Host=neon-system-db-citus-postgresql.neon-system;Username=postgres;Password=0987654321;Database=postgres";
 
-            var grafanaInitialized = true;
+            await CreateDatabaseAsync("grafana", "grafana");
+            
+            Log.LogInfo("[neon-system-db] Finished setup for Grafana.");
+        }
 
-            await using var conn = new NpgsqlConnection(connString);
-            await conn.OpenAsync();
-
-            await using (var cmd = new NpgsqlCommand("SELECT DATNAME FROM pg_catalog.pg_database WHERE DATNAME = 'grafana'", conn))
-            await using (var reader = await cmd.ExecuteReaderAsync())
+        /// <summary>
+        /// Helper method to create a database with default user.
+        /// </summary>
+        /// <param name="dbName"></param>
+        /// <param name="dbUser"></param>
+        /// <returns></returns>
+        private async Task CreateDatabaseAsync(string dbName, string dbUser, string dbPass = null)
+        {
+            try
             {
-                await reader.ReadAsync();
-                if (!reader.HasRows)
-                {
-                    await conn.CloseAsync();
-                    Log.LogInfo("[neon-system-db] Creating database 'grafana'.");
-                    grafanaInitialized = false;
-                    await using (var createCmd = new NpgsqlCommand("CREATE DATABASE grafana", conn))
-                    {
-                        await conn.OpenAsync();
-                        await createCmd.ExecuteNonQueryAsync();
-                        await conn.CloseAsync();
-                    }
-                }
-            }
-
-            await conn.OpenAsync();
-            await using (var cmd = new NpgsqlCommand("SELECT 'exists' FROM pg_roles WHERE rolname='grafana'", conn))
-            await using (var reader = await cmd.ExecuteReaderAsync())
-            {
-                await reader.ReadAsync();
-                if (!reader.HasRows)
-                {
-                    await conn.CloseAsync();
-                    Log.LogInfo("[neon-system-db] Creating user 'grafana'.");
-                    grafanaInitialized = false;
-                    await using (var createCmd = new NpgsqlCommand("CREATE ROLE grafana WITH LOGIN", conn))
-                    {
-                        await conn.OpenAsync();
-                        await createCmd.ExecuteNonQueryAsync();
-                        await conn.CloseAsync();
-                    }
-                }
-            }
-
-            if (!grafanaInitialized)
-            {
+                await using var conn = new NpgsqlConnection(connString);
                 await conn.OpenAsync();
-                Log.LogInfo("[neon-system-db] Setting permissions for user 'grafana' on database 'grafana'.");
-                await using (var createCmd = new NpgsqlCommand("GRANT ALL PRIVILEGES ON DATABASE grafana TO grafana", conn))
+
+                var dbInitialized = true;
+
+                await using (var cmd = new NpgsqlCommand($"SELECT DATNAME FROM pg_catalog.pg_database WHERE DATNAME = '{dbName}'", conn))
+                await using (var reader = await cmd.ExecuteReaderAsync())
                 {
-                    await createCmd.ExecuteNonQueryAsync();
-                    await conn.CloseAsync();
+                    await reader.ReadAsync();
+                    if (!reader.HasRows)
+                    {
+                        await conn.CloseAsync();
+                        Log.LogInfo($"[neon-system-db] Creating database '{dbName}'.");
+                        dbInitialized = false;
+                        await using (var createCmd = new NpgsqlCommand($"CREATE DATABASE {dbName}", conn))
+                        {
+                            await conn.OpenAsync();
+                            await createCmd.ExecuteNonQueryAsync();
+                            await conn.CloseAsync();
+                        }
+                    }
+                }
+
+                if (conn.State != System.Data.ConnectionState.Open) {
+                    await conn.OpenAsync(); 
+                }
+
+                await using (var cmd = new NpgsqlCommand($"SELECT 'exists' FROM pg_roles WHERE rolname='{dbUser}'", conn))
+                await using (var reader = await cmd.ExecuteReaderAsync())
+                {
+                    await reader.ReadAsync();
+                    if (!reader.HasRows)
+                    {
+                        await conn.CloseAsync();
+                        Log.LogInfo($"[neon-system-db] Creating user '{dbUser}'.");
+                        dbInitialized = false;
+
+                        string createCmdString;
+                        if (!string.IsNullOrEmpty(dbPass))
+                        {
+                            createCmdString = $"CREATE USER {dbUser} WITH PASSWORD '{dbPass}'";
+                        }
+                        else
+                        {
+                            createCmdString = $"CREATE ROLE {dbUser} WITH LOGIN";
+                        }
+
+                        await using (var createCmd = new NpgsqlCommand(createCmdString, conn))
+                        {
+                            await conn.OpenAsync();
+                            await createCmd.ExecuteNonQueryAsync();
+                            await conn.CloseAsync();
+                        }
+                    }
+                }
+
+                if (!dbInitialized)
+                {
+                    if (conn.State != System.Data.ConnectionState.Open)
+                    {
+                        await conn.OpenAsync();
+                    }
+
+                    Log.LogInfo($"[neon-system-db] Setting permissions for user '{dbUser}' on database '{dbName}'.");
+                    await using (var createCmd = new NpgsqlCommand($"GRANT ALL PRIVILEGES ON DATABASE {dbName} TO {dbUser}", conn))
+                    {
+                        await createCmd.ExecuteNonQueryAsync();
+                        await conn.CloseAsync();
+                    }
                 }
             }
-            Log.LogInfo("[neon-system-db] Finished setup for grafana.");
+            catch (Exception e)
+            {
+                Log.LogError(e);
+            }
         }
     }
 }

@@ -40,9 +40,10 @@ namespace NeonClusterManager
             await NeonHelper.WaitForAsync(
                     async () => 
                     (
-                        await k8s.ListNamespacedDeploymentAsync("monitoring")).Items.Any(s => s.Metadata.Name == "neon-logs-kibana" && s.Status.AvailableReplicas > 1
+                        (await k8s.ListNamespacedDeploymentAsync("monitoring", labelSelector: "release=neon-logs-kibana")).Items.All(s => s.Spec.Replicas == s.Status.AvailableReplicas)
                     ), 
-                    TimeSpan.FromSeconds(3600)
+                    TimeSpan.FromMinutes(30),
+                    TimeSpan.FromSeconds(10)
                 );
 
             Log.LogInfo("Setting up Kibana index patterns.");
