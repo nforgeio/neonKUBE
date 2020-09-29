@@ -190,7 +190,10 @@ namespace Neon.Kube
         /// putting your blacklist rules before your whitelist rules.
         /// </note>
         /// <note>
-        /// This currently applies to all network ports.
+        /// These rules currently apply to all network ports.
+        /// </note>
+        /// <note>
+        /// This is not currently supported on AWS.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "EgressAddressRules", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
