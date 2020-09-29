@@ -213,6 +213,14 @@ namespace Neon.Kube
                 }
             }
 
+            if (!clusterDefinition.Nodes.Any(n => n.Labels.NeonSystemRegistry))
+            {
+                foreach (var m in clusterDefinition.Masters)
+                {
+                    m.Labels.NeonSystemRegistry = true;
+                }
+            }
+
             if (!clusterDefinition.Nodes.Any(n => n.Labels.Istio))
             {
                 if (AllowPodsOnMasters.GetValueOrDefault())

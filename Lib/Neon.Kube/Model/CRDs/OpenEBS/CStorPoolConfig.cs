@@ -51,7 +51,7 @@ namespace Neon.Kube
         /// <summary>
         /// Tolerations to be applied to the CStor Pool pods.
         /// </summary>
-        [JsonProperty(PropertyName = "dataRaidGroupType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "tolerations", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public List<V1Toleration> Tolerations { get; set; }
     }

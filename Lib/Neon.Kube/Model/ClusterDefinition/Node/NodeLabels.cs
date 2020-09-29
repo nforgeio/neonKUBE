@@ -409,6 +409,21 @@ namespace Neon.Kube
         [DefaultValue(false)]
         public bool NeonSystemDb { get; set; } = false;
 
+        /// <summary>
+        /// Reserved label name for <see cref="LabelNeonSystemDb"/>.
+        /// </summary>
+        public const string LabelNeonSystemRegistry = ClusterDefinition.ReservedLabelPrefix + "neon-system.registry";
+
+        /// <summary>
+        /// <b>io.neonkube.neon-system.registry</b> [<c>bool</c>]: Indicates that the neon-system 
+        /// Harbor registry will be deployed to this node.  
+        /// This defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "NeonSystemRegistry", Required = Required.Default)]
+        [YamlMember(Alias = "neonSystemRegistry", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool NeonSystemRegistry { get; set; } = false;
+
         //---------------------------------------------------------------------
         // Define the logging related labels.
 
@@ -509,6 +524,7 @@ namespace Neon.Kube
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalPower,               PhysicalPower));
 
                 list.Add(new KeyValuePair<string, object>(LabelNeonSystemDb,                NeonHelper.ToBoolString(NeonSystemDb)));
+                list.Add(new KeyValuePair<string, object>(LabelNeonSystemRegistry,          NeonHelper.ToBoolString(NeonSystemRegistry)));
 
                 list.Add(new KeyValuePair<string, object>(LabelIstio,                       NeonHelper.ToBoolString(Istio)));
 
