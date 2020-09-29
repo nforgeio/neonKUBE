@@ -2299,6 +2299,9 @@ exit 0
             WriteLog(logWriter, $"Disable:  auto updates");
             node.Status = "disable: auto updates";
 
+            node.SudoCommand("systemctl stop snapd.service", RunOptions.None);
+            node.SudoCommand("systemctl mask snapd.service", RunOptions.None);
+
             node.SudoCommand("systemctl stop apt-daily.timer", RunOptions.None);
             node.SudoCommand("systemctl mask apt-daily.timer", RunOptions.None);
 

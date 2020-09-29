@@ -1132,6 +1132,14 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override void AddPostPrepareSteps(SetupController<NodeDefinition> setupController)
         {
+            // Add a step to perform low-level node initialization.
+
+            setupController.AddNodeStep("node low-level",
+                (node, stepDelay) =>
+                {
+                    KubeHelper.InitializeNode(node, secureSshPassword);
+                });
+
             // We need to add any required OpenEBS cStore disks after the node has been otherwise
             // prepared.  We need to do this here because if we created the data and OpenEBS disks
             // when the VM is initially created, the disk setup scripts executed during prepare
@@ -2726,7 +2734,7 @@ namespace Neon.Kube
                 // SSH password by default; they use an SSH key instead.  We also want
                 // to rename the default [ubuntu] user to our standard [sysadmin].
                 //
-                // I'm going to address this by passing a first boot script as user data
+                // I'm going to address this by passing a first boot script as user-data
                 // when creating the instance, which will:
                 //
                 //      1. Remove [ec2-instance-connect]
@@ -2749,7 +2757,7 @@ $@"#!/bin/bash
 # exec &> >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
 
 #------------------------------------------------------------------------------
-# Install required packagesL
+# Install required packages.
 
 apt-get install -yq unzip
 
@@ -2776,11 +2784,14 @@ systemctl restart ssh
 echo 'ubuntu:{secureSshPassword}' | chpasswd
 
 #------------------------------------------------------------------------------
-# Rename the [ubuntu] user and home directory to [sysadmin]
+# Rename the [ubuntu] user, home directory, and group to [sysadmin]
 
 usermod -l sysadmin ubuntu
+
 mv /home/ubuntu /home/sysadmin
 usermod -d /home/sysadmin sysadmin
+
+groupmod -n sysadmin ubuntu
 ";
                 var runResponse = await ec2Client.RunInstancesAsync(
                     new RunInstancesRequest()
@@ -2824,7 +2835,7 @@ usermod -d /home/sysadmin sysadmin
             //
             // NOTE:
             // ---- 
-            // It's possible that the instance is still stopped when a previous user data 
+            // It's possible that the instance is still stopped when a previous user-data 
             // clearing operation was interrupted (below).  We'll just restart it here
             // to handle that.
 
@@ -2893,7 +2904,6 @@ usermod -d /home/sysadmin sysadmin
                 timeout:      operationTimeout,
                 pollInterval: operationPollInternal);
 
-
             //-----------------------------------------------------------------
             // Tag the EC2 volumes created for the instance.
 
@@ -2953,7 +2963,7 @@ usermod -d /home/sysadmin sysadmin
             }
 
             //-----------------------------------------------------------------
-            // We need to clear the instance user data because it can be displayed by
+            // We need to clear the instance user-data because it can be displayed on
             // the AWS portal which would expose the secure SSH password.  We'll
             // need to stop the instance first and then restart it to pick up the change.
             //

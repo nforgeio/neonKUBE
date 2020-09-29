@@ -618,6 +618,7 @@ namespace Neon.Kube
         private bool                                    prefixResourceNames;
         private AzureHostingOptions                     azureOptions;
         private AzureCredentials                        azureCredentials;
+        private string                                  secureSshPassword;
         private NetworkOptions                          networkOptions;
         private string                                  region;
         private IAzure                                  azure;
@@ -889,6 +890,8 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(orgSshPassword), nameof(orgSshPassword));
             Covenant.Assert(cluster != null, $"[{nameof(AzureHostingManager)}] was created with the wrong constructor.");
 
+            this.secureSshPassword = secureSshPassword;
+
             // We need to ensure that the cluster has at least one ingress node.
 
             KubeHelper.EnsureIngressNodes(cluster.Definition);
@@ -979,6 +982,14 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override void AddPostPrepareSteps(SetupController<NodeDefinition> setupController)
         {
+            // Add a step to perform low-level node initialization.
+
+            setupController.AddNodeStep("node low-level",
+                (node, stepDelay) =>
+                {
+                    KubeHelper.InitializeNode(node, secureSshPassword);
+                });
+
             // We need to add any required OpenEBS cStore disks after the node has been otherwise
             // prepared.  We need to do this here because if we created the data and OpenEBS disks
             // when the VM is initially created, the disk setup scripts executed during prepare
