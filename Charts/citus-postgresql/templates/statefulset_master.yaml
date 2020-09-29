@@ -55,7 +55,7 @@ spec:
           chmod 0600 /home/postgres/ssl/citus.key
           chmod 0644 /home/postgres/ssl/citus.crt
           {{- end }}
-          chown -R postgres:postgres /home/postgres
+          chown -R 999:999 /home/postgres
           mkdir -p /var/lib/postgresql/data
           chmod 777 /var/lib/postgresql/data
           find /var/lib/postgresql/data -mindepth 1 -maxdepth 1 -not -name ".snapshot" -not -name "lost+found" | xargs chown -fR 999:999 || :
