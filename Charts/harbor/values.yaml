@@ -198,29 +198,29 @@ persistence:
       # Specify the "storageClass" used to provision the volume. Or the default
       # StorageClass will be used(the default).
       # Set it to "-" to disable dynamic provisioning
-      storageClass: ""
+      storageClass: "nfs"
       subPath: ""
-      accessMode: ReadWriteOnce
-      size: 5Gi
+      accessMode: ReadWriteMany
+      size: 128Gi
     chartmuseum:
       existingClaim: ""
-      storageClass: ""
+      storageClass: "nfs"
       subPath: ""
-      accessMode: ReadWriteOnce
+      accessMode: ReadWriteMany
       size: 5Gi
     jobservice:
       existingClaim: ""
-      storageClass: ""
+      storageClass: "nfs"
       subPath: ""
-      accessMode: ReadWriteOnce
-      size: 1Gi
+      accessMode: ReadWriteMany
+      size: 10Gi
     # If external database is used, the following settings for database will
     # be ignored
     database:
       existingClaim: ""
-      storageClass: ""
+      storageClass: "nfs"
       subPath: ""
-      accessMode: ReadWriteOnce
+      accessMode: ReadWriteMany
       size: 1Gi
     # If external Redis is used, the following settings for Redis will
     # be ignored
@@ -232,9 +232,9 @@ persistence:
       size: 1Gi
     trivy:
       existingClaim: ""
-      storageClass: ""
+      storageClass: "nfs"
       subPath: ""
-      accessMode: ReadWriteOnce
+      accessMode: ReadWriteMany
       size: 5Gi
   # Define which storage backend is used for registry and chartmuseum to store
   # images and charts. Refer to
@@ -382,8 +382,13 @@ nginx:
   #  requests:
   #    memory: 256Mi
   #    cpu: 100m
-  nodeSelector: {}
-  tolerations: []
+  nodeSelector: 
+    neonkube.io/neon-system.registry: "true"
+  tolerations: 
+  - operator: "Exists"
+    effect: "NoSchedule"
+  - operator: "Exists"
+    effect: "NoExecute"
   affinity: {}
   ## Additional deployment annotations
   podAnnotations: {}
@@ -399,8 +404,13 @@ portal:
   #  requests:
   #    memory: 256Mi
   #    cpu: 100m
-  nodeSelector: {}
-  tolerations: []
+  nodeSelector: 
+    neonkube.io/neon-system.registry: "true"
+  tolerations: 
+  - operator: "Exists"
+    effect: "NoSchedule"
+  - operator: "Exists"
+    effect: "NoExecute"
   affinity: {}
   ## Additional deployment annotations
   podAnnotations: {}
@@ -419,8 +429,13 @@ core:
   #  requests:
   #    memory: 256Mi
   #    cpu: 100m
-  nodeSelector: {}
-  tolerations: []
+  nodeSelector: 
+    neonkube.io/neon-system.registry: "true"
+  tolerations: 
+  - operator: "Exists"
+    effect: "NoSchedule"
+  - operator: "Exists"
+    effect: "NoExecute"
   affinity: {}
   ## Additional deployment annotations
   podAnnotations: {}
@@ -447,13 +462,18 @@ jobservice:
   serviceAccountName: ""
   maxJobWorkers: 10
   # The logger for jobs: "file", "database" or "stdout"
-  jobLogger: file
+  jobLogger: stdout
   # resources:
   #   requests:
   #     memory: 256Mi
   #     cpu: 100m
-  nodeSelector: {}
-  tolerations: []
+  nodeSelector: 
+    neonkube.io/neon-system.registry: "true"
+  tolerations:
+  - operator: "Exists"
+    effect: "NoSchedule"
+  - operator: "Exists"
+    effect: "NoExecute"
   affinity: {}
   ## Additional deployment annotations
   podAnnotations: {}
@@ -483,8 +503,13 @@ registry:
     #    memory: 256Mi
     #    cpu: 100m
   replicas: 1
-  nodeSelector: {}
-  tolerations: []
+  nodeSelector: 
+    neonkube.io/neon-system.registry: "true"
+  tolerations:
+  - operator: "Exists"
+    effect: "NoSchedule"
+  - operator: "Exists"
+    effect: "NoExecute"
   affinity: {}
   ## Additional deployment annotations
   podAnnotations: {}
@@ -529,8 +554,13 @@ chartmuseum:
   #  requests:
   #    memory: 256Mi
   #    cpu: 100m
-  nodeSelector: {}
-  tolerations: []
+  nodeSelector: 
+    neonkube.io/neon-system.registry: "true"
+  tolerations: 
+  - operator: "Exists"
+    effect: "NoSchedule"
+  - operator: "Exists"
+    effect: "NoExecute"
   affinity: {}
   ## Additional deployment annotations
   podAnnotations: {}
@@ -559,8 +589,13 @@ clair:
   # The interval of clair updaters, the unit is hour, set to 0 to
   # disable the updaters
   updatersInterval: 12
-  nodeSelector: {}
-  tolerations: []
+  nodeSelector: 
+    neonkube.io/neon-system.registry: "true"
+  tolerations: 
+  - operator: "Exists"
+    effect: "NoSchedule"
+  - operator: "Exists"
+    effect: "NoExecute"
   affinity: {}
   ## Additional deployment annotations
   podAnnotations: {}
@@ -616,8 +651,13 @@ trivy:
     limits:
       cpu: 1
       memory: 1Gi
-  nodeSelector: {}
-  tolerations: []
+  nodeSelector: 
+    neonkube.io/neon-system.registry: "true"
+  tolerations: 
+  - operator: "Exists"
+    effect: "NoSchedule"
+  - operator: "Exists"
+    effect: "NoExecute"
   affinity: {}
   ## Additional deployment annotations
   podAnnotations: {}
@@ -646,8 +686,13 @@ notary:
     #  requests:
     #    memory: 256Mi
     #    cpu: 100m
-  nodeSelector: {}
-  tolerations: []
+  nodeSelector: 
+    neonkube.io/neon-system.registry: "true"
+  tolerations: 
+  - operator: "Exists"
+    effect: "NoSchedule"
+  - operator: "Exists"
+    effect: "NoExecute"
   affinity: {}
   ## Additional deployment annotations
   podAnnotations: {}
@@ -675,14 +720,19 @@ database:
     #  requests:
     #    memory: 256Mi
     #    cpu: 100m
-    nodeSelector: {}
-    tolerations: []
+    nodeSelector: 
+      neonkube.io/neon-system.registry: "true"
+    tolerations: 
+    - operator: "Exists"
+      effect: "NoSchedule"
+    - operator: "Exists"
+      effect: "NoExecute"
     affinity: {}
   external:
     host: "neon-system-db-citus-postgresql.neon-system"
     port: "5432"
-    username: "postgres"
-    password: "password"
+    username: "harbor"
+    password: "harbor"
     coreDatabase: "registry"
     clairDatabase: "clair"
     notaryServerDatabase: "notary_server"
@@ -708,7 +758,7 @@ database:
 redis:
   # if external Redis is used, set "type" to "external"
   # and fill the connection informations in "external" section
-  type: internal
+  type: external
   internal:
     # set the service account to be used, default if left empty
     serviceAccountName: ""
@@ -719,14 +769,19 @@ redis:
     #  requests:
     #    memory: 256Mi
     #    cpu: 100m
-    nodeSelector: {}
-    tolerations: []
+    nodeSelector: 
+      neonkube.io/neon-system.registry: "true"
+    tolerations: 
+    - operator: "Exists"
+      effect: "NoSchedule"
+    - operator: "Exists"
+      effect: "NoExecute"
     affinity: {}
   external:
     # support redis, redis+sentinel
     # addr for redis: <host_redis>:<port_redis>
     # addr for redis+sentinel: <host_sentinel1>:<port_sentinel1>,<host_sentinel2>:<port_sentinel2>,<host_sentinel3>:<port_sentinel3>
-    addr: "192.168.0.2:6379"
+    addr: "neon-registry-redis-ha:6379"
     # The name of the set of Redis instances to monitor, it must be set to support redis+sentinel
     sentinelMasterSet: ""
     # The "coreDatabaseIndex" must be "0" as the library Harbor
