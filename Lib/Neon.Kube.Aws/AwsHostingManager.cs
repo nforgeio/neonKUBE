@@ -749,6 +749,7 @@ namespace Neon.Kube
         private RegionEndpoint                      regionEndpoint;
         private KubeSshKey                          sshKey;
         private string                              secureSshPassword;
+        private List<Filter>                        clusterFilter;      // Used to filter resources that belong to our cluster
         private AmazonEC2Client                     ec2Client;
         private AmazonElasticLoadBalancingV2Client  elbClient;
         private AmazonResourceGroupsClient          rgClient;
@@ -848,6 +849,14 @@ namespace Neon.Kube
             this.region             = awsOptions.Region;
             this.availabilityZone   = awsOptions.AvailabilityZone;
             this.resourceGroupName  = awsOptions.ResourceGroup;
+            this.clusterFilter      = new List<Filter>()
+            {
+                new Filter()
+                {
+                    Name   = $"tag:{neonClusterTagKey}",
+                    Values = new List<string>() { clusterName }
+                }
+            };
 
             // We're always going to prefix AWS resource names with the cluster name because
             // AWS resource names have scope and because load balancer names need to be unique
@@ -1156,7 +1165,7 @@ namespace Neon.Kube
                     var volumeName        = GetResourceName($"{node.Name}-openebs");
                     var awsInstance       = nodeNameToAwsInstance[node.Name];
                     var openEBSVolumeType = ToEc2VolumeType(awsInstance.Metadata.Aws.OpenEBSVolumeType);
-                    var volumePagenator   = ec2Client.Paginators.DescribeVolumes(new DescribeVolumesRequest());
+                    var volumePagenator   = ec2Client.Paginators.DescribeVolumes(new DescribeVolumesRequest() { Filters = clusterFilter });
                     var volume            = (Volume)null;
 
                     // Check if we've already created the volume.
@@ -1199,7 +1208,7 @@ namespace Neon.Kube
                         {
                             node.Status = "openebs: waiting for cstore volume...";
 
-                            var volumePagenator = ec2Client.Paginators.DescribeVolumes(new DescribeVolumesRequest());
+                            var volumePagenator = ec2Client.Paginators.DescribeVolumes(new DescribeVolumesRequest() { Filters = clusterFilter });
 
                             await foreach (var volumeItem in volumePagenator.Volumes)
                             {
@@ -1428,7 +1437,7 @@ namespace Neon.Kube
 
             // VPC and it's default network ACL.
 
-            var vpcPaginator = ec2Client.Paginators.DescribeVpcs(new DescribeVpcsRequest());
+            var vpcPaginator = ec2Client.Paginators.DescribeVpcs(new DescribeVpcsRequest() { Filters = clusterFilter });
 
             await foreach (var vpcItem in vpcPaginator.Vpcs)
             {
@@ -1442,7 +1451,7 @@ namespace Neon.Kube
 
             // DHCP options
 
-            var dhcpPaginator = ec2Client.Paginators.DescribeDhcpOptions(new DescribeDhcpOptionsRequest());
+            var dhcpPaginator = ec2Client.Paginators.DescribeDhcpOptions(new DescribeDhcpOptionsRequest() { Filters = clusterFilter });
 
             await foreach (var dhcpItem in dhcpPaginator.DhcpOptions)
             {
@@ -1456,7 +1465,7 @@ namespace Neon.Kube
 
             // Security Groups
 
-            var securityGroupPagenator = ec2Client.Paginators.DescribeSecurityGroups(new DescribeSecurityGroupsRequest());
+            var securityGroupPagenator = ec2Client.Paginators.DescribeSecurityGroups(new DescribeSecurityGroupsRequest() { Filters = clusterFilter });
 
             await foreach (var securityGroupItem in securityGroupPagenator.SecurityGroups)
             {
@@ -1470,7 +1479,7 @@ namespace Neon.Kube
 
             // Public and node subnets
 
-            var subnetPaginator = ec2Client.Paginators.DescribeSubnets(new DescribeSubnetsRequest());
+            var subnetPaginator = ec2Client.Paginators.DescribeSubnets(new DescribeSubnetsRequest() { Filters = clusterFilter });
 
             await foreach (var subnetItem in subnetPaginator.Subnets)
             {
@@ -1493,7 +1502,7 @@ namespace Neon.Kube
 
             // Subnet route tables
 
-            var routeTablePagenator = ec2Client.Paginators.DescribeRouteTables(new DescribeRouteTablesRequest());
+            var routeTablePagenator = ec2Client.Paginators.DescribeRouteTables(new DescribeRouteTablesRequest() { Filters = clusterFilter });
 
             await foreach (var routeTableItem in routeTablePagenator.RouteTables)
             {
@@ -1554,7 +1563,7 @@ namespace Neon.Kube
 
             // Placement groups
 
-            var placementGroupPaginator = await ec2Client.DescribePlacementGroupsAsync(new DescribePlacementGroupsRequest());
+            var placementGroupPaginator = await ec2Client.DescribePlacementGroupsAsync(new DescribePlacementGroupsRequest() { Filters = clusterFilter });
 
             foreach (var placementGroupItem in placementGroupPaginator.PlacementGroups)
             {
@@ -1575,7 +1584,7 @@ namespace Neon.Kube
 
             // Instances
 
-            var instancePaginator = ec2Client.Paginators.DescribeInstances(new DescribeInstancesRequest());
+            var instancePaginator = ec2Client.Paginators.DescribeInstances(new DescribeInstancesRequest() { Filters = clusterFilter });
 
             await foreach (var reservation in instancePaginator.Reservations)
             {
@@ -1631,7 +1640,7 @@ namespace Neon.Kube
         /// <returns>The internet gateway or <c>null</c>.</returns>
         private async Task<InternetGateway> GetInternetGatewayAsync()
         {
-            var gatewayPaginator = ec2Client.Paginators.DescribeInternetGateways(new DescribeInternetGatewaysRequest());
+            var gatewayPaginator = ec2Client.Paginators.DescribeInternetGateways(new DescribeInternetGatewaysRequest() { Filters = clusterFilter });
 
             await foreach (var gatewayItem in gatewayPaginator.InternetGateways)
             {
@@ -1700,7 +1709,7 @@ namespace Neon.Kube
         {
             // $todo(jefflill): This would be more efficient with a filter.
 
-            var networkAclPagenator = ec2Client.Paginators.DescribeNetworkAcls(new DescribeNetworkAclsRequest());
+            var networkAclPagenator = ec2Client.Paginators.DescribeNetworkAcls(new DescribeNetworkAclsRequest() { Filters = clusterFilter });
 
             await foreach (var networkAclItem in networkAclPagenator.NetworkAcls)
             {
@@ -1723,7 +1732,7 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(vpc != null, nameof(vpc));
 
-            var associationPaginator = ec2Client.Paginators.DescribeNetworkAcls(new DescribeNetworkAclsRequest());
+            var associationPaginator = ec2Client.Paginators.DescribeNetworkAcls(new DescribeNetworkAclsRequest() { Filters = clusterFilter });
 
             await foreach (var association in associationPaginator.NetworkAcls)
             {
@@ -2278,7 +2287,7 @@ namespace Neon.Kube
                     });
 
                 var securityGroupId = securityGroupResponse.GroupId;
-                var securityGroupPagenator = ec2Client.Paginators.DescribeSecurityGroups(new DescribeSecurityGroupsRequest());
+                var securityGroupPagenator = ec2Client.Paginators.DescribeSecurityGroups(new DescribeSecurityGroupsRequest() { Filters = clusterFilter });
 
                 await foreach (var securityGroupItem in securityGroupPagenator.SecurityGroups)
                 {
@@ -2913,7 +2922,7 @@ groupmod -n sysadmin ubuntu
             // We need to reload the instance to obtain information on its
             // attached volumes.
 
-            var instancePagenator = ec2Client.Paginators.DescribeInstances(new DescribeInstancesRequest());
+            var instancePagenator = ec2Client.Paginators.DescribeInstances(new DescribeInstancesRequest() { Filters = clusterFilter });
 
             await foreach (var reservationItem in instancePagenator.Reservations)
             {
