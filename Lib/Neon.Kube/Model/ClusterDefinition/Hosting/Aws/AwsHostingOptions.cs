@@ -194,7 +194,8 @@ namespace Neon.Kube
         /// <para>
         /// Identifies the default AWS instance type to be provisioned for cluster nodes that don't
         /// specify an instance type.  This defaults to <b>c4.xlarge</b> which includes 4 virtual
-        /// cores and 7.5 GiB RAM.
+        /// cores and 7.5 GiB RAM but can be overridden for specific cluster nodes via
+        /// <see cref="AwsNodeOptions.InstanceType"/>.
         /// </para>
         /// <note>
         /// neonKUBE clusters cannot be deployed to ARM-based AWS instance types.  You must
@@ -211,9 +212,53 @@ namespace Neon.Kube
         public string DefaultInstanceType { get; set; } = defaultInstanceType;
 
         /// <summary>
+        /// <para>
+        /// Specifies whether the cluster instances should be EBS-optimized by default.  
+        /// This defaults to <c>false</c> and can be overidden for specific cluster nodes
+        /// via <see cref="AwsNodeOptions.EbsOptimized"/>.
+        /// </para>
+        /// <para>
+        /// <a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-optimized.html">Amazon EBS–optimized instances</a>
+        /// </para>
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Non EBS optimized instances perform disk operation I/O to EBS volumes using the same
+        /// network used for other network operations.  This means that you may see some disk
+        /// performance declines when your instance is busy serving web traffic or running
+        /// database queries, etc.
+        /// </para>
+        /// <para>
+        /// EBS optimization can be enabled for some instance types.  This provisions extra dedicated
+        /// network bandwidth exclusively for EBS I/O.  Exactly how this works, depends on the specific
+        /// VM type.
+        /// </para>
+        /// <para>
+        /// More modern AWS VM types enable EBS optimization by default and you won't incur any
+        /// additional charges for these instances and disabling EBS optimization here or via
+        /// <see cref="AwsNodeOptions.EbsOptimized"/> won't have any effect.
+        /// </para>
+        /// <para>
+        /// Some AWS instance types can be optimized but this is disabled by default.  When you
+        /// enable this by setting <see cref="AwsHostingOptions.DefaultEbsOptimized"/><c>=true</c> or 
+        /// <see cref="AwsNodeOptions.EbsOptimized"/><c>=true</c>, you'll probably an additional
+        /// AWS hourly fee for these instances.
+        /// </para>
+        /// <para>
+        /// Some AWS instance types don't support EBS optimization.  You'll need to be sure that
+        /// this is disabled for those nodes.
+        /// </para>
+        /// </remarks>
+        [JsonProperty(PropertyName = "DefaultEbsOptimized", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "defaultEbsOptimized", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool DefaultEbsOptimized { get; set; } = false;
+
+        /// <summary>
         /// Specifies the default AWS volume type for cluster node primary disks.  This defaults
         /// to <see cref="AwsVolumeType.Gp2"/> which is SSD based and offers a reasonable
-        /// compromise between performance and cost.
+        /// compromise between performance and cost.  This can be overriden for specific cluster
+        /// nodes via <see cref="AwsNodeOptions.VolumeType"/>.
         /// </summary>
         [JsonProperty(PropertyName = "DefaultVolumeType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "defaultVolumeType", ApplyNamingConventions = false)]
@@ -222,7 +267,8 @@ namespace Neon.Kube
 
         /// <summary>
         /// Specifies the default AWS volume size for the cluster node primary disks.
-        /// This defaults to <b>128 GiB</b>.
+        /// This defaults to <b>128 GiB</b> but can be overridden for specific cluster
+        /// nodes via <see cref="AwsNodeOptions.VolumeSize"/>.
         /// </summary>
         /// <remarks>
         /// <note>
@@ -238,7 +284,8 @@ namespace Neon.Kube
         /// <summary>
         /// Specifies the default AWS volume type to use for OpenEBS cStore disks.  This defaults
         /// to <see cref="AwsVolumeType.Gp2"/> which is SSD based and offers a reasonable
-        /// compromise between performance and cost.
+        /// compromise between performance and cost.  This can be overridden for specific
+        /// cluster nodes via <see cref="AwsNodeOptions.OpenEBSVolumeType"/>.
         /// </summary>
         [JsonProperty(PropertyName = "DefaultOpenEBSVolumeType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "defaultOpenEBSVolumeType", ApplyNamingConventions = false)]
@@ -247,7 +294,8 @@ namespace Neon.Kube
 
         /// <summary>
         /// Specifies the default AWS volume size to be used when creating 
-        /// OpenEBS cStore disks.  This defaults to <b>128 GiB</b>.
+        /// OpenEBS cStore disks.  This defaults to <b>128 GiB</b> but can
+        /// be overridden for specific cluster nodes via <see cref="AwsNodeOptions.OpenEBSVolumeSize"/>.
         /// </summary>
         /// <remarks>
         /// <note>

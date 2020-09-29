@@ -2778,6 +2778,21 @@ usermod -d /home/sysadmin sysadmin
 
 groupmod -n sysadmin ubuntu
 ";
+                var ebsOptimized = awsOptions.DefaultEbsOptimized;
+
+                switch (awsNodeOptions.EbsOptimized)
+                {
+                    case TriState.True:
+
+                        ebsOptimized = true;
+                        break;
+
+                    case TriState.False:
+
+                        ebsOptimized = false;
+                        break;
+                }
+
                 var runResponse = await ec2Client.RunInstancesAsync(
                     new RunInstancesRequest()
                     {
@@ -2786,6 +2801,7 @@ groupmod -n sysadmin ubuntu
                         MinCount         = 1,
                         MaxCount         = 1,
                         SubnetId         = nodeSubnet.SubnetId,
+                        EbsOptimized     = ebsOptimized,
                         PrivateIpAddress = node.Address.ToString(),
                         SecurityGroupIds = new List<string>() { securityGroup.GroupId },
                         KeyName          = keyPairName,
