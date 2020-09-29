@@ -44,9 +44,19 @@ namespace Neon.Kube
     public class AwsNodeOptions
     {
         /// <summary>
+        /// <para>
         /// Optionally specifies the type of ECB instance to provision for this node.  The available
         /// instance types are listed <a href="https://aws.amazon.com/ec2/instance-types/">here</a>.
         /// This defaults to <see cref="AwsHostingOptions.DefaultInstanceType"/>.
+        /// </para>
+        /// <note>
+        /// neonKUBE clusters cannot be deployed to ARM-based AWS instance types.  You must
+        /// specify an instance type using a Intel or AMD 64-bit processor.
+        /// </note>
+        /// <note>
+        /// neonKUBE requires master and worker instances to have at least 4 CPUs and 4GiB RAM.  Choose
+        /// an AWS instance type that satisfies these requirements.
+        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "InstanceType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "instanceType", ApplyNamingConventions = false)]

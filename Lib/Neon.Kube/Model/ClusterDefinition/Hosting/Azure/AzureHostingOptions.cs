@@ -42,7 +42,7 @@ namespace Neon.Kube
     /// </summary>
     public class AzureHostingOptions
     {
-        private const string                defaultVmSize             = "Standard_B2S";
+        private const string                defaultVmSize             = "Standard_A3";
         internal const AzureStorageType     defaultStorageType        = AzureStorageType.StandardSSD;
         private const string                defaultDiskSize           = "128 GiB";
         internal const AzureStorageType     defaultOpenEBSStorageType = defaultStorageType;
@@ -263,11 +263,15 @@ namespace Neon.Kube
         /// for specific nodes.
         /// </para>
         /// <note>
-        /// This defaults to <b>Standard_B2S</b> which should be suitable for testing purposes
-        /// as well as relatively idle clusters.  Each <b>Standard_B2S</b> VM includes 2 virtual
-        /// cores and 4 GiB RAM.  At the time this was written, the pay-as-you-go cost for this
-        /// VM is listed at $0.0416/hour or about $30/month in a USA datacenter.  <b>Bs-series</b>
-        /// VMs are available in almost all Azure datacenters.
+        /// This defaults to <b>Standard_A3</b> which includes includes 4 virtual CPUs and 7 GiB RAM.
+        /// </note>
+        /// <note>
+        /// neonKUBE clusters cannot be deployed to ARM-based Azure V, sizes.  You must
+        /// specify an VM size using a Intel or AMD 64-bit processor.
+        /// </note>
+        /// <note>
+        /// neonKUBE requires master and worker instances to have at least 4 CPUs and 4GiB RAM.  Choose
+        /// an Azure VM size instance type that satisfies these requirements.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "DefaultVmSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]

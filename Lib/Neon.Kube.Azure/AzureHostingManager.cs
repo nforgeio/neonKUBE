@@ -984,7 +984,7 @@ namespace Neon.Kube
         {
             // Add a step to perform low-level node initialization.
 
-            setupController.AddNodeStep("node low-level",
+            setupController.AddNodeStep("node basics",
                 (node, stepDelay) =>
                 {
                     KubeHelper.InitializeNode(node, secureSshPassword);

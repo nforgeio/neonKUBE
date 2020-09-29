@@ -70,7 +70,7 @@ namespace Neon.Kube
         /// <summary>
         /// The minimum required network interface cards for master nodes.
         /// </summary>
-        public const int MinMasterNics = 2;
+        public const int MinMasterNics = 1;
 
         /// <summary>
         /// The minimum required network interface cards for worker nodes.

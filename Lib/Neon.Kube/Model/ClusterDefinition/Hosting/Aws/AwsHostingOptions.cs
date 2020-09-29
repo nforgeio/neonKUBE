@@ -47,7 +47,7 @@ namespace Neon.Kube
         /// </summary>
         internal const int MaxPlacementPartitions = 7;
 
-        private const string            defaultInstanceType      = "t3a.medium";
+        private const string            defaultInstanceType      = "c4.xlarge";
         internal const AwsVolumeType    defaultVolumeType        = AwsVolumeType.Gp2;
         private const string            defaultVolumeSize        = "128 GiB";
         internal const AwsVolumeType    defaultOpenEBSVolumeType = defaultVolumeType;
@@ -191,9 +191,19 @@ namespace Neon.Kube
         public string ResourceGroup { get; set; }
 
         /// <summary>
+        /// <para>
         /// Identifies the default AWS instance type to be provisioned for cluster nodes that don't
-        /// specify an instance type.  This defaults to <b>t3a.medium</b> which includes 2 virtual
-        /// cores and 4 GiB RAM.
+        /// specify an instance type.  This defaults to <b>c4.xlarge</b> which includes 4 virtual
+        /// cores and 7.5 GiB RAM.
+        /// </para>
+        /// <note>
+        /// neonKUBE clusters cannot be deployed to ARM-based AWS instance types.  You must
+        /// specify an instance type using a Intel or AMD 64-bit processor.
+        /// </note>
+        /// <note>
+        /// neonKUBE requires master and worker instances to have at least 4 CPUs and 4GiB RAM.  Choose
+        /// an AWS instance type that satisfies these requirements.
+        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "DefaultInstanceType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "defaultInstanceType", ApplyNamingConventions = false)]

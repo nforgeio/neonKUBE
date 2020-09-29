@@ -187,26 +187,5 @@ namespace Neon.Kube
         /// </note>
         /// </remarks>
         string GetDataDisk(SshProxy<NodeDefinition> node);
-
-        /// <summary>
-        /// Returns the name for a disk partition.
-        /// </summary>
-        /// <param name="diskName">The disk name (like: <b>"/dev/sda"</b>).</param>
-        /// <param name="partition">The partition number (between 1..4).</param>
-        /// <returns>The disk partition name.</returns>
-        /// <remarks>
-        /// <para>
-        /// For most hosting environments, the partition name is simply the
-        /// partition number appended to the disk name like <b>"/dev/sda1"</b>,
-        /// but this is not always the case.  For example, AWS names disks
-        /// like <b>"/dev/nvme0n1"</b> and partitions like <b>/dev/nvme0n1p1</b>
-        /// </para>
-        /// <para>
-        /// This method gives hosting managers a chance to return a custom
-        /// name when necessary.  The base <see cref="HostingManager.GetPartitionName(string, int)"/>
-        /// method simply appends the partition number to the disk name.
-        /// </para>
-        /// </remarks>
-        string GetPartitionName(string diskName, int partition);
     }
 }

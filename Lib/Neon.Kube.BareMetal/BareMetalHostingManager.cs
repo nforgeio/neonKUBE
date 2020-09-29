@@ -246,7 +246,11 @@ namespace Neon.Kube
                     {
                         // NOTE: Nodes should still be connected from the last step.
 
-                        if (node.ListUnpartitionedDisks().Count() > 0)
+                        var unpartitonedDisks = node.ListDisks()
+                            .Where(disk => disk.Value.Partitions.Count == 0)
+                            .Select(disk => disk.Value.DiskName);
+
+                        if (unpartitonedDisks.Count() > 0)
                         {
                             node.Metadata.OpenEBS = true;
 

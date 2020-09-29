@@ -91,7 +91,12 @@ namespace Neon.Kube
         public string HostPassword { get; set; }
 
         /// <summary>
-        /// The default number of virtual processors to assign to each cluster virtual machine.
+        /// <para>
+        /// The default number of virtual processors to assign to each cluster virtual machine.  
+        /// </para>
+        /// <note>
+        /// neonKUBE requires that each master and worker node have at least 4 CPUs.
+        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "Processors", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "processors", ApplyNamingConventions = false)]
@@ -99,9 +104,14 @@ namespace Neon.Kube
         public int Processors { get; set; } = 4;
 
         /// <summary>
+        /// <para>
         /// Specifies the default amount of memory to allocate to each cluster virtual machine.  This is specified as a string
         /// that can be a byte count or a number with units like <b>512MiB</b>, <b>0.5GiB</b>, <b>2iGB</b>, or <b>1TiB</b>.  
         /// This defaults to <b>4GiB</b>.
+        /// </para>
+        /// <note>
+        /// neonKUBE requires that each master and worker node have at least 4GiB of RAM.
+        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "Memory", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "memory", ApplyNamingConventions = false)]
