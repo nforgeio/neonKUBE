@@ -36,9 +36,12 @@ using Neon.Retry;
 using Neon.Time;
 
 using ICSharpCode.SharpZipLib.Zip;
+
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
 using Renci.SshNet;
 using Renci.SshNet.Common;
-using Couchbase.Management;
 
 // $todo(jefflill):
 //
@@ -3277,148 +3280,128 @@ echo $? > {cmdFolder}/exit
         }
 
         /// <summary>
-        /// <para>
-        /// Returns a dictionary mapping block device names to a boolean indicating
-        /// whether the device is partitioned or not.
-        /// </para>
-        /// <note>
-        /// We're going to exclude any floppy disks from the list.
-        /// </note>
+        /// Lists information about the disks on the remote machine.
         /// </summary>
-        /// <returns>The device dictionary.</returns>
-        private Dictionary<string, bool> ListDisks()
+        /// <param name="includeFloppy">Optionally include floppy disks.</param>
+        /// <returns>
+        /// A <see cref="Dictionary{TKey, TValue}"/> relating the case sensitive 
+        /// disk name to a <see cref="LinuxDiskInfo"/> including information
+        /// on the disk partitions.
+        /// </returns>
+        public Dictionary<string, LinuxDiskInfo> ListDisks(bool includeFloppy = false)
         {
-            // Linux does not guarentee that the device names for specific devices
-            // will remain the same across reboots or even first boot.  This is a
-            // problem for cluster setup when a data disk has been attached, which
-            // current applies only to cloud environments.
-            //
-            // We need to be able to identify the OS for the on-premise hypervisor 
-            // hosting environments so we can resize the OS disk that was created 
-            // with the original size of the node image to the required size as
-            // well as to identify the OpenEBS cStore device for all environments.
-            //
-            // This method uses the Linux [lsblk] to list the block devices and then
-            // look for disks that haven't been partitioned.  The command output
-            // will look something like this:
-            //
-            //      fd0   disk
-            //      loop0 loop
-            //      loop2 loop
-            //      loop3 loop
-            //      loop4 loop
-            //      loop5 loop
-            //      sda   disk
-            //      sda1  part
-            //      sda2  part
-            //      sdb   disk
-            //      sr0   rom
-            //
-            // In this example, [sda] is partitioned and must be the OS disk (because
-            // there's no other partitioned disk).  [sdb] is not partitioned, so it
-            // must be the new data disk.
-            //
-            // Note that on AWS, the partition numbers are prefixed by a "p", as in:
-            //
-            //      loop0       loop
-            //      loop1       loop
-            //      loop2       loop
-            //      loop3       loop
-            //      nvme1n1     disk
-            //      nvme0n1     disk
-            //      nvme0n1p1   part
-            //
-            // The [nvme0n1p1] partition follows this pattern.  I don't know it there's
-            // a completely general rule here, but I suspect that the "p" was added
-            // here because the disk name ended with a digit.  We'll need to handle
-            // these cases as well.
+            var nameToDisk = new Dictionary<string, LinuxDiskInfo>();
 
-            // List all of the block device names along with their types.
+            // We're going to use the [lsblk --json -b] command to list the block
+            // devices as JSON with sizes in bytes.  The result will look something
+            // like this:
+            //     
+            //     {
+            //         "blockdevices": [
+            //           {"name":"fd0", "maj:min":"2:0", "rm":true, "size":4096, "ro":false, "type":"disk", "mountpoint":null},
+            //           {"name":"loop0", "maj:min":"7:0", "rm":false, "size":57614336, "ro":true, "type":"loop", "mountpoint":"/snap/core18/1705"},
+            //           {"name":"loop1", "maj:min":"7:1", "rm":false, "size":28405760, "ro":true, "type":"loop", "mountpoint":"/snap/snapd/7264"},
+            //           {"name":"loop2", "maj:min":"7:2", "rm":false, "size":72318976, "ro":true, "type":"loop", "mountpoint":"/snap/lxd/14804"},
+            //           {"name":"loop3", "maj:min":"7:3", "rm":false, "size":58007552, "ro":true, "type":"loop", "mountpoint":"/snap/core18/1885"},
+            //           {"name":"loop4", "maj:min":"7:4", "rm":false, "size":31735808, "ro":true, "type":"loop", "mountpoint":"/snap/snapd/9279"},
+            //           {"name":"loop5", "maj:min":"7:5", "rm":false, "size":71921664, "ro":true, "type":"loop", "mountpoint":"/snap/lxd/17320"},
+            //           {"name":"sda", "maj:min":"8:0", "rm":false, "size":10737418240, "ro":false, "type":"disk", "mountpoint":null,
+            //              "children": [
+            //                 {"name":"sda1", "maj:min":"8:1", "rm":false, "size":1048576, "ro":false, "type":"part", "mountpoint":null},
+            //                 {"name":"sda2", "maj:min":"8:2", "rm":false, "size":10734272512, "ro":false, "type":"part", "mountpoint":"/"}
+            //              ]
+            //           },
+            //           {"name":"sr0", "maj:min":"11:0", "rm":true, "size":1073741312, "ro":false, "type":"rom", "mountpoint":null}
+            //        ]
+            //     }
 
-            var result = SudoCommand("lsblk --output NAME,TYPE --tree=SIZE --noheadings");
+            var response = SudoCommand("lsblk --json -b");
 
-            result.EnsureSuccess();
+            response.EnsureSuccess();
 
-            var devices = new List<Tuple<string, string>>();
+            var rootObject  = JObject.Parse(response.OutputText);
+            var deviceArray = (JArray)rootObject.Property("blockdevices").Value;
 
-            foreach (var line in result.OutputText.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+            foreach (var device in deviceArray.Select(item => (JObject)(item)))
             {
-                var columns = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                var deviceName  = device.Property("name").ToObject<string>();
+                var isRemovable = device.Property("rm").ToObject<bool>();
+                var size        = device.Property("size").ToObject<long>();
+                var isReadOnly  = device.Property("ro").ToObject<bool>();
+                var type        = device.Property("type").ToObject<string>();
 
-                if (columns[0].StartsWith("fd"))
+                if (type != "disk")
                 {
-                    continue;   // Exclude floppy disks
+                    continue;
                 }
 
-                devices.Add(new Tuple<string, string>(columns[0].Trim(), columns[1].Trim()));
-            }
+                // $hack(jefflill): I'm assuming that floppy disks are named like: fd#
 
-            // Iterate through the devices and add the disks to a dictionary.
-
-            var deviceNameToIsPartitioned = new Dictionary<string, bool>();
-
-            foreach (var device in devices.Where(d => d.Item2 == "disk"))
-            {
-                deviceNameToIsPartitioned.Add(device.Item1, false);
-            }
-
-            // Iterate through the partitions, extract the parent disk name
-            // and then mark those disks that are partitioned.
-
-            foreach (var partition in devices.Where(d => d.Item2 == "part"))
-            {
-                var deviceName = partition.Item1;
-                var diskName   = (string)null;
-
-                // Strip off the trailing digit or ("p" + digit) to obtain the disk name.
-
-                if (char.IsDigit(deviceName[deviceName.Length - 1]))
+                if (deviceName.Length == 3 && deviceName.StartsWith("fd") && char.IsDigit(deviceName[2]))
                 {
-                    if (deviceName[deviceName.Length - 2] == 'p')
-                    {
-                        diskName = deviceName.Substring(0, deviceName.Length - 2);
-                    }
-                    else
-                    {
-                        diskName = deviceName.Substring(0, deviceName.Length - 1);
-                    }
+                    // Looks like a floppy device.
 
-                    if (deviceNameToIsPartitioned.ContainsKey(diskName))
+                    if (!includeFloppy)
                     {
-                        deviceNameToIsPartitioned[diskName] = true;
+                        continue;
                     }
                 }
+
+                deviceName = $"/dev/{deviceName}";
+
+                var partitions   = new List<LinuxDiskPartition>();
+                var partitionNum = 1;
+                var children     = device.Property("children");
+
+                if (children != null)
+                {
+                    foreach (var partition in children
+                        .Value
+                        .ToObject<JArray>()
+                        .Select(item => (JObject)item))
+                    {
+                        var partitionName = partition.Property("name").ToObject<string>();
+                        var partitionSize = partition.Property("size").ToObject<long>();
+                        var partitionType = partition.Property("type").ToObject<string>();
+                        var mountPoint = partition.Property("mountpoint").ToObject<string>();
+
+                        if (partitionType != "part")
+                        {
+                            continue;
+                        }
+
+                        partitions.Add(new LinuxDiskPartition(partitionNum++, $"/dev/{partitionName}", partitionSize, mountPoint));
+                    }
+                }
+
+                nameToDisk.Add(deviceName, new LinuxDiskInfo(deviceName, size, isRemovable, isReadOnly, partitions));
             }
 
-            return deviceNameToIsPartitioned;
+            return nameToDisk;
         }
 
         /// <summary>
-        /// Returns the names of the node's partitioned disks.  At first boot, the only
-        /// partitioned disk should be the operating system disk.
+        /// Returns the names of any unpartitioned disks (excluding floppy disks).
         /// </summary>
-        /// <returns>The list of partitioned disk names (like "/dev/sda").</returns>
-        public IEnumerable<string> ListPartitionedDisks()
+        /// <returns>The names of the unpartitioned disks.</returns>
+        public List<string> ListUnpartitionedDisks()
         {
-            var deviceNameToIsPartitioned = ListDisks();
-
-            return deviceNameToIsPartitioned
-                .Where(keyValue => keyValue.Value)
-                .Select(keyValue => $"/dev/{keyValue.Key}");
+            return ListDisks()
+                .Where(item => item.Value.Partitions.Count == 0)
+                .Select(item => item.Key)
+                .ToList();
         }
 
         /// <summary>
-        /// Returns the names of the node's unpartitioned disk block devices.  This can
-        /// be useful for identifying newly attached data disks during cluster setup.
+        /// Returns the names of any partitioned disks (excluding floppy disks).
         /// </summary>
-        /// <returns>The list of unpartitioned Linux disk names (like "/dev/sda").</returns>
-        public IEnumerable<string> ListUnpartitionedDisks()
+        /// <returns>The names of the unpartitioned disks.</returns>
+        public List<string> ListPartitionedDisks()
         {
-            var deviceNameToIsPartitioned = ListDisks();
-
-            return deviceNameToIsPartitioned
-                .Where(keyValue => !keyValue.Value)
-                .Select(keyValue => $"/dev/{keyValue.Key}");
+            return ListDisks()
+                .Where(item => item.Value.Partitions.Count != 0)
+                .Select(item => item.Key)
+                .ToList();
         }
 
         /// <summary>

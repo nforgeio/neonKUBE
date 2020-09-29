@@ -376,20 +376,12 @@ systemctl restart rsyslog.service
             // We need to upload the cluster configuration and initialize drives attached 
             // to the node.  We're going to assume that these are not already initialized.
 
-            // $todo(jefflill): 
-            //
-            // We may need an option that allows an operator to pre-build a hardware
-            // based drive array or something.  I'm going to defer this to later and
-            // concentrate on commodity hardware and cloud deployments for now. 
-            //
-            //      https://github.com/nforgeio/neonKUBE/issues/963
-
             node.Status = "setup: disk";
 
-            var diskName      = hostingManager.GetDataDisk(node);
-            var partitionName = hostingManager.GetPartitionName(diskName, 1);
+            var diskName  = hostingManager.GetDataDisk(node);
+            var partition = char.IsDigit(diskName.Last()) ? $"{diskName}p1" : $"{diskName}1";
 
-            node.SudoCommand("setup-disk.sh", diskName, partitionName);
+            node.SudoCommand("setup-disk.sh", diskName, partition);
 
             // Clear any DHCP leases to be super sure that cloned node
             // VMs will obtain fresh IP addresses.

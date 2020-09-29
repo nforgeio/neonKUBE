@@ -9,11 +9,7 @@
 #                         like "/dev/sda".
 #
 #       PARTITION       - This will be passed as the name of the partition
-#                         that will be created for the disk.  This will
-#                         generally be the name of the disk with "1" appended
-#                         like "/dev/sda1", indicating the partition #1 but
-#                         some environments append something else (AWS appends
-#                         "p1" for partition #1 to the disk name).
+#                         that will be created for the disk.
 #
 # NOTE: This script must be run under sudo.
 
@@ -60,7 +56,7 @@ p
 w
 EOF
 
-    # Sleep a bit to allow the change to persist.  I think something
+    # Sleep a bit to allow the change to persist.  I believe something
     # fancy is happening on AWS that requires this.
 
     sleep 10
