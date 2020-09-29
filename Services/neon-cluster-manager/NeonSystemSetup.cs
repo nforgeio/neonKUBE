@@ -58,26 +58,32 @@ namespace NeonClusterManager
             Log.LogInfo("[neon-system-db] Waiting for neon-system database to be ready.");
 
             await NeonHelper.WaitForAsync(
-                    async () => 
-                    (
-                        await k8s.ListNamespacedStatefulSetAsync("neon-system")).Items.Any(
-                            s => s.Metadata.Name == "neon-system-db-citus-postgresql-worker"
-                            && s.Status.ReadyReplicas == s.Spec.Replicas
-                    ), 
-                    TimeSpan.FromMinutes(30),
-                    TimeSpan.FromSeconds(10)
-                );
+                async () =>
+                {
+                    var statefulsets = await k8s.ListNamespacedStatefulSetAsync("neon-system", labelSelector: "release=neon-system-db");
+                    if (statefulsets == null || statefulsets.Items.Count < 2)
+                    {
+                        return false;
+                    }
 
+                    return statefulsets.Items.All(p => p.Status.ReadyReplicas == p.Spec.Replicas);
+                },
+                timeout: TimeSpan.FromMinutes(30),
+                pollInterval: TimeSpan.FromSeconds(10)); 
+            
             await NeonHelper.WaitForAsync(
-                    async () => 
-                    (
-                        await k8s.ListNamespacedStatefulSetAsync("neon-system")).Items.Any(
-                            s => s.Metadata.Name == "neon-system-db-citus-postgresql-master"
-                            && s.Status.ReadyReplicas == s.Spec.Replicas
-                    ),
-                    TimeSpan.FromMinutes(30),
-                    TimeSpan.FromSeconds(10)
-                );
+                async () =>
+                {
+                    var deployments = await k8s.ListNamespacedDeploymentAsync("neon-system", labelSelector: "release=neon-system-db");
+                    if (deployments == null || deployments.Items.Count == 0)
+                    {
+                        return false;
+                    }
+
+                    return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
+                },
+                timeout: TimeSpan.FromMinutes(30),
+                pollInterval: TimeSpan.FromSeconds(10));
 
             Log.LogInfo("[neon-system-db] neon-system database is ready.");
         }
