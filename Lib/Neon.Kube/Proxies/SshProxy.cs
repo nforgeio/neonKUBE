@@ -46,10 +46,32 @@ using Renci.SshNet.Common;
 namespace Neon.Kube
 {
     /// <summary>
-    /// A simplified version of <see cref="SshProxy{TMetadata}"/> that doesn't require
-    /// the specification of a metadata type.
+    /// <para>
+    /// Uses an SSH/SCP connection to provide access to Linux machines to access
+    /// files, run commands, etc.  This is a simplified version of <see cref="SshProxy{TMetadata}"/> 
+    /// that doesn't require the specification of a metadata type.
+    /// </para>
+    /// <note>
+    /// This is class is <b>not intended</b> to be a <b>general purpose SSH wrapper</b> 
+    /// at this time.  It currently assumes that the remote side is running some variant
+    /// of Linux and it makes some global changes including disabling SUDO password prompts
+    /// for all users as well as creating some global directories.
+    /// </note>
     /// </summary>
-    public class SshProxy : SshProxy<object>
+    /// <remarks>
+    /// <para>
+    /// This class includes methods to invoke Linux commands on the node,
+    /// </para>
+    /// <para>
+    /// Call <see cref="SshProxy{TMetaData}.Dispose()"/> or <see cref="SshProxy{TMetaData}.Disconnect()"/> to close the connection.
+    /// </para>
+    /// <note>
+    /// You can use <see cref="SshProxy{TMetaData}.Clone()"/> to make a copy of a proxy that can be
+    /// used to perform parallel operations against the same machine.
+    /// </note>
+    /// </remarks>
+    /// <threadsafety instance="false"/>
+    public class SshProxy : SshProxy<object>, IDisposable
     {
         /// <summary>
         /// Constructs a <see cref="SshProxy"/>.

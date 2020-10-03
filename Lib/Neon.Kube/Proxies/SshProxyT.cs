@@ -48,6 +48,17 @@ using Renci.SshNet.Common;
 // The download methods don't seem to be working for paths like [/proc/meminfo].
 // They return an empty stream.
 
+// $todo(jefflill):
+//
+// Most of this code has been copied to the [Neon.SSH.NET] project under
+// the [Neon.SSH] namespace.  There's just a tiny bit of extra functionality
+// implemented by this and the derived [SshProxy] class.
+//
+// We should convert this class to inherit from the [Neon.SSH.NET] class
+// so we don't have to maintain duplicate code.
+//
+//      https://github.com/nforgeio/neonKUBE/issues/1006
+
 namespace Neon.Kube
 {
     /// <summary>
@@ -58,9 +69,8 @@ namespace Neon.Kube
     /// <note>
     /// This is class is <b>not intended</b> to be a <b>general purpose SSH wrapper</b> 
     /// at this time.  It currently assumes that the remote side is running some variant
-    /// of Linux and it makes some global changes including overwriting the 
-    /// <b>/etc/sudoers.d/nopasswd</b> file to disable password prompts for all
-    /// users and creating some global directories.
+    /// of Linux and it makes some global changes including disabling SUDO password prompts
+    /// for all users as well as creating some global directories.
     /// </note>
     /// </summary>
     /// <typeparam name="TMetadata">
