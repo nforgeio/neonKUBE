@@ -59,4 +59,9 @@ This is a cloned and slightly updated build of https://www.nuget.org/packages/SS
     <None Include="..\..\LICENSE" Pack="True" PackagePath="" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
+    <ProjectReference Include="..\Neon.Cryptography\Neon.Cryptography.csproj" />
+  </ItemGroup>
+
 </Project>
