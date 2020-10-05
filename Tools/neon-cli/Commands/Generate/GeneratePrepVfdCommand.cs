@@ -113,7 +113,7 @@ of a hack that assumes a text file where NEWLINEs at the end don't matter.
             var vfdPath     = commandLine.Arguments.ElementAtOrDefault(1);
             var credentials = SshCredentials.FromUserPassword("sysadmin", "sysadmin0000");
 
-            using (var server = new SshProxy<string>("vm-fhd", ipAddress, credentials))
+            using (var server = new LinuxSshProxy<string>("vm-fhd", ipAddress, credentials))
             {
                 server.WaitForBoot();
 

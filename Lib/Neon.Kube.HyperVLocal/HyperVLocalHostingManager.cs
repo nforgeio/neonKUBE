@@ -292,7 +292,7 @@ namespace Neon.Kube
         public override bool RequiresAdminPrivileges => true;
 
         /// <inheritdoc/>
-        public override string GetDataDisk(SshProxy<NodeDefinition> node)
+        public override string GetDataDisk(LinuxSshProxy<NodeDefinition> node)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 
@@ -569,7 +569,7 @@ namespace Neon.Kube
         /// Creates a Hyper-V virtual machine for a cluster node.
         /// </summary>
         /// <param name="node">The target node.</param>
-        private void ProvisionVM(SshProxy<NodeDefinition> node)
+        private void ProvisionVM(LinuxSshProxy<NodeDefinition> node)
         {
             using (var hyperv = new HyperVClient())
             {

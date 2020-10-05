@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    NamespaceDoc.cs
+// FILE:	    SshProxyException.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -20,22 +20,39 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Common;
+using Neon.Cryptography;
+using Neon.Diagnostics;
+using Neon.IO;
+using Neon.Net;
+using Neon.Retry;
+using Neon.Time;
 
+using ICSharpCode.SharpZipLib.Zip;
 using Renci.SshNet;
+using Renci.SshNet.Common;
 
 namespace Neon.SSH
 {
     /// <summary>
-    /// This namespace includes the <see cref="SshLinuxProxy{TMetadata}"/>, <see cref="SshLinuxProxy"/>
-    /// and related classes that wrap and extend the base SSH.NET class with additional support for
-    /// managing remote Linux machines via SSH.
+    /// Thrown for <see cref="LinuxSshProxy{TMetadata}"/> errors.
     /// </summary>
-    public class NamespaceDoc
+    public class SshProxyException : Exception
     {
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="innerException"></param>
+        public SshProxyException(string message, Exception innerException = null)
+            : base(message, innerException)
+        {
+        }
     }
 }

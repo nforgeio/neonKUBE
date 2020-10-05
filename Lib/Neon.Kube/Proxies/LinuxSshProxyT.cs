@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    SshLinuxProxyT.cs
+// FILE:	    LinuxSshProxyT.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -48,7 +48,18 @@ using Renci.SshNet.Common;
 // The download methods don't seem to be working for paths like [/proc/meminfo].
 // They return an empty stream.
 
-namespace Neon.SSH
+// $todo(jefflill):
+//
+// Most of this code has been copied to the [Neon.SSH.NET] project under
+// the [Neon.SSH] namespace.  There's just a tiny bit of extra functionality
+// implemented by this and the derived [SshProxy] class.
+//
+// We should convert this class to inherit from the [Neon.SSH.NET] class
+// so we don't have to maintain duplicate code.
+//
+//      https://github.com/nforgeio/neonKUBE/issues/1006
+
+namespace Neon.Kube
 {
     /// <summary>
     /// <para>
@@ -84,7 +95,7 @@ namespace Neon.SSH
     /// </note>
     /// </remarks>
     /// <threadsafety instance="false"/>
-    public class SshLinuxProxy<TMetadata> : IDisposable
+    public class LinuxSshProxy<TMetadata> : IDisposable
         where TMetadata : class
     {
         //---------------------------------------------------------------------
@@ -184,7 +195,7 @@ namespace Neon.SSH
 
         // Path to the transient file on the Linux box whose presence indicates
         // that the server is still rebooting.
-        private readonly string RebootStatusPath = $"{HostFolders.Tmpfs}/rebooting";
+        private readonly string RebootStatusPath = $"{KubeHostFolders.Tmpfs}/rebooting";
 
         private readonly object syncLock   = new object();
         private bool            isDisposed = false;
@@ -197,16 +208,17 @@ namespace Neon.SSH
         private string          faultMessage;
 
         /// <summary>
-        /// Constructs a <see cref="SshLinuxProxy{TMetadata}"/>.
+        /// Constructs a <see cref="LinuxSshProxy{TMetadata}"/>.
         /// </summary>
         /// <param name="name">The display name for the server.</param>
         /// <param name="address">The private cluster IP address for the server.</param>
         /// <param name="credentials">The credentials to be used for establishing SSH connections.</param>
+        /// <param name="port">Optionally overrides the standard SSH port (22).</param>
         /// <param name="logWriter">The optional <see cref="TextWriter"/> where operation logs will be written.</param>
         /// <exception cref="ArgumentNullException">
         /// Thrown if <paramref name="name"/> or if <paramref name="credentials"/> is <c>null</c>.
         /// </exception>
-        public SshLinuxProxy(string name, IPAddress address, SshCredentials credentials, TextWriter logWriter = null)
+        public LinuxSshProxy(string name, IPAddress address, SshCredentials credentials, int port = NetworkPorts.SSH, TextWriter logWriter = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
             Covenant.Requires<ArgumentNullException>(credentials != null, nameof(credentials));
@@ -229,7 +241,7 @@ namespace Neon.SSH
         /// <summary>
         /// Finalizer.
         /// </summary>
-        ~SshLinuxProxy()
+        ~LinuxSshProxy()
         {
             Dispose(false);
         }
@@ -292,10 +304,10 @@ namespace Neon.SSH
         /// need to be able to perform multiple SSH/SCP operations against the same
         /// machine in parallel.
         /// </summary>
-        /// <returns>The cloned <see cref="SshLinuxProxy{TMetadata}"/>.</returns>
-        public SshLinuxProxy<TMetadata> Clone()
+        /// <returns>The cloned <see cref="LinuxSshProxy{TMetadata}"/>.</returns>
+        public LinuxSshProxy<TMetadata> Clone()
         {
-            var sshProxy = new SshLinuxProxy<TMetadata>(Name, Address, credentials)
+            var sshProxy = new LinuxSshProxy<TMetadata>(Name, Address, credentials)
             {
                 Metadata  = this.Metadata,
                 OsName    = this.OsName,
@@ -465,6 +477,11 @@ namespace Neon.SSH
         }
 
         /// <summary>
+        /// The associated <see cref="ClusterProxy"/> or <c>null</c>.
+        /// </summary>
+        public ClusterProxy Cluster { get; internal set; }
+
+        /// <summary>
         /// Returns the display name for the server.
         /// </summary>
         public string Name { get; private set; }
@@ -508,7 +525,7 @@ namespace Neon.SSH
         /// <summary>
         /// The PATH to use on the remote server when executing commands in the
         /// session or <c>null</c>/empty to run commands without a path.  This
-        /// defaults to the standard Linux path and <see cref="HostFolders.Bin"/>.
+        /// defaults to the standard Linux path and <see cref="KubeHostFolders.Bin"/>.
         /// </summary>
         /// <remarks>
         /// <note>
@@ -516,7 +533,7 @@ namespace Neon.SSH
         /// multiple directories as required.
         /// </note>
         /// </remarks>
-        public string RemotePath { get; set; } = $"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:{HostFolders.Bin}:{HostFolders.Setup}";
+        public string RemotePath { get; set; } = $"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:{KubeHostFolders.Bin}:{KubeHostFolders.Setup}";
 
         /// <summary>
         /// Returns the username used to log into the remote node.
@@ -703,7 +720,7 @@ namespace Neon.SSH
                         var sudoDisableScript =
 $@"#!/bin/bash
 
-cat <<EOF > {HostFolders.Home(Username)}/sudo-disable-prompt
+cat <<EOF > {KubeHostFolders.Home(Username)}/sudo-disable-prompt
 #!/bin/bash
 echo ""%sudo    ALL=NOPASSWD: ALL"" > /etc/sudoers.d/nopasswd
 echo ""Defaults    !requiretty""  > /etc/sudoers.d/notty
@@ -713,31 +730,31 @@ chown root /etc/sudoers.d/*
 chmod 440 /etc/sudoers.d/*
 EOF
 
-chmod 770 {HostFolders.Home(Username)}/sudo-disable-prompt
+chmod 770 {KubeHostFolders.Home(Username)}/sudo-disable-prompt
 
-cat <<EOF > {HostFolders.Home(Username)}/askpass
+cat <<EOF > {KubeHostFolders.Home(Username)}/askpass
 #!/bin/bash
 echo {password}
 EOF
-chmod 770 {HostFolders.Home(Username)}/askpass
+chmod 770 {KubeHostFolders.Home(Username)}/askpass
 
-export SUDO_ASKPASS={HostFolders.Home(Username)}/askpass
+export SUDO_ASKPASS={KubeHostFolders.Home(Username)}/askpass
 
-sudo -A {HostFolders.Home(Username)}/sudo-disable-prompt
-rm {HostFolders.Home(Username)}/sudo-disable-prompt
-rm {HostFolders.Home(Username)}/askpass
+sudo -A {KubeHostFolders.Home(Username)}/sudo-disable-prompt
+rm {KubeHostFolders.Home(Username)}/sudo-disable-prompt
+rm {KubeHostFolders.Home(Username)}/askpass
 ";
                         using (var stream = new MemoryStream())
                         {
                             stream.Write(Encoding.UTF8.GetBytes(sudoDisableScript.Replace("\r", string.Empty)));
                             stream.Position = 0;
 
-                            scpClient.Upload(stream, $"{HostFolders.Home(Username)}/sudo-disable");
-                            shellClient.RunCommand($"chmod 770 {HostFolders.Home(Username)}/sudo-disable");
+                            scpClient.Upload(stream, $"{KubeHostFolders.Home(Username)}/sudo-disable");
+                            shellClient.RunCommand($"chmod 770 {KubeHostFolders.Home(Username)}/sudo-disable");
                         }
 
-                        shellClient.RunCommand($"{HostFolders.Home(Username)}/sudo-disable");
-                        shellClient.RunCommand($"rm {HostFolders.Home(Username)}/sudo-disable");
+                        shellClient.RunCommand($"{KubeHostFolders.Home(Username)}/sudo-disable");
+                        shellClient.RunCommand($"rm {KubeHostFolders.Home(Username)}/sudo-disable");
 
                         // Indicate that we shouldn't perform these operations again on this machine.
 
@@ -820,7 +837,7 @@ rm {HostFolders.Home(Username)}/askpass
 
             try
             {
-                SudoCommand($"mkdir -p {HostFolders.Tmpfs} && touch {RebootStatusPath}");
+                SudoCommand($"mkdir -p {KubeHostFolders.Tmpfs} && touch {RebootStatusPath}");
                 LogLine("*** REBOOT");
                 SudoCommand("systemctl stop systemd-logind.service", RunOptions.LogOutput);
                 SudoCommand("reboot", RunOptions.Defaults | RunOptions.Shutdown);
@@ -941,8 +958,20 @@ rm {HostFolders.Home(Username)}/askpass
         /// <returns>The connection information.</returns>
         private ConnectionInfo GetConnectionInfo()
         {
-            var address = Address.ToString();
+            var address = string.Empty;
             var port    = SshPort;
+
+            if (Cluster?.HostingManager != null)
+            {
+                var ep = Cluster.HostingManager.GetSshEndpoint(this.Name);
+
+                address = ep.Address;
+                port    = ep.Port;
+            }
+            else
+            {
+                address = Address.ToString();
+            }
 
             var connectionInfo = new ConnectionInfo(address, port, credentials.Username, credentials.AuthenticationMethod)
             {
@@ -1135,7 +1164,7 @@ rm {HostFolders.Home(Username)}/askpass
                             continue;
                         }
 
-                        var split = line.Split(new char[] { '=' }, 2);
+                        var split = line.Split('=', 2);
 
                         if (split.Length < 2)
                         {
@@ -1189,7 +1218,7 @@ rm {HostFolders.Home(Username)}/askpass
             {
                 if (isDisposed)
                 {
-                    throw new ObjectDisposedException(nameof(SshLinuxProxy<TMetadata>));
+                    throw new ObjectDisposedException(nameof(LinuxSshProxy<TMetadata>));
                 }
 
                 if (credentials == null || credentials == SshCredentials.None)
@@ -1251,7 +1280,7 @@ rm {HostFolders.Home(Username)}/askpass
             {
                 if (isDisposed)
                 {
-                    throw new ObjectDisposedException(nameof(SshLinuxProxy<TMetadata>));
+                    throw new ObjectDisposedException(nameof(LinuxSshProxy<TMetadata>));
                 }
 
                 if (credentials == null || credentials == SshCredentials.None)
@@ -1286,7 +1315,7 @@ rm {HostFolders.Home(Username)}/askpass
             {
                 if (isDisposed)
                 {
-                    throw new ObjectDisposedException(nameof(SshLinuxProxy<TMetadata>));
+                    throw new ObjectDisposedException(nameof(LinuxSshProxy<TMetadata>));
                 }
 
                 // We're going to retry connecting up to 10 times.
@@ -1344,7 +1373,7 @@ rm {HostFolders.Home(Username)}/askpass
             {
                 if (isDisposed)
                 {
-                    throw new ObjectDisposedException(nameof(SshLinuxProxy<TMetadata>));
+                    throw new ObjectDisposedException(nameof(LinuxSshProxy<TMetadata>));
                 }
 
                 if (scpClient != null)
@@ -1366,17 +1395,17 @@ rm {HostFolders.Home(Username)}/askpass
         /// <summary>
         /// Returns the path to the user's home folder on the server.
         /// </summary>
-        public string HomeFolderPath => HostFolders.Home(Username);
+        public string HomeFolderPath => KubeHostFolders.Home(Username);
 
         /// <summary>
         /// Returns the path to the user's download folder on the server.
         /// </summary>
-        public string DownloadFolderPath => HostFolders.Download(Username);
+        public string DownloadFolderPath => KubeHostFolders.Download(Username);
 
         /// <summary>
         /// Returns the path to the user's upload folder on the server.
         /// </summary>
-        public string UploadFolderPath => HostFolders.Upload(Username);
+        public string UploadFolderPath => KubeHostFolders.Upload(Username);
 
         /// <summary>
         /// <para>
@@ -1412,7 +1441,7 @@ rm {HostFolders.Home(Username)}/askpass
 
         /// <summary>
         /// <para>
-        /// Ensures that the node is configured such that <see cref="SshLinuxProxy{TMetadata}"/> can function properly.
+        /// Ensures that the node is configured such that <see cref="LinuxSshProxy{TMetadata}"/> can function properly.
         /// This includes disabling <b>requiretty</b> as well as restricting <b>sudo</b> from requiring passwords
         /// as well as creating the minimum user home folders required by the proxy for executing scripts as well
         /// as uploading and downloading files.
@@ -1449,27 +1478,27 @@ rm {HostFolders.Home(Username)}/askpass
 
             // [~/.neonkube]
 
-            var folderPath = HostFolders.NeonKubeHome(Username);
+            var folderPath = KubeHostFolders.NeonKubeHome(Username);
             sshClient.RunCommand($"mkdir -p {folderPath} && chmod 700 {folderPath}");
 
             // [~/.neonkube/archive]
 
-            folderPath = HostFolders.Archive(Username);
+            folderPath = KubeHostFolders.Archive(Username);
             sshClient.RunCommand($"mkdir -p {folderPath} && chmod 700 {folderPath}");
 
             // [~/.neonkube/download]
 
-            folderPath = HostFolders.Download(Username);
+            folderPath = KubeHostFolders.Download(Username);
             sshClient.RunCommand($"mkdir -p {folderPath} && chmod 700 {folderPath}");
 
             // [~/.neonkube/exec]
 
-            folderPath = HostFolders.Exec(Username);
+            folderPath = KubeHostFolders.Exec(Username);
             sshClient.RunCommand($"mkdir -p {folderPath} && chmod 700 {folderPath}");
 
             // [~/.neonkube/upload]
 
-            folderPath = HostFolders.Upload(Username);
+            folderPath = KubeHostFolders.Upload(Username);
             sshClient.RunCommand($"mkdir -p {folderPath} && chmod 700 {folderPath}");
 
             //-----------------------------------------------------------------
@@ -2097,7 +2126,7 @@ rm {HostFolders.Home(Username)}/askpass
 
                 // Upload the ZIP file to a temporary folder.
 
-                var bundleFolder = $"{HostFolders.Exec(Username)}/{Guid.NewGuid().ToString("d")}";
+                var bundleFolder = $"{KubeHostFolders.Exec(Username)}/{Guid.NewGuid().ToString("d")}";
                 var zipPath      = LinuxPath.Combine(bundleFolder, "__bundle.zip");
 
                 RunCommand($"mkdir {bundleFolder} && chmod 700 {bundleFolder}", RunOptions.LogOnErrorOnly);
@@ -2325,7 +2354,7 @@ rm {HostFolders.Home(Username)}/askpass
 
             // Create the command folder.
 
-            var execFolder = $"{HostFolders.Exec(Username)}";
+            var execFolder = $"{KubeHostFolders.Exec(Username)}";
             var cmdFolder  = LinuxPath.Combine(execFolder, Guid.NewGuid().ToString("d"));
 
             SafeSshOperation("create command folder", () => sshClient.RunCommand($"mkdir {cmdFolder} && chmod 700 {cmdFolder}"));
@@ -3030,7 +3059,7 @@ echo $? > {cmdFolder}/exit
         /// </para>
         /// <para>
         /// This method tracks successful action completion by creating a file
-        /// on the node at <see cref="HostFolders.State"/><b>/ACTION-ID</b>.
+        /// on the node at <see cref="KubeHostFolders.State"/><b>/ACTION-ID</b>.
         /// To ensure idempotency, this method first checks for the existance of
         /// this file and returns immediately without invoking the action if it is 
         /// present.
@@ -3042,7 +3071,7 @@ echo $? > {cmdFolder}/exit
             Covenant.Requires<ArgumentException>(idempotentRegex.IsMatch(actionId), nameof(actionId));
             Covenant.Requires<ArgumentNullException>(action != null, nameof(action));
 
-            var stateFolder = HostFolders.State;
+            var stateFolder = KubeHostFolders.State;
             var slashPos    = actionId.LastIndexOf('/');
 
             if (slashPos != -1)

@@ -556,7 +556,7 @@ OPTIONS:
         /// a word).
         /// </summary>
         /// <param name="node">The target node.</param>
-        private void ConfigureBasic(SshProxy<NodeDefinition> node)
+        private void ConfigureBasic(LinuxSshProxy<NodeDefinition> node)
         {
             // Configure the node's environment variables.
 
@@ -574,7 +574,7 @@ OPTIONS:
         /// <param name="hostingManager">The hosting manager.</param>
         /// <param name="node">The target node.</param>
         /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
-        private void SetupCommon(HostingManager hostingManager, SshProxy<NodeDefinition> node, TimeSpan stepDelay)
+        private void SetupCommon(HostingManager hostingManager, LinuxSshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
             Covenant.Requires<ArgumentNullException>(hostingManager != null, nameof(hostingManager));
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
@@ -639,7 +639,7 @@ OPTIONS:
         /// Performs basic node configuration.
         /// </summary>
         /// <param name="node">The target node.</param>
-        private void SetupNode(SshProxy<NodeDefinition> node)
+        private void SetupNode(LinuxSshProxy<NodeDefinition> node)
         {
             node.InvokeIdempotentAction($"setup/{node.Metadata.Role}",
                 () =>
@@ -714,7 +714,7 @@ OPTIONS:
         /// Reboots the cluster nodes.
         /// </summary>
         /// <param name="node">The cluster node.</param>
-        private void RebootAndWait(SshProxy<NodeDefinition> node)
+        private void RebootAndWait(LinuxSshProxy<NodeDefinition> node)
         {
             node.Status = "restarting...";
             node.Reboot(wait: true);
@@ -724,7 +724,7 @@ OPTIONS:
         /// Updates the node hostname and related configuration.
         /// </summary>
         /// <param name="node">The target node.</param>
-        private void UploadHostname(SshProxy<NodeDefinition> node)
+        private void UploadHostname(LinuxSshProxy<NodeDefinition> node)
         {
             // Update the hostname.
 
@@ -826,7 +826,7 @@ $@"
         /// </summary>
         /// <param name="node">The target node.</param>
         /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
-        private void SetupKubernetes(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
+        private void SetupKubernetes(LinuxSshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
             node.InvokeIdempotentAction("setup/setup-install-kubernetes",
                 () =>
@@ -1790,7 +1790,7 @@ kubectl apply -f https://openebs.github.io/charts/openebs-operator.yaml
         /// Installs the Calico CNI.
         /// </summary>
         /// <param name="master">The master node.</param>
-        private void DeployCalicoCni(SshProxy<NodeDefinition> master)
+        private void DeployCalicoCni(LinuxSshProxy<NodeDefinition> master)
         {
             master.InvokeIdempotentAction("setup/cluster-deploy-cni",
                 () =>
@@ -1853,7 +1853,7 @@ rm /tmp/calico.yaml
         /// Installs Istio.
         /// </summary>
         /// <param name="master">The master node.</param>
-        private void InstallIstio(SshProxy<NodeDefinition> master)
+        private void InstallIstio(LinuxSshProxy<NodeDefinition> master)
         {
             master.Status = "deploy: istio";
 
@@ -2050,7 +2050,7 @@ istioctl install -f istio-cni.yaml
         /// <param name="values">Optional values to override Helm chart values.</param>
         /// <returns></returns>
         private async Task InstallHelmChartAsync(
-            SshProxy<NodeDefinition>            master,
+            LinuxSshProxy<NodeDefinition>            master,
             string                              chartName,
             string                              releaseName = null,
             string                              @namespace = "default",
@@ -2149,7 +2149,7 @@ rm -rf {chartName}*
         /// Some initial kubernetes config.
         /// </summary>
         /// <param name="master">The master node.</param>
-        private async Task KubeSetupAsync(SshProxy<NodeDefinition> master)
+        private async Task KubeSetupAsync(LinuxSshProxy<NodeDefinition> master)
         {
             master.Status = "deploy: cluster-setup";
 
@@ -2160,7 +2160,7 @@ rm -rf {chartName}*
         /// Installs OpenEBS
         /// </summary>
         /// <param name="master">The master node.</param>
-        private async Task InstallOpenEBSAsync(SshProxy<NodeDefinition> master)
+        private async Task InstallOpenEBSAsync(LinuxSshProxy<NodeDefinition> master)
         {
             master.Status = "deploy: openebs";
 
@@ -2200,7 +2200,7 @@ rm -rf {chartName}*
         /// Setup Kube state metrics.
         /// </summary>
         /// <param name="master">The master node.</param>
-        private async Task InstallKubeStateMetricsAsync(SshProxy<NodeDefinition> master)
+        private async Task InstallKubeStateMetricsAsync(LinuxSshProxy<NodeDefinition> master)
         {
             master.Status = "deploy: kube-state-metrics";
 
@@ -2211,7 +2211,7 @@ rm -rf {chartName}*
         /// Deploy Kiali
         /// </summary>
         /// <param name="master">The master node.</param>
-        private async Task InstallKialiAsync(SshProxy<NodeDefinition> master)
+        private async Task InstallKialiAsync(LinuxSshProxy<NodeDefinition> master)
         {
             master.Status = "deploy: kiali";
 
@@ -2233,7 +2233,7 @@ rm -rf {chartName}*
         /// Installs an Etcd cluster to the monitoring namespace.
         /// </summary>
         /// <param name="master">The master node.</param>
-        private async Task InstallEtcdAsync(SshProxy<NodeDefinition> master)
+        private async Task InstallEtcdAsync(LinuxSshProxy<NodeDefinition> master)
         {
             master.Status = "deploy: neon-metrics-etcd-cluster";
 
@@ -2270,7 +2270,7 @@ rm -rf {chartName}*
         /// Installs an Metrics cluster to the monitoring namespace.
         /// </summary>
         /// <param name="master">The master node.</param>
-        private async Task InstallNeonMetricsAsync(SshProxy<NodeDefinition> master)
+        private async Task InstallNeonMetricsAsync(LinuxSshProxy<NodeDefinition> master)
         {
             master.Status = "deploy: neon-metrics";
 
@@ -2377,7 +2377,7 @@ rm -rf {chartName}*
         /// Installs a Yugabyte cluster for metrics storage.
         /// </summary>
         /// <param name="master"></param>
-        private async Task InstallMetricsYugabyteAsync(SshProxy<NodeDefinition> master)
+        private async Task InstallMetricsYugabyteAsync(LinuxSshProxy<NodeDefinition> master)
         {
             master.InvokeIdempotentAction("deploy/metrics-persistence-yugabyte",
                 () =>
@@ -2424,7 +2424,7 @@ rm -rf {chartName}*
         /// Installs Elasticsearch
         /// </summary>
         /// <param name="master">The master node.</param>
-        private async Task InstallElasticSearchAsync(SshProxy<NodeDefinition> master)
+        private async Task InstallElasticSearchAsync(LinuxSshProxy<NodeDefinition> master)
         {
             master.Status = "deploy: elasticsearch";
 
@@ -2486,7 +2486,7 @@ rm -rf {chartName}*
         /// Installs FluentBit
         /// </summary>
         /// <param name="master">The master node.</param>
-        private async Task InstallFluentBitAsync(SshProxy<NodeDefinition> master)
+        private async Task InstallFluentBitAsync(LinuxSshProxy<NodeDefinition> master)
         {
             master.Status = "deploy: fluent-bit";            
 
@@ -2508,7 +2508,7 @@ rm -rf {chartName}*
         /// Installs fluentd
         /// </summary>
         /// <param name="master">The master node.</param>
-        private async Task InstallFluentdAsync(SshProxy<NodeDefinition> master)
+        private async Task InstallFluentdAsync(LinuxSshProxy<NodeDefinition> master)
         {
             master.Status = "deploy: fluentd";
 
@@ -2532,7 +2532,7 @@ rm -rf {chartName}*
         /// Installs Kibana
         /// </summary>
         /// <param name="master">The master node.</param>
-        private async Task InstallKibanaAsync(SshProxy<NodeDefinition> master)
+        private async Task InstallKibanaAsync(LinuxSshProxy<NodeDefinition> master)
         {
             master.Status = "deploy: kibana";
 
@@ -2554,7 +2554,7 @@ rm -rf {chartName}*
         /// Installs Jaeger
         /// </summary>
         /// <param name="master">The master node.</param>
-        private async Task InstallJaegerAsync(SshProxy<NodeDefinition> master)
+        private async Task InstallJaegerAsync(LinuxSshProxy<NodeDefinition> master)
         {
             master.Status = "deploy: jaeger";
 
@@ -2576,7 +2576,7 @@ rm -rf {chartName}*
         /// Installs the Neon Cluster Manager.
         /// </summary>
         /// <param name="master">The master node.</param>
-        private async Task InstallClusterManagerAsync(SshProxy<NodeDefinition> master)
+        private async Task InstallClusterManagerAsync(LinuxSshProxy<NodeDefinition> master)
         {
             master.Status = "deploy: neon-cluster-manager";
 
@@ -2587,7 +2587,7 @@ rm -rf {chartName}*
         /// Installs a Citus-postgres database used by neon-system services.
         /// </summary>
         /// <param name="master">The master node.</param>
-        private async Task InstallSystemDbAsync(SshProxy<NodeDefinition> master)
+        private async Task InstallSystemDbAsync(LinuxSshProxy<NodeDefinition> master)
         {
             master.Status = "deploy: neon-system-db";
 
@@ -2621,7 +2621,7 @@ rm -rf {chartName}*
         /// <summary>
         /// Adds the node labels.
         /// </summary>
-        private void LabelNodes(SshProxy<NodeDefinition> master)
+        private void LabelNodes(LinuxSshProxy<NodeDefinition> master)
         {
             master.InvokeIdempotentAction("setup/cluster-label-nodes",
                 () =>

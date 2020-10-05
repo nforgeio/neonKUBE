@@ -41,7 +41,7 @@ namespace NeonCli
         /// </summary>
         /// <param name="node">The target cluster node.</param>
         /// <param name="stepDelay">Ignored.</param>
-        public static void VerifyOS(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
+        public static void VerifyOS(LinuxSshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
             KubeHelper.VerifyNodeOperatingSystem(node);
         }
@@ -51,7 +51,7 @@ namespace NeonCli
         /// </summary>
         /// <param name="node">The target node.</param>
         /// <param name="stepDelayed">Ignored.</param>
-        public static void ConfigureOpenSsh(SshProxy<NodeDefinition> node, TimeSpan stepDelayed)
+        public static void ConfigureOpenSsh(LinuxSshProxy<NodeDefinition> node, TimeSpan stepDelayed)
         {
             // Upload the OpenSSH server configuration, restart OpenSSH and
             // then disconnect and wait for the OpenSSH to restart.
@@ -66,7 +66,7 @@ namespace NeonCli
         /// </summary>
         /// <param name="node">The server to be updated.</param>
         /// <param name="clusterDefinition">The cluster definition.</param>
-        public static void ConfigureEnvironmentVariables(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
+        public static void ConfigureEnvironmentVariables(LinuxSshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
         {
             node.Status = "environment variables";
 
@@ -165,7 +165,7 @@ namespace NeonCli
         /// </summary>
         /// <param name="node">The target node.</param>
         /// <param name="clusterLogin">The cluster login.</param>
-        public static void ConfigureSshKey(SshProxy<NodeDefinition> node, ClusterLogin clusterLogin)
+        public static void ConfigureSshKey(LinuxSshProxy<NodeDefinition> node, ClusterLogin clusterLogin)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
             Covenant.Requires<ArgumentNullException>(clusterLogin != null, nameof(clusterLogin));
@@ -259,7 +259,7 @@ systemctl restart sshd
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <param name="kubeSetupInfo">Kubernetes setup details.</param>
         /// <param name="shutdown">Optionally shuts down the node.</param>
-        public static void PrepareNode(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition, KubeSetupInfo kubeSetupInfo, HostingManager hostingManager, bool shutdown = false)
+        public static void PrepareNode(LinuxSshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition, KubeSetupInfo kubeSetupInfo, HostingManager hostingManager, bool shutdown = false)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));

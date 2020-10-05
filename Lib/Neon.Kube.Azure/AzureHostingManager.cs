@@ -187,7 +187,7 @@ namespace Neon.Kube
             /// </summary>
             /// <param name="node">The associated node proxy.</param>
             /// <param name="hostingManager">The parent hosting manager.</param>
-            public AzureVm(SshProxy<NodeDefinition> node, AzureHostingManager hostingManager)
+            public AzureVm(LinuxSshProxy<NodeDefinition> node, AzureHostingManager hostingManager)
             {
                 Covenant.Requires<ArgumentNullException>(hostingManager != null, nameof(hostingManager));
 
@@ -198,7 +198,7 @@ namespace Neon.Kube
             /// <summary>
             /// Returns the associated node proxy.
             /// </summary>
-            public SshProxy<NodeDefinition> Node { get; private set; }
+            public LinuxSshProxy<NodeDefinition> Node { get; private set; }
 
             /// <summary>
             /// Returns the node metadata (AKA its definition).
@@ -1077,7 +1077,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override string GetDataDisk(SshProxy<NodeDefinition> node)
+        public override string GetDataDisk(LinuxSshProxy<NodeDefinition> node)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 
@@ -1558,7 +1558,7 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="node">The target node.</param>
         /// <param name="stepDelay">The step delay.</param>
-        private void CreateVm(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
+        private void CreateVm(LinuxSshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
             var azureNode = nameToVm[node.Name];
 
@@ -1631,7 +1631,7 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="node">The target node.</param>
         /// <param name="stepDelay">The step delay.</param>
-        private void ConfigureNode(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
+        private void ConfigureNode(LinuxSshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
             node.WaitForBoot();
 

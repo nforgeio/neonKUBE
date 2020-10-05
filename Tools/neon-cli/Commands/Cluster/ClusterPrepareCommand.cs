@@ -411,11 +411,11 @@ Server Requirements:
 
                 cluster.Definition.ValidatePrivateNodeAddresses();
 
-                var ipAddressToServer = new Dictionary<IPAddress, SshProxy<NodeDefinition>>();
+                var ipAddressToServer = new Dictionary<IPAddress, LinuxSshProxy<NodeDefinition>>();
 
                 foreach (var node in cluster.Nodes.OrderBy(n => n.Name))
                 {
-                    SshProxy<NodeDefinition> duplicateServer;
+                    LinuxSshProxy<NodeDefinition> duplicateServer;
 
                     if (node.Address == IPAddress.Any)
                     {

@@ -34,8 +34,8 @@ namespace Neon.SSH
     /// </summary>
     /// <remarks>
     /// <para>
-    /// This class is intended for use with the <see cref="SshLinuxProxy{TMetadata}.RunCommand(CommandBundle, RunOptions)"/>
-    /// and  <see cref="SshLinuxProxy{TMetadata}.SudoCommand(CommandBundle, RunOptions)"/> methods for situations where
+    /// This class is intended for use with the <see cref="LinuxSshProxy{TMetadata}.RunCommand(CommandBundle, RunOptions)"/>
+    /// and  <see cref="LinuxSshProxy{TMetadata}.SudoCommand(CommandBundle, RunOptions)"/> methods for situations where
     /// one or more files need to be uploaded to a cluster node and be used when a command is executed.
     /// </para>
     /// <para>

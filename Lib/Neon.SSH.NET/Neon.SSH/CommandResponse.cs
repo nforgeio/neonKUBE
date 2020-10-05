@@ -40,8 +40,8 @@ namespace Neon.SSH
 {
     /// <summary>
     /// Describes the results of a command executed on the remote server using
-    /// <see cref="SshLinuxProxy{TMetadata}.RunCommand(CommandBundle, RunOptions)"/> 
-    /// or <see cref="SshLinuxProxy{TMetadata}.SudoCommand(string, object[])"/>.
+    /// <see cref="LinuxSshProxy{TMetadata}.RunCommand(CommandBundle, RunOptions)"/> 
+    /// or <see cref="LinuxSshProxy{TMetadata}.SudoCommand(string, object[])"/>.
     /// </summary>
     public class CommandResponse : IBashCommandFormatter
     {

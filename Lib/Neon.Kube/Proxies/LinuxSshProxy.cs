@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    SshProxy.cs
+// FILE:	    LinuxSshProxy.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -48,7 +48,7 @@ namespace Neon.Kube
     /// <summary>
     /// <para>
     /// Uses an SSH/SCP connection to provide access to Linux machines to access
-    /// files, run commands, etc.  This is a simplified version of <see cref="SshProxy{TMetadata}"/> 
+    /// files, run commands, etc.  This is a simplified version of <see cref="LinuxSshProxy{TMetadata}"/> 
     /// that doesn't require the specification of a metadata type.
     /// </para>
     /// <note>
@@ -63,28 +63,29 @@ namespace Neon.Kube
     /// This class includes methods to invoke Linux commands on the node,
     /// </para>
     /// <para>
-    /// Call <see cref="SshProxy{TMetaData}.Dispose()"/> or <see cref="SshProxy{TMetaData}.Disconnect()"/> to close the connection.
+    /// Call <see cref="LinuxSshProxy{TMetaData}.Dispose()"/> or <see cref="LinuxSshProxy{TMetaData}.Disconnect()"/> to close the connection.
     /// </para>
     /// <note>
-    /// You can use <see cref="SshProxy{TMetaData}.Clone()"/> to make a copy of a proxy that can be
+    /// You can use <see cref="LinuxSshProxy{TMetaData}.Clone()"/> to make a copy of a proxy that can be
     /// used to perform parallel operations against the same machine.
     /// </note>
     /// </remarks>
     /// <threadsafety instance="false"/>
-    public class SshProxy : SshProxy<object>, IDisposable
+    public class LinuxSshProxy : LinuxSshProxy<object>, IDisposable
     {
         /// <summary>
-        /// Constructs a <see cref="SshProxy"/>.
+        /// Constructs a <see cref="LinuxSshProxy"/>.
         /// </summary>
         /// <param name="name">The display name for the server.</param>
         /// <param name="address">The private cluster IP address for the server.</param>
         /// <param name="credentials">The credentials to be used for establishing SSH connections.</param>
+        /// <param name="port">Optionally overrides the standard SSH port (22).</param>
         /// <param name="logWriter">The optional <see cref="TextWriter"/> where operation logs will be written.</param>
         /// <exception cref="ArgumentNullException">
         /// Thrown if <paramref name="name"/> or if <paramref name="credentials"/> is <c>null</c>.
         /// </exception>
-        public SshProxy(string name, IPAddress address, SshCredentials credentials, TextWriter logWriter = null)
-            : base(name, address, credentials, logWriter)
+        public LinuxSshProxy(string name, IPAddress address, SshCredentials credentials, int port = NetworkPorts.SSH, TextWriter logWriter = null)
+            : base(name, address, credentials, port, logWriter)
         {
         }
     }
