@@ -975,7 +975,7 @@ rm {HostFolders.Home(Username)}/askpass
         /// <remarks>
         /// <note>
         /// The first time a connection is established is called on a particular host, password credentials 
-        /// must be used so that low-level <b>sudo</b> configuration cxan be performed.  Subsequent connections
+        /// must be used so that low-level <b>sudo</b> configuration can be performed.  Subsequent connections
         /// can use TLS certificates.
         /// </note>
         /// </remarks>
@@ -1014,7 +1014,7 @@ rm {HostFolders.Home(Username)}/askpass
         /// <remarks>
         /// <note>
         /// The first time a connection is established is called on a particular host, password credentials 
-        /// must be used so that low-level <b>sudo</b> configuration cxan be performed.  Subsequent connections
+        /// must be used so that low-level <b>sudo</b> configuration can be performed.  Subsequent connections
         /// can use TLS certificates.
         /// </note>
         /// <para>
@@ -1093,7 +1093,7 @@ rm {HostFolders.Home(Username)}/askpass
                             throw;
                         }
 
-                        if (operationTimer.HasFired)
+                        if (timeout == TimeSpan.Zero || operationTimer.HasFired)
                         {
                             throw;
                         }
