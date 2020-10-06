@@ -161,7 +161,7 @@ namespace Neon.Kube
 
             foreach (var nodeDefinition in Definition.SortedNodes)
             {
-                var node = nodeProxyCreator(nodeDefinition.Name, IPAddress.Parse(nodeDefinition.Address ?? "0.0.0.0"), appendLog);
+                var node = nodeProxyCreator(nodeDefinition.Name, NetHelper.ParseIPv4Address(nodeDefinition.Address ?? "0.0.0.0"), appendLog);
 
                 node.Cluster           = this;
                 node.DefaultRunOptions = defaultRunOptions;

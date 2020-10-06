@@ -519,7 +519,7 @@ namespace Neon.Kube
 
                 if (externalSwitch == null)
                 {
-                    hyperv.NewVmExternalSwitch(switchName = defaultSwitchName, IPAddress.Parse(cluster.Definition.Network.Gateway));
+                    hyperv.NewVmExternalSwitch(switchName = defaultSwitchName, NetHelper.ParseIPv4Address(cluster.Definition.Network.Gateway));
                 }
                 else
                 {

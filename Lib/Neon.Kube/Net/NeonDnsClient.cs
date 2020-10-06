@@ -249,7 +249,7 @@ namespace Neon.Net
 
             // We can short-circuit things if the parameter is an IP address.
 
-            if (IPAddress.TryParse(addressOrFQDN, out var address))
+            if (NetHelper.TryParseIPv4Address(addressOrFQDN, out var address))
             {
                 return new IPAddress[] { address };
             }

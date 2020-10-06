@@ -189,7 +189,7 @@ namespace Neon.Kube
                 var fields = ApiLoadBalancer.Split(':', 2);
                 var error  = $"[{nameof(KubernetesOptions)}.{nameof(ApiLoadBalancer)}={ApiLoadBalancer}] is invalid].";
 
-                if (!NetHelper.IsValidHost(fields[0]) || !IPAddress.TryParse(fields[0], out var address) || address.AddressFamily != AddressFamily.InterNetwork)
+                if (!NetHelper.IsValidHost(fields[0]) || !NetHelper.TryParseIPv4Address(fields[0], out var address) || address.AddressFamily != AddressFamily.InterNetwork)
                 {
                     throw new ClusterDefinitionException(error);
                 }

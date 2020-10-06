@@ -32,8 +32,7 @@ using Newtonsoft.Json;
 using Neon.ModelGen;
 using Neon.Common;
 using Neon.Kube;
-using Microsoft.Azure.Management.ContainerRegistry.Fluent.Models;
-using System.ComponentModel;
+using Neon.Net;
 
 namespace NeonCli
 {
@@ -109,7 +108,7 @@ of a hack that assumes a text file where NEWLINEs at the end don't matter.
                 Program.Exit(1);
             }
 
-            var ipAddress   = IPAddress.Parse(commandLine.Arguments.ElementAtOrDefault(0));
+            var ipAddress   = NetHelper.ParseIPv4Address(commandLine.Arguments.ElementAtOrDefault(0));
             var vfdPath     = commandLine.Arguments.ElementAtOrDefault(1);
             var credentials = SshCredentials.FromUserPassword("sysadmin", "sysadmin0000");
 

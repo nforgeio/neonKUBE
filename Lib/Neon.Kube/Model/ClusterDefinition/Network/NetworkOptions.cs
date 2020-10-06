@@ -311,7 +311,7 @@ namespace Neon.Kube
 
             foreach (var nameserver in Nameservers)
             {
-                if (!IPAddress.TryParse(nameserver, out var address))
+                if (!NetHelper.TryParseIPv4Address(nameserver, out var address))
                 {
                     throw new ClusterDefinitionException($"[{nameserver}] is not a valid [{nameof(NetworkOptions)}.{nameof(Nameservers)}] IP address.");
                 }
@@ -336,7 +336,7 @@ namespace Neon.Kube
                     Gateway = premiseSubnet.FirstUsableAddress.ToString();
                 }
 
-                if (!IPAddress.TryParse(Gateway, out gateway) || gateway.AddressFamily != AddressFamily.InterNetwork)
+                if (!NetHelper.TryParseIPv4Address(Gateway, out gateway) || gateway.AddressFamily != AddressFamily.InterNetwork)
                 {
                     throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(Gateway)}={Gateway}] is not a valid IPv4 address.");
                 }

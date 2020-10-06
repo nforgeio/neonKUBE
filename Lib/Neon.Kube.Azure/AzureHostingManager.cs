@@ -1196,7 +1196,7 @@ namespace Neon.Kube
 
             if (publicAddress != null)
             {
-                clusterAddress = IPAddress.Parse(publicAddress.IPAddress);
+                clusterAddress = NetHelper.ParseIPv4Address(publicAddress.IPAddress);
             }
 
             vnet         = azure.Networks.ListByResourceGroup(resourceGroupName).SingleOrDefault(vnet => vnet.Name == vnetName);
@@ -1489,7 +1489,7 @@ namespace Neon.Kube
                         .WithTags(GetTags())
                         .Create();
 
-                clusterAddress = IPAddress.Parse(publicAddress.IPAddress);
+                clusterAddress = NetHelper.ParseIPv4Address(publicAddress.IPAddress);
             }
         }
 

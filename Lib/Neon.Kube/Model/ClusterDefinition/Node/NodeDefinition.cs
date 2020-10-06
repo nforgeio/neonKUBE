@@ -296,7 +296,7 @@ namespace Neon.Kube
                     throw new ClusterDefinitionException($"Node [{Name}] requires [{nameof(Address)}] when hosting in an on-premise facility.");
                 }
 
-                if (!IPAddress.TryParse(Address, out var nodeAddress))
+                if (!NetHelper.TryParseIPv4Address(Address, out var nodeAddress))
                 {
                     throw new ClusterDefinitionException($"Node [{Name}] has invalid IP address [{Address}].");
                 }

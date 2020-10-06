@@ -164,7 +164,7 @@ namespace Neon.Kube
                     continue;
                 }
 
-                var address = IPAddress.Parse(node.Address);
+                var address = NetHelper.ParseIPv4Address(node.Address);
 
                 if (addressToNode.TryGetValue(address, out var conflictNode))
                 {
@@ -216,7 +216,7 @@ namespace Neon.Kube
                     continue;
                 }
 
-                var address = IPAddress.Parse(node.Address);
+                var address = NetHelper.ParseIPv4Address(node.Address);
 
                 if (!nodeSubnet.Contains(address))
                 {
@@ -249,7 +249,7 @@ namespace Neon.Kube
                     continue;
                 }
 
-                var address = IPAddress.Parse(node.Address);
+                var address     = NetHelper.ParseIPv4Address(node.Address);
                 var addressUint = NetHelper.AddressToUint(address);
 
                 if (!assignedAddresses.Contains(addressUint))

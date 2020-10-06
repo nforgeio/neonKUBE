@@ -244,7 +244,7 @@ Server Requirements:
                         Console.Error.WriteLine($"***        machines conflict with the following cluster nodes:");
                         Console.Error.WriteLine();
 
-                        foreach (var node in pingConflicts.OrderBy(n => NetHelper.AddressToUint(IPAddress.Parse(n.Address))))
+                        foreach (var node in pingConflicts.OrderBy(n => NetHelper.AddressToUint(NetHelper.ParseIPv4Address(n.Address))))
                         {
                             Console.Error.WriteLine($"{node.Address, 16}:    {node.Name}");
                         }

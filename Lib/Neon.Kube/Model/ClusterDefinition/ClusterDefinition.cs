@@ -637,7 +637,7 @@ namespace Neon.Kube
                     throw new ClusterDefinitionException($"Node [{node.Name}] has not been assigned a private IP address.");
                 }
 
-                if (!IPAddress.TryParse(node.Address, out var address))
+                if (!NetHelper.TryParseIPv4Address(node.Address, out var address))
                 {
                     throw new ClusterDefinitionException($"Node [{node.Name}] has invalid private IP address [{node.Address}].");
                 }
@@ -828,7 +828,7 @@ namespace Neon.Kube
                 {
                     var fields = endpoint.Split(':');
 
-                    if (!IPAddress.TryParse(fields[0], out var address) && !NetHelper.IsValidHost(fields[0]))
+                    if (!NetHelper.TryParseIPv4Address(fields[0], out var address) && !NetHelper.IsValidHost(fields[0]))
                     {
                         throw new ClusterDefinitionException($"Invalid IP address or HOSTNAME [{fields[0]}] in [{nameof(ClusterDefinition)}.{nameof(PackageProxy)}={PackageProxy}].");
                     }

@@ -110,7 +110,7 @@ namespace Neon.Kube
         public AddressRule(string addressOrSubnet, AddressRuleAction action)
         {
             Covenant.Requires<ArgumentException>(!string.IsNullOrEmpty(addressOrSubnet), nameof(addressOrSubnet));
-            Covenant.Requires<ArgumentException>(addressOrSubnet.Equals("any", StringComparison.InvariantCultureIgnoreCase) || IPAddress.TryParse(addressOrSubnet, out var v1) || NetworkCidr.TryParse(addressOrSubnet, out var v2), nameof(addressOrSubnet));
+            Covenant.Requires<ArgumentException>(addressOrSubnet.Equals("any", StringComparison.InvariantCultureIgnoreCase) || NetHelper.TryParseIPv4Address(addressOrSubnet, out var v1) || NetworkCidr.TryParse(addressOrSubnet, out var v2), nameof(addressOrSubnet));
 
             if (addressOrSubnet.Equals("any", StringComparison.InvariantCultureIgnoreCase))
             {
@@ -157,7 +157,7 @@ namespace Neon.Kube
         {
             if (!IsAny)
             {
-                if (!IPAddress.TryParse(AddressOrSubnet, out var v1) && !NetworkCidr.TryParse(AddressOrSubnet, out var v2))
+                if (!NetHelper.TryParseIPv4Address(AddressOrSubnet, out var v1) && !NetworkCidr.TryParse(AddressOrSubnet, out var v2))
                 {
                     throw new ClusterDefinitionException($"Invalid address or subnet [{AddressOrSubnet}] specified for a [{context}].");
                 }

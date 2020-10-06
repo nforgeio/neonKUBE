@@ -33,8 +33,7 @@ using Neon.Common;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
-using Org.BouncyCastle.Bcpg;
-using Renci.SshNet;
+using Neon.Net;
 
 namespace Neon.XenServer
 {
@@ -96,7 +95,7 @@ namespace Neon.XenServer
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username), nameof(username));
 
-            if (!IPAddress.TryParse(addressOrFQDN, out var address))
+            if (!NetHelper.TryParseIPv4Address(addressOrFQDN, out var address))
             {
                 var hostEntry = Dns.GetHostEntry(addressOrFQDN);
 
