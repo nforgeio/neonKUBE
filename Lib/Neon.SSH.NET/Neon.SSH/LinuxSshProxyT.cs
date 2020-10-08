@@ -1448,27 +1448,27 @@ rm {HostFolders.Home(Username)}/askpass
 
             Status = "prepare: user folders";
 
-            // [~/.neonkube]
+            // [~/.neon]
 
-            var folderPath = HostFolders.NeonKubeHome(Username);
+            var folderPath = HostFolders.NeonHome(Username);
             sshClient.RunCommand($"mkdir -p {folderPath} && chmod 700 {folderPath}");
 
-            // [~/.neonkube/archive]
+            // [~/.neon/archive]
 
             folderPath = HostFolders.Archive(Username);
             sshClient.RunCommand($"mkdir -p {folderPath} && chmod 700 {folderPath}");
 
-            // [~/.neonkube/download]
+            // [~/.neon/download]
 
             folderPath = HostFolders.Download(Username);
             sshClient.RunCommand($"mkdir -p {folderPath} && chmod 700 {folderPath}");
 
-            // [~/.neonkube/exec]
+            // [~/.neon/exec]
 
             folderPath = HostFolders.Exec(Username);
             sshClient.RunCommand($"mkdir -p {folderPath} && chmod 700 {folderPath}");
 
-            // [~/.neonkube/upload]
+            // [~/.neon/upload]
 
             folderPath = HostFolders.Upload(Username);
             sshClient.RunCommand($"mkdir -p {folderPath} && chmod 700 {folderPath}");
@@ -2294,12 +2294,12 @@ rm {HostFolders.Home(Username)}/askpass
             // it completed, potentially after we've been disconnected and then were
             // able to reestablish the connection.
             //
-            // We're going to use the [~/.neonkube/exec] folder coordinate
+            // We're going to use the [~/.neon/exec] folder coordinate
             // this by:
             //
             //      1. Generating a GUID for the operation.
             //
-            //      2. Creating a folder named [~/.neonkube/exec] for the 
+            //      2. Creating a folder named [~/.neon/exec] for the 
             //         operation.  This folder will be referred to as [$] below.
             //
             //      3. Generating a script called [$/cmd.sh] that 

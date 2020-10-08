@@ -1476,27 +1476,27 @@ rm {KubeHostFolders.Home(Username)}/askpass
 
             Status = "prepare: user folders";
 
-            // [~/.neonkube]
+            // [~/.neon]
 
-            var folderPath = KubeHostFolders.NeonKubeHome(Username);
+            var folderPath = KubeHostFolders.NeonHome(Username);
             sshClient.RunCommand($"mkdir -p {folderPath} && chmod 700 {folderPath}");
 
-            // [~/.neonkube/archive]
+            // [~/.neon/archive]
 
             folderPath = KubeHostFolders.Archive(Username);
             sshClient.RunCommand($"mkdir -p {folderPath} && chmod 700 {folderPath}");
 
-            // [~/.neonkube/download]
+            // [~/.neon/download]
 
             folderPath = KubeHostFolders.Download(Username);
             sshClient.RunCommand($"mkdir -p {folderPath} && chmod 700 {folderPath}");
 
-            // [~/.neonkube/exec]
+            // [~/.neon/exec]
 
             folderPath = KubeHostFolders.Exec(Username);
             sshClient.RunCommand($"mkdir -p {folderPath} && chmod 700 {folderPath}");
 
-            // [~/.neonkube/upload]
+            // [~/.neon/upload]
 
             folderPath = KubeHostFolders.Upload(Username);
             sshClient.RunCommand($"mkdir -p {folderPath} && chmod 700 {folderPath}");
@@ -2322,12 +2322,12 @@ rm {KubeHostFolders.Home(Username)}/askpass
             // it completed, potentially after we've been disconnected and then were
             // able to reestablish the connection.
             //
-            // We're going to use the [~/.neonkube/exec] folder coordinate
+            // We're going to use the [~/.neon/exec] folder coordinate
             // this by:
             //
             //      1. Generating a GUID for the operation.
             //
-            //      2. Creating a folder named [~/.neonkube/exec] for the 
+            //      2. Creating a folder named [~/.neon/exec] for the 
             //         operation.  This folder will be referred to as [$] below.
             //
             //      3. Generating a script called [$/cmd.sh] that 
