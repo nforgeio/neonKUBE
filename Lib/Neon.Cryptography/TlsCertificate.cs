@@ -39,14 +39,24 @@ using YamlDotNet.Serialization;
 using Neon.Common;
 using Neon.IO;
 
-// $todo(jefflill):
-//
-// Look into using [SecureString] for the [KeyPem] property.
-
 namespace Neon.Cryptography
 {
     /// <summary>
+    /// <para>
     /// Holds the public and private parts of a TLS certificate.
+    /// </para>
+    /// <note>
+    /// <para>
+    /// This class is a bit of a hack and relies on the presence of the <b>openssl</b>
+    /// command line tool for Linux, OS/X,... and the <b>certutil</b> tool for Windows.
+    /// This means that you'll need to take care to ensure <b>openssl</b> is present in
+    /// your Docker images, etc.
+    /// </para>
+    /// <para>
+    /// This class is deprecated.  We recommend that you use the .NET Core 3+ 
+    /// <c>X509Certificate2</c> or .NETFramework class instead.
+    /// </para>
+    /// </note>
     /// </summary>
     /// <remarks>
     /// <para>
@@ -59,6 +69,7 @@ namespace Neon.Cryptography
     /// authority after the certificate and before the private key.
     /// </note>
     /// </remarks>
+    [Obsolete("Try to use [X509Certificate2] instead.")]
     public class TlsCertificate
     {
         //---------------------------------------------------------------------
@@ -1175,7 +1186,7 @@ subjectAltName         = @alt_names
                 // $todo(jefflill):
                 //
                 // Hacking this using the [CertUtil] and [OpenSSL] tools until we completely port
-                // to using X509Certificate.  The main thing we need to do to accomplish this is
+                // to using X509Certificate2.  The main thing we need to do to accomplish this is
                 // to be able to parse the subject/subject alt names.  See the comment at the top
                 // of this file.
 

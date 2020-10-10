@@ -9,7 +9,7 @@ using Neon.Temporal;
 namespace Snippets_SignalWorkflow
 {
     #region code
-    [WorkflowInterface(TaskList = "my-tasks")]
+    [WorkflowInterface(TaskQueue = "my-tasks")]
     public interface IMyWorkflow : IWorkflow
     {
         [WorkflowMethod]
@@ -70,7 +70,7 @@ namespace Snippets_SignalWorkflow
                 // Create a worker and register the workflow and activity 
                 // implementations to let Temporal know we're open for business.
 
-                var worker = await client.NewWorkerAsync(new WorkerOptions() { TaskList = "my-tasks" });
+                var worker = await client.NewWorkerAsync(new WorkerOptions() { TaskQueue = "my-tasks" });
 
                 await worker.RegisterAssemblyAsync(Assembly.GetExecutingAssembly());
                 await worker.StartAsync();

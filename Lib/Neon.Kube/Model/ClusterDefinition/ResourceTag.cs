@@ -53,7 +53,7 @@ namespace Neon.Kube
         {
             this.Key = key;
 
-            if (!string.IsNullOrEmpty(Value))
+            if (!string.IsNullOrEmpty(value))
             {
                 this.Value = value;
             }

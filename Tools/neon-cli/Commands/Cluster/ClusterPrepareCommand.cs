@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -72,9 +73,8 @@ Server Requirements:
 --------------------
 
     * Supported version of Linux (server)
-    * Known root SSH credentials
-    * OpenSSH installed (or another SSH server)
-    * [sudo] elevates permissions without a password
+    * Known [sysadmin] sudoer user
+    * OpenSSH installed
 ";
         private const string    logBeginMarker  = "# CLUSTER-BEGIN-PREPARE ##########################################################";
         private const string    logEndMarker    = "# CLUSTER-END-PREPARE-SUCCESS ####################################################";
@@ -85,7 +85,6 @@ Server Requirements:
         private HostingManager  hostingManager;
         private string          clusterDefPath;
         private string          packageCaches;
-        private bool            force;
 
         /// <inheritdoc/>
         public override string[] Words
@@ -149,7 +148,6 @@ Server Requirements:
             }
 
             clusterDefPath = commandLine.Arguments[0];
-            force          = commandLine.GetFlag("--force");
 
             ClusterDefinition.ValidateFile(clusterDefPath, strict: true);
 
@@ -163,7 +161,7 @@ Server Requirements:
 
             if (KubeHelper.Config.GetContext(cluster.Definition.Name) != null)
             {
-                Console.Error.WriteLine($"*** ERROR: A context named [{cluster.Definition.Name}] already exists.");
+                Console.Error.WriteLine($"*** ERROR: A login named [{cluster.Definition.Name}] already exists.");
                 Program.Exit(1);
             }
 
@@ -186,13 +184,16 @@ Server Requirements:
                 // corrupt the existing cluster and also probably prevent the new cluster from
                 // provisioning correctly.
                 //
-                // Note that we're not going to perform this check for the [Machine] hosting 
+                // Note that we're not going to perform this check for the [BareMetal] hosting 
                 // environment because we're expecting the bare machines to be already running 
                 // with the assigned addresses and we're also not going to do this for cloud
                 // environments because we're assuming that the cluster will run in its own
-                // private network so there'll ne no possibility of conflicts.
+                // private network so there'll be no possibility of conflicts.
+                //
+                // We also won't do this for cloud deployments because those nodes will be
+                // running in an isolated private network.
 
-                if (cluster.Definition.Hosting.Environment != HostingEnvironment.Machine && 
+                if (cluster.Definition.Hosting.Environment != HostingEnvironment.BareMetal && 
                     !cluster.Definition.Hosting.IsCloudProvider)
                 {
                     Console.WriteLine();
@@ -218,7 +219,7 @@ Server Requirements:
                             using (var pinger = new Pinger())
                             {
                                 // We're going to try pinging up to [pingAttempts] times for each node
-                                // just in case the network it sketchy and we're losing reply packets.
+                                // just in case the network is sketchy and we're losing reply packets.
 
                                 for (int i = 0; i < pingAttempts; i++)
                                 {
@@ -243,7 +244,7 @@ Server Requirements:
                         Console.Error.WriteLine($"***        machines conflict with the following cluster nodes:");
                         Console.Error.WriteLine();
 
-                        foreach (var node in pingConflicts.OrderBy(n => NetHelper.AddressToUint(IPAddress.Parse(n.Address))))
+                        foreach (var node in pingConflicts.OrderBy(n => NetHelper.AddressToUint(NetHelper.ParseIPv4Address(n.Address))))
                         {
                             Console.Error.WriteLine($"{node.Address, 16}:    {node.Name}");
                         }
@@ -283,25 +284,25 @@ Server Requirements:
                     Program.VerifyAdminPrivileges($"Provisioning to [{cluster.Definition.Hosting.Environment}] requires elevated administrator privileges.");
                 }
 
-                // Load the cluster context extension information if it exists and if it indicates
-                // that setup is still pending, we'll use that information (especially the generated
+                // Load the cluster login information if it exists and if it indicates that
+                // setup is still pending, we'll use that information (especially the generated
                 // secure SSH password).
                 //
                 // Otherwise, we'll write (or overwrite) the context file with a fresh context.
 
-                var contextExtensionPath = KubeHelper.GetContextExtensionPath((KubeContextName)$"{KubeConst.RootUser}@{clusterDefinition.Name}");
-                var contextExtension     = KubeContextExtension.Load(contextExtensionPath);
+                var clusterLoginPath = KubeHelper.GetClusterLoginPath((KubeContextName)$"{KubeConst.RootUser}@{clusterDefinition.Name}");
+                var clusterLogin     = ClusterLogin.Load(clusterLoginPath);
 
-                if (contextExtension == null || !contextExtension.SetupDetails.SetupPending)
+                if (clusterLogin == null || !clusterLogin.SetupDetails.SetupPending)
                 {
-                    contextExtension = new KubeContextExtension(contextExtensionPath)
+                    clusterLogin = new ClusterLogin(clusterLoginPath)
                     {
                         ClusterDefinition = clusterDefinition,
                         SshUsername       = KubeConst.SysAdminUsername,
                         SetupDetails      = new KubeSetupDetails() { SetupPending = true }
                     };
 
-                    contextExtension.Save();
+                    clusterLogin.Save();
                 }
 
                 // We're going to generate a secure random password and we're going to append
@@ -328,18 +329,80 @@ Server Requirements:
 
                 var orgSshPassword = Program.MachinePassword;
 
-                if (hostingManager.GenerateSecurePassword && string.IsNullOrEmpty(contextExtension.SshPassword))
+                if (hostingManager.GenerateSecurePassword && string.IsNullOrEmpty(clusterLogin.SshPassword))
                 {
-                    contextExtension.SshPassword = NeonHelper.GetCryptoRandomPassword(clusterDefinition.Security.PasswordLength);
+                    clusterLogin.SshPassword = NeonHelper.GetCryptoRandomPassword(clusterDefinition.Security.PasswordLength);
 
                     // Append a string that guarantees that the generated password meets
                     // cloud minimum requirements.
 
-                    contextExtension.SshPassword += ".Aa0";
-                    contextExtension.Save();
+                    clusterLogin.SshPassword += ".Aa0";
+                    clusterLogin.Save();
                 }
 
-                if (!hostingManager.ProvisionAsync(force, contextExtension.SshPassword, orgSshPassword).Result)
+                // We're also going to generate the server's SSH key here and pass that to the hosting
+                // manager's provisioner.  We need to do this up front because some hosting environments
+                // like AWS don't allow SSH password authentication by default, so we'll need the SSH key
+                // to initialize the nodes after they've been provisioned for those environments.
+
+                if (clusterLogin.SshKey == null)
+                {
+                    // Generate a 2048 bit SSH key pair.
+
+                    clusterLogin.SshKey = KubeHelper.GenerateSshKey(cluster.Name, "sysadmin");
+
+                    // We're going to use WinSCP (if it's installed) to convert the OpenSSH PEM formatted key
+                    // to the PPK format PuTTY/WinSCP requires.
+
+                    if (NeonHelper.IsWindows)
+                    {
+                        var pemKeyPath = Path.Combine(KubeHelper.TempFolder, Guid.NewGuid().ToString("d"));
+                        var ppkKeyPath = Path.Combine(KubeHelper.TempFolder, Guid.NewGuid().ToString("d"));
+
+                        try
+                        {
+                            File.WriteAllText(pemKeyPath, clusterLogin.SshKey.PrivateOpenSSH);
+
+                            ExecuteResponse result;
+
+                            try
+                            {
+                                result = NeonHelper.ExecuteCapture("winscp.com", $@"/keygen ""{pemKeyPath}"" /comment=""{cluster.Definition.Name} Key"" /output=""{ppkKeyPath}""");
+                            }
+                            catch (Win32Exception)
+                            {
+                                return; // Tolerate when WinSCP isn't installed.
+                            }
+
+                            if (result.ExitCode != 0)
+                            {
+                                Console.WriteLine(result.OutputText);
+                                Console.Error.WriteLine(result.ErrorText);
+                                Program.Exit(result.ExitCode);
+                            }
+
+                            clusterLogin.SshKey.PrivatePPK = NeonHelper.ToLinuxLineEndings(File.ReadAllText(ppkKeyPath));
+
+                            // Persist the SSH key.
+
+                            clusterLogin.Save();
+                        }
+                        finally
+                        {
+                            if (File.Exists(pemKeyPath))
+                            {
+                                File.Delete(pemKeyPath);
+                            }
+
+                            if (File.Exists(ppkKeyPath))
+                            {
+                                File.Delete(ppkKeyPath);
+                            }
+                        }
+                    }
+                }
+
+                if (!hostingManager.ProvisionAsync(clusterLogin, clusterLogin.SshPassword, orgSshPassword).Result)
                 {
                     Program.Exit(1);
                 }
@@ -348,11 +411,11 @@ Server Requirements:
 
                 cluster.Definition.ValidatePrivateNodeAddresses();
 
-                var ipAddressToServer = new Dictionary<IPAddress, SshProxy<NodeDefinition>>();
+                var ipAddressToServer = new Dictionary<IPAddress, LinuxSshProxy<NodeDefinition>>();
 
                 foreach (var node in cluster.Nodes.OrderBy(n => n.Name))
                 {
-                    SshProxy<NodeDefinition> duplicateServer;
+                    LinuxSshProxy<NodeDefinition> duplicateServer;
 
                     if (node.Address == IPAddress.Any)
                     {
@@ -398,7 +461,7 @@ Server Requirements:
 
                 var operation = $"Preparing [{cluster.Definition.Name}] cluster nodes";
 
-                var controller = 
+                var setupController = 
                     new SetupController<NodeDefinition>(operation, cluster.Nodes)
                     {
                         ShowStatus  = !Program.Quiet,
@@ -407,11 +470,14 @@ Server Requirements:
 
                 // Prepare the nodes.
 
-                controller.AddWaitUntilOnlineStep(timeout: TimeSpan.FromMinutes(15));
-                hostingManager.AddPostProvisionSteps(controller);
-                controller.AddNodeStep("verify OS", CommonSteps.VerifyOS);
-
-                controller.AddNodeStep("prepare", 
+                setupController.AddWaitUntilOnlineStep(timeout: TimeSpan.FromMinutes(15));
+                setupController.AddNodeStep("node OS verify", CommonSteps.VerifyOS);
+                setupController.AddNodeStep("node credentials", 
+                    (node, stepDelay) =>
+                    {
+                        CommonSteps.ConfigureSshKey(node, clusterLogin);
+                    });
+                setupController.AddNodeStep("node prepare", 
                     (node, stepDelay) =>
                     {
                         Thread.Sleep(stepDelay);
@@ -419,7 +485,14 @@ Server Requirements:
                     },
                     stepStaggerSeconds: cluster.Definition.Setup.StepStaggerSeconds);
             
-                if (!controller.Run())
+                // Some hosting manages may have to some additional work after the node has
+                // been otherwise prepared.
+
+                hostingManager.AddPostPrepareSteps(setupController);
+
+                // Start cluster preparation.
+
+                if (!setupController.Run())
                 {
                     // Write the operation end/failed marker to all cluster node logs.
 
@@ -440,6 +513,8 @@ Server Requirements:
             }
             finally
             {
+                hostingManager?.Dispose();
+
                 if (!failed)
                 {
                     KubeHelper.Desktop.EndOperationAsync($"Cluster [{cluster.Name}] has been prepared and is ready for setup.").Wait();

@@ -33,6 +33,7 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Net;
+using System.Runtime;
 
 namespace Neon.Kube
 {
@@ -46,9 +47,14 @@ namespace Neon.Kube
         /// </summary>
         internal const int MaxPlacementPartitions = 7;
 
-        private const string            defaultInstanceType = "t3a.medium";
-        private const AwsVolumeType     defaultVolumeType   = AwsVolumeType.Gp2;
-        private const string            defaultVolumeSize   = "128 GiB";
+        private const string            defaultInstanceType      = "c4.xlarge";
+        internal const AwsVolumeType    defaultVolumeType        = AwsVolumeType.Gp2;
+        private const string            defaultVolumeSize        = "128 GiB";
+        internal const AwsVolumeType    defaultOpenEBSVolumeType = defaultVolumeType;
+        private const string            defaultOpenEBSVolumeSize = "128 GiB";
+        private const string            defaultVpcSubnet         = "10.100.0.0/16";
+        private const string            defaultPrivateSubnet     = "10.100.0.0/24";
+        private const string            defaultPublicSubnet      = "10.100.255.0/24";
 
         /// <summary>
         /// Constructor.
@@ -185,9 +191,20 @@ namespace Neon.Kube
         public string ResourceGroup { get; set; }
 
         /// <summary>
+        /// <para>
         /// Identifies the default AWS instance type to be provisioned for cluster nodes that don't
-        /// specify an instance type.  This defaults to <b>t3a.medium</b> which includes 2 virtual
-        /// cores and 4 GiB RAM.
+        /// specify an instance type.  This defaults to <b>c4.xlarge</b> which includes 4 virtual
+        /// cores and 7.5 GiB RAM but can be overridden for specific cluster nodes via
+        /// <see cref="AwsNodeOptions.InstanceType"/>.
+        /// </para>
+        /// <note>
+        /// neonKUBE clusters cannot be deployed to ARM-based AWS instance types.  You must
+        /// specify an instance type using a Intel or AMD 64-bit processor.
+        /// </note>
+        /// <note>
+        /// neonKUBE requires master and worker instances to have at least 4 CPUs and 4GiB RAM.  Choose
+        /// an AWS instance type that satisfies these requirements.
+        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "DefaultInstanceType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "defaultInstanceType", ApplyNamingConventions = false)]
@@ -195,9 +212,53 @@ namespace Neon.Kube
         public string DefaultInstanceType { get; set; } = defaultInstanceType;
 
         /// <summary>
-        /// Specifies the default EBS volume type to use for cluster node disks.  This defaults
+        /// <para>
+        /// Specifies whether the cluster instances should be EBS-optimized by default.  
+        /// This defaults to <c>false</c> and can be overidden for specific cluster nodes
+        /// via <see cref="AwsNodeOptions.EbsOptimized"/>.
+        /// </para>
+        /// <para>
+        /// <a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-optimized.html">Amazon EBS–optimized instances</a>
+        /// </para>
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Non EBS optimized instances perform disk operation I/O to EBS volumes using the same
+        /// network used for other network operations.  This means that you may see some disk
+        /// performance declines when your instance is busy serving web traffic or running
+        /// database queries, etc.
+        /// </para>
+        /// <para>
+        /// EBS optimization can be enabled for some instance types.  This provisions extra dedicated
+        /// network bandwidth exclusively for EBS I/O.  Exactly how this works, depends on the specific
+        /// VM type.
+        /// </para>
+        /// <para>
+        /// More modern AWS VM types enable EBS optimization by default and you won't incur any
+        /// additional charges for these instances and disabling EBS optimization here or via
+        /// <see cref="AwsNodeOptions.EbsOptimized"/> won't have any effect.
+        /// </para>
+        /// <para>
+        /// Some AWS instance types can be optimized but this is disabled by default.  When you
+        /// enable this by setting <see cref="AwsHostingOptions.DefaultEbsOptimized"/><c>=true</c> or 
+        /// <see cref="AwsNodeOptions.EbsOptimized"/><c>=true</c>, you'll probably an additional
+        /// AWS hourly fee for these instances.
+        /// </para>
+        /// <para>
+        /// Some AWS instance types don't support EBS optimization.  You'll need to be sure that
+        /// this is disabled for those nodes.
+        /// </para>
+        /// </remarks>
+        [JsonProperty(PropertyName = "DefaultEbsOptimized", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "defaultEbsOptimized", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool DefaultEbsOptimized { get; set; } = false;
+
+        /// <summary>
+        /// Specifies the default AWS volume type for cluster node primary disks.  This defaults
         /// to <see cref="AwsVolumeType.Gp2"/> which is SSD based and offers a reasonable
-        /// compromise between performance and cost.
+        /// compromise between performance and cost.  This can be overriden for specific cluster
+        /// nodes via <see cref="AwsNodeOptions.VolumeType"/>.
         /// </summary>
         [JsonProperty(PropertyName = "DefaultVolumeType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "defaultVolumeType", ApplyNamingConventions = false)]
@@ -205,20 +266,76 @@ namespace Neon.Kube
         public AwsVolumeType DefaultVolumeType { get; set; } = defaultVolumeType;
 
         /// <summary>
-        /// Specifies the default AWS disk size to be used when creating a
-        /// node that does not specify a disk size in its <see cref="NodeOptions"/>.
-        /// This defaults to <b>128 GiB</b>.
+        /// Specifies the default AWS volume size for the cluster node primary disks.
+        /// This defaults to <b>128 GiB</b> but can be overridden for specific cluster
+        /// nodes via <see cref="AwsNodeOptions.VolumeSize"/>.
         /// </summary>
         /// <remarks>
         /// <note>
         /// Node disks smaller than 32 GiB are not supported by neonKUBE.  We'll automatically
-        /// upgrade the disk size when necessary.
+        /// round up the disk size when necessary.
         /// </note>
         /// </remarks>
         [JsonProperty(PropertyName = "DefaultVolumeSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "defaultVolumeSize", ApplyNamingConventions = false)]
         [DefaultValue(defaultVolumeSize)]
         public string DefaultVolumeSize { get; set; } = defaultVolumeSize;
+
+        /// <summary>
+        /// Specifies the default AWS volume type to use for OpenEBS cStore disks.  This defaults
+        /// to <see cref="AwsVolumeType.Gp2"/> which is SSD based and offers a reasonable
+        /// compromise between performance and cost.  This can be overridden for specific
+        /// cluster nodes via <see cref="AwsNodeOptions.OpenEBSVolumeType"/>.
+        /// </summary>
+        [JsonProperty(PropertyName = "DefaultOpenEBSVolumeType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "defaultOpenEBSVolumeType", ApplyNamingConventions = false)]
+        [DefaultValue(defaultOpenEBSVolumeType)]
+        public AwsVolumeType DefaultOpenEBSVolumeType { get; set; } = defaultOpenEBSVolumeType;
+
+        /// <summary>
+        /// Specifies the default AWS volume size to be used when creating 
+        /// OpenEBS cStore disks.  This defaults to <b>128 GiB</b> but can
+        /// be overridden for specific cluster nodes via <see cref="AwsNodeOptions.OpenEBSVolumeSize"/>.
+        /// </summary>
+        /// <remarks>
+        /// <note>
+        /// Node disks smaller than 32 GiB are not supported by neonKUBE.  We'll automatically
+        /// round up the disk size when necessary.
+        /// </note>
+        /// </remarks>
+        [JsonProperty(PropertyName = "DefaultOpenEBSVolumeSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "defaultOpenEBSVolumeSize", ApplyNamingConventions = false)]
+        [DefaultValue(defaultOpenEBSVolumeSize)]
+        public string DefaultOpenEBSVolumeSize { get; set; } = defaultVolumeSize;
+
+        /// <summary>
+        /// Specifies the subnet CIDR to used for AWS VPC (virtual private cloud) provisioned
+        /// for the cluster.  This must surround the <see cref="NodeSubnet"/> and
+        /// <see cref="PublicSubnet"/> subnets.  This defaults to <b>10.100.0.0/16</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "VpcSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "vpcSubnet", ApplyNamingConventions = false)]
+        [DefaultValue(defaultVpcSubnet)]
+        public string VpcSubnet { get; set; } = defaultVpcSubnet;
+
+        /// <summary>
+        /// Specifies the private subnet CIDR within <see cref="VpcSubnet"/> for the private subnet
+        /// where the cluster node instances will be provisioned.  This defaults to <b>10.100.0.0/24</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "PrivateSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "privateSubnet", ApplyNamingConventions = false)]
+        [DefaultValue(defaultPrivateSubnet)]
+        public string NodeSubnet { get; set; } = defaultPrivateSubnet;
+
+        /// <summary>
+        /// Specifies the public subnet CIDR within <see cref="VpcSubnet"/> for the public subnet where
+        /// the AWS network load balancer will be provisioned to manage inbound cluster traffic.
+        /// This defaults to <b>10.100.255.0/16</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "PublicSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "publicSubnet", ApplyNamingConventions = false)]
+        [DefaultValue(defaultPublicSubnet)]
+        public string PublicSubnet { get; set; } = defaultPublicSubnet;
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
@@ -326,6 +443,18 @@ namespace Neon.Kube
                 throw new ClusterDefinitionException($"AWS hosting [{nameof(DefaultVolumeSize)}={DefaultVolumeSize}] is not valid.");
             }
 
+            // Verify [DefaultOpenEBSVolumeSize].
+
+            if (string.IsNullOrEmpty(DefaultOpenEBSVolumeSize))
+            {
+                DefaultOpenEBSVolumeSize = defaultOpenEBSVolumeSize;
+            }
+
+            if (!ByteUnits.TryParse(DefaultOpenEBSVolumeSize, out var openEbsVolumeSize) || openEbsVolumeSize <= 0)
+            {
+                throw new ClusterDefinitionException($"AWS hosting [{nameof(DefaultOpenEBSVolumeSize)}={DefaultOpenEBSVolumeSize}] is not valid.");
+            }
+
             // Check AWS cluster limits.
 
             if (clusterDefinition.Masters.Count() > KubeConst.MaxMasters)
@@ -336,6 +465,74 @@ namespace Neon.Kube
             if (clusterDefinition.Nodes.Count() > AwsHelper.MaxClusterNodes)
             {
                 throw new ClusterDefinitionException($"cluster node count [{clusterDefinition.Nodes.Count()}] exceeds the [{AwsHelper.MaxClusterNodes}] limit for clusters deployed to AWS.");
+            }
+
+            //-----------------------------------------------------------------
+            // Network subnets
+
+            VpcSubnet     = VpcSubnet ?? defaultVpcSubnet;
+            NodeSubnet = NodeSubnet ?? defaultPrivateSubnet;
+            PublicSubnet  = PublicSubnet ?? defaultPublicSubnet;
+
+            const int minAwsPrefix = 16;
+            const int maxAwsPrefix = 28;
+
+            // VpcSubnet
+
+            if (!NetworkCidr.TryParse(VpcSubnet, out var vpcSubnet))
+            {
+                throw new ClusterDefinitionException($"AWS hosting [{nameof(VpcSubnet)}={VpcSubnet}] is not a valid subnet.");
+            }
+
+            if (vpcSubnet.PrefixLength < minAwsPrefix)
+            {
+                throw new ClusterDefinitionException($"AWS hosting [{nameof(VpcSubnet)}={VpcSubnet}] is too large.  The smallest CIDR prefix supported by AWS is [/{minAwsPrefix}].");
+            }
+
+            if (vpcSubnet.PrefixLength > maxAwsPrefix)
+            {
+                throw new ClusterDefinitionException($"AWS hosting [{nameof(VpcSubnet)}={VpcSubnet}] is too large.  The largest CIDR prefix supported by AWS is [/{maxAwsPrefix}].");
+            }
+
+            // PrivateSubnet
+
+            if (!NetworkCidr.TryParse(NodeSubnet, out var privateSubnet))
+            {
+                throw new ClusterDefinitionException($"AWS hosting [{nameof(NodeSubnet)}={NodeSubnet}] is not a valid subnet.");
+            }
+
+            if (vpcSubnet.PrefixLength < minAwsPrefix)
+            {
+                throw new ClusterDefinitionException($"AWS hosting [{nameof(NodeSubnet)}={NodeSubnet}] is too large.  The smallest CIDR prefix supported by AWS is [/{minAwsPrefix}].");
+            }
+
+            if (vpcSubnet.PrefixLength > maxAwsPrefix)
+            {
+                throw new ClusterDefinitionException($"AWS hosting [{nameof(NodeSubnet)}={NodeSubnet}] is too large.  The largest CIDR prefix supported by AWS is [/{maxAwsPrefix}].");
+            }
+
+            // PublicSubnet
+
+            if (!NetworkCidr.TryParse(PublicSubnet, out var publicSubnet))
+            {
+                throw new ClusterDefinitionException($"AWS hosting [{nameof(PublicSubnet)}={PublicSubnet}] is not a valid subnet.");
+            }
+
+            // Ensure that the subnets fit together.
+
+            if (!vpcSubnet.Contains(privateSubnet))
+            {
+                throw new ClusterDefinitionException($"AWS hosting [{nameof(PublicSubnet)}={PublicSubnet}] is not contained within [{nameof(VpcSubnet)}={VpcSubnet}].");
+            }
+
+            if (!vpcSubnet.Contains(publicSubnet))
+            {
+                throw new ClusterDefinitionException($"AWS hosting [{nameof(NodeSubnet)}={NodeSubnet}] is not contained within [{nameof(VpcSubnet)}={VpcSubnet}].");
+            }
+
+            if (privateSubnet.Overlaps(publicSubnet))
+            {
+                throw new ClusterDefinitionException($"AWS hosting [{nameof(NodeSubnet)}={NodeSubnet}] and [{nameof(PublicSubnet)}={PublicSubnet}] cannot overlap.");
             }
         }
     }

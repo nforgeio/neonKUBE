@@ -125,6 +125,11 @@ namespace Neon.Kube
         /// </summary>
         public const string LabelIngress = ClusterDefinition.ReservedLabelPrefix + "node.ingress";
 
+        /// <summary>
+        /// Reserved label name used to indicate that a node host an OpenEBS cStore block device.
+        /// </summary>
+        public const string LabelOpenEbs = ClusterDefinition.ReservedLabelPrefix + "node.openebs";
+
         //---------------------------------------------------------------------
         // Azure hosting related labels.
 
@@ -235,7 +240,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// <b>io.neonkube/compute.cores</b> [<c>int</c>]: Specifies the number of CPU cores.
-        /// This defaults to <b>0</b> for <see cref="HostingEnvironment.Machine"/>
+        /// This defaults to <b>0</b> for <see cref="HostingEnvironment.BareMetal"/>
         /// and is initialized for cloud and Hypervisor based hosting environments.
         /// </summary>
         [JsonProperty(PropertyName = "ComputeCores", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
@@ -245,7 +250,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// <b>io.neonkube/compute.ram_mb</b> [<c>int</c>]: Specifies the available RAM in
-        /// megabytes.  This defaults to <b>0</b> for <see cref="HostingEnvironment.Machine"/>
+        /// megabytes.  This defaults to <b>0</b> for <see cref="HostingEnvironment.BareMetal"/>
         /// and is initialized for cloud and Hypervisor based hosting environments.
         /// </summary>
         [JsonProperty(PropertyName = "ComputeRamMiB", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
@@ -387,37 +392,55 @@ namespace Neon.Kube
         public bool Istio { get; set; } = false;
 
         //---------------------------------------------------------------------
+        // Define the neon-system related labels.
+
+        /// <summary>
+        /// Reserved label name for <see cref="LabelNeonSystemDb"/>.
+        /// </summary>
+        public const string LabelNeonSystemDb = ClusterDefinition.ReservedLabelPrefix + "neon-system.db";
+
+        /// <summary>
+        /// <b>io.neonkube.neon-system.db</b> [<c>bool</c>]: Indicates that the neon-system 
+        /// Citus/Postgresql database will be deployed to this node.  
+        /// This defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "NeonSystemDb", Required = Required.Default)]
+        [YamlMember(Alias = "neonSystemDb", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool NeonSystemDb { get; set; } = false;
+
+        //---------------------------------------------------------------------
         // Define the logging related labels.
 
         /// <summary>
-        /// Reserved label name for <see cref="Elasticsearch"/>.
+        /// Reserved label name for <see cref="Logs"/>.
         /// </summary>
-        public const string LabelElasticsearch = ClusterDefinition.ReservedLabelPrefix + "monitor.elasticsearch";
+        public const string LabelLogs = ClusterDefinition.ReservedLabelPrefix + "monitor.logs";
 
         /// <summary>
-        /// Reserved label name for <see cref="M3DB"/>.
+        /// Reserved label name for <see cref="Metrics"/>.
         /// </summary>
-        public const string LabelM3DB = ClusterDefinition.ReservedLabelPrefix + "monitor.m3db";
+        public const string LabelMetrics = ClusterDefinition.ReservedLabelPrefix + "monitor.metrics";
 
         /// <summary>
-        /// <b>io.neonkube.monitor.elasticsearch</b> [<c>bool</c>]: Indicates that Elasticsearch 
-        /// will be deployed to this node if <see cref="ElasticsearchOptions.Enabled"/> is <c>true</c>.  
+        /// <b>io.neonkube.monitor.logs</b> [<c>bool</c>]: Indicates that Elasticsearch 
+        /// will be deployed to this node if <see cref="LogOptions.Enabled"/> is <c>true</c>.  
         /// This defaults to <c>false</c>.
         /// </summary>
-        [JsonProperty(PropertyName = "Elasticsearch", Required = Required.Default)]
-        [YamlMember(Alias = "elasticsearch", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "Logs", Required = Required.Default)]
+        [YamlMember(Alias = "logs", ApplyNamingConventions = false)]
         [DefaultValue(false)]
-        public bool Elasticsearch { get; set; } = false;
+        public bool Logs { get; set; } = false;
 
         /// <summary>
-        /// <b>io.neonkube.monitor.m3db</b> [<c>bool</c>]: Indicates that M3DB 
-        /// will be deployed to this node if <see cref="PrometheusOptions.Enabled"/> is <c>true</c>.  
+        /// <b>io.neonkube.monitor.metrics</b> [<c>bool</c>]: Indicates that Metrics 
+        /// will be deployed to this node if <see cref="MetricsOptions.Enabled"/> is <c>true</c>.  
         /// This defaults to <c>false</c>.
         /// </summary>
-        [JsonProperty(PropertyName = "M3DB", Required = Required.Default)]
-        [YamlMember(Alias = "m3db", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "Metrics", Required = Required.Default)]
+        [YamlMember(Alias = "metrics", ApplyNamingConventions = false)]
         [DefaultValue(false)]
-        public bool M3DB { get; set; } = false;
+        public bool Metrics { get; set; } = false;
 
         //---------------------------------------------------------------------
         // Custom labels
@@ -460,6 +483,7 @@ namespace Neon.Kube
                 list.Add(new KeyValuePair<string, object>(LabelAddress,                     Node.Address));
                 list.Add(new KeyValuePair<string, object>(LabelRole,                        Node.Role));
                 list.Add(new KeyValuePair<string, object>(LabelIngress,                     Node.Ingress));
+                list.Add(new KeyValuePair<string, object>(LabelOpenEbs,                     Node.OpenEBS));
 
                 if (Node.Azure != null)
                 {
@@ -484,11 +508,13 @@ namespace Neon.Kube
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalAvailabilitytSet,    PhysicalAvailabilitySet));
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalPower,               PhysicalPower));
 
+                list.Add(new KeyValuePair<string, object>(LabelNeonSystemDb,                NeonHelper.ToBoolString(NeonSystemDb)));
+
                 list.Add(new KeyValuePair<string, object>(LabelIstio,                       NeonHelper.ToBoolString(Istio)));
 
-                list.Add(new KeyValuePair<string, object>(LabelElasticsearch,               NeonHelper.ToBoolString(Elasticsearch)));
+                list.Add(new KeyValuePair<string, object>(LabelLogs,                        NeonHelper.ToBoolString(Logs)));
 
-                list.Add(new KeyValuePair<string, object>(LabelM3DB,                        NeonHelper.ToBoolString(M3DB)));
+                list.Add(new KeyValuePair<string, object>(LabelMetrics,                     NeonHelper.ToBoolString(Metrics)));
 
                 return list;
             }
@@ -549,6 +575,7 @@ namespace Neon.Kube
                     case LabelAddress:                      Node.Address = label.Value; break;
                     case LabelRole:                         Node.Role = label.Value; break;
                     case LabelIngress:                      ParseCheck(label, () => { Node.Ingress = NeonHelper.ParseBool(label.Value); }); break; 
+                    case LabelOpenEbs:                      ParseCheck(label, () => { Node.OpenEBS = NeonHelper.ParseBool(label.Value); }); break; 
 
                     case LabelAzureVmSize:
                     case LabelAzureStorageType:

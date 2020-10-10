@@ -43,7 +43,7 @@ namespace TestTemporal
     {
         //---------------------------------------------------------------------
 
-        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
+        [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IWorkflowDuplicateBlankEntrypoint : IWorkflow
         {
             [WorkflowMethod]
@@ -82,7 +82,7 @@ namespace TestTemporal
 
         //---------------------------------------------------------------------
 
-        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
+        [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IWorkflowDuplicateEntrypoint : IWorkflow
         {
             [WorkflowMethod(Name ="same")]
@@ -120,7 +120,7 @@ namespace TestTemporal
 
         //---------------------------------------------------------------------
 
-        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
+        [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IWorkflowNoEntrypoint : IWorkflow
         {
         }
@@ -144,7 +144,7 @@ namespace TestTemporal
 
         //---------------------------------------------------------------------
 
-        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
+        [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IWorkflowDuplicateSignal : IWorkflow
         {
             [WorkflowMethod]
@@ -190,7 +190,7 @@ namespace TestTemporal
 
         //---------------------------------------------------------------------
 
-        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
+        [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IWorkflowDuplicateQuery : IWorkflow
         {
             [WorkflowMethod]
@@ -236,14 +236,14 @@ namespace TestTemporal
 
         //---------------------------------------------------------------------
 
-        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
+        [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IWorkflowMultiInterface1 : IWorkflow
         {
             [WorkflowMethod]
             Task Run1Async();
         }
 
-        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
+        [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IWorkflowMultiInterface2 : IWorkflow
         {
             [WorkflowMethod]

@@ -50,9 +50,9 @@ livenessProbe:
 
 image:
   repository: grafana/grafana
-  tag: 7.0.3
+  tag: 7.1.5
+  sha: ""
   pullPolicy: IfNotPresent
-
   ## Optionally specify an array of imagePullSecrets.
   ## Secrets must be manually created in the namespace.
   ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
@@ -160,7 +160,8 @@ resources: {}
 ## Node labels for pod assignment
 ## ref: https://kubernetes.io/docs/user-guide/node-selection/
 #
-nodeSelector: {}
+nodeSelector:
+  neonkube.io/monitor.metrics: "true"
 
 ## Tolerations for pod assignment
 ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
@@ -173,6 +174,7 @@ tolerations: []
 affinity: {}
 
 extraInitContainers: []
+
 
 ## Enable an Specify container in extraContainers. This is meant to allow adding an authentication proxy to a grafana pod
 extraContainers: |
@@ -193,11 +195,6 @@ extraContainers: |
 
 ## Volumes that can be used in init containers that will not be mounted to deployment pods
 extraContainerVolumes: []
-#  - name: volume-from-secret
-#    secret:
-#      secretName: secret-to-mount
-#  - name: empty-dir-volume
-#    emptyDir: {}
 
 ## Enable persistence using Persistent Volume Claims
 ## ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
@@ -205,10 +202,10 @@ extraContainerVolumes: []
 persistence:
   type: pvc
   enabled: false
-  # storageClassName: default
+  storageClassName: ""
   accessModes:
     - ReadWriteOnce
-  size: 10Gi
+  size: 2Gi
   # annotations: {}
   finalizers:
     - kubernetes.io/pvc-protection
@@ -219,7 +216,7 @@ initChownData:
   ## If false, data ownership will not be reset at startup
   ## This allows the prometheus-server to be run with an arbitrary user
   ##
-  enabled: true
+  enabled: false
 
   ## initChownData container image
   ##
@@ -303,7 +300,6 @@ extraVolumeMounts: []
 ## Pass the plugins you want installed as a list.
 ##
 plugins:
-  - digrich-bubblechart-panel
   - grafana-clock-panel
   - grafana-worldmap-panel
   - briangann-gauge-panel
@@ -321,7 +317,7 @@ datasources:
     datasources:
     - name: Prometheus
       type: prometheus
-      url: http://m3coordinator-m3db-prometheus.monitoring:7201
+      url: http://neon-metrics-cortex:9009/api/prom
       access: proxy
       isDefault: true
       jsonData:
@@ -396,73 +392,35 @@ dashboards:
   #    json: |
   #       $RAW_JSON
      galley-dashboard:
-       gnetId: 7648
-       revision: 3
-       datasource: Prometheus
+       file: dashboards/istio-galley-dashboard.json
      istio-mesh-dashboard:
-       gnetId: 7639
-       revision: 13
-       datasource: Prometheus
+       file: dashboards/istio-mesh-dashboard.json
      istio-performance-dashboard:
-       gnetId: 12153
-       revision: 1
-       datasource: Prometheus
+       file: dashboards/istio-performance-dashboard.json
      istio-service-dashboard:
-       gnetId: 7636
-       revision: 13
-       datasource: Prometheus
+       file: dashboards/istio-service-dashboard.json
      istio-workload-dashboard:
-       gnetId: 7630
-       revision: 13
-       datasource: Prometheus
+       file: dashboards/istio-workload-dashboard.json
      istio-mixer-dashboard:
-       gnetId: 7642
-       revision: 13
-       datasource: Prometheus
+       file: dashboards/istio-mixer-dashboard.json
      istio-control-plane-dashboard:
-       gnetId: 7645
-       revision: 13
-       datasource: Prometheus
+       file: dashboards/istio-control-plane-dashboard.json
      prometheus-alertmanager:
-       gnetId: 9578
-       revision: 4
-       datasource: Prometheus
+       file: dashboards/alertmanager_rev4.json
      node-metrics:
-       gnetId: 1860
-       revision: 19
-       datasource: Prometheus
-     open-ebs:
-       gnetId: 12171
-       revision: 2
-       datasource: Prometheus
-     ceph:
-       gnetId: 2842
-       revision: 11
-       datasource: Prometheus
+       file: dashboards/node-exporter-full_rev21.json
      all-nodes:
-       gnetId: 11074
-       revision: 2
-       datasource: Prometheus
-     m3-dashboard:
-       gnetId: 8126
-       revision: 1
-       datasource: Prometheus
+       file: dashboards/node-exporter-en_rev4.json
      fluentd:
-       gnetId: 9950
-       revision: 3
-       datasource: Prometheus
-     fluentd:
-       gnetId: 11620
-       revision: 1
-       datasource: Prometheus
-     linux-node-alerts:
-       gnetId: 5984
-       revision: 4
-       datasource: Prometheus
+       file: dashboards/fluentd-dashboard-prometheus-exporter_rev3
+     fluent-bit:
+       file: dashboards/logging-dashboard_rev1.json
      k8s-summary:
-       gnetId: 8685
-       revision: 1
-       datasource: Prometheus
+       file: dashboards/k8s-cluster-summary_rev1.json
+     yugabyte:
+       file: dashboards/yugabytedb_rev2.json
+     cortex:
+       file: dashboards/cortex-performance_rev1.json
 
 ## Reference to external ConfigMap per provider. Use provider name as key and ConfiMap name as value.
 ## A provider dashboards must be defined either by external ConfigMaps or in values.yaml, not in both.
@@ -480,6 +438,11 @@ dashboardsConfigMaps: {}
 ## ref: http://docs.grafana.org/installation/configuration/
 ##
 grafana.ini:
+  database:
+    type: postgres
+    host: neon-system-db-citus-postgresql.neon-system
+    name: grafana
+    user: grafana
   paths:
     data: /var/lib/grafana/data
     logs: /var/log/grafana
@@ -556,7 +519,10 @@ smtp:
 ## Sidecars that collect the configmaps with specified label and stores the included files them into the respective folders
 ## Requires at least Grafana 5 to work and can't be used together with parameters dashboardProviders, datasources and dashboards
 sidecar:
-  image: kiwigrid/k8s-sidecar:0.1.151
+  image:
+    repository: kiwigrid/k8s-sidecar
+    tag: 0.1.151
+    sha: ""
   imagePullPolicy: IfNotPresent
   resources: {}
 #   limits:
@@ -567,8 +533,9 @@ sidecar:
 #     memory: 50Mi
   # skipTlsVerify Set to true to skip tls verification for kube api calls
   # skipTlsVerify: true
+  enableUniqueFilenames: false
   dashboards:
-    enabled: false
+    enabled: true
     SCProvider: true
     # label that the configmaps with dashboards are marked with
     label: grafana_dashboard
@@ -594,11 +561,21 @@ sidecar:
       disableDelete: false
       # allow updating provisioned dashboards from the UI
       allowUiUpdates: false
+      # allow Grafana to replicate dashboard structure from filesystem
+      foldersFromFilesStructure: false
   datasources:
     enabled: false
     # label that the configmaps with datasources are marked with
     label: grafana_datasource
     # If specified, the sidecar will search for datasource config-maps inside this namespace.
+    # Otherwise the namespace in which the sidecar is running will be used.
+    # It's also possible to specify ALL to search in all namespaces
+    searchNamespace: null
+  notifiers:
+    enabled: false
+    # label that the configmaps with notifiers are marked with
+    label: grafana_notifier
+    # If specified, the sidecar will search for notifier config-maps inside this namespace.
     # Otherwise the namespace in which the sidecar is running will be used.
     # It's also possible to specify ALL to search in all namespaces
     searchNamespace: null

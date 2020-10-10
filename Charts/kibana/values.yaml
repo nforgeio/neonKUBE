@@ -108,7 +108,8 @@ readinessProbe:
   timeoutSeconds: 5
 
 imagePullSecrets: []
-nodeSelector: {}
+nodeSelector: 
+  neonkube.io/monitor.logs: "true"
 tolerations: []
 affinity: {}
 

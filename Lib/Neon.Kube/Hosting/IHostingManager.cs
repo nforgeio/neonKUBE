@@ -72,10 +72,9 @@ namespace Neon.Kube
         /// Creates and initializes the cluster resources such as the virtual machines,
         /// networks, load balancers, network security groups, public IP addresses etc.
         /// </summary>
-        /// <param name="force">
-        /// Indicates that any existing resources (such as virtual machines) 
-        /// are to be replaced or overwritten during privisioning.  The actual interpretation
-        /// of this parameter is specific to each hosting manager implementation.
+        /// <param name="clusterLogin">
+        /// The login for the cluster being provisioned.
+        /// This is required.
         /// </param>
         /// <param name="secureSshPassword">
         /// The secure SSH password to be set for all node VMs. This is required.
@@ -97,13 +96,13 @@ namespace Neon.Kube
         /// equivalent to calling <see cref="EnableInternetSshAsync"/>.
         /// </para>
         /// </remarks>
-        Task<bool> ProvisionAsync(bool force, string secureSshPassword, string orgSshPassword = null);
+        Task<bool> ProvisionAsync(ClusterLogin clusterLogin, string secureSshPassword, string orgSshPassword = null);
 
         /// <summary>
-        /// Adds any necessary post-provisioning steps to a setup controller.
+        /// Adds any steps to be performed after the node has been otherwise prepared.
         /// </summary>
-        /// <param name="controller">The target setup controller.</param>
-        void AddPostProvisionSteps(SetupController<NodeDefinition> controller);
+        /// <param name="setupController">The target setup controller.</param>
+        void AddPostPrepareSteps(SetupController<NodeDefinition> setupController);
 
         /// <summary>
         /// Returns <c>true</c> if the hosting manage is capable of updating the upstream
@@ -136,7 +135,7 @@ namespace Neon.Kube
         /// <para>
         /// Each node will be assigned a public port that has a NAT rule directing SSH
         /// traffic to that specific node.  These ports will be in the range of
-        /// <see cref="NetworkOptions.ReservedIngressStartPort"/> to <see cref="NetworkOptions.ReservedIngressEndPort"/>.
+        /// <see cref="NetworkOptions.FirstExternalSshPort"/> to <see cref="NetworkOptions.LastExternalSshPort"/>.
         /// <see cref="GetSshEndpoint(string)"/> will return the external endpoint
         /// for nodes when external SSH is enabled. 
         /// </para>
@@ -187,6 +186,6 @@ namespace Neon.Kube
         /// This will not work after the node's data disk has been initialized.
         /// </note>
         /// </remarks>
-        string GetDataDevice(SshProxy<NodeDefinition> node);
+        string GetDataDisk(LinuxSshProxy<NodeDefinition> node);
     }
 }

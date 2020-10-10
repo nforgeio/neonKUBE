@@ -62,8 +62,13 @@ namespace Neon.Kube
         public string Host { get; set; } = null;
 
         /// <summary>
+        /// <para>
         /// Specifies the number of processors to assigned to this node when provisioned on a hypervisor.  This
         /// defaults to the value specified by <see cref="VmHostingOptions.Processors"/>.
+        /// </para>
+        /// <note>
+        /// neonKUBE requires that each master and worker node have at least 4 CPUs.
+        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "Processors", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "processors", ApplyNamingConventions = false)]
@@ -71,10 +76,15 @@ namespace Neon.Kube
         public int Processors { get; set; } = 0;
 
         /// <summary>
-        /// Specifies the maximum amount of memory to allocate to this node when provisioned on a hypervisor.  
+        /// <para>
+        /// Specifies the amount of memory to allocate to this node when provisioned on a hypervisor.  
         /// This is specified as a string that can be a byte count or a number with units like <b>512MB</b>, 
         /// <b>0.5GB</b>, <b>2GB</b>, or <b>1TB</b>.  This defaults to the value specified by 
         /// <see cref="VmHostingOptions.Memory"/>.
+        /// </para>
+        /// <note>
+        /// neonKUBE requires that each master and worker node have at least 4GiB of RAM.
+        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "Memory", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "memory", ApplyNamingConventions = false)]
@@ -82,14 +92,25 @@ namespace Neon.Kube
         public string Memory { get; set; } = null;
 
         /// <summary>
-        /// The amount of disk space to allocate to this node when when provisioned on a hypervisor.  This is specified as a string
-        /// that can be a byte count or a number with units like <b>512MB</b>, <b>0.5GB</b>, <b>2GB</b>, or <b>1TB</b>.  This defaults 
-        /// to the value specified by <see cref="VmHostingOptions.Disk"/>.
+        /// The size of operating system disk for this node when when provisioned on a hypervisor.  This is specified 
+        /// as a string that can be a byte count or a number with units like <b>512MB</b>, <b>0.5GB</b>, <b>2GB</b>, or <b>1TB</b>.  This 
+        /// defaults to the value specified by <see cref="VmHostingOptions.OsDisk"/>.
         /// </summary>
-        [JsonProperty(PropertyName = "Disk", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "disk", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "OsDisk", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "osDisk", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public string Disk { get; set; } = null;
+        public string OsDisk { get; set; } = null;
+
+        /// <summary>
+        /// Specifies the size of the second block device to be created for this node when it is
+        /// enabled for OpenEBS.  This is specified as a string that can be a byte count or a number with 
+        /// units like <b>512MiB</b>, <b>0.5GiB</b>, <b>2iGB</b>, or <b>1TiB</b>.  This defaults
+        /// to the value specified by <see cref="VmHostingOptions.OpenEbsDisk"/>.
+        /// </summary>
+        [JsonProperty(PropertyName = "OpenEbsDisk", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "openEbsDisk", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string OpenEbsDisk { get; set; } = null;
 
         /// <summary>
         /// Returns the maximum number processors to allocate for this node when
@@ -128,20 +149,38 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the maximum number of bytes to disk allocate to for this node when
+        /// Returns the size of the operating system disk to be created for this node when
         /// hosted on a hypervisor.
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <returns>The size in bytes.</returns>
-        public long GetDisk(ClusterDefinition clusterDefinition)
+        public long GetOsDisk(ClusterDefinition clusterDefinition)
         {
-            if (!string.IsNullOrEmpty(Disk))
+            if (!string.IsNullOrEmpty(OsDisk))
             {
-                return ClusterDefinition.ValidateSize(Disk, this.GetType(), nameof(Disk));
+                return ClusterDefinition.ValidateSize(OsDisk, this.GetType(), nameof(OsDisk));
             }
             else
             {
-                return ClusterDefinition.ValidateSize(clusterDefinition.Hosting.Vm.Disk, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Hosting.Vm.Disk));
+                return ClusterDefinition.ValidateSize(clusterDefinition.Hosting.Vm.OsDisk, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Hosting.Vm.OsDisk));
+            }
+        }
+
+        /// <summary>
+        /// Returns the size of the OpenEBS cStore disk to be created for this node when
+        /// hosted on a hypervisor.
+        /// </summary>
+        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <returns>The size in bytes.</returns>
+        public long GetOpenEbsDisk(ClusterDefinition clusterDefinition)
+        {
+            if (!string.IsNullOrEmpty(OpenEbsDisk))
+            {
+                return ClusterDefinition.ValidateSize(OpenEbsDisk, this.GetType(), nameof(OpenEbsDisk));
+            }
+            else
+            {
+                return ClusterDefinition.ValidateSize(clusterDefinition.Hosting.Vm.OpenEbsDisk, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Hosting.Vm.OpenEbsDisk));
             }
         }
 
@@ -173,9 +212,14 @@ namespace Neon.Kube
                 ClusterDefinition.ValidateSize(Memory, this.GetType(), nameof(Memory));
             }
 
-            if (Disk != null)
+            if (OsDisk != null)
             {
-                ClusterDefinition.ValidateSize(Disk, this.GetType(), nameof(Disk));
+                ClusterDefinition.ValidateSize(OsDisk, this.GetType(), nameof(OsDisk));
+            }
+
+            if (OpenEbsDisk != null)
+            {
+                ClusterDefinition.ValidateSize(OpenEbsDisk, this.GetType(), nameof(OpenEbsDisk));
             }
         }
     }

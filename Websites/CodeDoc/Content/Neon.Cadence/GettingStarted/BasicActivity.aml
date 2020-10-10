@@ -41,7 +41,7 @@
           sends an email message.  This method is tagged with a <codeEntityReference qualifyHint="false">T:Neon.Cadence.ActivityMethodAttribute</codeEntityReference>
           attribute indicating that it's an activity entry point.  Note that activity interfaces must inherit <codeEntityReference qualifyHint="false">T:Neon.Cadence.IActivity</codeEntityReference>
           and that we tagged this with <codeEntityReference qualifyHint="false">T:Neon.Cadence.ActivityInterfaceAttribute</codeEntityReference>
-          indicating that the activity will execute within the <legacyBold>my-tasks</legacyBold> task list.
+          indicating that the activity will execute within the <legacyBold>my-tasks</legacyBold> task queue.
         </para>
         <para>
           The <codeInline>SendHelloClass</codeInline> implements the activity.  Activity classes must derive from

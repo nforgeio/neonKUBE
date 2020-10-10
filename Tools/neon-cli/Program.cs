@@ -618,7 +618,7 @@ You can disable the use of this encrypted folder by specifying
         public static bool Debug { get; set; }
 
         /// <summary>
-        /// Creates a <see cref="SshProxy{TMetadata}"/> for the specified host and server name,
+        /// Creates a <see cref="LinuxSshProxy{TMetadata}"/> for the specified host and server name,
         /// configuring logging and the credentials as specified by the global command
         /// line options.
         /// </summary>
@@ -630,8 +630,8 @@ You can disable the use of this encrypted folder by specifying
         /// </param>
         /// 
         /// <typeparam name="TMetadata">Defines the metadata type the command wishes to associate with the server.</typeparam>
-        /// <returns>The <see cref="SshProxy{TMetadata}"/>.</returns>
-        public static SshProxy<TMetadata> CreateNodeProxy<TMetadata>(string name, IPAddress address, bool appendToLog)
+        /// <returns>The <see cref="LinuxSshProxy{TMetadata}"/>.</returns>
+        public static LinuxSshProxy<TMetadata> CreateNodeProxy<TMetadata>(string name, IPAddress address, bool appendToLog)
             where TMetadata : class
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
@@ -663,7 +663,7 @@ You can disable the use of this encrypted folder by specifying
                 return null;
             }
 
-            return new SshProxy<TMetadata>(name, address, sshCredentials, logWriter);
+            return new LinuxSshProxy<TMetadata>(name, address, sshCredentials, logWriter: logWriter);
         }
 
         /// <summary>
@@ -730,12 +730,12 @@ You can disable the use of this encrypted folder by specifying
         /// Uses WinSCP to convert an OpenSSH PEM formatted key to the PPK format
         /// required by PuTTY/WinSCP.  This works only on Windows.
         /// </summary>
-        /// <param name="kubeLogin">The related cluster login information.</param>
+        /// <param name="kubeLogin">The cluster login.</param>
         /// <param name="pemKey">The OpenSSH PEM key.</param>
         /// <returns>The converted PPPK key.</returns>
         /// <exception cref="NotImplementedException">Thrown when not running on Windows.</exception>
         /// <exception cref="Win32Exception">Thrown if WinSCP could not be executed.</exception>
-        public static string ConvertPUBtoPPK(KubeContextExtension kubeLogin, string pemKey)
+        public static string ConvertPUBtoPPK(ClusterLogin kubeLogin, string pemKey)
         {
             if (!NeonHelper.IsWindows)
             {

@@ -33,9 +33,9 @@ metrics:
   serviceMonitor:
     enabled: true
     additionalLabels: {}
-    # namespace: monitoring
-    # interval: 30s
-    # scrapeTimeout: 10s
+    namespace: monitoring
+    interval: 30s
+    scrapeTimeout: 10s
 
 # When enabled, fluent-bit will keep track of tailing offsets across pod restarts.
 trackOffsets: false
@@ -125,7 +125,9 @@ parsers:
 env: []
 
 ## Annotations to add to the DaemonSet's Pods
-podAnnotations: {}
+podAnnotations:
+  traffic.sidecar.istio.io/excludeInboundPorts: '443,2020'
+  traffic.sidecar.istio.io/excludeOutboundPorts: '443,2020'
 
 ## By default there different 'files' provides in the config
 ## (fluent-bit.conf, custom_parsers.conf). This defeats

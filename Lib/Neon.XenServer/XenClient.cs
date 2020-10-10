@@ -33,8 +33,7 @@ using Neon.Common;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
-using Org.BouncyCastle.Bcpg;
-using Renci.SshNet;
+using Neon.Net;
 
 namespace Neon.XenServer
 {
@@ -54,7 +53,7 @@ namespace Neon.XenServer
     /// <para>
     /// The workaround is to simnply connect to the XenServer host via SSH
     /// and perform commands using the <b>xe</b> command line tool installed
-    /// with XenServer.  We're going to take advantage of the <see cref="SshProxy{TMetadata}"/>
+    /// with XenServer.  We're going to take advantage of the <see cref="LinuxSshProxy{TMetadata}"/>
     /// class to handle the SSH connection and command execution.
     /// </para>
     /// <para>
@@ -96,7 +95,7 @@ namespace Neon.XenServer
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username), nameof(username));
 
-            if (!IPAddress.TryParse(addressOrFQDN, out var address))
+            if (!NetHelper.TryParseIPv4Address(addressOrFQDN, out var address))
             {
                 var hostEntry = Dns.GetHostEntry(addressOrFQDN);
 
@@ -119,7 +118,7 @@ namespace Neon.XenServer
 
             Address           = addressOrFQDN;
             Name              = name;
-            SshProxy          = new SshProxy<XenClient>(addressOrFQDN, address, SshCredentials.FromUserPassword(username, password), logWriter);
+            SshProxy          = new LinuxSshProxy<XenClient>(addressOrFQDN, address, SshCredentials.FromUserPassword(username, password), logWriter: logWriter);
             SshProxy.Metadata = this;
             runOptions        = RunOptions.IgnoreRemotePath;
 
@@ -155,7 +154,7 @@ namespace Neon.XenServer
         /// <summary>
         /// Returns the SSH proxy for the XenServer host.
         /// </summary>
-        public SshProxy<XenClient> SshProxy { get; private set; }
+        public LinuxSshProxy<XenClient> SshProxy { get; private set; }
 
         /// <summary>
         /// Implements the XenServer storage repository operations.

@@ -114,7 +114,7 @@ namespace TestTemporal
                     {
                         $"-config={Path.Combine(goTestDir, "config.yaml")}",
                         $"-domain={TemporalFixture.Namespace}", 
-                        $"-tasklist={TemporalTestHelper.TaskList_TwfArgs}", 
+                        $"-taskqueue={TemporalTestHelper.TaskQueue_TwfArgs}", 
                         $"-readyfile={readyFile}",
                         $"-stopfile={stopFile}"
                     });
@@ -152,7 +152,7 @@ namespace TestTemporal
         /// <summary>
         /// Partial definition of for a GOLANG workflow.
         /// </summary>
-        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList_TwfArgs)]
+        [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue_TwfArgs)]
         public interface IGoWorkflow : IWorkflow
         {
             [WorkflowMethod(Name = "main.NoArgsWorkflow", IsFullName = true)]
@@ -168,7 +168,7 @@ namespace TestTemporal
         /// <summary>
         /// Partial definition of for a GOLANG activity.
         /// </summary>
-        [ActivityInterface(TaskList = TemporalTestHelper.TaskList_TwfArgs)]
+        [ActivityInterface(TaskQueue = TemporalTestHelper.TaskQueue_TwfArgs)]
         public interface IGoActivity : IActivity
         {
             [WorkflowMethod(Name = "main.NoArgsActivity", IsFullName = true)]
@@ -200,7 +200,7 @@ namespace TestTemporal
                 var options = new WorkflowOptions()
                 {
                     WorkflowId = "NoArgs-" + Guid.NewGuid().ToString("d"),
-                    TaskList   = TemporalTestHelper.TaskList_TwfArgs
+                    TaskQueue   = TemporalTestHelper.TaskQueue_TwfArgs
                 };
 
                 var stub      = client.NewUntypedWorkflowStub("main.NoArgsWorkflow", options);
@@ -214,7 +214,7 @@ namespace TestTemporal
                 options = new WorkflowOptions()
                 {
                     WorkflowId = "OneArg-" + Guid.NewGuid().ToString("d"),
-                    TaskList   = TemporalTestHelper.TaskList_TwfArgs
+                    TaskQueue   = TemporalTestHelper.TaskQueue_TwfArgs
                 };
 
                 stub      = client.NewUntypedWorkflowStub("main.OneArgWorkflow", options);
@@ -228,7 +228,7 @@ namespace TestTemporal
                 options = new WorkflowOptions()
                 {
                     WorkflowId = "TwoArgs-" + Guid.NewGuid().ToString("d"),
-                    TaskList   = TemporalTestHelper.TaskList_TwfArgs
+                    TaskQueue   = TemporalTestHelper.TaskQueue_TwfArgs
                 };
 
                 stub      = client.NewUntypedWorkflowStub("main.TwoArgsWorkflow", options);
@@ -242,7 +242,7 @@ namespace TestTemporal
                 options = new WorkflowOptions()
                 {
                     WorkflowId = "OneArrayArg-" + Guid.NewGuid().ToString("d"),
-                    TaskList   = TemporalTestHelper.TaskList_TwfArgs
+                    TaskQueue   = TemporalTestHelper.TaskQueue_TwfArgs
                 };
 
                 stub      = client.NewUntypedWorkflowStub("main.ArrayArgWorkflow", options);
@@ -258,7 +258,7 @@ namespace TestTemporal
                 options = new WorkflowOptions()
                 {
                     WorkflowId = "OneArrayArgs-" + Guid.NewGuid().ToString("d"),
-                    TaskList   = TemporalTestHelper.TaskList_TwfArgs
+                    TaskQueue   = TemporalTestHelper.TaskQueue_TwfArgs
                 };
 
                 stub = client.NewUntypedWorkflowStub("main.ArrayArgsWorkflow", options);
@@ -276,7 +276,7 @@ namespace TestTemporal
                 options = new WorkflowOptions()
                 {
                     WorkflowId = "ErrorWorkflow-NOERROR-" + Guid.NewGuid().ToString("d"),
-                    TaskList   = TemporalTestHelper.TaskList_TwfArgs
+                    TaskQueue   = TemporalTestHelper.TaskQueue_TwfArgs
                 };
 
                 stub      = client.NewUntypedWorkflowStub("main.ErrorWorkflow", options);
@@ -289,7 +289,7 @@ namespace TestTemporal
                 options = new WorkflowOptions()
                 {
                     WorkflowId = "ErrorWorkflow-ERROR-" + Guid.NewGuid().ToString("d"),
-                    TaskList   = TemporalTestHelper.TaskList_TwfArgs
+                    TaskQueue   = TemporalTestHelper.TaskQueue_TwfArgs
                 };
 
                 stub      = client.NewUntypedWorkflowStub("main.ErrorWorkflow", options);
@@ -316,7 +316,7 @@ namespace TestTemporal
                 options = new WorkflowOptions()
                 {
                     WorkflowId = "StringErrorWorkflow-NOERROR-" + Guid.NewGuid().ToString("d"),
-                    TaskList   = TemporalTestHelper.TaskList_TwfArgs
+                    TaskQueue   = TemporalTestHelper.TaskQueue_TwfArgs
                 };
 
                 stub      = client.NewUntypedWorkflowStub("main.StringErrorWorkflow", options);
@@ -329,7 +329,7 @@ namespace TestTemporal
                 options = new WorkflowOptions()
                 {
                     WorkflowId = "StringErrorWorkflow-ERROR-" + Guid.NewGuid().ToString("d"),
-                    TaskList   = TemporalTestHelper.TaskList_TwfArgs
+                    TaskQueue   = TemporalTestHelper.TaskQueue_TwfArgs
                 };
 
                 stub      = client.NewUntypedWorkflowStub("main.ErrorWorkflow", options);
@@ -348,7 +348,7 @@ namespace TestTemporal
 
         //---------------------------------------------------------------------
 
-        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
+        [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IGoUntypedActivityTester : IWorkflow
         {
             [WorkflowMethod(Name = "NoArgsWorkflow")]
@@ -364,7 +364,7 @@ namespace TestTemporal
         [Workflow(AutoRegister = true)]
         public class GoUntypedActivityTester : WorkflowBase, IGoUntypedActivityTester
         {
-            private ActivityOptions options = new ActivityOptions() { TaskList = TemporalTestHelper.TaskList_TwfArgs };
+            private ActivityOptions options = new ActivityOptions() { TaskQueue = TemporalTestHelper.TaskQueue_TwfArgs };
 
             public async Task<string> NoArgsAsync()
             {
@@ -471,7 +471,7 @@ namespace TestTemporal
 
         //---------------------------------------------------------------------
 
-        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
+        [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IGoActivityTester : IWorkflow
         {
             [WorkflowMethod(Name = "NoArgsWorkflow")]

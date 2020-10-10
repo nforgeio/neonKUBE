@@ -14,7 +14,7 @@ using Xunit;
 
 namespace MyTests
 {
-    [WorkflowInterface(TaskList = "test-tasks")]
+    [WorkflowInterface(TaskQueue = "test-tasks")]
     public interface IHelloWorkflow : IWorkflow
     {
         [WorkflowMethod]
@@ -66,7 +66,7 @@ namespace MyTests
                 // Create a worker and register the workflow and activity 
                 // implementations to let Temporal know we're open for business.
 
-                var worker = client.NewWorkerAsync(new WorkerOptions() { TaskList = "test-tasks" }).Result;
+                var worker = client.NewWorkerAsync(new WorkerOptions() { TaskQueue = "test-tasks" }).Result;
 
                 worker.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).Wait();
                 worker.StartAsync().Wait();

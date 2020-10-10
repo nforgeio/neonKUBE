@@ -44,14 +44,68 @@ namespace Neon.Kube
     public class AwsNodeOptions
     {
         /// <summary>
+        /// <para>
         /// Optionally specifies the type of ECB instance to provision for this node.  The available
         /// instance types are listed <a href="https://aws.amazon.com/ec2/instance-types/">here</a>.
         /// This defaults to <see cref="AwsHostingOptions.DefaultInstanceType"/>.
+        /// </para>
+        /// <note>
+        /// neonKUBE clusters cannot be deployed to ARM-based AWS instance types.  You must
+        /// specify an instance type using a Intel or AMD 64-bit processor.
+        /// </note>
+        /// <note>
+        /// neonKUBE requires master and worker instances to have at least 4 CPUs and 4GiB RAM.  Choose
+        /// an AWS instance type that satisfies these requirements.
+        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "InstanceType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "instanceType", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string InstanceType { get; set; } = null;
+
+        /// <summary>
+        /// <para>
+        /// Specifies whether the cluster instance should be EBS-optimized.  This is a <see cref="TriState"/>
+        /// value that defaults to <see cref="TriState.Default"/> which means that the default cluster wide
+        /// <see cref="AwsHostingOptions.DefaultEbsOptimized"/> value will be used.  You can override the 
+        /// cluster default for this node by setting <see cref="TriState.True"/> or <see cref="TriState.False"/>.
+        /// </para>
+        /// <para>
+        /// <a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-optimized.html">Amazon EBS–optimized instances</a>
+        /// </para>
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Non EBS optimized instances perform disk operation I/O to EBS volumes using the same
+        /// network used for other network operations.  This means that you may see some disk
+        /// performance declines when your instance is busy serving web traffic or running
+        /// database queries, etc.
+        /// </para>
+        /// <para>
+        /// EBS optimization can be enabled for some instance types.  This provisions extra dedicated
+        /// network bandwidth exclusively for EBS I/O.  Exactly how this works, depends on the specific
+        /// VM type.
+        /// </para>
+        /// <para>
+        /// More modern AWS VM types enable EBS optimization by default and you won't incur any
+        /// additional charges for these instances and disabling EBS optimization here or via
+        /// <see cref="AwsHostingOptions.DefaultEbsOptimized"/> won't have any effect.
+        /// </para>
+        /// <para>
+        /// Some AWS instance types can be optimized but this is disabled by default.  When you
+        /// enable this by setting <see cref="AwsHostingOptions.DefaultEbsOptimized"/><c>=true</c> or 
+        /// <see cref="AwsNodeOptions.EbsOptimized"/><c>=true</c>, you'll probably an additional
+        /// AWS hourly fee for these instances.
+        /// </para>
+        /// <para>
+        /// Some AWS instance types don't support EBS optimization.  You'll need to be sure that
+        /// this is disabled for those nodes.
+        /// </para>
+        /// </remarks>
+        [JsonProperty(PropertyName = "EbsOptimized", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "ebsOptimized", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public TriState EbsOptimized { get; set; } = TriState.Default;
 
         /// <summary>
         /// Optionally specifies the AWS placement group partition the node will be provisioned
@@ -84,7 +138,7 @@ namespace Neon.Kube
         public int PlacementPartition { get; set; } = 0;
 
         /// <summary>
-        /// Optionally specifies the type of volume to attach to the cluster node.  This defaults
+        /// Optionally specifies the type of AWS volume to be used as the node's primary disk.  This defaults
         /// to <see cref="AwsVolumeType.Default"/> which indicates that <see cref="AwsHostingOptions.DefaultInstanceType"/>
         /// will specify the volume type for the node.
         /// </summary>
@@ -94,9 +148,35 @@ namespace Neon.Kube
         public AwsVolumeType VolumeType { get; set; } = AwsVolumeType.Default;
 
         /// <summary>
-        /// Optionally specifies the size of the EBS volume to be created and attached to the cluster node.
+        /// Optionally specifies the size of the AWS volume to be used as the node's primary disk.
         /// This defaults to <c>null</c> which indicates that <see cref="AwsHostingOptions.DefaultVolumeSize"/>
-        /// will be used, and that defaults to <b>128 GiB</b>.
+        /// will be used.
+        /// </summary>
+        /// <remarks>
+        /// <note>
+        /// Node disks smaller than 32 GiB are not supported by neonKUBE.  We'll automatically
+        /// round up the disk size when necessary.
+        /// </note>
+        /// </remarks>
+        [JsonProperty(PropertyName = "VolumeSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "volumeSize", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string VolumeSize { get; set; } = null;
+
+        /// <summary>
+        /// Optionally specifies the AWS volume type to be used for the the node's OpenEBS cStore disk (if any).  This defaults
+        /// to <see cref="AwsVolumeType.Default"/> which indicates that <see cref="AwsHostingOptions.DefaultOpenEBSVolumeType"/>
+        /// will specify the volume type for the node.
+        /// </summary>
+        [JsonProperty(PropertyName = "OpenEBSVolumeType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "openEBSVolumeType", ApplyNamingConventions = false)]
+        [DefaultValue(AwsVolumeType.Default)]
+        public AwsVolumeType OpenEBSVolumeType { get; set; } = AwsVolumeType.Default;
+
+        /// <summary>
+        /// Optionally specifies the size of the AWS volume to be used for the node's OpenEBS cStore disk (if any).
+        /// This defaults to <c>null</c> which indicates that <see cref="AzureHostingOptions.DefaultDiskSize"/>
+        /// will be used for the node.
         /// </summary>
         /// <remarks>
         /// <note>
@@ -104,10 +184,10 @@ namespace Neon.Kube
         /// upgrade the disk size when necessary.
         /// </note>
         /// </remarks>
-        [JsonProperty(PropertyName = "VolumeSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "volumeSize", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "OpenEBSVolumeSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "openEBSVolumeSize", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public string VolumeSize { get; set; } = null;
+        public string OpenEBSVolumeSize { get; set; } = null;
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
@@ -124,13 +204,25 @@ namespace Neon.Kube
 
             var node = clusterDefinition.NodeDefinitions[nodeName];
 
+            // Set the cluster default storage types if necessary.
+
             if (VolumeType == AwsVolumeType.Default)
             {
                 VolumeType = clusterDefinition.Hosting.Aws.DefaultVolumeType;
 
                 if (VolumeType == AwsVolumeType.Default)
                 {
-                    VolumeType = AwsVolumeType.Gp2;
+                    VolumeType = AwsHostingOptions.defaultVolumeType;
+                }
+            }
+
+            if (OpenEBSVolumeType == AwsVolumeType.Default)
+            {
+                OpenEBSVolumeType = clusterDefinition.Hosting.Aws.DefaultOpenEBSVolumeType;
+
+                if (OpenEBSVolumeType == AwsVolumeType.Default)
+                {
+                    VolumeType = AwsHostingOptions.defaultOpenEBSVolumeType;
                 }
             }
 
@@ -199,9 +291,25 @@ namespace Neon.Kube
                 throw new ClusterDefinitionException($"cluster node [{nodeName}] configures [{nameof(AwsNodeOptions)}.{nameof(VolumeSize)}={VolumeSize}] which is not valid.");
             }
 
-            var driveSizeGiB = AwsHelper.GetDiskSizeGiB(VolumeType, volumeSizeBytes);
+            var driveSizeGiB = AwsHelper.GetVolumeSizeGiB(VolumeType, volumeSizeBytes);
 
             this.VolumeSize = $"{driveSizeGiB} GiB";
+
+            // Validate the OpenEBS volume size too.
+
+            if (string.IsNullOrEmpty(this.OpenEBSVolumeSize))
+            {
+                this.OpenEBSVolumeSize = clusterDefinition.Hosting.Aws.DefaultOpenEBSVolumeSize;
+            }
+
+            if (!ByteUnits.TryParse(this.VolumeSize, out var openEbsVolumeSizeBytes) || openEbsVolumeSizeBytes <= 1)
+            {
+                throw new ClusterDefinitionException($"cluster node [{nodeName}] configures [{nameof(AwsNodeOptions)}.{nameof(OpenEBSVolumeSize)}={OpenEBSVolumeSize}] which is not valid.");
+            }
+
+            var openEBSVolumeSizeGiB = AwsHelper.GetVolumeSizeGiB(OpenEBSVolumeType, openEbsVolumeSizeBytes);
+
+            this.VolumeSize = $"{openEBSVolumeSizeGiB} GiB";
         }
     }
 }

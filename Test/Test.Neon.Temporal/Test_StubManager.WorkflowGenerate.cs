@@ -45,7 +45,7 @@ namespace TestTemporal
     {
         //---------------------------------------------------------------------
 
-        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
+        [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IWorkflowEntryVoidNoArgs : IWorkflow
         {
             [WorkflowMethod]
@@ -63,7 +63,7 @@ namespace TestTemporal
 
         //---------------------------------------------------------------------
 
-        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
+        [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IWorkflowEntryVoidWithArgs : IWorkflow
         {
             [WorkflowMethod]
@@ -81,7 +81,7 @@ namespace TestTemporal
 
         //---------------------------------------------------------------------
 
-        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
+        [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IWorkflowEntryResultWithArgs : IWorkflow
         {
             [WorkflowMethod]
@@ -101,14 +101,14 @@ namespace TestTemporal
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public void Generate_WorkflowResultWithOptions()
         {
-            var stub = StubManager.NewWorkflowStub<IWorkflowEntryResultWithArgs>(client, options: new WorkflowOptions() { TaskList = "my-tasklist", Namespace = "my-namespace" });
+            var stub = StubManager.NewWorkflowStub<IWorkflowEntryResultWithArgs>(client, options: new WorkflowOptions() { TaskQueue = "my-taskqueue", Namespace = "my-namespace" });
 
             Assert.NotNull(stub);
         }
 
         //---------------------------------------------------------------------
 
-        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
+        [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IWorkflowSignalNoArgs : IWorkflow
         {
             [WorkflowMethod]
@@ -129,7 +129,7 @@ namespace TestTemporal
 
         //---------------------------------------------------------------------
 
-        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
+        [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IWorkflowSignalWithArgs : IWorkflow
         {
             [WorkflowMethod]
@@ -150,7 +150,7 @@ namespace TestTemporal
 
         //---------------------------------------------------------------------
 
-        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
+        [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IWorkflowQueryVoidNoArgs : IWorkflow
         {
             [WorkflowMethod]
@@ -171,7 +171,7 @@ namespace TestTemporal
 
         //---------------------------------------------------------------------
 
-        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
+        [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IWorkflowQueryVoidWithArgs : IWorkflow
         {
             [WorkflowMethod]
@@ -192,7 +192,7 @@ namespace TestTemporal
 
         //---------------------------------------------------------------------
 
-        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
+        [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IWorkflowQueryResultWithArgs : IWorkflow
         {
             [WorkflowMethod]
@@ -213,7 +213,7 @@ namespace TestTemporal
 
         //---------------------------------------------------------------------
 
-        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
+        [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IWorkflowMultiMethods : IWorkflow
         {
             [WorkflowMethod]

@@ -189,7 +189,7 @@ namespace Neon.Kube
                 var fields = ApiLoadBalancer.Split(':', 2);
                 var error  = $"[{nameof(KubernetesOptions)}.{nameof(ApiLoadBalancer)}={ApiLoadBalancer}] is invalid].";
 
-                if (!NetHelper.IsValidHost(fields[0]) || !IPAddress.TryParse(fields[0], out var address) || address.AddressFamily != AddressFamily.InterNetwork)
+                if (!NetHelper.IsValidHost(fields[0]) || !NetHelper.TryParseIPv4Address(fields[0], out var address) || address.AddressFamily != AddressFamily.InterNetwork)
                 {
                     throw new ClusterDefinitionException(error);
                 }
@@ -197,6 +197,37 @@ namespace Neon.Kube
                 if (!int.TryParse(fields[1], out var port) || NetHelper.IsValidPort(port))
                 {
                     throw new ClusterDefinitionException(error);
+                }
+            }
+
+            if (!AllowPodsOnMasters.HasValue)
+            {
+                AllowPodsOnMasters = clusterDefinition.Workers.Count() == 0;
+            }
+
+            if (!clusterDefinition.Nodes.Any(n => n.Labels.NeonSystemDb))
+            {
+                foreach (var m in clusterDefinition.Masters)
+                {
+                    m.Labels.NeonSystemDb = true;
+                }
+            }
+
+            if (!clusterDefinition.Nodes.Any(n => n.Labels.Istio))
+            {
+                if (AllowPodsOnMasters.GetValueOrDefault())
+                {
+                    foreach (var n in clusterDefinition.Nodes)
+                    {
+                        n.Labels.Istio = true;
+                    };
+                }
+                else
+                {
+                    foreach (var w in clusterDefinition.Nodes.Where(n => n.IsWorker))
+                    {
+                        w.Labels.Istio = true;
+                    }
                 }
             }
         }

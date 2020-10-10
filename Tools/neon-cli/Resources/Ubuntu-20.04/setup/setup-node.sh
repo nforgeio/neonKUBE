@@ -291,13 +291,13 @@ cat <<EOF > /etc/sysctl.conf
 # TWEAK: neonKUBE settings:
 
 # Explicitly set the maximum number of file descriptors for the
-# entire system.  This looks like it defaults to [398327] for
+# entire system.  This looks like it defaults to [1048576] for
 # Ubuntu 20.04 so we're going to pin this value to enforce
 # consistency across Linux updates, etc.
-fs.file-max = 398327
+fs.file-max = 1048576
 
 # We'll allow processes to open the same number of file handles.
-fs.nr_open = 398327
+fs.nr_open = 1048576
 
 ###################################################################
 # Boost the number of RAM pages a process can map as well as increasing 
@@ -387,6 +387,12 @@ net.ipv4.conf.default.log_martians = 1
 # Implement RFC 1337 fix
 net.ipv4.tcp_rfc1337 = 1
 
+# set max number of connections
+net.netfilter.nf_conntrack_max=1000000
+net.nf_conntrack_max=1000000
+net.netfilter.nf_conntrack_expect_max=1000
+net.netfilter.nf_conntrack_buckets=250000
+
 # Randomize addresses of mmap base, heap, stack and VDSO page
 kernel.randomize_va_space = 2
 
@@ -411,11 +417,13 @@ EOF
 # default.  We're going to explicitly set the limit to 1 million connections.
 # This will consume about 8MiB of RAM (so not too bad).
 
-cat <<EOF > /etc/modprobe.d/nf_conntrack.conf
+#cat <<EOF > /etc/modprobe.d/nf_conntrack.conf
 # Explicitly set the maximum number of TCP connections that iptables can track.
 # Note that this number is multiplied by 8 to obtain the connection count.
-options nf_conntrack hashsize = 125000
-EOF
+#options nf_conntrack hashsize = 393216
+#EOF
+
+echo nf_conntrack > /etc/modules
 
 #------------------------------------------------------------------------------
 # Databases are generally not compatible with transparent huge pages.  It appears
@@ -630,6 +638,10 @@ EOF
 systemctl enable neon-cleaner
 systemctl daemon-reload
 systemctl restart neon-cleaner
+
+systemctl enable iscsid
+systemctl daemon-reload
+systemctl restart iscsid
 
 # Indicate that the script has completed.
 

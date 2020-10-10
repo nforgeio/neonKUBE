@@ -97,6 +97,10 @@ namespace Neon.Kube
                     linuxTemplateUri = null;
                     break;
 
+                case HostingEnvironment.BareMetal:
+
+                    break;
+
                 case HostingEnvironment.HyperV:
                 case HostingEnvironment.HyperVLocal:
 
@@ -108,10 +112,6 @@ namespace Neon.Kube
                     {
                         linuxTemplateUri = $"https://s3-us-west-2.amazonaws.com/neonkube/vm-images/hyperv/neon-{clusterDefinition.LinuxDistribution}-{clusterDefinition.LinuxVersion}.vhdx";
                     }
-                    break;
-
-                case HostingEnvironment.Machine:
-
                     break;
 
                 case HostingEnvironment.XenServer:
@@ -160,7 +160,7 @@ namespace Neon.Kube
                 CalicoRbacYamlUri  = $"https://docs.projectcalico.org/v{KubeVersions.CalicoVersion}/getting-started/kubernetes/installation/hosted/rbac-kdd.yaml",
                 CalicoSetupYamlUri = $"https://docs.projectcalico.org/v{KubeVersions.CalicoVersion}/manifests/calico.yaml",
 
-                IstioLinuxUri      = $"https://github.com/istio/istio/releases/download/{KubeVersions.IstioVersion}/istio-{KubeVersions.IstioVersion}-linux.tar.gz"
+                IstioLinuxUri      = $"https://github.com/istio/istio/releases/download/{KubeVersions.IstioVersion}/istioctl-{KubeVersions.IstioVersion}-linux-amd64.tar.gz"
             };
 
             await Task.CompletedTask;

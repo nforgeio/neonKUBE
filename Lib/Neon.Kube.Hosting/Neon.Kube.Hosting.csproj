@@ -49,10 +49,10 @@
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
     <ProjectReference Include="..\Neon.Kube.Aws\Neon.Kube.Aws.csproj" />
     <ProjectReference Include="..\Neon.Kube.Azure\Neon.Kube.Azure.csproj" />
+    <ProjectReference Include="..\Neon.Kube.BareMetal\Neon.Kube.BareMetal.csproj" />
     <ProjectReference Include="..\Neon.Kube.Google\Neon.Kube.Google.csproj" />
     <ProjectReference Include="..\Neon.Kube.HyperVLocal\Neon.Kube.HyperVLocal.csproj" />
     <ProjectReference Include="..\Neon.Kube.HyperV\Neon.Kube.HyperV.csproj" />
-    <ProjectReference Include="..\Neon.Kube.Machine\Neon.Kube.Machine.csproj" />
     <ProjectReference Include="..\Neon.Kube.XenServer\Neon.Kube.XenServer.csproj" />
     <ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
   </ItemGroup>

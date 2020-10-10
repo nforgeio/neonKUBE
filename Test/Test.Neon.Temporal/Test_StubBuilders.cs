@@ -79,7 +79,7 @@ namespace TestTemporal
                 DebugPrelaunched       = TemporalTestHelper.DebugPrelaunched,
                 DebugDisableHeartbeats = TemporalTestHelper.DebugDisableHeartbeats,
                 ClientIdentity         = TemporalTestHelper.ClientIdentity,
-                DefaultTaskList        = TemporalTestHelper.TaskList,
+                DefaultTaskQueue       = TemporalTestHelper.TaskQueue,
             };
 
             if (fixture.Start(settings, stackDefinition: TemporalTestHelper.TemporalStackDefinition, reconnect: true, keepRunning: TemporalTestHelper.KeepTemporalServerOpen) == TestFixtureStatus.Started)

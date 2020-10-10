@@ -112,7 +112,7 @@
             <entry>
               <para>
                 Temporal is is a multi tenant service. The unit of isolation is called a namespace. 
-                Each namespace acts as a namespace for task list names as well as workflow Ids.
+                Each namespace acts as a namespace for task queue names as well as workflow Ids.
                 For example, when a workflow is started, it is started in a specific namespace. 
                 Temporal guarantees a unique workflow Id within a namespace, and supports running
                 workflow executions to use the same workflow Id if they are in different namespaces.
@@ -188,7 +188,7 @@
           <row>
             <entry>
               <para>
-                <legacyBold>TaskList</legacyBold>
+                <legacyBold>TaskQueue</legacyBold>
               </para>
             </entry>
             <entry>
@@ -198,10 +198,10 @@
                 application that registers the workflows and activities it implements
                 with the Temporal cluster.  You'll need to specify the namespace where the
                 workflows and activities will be hosted by Temporal and also a
-                <legacyBold>task list</legacyBold> string.
+                <legacyBold>task queue</legacyBold> string.
               </para>
               <para>
-                Temporal uses the task list you specify to identify all instances of
+                Temporal uses the task queue you specify to identify all instances of
                 a workflow service running such that work can be distributed to across
                 these services.
               </para>
@@ -210,7 +210,7 @@
                   All instances of your workflow should implement <legacyBold>exact same workflows and activities</legacyBold>
                   because Temporal doesn't track exactly which workflows and activities are exposed
                   by each workflow service instance.  Temporal assumes that all worker instances
-                  registered with same task list can execute any of the registered workflows
+                  registered with same task queue can execute any of the registered workflows
                   and activities.
                 </para>
                 <para>

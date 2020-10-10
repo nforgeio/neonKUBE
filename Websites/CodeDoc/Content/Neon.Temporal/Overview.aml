@@ -192,7 +192,7 @@
               next.  This can be increased to a maximum of 60 seconds via configuration.
             </para>
           </definition>
-          <definedTerm>Namespaces and Task Lists</definedTerm>
+          <definedTerm>Namespaces and Task Queues</definedTerm>
           <definition>
             <para>
               Temporal is a multi-tenant service and uses namespaces to isolate each tenant from any others.  A namespace
@@ -248,7 +248,7 @@
               Author your workflows and activities as a deployable process.  This is typically just a
               .NET Console application that runs on its own or perhaps as a Docker image in a Kubernetes
               cluster.  These workers will register their workflow and activity implementations with Temporal
-              under a task list (<legacyBold>Acme-PROD</legacyBold> in this case) to isolate these registrations
+              under a task queue (<legacyBold>Acme-PROD</legacyBold> in this case) to isolate these registrations
               from other cluster users.
             </para>
             <para>
@@ -274,7 +274,7 @@
           <listItem>
             <para>
               Let's say the application needs to send an email.  The application will need to connect
-              to the Temporal cluster with the <legacyBold>Acme-PROD</legacyBold> task list and invoke
+              to the Temporal cluster with the <legacyBold>Acme-PROD</legacyBold> task queue and invoke
               the <legacyBold>Send()</legacyBold> workflow, passing the target address, subject, message,
               and such.
             </para>

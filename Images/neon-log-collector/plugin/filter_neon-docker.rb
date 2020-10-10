@@ -35,7 +35,7 @@ module Fluent
 
             # Detect Docker events.
             #
-            # Note that I'm explictly excluding tags like [systemd.**]
+            # Note that I'm explicitly excluding tags like [systemd.**]
             # because there doesn't seem to be a way to specify an inverse
             # filter in a TD_AGENT config.
 

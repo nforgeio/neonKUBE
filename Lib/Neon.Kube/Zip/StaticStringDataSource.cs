@@ -21,7 +21,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 
-namespace ICSharpCode.SharpZipLib.Zip
+using ICSharpCode.SharpZipLib.Zip;
+
+namespace Neon.SSH
 {
     /// <summary>
     /// Implements a <see cref="IStaticDataSource"/> that wraps a string to be

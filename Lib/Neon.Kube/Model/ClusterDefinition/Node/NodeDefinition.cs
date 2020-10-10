@@ -151,19 +151,46 @@ namespace Neon.Kube
         /// <summary>
         /// <para>
         /// Indicates whether this node should be configured to accept external network traffic
-        /// on node ports and route that into the cluster.
+        /// on node ports and route that into the cluster.  This defaults to <c>false</c>.
         /// </para>
         /// <note>
         /// If all nodes have <see cref="Ingress"/> set to <c>false</c> and the cluster defines
         /// one or more <see cref="NetworkOptions.IngressRules"/> then neonKUBE will choose a
-        /// reasonable set of nodes to accept ibound traffic.
+        /// reasonable set of nodes to accept inbound traffic.
         /// </note>
         /// </summary>
+        [JsonProperty(PropertyName = "Ingress", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "ingress", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
         public bool Ingress { get; set; } = false;
 
         /// <summary>
-        /// Specifies the labels to be assigned to the cluster node.  These can provide
-        /// detailed information such as the host CPU, RAM, storage, etc.  <see cref="NodeLabels"/>
+        /// <para>
+        /// Indicates that this node will provide a cStore block device for the cStorePool
+        /// maintained by the cluster OpenEBS service that provides cloud optimized storage.
+        /// This defaults to <c>false</c>
+        /// </para>
+        /// <note>
+        /// If all nodes have <see cref="OpenEBS"/> set to <c>false</c> then most neonKUBE 
+        /// hosting managers will automatically choose the nodes that will host the cStore
+        /// block devices by configuring up to three nodes to do this, favoring worker nodes
+        /// over masters when possible.
+        /// </note>
+        /// <note>
+        /// The <see cref="HostingEnvironment.BareMetal"/> hosting manager works a bit differently
+        /// from the others.  It requires that at least one node have <see cref="OpenEBS"/><c>=true</c>
+        /// and that node must have an empty unpartitioned block device available to be provisoned
+        /// as an cStore.
+        /// </note>
+        /// </summary>
+        [JsonProperty(PropertyName = "OpenEbs", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "openEbs", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool OpenEBS { get; set; } = false;
+
+        /// <summary>
+        /// Specifies the labels to be assigned to the cluster node.  These can describe
+        /// details such as the host CPU, RAM, storage, etc.  <see cref="NodeLabels"/>
         /// for more information.
         /// </summary>
         [JsonProperty(PropertyName = "Labels")]
@@ -269,7 +296,7 @@ namespace Neon.Kube
                     throw new ClusterDefinitionException($"Node [{Name}] requires [{nameof(Address)}] when hosting in an on-premise facility.");
                 }
 
-                if (!IPAddress.TryParse(Address, out var nodeAddress))
+                if (!NetHelper.TryParseIPv4Address(Address, out var nodeAddress))
                 {
                     throw new ClusterDefinitionException($"Node [{Name}] has invalid IP address [{Address}].");
                 }
@@ -289,14 +316,14 @@ namespace Neon.Kube
                     Azure.Validate(clusterDefinition, this.Name);
                     break;
 
+                case HostingEnvironment.BareMetal:
+
+                    // No machine options to check at this time.
+                    break;
+
                 case HostingEnvironment.Google:
 
                     // $todo(jefflill: Implement this
-                    break;
-
-                case HostingEnvironment.Machine:
-
-                    // No machine options to check at this time.
                     break;
 
                 case HostingEnvironment.HyperV:

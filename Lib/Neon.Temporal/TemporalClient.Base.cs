@@ -61,9 +61,9 @@ namespace Neon.Temporal
         /// <para>
         /// Each worker instance will be responsible for actually executing Temporal workflows and
         /// activities.  Workers are registered within a Temporal namespace and are assigned to a
-        /// task list which identifies the virtual queue Temporal uses to schedule work on workers.
+        /// task queue which identifies the virtual queue Temporal uses to schedule work on workers.
         /// Workers implementing the same workflows and activities will generally be assigned to
-        /// the same task list (which is just an identifying string).
+        /// the same task queue (which is just an identifying string).
         /// </para>
         /// <para>
         /// After you have a new worker, you'll need to register workflow and/or activity implementations
@@ -95,13 +95,13 @@ namespace Neon.Temporal
                 options.Namespace = Settings.Namespace;
             }
 
-            if (string.IsNullOrEmpty(options.TaskList))
+            if (string.IsNullOrEmpty(options.TaskQueue))
             {
-                options.TaskList = Settings.DefaultTaskList;
+                options.TaskQueue = Settings.DefaultTaskQueue;
 
-                if (string.IsNullOrEmpty(options.TaskList))
+                if (string.IsNullOrEmpty(options.TaskQueue))
                 {
-                    throw new ArgumentException("Worker cannot be started without a task list.  Please specify this via [WorkerOptions.TaskList] or [TemporalSettings.DefaultTaskList].");
+                    throw new ArgumentException("Worker cannot be started without a task queue.  Please specify this via [WorkerOptions.TaskQueue] or [TemporalSettings.DefaultTaskQueue].");
                 }
             }
 
@@ -109,7 +109,7 @@ namespace Neon.Temporal
                 new NewWorkerRequest()
                 {
                     Namespace = options.Namespace,
-                    TaskList  = options.TaskList,
+                    TaskQueue = options.TaskQueue,
                     Options   = options
                 }));
 
@@ -129,27 +129,27 @@ namespace Neon.Temporal
         /// Returns information about pollers (AKA workers) that have communicated 
         /// with the Temporal cluster in the last few minutes.
         /// </summary>
-        /// <param name="taskList">Identifies the tasklist.</param>
-        /// <param name="taskListType">
+        /// <param name="taskQueue">Identifies the task queue.</param>
+        /// <param name="taskQueueType">
         /// Indicates whether to return information for decision (AKA workflow pollers)
         /// or activity pollers.
         /// </param>
         /// <param name="namespace">Optionally specifies the Temporal namespace.</param>
-        /// <returns>The <see cref="TaskListDescription"/> for the pollers.</returns>
-        public async Task<TaskListDescription> DescribeTaskListAsync(string taskList, TaskListType taskListType, string @namespace = null)
+        /// <returns>The <see cref="TaskQueueDescription"/> for the pollers.</returns>
+        public async Task<TaskQueueDescription> DescribeQueueListAsync(string taskQueue, TaskQueueType taskQueueType, string @namespace = null)
         {
             await SyncContext.ClearAsync;
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList), nameof(taskList));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskQueue), nameof(taskQueue));
             EnsureNotDisposed();
 
             @namespace = ResolveNamespace(@namespace);
 
-            var reply = (DescribeTaskListReply)await CallProxyAsync(
-                new DescribeTaskListRequest()
+            var reply = (DescribeTaskQueueReply)await CallProxyAsync(
+                new DescribeTaskQueueRequest()
                 {
-                    Name         = taskList,
-                    TaskListType = taskListType,
-                    Namespace    = @namespace,
+                    Name          = taskQueue,
+                    TaskQueueType = taskQueueType,
+                    Namespace     = @namespace,
                 });
 
             reply.ThrowOnError();

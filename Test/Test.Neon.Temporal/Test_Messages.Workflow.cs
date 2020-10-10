@@ -212,7 +212,7 @@ namespace TestTemporal
                 message.Namespace = "my-namespace";
                 message.Workflow = "Foo";
                 message.Args = new byte[] { 0, 1, 2, 3, 4 };
-                message.Options = new WorkflowOptions() { TaskList = "my-list", StartToCloseTimeout = TimeSpan.FromSeconds(100) };
+                message.Options = new WorkflowOptions() { TaskQueue = "my-list", StartToCloseTimeout = TimeSpan.FromSeconds(100) };
 
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
@@ -220,7 +220,7 @@ namespace TestTemporal
                 Assert.Equal("my-namespace", message.Namespace);
                 Assert.Equal("Foo", message.Workflow);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
-                Assert.Equal("my-list", message.Options.TaskList);
+                Assert.Equal("my-list", message.Options.TaskQueue);
                 Assert.Equal(TimeSpan.FromSeconds(100), message.Options.StartToCloseTimeout);
 
                 stream.SetLength(0);
@@ -235,7 +235,7 @@ namespace TestTemporal
                 Assert.Equal("my-namespace", message.Namespace);
                 Assert.Equal("Foo", message.Workflow);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
-                Assert.Equal("my-list", message.Options.TaskList);
+                Assert.Equal("my-list", message.Options.TaskQueue);
                 Assert.Equal(TimeSpan.FromSeconds(100), message.Options.StartToCloseTimeout);
 
                 // Clone()
@@ -248,7 +248,7 @@ namespace TestTemporal
                 Assert.Equal("my-namespace", message.Namespace);
                 Assert.Equal("Foo", message.Workflow);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
-                Assert.Equal("my-list", message.Options.TaskList);
+                Assert.Equal("my-list", message.Options.TaskQueue);
                 Assert.Equal(TimeSpan.FromSeconds(100), message.Options.StartToCloseTimeout);
 
                 // Echo the message via the associated [temporal-proxy] and verify.
@@ -261,7 +261,7 @@ namespace TestTemporal
                 Assert.Equal("my-namespace", message.Namespace);
                 Assert.Equal("Foo", message.Workflow);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
-                Assert.Equal("my-list", message.Options.TaskList);
+                Assert.Equal("my-list", message.Options.TaskQueue);
                 Assert.Equal(TimeSpan.FromSeconds(100), message.Options.StartToCloseTimeout);
             }
         }
@@ -366,7 +366,7 @@ namespace TestTemporal
                 Assert.Null(message.WorkflowId);
                 Assert.Null(message.RunId);
                 Assert.Null(message.WorkflowType);
-                Assert.Null(message.TaskList);
+                Assert.Null(message.TaskQueue);
                 Assert.Equal(TimeSpan.Zero, message.ExecutionStartToCloseTimeout);
 
                 // Round-trip
@@ -475,7 +475,7 @@ namespace TestTemporal
                 Assert.Equal(0, message.ContinueAsNewScheduleToStartTimeout);
                 Assert.Equal(0, message.ContinueAsNewStartToCloseTimeout);
                 Assert.Null(message.ContinueAsNewWorkflow);
-                Assert.Null(message.ContinueAsNewTaskList);
+                Assert.Null(message.ContinueAsNewTaskQueue);
                 Assert.Null(message.ContinueAsNewNamespace);
                 Assert.False(message.ForceReplay);
 
@@ -491,8 +491,8 @@ namespace TestTemporal
                 message.ContinueAsNewScheduleToCloseTimeout = 2000;
                 message.ContinueAsNewScheduleToStartTimeout = 3000;
                 message.ContinueAsNewStartToCloseTimeout = 4000;
-                message.ContinueAsNewWorkflow = "my-workflow";
-                message.ContinueAsNewTaskList = "my-tasklist";
+                message.ContinueAsNewWorkflow  = "my-workflow";
+                message.ContinueAsNewTaskQueue = "my-taskqueue";
                 message.ContinueAsNewNamespace = "my-namespace";
                 message.ForceReplay = true;
 
@@ -504,7 +504,7 @@ namespace TestTemporal
                 Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, message.ContinueAsNewArgs);
                 Assert.Equal(1000, message.ContinueAsNewExecutionStartToCloseTimeout);
                 Assert.Equal("my-workflow", message.ContinueAsNewWorkflow);
-                Assert.Equal("my-tasklist", message.ContinueAsNewTaskList);
+                Assert.Equal("my-taskqueue", message.ContinueAsNewTaskQueue);
                 Assert.Equal("my-namespace", message.ContinueAsNewNamespace);
                 Assert.True(message.ForceReplay);
 
@@ -525,7 +525,7 @@ namespace TestTemporal
                 Assert.Equal(3000, message.ContinueAsNewScheduleToStartTimeout);
                 Assert.Equal(4000, message.ContinueAsNewStartToCloseTimeout);
                 Assert.Equal("my-workflow", message.ContinueAsNewWorkflow);
-                Assert.Equal("my-tasklist", message.ContinueAsNewTaskList);
+                Assert.Equal("my-taskqueue", message.ContinueAsNewTaskQueue);
                 Assert.Equal("my-namespace", message.ContinueAsNewNamespace);
                 Assert.True(message.ForceReplay);
 
@@ -544,7 +544,7 @@ namespace TestTemporal
                 Assert.Equal(3000, message.ContinueAsNewScheduleToStartTimeout);
                 Assert.Equal(4000, message.ContinueAsNewStartToCloseTimeout);
                 Assert.Equal("my-workflow", message.ContinueAsNewWorkflow);
-                Assert.Equal("my-tasklist", message.ContinueAsNewTaskList);
+                Assert.Equal("my-taskqueue", message.ContinueAsNewTaskQueue);
                 Assert.Equal("my-namespace", message.ContinueAsNewNamespace);
                 Assert.True(message.ForceReplay);
 
@@ -563,7 +563,7 @@ namespace TestTemporal
                 Assert.Equal(3000, message.ContinueAsNewScheduleToStartTimeout);
                 Assert.Equal(4000, message.ContinueAsNewStartToCloseTimeout);
                 Assert.Equal("my-workflow", message.ContinueAsNewWorkflow);
-                Assert.Equal("my-tasklist", message.ContinueAsNewTaskList);
+                Assert.Equal("my-taskqueue", message.ContinueAsNewTaskQueue);
                 Assert.Equal("my-namespace", message.ContinueAsNewNamespace);
                 Assert.True(message.ForceReplay);
             }
@@ -1034,7 +1034,7 @@ namespace TestTemporal
                 message.Namespace = "my-namespace";
                 message.SignalName = "my-signal";
                 message.SignalArgs = new byte[] { 0, 1, 2, 3, 4 };
-                message.Options = new WorkflowOptions() { TaskList = "my-tasklist", WorkflowIdReusePolicy = WorkflowIdReusePolicy.AllowDuplicate };
+                message.Options = new WorkflowOptions() { TaskQueue = "my-taskqueue", WorkflowIdReusePolicy = WorkflowIdReusePolicy.AllowDuplicate };
                 message.WorkflowArgs = new byte[] { 5, 6, 7, 8, 9 };
 
                 Assert.Equal(444, message.ClientId);
@@ -1044,7 +1044,7 @@ namespace TestTemporal
                 Assert.Equal("my-namespace", message.Namespace);
                 Assert.Equal("my-signal", message.SignalName);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.SignalArgs);
-                Assert.Equal("my-tasklist", message.Options.TaskList);
+                Assert.Equal("my-taskqueue", message.Options.TaskQueue);
                 Assert.Equal(WorkflowIdReusePolicy.AllowDuplicate, message.Options.WorkflowIdReusePolicy);
                 Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, message.WorkflowArgs);
 
@@ -1061,7 +1061,7 @@ namespace TestTemporal
                 Assert.Equal("my-namespace", message.Namespace);
                 Assert.Equal("my-signal", message.SignalName);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.SignalArgs);
-                Assert.Equal("my-tasklist", message.Options.TaskList);
+                Assert.Equal("my-taskqueue", message.Options.TaskQueue);
                 Assert.Equal(WorkflowIdReusePolicy.AllowDuplicate, message.Options.WorkflowIdReusePolicy);
                 Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, message.WorkflowArgs);
 
@@ -1076,7 +1076,7 @@ namespace TestTemporal
                 Assert.Equal("my-namespace", message.Namespace);
                 Assert.Equal("my-signal", message.SignalName);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.SignalArgs);
-                Assert.Equal("my-tasklist", message.Options.TaskList);
+                Assert.Equal("my-taskqueue", message.Options.TaskQueue);
                 Assert.Equal(WorkflowIdReusePolicy.AllowDuplicate, message.Options.WorkflowIdReusePolicy);
                 Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, message.WorkflowArgs);
 
@@ -1091,7 +1091,7 @@ namespace TestTemporal
                 Assert.Equal("my-namespace", message.Namespace);
                 Assert.Equal("my-signal", message.SignalName);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.SignalArgs);
-                Assert.Equal("my-tasklist", message.Options.TaskList);
+                Assert.Equal("my-taskqueue", message.Options.TaskQueue);
                 Assert.Equal(WorkflowIdReusePolicy.AllowDuplicate, message.Options.WorkflowIdReusePolicy);
                 Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, message.WorkflowArgs);
             }
@@ -1546,8 +1546,8 @@ namespace TestTemporal
             {
                 Configuration = new WorkflowConfiguration()
                 {
-                    TaskList                = "my-tasklist",
-                    TaskListKind            = TaskListType.Activity,
+                    TaskQueue               = "my-taskqueue",
+                    TaskQueueKind           = TaskQueueType.Activity,
                     StartToCloseTimeout     = TimeSpan.FromSeconds(1),
                     TaskStartToCloseTimeout = TimeSpan.FromSeconds(2),
                     ParentClosePolicy       = ParentClosePolicy.RequestCancel
@@ -1616,8 +1616,8 @@ namespace TestTemporal
             var config = description.Configuration;
 
             Assert.NotNull(config);
-            Assert.NotNull(config.TaskList);
-            Assert.Equal(expected.Configuration.TaskList, config.TaskList);
+            Assert.NotNull(config.TaskQueue);
+            Assert.Equal(expected.Configuration.TaskQueue, config.TaskQueue);
             Assert.Equal(expected.Configuration.StartToCloseTimeout, config.StartToCloseTimeout);
             Assert.Equal(expected.Configuration.TaskStartToCloseTimeout, config.TaskStartToCloseTimeout);
             Assert.Equal(expected.Configuration.ParentClosePolicy, config.ParentClosePolicy);
@@ -2762,7 +2762,7 @@ namespace TestTemporal
 
         private void AssertEqualChildOptions(ChildWorkflowOptions expected, ChildWorkflowOptions actual)
         {
-            Assert.Equal(expected.TaskList, actual.TaskList);
+            Assert.Equal(expected.TaskQueue, actual.TaskQueue);
             Assert.Equal(expected.Namespace, actual.Namespace);
             Assert.Equal(expected.ChildPolicy, actual.ChildPolicy);
             Assert.Equal(expected.CronSchedule, actual.CronSchedule);
@@ -2805,7 +2805,7 @@ namespace TestTemporal
 
                 var options = new ChildWorkflowOptions()
                 {
-                    TaskList               = "my-tasklist",
+                    TaskQueue              = "my-taskqueue",
                     Namespace              = "my-namespace",
                     ChildPolicy            = ParentClosePolicy.RequestCancel,
                     CronSchedule           = "* 12 * * *",

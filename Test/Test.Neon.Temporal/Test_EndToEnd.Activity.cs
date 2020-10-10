@@ -48,7 +48,7 @@ namespace TestTemporal
         private static bool activityTests_ActivityWithNoResultCalled;
         private static bool activityTests_WorkflowWithNoResultCalled;
 
-        [ActivityInterface(TaskList = TemporalTestHelper.TaskList)]
+        [ActivityInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IActivityWithNoResult : IActivity
         {
             [ActivityMethod]
@@ -66,7 +66,7 @@ namespace TestTemporal
             }
         }
 
-        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
+        [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IActivityWorkflowWithNoResult : IWorkflow
         {
             [WorkflowMethod]
@@ -109,7 +109,7 @@ namespace TestTemporal
 
         //---------------------------------------------------------------------
 
-        [ActivityInterface(TaskList = TemporalTestHelper.TaskList)]
+        [ActivityInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IActivityWithResult : IActivity
         {
             [ActivityMethod]
@@ -125,7 +125,7 @@ namespace TestTemporal
             }
         }
 
-        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
+        [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IActivityWorkflowWithResult : IWorkflow
         {
             [WorkflowMethod]
@@ -160,7 +160,7 @@ namespace TestTemporal
 
         //---------------------------------------------------------------------
 
-        [ActivityInterface(TaskList = TemporalTestHelper.TaskList)]
+        [ActivityInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IActivityWithError : IActivity
         {
             [ActivityMethod]
@@ -178,7 +178,7 @@ namespace TestTemporal
             }
         }
 
-        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
+        [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IActivityWorkflowWithError : IWorkflow
         {
             // These methods return NULL on success, otherwise the error reason.
@@ -302,7 +302,7 @@ namespace TestTemporal
             }
         }
 
-        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
+        [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface ILocalActivityWorkflowWithResult : IWorkflow
         {
             [WorkflowMethod]
@@ -365,7 +365,7 @@ namespace TestTemporal
             }
         }
 
-        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
+        [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface ILocalActivityWorkflowWithoutResult : IWorkflow
         {
             [WorkflowMethod]
@@ -404,7 +404,7 @@ namespace TestTemporal
 
             Assert.NotNull(LocalActivityWithouthResult.Info);
             Assert.Null(LocalActivityWithouthResult.Info.ActivityTypeName);     // This is NULL for local activities
-            Assert.Equal(TemporalTestHelper.TaskList, LocalActivityWithouthResult.Info.TaskList);
+            Assert.Equal(TemporalTestHelper.TaskQueue, LocalActivityWithouthResult.Info.TaskQueue);
             Assert.Equal("test-namespace", LocalActivityWithouthResult.Info.WorkflowNamespace);
         }
 
@@ -433,7 +433,7 @@ namespace TestTemporal
             }
         }
 
-        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
+        [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface ILocalActivityWorkflowMultipleMethods : IWorkflow
         {
             [WorkflowMethod]
@@ -481,7 +481,7 @@ namespace TestTemporal
 
         //---------------------------------------------------------------------
 
-        [ActivityInterface(TaskList = TemporalTestHelper.TaskList)]
+        [ActivityInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IActivityMultipleMethods : IActivity
         {
             [ActivityMethod]
@@ -504,7 +504,7 @@ namespace TestTemporal
             }
         }
 
-        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
+        [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IActivityWorkflowMultipleMethods : IWorkflow
         {
             [WorkflowMethod]
@@ -552,7 +552,7 @@ namespace TestTemporal
 
         //---------------------------------------------------------------------
 
-        [ActivityInterface(TaskList = TemporalTestHelper.TaskList)]
+        [ActivityInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IActivityLogger : IActivity
         {
             [ActivityMethod]
@@ -569,7 +569,7 @@ namespace TestTemporal
             }
         }
 
-        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
+        [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IActivityWorkflowLogger : IWorkflow
         {
             [WorkflowMethod]
@@ -610,7 +610,7 @@ namespace TestTemporal
 
         //---------------------------------------------------------------------
 
-        [ActivityInterface(TaskList = TemporalTestHelper.TaskList)]
+        [ActivityInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IActivityMultipleStubCalls : IActivity
         {
             [ActivityMethod]
@@ -627,7 +627,7 @@ namespace TestTemporal
             }
         }
 
-        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
+        [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IActivityWorkflowMultipleStubCalls : IWorkflow
         {
             [WorkflowMethod]
@@ -665,7 +665,7 @@ namespace TestTemporal
 
         //---------------------------------------------------------------------
 
-        [ActivityInterface(TaskList = TemporalTestHelper.TaskList)]
+        [ActivityInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IActivityDifferentNamesInterface : IActivity
         {
             [ActivityMethod]
@@ -682,7 +682,7 @@ namespace TestTemporal
             }
         }
 
-        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
+        [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IWorkflowActivityDifferentNames : IWorkflow
         {
             [WorkflowMethod]
@@ -740,7 +740,7 @@ namespace TestTemporal
             Error8,
         }
 
-        [ActivityInterface(TaskList = TemporalTestHelper.TaskList)]
+        [ActivityInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IActivityHeartbeat : IActivity
         {
             [ActivityMethod]
@@ -839,7 +839,7 @@ namespace TestTemporal
             }
         }
 
-        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
+        [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IWorkflowActivityHeartbeat : IWorkflow
         {
             [WorkflowMethod]
@@ -911,7 +911,7 @@ namespace TestTemporal
 
         //---------------------------------------------------------------------
 
-        [ActivityInterface(TaskList = TemporalTestHelper.TaskList)]
+        [ActivityInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IActivityFail : IActivity
         {
             [ActivityMethod]
@@ -928,7 +928,7 @@ namespace TestTemporal
             }
         }
 
-        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
+        [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IWorkflowActivityFail : IWorkflow
         {
             [WorkflowMethod]
@@ -989,7 +989,7 @@ namespace TestTemporal
             public int Age { get; set; }
         }
 
-        [ActivityInterface(TaskList = TemporalTestHelper.TaskList)]
+        [ActivityInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IActivityData : IActivity
         {
             [ActivityMethod]
@@ -1005,7 +1005,7 @@ namespace TestTemporal
             }
         }
 
-        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
+        [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IWorkflowActivityComplexData : IWorkflow
         {
             [WorkflowMethod]
@@ -1047,7 +1047,7 @@ namespace TestTemporal
 
         //---------------------------------------------------------------------
 
-        [ActivityInterface(TaskList = TemporalTestHelper.TaskList)]
+        [ActivityInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IActivityExternalCompletion : IActivity
         {
             [ActivityMethod]
@@ -1081,7 +1081,7 @@ namespace TestTemporal
             }
         }
 
-        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
+        [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IWorkflowActivityExternalCompletion : IWorkflow
         {
             [WorkflowMethod]
@@ -1339,7 +1339,7 @@ namespace TestTemporal
 
         //---------------------------------------------------------------------
 
-        [ActivityInterface(TaskList = TemporalTestHelper.TaskList)]
+        [ActivityInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IActivityWithDependency : IActivity
         {
             [ActivityMethod]
@@ -1362,7 +1362,7 @@ namespace TestTemporal
             }
         }
 
-        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
+        [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IActivityWorkflowWithDependency : IWorkflow
         {
             [WorkflowMethod]
@@ -1401,7 +1401,7 @@ namespace TestTemporal
 
         //---------------------------------------------------------------------
 
-        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
+        [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IActivityWorkflowNullables : IWorkflow
         {
             [WorkflowMethod]
@@ -1419,7 +1419,7 @@ namespace TestTemporal
             }
         }
 
-        [ActivityInterface(TaskList = TemporalTestHelper.TaskList)]
+        [ActivityInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IActivityNullables : IActivity
         {
             [ActivityMethod]
@@ -1452,7 +1452,7 @@ namespace TestTemporal
 
         //---------------------------------------------------------------------
 
-        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
+        [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IActivityWorkflowDefaultArg : IWorkflow
         {
             [WorkflowMethod(Name = "test")]
@@ -1470,7 +1470,7 @@ namespace TestTemporal
             }
         }
 
-        [ActivityInterface(TaskList = TemporalTestHelper.TaskList)]
+        [ActivityInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IActivityDefaultArg : IActivity
         {
             [ActivityMethod]

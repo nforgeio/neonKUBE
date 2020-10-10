@@ -60,7 +60,7 @@ namespace TestTemporal
                     contextId:          1,
                     workflowTypeName:   typeof(DummyWorkflow).FullName,
                     @namespace:         "my-namespace",
-                    taskList:           "my-tasklist",
+                    taskQueue:          "my-taskqueue",
                     workflowId:         "my-workflow-id",
                     runId:              "my-run-id",
                     isReplaying:        false,

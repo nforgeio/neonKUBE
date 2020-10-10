@@ -63,17 +63,17 @@ namespace Neon.Temporal.Internal
 
         /// <summary>
         /// <para>
-        /// Optionally specifies the Temporal task list for the worker.  This defaults to
-        /// <see cref="TemporalSettings.DefaultTaskList"/>.
+        /// Optionally specifies the Temporal task queue for the worker.  This defaults to
+        /// <see cref="TemporalSettings.DefaultTaskQueue"/>.
         /// </para>
         /// <note>
         /// You must ensure that this is not <c>null</c> or empty.
         /// </note>
         /// </summary>
-        public string TaskList 
+        public string TaskQueue 
         {
-            get => GetStringProperty(PropertyNames.TaskList);
-            set => SetStringProperty(PropertyNames.TaskList, value); 
+            get => GetStringProperty(PropertyNames.TaskQueue);
+            set => SetStringProperty(PropertyNames.TaskQueue, value); 
         }
 
         /// <summary>
@@ -104,7 +104,7 @@ namespace Neon.Temporal.Internal
 
             typedTarget.Name      = this.Name;
             typedTarget.Namespace = this.Namespace;
-            typedTarget.TaskList  = this.TaskList;
+            typedTarget.TaskQueue = this.TaskQueue;
             typedTarget.Options   = this.Options;
         }
     }

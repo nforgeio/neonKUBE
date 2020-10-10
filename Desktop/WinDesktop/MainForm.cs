@@ -714,7 +714,7 @@ namespace WinDesktop
                     var userContext   = KubeHelper.Config.GetUser(KubeHelper.CurrentContext.Properties.User);
                     var certPem       = Encoding.UTF8.GetString(Convert.FromBase64String(userContext.Properties.ClientCertificateData));
                     var keyPem        = Encoding.UTF8.GetString(Convert.FromBase64String(userContext.Properties.ClientKeyData));
-                    var dashboardCert = TlsCertificate.Parse(KubeHelper.CurrentContext.Extension.KubernetesDashboardCertificate).ToX509(publicOnly: true);
+                    var dashboardCert = TlsCertificate.Parse(KubeHelper.CurrentContext.Extension.DashboardCertificate).ToX509(publicOnly: true);
 
                     var kubeDashboardProxy =
                         new ReverseProxy(
@@ -1142,7 +1142,7 @@ namespace WinDesktop
         /// </remarks>
         private void OnCmdCommand(object sender, EventArgs args)
         {
-            var neonProgramFolder = Environment.GetEnvironmentVariable("NEONKUBE_PROGRAM_FOLDER");
+            var neonProgramFolder = Environment.GetEnvironmentVariable("NEONDESKTOP_PROGRAM_FOLDER");
             var orgPATH           = Environment.GetEnvironmentVariable("PATH");
 
             try

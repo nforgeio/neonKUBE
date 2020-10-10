@@ -8,7 +8,7 @@ using Neon.Temporal;
 
 namespace HelloWorld_DecisionTask
 {
-    [ActivityInterface(TaskList = "my-tasks")]
+    [ActivityInterface(TaskQueue = "my-tasks")]
     public interface IMyActivity : IActivity
     {
         [ActivityMethod(Name = "get-email")]
@@ -21,7 +21,7 @@ namespace HelloWorld_DecisionTask
         Task SendEmail(string email, string text);
     }
 
-    [WorkflowInterface(TaskList = "my-tasks")]
+    [WorkflowInterface(TaskQueue = "my-tasks")]
     public interface IMyWorkflow : IWorkflow
     {
         [WorkflowMethod]

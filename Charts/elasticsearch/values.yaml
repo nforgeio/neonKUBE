@@ -73,10 +73,7 @@ networkHost: "0.0.0.0"
 
 volumeClaimTemplate:
   accessModes: [ "ReadWriteOnce" ]
-  storageClassName: "local-storage"
-  selector:
-    matchLabels:
-      elasticsearch: default
+  storageClassName: "openebs-hostpath"
   resources:
     requests:
       storage: 512Mi
@@ -160,9 +157,9 @@ schedulerName: ""
 
 imagePullSecrets: []
 nodeSelector:
-  neonkube.io/monitor.elasticsearch: "true"
+  neonkube.io/monitor.logs: "true"
 tolerations:
-  - key: "neonkube.io/elasticsearch"
+  - key: "neonkube.io/logs"
     operator: "Exists"
     effect: "NoSchedule"
   - key: "node.kubernetes.io/disk-pressure"

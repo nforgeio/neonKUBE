@@ -48,7 +48,7 @@ namespace Neon.Kube
         // Static members
 
         private static readonly object                          syncLock = new object();
-        private static Dictionary<HostingEnvironment, Type>    environmentToHostingManager;
+        private static Dictionary<HostingEnvironment, Type>     environmentToHostingManager;
 
         /// <summary>
         /// <para>
@@ -98,10 +98,10 @@ namespace Neon.Kube
 
                 AwsHostingManager.Load();
                 AzureHostingManager.Load();
+                BareMetalHostingManager.Load();
                 GoogleHostingManager.Load();
                 HyperVHostingManager.Load();
                 HyperVLocalHostingManager.Load();
-                MachineHostingManager.Load();
                 XenServerHostingManager.Load();
 
                 // We're going to reflect all loaded assemblies for classes that implement
@@ -145,25 +145,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public bool IsCloudEnvironment(HostingEnvironment environment)
         {
-            switch (environment)
-            {
-                case HostingEnvironment.Aws:
-                case HostingEnvironment.Azure:
-                case HostingEnvironment.Google:
-
-                    return true;
-
-                case HostingEnvironment.HyperV:
-                case HostingEnvironment.HyperVLocal:
-                case HostingEnvironment.Machine:
-                case HostingEnvironment.XenServer:
-
-                    return false;
-
-                default:
-
-                    throw new NotImplementedException($"Hosting manager for [{environment}] is not implemented.");
-            }
+            return KubeHelper.IsCloudEnvironment(environment);
         }
 
         /// <inheritdoc/>

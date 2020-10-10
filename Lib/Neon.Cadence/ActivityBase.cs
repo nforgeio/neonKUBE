@@ -638,7 +638,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="client">The Cadence client.</param>
         /// <param name="args">The encoded activity arguments.</param>
-        /// <returns>Thye activity results.</returns>
+        /// <returns>The activity results.</returns>
         internal async Task<byte[]> OnInvokeAsync(CadenceClient client, byte[] args)
         {
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));

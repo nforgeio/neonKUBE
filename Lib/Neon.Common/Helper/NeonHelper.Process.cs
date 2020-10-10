@@ -362,12 +362,12 @@ namespace Neon.Common
 
                 if (!timeout.HasValue || timeout.Value >= TimeSpan.FromDays(1))
                 {
-                    NeonHelper.WaitFor(() => stdErrClosed && stdOutClosed, timeout: timeout ?? TimeSpan.FromDays(365), pollTime: TimeSpan.FromMilliseconds(250));
+                    NeonHelper.WaitFor(() => stdErrClosed && stdOutClosed, timeout: timeout ?? TimeSpan.FromDays(365), pollInterval: TimeSpan.FromMilliseconds(250));
                     process.WaitForExit();
                 }
                 else
                 {
-                    NeonHelper.WaitFor(() => stdErrClosed && stdOutClosed, timeout: timeout.Value, pollTime: TimeSpan.FromMilliseconds(250));
+                    NeonHelper.WaitFor(() => stdErrClosed && stdOutClosed, timeout: timeout.Value, pollInterval: TimeSpan.FromMilliseconds(250));
                     process.WaitForExit((int)timeout.Value.TotalMilliseconds);
 
                     if (!process.HasExited)

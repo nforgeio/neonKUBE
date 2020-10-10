@@ -59,7 +59,7 @@ namespace Neon.Kube
         // Static members
 
         /// <summary>
-        /// Explictly casts a <see cref="KubeContextName"/> into a <c>string</c>.
+        /// Explicitly casts a <see cref="KubeContextName"/> into a <c>string</c>.
         /// </summary>
         /// <param name="name">The context name or <c>null</c>.</param>
         /// <returns>The converted string.</returns>
@@ -76,7 +76,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Explictly casts a <c>string</c> into a <see cref="KubeContextName"/>.
+        /// Explicitly casts a <c>string</c> into a <see cref="KubeContextName"/>.
         /// </summary>
         /// <param name="name">The context name or <c>null</c>.</param>
         /// <returns>The converted context name.</returns>

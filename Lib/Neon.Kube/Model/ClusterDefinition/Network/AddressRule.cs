@@ -39,8 +39,15 @@ using Neon.Net;
 namespace Neon.Kube
 {
     /// <summary>
+    /// <para>
     /// Used to whitelist or blacklist an IP address or subnet within a cluster's
     /// <see cref="NetworkOptions.IngressRules"/> or <see cref="NetworkOptions.EgressAddressRules"/>.
+    /// </para>
+    /// <note>
+    /// This is currently supported only for clusters hosted on Azure.  AWS doesn't support
+    /// this scenario and we currently don't support automatic router configuration for
+    /// on-premise environments.
+    /// </note>
     /// </summary>
     public class AddressRule
     {
@@ -103,7 +110,7 @@ namespace Neon.Kube
         public AddressRule(string addressOrSubnet, AddressRuleAction action)
         {
             Covenant.Requires<ArgumentException>(!string.IsNullOrEmpty(addressOrSubnet), nameof(addressOrSubnet));
-            Covenant.Requires<ArgumentException>(addressOrSubnet.Equals("any", StringComparison.InvariantCultureIgnoreCase) || IPAddress.TryParse(addressOrSubnet, out var v1) || NetworkCidr.TryParse(addressOrSubnet, out var v2), nameof(addressOrSubnet));
+            Covenant.Requires<ArgumentException>(addressOrSubnet.Equals("any", StringComparison.InvariantCultureIgnoreCase) || NetHelper.TryParseIPv4Address(addressOrSubnet, out var v1) || NetworkCidr.TryParse(addressOrSubnet, out var v2), nameof(addressOrSubnet));
 
             if (addressOrSubnet.Equals("any", StringComparison.InvariantCultureIgnoreCase))
             {
@@ -150,7 +157,7 @@ namespace Neon.Kube
         {
             if (!IsAny)
             {
-                if (!IPAddress.TryParse(AddressOrSubnet, out var v1) && !NetworkCidr.TryParse(AddressOrSubnet, out var v2))
+                if (!NetHelper.TryParseIPv4Address(AddressOrSubnet, out var v1) && !NetworkCidr.TryParse(AddressOrSubnet, out var v2))
                 {
                     throw new ClusterDefinitionException($"Invalid address or subnet [{AddressOrSubnet}] specified for a [{context}].");
                 }

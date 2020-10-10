@@ -68,7 +68,7 @@ namespace TestTemporal
 
         //---------------------------------------------------------------------
 
-        [WorkflowInterface(TaskList = "tasklist-1")]
+        [WorkflowInterface(TaskQueue = "taskqueue-1")]
         public interface IWorkflowWithResult1: IWorkflow
         {
             [WorkflowMethod]
@@ -83,7 +83,7 @@ namespace TestTemporal
             }
         }
 
-        [WorkflowInterface(TaskList = "tasklist-2")]
+        [WorkflowInterface(TaskQueue = "taskqueue-2")]
         public interface IWorkflowWithResult2 : IWorkflow
         {
             [WorkflowMethod]
@@ -98,7 +98,7 @@ namespace TestTemporal
             }
         }
 
-        [WorkflowInterface(TaskList = "tasklist-3")]
+        [WorkflowInterface(TaskQueue = "taskqueue-3")]
         public interface IWorkflowWithResult3 : IWorkflow
         {
             [WorkflowMethod]
@@ -113,7 +113,7 @@ namespace TestTemporal
             }
         }
 
-        [WorkflowInterface(TaskList = "tasklist-4")]
+        [WorkflowInterface(TaskQueue = "taskqueue-4")]
         public interface IWorkflowWithResult4 : IWorkflow
         {
             [WorkflowMethod]
@@ -146,19 +146,19 @@ namespace TestTemporal
 
                 using (var client2 = await TemporalClient.ConnectAsync(fixture.Settings))
                 {
-                    var worker2 = await client1.NewWorkerAsync(new WorkerOptions() { TaskList = "tasklist-2" });
+                    var worker2 = await client1.NewWorkerAsync(new WorkerOptions() { TaskQueue = "taskqueue-2" });
 
                     await worker2.RegisterWorkflowAsync<WorkflowWithResult1>();
                     await worker2.StartAsync();
 
                     var options1 = new WorkflowOptions()
                     {
-                        TaskList = "tasklist-1"
+                        TaskQueue = "taskqueue-1"
                     };
 
                     var options2 = new WorkflowOptions()
                     {
-                        TaskList = "tasklist-2"
+                        TaskQueue = "taskqueue-2"
                     };
 
                     var stub1 = client1.NewWorkflowStub<IWorkflowWithResult1>(options: options1);
@@ -214,7 +214,7 @@ namespace TestTemporal
 
         //---------------------------------------
 
-        [ActivityInterface(TaskList = "tasklist-1")]
+        [ActivityInterface(TaskQueue = "taskqueue-1")]
         public interface IActivityWorker1 : IActivity
         {
             [ActivityMethod]
@@ -231,7 +231,7 @@ namespace TestTemporal
             }
         }
 
-        [WorkflowInterface(TaskList = "tasklist-1")]
+        [WorkflowInterface(TaskQueue = "taskqueue-1")]
         public interface IWorkflowWorker1 : IWorkflow
         {
             [WorkflowMethod]
@@ -265,7 +265,7 @@ namespace TestTemporal
 
         //---------------------------------------
 
-        [ActivityInterface(TaskList = "tasklist-2")]
+        [ActivityInterface(TaskQueue = "taskqueue-2")]
         public interface IActivityWorker2 : IActivity
         {
             [ActivityMethod]
@@ -282,7 +282,7 @@ namespace TestTemporal
             }
         }
 
-        [WorkflowInterface(TaskList = "tasklist-2")]
+        [WorkflowInterface(TaskQueue = "taskqueue-2")]
         public interface IWorkflowWorker2 : IWorkflow
         {
             [WorkflowMethod]
@@ -316,7 +316,7 @@ namespace TestTemporal
 
         //---------------------------------------
 
-        [ActivityInterface(TaskList = "tasklist-3")]
+        [ActivityInterface(TaskQueue = "taskqueue-3")]
         public interface IActivityWorker3 : IActivity
         {
             [ActivityMethod]
@@ -333,7 +333,7 @@ namespace TestTemporal
             }
         }
 
-        [WorkflowInterface(TaskList = "tasklist-3")]
+        [WorkflowInterface(TaskQueue = "taskqueue-3")]
         public interface IWorkflowWorker3 : IWorkflow
         {
             [WorkflowMethod]
@@ -367,7 +367,7 @@ namespace TestTemporal
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
-        public async Task Multiple_TaskLists()
+        public async Task Multiple_TaskQueues()
         {
             await SyncContext.ClearAsync;
 
@@ -401,19 +401,19 @@ namespace TestTemporal
 
                 // Initialize and start the workers.
 
-                var worker1 = await workerClient1.NewWorkerAsync(new WorkerOptions() { TaskList = "tasklist-1" });
+                var worker1 = await workerClient1.NewWorkerAsync(new WorkerOptions() { TaskQueue = "taskqueue-1" });
 
                 await worker1.RegisterActivityAsync<ActivityWorker1>();
                 await worker1.RegisterWorkflowAsync<WorkflowWorker1>();
                 await worker1.StartAsync();
 
-                var worker2 = await workerClient1.NewWorkerAsync(new WorkerOptions() { TaskList = "tasklist-2" });
+                var worker2 = await workerClient1.NewWorkerAsync(new WorkerOptions() { TaskQueue = "taskqueue-2" });
 
                 await worker2.RegisterActivityAsync<ActivityWorker2>();
                 await worker2.RegisterWorkflowAsync<WorkflowWorker2>();
                 await worker2.StartAsync();
 
-                var worker3 = await workerClient1.NewWorkerAsync(new WorkerOptions() { TaskList = "tasklist-3" });
+                var worker3 = await workerClient1.NewWorkerAsync(new WorkerOptions() { TaskQueue = "taskqueue-3" });
 
                 await worker3.RegisterActivityAsync<ActivityWorker3>();
                 await worker3.RegisterWorkflowAsync<WorkflowWorker3>();

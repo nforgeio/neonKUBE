@@ -33,6 +33,7 @@ using Neon.Common;
 using Neon.HyperV;
 using Neon.IO;
 using Neon.Kube;
+using Neon.Net;
 using Neon.XenServer;
 
 namespace NeonCli
@@ -157,7 +158,7 @@ node template.
                     Program.Exit(1);
                 }
 
-                if (!IPAddress.TryParse(hostAddress, out hostIpAddress))
+                if (!NetHelper.TryParseIPv4Address(hostAddress, out hostIpAddress))
                 {
                     Console.Error.WriteLine($"**** ERROR: [{hostAddress}] is not a valid IP address.");
                     Program.Exit(1);
@@ -188,7 +189,7 @@ node template.
                 Program.Exit(1);
             }
 
-            if (!IPAddress.TryParse(address, out var ipAddress))
+            if (!NetHelper.TryParseIPv4Address(address, out var ipAddress))
             {
                 Console.Error.WriteLine($"**** ERROR: [{address}] is not a valid IP address.");
                 Program.Exit(1);

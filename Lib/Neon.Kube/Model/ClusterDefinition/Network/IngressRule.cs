@@ -101,11 +101,16 @@ namespace Neon.Kube
         /// Optionally specifies whitelisted and/or blacklisted external addresses for
         /// inbound traffic.  This defaults to allowing inbound traffic from anywhere 
         /// when the property is <c>null</c> or empty.
+        /// </para>
         /// <note>
         /// Address rules are processed in order, from first to last so you may consider
         /// putting your blacklist rules before your whitelist rules.
         /// </note>
-        /// </para>
+        /// <note>
+        /// This is currently supported only for clusters hosted on Azure.  AWS doesn't support
+        /// this scenario and we currently don't support automatic router configuration for
+        /// on-premise environments.
+        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "AddressRules", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "addressRules", ApplyNamingConventions = false)]

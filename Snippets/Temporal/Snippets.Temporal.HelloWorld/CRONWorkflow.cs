@@ -8,7 +8,7 @@ using Neon.Temporal;
 namespace Snippets.Temporal.CRON
 {
     #region code
-    [WorkflowInterface(TaskList = "my-tasks")]
+    [WorkflowInterface(TaskQueue = "my-tasks")]
     public interface ICronWorkflow : IWorkflow
     {
         [WorkflowMethod(Name = "backup")]

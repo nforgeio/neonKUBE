@@ -59,7 +59,7 @@ namespace Neon.Temporal.Internal
         public static PropertyNameUtf8 ContinueAsNewScheduleToCloseTimeout { get; private set; }       = new PropertyNameUtf8("ContinueAsNewScheduleToCloseTimeout");
         public static PropertyNameUtf8 ContinueAsNewScheduleToStartTimeout { get; private set; }       = new PropertyNameUtf8("ContinueAsNewScheduleToStartTimeout");
         public static PropertyNameUtf8 ContinueAsNewStartToCloseTimeout { get; private set; }          = new PropertyNameUtf8("ContinueAsNewStartToCloseTimeout");
-        public static PropertyNameUtf8 ContinueAsNewTaskList { get; private set; }                     = new PropertyNameUtf8("ContinueAsNewTaskList");
+        public static PropertyNameUtf8 ContinueAsNewTaskQueue { get; private set; }                    = new PropertyNameUtf8("ContinueAsNewTaskQueue");
         public static PropertyNameUtf8 ContinueAsNewWorkflow { get; private set; }                     = new PropertyNameUtf8("ContinueAsNewWorkflow");
         public static PropertyNameUtf8 CreateNamespace { get; private set; }                           = new PropertyNameUtf8("CreateNamespace");
         public static PropertyNameUtf8 Data { get; private set; }                                      = new PropertyNameUtf8("Data");
@@ -125,9 +125,9 @@ namespace Neon.Temporal.Internal
         public static PropertyNameUtf8 SignalName { get; private set; }                                = new PropertyNameUtf8("SignalName");
         public static PropertyNameUtf8 Size { get; private set; }                                      = new PropertyNameUtf8("Size");
         public static PropertyNameUtf8 TargetRequestId { get; private set; }                           = new PropertyNameUtf8("TargetRequestId");
-        public static PropertyNameUtf8 TaskList { get; private set; }                                  = new PropertyNameUtf8("TaskList");
-        public static PropertyNameUtf8 TaskListKind { get; private set; }                              = new PropertyNameUtf8("TaskListKind");
-        public static PropertyNameUtf8 TaskListType { get; private set; }                              = new PropertyNameUtf8("TaskListType");
+        public static PropertyNameUtf8 TaskQueue { get; private set; }                                 = new PropertyNameUtf8("TaskQueue");
+        public static PropertyNameUtf8 TaskQueueKind { get; private set; }                             = new PropertyNameUtf8("TaskQueueKind");
+        public static PropertyNameUtf8 TaskQueueType { get; private set; }                             = new PropertyNameUtf8("TaskQueueType");
         public static PropertyNameUtf8 TaskToken { get; private set; }                                 = new PropertyNameUtf8("TaskToken");
         public static PropertyNameUtf8 Time { get; private set; }                                      = new PropertyNameUtf8("Time");
         public static PropertyNameUtf8 Timeout { get; private set; }                                   = new PropertyNameUtf8("Timeout");

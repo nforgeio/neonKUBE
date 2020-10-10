@@ -169,35 +169,35 @@ namespace Neon.Temporal
     /// are implemented by workers.  For example, if you deploy a program called <b>payments.exe</b>
     /// that implements payment related workflows and activities like <b>validate</b>,
     /// <b>debit</b>, <b>credit</b>,... you could register these and then start a worker using
-    /// <b>tasklist=payments</b>.
+    /// <b>taskqueue=payments</b>.
     /// </para>
     /// <para>
-    /// You'll need to provide the correct task list when executing a workflow or normal (non-local)
+    /// You'll need to provide the correct task queue when executing a workflow or normal (non-local)
     /// activity.  Temporal will schedule the workflow or activity on one of the workers that
-    /// was started with the specified task list.  The most convienent way to specify the task list
-    /// is to tag your workflow and activity interfaces with <c>[WorkflowInterface(TaskList = "payments")]</c>
-    /// and <c>[ActivityInterface(TaskList = "payments")]</c> attributes, specifying the target task list.
+    /// was started with the specified task queue.  The most convienent way to specify the task queue
+    /// is to tag your workflow and activity interfaces with <c>[WorkflowInterface(TaskQueue = "payments")]</c>
+    /// and <c>[ActivityInterface(TaskQueue = "payments")]</c> attributes, specifying the target task queue.
     /// </para>
     /// <note>
-    /// You may specify a default task list when connecting a <see cref="TemporalClient"/> via
-    /// <see cref="TemporalSettings.DefaultTaskList"/> (which defaults to <c>null</c>).  This may
+    /// You may specify a default task queue when connecting a <see cref="TemporalClient"/> via
+    /// <see cref="TemporalSettings.DefaultTaskQueue"/> (which defaults to <c>null</c>).  This may
     /// be convienent for simple deployments.
     /// </note>
     /// <para>
-    /// You may also specify a custom task list in the workflow and activity options used when
-    /// executing a workflow or activity.  A task list specified in one of these options takes
-    /// precedence over the task list specified in an attribute.
+    /// You may also specify a custom task queue in the workflow and activity options used when
+    /// executing a workflow or activity.  A task queue specified in one of these options takes
+    /// precedence over the task queue specified in an attribute.
     /// </para>
     /// <note>
-    /// The .NET client will complain if a task list is not specified in either an interface
-    /// attribute via options and the there's no client default task list set.
+    /// The .NET client will complain if a task queue is not specified in either an interface
+    /// attribute via options and the there's no client default task queue set.
     /// </note>
     /// <note>
     /// <para>
     /// <b>IMPORTANT:</b> You need to take care to ensure that the task lists you use for your
     /// workers uniquely identify the set of workflows and activities implemented by your the workers.
     /// For example, if you start two workers, <b>worker-a</b> and <b>worker-b</b> using the same
-    /// task list, but <b>worker-a</b> registers the <b>foo</b> workflow and <b>worker-b</b>
+    /// task queue, but <b>worker-a</b> registers the <b>foo</b> workflow and <b>worker-b</b>
     /// registers the <c>bar</c> activity, you're going run into trouble.
     /// </para>
     /// <para>
@@ -217,7 +217,7 @@ namespace Neon.Temporal
     /// </para>
     /// <para>
     /// So the moral of this store is carefully choose your task lists to match the set of workflows
-    /// and activities implemented by your application.  One common approach is to name the task list
+    /// and activities implemented by your application.  One common approach is to name the task queue
     /// after the service or application that implements the workflow anbd activities.
     /// </para>
     /// </note>
@@ -954,7 +954,7 @@ namespace Neon.Temporal
                                 }
                             },
                             timeout: TimeSpan.FromSeconds(30),
-                            pollTime: TimeSpan.FromMilliseconds(500));
+                            pollInterval: TimeSpan.FromMilliseconds(500));
                     }
 
                     // Send the [InitializeRequest] to the [temporal-proxy] so it will know

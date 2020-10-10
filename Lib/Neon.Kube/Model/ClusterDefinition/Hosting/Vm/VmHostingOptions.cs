@@ -45,8 +45,9 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Static members
 
-        internal const string DefaultMemory = "4 GiB";
-        internal const string DefaultDisk   = "128 GiB";
+        internal const string DefaultMemory      = "4 GiB";
+        internal const string DefaultOsDisk      = "128 GiB";
+        internal const string DefaultOpenEbsDisk = "128 GiB";
 
         //---------------------------------------------------------------------
         // Instance members
@@ -90,7 +91,12 @@ namespace Neon.Kube
         public string HostPassword { get; set; }
 
         /// <summary>
-        /// The default number of virtual processors to assign to each cluster virtual machine.
+        /// <para>
+        /// The default number of virtual processors to assign to each cluster virtual machine.  
+        /// </para>
+        /// <note>
+        /// neonKUBE requires that each master and worker node have at least 4 CPUs.
+        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "Processors", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "processors", ApplyNamingConventions = false)]
@@ -98,9 +104,14 @@ namespace Neon.Kube
         public int Processors { get; set; } = 4;
 
         /// <summary>
-        /// Specifies the default maximum amount of memory to allocate to each cluster virtual machine.  This is specified as a string
+        /// <para>
+        /// Specifies the default amount of memory to allocate to each cluster virtual machine.  This is specified as a string
         /// that can be a byte count or a number with units like <b>512MiB</b>, <b>0.5GiB</b>, <b>2iGB</b>, or <b>1TiB</b>.  
         /// This defaults to <b>4GiB</b>.
+        /// </para>
+        /// <note>
+        /// neonKUBE requires that each master and worker node have at least 4GiB of RAM.
+        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "Memory", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "memory", ApplyNamingConventions = false)]
@@ -108,30 +119,45 @@ namespace Neon.Kube
         public string Memory { get; set; } = DefaultMemory;
 
         /// <summary>
-        /// Specifies the maximum amount of memory to allocate to each cluster virtual machine.  This is specified as a string
+        /// Specifies the default size of the operating system disk for cluster virtual machines.  This is specified as a string
         /// that can be a long byte count or a byte count or a number with units like <b>512MiB</b>, <b>0.5GiB</b>, <b>2GiB</b>, 
-        /// or <b>1TiB</b>.  This defaults to <b>64GiB</b>.
+        /// or <b>1TiB</b>.  This defaults to <b>128GiB</b>.
         /// </summary>
-        [JsonProperty(PropertyName = "Disk", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "disk", ApplyNamingConventions = false)]
-        [DefaultValue(DefaultDisk)]
-        public string Disk { get; set; } = DefaultDisk;
+        [JsonProperty(PropertyName = "OsDisk", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "osDisk", ApplyNamingConventions = false)]
+        [DefaultValue(DefaultOsDisk)]
+        public string OsDisk { get; set; } = DefaultOsDisk;
+
+        /// <summary>
+        /// Specifies the default size of the second block device to be created for nodes enabled for
+        /// OpenEBS.  This is specified as a string that can be a byte count or a number with 
+        /// units like <b>512MiB</b>, <b>0.5GiB</b>, <b>2iGB</b>, or <b>1TiB</b>.  This defaults
+        /// to <b>128GiB</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "OpenEbsDisk", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "openEbsDisk", ApplyNamingConventions = false)]
+        [DefaultValue(DefaultOpenEbsDisk)]
+        public string OpenEbsDisk { get; set; } = DefaultOpenEbsDisk;
 
         /// <summary>
         /// <para>
-        /// Path to the folder where virtual machine hard drive folders are to be persisted.
+        /// Path to the location where virtual machine hard disk will be created.
         /// This defaults to the local Hyper-V folder for Windows.
         /// </para>
         /// <note>
-        /// This is recognized only when deploying on a local Hyper-V hypervisor, typically
-        /// for development and test purposes.  This is ignored when provisioning on remote
-        /// Hyper-V instances or for cloud or bare machine environments.
+        /// <para>
+        /// This is currently recognized only when deploying on a local Hyper-V hypervisor.
+        /// Eventually, you'll be able to specify a XenServer storage repository.
+        /// </para>
+        /// <para>
+        /// <a href="https://github.com/nforgeio/neonKUBE/issues/996">Issue #996</a>
+        /// </para>
         /// </note>
         /// </summary>
-        [JsonProperty(PropertyName = "DriveFolder", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "driveFolder", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "DiskLocation", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "diskLocation", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public string DriveFolder { get; set; } = null;
+        public string DiskLocation { get; set; } = null;
 
         /// <summary>
         /// <para>
@@ -202,11 +228,12 @@ namespace Neon.Kube
             }
 
             Memory = Memory ?? DefaultMemory;
-            Disk   = Disk ?? DefaultDisk;
+            OsDisk = OsDisk ?? DefaultOsDisk;
             Hosts  = Hosts ?? new List<HypervisorHost>();
 
             ClusterDefinition.ValidateSize(Memory, this.GetType(), nameof(Memory));
-            ClusterDefinition.ValidateSize(Disk, this.GetType(), nameof(Disk));
+            ClusterDefinition.ValidateSize(OsDisk, this.GetType(), nameof(OsDisk));
+            ClusterDefinition.ValidateSize(OpenEbsDisk, this.GetType(), nameof(OpenEbsDisk));
 
             // Verify that the hypervisor host machines have unique names and addresses.
 
@@ -231,7 +258,7 @@ namespace Neon.Kube
             }
 
             // Ensure that some hypervisor hosts have been specified if we're deploying to remote
-            // hypervisors and also that each node definition specifies a host hyoervisor.
+            // hypervisors and also that each node definition specifies a host hypervisor.
 
             if (clusterDefinition.Hosting.IsRemoteHypervisorProvider)
             {
@@ -245,9 +272,9 @@ namespace Neon.Kube
                     vmHost.Validate(clusterDefinition);
                 }
 
-                foreach (var node in clusterDefinition.NodeDefinitions.Values)
+                foreach (var node in clusterDefinition.Nodes)
                 {
-                    if (string.IsNullOrEmpty(node.Vm.Host))
+                    if (string.IsNullOrEmpty(node.Vm?.Host))
                     {
                         throw new ClusterDefinitionException($"Node [{node.Name}] does not specify a host hypervisor with [{nameof(NodeDefinition.Vm.Host)}].");
                     }

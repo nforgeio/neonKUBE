@@ -25,17 +25,17 @@ namespace Neon.Service
         /// <summary>
         /// Cluster Manager Operator.
         /// </summary>
-        public const string ClusterManager = "cluster-manager";
+        public const string NeonClusterManager = "neon-cluster-manager";
 
         /// <summary>
         /// Elasticsearch.
         /// </summary>
-        public const string Elasticsearch = "elasticsearch-master";
+        public const string Elasticsearch = "neon-logs-elasticsearch";
 
         /// <summary>
         /// Kibana.
         /// </summary>
-        public const string Kibana = "kibana-kibana";
+        public const string Kibana = "neon-logs-kibana";
 
         /// <summary>
         /// Non-production service used to test Cadence running in a Linux container.

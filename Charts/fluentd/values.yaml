@@ -4,7 +4,7 @@
 image:
   repository: nkubedev/neon-log-collector
   tag: latest
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
   # pullSecrets:
   #   - secret1
   #   - secret2
@@ -20,13 +20,6 @@ output:
   buffer_queue_limit: 4GB
 
 env: {}
-
-plugins:
-  enabled: true
-  pluginsList:
-    - fluent-plugin-dedot_filter
-    - fluent-plugin-kubernetes_metadata_filter
-    - fluent-plugin-elasticsearch
 
 # Extra Environment Values - allows yaml definitions
 extraEnvVars:
@@ -59,13 +52,15 @@ metrics:
   serviceMonitor:
     enabled: true
     additionalLabels: {}
-    # namespace: monitoring
-    # interval: 30s
-    # scrapeTimeout: 10s
+    namespace: monitoring
+    interval: 30s
+    scrapeTimeout: 10s
 
 annotations:
   prometheus.io/scrape: "true"
   prometheus.io/port: "24231"
+  traffic.sidecar.istio.io/excludeInboundPorts: '24231'
+  traffic.sidecar.istio.io/excludeOutboundPorts: '24231'
 
 ingress:
   enabled: false
@@ -86,75 +81,6 @@ ingress:
 #    - secretName: http-input-tls
 #      hosts:
 #        - http-input.local
-
-configMaps:
-  general.conf: |
-    # Prevent fluentd from handling records containing its own logs. Otherwise
-    # it can lead to an infinite loop, when error in sending one message generates
-    # another message which also fails to be sent and so on.
-    <match fluentd.**>
-      @type null
-    </match>
-
-    # Used for health checking
-    <source>
-      @type http
-      port 9880
-      bind 0.0.0.0
-    </source>
-
-    # Emits internal metrics to every minute, and also exposes them on port
-    # 24220. Useful for determining if an output plugin is retryring/erroring,
-    # or determining the buffer queue length.
-    <source>
-      @type monitor_agent
-      bind 0.0.0.0
-      port 24220
-      tag fluentd.monitor.metrics
-    </source>
-
-  system.conf: |-
-    <system>
-      root_dir /tmp/fluentd-buffers/
-    </system>
-  forward-input.conf: |
-    <source>
-      @type forward
-      port 24224
-      bind 0.0.0.0
-    </source>
-  output.conf: |
-    <match **>
-      @id elasticsearch
-      @type elasticsearch
-
-      include_tag_key true
-      # Replace with the host/port to your Elasticsearch cluster.
-      host "#{ENV['OUTPUT_HOST']}"
-      port "#{ENV['OUTPUT_PORT']}"
-      scheme "#{ENV['OUTPUT_SCHEME']}"
-      ssl_version "#{ENV['OUTPUT_SSL_VERSION']}"
-      logstash_format true
-      reload_connections false
-      reconnect_on_error true
-      reload_on_failure true
-      slow_flush_log_threshold 25.0
-      <buffer>
-        @type file
-        path /var/log/fluentd-buffers/kubernetes.system.buffer
-        flush_mode immediate
-        flush_thread_count 4
-        chunk_full_threshold 0.9
-        # retry_forever
-        retry_type exponential_backoff
-        retry_timeout 1s
-        retry_max_times 5
-        retry_max_interval 30
-        chunk_limit_size "#{ENV['OUTPUT_BUFFER_CHUNK_LIMIT']}"
-        queue_limit_length "#{ENV['OUTPUT_BUFFER_QUEUE_LIMIT']}"
-        overflow_action drop_oldest_chunk
-      </buffer>
-    </match>
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
@@ -197,7 +123,7 @@ serviceAccount:
 # Enable autoscaling using HorizontalPodAutoscaler
 autoscaling:
   enabled: true
-  minReplicas: 4
+  minReplicas: 1
   maxReplicas: 10
   metrics:
     - type: Resource
@@ -217,7 +143,8 @@ autoscaling:
 # Full description about this field: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#pod-v1-core
 terminationGracePeriodSeconds: 90
 
-nodeSelector: {}
+nodeSelector: 
+  neonkube.io/monitor.logs: "true"
 
 tolerations: []
 

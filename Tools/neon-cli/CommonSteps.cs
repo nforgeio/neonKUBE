@@ -41,9 +41,9 @@ namespace NeonCli
         /// </summary>
         /// <param name="node">The target cluster node.</param>
         /// <param name="stepDelay">Ignored.</param>
-        public static void VerifyOS(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
+        public static void VerifyOS(LinuxSshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
-            KubeHelper.VerifyNodeOs(node);
+            KubeHelper.VerifyNodeOperatingSystem(node);
         }
 
         /// <summary>
@@ -51,135 +51,12 @@ namespace NeonCli
         /// </summary>
         /// <param name="node">The target node.</param>
         /// <param name="stepDelayed">Ignored.</param>
-        public static void ConfigureOpenSSH(SshProxy<NodeDefinition> node, TimeSpan stepDelayed)
+        public static void ConfigureOpenSsh(LinuxSshProxy<NodeDefinition> node, TimeSpan stepDelayed)
         {
             // Upload the OpenSSH server configuration, restart OpenSSH and
             // then disconnect and wait for the OpenSSH to restart.
 
-            var openSshConfig =
-@"# FILE:	       sshd_config
-# CONTRIBUTOR: Jeff Lill
-# COPYRIGHT:   Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the ""License"");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an ""AS IS"" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
-# This file is written to neonKUBE nodes during cluster preparation.
-#
-# See the sshd_config(5) manpage for details
-
-# Make it easy for operators to customize this config.
-Include /etc/ssh/sshd_config.d/*
-
-# What ports, IPs and protocols we listen for
-# Port 22
-# Use these options to restrict which interfaces/protocols sshd will bind to
-#ListenAddress ::
-#ListenAddress 0.0.0.0
-Protocol 2
-# HostKeys for protocol version 2
-HostKey /etc/ssh/ssh_host_rsa_key
-#HostKey /etc/ssh/ssh_host_dsa_key
-#HostKey /etc/ssh/ssh_host_ecdsa_key
-#HostKey /etc/ssh/ssh_host_ed25519_key
-#Privilege Separation is turned on for security
-UsePrivilegeSeparation yes
-
-# Lifetime and size of ephemeral version 1 server key
-KeyRegenerationInterval 3600
-ServerKeyBits 1024
-
-# Logging
-SyslogFacility AUTH
-LogLevel INFO
-
-# Authentication:
-LoginGraceTime 120
-PermitRootLogin no
-StrictModes yes
-
-RSAAuthentication yes
-PubkeyAuthentication yes
-#AuthorizedKeysFile	%h/.ssh/authorized_keys
-
-# Don't read the user's ~/.rhosts and ~/.shosts files
-IgnoreRhosts yes
-# For this to work you will also need host keys in /etc/ssh_known_hosts
-RhostsRSAAuthentication no
-# similar for protocol version 2
-HostbasedAuthentication no
-# Uncomment if you don't trust ~/.ssh/known_hosts for RhostsRSAAuthentication
-#IgnoreUserKnownHosts yes
-
-# To enable empty passwords, change to yes (NOT RECOMMENDED)
-PermitEmptyPasswords no
-
-# Change to yes to enable challenge-response passwords (beware issues with
-# some PAM modules and threads)
-ChallengeResponseAuthentication no
-
-# Change to no to disable tunnelled clear text passwords
-#PasswordAuthentication yes
-
-# Kerberos options
-#KerberosAuthentication no
-#KerberosGetAFSToken no
-#KerberosOrLocalPasswd yes
-#KerberosTicketCleanup yes
-
-# GSSAPI options
-#GSSAPIAuthentication no
-#GSSAPICleanupCredentials yes
-
-AllowTcpForwarding no
-X11Forwarding no
-X11DisplayOffset 10
-PermitTunnel no
-PrintMotd no
-PrintLastLog yes
-TCPKeepAlive yes
-UsePrivilegeSeparation yes
-#UseLogin no
-
-#MaxStartups 10:30:60
-#Banner /etc/issue.net
-
-# Allow client to pass locale environment variables
-AcceptEnv LANG LC_*
-
-Subsystem sftp /usr/lib/openssh/sftp-server
-
-# Set this to 'yes' to enable PAM authentication, account processing,
-# and session processing. If this is enabled, PAM authentication will
-# be allowed through the ChallengeResponseAuthentication and
-# PasswordAuthentication.  Depending on your PAM configuration,
-# PAM authentication via ChallengeResponseAuthentication may bypass
-# the setting of ""PermitRootLogin without-password"".
-# If you just want the PAM account and session checks to run without
-# PAM authentication, then enable this but set PasswordAuthentication
-# and ChallengeResponseAuthentication to 'no'.
-UsePAM yes
-
-# Allow connections to be idle for up to an 10 minutes (600 seconds)
-# before terminating them.  This configuration pings the client every
-# 30 seconds for up to 20 times without a response:
-#
-#   20*30 = 600 seconds
-
-ClientAliveInterval 30
-ClientAliveCountMax 20
-TCPKeepAlive yes
-";
-            node.UploadText("/etc/ssh/sshd_config", openSshConfig);
+            node.UploadText("/etc/ssh/sshd_config", KubeHelper.OpenSshConfig);
             node.SudoCommand("systemctl restart sshd");
         }
 
@@ -189,7 +66,7 @@ TCPKeepAlive yes
         /// </summary>
         /// <param name="node">The server to be updated.</param>
         /// <param name="clusterDefinition">The cluster definition.</param>
-        public static void ConfigureEnvironmentVariables(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
+        public static void ConfigureEnvironmentVariables(LinuxSshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
         {
             node.Status = "environment variables";
 
@@ -284,6 +161,97 @@ TCPKeepAlive yes
         }
 
         /// <summary>
+        /// Configures a node's host public SSH key during node provisioning.
+        /// </summary>
+        /// <param name="node">The target node.</param>
+        /// <param name="clusterLogin">The cluster login.</param>
+        public static void ConfigureSshKey(LinuxSshProxy<NodeDefinition> node, ClusterLogin clusterLogin)
+        {
+            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
+            Covenant.Requires<ArgumentNullException>(clusterLogin != null, nameof(clusterLogin));
+
+            // Configure the SSH credentials on the node.
+
+            node.InvokeIdempotentAction("setup/ssh",
+                () =>
+                {
+                    CommandBundle bundle;
+
+                    // Here's some information explaining what how this works:
+                    //
+                    //      https://help.ubuntu.com/community/SSH/OpenSSH/Configuring
+                    //      https://help.ubuntu.com/community/SSH/OpenSSH/Keys
+
+                    node.Status = "setup: client SSH key";
+
+                    // Enable the public key by appending it to [$HOME/.ssh/authorized_keys],
+                    // creating the file if necessary.  Note that we're allowing only a single
+                    // authorized key.
+
+                    var addKeyScript =
+$@"
+chmod go-w ~/
+mkdir -p $HOME/.ssh
+chmod 700 $HOME/.ssh
+touch $HOME/.ssh/authorized_keys
+cat ssh-key.ssh2 > $HOME/.ssh/authorized_keys
+chmod 600 $HOME/.ssh/authorized_keys
+";
+                    bundle = new CommandBundle("./addkeys.sh");
+
+                    bundle.AddFile("addkeys.sh", addKeyScript, isExecutable: true);
+                    bundle.AddFile("ssh_host_rsa_key", clusterLogin.SshKey.PublicSSH2);
+
+                    // NOTE: I'm explicitly not running the bundle as [sudo] because the OpenSSH
+                    //       server is very picky about the permissions on the user's [$HOME]
+                    //       and [$HOME/.ssl] folder and contents.  This took me a couple 
+                    //       hours to figure out.
+
+                    node.RunCommand(bundle);
+
+                    // These steps are required for both password and public key authentication.
+
+                    // Upload the server key and edit the [sshd] config to disable all host keys 
+                    // except for RSA.
+
+                    var configScript =
+$@"
+# Install public SSH key for the [sysadmin] user.
+
+cp ssh_host_rsa_key.pub /home/{KubeConst.SysAdminUsername}/.ssh/authorized_keys
+
+# Disable all host keys except for RSA.
+
+sed -i 's!^\HostKey /etc/ssh/ssh_host_dsa_key$!#HostKey /etc/ssh/ssh_host_dsa_key!g' /etc/ssh/sshd_config
+sed -i 's!^\HostKey /etc/ssh/ssh_host_ecdsa_key$!#HostKey /etc/ssh/ssh_host_ecdsa_key!g' /etc/ssh/sshd_config
+sed -i 's!^\HostKey /etc/ssh/ssh_host_ed25519_key$!#HostKey /etc/ssh/ssh_host_ed25519_key!g' /etc/ssh/sshd_config
+
+# Restart SSHD to pick up the changes.
+
+systemctl restart sshd
+";
+                    bundle = new CommandBundle("./config.sh");
+
+                    bundle.AddFile("config.sh", configScript, isExecutable: true);
+                    bundle.AddFile("ssh_host_rsa_key.pub", clusterLogin.SshKey.PublicPUB);
+                    node.SudoCommand(bundle);
+                });
+
+            // Verify that we can login with the new SSH private key and also verify that
+            // the password still works.
+
+            node.Status = "ssh: verify private key auth";
+            node.Disconnect();
+            node.UpdateCredentials(SshCredentials.FromPrivateKey(KubeConst.SysAdminUsername, clusterLogin.SshKey.PrivatePEM));
+            node.WaitForBoot();
+
+            node.Status = "ssh: verify password auth";
+            node.Disconnect();
+            node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUsername, clusterLogin.SshPassword));
+            node.WaitForBoot();
+        }
+
+        /// <summary>
         /// Initializes a near virgin server with the basic capabilities required
         /// for a cluster node.
         /// </summary>
@@ -291,7 +259,7 @@ TCPKeepAlive yes
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <param name="kubeSetupInfo">Kubernetes setup details.</param>
         /// <param name="shutdown">Optionally shuts down the node.</param>
-        public static void PrepareNode(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition, KubeSetupInfo kubeSetupInfo, HostingManager hostingManager, bool shutdown = false)
+        public static void PrepareNode(LinuxSshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition, KubeSetupInfo kubeSetupInfo, HostingManager hostingManager, bool shutdown = false)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
@@ -381,7 +349,7 @@ systemctl restart rsyslog.service
 
             node.Status = "configure: openssh";
 
-            ConfigureOpenSSH(node, TimeSpan.Zero);
+            ConfigureOpenSsh(node, TimeSpan.Zero);
 
             node.Status = "upload: prepare files";
 
@@ -408,16 +376,12 @@ systemctl restart rsyslog.service
             // We need to upload the cluster configuration and initialize drives attached 
             // to the node.  We're going to assume that these are not already initialized.
 
-            // $todo(jefflill): 
-            //
-            // We may need an option that allows an operator to pre-build a hardware
-            // based drive array or something.  I'm going to defer this to later and
-            // concentrate on commodity hardware and cloud deployments for now. 
-            //
-            //      https://github.com/nforgeio/neonKUBE/issues/963
-
             node.Status = "setup: disk";
-            node.SudoCommand("setup-disk.sh", hostingManager.GetDataDevice(node));
+
+            var diskName  = hostingManager.GetDataDisk(node);
+            var partition = char.IsDigit(diskName.Last()) ? $"{diskName}p1" : $"{diskName}1";
+
+            node.SudoCommand("setup-disk.sh", diskName, partition);
 
             // Clear any DHCP leases to be super sure that cloned node
             // VMs will obtain fresh IP addresses.

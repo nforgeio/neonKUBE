@@ -9,7 +9,7 @@ using Neon.Temporal;
 namespace HelloWorld_BasicActivity_2
 {
     #region code
-    [ActivityInterface(TaskList = "my-tasks")]
+    [ActivityInterface(TaskQueue = "my-tasks")]
     public interface ISendHelloActivity : IActivity
     {
         [ActivityMethod]
@@ -30,7 +30,7 @@ namespace HelloWorld_BasicActivity_2
         }
     }
 
-    [WorkflowInterface(TaskList = "my-tasks")]
+    [WorkflowInterface(TaskQueue = "my-tasks")]
     public interface IHelloWorkflow : IWorkflow
     {
         [WorkflowMethod]

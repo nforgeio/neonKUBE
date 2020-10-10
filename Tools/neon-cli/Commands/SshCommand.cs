@@ -72,8 +72,8 @@ ARGUMENTS:
                 Program.Exit(0);
             }
 
-            var cluster    = Program.GetCluster();
-            var extensions = KubeHelper.CurrentContext.Extension;
+            var cluster      = Program.GetCluster();
+            var clusterLogin = KubeHelper.CurrentContext.Extension;
 
             NodeDefinition node;
 
@@ -97,32 +97,33 @@ ARGUMENTS:
             // The host's SSH key fingerprint looks something like the example below.  We
             // need to extract the MD5 HEX part to generate a PuTTY compatible fingerprint.
             //
-            //      2048 MD5:cb:2f:f1:68:4b:aa:b3:8a:72:4d:53:f6:9f:5f:6a:fa root@manage-0 (RSA)
+            //      2048 MD5:cb:2f:f1:68:4b:aa:b3:8a:72:4d:53:f6:9f:5f:6a:fa sysadmin@manage-0 (RSA)
 
-            const string    md5Pattern = "MD5:";
+            const string    md5Pattern     = "MD5:";
+            string          md5Fingerprint = clusterLogin.SshKey.FingerprintMd5;
             string          fingerprint;
             int             startPos;
             int             endPos;
 
-            startPos = extensions.SshNodeFingerprint.IndexOf(md5Pattern);
+            startPos = md5Fingerprint.IndexOf(md5Pattern);
 
             if (startPos == -1)
             {
-                Console.Error.WriteLine($"*** ERROR: Cannot parse host's SSH key fingerprint [{extensions.SshNodeFingerprint}].");
+                Console.Error.WriteLine($"*** ERROR: Cannot parse host's SSH key fingerprint [{md5Fingerprint}].");
                 Program.Exit(1);
             }
 
             startPos += md5Pattern.Length;
 
-            endPos = extensions.SshNodeFingerprint.IndexOf(' ', startPos);
+            endPos = md5Fingerprint.IndexOf(' ', startPos);
 
             if (endPos == -1)
             {
-                fingerprint = extensions.SshNodeFingerprint.Substring(startPos).Trim();
+                fingerprint = md5Fingerprint.Substring(startPos).Trim();
             }
             else
             {
-                fingerprint = extensions.SshNodeFingerprint.Substring(startPos, endPos - startPos).Trim();
+                fingerprint = md5Fingerprint.Substring(startPos, endPos - startPos).Trim();
             }
 
             // Launch PuTTY.
@@ -133,7 +134,7 @@ ARGUMENTS:
                 Program.Exit(1);
             }
 
-            Process.Start(Program.PuttyPath, $"-l {extensions.SshUsername} -pw {extensions.SshPassword} {node.Address}:22 -hostkey \"{fingerprint}\"");
+            Process.Start(Program.PuttyPath, $"-l {clusterLogin.SshUsername} -pw {clusterLogin.SshPassword} {node.Address}:22 -hostkey \"{fingerprint}\"");
         }
     }
 }

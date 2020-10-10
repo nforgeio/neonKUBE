@@ -49,13 +49,10 @@ persistence:
 
 volumeClaimTemplate:
   accessModes: [ "ReadWriteOnce" ]
-  storageClassName: "local-storage"
-  selector:
-    matchLabels:
-      etcd: monitoring
+  storageClassName: "openebs-hostpath"
   resources:
     requests:
-      storage: 10Gi
+      storage: 1Gi
 
 ## This is only available when persistentVolume is false:
 ## If persistentVolume is not enabled, one can choose to use memory mode for ETCD by setting memoryMode to "true".
@@ -65,10 +62,11 @@ memoryMode: false
 ## Node labels and tolerations for pod assignment
 ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector
 ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#taints-and-tolerations-beta-feature
-nodeSelector: {}
+nodeSelector: 
+  neonkube.io/monitor.metrics: "true"
 tolerations:
   - effect: NoSchedule
-    key: neonkube.io/m3
+    key: neonkube.io/metrics
     operator: Exists
 affinity: {}
 extraEnv: []
