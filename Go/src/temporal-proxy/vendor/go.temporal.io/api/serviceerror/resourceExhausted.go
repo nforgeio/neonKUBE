@@ -47,7 +47,7 @@ func (e *ResourceExhausted) Error() string {
 	return e.Message
 }
 
-func (e *ResourceExhausted) status() *status.Status {
+func (e *ResourceExhausted) Status() *status.Status {
 	if e.st != nil {
 		return e.st
 	}

@@ -62,7 +62,7 @@ func (e *NamespaceNotActive) Error() string {
 	return e.Message
 }
 
-func (e *NamespaceNotActive) status() *status.Status {
+func (e *NamespaceNotActive) Status() *status.Status {
 	if e.st != nil {
 		return e.st
 	}

@@ -47,7 +47,7 @@ func (e *DataLoss) Error() string {
 	return e.Message
 }
 
-func (e *DataLoss) status() *status.Status {
+func (e *DataLoss) Status() *status.Status {
 	if e.st != nil {
 		return e.st
 	}

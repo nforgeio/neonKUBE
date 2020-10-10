@@ -287,9 +287,6 @@ type WorkflowServiceClient interface {
 	// Things cleared are:
 	// 1. StickyTaskQueue
 	// 2. StickyScheduleToStartTimeout
-	// 3. ClientLibraryVersion
-	// 4. ClientFeatureVersion
-	// 5. ClientImpl
 	ResetStickyTaskQueue(ctx context.Context, in *ResetStickyTaskQueueRequest, opts ...grpc.CallOption) (*ResetStickyTaskQueueResponse, error)
 	// QueryWorkflow returns query result for a specified workflow execution
 	QueryWorkflow(ctx context.Context, in *QueryWorkflowRequest, opts ...grpc.CallOption) (*QueryWorkflowResponse, error)
@@ -808,9 +805,6 @@ type WorkflowServiceServer interface {
 	// Things cleared are:
 	// 1. StickyTaskQueue
 	// 2. StickyScheduleToStartTimeout
-	// 3. ClientLibraryVersion
-	// 4. ClientFeatureVersion
-	// 5. ClientImpl
 	ResetStickyTaskQueue(context.Context, *ResetStickyTaskQueueRequest) (*ResetStickyTaskQueueResponse, error)
 	// QueryWorkflow returns query result for a specified workflow execution
 	QueryWorkflow(context.Context, *QueryWorkflowRequest) (*QueryWorkflowResponse, error)

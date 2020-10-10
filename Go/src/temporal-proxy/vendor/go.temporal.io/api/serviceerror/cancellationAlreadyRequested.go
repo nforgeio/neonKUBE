@@ -49,7 +49,7 @@ func (e *CancellationAlreadyRequested) Error() string {
 	return e.Message
 }
 
-func (e *CancellationAlreadyRequested) status() *status.Status {
+func (e *CancellationAlreadyRequested) Status() *status.Status {
 	if e.st != nil {
 		return e.st
 	}

@@ -26,8 +26,8 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/types"
-	"go.temporal.io/api/namespace"
-	"go.temporal.io/api/workflowservice"
+	"go.temporal.io/api/namespace/v1"
+	"go.temporal.io/api/workflowservice/v1"
 	"go.temporal.io/sdk/activity"
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/converter"
@@ -461,7 +461,7 @@ func handleNamespaceUpdateRequest(requestCtx context.Context, request *messages.
 	return reply
 }
 
-func handleDescribeTaskListRequest(requestCtx context.Context, request *messages.DescribeTaskListRequest) messages.IProxyReply {
+func handleDescribeTaskListRequest(requestCtx context.Context, request *messages.DescribeTaskQueueRequest) messages.IProxyReply {
 	name := *request.GetName()
 	namespace := *request.GetNamespace()
 	clientID := request.GetClientID()

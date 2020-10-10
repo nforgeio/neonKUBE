@@ -24,8 +24,8 @@ import (
 	"sync"
 	"time"
 
-	"go.temporal.io/api/tasklist"
-	"go.temporal.io/api/workflowservice"
+	"go.temporal.io/api/taskqueue/v1"
+	"go.temporal.io/api/workflowservice/v1"
 	"go.temporal.io/sdk/activity"
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/converter"
@@ -458,7 +458,7 @@ func (helper *ClientHelper) DescribeTaskList(
 	ctx context.Context,
 	namespace string,
 	taskList string,
-	taskListType tasklist.TaskListType,
+	taskListType taskqueue.TaskQueueType,
 ) (*workflowservice.DescribeTaskListResponse, error) {
 	client, err := helper.GetOrCreateWorkflowClient(namespace)
 	if err != nil {
@@ -601,7 +601,8 @@ func (helper *ClientHelper) SignalWithStartWorkflow(
 		zap.String("WorkflowID", run.GetID()),
 		zap.String("RunID", run.GetRunID()))
 
-	return &workflow.Exection{ID: run.GetID(), RunID: run.GetRunID()}, nil
+	return nil, nil
+	//return &workflow.Exection{ID: run.GetID(), RunID: run.GetRunID()}, nil
 }
 
 // DescribeWorkflowExecution describe the execution

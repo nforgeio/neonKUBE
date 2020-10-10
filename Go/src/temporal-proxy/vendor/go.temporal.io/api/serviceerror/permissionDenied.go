@@ -47,7 +47,7 @@ func (e *PermissionDenied) Error() string {
 	return e.Message
 }
 
-func (e *PermissionDenied) status() *status.Status {
+func (e *PermissionDenied) Status() *status.Status {
 	if e.st != nil {
 		return e.st
 	}

@@ -32,7 +32,7 @@ import (
 	"go.temporal.io/api/errordetails/v1"
 )
 
-// ToStatus converts service error to gogo gRPC status.
+// ToStatus converts service error to gogo gRPC Status.
 // If error is not a service error it returns status with code Unknown.
 func ToStatus(err error) *status.Status {
 	if err == nil {
@@ -40,7 +40,7 @@ func ToStatus(err error) *status.Status {
 	}
 
 	if svcerr, ok := err.(ServiceError); ok {
-		return svcerr.status()
+		return svcerr.Status()
 	}
 
 	// Special case for context.DeadlineExceeded because it can happened in unpredictable places.
@@ -49,12 +49,12 @@ func ToStatus(err error) *status.Status {
 	}
 
 	// Internal logic of status.Convert is:
-	//   - if err is already gogo Status or gRPC status, then just return it (this should never happen though).
+	//   - if err is already gogo Status or gRPC Status, then just return it (this should never happen though).
 	//   - otherwise returns codes.Unknown with message from err.Error() (this might happen if some generic go error reach to this point).
 	return status.Convert(err)
 }
 
-// FromStatus converts gogo gRPC status to service error.
+// FromStatus converts gogo gRPC Status to service error.
 func FromStatus(st *status.Status) error {
 	if st == nil || st.Code() == codes.OK {
 		return nil
@@ -127,8 +127,8 @@ func FromStatus(st *status.Status) error {
 			return newNamespaceNotActive(st, errDetails)
 		case *errordetails.ClientVersionNotSupportedFailure:
 			return newClientVersionNotSupported(st, errDetails)
-		case *errordetails.FeatureVersionNotSupportedFailure:
-			return newFeatureVersionNotSupported(st, errDetails)
+		case *errordetails.ServerVersionNotSupportedFailure:
+			return newServerVersionNotSupported(st, errDetails)
 		}
 	}
 

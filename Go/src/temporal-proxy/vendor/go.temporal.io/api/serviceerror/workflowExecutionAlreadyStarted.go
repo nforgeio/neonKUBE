@@ -53,7 +53,7 @@ func (e *WorkflowExecutionAlreadyStarted) Error() string {
 	return e.Message
 }
 
-func (e *WorkflowExecutionAlreadyStarted) status() *status.Status {
+func (e *WorkflowExecutionAlreadyStarted) Status() *status.Status {
 	if e.st != nil {
 		return e.st
 	}

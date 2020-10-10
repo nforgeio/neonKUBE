@@ -54,7 +54,7 @@ func (e *InvalidArgument) Error() string {
 	return e.Message
 }
 
-func (e *InvalidArgument) status() *status.Status {
+func (e *InvalidArgument) Status() *status.Status {
 	if e.st != nil {
 		return e.st
 	}

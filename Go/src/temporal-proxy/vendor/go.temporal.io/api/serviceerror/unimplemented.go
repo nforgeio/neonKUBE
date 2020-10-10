@@ -47,7 +47,7 @@ func (e *Unimplemented) Error() string {
 	return e.Message
 }
 
-func (e *Unimplemented) status() *status.Status {
+func (e *Unimplemented) Status() *status.Status {
 	if e.st != nil {
 		return e.st
 	}

@@ -47,7 +47,7 @@ func (e *DeadlineExceeded) Error() string {
 	return e.Message
 }
 
-func (e *DeadlineExceeded) status() *status.Status {
+func (e *DeadlineExceeded) Status() *status.Status {
 	if e.st != nil {
 		return e.st
 	}

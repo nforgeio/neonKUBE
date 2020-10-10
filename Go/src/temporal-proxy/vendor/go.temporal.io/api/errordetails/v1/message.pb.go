@@ -212,7 +212,7 @@ func (m *NamespaceNotActiveFailure) GetActiveCluster() string {
 
 type ClientVersionNotSupportedFailure struct {
 	ClientVersion     string `protobuf:"bytes,1,opt,name=client_version,json=clientVersion,proto3" json:"client_version,omitempty"`
-	ClientImpl        string `protobuf:"bytes,2,opt,name=client_impl,json=clientImpl,proto3" json:"client_impl,omitempty"`
+	ClientName        string `protobuf:"bytes,2,opt,name=client_name,json=clientName,proto3" json:"client_name,omitempty"`
 	SupportedVersions string `protobuf:"bytes,3,opt,name=supported_versions,json=supportedVersions,proto3" json:"supported_versions,omitempty"`
 }
 
@@ -255,9 +255,9 @@ func (m *ClientVersionNotSupportedFailure) GetClientVersion() string {
 	return ""
 }
 
-func (m *ClientVersionNotSupportedFailure) GetClientImpl() string {
+func (m *ClientVersionNotSupportedFailure) GetClientName() string {
 	if m != nil {
-		return m.ClientImpl
+		return m.ClientName
 	}
 	return ""
 }
@@ -269,23 +269,22 @@ func (m *ClientVersionNotSupportedFailure) GetSupportedVersions() string {
 	return ""
 }
 
-type FeatureVersionNotSupportedFailure struct {
-	Feature           string `protobuf:"bytes,1,opt,name=feature,proto3" json:"feature,omitempty"`
-	FeatureVersion    string `protobuf:"bytes,2,opt,name=feature_version,json=featureVersion,proto3" json:"feature_version,omitempty"`
-	SupportedVersions string `protobuf:"bytes,3,opt,name=supported_versions,json=supportedVersions,proto3" json:"supported_versions,omitempty"`
+type ServerVersionNotSupportedFailure struct {
+	ServerVersion                 string `protobuf:"bytes,1,opt,name=server_version,json=serverVersion,proto3" json:"server_version,omitempty"`
+	ClientSupportedServerVersions string `protobuf:"bytes,2,opt,name=client_supported_server_versions,json=clientSupportedServerVersions,proto3" json:"client_supported_server_versions,omitempty"`
 }
 
-func (m *FeatureVersionNotSupportedFailure) Reset()      { *m = FeatureVersionNotSupportedFailure{} }
-func (*FeatureVersionNotSupportedFailure) ProtoMessage() {}
-func (*FeatureVersionNotSupportedFailure) Descriptor() ([]byte, []int) {
+func (m *ServerVersionNotSupportedFailure) Reset()      { *m = ServerVersionNotSupportedFailure{} }
+func (*ServerVersionNotSupportedFailure) ProtoMessage() {}
+func (*ServerVersionNotSupportedFailure) Descriptor() ([]byte, []int) {
 	return fileDescriptor_2ed300ab0b02d291, []int{4}
 }
-func (m *FeatureVersionNotSupportedFailure) XXX_Unmarshal(b []byte) error {
+func (m *ServerVersionNotSupportedFailure) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *FeatureVersionNotSupportedFailure) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *ServerVersionNotSupportedFailure) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_FeatureVersionNotSupportedFailure.Marshal(b, m, deterministic)
+		return xxx_messageInfo_ServerVersionNotSupportedFailure.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -295,35 +294,28 @@ func (m *FeatureVersionNotSupportedFailure) XXX_Marshal(b []byte, deterministic 
 		return b[:n], nil
 	}
 }
-func (m *FeatureVersionNotSupportedFailure) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FeatureVersionNotSupportedFailure.Merge(m, src)
+func (m *ServerVersionNotSupportedFailure) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ServerVersionNotSupportedFailure.Merge(m, src)
 }
-func (m *FeatureVersionNotSupportedFailure) XXX_Size() int {
+func (m *ServerVersionNotSupportedFailure) XXX_Size() int {
 	return m.Size()
 }
-func (m *FeatureVersionNotSupportedFailure) XXX_DiscardUnknown() {
-	xxx_messageInfo_FeatureVersionNotSupportedFailure.DiscardUnknown(m)
+func (m *ServerVersionNotSupportedFailure) XXX_DiscardUnknown() {
+	xxx_messageInfo_ServerVersionNotSupportedFailure.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_FeatureVersionNotSupportedFailure proto.InternalMessageInfo
+var xxx_messageInfo_ServerVersionNotSupportedFailure proto.InternalMessageInfo
 
-func (m *FeatureVersionNotSupportedFailure) GetFeature() string {
+func (m *ServerVersionNotSupportedFailure) GetServerVersion() string {
 	if m != nil {
-		return m.Feature
+		return m.ServerVersion
 	}
 	return ""
 }
 
-func (m *FeatureVersionNotSupportedFailure) GetFeatureVersion() string {
+func (m *ServerVersionNotSupportedFailure) GetClientSupportedServerVersions() string {
 	if m != nil {
-		return m.FeatureVersion
-	}
-	return ""
-}
-
-func (m *FeatureVersionNotSupportedFailure) GetSupportedVersions() string {
-	if m != nil {
-		return m.SupportedVersions
+		return m.ClientSupportedServerVersions
 	}
 	return ""
 }
@@ -438,7 +430,7 @@ func init() {
 	proto.RegisterType((*WorkflowExecutionAlreadyStartedFailure)(nil), "temporal.api.errordetails.v1.WorkflowExecutionAlreadyStartedFailure")
 	proto.RegisterType((*NamespaceNotActiveFailure)(nil), "temporal.api.errordetails.v1.NamespaceNotActiveFailure")
 	proto.RegisterType((*ClientVersionNotSupportedFailure)(nil), "temporal.api.errordetails.v1.ClientVersionNotSupportedFailure")
-	proto.RegisterType((*FeatureVersionNotSupportedFailure)(nil), "temporal.api.errordetails.v1.FeatureVersionNotSupportedFailure")
+	proto.RegisterType((*ServerVersionNotSupportedFailure)(nil), "temporal.api.errordetails.v1.ServerVersionNotSupportedFailure")
 	proto.RegisterType((*NamespaceAlreadyExistsFailure)(nil), "temporal.api.errordetails.v1.NamespaceAlreadyExistsFailure")
 	proto.RegisterType((*CancellationAlreadyRequestedFailure)(nil), "temporal.api.errordetails.v1.CancellationAlreadyRequestedFailure")
 	proto.RegisterType((*QueryFailedFailure)(nil), "temporal.api.errordetails.v1.QueryFailedFailure")
@@ -449,41 +441,41 @@ func init() {
 }
 
 var fileDescriptor_2ed300ab0b02d291 = []byte{
-	// 529 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x53, 0xbf, 0x6f, 0xd3, 0x40,
-	0x14, 0xf6, 0x05, 0x51, 0xd4, 0x83, 0xa6, 0x60, 0x81, 0x54, 0xa4, 0x72, 0x29, 0x46, 0x81, 0x0a,
-	0x89, 0x44, 0x11, 0x9b, 0x99, 0xd2, 0x90, 0x48, 0x19, 0x88, 0x4a, 0x8b, 0x8a, 0xc4, 0x12, 0x1d,
-	0xf6, 0x4b, 0x75, 0xe2, 0xe2, 0x33, 0xf7, 0x23, 0xb4, 0x1b, 0x2b, 0x1b, 0x0b, 0x03, 0xff, 0x01,
-	0x7f, 0x02, 0x7f, 0x02, 0x63, 0xc6, 0x8e, 0xc4, 0x59, 0x10, 0x53, 0xff, 0x04, 0x64, 0xfb, 0x6c,
-	0x8c, 0x14, 0x55, 0x74, 0xf3, 0x7d, 0xef, 0xbb, 0xef, 0x7d, 0xef, 0xfc, 0x3e, 0xfc, 0x58, 0xc3,
-	0x34, 0x16, 0x92, 0xf2, 0x36, 0x8d, 0x59, 0x1b, 0xa4, 0x14, 0x32, 0x04, 0x4d, 0x19, 0x57, 0xed,
-	0x59, 0xa7, 0x3d, 0x05, 0xa5, 0xe8, 0x31, 0xb4, 0x62, 0x29, 0xb4, 0x70, 0xb7, 0x0b, 0x6e, 0x8b,
-	0xc6, 0xac, 0x55, 0xe5, 0xb6, 0x66, 0x1d, 0x8f, 0xe2, 0xcd, 0x91, 0xd0, 0x03, 0x61, 0xa2, 0x70,
-	0x40, 0x19, 0x37, 0x12, 0xdc, 0x47, 0x78, 0x33, 0x30, 0x52, 0x42, 0xa4, 0xc7, 0x01, 0x37, 0x4a,
-	0x83, 0xdc, 0x42, 0x3b, 0x68, 0x77, 0xfd, 0xa0, 0x6e, 0xe1, 0x5e, 0x8e, 0xba, 0x4d, 0x5c, 0xa7,
-	0x81, 0x66, 0x33, 0x28, 0x79, 0xb5, 0x8c, 0xb7, 0x91, 0xa3, 0x96, 0xe6, 0x31, 0xfc, 0xf0, 0xb5,
-	0x90, 0xef, 0x26, 0x5c, 0x7c, 0xe8, 0x9f, 0x40, 0x60, 0x34, 0x13, 0x51, 0x97, 0x4b, 0xa0, 0xe1,
-	0xe9, 0xa1, 0xa6, 0x52, 0x43, 0xd9, 0x79, 0x17, 0xdf, 0x54, 0x29, 0x32, 0x96, 0xf0, 0xde, 0x80,
-	0xd2, 0x63, 0x16, 0x16, 0xad, 0x33, 0xfc, 0x20, 0x87, 0x87, 0xa1, 0x7b, 0x07, 0xaf, 0x49, 0x13,
-	0xa5, 0xf5, 0xbc, 0xe5, 0x55, 0x69, 0xa2, 0x61, 0xe8, 0x7d, 0x42, 0xf8, 0xee, 0x88, 0x4e, 0x41,
-	0xc5, 0x34, 0x80, 0x91, 0xd0, 0xdd, 0xcc, 0x48, 0x21, 0xbf, 0x8d, 0xd7, 0xa3, 0xa2, 0x68, 0x75,
-	0xff, 0x02, 0xab, 0xc6, 0xae, 0xfd, 0xe7, 0xd8, 0x57, 0x56, 0x8d, 0xfd, 0x15, 0xe1, 0x9d, 0x1e,
-	0x67, 0x10, 0xe9, 0x23, 0x90, 0x8a, 0x89, 0x68, 0x24, 0xf4, 0xa1, 0x89, 0x63, 0x51, 0x9d, 0xb8,
-	0x89, 0xeb, 0x41, 0xc6, 0x19, 0xcf, 0x72, 0x92, 0xf5, 0xb5, 0x11, 0x54, 0x6f, 0xba, 0x0d, 0x7c,
-	0xdd, 0xd2, 0xd8, 0x34, 0xe6, 0xd6, 0x17, 0xce, 0xa1, 0xe1, 0x34, 0xe6, 0xee, 0x13, 0xec, 0xaa,
-	0x42, 0xbb, 0x90, 0x52, 0xd6, 0xd7, 0xad, 0xb2, 0x62, 0xe5, 0x94, 0xf7, 0x05, 0xe1, 0xfb, 0x03,
-	0xa0, 0xda, 0x48, 0xb8, 0xc0, 0xdc, 0x16, 0xbe, 0x36, 0xc9, 0x49, 0xd6, 0x55, 0x71, 0x4c, 0xdf,
-	0xca, 0x7e, 0x96, 0xbe, 0xed, 0x5b, 0x4d, 0xfe, 0x51, 0xbd, 0xac, 0xaf, 0x06, 0xbe, 0x57, 0xfe,
-	0x3e, 0xbb, 0x22, 0xfd, 0x13, 0xa6, 0xb4, 0xb2, 0x96, 0xbc, 0x26, 0x7e, 0xd0, 0xa3, 0x51, 0x00,
-	0x9c, 0xd3, 0xca, 0x1a, 0xd9, 0xbd, 0x28, 0x9d, 0x7b, 0xb7, 0xb1, 0xfb, 0xd2, 0x80, 0x3c, 0x4d,
-	0xcf, 0x25, 0xba, 0xf7, 0x1d, 0xcd, 0x17, 0xc4, 0x39, 0x5b, 0x10, 0xe7, 0x7c, 0x41, 0xd0, 0xc7,
-	0x84, 0xa0, 0x6f, 0x09, 0x41, 0x3f, 0x12, 0x82, 0xe6, 0x09, 0x41, 0x3f, 0x13, 0x82, 0x7e, 0x25,
-	0xc4, 0x39, 0x4f, 0x08, 0xfa, 0xbc, 0x24, 0xce, 0x7c, 0x49, 0x9c, 0xb3, 0x25, 0x71, 0x70, 0x83,
-	0x89, 0xd6, 0x45, 0x19, 0xda, 0xbb, 0xf1, 0x22, 0x0f, 0xdc, 0x7e, 0x9a, 0xb7, 0x7d, 0xf4, 0xa6,
-	0x7d, 0x5c, 0xb9, 0xc0, 0xc4, 0xaa, 0x8c, 0x3e, 0xab, 0x9e, 0x7f, 0xd7, 0x1a, 0xaf, 0x2c, 0xdd,
-	0xf7, 0xbb, 0x31, 0xf3, 0xfd, 0x7e, 0x5a, 0x7d, 0x9e, 0x57, 0x7d, 0xff, 0xa8, 0xf3, 0x76, 0x2d,
-	0xcb, 0xf2, 0xd3, 0x3f, 0x01, 0x00, 0x00, 0xff, 0xff, 0x7c, 0x53, 0x97, 0x30, 0xf9, 0x03, 0x00,
-	0x00,
+	// 531 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x93, 0xc1, 0x6e, 0xd3, 0x4c,
+	0x10, 0xc7, 0xbd, 0xf9, 0xf4, 0x55, 0xea, 0x40, 0x53, 0xb0, 0x40, 0x02, 0xa9, 0xdd, 0x44, 0x46,
+	0x81, 0x0a, 0x89, 0x44, 0x11, 0x37, 0x73, 0x4a, 0x43, 0x8a, 0x7a, 0x20, 0x2a, 0x0d, 0x2a, 0x12,
+	0x97, 0x68, 0xb1, 0x87, 0x6a, 0x85, 0xe3, 0x35, 0xbb, 0x6b, 0xd3, 0xde, 0xb8, 0x72, 0x43, 0xdc,
+	0x78, 0x03, 0x1e, 0x81, 0x47, 0xe0, 0x98, 0x63, 0x8f, 0xc4, 0xb9, 0x20, 0x4e, 0x7d, 0x04, 0x64,
+	0x7b, 0xed, 0xba, 0x28, 0xaa, 0x38, 0xee, 0x7f, 0xfe, 0x33, 0xf3, 0x1b, 0xed, 0x0c, 0x3c, 0xd4,
+	0x38, 0x8b, 0x84, 0x64, 0x41, 0x8f, 0x45, 0xbc, 0x87, 0x52, 0x0a, 0xe9, 0xa3, 0x66, 0x3c, 0x50,
+	0xbd, 0xa4, 0xdf, 0x9b, 0xa1, 0x52, 0xec, 0x18, 0xbb, 0x91, 0x14, 0x5a, 0xd8, 0x5b, 0xa5, 0xb7,
+	0xcb, 0x22, 0xde, 0xad, 0x7b, 0xbb, 0x49, 0xdf, 0x61, 0xb0, 0x39, 0x16, 0x7a, 0x4f, 0xc4, 0xa1,
+	0xbf, 0xc7, 0x78, 0x10, 0x4b, 0xb4, 0x1f, 0xc0, 0xa6, 0x17, 0x4b, 0x89, 0xa1, 0x9e, 0x7a, 0x41,
+	0xac, 0x34, 0xca, 0x3b, 0xa4, 0x4d, 0x76, 0xd6, 0x0f, 0x9b, 0x46, 0x1e, 0x16, 0xaa, 0xdd, 0x81,
+	0x26, 0xf3, 0x34, 0x4f, 0xb0, 0xf2, 0x35, 0x72, 0xdf, 0x46, 0xa1, 0x1a, 0x9b, 0xc3, 0xe1, 0xfe,
+	0x2b, 0x21, 0xdf, 0xbd, 0x0d, 0xc4, 0x87, 0xd1, 0x09, 0x7a, 0xb1, 0xe6, 0x22, 0x1c, 0x04, 0x12,
+	0x99, 0x7f, 0x3a, 0xd1, 0x4c, 0x6a, 0xac, 0x3a, 0xef, 0xc0, 0x0d, 0x95, 0x29, 0x53, 0x89, 0xef,
+	0x63, 0x54, 0x7a, 0xca, 0xfd, 0xb2, 0x75, 0xae, 0x1f, 0x16, 0xf2, 0xbe, 0x6f, 0xdf, 0x86, 0x35,
+	0x19, 0x87, 0x59, 0xbc, 0x68, 0xf9, 0xbf, 0x8c, 0xc3, 0x7d, 0xdf, 0xf9, 0x44, 0xe0, 0xee, 0x98,
+	0xcd, 0x50, 0x45, 0xcc, 0xc3, 0xb1, 0xd0, 0x83, 0x1c, 0xa4, 0x2c, 0xbf, 0x05, 0xeb, 0x61, 0x19,
+	0x34, 0x75, 0x2f, 0x84, 0x55, 0x63, 0x37, 0xfe, 0x71, 0xec, 0xff, 0x56, 0x8d, 0xfd, 0x95, 0x40,
+	0x7b, 0x18, 0x70, 0x0c, 0xf5, 0x11, 0x4a, 0xc5, 0x45, 0x38, 0x16, 0x7a, 0x12, 0x47, 0x91, 0xa8,
+	0x4f, 0xdc, 0x81, 0xa6, 0x97, 0x7b, 0xa6, 0x49, 0x61, 0x32, 0x5c, 0x1b, 0x5e, 0x3d, 0xd3, 0x6e,
+	0xc1, 0x35, 0x63, 0xcb, 0x78, 0x0d, 0x17, 0x14, 0x52, 0x36, 0xaf, 0xfd, 0x08, 0x6c, 0x55, 0xd6,
+	0x2e, 0x4b, 0x29, 0xc3, 0x75, 0xb3, 0x8a, 0x98, 0x72, 0xca, 0xf9, 0x42, 0xa0, 0x3d, 0x41, 0x99,
+	0xa0, 0xbc, 0x9a, 0x4d, 0xe5, 0x9e, 0xbf, 0xd9, 0x54, 0x3d, 0xd3, 0x7e, 0x06, 0x6d, 0xc3, 0x76,
+	0x41, 0x70, 0x39, 0x4f, 0x19, 0xe0, 0xed, 0xc2, 0x57, 0x35, 0xba, 0x44, 0xa0, 0x9c, 0x16, 0x6c,
+	0x57, 0x7f, 0x67, 0xf6, 0x63, 0x74, 0xc2, 0x95, 0x56, 0x06, 0xc8, 0xe9, 0xc0, 0xbd, 0x21, 0x0b,
+	0x3d, 0x0c, 0x02, 0x56, 0xdb, 0x21, 0xb3, 0x14, 0x15, 0xb7, 0x73, 0x0b, 0xec, 0x17, 0x31, 0xca,
+	0xd3, 0xec, 0x5d, 0xa9, 0xbb, 0xdf, 0xc9, 0x7c, 0x41, 0xad, 0xb3, 0x05, 0xb5, 0xce, 0x17, 0x94,
+	0x7c, 0x4c, 0x29, 0xf9, 0x96, 0x52, 0xf2, 0x23, 0xa5, 0x64, 0x9e, 0x52, 0xf2, 0x33, 0xa5, 0xe4,
+	0x57, 0x4a, 0xad, 0xf3, 0x94, 0x92, 0xcf, 0x4b, 0x6a, 0xcd, 0x97, 0xd4, 0x3a, 0x5b, 0x52, 0x0b,
+	0x5a, 0x5c, 0x74, 0xaf, 0x3a, 0xa0, 0xdd, 0xeb, 0xcf, 0x8b, 0x6b, 0x3b, 0xc8, 0x8e, 0xed, 0x80,
+	0xbc, 0xee, 0x1d, 0xd7, 0x12, 0xb8, 0x58, 0x75, 0xa0, 0x4f, 0xea, 0xef, 0xdf, 0x8d, 0xd6, 0x4b,
+	0x63, 0x77, 0xdd, 0x41, 0xc4, 0x5d, 0x77, 0x94, 0x45, 0x9f, 0x16, 0x51, 0xd7, 0x3d, 0xea, 0xbf,
+	0x59, 0xcb, 0x0f, 0xf9, 0xf1, 0x9f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x69, 0x76, 0x1b, 0x60, 0xf6,
+	0x03, 0x00, 0x00,
 }
 
 func (this *NotFoundFailure) Equal(that interface{}) bool {
@@ -592,7 +584,7 @@ func (this *ClientVersionNotSupportedFailure) Equal(that interface{}) bool {
 	if this.ClientVersion != that1.ClientVersion {
 		return false
 	}
-	if this.ClientImpl != that1.ClientImpl {
+	if this.ClientName != that1.ClientName {
 		return false
 	}
 	if this.SupportedVersions != that1.SupportedVersions {
@@ -600,14 +592,14 @@ func (this *ClientVersionNotSupportedFailure) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (this *FeatureVersionNotSupportedFailure) Equal(that interface{}) bool {
+func (this *ServerVersionNotSupportedFailure) Equal(that interface{}) bool {
 	if that == nil {
 		return this == nil
 	}
 
-	that1, ok := that.(*FeatureVersionNotSupportedFailure)
+	that1, ok := that.(*ServerVersionNotSupportedFailure)
 	if !ok {
-		that2, ok := that.(FeatureVersionNotSupportedFailure)
+		that2, ok := that.(ServerVersionNotSupportedFailure)
 		if ok {
 			that1 = &that2
 		} else {
@@ -619,13 +611,10 @@ func (this *FeatureVersionNotSupportedFailure) Equal(that interface{}) bool {
 	} else if this == nil {
 		return false
 	}
-	if this.Feature != that1.Feature {
+	if this.ServerVersion != that1.ServerVersion {
 		return false
 	}
-	if this.FeatureVersion != that1.FeatureVersion {
-		return false
-	}
-	if this.SupportedVersions != that1.SupportedVersions {
+	if this.ClientSupportedServerVersions != that1.ClientSupportedServerVersions {
 		return false
 	}
 	return true
@@ -734,20 +723,19 @@ func (this *ClientVersionNotSupportedFailure) GoString() string {
 	s := make([]string, 0, 7)
 	s = append(s, "&errordetails.ClientVersionNotSupportedFailure{")
 	s = append(s, "ClientVersion: "+fmt.Sprintf("%#v", this.ClientVersion)+",\n")
-	s = append(s, "ClientImpl: "+fmt.Sprintf("%#v", this.ClientImpl)+",\n")
+	s = append(s, "ClientName: "+fmt.Sprintf("%#v", this.ClientName)+",\n")
 	s = append(s, "SupportedVersions: "+fmt.Sprintf("%#v", this.SupportedVersions)+",\n")
 	s = append(s, "}")
 	return strings.Join(s, "")
 }
-func (this *FeatureVersionNotSupportedFailure) GoString() string {
+func (this *ServerVersionNotSupportedFailure) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := make([]string, 0, 7)
-	s = append(s, "&errordetails.FeatureVersionNotSupportedFailure{")
-	s = append(s, "Feature: "+fmt.Sprintf("%#v", this.Feature)+",\n")
-	s = append(s, "FeatureVersion: "+fmt.Sprintf("%#v", this.FeatureVersion)+",\n")
-	s = append(s, "SupportedVersions: "+fmt.Sprintf("%#v", this.SupportedVersions)+",\n")
+	s := make([]string, 0, 6)
+	s = append(s, "&errordetails.ServerVersionNotSupportedFailure{")
+	s = append(s, "ServerVersion: "+fmt.Sprintf("%#v", this.ServerVersion)+",\n")
+	s = append(s, "ClientSupportedServerVersions: "+fmt.Sprintf("%#v", this.ClientSupportedServerVersions)+",\n")
 	s = append(s, "}")
 	return strings.Join(s, "")
 }
@@ -931,10 +919,10 @@ func (m *ClientVersionNotSupportedFailure) MarshalToSizedBuffer(dAtA []byte) (in
 		i--
 		dAtA[i] = 0x1a
 	}
-	if len(m.ClientImpl) > 0 {
-		i -= len(m.ClientImpl)
-		copy(dAtA[i:], m.ClientImpl)
-		i = encodeVarintMessage(dAtA, i, uint64(len(m.ClientImpl)))
+	if len(m.ClientName) > 0 {
+		i -= len(m.ClientName)
+		copy(dAtA[i:], m.ClientName)
+		i = encodeVarintMessage(dAtA, i, uint64(len(m.ClientName)))
 		i--
 		dAtA[i] = 0x12
 	}
@@ -948,7 +936,7 @@ func (m *ClientVersionNotSupportedFailure) MarshalToSizedBuffer(dAtA []byte) (in
 	return len(dAtA) - i, nil
 }
 
-func (m *FeatureVersionNotSupportedFailure) Marshal() (dAtA []byte, err error) {
+func (m *ServerVersionNotSupportedFailure) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -958,34 +946,27 @@ func (m *FeatureVersionNotSupportedFailure) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *FeatureVersionNotSupportedFailure) MarshalTo(dAtA []byte) (int, error) {
+func (m *ServerVersionNotSupportedFailure) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *FeatureVersionNotSupportedFailure) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *ServerVersionNotSupportedFailure) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.SupportedVersions) > 0 {
-		i -= len(m.SupportedVersions)
-		copy(dAtA[i:], m.SupportedVersions)
-		i = encodeVarintMessage(dAtA, i, uint64(len(m.SupportedVersions)))
-		i--
-		dAtA[i] = 0x1a
-	}
-	if len(m.FeatureVersion) > 0 {
-		i -= len(m.FeatureVersion)
-		copy(dAtA[i:], m.FeatureVersion)
-		i = encodeVarintMessage(dAtA, i, uint64(len(m.FeatureVersion)))
+	if len(m.ClientSupportedServerVersions) > 0 {
+		i -= len(m.ClientSupportedServerVersions)
+		copy(dAtA[i:], m.ClientSupportedServerVersions)
+		i = encodeVarintMessage(dAtA, i, uint64(len(m.ClientSupportedServerVersions)))
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.Feature) > 0 {
-		i -= len(m.Feature)
-		copy(dAtA[i:], m.Feature)
-		i = encodeVarintMessage(dAtA, i, uint64(len(m.Feature)))
+	if len(m.ServerVersion) > 0 {
+		i -= len(m.ServerVersion)
+		copy(dAtA[i:], m.ServerVersion)
+		i = encodeVarintMessage(dAtA, i, uint64(len(m.ServerVersion)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -1137,7 +1118,7 @@ func (m *ClientVersionNotSupportedFailure) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovMessage(uint64(l))
 	}
-	l = len(m.ClientImpl)
+	l = len(m.ClientName)
 	if l > 0 {
 		n += 1 + l + sovMessage(uint64(l))
 	}
@@ -1148,21 +1129,17 @@ func (m *ClientVersionNotSupportedFailure) Size() (n int) {
 	return n
 }
 
-func (m *FeatureVersionNotSupportedFailure) Size() (n int) {
+func (m *ServerVersionNotSupportedFailure) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	l = len(m.Feature)
+	l = len(m.ServerVersion)
 	if l > 0 {
 		n += 1 + l + sovMessage(uint64(l))
 	}
-	l = len(m.FeatureVersion)
-	if l > 0 {
-		n += 1 + l + sovMessage(uint64(l))
-	}
-	l = len(m.SupportedVersions)
+	l = len(m.ClientSupportedServerVersions)
 	if l > 0 {
 		n += 1 + l + sovMessage(uint64(l))
 	}
@@ -1242,20 +1219,19 @@ func (this *ClientVersionNotSupportedFailure) String() string {
 	}
 	s := strings.Join([]string{`&ClientVersionNotSupportedFailure{`,
 		`ClientVersion:` + fmt.Sprintf("%v", this.ClientVersion) + `,`,
-		`ClientImpl:` + fmt.Sprintf("%v", this.ClientImpl) + `,`,
+		`ClientName:` + fmt.Sprintf("%v", this.ClientName) + `,`,
 		`SupportedVersions:` + fmt.Sprintf("%v", this.SupportedVersions) + `,`,
 		`}`,
 	}, "")
 	return s
 }
-func (this *FeatureVersionNotSupportedFailure) String() string {
+func (this *ServerVersionNotSupportedFailure) String() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&FeatureVersionNotSupportedFailure{`,
-		`Feature:` + fmt.Sprintf("%v", this.Feature) + `,`,
-		`FeatureVersion:` + fmt.Sprintf("%v", this.FeatureVersion) + `,`,
-		`SupportedVersions:` + fmt.Sprintf("%v", this.SupportedVersions) + `,`,
+	s := strings.Join([]string{`&ServerVersionNotSupportedFailure{`,
+		`ServerVersion:` + fmt.Sprintf("%v", this.ServerVersion) + `,`,
+		`ClientSupportedServerVersions:` + fmt.Sprintf("%v", this.ClientSupportedServerVersions) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -1741,7 +1717,7 @@ func (m *ClientVersionNotSupportedFailure) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ClientImpl", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ClientName", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1769,7 +1745,7 @@ func (m *ClientVersionNotSupportedFailure) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ClientImpl = string(dAtA[iNdEx:postIndex])
+			m.ClientName = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
@@ -1827,7 +1803,7 @@ func (m *ClientVersionNotSupportedFailure) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *FeatureVersionNotSupportedFailure) Unmarshal(dAtA []byte) error {
+func (m *ServerVersionNotSupportedFailure) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1850,15 +1826,15 @@ func (m *FeatureVersionNotSupportedFailure) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: FeatureVersionNotSupportedFailure: wiretype end group for non-group")
+			return fmt.Errorf("proto: ServerVersionNotSupportedFailure: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: FeatureVersionNotSupportedFailure: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: ServerVersionNotSupportedFailure: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Feature", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ServerVersion", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1886,11 +1862,11 @@ func (m *FeatureVersionNotSupportedFailure) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Feature = string(dAtA[iNdEx:postIndex])
+			m.ServerVersion = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field FeatureVersion", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ClientSupportedServerVersions", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1918,39 +1894,7 @@ func (m *FeatureVersionNotSupportedFailure) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.FeatureVersion = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field SupportedVersions", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowMessage
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthMessage
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthMessage
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.SupportedVersions = string(dAtA[iNdEx:postIndex])
+			m.ClientSupportedServerVersions = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

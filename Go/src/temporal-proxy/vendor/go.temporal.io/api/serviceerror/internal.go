@@ -54,7 +54,7 @@ func (e *Internal) Error() string {
 	return e.Message
 }
 
-func (e *Internal) status() *status.Status {
+func (e *Internal) Status() *status.Status {
 	if e.st != nil {
 		return e.st
 	}

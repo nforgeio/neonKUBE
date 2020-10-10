@@ -51,7 +51,7 @@ func (e *NotFound) Error() string {
 	return e.Message
 }
 
-func (e *NotFound) status() *status.Status {
+func (e *NotFound) Status() *status.Status {
 	if e.st != nil {
 		return e.st
 	}

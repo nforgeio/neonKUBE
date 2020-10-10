@@ -47,7 +47,7 @@ func (e *Canceled) Error() string {
 	return e.Message
 }
 
-func (e *Canceled) status() *status.Status {
+func (e *Canceled) Status() *status.Status {
 	if e.st != nil {
 		return e.st
 	}

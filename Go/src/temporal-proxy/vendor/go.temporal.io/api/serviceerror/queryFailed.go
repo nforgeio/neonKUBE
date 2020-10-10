@@ -49,7 +49,7 @@ func (e *QueryFailed) Error() string {
 	return e.Message
 }
 
-func (e *QueryFailed) status() *status.Status {
+func (e *QueryFailed) Status() *status.Status {
 	if e.st != nil {
 		return e.st
 	}

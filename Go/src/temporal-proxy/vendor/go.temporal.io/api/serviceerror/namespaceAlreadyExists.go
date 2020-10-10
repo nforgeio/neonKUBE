@@ -49,7 +49,7 @@ func (e *NamespaceAlreadyExists) Error() string {
 	return e.Message
 }
 
-func (e *NamespaceAlreadyExists) status() *status.Status {
+func (e *NamespaceAlreadyExists) Status() *status.Status {
 	if e.st != nil {
 		return e.st
 	}

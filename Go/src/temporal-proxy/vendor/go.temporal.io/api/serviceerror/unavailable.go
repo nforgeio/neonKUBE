@@ -47,7 +47,7 @@ func (e *Unavailable) Error() string {
 	return e.Message
 }
 
-func (e *Unavailable) status() *status.Status {
+func (e *Unavailable) Status() *status.Status {
 	if e.st != nil {
 		return e.st
 	}

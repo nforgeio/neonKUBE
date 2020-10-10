@@ -36,18 +36,18 @@ type (
 	ClientVersionNotSupported struct {
 		Message           string
 		ClientVersion     string
-		ClientImpl        string
+		ClientName        string
 		SupportedVersions string
 		st                *status.Status
 	}
 )
 
 // NewClientVersionNotSupported returns new ClientVersionNotSupported error.
-func NewClientVersionNotSupported(clientVersion, clientImpl, supportedVersions string) *ClientVersionNotSupported {
+func NewClientVersionNotSupported(clientVersion, clientName, supportedVersions string) *ClientVersionNotSupported {
 	return &ClientVersionNotSupported{
-		Message:           fmt.Sprintf("Client version %s is not supported. Supported versions for %s are %s", clientVersion, clientImpl, supportedVersions),
+		Message:           fmt.Sprintf("Client version %s is not supported. Server supports %s versions: %s", clientVersion, clientName, supportedVersions),
 		ClientVersion:     clientVersion,
-		ClientImpl:        clientImpl,
+		ClientName:        clientName,
 		SupportedVersions: supportedVersions,
 	}
 }
@@ -57,7 +57,7 @@ func (e *ClientVersionNotSupported) Error() string {
 	return e.Message
 }
 
-func (e *ClientVersionNotSupported) status() *status.Status {
+func (e *ClientVersionNotSupported) Status() *status.Status {
 	if e.st != nil {
 		return e.st
 	}
@@ -66,7 +66,7 @@ func (e *ClientVersionNotSupported) status() *status.Status {
 	st, _ = st.WithDetails(
 		&errordetails.ClientVersionNotSupportedFailure{
 			ClientVersion:     e.ClientVersion,
-			ClientImpl:        e.ClientImpl,
+			ClientName:        e.ClientName,
 			SupportedVersions: e.SupportedVersions,
 		},
 	)
@@ -77,7 +77,7 @@ func newClientVersionNotSupported(st *status.Status, errDetails *errordetails.Cl
 	return &ClientVersionNotSupported{
 		Message:           st.Message(),
 		ClientVersion:     errDetails.GetClientVersion(),
-		ClientImpl:        errDetails.GetClientImpl(),
+		ClientName:        errDetails.GetClientName(),
 		SupportedVersions: errDetails.GetSupportedVersions(),
 		st:                st,
 	}

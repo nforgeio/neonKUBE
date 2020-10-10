@@ -41,7 +41,6 @@ import (
 	enumspb "go.temporal.io/api/enums/v1"
 	failurepb "go.temporal.io/api/failure/v1"
 	historypb "go.temporal.io/api/history/v1"
-	"go.temporal.io/api/serviceerror"
 	taskqueuepb "go.temporal.io/api/taskqueue/v1"
 
 	"go.temporal.io/sdk/converter"
@@ -206,8 +205,8 @@ func newWorkflowExecutionEventHandler(
 		&context.enableLoggingInReplay)
 
 	if scope != nil {
-		context.metricsScope = tagScope(metrics.WrapScope(&context.isReplay, scope, context),
-			tagWorkflowType, workflowInfo.WorkflowType.Name)
+		replayAwareScope := metrics.WrapScope(&context.isReplay, scope, context)
+		context.metricsScope = metrics.GetMetricsScopeForWorkflow(replayAwareScope, workflowInfo.WorkflowType.Name)
 	}
 
 	return &workflowExecutionEventHandlerImpl{context, nil}
@@ -641,6 +640,10 @@ func (wc *workflowEnvironmentImpl) SideEffect(f func() (*commonpb.Payloads, erro
 			panic(fmt.Sprintf("No cached result found for side effectID=%v. KnownSideEffects=%v",
 				sideEffectID, keys))
 		}
+
+		// Once the SideEffect has been consumed, we can free the referenced payload
+		// to reduce memory pressure
+		delete(wc.sideEffectResult, sideEffectID)
 		wc.logger.Debug("SideEffect returning already calculated result.",
 			tagSideEffectID, sideEffectID)
 	} else {
@@ -961,8 +964,8 @@ func (weh *workflowExecutionEventHandlerImpl) handleWorkflowExecutionStarted(
 }
 
 func (weh *workflowExecutionEventHandlerImpl) handleActivityTaskCompleted(event *historypb.HistoryEvent) error {
-	activityID := weh.commandsHelper.getActivityID(event)
-	command := weh.commandsHelper.handleActivityTaskClosed(activityID)
+	activityID, scheduledEventID := weh.commandsHelper.getActivityAndScheduledEventIDs(event)
+	command := weh.commandsHelper.handleActivityTaskClosed(activityID, scheduledEventID)
 	activity := command.getData().(*scheduledActivity)
 	if activity.handled {
 		return nil
@@ -973,8 +976,8 @@ func (weh *workflowExecutionEventHandlerImpl) handleActivityTaskCompleted(event 
 }
 
 func (weh *workflowExecutionEventHandlerImpl) handleActivityTaskFailed(event *historypb.HistoryEvent) error {
-	activityID := weh.commandsHelper.getActivityID(event)
-	command := weh.commandsHelper.handleActivityTaskClosed(activityID)
+	activityID, scheduledEventID := weh.commandsHelper.getActivityAndScheduledEventIDs(event)
+	command := weh.commandsHelper.handleActivityTaskClosed(activityID, scheduledEventID)
 	activity := command.getData().(*scheduledActivity)
 	if activity.handled {
 		return nil
@@ -996,8 +999,8 @@ func (weh *workflowExecutionEventHandlerImpl) handleActivityTaskFailed(event *hi
 }
 
 func (weh *workflowExecutionEventHandlerImpl) handleActivityTaskTimedOut(event *historypb.HistoryEvent) error {
-	activityID := weh.commandsHelper.getActivityID(event)
-	command := weh.commandsHelper.handleActivityTaskClosed(activityID)
+	activityID, scheduledEventID := weh.commandsHelper.getActivityAndScheduledEventIDs(event)
+	command := weh.commandsHelper.handleActivityTaskClosed(activityID, scheduledEventID)
 	activity := command.getData().(*scheduledActivity)
 	if activity.handled {
 		return nil
@@ -1021,8 +1024,8 @@ func (weh *workflowExecutionEventHandlerImpl) handleActivityTaskTimedOut(event *
 }
 
 func (weh *workflowExecutionEventHandlerImpl) handleActivityTaskCanceled(event *historypb.HistoryEvent) error {
-	activityID := weh.commandsHelper.getActivityID(event)
-	command := weh.commandsHelper.handleActivityTaskCanceled(activityID)
+	activityID, scheduledEventID := weh.commandsHelper.getActivityAndScheduledEventIDs(event)
+	command := weh.commandsHelper.handleActivityTaskCanceled(activityID, scheduledEventID)
 	activity := command.getData().(*scheduledActivity)
 	if activity.handled {
 		return nil
@@ -1224,10 +1227,22 @@ func (weh *workflowExecutionEventHandlerImpl) handleStartChildWorkflowExecutionF
 		return nil
 	}
 
-	err := serviceerror.NewWorkflowExecutionAlreadyStarted("Workflow execution already started", "", "")
-	childWorkflow.handle(nil, err)
+	if attributes.GetCause() == enumspb.START_CHILD_WORKFLOW_EXECUTION_FAILED_CAUSE_WORKFLOW_ALREADY_EXISTS {
+		err := NewChildWorkflowExecutionError(
+			attributes.GetNamespace(),
+			attributes.GetWorkflowId(),
+			"",
+			attributes.GetWorkflowType().GetName(),
+			attributes.GetInitiatedEventId(),
+			0,
+			enumspb.RETRY_STATE_NON_RETRYABLE_FAILURE,
+			errors.New("workflow execution already started"),
+		)
+		childWorkflow.handle(nil, err)
+		return nil
+	}
 
-	return nil
+	return fmt.Errorf("unknown cause: %v", attributes.GetCause())
 }
 
 func (weh *workflowExecutionEventHandlerImpl) handleChildWorkflowExecutionStarted(event *historypb.HistoryEvent) error {
@@ -1326,7 +1341,7 @@ func (weh *workflowExecutionEventHandlerImpl) handleChildWorkflowExecutionTimedO
 		attributes.GetInitiatedEventId(),
 		attributes.GetStartedEventId(),
 		attributes.GetRetryState(),
-		NewTimeoutError(enumspb.TIMEOUT_TYPE_START_TO_CLOSE, nil),
+		NewTimeoutError("Child workflow timeout", enumspb.TIMEOUT_TYPE_START_TO_CLOSE, nil),
 	)
 	childWorkflow.handle(nil, childWorkflowExecutionError)
 	return nil
