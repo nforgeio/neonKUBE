@@ -324,7 +324,7 @@ namespace Neon.SSH
                         var relativePath = file.Substring(sourceFolder.Length + 1);
                         var data         = File.ReadAllBytes(file);
 
-                        zip.Add(new StaticBytesDataSource(data), file);
+                        zip.Add(new StaticBytesDataSource(data), relativePath);
                     }
 
                     zip.CommitUpdate();
