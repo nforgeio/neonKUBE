@@ -230,7 +230,7 @@ namespace Neon.SSH
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(command), nameof(command));
 
-            this.Command = command;
+            this.Command = NeonHelper.ToLinuxLineEndings(command);
             this.Args    = args ?? Array.Empty<object>();
         }
 
