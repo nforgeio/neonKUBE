@@ -329,6 +329,8 @@ namespace Neon.Kube
 
                     zip.CommitUpdate();
                 }
+
+                AddFile(path, ms.ToArray());
             }
         }
 

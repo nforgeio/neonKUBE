@@ -329,6 +329,8 @@ namespace Neon.SSH
 
                     zip.CommitUpdate();
                 }
+
+                AddFile(path, ms.ToArray());
             }
         }
 
