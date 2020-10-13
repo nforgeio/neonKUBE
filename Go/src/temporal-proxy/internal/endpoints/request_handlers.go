@@ -25,7 +25,6 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/gogo/protobuf/types"
 	"go.temporal.io/api/namespace/v1"
 	"go.temporal.io/api/workflowservice/v1"
 	"go.temporal.io/sdk/activity"
@@ -117,12 +116,17 @@ func handleConnectRequest(requestCtx context.Context, request *messages.ConnectR
 		defer cancel()
 
 		// register the namespace
-		retention := int32(7)
+		retention, err := time.ParseDuration("168h")
+		if err != nil {
+			reply.Build(err)
+			return reply
+		}
+
 		err = clientHelper.RegisterNamespace(
 			ctx,
 			&workflowservice.RegisterNamespaceRequest{
-				Name:                                   defaultNamespace,
-				WorkflowExecutionRetentionPeriodInDays: retention,
+				Name:                             defaultNamespace,
+				WorkflowExecutionRetentionPeriod: &retention,
 			})
 
 		if err != nil {
@@ -259,9 +263,7 @@ func handleNewWorkerRequest(requestCtx context.Context, request *messages.NewWor
 
 	// configure temporal logger
 	// set options
-	logger := SetLogger(internal.LogLevel, internal.Debug)
 	opts := request.GetOptions()
-	opts.Logger = logger.Named(internal.TemporalLoggerName)
 
 	// create a new worker using a configured ClientHelper instance
 
@@ -375,14 +377,10 @@ func handleNamespaceRegisterRequest(requestCtx context.Context, request *message
 
 	// create a new temporal namespace RegisterNamespaceRequest for
 	// registering a new namespace
-	emitMetrics := request.GetEmitMetrics()
-	retentionDays := request.GetRetentionDays()
 	registerNamespaceRequest := workflowservice.RegisterNamespaceRequest{
-		Name:                                   namespaceName,
-		Description:                            *request.GetDescription(),
-		OwnerEmail:                             *request.GetOwnerEmail(),
-		EmitMetric:                             emitMetrics,
-		WorkflowExecutionRetentionPeriodInDays: retentionDays,
+		Name:        namespaceName,
+		Description: *request.GetDescription(),
+		OwnerEmail:  *request.GetOwnerEmail(),
 	}
 
 	// create context with timeout
@@ -424,25 +422,18 @@ func handleNamespaceUpdateRequest(requestCtx context.Context, request *messages.
 		return reply
 	}
 
-	// NamespaceUpdateRequest.Configuration
-	configurationEmitMetrics := request.GetConfigurationEmitMetrics()
-	configurationRetentionDays := request.GetConfigurationRetentionDays()
-	configuration := namespace.NamespaceConfiguration{
-		EmitMetric:                             &types.BoolValue{Value: configurationEmitMetrics},
-		WorkflowExecutionRetentionPeriodInDays: configurationRetentionDays,
-	}
-
-	// NamespaceUpdateRequest.UpdatedInfo
-	updatedInfo := namespace.UpdateNamespaceInfo{
+	//Config
+	configuration := request.GetNamespaceConfig()
+	updateInfo := namespace.UpdateNamespaceInfo{
 		Description: *request.GetUpdatedInfoDescription(),
 		OwnerEmail:  *request.GetUpdatedInfoOwnerEmail(),
 	}
 
 	// NamespaceUpdateRequest
 	namespaceUpdateRequest := workflowservice.UpdateNamespaceRequest{
-		Name:          nspace,
-		Configuration: &configuration,
-		UpdatedInfo:   &updatedInfo,
+		Name:       nspace,
+		Config:     configuration,
+		UpdateInfo: &updateInfo,
 	}
 
 	// create context with timeout

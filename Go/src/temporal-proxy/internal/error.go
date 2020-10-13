@@ -57,6 +57,9 @@ const (
 
 	// UnknownExternalWorkflowExecutionError can be returned when external workflow doesn't exist
 	UnknownExternalWorkflowExecutionError TemporalErrorType = 9
+
+	// ProxyError returned when there is an issue with the temporal proxy
+	ProxyError TemporalErrorType = 10
 )
 
 type (
@@ -118,7 +121,7 @@ func NewTemporalError(err error, errTypes ...TemporalErrorType) *TemporalError {
 		} else if temporal.IsTimeoutError(err) {
 			errType = TimeoutError
 		} else {
-			errType = ApplicationError
+			errType = ProxyError
 		}
 	}
 

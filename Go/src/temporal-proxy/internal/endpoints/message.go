@@ -510,7 +510,7 @@ func handleIProxyRequest(request messages.IProxyRequest) (err error) {
 			// set the reply
 			reply = messages.NewProxyReply()
 			reply.SetRequestID(request.GetRequestID())
-			reply.Build(internal.NewTemporalError(e, internal.CustomError))
+			reply.Build(internal.NewTemporalError(e))
 		}
 	}
 
