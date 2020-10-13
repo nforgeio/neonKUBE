@@ -239,13 +239,13 @@ func handleTerminateRequest(requestCtx context.Context, request *messages.Termin
 
 func handleNewWorkerRequest(requestCtx context.Context, request *messages.NewWorkerRequest) messages.IProxyReply {
 	namespace := *request.GetNamespace()
-	taskList := *request.GetTaskList()
+	taskQueue := *request.GetTaskQueue()
 	clientID := request.GetClientID()
 	Logger.Debug("NewWorkerRequest Received",
 		zap.Int64("ClientId", clientID),
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.String("Namespace", namespace),
-		zap.String("TaskList", taskList),
+		zap.String("TaskQueue", taskQueue),
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new NewWorkerReply
@@ -267,7 +267,7 @@ func handleNewWorkerRequest(requestCtx context.Context, request *messages.NewWor
 
 	workerID, err := clientHelper.StartWorker(
 		namespace,
-		taskList,
+		taskQueue,
 		*opts)
 
 	if err != nil {
@@ -279,7 +279,7 @@ func handleNewWorkerRequest(requestCtx context.Context, request *messages.NewWor
 		zap.Int64("WorkerId", workerID),
 		zap.Int64("ClientId", clientID),
 		zap.String("Namespace", namespace),
-		zap.String("TaskList", taskList))
+		zap.String("TaskQueue", taskQueue))
 
 	reply.Build(nil, workerID)
 
@@ -461,18 +461,18 @@ func handleNamespaceUpdateRequest(requestCtx context.Context, request *messages.
 	return reply
 }
 
-func handleDescribeTaskListRequest(requestCtx context.Context, request *messages.DescribeTaskQueueRequest) messages.IProxyReply {
+func handleDescribeTaskQueueRequest(requestCtx context.Context, request *messages.DescribeTaskQueueRequest) messages.IProxyReply {
 	name := *request.GetName()
 	namespace := *request.GetNamespace()
 	clientID := request.GetClientID()
-	Logger.Debug("DescribeTaskListRequest Received",
-		zap.String("TaskList", name),
+	Logger.Debug("DescribeTaskQueueRequest Received",
+		zap.String("TaskQueue", name),
 		zap.String("Namespace", namespace),
 		zap.Int64("ClientId", clientID),
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int("ProcessId", os.Getpid()))
 
-	// new DescribeTaskListReply
+	// new DescribeTaskQueueReply
 	reply := messages.CreateReplyMessage(request)
 
 	clientHelper := Clients.Get(clientID)
@@ -485,7 +485,7 @@ func handleDescribeTaskListRequest(requestCtx context.Context, request *messages
 	ctx, cancel := context.WithTimeout(requestCtx, clientHelper.GetClientTimeout())
 	defer cancel()
 
-	describeResponse, err := clientHelper.DescribeTaskList(ctx, namespace, name, request.GetTaskListType())
+	describeResponse, err := clientHelper.DescribeTaskQueue(ctx, namespace, name, request.GetTaskQueueType())
 	if err != nil {
 		reply.Build(err)
 		return reply
@@ -544,14 +544,14 @@ func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages
 		workflowInvokeRequest.SetClientID(clientID)
 
 		// get the WorkflowInfo (Namespace, WorkflowID, RunID, WorkflowType,
-		// TaskList, ExecutionStartToCloseTimeout)
+		// TaskQueue, ExecutionStartToCloseTimeout)
 		// from the context
 		workflowInfo := workflow.GetInfo(ctx)
 		workflowInvokeRequest.SetNamespace(&workflowInfo.Namespace)
 		workflowInvokeRequest.SetWorkflowID(&workflowInfo.WorkflowExecution.ID)
 		workflowInvokeRequest.SetRunID(&workflowInfo.WorkflowExecution.RunID)
 		workflowInvokeRequest.SetWorkflowType(&workflowInfo.WorkflowType.Name)
-		workflowInvokeRequest.SetTaskList(&workflowInfo.TaskQueueName)
+		workflowInvokeRequest.SetTaskQueue(&workflowInfo.TaskQueueName)
 		workflowInvokeRequest.SetExecutionStartToCloseTimeout(time.Duration(int64(workflowInfo.WorkflowExecutionTimeout) * int64(time.Second)))
 
 		// set ReplayStatus

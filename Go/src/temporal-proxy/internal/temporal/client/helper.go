@@ -24,7 +24,7 @@ import (
 	"sync"
 	"time"
 
-	"go.temporal.io/api/taskqueue/v1"
+	"go.temporal.io/api/enums/v1"
 	"go.temporal.io/api/workflowservice/v1"
 	"go.temporal.io/sdk/activity"
 	"go.temporal.io/sdk/client"
@@ -208,11 +208,11 @@ func (helper *ClientHelper) SetupServiceConfig(ctx context.Context) error {
 }
 
 // StartWorker starts a workflow worker and activity worker based on configured options.
-// The worker will listen for workflows registered with the same taskList.
+// The worker will listen for workflows registered with the same taskqueue.
 //
 // params:
 //	- namespace string -> the namespace that identifies the client to start the worker with.
-// 	- taskList string -> the name of the group of temporal workflows for the worker to listen for.
+// 	- taskqueue string -> the name of the group of temporal workflows for the worker to listen for.
 // 	- options worker.Options -> Options used to configure a worker instance.
 //	- workerID int64 -> the id of the new worker that will be mapped internally in
 // 	the temporal-proxy.
@@ -224,7 +224,7 @@ func (helper *ClientHelper) SetupServiceConfig(ctx context.Context) error {
 // 	the workflow was triggered successfully.
 func (helper *ClientHelper) StartWorker(
 	namespace string,
-	taskList string,
+	taskqueue string,
 	options worker.Options,
 ) (int64, error) {
 	client, err := helper.GetOrCreateWorkflowClient(namespace)
@@ -232,7 +232,7 @@ func (helper *ClientHelper) StartWorker(
 		return 0, err
 	}
 
-	worker := worker.New(client, taskList, options)
+	worker := worker.New(client, taskqueue, options)
 	if worker.Start() != nil {
 		return 0, err
 	}
@@ -441,36 +441,36 @@ func (helper *ClientHelper) GetWorkflow(
 	return workflowRun, nil
 }
 
-// DescribeTaskList gets the description of a registered temporal namespace.
+// DescribeTaskQueue gets the description of a registered temporal namespace.
 //
 // params:
 //	- ctx context.Context -> the context to use to execute the describe namespace
 // 	request to temporal.
-//  - namespace string -> the string namespace the specified TaskList exists in.
-// 	- taskList string -> the string name of the TaskList to describe.
-//  - taskListType -> the tasklist.TaskListType of the TaskList to describe.
+//  - namespace string -> the string namespace the specified TaskQueue exists in.
+// 	- taskqueue string -> the string name of the TaskQueue to describe.
+//  - taskqueueType -> the enum.TaskQueueType of the TaskQueue to describe.
 //
 // returns:
-//	- *workflowservice.DescribeTaskListResponse -> response to the describe task list request.
+//	- *workflowservice.DescribeTaskQueueResponse -> response to the describe task queue request.
 // 	request
 // 	- error -> error if one is thrown, nil if the method executed with no errors.
-func (helper *ClientHelper) DescribeTaskList(
+func (helper *ClientHelper) DescribeTaskQueue(
 	ctx context.Context,
 	namespace string,
-	taskList string,
-	taskListType taskqueue.TaskQueueType,
-) (*workflowservice.DescribeTaskListResponse, error) {
+	taskqueue string,
+	taskqueueType enums.TaskQueueType,
+) (*workflowservice.DescribeTaskQueueResponse, error) {
 	client, err := helper.GetOrCreateWorkflowClient(namespace)
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := client.DescribeTaskQueue(ctx, taskList, taskListType)
+	resp, err := client.DescribeTaskQueue(ctx, taskqueue, taskqueueType)
 	if err != nil {
 		return nil, err
 	}
 
-	helper.Logger.Info("TaskList Describe Response", zap.String("TaskList Info", resp.String()))
+	helper.Logger.Info("TaskQueue Describe Response", zap.String("TaskQueue Info", resp.String()))
 
 	return resp, nil
 }

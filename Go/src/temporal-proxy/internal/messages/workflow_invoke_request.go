@@ -163,22 +163,22 @@ func (request *WorkflowInvokeRequest) SetNamespace(value *string) {
 	request.SetStringProperty("Namespace", value)
 }
 
-// GetTaskList gets a WorkflowInvokeRequest's TaskList value
-// from its properties map. The tasklist where the workflow is executing.
+// GetTaskQueue gets a WorkflowInvokeRequest's TaskQueue value
+// from its properties map. The taskqueue where the workflow is executing.
 //
 // returns *string -> pointer to a string in memory holding the value
-// of a WorkflowInvokeRequest's TaskList
-func (request *WorkflowInvokeRequest) GetTaskList() *string {
-	return request.GetStringProperty("TaskList")
+// of a WorkflowInvokeRequest's TaskQueue
+func (request *WorkflowInvokeRequest) GetTaskQueue() *string {
+	return request.GetStringProperty("TaskQueue")
 }
 
-// SetTaskList sets a WorkflowInvokeRequest's TaskList value
-// in its properties map. The tasklist where the workflow is executing.
+// SetTaskQueue sets a WorkflowInvokeRequest's TaskQueue value
+// in its properties map. The taskqueue where the workflow is executing.
 //
 // param value *string -> a pointer to a string in memory that holds the value
 // to be set in the properties map
-func (request *WorkflowInvokeRequest) SetTaskList(value *string) {
-	request.SetStringProperty("TaskList", value)
+func (request *WorkflowInvokeRequest) SetTaskQueue(value *string) {
+	request.SetStringProperty("TaskQueue", value)
 }
 
 // GetExecutionStartToCloseTimeout gets a WorkflowInvokeRequest's
@@ -248,7 +248,7 @@ func (request *WorkflowInvokeRequest) CopyTo(target IProxyMessage) {
 		v.SetWorkflowID(request.GetWorkflowID())
 		v.SetWorkflowType(request.GetWorkflowType())
 		v.SetRunID(request.GetRunID())
-		v.SetTaskList(request.GetTaskList())
+		v.SetTaskQueue(request.GetTaskQueue())
 		v.SetExecutionStartToCloseTimeout(request.GetExecutionStartToCloseTimeout())
 		v.SetReplayStatus(request.GetReplayStatus())
 	}

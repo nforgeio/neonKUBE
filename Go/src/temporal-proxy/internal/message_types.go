@@ -196,14 +196,14 @@ const (
 	NamespaceListReply MessageType = 30
 
 	/// <summary>
-	/// <b>client --> proxy:</b> Sent to obtain details for a task list.
+	/// <b>client --> proxy:</b> Sent to obtain details for a task queue.
 	/// </summary>
-	DescribeTaskListRequest MessageType = 31
+	DescribeTaskQueueRequest MessageType = 31
 
 	/// <summary>
-	/// <b>proxy --> client:</b> Sent in response to a <see cref="DescribeTaskListRequest"/> message.
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="DescribeTaskQueueRequest"/> message.
 	/// </summary>
-	DescribeTaskListReply MessageType = 32
+	DescribeTaskQueueReply MessageType = 32
 
 	//---------------------------------------------------------------------
 	// Workflow messages
@@ -834,10 +834,10 @@ func (m MessageType) String() string {
 	case LogReply:
 		return "LogReply"
 
-	case DescribeTaskListRequest:
-		return "DescribeTaskListRequest"
-	case DescribeTaskListReply:
-		return "DescribeTaskListReply"
+	case DescribeTaskQueueRequest:
+		return "DescribeTaskQueueRequest"
+	case DescribeTaskQueueReply:
+		return "DescribeTaskQueueReply"
 
 	case WorkflowRegisterRequest:
 		return "WorkflowRegisterRequest"

@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"reflect"
 
+	enumspb "go.temporal.io/api/enums/v1"
 	"go.temporal.io/sdk/temporal"
 )
 
@@ -150,6 +151,10 @@ func (c *TemporalError) ToError() error {
 		break
 	case CancelledError:
 		err = temporal.NewCanceledError(c.Error())
+		break
+	case TimeoutError:
+		err = temporal.NewTimeoutError(enumspb.TIMEOUT_TYPE_UNSPECIFIED, errors.New(c.Error()))
+		break
 	default:
 		return c
 	}
@@ -171,16 +176,24 @@ func (c *TemporalError) GetType() TemporalErrorType {
 	switch *c.Type {
 	case "cancelled":
 		return CancelledError
-	case "custom":
+	case "application":
 		return ApplicationError
-	case "generic":
-		return GenericError
-	case "panic":
-		return PanicError
-	case "terminated":
-		return TerminatedError
+	case "activity":
+		return ActivityError
+	case "server":
+		return ServerError
+	case "childWorkflowExecution":
+		return ChildWorkflowExecutionError
+	case "workflowExecution":
+		return WorkflowExecutionError
 	case "timeout":
 		return TimeoutError
+	case "terminated":
+		return TerminatedError
+	case "panic":
+		return PanicError
+	case "unknownExternalWorkflowExecution":
+		return UnknownExternalWorkflowExecutionError
 	default:
 		err := fmt.Errorf("unrecognized error type %v", *c.Type)
 		panic(err)
@@ -197,16 +210,34 @@ func (c *TemporalError) SetType(errorType TemporalErrorType) {
 	switch errorType {
 	case CancelledError:
 		typeString = "cancelled"
+		break
 	case ApplicationError:
-		typeString = "custom"
-	case GenericError:
-		typeString = "generic"
+		typeString = "application"
+		break
+	case ActivityError:
+		typeString = "activity"
+		break
+	case ServerError:
+		typeString = "server"
+		break
+	case ChildWorkflowExecutionError:
+		typeString = "childWorkflowExecution"
+		break
+	case WorkflowExecutionError:
+		typeString = "workflowExecution"
+		break
 	case PanicError:
 		typeString = "panic"
+		break
 	case TerminatedError:
 		typeString = "terminated"
+		break
 	case TimeoutError:
 		typeString = "timeout"
+		break
+	case UnknownExternalWorkflowExecutionError:
+		typeString = "unknownExternalWorkflowExecution"
+		break
 	default:
 		err := fmt.Errorf("unrecognized error type %v", errorType)
 		panic(err)
@@ -217,11 +248,14 @@ func (c *TemporalError) SetType(errorType TemporalErrorType) {
 func (t *TemporalErrorType) String() string {
 	return [...]string{
 		"cancelled",
-		"custom",
-		"generic",
-		"panic",
-		"terminated",
+		"application",
+		"server",
+		"childWorkflowExecution",
+		"workflowExecution",
 		"timeout",
+		"terminated",
+		"panic",
+		"unknownExternalWorkflowExecution",
 	}[*t]
 }
 
@@ -267,22 +301,16 @@ func IsCancelledError(err error) bool {
 	return false
 }
 
-// IsGenericError determines if an error
-// is a TemporalError of type GenericError.
+// IsWorkflowExecutionAlreadyStartedError determines if an error
+// is a TemporalError of type WorkflowExecutionAlreadyStartedError.
 //
 // param err error -> the error to evaluate.
 //
 // returns bool -> error is a TemporalError of type
-// GenericError or not.
-func IsGenericError(err error) bool {
+// WorkflowExecutionAlreadyStartedError or not.
+func IsWorkflowExecutionAlreadyStartedError(err error) bool {
 	if err != nil && !reflect.ValueOf(err).IsNil() {
-		if v, ok := err.(*TemporalError); ok {
-			if v.GetType() == GenericError {
-				return true
-			}
-		} else {
-			return temporal.IsGenericError(err)
-		}
+		return temporal.IsWorkflowExecutionAlreadyStartedError(err)
 	}
 
 	return false

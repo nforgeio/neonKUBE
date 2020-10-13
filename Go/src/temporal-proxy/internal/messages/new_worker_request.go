@@ -67,22 +67,22 @@ func (request *NewWorkerRequest) SetNamespace(value *string) {
 	request.SetStringProperty("Namespace", value)
 }
 
-// GetTaskList gets a NewWorkerRequest's TaskList value
+// GetTaskQueue gets a NewWorkerRequest's TaskQueue value
 // from its properties map
 //
 // returns *string -> pointer to a string in memory holding the value
-// of a NewWorkerRequest's TaskList
-func (request *NewWorkerRequest) GetTaskList() *string {
-	return request.GetStringProperty("TaskList")
+// of a NewWorkerRequest's TaskQueue
+func (request *NewWorkerRequest) GetTaskQueue() *string {
+	return request.GetStringProperty("TaskQueue")
 }
 
-// SetTaskList sets a NewWorkerRequest's TaskList value
+// SetTaskQueue sets a NewWorkerRequest's TaskQueue value
 // in its properties map
 //
 // param value *string -> a pointer to a string in memory that holds the value
 // to be set in the properties map
-func (request *NewWorkerRequest) SetTaskList(value *string) {
-	request.SetStringProperty("TaskList", value)
+func (request *NewWorkerRequest) SetTaskQueue(value *string) {
+	request.SetStringProperty("TaskQueue", value)
 }
 
 // GetOptions gets a NewWorkerRequest's start options
@@ -127,7 +127,7 @@ func (request *NewWorkerRequest) CopyTo(target IProxyMessage) {
 	request.ProxyRequest.CopyTo(target)
 	if v, ok := target.(*NewWorkerRequest); ok {
 		v.SetNamespace(request.GetNamespace())
-		v.SetTaskList(request.GetTaskList())
+		v.SetTaskQueue(request.GetTaskQueue())
 		v.SetOptions(request.GetOptions())
 	}
 }

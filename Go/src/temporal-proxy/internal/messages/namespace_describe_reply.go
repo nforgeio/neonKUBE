@@ -18,12 +18,12 @@
 package messages
 
 import (
-	"fmt"
 	"strings"
 	internal "temporal-proxy/internal"
 
-	go.temporal.io/api/namespace"
-	go.temporal.io/api/workflowservice"
+	"go.temporal.io/api/enums/v1"
+	"go.temporal.io/api/namespace/v1"
+	"go.temporal.io/api/workflowservice/v1"
 )
 
 type (
@@ -85,11 +85,11 @@ func (reply *NamespaceDescribeReply) SetNamespaceInfoDescription(value *string) 
 // GetNamespaceInfoStatus gets the NamespaceInfoStatus property as a string
 // pointer from a NamespaceDescribeReply's properties map.
 //
-// returns namespace.NamespaceStatus -> status of the specified namespace.
-func (reply *NamespaceDescribeReply) GetNamespaceInfoStatus() namespace.NamespaceStatus {
+// returns enums.NamespaceState -> status of the specified namespace.
+func (reply *NamespaceDescribeReply) GetNamespaceInfoStatus() enums.NamespaceState {
 	namespaceStatusPtr := reply.GetStringProperty("NamespaceInfoStatus")
 	if namespaceStatusPtr == nil {
-		return namespace.NamespaceStatus_Registered
+		return enums.NAMESPACE_STATE_REGISTERED
 	}
 
 	return StringToNamespaceStatus(*namespaceStatusPtr)
@@ -98,8 +98,8 @@ func (reply *NamespaceDescribeReply) GetNamespaceInfoStatus() namespace.Namespac
 // SetNamespaceInfoStatus sets the NamespaceInfoStatus property as a string
 // pointer in a NamespaceDescribeReply's properties map
 //
-// param value namespace.NamespaceStatus -> status of the specified namespace.
-func (reply *NamespaceDescribeReply) SetNamespaceInfoStatus(value namespace.NamespaceStatus) {
+// param value enums.NamespaceState -> status of the specified namespace.
+func (reply *NamespaceDescribeReply) SetNamespaceInfoStatus(value enums.NamespaceState) {
 	status := value.String()
 	reply.SetStringProperty("NamespaceInfoStatus", &status)
 }
@@ -121,40 +121,27 @@ func (reply *NamespaceDescribeReply) SetNamespaceInfoOwnerEmail(value *string) {
 	reply.SetStringProperty("NamespaceInfoOwnerEmail", value)
 }
 
-// GetConfigurationRetentionDays gets the ConfigurationRetentionDays property
-// as an int32 from a NamespaceDescribeReply's properties map
+// GetNamespaceConfig gets a NamespaceDescribeReply's NamespaceConfig field
+// from its properties map. NamespaceConfig is the namespace.NamespaceConfig to set in the activity
+// complete call.
 //
-// returns int32 -> int32 namespace retention in days value from a NamespaceDescribeReply's
-// properties map
-func (reply *NamespaceDescribeReply) GetConfigurationRetentionDays() int32 {
-	return reply.GetIntProperty("ConfigurationRetentionDays")
+// returns *namespace.NamespaceConfig -> namespace.NamespaceConfig to set in activity complete
+func (reply *NamespaceDescribeReply) GetNamespaceConfig() *namespace.NamespaceConfig {
+	config := new(namespace.NamespaceConfig)
+	err := reply.GetJSONProperty("NamespaceConfig", &config)
+	if err != nil {
+		return nil
+	}
+	return config
 }
 
-// SetConfigurationRetentionDays sets the ConfigurationRetentionDays property as
-// an int32 pointer in a NamespaceDescribeReply's properties map
+// SetNamespaceConfig sets an NamespaceDescribeReply's NamespaceConfig field
+// from its properties map.  NamespaceConfig is the namespace.NamespaceConfig to set in the activity
+// complete call.
 //
-// param value int32 -> int32 namespace retention in days to set
-// as the NamespaceDescribeReply's ConfigurationRetentionDays in its properties map
-func (reply *NamespaceDescribeReply) SetConfigurationRetentionDays(value int32) {
-	reply.SetIntProperty("ConfigurationRetentionDays", value)
-}
-
-// GetConfigurationEmitMetrics gets the ConfigurationEmitMetrics property
-// as a bool from a NamespaceDescribeReply's properties map
-//
-// returns bool -> bool ConfigurationEmitMetrics value from a NamespaceDescribeReply's
-// properties map
-func (reply *NamespaceDescribeReply) GetConfigurationEmitMetrics() bool {
-	return reply.GetBoolProperty("ConfigurationEmitMetrics")
-}
-
-// SetConfigurationEmitMetrics sets the ConfigurationEmitMetrics property as
-// a bool in a NamespaceDescribeReply's properties map
-//
-// param value bool -> bool that enables metric generation
-// as the NamespaceDescribeReply's ConfigurationEmitMetrics in its properties map
-func (reply *NamespaceDescribeReply) SetConfigurationEmitMetrics(value bool) {
-	reply.SetBoolProperty("ConfigurationEmitMetrics", value)
+// param value namespace.NamespaceConfig -> namespace.NamespaceConfig value to set in activity complete
+func (reply *NamespaceDescribeReply) SetNamespaceConfig(value *namespace.NamespaceConfig) {
+	reply.SetJSONProperty("NamespaceConfig", value)
 }
 
 // -------------------------------------------------------------------------
@@ -167,9 +154,8 @@ func (reply *NamespaceDescribeReply) Build(e error, result ...interface{}) {
 		if v, ok := result[0].(*workflowservice.DescribeNamespaceResponse); ok {
 			reply.SetNamespaceInfoName(&v.NamespaceInfo.Name)
 			reply.SetNamespaceInfoDescription(&v.NamespaceInfo.Description)
-			reply.SetNamespaceInfoStatus(v.NamespaceInfo.Status)
-			reply.SetConfigurationEmitMetrics(v.Configuration.EmitMetric.Value)
-			reply.SetConfigurationRetentionDays(v.Configuration.GetWorkflowExecutionRetentionPeriodInDays())
+			reply.SetNamespaceInfoStatus(v.NamespaceInfo.State)
+			reply.SetNamespaceConfig(v.Config)
 			reply.SetNamespaceInfoOwnerEmail(&v.NamespaceInfo.OwnerEmail)
 		}
 	}
@@ -189,8 +175,7 @@ func (reply *NamespaceDescribeReply) CopyTo(target IProxyMessage) {
 	reply.ProxyReply.CopyTo(target)
 	if v, ok := target.(*NamespaceDescribeReply); ok {
 		v.SetNamespaceInfoName(reply.GetNamespaceInfoName())
-		v.SetConfigurationEmitMetrics(reply.GetConfigurationEmitMetrics())
-		v.SetConfigurationRetentionDays(reply.GetConfigurationRetentionDays())
+		v.SetNamespaceConfig(reply.GetNamespaceConfig())
 		v.SetNamespaceInfoDescription(reply.GetNamespaceInfoDescription())
 		v.SetNamespaceInfoStatus(reply.GetNamespaceInfoStatus())
 		v.SetNamespaceInfoOwnerEmail(reply.GetNamespaceInfoOwnerEmail())
@@ -200,16 +185,16 @@ func (reply *NamespaceDescribeReply) CopyTo(target IProxyMessage) {
 // StringToNamespaceStatus takes a valid domain status
 // as a string and converts it into a domain status
 // if possible
-func StringToNamespaceStatus(value string) namespace.NamespaceStatus {
+func StringToNamespaceStatus(value string) enums.NamespaceState {
 	value = strings.ToUpper(value)
 	switch value {
 	case "REGISTERED":
-		return namespace.NamespaceStatus_Registered
+		return enums.NAMESPACE_STATE_REGISTERED
 	case "DEPRECATED":
-		return namespace.NamespaceStatus_Deprecated
+		return enums.NAMESPACE_STATE_DEPRECATED
 	case "DELETED":
-		return namespace.NamespaceStatus_Deleted
+		return enums.NAMESPACE_STATE_DELETED
 	default:
-		panic(fmt.Errorf("Invalid Namespace Status string: %s", value))
+		return enums.NAMESPACE_STATE_UNSPECIFIED
 	}
 }
