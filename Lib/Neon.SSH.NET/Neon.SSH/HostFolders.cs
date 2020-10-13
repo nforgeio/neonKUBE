@@ -49,11 +49,18 @@ namespace Neon.SSH
     public static class HostFolders
     {
         /// <summary>
+        /// Path to a user's <b>neon</b> home directory.
+        /// </summary>
+        /// <param name="username">The username.</param>
+        /// <returns>The directory path.</returns>
+        public static string NeonHome(string username) => $"/home/{username}/.neon";
+
+        /// <summary>
         /// Path to a user archive directory.
         /// </summary>
         /// <param name="username">The username.</param>
         /// <returns>The directory path.</returns>
-        public static string Archive(string username) => $"/home/{username}/.neonkube/archive";
+        public static string Archive(string username) => $"{NeonHome(username)}/archive";
 
         /// <summary>
         /// Path to the cluster executable files directory.
@@ -70,7 +77,7 @@ namespace Neon.SSH
         /// </summary>
         /// <param name="username">The username.</param>
         /// <returns>The directory path.</returns>
-        public static string Download(string username) => $"/home/{username}/.neonkube/download";
+        public static string Download(string username) => $"{NeonHome(username)}/download";
 
         /// <summary>
         /// The user folder where cluster tools can upload, unpack, and then
@@ -79,7 +86,7 @@ namespace Neon.SSH
         /// </summary>
         /// <param name="username">The username.</param>
         /// <returns>The directory path.</returns>
-        public static string Exec(string username) => $"/home/{username}/.neonkube/exec";
+        public static string Exec(string username) => $"{NeonHome(username)}/exec";
 
         /// <summary>
         /// Path to a user archive directory.
@@ -87,13 +94,6 @@ namespace Neon.SSH
         /// <param name="username">The username.</param>
         /// <returns>The directory path.</returns>
         public static string Home(string username) => $"/home/{username}";
-
-        /// <summary>
-        /// Path to a user <b>.neonkube</b> home directory.
-        /// </summary>
-        /// <param name="username">The username.</param>
-        /// <returns>The directory path.</returns>
-        public static string NeonKubeHome(string username) => $"/home/{username}/.neonkube";
 
         /// <summary>
         /// Path to the cluster management scripts directory.
@@ -121,6 +121,6 @@ namespace Neon.SSH
         /// </summary>
         /// <param name="username">The username.</param>
         /// <returns>The directory path.</returns>
-        public static string Upload(string username) => $"/home/{username}/.neonkube/upload";
+        public static string Upload(string username) => $"{NeonHome(username)}/upload";
     }
 }
