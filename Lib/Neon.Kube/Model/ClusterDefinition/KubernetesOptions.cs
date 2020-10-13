@@ -194,7 +194,7 @@ namespace Neon.Kube
                     throw new ClusterDefinitionException(error);
                 }
 
-                if (!int.TryParse(fields[1], out var port) || NetHelper.IsValidPort(port))
+                if (!int.TryParse(fields[1], out var port) || !NetHelper.IsValidPort(port))
                 {
                     throw new ClusterDefinitionException(error);
                 }
