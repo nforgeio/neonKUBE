@@ -47,7 +47,7 @@ persistence:
   storageClass: "cstor-csi-stripe"
 
   accessMode: ReadWriteOnce
-  size: 256Gi
+  size: 32Gi
 
 ## For creating the StorageClass automatically:
 storageClass:
@@ -91,7 +91,8 @@ resources: {}
   #  cpu: 100m
   #  memory: 128Mi
 
-nodeSelector: {}
+nodeSelector:
+  neonkube.io/node.openebs: "true"
 
 tolerations: 
 - operator: "Exists"
