@@ -201,7 +201,7 @@ persistence:
       storageClass: "nfs"
       subPath: ""
       accessMode: ReadWriteMany
-      size: 128Gi
+      size: 5Gi
     chartmuseum:
       existingClaim: ""
       storageClass: "nfs"
@@ -602,7 +602,7 @@ clair:
 
 trivy:
   # enabled the flag to enable Trivy scanner
-  enabled: true
+  enabled: false
   image:
     # repository the repository for Trivy adapter image
     repository: goharbor/trivy-adapter-photon
