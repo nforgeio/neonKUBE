@@ -29,9 +29,13 @@ import (
 	"testing"
 	"time"
 
+	"go.temporal.io/api/common/v1"
 	"go.temporal.io/api/enums/v1"
+	"go.temporal.io/api/failure/v1"
 	"go.temporal.io/api/namespace/v1"
+	"go.temporal.io/api/replication/v1"
 	"go.temporal.io/api/taskqueue/v1"
+	apiworkflow "go.temporal.io/api/workflow/v1"
 	"go.temporal.io/api/workflowservice/v1"
 	"go.temporal.io/sdk/activity"
 	"go.temporal.io/sdk/client"
@@ -42,7 +46,6 @@ import (
 	"go.uber.org/zap/zapcore"
 
 	"github.com/a3linux/amazon-ssm-agent/agent/times"
-	"github.com/gogo/protobuf/types"
 
 	"github.com/stretchr/testify/suite"
 
@@ -52,7 +55,6 @@ import (
 	"temporal-proxy/internal/messages"
 	"temporal-proxy/internal/server"
 	proxytemporal "temporal-proxy/internal/temporal"
-	"temporal-proxy/vendor/go.temporal.io/api/common/v1"
 )
 
 type (
@@ -233,7 +235,7 @@ func (s *UnitTestSuite) TestInitializeReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -369,7 +371,7 @@ func (s *UnitTestSuite) TestConnectReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -467,7 +469,7 @@ func (s *UnitTestSuite) TestDisconnectReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -557,29 +559,24 @@ func (s *UnitTestSuite) TestNamespaceDescribeReply() {
 	s.NoError(err)
 	s.NotNil(message)
 
+	var config namespace.NamespaceConfig
+
 	if v, ok := message.(*messages.NamespaceDescribeReply); ok {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetError())
-		s.False(v.GetConfigurationEmitMetrics())
-		s.Equal(int32(0), v.GetConfigurationRetentionDays())
+		s.Nil(v.GetNamespaceConfig())
 		s.Nil(v.GetNamespaceInfoName())
 		s.Nil(v.GetNamespaceInfoDescription())
 		s.Nil(v.GetNamespaceInfoOwnerEmail())
-		s.Equal(namespace.NamespaceStatus_Registered, v.GetNamespaceInfoStatus())
+		s.Equal(enums.NAMESPACE_STATE_REGISTERED, v.GetNamespaceInfoStatus())
 
 		// Round-trip
 
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
-
-		v.SetConfigurationEmitMetrics(true)
-		s.True(v.GetConfigurationEmitMetrics())
-
-		v.SetConfigurationRetentionDays(int32(7))
-		s.Equal(int32(7), v.GetConfigurationRetentionDays())
 
 		namespaceInfoNameStr := "my-name"
 		v.SetNamespaceInfoName(&namespaceInfoNameStr)
@@ -589,12 +586,47 @@ func (s *UnitTestSuite) TestNamespaceDescribeReply() {
 		v.SetNamespaceInfoDescription(&namespaceInfoDescriptionStr)
 		s.Equal("my-description", *v.GetNamespaceInfoDescription())
 
-		v.SetNamespaceInfoStatus(namespace.NamespaceStatus_Deprecated)
-		s.Equal(namespace.NamespaceStatus_Deprecated, v.GetNamespaceInfoStatus())
+		v.SetNamespaceInfoStatus(enums.NAMESPACE_STATE_DEPRECATED)
+		s.Equal(enums.NAMESPACE_STATE_DEPRECATED, v.GetNamespaceInfoStatus())
 
 		namespaceInfoOwnerEmailStr := "joe@bloe.com"
 		v.SetNamespaceInfoOwnerEmail(&namespaceInfoOwnerEmailStr)
 		s.Equal("joe@bloe.com", *v.GetNamespaceInfoOwnerEmail())
+
+		reason := "my-reason"
+		operator := "my-operator"
+		ctn1 := time.Time{}
+		bbi1 := namespace.BadBinaryInfo{
+			Reason:     reason,
+			Operator:   operator,
+			CreateTime: &ctn1,
+		}
+
+		ctn2 := time.Time{}
+		bbi2 := namespace.BadBinaryInfo{
+			Reason:     reason,
+			Operator:   operator,
+			CreateTime: &ctn2,
+		}
+
+		badBinaries := namespace.BadBinaries{
+			Binaries: map[string]*namespace.BadBinaryInfo{"1": &bbi1, "2": &bbi2},
+		}
+
+		hauri := "huri"
+		vauri := "vuri"
+		workflowRetentionTtl := time.Second * 5
+		config = namespace.NamespaceConfig{
+			WorkflowExecutionRetentionTtl: &workflowRetentionTtl,
+			HistoryArchivalState:          enums.ARCHIVAL_STATE_ENABLED,
+			HistoryArchivalUri:            hauri,
+			VisibilityArchivalState:       enums.ARCHIVAL_STATE_DISABLED,
+			VisibilityArchivalUri:         vauri,
+			BadBinaries:                   &badBinaries,
+		}
+
+		v.SetNamespaceConfig(&config)
+		s.Equal(config, *v.GetNamespaceConfig())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -610,10 +642,9 @@ func (s *UnitTestSuite) TestNamespaceDescribeReply() {
 		s.True(internal.IsApplicationError(v.GetError()))
 		s.Equal("my-name", *v.GetNamespaceInfoName())
 		s.Equal("my-description", *v.GetNamespaceInfoDescription())
-		s.Equal(namespace.NamespaceStatus_Deprecated, v.GetNamespaceInfoStatus())
+		s.Equal(enums.NAMESPACE_STATE_DEPRECATED, v.GetNamespaceInfoStatus())
 		s.Equal("joe@bloe.com", *v.GetNamespaceInfoOwnerEmail())
-		s.Equal(int32(7), v.GetConfigurationRetentionDays())
-		s.True(v.GetConfigurationEmitMetrics())
+		s.Equal(config, *v.GetNamespaceConfig())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -625,10 +656,9 @@ func (s *UnitTestSuite) TestNamespaceDescribeReply() {
 		s.True(internal.IsApplicationError(v.GetError()))
 		s.Equal("my-name", *v.GetNamespaceInfoName())
 		s.Equal("my-description", *v.GetNamespaceInfoDescription())
-		s.Equal(namespace.NamespaceStatus_Deprecated, v.GetNamespaceInfoStatus())
+		s.Equal(enums.NAMESPACE_STATE_DEPRECATED, v.GetNamespaceInfoStatus())
 		s.Equal("joe@bloe.com", *v.GetNamespaceInfoOwnerEmail())
-		s.Equal(int32(7), v.GetConfigurationRetentionDays())
-		s.True(v.GetConfigurationEmitMetrics())
+		s.Equal(config, *v.GetNamespaceConfig())
 	}
 }
 
@@ -728,7 +758,7 @@ func (s *UnitTestSuite) TestNamespaceListReply() {
 		uuid1 := "uuid1"
 		namespaceInfo1 := namespace.NamespaceInfo{
 			Name:        name1,
-			Status:      namespace.NamespaceStatus_Deleted,
+			State:       enums.NAMESPACE_STATE_DELETED,
 			Description: desc,
 			OwnerEmail:  email,
 			Data:        map[string]string{"1": "first", "2": "second"},
@@ -739,7 +769,7 @@ func (s *UnitTestSuite) TestNamespaceListReply() {
 		uuid2 := "uuid2"
 		namespaceInfo2 := namespace.NamespaceInfo{
 			Name:        name2,
-			Status:      namespace.NamespaceStatus_Deprecated,
+			State:       enums.NAMESPACE_STATE_DEPRECATED,
 			Description: desc,
 			OwnerEmail:  email,
 			Data:        map[string]string{"3": "third", "4": "fourth"},
@@ -748,72 +778,70 @@ func (s *UnitTestSuite) TestNamespaceListReply() {
 
 		reason := "my-reason"
 		operator := "my-operator"
-		ctn1 := int64(44)
+		ctn1 := time.Time{}
 		bbi1 := namespace.BadBinaryInfo{
-			Reason:          reason,
-			Operator:        operator,
-			CreatedTimeNano: ctn1,
+			Reason:     reason,
+			Operator:   operator,
+			CreateTime: &ctn1,
 		}
 
-		ctn2 := int64(55)
+		ctn2 := time.Time{}
 		bbi2 := namespace.BadBinaryInfo{
-			Reason:          reason,
-			Operator:        operator,
-			CreatedTimeNano: ctn2,
+			Reason:     reason,
+			Operator:   operator,
+			CreateTime: &ctn2,
 		}
 
 		badBinaries := namespace.BadBinaries{
 			Binaries: map[string]*namespace.BadBinaryInfo{"1": &bbi1, "2": &bbi2},
 		}
 
-		werpd := int32(7)
-		em := true
 		hauri := "huri"
 		vauri := "vuri"
-		namespaceConfiguration := namespace.NamespaceConfiguration{
-			WorkflowExecutionRetentionPeriodInDays: werpd,
-			EmitMetric:                             &types.BoolValue{Value: em},
-			HistoryArchivalURI:                     hauri,
-			HistoryArchivalStatus:                  namespace.ArchivalStatus_Enabled,
-			BadBinaries:                            &badBinaries,
-			VisibilityArchivalStatus:               namespace.ArchivalStatus_Disabled,
-			VisibilityArchivalURI:                  vauri,
+		workflowRetentionTtl := time.Second * 5
+		config := namespace.NamespaceConfig{
+			WorkflowExecutionRetentionTtl: &workflowRetentionTtl,
+			HistoryArchivalState:          enums.ARCHIVAL_STATE_ENABLED,
+			HistoryArchivalUri:            hauri,
+			VisibilityArchivalState:       enums.ARCHIVAL_STATE_DISABLED,
+			VisibilityArchivalUri:         vauri,
+			BadBinaries:                   &badBinaries,
 		}
 
 		cn1 := "cluster-name1"
-		crc1 := replication.ClusterReplicationConfiguration{
+		crc1 := replication.ClusterReplicationConfig{
 			ClusterName: cn1,
 		}
 
 		cn2 := "cluster-name2"
-		crc2 := replication.ClusterReplicationConfiguration{
+		crc2 := replication.ClusterReplicationConfig{
 			ClusterName: cn2,
 		}
 
 		acn := "my-cluster"
-		namespaceRC := replication.NamespaceReplicationConfiguration{
+		namespaceRC := replication.NamespaceReplicationConfig{
 			ActiveClusterName: acn,
-			Clusters:          []*replication.ClusterReplicationConfiguration{&crc1, &crc2},
+			Clusters:          []*replication.ClusterReplicationConfig{&crc1, &crc2},
 		}
 
 		fv1 := int64(3)
 		igd1 := true
 		ddr1 := workflowservice.DescribeNamespaceResponse{
-			NamespaceInfo:            &namespaceInfo1,
-			Configuration:            &namespaceConfiguration,
-			ReplicationConfiguration: &namespaceRC,
-			FailoverVersion:          fv1,
-			IsGlobalNamespace:        igd1,
+			NamespaceInfo:     &namespaceInfo1,
+			Config:            &config,
+			ReplicationConfig: &namespaceRC,
+			FailoverVersion:   fv1,
+			IsGlobalNamespace: igd1,
 		}
 
 		fv2 := int64(10)
 		igd2 := false
 		ddr2 := workflowservice.DescribeNamespaceResponse{
-			NamespaceInfo:            &namespaceInfo2,
-			Configuration:            &namespaceConfiguration,
-			ReplicationConfiguration: &namespaceRC,
-			FailoverVersion:          fv2,
-			IsGlobalNamespace:        igd2,
+			NamespaceInfo:     &namespaceInfo2,
+			Config:            &config,
+			ReplicationConfig: &namespaceRC,
+			FailoverVersion:   fv2,
+			IsGlobalNamespace: igd2,
 		}
 
 		namespaces = []*workflowservice.DescribeNamespaceResponse{&ddr1, &ddr2}
@@ -821,7 +849,7 @@ func (s *UnitTestSuite) TestNamespaceListReply() {
 		v.SetNamespaces(namespaces)
 		s.Equal(namespaces, v.GetNamespaces())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -958,7 +986,7 @@ func (s *UnitTestSuite) TestNamespaceRegisterReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -1065,7 +1093,7 @@ func (s *UnitTestSuite) TestNamespaceDeprecateReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -1107,13 +1135,14 @@ func (s *UnitTestSuite) TestNamespaceUpdateRequest() {
 	s.NoError(err)
 	s.NotNil(message)
 
+	var config namespace.NamespaceConfig
+
 	if v, ok := message.(*messages.NamespaceUpdateRequest); ok {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetName())
 		s.Nil(v.GetUpdatedInfoDescription())
 		s.Nil(v.GetUpdatedInfoOwnerEmail())
-		s.False(v.GetConfigurationEmitMetrics())
-		s.Equal(int32(0), v.GetConfigurationRetentionDays())
+		s.Nil(v.GetNamespaceConfig())
 		s.Nil(v.GetSecurityToken())
 
 		// Round-trip
@@ -1133,11 +1162,40 @@ func (s *UnitTestSuite) TestNamespaceUpdateRequest() {
 		v.SetUpdatedInfoOwnerEmail(&ownerEmailStr)
 		s.Equal("my-email", *v.GetUpdatedInfoOwnerEmail())
 
-		v.SetConfigurationEmitMetrics(true)
-		s.True(v.GetConfigurationEmitMetrics())
+		reason := "my-reason"
+		operator := "my-operator"
+		ctn1 := time.Time{}
+		bbi1 := namespace.BadBinaryInfo{
+			Reason:     reason,
+			Operator:   operator,
+			CreateTime: &ctn1,
+		}
 
-		v.SetConfigurationRetentionDays(int32(14))
-		s.Equal(int32(14), v.GetConfigurationRetentionDays())
+		ctn2 := time.Time{}
+		bbi2 := namespace.BadBinaryInfo{
+			Reason:     reason,
+			Operator:   operator,
+			CreateTime: &ctn2,
+		}
+
+		badBinaries := namespace.BadBinaries{
+			Binaries: map[string]*namespace.BadBinaryInfo{"1": &bbi1, "2": &bbi2},
+		}
+
+		hauri := "huri"
+		vauri := "vuri"
+		workflowRetentionTtl := time.Second * 5
+		config = namespace.NamespaceConfig{
+			WorkflowExecutionRetentionTtl: &workflowRetentionTtl,
+			HistoryArchivalState:          enums.ARCHIVAL_STATE_ENABLED,
+			HistoryArchivalUri:            hauri,
+			VisibilityArchivalState:       enums.ARCHIVAL_STATE_DISABLED,
+			VisibilityArchivalUri:         vauri,
+			BadBinaries:                   &badBinaries,
+		}
+
+		v.SetNamespaceConfig(&config)
+		s.Equal(config, *v.GetNamespaceConfig())
 
 		securityToken := "security-token"
 		v.SetSecurityToken(&securityToken)
@@ -1158,8 +1216,7 @@ func (s *UnitTestSuite) TestNamespaceUpdateRequest() {
 		s.Equal("my-namespace", *v.GetName())
 		s.Equal("my-description", *v.GetUpdatedInfoDescription())
 		s.Equal("my-email", *v.GetUpdatedInfoOwnerEmail())
-		s.True(v.GetConfigurationEmitMetrics())
-		s.Equal(int32(14), v.GetConfigurationRetentionDays())
+		s.Equal(config, *v.GetNamespaceConfig())
 		s.Equal("security-token", *v.GetSecurityToken())
 	}
 
@@ -1172,8 +1229,7 @@ func (s *UnitTestSuite) TestNamespaceUpdateRequest() {
 		s.Equal("my-namespace", *v.GetName())
 		s.Equal("my-description", *v.GetUpdatedInfoDescription())
 		s.Equal("my-email", *v.GetUpdatedInfoOwnerEmail())
-		s.True(v.GetConfigurationEmitMetrics())
-		s.Equal(int32(14), v.GetConfigurationRetentionDays())
+		s.Equal(config, *v.GetNamespaceConfig())
 		s.Equal("security-token", *v.GetSecurityToken())
 	}
 }
@@ -1198,7 +1254,7 @@ func (s *UnitTestSuite) TestNamespaceUpdateReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -1290,7 +1346,7 @@ func (s *UnitTestSuite) TestTerminateReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -1382,7 +1438,7 @@ func (s *UnitTestSuite) TestHeartbeatReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -1481,7 +1537,7 @@ func (s *UnitTestSuite) TestCancelReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 
 		v.SetWasCancelled(true)
@@ -1537,7 +1593,7 @@ func (s *UnitTestSuite) TestNewWorkerReply() {
 		v.SetWorkerID(int64(666))
 		s.Equal(int64(666), v.GetWorkerID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -1698,7 +1754,7 @@ func (s *UnitTestSuite) TestStopWorkerReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -1811,7 +1867,7 @@ func (s *UnitTestSuite) TestLogReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -1899,7 +1955,7 @@ func (s *UnitTestSuite) TestPingReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -1946,7 +2002,7 @@ func (s *UnitTestSuite) TestDescribeTaskQueueRequest() {
 		s.Nil(v.GetName())
 		s.Nil(v.GetNamespace())
 		s.Equal(int64(0), v.GetClientID())
-		s.Equal(enums.TaskQueueType_Decision, v.GetTaskQueueType())
+		s.Equal(enums.TASK_QUEUE_TYPE_WORKFLOW, v.GetTaskQueueType())
 
 		// Round-trip
 
@@ -1964,8 +2020,8 @@ func (s *UnitTestSuite) TestDescribeTaskQueueRequest() {
 		v.SetNamespace(&namespaceStr)
 		s.Equal("my-namespace", *v.GetNamespace())
 
-		v.SetTaskQueueType(enums.TaskQueueType_Activity)
-		s.Equal(enums.TaskQueueType_Activity, v.GetTaskQueueType())
+		v.SetTaskQueueType(enums.TASK_QUEUE_TYPE_ACTIVITY)
+		s.Equal(enums.TASK_QUEUE_TYPE_ACTIVITY, v.GetTaskQueueType())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -1981,7 +2037,7 @@ func (s *UnitTestSuite) TestDescribeTaskQueueRequest() {
 		s.Equal(int64(666), v.GetClientID())
 		s.Equal("my-name", *v.GetName())
 		s.Equal("my-namespace", *v.GetNamespace())
-		s.Equal(enums.TaskQueueType_Activity, v.GetTaskQueueType())
+		s.Equal(enums.TASK_QUEUE_TYPE_ACTIVITY, v.GetTaskQueueType())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -1993,7 +2049,7 @@ func (s *UnitTestSuite) TestDescribeTaskQueueRequest() {
 		s.Equal(int64(666), v.GetClientID())
 		s.Equal("my-name", *v.GetName())
 		s.Equal("my-namespace", *v.GetNamespace())
-		s.Equal(enums.TaskQueueType_Activity, v.GetTaskQueueType())
+		s.Equal(enums.TASK_QUEUE_TYPE_ACTIVITY, v.GetTaskQueueType())
 	}
 }
 
@@ -2019,19 +2075,19 @@ func (s *UnitTestSuite) TestDescribeTaskQueueReply() {
 		s.Equal(int64(555), v.GetRequestID())
 
 		result := new(workflowservice.DescribeTaskQueueResponse)
-		lat1 := int64(1)
-		lat2 := int64(2)
+		lat1 := time.Time{}
+		lat2 := time.Time{}
 		identity1 := "i1"
 		identity2 := "i2"
 		rps1 := float64(1)
 		rps2 := float64(2)
 		pollerInfo1 := taskqueue.PollerInfo{
-			LastAccessTime: lat1,
+			LastAccessTime: &lat1,
 			Identity:       identity1,
 			RatePerSecond:  rps1,
 		}
 		pollerInfo2 := taskqueue.PollerInfo{
-			LastAccessTime: lat2,
+			LastAccessTime: &lat2,
 			Identity:       identity2,
 			RatePerSecond:  rps2,
 		}
@@ -2040,12 +2096,12 @@ func (s *UnitTestSuite) TestDescribeTaskQueueReply() {
 		result.Pollers = pollers
 
 		v.SetResult(result)
-		s.Equal(int64(1), v.GetResult().Pollers[0].LastAccessTime)
-		s.Equal(int64(2), v.GetResult().Pollers[1].LastAccessTime)
+		s.Equal(time.Time{}, v.GetResult().Pollers[0].LastAccessTime)
+		s.Equal(time.Time{}, v.GetResult().Pollers[1].LastAccessTime)
 		s.Equal("i1", v.GetResult().Pollers[0].Identity)
 		s.Equal("i2", v.GetResult().Pollers[1].Identity)
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -2059,8 +2115,8 @@ func (s *UnitTestSuite) TestDescribeTaskQueueReply() {
 
 	if v, ok := message.(*messages.DescribeTaskQueueReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(int64(1), v.GetResult().Pollers[0].LastAccessTime)
-		s.Equal(int64(2), v.GetResult().Pollers[1].LastAccessTime)
+		s.Equal(time.Time{}, v.GetResult().Pollers[0].LastAccessTime)
+		s.Equal(time.Time{}, v.GetResult().Pollers[1].LastAccessTime)
 		s.Equal("i1", v.GetResult().Pollers[0].Identity)
 		s.Equal("i2", v.GetResult().Pollers[1].Identity)
 		s.True(internal.IsApplicationError(v.GetError()))
@@ -2072,8 +2128,8 @@ func (s *UnitTestSuite) TestDescribeTaskQueueReply() {
 
 	if v, ok := message.(*messages.DescribeTaskQueueReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(int64(1), v.GetResult().Pollers[0].LastAccessTime)
-		s.Equal(int64(2), v.GetResult().Pollers[1].LastAccessTime)
+		s.Equal(time.Time{}, v.GetResult().Pollers[0].LastAccessTime)
+		s.Equal(time.Time{}, v.GetResult().Pollers[1].LastAccessTime)
 		s.Equal("i1", v.GetResult().Pollers[0].Identity)
 		s.Equal("i2", v.GetResult().Pollers[1].Identity)
 		s.True(internal.IsApplicationError(v.GetError()))
@@ -2147,7 +2203,7 @@ func (s *UnitTestSuite) TestWorkflowSetCacheSizeReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -2249,7 +2305,7 @@ func (s *UnitTestSuite) TestWorkflowRegisterReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -2372,7 +2428,7 @@ func (s *UnitTestSuite) TestWorkflowExecuteReply() {
 		s.Equal("foo", v.GetExecution().ID)
 		s.Equal("bar", v.GetExecution().RunID)
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -2550,7 +2606,7 @@ func (s *UnitTestSuite) TestWorkflowInvokeReply() {
 		v.SetResult(result)
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 
 		v.SetForceReplay(true)
@@ -2718,7 +2774,7 @@ func (s *UnitTestSuite) TestWorkflowCancelReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -2842,7 +2898,7 @@ func (s *UnitTestSuite) TestWorkflowTerminateReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -2966,7 +3022,7 @@ func (s *UnitTestSuite) TestWorkflowSignalReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -3113,7 +3169,7 @@ func (s *UnitTestSuite) TestWorkflowSignalWithStartReply() {
 		s.Equal("666", v.GetExecution().ID)
 		s.Equal("777", v.GetExecution().RunID)
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -3164,7 +3220,7 @@ func (s *UnitTestSuite) TestWorkflowCancelChildReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -3341,7 +3397,7 @@ func (s *UnitTestSuite) TestWorkflowQueryReply() {
 		v.SetResult(result)
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -3460,7 +3516,7 @@ func (s *UnitTestSuite) TestWorkflowMutableReply() {
 		v.SetResult(result)
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -3580,27 +3636,29 @@ func (s *UnitTestSuite) TestWorkflowDescribeExecutionReply() {
 		tlName := "my-list"
 		tl := taskqueue.TaskQueue{
 			Name: tlName,
-			Kind: taskqueue.TaskQueueKind_Sticky,
+			Kind: enums.TASK_QUEUE_KIND_STICKY,
 		}
 
-		esct := int32(44)
-		tsct := int32(55)
-		wec := execution.WorkflowExecutionConfiguration{
-			TaskQueue:                       &tl,
-			WorkflowExecutionTimeoutSeconds: esct,
-			WorkflowTaskTimeoutSeconds:      tsct,
+		esct := time.Second * 5
+		tsct := time.Second * 5
+		wrt := time.Second * 5
+		wec := apiworkflow.WorkflowExecutionConfig{
+			TaskQueue:                  &tl,
+			WorkflowExecutionTimeout:   &esct,
+			DefaultWorkflowTaskTimeout: &tsct,
+			WorkflowRunTimeout:         &wrt,
 		}
 
 		wid := "my-workflow"
 		rid := "my-run"
-		we := execution.WorkflowExecution{
+		we := common.WorkflowExecution{
 			WorkflowId: wid,
 			RunId:      rid,
 		}
 
 		pwid := "parent-workflow"
 		prid := "parent-run"
-		pwe := execution.WorkflowExecution{
+		pwe := common.WorkflowExecution{
 			WorkflowId: pwid,
 			RunId:      prid,
 		}
@@ -3609,42 +3667,42 @@ func (s *UnitTestSuite) TestWorkflowDescribeExecutionReply() {
 		wt := "my-name"
 		bc := "my-checksum"
 		fdci := int64(44)
-		ctn := int64(55)
-		etn := int64(66)
+		ctn := time.Time{}
+		etn := time.Time{}
 		rese := true
-		rpi := execution.ResetPointInfo{
-			BinaryChecksum:           bc,
-			RunId:                    rid,
-			FirstDecisionCompletedId: fdci,
-			CreatedTimeNano:          ctn,
-			ExpiringTimeNano:         etn,
-			Resettable:               rese,
+		rpi := apiworkflow.ResetPointInfo{
+			BinaryChecksum:               bc,
+			RunId:                        rid,
+			FirstWorkflowTaskCompletedId: fdci,
+			CreateTime:                   &ctn,
+			ExpireTime:                   &etn,
+			Resettable:                   rese,
 		}
 
-		arp := execution.ResetPoints{
-			Points: []*execution.ResetPointInfo{&rpi},
+		arp := apiworkflow.ResetPoints{
+			Points: []*apiworkflow.ResetPointInfo{&rpi},
 		}
 
-		st := int64(44)
-		ct := int64(55)
+		st := time.Time{}
+		ct := time.Time{}
 		hl := int64(66)
 		pd := "parent-namespace"
-		et := int64(77)
+		et := time.Time{}
 		p1 := common.Payload{Data: []byte{1, 2, 3, 4, 5}}
 		p2 := common.Payload{Data: []byte{6, 7, 8, 9, 10}}
 		p3 := common.Payload{Data: []byte{11, 12, 13, 14, 15}}
-		ps := common.Payloads{Payloads: []*common.Payload{&p1, &p2, &p3}}
-		wei := execution.WorkflowExecutionInfo{
+		ps := common.Payloads{[]*common.Payload{&p1, &p2, &p3}}
+		wei := apiworkflow.WorkflowExecutionInfo{
 			Execution:         &we,
 			Type:              &common.WorkflowType{Name: wt},
-			StartTime:         &types.Int64Value{Value: st},
-			CloseTime:         &types.Int64Value{Value: ct},
+			StartTime:         &st,
+			CloseTime:         &ct,
 			HistoryLength:     hl,
 			ParentNamespaceId: pd,
 			ParentExecution:   &pwe,
-			ExecutionTime:     et,
-			Memo:              &common.Memo{Fields: map[string]*common.Payloads{"first": &ps}},
-			SearchAttributes:  &common.SearchAttributes{IndexedFields: map[string]*common.Payloads{"second": &ps}},
+			ExecutionTime:     &et,
+			Memo:              &common.Memo{Fields: map[string]*common.Payload{"first": ps.Payloads[0]}},
+			SearchAttributes:  &common.SearchAttributes{IndexedFields: map[string]*common.Payload{"second": ps.Payloads[1]}},
 			AutoResetPoints:   &arp,
 		}
 
@@ -3653,47 +3711,47 @@ func (s *UnitTestSuite) TestWorkflowDescribeExecutionReply() {
 		}
 
 		aid := activityName
-		lht := int64(44)
-		lst := int64(55)
-		atp := int32(66)
+		lht := time.Time{}
+		lst := time.Time{}
+		atp := int32(55)
 		ma := int32(77)
 		lfr := "my-reason"
 		lwi := "my-identity"
-		pai := execution.PendingActivityInfo{
-			ActivityId:             aid,
-			ActivityType:           &at,
-			State:                  execution.PendingActivityState_Started,
-			HeartbeatDetails:       &ps,
-			LastHeartbeatTimestamp: lht,
-			LastStartedTimestamp:   lst,
-			Attempt:                atp,
-			MaximumAttempts:        ma,
-			ScheduledTimestamp:     st,
-			ExpirationTimestamp:    et,
-			LastFailureReason:      lfr,
-			LastWorkerIdentity:     lwi,
+		pai := apiworkflow.PendingActivityInfo{
+			ActivityId:         aid,
+			ActivityType:       &at,
+			State:              enums.PENDING_ACTIVITY_STATE_STARTED,
+			HeartbeatDetails:   &ps,
+			LastHeartbeatTime:  &lht,
+			LastStartedTime:    &lst,
+			Attempt:            atp,
+			MaximumAttempts:    ma,
+			ScheduledTime:      &st,
+			ExpirationTime:     &et,
+			LastFailure:        &failure.Failure{Message: lfr},
+			LastWorkerIdentity: lwi,
 		}
 
 		wn := "my-workflow"
 		iid := int64(44)
-		pcei := execution.PendingChildExecutionInfo{
-			WorkflowId:      wid,
-			RunId:           rid,
-			WorkflowTypName: wn,
-			InitiatedId:     iid,
+		pcei := apiworkflow.PendingChildExecutionInfo{
+			WorkflowId:       wid,
+			RunId:            rid,
+			WorkflowTypeName: wn,
+			InitiatedId:      iid,
 		}
 
 		details = workflowservice.DescribeWorkflowExecutionResponse{
-			ExecutionConfiguration: &wec,
-			WorkflowExecutionInfo:  &wei,
-			PendingActivities:      []*execution.PendingActivityInfo{&pai},
-			PendingChildren:        []*execution.PendingChildExecutionInfo{&pcei},
+			ExecutionConfig:       &wec,
+			WorkflowExecutionInfo: &wei,
+			PendingActivities:     []*apiworkflow.PendingActivityInfo{&pai},
+			PendingChildren:       []*apiworkflow.PendingChildExecutionInfo{&pcei},
 		}
 
 		v.SetDetails(&details)
 		s.Equal(details, *v.GetDetails())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -3742,7 +3800,7 @@ func (s *UnitTestSuite) TestWorkflowDisconnectContextReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -3844,7 +3902,7 @@ func (s *UnitTestSuite) TestWorkflowExecuteChildReply() {
 		s.Equal("my-workflow", v.GetExecution().ID)
 		s.Equal("my-run", v.GetExecution().RunID)
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -3911,12 +3969,18 @@ func (s *UnitTestSuite) TestWorkflowExecuteChildRequest() {
 		opts := workflow.ChildWorkflowOptions{
 			TaskQueue:                "my-taskqueue",
 			Namespace:                "my-namespace",
-			ParentClosePolicy:        client.ParentClosePolicyAbandon,
+			ParentClosePolicy:        enums.PARENT_CLOSE_POLICY_ABANDON,
 			WorkflowID:               "my-workflow",
 			WorkflowExecutionTimeout: time.Second * 20,
 		}
 		v.SetOptions(&opts)
-		s.Equal(workflow.ChildWorkflowOptions{TaskQueue: "my-taskqueue", Namespace: "my-namespace", ParentClosePolicy: client.ParentClosePolicyAbandon, WorkflowID: "my-workflow", WorkflowExecutionTimeout: time.Second * 20}, *v.GetOptions())
+		s.Equal(workflow.ChildWorkflowOptions{
+			TaskQueue:                "my-taskqueue",
+			Namespace:                "my-namespace",
+			ParentClosePolicy:        enums.PARENT_CLOSE_POLICY_ABANDON,
+			WorkflowID:               "my-workflow",
+			WorkflowExecutionTimeout: time.Second * 20,
+		}, *v.GetOptions())
 
 		v.SetScheduleToStartTimeout(time.Second * 30)
 		s.Equal(time.Second*30, v.GetScheduleToStartTimeout())
@@ -3933,7 +3997,7 @@ func (s *UnitTestSuite) TestWorkflowExecuteChildRequest() {
 	if v, ok := message.(*messages.WorkflowExecuteChildRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("my-workflow", *v.GetWorkflow())
-		s.Equal(workflow.ChildWorkflowOptions{TaskQueue: "my-taskqueue", Namespace: "my-namespace", ParentClosePolicy: client.ParentClosePolicyAbandon, WorkflowID: "my-workflow", WorkflowExecutionTimeout: time.Second * 20}, *v.GetOptions())
+		s.Equal(workflow.ChildWorkflowOptions{TaskQueue: "my-taskqueue", Namespace: "my-namespace", ParentClosePolicy: enums.PARENT_CLOSE_POLICY_ABANDON, WorkflowID: "my-workflow", WorkflowExecutionTimeout: time.Second * 20}, *v.GetOptions())
 		s.Equal(time.Second*30, v.GetScheduleToStartTimeout())
 	}
 
@@ -3944,7 +4008,7 @@ func (s *UnitTestSuite) TestWorkflowExecuteChildRequest() {
 	if v, ok := message.(*messages.WorkflowExecuteChildRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("my-workflow", *v.GetWorkflow())
-		s.Equal(workflow.ChildWorkflowOptions{TaskQueue: "my-taskqueue", Namespace: "my-namespace", ParentClosePolicy: client.ParentClosePolicyAbandon, WorkflowID: "my-workflow", WorkflowExecutionTimeout: time.Second * 20}, *v.GetOptions())
+		s.Equal(workflow.ChildWorkflowOptions{TaskQueue: "my-taskqueue", Namespace: "my-namespace", ParentClosePolicy: enums.PARENT_CLOSE_POLICY_ABANDON, WorkflowID: "my-workflow", WorkflowExecutionTimeout: time.Second * 20}, *v.GetOptions())
 		s.Equal(time.Second*30, v.GetScheduleToStartTimeout())
 	}
 }
@@ -3973,7 +4037,7 @@ func (s *UnitTestSuite) TestWorkflowGetLastResultReply() {
 		v.SetResult([]byte{0, 1, 2, 3, 4})
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -4068,7 +4132,7 @@ func (s *UnitTestSuite) TestWorkflowGetResultReply() {
 		v.SetResult([]byte{0, 1, 2, 3, 4})
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -4184,7 +4248,7 @@ func (s *UnitTestSuite) TestWorkflowGetTimeReply() {
 		v.SetTime(time.Date(2019, time.May, 27, 0, 0, 0, 0, time.UTC))
 		s.Equal(time.Date(2019, time.May, 27, 0, 0, 0, 0, time.UTC), v.GetTime())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -4279,7 +4343,7 @@ func (s *UnitTestSuite) TestWorkflowHasLastResultReply() {
 		v.SetHasResult(true)
 		s.True(v.GetHasResult())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -4374,7 +4438,7 @@ func (s *UnitTestSuite) TestWorkflowQueryInvokeReply() {
 		v.SetResult([]byte{0, 1, 2, 3, 4})
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -4490,7 +4554,7 @@ func (s *UnitTestSuite) TestWorkflowSetQueryHandlerReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -4596,7 +4660,7 @@ func (s *UnitTestSuite) TestWorkflowSignalChildReply() {
 		v.SetResult([]byte{0, 1, 2, 3, 4})
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -4712,7 +4776,7 @@ func (s *UnitTestSuite) TestWorkflowSignalInvokeReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -4826,7 +4890,7 @@ func (s *UnitTestSuite) TestWorkflowSignalSubscribeReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -4928,7 +4992,7 @@ func (s *UnitTestSuite) TestWorkflowSleepReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -5029,7 +5093,7 @@ func (s *UnitTestSuite) TestWorkflowFutureReadyReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -5134,7 +5198,7 @@ func (s *UnitTestSuite) TestWorkflowWaitForChildReply() {
 		v.SetResult([]byte{0, 1, 2, 3, 4})
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -5241,7 +5305,7 @@ func (s *UnitTestSuite) TestWorkflowGetVersionReply() {
 		v.SetVersion(int32(20))
 		s.Equal(int32(20), v.GetVersion())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -5423,7 +5487,7 @@ func (s *UnitTestSuite) TestWorkflowQueueNewReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -5546,7 +5610,7 @@ func (s *UnitTestSuite) TestWorkflowQueueWriteReply() {
 		v.SetIsFull(true)
 		s.True(v.GetIsFull())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -5669,7 +5733,7 @@ func (s *UnitTestSuite) TestWorkflowQueueReadReply() {
 		v.SetData([]byte{0, 1, 2, 3, 4})
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetData())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -5780,7 +5844,7 @@ func (s *UnitTestSuite) TestWorkflowQueueCloseReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -5840,8 +5904,8 @@ func (s *UnitTestSuite) TestActivityCompleteRequest() {
 		v.SetResult([]byte{5, 6, 7, 8, 9})
 		s.Equal([]byte{5, 6, 7, 8, 9}, v.GetResult())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.GenericError))
-		s.True(internal.IsGenericError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 
 		namespace := "my-namespace"
 		workflowID := "my-workflow"
@@ -5871,7 +5935,7 @@ func (s *UnitTestSuite) TestActivityCompleteRequest() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetTaskToken())
 		s.Equal([]byte{5, 6, 7, 8, 9}, v.GetResult())
-		s.True(internal.IsGenericError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 		s.Equal("my-namespace", *v.GetNamespace())
 		s.Equal("my-workflow", *v.GetWorkflowID())
 		s.Equal("my-workflowrun", *v.GetRunID())
@@ -5886,7 +5950,7 @@ func (s *UnitTestSuite) TestActivityCompleteRequest() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetTaskToken())
 		s.Equal([]byte{5, 6, 7, 8, 9}, v.GetResult())
-		s.True(internal.IsGenericError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 		s.Equal("my-namespace", *v.GetNamespace())
 		s.Equal("my-workflow", *v.GetWorkflowID())
 		s.Equal("my-workflowrun", *v.GetRunID())
@@ -5914,7 +5978,7 @@ func (s *UnitTestSuite) TestActivityCompleteReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -5965,7 +6029,7 @@ func (s *UnitTestSuite) TestActivityExecuteLocalReply() {
 		v.SetResult([]byte{0, 1, 2, 3, 4})
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -6075,7 +6139,7 @@ func (s *UnitTestSuite) TestActivityExecuteReply() {
 		v.SetResult([]byte{0, 1, 2, 3, 4})
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -6194,7 +6258,7 @@ func (s *UnitTestSuite) TestActivityGetHeartbeatDetailsReply() {
 		v.SetDetails([]byte{0, 1, 2, 3, 4})
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetDetails())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -6296,7 +6360,7 @@ func (s *UnitTestSuite) TestActivityGetInfoReply() {
 		v.SetInfo(&info)
 		s.Equal(activity.Info{TaskQueue: "my-taskqueue", Attempt: 4, ActivityID: "my-activity", WorkflowNamespace: "my-namespace", ActivityType: activity.Type{Name: "activity"}}, *v.GetInfo())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -6391,7 +6455,7 @@ func (s *UnitTestSuite) TestActivityHasHeartbeatDetailsReply() {
 		v.SetHasDetails(true)
 		s.Equal(true, v.GetHasDetails())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -6486,7 +6550,7 @@ func (s *UnitTestSuite) TestActivityInvokeLocalReply() {
 		v.SetResult([]byte{0, 1, 2, 3, 4})
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -6593,7 +6657,7 @@ func (s *UnitTestSuite) TestActivityInvokeReply() {
 		v.SetResult([]byte{0, 1, 2, 3, 4})
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -6697,7 +6761,7 @@ func (s *UnitTestSuite) TestActivityRecordHeartbeatReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -6825,7 +6889,7 @@ func (s *UnitTestSuite) TestActivityRegisterReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -6927,7 +6991,7 @@ func (s *UnitTestSuite) TestActivityStoppingReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -7105,7 +7169,7 @@ func (s *UnitTestSuite) TestActivityStartReply() {
 		v.SetClientID(int64(777))
 		s.Equal(int64(777), v.GetClientID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -7216,7 +7280,7 @@ func (s *UnitTestSuite) TestActivityGetResultReply() {
 		v.SetResult([]byte{0, 1, 2, 3, 4})
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -7344,7 +7408,7 @@ func (s *UnitTestSuite) TestActivityStartLocalReply() {
 		v.SetClientID(int64(777))
 		s.Equal(int64(777), v.GetClientID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -7455,7 +7519,7 @@ func (s *UnitTestSuite) TestActivityGetLocalResultReply() {
 		v.SetResult([]byte{0, 1, 2, 3, 4})
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
@@ -7564,7 +7628,7 @@ func (s *UnitTestSuite) TestProxyMessage() {
 		var temporalError internal.TemporalError
 		v.GetJSONProperty("Error", &temporalError)
 		s.Equal("foo", temporalError.Error())
-		s.True(internal.IsApplicationError(&temporalError))
+		s.True(internal.IsProxyError(&temporalError))
 
 		// attachment values
 		s.Equal(3, len(v.Attachments))
@@ -7637,7 +7701,7 @@ func (s *UnitTestSuite) TestProxyReply() {
 		// Round-trip
 		v.SetRequestID(int64(555))
 		v.SetClientID(int64(666))
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(int64(666), v.GetClientID())
@@ -7720,7 +7784,7 @@ func (s *UnitTestSuite) TestWorkflowReply() {
 
 		// Round-trip
 		v.SetRequestID(int64(555))
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		v.SetReplayStatus(proxytemporal.ReplayStatusReplaying)
 
 		s.Equal(int64(555), v.GetRequestID())
@@ -7804,7 +7868,7 @@ func (s *UnitTestSuite) TestActivityReply() {
 
 		// Round-trip
 		v.SetRequestID(int64(555))
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 
 		v.SetActivityContextID(int64(555))
 		s.Equal(int64(555), v.GetActivityContextID())
