@@ -22,5 +22,5 @@ spec:
       name: http
       targetPort: {{ .Values.httpPort }}
   selector:
-    app: {{ .Chart.Name }}
+    app: kibana
     release: {{ .Release.Name | quote }}
