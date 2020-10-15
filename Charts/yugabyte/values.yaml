@@ -111,7 +111,7 @@ serviceMonitor:
   ##
   enabled: true
   ## interval is the default scrape_interval for all the endpoints
-  interval: 30s
+  interval: 60s
   ## extraLabels can be used to add labels to the ServiceMonitors
   ## being created
   extraLabels: {}
