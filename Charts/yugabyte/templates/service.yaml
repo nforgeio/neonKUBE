@@ -180,9 +180,6 @@ spec:
         traffic.sidecar.istio.io/excludeInboundPorts: '9000,11000,12000,13000'
         traffic.sidecar.istio.io/excludeOutboundPorts: '9000,11000,12000,13000'
       {{ end }}
-      {{ if $root.Values.networkAnnotation }}
-{{ toYaml $root.Values.networkAnnotation | indent 8}}
-      {{ end }}
       labels:
         app: "{{ .label }}"
         heritage: {{ $root.Values.helm2Legacy | ternary "Tiller" ($root.Release.Service | quote) }}
@@ -225,6 +222,34 @@ spec:
                   values:
                   - "{{ .label }}"
               topologyKey: kubernetes.io/hostname
+      {{ if contains .name "yb-tservers" }}
+      initContainers:
+      - name: chmod-er
+        image: busybox:latest
+        command:
+        - /bin/sh
+        - -c
+        - |
+          chmod 0750 -R /mnt/disk0/pg_data || :
+        securityContext:
+          runAsUser: 0
+        volumeMounts:
+          {{ if not $root.Values.storage.ephemeral }}
+          {{- range $index := until (int ($storageInfo.count)) }}
+          - name: datadir{{ $index }}
+            mountPath: /mnt/disk{{ $index }}
+            readOnly: false
+          {{- end }}
+          {{- end }}
+          {{- if $root.Values.tls.enabled }}
+          - name: {{ .label }}-yugabyte-tls-cert
+            mountPath: /opt/certs/yugabyte
+            readOnly: true
+          - name: yugabyte-tls-client-cert
+            mountPath: /root/.yugabytedb/
+            readOnly: true
+          {{- end }}
+      {{ end }}
       containers:
       - name: "{{ .label }}"
         image: "{{ $root.Values.Image.repository }}:{{ $root.Values.Image.tag }}"

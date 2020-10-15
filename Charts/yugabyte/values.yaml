@@ -40,8 +40,8 @@ replicas:
   tserver: 3
 
 partition:
-  master: 3
-  tserver: 3
+  master: 0
+  tserver: 0
 
 tls:
   # Set to true to enable the TLS.
