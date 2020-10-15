@@ -43,6 +43,12 @@ cortexConfig:
       max_send_msg_size: 104857600
       grpc_compression: gzip
 
+  limits:
+    max_series_per_metric: 0
+    max_series_per_user: 0
+    max_metadata_per_user: 0
+    max_metadata_per_metric: 100
+
   ingester:
     lifecycler:
       # The address to advertise for this ingester. Will be autodiscovered by
@@ -109,7 +115,13 @@ tolerations:
     operator: Exists
     effect: NoSchedule
 
-resources: {}
+resources:
+  limits:
+    cpu: 750m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi
 
 podAnnotations:
   prometheus.io/scrape: "true"
