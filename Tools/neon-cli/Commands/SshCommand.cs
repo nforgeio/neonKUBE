@@ -99,32 +99,32 @@ ARGUMENTS:
             //
             //      2048 MD5:cb:2f:f1:68:4b:aa:b3:8a:72:4d:53:f6:9f:5f:6a:fa sysadmin@manage-0 (RSA)
 
-            const string    md5Pattern     = "MD5:";
-            string          md5Fingerprint = clusterLogin.SshKey.FingerprintMd5;
-            string          fingerprint;
-            int             startPos;
-            int             endPos;
+            //const string    md5Pattern     = "MD5:";
+            //string          md5Fingerprint = clusterLogin.SshKey.FingerprintMd5;
+            //string          fingerprint;
+            //int             startPos;
+            //int             endPos;
 
-            startPos = md5Fingerprint.IndexOf(md5Pattern);
+            //startPos = md5Fingerprint.IndexOf(md5Pattern);
 
-            if (startPos == -1)
-            {
-                Console.Error.WriteLine($"*** ERROR: Cannot parse host's SSH key fingerprint [{md5Fingerprint}].");
-                Program.Exit(1);
-            }
+            //if (startPos == -1)
+            //{
+            //    Console.Error.WriteLine($"*** ERROR: Cannot parse host's SSH key fingerprint [{md5Fingerprint}].");
+            //    Program.Exit(1);
+            //}
 
-            startPos += md5Pattern.Length;
+            //startPos += md5Pattern.Length;
 
-            endPos = md5Fingerprint.IndexOf(' ', startPos);
+            //endPos = md5Fingerprint.IndexOf(' ', startPos);
 
-            if (endPos == -1)
-            {
-                fingerprint = md5Fingerprint.Substring(startPos).Trim();
-            }
-            else
-            {
-                fingerprint = md5Fingerprint.Substring(startPos, endPos - startPos).Trim();
-            }
+            //if (endPos == -1)
+            //{
+            //    fingerprint = md5Fingerprint.Substring(startPos).Trim();
+            //}
+            //else
+            //{
+            //    fingerprint = md5Fingerprint.Substring(startPos, endPos - startPos).Trim();
+            //}
 
             // Launch PuTTY.
 
@@ -134,7 +134,7 @@ ARGUMENTS:
                 Program.Exit(1);
             }
 
-            Process.Start(Program.PuttyPath, $"-l {clusterLogin.SshUsername} -pw {clusterLogin.SshPassword} {node.Address}:22 -hostkey \"{fingerprint}\"");
+            Process.Start(Program.PuttyPath, $"-l {clusterLogin.SshUsername} -pw {clusterLogin.SshPassword} {node.Address}:22");
         }
     }
 }
