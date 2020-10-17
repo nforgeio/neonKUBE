@@ -595,14 +595,14 @@ func (s *UnitTestSuite) TestNamespaceDescribeReply() {
 
 		reason := "my-reason"
 		operator := "my-operator"
-		ctn1 := time.Time{}
+		ctn1 := time.Date(2021, time.Month(2), 21, 1, 10, 30, 0, time.UTC)
 		bbi1 := namespace.BadBinaryInfo{
 			Reason:     reason,
 			Operator:   operator,
 			CreateTime: &ctn1,
 		}
 
-		ctn2 := time.Time{}
+		ctn2 := time.Date(2021, time.Month(2), 21, 1, 10, 30, 0, time.UTC)
 		bbi2 := namespace.BadBinaryInfo{
 			Reason:     reason,
 			Operator:   operator,
@@ -778,14 +778,14 @@ func (s *UnitTestSuite) TestNamespaceListReply() {
 
 		reason := "my-reason"
 		operator := "my-operator"
-		ctn1 := time.Time{}
+		ctn1 := time.Date(2021, time.Month(2), 21, 1, 10, 30, 0, time.UTC)
 		bbi1 := namespace.BadBinaryInfo{
 			Reason:     reason,
 			Operator:   operator,
 			CreateTime: &ctn1,
 		}
 
-		ctn2 := time.Time{}
+		ctn2 := time.Date(2021, time.Month(2), 21, 1, 10, 30, 0, time.UTC)
 		bbi2 := namespace.BadBinaryInfo{
 			Reason:     reason,
 			Operator:   operator,
@@ -1164,14 +1164,14 @@ func (s *UnitTestSuite) TestNamespaceUpdateRequest() {
 
 		reason := "my-reason"
 		operator := "my-operator"
-		ctn1 := time.Time{}
+		ctn1 := time.Date(2021, time.Month(2), 21, 1, 10, 30, 0, time.UTC)
 		bbi1 := namespace.BadBinaryInfo{
 			Reason:     reason,
 			Operator:   operator,
 			CreateTime: &ctn1,
 		}
 
-		ctn2 := time.Time{}
+		ctn2 := time.Date(2021, time.Month(2), 21, 1, 10, 30, 0, time.UTC)
 		bbi2 := namespace.BadBinaryInfo{
 			Reason:     reason,
 			Operator:   operator,
@@ -2064,6 +2064,9 @@ func (s *UnitTestSuite) TestDescribeTaskQueueReply() {
 	s.NoError(err)
 	s.NotNil(message)
 
+	var lat1 time.Time
+	var lat2 time.Time
+
 	if v, ok := message.(*messages.DescribeTaskQueueReply); ok {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetError())
@@ -2075,8 +2078,8 @@ func (s *UnitTestSuite) TestDescribeTaskQueueReply() {
 		s.Equal(int64(555), v.GetRequestID())
 
 		result := new(workflowservice.DescribeTaskQueueResponse)
-		lat1 := time.Time{}
-		lat2 := time.Time{}
+		lat1 = time.Date(2021, time.Month(2), 21, 1, 10, 30, 0, time.UTC)
+		lat2 = time.Date(2021, time.Month(2), 21, 1, 10, 30, 0, time.UTC)
 		identity1 := "i1"
 		identity2 := "i2"
 		rps1 := float64(1)
@@ -2096,8 +2099,8 @@ func (s *UnitTestSuite) TestDescribeTaskQueueReply() {
 		result.Pollers = pollers
 
 		v.SetResult(result)
-		s.Equal(&time.Time{}, v.GetResult().Pollers[0].LastAccessTime)
-		s.Equal(&time.Time{}, v.GetResult().Pollers[1].LastAccessTime)
+		s.Equal(&lat1, v.GetResult().Pollers[0].LastAccessTime)
+		s.Equal(&lat2, v.GetResult().Pollers[1].LastAccessTime)
 		s.Equal("i1", v.GetResult().Pollers[0].Identity)
 		s.Equal("i2", v.GetResult().Pollers[1].Identity)
 
@@ -2115,8 +2118,8 @@ func (s *UnitTestSuite) TestDescribeTaskQueueReply() {
 
 	if v, ok := message.(*messages.DescribeTaskQueueReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(&time.Time{}, v.GetResult().Pollers[0].LastAccessTime)
-		s.Equal(&time.Time{}, v.GetResult().Pollers[1].LastAccessTime)
+		s.Equal(&lat1, v.GetResult().Pollers[0].LastAccessTime)
+		s.Equal(&lat2, v.GetResult().Pollers[1].LastAccessTime)
 		s.Equal("i1", v.GetResult().Pollers[0].Identity)
 		s.Equal("i2", v.GetResult().Pollers[1].Identity)
 		s.True(internal.IsApplicationError(v.GetError()))
@@ -2128,8 +2131,8 @@ func (s *UnitTestSuite) TestDescribeTaskQueueReply() {
 
 	if v, ok := message.(*messages.DescribeTaskQueueReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(&time.Time{}, v.GetResult().Pollers[0].LastAccessTime)
-		s.Equal(&time.Time{}, v.GetResult().Pollers[1].LastAccessTime)
+		s.Equal(&lat1, v.GetResult().Pollers[0].LastAccessTime)
+		s.Equal(&lat2, v.GetResult().Pollers[1].LastAccessTime)
 		s.Equal("i1", v.GetResult().Pollers[0].Identity)
 		s.Equal("i2", v.GetResult().Pollers[1].Identity)
 		s.True(internal.IsApplicationError(v.GetError()))
@@ -3667,8 +3670,8 @@ func (s *UnitTestSuite) TestWorkflowDescribeExecutionReply() {
 		wt := "my-name"
 		bc := "my-checksum"
 		fdci := int64(44)
-		ctn := time.Time{}
-		etn := time.Time{}
+		ctn := time.Date(2021, time.Month(2), 21, 1, 10, 30, 0, time.UTC)
+		etn := time.Date(2021, time.Month(2), 21, 1, 10, 30, 0, time.UTC)
 		rese := true
 		rpi := apiworkflow.ResetPointInfo{
 			BinaryChecksum:               bc,
@@ -3683,11 +3686,11 @@ func (s *UnitTestSuite) TestWorkflowDescribeExecutionReply() {
 			Points: []*apiworkflow.ResetPointInfo{&rpi},
 		}
 
-		st := time.Time{}
-		ct := time.Time{}
+		st := time.Date(2021, time.Month(2), 21, 1, 10, 30, 0, time.UTC)
+		ct := time.Date(2021, time.Month(2), 21, 1, 10, 30, 0, time.UTC)
 		hl := int64(66)
 		pd := "parent-namespace"
-		et := time.Time{}
+		et := time.Date(2021, time.Month(2), 21, 1, 10, 30, 0, time.UTC)
 		p1 := common.Payload{Data: []byte{1, 2, 3, 4, 5}}
 		p2 := common.Payload{Data: []byte{6, 7, 8, 9, 10}}
 		p3 := common.Payload{Data: []byte{11, 12, 13, 14, 15}}
@@ -3711,8 +3714,8 @@ func (s *UnitTestSuite) TestWorkflowDescribeExecutionReply() {
 		}
 
 		aid := activityName
-		lht := time.Time{}
-		lst := time.Time{}
+		lht := time.Date(2021, time.Month(2), 21, 1, 10, 30, 0, time.UTC)
+		lst := time.Date(2021, time.Month(2), 21, 1, 10, 30, 0, time.UTC)
 		atp := int32(55)
 		ma := int32(77)
 		lfr := "my-reason"
