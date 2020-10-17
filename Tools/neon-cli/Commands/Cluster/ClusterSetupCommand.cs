@@ -3039,7 +3039,7 @@ rm -rf {chartName}*
         /// </summary>
         /// <param name="master"></param>
         /// <returns></returns>
-        private async Task InstallNeonRegistryAsync(SshProxy<NodeDefinition> master)
+        private async Task InstallNeonRegistryAsync(LinuxSshProxy<NodeDefinition> master)
         {
             master.Status = "deploy: registry";
 
