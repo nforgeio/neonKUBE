@@ -2096,8 +2096,8 @@ func (s *UnitTestSuite) TestDescribeTaskQueueReply() {
 		result.Pollers = pollers
 
 		v.SetResult(result)
-		s.Equal(time.Time{}, v.GetResult().Pollers[0].LastAccessTime)
-		s.Equal(time.Time{}, v.GetResult().Pollers[1].LastAccessTime)
+		s.Equal(&time.Time{}, v.GetResult().Pollers[0].LastAccessTime)
+		s.Equal(&time.Time{}, v.GetResult().Pollers[1].LastAccessTime)
 		s.Equal("i1", v.GetResult().Pollers[0].Identity)
 		s.Equal("i2", v.GetResult().Pollers[1].Identity)
 
@@ -2115,8 +2115,8 @@ func (s *UnitTestSuite) TestDescribeTaskQueueReply() {
 
 	if v, ok := message.(*messages.DescribeTaskQueueReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(time.Time{}, v.GetResult().Pollers[0].LastAccessTime)
-		s.Equal(time.Time{}, v.GetResult().Pollers[1].LastAccessTime)
+		s.Equal(&time.Time{}, v.GetResult().Pollers[0].LastAccessTime)
+		s.Equal(&time.Time{}, v.GetResult().Pollers[1].LastAccessTime)
 		s.Equal("i1", v.GetResult().Pollers[0].Identity)
 		s.Equal("i2", v.GetResult().Pollers[1].Identity)
 		s.True(internal.IsApplicationError(v.GetError()))
@@ -2128,8 +2128,8 @@ func (s *UnitTestSuite) TestDescribeTaskQueueReply() {
 
 	if v, ok := message.(*messages.DescribeTaskQueueReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(time.Time{}, v.GetResult().Pollers[0].LastAccessTime)
-		s.Equal(time.Time{}, v.GetResult().Pollers[1].LastAccessTime)
+		s.Equal(&time.Time{}, v.GetResult().Pollers[0].LastAccessTime)
+		s.Equal(&time.Time{}, v.GetResult().Pollers[1].LastAccessTime)
 		s.Equal("i1", v.GetResult().Pollers[0].Identity)
 		s.Equal("i2", v.GetResult().Pollers[1].Identity)
 		s.True(internal.IsApplicationError(v.GetError()))
