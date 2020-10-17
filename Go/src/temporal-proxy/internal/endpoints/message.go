@@ -257,10 +257,10 @@ func handleIProxyRequest(request messages.IProxyRequest) (err error) {
 				reply = handlePingRequest(ctx, v)
 			}
 
-		// DescribeTaskListRequest
-		case internal.DescribeTaskListRequest:
-			if v, ok := request.(*messages.DescribeTaskListRequest); ok {
-				reply = handleDescribeTaskListRequest(ctx, v)
+		// DescribeTaskQueueRequest
+		case internal.DescribeTaskQueueRequest:
+			if v, ok := request.(*messages.DescribeTaskQueueRequest); ok {
+				reply = handleDescribeTaskQueueRequest(ctx, v)
 			}
 
 		// -------------------------------------------------------------------------
@@ -510,7 +510,7 @@ func handleIProxyRequest(request messages.IProxyRequest) (err error) {
 			// set the reply
 			reply = messages.NewProxyReply()
 			reply.SetRequestID(request.GetRequestID())
-			reply.Build(internal.NewTemporalError(e, internal.CustomError))
+			reply.Build(internal.NewTemporalError(e))
 		}
 	}
 

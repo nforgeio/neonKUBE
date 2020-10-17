@@ -24,6 +24,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Common;
+using Neon.Net;
 using Neon.Retry;
 
 namespace Neon.Xunit
@@ -84,7 +85,7 @@ namespace Neon.Xunit
             set
             {
                 Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(value), nameof(value));
-                Covenant.Requires<ArgumentException>(IPAddress.TryParse(value, out var address) && address.AddressFamily == AddressFamily.InterNetwork, nameof(value), $"[{value}] is not a valid IPv4 address.");
+                Covenant.Requires<ArgumentException>(NetHelper.TryParseIPv4Address(value, out var address) && address.AddressFamily == AddressFamily.InterNetwork, nameof(value), $"[{value}] is not a valid IPv4 address.");
                 
                 defaultHostInterface = value;
             }
@@ -113,7 +114,7 @@ namespace Neon.Xunit
                 hostInterface = DefaultHostInterface;
             }
 
-            Covenant.Requires<ArgumentException>(IPAddress.TryParse(hostInterface, out var address) && address.AddressFamily == AddressFamily.InterNetwork, nameof(hostInterface), $"[{hostInterface}] is not a valid IPv4 address.");
+            Covenant.Requires<ArgumentException>(NetHelper.TryParseIPv4Address(hostInterface, out var address) && address.AddressFamily == AddressFamily.InterNetwork, nameof(hostInterface), $"[{hostInterface}] is not a valid IPv4 address.");
 
             if (forConnection && hostInterface == "0.0.0.0")
             {

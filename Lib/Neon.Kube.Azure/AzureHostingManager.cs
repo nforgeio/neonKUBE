@@ -187,7 +187,7 @@ namespace Neon.Kube
             /// </summary>
             /// <param name="node">The associated node proxy.</param>
             /// <param name="hostingManager">The parent hosting manager.</param>
-            public AzureVm(SshProxy<NodeDefinition> node, AzureHostingManager hostingManager)
+            public AzureVm(LinuxSshProxy<NodeDefinition> node, AzureHostingManager hostingManager)
             {
                 Covenant.Requires<ArgumentNullException>(hostingManager != null, nameof(hostingManager));
 
@@ -198,7 +198,7 @@ namespace Neon.Kube
             /// <summary>
             /// Returns the associated node proxy.
             /// </summary>
-            public SshProxy<NodeDefinition> Node { get; private set; }
+            public LinuxSshProxy<NodeDefinition> Node { get; private set; }
 
             /// <summary>
             /// Returns the node metadata (AKA its definition).
@@ -618,23 +618,24 @@ namespace Neon.Kube
         private bool                                    prefixResourceNames;
         private AzureHostingOptions                     azureOptions;
         private AzureCredentials                        azureCredentials;
+        private string                                  secureSshPassword;
         private NetworkOptions                          networkOptions;
         private string                                  region;
         private IAzure                                  azure;
+        private readonly Dictionary<string, AzureVm>    nameToVm;
 
         // These names will be used to identify the cluster resources.
 
-        private string                                  resourceGroupName;
-        private string                                  publicAddressName;
-        private string                                  vnetName;
-        private string                                  subnetName;
-        private string                                  proximityPlacementGroupName;
-        private string                                  loadbalancerName;
-        private string                                  loadbalancerFrontendName;
-        private string                                  loadbalancerIngressBackendName;
-        private string                                  loadbalancerMasterBackendName;
-        private string                                  subnetNsgName;
-        private Dictionary<string, AzureVm>             nameToVm;
+        private readonly string                         resourceGroupName;
+        private readonly string                         publicAddressName;
+        private readonly string                         vnetName;
+        private readonly string                         subnetName;
+        private readonly string                         proximityPlacementGroupName;
+        private readonly string                         loadbalancerName;
+        private readonly string                         loadbalancerFrontendName;
+        private readonly string                         loadbalancerIngressBackendName;
+        private readonly string                         loadbalancerMasterBackendName;
+        private readonly string                         subnetNsgName;
 
         // These reference the Azure resources.
 
@@ -889,6 +890,8 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(orgSshPassword), nameof(orgSshPassword));
             Covenant.Assert(cluster != null, $"[{nameof(AzureHostingManager)}] was created with the wrong constructor.");
 
+            this.secureSshPassword = secureSshPassword;
+
             // We need to ensure that the cluster has at least one ingress node.
 
             KubeHelper.EnsureIngressNodes(cluster.Definition);
@@ -979,6 +982,14 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override void AddPostPrepareSteps(SetupController<NodeDefinition> setupController)
         {
+            // Add a step to perform low-level node initialization.
+
+            setupController.AddNodeStep("node basics",
+                (node, stepDelay) =>
+                {
+                    KubeHelper.InitializeNode(node, secureSshPassword);
+                });
+
             // We need to add any required OpenEBS cStore disks after the node has been otherwise
             // prepared.  We need to do this here because if we created the data and OpenEBS disks
             // when the VM is initially created, the disk setup scripts executed during prepare
@@ -1066,7 +1077,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override string GetDataDevice(SshProxy<NodeDefinition> node)
+        public override string GetDataDisk(LinuxSshProxy<NodeDefinition> node)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 
@@ -1185,7 +1196,7 @@ namespace Neon.Kube
 
             if (publicAddress != null)
             {
-                clusterAddress = IPAddress.Parse(publicAddress.IPAddress);
+                clusterAddress = NetHelper.ParseIPv4Address(publicAddress.IPAddress);
             }
 
             vnet         = azure.Networks.ListByResourceGroup(resourceGroupName).SingleOrDefault(vnet => vnet.Name == vnetName);
@@ -1439,9 +1450,9 @@ namespace Neon.Kube
                     .Define(vnetName)
                     .WithRegion(region)
                     .WithExistingResourceGroup(resourceGroupName)
-                    .WithAddressSpace(networkOptions.NodeSubnet)
+                    .WithAddressSpace(azureOptions.VnetSubnet)
                     .DefineSubnet(subnetName)
-                        .WithAddressPrefix(networkOptions.NodeSubnet)
+                        .WithAddressPrefix(azureOptions.NodeSubnet)
                         .WithExistingNetworkSecurityGroup(subnetNsg.Id)
                         .Attach();
 
@@ -1478,7 +1489,7 @@ namespace Neon.Kube
                         .WithTags(GetTags())
                         .Create();
 
-                clusterAddress = IPAddress.Parse(publicAddress.IPAddress);
+                clusterAddress = NetHelper.ParseIPv4Address(publicAddress.IPAddress);
             }
         }
 
@@ -1547,7 +1558,7 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="node">The target node.</param>
         /// <param name="stepDelay">The step delay.</param>
-        private void CreateVm(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
+        private void CreateVm(LinuxSshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
             var azureNode = nameToVm[node.Name];
 
@@ -1620,7 +1631,7 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="node">The target node.</param>
         /// <param name="stepDelay">The step delay.</param>
-        private void ConfigureNode(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
+        private void ConfigureNode(LinuxSshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
             node.WaitForBoot();
 

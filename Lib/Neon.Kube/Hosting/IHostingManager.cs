@@ -186,6 +186,6 @@ namespace Neon.Kube
         /// This will not work after the node's data disk has been initialized.
         /// </note>
         /// </remarks>
-        string GetDataDevice(SshProxy<NodeDefinition> node);
+        string GetDataDisk(LinuxSshProxy<NodeDefinition> node);
     }
 }

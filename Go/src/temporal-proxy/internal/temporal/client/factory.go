@@ -15,10 +15,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package proxyclient
+package client
 
 import (
-	"go.temporal.io/temporal/client"
+	"go.temporal.io/sdk/client"
 	"go.uber.org/zap"
 )
 

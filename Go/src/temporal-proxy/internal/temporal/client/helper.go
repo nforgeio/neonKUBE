@@ -15,7 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package proxyclient
+package client
 
 import (
 	"context"
@@ -24,13 +24,13 @@ import (
 	"sync"
 	"time"
 
-	"go.temporal.io/temporal-proto/tasklist"
-	"go.temporal.io/temporal-proto/workflowservice"
-	"go.temporal.io/temporal/activity"
-	"go.temporal.io/temporal/client"
-	"go.temporal.io/temporal/encoded"
-	"go.temporal.io/temporal/worker"
-	"go.temporal.io/temporal/workflow"
+	"go.temporal.io/api/enums/v1"
+	"go.temporal.io/api/workflowservice/v1"
+	"go.temporal.io/sdk/activity"
+	"go.temporal.io/sdk/client"
+	"go.temporal.io/sdk/converter"
+	"go.temporal.io/sdk/worker"
+	"go.temporal.io/sdk/workflow"
 
 	"go.uber.org/zap"
 
@@ -172,11 +172,7 @@ func (helper *ClientHelper) SetupServiceConfig(ctx context.Context) error {
 	// build namespace client
 
 	if helper.NamespaceClient != nil {
-		if err := helper.NamespaceClient.CloseConnection(); err != nil {
-			helper.Logger.Error("failed to close existing namespace client connection.",
-				zap.String("Namespace", helper.Builder.GetNamespace()),
-				zap.Error(err))
-		}
+		helper.NamespaceClient.Close()
 	}
 
 	namespaceClient, err := helper.Builder.BuildTemporalNamespaceClient()
@@ -197,11 +193,7 @@ func (helper *ClientHelper) SetupServiceConfig(ctx context.Context) error {
 	// build the client
 
 	if c := helper.WorkflowClients.Get(helper.Builder.GetNamespace()); c != nil {
-		if err = c.CloseConnection(); err != nil {
-			helper.Logger.Error("failed to close existing client connection.",
-				zap.String("Namespace", helper.Builder.GetNamespace()),
-				zap.Error(err))
-		}
+		c.Close()
 	}
 
 	client, err := helper.Builder.BuildClient()
@@ -216,11 +208,11 @@ func (helper *ClientHelper) SetupServiceConfig(ctx context.Context) error {
 }
 
 // StartWorker starts a workflow worker and activity worker based on configured options.
-// The worker will listen for workflows registered with the same taskList.
+// The worker will listen for workflows registered with the same taskqueue.
 //
 // params:
 //	- namespace string -> the namespace that identifies the client to start the worker with.
-// 	- taskList string -> the name of the group of temporal workflows for the worker to listen for.
+// 	- taskqueue string -> the name of the group of temporal workflows for the worker to listen for.
 // 	- options worker.Options -> Options used to configure a worker instance.
 //	- workerID int64 -> the id of the new worker that will be mapped internally in
 // 	the temporal-proxy.
@@ -232,7 +224,7 @@ func (helper *ClientHelper) SetupServiceConfig(ctx context.Context) error {
 // 	the workflow was triggered successfully.
 func (helper *ClientHelper) StartWorker(
 	namespace string,
-	taskList string,
+	taskqueue string,
 	options worker.Options,
 ) (int64, error) {
 	client, err := helper.GetOrCreateWorkflowClient(namespace)
@@ -240,7 +232,7 @@ func (helper *ClientHelper) StartWorker(
 		return 0, err
 	}
 
-	worker := worker.New(client, taskList, options)
+	worker := worker.New(client, taskqueue, options)
 	if worker.Start() != nil {
 		return 0, err
 	}
@@ -403,6 +395,7 @@ func (helper *ClientHelper) ExecuteWorkflow(
 				continue
 			}
 
+			helper.Logger.Error("workflow failed to execute", zap.Error(err))
 			return nil, err
 		}
 		break
@@ -448,36 +441,36 @@ func (helper *ClientHelper) GetWorkflow(
 	return workflowRun, nil
 }
 
-// DescribeTaskList gets the description of a registered temporal namespace.
+// DescribeTaskQueue gets the description of a registered temporal namespace.
 //
 // params:
 //	- ctx context.Context -> the context to use to execute the describe namespace
 // 	request to temporal.
-//  - namespace string -> the string namespace the specified TaskList exists in.
-// 	- taskList string -> the string name of the TaskList to describe.
-//  - taskListType -> the tasklist.TaskListType of the TaskList to describe.
+//  - namespace string -> the string namespace the specified TaskQueue exists in.
+// 	- taskqueue string -> the string name of the TaskQueue to describe.
+//  - taskqueueType -> the enum.TaskQueueType of the TaskQueue to describe.
 //
 // returns:
-//	- *workflowservice.DescribeTaskListResponse -> response to the describe task list request.
+//	- *workflowservice.DescribeTaskQueueResponse -> response to the describe task queue request.
 // 	request
 // 	- error -> error if one is thrown, nil if the method executed with no errors.
-func (helper *ClientHelper) DescribeTaskList(
+func (helper *ClientHelper) DescribeTaskQueue(
 	ctx context.Context,
 	namespace string,
-	taskList string,
-	taskListType tasklist.TaskListType,
-) (*workflowservice.DescribeTaskListResponse, error) {
+	taskqueue string,
+	taskqueueType enums.TaskQueueType,
+) (*workflowservice.DescribeTaskQueueResponse, error) {
 	client, err := helper.GetOrCreateWorkflowClient(namespace)
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := client.DescribeTaskList(ctx, taskList, taskListType)
+	resp, err := client.DescribeTaskQueue(ctx, taskqueue, taskqueueType)
 	if err != nil {
 		return nil, err
 	}
 
-	helper.Logger.Info("TaskList Describe Response", zap.String("TaskList Info", resp.String()))
+	helper.Logger.Info("TaskQueue Describe Response", zap.String("TaskQueue Info", resp.String()))
 
 	return resp, nil
 }
@@ -590,7 +583,7 @@ func (helper *ClientHelper) SignalWithStartWorkflow(
 		return nil, err
 	}
 
-	workflowExecution, err := client.SignalWithStartWorkflow(
+	run, err := client.SignalWithStartWorkflow(
 		ctx,
 		workflowID,
 		signalName,
@@ -605,10 +598,11 @@ func (helper *ClientHelper) SignalWithStartWorkflow(
 
 	helper.Logger.Info("Started Workflow",
 		zap.String("Workflow", workflow),
-		zap.String("WorkflowID", workflowExecution.ID),
-		zap.String("RunID", workflowExecution.RunID))
+		zap.String("WorkflowID", run.GetID()),
+		zap.String("RunID", run.GetRunID()))
 
-	return workflowExecution, nil
+	return nil, nil
+	//return &workflow.Exection{ID: run.GetID(), RunID: run.GetRunID()}, nil
 }
 
 // DescribeWorkflowExecution describe the execution
@@ -699,7 +693,7 @@ func (helper *ClientHelper) SignalWorkflow(
 // 	- args ...interface{} -> the optional querying arguments.
 //
 // returns:
-//	- encoded.Value -> the encoded result value of querying a workflow.
+//	- converter.EncodedValue -> the encoded result value of querying a workflow.
 // 	- error -> error upon failure and nil upon success.
 func (helper *ClientHelper) QueryWorkflow(
 	ctx context.Context,
@@ -708,7 +702,7 @@ func (helper *ClientHelper) QueryWorkflow(
 	namespace string,
 	queryType string,
 	args ...interface{},
-) (encoded.Value, error) {
+) (converter.EncodedValue, error) {
 	client, err := helper.GetOrCreateWorkflowClient(namespace)
 	if err != nil {
 		return nil, err
@@ -908,16 +902,9 @@ func (helper *ClientHelper) RecordActivityHeartbeatByID(
 }
 
 // CloseNamespaceClientConnection closes the connection to an existing Namespace client.
-//
-// returns error -> error if there is an issue closing the grpc connection.
-func (helper *ClientHelper) CloseNamespaceClientConnection() error {
-	if err := helper.NamespaceClient.CloseConnection(); err != nil {
-		return err
-	}
-
+func (helper *ClientHelper) CloseNamespaceClientConnection() {
+	helper.NamespaceClient.Close()
 	helper.NamespaceClient = nil
-
-	return nil
 }
 
 // CloseWorkflowClientConnection closes an existing Temporal client connection.
@@ -929,11 +916,8 @@ func (helper *ClientHelper) CloseWorkflowClientConnection(namespace string) erro
 		return err
 	}
 
-	if err := client.CloseConnection(); err != nil {
-		return err
-	}
-
-	_ = helper.WorkflowClients.Remove(namespace)
+	client.Close()
+	helper.WorkflowClients.Remove(namespace)
 
 	return nil
 }
@@ -942,9 +926,7 @@ func (helper *ClientHelper) CloseWorkflowClientConnection(namespace string) erro
 //
 // returns error -> error thrown if there was an issue closing client connections.
 func (helper *ClientHelper) Destroy() error {
-	if err := helper.CloseNamespaceClientConnection(); err != nil {
-		return err
-	}
+	helper.CloseNamespaceClientConnection()
 
 	for v := range helper.WorkflowClients.clients {
 		if err := helper.CloseWorkflowClientConnection(v); err != nil {

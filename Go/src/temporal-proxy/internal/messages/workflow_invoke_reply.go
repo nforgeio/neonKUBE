@@ -205,23 +205,23 @@ func (reply *WorkflowInvokeReply) SetContinueAsNewWorkflow(value *string) {
 	reply.SetStringProperty("ContinueAsNewWorkflow", value)
 }
 
-// GetContinueAsNewTaskList gets ContinueAsNewTaskList
+// GetContinueAsNewTaskQueue gets ContinueAsNewTaskQueue
 // arguments from a WorkflowInvokeReply's properties map. Optionally overrides the current
-// workflow's tasklist for the restarted workflow when this value is not nil
+// workflow's taskqueue for the restarted workflow when this value is not nil
 //
-// returns *string -> pointer to a string in memory representing the ContinueAsNewTaskList
-func (reply *WorkflowInvokeReply) GetContinueAsNewTaskList() *string {
-	return reply.GetStringProperty("ContinueAsNewTaskList")
+// returns *string -> pointer to a string in memory representing the ContinueAsNewTaskQueue
+func (reply *WorkflowInvokeReply) GetContinueAsNewTaskQueue() *string {
+	return reply.GetStringProperty("ContinueAsNewTaskQueue")
 }
 
-// SetContinueAsNewTaskList sets the ContinueAsNewTaskList
+// SetContinueAsNewTaskQueue sets the ContinueAsNewTaskQueue
 // in a WorkflowInvokeReply's properties map.Optionally overrides the current
-// workflow's tasklist for the restarted workflow when this value is not nil
+// workflow's taskqueue for the restarted workflow when this value is not nil
 //
 // param value *string -> pointer to a string in memory representing the
-// ContinueAsNewTaskList to be set in the WorkflowInvokeReply's properties map
-func (reply *WorkflowInvokeReply) SetContinueAsNewTaskList(value *string) {
-	reply.SetStringProperty("ContinueAsNewTaskList", value)
+// ContinueAsNewTaskQueue to be set in the WorkflowInvokeReply's properties map
+func (reply *WorkflowInvokeReply) SetContinueAsNewTaskQueue(value *string) {
+	reply.SetStringProperty("ContinueAsNewTaskQueue", value)
 }
 
 // GetContinueAsNewNamespace gets ContinueAsNewNamespace
@@ -286,7 +286,7 @@ func (reply *WorkflowInvokeReply) CopyTo(target IProxyMessage) {
 		v.SetContinueAsNewScheduleToStartTimeout(reply.GetContinueAsNewScheduleToStartTimeout())
 		v.SetContinueAsNewStartToCloseTimeout(reply.GetContinueAsNewStartToCloseTimeout())
 		v.SetContinueAsNewWorkflow(reply.GetContinueAsNewWorkflow())
-		v.SetContinueAsNewTaskList(reply.GetContinueAsNewTaskList())
+		v.SetContinueAsNewTaskQueue(reply.GetContinueAsNewTaskQueue())
 		v.SetContinueAsNewNamespace(reply.GetContinueAsNewNamespace())
 		v.SetForceReplay(reply.GetForceReplay())
 	}

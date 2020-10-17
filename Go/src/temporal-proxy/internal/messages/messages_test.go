@@ -29,22 +29,23 @@ import (
 	"testing"
 	"time"
 
-	"go.temporal.io/temporal-proto/common"
-	"go.temporal.io/temporal-proto/execution"
-	"go.temporal.io/temporal-proto/namespace"
-	"go.temporal.io/temporal-proto/replication"
-	"go.temporal.io/temporal-proto/tasklist"
-	"go.temporal.io/temporal-proto/workflowservice"
-	"go.temporal.io/temporal/activity"
-	"go.temporal.io/temporal/client"
-	"go.temporal.io/temporal/worker"
-	"go.temporal.io/temporal/workflow"
-	goleak "go.uber.org/goleak"
+	"go.temporal.io/api/common/v1"
+	"go.temporal.io/api/enums/v1"
+	"go.temporal.io/api/failure/v1"
+	"go.temporal.io/api/namespace/v1"
+	"go.temporal.io/api/replication/v1"
+	"go.temporal.io/api/taskqueue/v1"
+	apiworkflow "go.temporal.io/api/workflow/v1"
+	"go.temporal.io/api/workflowservice/v1"
+	"go.temporal.io/sdk/activity"
+	"go.temporal.io/sdk/client"
+	"go.temporal.io/sdk/worker"
+	"go.temporal.io/sdk/workflow"
+	"go.uber.org/goleak"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
 	"github.com/a3linux/amazon-ssm-agent/agent/times"
-	"github.com/gogo/protobuf/types"
 
 	"github.com/stretchr/testify/suite"
 
@@ -234,8 +235,8 @@ func (s *UnitTestSuite) TestInitializeReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -248,7 +249,7 @@ func (s *UnitTestSuite) TestInitializeReply() {
 
 	if v, ok := message.(*messages.InitializeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -257,7 +258,7 @@ func (s *UnitTestSuite) TestInitializeReply() {
 
 	if v, ok := message.(*messages.InitializeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 func (s *UnitTestSuite) TestConnectRequest() {
@@ -370,8 +371,8 @@ func (s *UnitTestSuite) TestConnectReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -384,7 +385,7 @@ func (s *UnitTestSuite) TestConnectReply() {
 
 	if v, ok := message.(*messages.ConnectReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -393,7 +394,7 @@ func (s *UnitTestSuite) TestConnectReply() {
 
 	if v, ok := message.(*messages.ConnectReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -468,8 +469,8 @@ func (s *UnitTestSuite) TestDisconnectReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -482,7 +483,7 @@ func (s *UnitTestSuite) TestDisconnectReply() {
 
 	if v, ok := message.(*messages.DisconnectReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -491,7 +492,7 @@ func (s *UnitTestSuite) TestDisconnectReply() {
 
 	if v, ok := message.(*messages.DisconnectReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -558,29 +559,24 @@ func (s *UnitTestSuite) TestNamespaceDescribeReply() {
 	s.NoError(err)
 	s.NotNil(message)
 
+	var config namespace.NamespaceConfig
+
 	if v, ok := message.(*messages.NamespaceDescribeReply); ok {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetError())
-		s.False(v.GetConfigurationEmitMetrics())
-		s.Equal(int32(0), v.GetConfigurationRetentionDays())
+		s.Nil(v.GetNamespaceConfig())
 		s.Nil(v.GetNamespaceInfoName())
 		s.Nil(v.GetNamespaceInfoDescription())
 		s.Nil(v.GetNamespaceInfoOwnerEmail())
-		s.Equal(namespace.NamespaceStatus_Registered, v.GetNamespaceInfoStatus())
+		s.Equal(enums.NAMESPACE_STATE_REGISTERED, v.GetNamespaceInfoStatus())
 
 		// Round-trip
 
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
-
-		v.SetConfigurationEmitMetrics(true)
-		s.True(v.GetConfigurationEmitMetrics())
-
-		v.SetConfigurationRetentionDays(int32(7))
-		s.Equal(int32(7), v.GetConfigurationRetentionDays())
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 
 		namespaceInfoNameStr := "my-name"
 		v.SetNamespaceInfoName(&namespaceInfoNameStr)
@@ -590,12 +586,47 @@ func (s *UnitTestSuite) TestNamespaceDescribeReply() {
 		v.SetNamespaceInfoDescription(&namespaceInfoDescriptionStr)
 		s.Equal("my-description", *v.GetNamespaceInfoDescription())
 
-		v.SetNamespaceInfoStatus(namespace.NamespaceStatus_Deprecated)
-		s.Equal(namespace.NamespaceStatus_Deprecated, v.GetNamespaceInfoStatus())
+		v.SetNamespaceInfoStatus(enums.NAMESPACE_STATE_DEPRECATED)
+		s.Equal(enums.NAMESPACE_STATE_DEPRECATED, v.GetNamespaceInfoStatus())
 
 		namespaceInfoOwnerEmailStr := "joe@bloe.com"
 		v.SetNamespaceInfoOwnerEmail(&namespaceInfoOwnerEmailStr)
 		s.Equal("joe@bloe.com", *v.GetNamespaceInfoOwnerEmail())
+
+		reason := "my-reason"
+		operator := "my-operator"
+		ctn1 := time.Date(2021, time.Month(2), 21, 1, 10, 30, 0, time.UTC)
+		bbi1 := namespace.BadBinaryInfo{
+			Reason:     reason,
+			Operator:   operator,
+			CreateTime: &ctn1,
+		}
+
+		ctn2 := time.Date(2021, time.Month(2), 21, 1, 10, 30, 0, time.UTC)
+		bbi2 := namespace.BadBinaryInfo{
+			Reason:     reason,
+			Operator:   operator,
+			CreateTime: &ctn2,
+		}
+
+		badBinaries := namespace.BadBinaries{
+			Binaries: map[string]*namespace.BadBinaryInfo{"1": &bbi1, "2": &bbi2},
+		}
+
+		hauri := "huri"
+		vauri := "vuri"
+		workflowRetentionTtl := time.Second * 5
+		config = namespace.NamespaceConfig{
+			WorkflowExecutionRetentionTtl: &workflowRetentionTtl,
+			HistoryArchivalState:          enums.ARCHIVAL_STATE_ENABLED,
+			HistoryArchivalUri:            hauri,
+			VisibilityArchivalState:       enums.ARCHIVAL_STATE_DISABLED,
+			VisibilityArchivalUri:         vauri,
+			BadBinaries:                   &badBinaries,
+		}
+
+		v.SetNamespaceConfig(&config)
+		s.Equal(config, *v.GetNamespaceConfig())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -608,13 +639,12 @@ func (s *UnitTestSuite) TestNamespaceDescribeReply() {
 
 	if v, ok := message.(*messages.NamespaceDescribeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 		s.Equal("my-name", *v.GetNamespaceInfoName())
 		s.Equal("my-description", *v.GetNamespaceInfoDescription())
-		s.Equal(namespace.NamespaceStatus_Deprecated, v.GetNamespaceInfoStatus())
+		s.Equal(enums.NAMESPACE_STATE_DEPRECATED, v.GetNamespaceInfoStatus())
 		s.Equal("joe@bloe.com", *v.GetNamespaceInfoOwnerEmail())
-		s.Equal(int32(7), v.GetConfigurationRetentionDays())
-		s.True(v.GetConfigurationEmitMetrics())
+		s.Equal(config, *v.GetNamespaceConfig())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -623,13 +653,12 @@ func (s *UnitTestSuite) TestNamespaceDescribeReply() {
 
 	if v, ok := message.(*messages.NamespaceDescribeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 		s.Equal("my-name", *v.GetNamespaceInfoName())
 		s.Equal("my-description", *v.GetNamespaceInfoDescription())
-		s.Equal(namespace.NamespaceStatus_Deprecated, v.GetNamespaceInfoStatus())
+		s.Equal(enums.NAMESPACE_STATE_DEPRECATED, v.GetNamespaceInfoStatus())
 		s.Equal("joe@bloe.com", *v.GetNamespaceInfoOwnerEmail())
-		s.Equal(int32(7), v.GetConfigurationRetentionDays())
-		s.True(v.GetConfigurationEmitMetrics())
+		s.Equal(config, *v.GetNamespaceConfig())
 	}
 }
 
@@ -729,7 +758,7 @@ func (s *UnitTestSuite) TestNamespaceListReply() {
 		uuid1 := "uuid1"
 		namespaceInfo1 := namespace.NamespaceInfo{
 			Name:        name1,
-			Status:      namespace.NamespaceStatus_Deleted,
+			State:       enums.NAMESPACE_STATE_DELETED,
 			Description: desc,
 			OwnerEmail:  email,
 			Data:        map[string]string{"1": "first", "2": "second"},
@@ -740,7 +769,7 @@ func (s *UnitTestSuite) TestNamespaceListReply() {
 		uuid2 := "uuid2"
 		namespaceInfo2 := namespace.NamespaceInfo{
 			Name:        name2,
-			Status:      namespace.NamespaceStatus_Deprecated,
+			State:       enums.NAMESPACE_STATE_DEPRECATED,
 			Description: desc,
 			OwnerEmail:  email,
 			Data:        map[string]string{"3": "third", "4": "fourth"},
@@ -749,72 +778,70 @@ func (s *UnitTestSuite) TestNamespaceListReply() {
 
 		reason := "my-reason"
 		operator := "my-operator"
-		ctn1 := int64(44)
+		ctn1 := time.Date(2021, time.Month(2), 21, 1, 10, 30, 0, time.UTC)
 		bbi1 := namespace.BadBinaryInfo{
-			Reason:          reason,
-			Operator:        operator,
-			CreatedTimeNano: ctn1,
+			Reason:     reason,
+			Operator:   operator,
+			CreateTime: &ctn1,
 		}
 
-		ctn2 := int64(55)
+		ctn2 := time.Date(2021, time.Month(2), 21, 1, 10, 30, 0, time.UTC)
 		bbi2 := namespace.BadBinaryInfo{
-			Reason:          reason,
-			Operator:        operator,
-			CreatedTimeNano: ctn2,
+			Reason:     reason,
+			Operator:   operator,
+			CreateTime: &ctn2,
 		}
 
 		badBinaries := namespace.BadBinaries{
 			Binaries: map[string]*namespace.BadBinaryInfo{"1": &bbi1, "2": &bbi2},
 		}
 
-		werpd := int32(7)
-		em := true
 		hauri := "huri"
 		vauri := "vuri"
-		namespaceConfiguration := namespace.NamespaceConfiguration{
-			WorkflowExecutionRetentionPeriodInDays: werpd,
-			EmitMetric:                             &types.BoolValue{Value: em},
-			HistoryArchivalURI:                     hauri,
-			HistoryArchivalStatus:                  namespace.ArchivalStatus_Enabled,
-			BadBinaries:                            &badBinaries,
-			VisibilityArchivalStatus:               namespace.ArchivalStatus_Disabled,
-			VisibilityArchivalURI:                  vauri,
+		workflowRetentionTtl := time.Second * 5
+		config := namespace.NamespaceConfig{
+			WorkflowExecutionRetentionTtl: &workflowRetentionTtl,
+			HistoryArchivalState:          enums.ARCHIVAL_STATE_ENABLED,
+			HistoryArchivalUri:            hauri,
+			VisibilityArchivalState:       enums.ARCHIVAL_STATE_DISABLED,
+			VisibilityArchivalUri:         vauri,
+			BadBinaries:                   &badBinaries,
 		}
 
 		cn1 := "cluster-name1"
-		crc1 := replication.ClusterReplicationConfiguration{
+		crc1 := replication.ClusterReplicationConfig{
 			ClusterName: cn1,
 		}
 
 		cn2 := "cluster-name2"
-		crc2 := replication.ClusterReplicationConfiguration{
+		crc2 := replication.ClusterReplicationConfig{
 			ClusterName: cn2,
 		}
 
 		acn := "my-cluster"
-		namespaceRC := replication.NamespaceReplicationConfiguration{
+		namespaceRC := replication.NamespaceReplicationConfig{
 			ActiveClusterName: acn,
-			Clusters:          []*replication.ClusterReplicationConfiguration{&crc1, &crc2},
+			Clusters:          []*replication.ClusterReplicationConfig{&crc1, &crc2},
 		}
 
 		fv1 := int64(3)
 		igd1 := true
 		ddr1 := workflowservice.DescribeNamespaceResponse{
-			NamespaceInfo:            &namespaceInfo1,
-			Configuration:            &namespaceConfiguration,
-			ReplicationConfiguration: &namespaceRC,
-			FailoverVersion:          fv1,
-			IsGlobalNamespace:        igd1,
+			NamespaceInfo:     &namespaceInfo1,
+			Config:            &config,
+			ReplicationConfig: &namespaceRC,
+			FailoverVersion:   fv1,
+			IsGlobalNamespace: igd1,
 		}
 
 		fv2 := int64(10)
 		igd2 := false
 		ddr2 := workflowservice.DescribeNamespaceResponse{
-			NamespaceInfo:            &namespaceInfo2,
-			Configuration:            &namespaceConfiguration,
-			ReplicationConfiguration: &namespaceRC,
-			FailoverVersion:          fv2,
-			IsGlobalNamespace:        igd2,
+			NamespaceInfo:     &namespaceInfo2,
+			Config:            &config,
+			ReplicationConfig: &namespaceRC,
+			FailoverVersion:   fv2,
+			IsGlobalNamespace: igd2,
 		}
 
 		namespaces = []*workflowservice.DescribeNamespaceResponse{&ddr1, &ddr2}
@@ -822,8 +849,8 @@ func (s *UnitTestSuite) TestNamespaceListReply() {
 		v.SetNamespaces(namespaces)
 		s.Equal(namespaces, v.GetNamespaces())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -837,7 +864,7 @@ func (s *UnitTestSuite) TestNamespaceListReply() {
 	if v, ok := message.(*messages.NamespaceListReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{1, 2, 3, 4}, v.GetNextPageToken())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 		s.Equal(namespaces, v.GetNamespaces())
 	}
 
@@ -848,7 +875,7 @@ func (s *UnitTestSuite) TestNamespaceListReply() {
 	if v, ok := message.(*messages.NamespaceListReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{1, 2, 3, 4}, v.GetNextPageToken())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 		s.Equal(namespaces, v.GetNamespaces())
 	}
 }
@@ -959,8 +986,8 @@ func (s *UnitTestSuite) TestNamespaceRegisterReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -973,7 +1000,7 @@ func (s *UnitTestSuite) TestNamespaceRegisterReply() {
 
 	if v, ok := message.(*messages.NamespaceRegisterReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -982,7 +1009,7 @@ func (s *UnitTestSuite) TestNamespaceRegisterReply() {
 
 	if v, ok := message.(*messages.NamespaceRegisterReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -1066,8 +1093,8 @@ func (s *UnitTestSuite) TestNamespaceDeprecateReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -1080,7 +1107,7 @@ func (s *UnitTestSuite) TestNamespaceDeprecateReply() {
 
 	if v, ok := message.(*messages.NamespaceDeprecateReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -1089,7 +1116,7 @@ func (s *UnitTestSuite) TestNamespaceDeprecateReply() {
 
 	if v, ok := message.(*messages.NamespaceDeprecateReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -1108,13 +1135,14 @@ func (s *UnitTestSuite) TestNamespaceUpdateRequest() {
 	s.NoError(err)
 	s.NotNil(message)
 
+	var config namespace.NamespaceConfig
+
 	if v, ok := message.(*messages.NamespaceUpdateRequest); ok {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetName())
 		s.Nil(v.GetUpdatedInfoDescription())
 		s.Nil(v.GetUpdatedInfoOwnerEmail())
-		s.False(v.GetConfigurationEmitMetrics())
-		s.Equal(int32(0), v.GetConfigurationRetentionDays())
+		s.Nil(v.GetNamespaceConfig())
 		s.Nil(v.GetSecurityToken())
 
 		// Round-trip
@@ -1134,11 +1162,40 @@ func (s *UnitTestSuite) TestNamespaceUpdateRequest() {
 		v.SetUpdatedInfoOwnerEmail(&ownerEmailStr)
 		s.Equal("my-email", *v.GetUpdatedInfoOwnerEmail())
 
-		v.SetConfigurationEmitMetrics(true)
-		s.True(v.GetConfigurationEmitMetrics())
+		reason := "my-reason"
+		operator := "my-operator"
+		ctn1 := time.Date(2021, time.Month(2), 21, 1, 10, 30, 0, time.UTC)
+		bbi1 := namespace.BadBinaryInfo{
+			Reason:     reason,
+			Operator:   operator,
+			CreateTime: &ctn1,
+		}
 
-		v.SetConfigurationRetentionDays(int32(14))
-		s.Equal(int32(14), v.GetConfigurationRetentionDays())
+		ctn2 := time.Date(2021, time.Month(2), 21, 1, 10, 30, 0, time.UTC)
+		bbi2 := namespace.BadBinaryInfo{
+			Reason:     reason,
+			Operator:   operator,
+			CreateTime: &ctn2,
+		}
+
+		badBinaries := namespace.BadBinaries{
+			Binaries: map[string]*namespace.BadBinaryInfo{"1": &bbi1, "2": &bbi2},
+		}
+
+		hauri := "huri"
+		vauri := "vuri"
+		workflowRetentionTtl := time.Second * 5
+		config = namespace.NamespaceConfig{
+			WorkflowExecutionRetentionTtl: &workflowRetentionTtl,
+			HistoryArchivalState:          enums.ARCHIVAL_STATE_ENABLED,
+			HistoryArchivalUri:            hauri,
+			VisibilityArchivalState:       enums.ARCHIVAL_STATE_DISABLED,
+			VisibilityArchivalUri:         vauri,
+			BadBinaries:                   &badBinaries,
+		}
+
+		v.SetNamespaceConfig(&config)
+		s.Equal(config, *v.GetNamespaceConfig())
 
 		securityToken := "security-token"
 		v.SetSecurityToken(&securityToken)
@@ -1159,8 +1216,7 @@ func (s *UnitTestSuite) TestNamespaceUpdateRequest() {
 		s.Equal("my-namespace", *v.GetName())
 		s.Equal("my-description", *v.GetUpdatedInfoDescription())
 		s.Equal("my-email", *v.GetUpdatedInfoOwnerEmail())
-		s.True(v.GetConfigurationEmitMetrics())
-		s.Equal(int32(14), v.GetConfigurationRetentionDays())
+		s.Equal(config, *v.GetNamespaceConfig())
 		s.Equal("security-token", *v.GetSecurityToken())
 	}
 
@@ -1173,8 +1229,7 @@ func (s *UnitTestSuite) TestNamespaceUpdateRequest() {
 		s.Equal("my-namespace", *v.GetName())
 		s.Equal("my-description", *v.GetUpdatedInfoDescription())
 		s.Equal("my-email", *v.GetUpdatedInfoOwnerEmail())
-		s.True(v.GetConfigurationEmitMetrics())
-		s.Equal(int32(14), v.GetConfigurationRetentionDays())
+		s.Equal(config, *v.GetNamespaceConfig())
 		s.Equal("security-token", *v.GetSecurityToken())
 	}
 }
@@ -1199,8 +1254,8 @@ func (s *UnitTestSuite) TestNamespaceUpdateReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -1213,7 +1268,7 @@ func (s *UnitTestSuite) TestNamespaceUpdateReply() {
 
 	if v, ok := message.(*messages.NamespaceUpdateReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -1222,7 +1277,7 @@ func (s *UnitTestSuite) TestNamespaceUpdateReply() {
 
 	if v, ok := message.(*messages.NamespaceUpdateReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -1291,8 +1346,8 @@ func (s *UnitTestSuite) TestTerminateReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -1305,7 +1360,7 @@ func (s *UnitTestSuite) TestTerminateReply() {
 
 	if v, ok := message.(*messages.TerminateReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -1314,7 +1369,7 @@ func (s *UnitTestSuite) TestTerminateReply() {
 
 	if v, ok := message.(*messages.TerminateReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -1383,8 +1438,8 @@ func (s *UnitTestSuite) TestHeartbeatReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -1397,7 +1452,7 @@ func (s *UnitTestSuite) TestHeartbeatReply() {
 
 	if v, ok := message.(*messages.HeartbeatReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -1406,7 +1461,7 @@ func (s *UnitTestSuite) TestHeartbeatReply() {
 
 	if v, ok := message.(*messages.HeartbeatReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -1482,8 +1537,8 @@ func (s *UnitTestSuite) TestCancelReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 
 		v.SetWasCancelled(true)
 		s.True(v.GetWasCancelled())
@@ -1499,7 +1554,7 @@ func (s *UnitTestSuite) TestCancelReply() {
 
 	if v, ok := message.(*messages.CancelReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 		s.True(v.GetWasCancelled())
 	}
 
@@ -1509,7 +1564,7 @@ func (s *UnitTestSuite) TestCancelReply() {
 
 	if v, ok := message.(*messages.CancelReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 		s.True(v.GetWasCancelled())
 	}
 }
@@ -1538,8 +1593,8 @@ func (s *UnitTestSuite) TestNewWorkerReply() {
 		v.SetWorkerID(int64(666))
 		s.Equal(int64(666), v.GetWorkerID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -1553,7 +1608,7 @@ func (s *UnitTestSuite) TestNewWorkerReply() {
 	if v, ok := message.(*messages.NewWorkerReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(int64(666), v.GetWorkerID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -1563,7 +1618,7 @@ func (s *UnitTestSuite) TestNewWorkerReply() {
 	if v, ok := message.(*messages.NewWorkerReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(int64(666), v.GetWorkerID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -1581,7 +1636,7 @@ func (s *UnitTestSuite) TestNewWorkerRequest() {
 	if v, ok := message.(*messages.NewWorkerRequest); ok {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetNamespace())
-		s.Nil(v.GetTaskList())
+		s.Nil(v.GetTaskQueue())
 		s.Nil(v.GetOptions())
 
 		// Round-trip
@@ -1594,8 +1649,8 @@ func (s *UnitTestSuite) TestNewWorkerRequest() {
 		s.Equal("my-namespace", *v.GetNamespace())
 
 		tasks := "my-tasks"
-		v.SetTaskList(&tasks)
-		s.Equal("my-tasks", *v.GetTaskList())
+		v.SetTaskQueue(&tasks)
+		s.Equal("my-tasks", *v.GetTaskQueue())
 
 		opts := worker.Options{WorkerActivitiesPerSecond: 2, MaxConcurrentActivityExecutionSize: 1234}
 		v.SetOptions(&opts)
@@ -1614,7 +1669,7 @@ func (s *UnitTestSuite) TestNewWorkerRequest() {
 	if v, ok := message.(*messages.NewWorkerRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("my-namespace", *v.GetNamespace())
-		s.Equal("my-tasks", *v.GetTaskList())
+		s.Equal("my-tasks", *v.GetTaskQueue())
 		s.Equal(1234, v.GetOptions().MaxConcurrentActivityExecutionSize)
 		s.Equal(float64(2), v.GetOptions().WorkerActivitiesPerSecond)
 	}
@@ -1626,7 +1681,7 @@ func (s *UnitTestSuite) TestNewWorkerRequest() {
 	if v, ok := message.(*messages.NewWorkerRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("my-namespace", *v.GetNamespace())
-		s.Equal("my-tasks", *v.GetTaskList())
+		s.Equal("my-tasks", *v.GetTaskQueue())
 		s.Equal(1234, v.GetOptions().MaxConcurrentActivityExecutionSize)
 		s.Equal(float64(2), v.GetOptions().WorkerActivitiesPerSecond)
 	}
@@ -1699,8 +1754,8 @@ func (s *UnitTestSuite) TestStopWorkerReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -1713,7 +1768,7 @@ func (s *UnitTestSuite) TestStopWorkerReply() {
 
 	if v, ok := message.(*messages.StopWorkerReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -1722,7 +1777,7 @@ func (s *UnitTestSuite) TestStopWorkerReply() {
 
 	if v, ok := message.(*messages.StopWorkerReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -1812,8 +1867,8 @@ func (s *UnitTestSuite) TestLogReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -1826,7 +1881,7 @@ func (s *UnitTestSuite) TestLogReply() {
 
 	if v, ok := message.(*messages.LogReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -1835,7 +1890,7 @@ func (s *UnitTestSuite) TestLogReply() {
 
 	if v, ok := message.(*messages.LogReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -1900,8 +1955,8 @@ func (s *UnitTestSuite) TestPingReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -1914,7 +1969,7 @@ func (s *UnitTestSuite) TestPingReply() {
 
 	if v, ok := message.(*messages.PingReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -1923,15 +1978,15 @@ func (s *UnitTestSuite) TestPingReply() {
 
 	if v, ok := message.(*messages.PingReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
-func (s *UnitTestSuite) TestDescribeTaskListRequest() {
+func (s *UnitTestSuite) TestDescribeTaskQueueRequest() {
 
-	var message messages.IProxyMessage = messages.NewDescribeTaskListRequest()
-	if v, ok := message.(*messages.DescribeTaskListRequest); ok {
-		s.Equal(internal.DescribeTaskListReply, v.GetReplyType())
+	var message messages.IProxyMessage = messages.NewDescribeTaskQueueRequest()
+	if v, ok := message.(*messages.DescribeTaskQueueRequest); ok {
+		s.Equal(internal.DescribeTaskQueueReply, v.GetReplyType())
 	}
 
 	proxyMessage := message.GetProxyMessage()
@@ -1942,12 +1997,12 @@ func (s *UnitTestSuite) TestDescribeTaskListRequest() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*messages.DescribeTaskListRequest); ok {
+	if v, ok := message.(*messages.DescribeTaskQueueRequest); ok {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetName())
 		s.Nil(v.GetNamespace())
 		s.Equal(int64(0), v.GetClientID())
-		s.Equal(tasklist.TaskListType_Decision, v.GetTaskListType())
+		s.Equal(enums.TASK_QUEUE_TYPE_WORKFLOW, v.GetTaskQueueType())
 
 		// Round-trip
 
@@ -1965,8 +2020,8 @@ func (s *UnitTestSuite) TestDescribeTaskListRequest() {
 		v.SetNamespace(&namespaceStr)
 		s.Equal("my-namespace", *v.GetNamespace())
 
-		v.SetTaskListType(tasklist.TaskListType_Activity)
-		s.Equal(tasklist.TaskListType_Activity, v.GetTaskListType())
+		v.SetTaskQueueType(enums.TASK_QUEUE_TYPE_ACTIVITY)
+		s.Equal(enums.TASK_QUEUE_TYPE_ACTIVITY, v.GetTaskQueueType())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -1977,29 +2032,29 @@ func (s *UnitTestSuite) TestDescribeTaskListRequest() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*messages.DescribeTaskListRequest); ok {
+	if v, ok := message.(*messages.DescribeTaskQueueRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(int64(666), v.GetClientID())
 		s.Equal("my-name", *v.GetName())
 		s.Equal("my-namespace", *v.GetNamespace())
-		s.Equal(tasklist.TaskListType_Activity, v.GetTaskListType())
+		s.Equal(enums.TASK_QUEUE_TYPE_ACTIVITY, v.GetTaskQueueType())
 	}
 
 	message, err = s.echoToConnection(message)
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*messages.DescribeTaskListRequest); ok {
+	if v, ok := message.(*messages.DescribeTaskQueueRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(int64(666), v.GetClientID())
 		s.Equal("my-name", *v.GetName())
 		s.Equal("my-namespace", *v.GetNamespace())
-		s.Equal(tasklist.TaskListType_Activity, v.GetTaskListType())
+		s.Equal(enums.TASK_QUEUE_TYPE_ACTIVITY, v.GetTaskQueueType())
 	}
 }
 
-func (s *UnitTestSuite) TestDescribeTaskListReply() {
-	var message messages.IProxyMessage = messages.NewDescribeTaskListReply()
+func (s *UnitTestSuite) TestDescribeTaskQueueReply() {
+	var message messages.IProxyMessage = messages.NewDescribeTaskQueueReply()
 	proxyMessage := message.GetProxyMessage()
 
 	serializedMessage, err := proxyMessage.Serialize(false)
@@ -2009,7 +2064,10 @@ func (s *UnitTestSuite) TestDescribeTaskListReply() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*messages.DescribeTaskListReply); ok {
+	var lat1 time.Time
+	var lat2 time.Time
+
+	if v, ok := message.(*messages.DescribeTaskQueueReply); ok {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetError())
 		s.Nil(v.GetResult())
@@ -2019,35 +2077,35 @@ func (s *UnitTestSuite) TestDescribeTaskListReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		result := new(workflowservice.DescribeTaskListResponse)
-		lat1 := int64(1)
-		lat2 := int64(2)
+		result := new(workflowservice.DescribeTaskQueueResponse)
+		lat1 = time.Date(2021, time.Month(2), 21, 1, 10, 30, 0, time.UTC)
+		lat2 = time.Date(2021, time.Month(2), 21, 1, 10, 30, 0, time.UTC)
 		identity1 := "i1"
 		identity2 := "i2"
 		rps1 := float64(1)
 		rps2 := float64(2)
-		pollerInfo1 := tasklist.PollerInfo{
-			LastAccessTime: lat1,
+		pollerInfo1 := taskqueue.PollerInfo{
+			LastAccessTime: &lat1,
 			Identity:       identity1,
 			RatePerSecond:  rps1,
 		}
-		pollerInfo2 := tasklist.PollerInfo{
-			LastAccessTime: lat2,
+		pollerInfo2 := taskqueue.PollerInfo{
+			LastAccessTime: &lat2,
 			Identity:       identity2,
 			RatePerSecond:  rps2,
 		}
 
-		pollers := []*tasklist.PollerInfo{&pollerInfo1, &pollerInfo2}
+		pollers := []*taskqueue.PollerInfo{&pollerInfo1, &pollerInfo2}
 		result.Pollers = pollers
 
 		v.SetResult(result)
-		s.Equal(int64(1), v.GetResult().Pollers[0].LastAccessTime)
-		s.Equal(int64(2), v.GetResult().Pollers[1].LastAccessTime)
+		s.Equal(&lat1, v.GetResult().Pollers[0].LastAccessTime)
+		s.Equal(&lat2, v.GetResult().Pollers[1].LastAccessTime)
 		s.Equal("i1", v.GetResult().Pollers[0].Identity)
 		s.Equal("i2", v.GetResult().Pollers[1].Identity)
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -2058,26 +2116,26 @@ func (s *UnitTestSuite) TestDescribeTaskListReply() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*messages.DescribeTaskListReply); ok {
+	if v, ok := message.(*messages.DescribeTaskQueueReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(int64(1), v.GetResult().Pollers[0].LastAccessTime)
-		s.Equal(int64(2), v.GetResult().Pollers[1].LastAccessTime)
+		s.Equal(&lat1, v.GetResult().Pollers[0].LastAccessTime)
+		s.Equal(&lat2, v.GetResult().Pollers[1].LastAccessTime)
 		s.Equal("i1", v.GetResult().Pollers[0].Identity)
 		s.Equal("i2", v.GetResult().Pollers[1].Identity)
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*messages.DescribeTaskListReply); ok {
+	if v, ok := message.(*messages.DescribeTaskQueueReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(int64(1), v.GetResult().Pollers[0].LastAccessTime)
-		s.Equal(int64(2), v.GetResult().Pollers[1].LastAccessTime)
+		s.Equal(&lat1, v.GetResult().Pollers[0].LastAccessTime)
+		s.Equal(&lat2, v.GetResult().Pollers[1].LastAccessTime)
 		s.Equal("i1", v.GetResult().Pollers[0].Identity)
 		s.Equal("i2", v.GetResult().Pollers[1].Identity)
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -2148,8 +2206,8 @@ func (s *UnitTestSuite) TestWorkflowSetCacheSizeReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -2162,7 +2220,7 @@ func (s *UnitTestSuite) TestWorkflowSetCacheSizeReply() {
 
 	if v, ok := message.(*messages.WorkflowSetCacheSizeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -2171,7 +2229,7 @@ func (s *UnitTestSuite) TestWorkflowSetCacheSizeReply() {
 
 	if v, ok := message.(*messages.WorkflowSetCacheSizeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -2250,8 +2308,8 @@ func (s *UnitTestSuite) TestWorkflowRegisterReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -2264,7 +2322,7 @@ func (s *UnitTestSuite) TestWorkflowRegisterReply() {
 
 	if v, ok := message.(*messages.WorkflowRegisterReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -2273,7 +2331,7 @@ func (s *UnitTestSuite) TestWorkflowRegisterReply() {
 
 	if v, ok := message.(*messages.WorkflowRegisterReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -2313,7 +2371,7 @@ func (s *UnitTestSuite) TestWorkflowExecuteRequest() {
 		v.SetArgs(args)
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetArgs())
 
-		opts := client.StartWorkflowOptions{TaskList: "my-list", WorkflowExecutionTimeout: time.Second * 100}
+		opts := client.StartWorkflowOptions{TaskQueue: "my-list", WorkflowExecutionTimeout: time.Second * 100}
 		v.SetOptions(&opts)
 		s.Equal(time.Second*100, v.GetOptions().WorkflowExecutionTimeout)
 	}
@@ -2373,8 +2431,8 @@ func (s *UnitTestSuite) TestWorkflowExecuteReply() {
 		s.Equal("foo", v.GetExecution().ID)
 		s.Equal("bar", v.GetExecution().RunID)
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -2389,7 +2447,7 @@ func (s *UnitTestSuite) TestWorkflowExecuteReply() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("foo", v.GetExecution().ID)
 		s.Equal("bar", v.GetExecution().RunID)
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -2400,7 +2458,7 @@ func (s *UnitTestSuite) TestWorkflowExecuteReply() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("foo", v.GetExecution().ID)
 		s.Equal("bar", v.GetExecution().RunID)
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -2424,7 +2482,7 @@ func (s *UnitTestSuite) TestWorkflowInvokeRequest() {
 		s.Nil(v.GetWorkflowID())
 		s.Nil(v.GetRunID())
 		s.Nil(v.GetWorkflowType())
-		s.Nil(v.GetTaskList())
+		s.Nil(v.GetTaskQueue())
 		s.Equal(time.Duration(0), v.GetExecutionStartToCloseTimeout())
 		s.Equal(proxytemporal.ReplayStatusUnspecified, v.GetReplayStatus())
 
@@ -2452,9 +2510,9 @@ func (s *UnitTestSuite) TestWorkflowInvokeRequest() {
 		v.SetWorkflowID(&workflowID)
 		s.Equal("my-workflowid", *v.GetWorkflowID())
 
-		taskList := "my-tasklist"
-		v.SetTaskList(&taskList)
-		s.Equal("my-tasklist", *v.GetTaskList())
+		taskQueue := "my-taskqueue"
+		v.SetTaskQueue(&taskQueue)
+		s.Equal("my-taskqueue", *v.GetTaskQueue())
 
 		runID := "my-runid"
 		v.SetRunID(&runID)
@@ -2486,7 +2544,7 @@ func (s *UnitTestSuite) TestWorkflowInvokeRequest() {
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetArgs())
 		s.Equal("my-namespace", *v.GetNamespace())
 		s.Equal("my-workflowid", *v.GetWorkflowID())
-		s.Equal("my-tasklist", *v.GetTaskList())
+		s.Equal("my-taskqueue", *v.GetTaskQueue())
 		s.Equal("my-runid", *v.GetRunID())
 		s.Equal("my-workflowtype", *v.GetWorkflowType())
 		s.Equal(time.Hour*24, v.GetExecutionStartToCloseTimeout())
@@ -2504,7 +2562,7 @@ func (s *UnitTestSuite) TestWorkflowInvokeRequest() {
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetArgs())
 		s.Equal("my-namespace", *v.GetNamespace())
 		s.Equal("my-workflowid", *v.GetWorkflowID())
-		s.Equal("my-tasklist", *v.GetTaskList())
+		s.Equal("my-taskqueue", *v.GetTaskQueue())
 		s.Equal("my-runid", *v.GetRunID())
 		s.Equal("my-workflowtype", *v.GetWorkflowType())
 		s.Equal(time.Hour*24, v.GetExecutionStartToCloseTimeout())
@@ -2532,7 +2590,7 @@ func (s *UnitTestSuite) TestWorkflowInvokeReply() {
 		s.Nil(v.GetResult())
 		s.Nil(v.GetContinueAsNewArgs())
 		s.Nil(v.GetContinueAsNewNamespace())
-		s.Nil(v.GetContinueAsNewTaskList())
+		s.Nil(v.GetContinueAsNewTaskQueue())
 		s.Nil(v.GetContinueAsNewWorkflow())
 		s.Equal(int64(0), v.GetContinueAsNewExecutionStartToCloseTimeout())
 		s.Equal(int64(0), v.GetContinueAsNewScheduleToCloseTimeout())
@@ -2551,8 +2609,8 @@ func (s *UnitTestSuite) TestWorkflowInvokeReply() {
 		v.SetResult(result)
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 
 		v.SetForceReplay(true)
 		s.True(v.GetForceReplay())
@@ -2572,9 +2630,9 @@ func (s *UnitTestSuite) TestWorkflowInvokeReply() {
 		v.SetContinueAsNewWorkflow(&workflow)
 		s.Equal("test-workflow", *v.GetContinueAsNewWorkflow())
 
-		taskList := "test-task"
-		v.SetContinueAsNewTaskList(&taskList)
-		s.Equal("test-task", *v.GetContinueAsNewTaskList())
+		taskQueue := "test-task"
+		v.SetContinueAsNewTaskQueue(&taskQueue)
+		s.Equal("test-task", *v.GetContinueAsNewTaskQueue())
 
 		v.SetContinueAsNewExecutionStartToCloseTimeout(int64(1))
 		s.Equal(int64(1), v.GetContinueAsNewExecutionStartToCloseTimeout())
@@ -2601,13 +2659,13 @@ func (s *UnitTestSuite) TestWorkflowInvokeReply() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(int64(666), v.GetContextID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 		s.True(v.GetForceReplay())
 		s.True(v.GetContinueAsNew())
 		s.Equal([]byte{5, 6, 7, 8}, v.GetContinueAsNewArgs())
 		s.Equal("test-namespace", *v.GetContinueAsNewNamespace())
 		s.Equal("test-workflow", *v.GetContinueAsNewWorkflow())
-		s.Equal("test-task", *v.GetContinueAsNewTaskList())
+		s.Equal("test-task", *v.GetContinueAsNewTaskQueue())
 		s.Equal(int64(1), v.GetContinueAsNewExecutionStartToCloseTimeout())
 		s.Equal(int64(2), v.GetContinueAsNewScheduleToCloseTimeout())
 		s.Equal(int64(3), v.GetContinueAsNewScheduleToStartTimeout())
@@ -2622,13 +2680,13 @@ func (s *UnitTestSuite) TestWorkflowInvokeReply() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(int64(666), v.GetContextID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 		s.True(v.GetForceReplay())
 		s.True(v.GetContinueAsNew())
 		s.Equal([]byte{5, 6, 7, 8}, v.GetContinueAsNewArgs())
 		s.Equal("test-namespace", *v.GetContinueAsNewNamespace())
 		s.Equal("test-workflow", *v.GetContinueAsNewWorkflow())
-		s.Equal("test-task", *v.GetContinueAsNewTaskList())
+		s.Equal("test-task", *v.GetContinueAsNewTaskQueue())
 		s.Equal(int64(1), v.GetContinueAsNewExecutionStartToCloseTimeout())
 		s.Equal(int64(2), v.GetContinueAsNewScheduleToCloseTimeout())
 		s.Equal(int64(3), v.GetContinueAsNewScheduleToStartTimeout())
@@ -2719,8 +2777,8 @@ func (s *UnitTestSuite) TestWorkflowCancelReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -2733,7 +2791,7 @@ func (s *UnitTestSuite) TestWorkflowCancelReply() {
 
 	if v, ok := message.(*messages.WorkflowCancelReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -2742,7 +2800,7 @@ func (s *UnitTestSuite) TestWorkflowCancelReply() {
 
 	if v, ok := message.(*messages.WorkflowCancelReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -2843,8 +2901,8 @@ func (s *UnitTestSuite) TestWorkflowTerminateReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -2857,7 +2915,7 @@ func (s *UnitTestSuite) TestWorkflowTerminateReply() {
 
 	if v, ok := message.(*messages.WorkflowTerminateReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -2866,7 +2924,7 @@ func (s *UnitTestSuite) TestWorkflowTerminateReply() {
 
 	if v, ok := message.(*messages.WorkflowTerminateReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -2967,8 +3025,8 @@ func (s *UnitTestSuite) TestWorkflowSignalReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -2981,7 +3039,7 @@ func (s *UnitTestSuite) TestWorkflowSignalReply() {
 
 	if v, ok := message.(*messages.WorkflowSignalReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -2990,7 +3048,7 @@ func (s *UnitTestSuite) TestWorkflowSignalReply() {
 
 	if v, ok := message.(*messages.WorkflowSignalReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -3037,10 +3095,10 @@ func (s *UnitTestSuite) TestWorkflowSignalWithStartRequest() {
 		v.SetSignalArgs(signalArgs)
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetSignalArgs())
 
-		opts := client.StartWorkflowOptions{TaskList: "my-tasklist", WorkflowIDReusePolicy: client.WorkflowIDReusePolicyAllowDuplicate}
+		opts := client.StartWorkflowOptions{TaskQueue: "my-taskqueue", WorkflowIDReusePolicy: enums.WORKFLOW_ID_REUSE_POLICY_ALLOW_DUPLICATE}
 		v.SetOptions(&opts)
-		s.Equal("my-tasklist", v.GetOptions().TaskList)
-		s.Equal(client.WorkflowIDReusePolicyAllowDuplicate, v.GetOptions().WorkflowIDReusePolicy)
+		s.Equal("my-taskqueue", v.GetOptions().TaskQueue)
+		s.Equal(enums.WORKFLOW_ID_REUSE_POLICY_ALLOW_DUPLICATE, v.GetOptions().WorkflowIDReusePolicy)
 
 		workflowArgs := []byte{5, 6, 7, 8, 9}
 		v.SetWorkflowArgs(workflowArgs)
@@ -3065,8 +3123,8 @@ func (s *UnitTestSuite) TestWorkflowSignalWithStartRequest() {
 		s.Equal("777", *v.GetWorkflowID())
 		s.Equal("my-signal", *v.GetSignalName())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetSignalArgs())
-		s.Equal("my-tasklist", v.GetOptions().TaskList)
-		s.Equal(client.WorkflowIDReusePolicyAllowDuplicate, v.GetOptions().WorkflowIDReusePolicy)
+		s.Equal("my-taskqueue", v.GetOptions().TaskQueue)
+		s.Equal(enums.WORKFLOW_ID_REUSE_POLICY_ALLOW_DUPLICATE, v.GetOptions().WorkflowIDReusePolicy)
 		s.Equal([]byte{5, 6, 7, 8, 9}, v.GetWorkflowArgs())
 		s.Equal("my-namespace", *v.GetNamespace())
 	}
@@ -3081,8 +3139,8 @@ func (s *UnitTestSuite) TestWorkflowSignalWithStartRequest() {
 		s.Equal("777", *v.GetWorkflowID())
 		s.Equal("my-signal", *v.GetSignalName())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetSignalArgs())
-		s.Equal("my-tasklist", v.GetOptions().TaskList)
-		s.Equal(client.WorkflowIDReusePolicyAllowDuplicate, v.GetOptions().WorkflowIDReusePolicy)
+		s.Equal("my-taskqueue", v.GetOptions().TaskQueue)
+		s.Equal(enums.WORKFLOW_ID_REUSE_POLICY_ALLOW_DUPLICATE, v.GetOptions().WorkflowIDReusePolicy)
 		s.Equal([]byte{5, 6, 7, 8, 9}, v.GetWorkflowArgs())
 		s.Equal("my-namespace", *v.GetNamespace())
 	}
@@ -3114,8 +3172,8 @@ func (s *UnitTestSuite) TestWorkflowSignalWithStartReply() {
 		s.Equal("666", v.GetExecution().ID)
 		s.Equal("777", v.GetExecution().RunID)
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -3130,7 +3188,7 @@ func (s *UnitTestSuite) TestWorkflowSignalWithStartReply() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("666", v.GetExecution().ID)
 		s.Equal("777", v.GetExecution().RunID)
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -3141,7 +3199,7 @@ func (s *UnitTestSuite) TestWorkflowSignalWithStartReply() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("666", v.GetExecution().ID)
 		s.Equal("777", v.GetExecution().RunID)
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -3165,8 +3223,8 @@ func (s *UnitTestSuite) TestWorkflowCancelChildReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -3179,7 +3237,7 @@ func (s *UnitTestSuite) TestWorkflowCancelChildReply() {
 
 	if v, ok := message.(*messages.WorkflowCancelChildReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -3188,7 +3246,7 @@ func (s *UnitTestSuite) TestWorkflowCancelChildReply() {
 
 	if v, ok := message.(*messages.WorkflowCancelChildReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -3342,8 +3400,8 @@ func (s *UnitTestSuite) TestWorkflowQueryReply() {
 		v.SetResult(result)
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -3357,7 +3415,7 @@ func (s *UnitTestSuite) TestWorkflowQueryReply() {
 	if v, ok := message.(*messages.WorkflowQueryReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -3367,7 +3425,7 @@ func (s *UnitTestSuite) TestWorkflowQueryReply() {
 	if v, ok := message.(*messages.WorkflowQueryReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -3461,8 +3519,8 @@ func (s *UnitTestSuite) TestWorkflowMutableReply() {
 		v.SetResult(result)
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -3477,7 +3535,7 @@ func (s *UnitTestSuite) TestWorkflowMutableReply() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 		s.Equal(int64(888), v.GetContextID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -3488,7 +3546,7 @@ func (s *UnitTestSuite) TestWorkflowMutableReply() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(int64(888), v.GetContextID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -3579,29 +3637,31 @@ func (s *UnitTestSuite) TestWorkflowDescribeExecutionReply() {
 		s.Equal(int64(555), v.GetRequestID())
 
 		tlName := "my-list"
-		tl := tasklist.TaskList{
+		tl := taskqueue.TaskQueue{
 			Name: tlName,
-			Kind: tasklist.TaskListKind_Sticky,
+			Kind: enums.TASK_QUEUE_KIND_STICKY,
 		}
 
-		esct := int32(44)
-		tsct := int32(55)
-		wec := execution.WorkflowExecutionConfiguration{
-			TaskList:                        &tl,
-			WorkflowExecutionTimeoutSeconds: esct,
-			WorkflowTaskTimeoutSeconds:      tsct,
+		esct := time.Second * 5
+		tsct := time.Second * 5
+		wrt := time.Second * 5
+		wec := apiworkflow.WorkflowExecutionConfig{
+			TaskQueue:                  &tl,
+			WorkflowExecutionTimeout:   &esct,
+			DefaultWorkflowTaskTimeout: &tsct,
+			WorkflowRunTimeout:         &wrt,
 		}
 
 		wid := "my-workflow"
 		rid := "my-run"
-		we := execution.WorkflowExecution{
+		we := common.WorkflowExecution{
 			WorkflowId: wid,
 			RunId:      rid,
 		}
 
 		pwid := "parent-workflow"
 		prid := "parent-run"
-		pwe := execution.WorkflowExecution{
+		pwe := common.WorkflowExecution{
 			WorkflowId: pwid,
 			RunId:      prid,
 		}
@@ -3610,42 +3670,42 @@ func (s *UnitTestSuite) TestWorkflowDescribeExecutionReply() {
 		wt := "my-name"
 		bc := "my-checksum"
 		fdci := int64(44)
-		ctn := int64(55)
-		etn := int64(66)
+		ctn := time.Date(2021, time.Month(2), 21, 1, 10, 30, 0, time.UTC)
+		etn := time.Date(2021, time.Month(2), 21, 1, 10, 30, 0, time.UTC)
 		rese := true
-		rpi := execution.ResetPointInfo{
-			BinaryChecksum:           bc,
-			RunId:                    rid,
-			FirstDecisionCompletedId: fdci,
-			CreatedTimeNano:          ctn,
-			ExpiringTimeNano:         etn,
-			Resettable:               rese,
+		rpi := apiworkflow.ResetPointInfo{
+			BinaryChecksum:               bc,
+			RunId:                        rid,
+			FirstWorkflowTaskCompletedId: fdci,
+			CreateTime:                   &ctn,
+			ExpireTime:                   &etn,
+			Resettable:                   rese,
 		}
 
-		arp := execution.ResetPoints{
-			Points: []*execution.ResetPointInfo{&rpi},
+		arp := apiworkflow.ResetPoints{
+			Points: []*apiworkflow.ResetPointInfo{&rpi},
 		}
 
-		st := int64(44)
-		ct := int64(55)
+		st := time.Date(2021, time.Month(2), 21, 1, 10, 30, 0, time.UTC)
+		ct := time.Date(2021, time.Month(2), 21, 1, 10, 30, 0, time.UTC)
 		hl := int64(66)
 		pd := "parent-namespace"
-		et := int64(77)
+		et := time.Date(2021, time.Month(2), 21, 1, 10, 30, 0, time.UTC)
 		p1 := common.Payload{Data: []byte{1, 2, 3, 4, 5}}
 		p2 := common.Payload{Data: []byte{6, 7, 8, 9, 10}}
 		p3 := common.Payload{Data: []byte{11, 12, 13, 14, 15}}
-		ps := common.Payloads{Payloads: []*common.Payload{&p1, &p2, &p3}}
-		wei := execution.WorkflowExecutionInfo{
+		ps := common.Payloads{[]*common.Payload{&p1, &p2, &p3}}
+		wei := apiworkflow.WorkflowExecutionInfo{
 			Execution:         &we,
 			Type:              &common.WorkflowType{Name: wt},
-			StartTime:         &types.Int64Value{Value: st},
-			CloseTime:         &types.Int64Value{Value: ct},
+			StartTime:         &st,
+			CloseTime:         &ct,
 			HistoryLength:     hl,
 			ParentNamespaceId: pd,
 			ParentExecution:   &pwe,
-			ExecutionTime:     et,
-			Memo:              &common.Memo{Fields: map[string]*common.Payloads{"first": &ps}},
-			SearchAttributes:  &common.SearchAttributes{IndexedFields: map[string]*common.Payloads{"second": &ps}},
+			ExecutionTime:     &et,
+			Memo:              &common.Memo{Fields: map[string]*common.Payload{"first": ps.Payloads[0]}},
+			SearchAttributes:  &common.SearchAttributes{IndexedFields: map[string]*common.Payload{"second": ps.Payloads[1]}},
 			AutoResetPoints:   &arp,
 		}
 
@@ -3654,48 +3714,48 @@ func (s *UnitTestSuite) TestWorkflowDescribeExecutionReply() {
 		}
 
 		aid := activityName
-		lht := int64(44)
-		lst := int64(55)
-		atp := int32(66)
+		lht := time.Date(2021, time.Month(2), 21, 1, 10, 30, 0, time.UTC)
+		lst := time.Date(2021, time.Month(2), 21, 1, 10, 30, 0, time.UTC)
+		atp := int32(55)
 		ma := int32(77)
 		lfr := "my-reason"
 		lwi := "my-identity"
-		pai := execution.PendingActivityInfo{
-			ActivityId:             aid,
-			ActivityType:           &at,
-			State:                  execution.PendingActivityState_Started,
-			HeartbeatDetails:       &ps,
-			LastHeartbeatTimestamp: lht,
-			LastStartedTimestamp:   lst,
-			Attempt:                atp,
-			MaximumAttempts:        ma,
-			ScheduledTimestamp:     st,
-			ExpirationTimestamp:    et,
-			LastFailureReason:      lfr,
-			LastWorkerIdentity:     lwi,
+		pai := apiworkflow.PendingActivityInfo{
+			ActivityId:         aid,
+			ActivityType:       &at,
+			State:              enums.PENDING_ACTIVITY_STATE_STARTED,
+			HeartbeatDetails:   &ps,
+			LastHeartbeatTime:  &lht,
+			LastStartedTime:    &lst,
+			Attempt:            atp,
+			MaximumAttempts:    ma,
+			ScheduledTime:      &st,
+			ExpirationTime:     &et,
+			LastFailure:        &failure.Failure{Message: lfr},
+			LastWorkerIdentity: lwi,
 		}
 
 		wn := "my-workflow"
 		iid := int64(44)
-		pcei := execution.PendingChildExecutionInfo{
-			WorkflowId:      wid,
-			RunId:           rid,
-			WorkflowTypName: wn,
-			InitiatedId:     iid,
+		pcei := apiworkflow.PendingChildExecutionInfo{
+			WorkflowId:       wid,
+			RunId:            rid,
+			WorkflowTypeName: wn,
+			InitiatedId:      iid,
 		}
 
 		details = workflowservice.DescribeWorkflowExecutionResponse{
-			ExecutionConfiguration: &wec,
-			WorkflowExecutionInfo:  &wei,
-			PendingActivities:      []*execution.PendingActivityInfo{&pai},
-			PendingChildren:        []*execution.PendingChildExecutionInfo{&pcei},
+			ExecutionConfig:       &wec,
+			WorkflowExecutionInfo: &wei,
+			PendingActivities:     []*apiworkflow.PendingActivityInfo{&pai},
+			PendingChildren:       []*apiworkflow.PendingChildExecutionInfo{&pcei},
 		}
 
 		v.SetDetails(&details)
 		s.Equal(details, *v.GetDetails())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -3709,7 +3769,7 @@ func (s *UnitTestSuite) TestWorkflowDescribeExecutionReply() {
 	if v, ok := message.(*messages.WorkflowDescribeExecutionReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(details, *v.GetDetails())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -3719,7 +3779,7 @@ func (s *UnitTestSuite) TestWorkflowDescribeExecutionReply() {
 	if v, ok := message.(*messages.WorkflowDescribeExecutionReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(details, *v.GetDetails())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -3743,8 +3803,8 @@ func (s *UnitTestSuite) TestWorkflowDisconnectContextReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -3757,7 +3817,7 @@ func (s *UnitTestSuite) TestWorkflowDisconnectContextReply() {
 
 	if v, ok := message.(*messages.WorkflowDisconnectContextReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -3766,7 +3826,7 @@ func (s *UnitTestSuite) TestWorkflowDisconnectContextReply() {
 
 	if v, ok := message.(*messages.WorkflowDisconnectContextReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -3845,8 +3905,8 @@ func (s *UnitTestSuite) TestWorkflowExecuteChildReply() {
 		s.Equal("my-workflow", v.GetExecution().ID)
 		s.Equal("my-run", v.GetExecution().RunID)
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -3862,7 +3922,7 @@ func (s *UnitTestSuite) TestWorkflowExecuteChildReply() {
 		s.Equal(int64(666), v.GetChildID())
 		s.Equal("my-workflow", v.GetExecution().ID)
 		s.Equal("my-run", v.GetExecution().RunID)
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -3874,7 +3934,7 @@ func (s *UnitTestSuite) TestWorkflowExecuteChildReply() {
 		s.Equal(int64(666), v.GetChildID())
 		s.Equal("my-workflow", v.GetExecution().ID)
 		s.Equal("my-run", v.GetExecution().RunID)
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -3910,14 +3970,20 @@ func (s *UnitTestSuite) TestWorkflowExecuteChildRequest() {
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetArgs())
 
 		opts := workflow.ChildWorkflowOptions{
-			TaskList:                 "my-tasklist",
+			TaskQueue:                "my-taskqueue",
 			Namespace:                "my-namespace",
-			ParentClosePolicy:        client.ParentClosePolicyAbandon,
+			ParentClosePolicy:        enums.PARENT_CLOSE_POLICY_ABANDON,
 			WorkflowID:               "my-workflow",
 			WorkflowExecutionTimeout: time.Second * 20,
 		}
 		v.SetOptions(&opts)
-		s.Equal(workflow.ChildWorkflowOptions{TaskList: "my-tasklist", Namespace: "my-namespace", ParentClosePolicy: client.ParentClosePolicyAbandon, WorkflowID: "my-workflow", WorkflowExecutionTimeout: time.Second * 20}, *v.GetOptions())
+		s.Equal(workflow.ChildWorkflowOptions{
+			TaskQueue:                "my-taskqueue",
+			Namespace:                "my-namespace",
+			ParentClosePolicy:        enums.PARENT_CLOSE_POLICY_ABANDON,
+			WorkflowID:               "my-workflow",
+			WorkflowExecutionTimeout: time.Second * 20,
+		}, *v.GetOptions())
 
 		v.SetScheduleToStartTimeout(time.Second * 30)
 		s.Equal(time.Second*30, v.GetScheduleToStartTimeout())
@@ -3934,7 +4000,7 @@ func (s *UnitTestSuite) TestWorkflowExecuteChildRequest() {
 	if v, ok := message.(*messages.WorkflowExecuteChildRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("my-workflow", *v.GetWorkflow())
-		s.Equal(workflow.ChildWorkflowOptions{TaskList: "my-tasklist", Namespace: "my-namespace", ParentClosePolicy: client.ParentClosePolicyAbandon, WorkflowID: "my-workflow", WorkflowExecutionTimeout: time.Second * 20}, *v.GetOptions())
+		s.Equal(workflow.ChildWorkflowOptions{TaskQueue: "my-taskqueue", Namespace: "my-namespace", ParentClosePolicy: enums.PARENT_CLOSE_POLICY_ABANDON, WorkflowID: "my-workflow", WorkflowExecutionTimeout: time.Second * 20}, *v.GetOptions())
 		s.Equal(time.Second*30, v.GetScheduleToStartTimeout())
 	}
 
@@ -3945,7 +4011,7 @@ func (s *UnitTestSuite) TestWorkflowExecuteChildRequest() {
 	if v, ok := message.(*messages.WorkflowExecuteChildRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("my-workflow", *v.GetWorkflow())
-		s.Equal(workflow.ChildWorkflowOptions{TaskList: "my-tasklist", Namespace: "my-namespace", ParentClosePolicy: client.ParentClosePolicyAbandon, WorkflowID: "my-workflow", WorkflowExecutionTimeout: time.Second * 20}, *v.GetOptions())
+		s.Equal(workflow.ChildWorkflowOptions{TaskQueue: "my-taskqueue", Namespace: "my-namespace", ParentClosePolicy: enums.PARENT_CLOSE_POLICY_ABANDON, WorkflowID: "my-workflow", WorkflowExecutionTimeout: time.Second * 20}, *v.GetOptions())
 		s.Equal(time.Second*30, v.GetScheduleToStartTimeout())
 	}
 }
@@ -3974,8 +4040,8 @@ func (s *UnitTestSuite) TestWorkflowGetLastResultReply() {
 		v.SetResult([]byte{0, 1, 2, 3, 4})
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -3989,7 +4055,7 @@ func (s *UnitTestSuite) TestWorkflowGetLastResultReply() {
 	if v, ok := message.(*messages.WorkflowGetLastResultReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -3999,7 +4065,7 @@ func (s *UnitTestSuite) TestWorkflowGetLastResultReply() {
 	if v, ok := message.(*messages.WorkflowGetLastResultReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -4069,8 +4135,8 @@ func (s *UnitTestSuite) TestWorkflowGetResultReply() {
 		v.SetResult([]byte{0, 1, 2, 3, 4})
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -4084,7 +4150,7 @@ func (s *UnitTestSuite) TestWorkflowGetResultReply() {
 	if v, ok := message.(*messages.WorkflowGetResultReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -4094,7 +4160,7 @@ func (s *UnitTestSuite) TestWorkflowGetResultReply() {
 	if v, ok := message.(*messages.WorkflowGetResultReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -4185,8 +4251,8 @@ func (s *UnitTestSuite) TestWorkflowGetTimeReply() {
 		v.SetTime(time.Date(2019, time.May, 27, 0, 0, 0, 0, time.UTC))
 		s.Equal(time.Date(2019, time.May, 27, 0, 0, 0, 0, time.UTC), v.GetTime())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -4200,7 +4266,7 @@ func (s *UnitTestSuite) TestWorkflowGetTimeReply() {
 	if v, ok := message.(*messages.WorkflowGetTimeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(time.Date(2019, time.May, 27, 0, 0, 0, 0, time.UTC), v.GetTime())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -4210,7 +4276,7 @@ func (s *UnitTestSuite) TestWorkflowGetTimeReply() {
 	if v, ok := message.(*messages.WorkflowGetTimeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(time.Date(2019, time.May, 27, 0, 0, 0, 0, time.UTC), v.GetTime())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -4280,8 +4346,8 @@ func (s *UnitTestSuite) TestWorkflowHasLastResultReply() {
 		v.SetHasResult(true)
 		s.True(v.GetHasResult())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -4295,7 +4361,7 @@ func (s *UnitTestSuite) TestWorkflowHasLastResultReply() {
 	if v, ok := message.(*messages.WorkflowHasLastResultReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.True(v.GetHasResult())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -4305,7 +4371,7 @@ func (s *UnitTestSuite) TestWorkflowHasLastResultReply() {
 	if v, ok := message.(*messages.WorkflowHasLastResultReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.True(v.GetHasResult())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -4375,8 +4441,8 @@ func (s *UnitTestSuite) TestWorkflowQueryInvokeReply() {
 		v.SetResult([]byte{0, 1, 2, 3, 4})
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -4390,7 +4456,7 @@ func (s *UnitTestSuite) TestWorkflowQueryInvokeReply() {
 	if v, ok := message.(*messages.WorkflowQueryInvokeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -4400,7 +4466,7 @@ func (s *UnitTestSuite) TestWorkflowQueryInvokeReply() {
 	if v, ok := message.(*messages.WorkflowQueryInvokeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -4491,8 +4557,8 @@ func (s *UnitTestSuite) TestWorkflowSetQueryHandlerReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -4505,7 +4571,7 @@ func (s *UnitTestSuite) TestWorkflowSetQueryHandlerReply() {
 
 	if v, ok := message.(*messages.WorkflowSetQueryHandlerReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -4514,7 +4580,7 @@ func (s *UnitTestSuite) TestWorkflowSetQueryHandlerReply() {
 
 	if v, ok := message.(*messages.WorkflowSetQueryHandlerReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -4597,8 +4663,8 @@ func (s *UnitTestSuite) TestWorkflowSignalChildReply() {
 		v.SetResult([]byte{0, 1, 2, 3, 4})
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -4612,7 +4678,7 @@ func (s *UnitTestSuite) TestWorkflowSignalChildReply() {
 	if v, ok := message.(*messages.WorkflowSignalChildReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -4622,7 +4688,7 @@ func (s *UnitTestSuite) TestWorkflowSignalChildReply() {
 	if v, ok := message.(*messages.WorkflowSignalChildReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -4713,8 +4779,8 @@ func (s *UnitTestSuite) TestWorkflowSignalInvokeReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -4727,7 +4793,7 @@ func (s *UnitTestSuite) TestWorkflowSignalInvokeReply() {
 
 	if v, ok := message.(*messages.WorkflowSignalInvokeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -4736,7 +4802,7 @@ func (s *UnitTestSuite) TestWorkflowSignalInvokeReply() {
 
 	if v, ok := message.(*messages.WorkflowSignalInvokeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -4827,8 +4893,8 @@ func (s *UnitTestSuite) TestWorkflowSignalSubscribeReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -4841,7 +4907,7 @@ func (s *UnitTestSuite) TestWorkflowSignalSubscribeReply() {
 
 	if v, ok := message.(*messages.WorkflowSignalSubscribeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -4850,7 +4916,7 @@ func (s *UnitTestSuite) TestWorkflowSignalSubscribeReply() {
 
 	if v, ok := message.(*messages.WorkflowSignalSubscribeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -4929,8 +4995,8 @@ func (s *UnitTestSuite) TestWorkflowSleepReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -4943,7 +5009,7 @@ func (s *UnitTestSuite) TestWorkflowSleepReply() {
 
 	if v, ok := message.(*messages.WorkflowSleepReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -4952,7 +5018,7 @@ func (s *UnitTestSuite) TestWorkflowSleepReply() {
 
 	if v, ok := message.(*messages.WorkflowSleepReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -5030,8 +5096,8 @@ func (s *UnitTestSuite) TestWorkflowFutureReadyReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -5044,7 +5110,7 @@ func (s *UnitTestSuite) TestWorkflowFutureReadyReply() {
 
 	if v, ok := message.(*messages.WorkflowFutureReadyReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -5053,7 +5119,7 @@ func (s *UnitTestSuite) TestWorkflowFutureReadyReply() {
 
 	if v, ok := message.(*messages.WorkflowFutureReadyReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -5135,8 +5201,8 @@ func (s *UnitTestSuite) TestWorkflowWaitForChildReply() {
 		v.SetResult([]byte{0, 1, 2, 3, 4})
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -5150,7 +5216,7 @@ func (s *UnitTestSuite) TestWorkflowWaitForChildReply() {
 	if v, ok := message.(*messages.WorkflowWaitForChildReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -5160,7 +5226,7 @@ func (s *UnitTestSuite) TestWorkflowWaitForChildReply() {
 	if v, ok := message.(*messages.WorkflowWaitForChildReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -5242,8 +5308,8 @@ func (s *UnitTestSuite) TestWorkflowGetVersionReply() {
 		v.SetVersion(int32(20))
 		s.Equal(int32(20), v.GetVersion())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -5257,7 +5323,7 @@ func (s *UnitTestSuite) TestWorkflowGetVersionReply() {
 	if v, ok := message.(*messages.WorkflowGetVersionReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(int32(20), v.GetVersion())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -5267,7 +5333,7 @@ func (s *UnitTestSuite) TestWorkflowGetVersionReply() {
 	if v, ok := message.(*messages.WorkflowGetVersionReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(int32(20), v.GetVersion())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -5424,8 +5490,8 @@ func (s *UnitTestSuite) TestWorkflowQueueNewReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -5438,7 +5504,7 @@ func (s *UnitTestSuite) TestWorkflowQueueNewReply() {
 
 	if v, ok := message.(*messages.WorkflowQueueNewReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -5447,7 +5513,7 @@ func (s *UnitTestSuite) TestWorkflowQueueNewReply() {
 
 	if v, ok := message.(*messages.WorkflowQueueNewReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -5547,8 +5613,8 @@ func (s *UnitTestSuite) TestWorkflowQueueWriteReply() {
 		v.SetIsFull(true)
 		s.True(v.GetIsFull())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -5562,7 +5628,7 @@ func (s *UnitTestSuite) TestWorkflowQueueWriteReply() {
 	if v, ok := message.(*messages.WorkflowQueueWriteReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.True(v.GetIsFull())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -5572,7 +5638,7 @@ func (s *UnitTestSuite) TestWorkflowQueueWriteReply() {
 	if v, ok := message.(*messages.WorkflowQueueWriteReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.True(v.GetIsFull())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -5670,8 +5736,8 @@ func (s *UnitTestSuite) TestWorkflowQueueReadReply() {
 		v.SetData([]byte{0, 1, 2, 3, 4})
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetData())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -5686,7 +5752,7 @@ func (s *UnitTestSuite) TestWorkflowQueueReadReply() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.True(v.GetIsClosed())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetData())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -5697,7 +5763,7 @@ func (s *UnitTestSuite) TestWorkflowQueueReadReply() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.True(v.GetIsClosed())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetData())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -5781,8 +5847,8 @@ func (s *UnitTestSuite) TestWorkflowQueueCloseReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -5795,7 +5861,7 @@ func (s *UnitTestSuite) TestWorkflowQueueCloseReply() {
 
 	if v, ok := message.(*messages.WorkflowQueueCloseReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -5804,7 +5870,7 @@ func (s *UnitTestSuite) TestWorkflowQueueCloseReply() {
 
 	if v, ok := message.(*messages.WorkflowQueueCloseReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -5841,8 +5907,8 @@ func (s *UnitTestSuite) TestActivityCompleteRequest() {
 		v.SetResult([]byte{5, 6, 7, 8, 9})
 		s.Equal([]byte{5, 6, 7, 8, 9}, v.GetResult())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.GenericError))
-		s.True(internal.IsGenericError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 
 		namespace := "my-namespace"
 		workflowID := "my-workflow"
@@ -5872,7 +5938,7 @@ func (s *UnitTestSuite) TestActivityCompleteRequest() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetTaskToken())
 		s.Equal([]byte{5, 6, 7, 8, 9}, v.GetResult())
-		s.True(internal.IsGenericError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 		s.Equal("my-namespace", *v.GetNamespace())
 		s.Equal("my-workflow", *v.GetWorkflowID())
 		s.Equal("my-workflowrun", *v.GetRunID())
@@ -5887,7 +5953,7 @@ func (s *UnitTestSuite) TestActivityCompleteRequest() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetTaskToken())
 		s.Equal([]byte{5, 6, 7, 8, 9}, v.GetResult())
-		s.True(internal.IsGenericError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 		s.Equal("my-namespace", *v.GetNamespace())
 		s.Equal("my-workflow", *v.GetWorkflowID())
 		s.Equal("my-workflowrun", *v.GetRunID())
@@ -5915,8 +5981,8 @@ func (s *UnitTestSuite) TestActivityCompleteReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -5929,7 +5995,7 @@ func (s *UnitTestSuite) TestActivityCompleteReply() {
 
 	if v, ok := message.(*messages.ActivityCompleteReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -5938,7 +6004,7 @@ func (s *UnitTestSuite) TestActivityCompleteReply() {
 
 	if v, ok := message.(*messages.ActivityCompleteReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -5966,8 +6032,8 @@ func (s *UnitTestSuite) TestActivityExecuteLocalReply() {
 		v.SetResult([]byte{0, 1, 2, 3, 4})
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -5981,7 +6047,7 @@ func (s *UnitTestSuite) TestActivityExecuteLocalReply() {
 	if v, ok := message.(*messages.ActivityExecuteLocalReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -5991,7 +6057,7 @@ func (s *UnitTestSuite) TestActivityExecuteLocalReply() {
 	if v, ok := message.(*messages.ActivityExecuteLocalReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -6076,8 +6142,8 @@ func (s *UnitTestSuite) TestActivityExecuteReply() {
 		v.SetResult([]byte{0, 1, 2, 3, 4})
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -6091,7 +6157,7 @@ func (s *UnitTestSuite) TestActivityExecuteReply() {
 	if v, ok := message.(*messages.ActivityExecuteReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -6101,7 +6167,7 @@ func (s *UnitTestSuite) TestActivityExecuteReply() {
 	if v, ok := message.(*messages.ActivityExecuteReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -6134,10 +6200,10 @@ func (s *UnitTestSuite) TestActivityExecuteRequest() {
 		opts := workflow.ActivityOptions{
 			ScheduleToCloseTimeout: time.Second * 30,
 			WaitForCancellation:    false,
-			TaskList:               "my-tasklist",
+			TaskQueue:              "my-taskqueue",
 		}
 		v.SetOptions(&opts)
-		s.Equal(workflow.ActivityOptions{ScheduleToCloseTimeout: time.Second * 30, WaitForCancellation: false, TaskList: "my-tasklist"}, *v.GetOptions())
+		s.Equal(workflow.ActivityOptions{ScheduleToCloseTimeout: time.Second * 30, WaitForCancellation: false, TaskQueue: "my-taskqueue"}, *v.GetOptions())
 
 		namespace := "my-namespace"
 		v.SetNamespace(&namespace)
@@ -6155,7 +6221,7 @@ func (s *UnitTestSuite) TestActivityExecuteRequest() {
 	if v, ok := message.(*messages.ActivityExecuteRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetArgs())
-		s.Equal(workflow.ActivityOptions{ScheduleToCloseTimeout: time.Second * 30, WaitForCancellation: false, TaskList: "my-tasklist"}, *v.GetOptions())
+		s.Equal(workflow.ActivityOptions{ScheduleToCloseTimeout: time.Second * 30, WaitForCancellation: false, TaskQueue: "my-taskqueue"}, *v.GetOptions())
 		s.Equal("my-namespace", *v.GetNamespace())
 	}
 
@@ -6166,7 +6232,7 @@ func (s *UnitTestSuite) TestActivityExecuteRequest() {
 	if v, ok := message.(*messages.ActivityExecuteRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetArgs())
-		s.Equal(workflow.ActivityOptions{ScheduleToCloseTimeout: time.Second * 30, WaitForCancellation: false, TaskList: "my-tasklist"}, *v.GetOptions())
+		s.Equal(workflow.ActivityOptions{ScheduleToCloseTimeout: time.Second * 30, WaitForCancellation: false, TaskQueue: "my-taskqueue"}, *v.GetOptions())
 		s.Equal("my-namespace", *v.GetNamespace())
 	}
 }
@@ -6195,8 +6261,8 @@ func (s *UnitTestSuite) TestActivityGetHeartbeatDetailsReply() {
 		v.SetDetails([]byte{0, 1, 2, 3, 4})
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetDetails())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -6210,7 +6276,7 @@ func (s *UnitTestSuite) TestActivityGetHeartbeatDetailsReply() {
 	if v, ok := message.(*messages.ActivityGetHeartbeatDetailsReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetDetails())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -6220,7 +6286,7 @@ func (s *UnitTestSuite) TestActivityGetHeartbeatDetailsReply() {
 	if v, ok := message.(*messages.ActivityGetHeartbeatDetailsReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetDetails())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -6288,17 +6354,17 @@ func (s *UnitTestSuite) TestActivityGetInfoReply() {
 		s.Equal(int64(555), v.GetRequestID())
 
 		info := activity.Info{
-			TaskList:          "my-tasklist",
+			TaskQueue:         "my-taskqueue",
 			Attempt:           4,
 			ActivityID:        "my-activity",
 			WorkflowNamespace: "my-namespace",
 			ActivityType:      activity.Type{Name: "activity"},
 		}
 		v.SetInfo(&info)
-		s.Equal(activity.Info{TaskList: "my-tasklist", Attempt: 4, ActivityID: "my-activity", WorkflowNamespace: "my-namespace", ActivityType: activity.Type{Name: "activity"}}, *v.GetInfo())
+		s.Equal(activity.Info{TaskQueue: "my-taskqueue", Attempt: 4, ActivityID: "my-activity", WorkflowNamespace: "my-namespace", ActivityType: activity.Type{Name: "activity"}}, *v.GetInfo())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -6311,8 +6377,8 @@ func (s *UnitTestSuite) TestActivityGetInfoReply() {
 
 	if v, ok := message.(*messages.ActivityGetInfoReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(activity.Info{TaskList: "my-tasklist", Attempt: 4, ActivityID: "my-activity", WorkflowNamespace: "my-namespace", ActivityType: activity.Type{Name: "activity"}}, *v.GetInfo())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.Equal(activity.Info{TaskQueue: "my-taskqueue", Attempt: 4, ActivityID: "my-activity", WorkflowNamespace: "my-namespace", ActivityType: activity.Type{Name: "activity"}}, *v.GetInfo())
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -6321,8 +6387,8 @@ func (s *UnitTestSuite) TestActivityGetInfoReply() {
 
 	if v, ok := message.(*messages.ActivityGetInfoReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(activity.Info{TaskList: "my-tasklist", Attempt: 4, ActivityID: "my-activity", WorkflowNamespace: "my-namespace", ActivityType: activity.Type{Name: "activity"}}, *v.GetInfo())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.Equal(activity.Info{TaskQueue: "my-taskqueue", Attempt: 4, ActivityID: "my-activity", WorkflowNamespace: "my-namespace", ActivityType: activity.Type{Name: "activity"}}, *v.GetInfo())
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -6392,8 +6458,8 @@ func (s *UnitTestSuite) TestActivityHasHeartbeatDetailsReply() {
 		v.SetHasDetails(true)
 		s.Equal(true, v.GetHasDetails())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -6407,7 +6473,7 @@ func (s *UnitTestSuite) TestActivityHasHeartbeatDetailsReply() {
 	if v, ok := message.(*messages.ActivityHasHeartbeatDetailsReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(true, v.GetHasDetails())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -6417,7 +6483,7 @@ func (s *UnitTestSuite) TestActivityHasHeartbeatDetailsReply() {
 	if v, ok := message.(*messages.ActivityHasHeartbeatDetailsReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(true, v.GetHasDetails())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -6487,8 +6553,8 @@ func (s *UnitTestSuite) TestActivityInvokeLocalReply() {
 		v.SetResult([]byte{0, 1, 2, 3, 4})
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -6502,7 +6568,7 @@ func (s *UnitTestSuite) TestActivityInvokeLocalReply() {
 	if v, ok := message.(*messages.ActivityInvokeLocalReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -6512,7 +6578,7 @@ func (s *UnitTestSuite) TestActivityInvokeLocalReply() {
 	if v, ok := message.(*messages.ActivityInvokeLocalReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -6594,8 +6660,8 @@ func (s *UnitTestSuite) TestActivityInvokeReply() {
 		v.SetResult([]byte{0, 1, 2, 3, 4})
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -6609,7 +6675,7 @@ func (s *UnitTestSuite) TestActivityInvokeReply() {
 	if v, ok := message.(*messages.ActivityInvokeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -6619,7 +6685,7 @@ func (s *UnitTestSuite) TestActivityInvokeReply() {
 	if v, ok := message.(*messages.ActivityInvokeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -6698,8 +6764,8 @@ func (s *UnitTestSuite) TestActivityRecordHeartbeatReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -6712,7 +6778,7 @@ func (s *UnitTestSuite) TestActivityRecordHeartbeatReply() {
 
 	if v, ok := message.(*messages.ActivityRecordHeartbeatReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -6721,7 +6787,7 @@ func (s *UnitTestSuite) TestActivityRecordHeartbeatReply() {
 
 	if v, ok := message.(*messages.ActivityRecordHeartbeatReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -6826,8 +6892,8 @@ func (s *UnitTestSuite) TestActivityRegisterReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -6840,7 +6906,7 @@ func (s *UnitTestSuite) TestActivityRegisterReply() {
 
 	if v, ok := message.(*messages.ActivityRegisterReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -6849,7 +6915,7 @@ func (s *UnitTestSuite) TestActivityRegisterReply() {
 
 	if v, ok := message.(*messages.ActivityRegisterReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -6928,8 +6994,8 @@ func (s *UnitTestSuite) TestActivityStoppingReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -6942,7 +7008,7 @@ func (s *UnitTestSuite) TestActivityStoppingReply() {
 
 	if v, ok := message.(*messages.ActivityStoppingReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -6951,7 +7017,7 @@ func (s *UnitTestSuite) TestActivityStoppingReply() {
 
 	if v, ok := message.(*messages.ActivityStoppingReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -7038,10 +7104,10 @@ func (s *UnitTestSuite) TestActivityStartRequest() {
 		opts := workflow.ActivityOptions{
 			ScheduleToCloseTimeout: time.Second * 30,
 			WaitForCancellation:    false,
-			TaskList:               "my-tasklist",
+			TaskQueue:              "my-taskqueue",
 		}
 		v.SetOptions(&opts)
-		s.Equal(workflow.ActivityOptions{ScheduleToCloseTimeout: time.Second * 30, WaitForCancellation: false, TaskList: "my-tasklist"}, *v.GetOptions())
+		s.Equal(workflow.ActivityOptions{ScheduleToCloseTimeout: time.Second * 30, WaitForCancellation: false, TaskQueue: "my-taskqueue"}, *v.GetOptions())
 
 		namespace := "my-namespace"
 		v.SetNamespace(&namespace)
@@ -7062,7 +7128,7 @@ func (s *UnitTestSuite) TestActivityStartRequest() {
 	if v, ok := message.(*messages.ActivityStartRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetArgs())
-		s.Equal(workflow.ActivityOptions{ScheduleToCloseTimeout: time.Second * 30, WaitForCancellation: false, TaskList: "my-tasklist"}, *v.GetOptions())
+		s.Equal(workflow.ActivityOptions{ScheduleToCloseTimeout: time.Second * 30, WaitForCancellation: false, TaskQueue: "my-taskqueue"}, *v.GetOptions())
 		s.Equal("my-namespace", *v.GetNamespace())
 		s.Equal(int64(666), v.GetActivityID())
 		s.Equal(int64(777), v.GetClientID())
@@ -7075,7 +7141,7 @@ func (s *UnitTestSuite) TestActivityStartRequest() {
 	if v, ok := message.(*messages.ActivityStartRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetArgs())
-		s.Equal(workflow.ActivityOptions{ScheduleToCloseTimeout: time.Second * 30, WaitForCancellation: false, TaskList: "my-tasklist"}, *v.GetOptions())
+		s.Equal(workflow.ActivityOptions{ScheduleToCloseTimeout: time.Second * 30, WaitForCancellation: false, TaskQueue: "my-taskqueue"}, *v.GetOptions())
 		s.Equal("my-namespace", *v.GetNamespace())
 		s.Equal(int64(666), v.GetActivityID())
 		s.Equal(int64(777), v.GetClientID())
@@ -7106,8 +7172,8 @@ func (s *UnitTestSuite) TestActivityStartReply() {
 		v.SetClientID(int64(777))
 		s.Equal(int64(777), v.GetClientID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -7121,7 +7187,7 @@ func (s *UnitTestSuite) TestActivityStartReply() {
 	if v, ok := message.(*messages.ActivityStartReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(int64(777), v.GetClientID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -7131,7 +7197,7 @@ func (s *UnitTestSuite) TestActivityStartReply() {
 	if v, ok := message.(*messages.ActivityStartReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(int64(777), v.GetClientID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -7217,8 +7283,8 @@ func (s *UnitTestSuite) TestActivityGetResultReply() {
 		v.SetResult([]byte{0, 1, 2, 3, 4})
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -7233,7 +7299,7 @@ func (s *UnitTestSuite) TestActivityGetResultReply() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(int64(666), v.GetClientID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -7244,7 +7310,7 @@ func (s *UnitTestSuite) TestActivityGetResultReply() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(int64(666), v.GetClientID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -7345,8 +7411,8 @@ func (s *UnitTestSuite) TestActivityStartLocalReply() {
 		v.SetClientID(int64(777))
 		s.Equal(int64(777), v.GetClientID())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -7360,7 +7426,7 @@ func (s *UnitTestSuite) TestActivityStartLocalReply() {
 	if v, ok := message.(*messages.ActivityStartLocalReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(int64(777), v.GetClientID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -7370,7 +7436,7 @@ func (s *UnitTestSuite) TestActivityStartLocalReply() {
 	if v, ok := message.(*messages.ActivityStartLocalReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(int64(777), v.GetClientID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -7456,8 +7522,8 @@ func (s *UnitTestSuite) TestActivityGetLocalResultReply() {
 		v.SetResult([]byte{0, 1, 2, 3, 4})
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
-		s.True(internal.IsCustomError(v.GetError()))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -7472,7 +7538,7 @@ func (s *UnitTestSuite) TestActivityGetLocalResultReply() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(int64(666), v.GetClientID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 
 	message, err = s.echoToConnection(message)
@@ -7483,7 +7549,7 @@ func (s *UnitTestSuite) TestActivityGetLocalResultReply() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(int64(666), v.GetClientID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 
@@ -7565,7 +7631,7 @@ func (s *UnitTestSuite) TestProxyMessage() {
 		var temporalError internal.TemporalError
 		v.GetJSONProperty("Error", &temporalError)
 		s.Equal("foo", temporalError.Error())
-		s.True(internal.IsCustomError(&temporalError))
+		s.True(internal.IsProxyError(&temporalError))
 
 		// attachment values
 		s.Equal(3, len(v.Attachments))
@@ -7638,11 +7704,11 @@ func (s *UnitTestSuite) TestProxyReply() {
 		// Round-trip
 		v.SetRequestID(int64(555))
 		v.SetClientID(int64(666))
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(int64(666), v.GetClientID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 		s.Equal("foo", v.GetError().Error())
 
 		// serialize the new message
@@ -7659,7 +7725,7 @@ func (s *UnitTestSuite) TestProxyReply() {
 
 	if v, ok := message.(*messages.ProxyReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 		s.Equal("foo", v.GetError().Error())
 		s.Equal(int64(666), v.GetClientID())
 	}
@@ -7721,11 +7787,11 @@ func (s *UnitTestSuite) TestWorkflowReply() {
 
 		// Round-trip
 		v.SetRequestID(int64(555))
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 		v.SetReplayStatus(proxytemporal.ReplayStatusReplaying)
 
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 		s.Equal("foo", v.GetError().Error())
 		s.Equal(proxytemporal.ReplayStatusReplaying, v.GetReplayStatus())
 
@@ -7743,7 +7809,7 @@ func (s *UnitTestSuite) TestWorkflowReply() {
 
 	if v, ok := message.(*messages.WorkflowReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 		s.Equal("foo", v.GetError().Error())
 		s.Equal(proxytemporal.ReplayStatusReplaying, v.GetReplayStatus())
 	}
@@ -7805,13 +7871,13 @@ func (s *UnitTestSuite) TestActivityReply() {
 
 		// Round-trip
 		v.SetRequestID(int64(555))
-		v.SetError(internal.NewTemporalError(errors.New("foo")))
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
 
 		v.SetActivityContextID(int64(555))
 		s.Equal(int64(555), v.GetActivityContextID())
 
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 		s.Equal("foo", v.GetError().Error())
 
 		// serialize the new message
@@ -7828,7 +7894,7 @@ func (s *UnitTestSuite) TestActivityReply() {
 
 	if v, ok := message.(*messages.ActivityReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.True(internal.IsCustomError(v.GetError()))
+		s.True(internal.IsApplicationError(v.GetError()))
 		s.Equal(int64(555), v.GetActivityContextID())
 		s.Equal("foo", v.GetError().Error())
 	}

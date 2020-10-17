@@ -96,14 +96,14 @@ namespace Neon.Kube
         /// <summary>
         /// Returns the authentication method to be used to establish an SSH.NET session.
         /// </summary>
-        /// <exception cref="KubeException">Thrown if the SSH credentials are not available.</exception>
+        /// <exception cref="SshProxyException">Thrown if the SSH credentials are not available.</exception>
         internal AuthenticationMethod AuthenticationMethod
         {
             get
             {
                 if (authenticationMethod == null)
                 {
-                    throw new KubeException("cluster SSH credentials are not available.");
+                    throw new SshProxyException("cluster SSH credentials are not available.");
                 }
 
                 return authenticationMethod;

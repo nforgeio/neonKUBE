@@ -25,14 +25,13 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/gogo/protobuf/types"
-	"go.temporal.io/temporal-proto/namespace"
-	"go.temporal.io/temporal-proto/workflowservice"
-	"go.temporal.io/temporal/activity"
-	"go.temporal.io/temporal/client"
-	"go.temporal.io/temporal/encoded"
-	"go.temporal.io/temporal/worker"
-	"go.temporal.io/temporal/workflow"
+	"go.temporal.io/api/namespace/v1"
+	"go.temporal.io/api/workflowservice/v1"
+	"go.temporal.io/sdk/activity"
+	"go.temporal.io/sdk/client"
+	"go.temporal.io/sdk/converter"
+	"go.temporal.io/sdk/worker"
+	"go.temporal.io/sdk/workflow"
 	"go.uber.org/zap"
 
 	"temporal-proxy/internal"
@@ -117,12 +116,17 @@ func handleConnectRequest(requestCtx context.Context, request *messages.ConnectR
 		defer cancel()
 
 		// register the namespace
-		retention := int32(7)
+		retention, err := time.ParseDuration("168h")
+		if err != nil {
+			reply.Build(err)
+			return reply
+		}
+
 		err = clientHelper.RegisterNamespace(
 			ctx,
 			&workflowservice.RegisterNamespaceRequest{
-				Name:                                   defaultNamespace,
-				WorkflowExecutionRetentionPeriodInDays: retention,
+				Name:                             defaultNamespace,
+				WorkflowExecutionRetentionPeriod: &retention,
 			})
 
 		if err != nil {
@@ -239,13 +243,13 @@ func handleTerminateRequest(requestCtx context.Context, request *messages.Termin
 
 func handleNewWorkerRequest(requestCtx context.Context, request *messages.NewWorkerRequest) messages.IProxyReply {
 	namespace := *request.GetNamespace()
-	taskList := *request.GetTaskList()
+	taskQueue := *request.GetTaskQueue()
 	clientID := request.GetClientID()
 	Logger.Debug("NewWorkerRequest Received",
 		zap.Int64("ClientId", clientID),
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.String("Namespace", namespace),
-		zap.String("TaskList", taskList),
+		zap.String("TaskQueue", taskQueue),
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new NewWorkerReply
@@ -259,15 +263,13 @@ func handleNewWorkerRequest(requestCtx context.Context, request *messages.NewWor
 
 	// configure temporal logger
 	// set options
-	logger := SetLogger(internal.LogLevel, internal.Debug)
 	opts := request.GetOptions()
-	opts.Logger = logger.Named(internal.TemporalLoggerName)
 
 	// create a new worker using a configured ClientHelper instance
 
 	workerID, err := clientHelper.StartWorker(
 		namespace,
-		taskList,
+		taskQueue,
 		*opts)
 
 	if err != nil {
@@ -279,7 +281,7 @@ func handleNewWorkerRequest(requestCtx context.Context, request *messages.NewWor
 		zap.Int64("WorkerId", workerID),
 		zap.Int64("ClientId", clientID),
 		zap.String("Namespace", namespace),
-		zap.String("TaskList", taskList))
+		zap.String("TaskQueue", taskQueue))
 
 	reply.Build(nil, workerID)
 
@@ -375,14 +377,10 @@ func handleNamespaceRegisterRequest(requestCtx context.Context, request *message
 
 	// create a new temporal namespace RegisterNamespaceRequest for
 	// registering a new namespace
-	emitMetrics := request.GetEmitMetrics()
-	retentionDays := request.GetRetentionDays()
 	registerNamespaceRequest := workflowservice.RegisterNamespaceRequest{
-		Name:                                   namespaceName,
-		Description:                            *request.GetDescription(),
-		OwnerEmail:                             *request.GetOwnerEmail(),
-		EmitMetric:                             emitMetrics,
-		WorkflowExecutionRetentionPeriodInDays: retentionDays,
+		Name:        namespaceName,
+		Description: *request.GetDescription(),
+		OwnerEmail:  *request.GetOwnerEmail(),
 	}
 
 	// create context with timeout
@@ -424,25 +422,18 @@ func handleNamespaceUpdateRequest(requestCtx context.Context, request *messages.
 		return reply
 	}
 
-	// NamespaceUpdateRequest.Configuration
-	configurationEmitMetrics := request.GetConfigurationEmitMetrics()
-	configurationRetentionDays := request.GetConfigurationRetentionDays()
-	configuration := namespace.NamespaceConfiguration{
-		EmitMetric:                             &types.BoolValue{Value: configurationEmitMetrics},
-		WorkflowExecutionRetentionPeriodInDays: configurationRetentionDays,
-	}
-
-	// NamespaceUpdateRequest.UpdatedInfo
-	updatedInfo := namespace.UpdateNamespaceInfo{
+	//Config
+	configuration := request.GetNamespaceConfig()
+	updateInfo := namespace.UpdateNamespaceInfo{
 		Description: *request.GetUpdatedInfoDescription(),
 		OwnerEmail:  *request.GetUpdatedInfoOwnerEmail(),
 	}
 
 	// NamespaceUpdateRequest
 	namespaceUpdateRequest := workflowservice.UpdateNamespaceRequest{
-		Name:          nspace,
-		Configuration: &configuration,
-		UpdatedInfo:   &updatedInfo,
+		Name:       nspace,
+		Config:     configuration,
+		UpdateInfo: &updateInfo,
 	}
 
 	// create context with timeout
@@ -461,18 +452,18 @@ func handleNamespaceUpdateRequest(requestCtx context.Context, request *messages.
 	return reply
 }
 
-func handleDescribeTaskListRequest(requestCtx context.Context, request *messages.DescribeTaskListRequest) messages.IProxyReply {
+func handleDescribeTaskQueueRequest(requestCtx context.Context, request *messages.DescribeTaskQueueRequest) messages.IProxyReply {
 	name := *request.GetName()
 	namespace := *request.GetNamespace()
 	clientID := request.GetClientID()
-	Logger.Debug("DescribeTaskListRequest Received",
-		zap.String("TaskList", name),
+	Logger.Debug("DescribeTaskQueueRequest Received",
+		zap.String("TaskQueue", name),
 		zap.String("Namespace", namespace),
 		zap.Int64("ClientId", clientID),
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int("ProcessId", os.Getpid()))
 
-	// new DescribeTaskListReply
+	// new DescribeTaskQueueReply
 	reply := messages.CreateReplyMessage(request)
 
 	clientHelper := Clients.Get(clientID)
@@ -485,7 +476,7 @@ func handleDescribeTaskListRequest(requestCtx context.Context, request *messages
 	ctx, cancel := context.WithTimeout(requestCtx, clientHelper.GetClientTimeout())
 	defer cancel()
 
-	describeResponse, err := clientHelper.DescribeTaskList(ctx, namespace, name, request.GetTaskListType())
+	describeResponse, err := clientHelper.DescribeTaskQueue(ctx, namespace, name, request.GetTaskQueueType())
 	if err != nil {
 		reply.Build(err)
 		return reply
@@ -544,15 +535,15 @@ func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages
 		workflowInvokeRequest.SetClientID(clientID)
 
 		// get the WorkflowInfo (Namespace, WorkflowID, RunID, WorkflowType,
-		// TaskList, ExecutionStartToCloseTimeout)
+		// TaskQueue, ExecutionStartToCloseTimeout)
 		// from the context
 		workflowInfo := workflow.GetInfo(ctx)
 		workflowInvokeRequest.SetNamespace(&workflowInfo.Namespace)
 		workflowInvokeRequest.SetWorkflowID(&workflowInfo.WorkflowExecution.ID)
 		workflowInvokeRequest.SetRunID(&workflowInfo.WorkflowExecution.RunID)
 		workflowInvokeRequest.SetWorkflowType(&workflowInfo.WorkflowType.Name)
-		workflowInvokeRequest.SetTaskList(&workflowInfo.TaskListName)
-		workflowInvokeRequest.SetExecutionStartToCloseTimeout(time.Duration(int64(workflowInfo.WorkflowExecutionTimeoutSeconds) * int64(time.Second)))
+		workflowInvokeRequest.SetTaskQueue(&workflowInfo.TaskQueueName)
+		workflowInvokeRequest.SetExecutionStartToCloseTimeout(time.Duration(int64(workflowInfo.WorkflowExecutionTimeout) * int64(time.Second)))
 
 		// set ReplayStatus
 		setReplayStatus(ctx, workflowInvokeRequest)
@@ -784,7 +775,7 @@ func handleWorkflowSignalWithStartRequest(requestCtx context.Context, request *m
 	defer cancel()
 
 	// signalwithstart the specified workflow
-	workflowExecution, err := clientHelper.SignalWithStartWorkflow(
+	execution, err := clientHelper.SignalWithStartWorkflow(
 		ctx,
 		workflowID,
 		*request.GetNamespace(),
@@ -799,7 +790,7 @@ func handleWorkflowSignalWithStartRequest(requestCtx context.Context, request *m
 		return reply
 	}
 
-	reply.Build(nil, workflowExecution)
+	reply.Build(nil, execution)
 
 	return reply
 }
@@ -868,7 +859,7 @@ func handleWorkflowMutableRequest(requestCtx context.Context, request *messages.
 	}
 
 	// MutableSideEffect/SideEffect calls
-	var value encoded.Value
+	var value converter.EncodedValue
 	if mutableID := request.GetMutableID(); mutableID != nil {
 		value = workflow.MutableSideEffect(
 			ctx,
@@ -1277,10 +1268,6 @@ func handleWorkflowSleepRequest(requestCtx context.Context, request *messages.Wo
 	var result interface{}
 	future := workflow.NewTimer(ctx, request.GetDuration())
 
-	// Send ACK: Commented out because its no longer needed.
-	// op := sendFutureACK(contextID, requestID, clientID)
-	// <-op.GetChannel()
-
 	// wait for the future to be unblocked
 	err := future.Get(ctx, &result)
 	if err != nil {
@@ -1331,10 +1318,6 @@ func handleWorkflowExecuteChildRequest(requestCtx context.Context, request *mess
 	ctx = workflow.WithScheduleToStartTimeout(ctx, request.GetScheduleToStartTimeout())
 	ctx, cancel := workflow.WithCancel(ctx)
 	childFuture := workflow.ExecuteChildWorkflow(ctx, workflowName, request.GetArgs())
-
-	// Send ACK: Commented out because its no longer needed.
-	// op := sendFutureACK(contextID, requestID, clientID)
-	// <-op.GetChannel()
 
 	// create the new ChildContext
 	// add the ChildWorkflowFuture and the cancel func to the

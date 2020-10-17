@@ -22,8 +22,8 @@ import (
 	"os"
 	"time"
 
-	"go.temporal.io/temporal/activity"
-	"go.temporal.io/temporal/workflow"
+	"go.temporal.io/sdk/activity"
+	"go.temporal.io/sdk/workflow"
 	"go.uber.org/zap"
 
 	"temporal-proxy/internal"
@@ -72,8 +72,8 @@ func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply, op *Operatio
 		if reply.GetContinueAsNewNamespace() != nil {
 			continueContext = workflow.WithWorkflowNamespace(continueContext, *reply.GetContinueAsNewNamespace())
 		}
-		if reply.GetContinueAsNewTaskList() != nil {
-			continueContext = workflow.WithTaskList(continueContext, *reply.GetContinueAsNewTaskList())
+		if reply.GetContinueAsNewTaskQueue() != nil {
+			continueContext = workflow.WithTaskQueue(continueContext, *reply.GetContinueAsNewTaskQueue())
 		}
 		if reply.GetContinueAsNewExecutionStartToCloseTimeout() > 0 {
 			continueContext = workflow.WithStartToCloseTimeout(continueContext, time.Duration(reply.GetContinueAsNewExecutionStartToCloseTimeout()))

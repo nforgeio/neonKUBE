@@ -22,28 +22,44 @@ import (
 	"fmt"
 	"reflect"
 
-	"go.temporal.io/temporal"
+	enumspb "go.temporal.io/api/enums/v1"
+	"go.temporal.io/sdk/temporal"
 )
 
 const (
 
+	// ApplicationError returned from activity implementations with message and optional details.
+	ApplicationError TemporalErrorType = 0
+
 	// CancelledError indicates that an operation was cancelled
-	CancelledError TemporalErrorType = 0
+	CancelledError TemporalErrorType = 1
 
-	// CustomError is a custom error
-	CustomError TemporalErrorType = 1
+	// ActivityError returned from workflow when activity returned an error.
+	ActivityError TemporalErrorType = 2
 
-	// GenericError is a generic error
-	GenericError TemporalErrorType = 2
+	// ServerError can be returned from server.
+	ServerError TemporalErrorType = 3
 
-	// PanicError is a panic error
-	PanicError TemporalErrorType = 3
+	// ChildWorkflowExecutionError returned from workflow when child workflow returned an error.
+	ChildWorkflowExecutionError TemporalErrorType = 4
 
-	// TerminatedError is a termination error
-	TerminatedError TemporalErrorType = 4
+	// WorkflowExecutionError returned from workflow.
+	WorkflowExecutionError TemporalErrorType = 5
 
 	// TimeoutError is a timeout error
-	TimeoutError TemporalErrorType = 5
+	TimeoutError TemporalErrorType = 6
+
+	// TerminatedError is a termination error
+	TerminatedError TemporalErrorType = 7
+
+	// PanicError is a panic error
+	PanicError TemporalErrorType = 8
+
+	// UnknownExternalWorkflowExecutionError can be returned when external workflow doesn't exist
+	UnknownExternalWorkflowExecutionError TemporalErrorType = 9
+
+	// ProxyError returned when there is an issue with the temporal proxy
+	ProxyError TemporalErrorType = 10
 )
 
 type (
@@ -96,10 +112,8 @@ func NewTemporalError(err error, errTypes ...TemporalErrorType) *TemporalError {
 	} else {
 		if temporal.IsCanceledError(err) {
 			errType = CancelledError
-		} else if temporal.IsCustomError(err) {
-			errType = CustomError
-		} else if temporal.IsGenericError(err) {
-			errType = GenericError
+		} else if temporal.IsApplicationError(err) {
+			errType = ApplicationError
 		} else if temporal.IsPanicError(err) {
 			errType = PanicError
 		} else if temporal.IsTerminatedError(err) {
@@ -107,7 +121,7 @@ func NewTemporalError(err error, errTypes ...TemporalErrorType) *TemporalError {
 		} else if temporal.IsTimeoutError(err) {
 			errType = TimeoutError
 		} else {
-			errType = CustomError
+			errType = ProxyError
 		}
 	}
 
@@ -126,7 +140,7 @@ func (c *TemporalError) Error() string {
 }
 
 // ToError returns an error interface from a TemporalError
-// instance.  If the TemporalError is of type CustomError or
+// instance.  If the TemporalError is of type ApplicationError or
 // Canceled, the resulting Temporal client errors will
 // be returned.
 //
@@ -135,11 +149,15 @@ func (c *TemporalError) ToError() error {
 	var err error
 	errType := c.GetType()
 	switch errType {
-	case CustomError:
-		err = temporal.NewCustomError(c.Error())
+	case ApplicationError:
+		err = temporal.NewApplicationError(c.Error(), "")
 		break
 	case CancelledError:
 		err = temporal.NewCanceledError(c.Error())
+		break
+	case TimeoutError:
+		err = temporal.NewTimeoutError(enumspb.TIMEOUT_TYPE_UNSPECIFIED, errors.New(c.Error()))
+		break
 	default:
 		return c
 	}
@@ -161,19 +179,26 @@ func (c *TemporalError) GetType() TemporalErrorType {
 	switch *c.Type {
 	case "cancelled":
 		return CancelledError
-	case "custom":
-		return CustomError
-	case "generic":
-		return GenericError
-	case "panic":
-		return PanicError
-	case "terminated":
-		return TerminatedError
+	case "application":
+		return ApplicationError
+	case "activity":
+		return ActivityError
+	case "server":
+		return ServerError
+	case "childWorkflowExecution":
+		return ChildWorkflowExecutionError
+	case "workflowExecution":
+		return WorkflowExecutionError
 	case "timeout":
 		return TimeoutError
+	case "terminated":
+		return TerminatedError
+	case "panic":
+		return PanicError
+	case "unknownExternalWorkflowExecution":
+		return UnknownExternalWorkflowExecutionError
 	default:
-		err := fmt.Errorf("unrecognized error type %v", *c.Type)
-		panic(err)
+		return ProxyError
 	}
 }
 
@@ -187,49 +212,71 @@ func (c *TemporalError) SetType(errorType TemporalErrorType) {
 	switch errorType {
 	case CancelledError:
 		typeString = "cancelled"
-	case CustomError:
-		typeString = "custom"
-	case GenericError:
-		typeString = "generic"
+		break
+	case ApplicationError:
+		typeString = "application"
+		break
+	case ActivityError:
+		typeString = "activity"
+		break
+	case ServerError:
+		typeString = "server"
+		break
+	case ChildWorkflowExecutionError:
+		typeString = "childWorkflowExecution"
+		break
+	case WorkflowExecutionError:
+		typeString = "workflowExecution"
+		break
 	case PanicError:
 		typeString = "panic"
+		break
 	case TerminatedError:
 		typeString = "terminated"
+		break
 	case TimeoutError:
 		typeString = "timeout"
+		break
+	case UnknownExternalWorkflowExecutionError:
+		typeString = "unknownExternalWorkflowExecution"
+		break
 	default:
-		err := fmt.Errorf("unrecognized error type %v", errorType)
-		panic(err)
+		typeString = "proxy"
 	}
 	c.Type = &typeString
 }
 
 func (t *TemporalErrorType) String() string {
 	return [...]string{
+		"application",
 		"cancelled",
-		"custom",
-		"generic",
-		"panic",
-		"terminated",
+		"activity",
+		"server",
+		"childWorkflowExecution",
+		"workflowExecution",
 		"timeout",
+		"terminated",
+		"panic",
+		"unknownExternalWorkflowExecution",
+		"proxy",
 	}[*t]
 }
 
-// IsCustomError determines if an error
-// is a TemporalError of type CustomError.
+// IsApplicationError determines if an error
+// is a TemporalError of type ApplicationError.
 //
 // param err error -> the error to evaluate.
 //
 // returns bool -> error is a TemporalError of type
-// CustomError or not.
-func IsCustomError(err error) bool {
+// ApplicationError or not.
+func IsApplicationError(err error) bool {
 	if err != nil && !reflect.ValueOf(err).IsNil() {
 		if v, ok := err.(*TemporalError); ok {
-			if v.GetType() == CustomError {
+			if v.GetType() == ApplicationError {
 				return true
 			}
 		} else {
-			return temporal.IsCustomError(err)
+			return temporal.IsApplicationError(err)
 		}
 	}
 
@@ -257,22 +304,16 @@ func IsCancelledError(err error) bool {
 	return false
 }
 
-// IsGenericError determines if an error
-// is a TemporalError of type GenericError.
+// IsWorkflowExecutionAlreadyStartedError determines if an error
+// is a TemporalError of type WorkflowExecutionAlreadyStartedError.
 //
 // param err error -> the error to evaluate.
 //
 // returns bool -> error is a TemporalError of type
-// GenericError or not.
-func IsGenericError(err error) bool {
+// WorkflowExecutionAlreadyStartedError or not.
+func IsWorkflowExecutionAlreadyStartedError(err error) bool {
 	if err != nil && !reflect.ValueOf(err).IsNil() {
-		if v, ok := err.(*TemporalError); ok {
-			if v.GetType() == GenericError {
-				return true
-			}
-		} else {
-			return temporal.IsGenericError(err)
-		}
+		return temporal.IsWorkflowExecutionAlreadyStartedError(err)
 	}
 
 	return false
@@ -335,6 +376,25 @@ func IsTimeoutError(err error) bool {
 			}
 		} else {
 			return temporal.IsTimeoutError(err)
+		}
+	}
+
+	return false
+}
+
+// IsProxyError determines if an error
+// is a TemporalError of type ProxyError.
+//
+// param err error -> the error to evaluate.
+//
+// returns bool -> error is a TemporalError of type
+// ProxyError or not.
+func IsProxyError(err error) bool {
+	if err != nil && !reflect.ValueOf(err).IsNil() {
+		if v, ok := err.(*TemporalError); ok {
+			if v.GetType() == ProxyError {
+				return true
+			}
 		}
 	}
 

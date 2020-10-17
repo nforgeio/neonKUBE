@@ -39,6 +39,7 @@ using Neon.Cryptography;
 using Neon.IO;
 using Neon.Net;
 using Remotion.Linq.Parsing;
+using Org.BouncyCastle.Cms;
 
 namespace Neon.Kube
 {
@@ -512,6 +513,113 @@ namespace Neon.Kube
         public IEnumerable<NodeDefinition> SortedMasterThenWorkerNodes => SortedMasterNodes.Union(SortedWorkerNodes);
 
         /// <summary>
+        /// Holds the subnet where nodes will be provisioned along with the name of the options 
+        /// class and property where the subnet was specified for the current hosting environment.
+        /// </summary>
+        internal class NodeSubnetInfo
+        {
+            /// <summary>
+            /// Constructor.
+            /// </summary>
+            /// <param name="subnet">The subnet.</param>
+            /// <param name="property">The source property information.</param>
+            /// <param name="startReservedAddresses">The number of reserved addresses at the start of the subnet.</param>
+            /// <param name="endReservedAddresses">The number of reserved addresses at the end of the subnet.</param>
+            public NodeSubnetInfo(string subnet, string property, int startReservedAddresses, int endReservedAddresses)
+            {
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(subnet), nameof(subnet));
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(property), nameof(property));
+
+                this.Subnet                 = subnet;
+                this.Property               = property;
+                this.StartReservedAddresses = startReservedAddresses;
+                this.EndReservedAddresses   = endReservedAddresses;
+            }
+
+            /// <summary>
+            /// Returns the subnet.
+            /// </summary>
+            public string Subnet { get; private set; }
+
+            /// <summary>
+            /// Describes the options class and property where the subnet value was specified.
+            /// </summary>
+            public string Property { get; private set; }
+
+            /// <summary>
+            /// Returns the number of addresses reserved at the start of the subnet.
+            /// </summary>
+            public int StartReservedAddresses { get; private set; }
+
+            /// <summary>
+            /// Returns the number oaddresses reserved at the and of the subnet.
+            /// </summary>
+            public int EndReservedAddresses { get; private set; }
+
+            /// <summary>
+            /// Returns the total number of reserved subnet addresses.
+            /// </summary>
+            public int ReservedAddresses => StartReservedAddresses + EndReservedAddresses;
+        }
+
+        /// <summary>
+        /// Returns the subnet where the cluster nodes will reside.  This is determined
+        /// for each hosting environment.  For on-premise environments, this will be
+        /// <see cref="NetworkOptions.PremiseSubnet"/>, for cloud environments, this will
+        /// come from the cloud specific hosting options.
+        /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
+        internal NodeSubnetInfo NodeSubnet
+        {
+            get
+            {
+                // $todo(jefflill):
+                //
+                // This amy need to return an array of possible subnets for more advanced cloud
+                // deployment scenarios (e.g. multiple availability zones or cross region
+                // deployments).
+
+                if (KubeHelper.IsOnPremiseEnvironment(Hosting.Environment))
+                {
+                    return new NodeSubnetInfo(Network.PremiseSubnet, $"{nameof(ClusterDefinition)}.{nameof(ClusterDefinition.Network)}.{nameof(NetworkOptions.PremiseSubnet)}", 0, 0);
+                }
+
+                switch (Hosting.Environment)
+                {
+                    case HostingEnvironment.Aws:
+
+                        return new NodeSubnetInfo(
+                            Hosting.Aws.NodeSubnet,
+                            $"{nameof(ClusterDefinition)}.{nameof(HostingOptions)}.{nameof(HostingOptions.Aws)}.{nameof(AwsHostingOptions.NodeSubnet)}", 
+                            KubeConst.CloudSubnetStartReservedIPs, 
+                            KubeConst.CloudSubnetEndReservedIPs);
+
+                    case HostingEnvironment.Azure:
+
+                        return new NodeSubnetInfo(
+                            Hosting.Azure.NodeSubnet, 
+                            $"{nameof(ClusterDefinition)}.{nameof(HostingOptions)}.{nameof(HostingOptions.Azure)}.{nameof(AzureHostingOptions.NodeSubnet)}",
+                            KubeConst.CloudSubnetStartReservedIPs,
+                            KubeConst.CloudSubnetEndReservedIPs);
+
+                    case HostingEnvironment.Google:
+
+                        return new NodeSubnetInfo(
+                            Hosting.Google.NodeSubnet,
+                            $"{nameof(ClusterDefinition)}.{nameof(HostingOptions)}.{nameof(HostingOptions.Google)}.{nameof(GoogleHostingOptions.NodeSubnet)}",
+                            KubeConst.CloudSubnetStartReservedIPs,
+                            KubeConst.CloudSubnetEndReservedIPs);
+
+                    default:
+                    case HostingEnvironment.Unknown:
+
+                        throw new NotImplementedException($"Unexpected hosting environment [{Hosting.Environment}].");
+                }
+            }
+        }
+
+        /// <summary>
         /// Validates that node private IP addresses are set, are within the nodes subnet, and
         /// are unique.  This method is intended to be called from hosting options classes
         /// like <see cref="MachineHostingOptions"/> which require specified node IP addresses.
@@ -522,16 +630,6 @@ namespace Neon.Kube
         {
             var ipAddressToNode = new Dictionary<IPAddress, NodeDefinition>();
 
-            if (string.IsNullOrEmpty(Network.NodeSubnet))
-            {
-                throw new ClusterDefinitionException($"The [{nameof(ClusterDefinition)}.{nameof(ClusterDefinition.Network)}.{nameof(NetworkOptions.NodeSubnet)}] property is required.");
-            }
-
-            if (!NetworkCidr.TryParse(Network.NodeSubnet, out var nodeSubnet))
-            {
-                throw new ClusterDefinitionException($"The [{nameof(ClusterDefinition)}.{nameof(ClusterDefinition.Network)}.{nameof(NetworkOptions.NodeSubnet)}={Network.NodeSubnet}] property is not valid.");
-            }
-
             foreach (var node in SortedNodes.OrderBy(n => n.Name))
             {
                 if (string.IsNullOrEmpty(node.Address))
@@ -539,7 +637,7 @@ namespace Neon.Kube
                     throw new ClusterDefinitionException($"Node [{node.Name}] has not been assigned a private IP address.");
                 }
 
-                if (!IPAddress.TryParse(node.Address, out var address))
+                if (!NetHelper.TryParseIPv4Address(node.Address, out var address))
                 {
                     throw new ClusterDefinitionException($"Node [{node.Name}] has invalid private IP address [{node.Address}].");
                 }
@@ -730,7 +828,7 @@ namespace Neon.Kube
                 {
                     var fields = endpoint.Split(':');
 
-                    if (!IPAddress.TryParse(fields[0], out var address) && !NetHelper.IsValidHost(fields[0]))
+                    if (!NetHelper.TryParseIPv4Address(fields[0], out var address) && !NetHelper.IsValidHost(fields[0]))
                     {
                         throw new ClusterDefinitionException($"Invalid IP address or HOSTNAME [{fields[0]}] in [{nameof(ClusterDefinition)}.{nameof(PackageProxy)}={PackageProxy}].");
                     }
@@ -739,50 +837,6 @@ namespace Neon.Kube
                     {
                         throw new ClusterDefinitionException($"Invalid port [{fields[1]}] in [{nameof(ClusterDefinition)}.{nameof(PackageProxy)}={PackageProxy}].");
                     }
-                }
-            }
-
-            // Ensure that each node has a valid unique or NULL IP address.
-
-            NetworkCidr nodeSubnet = null;
-
-            if (Network.NodeSubnet != null)
-            {
-                nodeSubnet = NetworkCidr.Parse(Network.NodeSubnet);
-            }
-
-            var addressToNode = new Dictionary<string, NodeDefinition>();
-
-            foreach (var node in SortedNodes)
-            {
-                if (node.Address != null)
-                {
-                    NodeDefinition conflictNode;
-
-                    if (addressToNode.TryGetValue(node.Address, out conflictNode))
-                    {
-                        throw new ClusterDefinitionException($"Node [name={node.Name}] has invalid private IP address [{node.Address}] that conflicts with node [name={conflictNode.Name}].");
-                    }
-                }
-            }
-
-            foreach (var node in SortedNodes)
-            {
-                if (node.Address != null)
-                {
-                    if (!IPAddress.TryParse(node.Address, out var address))
-                    {
-                        throw new ClusterDefinitionException($"Node [name={node.Name}] has invalid private IP address [{node.Address}].");
-                    }
-
-                    if (nodeSubnet != null && !nodeSubnet.Contains(address))
-                    {
-                        throw new ClusterDefinitionException($"Node [name={node.Name}] has private IP address [{node.Address}] that is not within the hosting [{nameof(Network.NodeSubnet)}={Network.NodeSubnet}].");
-                    }
-                }
-                else if (!Hosting.IsCloudProvider)
-                {
-                    throw new ClusterDefinitionException($"Node [name={node.Name}] is not assigned a private IP address.  This is required when deploying to a [{nameof(Environment)}={Environment}] hosting environment.");
                 }
             }
 

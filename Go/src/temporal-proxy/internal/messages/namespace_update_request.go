@@ -19,6 +19,8 @@ package messages
 
 import (
 	internal "temporal-proxy/internal"
+
+	"go.temporal.io/api/namespace/v1"
 )
 
 type (
@@ -101,37 +103,27 @@ func (request *NamespaceUpdateRequest) SetUpdatedInfoOwnerEmail(value *string) {
 	request.SetStringProperty("UpdatedInfoOwnerEmail", value)
 }
 
-// GetConfigurationEmitMetrics gets a NamespaceUpdateRequest's ConfigurationEmitMetrics
-// value from its properties map
+// GetNamespaceConfig gets a NamespaceUpdateRequest's NamespaceConfig field
+// from its properties map. NamespaceConfig is the namespace.NamespaceConfig to set in the activity
+// complete call.
 //
-// returns bool -> bool specifying the metrics emission settings
-func (request *NamespaceUpdateRequest) GetConfigurationEmitMetrics() bool {
-	return request.GetBoolProperty("ConfigurationEmitMetrics")
+// returns *namespace.NamespaceConfig -> namespace.NamespaceConfig to set in activity complete
+func (request *NamespaceUpdateRequest) GetNamespaceConfig() *namespace.NamespaceConfig {
+	config := new(namespace.NamespaceConfig)
+	err := request.GetJSONProperty("NamespaceConfig", &config)
+	if err != nil {
+		return nil
+	}
+	return config
 }
 
-// SetConfigurationEmitMetrics sets a NamespaceUpdateRequest's ConfigurationEmitMetrics
-// value in its properties map
+// SetNamespaceConfig sets an NamespaceUpdateRequest's NamespaceConfig field
+// from its properties map.  NamespaceConfig is the namespace.NamespaceConfig to set in the activity
+// complete call.
 //
-// param value bool -> bool value to be set in the properties map
-func (request *NamespaceUpdateRequest) SetConfigurationEmitMetrics(value bool) {
-	request.SetBoolProperty("ConfigurationEmitMetrics", value)
-}
-
-// GetConfigurationRetentionDays gets a NamespaceUpdateRequest's ConfigurationRetentionDays
-// value from its properties map
-//
-// returns int32 -> int32 indicating the complete workflow history retention
-// period in days
-func (request *NamespaceUpdateRequest) GetConfigurationRetentionDays() int32 {
-	return request.GetIntProperty("ConfigurationRetentionDays")
-}
-
-// SetConfigurationRetentionDays sets a NamespaceUpdateRequest's ConfigurationRetentionDays
-// value in its properties map
-//
-// param value int32 -> int32 value to be set in the properties map
-func (request *NamespaceUpdateRequest) SetConfigurationRetentionDays(value int32) {
-	request.SetIntProperty("ConfigurationRetentionDays", value)
+// param value namespace.NamespaceConfig -> namespace.NamespaceConfig value to set in activity complete
+func (request *NamespaceUpdateRequest) SetNamespaceConfig(value *namespace.NamespaceConfig) {
+	request.SetJSONProperty("NamespaceConfig", value)
 }
 
 // GetSecurityToken gets a NamespaceUpdateRequest's SecurityToken value
@@ -171,8 +163,7 @@ func (request *NamespaceUpdateRequest) CopyTo(target IProxyMessage) {
 		v.SetName(request.GetName())
 		v.SetUpdatedInfoDescription(request.GetUpdatedInfoDescription())
 		v.SetUpdatedInfoOwnerEmail(request.GetUpdatedInfoOwnerEmail())
-		v.SetConfigurationEmitMetrics(request.GetConfigurationEmitMetrics())
-		v.SetConfigurationRetentionDays(request.GetConfigurationRetentionDays())
+		v.SetNamespaceConfig(request.GetNamespaceConfig())
 		v.SetSecurityToken(request.GetSecurityToken())
 	}
 }

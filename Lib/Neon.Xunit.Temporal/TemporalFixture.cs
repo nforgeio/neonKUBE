@@ -72,7 +72,7 @@ services:
         limits:
           memory: 1G
   temporal:
-    image: temporalio/auto-setup:0.21.1
+    image: temporalio/auto-setup:1.0.0
     ports:
      - ""7233:7233""
     environment:
@@ -81,7 +81,7 @@ services:
     depends_on:
       - cassandra
   temporal-web:
-    image: temporalio/web:0.21.1
+    image: temporalio/web:1.0.0
     environment:
       - ""TEMPORAL_GRPC_ENDPOINT=temporal:7233""
     ports:

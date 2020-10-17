@@ -28,10 +28,10 @@ namespace Neon.Kube
     public enum HostingEnvironment
     {
         /// <summary>
-        /// Hosted on directly on pre-provisioned bare metal or virtual machines.
+        /// Unknown or unspecified hosting environment.
         /// </summary>
-        [EnumMember(Value = "machine")]
-        Machine = 0,
+        [EnumMember(Value = "unknown")]
+        Unknown = 0,
 
         /// <summary>
         /// Amazon Web Services.
@@ -45,6 +45,12 @@ namespace Neon.Kube
         [EnumMember(Value = "azure")]
         Azure,
 
+        /// <summary>
+        /// Hosted on directly on pre-provisioned bare metal or virtual machines.
+        /// </summary>
+        [EnumMember(Value = "bare-metal")]
+        BareMetal,
+        
         /// <summary>
         /// Google Cloud Platform.
         /// </summary>
@@ -71,11 +77,5 @@ namespace Neon.Kube
         /// </summary>
         [EnumMember(Value = "xenserver")]
         XenServer,
-
-        /// <summary>
-        /// Unknown or unspecified hosting environment.
-        /// </summary>
-        [EnumMember(Value = "unknown")]
-        Unknown
     }
 }

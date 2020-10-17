@@ -29,6 +29,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+
 using YamlDotNet.Serialization;
 
 using Neon.Common;
@@ -41,11 +42,13 @@ namespace Neon.Kube
     /// </summary>
     public class AzureHostingOptions
     {
-        private const string                defaultVmSize             = "Standard_B2S";
+        private const string                defaultVmSize             = "Standard_A3";
         internal const AzureStorageType     defaultStorageType        = AzureStorageType.StandardSSD;
         private const string                defaultDiskSize           = "128 GiB";
         internal const AzureStorageType     defaultOpenEBSStorageType = defaultStorageType;
         private const string                defaultOpenEBSDiskSize    = "128 GiB";
+        private const string                defaultVnetSubnet         = "10.100.0.0/24";
+        private const string                defaultNodeSubnet         = "10.100.0.0/24";
 
         /// <summary>
         /// Constructor.
@@ -256,15 +259,18 @@ namespace Neon.Kube
         /// <para>
         /// Specifies the default Azure virtual machine size.  You the available VM sizes are listed 
         /// <a href="https://docs.microsoft.com/en-us/azure/virtual-machines/sizes-general">here</a>.
-        /// Cluster node VMs will be provisioned with this size unless overridden by <see cref="AzureNodeOptions"/>
-        /// for specific nodes.
         /// </para>
         /// <note>
-        /// This defaults to <b>Standard_B2S</b> which should be suitable for testing purposes
-        /// as well as relatively idle clusters.  Each <b>Standard_B2S</b> VM includes 2 virtual
-        /// cores and 4 GiB RAM.  At the time this was written, the pay-as-you-go cost for this
-        /// VM is listed at $0.0416/hour or about $30/month in a USA datacenter.  <b>Bs-series</b>
-        /// VMs are available in almost all Azure datacenters.
+        /// This defaults to <b>Standard_A3</b> which includes includes 4 virtual CPUs and 7 GiB RAM but
+        /// you can override this for specific cluster nodfes via <see cref="AzureNodeOptions.VmSize"/>.
+        /// </note>
+        /// <note>
+        /// neonKUBE clusters cannot be deployed to ARM-based Azure VM sizes.  You must
+        /// specify an VM size using a Intel or AMD 64-bit processor.
+        /// </note>
+        /// <note>
+        /// neonKUBE requires master and worker instances to have at least 4 CPUs and 4GiB RAM.  Choose
+        /// an Azure VM size instance type that satisfies these requirements.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "DefaultVmSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -274,7 +280,8 @@ namespace Neon.Kube
 
         /// <summary>
         /// Specifies the default Azure storage type for cluster node primary disks.
-        /// This defaults to <see cref="AzureStorageType.StandardSSD"/>.
+        /// This defaults to <see cref="AzureStorageType.StandardSSD"/> and be
+        /// overridden for specific cluster nodes via <see cref="AzureNodeOptions.StorageType"/>.
         /// </summary>
         [JsonProperty(PropertyName = "DefaultStorageType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "defaultStorageType", ApplyNamingConventions = false)]
@@ -283,7 +290,8 @@ namespace Neon.Kube
 
         /// <summary>
         /// Specifies the default Azure disk size to be used when cluster node primary disks.
-        /// This defaults to <b>128 GiB</b>.
+        /// This defaults to <b>128 GiB</b> but this can be overridden for specific cluster nodes
+        /// via <see cref="AzureNodeOptions.OpenEBSDiskSize"/>.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -320,7 +328,8 @@ namespace Neon.Kube
 
         /// <summary>
         /// Specifies the default Azure storage type of be used for the cluster node primary disks.  This defaults
-        /// to <see cref="AzureStorageType.StandardHDD"/> which is a reasonable tradeoff between cost and performance.
+        /// to <see cref="AzureStorageType.StandardHDD"/> but this can be overridden for specific cluster
+        /// nodes via <see cref="AzureNodeOptions.OpenEBSStorageType"/>.
         /// </summary>
         [JsonProperty(PropertyName = "OpenEBSStorageType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "openEBSStorageType", ApplyNamingConventions = false)]
@@ -328,7 +337,8 @@ namespace Neon.Kube
         public AzureStorageType DefaultOpenEBSStorageType { get; set; } = defaultOpenEBSStorageType;
 
         /// <summary>
-        /// Specifies the default size for cluster node primary disks.  This defaults to <b>128 GiB</b>.
+        /// Specifies the default size for cluster node primary disks.  This defaults to <b>128 GiB</b>
+        /// but can be overridden for specific cluster nodes via <see cref="AzureNodeOptions.OpenEBSDiskSize"/>.
         /// </summary>
         /// <remarks>
         /// <note>
@@ -340,6 +350,23 @@ namespace Neon.Kube
         [YamlMember(Alias = "defaultOpenEBSDiskSize", ApplyNamingConventions = false)]
         [DefaultValue(defaultOpenEBSDiskSize)]
         public string DefaultOpenEBSDiskSize { get; set; } = defaultOpenEBSDiskSize;
+
+        /// <summary>
+        /// Specifies the subnet for the Azure VNET.  This defaults to <b>10.100.0.0/24</b>
+        /// </summary>
+        [JsonProperty(PropertyName = "VnetSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "vnetSubnet", ApplyNamingConventions = false)]
+        [DefaultValue(defaultVnetSubnet)]
+        public string VnetSubnet { get; set; } = defaultVnetSubnet;
+
+        /// <summary>
+        /// specifies the subnet within <see cref="VnetSubnet"/> where the cluster nodes will be provisioned.
+        /// This defaults to <b>10.100.0.0/24</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "NodeSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "nodeSubnet", ApplyNamingConventions = false)]
+        [DefaultValue(defaultNodeSubnet)]
+        public string NodeSubnet { get; set; } = defaultNodeSubnet;
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
@@ -472,6 +499,23 @@ namespace Neon.Kube
             if (clusterDefinition.Nodes.Count() > AzureHelper.MaxClusterNodes)
             {
                 throw new ClusterDefinitionException($"cluster node count [{clusterDefinition.Nodes.Count()}] exceeds the [{AzureHelper.MaxClusterNodes}] limit for clusters deployed to Azure.");
+            }
+
+            // Verify subnets
+
+            if (!NetworkCidr.TryParse(VnetSubnet, out var vnetSubnet))
+            {
+                throw new ClusterDefinitionException($"AWS hosting [{nameof(VnetSubnet)}={VnetSubnet}] is not a valid subnet.");
+            }
+
+            if (!NetworkCidr.TryParse(NodeSubnet, out var nodeSubnet))
+            {
+                throw new ClusterDefinitionException($"AWS hosting [{nameof(NodeSubnet)}={NodeSubnet}] is not a valid subnet.");
+            }
+
+            if (!vnetSubnet.Contains(nodeSubnet))
+            {
+                throw new ClusterDefinitionException($"AWS hosting [{nameof(NodeSubnet)}={NodeSubnet}] is contained within [{nameof(VnetSubnet)}={VnetSubnet}].");
             }
         }
     }

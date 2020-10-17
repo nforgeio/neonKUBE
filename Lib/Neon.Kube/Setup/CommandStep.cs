@@ -160,7 +160,7 @@ namespace Neon.Kube
         /// Actually executes the command on the node.
         /// </summary>
         /// <param name="node">The target node.</param>
-        private void Execute(SshProxy<NodeDefinition> node)
+        private void Execute(LinuxSshProxy<NodeDefinition> node)
         {
             var status = this.ToString();
 

@@ -73,9 +73,8 @@ Server Requirements:
 --------------------
 
     * Supported version of Linux (server)
-    * Known root SSH credentials
-    * OpenSSH installed (or another SSH server)
-    * [sudo] elevates permissions without a password
+    * Known [sysadmin] sudoer user
+    * OpenSSH installed
 ";
         private const string    logBeginMarker  = "# CLUSTER-BEGIN-PREPARE ##########################################################";
         private const string    logEndMarker    = "# CLUSTER-END-PREPARE-SUCCESS ####################################################";
@@ -185,7 +184,7 @@ Server Requirements:
                 // corrupt the existing cluster and also probably prevent the new cluster from
                 // provisioning correctly.
                 //
-                // Note that we're not going to perform this check for the [Machine] hosting 
+                // Note that we're not going to perform this check for the [BareMetal] hosting 
                 // environment because we're expecting the bare machines to be already running 
                 // with the assigned addresses and we're also not going to do this for cloud
                 // environments because we're assuming that the cluster will run in its own
@@ -194,7 +193,7 @@ Server Requirements:
                 // We also won't do this for cloud deployments because those nodes will be
                 // running in an isolated private network.
 
-                if (cluster.Definition.Hosting.Environment != HostingEnvironment.Machine && 
+                if (cluster.Definition.Hosting.Environment != HostingEnvironment.BareMetal && 
                     !cluster.Definition.Hosting.IsCloudProvider)
                 {
                     Console.WriteLine();
@@ -245,7 +244,7 @@ Server Requirements:
                         Console.Error.WriteLine($"***        machines conflict with the following cluster nodes:");
                         Console.Error.WriteLine();
 
-                        foreach (var node in pingConflicts.OrderBy(n => NetHelper.AddressToUint(IPAddress.Parse(n.Address))))
+                        foreach (var node in pingConflicts.OrderBy(n => NetHelper.AddressToUint(NetHelper.ParseIPv4Address(n.Address))))
                         {
                             Console.Error.WriteLine($"{node.Address, 16}:    {node.Name}");
                         }
@@ -350,7 +349,7 @@ Server Requirements:
                 {
                     // Generate a 2048 bit SSH key pair.
 
-                    clusterLogin.SshKey = KubeHelper.GenerateSshKey(cluster.Name, "root");
+                    clusterLogin.SshKey = KubeHelper.GenerateSshKey(cluster.Name, "sysadmin");
 
                     // We're going to use WinSCP (if it's installed) to convert the OpenSSH PEM formatted key
                     // to the PPK format PuTTY/WinSCP requires.
@@ -412,11 +411,11 @@ Server Requirements:
 
                 cluster.Definition.ValidatePrivateNodeAddresses();
 
-                var ipAddressToServer = new Dictionary<IPAddress, SshProxy<NodeDefinition>>();
+                var ipAddressToServer = new Dictionary<IPAddress, LinuxSshProxy<NodeDefinition>>();
 
                 foreach (var node in cluster.Nodes.OrderBy(n => n.Name))
                 {
-                    SshProxy<NodeDefinition> duplicateServer;
+                    LinuxSshProxy<NodeDefinition> duplicateServer;
 
                     if (node.Address == IPAddress.Any)
                     {

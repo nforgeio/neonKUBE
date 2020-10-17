@@ -20,7 +20,7 @@ package messages
 import (
 	internal "temporal-proxy/internal"
 
-	"go.temporal.io/temporal-proto/workflowservice"
+	"go.temporal.io/api/workflowservice/v1"
 )
 
 type (

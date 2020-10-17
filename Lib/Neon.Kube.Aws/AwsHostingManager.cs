@@ -50,13 +50,14 @@ using Amazon.ResourceGroups;
 using Amazon.ResourceGroups.Model;
 using Amazon.Runtime;
 
+using Renci.SshNet.Common;
+
 using Ec2Instance    = Amazon.EC2.Model.Instance;
 using Ec2Tag         = Amazon.EC2.Model.Tag;
 using Ec2VolumeType  = Amazon.EC2.VolumeType;
 using ElbAction      = Amazon.ElasticLoadBalancingV2.Model.Action;
 using ElbTag         = Amazon.ElasticLoadBalancingV2.Model.Tag;
 using ElbTargetGroup = Amazon.ElasticLoadBalancingV2.Model.TargetGroup;
-using Remotion.Linq.Clauses.Expressions;
 
 namespace Neon.Kube
 {
@@ -72,23 +73,33 @@ namespace Neon.Kube
         // A neonKUBE AWS cluster will require provisioning these things:
         //
         //      * VPC (virtual private cloud, equivilant to an Azure VNET)
+        //
+        //      * Public subnet where the network load balancer, internet
+        //        gateway and NAT gateway will be deployed to manage internet 
+        //        traffic.
+        //
+        //      * Node (private subnet) where the nodes will be deployed.
+        //
         //      * Instances & EC2 volumes
-        //      * Network Load balancer with public Elastic IP
+        //
+        //      * Elastic IP for the load balancer.
         //
         // In the future, we may relax the public load balancer requirement so
-        // that virtual air-gapped clusters can be supported (more on that below).
+        // that virtual air-gapped clusters can be supported.
         //
-        // The VPC will be configured using the cluster definition's [NetworkOptions],
-        // with [NetworkOptions.NodeSubnet] used to configure the subnet.
-        // Node IP addresses will be automatically assigned by default, but this
-        // can be customized via the cluster definition when necessary.
+        // The network will be configured using cluster definition's [AwsHostingOptions].
+        // [VpcSubnet] will be used to configure the VPC and [PublicSubnet] and
+        // [NodeSubnet] will be used for the public subnet and the private node subnet.
+        // Node IP addresses will be automatically assigned from the node subnet by default, 
+        // but this can be customized via the cluster definition when necessary.
         //
         // The load balancer will be created using a public Elastic IP address to balance
         // inbound traffic across a backend target including the instances designated 
         // to accept ingress traffic into the cluster.  These nodes are identified 
         // by the presence of a [neonkube.io/node.ingress=true] label which can be
         // set explicitly.  neonKUBE will default to reasonable ingress nodes when
-        // necessary.
+        // necessary.  We'll be automaticall managing the AWS target groups and
+        // network ACLs to make this all work.
         //
         // External load balancer traffic can be enabled for specific ports via 
         // [NetworkOptions.IngressRules] which specify two ports: 
@@ -103,13 +114,11 @@ namespace Neon.Kube
         // NOTE: Only TCP connections are supported at this time because Istio
         //       doesn't support UDP, ICMP, etc. at this time.
         //
-        // The default VPC network ACL will be used to manage network security
-        // and will include ingress rules constructed from [NetworkOptions.IngressRules],
-        // any temporary SSH related rules as well as egress rules constructed from
-        // [NetworkOptions.EgressAddressRules].
-        //
-        // AWS instances will be configured with each node's private IP address
-        // within the subnet.  The provisioner assigns these addresses automatically.
+        // We're going to use two network ACLs to try make ingress rule changes
+        // as non-disruptive as possible.  The idea is to update the network ACL
+        // not currently in use with any rule changes and then swap the ACLs
+        // so all of the rules will be applied in a single opertation (rather
+        // than performing multiple operations on the current ACL).
         //
         // VMs are currently based on the Ubuntu-20.04 Server AMIs published to the
         // AWS regions by Canonical.  Note that AWS VM images work differently from
@@ -136,8 +145,7 @@ namespace Neon.Kube
         //
         // NOTE: We're not going to use the base Canonical image from the AWS 
         //       Marketplace because marketplace images cannot be copied and
-        //       we're going to need to do that when we make our own marketplace
-        //       image.
+        //       we'll need to do that when we make our own marketplace image.
         //
         // Node instance and disk types and sizes are specified by the 
         // [NodeDefinition.Aws] property.  Instance types are specified
@@ -223,7 +231,7 @@ namespace Neon.Kube
             /// </summary>
             /// <param name="node">The associated node proxy.</param>
             /// <param name="hostingManager">The parent hosting manager.</param>
-            public AwsInstance(SshProxy<NodeDefinition> node, AwsHostingManager hostingManager)
+            public AwsInstance(LinuxSshProxy<NodeDefinition> node, AwsHostingManager hostingManager)
             {
                 Covenant.Requires<ArgumentNullException>(hostingManager != null, nameof(hostingManager));
 
@@ -234,7 +242,7 @@ namespace Neon.Kube
             /// <summary>
             /// Returns the associated node proxy.
             /// </summary>
-            public SshProxy<NodeDefinition> Node { get; private set; }
+            public LinuxSshProxy<NodeDefinition> Node { get; private set; }
 
             /// <summary>
             /// Returns the node metadata (AKA its definition).
@@ -513,6 +521,14 @@ namespace Neon.Kube
         private const string neonNodeSshTagKey = neonTagKeyPrefix + "node.ssh-port";
 
         /// <summary>
+        /// Used to tag VM instances with an indication that the user-data passed
+        /// on create has already been cleared.  This data includes the secure SSH
+        /// password and we don't want to leave it around because it can be retrieved
+        /// via the AWS portal.
+        /// </summary>
+        private const string neonNodeUserDataTagKey = neonTagKeyPrefix + "node.user-data";
+
+        /// <summary>
         /// Used to tag VPC instances with a boolean indicating whether external
         /// SSH access to the cluster is currently enabled or disabled.
         /// </summary>
@@ -521,22 +537,27 @@ namespace Neon.Kube
         /// <summary>
         /// The default deny everything network ACL rule number.
         /// </summary>
-        private const int aclDenyAllRuleNumber = 32767;
+        private const int denyAllAclRuleNumber = 32767;
 
         /// <summary>
-        /// The first NSG rule priority to use for temporary SSH rules.
+        /// The first network ACL rule number for internal rules.
         /// </summary>
-        private const int firstSshRuleNumber = 1000;
+        private const int firstInternalAclRuleNumber = 1;
 
         /// <summary>
-        /// The first NSG rule priority to use for ingress rules.
+        /// The first network ACL rule numberm for temporary SSH rules.
         /// </summary>
-        private const int firstIngressRuleNumber = 2000;
+        private const int firstSshAclRuleNumber = 1000;
 
         /// <summary>
-        /// The first NSG rule priority to use for egress rules.
+        /// The network ACL rule number for ingress rules.
         /// </summary>
-        private const int firstEgressRuleNumber = 2000;
+        private const int firstIngressAclRuleNumber = 2000;
+
+        /// <summary>
+        /// The network ACL rule number for egress rules.
+        /// </summary>
+        private const int firstEgressAclRuleNumber = 2000;
 
         /// <summary>
         /// Returns the list of supported Ubuntu images from the AWS Marketplace.
@@ -544,20 +565,30 @@ namespace Neon.Kube
         private static IReadOnlyList<AwsUbuntuImage> ubuntuImages;
 
         /// <summary>
-        /// Identifies the target VM block device for the data disk. 
+        /// Identifies the instance VM block device for the OS disk. 
+        /// </summary>
+        private const string osDeviceName = "/dev/sda1";
+
+        /// <summary>
+        /// Identifies the instance VM block device for the data disk. 
         /// </summary>
         private const string dataDeviceName = "/dev/sdb";
 
         /// <summary>
         /// Identifies the target VM block device for the OpenEBS oStore disk. 
         /// </summary>
-        private const string openEBSDeviceName = "/dev/sdc";
+        private const string openEBSDeviceName = "/dev/sdf";
 
         /// <summary>
-        /// 
+        /// Some AWS operations (like creating a NAT gateway or waiting for a load balancer
+        /// target group to initialize and transition to healthy) can take a very long time 
+        /// to complete.
         /// </summary>
-        private static readonly TimeSpan operationTimeout = TimeSpan.FromMinutes(5);
+        private static readonly TimeSpan operationTimeout = TimeSpan.FromMinutes(10);
 
+        /// <summary>
+        /// Polling interval for slow operations.
+        /// </summary>
         private static readonly TimeSpan operationPollInternal = TimeSpan.FromSeconds(5);
 
         /// <summary>
@@ -579,37 +610,6 @@ namespace Neon.Kube
         {
             // We don't have to do anything here because the assembly is loaded
             // as a byproduct of calling this method.
-        }
-
-        /// <summary>
-        /// <para>
-        /// Converts an <see cref="IngressProtocol"/> into the corresponding string AWS
-        /// uses to identify the protocol for a network ACL entry.
-        /// </para>
-        /// <note>
-        /// The values returned are internet protocol numbers as strings.  AWS also supports
-        ///<b> "-1"</b> which means <b>any</b> protocol, but we don't use that.
-        /// </note>
-        /// </summary>
-        /// <param name="protocol">The input protocol.</param>
-        /// <returns>The corresponding AWS protocol string.</returns>
-        private static string ToNetworkAclEntryProtocol(IngressProtocol protocol)
-        {
-            switch (protocol)
-            {
-                case IngressProtocol.Http:
-                case IngressProtocol.Https:
-                case IngressProtocol.Tcp:
-
-                    // We're deploying a network load balancer, so all of these
-                    // protocols map to TCP.
-
-                    return "6";     // TCP
-
-                default:
-
-                    throw new NotImplementedException();
-            }
         }
 
         /// <summary>
@@ -749,39 +749,45 @@ namespace Neon.Kube
         private RegionEndpoint                      regionEndpoint;
         private KubeSshKey                          sshKey;
         private string                              secureSshPassword;
+        private List<Filter>                        clusterFilter;      // Used to filter resources that belong to our cluster
         private AmazonEC2Client                     ec2Client;
         private AmazonElasticLoadBalancingV2Client  elbClient;
         private AmazonResourceGroupsClient          rgClient;
 
         // These are the names we'll use for cluster AWS resources.
 
-        private string                              elasticIpName;
-        private string                              vpcName;
-        private string                              dhcpOptionName;
-        private string                              sgAllowAllName;
-        private string                              subnetName;
-        private string                              networkAclName1;
-        private string                              networkAclName2;
-        private string                              gatewayName;
-        private string                              loadBalancerName;
-        private string                              elbName;
-        private string                              keyPairName;
-        private string                              masterPlacementGroupName;
-        private string                              workerPlacementGroupName;
+        private readonly string                     ingressAddressName;
+        private readonly string                     egressAddressName;
+        private readonly string                     vpcName;
+        private readonly string                     dhcpOptionName;
+        private readonly string                     securityGroupName;
+        private readonly string                     publicSubnetName;
+        private readonly string                     nodeSubnetName;
+        private readonly string                     publicRouteTableName;
+        private readonly string                     nodeRouteTableName;
+        private readonly string                     internetGatewayName;
+        private readonly string                     natGatewayName;
+        private readonly string                     loadBalancerName;
+        private readonly string                     elbName;
+        private readonly string                     keyPairName;
+        private readonly string                     masterPlacementGroupName;
+        private readonly string                     workerPlacementGroupName;
 
         // These reference the AWS resources.
 
         private string                              ami;
         private Group                               resourceGroup;
-        private Address                             elasticIp;
+        private Address                             ingressAddress;
+        private Address                             egressAddress;
         private Vpc                                 vpc;
-        private RouteTable                          vpcRouteTable;
         private DhcpOptions                         dhcpOptions;
-        private SecurityGroup                       sgAllowAll;
-        private Subnet                              subnet;
-        private NetworkAcl                          networkAcl1;
-        private NetworkAcl                          networkAcl2;
-        private InternetGateway                     gateway;
+        private SecurityGroup                       securityGroup;
+        private Subnet                              publicSubnet;
+        private Subnet                              nodeSubnet;
+        private RouteTable                          publicRouteTable;
+        private RouteTable                          nodeRouteTable;
+        private InternetGateway                     internetGateway;
+        private NatGateway                          natGateway;
         private LoadBalancer                        loadBalancer;
         private string                              keyPairId;
         private PlacementGroup                      masterPlacementGroup;
@@ -843,6 +849,14 @@ namespace Neon.Kube
             this.region             = awsOptions.Region;
             this.availabilityZone   = awsOptions.AvailabilityZone;
             this.resourceGroupName  = awsOptions.ResourceGroup;
+            this.clusterFilter      = new List<Filter>()
+            {
+                new Filter()
+                {
+                    Name   = $"tag:{neonClusterTagKey}",
+                    Values = new List<string>() { clusterName }
+                }
+            };
 
             // We're always going to prefix AWS resource names with the cluster name because
             // AWS resource names have scope and because load balancer names need to be unique
@@ -852,14 +866,17 @@ namespace Neon.Kube
 
             // Initialize the cluster resource names.
 
-            elasticIpName            = GetResourceName("elastic-ip");
+            ingressAddressName       = GetResourceName("ingress-address");
+            egressAddressName        = GetResourceName("egress-address");
             vpcName                  = GetResourceName("vpc");
             dhcpOptionName           = GetResourceName("dhcp-opt");
-            sgAllowAllName           = GetResourceName("sg-allow-all");
-            subnetName               = GetResourceName("subnet");
-            networkAclName1          = GetResourceName("network-acl-1");
-            networkAclName2          = GetResourceName("network-acl-2");
-            gatewayName              = GetResourceName("internet-gateway");
+            securityGroupName        = GetResourceName("security-group");
+            publicSubnetName         = GetResourceName("public-subnet");
+            nodeSubnetName           = GetResourceName("node-subnet");
+            publicRouteTableName     = GetResourceName("public-route-table");
+            nodeRouteTableName       = GetResourceName("node-route-table");
+            internetGatewayName      = GetResourceName("internet-gateway");
+            natGatewayName           = GetResourceName("nat-gateway");
             loadBalancerName         = GetResourceName("load-balancer");
             elbName                  = GetLoadBalancerName(clusterName, "elb");
             keyPairName              = GetResourceName("ssh-keys");
@@ -1094,16 +1111,23 @@ namespace Neon.Kube
             controller.AddGlobalStep("region check", VerifyRegionAndInstanceTypesAsync);
             controller.AddGlobalStep("locate ami", LocateAmiAsync);
             controller.AddGlobalStep("resource group", CreateResourceGroupAsync);
-            controller.AddGlobalStep("elastic ip", CreateElasticIpAsync);
+            controller.AddGlobalStep("elastic ip", CreateAddressesAsync);
             controller.AddGlobalStep("placement groups", ConfigurePlacementGroupAsync);
             controller.AddGlobalStep("external ssh ports", AssignExternalSshPorts, quiet: true);
             controller.AddGlobalStep("network", ConfigureNetworkAsync);
-            controller.AddGlobalStep("ssh key", ImportKeyPairAsync);
+            controller.AddGlobalStep("ssh keys", ImportKeyPairAsync);
             controller.AddNodeStep("node instances", CreateNodeInstanceAsync);
+            controller.AddNodeStep("credentials",
+                (node, stepDelay) =>
+                {
+                    // Update the node SSH proxies to use the secure SSH password.
+
+                    node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUsername, secureSshPassword));
+                },
+                quiet: true);
             controller.AddGlobalStep("load balancer", ConfigureLoadBalancerAsync);
+            controller.AddNodeStep("load balancer targets", WaitForSshTargetAsync);
             controller.AddGlobalStep("internet routing", async () => await UpdateNetworkAsync(NetworkOperations.InternetRouting | NetworkOperations.EnableSsh));
-            //controller.AddGlobalStep("nic tags", ConfigureNicTags);   // <-- This doesn't work yet
-            controller.AddNodeStep("node ssh config", ConfigureNodeSsh);
 
             if (!controller.Run(leaveNodesConnected: false))
             {
@@ -1117,6 +1141,14 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override void AddPostPrepareSteps(SetupController<NodeDefinition> setupController)
         {
+            // Add a step to perform low-level node initialization.
+
+            setupController.AddNodeStep("node basics",
+                (node, stepDelay) =>
+                {
+                    KubeHelper.InitializeNode(node, secureSshPassword);
+                });
+
             // We need to add any required OpenEBS cStore disks after the node has been otherwise
             // prepared.  We need to do this here because if we created the data and OpenEBS disks
             // when the VM is initially created, the disk setup scripts executed during prepare
@@ -1130,17 +1162,19 @@ namespace Neon.Kube
                 {
                     node.Status = "openebs: checking";
 
-                    var volumeName        = $"{node.Name}-openebs";
+                    var volumeName        = GetResourceName($"{node.Name}-openebs");
                     var awsInstance       = nodeNameToAwsInstance[node.Name];
                     var openEBSVolumeType = ToEc2VolumeType(awsInstance.Metadata.Aws.OpenEBSVolumeType);
-                    var volumePagenator   = ec2Client.Paginators.DescribeVolumes(new DescribeVolumesRequest());
+                    var volumePagenator   = ec2Client.Paginators.DescribeVolumes(new DescribeVolumesRequest() { Filters = clusterFilter });
                     var volume            = (Volume)null;
 
-                    // Look to see if we've already created the volume.
+                    // Check if we've already created the volume.
 
                     await foreach (var volumeItem in volumePagenator.Volumes)
                     {
-                        if (volumeItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == volumeName) &&
+                        if (volumeItem.State != VolumeState.Deleting && 
+                            volumeItem.State != VolumeState.Deleted &&
+                            volumeItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == volumeName) &&
                             volumeItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
                         {
                             volume = volumeItem;
@@ -1152,7 +1186,7 @@ namespace Neon.Kube
 
                     if (volume == null)
                     {
-                        node.Status = "openebs: add cstore disk";
+                        node.Status = "openebs: create cstore volume";
 
                         var volumeResponse = await ec2Client.CreateVolumeAsync(
                             new CreateVolumeRequest()
@@ -1161,11 +1195,35 @@ namespace Neon.Kube
                                 VolumeType         = openEBSVolumeType,
                                 Size               = (int)(ByteUnits.Parse(node.Metadata.Aws.OpenEBSVolumeSize) / ByteUnits.GibiBytes),
                                 MultiAttachEnabled = false,
-                                TagSpecifications  = GetTagSpecifications(volumeName, ResourceType.Volume)
+                                TagSpecifications  = GetTagSpecifications(volumeName, ResourceType.Volume, new ResourceTag(neonNodeNameTagKey, node.Name))
                             });
 
                         volume = volumeResponse.Volume;
                     }
+
+                    // Wait for the volume to become available.
+
+                    await NeonHelper.WaitForAsync(
+                        async () =>
+                        {
+                            node.Status = "openebs: waiting for cstore volume...";
+
+                            var volumePagenator = ec2Client.Paginators.DescribeVolumes(new DescribeVolumesRequest() { Filters = clusterFilter });
+
+                            await foreach (var volumeItem in volumePagenator.Volumes)
+                            {
+                                if (volumeItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == volumeName) &&
+                                    volumeItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
+                                {
+                                    volume = volumeItem;
+                                    break;
+                                }
+                            }
+
+                            return volume.State == VolumeState.Available || volume.State == VolumeState.InUse;
+                        },
+                        timeout:      operationTimeout,
+                        pollInterval: operationPollInternal);
 
                     // Attach the volume to the VM if it's not already attached.
 
@@ -1176,9 +1234,30 @@ namespace Neon.Kube
                             {
                                 VolumeId   = volume.VolumeId,
                                 InstanceId = awsInstance.InstanceId,
-                                Device     = openEBSDeviceName
+                                Device     = openEBSDeviceName,
                             });
                     }
+
+                    // AWS defaults to deleting volumes on termination only for the
+                    // volumes created along with the new instance.  We want the 
+                    // OpenEBS cStore volume to be deleted as well.
+
+                    await ec2Client.ModifyInstanceAttributeAsync(
+                        new ModifyInstanceAttributeRequest()
+                        {
+                            InstanceId          = awsInstance.InstanceId,
+                            BlockDeviceMappings = new List<InstanceBlockDeviceMappingSpecification>()
+                            {
+                                new InstanceBlockDeviceMappingSpecification()
+                                {
+                                    DeviceName = openEBSDeviceName,
+                                    Ebs        = new EbsInstanceBlockDeviceSpecification()
+                                    {
+                                        DeleteOnTermination = true,
+                                    }
+                                }
+                            }
+                        });
                 },
                 node => node.Metadata.OpenEBS);
         }
@@ -1191,26 +1270,28 @@ namespace Neon.Kube
         {
             var operations = NetworkOperations.InternetRouting;
 
-            // We need to update the SSH rules too if it looks like SSH is
-            // currently enabled.  We'll tell by inspecting the subnet
-            // network ACL, looking for the entry allowing SSH traffic
-            // from the reserved port range.
+            // Update the SSH listeners if there are any SSH listeners already.  This will
+            // be important after we support dynamically adding and removing cluster nodes.
 
-            var subnetAcl = (NetworkAcl)null;
+            var listenerPagenator = elbClient.Paginators.DescribeListeners(
+                new DescribeListenersRequest()
+                {
+                    LoadBalancerArn = loadBalancer.LoadBalancerArn
+                });
 
-            if (networkAcl1.Associations.Any(association => association.SubnetId == subnet.SubnetId))
+            var listeners = new List<Listener>();
+
+            await foreach (var listenerItem in listenerPagenator.Listeners)
             {
-                subnetAcl = networkAcl1;
-            }
-            else if (networkAcl2.Associations.Any(association => association.SubnetId == subnet.SubnetId))
-            {
-                subnetAcl = networkAcl2;
+                listeners.Add(listenerItem);
             }
 
-            if (subnetAcl.Entries.Any(entry => entry.RuleNumber == firstSshRuleNumber))
+            if (listeners.Any(listener => networkOptions.FirstExternalSshPort <= listener.Port && listener.Port < networkOptions.LastExternalSshPort))
             {
                 operations |= NetworkOperations.EnableSsh;
             }
+
+            // Perform the update.
 
             await UpdateNetworkAsync(operations);
         }
@@ -1239,11 +1320,11 @@ namespace Neon.Kube
 
             Covenant.Assert(awsInstance.ExternalSshPort != 0, $"Node [{nodeName}] does not have an external SSH port assignment.");
 
-            return (Address: cluster.GetNode(nodeName).Address.ToString(), Port: awsInstance.ExternalSshPort);
+            return (Address: ingressAddress.PublicIp, Port: awsInstance.ExternalSshPort);
         }
 
         /// <inheritdoc/>
-        public override string GetDataDevice(SshProxy<NodeDefinition> node)
+        public override string GetDataDisk(LinuxSshProxy<NodeDefinition> node)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 
@@ -1349,13 +1430,14 @@ namespace Neon.Kube
                 ValidateResourceGroupQuery(groupQueryResponse.GroupQuery);
             }
 
-            // Elastic IP
+            // Elastic IPs
 
-            elasticIp = await GetElasticIpAsync();
+            ingressAddress = await GetElasticIpAsync(ingressAddressName);
+            egressAddress  = await GetElasticIpAsync(egressAddressName);
 
             // VPC and it's default network ACL.
 
-            var vpcPaginator = ec2Client.Paginators.DescribeVpcs(new DescribeVpcsRequest());
+            var vpcPaginator = ec2Client.Paginators.DescribeVpcs(new DescribeVpcsRequest() { Filters = clusterFilter });
 
             await foreach (var vpcItem in vpcPaginator.Vpcs)
             {
@@ -1369,7 +1451,7 @@ namespace Neon.Kube
 
             // DHCP options
 
-            var dhcpPaginator = ec2Client.Paginators.DescribeDhcpOptions(new DescribeDhcpOptionsRequest());
+            var dhcpPaginator = ec2Client.Paginators.DescribeDhcpOptions(new DescribeDhcpOptionsRequest() { Filters = clusterFilter });
 
             await foreach (var dhcpItem in dhcpPaginator.DhcpOptions)
             {
@@ -1383,46 +1465,68 @@ namespace Neon.Kube
 
             // Security Groups
 
-            var securityGroupPagenator = ec2Client.Paginators.DescribeSecurityGroups(new DescribeSecurityGroupsRequest());
+            var securityGroupPagenator = ec2Client.Paginators.DescribeSecurityGroups(new DescribeSecurityGroupsRequest() { Filters = clusterFilter });
 
             await foreach (var securityGroupItem in securityGroupPagenator.SecurityGroups)
             {
-                if (securityGroupItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == sgAllowAllName) &&
+                if (securityGroupItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == securityGroupName) &&
                     securityGroupItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
                 {
-                    sgAllowAll = securityGroupItem;
+                    securityGroup = securityGroupItem;
                     break;
                 }
             }
 
-            // Subnet
+            // Public and node subnets
 
-            var subnetPaginator = ec2Client.Paginators.DescribeSubnets(new DescribeSubnetsRequest());
+            var subnetPaginator = ec2Client.Paginators.DescribeSubnets(new DescribeSubnetsRequest() { Filters = clusterFilter });
 
             await foreach (var subnetItem in subnetPaginator.Subnets)
             {
-                if (subnetItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == subnetName) &&
+                if (subnetItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == publicSubnetName) &&
                     subnetItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
                 {
-                    subnet = subnetItem;
+                    publicSubnet = subnetItem;
+                }
+                else if (subnetItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == nodeSubnetName) &&
+                    subnetItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
+                {
+                    nodeSubnet = subnetItem;
+                }
+
+                if (publicSubnet != null && nodeSubnet != null)
+                {
                     break;
                 }
             }
 
-            // Network ACLs
-            //
-            // Note that subnets are created with a default network ACL assigned.  We'll identify this
-            // as [networkAcl1].
+            // Subnet route tables
 
-            await IdentifyPublicNetworkAclsAsync();
+            var routeTablePagenator = ec2Client.Paginators.DescribeRouteTables(new DescribeRouteTablesRequest() { Filters = clusterFilter });
 
-            // Route Table
+            await foreach (var routeTableItem in routeTablePagenator.RouteTables)
+            {
+                if (routeTableItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == publicRouteTableName) &&
+                    routeTableItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
+                {
+                    publicRouteTable = routeTableItem;
+                }
+                else if (routeTableItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == nodeRouteTableName) &&
+                         routeTableItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
+                {
+                    nodeRouteTable = routeTableItem;
+                }
 
-            vpcRouteTable = await GetVpcRouteTableAsync();
+                if (publicRouteTable != null && nodeRouteTable != null)
+                {
+                    break;
+                }
+            }
 
-            // Internet Gateway
+            // Internet and NAT Gateways
 
-            gateway = await GetInternetGatewayAsync();
+            internetGateway = await GetInternetGatewayAsync();
+            natGateway      = await GetNatGatewayAsync();
 
             // Load Balancer
 
@@ -1459,7 +1563,7 @@ namespace Neon.Kube
 
             // Placement groups
 
-            var placementGroupPaginator = await ec2Client.DescribePlacementGroupsAsync(new DescribePlacementGroupsRequest());
+            var placementGroupPaginator = await ec2Client.DescribePlacementGroupsAsync(new DescribePlacementGroupsRequest() { Filters = clusterFilter });
 
             foreach (var placementGroupItem in placementGroupPaginator.PlacementGroups)
             {
@@ -1480,7 +1584,7 @@ namespace Neon.Kube
 
             // Instances
 
-            var instancePaginator = ec2Client.Paginators.DescribeInstances(new DescribeInstancesRequest());
+            var instancePaginator = ec2Client.Paginators.DescribeInstances(new DescribeInstancesRequest() { Filters = clusterFilter });
 
             await foreach (var reservation in instancePaginator.Reservations)
             {
@@ -1512,134 +1616,6 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Attempts to identify the two subnet network ACLs we'll be using to secure the subnet.
-        /// </summary>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task IdentifyPublicNetworkAclsAsync()
-        {
-            if (vpc == null || subnet == null)
-            {
-                // There can't be any network ACLs until the VPC and subnet exist.
-
-                return;
-            }
-
-retry:
-            var networkAclPagenator = ec2Client.Paginators.DescribeNetworkAcls(new DescribeNetworkAclsRequest());
-            var networkAcls         = new List<NetworkAcl>();
-            var haveSubnetAcl       = false;
-
-            await foreach (var networkAclItem in networkAclPagenator.NetworkAcls)
-            {
-                if (networkAclItem.VpcId == vpc.VpcId)
-                {
-                    networkAcls.Add(networkAclItem);
-                }
-            }
-
-            foreach (var networkAclItem in networkAcls)
-            {
-                if (networkAclItem.Associations.Any(association => association.SubnetId == subnet.SubnetId))
-                {
-                    haveSubnetAcl = true;
-
-                    // This must be the default ACL assigned to the subnet.  We'll rename
-                    // this to be [networkAcl1] if it's not already assigned a name. 
-
-                    var aclName = networkAclItem.Tags.FirstOrDefault(tag => tag.Key == nameTagKey)?.Value;
-
-                    if (aclName != networkAclName1 && aclName != networkAclName2)
-                    {
-                        await ec2Client.CreateTagsAsync(
-                            new CreateTagsRequest()
-                            {
-                                Resources = new List<string>() { networkAclItem.NetworkAclId },
-                                Tags      = GetTags<Ec2Tag>(networkAclName1)
-                            });
-
-                        networkAcl1 = await GetNetworkAclAsync(networkAclItem.NetworkAclId);
-
-                        continue;
-                    }
-                }
-
-                if (networkAclItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
-                {
-                    if (networkAclItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
-                    {
-                        if (networkAclItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == networkAclName1))
-                        {
-                            networkAcl1 = networkAclItem;
-                        }
-                        else if (networkAclItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == networkAclName2))
-                        {
-                            networkAcl2 = networkAclItem;
-                        }
-                    }
-                }
-            }
-
-            // Note that one of the network ACLs must be associated with the subnet.  This may not be the
-            // case if the subnet for a previous cluster with the same name was deleted but the network
-            // ACLs were not.  This shouldn't really happen in production if the cluster was deprovisioned
-            // via the hosting manager but may happen when testing and debugging.
-            //
-            // We're going to address this situation by removing both network ACLs and then looping to
-            // relocate the subnet associated ACL.
-
-            if (!haveSubnetAcl)
-            {
-                // Delete both ACLs (if they exist) and try to locate the default subnet ACL again.
-
-                if (networkAcl1 != null)
-                {
-                    await ec2Client.DeleteNetworkAclAsync(
-                        new DeleteNetworkAclRequest()
-                        {
-                            NetworkAclId = networkAcl1.NetworkAclId
-                        });
-                }
-
-                if (networkAcl2 != null)
-                {
-                    await ec2Client.DeleteNetworkAclAsync(
-                        new DeleteNetworkAclRequest()
-                        {
-                            NetworkAclId = networkAcl2.NetworkAclId
-                        });
-                }
-
-                goto retry;     // YAY: A GOTO!  I haven't coded one of those for a while.
-            }
-
-            // Ensure that both ACLs exist.
-
-            if (networkAcl1 == null)
-            {
-                var networkAclResponse = await ec2Client.CreateNetworkAclAsync(
-                    new CreateNetworkAclRequest()
-                    {
-                         VpcId             = vpc.VpcId,
-                         TagSpecifications = GetTagSpecifications(networkAclName1, ResourceType.NetworkAcl)
-                    });
-
-                networkAcl1 = networkAclResponse.NetworkAcl;
-            }
-
-            if (networkAcl2 == null)
-            {
-                var networkAclResponse = await ec2Client.CreateNetworkAclAsync(
-                    new CreateNetworkAclRequest()
-                    {
-                         VpcId             = vpc.VpcId,
-                         TagSpecifications = GetTagSpecifications(networkAclName2, ResourceType.NetworkAcl)
-                    });
-
-                networkAcl2 = networkAclResponse.NetworkAcl;
-            }
-        }
-
-        /// <summary>
         /// Attempts to locate the cluster load balancer.
         /// </summary>
         /// <returns>The load balancer or <c>null</c>.</returns>
@@ -1659,58 +1635,37 @@ retry:
         }
 
         /// <summary>
-        /// Returns the VPC's main route table.
-        /// </summary>
-        /// <returns>The main route table or <c>null</c>.</returns>
-        private async Task<RouteTable> GetVpcRouteTableAsync()
-        {
-            if (vpc == null)
-            {
-                // The route table belongs to the VPC so there'll be no table
-                // before the VPC exists.
-
-                return null;
-            }
-
-            // It looks like it can take some time for the VPC to provision its
-            // main route table.  We'll loop for a bit to wait for it.
-
-            var routeTable = (RouteTable)null;
-
-            await NeonHelper.WaitForAsync(
-                async () =>
-                {
-                    var routeTablePagenator = ec2Client.Paginators.DescribeRouteTables(new DescribeRouteTablesRequest());
-
-                    await foreach (var routeTableItem in routeTablePagenator.RouteTables)
-                    {
-                        if (routeTableItem.VpcId == vpc.VpcId && routeTableItem.Associations.Any(association => association.Main))
-                        {
-                            routeTable = routeTableItem;
-                            return true;
-                        }
-                    }
-
-                    return false;
-                },
-                timeout:        operationTimeout,
-                pollInterval:   operationPollInternal,
-                timeoutMessage: "Timeout waiting for the main routing table to be created for the cluster VPC.");
-
-            return routeTable;
-        }
-
-        /// <summary>
         /// Returns the internet gateway.
         /// </summary>
         /// <returns>The internet gateway or <c>null</c>.</returns>
         private async Task<InternetGateway> GetInternetGatewayAsync()
         {
-            var gatewayPaginator = ec2Client.Paginators.DescribeInternetGateways(new DescribeInternetGatewaysRequest());
+            var gatewayPaginator = ec2Client.Paginators.DescribeInternetGateways(new DescribeInternetGatewaysRequest() { Filters = clusterFilter });
 
             await foreach (var gatewayItem in gatewayPaginator.InternetGateways)
             {
-                if (gatewayItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == gatewayName) &&
+                if (gatewayItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == internetGatewayName) &&
+                    gatewayItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
+                {
+                    return gatewayItem;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Returns the NAT gateway.
+        /// </summary>
+        /// <returns>The internet gateway or <c>null</c>.</returns>
+        private async Task<NatGateway> GetNatGatewayAsync()
+        {
+            var gatewayPaginator = ec2Client.Paginators.DescribeNatGateways(new DescribeNatGatewaysRequest());
+
+            await foreach (var gatewayItem in gatewayPaginator.NatGateways)
+            {
+                if (gatewayItem.State != NatGatewayState.Deleted &&
+                    gatewayItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == natGatewayName) &&
                     gatewayItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
                 {
                     return gatewayItem;
@@ -1754,7 +1709,7 @@ retry:
         {
             // $todo(jefflill): This would be more efficient with a filter.
 
-            var networkAclPagenator = ec2Client.Paginators.DescribeNetworkAcls(new DescribeNetworkAclsRequest());
+            var networkAclPagenator = ec2Client.Paginators.DescribeNetworkAcls(new DescribeNetworkAclsRequest() { Filters = clusterFilter });
 
             await foreach (var networkAclItem in networkAclPagenator.NetworkAcls)
             {
@@ -1777,7 +1732,7 @@ retry:
         {
             Covenant.Requires<ArgumentNullException>(vpc != null, nameof(vpc));
 
-            var associationPaginator = ec2Client.Paginators.DescribeNetworkAcls(new DescribeNetworkAclsRequest());
+            var associationPaginator = ec2Client.Paginators.DescribeNetworkAcls(new DescribeNetworkAclsRequest() { Filters = clusterFilter });
 
             await foreach (var association in associationPaginator.NetworkAcls)
             {
@@ -1846,7 +1801,7 @@ retry:
 
                 if (!instanceTypeInfo.ProcessorInfo.SupportedArchitectures.Any(architecture => architecture == "x86_64"))
                 {
-                    throw new KubeException($"Node [{node.Name}] requests [{nameof(node.Metadata.Aws.InstanceType)}={instanceType}] which is not supported due to not being x86_64.");
+                    throw new KubeException($"Node [{node.Name}] requests [{nameof(node.Metadata.Aws.InstanceType)}={instanceType}] which is not supported.  neonKUBE requires an x86_64 CPU.");
                 }
 
                 switch (node.Metadata.Role)
@@ -1855,7 +1810,7 @@ retry:
 
                         if (instanceTypeInfo.VCpuInfo.DefaultVCpus < KubeConst.MinMasterCores)
                         {
-                            throw new KubeException($"Master node [{node.Name}] requests [{nameof(node.Metadata.Aws.InstanceType)}={instanceType}] with [Cores={instanceTypeInfo.VCpuInfo.DefaultVCpus} MiB] which is lower than the required [{KubeConst.MinMasterCores}] cores.]");
+                            throw new KubeException($"Master node [{node.Name}] requests [{nameof(node.Metadata.Aws.InstanceType)}={instanceType}] with [Cores={instanceTypeInfo.VCpuInfo.DefaultVCpus}] which is lower than the required [{KubeConst.MinMasterCores}] cores.]");
                         }
 
                         if (instanceTypeInfo.MemoryInfo.SizeInMiB < KubeConst.MinMasterRamMiB)
@@ -1868,7 +1823,7 @@ retry:
 
                         if (instanceTypeInfo.VCpuInfo.DefaultVCpus < KubeConst.MinWorkerCores)
                         {
-                            throw new KubeException($"Worker node [{node.Name}] requests [{nameof(node.Metadata.Aws.InstanceType)}={instanceType}] with [Cores={instanceTypeInfo.VCpuInfo.DefaultVCpus} MiB] which is lower than the required [{KubeConst.MinWorkerCores}] cores.]");
+                            throw new KubeException($"Worker node [{node.Name}] requests [{nameof(node.Metadata.Aws.InstanceType)}={instanceType}] with [Cores={instanceTypeInfo.VCpuInfo.DefaultVCpus}] which is lower than the required [{KubeConst.MinWorkerCores}] cores.]");
                         }
 
                         if (instanceTypeInfo.MemoryInfo.SizeInMiB < KubeConst.MinWorkerRamMiB)
@@ -2090,14 +2045,17 @@ retry:
         /// <summary>
         /// Returns the cluster's elastic IP address.
         /// </summary>
+        /// <param name="addressName">The address name.</param>
         /// <returns>The elastic IP address or <c>null</c> if it doesn't exist.</returns>
-        private async Task<Address> GetElasticIpAsync()
+        private async Task<Address> GetElasticIpAsync(string addressName)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(addressName), nameof(addressName));
+
             var addressResponse = await ec2Client.DescribeAddressesAsync();
 
             foreach (var addressItem in addressResponse.Addresses)
             {
-                if (addressItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == elasticIpName) &&
+                if (addressItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == addressName) &&
                     addressItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
                 {
                     return addressItem;
@@ -2108,12 +2066,12 @@ retry:
         }
 
         /// <summary>
-        /// Creates the elastic IP address for the cluster if it doesn't already exist.
+        /// Creates the ingress and egress elastic IP addresses for the cluster if they don't already exist.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task CreateElasticIpAsync()
+        private async Task CreateAddressesAsync()
         {
-            if (elasticIp == null)
+            if (ingressAddress == null)
             {
                 var allocateResponse = await ec2Client.AllocateAddressAsync(
                     new AllocateAddressRequest()
@@ -2127,7 +2085,78 @@ retry:
                     new CreateTagsRequest()
                     {
                         Resources = new List<string>() { addressId },
-                        Tags      = GetTags<Ec2Tag>(elasticIpName)
+                        Tags      = GetTags<Ec2Tag>(ingressAddressName)
+                    });
+
+                // Retrieve the ingress address resource.
+
+                var addressResponse = await ec2Client.DescribeAddressesAsync();
+
+                foreach (var addr in addressResponse.Addresses)
+                {
+                    if (addr.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == ingressAddressName) &&
+                        addr.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
+                    {
+                        ingressAddress = addr;
+                        break;
+                    }
+                }
+            }
+
+            if (egressAddress == null)
+            {
+                var allocateResponse = await ec2Client.AllocateAddressAsync(
+                    new AllocateAddressRequest()
+                    {
+                        Domain = DomainType.Vpc
+                    });
+
+                var addressId = allocateResponse.AllocationId;
+
+                await ec2Client.CreateTagsAsync(
+                    new CreateTagsRequest()
+                    {
+                        Resources = new List<string>() { addressId },
+                        Tags = GetTags<Ec2Tag>(egressAddressName)
+                    });
+
+                // Retrieve the egress address resource.
+
+                var addressResponse = await ec2Client.DescribeAddressesAsync();
+
+                foreach (var addr in addressResponse.Addresses)
+                {
+                    if (addr.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == egressAddressName) &&
+                        addr.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
+                    {
+                        egressAddress = addr;
+                        break;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Creates the egress elastic IP address for the cluster if it doesn't already exist.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task CreateEgressAddressAsync()
+        {
+            if (egressAddress == null)
+            {
+                var allocateResponse = await ec2Client.AllocateAddressAsync(
+                    new AllocateAddressRequest()
+                    {
+                        Domain = DomainType.Vpc
+                    });
+
+                var addressId = allocateResponse.AllocationId;
+
+                await ec2Client.CreateTagsAsync(
+                    new CreateTagsRequest()
+                    {
+                        Resources = new List<string>() { addressId },
+                        Tags = GetTags<Ec2Tag>(egressAddressName)
                     });
 
                 // Retrieve the elastic IP resource.
@@ -2136,10 +2165,10 @@ retry:
 
                 foreach (var addr in addressResponse.Addresses)
                 {
-                    if (addr.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == elasticIpName) &&
+                    if (addr.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == egressAddressName) &&
                         addr.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
                     {
-                        elasticIp = addr;
+                        egressAddress = addr;
                         break;
                     }
                 }
@@ -2191,36 +2220,18 @@ retry:
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task ConfigureNetworkAsync()
         {
-            // Create the VPC with the node subnet CIDR.
+            // Create the VPC.
 
             if (vpc == null)
             {
                 var vpcResponse = await ec2Client.CreateVpcAsync(
                     new CreateVpcRequest()
                     {
-                        CidrBlock         = networkOptions.NodeSubnet,
+                        CidrBlock         = awsOptions.VpcSubnet,
                         TagSpecifications = GetTagSpecifications(vpcName, ResourceType.Vpc)
                     });;
 
                 vpc = vpcResponse.Vpc;
-            }
-
-            vpcRouteTable = await GetVpcRouteTableAsync();
-
-            // Clear the VPC's default network ACL by deleting all inbound and outbound 
-            // rules except for the default DENY rule for both directions.
-
-            var defaultNetworkAcl = await GetVpcNetworkAclAsync(vpc);
-
-            foreach (var entry in defaultNetworkAcl.Entries.Where(entry => entry.RuleNumber != aclDenyAllRuleNumber))
-            {
-                await ec2Client.DeleteNetworkAclEntryAsync(
-                    new DeleteNetworkAclEntryRequest()
-                    {
-                        NetworkAclId = defaultNetworkAcl.NetworkAclId,
-                        RuleNumber   = entry.RuleNumber,
-                        Egress       = entry.Egress
-                    });
             }
 
             // Override the default AWS DNS servers if the user has specified 
@@ -2262,69 +2273,44 @@ retry:
                     });
             }
 
-            // Create the internet gateway and attach it to VPC.
-
-            if (gateway == null)
-            {
-                var internetGatewayResponse = await ec2Client.CreateInternetGatewayAsync(
-                    new CreateInternetGatewayRequest()
-                    {
-                        TagSpecifications = GetTagSpecifications(gatewayName, ResourceType.InternetGateway)
-                    });
-
-                gateway = internetGatewayResponse.InternetGateway;
-            }
-
-            if (!gateway.Attachments.Any(attachment => attachment.VpcId == vpc.VpcId))
-            {
-                await ec2Client.AttachInternetGatewayAsync(
-                    new AttachInternetGatewayRequest()
-                    {
-                        InternetGatewayId = gateway.InternetGatewayId,
-                        VpcId             = vpc.VpcId
-                    });
-
-                gateway = await GetInternetGatewayAsync();
-            }
-
             // Create the ALLOW-ALL security group if it doesn't exist.
 
-            if (sgAllowAll == null)
+            if (securityGroup == null)
             {
                 var securityGroupResponse = await ec2Client.CreateSecurityGroupAsync(
                     new CreateSecurityGroupRequest()
                     {
-                        GroupName         = sgAllowAllName,
+                        GroupName         = securityGroupName,
                         Description       = "Allow all traffic",
                         VpcId             = vpc.VpcId,
-                        TagSpecifications = GetTagSpecifications(sgAllowAllName, ResourceType.SecurityGroup)
+                        TagSpecifications = GetTagSpecifications(securityGroupName, ResourceType.SecurityGroup)
                     });
 
-                var securityGroupId        = securityGroupResponse.GroupId;
-                var securityGroupPagenator = ec2Client.Paginators.DescribeSecurityGroups(new DescribeSecurityGroupsRequest());
+                var securityGroupId = securityGroupResponse.GroupId;
+                var securityGroupPagenator = ec2Client.Paginators.DescribeSecurityGroups(new DescribeSecurityGroupsRequest() { Filters = clusterFilter });
 
                 await foreach (var securityGroupItem in securityGroupPagenator.SecurityGroups)
                 {
                     if (securityGroupItem.GroupId == securityGroupId)
                     {
-                        sgAllowAll = securityGroupItem;
+                        securityGroup = securityGroupItem;
                         break;
                     }
                 }
 
-                Covenant.Assert(sgAllowAll != null);
+                Covenant.Assert(securityGroup != null);
 
                 // Security groups are created with an ALLOW-ALL egress rule.  We need to add
                 // the same for ingress.   Note that this is not a security vulnerablity because
                 // the load balancer only forwards traffic for explicit listeners and we also
                 // use network ACLs to secure the network.
 
-                if (sgAllowAll.IpPermissions.Count == 0)
+                if (securityGroup.IpPermissions.Count == 0)
                 {
                     await ec2Client.AuthorizeSecurityGroupIngressAsync(
                         new AuthorizeSecurityGroupIngressRequest()
                         {
-                            GroupId       = sgAllowAll.GroupId,
+                            GroupId       = securityGroup.GroupId,
                             IpPermissions = new List<IpPermission>
                             {
                                 new IpPermission()
@@ -2345,100 +2331,199 @@ retry:
                 }
             }
 
-            // Create the public and private subnets and associate them with the VPC.
+            // Create the public and node subnets alonhg with their route tables
+            // and associate them with the VPC.
 
-            if (subnet == null)
+            if (publicSubnet == null)
             {
                 var subnetResponse = await ec2Client.CreateSubnetAsync(
-                    new CreateSubnetRequest(vpc.VpcId, networkOptions.NodeSubnet)
+                    new CreateSubnetRequest(vpc.VpcId, awsOptions.PublicSubnet)
                     {
                         VpcId             = vpc.VpcId,
                         AvailabilityZone  = awsOptions.AvailabilityZone,
-                        TagSpecifications = GetTagSpecifications(subnetName, ResourceType.Subnet)
+                        TagSpecifications = GetTagSpecifications(publicSubnetName, ResourceType.Subnet)
                     });
 
-                subnet = subnetResponse.Subnet;
+                publicSubnet = subnetResponse.Subnet;
             }
 
-            // Identify/create the two network ACLs we'll use for securing the subnet.
-
-            await IdentifyPublicNetworkAclsAsync();
-
-            if (networkAcl1 == null)
+            if (nodeSubnet == null)
             {
-                var networkAclResponse = await ec2Client.CreateNetworkAclAsync(
-                    new CreateNetworkAclRequest()
+                var subnetResponse = await ec2Client.CreateSubnetAsync(
+                    new CreateSubnetRequest(vpc.VpcId, awsOptions.NodeSubnet)
                     {
                         VpcId             = vpc.VpcId,
-                        TagSpecifications = GetTagSpecifications(networkAclName1, ResourceType.NetworkAcl)
+                        AvailabilityZone  = awsOptions.AvailabilityZone,
+                        TagSpecifications = GetTagSpecifications(nodeSubnetName, ResourceType.Subnet)
                     });
 
-                networkAcl1 = networkAclResponse.NetworkAcl;
+                nodeSubnet = subnetResponse.Subnet;
             }
 
-            if (networkAcl2 == null)
+            if (publicRouteTable == null)
             {
-                var networkAclResponse = await ec2Client.CreateNetworkAclAsync(
-                    new CreateNetworkAclRequest()
+                var routeTableResponse = await ec2Client.CreateRouteTableAsync(
+                    new CreateRouteTableRequest()
                     {
                         VpcId             = vpc.VpcId,
-                        TagSpecifications = GetTagSpecifications(networkAclName2, ResourceType.NetworkAcl)
+                        TagSpecifications = GetTagSpecifications(publicRouteTableName, ResourceType.RouteTable)
                     });
 
-                networkAcl2 = networkAclResponse.NetworkAcl;
+                publicRouteTable = routeTableResponse.RouteTable;
             }
 
-            // Create the internet gateway and attach it to the VPC if it's
-            // not already attached.
+            if (!publicRouteTable.Associations.Any(association => association.SubnetId == publicSubnet.SubnetId))
+            {
+                await ec2Client.AssociateRouteTableAsync(
+                    new AssociateRouteTableRequest()
+                    {
+                        RouteTableId = publicRouteTable.RouteTableId,
+                        SubnetId     = publicSubnet.SubnetId
+                    });
+            }
 
-            if (gateway == null)
+            if (nodeRouteTable == null)
+            {
+                var routeTableResponse = await ec2Client.CreateRouteTableAsync(
+                    new CreateRouteTableRequest()
+                    {
+                        VpcId             = vpc.VpcId,
+                        TagSpecifications = GetTagSpecifications(nodeRouteTableName, ResourceType.RouteTable)
+                    });
+
+                nodeRouteTable = routeTableResponse.RouteTable;
+            }
+
+            if (!nodeRouteTable.Associations.Any(association => association.SubnetId == nodeSubnet.SubnetId))
+            {
+                await ec2Client.AssociateRouteTableAsync(
+                    new AssociateRouteTableRequest()
+                    {
+                        RouteTableId = nodeRouteTable.RouteTableId,
+                        SubnetId     = nodeSubnet.SubnetId
+                    });
+            }
+
+            // Create the internet gateway and attach it to the VPC.
+
+            if (internetGateway == null)
             {
                 var gatewayResponse = await ec2Client.CreateInternetGatewayAsync(
                     new CreateInternetGatewayRequest()
                     {
-                        TagSpecifications = GetTagSpecifications(gatewayName, ResourceType.InternetGateway)
+                        TagSpecifications = GetTagSpecifications(internetGatewayName, ResourceType.InternetGateway)
                     });
 
-                gateway = gatewayResponse.InternetGateway;
+                internetGateway = gatewayResponse.InternetGateway;
             }
 
-            if (!gateway.Attachments.Any(association => association.VpcId == vpc.VpcId))
+            if (!internetGateway.Attachments.Any(association => association.VpcId == vpc.VpcId))
             {
                 await ec2Client.AttachInternetGatewayAsync(
                     new AttachInternetGatewayRequest()
                     {
                         VpcId             = vpc.VpcId,
-                        InternetGatewayId = gateway.InternetGatewayId
+                        InternetGatewayId = internetGateway.InternetGatewayId
                     });
             }
 
-            // We need to update the VPC's main route table to include a route to 
-            // the internet gateway.
+            // Add a default route to the public subnet that sends traffic 
+            // to the Internet Gateway.
 
-            await AddGatewayRouteAsync(vpcRouteTable);
+            if (!publicRouteTable.Routes.Any(route => route.GatewayId == internetGateway.InternetGatewayId))
+            {
+                await ec2Client.CreateRouteAsync(
+                    new CreateRouteRequest()
+                    {
+                        RouteTableId         = publicRouteTable.RouteTableId,
+                        GatewayId            = internetGateway.InternetGatewayId,
+                        DestinationCidrBlock = "0.0.0.0/0"
+                    });
+            }
+
+            // Create the NAT gateway and attach it to the public subnet.  Note that it
+            // can take some time for the NAT Gateway be be available, so we'll have
+            // to wait.
+
+            if (natGateway == null)
+            {
+                var natGatewayResponse = await ec2Client.CreateNatGatewayAsync(
+                    new CreateNatGatewayRequest()
+                    {
+                        SubnetId          = publicSubnet.SubnetId,
+                        AllocationId      = egressAddress.AllocationId,
+                        TagSpecifications = GetTagSpecifications(natGatewayName, ResourceType.Natgateway)
+                    });
+
+                natGateway = natGatewayResponse.NatGateway;
+            }
+
+            await NeonHelper.WaitForAsync(
+                async () =>
+                {
+                    natGateway = await GetNatGatewayAsync();
+
+                    if (natGateway.State == NatGatewayState.Pending)
+                    {
+                        return false;
+                    }
+                    else if (natGateway.State == NatGatewayState.Available)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        throw new KubeException($"Unexpected NAT Gateway state: [{natGateway.State}].");
+                    }
+                },
+                timeout:      operationTimeout,
+                pollInterval: operationPollInternal);
+
+            // Add a default route to the node subnet that sends traffic to
+            // the NAT gateway.
+
+            if (!nodeRouteTable.Routes.Any(route => route.NatGatewayId == natGateway.NatGatewayId))
+            {
+                await ec2Client.CreateRouteAsync(
+                    new CreateRouteRequest()
+                    {
+                        RouteTableId         = nodeRouteTable.RouteTableId,
+                        GatewayId            = natGateway.NatGatewayId,
+                        DestinationCidrBlock = "0.0.0.0/0"
+                    });
+            }
         }
 
         /// <summary>
-        /// Adds a route to the internet gateway.
+        /// Configures the load balancer.
         /// </summary>
-        /// <param name="routeTable">The target route table.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task AddGatewayRouteAsync(RouteTable routeTable)
+        private async Task ConfigureLoadBalancerAsync()
         {
-            if (!routeTable.Routes.Any(route => route.GatewayId == gateway.InternetGatewayId && route.DestinationCidrBlock == "0.0.0.0/0"))
+            // Create the load balancer in the subnet.
+
+            if (loadBalancer == null)
             {
-                var routeEntryResponse = await ec2Client.CreateRouteAsync(
-                    new CreateRouteRequest()
+                await elbClient.CreateLoadBalancerAsync(
+                    new CreateLoadBalancerRequest()
                     {
-                        RouteTableId         = routeTable.RouteTableId,
-                        GatewayId            = gateway.InternetGatewayId,
-                        DestinationCidrBlock = "0.0.0.0/0"
+                        Name           = elbName,
+                        Type           = LoadBalancerTypeEnum.Network,
+                        Scheme         = LoadBalancerSchemeEnum.InternetFacing,
+                        SubnetMappings = new List<SubnetMapping>()
+                        {
+                            new SubnetMapping() { SubnetId = publicSubnet.SubnetId, AllocationId = ingressAddress.AllocationId }
+                        },
+                        IpAddressType  = IpAddressType.Ipv4,
+                        Tags           = GetTags<ElbTag>("load-balancer"),
                     });
 
-                // Reload the route table to pick up the change.
-
-                vpcRouteTable = await GetVpcRouteTableAsync();
+                loadBalancer = await GetLoadBalancerAsync();
             }
+
+            // Configure the ingress/egress listeners and target groups.
+
+            await UpdateNetworkAsync(NetworkOperations.InternetRouting | NetworkOperations.EnableSsh);
         }
 
         /// <summary>
@@ -2464,35 +2549,58 @@ retry:
         }
 
         /// <summary>
-        /// Configures the load balancer.
+        /// Waits for the load balancer SSH target group for the node to become healthy.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task ConfigureLoadBalancerAsync()
+        private async Task WaitForSshTargetAsync(LinuxSshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
-            // Create the load balancer in the subnet.
+            node.Status = "waiting...";
 
-            if (loadBalancer == null)
-            {
-                await elbClient.CreateLoadBalancerAsync(
-                    new CreateLoadBalancerRequest()
-                    {
-                        Name           = elbName,
-                        Type           = LoadBalancerTypeEnum.Network,
-                        Scheme         = LoadBalancerSchemeEnum.InternetFacing,
-                        SubnetMappings = new List<SubnetMapping>()
+            // Locate the SSH load balancer target for this node.
+            
+            // $hack(jefflill):
+            //
+            // This is a bit of a hack; I'm going to rely on the fact that the SSH target group
+            // names end with the "-EXTERNALPORT" for the target node.
+
+            var awsInstance       = nodeNameToAwsInstance[node.Name];
+            var targetGroupSuffix = $"-{awsInstance.ExternalSshPort}";
+            var targetGroup       = nameToTargetGroup.Values.Single(targetGroup => targetGroup.Protocol == ProtocolEnum.TCP && 
+                                                                                   targetGroup.Port == NetworkPorts.SSH && 
+                                                                                   targetGroup.TargetGroupName.EndsWith(targetGroupSuffix));
+            await NeonHelper.WaitForAsync(
+                async () =>
+                {
+                    var targetHealthResponse = await elbClient.DescribeTargetHealthAsync(
+                        new DescribeTargetHealthRequest()
                         {
-                            new SubnetMapping() { SubnetId = subnet.SubnetId, AllocationId = elasticIp.AllocationId }
-                        },
-                        IpAddressType  = IpAddressType.Ipv4,
-                        Tags           = GetTags<ElbTag>("load-balancer"),
-                    });
+                            TargetGroupArn = targetGroup.TargetGroupArn
+                        });
 
-                loadBalancer = await GetLoadBalancerAsync();
-            }
+                    var targetHealthState = targetHealthResponse.TargetHealthDescriptions.Single().TargetHealth.State;
 
-            // Configure the ingress/egress listeners and target groups.
+                    if (targetHealthState == TargetHealthStateEnum.Initial)
+                    {
+                        node.Status = $"target: registering...";
+                        return false;
+                    }
+                    else if (targetHealthState == TargetHealthStateEnum.Unhealthy)
+                    {
+                        node.Status = $"target: checking...";
+                        return false;
+                    }
+                    else if (targetHealthState == TargetHealthStateEnum.Healthy)
+                    {
+                        node.Status = $"target: {targetHealthState}";
+                        return true;
+                    }
 
-            await UpdateNetworkAsync(NetworkOperations.InternetRouting | NetworkOperations.EnableSsh);
+                    // Report unexpected target health states.
+
+                    throw new KubeException($"Unexpected target group health state: [{targetHealthState}]");
+                },
+                timeout:      operationTimeout,
+                pollInterval: operationPollInternal);
         }
 
         /// <summary>
@@ -2501,8 +2609,9 @@ retry:
         /// <param name="node">The target node.</param>
         /// <param name="stepDelay">The step delay.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task CreateNodeInstanceAsync(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
+        private async Task CreateNodeInstanceAsync(LinuxSshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
+            //-----------------------------------------------------------------
             // Create the instance if it doesn't already exist.
 
             var awsInstance     = nodeNameToAwsInstance[node.Name];
@@ -2612,12 +2721,86 @@ retry:
                 Covenant.Assert(!string.IsNullOrEmpty(placementGroupName));
                 Covenant.Assert(partitionNumber > 0);
 
-                // Create the instances in the subnet.
+                //-------------------------------------------------------------
+                // Create the instance in the node subnet.
                 //
                 // Note that AWS does not support starting new instances with a specific
-                // SSH password; they use an SSH key instead.  So we need to have AWS install
-                // the key when it provisions the VM and then we'll configure the password
-                // afterwards.
+                // SSH password by default; they use an SSH key instead.  We also want
+                // to rename the default [ubuntu] user to our standard [sysadmin].
+                //
+                // I'm going to address this by passing a first boot script as user-data
+                // when creating the instance, which will:
+                //
+                //      1. Remove [ec2-instance-connect]
+                //      1. Enable SSH password authentication
+                //      2. Rename the [ubuntu] user and home directory to [sysadmin]
+                //      3. Set the secure password for [sysadmin]
+
+                var bootScript =
+$@"#!/bin/bash
+
+# To enable debugging for this AWS user-script, add the ""-ex"" options to the
+# comment at the top of the file and uncomment the command below.  These cause
+# each command and its output to be logged and can be viewable in the AWS portal.
+#
+# WARNING: Do not leave any of this in production builds to avoid 
+#          leaking the secure SSH password to any logs!
+#          
+# Use: #!/bin/bash -ex
+#
+# exec &> >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
+
+#------------------------------------------------------------------------------
+# Install required packages.
+
+apt-get install -yq unzip
+
+#------------------------------------------------------------------------------
+# Remove: ec2-instance-connect (this could potentially cause SSH auth issues)
+
+apt-get remove -qy ec2-instance-connect
+
+#------------------------------------------------------------------------------
+# Overwrite the OpenSSH configuration with a known good one and then 
+# restart OpenSSH.
+
+sshdConfigPath=/etc/ssh/sshd_config
+
+cat <<EOF > /etc/ssh/sshd_config
+{KubeHelper.OpenSshConfig}
+EOF
+
+systemctl restart ssh
+
+#------------------------------------------------------------------------------
+# Update the [ubuntu] user password:
+
+echo 'ubuntu:{secureSshPassword}' | chpasswd
+
+#------------------------------------------------------------------------------
+# Rename the [ubuntu] user, home directory, and group to [sysadmin]
+
+usermod -l sysadmin ubuntu
+
+mv /home/ubuntu /home/sysadmin
+usermod -d /home/sysadmin sysadmin
+
+groupmod -n sysadmin ubuntu
+";
+                var ebsOptimized = awsOptions.DefaultEbsOptimized;
+
+                switch (awsNodeOptions.EbsOptimized)
+                {
+                    case TriState.True:
+
+                        ebsOptimized = true;
+                        break;
+
+                    case TriState.False:
+
+                        ebsOptimized = false;
+                        break;
+                }
 
                 var runResponse = await ec2Client.RunInstancesAsync(
                     new RunInstancesRequest()
@@ -2626,10 +2809,12 @@ retry:
                         InstanceType     = InstanceType.FindValue(awsNodeOptions.InstanceType),
                         MinCount         = 1,
                         MaxCount         = 1,
-                        KeyName          = keyPairName,
-                        SubnetId         = subnet.SubnetId,
+                        SubnetId         = nodeSubnet.SubnetId,
+                        EbsOptimized     = ebsOptimized,
                         PrivateIpAddress = node.Address.ToString(),
-                        SecurityGroupIds = new List<string>() { sgAllowAll.GroupId },
+                        SecurityGroupIds = new List<string>() { securityGroup.GroupId },
+                        KeyName          = keyPairName,
+                        UserData         = Convert.ToBase64String(Encoding.UTF8.GetBytes(NeonHelper.ToLinuxLineEndings(bootScript))),
                         Placement        = new Placement()
                         {
                             AvailabilityZone = awsOptions.AvailabilityZone,
@@ -2655,15 +2840,21 @@ retry:
                 awsInstance.Instance = runResponse.Reservation.Instances.Single();
             }
 
+            //-----------------------------------------------------------------
             // Wait for the instance to indicate that it's running.
+            //
+            // NOTE:
+            // ---- 
+            // It's possible that the instance is still stopped when a previous user-data 
+            // clearing operation was interrupted (below).  We'll just restart it here
+            // to handle that.
 
-            node.Status = "provisioning...";
+            node.Status = "pending...";
 
             var invalidStates = 
                 new HashSet<int>
                 {
                     InstanceStatusCodes.ShuttingDown,
-                    InstanceStatusCodes.Stopped,
                     InstanceStatusCodes.Stopping,
                     InstanceStatusCodes.Terminated
                 };
@@ -2674,14 +2865,15 @@ retry:
                     var statusResponse = await ec2Client.DescribeInstanceStatusAsync(
                         new DescribeInstanceStatusRequest()
                         {
-                            InstanceIds = new List<string>() { awsInstance.InstanceId }
+                            InstanceIds         = new List<string>() { awsInstance.InstanceId },
+                            IncludeAllInstances = true
                         });
 
                     var status = statusResponse.InstanceStatuses.SingleOrDefault();
 
                     if (status == null)
                     {
-                        return false;       // The instance provisioning operation must still be pending.
+                        return false;       // The instance provisioning operation must still be pending?
                     }
 
                     var state = status.InstanceState.Code & 0x00FF;        // Clear the internal AWS status code bits
@@ -2694,6 +2886,16 @@ retry:
                     if (state == InstanceStatusCodes.Running)
                     {
                         node.Status = "starting...";
+                    }
+                    else if (state == InstanceStatusCodes.Stopped)
+                    {
+                        node.Status = "restarting...";
+
+                        await ec2Client.StartInstancesAsync(
+                            new StartInstancesRequest()
+                            {
+                                InstanceIds = new List<string>() { awsInstance.InstanceId }
+                            });
                     }
                     else
                     {
@@ -2711,105 +2913,152 @@ retry:
                 },
                 timeout:      operationTimeout,
                 pollInterval: operationPollInternal);
-        }
 
-        /// <summary>
-        /// Configures the node to authenticate the [sysadmin] user with the secure SSH password 
-        /// as well as the public key.
-        /// </summary>
-        /// <param name="node">The target node.</param>
-        /// <param name="stepDelay">The step delay.</param>
-        private void ConfigureNodeSsh(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
-        {
-            // AWS requires SSH key based authenticated for newly created instances.
+            //-----------------------------------------------------------------
+            // Tag the EC2 volumes created for the instance.
 
-            node.Status = "connecting...";
+            node.Status = "tagging volumes";
 
-            node.UpdateCredentials(SshCredentials.FromPrivateKey(KubeConst.SysAdminUsername, sshKey.PrivatePEM));
-            node.WaitForBoot();
+            // We need to reload the instance to obtain information on its
+            // attached volumes.
 
-            // Set the secure [sysadmin] password.
+            var instancePagenator = ec2Client.Paginators.DescribeInstances(new DescribeInstancesRequest() { Filters = clusterFilter });
 
-            node.Status = "secure ssh password";
-
-            var passwordScript =
-$@"
-echo '{KubeConst.SysAdminUsername}:{secureSshPassword}' | chpasswd
-";
-            var response = node.SudoCommand(CommandBundle.FromScript(passwordScript));
-
-            if (response.ExitCode != 0)
+            await foreach (var reservationItem in instancePagenator.Reservations)
             {
-                throw new KubeException($"*** ERROR: Unable to set the strong SSH password [exitcode={response.ExitCode}].");
+                if (reservationItem.Instances.Count != 1)
+                {
+                    // We're creating instances one at a time so we can ignore
+                    // reservations with more than one instance.
+
+                    continue;
+                }
+
+                var instanceItem = reservationItem.Instances.Single();
+
+                if (instanceItem.InstanceId == awsInstance.InstanceId)
+                {
+                    awsInstance.Instance = instanceItem;
+                    break;
+                }
             }
 
-            // We need to reconfure the OpenSSH server to enable PAM (password)
-            // authentication.  We're simply going to append a new setting to
-            // the OpenSSH config file and restart the server.  Note that the
-            // config file will be replaced with the full cluster settings later
-            // on during cluster setup, so this won't result in a mess.
+            // So our AWS node instances will have either one or two attached 
+            // volumes.  It will always have the data volume we specified when
+            // we created the instance above.  This will have a well-known device
+            // name.  The node may (always?) also have the boot volume.  I believe
+            // that this might not be present in some situations but I'm not sure.
+            // 
+            // We'll assume that any second volume will be the OS disk.
 
-            node.Status = "config openssh";
+            var dataVolumeMapping = awsInstance.Instance.BlockDeviceMappings.Single(mapping => mapping.DeviceName == dataDeviceName);
 
-            var sshConfigScript =
-@"
-echo """" >> /etc/ssh/sshd_config
-echo ""UsePAM yes"" >> /etc/ssh/sshd_config
-systemctl restart sshd
-";
-            response = node.SudoCommand(CommandBundle.FromScript(sshConfigScript));
+            await ec2Client.CreateTagsAsync(
+                new CreateTagsRequest()
+                {
+                     Resources = new List<string> { dataVolumeMapping.Ebs.VolumeId },
+                     Tags      = GetTags<Ec2Tag>(GetResourceName($"{node.Name}.data"), new ResourceTag(neonNodeNameTagKey, node.Name))
+                });
 
-            if (response.ExitCode != 0)
+            var osVolumeMapping = awsInstance.Instance.BlockDeviceMappings.SingleOrDefault(mapping => mapping.DeviceName == osDeviceName);
+
+            if (osVolumeMapping != null)
             {
-                throw new KubeException($"*** ERROR: Unable to reconfigure OpenSSH [exitcode={response.ExitCode}].");
+                await ec2Client.CreateTagsAsync(
+                    new CreateTagsRequest()
+                    {
+                        Resources = new List<string> { osVolumeMapping.Ebs.VolumeId },
+                        Tags      = GetTags<Ec2Tag>(GetResourceName($"{node.Name}.os"), new ResourceTag(neonNodeNameTagKey, node.Name))
+                    });
             }
 
-            // Disconnect and then reconnect the node using password authentication to 
-            // verify that it works.
-
-            node.Status = "reconnect with password";
-
-            node.Disconnect();
-            node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUsername, secureSshPassword));
-            node.Connect();
-        }
-
-        /// <summary>
-        /// Sets the tags for the subnet's network interfaces.
-        /// </summary>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task ConfigureNicTags()
-        {
-            // $todo(jefflill):
+            //-----------------------------------------------------------------
+            // We need to clear the instance user-data because it can be displayed on
+            // the AWS portal which would expose the secure SSH password.  We'll
+            // need to stop the instance first and then restart it to pick up the change.
             //
-            // I haven't been able to figure out how to tag NICs.  The problem is discovering
-            // a NIC's ARN so we can use it to update the tags.  I think we can live without
-            // this but it would be nice to solve this sometime.
+            // Note that we're only going to do this once.  We'll use a tag to indicate
+            // that the user-data has been cleared for each instance.
 
-            //var nicPagenator = await ec2Client.DescribeNetworkInterfacesAsync(new DescribeNetworkInterfacesRequest());
-            //var nicArns      = new List<string>();
+            if (!awsInstance.Instance.Tags.Any(tag => tag.Key == neonNodeUserDataTagKey && tag.Value == "cleared"))
+            {
+                node.Status = "user-data: stop instance";
 
-            //foreach (var nic in nicPagenator.NetworkInterfaces)
-            //{
-            //    if (nic.SubnetId == subnet.SubnetId)
-            //    {
-            //        nicArns.Add(nic.NetworkInterfaceId);    // <-- This is not the NIC ARN
-            //    }
-            //}
+                await ec2Client.StopInstancesAsync(
+                    new StopInstancesRequest()
+                    {
+                         InstanceIds = new List<string>() { awsInstance.InstanceId }
+                    });
 
-            //await elbClient.AddTagsAsync(
-            //    new AddTagsRequest()
-            //    {
-            //        ResourceArns = nicArns,
-            //        Tags         = GetTags<ElbTag>(GetResourceName("nic"))
-            //    });
+                await NeonHelper.WaitForAsync(
+                    async () =>
+                    {
+                        var statusResponse = await ec2Client.DescribeInstanceStatusAsync(
+                            new DescribeInstanceStatusRequest()
+                            {
+                                InstanceIds         = new List<string>() { awsInstance.InstanceId },
+                                IncludeAllInstances = true
+                            });
 
-            await Task.CompletedTask;
+                        var status = statusResponse.InstanceStatuses.SingleOrDefault();
+                        var state  = status.InstanceState.Code & 0x00FF;        // Clear the internal AWS status code bits
+
+                        return state == InstanceStatusCodes.Stopped;
+                    },
+                    timeout:      operationTimeout,
+                    pollInterval: operationPollInternal);
+
+                node.Status = "user-data: clear";
+
+                await ec2Client.ModifyInstanceAttributeAsync(
+                    new ModifyInstanceAttributeRequest()
+                    {
+                        InstanceId = awsInstance.InstanceId,
+                        UserData   = string.Empty
+                    });
+
+                node.Status = "user-data: restart instance";
+
+                await ec2Client.StartInstancesAsync(
+                    new StartInstancesRequest()
+                    {
+                        InstanceIds = new List<string>() { awsInstance.InstanceId }
+                    });
+
+                // Wait for the instance to report being ready.
+
+                await NeonHelper.WaitForAsync(
+                    async () =>
+                    {
+                        var statusResponse = await ec2Client.DescribeInstanceStatusAsync(
+                            new DescribeInstanceStatusRequest()
+                            {
+                                InstanceIds         = new List<string>() { awsInstance.InstanceId },
+                                IncludeAllInstances = true
+                            });
+
+                        var status = statusResponse.InstanceStatuses.SingleOrDefault();
+                        var state  = status.InstanceState.Code & 0x00FF;        // Clear the internal AWS status code bits
+
+                        return state == InstanceStatusCodes.Running;
+                    },
+                    timeout: operationTimeout,
+                    pollInterval: operationPollInternal);
+
+                // Indicate that this instance's user-data has been cleared.
+
+                await ec2Client.CreateTagsAsync(
+                    new CreateTagsRequest()
+                    {
+                        Resources = new List<string>() { awsInstance.InstanceId },
+                        Tags      = new List<Ec2Tag> { new Ec2Tag(neonNodeUserDataTagKey, "cleared") }
+                    });
+            }
         }
 
         /// <summary>
         /// Constructs a target group name by appending the protocol, port and target group type 
-        /// to the base name passed.
+        /// to the base cluster name passed.
         /// </summary>
         /// <param name="clusterName">The cluster name.</param>
         /// <param name="ingressTarget">The neonKUBE target group type.</param>
@@ -2959,254 +3208,6 @@ systemctl restart sshd
                 };
 
             var ingressRules = networkOptions.IngressRules.Union(clusterRules).ToArray();
-
-            //-----------------------------------------------------------------
-            // Update the subnet network ACL.
-
-            // Determine whether either of the two network ACLs are associated with
-            // the subnet.  If one is assigned, then we'll modify the other one
-            // and then associate that one with the subnet to complete the operation.
-            //
-            // The idea here is that we're going to alternate between assigning
-            // the two ACLs so we can make a bunch of effective rule changes in
-            // one atomic operation.
-
-            NetworkAcl              updateAcl;
-            NetworkAclAssociation   association;
-
-            association = networkAcl1.Associations.SingleOrDefault(association => association.SubnetId == subnet.SubnetId);
-
-            if (association != null)
-            {
-                updateAcl = networkAcl2;
-            }
-            else
-            {
-                association = networkAcl2.Associations.SingleOrDefault(association => association.SubnetId == subnet.SubnetId);
-
-                if (association != null)
-                {
-                    updateAcl = networkAcl1;
-                }
-                else
-                {
-                    Covenant.Assert(false, "Cannot locate the current subnet network ACL.");
-
-                    association = null;
-                    updateAcl   = null;
-                }
-            }
-
-            // Remove any existing entries from the ACL we'll be assigning next.  Note
-            // that we need to leave the last ingress/egress DENY-ALL entries alone.
-
-            var existingEntries = updateAcl.Entries.Where(entry => entry.RuleNumber != aclDenyAllRuleNumber).ToList();
-
-            foreach (var entry in existingEntries)
-            {
-                await ec2Client.DeleteNetworkAclEntryAsync(
-                    new DeleteNetworkAclEntryRequest()
-                    {
-                        NetworkAclId = updateAcl.NetworkAclId,
-                        RuleNumber   = entry.RuleNumber,
-                        Egress       = entry.Egress
-                    });
-            }
-
-            // Add the external SSH rules source address rules.
-
-            var sshRuleNumber = firstSshRuleNumber;
-
-            if (networkOptions.ManagementAddressRules.Count == 0)
-            {
-                // There are no management source address constraints so we're going
-                // default to allowing traffic from all sources.
-
-                await ec2Client.CreateNetworkAclEntryAsync(
-                    new CreateNetworkAclEntryRequest()
-                    {
-                        NetworkAclId = updateAcl.NetworkAclId,
-                        RuleNumber   = sshRuleNumber++,
-                        Protocol     = ToNetworkAclEntryProtocol(IngressProtocol.Tcp),
-                        Egress       = false,
-                        CidrBlock    = "0.0.0.0/0",
-                        PortRange    = new PortRange() { From = networkOptions.FirstExternalSshPort, To = networkOptions.LastExternalSshPort },
-                        RuleAction   = RuleAction.Allow
-                    });
-            }
-            else
-            {
-                // We have some management source address constraints, so we'll 
-                // create a new network ACL entry for each constraint.
-
-                foreach (var addressRule in networkOptions.ManagementAddressRules)
-                {
-                    var sourceCidr = (string)null;
-
-                    if (addressRule.IsAny)
-                    {
-                        sourceCidr = "0.0.0.0/0";
-                    }
-                    else
-                    {
-                        sourceCidr = addressRule.AddressOrSubnet;
-
-                        if (!sourceCidr.Contains('/'))
-                        {
-                            // Convert a single IP address into a one address CIDR.
-
-                            sourceCidr += "/32";
-                        }
-                    }
-
-                    await ec2Client.CreateNetworkAclEntryAsync(
-                        new CreateNetworkAclEntryRequest()
-                        {
-                            NetworkAclId = updateAcl.NetworkAclId,
-                            RuleNumber   = sshRuleNumber++,
-                            Protocol     = ToNetworkAclEntryProtocol(IngressProtocol.Tcp),
-                            Egress       = false,
-                            PortRange    = new PortRange() { From = NetworkPorts.SSH, To = NetworkPorts.SSH },
-                            CidrBlock    = sourceCidr,
-                            RuleAction   = addressRule.Action == AddressRuleAction.Allow ? RuleAction.Allow : RuleAction.Deny
-                        });
-                }
-            }
-
-            // Add any network ACLs related to ingress rules from the cluster definition.
-
-            var ingressRuleNumber = firstIngressRuleNumber;
-
-            foreach (var ingressRule in ingressRules)
-            {
-                if (ingressRule.AddressRules.Count() == 0)
-                {
-                    // The ingress rule has no source address constraints.
-
-                    await ec2Client.CreateNetworkAclEntryAsync(
-                        new CreateNetworkAclEntryRequest()
-                        {
-                            NetworkAclId = updateAcl.NetworkAclId,
-                            RuleNumber   = ingressRuleNumber++,
-                            Protocol     = ToNetworkAclEntryProtocol(ingressRule.Protocol),
-                            Egress       = false,
-                            CidrBlock    = "0.0.0.0/0",
-                            PortRange    = new PortRange() { From = ingressRule.ExternalPort, To = ingressRule.ExternalPort },
-                            RuleAction   = RuleAction.Allow
-                        });
-                }
-                else
-                {
-                    // The ingress rule has source address constraints, so we'll 
-                    // create a new network ACL entry for each constraint.
-
-                    foreach (var addressRule in ingressRule.AddressRules)
-                    {
-                        var sourceCidr = (string)null;
-
-                        if (addressRule.IsAny)
-                        {
-                            sourceCidr = "0.0.0.0/0";
-                        }
-                        else
-                        {
-                            sourceCidr = addressRule.AddressOrSubnet;
-
-                            if (!sourceCidr.Contains('/'))
-                            {
-                                // Convert a single IP address into a one address CIDR.
-
-                                sourceCidr += "/32";
-                            }
-                        }
-
-                        await ec2Client.CreateNetworkAclEntryAsync(
-                            new CreateNetworkAclEntryRequest()
-                            {
-                                NetworkAclId = updateAcl.NetworkAclId,
-                                RuleNumber   = ingressRuleNumber++,
-                                Protocol     = ToNetworkAclEntryProtocol(ingressRule.Protocol),
-                                Egress       = false,
-                                PortRange    = new PortRange() { From = ingressRule.ExternalPort, To = ingressRule.ExternalPort },
-                                CidrBlock    = sourceCidr,
-                                RuleAction   = addressRule.Action == AddressRuleAction.Allow ? RuleAction.Allow : RuleAction.Deny
-                            });
-                    }
-                }
-            }
-
-            // Add any egress related destination address rules.  Note that when
-            // there are no egress rules defined, we need to insert an ALLOW-ALL 
-            // entry just before the default DENY-ALL entry.
-
-            if (networkOptions.EgressAddressRules.Count() > 0)
-            {
-                var egressRuleNumber = firstIngressRuleNumber;
-
-                foreach (var egressAddressRule in networkOptions.EgressAddressRules)
-                {
-                    var destinationCidr = (string)null;
-
-                    if (egressAddressRule.IsAny)
-                    {
-                        destinationCidr = "0.0.0.0/0";
-                    }
-                    else
-                    {
-                        destinationCidr = egressAddressRule.AddressOrSubnet;
-
-                        if (!destinationCidr.Contains('/'))
-                        {
-                            // Convert a single IP address into a one address CIDR.
-
-                            destinationCidr += "/32";
-                        }
-                    }
-
-                    await ec2Client.CreateNetworkAclEntryAsync(
-                        new CreateNetworkAclEntryRequest()
-                        {
-                            NetworkAclId = updateAcl.NetworkAclId,
-                            RuleNumber   = egressRuleNumber++,
-                            Protocol     = "-1",      // "-1" means any protocol
-                            Egress       = true,
-                            PortRange    = new PortRange() { From = 0, To = ushort.MaxValue },
-                            CidrBlock    = destinationCidr,
-                            RuleAction   = egressAddressRule.Action == AddressRuleAction.Allow ? RuleAction.Allow : RuleAction.Deny
-                        });
-                }
-            }
-            else
-            {
-                // Insert an ALLOW-ALL rule when the user defines no egress rules.
-
-                await ec2Client.CreateNetworkAclEntryAsync(
-                    new CreateNetworkAclEntryRequest()
-                    {
-                        NetworkAclId = updateAcl.NetworkAclId,
-                        RuleNumber   = firstIngressRuleNumber,
-                        Protocol     = "-1",      // "-1" means ANY protocol
-                        Egress       = true,
-                        PortRange    = new PortRange() { From = 0, To = ushort.MaxValue },
-                        CidrBlock    = "0.0.0.0/0",
-                        RuleAction   = RuleAction.Allow
-                    });
-            }
-
-            // The new network ACL is ready so associate it with the subnet, replacing
-            // the previous ACL (if any).
-
-            await ec2Client.ReplaceNetworkAclAssociationAsync(
-                new ReplaceNetworkAclAssociationRequest()
-                {
-                    AssociationId = association.NetworkAclAssociationId,
-                    NetworkAclId  = updateAcl.NetworkAclId
-                });
-
-            // We need to reload the network ACLs to pick up the subnet association change.
-
-            networkAcl1 = await GetNetworkAclAsync(networkAcl1.NetworkAclId);
-            networkAcl2 = await GetNetworkAclAsync(networkAcl2.NetworkAclId);
 
             //-----------------------------------------------------------------
             // Load target groups.

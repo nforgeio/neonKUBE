@@ -25,7 +25,7 @@ import (
 	"net/http"
 	"strings"
 
-	"go.temporal.io/temporal/workflow"
+	"go.temporal.io/sdk/workflow"
 
 	"temporal-proxy/internal"
 	"temporal-proxy/internal/messages"

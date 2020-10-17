@@ -20,7 +20,7 @@ package messages
 import (
 	internal "temporal-proxy/internal"
 
-	"go.temporal.io/temporal/activity"
+	"go.temporal.io/sdk/activity"
 )
 
 type (

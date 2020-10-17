@@ -41,7 +41,7 @@ using Renci.SshNet.Common;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Thrown for <see cref="SshProxy{TMetadata}"/> errors.
+    /// Thrown for <see cref="LinuxSshProxy{TMetadata}"/> errors.
     /// </summary>
     public class SshProxyException : Exception
     {

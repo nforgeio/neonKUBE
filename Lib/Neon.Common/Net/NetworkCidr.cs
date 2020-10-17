@@ -131,7 +131,7 @@ namespace Neon.Net
                 throw new ArgumentException($"Invalid CIDR [{input}].", nameof(input));
             }
 
-            if (!IPAddress.TryParse(input.Substring(0, slashPos), out var address))
+            if (!NetHelper.TryParseIPv4Address(input.Substring(0, slashPos), out var address))
             {
                 throw new ArgumentException($"Invalid CIDR [{input}].", nameof(input));
             }
@@ -171,7 +171,7 @@ namespace Neon.Net
                 return false;
             }
 
-            if (!IPAddress.TryParse(input.Substring(0, slashPos), out var address))
+            if (!NetHelper.TryParseIPv4Address(input.Substring(0, slashPos), out var address))
             {
                 return false;
             }

@@ -62,8 +62,13 @@ namespace Neon.Kube
         public string Host { get; set; } = null;
 
         /// <summary>
+        /// <para>
         /// Specifies the number of processors to assigned to this node when provisioned on a hypervisor.  This
         /// defaults to the value specified by <see cref="VmHostingOptions.Processors"/>.
+        /// </para>
+        /// <note>
+        /// neonKUBE requires that each master and worker node have at least 4 CPUs.
+        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "Processors", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "processors", ApplyNamingConventions = false)]
@@ -71,10 +76,15 @@ namespace Neon.Kube
         public int Processors { get; set; } = 0;
 
         /// <summary>
+        /// <para>
         /// Specifies the amount of memory to allocate to this node when provisioned on a hypervisor.  
         /// This is specified as a string that can be a byte count or a number with units like <b>512MB</b>, 
         /// <b>0.5GB</b>, <b>2GB</b>, or <b>1TB</b>.  This defaults to the value specified by 
         /// <see cref="VmHostingOptions.Memory"/>.
+        /// </para>
+        /// <note>
+        /// neonKUBE requires that each master and worker node have at least 4GiB of RAM.
+        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "Memory", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "memory", ApplyNamingConventions = false)]

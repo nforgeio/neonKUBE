@@ -44,14 +44,68 @@ namespace Neon.Kube
     public class AwsNodeOptions
     {
         /// <summary>
+        /// <para>
         /// Optionally specifies the type of ECB instance to provision for this node.  The available
         /// instance types are listed <a href="https://aws.amazon.com/ec2/instance-types/">here</a>.
         /// This defaults to <see cref="AwsHostingOptions.DefaultInstanceType"/>.
+        /// </para>
+        /// <note>
+        /// neonKUBE clusters cannot be deployed to ARM-based AWS instance types.  You must
+        /// specify an instance type using a Intel or AMD 64-bit processor.
+        /// </note>
+        /// <note>
+        /// neonKUBE requires master and worker instances to have at least 4 CPUs and 4GiB RAM.  Choose
+        /// an AWS instance type that satisfies these requirements.
+        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "InstanceType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "instanceType", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string InstanceType { get; set; } = null;
+
+        /// <summary>
+        /// <para>
+        /// Specifies whether the cluster instance should be EBS-optimized.  This is a <see cref="TriState"/>
+        /// value that defaults to <see cref="TriState.Default"/> which means that the default cluster wide
+        /// <see cref="AwsHostingOptions.DefaultEbsOptimized"/> value will be used.  You can override the 
+        /// cluster default for this node by setting <see cref="TriState.True"/> or <see cref="TriState.False"/>.
+        /// </para>
+        /// <para>
+        /// <a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-optimized.html">Amazon EBS–optimized instances</a>
+        /// </para>
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Non EBS optimized instances perform disk operation I/O to EBS volumes using the same
+        /// network used for other network operations.  This means that you may see some disk
+        /// performance declines when your instance is busy serving web traffic or running
+        /// database queries, etc.
+        /// </para>
+        /// <para>
+        /// EBS optimization can be enabled for some instance types.  This provisions extra dedicated
+        /// network bandwidth exclusively for EBS I/O.  Exactly how this works, depends on the specific
+        /// VM type.
+        /// </para>
+        /// <para>
+        /// More modern AWS VM types enable EBS optimization by default and you won't incur any
+        /// additional charges for these instances and disabling EBS optimization here or via
+        /// <see cref="AwsHostingOptions.DefaultEbsOptimized"/> won't have any effect.
+        /// </para>
+        /// <para>
+        /// Some AWS instance types can be optimized but this is disabled by default.  When you
+        /// enable this by setting <see cref="AwsHostingOptions.DefaultEbsOptimized"/><c>=true</c> or 
+        /// <see cref="AwsNodeOptions.EbsOptimized"/><c>=true</c>, you'll probably an additional
+        /// AWS hourly fee for these instances.
+        /// </para>
+        /// <para>
+        /// Some AWS instance types don't support EBS optimization.  You'll need to be sure that
+        /// this is disabled for those nodes.
+        /// </para>
+        /// </remarks>
+        [JsonProperty(PropertyName = "EbsOptimized", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "ebsOptimized", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public TriState EbsOptimized { get; set; } = TriState.Default;
 
         /// <summary>
         /// Optionally specifies the AWS placement group partition the node will be provisioned

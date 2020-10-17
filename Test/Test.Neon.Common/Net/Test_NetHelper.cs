@@ -36,19 +36,87 @@ namespace TestCommon
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void AddressEquals()
         {
-            Assert.True(NetHelper.AddressEquals(IPAddress.Parse("10.0.0.1"), IPAddress.Parse("10.0.0.1")));
-            Assert.False(NetHelper.AddressEquals(IPAddress.Parse("10.0.0.1"), IPAddress.Parse("10.0.0.2")));
+            Assert.True(NetHelper.AddressEquals(NetHelper.ParseIPv4Address("10.0.0.1"), NetHelper.ParseIPv4Address("10.0.0.1")));
+            Assert.False(NetHelper.AddressEquals(NetHelper.ParseIPv4Address("10.0.0.1"), NetHelper.ParseIPv4Address("10.0.0.2")));
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void AddressIncrement()
         {
-            Assert.True(NetHelper.AddressEquals(IPAddress.Parse("0.0.0.1"), NetHelper.AddressIncrement(IPAddress.Parse("0.0.0.0"))));
-            Assert.True(NetHelper.AddressEquals(IPAddress.Parse("0.0.1.0"), NetHelper.AddressIncrement(IPAddress.Parse("0.0.0.255"))));
-            Assert.True(NetHelper.AddressEquals(IPAddress.Parse("0.1.0.0"), NetHelper.AddressIncrement(IPAddress.Parse("0.0.255.255"))));
-            Assert.True(NetHelper.AddressEquals(IPAddress.Parse("1.0.0.0"), NetHelper.AddressIncrement(IPAddress.Parse("0.255.255.255"))));
-            Assert.True(NetHelper.AddressEquals(IPAddress.Parse("0.0.0.0"), NetHelper.AddressIncrement(IPAddress.Parse("255.255.255.255"))));
+            Assert.True(NetHelper.AddressEquals(NetHelper.ParseIPv4Address("0.0.0.1"), NetHelper.AddressIncrement(NetHelper.ParseIPv4Address("0.0.0.0"))));
+            Assert.True(NetHelper.AddressEquals(NetHelper.ParseIPv4Address("0.0.1.0"), NetHelper.AddressIncrement(NetHelper.ParseIPv4Address("0.0.0.255"))));
+            Assert.True(NetHelper.AddressEquals(NetHelper.ParseIPv4Address("0.1.0.0"), NetHelper.AddressIncrement(NetHelper.ParseIPv4Address("0.0.255.255"))));
+            Assert.True(NetHelper.AddressEquals(NetHelper.ParseIPv4Address("1.0.0.0"), NetHelper.AddressIncrement(NetHelper.ParseIPv4Address("0.255.255.255"))));
+            Assert.True(NetHelper.AddressEquals(NetHelper.ParseIPv4Address("0.0.0.0"), NetHelper.AddressIncrement(NetHelper.ParseIPv4Address("255.255.255.255"))));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void ParseIPv4()
+        {
+            Assert.Equal(IPAddress.Parse("1.2.3.4"), NetHelper.ParseIPv4Address("1.2.3.4"));
+            Assert.Equal(IPAddress.Parse("10.0.0.1"), NetHelper.ParseIPv4Address("10.0.0.1"));
+            Assert.Equal(IPAddress.Parse("255.255.255.255"), NetHelper.ParseIPv4Address("255.255.255.255"));
+
+            Assert.Throws<ArgumentNullException>(() => NetHelper.ParseIPv4Address(null));
+            Assert.Throws<ArgumentNullException>(() => NetHelper.ParseIPv4Address(""));
+
+            Assert.Throws<FormatException>(() => NetHelper.ParseIPv4Address("1.2.3.1000"));
+            Assert.Throws<FormatException>(() => NetHelper.ParseIPv4Address("garbage"));
+            Assert.Throws<FormatException>(() => NetHelper.ParseIPv4Address("123456"));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void TryParseIPv4()
+        {
+            IPAddress address;
+
+            Assert.True(NetHelper.TryParseIPv4Address("1.2.3.4", out address));
+            Assert.Equal(IPAddress.Parse("1.2.3.4"), address);
+
+            Assert.True(NetHelper.TryParseIPv4Address("10.0.0.1", out address));
+            Assert.Equal(IPAddress.Parse("10.0.0.1"), address);
+
+            Assert.True(NetHelper.TryParseIPv4Address("255.255.255.255", out address));
+            Assert.Equal(IPAddress.Parse("255.255.255.255"), address);
+
+            Assert.False(NetHelper.TryParseIPv4Address(null, out address));
+            Assert.False(NetHelper.TryParseIPv4Address("", out address));
+
+            Assert.False(NetHelper.TryParseIPv4Address("1.2.3.1000", out address));
+            Assert.False(NetHelper.TryParseIPv4Address("garbage", out address));
+            Assert.False(NetHelper.TryParseIPv4Address("123456", out address));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void ParseIPv6()
+        {
+            Assert.Equal(IPAddress.Parse("2001:0db8:85a3:0000:0000:8a2e:0370:7334"), NetHelper.ParseIPv6Address("2001:0db8:85a3:0000:0000:8a2e:0370:7334"));
+            Assert.Equal(IPAddress.Parse("::1"), NetHelper.ParseIPv6Address("::1"));
+
+            Assert.Throws<ArgumentNullException>(() => NetHelper.ParseIPv6Address(null));
+            Assert.Throws<ArgumentNullException>(() => NetHelper.ParseIPv6Address(""));
+            Assert.Throws<FormatException>(() => NetHelper.ParseIPv6Address("garbage"));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void TryParseIPv6()
+        {
+            IPAddress address;
+
+            Assert.True(NetHelper.TryParseIPv6Address("2001:0db8:85a3:0000:0000:8a2e:0370:7334", out address));
+            Assert.Equal(IPAddress.Parse("2001:0db8:85a3:0000:0000:8a2e:0370:7334"), address);
+
+            Assert.True(NetHelper.TryParseIPv6Address("::1", out address));
+            Assert.Equal(IPAddress.Parse("::1"), address);
+
+            Assert.False(NetHelper.TryParseIPv6Address(null, out address));
+            Assert.False(NetHelper.TryParseIPv6Address("", out address));
+            Assert.False(NetHelper.TryParseIPv4Address("garbage", out address));
         }
 
         [Fact]
@@ -82,7 +150,7 @@ namespace TestCommon
 
                 var hostEntries = new Dictionary<string, IPAddress>();
 
-                hostEntries.Add("foobar.test.nhive.io", IPAddress.Parse("1.2.3.4"));
+                hostEntries.Add("foobar.test.nhive.io", NetHelper.ParseIPv4Address("1.2.3.4"));
                 NetHelper.ModifyLocalHosts(hostEntries);
                 Assert.Equal("1.2.3.4", Dns.GetHostAddresses("foobar.test.nhive.io").Single().ToString());
 
@@ -119,7 +187,7 @@ namespace TestCommon
 
                 var hostEntries = new Dictionary<string, IPAddress>();
 
-                hostEntries.Add("foobar.test.nhive.io", IPAddress.Parse("1.2.3.4"));
+                hostEntries.Add("foobar.test.nhive.io", NetHelper.ParseIPv4Address("1.2.3.4"));
                 NetHelper.ModifyLocalHosts(hostEntries, marker);
                 Assert.Equal("1.2.3.4", Dns.GetHostAddresses("foobar.test.nhive.io").Single().ToString());
 
@@ -158,13 +226,13 @@ namespace TestCommon
                 var hostEntries = new Dictionary<string, IPAddress>();
                 var sections    = (IEnumerable<string>)null;
 
-                hostEntries.Add("foo-0.test.nhive.io", IPAddress.Parse("1.1.1.0"));
+                hostEntries.Add("foo-0.test.nhive.io", NetHelper.ParseIPv4Address("1.1.1.0"));
                 NetHelper.ModifyLocalHosts(hostEntries);
                 sections = NetHelper.ListLocalHostsSections();
                 Assert.Single(sections, "MODIFY");
 
                 hostEntries.Clear();
-                hostEntries.Add("foo-1.test.nhive.io", IPAddress.Parse("1.1.1.1"));
+                hostEntries.Add("foo-1.test.nhive.io", NetHelper.ParseIPv4Address("1.1.1.1"));
                 NetHelper.ModifyLocalHosts(hostEntries, section1);
                 sections = NetHelper.ListLocalHostsSections();
                 Assert.Equal(2, sections.Count());
@@ -172,7 +240,7 @@ namespace TestCommon
                 Assert.Contains(section1.ToUpperInvariant(), sections);
 
                 hostEntries.Clear();
-                hostEntries.Add("foo-2.test.nhive.io", IPAddress.Parse("1.1.1.2"));
+                hostEntries.Add("foo-2.test.nhive.io", NetHelper.ParseIPv4Address("1.1.1.2"));
                 NetHelper.ModifyLocalHosts(hostEntries, section2);
                 sections = NetHelper.ListLocalHostsSections();
                 Assert.Equal(3, sections.Count());
@@ -228,7 +296,7 @@ namespace TestCommon
                 var hostEntries = new Dictionary<string, IPAddress>();
                 var sections    = (IEnumerable<string>)null;
 
-                hostEntries.Add("foo-0.test.nhive.io", IPAddress.Parse("1.1.1.0"));
+                hostEntries.Add("foo-0.test.nhive.io", NetHelper.ParseIPv4Address("1.1.1.0"));
                 NetHelper.ModifyLocalHosts(hostEntries);
                 sections = NetHelper.ListLocalHostsSections();
                 Assert.Single(sections, "MODIFY");
@@ -240,7 +308,7 @@ namespace TestCommon
                 var originalMarkerAddress = Dns.GetHostAddresses("modify.neonforge-marker").Single().ToString();
 
                 hostEntries.Clear();
-                hostEntries.Add("foo-0.test.nhive.io", IPAddress.Parse("1.1.1.0"));
+                hostEntries.Add("foo-0.test.nhive.io", NetHelper.ParseIPv4Address("1.1.1.0"));
                 NetHelper.ModifyLocalHosts(hostEntries);
                 sections = NetHelper.ListLocalHostsSections();
                 Assert.Single(sections, "MODIFY");
@@ -250,7 +318,7 @@ namespace TestCommon
                 // Modify the existing host and verify.
 
                 hostEntries.Clear();
-                hostEntries.Add("foo-0.test.nhive.io", IPAddress.Parse("1.1.1.1"));
+                hostEntries.Add("foo-0.test.nhive.io", NetHelper.ParseIPv4Address("1.1.1.1"));
                 NetHelper.ModifyLocalHosts(hostEntries);
                 sections = NetHelper.ListLocalHostsSections();
                 Assert.Single(sections, "MODIFY");
@@ -270,8 +338,8 @@ namespace TestCommon
                 // Add a new hostname and verify.
 
                 hostEntries.Clear();
-                hostEntries.Add("foo-0.test.nhive.io", IPAddress.Parse("1.1.1.1"));
-                hostEntries.Add("foo-100.test.nhive.io", IPAddress.Parse("1.1.1.100"));
+                hostEntries.Add("foo-0.test.nhive.io", NetHelper.ParseIPv4Address("1.1.1.1"));
+                hostEntries.Add("foo-100.test.nhive.io", NetHelper.ParseIPv4Address("1.1.1.100"));
                 NetHelper.ModifyLocalHosts(hostEntries);
                 sections = NetHelper.ListLocalHostsSections();
                 Assert.Single(sections, "MODIFY");
@@ -293,7 +361,7 @@ namespace TestCommon
                 // Remove one of the entries and verify.
 
                 hostEntries.Clear();
-                hostEntries.Add("foo-0.test.nhive.io", IPAddress.Parse("1.1.1.1"));
+                hostEntries.Add("foo-0.test.nhive.io", NetHelper.ParseIPv4Address("1.1.1.1"));
                 NetHelper.ModifyLocalHosts(hostEntries);
                 sections = NetHelper.ListLocalHostsSections();
                 Assert.Single(sections, "MODIFY");
@@ -338,7 +406,7 @@ namespace TestCommon
                     var testAddress = $"1.2.3.{i}";
 
                     hostEntries.Clear();
-                    hostEntries.Add("foobar.test.nhive.io", IPAddress.Parse(testAddress));
+                    hostEntries.Add("foobar.test.nhive.io", NetHelper.ParseIPv4Address(testAddress));
 
                     NetHelper.ModifyLocalHosts(hostEntries);
                     Assert.Equal(testAddress, Dns.GetHostAddresses("foobar.test.nhive.io").Single().ToString());
@@ -591,7 +659,7 @@ namespace TestCommon
             // interface or that the OS will cycle through the free ports
             // before we're done.
 
-            var address = IPAddress.Parse("127.0.0.1");
+            var address = NetHelper.ParseIPv4Address("127.0.0.1");
             var ports   = new HashSet<int>();
 
             for (int i = 0; i < 100; i++)

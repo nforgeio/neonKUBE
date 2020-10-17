@@ -1,146 +1,90 @@
-# github.com/BurntSushi/toml v0.3.1
-github.com/BurntSushi/toml
 # github.com/a3linux/amazon-ssm-agent v0.0.0-20160402170735-8f4b98b7fa1a
 ## explicit
 github.com/a3linux/amazon-ssm-agent/agent/times
-# github.com/beorn7/perks v1.0.1
-github.com/beorn7/perks/quantile
-# github.com/cespare/xxhash/v2 v2.1.1
-github.com/cespare/xxhash/v2
-# github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd
-## explicit
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
 # github.com/facebookgo/clock v0.0.0-20150410010913-600d898af40a
-## explicit
 github.com/facebookgo/clock
-# github.com/go-chi/chi v4.1.1+incompatible
+# github.com/go-chi/chi v4.1.2+incompatible
 ## explicit
 github.com/go-chi/chi
 github.com/go-chi/chi/middleware
-# github.com/gogo/googleapis v1.3.2
+# github.com/gogo/googleapis v1.4.0
 github.com/gogo/googleapis/google/rpc
 # github.com/gogo/protobuf v1.3.1
 ## explicit
+github.com/gogo/protobuf/gogoproto
 github.com/gogo/protobuf/jsonpb
 github.com/gogo/protobuf/proto
+github.com/gogo/protobuf/protoc-gen-gogo/descriptor
 github.com/gogo/protobuf/sortkeys
 github.com/gogo/protobuf/types
 # github.com/gogo/status v1.1.0
-## explicit
 github.com/gogo/status
-# github.com/golang/mock v1.4.3
-## explicit
+# github.com/golang/mock v1.4.4
 github.com/golang/mock/gomock
-# github.com/golang/protobuf v1.3.5
+# github.com/golang/protobuf v1.4.2
 github.com/golang/protobuf/proto
 github.com/golang/protobuf/ptypes
 github.com/golang/protobuf/ptypes/any
 github.com/golang/protobuf/ptypes/duration
 github.com/golang/protobuf/ptypes/timestamp
 # github.com/google/uuid v1.1.1
-## explicit
 github.com/google/uuid
-# github.com/konsorten/go-windows-terminal-sequences v1.0.2
-## explicit
-# github.com/kr/text v0.2.0
-## explicit
-# github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369
-github.com/matttproud/golang_protobuf_extensions/pbutil
-# github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e
-## explicit
 # github.com/opentracing/opentracing-go v1.1.0
-## explicit
 github.com/opentracing/opentracing-go
-github.com/opentracing/opentracing-go/ext
 github.com/opentracing/opentracing-go/log
 # github.com/pborman/uuid v1.2.0
-## explicit
 github.com/pborman/uuid
-# github.com/pkg/errors v0.9.1
-## explicit
 # github.com/pmezard/go-difflib v1.0.0
 github.com/pmezard/go-difflib/difflib
-# github.com/prometheus/client_golang v1.4.1
-github.com/prometheus/client_golang/prometheus
-github.com/prometheus/client_golang/prometheus/internal
-github.com/prometheus/client_golang/prometheus/promhttp
-# github.com/prometheus/client_model v0.2.0
-github.com/prometheus/client_model/go
-# github.com/prometheus/common v0.9.1
-github.com/prometheus/common/expfmt
-github.com/prometheus/common/internal/bitbucket.org/ww/goautoneg
-github.com/prometheus/common/model
-# github.com/prometheus/procfs v0.0.9
-github.com/prometheus/procfs
-github.com/prometheus/procfs/internal/fs
-github.com/prometheus/procfs/internal/util
 # github.com/robfig/cron v1.2.0
-## explicit
 github.com/robfig/cron
-# github.com/sirupsen/logrus v1.5.0
-## explicit
 # github.com/stretchr/objx v0.2.0
-## explicit
 github.com/stretchr/objx
-# github.com/stretchr/testify v1.5.1
+# github.com/stretchr/testify v1.6.1
 ## explicit
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/mock
 github.com/stretchr/testify/require
 github.com/stretchr/testify/suite
-# github.com/uber-go/mapdecode v1.0.0
-github.com/uber-go/mapdecode
-github.com/uber-go/mapdecode/internal/mapstructure
-# github.com/uber-go/tally v3.3.15+incompatible
-## explicit
+# github.com/uber-go/tally v3.3.17+incompatible
 github.com/uber-go/tally
-# github.com/uber/jaeger-client-go v2.22.1+incompatible
+# go.temporal.io/api v1.0.0
 ## explicit
-# github.com/uber/jaeger-lib v2.2.0+incompatible
+go.temporal.io/api/command/v1
+go.temporal.io/api/common/v1
+go.temporal.io/api/enums/v1
+go.temporal.io/api/errordetails/v1
+go.temporal.io/api/failure/v1
+go.temporal.io/api/filter/v1
+go.temporal.io/api/history/v1
+go.temporal.io/api/namespace/v1
+go.temporal.io/api/query/v1
+go.temporal.io/api/replication/v1
+go.temporal.io/api/serviceerror
+go.temporal.io/api/taskqueue/v1
+go.temporal.io/api/workflow/v1
+go.temporal.io/api/workflowservice/v1
+go.temporal.io/api/workflowservicemock/v1
+# go.temporal.io/sdk v1.1.0
 ## explicit
-# github.com/uber/tchannel-go v1.16.0
-github.com/uber/tchannel-go
-github.com/uber/tchannel-go/internal/argreader
-github.com/uber/tchannel-go/relay
-github.com/uber/tchannel-go/thrift/arg2
-github.com/uber/tchannel-go/tnet
-github.com/uber/tchannel-go/tos
-github.com/uber/tchannel-go/trand
-github.com/uber/tchannel-go/typed
-# go.temporal.io/temporal v0.22.6
-## explicit
-go.temporal.io/temporal
-go.temporal.io/temporal/activity
-go.temporal.io/temporal/client
-go.temporal.io/temporal/encoded
-go.temporal.io/temporal/internal
-go.temporal.io/temporal/internal/common
-go.temporal.io/temporal/internal/common/backoff
-go.temporal.io/temporal/internal/common/cache
-go.temporal.io/temporal/internal/common/metrics
-go.temporal.io/temporal/internal/common/serializer
-go.temporal.io/temporal/internal/common/util
-go.temporal.io/temporal/worker
-go.temporal.io/temporal/workflow
-# go.temporal.io/temporal-proto v0.20.30
-## explicit
-go.temporal.io/temporal-proto/common
-go.temporal.io/temporal-proto/decision
-go.temporal.io/temporal-proto/event
-go.temporal.io/temporal-proto/execution
-go.temporal.io/temporal-proto/failure
-go.temporal.io/temporal-proto/filter
-go.temporal.io/temporal-proto/namespace
-go.temporal.io/temporal-proto/query
-go.temporal.io/temporal-proto/replication
-go.temporal.io/temporal-proto/serviceerror
-go.temporal.io/temporal-proto/tasklist
-go.temporal.io/temporal-proto/version
-go.temporal.io/temporal-proto/workflowservice
-go.temporal.io/temporal-proto/workflowservicemock
+go.temporal.io/sdk/activity
+go.temporal.io/sdk/client
+go.temporal.io/sdk/converter
+go.temporal.io/sdk/internal
+go.temporal.io/sdk/internal/common
+go.temporal.io/sdk/internal/common/backoff
+go.temporal.io/sdk/internal/common/cache
+go.temporal.io/sdk/internal/common/metrics
+go.temporal.io/sdk/internal/common/serializer
+go.temporal.io/sdk/internal/common/util
+go.temporal.io/sdk/internal/log
+go.temporal.io/sdk/log
+go.temporal.io/sdk/temporal
+go.temporal.io/sdk/worker
+go.temporal.io/sdk/workflow
 # go.uber.org/atomic v1.6.0
-## explicit
 go.uber.org/atomic
 # go.uber.org/goleak v1.0.0
 ## explicit
@@ -148,48 +92,7 @@ go.uber.org/goleak
 go.uber.org/goleak/internal/stack
 # go.uber.org/multierr v1.5.0
 go.uber.org/multierr
-# go.uber.org/net/metrics v1.3.0
-go.uber.org/net/metrics
-go.uber.org/net/metrics/bucket
-go.uber.org/net/metrics/push
-go.uber.org/net/metrics/tallypush
-# go.uber.org/thriftrw v1.22.0
-go.uber.org/thriftrw/version
-# go.uber.org/yarpc v1.45.0
-## explicit
-go.uber.org/yarpc
-go.uber.org/yarpc/api/backoff
-go.uber.org/yarpc/api/encoding
-go.uber.org/yarpc/api/middleware
-go.uber.org/yarpc/api/peer
-go.uber.org/yarpc/api/transport
-go.uber.org/yarpc/internal
-go.uber.org/yarpc/internal/backoff
-go.uber.org/yarpc/internal/bufferpool
-go.uber.org/yarpc/internal/config
-go.uber.org/yarpc/internal/digester
-go.uber.org/yarpc/internal/errorsync
-go.uber.org/yarpc/internal/firstoutboundmiddleware
-go.uber.org/yarpc/internal/humanize
-go.uber.org/yarpc/internal/inboundcall
-go.uber.org/yarpc/internal/inboundmiddleware
-go.uber.org/yarpc/internal/interpolate
-go.uber.org/yarpc/internal/introspection
-go.uber.org/yarpc/internal/iopool
-go.uber.org/yarpc/internal/observability
-go.uber.org/yarpc/internal/outboundmiddleware
-go.uber.org/yarpc/internal/request
-go.uber.org/yarpc/internal/yarpcerrors
-go.uber.org/yarpc/peer
-go.uber.org/yarpc/peer/abstractpeer
-go.uber.org/yarpc/peer/hostport
-go.uber.org/yarpc/pkg/errors
-go.uber.org/yarpc/pkg/lifecycle
-go.uber.org/yarpc/transport/tchannel
-go.uber.org/yarpc/transport/tchannel/internal
-go.uber.org/yarpc/yarpcconfig
-go.uber.org/yarpc/yarpcerrors
-# go.uber.org/zap v1.14.1
+# go.uber.org/zap v1.16.0
 ## explicit
 go.uber.org/zap
 go.uber.org/zap/buffer
@@ -198,77 +101,54 @@ go.uber.org/zap/internal/color
 go.uber.org/zap/internal/exit
 go.uber.org/zap/zapcore
 # golang.org/x/lint v0.0.0-20200302205851-738671d3881b
-## explicit
 golang.org/x/lint
 golang.org/x/lint/golint
-# golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e
-golang.org/x/net/bpf
-golang.org/x/net/context
+# golang.org/x/net v0.0.0-20200925080053-05aa5d4ee321
 golang.org/x/net/http/httpguts
 golang.org/x/net/http2
 golang.org/x/net/http2/hpack
 golang.org/x/net/idna
-golang.org/x/net/internal/iana
-golang.org/x/net/internal/socket
 golang.org/x/net/internal/timeseries
-golang.org/x/net/ipv4
-golang.org/x/net/ipv6
 golang.org/x/net/trace
-# golang.org/x/sys v0.0.0-20200327173247-9dae0f8f5775
-## explicit
+# golang.org/x/sys v0.0.0-20200923182605-d9f96fdee20d
+golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
-golang.org/x/sys/windows
-# golang.org/x/text v0.3.2
+# golang.org/x/text v0.3.3
 golang.org/x/text/secure/bidirule
 golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
-# golang.org/x/time v0.0.0-20191024005414-555d28b269f0
-## explicit
+# golang.org/x/time v0.0.0-20200416051211-89c76fbcd5d1
 golang.org/x/time/rate
-# golang.org/x/tools v0.0.0-20200327195553-82bb89366a1e
-## explicit
-golang.org/x/tools/go/analysis
-golang.org/x/tools/go/analysis/passes/inspect
+# golang.org/x/tools v0.0.0-20200605181038-cef9fc3bc8f0
 golang.org/x/tools/go/ast/astutil
-golang.org/x/tools/go/ast/inspector
-golang.org/x/tools/go/buildutil
 golang.org/x/tools/go/gcexportdata
-golang.org/x/tools/go/internal/cgo
 golang.org/x/tools/go/internal/gcimporter
-golang.org/x/tools/go/internal/packagesdriver
-golang.org/x/tools/go/loader
-golang.org/x/tools/go/packages
-golang.org/x/tools/go/types/objectpath
-golang.org/x/tools/go/types/typeutil
-golang.org/x/tools/internal/analysisinternal
-golang.org/x/tools/internal/gocommand
-golang.org/x/tools/internal/packagesinternal
-# google.golang.org/genproto v0.0.0-20200326112834-f447254575fd
-## explicit
+# google.golang.org/genproto v0.0.0-20200925023002-c2d885f95484
 google.golang.org/genproto/googleapis/rpc/status
-# google.golang.org/grpc v1.28.0
-## explicit
+# google.golang.org/grpc v1.32.0
 google.golang.org/grpc
 google.golang.org/grpc/attributes
 google.golang.org/grpc/backoff
 google.golang.org/grpc/balancer
 google.golang.org/grpc/balancer/base
+google.golang.org/grpc/balancer/grpclb/state
 google.golang.org/grpc/balancer/roundrobin
 google.golang.org/grpc/binarylog/grpc_binarylog_v1
 google.golang.org/grpc/codes
 google.golang.org/grpc/connectivity
 google.golang.org/grpc/credentials
-google.golang.org/grpc/credentials/internal
 google.golang.org/grpc/encoding
 google.golang.org/grpc/encoding/proto
 google.golang.org/grpc/grpclog
+google.golang.org/grpc/health/grpc_health_v1
 google.golang.org/grpc/internal
 google.golang.org/grpc/internal/backoff
 google.golang.org/grpc/internal/balancerload
 google.golang.org/grpc/internal/binarylog
 google.golang.org/grpc/internal/buffer
 google.golang.org/grpc/internal/channelz
+google.golang.org/grpc/internal/credentials
 google.golang.org/grpc/internal/envconfig
 google.golang.org/grpc/internal/grpclog
 google.golang.org/grpc/internal/grpcrand
@@ -276,50 +156,49 @@ google.golang.org/grpc/internal/grpcsync
 google.golang.org/grpc/internal/grpcutil
 google.golang.org/grpc/internal/resolver/dns
 google.golang.org/grpc/internal/resolver/passthrough
+google.golang.org/grpc/internal/serviceconfig
+google.golang.org/grpc/internal/status
 google.golang.org/grpc/internal/syscall
 google.golang.org/grpc/internal/transport
 google.golang.org/grpc/keepalive
 google.golang.org/grpc/metadata
-google.golang.org/grpc/naming
 google.golang.org/grpc/peer
 google.golang.org/grpc/resolver
 google.golang.org/grpc/serviceconfig
 google.golang.org/grpc/stats
 google.golang.org/grpc/status
 google.golang.org/grpc/tap
-# gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f
-## explicit
-# gopkg.in/yaml.v2 v2.2.8
-## explicit
-gopkg.in/yaml.v2
-# honnef.co/go/tools v0.0.1-2020.1.3
-## explicit
-honnef.co/go/tools/arg
-honnef.co/go/tools/cmd/staticcheck
-honnef.co/go/tools/code
-honnef.co/go/tools/config
-honnef.co/go/tools/deprecated
-honnef.co/go/tools/edit
-honnef.co/go/tools/facts
-honnef.co/go/tools/functions
-honnef.co/go/tools/go/types/typeutil
-honnef.co/go/tools/internal/cache
-honnef.co/go/tools/internal/passes/buildir
-honnef.co/go/tools/internal/renameio
-honnef.co/go/tools/internal/robustio
-honnef.co/go/tools/internal/sharedcheck
-honnef.co/go/tools/ir
-honnef.co/go/tools/ir/irutil
-honnef.co/go/tools/lint
-honnef.co/go/tools/lint/lintdsl
-honnef.co/go/tools/lint/lintutil
-honnef.co/go/tools/lint/lintutil/format
-honnef.co/go/tools/loader
-honnef.co/go/tools/pattern
-honnef.co/go/tools/printf
-honnef.co/go/tools/report
-honnef.co/go/tools/simple
-honnef.co/go/tools/staticcheck
-honnef.co/go/tools/stylecheck
-honnef.co/go/tools/unused
-honnef.co/go/tools/version
+# google.golang.org/protobuf v1.25.0
+google.golang.org/protobuf/encoding/protojson
+google.golang.org/protobuf/encoding/prototext
+google.golang.org/protobuf/encoding/protowire
+google.golang.org/protobuf/internal/descfmt
+google.golang.org/protobuf/internal/descopts
+google.golang.org/protobuf/internal/detrand
+google.golang.org/protobuf/internal/encoding/defval
+google.golang.org/protobuf/internal/encoding/json
+google.golang.org/protobuf/internal/encoding/messageset
+google.golang.org/protobuf/internal/encoding/tag
+google.golang.org/protobuf/internal/encoding/text
+google.golang.org/protobuf/internal/errors
+google.golang.org/protobuf/internal/fieldsort
+google.golang.org/protobuf/internal/filedesc
+google.golang.org/protobuf/internal/filetype
+google.golang.org/protobuf/internal/flags
+google.golang.org/protobuf/internal/genid
+google.golang.org/protobuf/internal/impl
+google.golang.org/protobuf/internal/mapsort
+google.golang.org/protobuf/internal/pragma
+google.golang.org/protobuf/internal/set
+google.golang.org/protobuf/internal/strs
+google.golang.org/protobuf/internal/version
+google.golang.org/protobuf/proto
+google.golang.org/protobuf/reflect/protoreflect
+google.golang.org/protobuf/reflect/protoregistry
+google.golang.org/protobuf/runtime/protoiface
+google.golang.org/protobuf/runtime/protoimpl
+google.golang.org/protobuf/types/known/anypb
+google.golang.org/protobuf/types/known/durationpb
+google.golang.org/protobuf/types/known/timestamppb
+# gopkg.in/yaml.v3 v3.0.0-20200605160147-a5ece683394c
+gopkg.in/yaml.v3

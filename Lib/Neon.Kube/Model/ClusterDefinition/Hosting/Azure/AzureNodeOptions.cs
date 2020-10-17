@@ -44,9 +44,19 @@ namespace Neon.Kube
     public class AzureNodeOptions
     {
         /// <summary>
+        /// <para>
         /// Optionally specifies the Azure virtual machine size.  The available VM sizes are listed 
         /// <a href="https://docs.microsoft.com/en-us/azure/virtual-machines/sizes-general">here</a>.
         /// This defaults to <see cref="AzureHostingOptions.DefaultVmSize"/>.
+        /// </para>
+        /// <note>
+        /// neonKUBE clusters cannot be deployed to ARM-based Azure V, sizes.  You must
+        /// specify an VM size using a Intel or AMD 64-bit processor.
+        /// </note>
+        /// <note>
+        /// neonKUBE requires master and worker instances to have at least 4 CPUs and 4GiB RAM.  Choose
+        /// an Azure VM size instance type that satisfies these requirements.
+        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "VmSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "vmSize", ApplyNamingConventions = false)]

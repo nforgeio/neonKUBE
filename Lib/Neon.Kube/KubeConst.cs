@@ -50,12 +50,12 @@ namespace Neon.Kube
         /// <summary>
         /// The minimum number of cores required by master nodes.
         /// </summary>
-        public const int MinMasterCores = 2;
+        public const int MinMasterCores = 4;
 
         /// <summary>
         /// The minimum number of cores required by worker nodes.
         /// </summary>
-        public const int MinWorkerCores = 2;
+        public const int MinWorkerCores = 4;
 
         /// <summary>
         /// The minimum RAM (MiB) required for master nodes.
@@ -70,7 +70,7 @@ namespace Neon.Kube
         /// <summary>
         /// The minimum required network interface cards for master nodes.
         /// </summary>
-        public const int MinMasterNics = 2;
+        public const int MinMasterNics = 1;
 
         /// <summary>
         /// The minimum required network interface cards for worker nodes.
@@ -230,19 +230,19 @@ namespace Neon.Kube
 
         /// <summary>
         /// The number of IP addresses reserved by cloud deployments at the beginning of the 
-        /// nodes subnet by the cloud provider and also for future neonKUBE features.
+        /// node subnet by the cloud provider and also for future neonKUBE features.
         /// This typically includes the cloud default gateway and DNS forwarding IPs as well
         /// as potential future neonKUBE features such as an integrated VPN and perhaps 
         /// management VMs.
         /// </summary>
-        public const int CloudVNetStartReservedIPs = 10;
+        public const int CloudSubnetStartReservedIPs = 10;
 
         /// <summary>
-        /// The number of IP addresses reserved by cloud deployments at the end of the nodes
+        /// The number of IP addresses reserved by cloud deployments at the end of the node
         /// subnet by the cloud provider.  This typically includes the network UDP broadcast
         /// address.
         /// </summary>
-        public const int CloudVNetEndReservedIPs = 1;
+        public const int CloudSubnetEndReservedIPs = 1;
 
         /// <summary>
         /// Default subnet for Kubernetes pods.

@@ -24,6 +24,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using ICSharpCode.SharpZipLib.Zip;
+
 using Neon.Common;
 
 namespace Neon.Kube
@@ -34,8 +36,8 @@ namespace Neon.Kube
     /// </summary>
     /// <remarks>
     /// <para>
-    /// This class is intended for use with the <see cref="SshProxy{TMetadata}.RunCommand(CommandBundle, RunOptions)"/>
-    /// and  <see cref="SshProxy{TMetadata}.SudoCommand(CommandBundle, RunOptions)"/> methods for situations where
+    /// This class is intended for use with the <see cref="LinuxSshProxy{TMetadata}.RunCommand(CommandBundle, RunOptions)"/>
+    /// and  <see cref="LinuxSshProxy{TMetadata}.SudoCommand(CommandBundle, RunOptions)"/> methods for situations where
     /// one or more files need to be uploaded to a cluster node and be used when a command is executed.
     /// </para>
     /// <para>
@@ -228,7 +230,7 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(command), nameof(command));
 
-            this.Command = command;
+            this.Command = NeonHelper.ToLinuxLineEndings(command);
             this.Args    = args ?? Array.Empty<object>();
         }
 
@@ -301,11 +303,44 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Creates a ZIP file, recursively adding all of the files in a local source folder and
+        /// then adds the ZIP file to the bundle.
+        /// </summary>
+        /// <param name="path">The file path relative to the directory where the command will be executed.</param>
+        /// <param name="sourceFolder">Path to the local source folder containing the files to be zipped.</param>
+        public void AddZip(string path, string sourceFolder)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path), nameof(path));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(sourceFolder), nameof(sourceFolder));
+
+            using (var ms = new MemoryStream())
+            {
+                using (var zip = ZipFile.Create(ms))
+                {
+                    zip.BeginUpdate();
+
+                    foreach (var file in Directory.GetFiles(sourceFolder, "*.*", SearchOption.AllDirectories))
+                    {
+                        var relativePath = file.Substring(sourceFolder.Length + 1);
+                        var data         = File.ReadAllBytes(file);
+
+                        zip.Add(new StaticBytesDataSource(data), relativePath);
+                    }
+
+                    zip.CommitUpdate();
+                }
+
+                AddFile(path, ms.ToArray());
+            }
+        }
+
+        /// <summary>
         /// Verifies that the bundle is valid.
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown when the bundle is not valid.</exception>
         public void Validate()
         {
+            // $todo(jefflill): Do we need this?  It's been blank for years.
         }
 
         /// <summary>

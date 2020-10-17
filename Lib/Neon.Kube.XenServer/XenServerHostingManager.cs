@@ -211,7 +211,7 @@ namespace Neon.Kube
             // Build a list of [SshProxy] instances that map to the specified XenServer
             // hosts.  We'll use the [XenClient] instances as proxy metadata.
 
-            var xenSshProxies = new List<SshProxy<XenClient>>();
+            var xenSshProxies = new List<LinuxSshProxy<XenClient>>();
 
             xenHosts = new List<XenClient>();
 
@@ -322,7 +322,7 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="xenHost">The target XenServer.</param>
         /// <returns>The list of nodes to be hosted on the XenServer.</returns>
-        private List<SshProxy<NodeDefinition>> GetHostedNodes(XenClient xenHost)
+        private List<LinuxSshProxy<NodeDefinition>> GetHostedNodes(XenClient xenHost)
         {
             var nodeDefinitions = cluster.Definition.NodeDefinitions.Values;
 
@@ -336,7 +336,7 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="node">The target node.</param>
         /// <returns>The virtual machine name.</returns>
-        private string GetVmName(SshProxy<NodeDefinition> node)
+        private string GetVmName(LinuxSshProxy<NodeDefinition> node)
         {
             return $"{cluster.Definition.Hosting.Vm.GetVmNamePrefix(cluster.Definition)}{node.Name}";
         }
@@ -345,7 +345,7 @@ namespace Neon.Kube
         /// Verify that the XenServer is ready to provision the cluster virtual machines.
         /// </summary>
         /// <param name="xenSshProxy">The XenServer SSH proxy.</param>
-        private void VerifyReady(SshProxy<XenClient> xenSshProxy)
+        private void VerifyReady(LinuxSshProxy<XenClient> xenSshProxy)
         {
             // $todo(jefflill):
             //
@@ -389,7 +389,7 @@ namespace Neon.Kube
         /// Install the virtual machine template on the XenServer if it's not already present.
         /// </summary>
         /// <param name="xenSshProxy">The XenServer SSH proxy.</param>
-        private void CheckVmTemplate(SshProxy<XenClient> xenSshProxy)
+        private void CheckVmTemplate(LinuxSshProxy<XenClient> xenSshProxy)
         {
             var xenHost      = xenSshProxy.Metadata;
             var templateName = GetXenTemplateName();
@@ -427,7 +427,7 @@ namespace Neon.Kube
         /// Provision the virtual machines on the XenServer.
         /// </summary>
         /// <param name="xenSshProxy">The XenServer SSH proxy.</param>
-        private void ProvisionVM(SshProxy<XenClient> xenSshProxy)
+        private void ProvisionVM(LinuxSshProxy<XenClient> xenSshProxy)
         {
             var xenHost  = xenSshProxy.Metadata;
             var hostInfo = xenHost.GetHostInfo();
@@ -539,7 +539,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override string GetDataDevice(SshProxy<NodeDefinition> node)
+        public override string GetDataDisk(LinuxSshProxy<NodeDefinition> node)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 
