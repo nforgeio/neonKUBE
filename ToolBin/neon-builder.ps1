@@ -102,7 +102,7 @@ function PublishCore
 #------------------------------------------------------------------------------
 
 # We see somewhat random build problems when Visual Studio has the solution open,
-# do have the user close Visual Studio instances first.
+# so have the user close Visual Studio instances first.
 
 Get-Process -Name devenv -ErrorAction SilentlyContinue
 
@@ -118,6 +118,8 @@ cd $nfRoot
 # Copy the version from [$/product-version] into [$/Lib/Neon/Common/Build.cs]
 
 & neon-build build-version
+
+# Build the solution.
 
 if (-not $nobuild)
 {
