@@ -23,11 +23,11 @@ import (
 
 type (
 
-	// ClientsMap holds a thread-safe map[int64]*ClientHelper that stores
+	// ClientsMap holds a thread-safe map[int64]*Helper that stores
 	// temporal workflow service clients with their clientID's
 	ClientsMap struct {
 		sync.Mutex
-		clients map[int64]*ClientHelper
+		clients map[int64]*Helper
 	}
 )
 
@@ -37,22 +37,22 @@ type (
 // NewClientsMap is the constructor for an ClientsMap
 func NewClientsMap() *ClientsMap {
 	o := new(ClientsMap)
-	o.clients = make(map[int64]*ClientHelper)
+	o.clients = make(map[int64]*Helper)
 	return o
 }
 
-// Add adds a new ClientHelper and its corresponding
+// Add adds a new Helper and its corresponding
 // ClientId into the Clients map.  This method is thread-safe.
 //
-// param clientID int64 -> the long clientID to the ClientHelper
+// param clientID int64 -> the long clientID to the Helper
 // to be added to the ClientsMap.  This will be the mapped key
 //
-// param client *ClientHelper -> *Client Helper to be added to the
+// param client *Helper -> *Client Helper to be added to the
 // ClientsMap. This will be the mapped value.
 //
-// returns int64 -> long clientID of the new ClientHelper
+// returns int64 -> long clientID of the new Helper
 // added to the map.
-func (c *ClientsMap) Add(clientID int64, helper *ClientHelper) int64 {
+func (c *ClientsMap) Add(clientID int64, helper *Helper) int64 {
 	c.Lock()
 	defer c.Unlock()
 	c.clients[clientID] = helper
@@ -62,10 +62,10 @@ func (c *ClientsMap) Add(clientID int64, helper *ClientHelper) int64 {
 // Remove removes key/value entry from the Clients map at the specified
 // ClientId.  This is a thread-safe method.
 //
-// param clientID int64 -> the long clientID to the ClientHelper
+// param clientID int64 -> the long clientID to the Helper
 // to be removed from the map. This will be the mapped key
 //
-// returns int64 -> long clientID of the ClientHelper
+// returns int64 -> long clientID of the Helper
 // to be removed from the map
 func (c *ClientsMap) Remove(clientID int64) int64 {
 	c.Lock()
@@ -74,14 +74,14 @@ func (c *ClientsMap) Remove(clientID int64) int64 {
 	return clientID
 }
 
-// Get gets a ClientHelper from the ClientsMap at
+// Get gets a Helper from the ClientsMap at
 // the specified clientID.  This method is thread-safe.
 //
-// param clientID int64 -> the long clientID to the ClientHelper
+// param clientID int64 -> the long clientID to the Helper
 // to be gotten from the ClientsMap.  This will be the mapped key
 //
-// returns *ClientHelper -> ClientHelper at the specified clientID
-func (c *ClientsMap) Get(clientID int64) *ClientHelper {
+// returns *Helper -> Helper at the specified clientID
+func (c *ClientsMap) Get(clientID int64) *Helper {
 	c.Lock()
 	defer c.Unlock()
 	return c.clients[clientID]

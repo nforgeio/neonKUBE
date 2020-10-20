@@ -171,7 +171,7 @@ func handleIProxyRequest(request messages.IProxyRequest) (err error) {
 	// check for a temporal server connection.
 	// if it exists, then enter switch block to handle the
 	// specified request type
-	if err = verifyClientHelper(request, Clients.Get(request.GetClientID())); err != nil {
+	if err = verifyHelper(request, Clients.Get(request.GetClientID())); err != nil {
 		reply = messages.CreateReplyMessage(request)
 		reply.Build(internal.NewTemporalError(err))
 	} else {

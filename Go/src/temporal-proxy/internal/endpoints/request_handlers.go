@@ -92,10 +92,10 @@ func handleConnectRequest(requestCtx context.Context, request *messages.ConnectR
 
 	// create and set the logger
 	logger := SetLogger(internal.LogLevel, internal.Debug)
-	clientHelper := proxyclient.NewClientHelper()
+	clientHelper := proxyclient.NewHelper()
 	clientHelper.Logger = logger.Named(internal.ProxyLoggerName)
 
-	// configure the ClientHelper
+	// configure the Helper
 	// setup the namespace, service, and workflow clients
 	err := clientHelper.SetupTemporalClients(requestCtx, opts)
 
@@ -265,7 +265,7 @@ func handleNewWorkerRequest(requestCtx context.Context, request *messages.NewWor
 	// set options
 	opts := request.GetOptions()
 
-	// create a new worker using a configured ClientHelper instance
+	// create a new worker using a configured Helper instance
 
 	workerID, err := clientHelper.StartWorker(
 		namespace,

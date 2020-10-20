@@ -168,9 +168,9 @@ func isForceReplayErr(err error) bool {
 	return strings.Contains(err.Error(), "force-replay")
 }
 
-// verifyClientHelper verifies the existence of a ClientHelper for specified
+// verifyHelper verifies the existence of a Helper for specified
 // IProxyRequests before sending them down to the request handlers.
-func verifyClientHelper(request messages.IProxyRequest, helper *proxyclient.ClientHelper) error {
+func verifyHelper(request messages.IProxyRequest, helper *proxyclient.Helper) error {
 	switch request.GetType() {
 	case internal.InitializeRequest,
 		internal.PingRequest,
