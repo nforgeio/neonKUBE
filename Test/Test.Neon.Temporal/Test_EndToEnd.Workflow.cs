@@ -4536,21 +4536,21 @@ namespace TestTemporal
         public interface IWorkflowDefaultNullableArg : IWorkflow
         {
             [WorkflowMethod(Name = "test")]
-            Task<TimeSpan?> TestAsync(TimeSpan? value = null);
+            Task<DateTime?> TestAsync(DateTime? value = null);
 
             [WorkflowMethod(Name = "test-child")]
-            Task<TimeSpan?> TestChildAsync(bool useDefault, TimeSpan? value = null);
+            Task<DateTime?> TestChildAsync(bool useDefault, DateTime? value = null);
         }
 
         [Workflow(AutoRegister = true)]
         public class WorkflowDefaultNullableArg : WorkflowBase, IWorkflowDefaultNullableArg
         {
-            public async Task<TimeSpan?> TestAsync(TimeSpan? value = null)
+            public async Task<DateTime?> TestAsync(DateTime? value = null)
             {
                 return await Task.FromResult(value);
             }
 
-            public async Task<TimeSpan?> TestChildAsync(bool useDefault, TimeSpan? value = null)
+            public async Task<DateTime?> TestChildAsync(bool useDefault, DateTime? value = null)
             {
                 var stub = Workflow.NewChildWorkflowStub<IWorkflowDefaultNullableArg>();
 
@@ -4569,26 +4569,30 @@ namespace TestTemporal
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_DefaultNullableArg_External()
         {
+            var testValue = new DateTime(2020, 10, 21);
+
             // Verify that calling an external workflow with default arguments works.
 
             var stub = client.NewWorkflowStub<IWorkflowDefaultNullableArg>();
             Assert.Null(await stub.TestAsync());
 
             stub = client.NewWorkflowStub<IWorkflowDefaultNullableArg>();
-            Assert.Equal(TimeSpan.FromSeconds(10), await stub.TestAsync(TimeSpan.FromSeconds(10)));
+            Assert.Equal(testValue, await stub.TestAsync(testValue));
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_DefaultNullableArg_Child()
         {
+            var testValue = new DateTime(2020, 10, 21);
+
             // Verify that calling a child workflow with default arguments works.
 
             var stub = client.NewWorkflowStub<IWorkflowDefaultNullableArg>();
             Assert.Null(await stub.TestChildAsync(useDefault: true));
 
             stub = client.NewWorkflowStub<IWorkflowDefaultNullableArg>();
-            Assert.Equal(TimeSpan.FromSeconds(10), await stub.TestChildAsync(useDefault: false, TimeSpan.FromSeconds(10)));
+            Assert.Equal(testValue, await stub.TestChildAsync(useDefault: false, testValue));
         }
     }
 }
