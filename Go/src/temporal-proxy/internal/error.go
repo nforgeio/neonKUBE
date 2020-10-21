@@ -198,8 +198,7 @@ func (c *TemporalError) GetType() TemporalErrorType {
 	case "unknownExternalWorkflowExecution":
 		return UnknownExternalWorkflowExecutionError
 	default:
-		err := fmt.Errorf("unrecognized error type %v", *c.Type)
-		panic(err)
+		return ProxyError
 	}
 }
 
@@ -242,16 +241,16 @@ func (c *TemporalError) SetType(errorType TemporalErrorType) {
 		typeString = "unknownExternalWorkflowExecution"
 		break
 	default:
-		err := fmt.Errorf("unrecognized error type %v", errorType)
-		panic(err)
+		typeString = "proxy"
 	}
 	c.Type = &typeString
 }
 
 func (t *TemporalErrorType) String() string {
 	return [...]string{
-		"cancelled",
 		"application",
+		"cancelled",
+		"activity",
 		"server",
 		"childWorkflowExecution",
 		"workflowExecution",
@@ -259,6 +258,7 @@ func (t *TemporalErrorType) String() string {
 		"terminated",
 		"panic",
 		"unknownExternalWorkflowExecution",
+		"proxy",
 	}[*t]
 }
 
@@ -376,6 +376,25 @@ func IsTimeoutError(err error) bool {
 			}
 		} else {
 			return temporal.IsTimeoutError(err)
+		}
+	}
+
+	return false
+}
+
+// IsProxyError determines if an error
+// is a TemporalError of type ProxyError.
+//
+// param err error -> the error to evaluate.
+//
+// returns bool -> error is a TemporalError of type
+// ProxyError or not.
+func IsProxyError(err error) bool {
+	if err != nil && !reflect.ValueOf(err).IsNil() {
+		if v, ok := err.(*TemporalError); ok {
+			if v.GetType() == ProxyError {
+				return true
+			}
 		}
 	}
 

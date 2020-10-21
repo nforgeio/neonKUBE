@@ -194,7 +194,7 @@ namespace Neon.Kube
                     throw new ClusterDefinitionException(error);
                 }
 
-                if (!int.TryParse(fields[1], out var port) || NetHelper.IsValidPort(port))
+                if (!int.TryParse(fields[1], out var port) || !NetHelper.IsValidPort(port))
                 {
                     throw new ClusterDefinitionException(error);
                 }
@@ -210,6 +210,14 @@ namespace Neon.Kube
                 foreach (var m in clusterDefinition.Masters)
                 {
                     m.Labels.NeonSystemDb = true;
+                }
+            }
+
+            if (!clusterDefinition.Nodes.Any(n => n.Labels.NeonSystemRegistry))
+            {
+                foreach (var m in clusterDefinition.Masters)
+                {
+                    m.Labels.NeonSystemRegistry = true;
                 }
             }
 

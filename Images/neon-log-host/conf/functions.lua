@@ -2,7 +2,10 @@
     if record["kubernetes"] == nil then
         return 0, 0, 0
     end
-    if record["kubernetes"]["namespace_name"] == "monitoring" and record["kubernetes"]["container_name"] == "istio-proxy" then
+    if string.starts(record["kubernetes"]["pod_name"], "neon-log") then
+        return -1, 0, 0
+    end
+    if string.starts(record["kubernetes"]["pod_name"], "fluent") then
         return -1, 0, 0
     end
     return 0, 0, 0
@@ -37,4 +40,8 @@ function dedot_keys(map)
     for k, v in pairs(new_map) do
         map[k] = v
     end
+end
+
+function string.starts(String,Start)
+   return string.sub(String,1,string.len(Start))==Start
 end

@@ -3,7 +3,7 @@
 Expand the name of the chart.
 */}}
 {{- define "name" -}}
-{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" -}}
+{{- default .Release.Name .Values.nameOverride | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{/*
@@ -11,25 +11,25 @@ Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 */}}
 {{- define "fullname" -}}
-{{- $name := default .Chart.Name .Values.nameOverride -}}
+{{- $name := default .Release.Name .Values.nameOverride -}}
 {{- printf "%s-%s" $name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{- define "uname" -}}
-{{ .Values.clusterName }}-{{ .Values.nodeGroup }}
+{{ .Release.Name }}-{{ .Values.nodeGroup }}
 {{- end -}}
 
 {{- define "masterService" -}}
 {{- if empty .Values.masterService -}}
-{{ .Values.clusterName }}-master
+{{ .Release.Name }}-master
 {{- else -}}
 {{ .Values.masterService }}
 {{- end -}}
 {{- end -}}
 
 {{- define "endpoints" -}}
-{{- $replicas := .replicas | int }}
-{{- $uname := printf "%s-%s" .clusterName .nodeGroup }}
+{{- $replicas := .Values.replicas | int }}
+{{- $uname := printf "%s-%s" $.Release.Name .Values.nodeGroup }}
   {{- range $i, $e := untilStep 0 $replicas 1 -}}
 {{ $uname }}-{{ $i }},
   {{- end -}}

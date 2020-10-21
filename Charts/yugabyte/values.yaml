@@ -40,8 +40,8 @@ replicas:
   tserver: 3
 
 partition:
-  master: 3
-  tserver: 3
+  master: 0
+  tserver: 0
 
 tls:
   # Set to true to enable the TLS.
@@ -111,7 +111,7 @@ serviceMonitor:
   ##
   enabled: true
   ## interval is the default scrape_interval for all the endpoints
-  interval: 30s
+  interval: 60s
   ## extraLabels can be used to add labels to the ServiceMonitors
   ## being created
   extraLabels: {}

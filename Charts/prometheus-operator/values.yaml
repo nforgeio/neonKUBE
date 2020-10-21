@@ -196,7 +196,7 @@ alertmanager:
   serviceMonitor:
     ## Scrape interval. If not set, the Prometheus default scrape interval is used.
     ##
-    interval: ""
+    interval: 1m
     selfMonitor: true
 
     ## 	metric relabel configs to apply to samples before ingestion.
@@ -248,7 +248,7 @@ alertmanager:
 
     ## Define Log Format
     # Use logfmt (default) or json-formatted logging
-    logFormat: logfmt
+    logFormat: json
 
     ## Log level for Alertmanager to be configured with.
     ##
@@ -449,7 +449,7 @@ grafana:
   serviceMonitor:
     ## Scrape interval. If not set, the Prometheus default scrape interval is used.
     ##
-    interval: ""
+    interval: 1m
     selfMonitor: true
 
     ## 	metric relabel configs to apply to samples before ingestion.
@@ -492,7 +492,7 @@ kubeApiServer:
   serviceMonitor:
     ## Scrape interval. If not set, the Prometheus default scrape interval is used.
     ##
-    interval: ""
+    interval: 1m
     jobLabel: component
     selector:
       matchLabels:
@@ -515,7 +515,7 @@ kubelet:
   serviceMonitor:
     ## Scrape interval. If not set, the Prometheus default scrape interval is used.
     ##
-    interval: ""
+    interval: 1m
 
     ## Enable scraping the kubelet over https. For requirements to enable this see
     ## https://github.com/coreos/prometheus-operator/issues/926
@@ -591,7 +591,7 @@ kubeControllerManager:
   serviceMonitor:
     ## Scrape interval. If not set, the Prometheus default scrape interval is used.
     ##
-    interval: ""
+    interval: 1m
 
     ## Enable scraping kube-controller-manager over https.
     ## Requires proper certs (not self-signed) and delegated authentication/authorization checks
@@ -633,7 +633,7 @@ coreDns:
   serviceMonitor:
     ## Scrape interval. If not set, the Prometheus default scrape interval is used.
     ##
-    interval: ""
+    interval: 1m
 
     ## 	metric relabel configs to apply to samples before ingestion.
     ##
@@ -662,7 +662,7 @@ kubeDns:
   serviceMonitor:
     ## Scrape interval. If not set, the Prometheus default scrape interval is used.
     ##
-    interval: ""
+    interval: 1m
 
     ## 	metric relabel configs to apply to samples before ingestion.
     ##
@@ -729,7 +729,7 @@ kubeEtcd:
   serviceMonitor:
     ## Scrape interval. If not set, the Prometheus default scrape interval is used.
     ##
-    interval: ""
+    interval: 1m
     scheme: http
     insecureSkipVerify: false
     serverName: ""
@@ -778,7 +778,7 @@ kubeScheduler:
   serviceMonitor:
     ## Scrape interval. If not set, the Prometheus default scrape interval is used.
     ##
-    interval: ""
+    interval: 1m
     ## Enable scraping kube-controller-manager over https.
     ## Requires proper certs (not self-signed) and delegated authentication/authorization checks
     ##
@@ -822,7 +822,7 @@ kubeProxy:
   serviceMonitor:
     ## Scrape interval. If not set, the Prometheus default scrape interval is used.
     ##
-    interval: ""
+    interval: 1m
 
     ## Enable scraping kube-proxy over https.
     ## Requires proper certs (not self-signed) and delegated authentication/authorization checks
@@ -851,7 +851,7 @@ kubeStateMetrics:
   serviceMonitor:
     ## Scrape interval. If not set, the Prometheus default scrape interval is used.
     ##
-    interval: ""
+    interval: 1m
 
     ## 	metric relabel configs to apply to samples before ingestion.
     ##
@@ -890,7 +890,7 @@ nodeExporter:
   serviceMonitor:
     ## Scrape interval. If not set, the Prometheus default scrape interval is used.
     ##
-    interval: ""
+    interval: 1m
 
     ## 	metric relabel configs to apply to samples before ingestion.
     ##
@@ -957,6 +957,7 @@ prometheusOperator:
         sidecar.istio.io/inject: "false"
       nodeSelector: 
         neonkube.io/monitor.metrics: "true"
+      tolerations: []
 
 
   ## Service account for Alertmanager to use.
@@ -1028,7 +1029,7 @@ prometheusOperator:
 
   ## Define Log Format
   # Use logfmt (default) or json-formatted logging
-  # logFormat: logfmt
+  logFormat: json
 
   ## Decrease log verbosity to errors only
   # logLevel: error
@@ -1045,7 +1046,7 @@ prometheusOperator:
   serviceMonitor:
     ## Scrape interval. If not set, the Prometheus default scrape interval is used.
     ##
-    interval: ""
+    interval: 1m
     selfMonitor: true
 
     ## 	metric relabel configs to apply to samples before ingestion.
@@ -1229,7 +1230,7 @@ prometheus:
   serviceMonitor:
     ## Scrape interval. If not set, the Prometheus default scrape interval is used.
     ##
-    interval: ""
+    interval: 1m
     selfMonitor: true
 
     ## 	metric relabel configs to apply to samples before ingestion.
@@ -1256,11 +1257,11 @@ prometheus:
 
     ## Interval between consecutive scrapes.
     ##
-    scrapeInterval: ""
+    scrapeinterval: 1m
 
     ## Interval between consecutive evaluations.
     ##
-    evaluationInterval: ""
+    evaluationinterval: 1m
 
     ## ListenLocal makes the Prometheus server listen on loopback, so that it does not bind against the Pod IP.
     ##
@@ -1422,7 +1423,7 @@ prometheus:
 
     ## Log format for Prometheus be configured in
     ##
-    logFormat: logfmt
+    logFormat: json
 
     ## Prefix used to register routes, overriding externalUrl route.
     ## Useful for proxies that rewrite URLs.

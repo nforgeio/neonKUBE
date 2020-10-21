@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Chart.Name }}
+  name: {{ template "fullname" . }}
   labels:
     app: {{ .Chart.Name }}
     release: {{ .Release.Name | quote }}
@@ -99,6 +99,8 @@ spec:
                 http "{{ .Values.healthCheckPath }}"
         ports:
         - containerPort: {{ .Values.httpPort }}
+          name: http
+          protocol: TCP
         resources:
 {{ toYaml .Values.resources | indent 10 }}
         volumeMounts:

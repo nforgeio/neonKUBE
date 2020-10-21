@@ -34,7 +34,7 @@ metrics:
     enabled: true
     additionalLabels: {}
     namespace: monitoring
-    interval: 30s
+    interval: 60s
     scrapeTimeout: 10s
 
 # When enabled, fluent-bit will keep track of tailing offsets across pod restarts.
@@ -47,7 +47,7 @@ priorityClassName: ""
 backend:
   type: forward
   forward:
-    host: fluentd.monitoring
+    host: neon-log-collector-fluentd.monitoring
     port: 24224
     tls: "off"
     tls_verify: "off"

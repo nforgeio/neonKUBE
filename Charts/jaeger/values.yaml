@@ -45,7 +45,7 @@ storage:
       # cassandra.tls.enabled: false
   elasticsearch:
     scheme: http
-    host: elasticsearch-master
+    host: neon-logs-elasticsearch-master
     port: 9200
     user: elastic
     usePassword: false
@@ -171,7 +171,7 @@ ingester:
     create: false
     name:
   nodeSelector: 
-    neonkube.io/monitor.metrics: "true"
+    neonkube.io/monitor.logs: "true"
   tolerations: []
   affinity: {}
   podAnnotations: {}
@@ -220,17 +220,10 @@ agent:
   serviceAccount:
     create: true
     name:
-  nodeSelector: {}
+  nodeSelector: 
+    neonkube.io/monitor.logs: "true"
   tolerations: []
-  affinity: 
-    nodeAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        nodeSelectorTerms:
-        - matchExpressions:
-          - key: neonkube.io/monitor.logs
-            operator: In
-            values:
-            - "true"
+  affinity: {}
   podAnnotations: {}
   ## Additional pod labels
   ## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
@@ -298,17 +291,10 @@ collector:
   serviceAccount:
     create: true
     name:
-  nodeSelector: {}
+  nodeSelector: 
+    neonkube.io/monitor.logs: "true"
   tolerations: []
-  affinity: 
-    nodeAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        nodeSelectorTerms:
-        - matchExpressions:
-          - key: neonkube.io/monitor.logs
-            operator: In
-            values:
-            - "true"
+  affinity: {}
   podAnnotations: {}
   ## Additional pod labels
   ## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
@@ -407,17 +393,10 @@ query:
   serviceAccount:
     create: true
     name:
-  nodeSelector: {}
+  nodeSelector: 
+    neonkube.io/monitor.logs: "true"
   tolerations: []
-  affinity: 
-    nodeAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        nodeSelectorTerms:
-        - matchExpressions:
-          - key: neonkube.io/monitor.logs
-            operator: In
-            values:
-            - "true"
+  affinity: {}
   podAnnotations: {}
   ## Additional pod labels
   ## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
@@ -467,17 +446,10 @@ spark:
   serviceAccount:
     create: true
     name:
-  nodeSelector: {}
+  nodeSelector: 
+    neonkube.io/monitor.logs: "true"
   tolerations: []
-  affinity: 
-    nodeAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        nodeSelectorTerms:
-        - matchExpressions:
-          - key: neonkube.io/monitor.logs
-            operator: In
-            values:
-            - "true"
+  affinity: {}
   extraSecretMounts: []
   extraConfigmapMounts: []
   ## Additional pod labels
@@ -485,7 +457,7 @@ spark:
   podLabels: {}
 
 esIndexCleaner:
-  enabled: false
+  enabled: true
   securityContext:
     runAsUser: 1000
   podSecurityContext:
@@ -511,17 +483,10 @@ esIndexCleaner:
   serviceAccount:
     create: true
     name:
-  nodeSelector: {}
+  nodeSelector: 
+    neonkube.io/monitor.logs: "true"
   tolerations: []
-  affinity: 
-    nodeAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        nodeSelectorTerms:
-        - matchExpressions:
-          - key: neonkube.io/monitor.logs
-            operator: In
-            values:
-            - "true"
+  affinity: {}
   extraSecretMounts: []
   extraConfigmapMounts: []
   podAnnotations: {}

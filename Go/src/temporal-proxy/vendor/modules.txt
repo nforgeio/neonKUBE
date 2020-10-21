@@ -12,7 +12,6 @@ github.com/go-chi/chi/middleware
 # github.com/gogo/googleapis v1.4.0
 github.com/gogo/googleapis/google/rpc
 # github.com/gogo/protobuf v1.3.1
-## explicit
 github.com/gogo/protobuf/gogoproto
 github.com/gogo/protobuf/jsonpb
 github.com/gogo/protobuf/proto
@@ -50,7 +49,7 @@ github.com/stretchr/testify/require
 github.com/stretchr/testify/suite
 # github.com/uber-go/tally v3.3.17+incompatible
 github.com/uber-go/tally
-# go.temporal.io/api v1.0.0
+# go.temporal.io/api v1.1.0
 ## explicit
 go.temporal.io/api/command/v1
 go.temporal.io/api/common/v1
@@ -64,6 +63,7 @@ go.temporal.io/api/query/v1
 go.temporal.io/api/replication/v1
 go.temporal.io/api/serviceerror
 go.temporal.io/api/taskqueue/v1
+go.temporal.io/api/version/v1
 go.temporal.io/api/workflow/v1
 go.temporal.io/api/workflowservice/v1
 go.temporal.io/api/workflowservicemock/v1
@@ -84,7 +84,8 @@ go.temporal.io/sdk/log
 go.temporal.io/sdk/temporal
 go.temporal.io/sdk/worker
 go.temporal.io/sdk/workflow
-# go.uber.org/atomic v1.6.0
+# go.uber.org/atomic v1.7.0
+## explicit
 go.uber.org/atomic
 # go.uber.org/goleak v1.0.0
 ## explicit
@@ -103,14 +104,14 @@ go.uber.org/zap/zapcore
 # golang.org/x/lint v0.0.0-20200302205851-738671d3881b
 golang.org/x/lint
 golang.org/x/lint/golint
-# golang.org/x/net v0.0.0-20200925080053-05aa5d4ee321
+# golang.org/x/net v0.0.0-20201010224723-4f7140c49acb
 golang.org/x/net/http/httpguts
 golang.org/x/net/http2
 golang.org/x/net/http2/hpack
 golang.org/x/net/idna
 golang.org/x/net/internal/timeseries
 golang.org/x/net/trace
-# golang.org/x/sys v0.0.0-20200923182605-d9f96fdee20d
+# golang.org/x/sys v0.0.0-20201009025420-dfb3f7c4e634
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
 # golang.org/x/text v0.3.3
@@ -118,13 +119,14 @@ golang.org/x/text/secure/bidirule
 golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
-# golang.org/x/time v0.0.0-20200416051211-89c76fbcd5d1
+# golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e
+## explicit
 golang.org/x/time/rate
 # golang.org/x/tools v0.0.0-20200605181038-cef9fc3bc8f0
 golang.org/x/tools/go/ast/astutil
 golang.org/x/tools/go/gcexportdata
 golang.org/x/tools/go/internal/gcimporter
-# google.golang.org/genproto v0.0.0-20200925023002-c2d885f95484
+# google.golang.org/genproto v0.0.0-20201012135029-0c95dc0d88e8
 google.golang.org/genproto/googleapis/rpc/status
 # google.golang.org/grpc v1.32.0
 google.golang.org/grpc
@@ -200,5 +202,6 @@ google.golang.org/protobuf/runtime/protoimpl
 google.golang.org/protobuf/types/known/anypb
 google.golang.org/protobuf/types/known/durationpb
 google.golang.org/protobuf/types/known/timestamppb
-# gopkg.in/yaml.v3 v3.0.0-20200605160147-a5ece683394c
+# gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776
+## explicit
 gopkg.in/yaml.v3

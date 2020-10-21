@@ -38,12 +38,18 @@ namespace NeonClusterManager
             Log.LogInfo("Waiting for Kibana to be ready.");
 
             await NeonHelper.WaitForAsync(
-                    async () => 
-                    (
-                        await k8s.ListNamespacedDeploymentAsync("monitoring")).Items.Any(s => s.Metadata.Name == "neon-logs-kibana" && s.Status.AvailableReplicas > 1
-                    ), 
-                    TimeSpan.FromSeconds(3600)
-                );
+                           async () =>
+                           {
+                               var deployments = await k8s.ListNamespacedDeploymentAsync("monitoring", labelSelector: "release=neon-logs-kibana");
+                               if (deployments == null || deployments.Items.Count == 0)
+                               {
+                                   return false;
+                               }
+
+                               return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
+                           },
+                            timeout: TimeSpan.FromMinutes(60),
+                            pollInterval: TimeSpan.FromSeconds(10));
 
             Log.LogInfo("Setting up Kibana index patterns.");
             using (var jsonClient = new JsonClient())

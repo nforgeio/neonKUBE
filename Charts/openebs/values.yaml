@@ -30,7 +30,11 @@ apiserver:
   sparse:
     enabled: "false"
   nodeSelector: {}
-  tolerations: []
+  tolerations: 
+  - operator: "Exists"
+    effect: "NoSchedule"
+  - operator: "Exists"
+    effect: "NoExecute"
   affinity: {}
   healthCheck:
     initialDelaySeconds: 30
@@ -51,7 +55,11 @@ provisioner:
   replicas: 1
   enableLeaderElection: true
   nodeSelector: {}
-  tolerations: []
+  tolerations: 
+  - operator: "Exists"
+    effect: "NoSchedule"
+  - operator: "Exists"
+    effect: "NoExecute"
   affinity: {}
   healthCheck:
     initialDelaySeconds: 30
@@ -65,7 +73,11 @@ localprovisioner:
   enableLeaderElection: true
   basePath: "/var/openebs/local"
   nodeSelector: {}
-  tolerations: []
+  tolerations: 
+  - operator: "Exists"
+    effect: "NoSchedule"
+  - operator: "Exists"
+    effect: "NoExecute"
   affinity: {}
   healthCheck:
     initialDelaySeconds: 30
@@ -83,7 +95,11 @@ snapshotOperator:
   enableLeaderElection: true
   upgradeStrategy: "Recreate"
   nodeSelector: {}
-  tolerations: []
+  tolerations: 
+  - operator: "Exists"
+    effect: "NoSchedule"
+  - operator: "Exists"
+    effect: "NoExecute"
   affinity: {}
   healthCheck:
     initialDelaySeconds: 30
@@ -107,7 +123,11 @@ ndm:
   probes:
     enableSeachest: false
   nodeSelector: {}
-  tolerations: []
+  tolerations: 
+  - operator: "Exists"
+    effect: "NoSchedule"
+  - operator: "Exists"
+    effect: "NoExecute"
   healthCheck:
     initialDelaySeconds: 30
     periodSeconds: 60
@@ -119,7 +139,11 @@ ndmOperator:
   replicas: 1
   upgradeStrategy: Recreate
   nodeSelector: {}
-  tolerations: []
+  tolerations:
+  - operator: "Exists"
+    effect: "NoSchedule"
+  - operator: "Exists"
+    effect: "NoExecute"
   healthCheck:
     initialDelaySeconds: 30
     periodSeconds: 60
@@ -138,7 +162,11 @@ webhook:
     initialDelaySeconds: 30
     periodSeconds: 60
   nodeSelector: {}
-  tolerations: []
+  tolerations: 
+  - operator: "Exists"
+    effect: "NoSchedule"
+  - operator: "Exists"
+    effect: "NoExecute"
   affinity: {}
   hostNetwork: false
 

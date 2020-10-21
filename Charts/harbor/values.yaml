@@ -198,29 +198,29 @@ persistence:
       # Specify the "storageClass" used to provision the volume. Or the default
       # StorageClass will be used(the default).
       # Set it to "-" to disable dynamic provisioning
-      storageClass: ""
+      storageClass: "nfs"
       subPath: ""
-      accessMode: ReadWriteOnce
+      accessMode: ReadWriteMany
       size: 5Gi
     chartmuseum:
       existingClaim: ""
-      storageClass: ""
+      storageClass: "nfs"
       subPath: ""
-      accessMode: ReadWriteOnce
+      accessMode: ReadWriteMany
       size: 5Gi
     jobservice:
       existingClaim: ""
-      storageClass: ""
+      storageClass: "nfs"
       subPath: ""
-      accessMode: ReadWriteOnce
-      size: 1Gi
+      accessMode: ReadWriteMany
+      size: 10Gi
     # If external database is used, the following settings for database will
     # be ignored
     database:
       existingClaim: ""
-      storageClass: ""
+      storageClass: "nfs"
       subPath: ""
-      accessMode: ReadWriteOnce
+      accessMode: ReadWriteMany
       size: 1Gi
     # If external Redis is used, the following settings for Redis will
     # be ignored
@@ -232,7 +232,7 @@ persistence:
       size: 1Gi
     trivy:
       existingClaim: ""
-      storageClass: ""
+      storageClass: "cstor-csi-stripe"
       subPath: ""
       accessMode: ReadWriteOnce
       size: 5Gi
@@ -374,7 +374,7 @@ proxy:
 nginx:
   image:
     repository: goharbor/nginx-photon
-    tag: dev
+    tag: v2.1.0
   # set the service account to be used, default if left empty
   serviceAccountName: ""
   replicas: 1
@@ -382,8 +382,13 @@ nginx:
   #  requests:
   #    memory: 256Mi
   #    cpu: 100m
-  nodeSelector: {}
-  tolerations: []
+  nodeSelector: 
+    neonkube.io/neon-system.registry: "true"
+  tolerations: 
+  - operator: "Exists"
+    effect: "NoSchedule"
+  - operator: "Exists"
+    effect: "NoExecute"
   affinity: {}
   ## Additional deployment annotations
   podAnnotations: {}
@@ -391,7 +396,7 @@ nginx:
 portal:
   image:
     repository: goharbor/harbor-portal
-    tag: dev
+    tag: v2.1.0
   # set the service account to be used, default if left empty
   serviceAccountName: ""
   replicas: 1
@@ -399,8 +404,13 @@ portal:
   #  requests:
   #    memory: 256Mi
   #    cpu: 100m
-  nodeSelector: {}
-  tolerations: []
+  nodeSelector: 
+    neonkube.io/neon-system.registry: "true"
+  tolerations: 
+  - operator: "Exists"
+    effect: "NoSchedule"
+  - operator: "Exists"
+    effect: "NoExecute"
   affinity: {}
   ## Additional deployment annotations
   podAnnotations: {}
@@ -408,7 +418,7 @@ portal:
 core:
   image:
     repository: goharbor/harbor-core
-    tag: dev
+    tag: v2.1.0
   # set the service account to be used, default if left empty
   serviceAccountName: ""
   replicas: 1
@@ -419,8 +429,13 @@ core:
   #  requests:
   #    memory: 256Mi
   #    cpu: 100m
-  nodeSelector: {}
-  tolerations: []
+  nodeSelector: 
+    neonkube.io/neon-system.registry: "true"
+  tolerations: 
+  - operator: "Exists"
+    effect: "NoSchedule"
+  - operator: "Exists"
+    effect: "NoExecute"
   affinity: {}
   ## Additional deployment annotations
   podAnnotations: {}
@@ -434,26 +449,31 @@ core:
   # "tls.crt" - the certificate
   # "tls.key" - the private key
   # The default key pair will be used if it isn't set
-  secretName: ""
+  secretName: "neon-registry-harbor"
   # The XSRF key. Will be generated automatically if it isn't specified
   xsrfKey: ""
 
 jobservice:
   image:
     repository: goharbor/harbor-jobservice
-    tag: dev
+    tag: v2.1.0
   replicas: 1
   # set the service account to be used, default if left empty
   serviceAccountName: ""
   maxJobWorkers: 10
   # The logger for jobs: "file", "database" or "stdout"
-  jobLogger: file
+  jobLogger: stdout
   # resources:
   #   requests:
   #     memory: 256Mi
   #     cpu: 100m
-  nodeSelector: {}
-  tolerations: []
+  nodeSelector: 
+    neonkube.io/neon-system.registry: "true"
+  tolerations:
+  - operator: "Exists"
+    effect: "NoSchedule"
+  - operator: "Exists"
+    effect: "NoExecute"
   affinity: {}
   ## Additional deployment annotations
   podAnnotations: {}
@@ -468,7 +488,7 @@ registry:
   registry:
     image:
       repository: goharbor/registry-photon
-      tag: dev
+      tag: v2.1.0
     # resources:
     #  requests:
     #    memory: 256Mi
@@ -476,15 +496,20 @@ registry:
   controller:
     image:
       repository: goharbor/harbor-registryctl
-      tag: dev
+      tag: v2.1.0
 
     # resources:
     #  requests:
     #    memory: 256Mi
     #    cpu: 100m
   replicas: 1
-  nodeSelector: {}
-  tolerations: []
+  nodeSelector: 
+    neonkube.io/neon-system.registry: "true"
+  tolerations:
+  - operator: "Exists"
+    effect: "NoSchedule"
+  - operator: "Exists"
+    effect: "NoExecute"
   affinity: {}
   ## Additional deployment annotations
   podAnnotations: {}
@@ -523,14 +548,19 @@ chartmuseum:
   absoluteUrl: false
   image:
     repository: goharbor/chartmuseum-photon
-    tag: dev
+    tag: v2.1.0
   replicas: 1
   # resources:
   #  requests:
   #    memory: 256Mi
   #    cpu: 100m
-  nodeSelector: {}
-  tolerations: []
+  nodeSelector: 
+    neonkube.io/neon-system.registry: "true"
+  tolerations: 
+  - operator: "Exists"
+    effect: "NoSchedule"
+  - operator: "Exists"
+    effect: "NoExecute"
   affinity: {}
   ## Additional deployment annotations
   podAnnotations: {}
@@ -542,7 +572,7 @@ clair:
   clair:
     image:
       repository: goharbor/clair-photon
-      tag: dev
+      tag: v2.1.0
     # resources:
     #  requests:
     #    memory: 256Mi
@@ -550,7 +580,7 @@ clair:
   adapter:
     image:
       repository: goharbor/clair-adapter-photon
-      tag: dev
+      tag: v2.1.0
     # resources:
     #  requests:
     #    memory: 256Mi
@@ -559,20 +589,25 @@ clair:
   # The interval of clair updaters, the unit is hour, set to 0 to
   # disable the updaters
   updatersInterval: 12
-  nodeSelector: {}
-  tolerations: []
+  nodeSelector: 
+    neonkube.io/neon-system.registry: "true"
+  tolerations: 
+  - operator: "Exists"
+    effect: "NoSchedule"
+  - operator: "Exists"
+    effect: "NoExecute"
   affinity: {}
   ## Additional deployment annotations
   podAnnotations: {}
 
 trivy:
   # enabled the flag to enable Trivy scanner
-  enabled: true
+  enabled: false
   image:
     # repository the repository for Trivy adapter image
     repository: goharbor/trivy-adapter-photon
     # tag the tag for Trivy adapter image
-    tag: dev
+    tag: v2.1.0
   # set the service account to be used, default if left empty
   serviceAccountName: ""
   # replicas the number of Pod replicas
@@ -616,8 +651,13 @@ trivy:
     limits:
       cpu: 1
       memory: 1Gi
-  nodeSelector: {}
-  tolerations: []
+  nodeSelector: 
+    neonkube.io/neon-system.registry: "true"
+  tolerations: 
+  - operator: "Exists"
+    effect: "NoSchedule"
+  - operator: "Exists"
+    effect: "NoExecute"
   affinity: {}
   ## Additional deployment annotations
   podAnnotations: {}
@@ -629,7 +669,7 @@ notary:
     serviceAccountName: ""
     image:
       repository: goharbor/notary-server-photon
-      tag: dev
+      tag: v2.1.0
     replicas: 1
     # resources:
     #  requests:
@@ -640,14 +680,19 @@ notary:
     serviceAccountName: ""
     image:
       repository: goharbor/notary-signer-photon
-      tag: dev
+      tag: v2.1.0
     replicas: 1
     # resources:
     #  requests:
     #    memory: 256Mi
     #    cpu: 100m
-  nodeSelector: {}
-  tolerations: []
+  nodeSelector: 
+    neonkube.io/neon-system.registry: "true"
+  tolerations: 
+  - operator: "Exists"
+    effect: "NoSchedule"
+  - operator: "Exists"
+    effect: "NoExecute"
   affinity: {}
   ## Additional deployment annotations
   podAnnotations: {}
@@ -668,21 +713,26 @@ database:
     serviceAccountName: ""
     image:
       repository: goharbor/harbor-db
-      tag: dev
+      tag: v2.1.0
     # The initial superuser password for internal database
     password: "changeit"
     # resources:
     #  requests:
     #    memory: 256Mi
     #    cpu: 100m
-    nodeSelector: {}
-    tolerations: []
+    nodeSelector: 
+      neonkube.io/neon-system.registry: "true"
+    tolerations: 
+    - operator: "Exists"
+      effect: "NoSchedule"
+    - operator: "Exists"
+      effect: "NoExecute"
     affinity: {}
   external:
     host: "neon-system-db-citus-postgresql.neon-system"
     port: "5432"
-    username: "postgres"
-    password: "password"
+    username: "harbor"
+    password: "harbor"
     coreDatabase: "registry"
     clairDatabase: "clair"
     notaryServerDatabase: "notary_server"
@@ -708,25 +758,30 @@ database:
 redis:
   # if external Redis is used, set "type" to "external"
   # and fill the connection informations in "external" section
-  type: internal
+  type: external
   internal:
     # set the service account to be used, default if left empty
     serviceAccountName: ""
     image:
       repository: goharbor/redis-photon
-      tag: dev
+      tag: v2.1.0
     # resources:
     #  requests:
     #    memory: 256Mi
     #    cpu: 100m
-    nodeSelector: {}
-    tolerations: []
+    nodeSelector: 
+      neonkube.io/neon-system.registry: "true"
+    tolerations: 
+    - operator: "Exists"
+      effect: "NoSchedule"
+    - operator: "Exists"
+      effect: "NoExecute"
     affinity: {}
   external:
     # support redis, redis+sentinel
     # addr for redis: <host_redis>:<port_redis>
     # addr for redis+sentinel: <host_sentinel1>:<port_sentinel1>,<host_sentinel2>:<port_sentinel2>,<host_sentinel3>:<port_sentinel3>
-    addr: "192.168.0.2:6379"
+    addr: "neon-system-registry-redis-ha:6379"
     # The name of the set of Redis instances to monitor, it must be set to support redis+sentinel
     sentinelMasterSet: ""
     # The "coreDatabaseIndex" must be "0" as the library Harbor

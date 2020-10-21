@@ -126,23 +126,6 @@ func (request *NamespaceUpdateRequest) SetNamespaceConfig(value *namespace.Names
 	request.SetJSONProperty("NamespaceConfig", value)
 }
 
-// GetConfigurationRetentionDays gets a NamespaceUpdateRequest's ConfigurationRetentionDays
-// value from its properties map
-//
-// returns int32 -> int32 indicating the complete workflow history retention
-// period in days
-func (request *NamespaceUpdateRequest) GetConfigurationRetentionDays() int32 {
-	return request.GetIntProperty("ConfigurationRetentionDays")
-}
-
-// SetConfigurationRetentionDays sets a NamespaceUpdateRequest's ConfigurationRetentionDays
-// value in its properties map
-//
-// param value int32 -> int32 value to be set in the properties map
-func (request *NamespaceUpdateRequest) SetConfigurationRetentionDays(value int32) {
-	request.SetIntProperty("ConfigurationRetentionDays", value)
-}
-
 // GetSecurityToken gets a NamespaceUpdateRequest's SecurityToken value
 // from its properties map
 //
@@ -181,7 +164,6 @@ func (request *NamespaceUpdateRequest) CopyTo(target IProxyMessage) {
 		v.SetUpdatedInfoDescription(request.GetUpdatedInfoDescription())
 		v.SetUpdatedInfoOwnerEmail(request.GetUpdatedInfoOwnerEmail())
 		v.SetNamespaceConfig(request.GetNamespaceConfig())
-		v.SetConfigurationRetentionDays(request.GetConfigurationRetentionDays())
 		v.SetSecurityToken(request.GetSecurityToken())
 	}
 }

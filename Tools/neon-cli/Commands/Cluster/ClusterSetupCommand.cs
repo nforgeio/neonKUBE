@@ -27,6 +27,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -1734,15 +1735,7 @@ spec:
             firstMaster.InvokeIdempotentAction("setup/cluster-deploy-openebs",
                 () =>
                 {
-                    // hack until I can figure out what the difference is between their broken
-                    // helm chart and the yaml below.
-                    var script =
-$@"#!/bin/bash
-
-kubectl apply -f https://openebs.github.io/charts/openebs-operator.yaml
-";
-                    firstMaster.SudoCommand(CommandBundle.FromScript(script));
-                    //InstallOpenEBSAsync(firstMaster).Wait();
+                    InstallOpenEBSAsync(firstMaster).Wait();
                 });
 
             firstMaster.InvokeIdempotentAction("setup/cluster-neon-system-namespace",
@@ -1775,6 +1768,14 @@ kubectl apply -f https://openebs.github.io/charts/openebs-operator.yaml
                 () =>
                 {
                     InstallClusterManagerAsync(firstMaster).Wait();
+                });
+
+            // Setup neon-registry.
+
+            firstMaster.InvokeIdempotentAction("setup/cluster-deploy-neon-registry",
+                () =>
+                {
+                    InstallNeonRegistryAsync(firstMaster).Wait();
                 });
 
             // Setup Kiali.
@@ -1903,6 +1904,23 @@ spec:
             patches:
               - path: kind
                 value: DaemonSet
+        service:
+          ports:
+          - name: http2
+            protocol: TCP
+            port: 80
+            targetPort: 8080
+            nodePort: 30080
+          - name: https
+            protocol: TCP
+            port: 443
+            targetPort: 8443
+            nodePort: 30443
+          - name: tls
+            protocol: TCP
+            port: 15443
+            targetPort: 15443
+            nodePort: 31922
         resources:
           requests:
             cpu: 100m
@@ -1930,7 +1948,7 @@ spec:
     pilot:
       traceSampling: 100
     meshConfig:
-      accessLogFile: ""/dev/stdout""
+      accessLogFile: """"
       accessLogFormat: '{{   ""authority"": ""%REQ(:AUTHORITY)%"",   ""mode"": ""%PROTOCOL%"",   ""upstream_service_time"": ""%RESP(X-ENVOY-UPSTREAM-SERVICE-TIME)%"",   ""upstream_local_address"": ""%UPSTREAM_LOCAL_ADDRESS%"",   ""duration"": ""%DURATION%"",   ""request_duration"": ""%REQUEST_DURATION%"",   ""response_duration"": ""%RESPONSE_DURATION%"",   ""response_tx_duration"": ""%RESPONSE_TX_DURATION%"",   ""downstream_local_address"": ""%DOWNSTREAM_LOCAL_ADDRESS%"",   ""upstream_transport_failure_reason"": ""%UPSTREAM_TRANSPORT_FAILURE_REASON%"",   ""route_name"": ""%ROUTE_NAME%"",   ""response_code"": ""%RESPONSE_CODE%"",   ""response_code_details"": ""%RESPONSE_CODE_DETAILS%"",   ""user_agent"": ""%REQ(USER-AGENT)%"",   ""response_flags"": ""%RESPONSE_FLAGS%"",   ""start_time"": ""%START_TIME(%s.%6f)%"",   ""method"": ""%REQ(:METHOD)%"",   ""host"": ""%REQ(:Host)%"",   ""referer"": ""%REQ(:Referer)%"",   ""request_id"": ""%REQ(X-REQUEST-ID)%"",   ""forwarded_host"": ""%REQ(X-FORWARDED-HOST)%"",   ""forwarded_proto"": ""%REQ(X-FORWARDED-PROTO)%"",   ""upstream_host"": ""%UPSTREAM_HOST%"",   ""downstream_local_uri_san"": ""%DOWNSTREAM_LOCAL_URI_SAN%"",   ""downstream_peer_uri_san"": ""%DOWNSTREAM_PEER_URI_SAN%"",   ""downstream_local_subject"": ""%DOWNSTREAM_LOCAL_SUBJECT%"",   ""downstream_peer_subject"": ""%DOWNSTREAM_PEER_SUBJECT%"",   ""downstream_peer_issuer"": ""%DOWNSTREAM_PEER_ISSUER%"",   ""downstream_tls_session_id"": ""%DOWNSTREAM_TLS_SESSION_ID%"",   ""downstream_tls_cipher"": ""%DOWNSTREAM_TLS_CIPHER%"",   ""downstream_tls_version"": ""%DOWNSTREAM_TLS_VERSION%"",   ""downstream_peer_serial"": ""%DOWNSTREAM_PEER_SERIAL%"",   ""downstream_peer_cert"": ""%DOWNSTREAM_PEER_CERT%"",   ""client_ip"": ""%REQ(X-FORWARDED-FOR)%"",   ""requested_server_name"": ""%REQUESTED_SERVER_NAME%"",   ""bytes_received"": ""%BYTES_RECEIVED%"",   ""bytes_sent"": ""%BYTES_SENT%"",   ""upstream_cluster"": ""%UPSTREAM_CLUSTER%"",   ""downstream_remote_address"": ""%DOWNSTREAM_REMOTE_ADDRESS%"",   ""path"": ""%REQ(X-ENVOY-ORIGINAL-PATH?:PATH)%"" }}'
       accessLogEncoding: ""JSON""
     gateways:
@@ -1939,16 +1957,6 @@ spec:
         externalTrafficPolicy: Local
         sds:
           enabled: true
-        ports:
-        - port: 80
-          nodePort: 30080
-          name: http2
-        - port: 443
-          nodePort: 30443
-          name: https
-        - port: 15443
-          targetPort: 15443
-          name: tls
     prometheus:
       enabled: false
     grafana:
@@ -2055,7 +2063,7 @@ istioctl install -f istio-cni.yaml
             string                              releaseName = null,
             string                              @namespace = "default",
             int                                 timeout    = 300,
-            bool                                wait       = true,
+            bool                                wait       = false,
             List<KeyValuePair<string, object>>  values     = null)
         {
             if (string.IsNullOrEmpty(releaseName))
@@ -2174,26 +2182,196 @@ rm -rf {chartName}*
                                 Name = "openebs",
                                 Labels = new Dictionary<string, string>()
                                 {
-                                    { "istio-injection", "enabled" }
+                                    { "istio-injection", "disabled" }
                                 }
                             }
                         });
                     });
 
-            var values = new List<KeyValuePair<string, object>>();
+            master.InvokeIdempotentAction("setup/neon-storage-openebs-install",
+                  () =>
+                  {
+                      var values = new List<KeyValuePair<string, object>>();
 
-            if (cluster.Definition.Workers.Count() >= 3)
-            {
-                var replicas = Math.Max(2, cluster.Definition.Workers.Count() / 3);
-                values.Add(new KeyValuePair<string, object>($"apiserver.replicas", replicas));
-                values.Add(new KeyValuePair<string, object>($"provisioner.replicas", replicas));
-                values.Add(new KeyValuePair<string, object>($"localprovisioner.replicas", replicas));
-                values.Add(new KeyValuePair<string, object>($"snapshotOperator.replicas", replicas));
-                values.Add(new KeyValuePair<string, object>($"ndmOperator.replicas", 1));
-                values.Add(new KeyValuePair<string, object>($"webhook.replicas", replicas));
-            }
+                      if (cluster.Definition.Workers.Count() >= 3)
+                      {
+                          var replicas = Math.Max(2, cluster.Definition.Workers.Count() / 3);
+                          values.Add(new KeyValuePair<string, object>($"apiserver.replicas", replicas));
+                          values.Add(new KeyValuePair<string, object>($"provisioner.replicas", replicas));
+                          values.Add(new KeyValuePair<string, object>($"localprovisioner.replicas", replicas));
+                          values.Add(new KeyValuePair<string, object>($"snapshotOperator.replicas", replicas));
+                          values.Add(new KeyValuePair<string, object>($"ndmOperator.replicas", 1));
+                          values.Add(new KeyValuePair<string, object>($"webhook.replicas", replicas));
+                      }
 
-            await InstallHelmChartAsync(master, "openebs", releaseName: "neon-storage", values: values, @namespace: "openebs", wait: true, timeout: 900);
+                      InstallHelmChartAsync(master, "openebs", releaseName: "neon-storage", values: values, @namespace: "openebs").Wait();
+                  });
+
+            master.InvokeIdempotentAction("setup/neon-storage-openebs-install-ready",
+                   () =>
+                   {
+                       NeonHelper.WaitFor(
+                           () =>
+                            {
+                                var deployments = k8sClient.ListNamespacedDeploymentAsync("openebs").Result;
+                                if (deployments == null || deployments.Items.Count == 0)
+                                {
+                                    return false;
+                                }
+
+                                return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
+                            }, 
+                            timeout: TimeSpan.FromMinutes(10),
+                            pollInterval: TimeSpan.FromSeconds(10));
+
+                        NeonHelper.WaitFor(
+                            () =>
+                            {
+                                var daemonsets = k8sClient.ListNamespacedDaemonSetAsync("openebs").Result;
+                                if (daemonsets == null || daemonsets.Items.Count == 0)
+                                {
+                                    return false;
+                                }
+
+                                return daemonsets.Items.All(p => p.Status.NumberAvailable == p.Status.DesiredNumberScheduled);
+                            },
+                            timeout: TimeSpan.FromMinutes(10),
+                            pollInterval: TimeSpan.FromSeconds(10));
+                   });
+
+            master.InvokeIdempotentAction("setup/neon-storage-openebs-cstor-poolcluster",
+                   () =>
+                   {
+                       var cStorPoolCluster = new V1CStorPoolCluster()
+                       {
+                           Metadata = new V1ObjectMeta()
+                           {
+                               Name = "cspc-stripe",
+                               NamespaceProperty = "openebs"
+                           },
+                           Spec = new V1CStorPoolClusterSpec()
+                           {
+                               Pools = new List<V1CStorPoolSpec>()
+                           }
+                       };
+
+                       var blockDevices = ((JObject)k8sClient.ListNamespacedCustomObjectAsync("openebs.io", "v1alpha1", "openebs", "blockdevices").Result).ToObject<V1CStorBlockDeviceList>();
+
+                       foreach (var n in cluster.Definition.Nodes)
+                       {
+                           if (blockDevices.Items.Any(bd => bd.Spec.NodeAttributes.GetValueOrDefault("nodeName") == n.Name))
+                           {
+                               var pool = new V1CStorPoolSpec()
+                                   {
+                                       NodeSelector = new Dictionary<string, string>()
+                                       {
+                                           { "kubernetes.io/hostname", n.Name }
+                                       },
+                                       DataRaidGroups = new List<V1CStorDataRaidGroup>()
+                                       {
+                                           new V1CStorDataRaidGroup()
+                                           {
+                                               BlockDevices = new List<V1CStorBlockDeviceRef>()
+                                           }
+                                       },
+                                       PoolConfig = new V1CStorPoolConfig()
+                                       {
+                                           DataRaidGroupType = DataRaidGroupType.Stripe,
+                                           Tolerations = new List<V1Toleration>()
+                                           {
+                                               { new V1Toleration() { Effect = "NoSchedule", OperatorProperty = "Exists" } },
+                                               { new V1Toleration() { Effect = "NoExecute", OperatorProperty = "Exists" } }
+                                           }
+                                       }
+                                   };
+
+                               foreach (var bd in blockDevices.Items.Where(bd => bd.Spec.NodeAttributes.GetValueOrDefault("nodeName") == n.Name))
+                               {
+                                   pool.DataRaidGroups.FirstOrDefault().BlockDevices.Add(
+                                       new V1CStorBlockDeviceRef()
+                                       {
+                                           BlockDeviceName = bd.Metadata.Name
+                                       });
+                               }
+
+                               cStorPoolCluster.Spec.Pools.Add(pool);
+                           }
+                       }
+
+                       k8sClient.CreateNamespacedCustomObject(cStorPoolCluster, V1CStorPoolCluster.KubeGroup, V1CStorPoolCluster.KubeApiVersion, "openebs", "cstorpoolclusters");
+                   });
+
+            master.InvokeIdempotentAction("setup/neon-storage-openebs-cstor-ready",
+                   () =>
+                   {
+                       NeonHelper.WaitFor(
+                           () =>
+                           {
+                               var deployments = k8sClient.ListNamespacedDeploymentAsync("openebs", labelSelector: "app=cstor-pool").Result;
+                               if (deployments == null || deployments.Items.Count == 0)
+                               {
+                                   return false;
+                               }
+
+                               return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
+                           },
+                            timeout: TimeSpan.FromMinutes(10),
+                            pollInterval: TimeSpan.FromSeconds(10));
+                   });
+
+            master.InvokeIdempotentAction("setup/neon-storage-openebs-cstor-storageclass",
+                   () =>
+                   {
+                       var storageClass = new V1StorageClass()
+                       {
+                           Metadata = new V1ObjectMeta()
+                           {
+                               Name = "cstor-csi-stripe"
+                           },
+                           Provisioner = "cstor.csi.openebs.io",
+                           AllowVolumeExpansion = true,
+                           Parameters = new Dictionary<string, string>()
+                           {
+                               { "cas-type", "cstor" },
+                               { "cstorPoolCluster", "cspc-stripe" },
+                               { "replicaCount", "3" }
+                           }
+                       };
+                       k8sClient.CreateStorageClass(storageClass);
+                   });
+
+            master.InvokeIdempotentAction("setup/neon-storage-openebs-nfs-install",
+                  () =>
+                  {
+                      var values = new List<KeyValuePair<string, object>>();
+
+                      var storage = cluster.Definition.Nodes.Where(n => n.OpenEBS).Sum(n => ByteUnits.Parse(n.Vm.OpenEbsDisk));
+                      
+                      int i = 0;
+                      values.Add(new KeyValuePair<string, object>($"persistence.size", $"{storage / 3}"));
+                      
+                      InstallHelmChartAsync(master, "nfs", releaseName: "neon-storage-nfs", @namespace: "openebs", values: values).Wait();
+                  });
+
+            master.InvokeIdempotentAction("setup/neon-storage-openebs-nfs-ready",
+                () =>
+                {
+                    NeonHelper.WaitFor(
+                        () =>
+                        {
+                            var statefulsets = k8sClient.ListNamespacedStatefulSetAsync("openebs", labelSelector: "release=neon-storage-nfs").Result;
+                            if (statefulsets == null || statefulsets.Items.Count == 0)
+                            {
+                                return false;
+                            }
+
+                            return statefulsets.Items.All(p => p.Status.ReadyReplicas == p.Spec.Replicas);
+                        },
+                        timeout: TimeSpan.FromMinutes(10),
+                        pollInterval: TimeSpan.FromSeconds(10));
+                });
+
+            await Task.CompletedTask;
         }
 
         /// <summary>
@@ -2214,19 +2392,59 @@ rm -rf {chartName}*
         private async Task InstallKialiAsync(LinuxSshProxy<NodeDefinition> master)
         {
             master.Status = "deploy: kiali";
+           
+            master.InvokeIdempotentAction("setup/kiali",
+                   () =>
+                   {
+                       var values = new List<KeyValuePair<string, object>>();
 
-            var values = new List<KeyValuePair<string, object>>();
+                       int i = 0;
+                       foreach (var t in GetTaintsAsync(NodeLabels.LabelIstio, "true").Result)
+                       {
+                           values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
+                           values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", t.Effect));
+                           values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
+                           i++;
+                       }
 
-            int i = 0;
-            foreach (var t in await GetTaintsAsync(NodeLabels.LabelIstio, "true"))
-            {
-                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
-                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", t.Effect));
-                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
-                i++;
-            }
+                       InstallHelmChartAsync(master, "kiali", releaseName: "kiali-operator", @namespace: "istio-system", values: values, wait: false).Wait();
+                   });
 
-            await InstallHelmChartAsync(master, "kiali", @namespace: "istio-system", values: values, wait: false);
+
+            master.InvokeIdempotentAction("setup/kiali-ready",
+                   () =>
+                   {
+                       NeonHelper.WaitFor(
+                           () =>
+                           {
+                               var deployments = k8sClient.ListNamespacedDeploymentAsync("istio-system", labelSelector: "app=kiali-operator").Result;
+                               if (deployments == null || deployments.Items.Count == 0)
+                               {
+                                   return false;
+                               }
+
+                               return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
+                           },
+                           timeout: TimeSpan.FromMinutes(10),
+                           pollInterval: TimeSpan.FromSeconds(10));
+
+
+                       NeonHelper.WaitFor(
+                           () =>
+                           {
+                               var deployments = k8sClient.ListNamespacedDeploymentAsync("istio-system", labelSelector: "app=kiali").Result;
+                               if (deployments == null || deployments.Items.Count == 0)
+                               {
+                                   return false;
+                               }
+
+                               return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
+                           },
+                           timeout: TimeSpan.FromMinutes(10),
+                           pollInterval: TimeSpan.FromSeconds(10));
+                   });
+
+            await Task.CompletedTask;
         }
 
         /// <summary>
@@ -2258,12 +2476,25 @@ rm -rf {chartName}*
                     InstallHelmChartAsync(master, "etcd-cluster", releaseName: "neon-metrics-etcd", @namespace: "monitoring", values: values).Wait();
                 });
 
-            
-            // wait for cluster to be running before proceeding
-            while (((await k8sClient.ListNamespacedPodAsync("monitoring", labelSelector: "release=neon-metrics-etcd"))).Items.Where(p => p.Status.Phase == "Running").Count() != cluster.Definition.Nodes.Where(l => l.Labels.Metrics == true).Count())
-            {
-                await Task.Delay(1000);
-            }
+            master.InvokeIdempotentAction("deploy/neon-metrics-etcd-cluster-ready",
+                () =>
+                {
+                    NeonHelper.WaitFor(
+                        () =>
+                        {
+                            var statefulsets = k8sClient.ListNamespacedStatefulSetAsync("monitoring", labelSelector: "release=neon-metrics-etcd").Result;
+                            if (statefulsets == null || statefulsets.Items.Count == 0)
+                            {
+                                return false;
+                            }
+
+                            return statefulsets.Items.All(p => p.Status.ReadyReplicas == p.Spec.Replicas);
+                        },
+                        timeout: TimeSpan.FromMinutes(10),
+                        pollInterval: TimeSpan.FromSeconds(10));
+                });
+
+            await Task.CompletedTask;
         }
 
         /// <summary>
@@ -2276,31 +2507,83 @@ rm -rf {chartName}*
 
             var cortexValues = new List<KeyValuePair<string, object>>();
 
-            master.InvokeIdempotentAction("deploy/neon-metrics-prometheus-operator",
+            master.InvokeIdempotentAction("deploy/neon-metrics-prometheus",
                 () =>
                 {
-                    master.Status = "deploy: neon-metrics-prometheus-operator";
+                    master.Status = "deploy: neon-metrics-prometheus";
 
                     var values = new List<KeyValuePair<string, object>>();
 
                     int i = 0;
                     foreach (var t in GetTaintsAsync(NodeLabels.LabelMetrics, "true").Result)
                     {
-                        values.Add(new KeyValuePair<string, object>($"alertmanagerSpec.tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
-                        values.Add(new KeyValuePair<string, object>($"alertmanagerSpec.tolerations[{i}].effect", t.Effect));
-                        values.Add(new KeyValuePair<string, object>($"alertmanagerSpec.tolerations[{i}].operator", "Exists"));
+                        values.Add(new KeyValuePair<string, object>($"alertmanager.alertmanagerSpec.tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
+                        values.Add(new KeyValuePair<string, object>($"alertmanager.alertmanagerSpec.tolerations[{i}].effect", t.Effect));
+                        values.Add(new KeyValuePair<string, object>($"alertmanager.alertmanagerSpec.tolerations[{i}].operator", "Exists"));
 
                         values.Add(new KeyValuePair<string, object>($"prometheusOperator.tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
                         values.Add(new KeyValuePair<string, object>($"prometheusOperator.tolerations[{i}].effect", t.Effect));
                         values.Add(new KeyValuePair<string, object>($"prometheusOperator.tolerations[{i}].operator", "Exists"));
+
+                        values.Add(new KeyValuePair<string, object>($"prometheusOperator.admissionWebhooks.patch.tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
+                        values.Add(new KeyValuePair<string, object>($"prometheusOperator.admissionWebhooks.patch.tolerations[{i}].effect", t.Effect));
+                        values.Add(new KeyValuePair<string, object>($"prometheusOperator.admissionWebhooks.patch.tolerations[{i}].operator", "Exists"));
+
+                        values.Add(new KeyValuePair<string, object>($"prometheus.prometheusSpec.tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
+                        values.Add(new KeyValuePair<string, object>($"prometheus.prometheusSpec.tolerations[{i}].effect", t.Effect));
+                        values.Add(new KeyValuePair<string, object>($"prometheus.prometheusSpec.tolerations[{i}].operator", "Exists"));
+
                         
-                        values.Add(new KeyValuePair<string, object>($"prometheusSpec.tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
-                        values.Add(new KeyValuePair<string, object>($"prometheusSpec.tolerations[{i}].effect", t.Effect));
-                        values.Add(new KeyValuePair<string, object>($"prometheusSpec.tolerations[{i}].operator", "Exists"));
                         i++;
                     }
 
-                    InstallHelmChartAsync(master, "prometheus-operator", releaseName: "neon-metrics-prometheus-operator", @namespace: "monitoring", values: values, timeout: 1200, wait: true).Wait();
+                    InstallHelmChartAsync(master, "prometheus-operator", releaseName: "neon-metrics-prometheus", @namespace: "monitoring", values: values, wait: false).Wait();
+                });
+
+            master.InvokeIdempotentAction("deploy/neon-metrics-prometheus-ready",
+                () =>
+                {
+                    NeonHelper.WaitFor(
+                        () =>
+                        {
+                            var deployments = k8sClient.ListNamespacedDeploymentAsync("monitoring", labelSelector: "release=neon-metrics-prometheus").Result;
+                            if (deployments == null || deployments.Items.Count == 0)
+                            {
+                                return false;
+                            }
+
+                            return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
+                        },
+                        timeout: TimeSpan.FromMinutes(20),
+                        pollInterval: TimeSpan.FromSeconds(10));
+
+                    NeonHelper.WaitFor(
+                        () =>
+                        {
+                            var daemonsets = k8sClient.ListNamespacedDaemonSetAsync("monitoring", labelSelector: "release=neon-metrics-prometheus").Result;
+                            if (daemonsets == null || daemonsets.Items.Count == 0)
+                            {
+                                return false;
+                            }
+
+                            return daemonsets.Items.All(p => p.Status.NumberAvailable == p.Status.DesiredNumberScheduled);
+                        },
+                        timeout: TimeSpan.FromMinutes(20),
+                        pollInterval: TimeSpan.FromSeconds(10));
+
+                    NeonHelper.WaitFor(
+                        () =>
+                        {
+                            var statefulsets = k8sClient.ListNamespacedStatefulSetAsync("monitoring", labelSelector: "release=neon-metrics-prometheus").Result;
+                            if (statefulsets == null || statefulsets.Items.Count < 2)
+                            {
+                                return false;
+                            }
+
+                            return statefulsets.Items.All(p => p.Status.ReadyReplicas == p.Spec.Replicas);
+                        },
+                        timeout: TimeSpan.FromMinutes(20),
+                        pollInterval: TimeSpan.FromSeconds(10));
                 });
 
             if (cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count() > 1)
@@ -2316,8 +2599,6 @@ rm -rf {chartName}*
             master.InvokeIdempotentAction("deploy/neon-metrics-cortex",
                 () =>
                 {
-                    master.Status = "deploy: neon-metrics-cortex";
-
                     switch (cluster.Definition.Monitor.Metrics.Storage)
                     {
                         case MetricsStorageOptions.Ephemeral:
@@ -2332,6 +2613,8 @@ rm -rf {chartName}*
                             break;
                     }
 
+                    master.Status = "deploy: neon-metrics-cortex";
+
                     int i = 0;
                     foreach (var t in GetTaintsAsync(NodeLabels.LabelMetrics, "true").Result)
                     {
@@ -2341,7 +2624,28 @@ rm -rf {chartName}*
                         i++;
                     }
 
-                    InstallHelmChartAsync(master, "cortex", releaseName: "neon-metrics-cortex", @namespace: "monitoring", values: cortexValues, timeout: 1200, wait: true).Wait();
+                    var replicas = Math.Max((cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count() / 3), 1);
+                    cortexValues.Add(new KeyValuePair<string, object>($"replicas", replicas));
+
+                    InstallHelmChartAsync(master, "cortex", releaseName: "neon-metrics-cortex", @namespace: "monitoring", values: cortexValues).Wait();
+                });
+
+            master.InvokeIdempotentAction("deploy/neon-metrics-cortex-ready",
+                () =>
+                {
+                    NeonHelper.WaitFor(
+                        () =>
+                        {
+                            var deployments = k8sClient.ListNamespacedDeploymentAsync("monitoring", labelSelector: "release=neon-metrics-cortex").Result;
+                            if (deployments == null || deployments.Items.Count == 0)
+                            {
+                                return false;
+                            }
+
+                            return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
+                        },
+                        timeout: TimeSpan.FromMinutes(20),
+                        pollInterval: TimeSpan.FromSeconds(10));
                 });
 
             master.InvokeIdempotentAction("deploy/istio-prometheus",
@@ -2352,7 +2656,7 @@ rm -rf {chartName}*
                     InstallHelmChartAsync(master, "istio-prometheus", @namespace: "monitoring").Wait();
                 });
 
-            master.InvokeIdempotentAction("deploy/grafana",
+            master.InvokeIdempotentAction("deploy/neon-metrics-grafana",
                 () =>
                 {
                     master.Status = "deploy: neon-metrics-grafana";
@@ -2371,6 +2675,25 @@ rm -rf {chartName}*
                     InstallHelmChartAsync(master, "grafana", releaseName: "neon-metrics-grafana", @namespace: "monitoring", values: values, wait: false).Wait();
                 });
 
+            master.InvokeIdempotentAction("deploy/neon-metrics-grafana-ready",
+                () =>
+                {
+                    NeonHelper.WaitFor(
+                        () =>
+                        {
+                            var deployments = k8sClient.ListNamespacedDeploymentAsync("monitoring", labelSelector: "release=neon-metrics-grafana").Result;
+                            if (deployments == null || deployments.Items.Count == 0)
+                            {
+                                return false;
+                            }
+
+                            return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
+                        },
+                        timeout: TimeSpan.FromMinutes(10),
+                        pollInterval: TimeSpan.FromSeconds(10));
+                });
+
+            await Task.CompletedTask;
         }
 
         /// <summary>
@@ -2379,42 +2702,55 @@ rm -rf {chartName}*
         /// <param name="master"></param>
         private async Task InstallMetricsYugabyteAsync(LinuxSshProxy<NodeDefinition> master)
         {
-            master.InvokeIdempotentAction("deploy/metrics-persistence-yugabyte",
+            master.Status = "deploy: metrics storage (yugabyte)";
+
+            master.InvokeIdempotentAction("deploy/neon-metrics-db",
                 () =>
                 {
-                    master.Status = "deploy: metrics storage (yugabyte)";
+                    var values = new List<KeyValuePair<string, object>>();
+                    values.Add(new KeyValuePair<string, object>($"replicas.master", cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count()));
+                    values.Add(new KeyValuePair<string, object>($"replicas.tserver", cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count()));
 
-                    master.InvokeIdempotentAction("setup/metrics-yugabyte",
+                    values.Add(new KeyValuePair<string, object>($"partition.master", cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count()));
+                    values.Add(new KeyValuePair<string, object>($"partition.tserver", cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count()));
+
+                    Regex re = new Regex(@"(\d+)([a-zA-Z]+)");
+                    Match result = re.Match(cluster.Definition.Monitor.Logs.DiskSize);
+
+                    var ybDiskSize = decimal.Parse(result.Groups[1].Value);
+                    var ybDiskUnit = result.Groups[2].Value;
+
+                    values.Add(new KeyValuePair<string, object>($"storage.master.size", $"{Math.Round(ybDiskSize / 3, 2)}{ybDiskUnit}"));
+                    values.Add(new KeyValuePair<string, object>($"storage.tserver.size", $"{Math.Round(2 * (ybDiskSize / 3), 2)}{ybDiskUnit}"));
+
+                    int i = 0;
+                    foreach (var t in GetTaintsAsync(NodeLabels.LabelMetrics, "true").Result)
+                    {
+                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
+                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", t.Effect));
+                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
+                        i++;
+                    }
+
+                    InstallHelmChartAsync(master, "yugabyte", releaseName: "neon-metrics-db", @namespace: "monitoring", values: values).Wait();
+                });
+
+            master.InvokeIdempotentAction("deploy/neon-metrics-db-ready",
+                () =>
+                {
+                    NeonHelper.WaitFor(
                         () =>
                         {
-                            var values = new List<KeyValuePair<string, object>>();
-                            values.Add(new KeyValuePair<string, object>($"replicas.master", cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count()));
-                            values.Add(new KeyValuePair<string, object>($"replicas.tserver", cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count()));
-
-                            values.Add(new KeyValuePair<string, object>($"partition.master", cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count()));
-                            values.Add(new KeyValuePair<string, object>($"partition.tserver", cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count()));
-
-                            Regex re = new Regex(@"(\d+)([a-zA-Z]+)");
-                            Match result = re.Match(cluster.Definition.Monitor.Logs.DiskSize);
-
-                            var ybDiskSize = decimal.Parse(result.Groups[1].Value);
-                            var ybDiskUnit = result.Groups[2].Value;
-
-                            values.Add(new KeyValuePair<string, object>($"storage.master.size", $"{Math.Round(ybDiskSize / 3, 2)}{ybDiskUnit}"));
-                            values.Add(new KeyValuePair<string, object>($"storage.tserver.size", $"{Math.Round(2 * (ybDiskSize / 3), 2)}{ybDiskUnit}"));
-
-                            int i = 0;
-                            foreach (var t in GetTaintsAsync(NodeLabels.LabelMetrics, "true").Result)
+                            var statefulsets = k8sClient.ListNamespacedStatefulSetAsync("monitoring", labelSelector: "release=neon-metrics-db").Result;
+                            if (statefulsets == null || statefulsets.Items.Count < 2)
                             {
-                                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
-                                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", t.Effect));
-                                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
-                                i++;
+                                return false;
                             }
 
-                            // We're not waiting because I was seeing this behaviour: https://github.com/helm/helm/issues/8674
-                            InstallHelmChartAsync(master, "yugabyte", releaseName: "neon-metrics-db", @namespace: "monitoring", values: values, wait: false).Wait();
-                        });
+                            return statefulsets.Items.All(p => p.Status.ReadyReplicas == p.Spec.Replicas);
+                        },
+                        timeout: TimeSpan.FromMinutes(20),
+                        pollInterval: TimeSpan.FromSeconds(10));
                 });
 
             await Task.CompletedTask;
@@ -2428,7 +2764,7 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: elasticsearch";
 
-            master.InvokeIdempotentAction("deploy/elasticsearch",
+            master.InvokeIdempotentAction("deploy/neon-logs-elasticsearch",
                 () =>
                 {
                     var monitorOptions = cluster.Definition.Monitor;
@@ -2472,11 +2808,25 @@ rm -rf {chartName}*
 
                     InstallHelmChartAsync(master, "elasticsearch", releaseName: "neon-logs-elasticsearch", @namespace: "monitoring", timeout: 1200, values: values, wait: false).Wait();
 
-                    // wait for Elasticsearch cluster to be running before proceeding.
-                    while ((k8sClient.ListNamespacedPodAsync("monitoring", labelSelector: "app=elasticsearch-master")).Result.Items.Where(p => p.Status.Phase == "Running").Count() != cluster.Definition.Nodes.Where(l => l.Labels.Metrics == true).Count())
-                    {
-                        Thread.Sleep(1000);
-                    }
+                    
+                });
+
+            master.InvokeIdempotentAction("deploy/neon-logs-elasticsearch-ready",
+                () =>
+                { 
+                    NeonHelper.WaitFor(
+                        () =>
+                        {
+                            var statefulsets = k8sClient.ListNamespacedStatefulSetAsync("monitoring", labelSelector: "release=neon-logs-elasticsearch").Result;
+                            if (statefulsets == null || statefulsets.Items.Count == 0)
+                            {
+                                return false;
+                            }
+
+                            return statefulsets.Items.All(p => p.Status.ReadyReplicas == p.Spec.Replicas);
+                        },
+                        timeout: TimeSpan.FromMinutes(30),
+                        pollInterval: TimeSpan.FromSeconds(10));
                 });
 
             await Task.CompletedTask;
@@ -2488,20 +2838,44 @@ rm -rf {chartName}*
         /// <param name="master">The master node.</param>
         private async Task InstallFluentBitAsync(LinuxSshProxy<NodeDefinition> master)
         {
-            master.Status = "deploy: fluent-bit";            
+            master.Status = "deploy: fluent-bit";
 
-            var values = new List<KeyValuePair<string, object>>();
-            var i = 0;
+            master.InvokeIdempotentAction("deploy/neon-log-host",
+                   () =>
+                   {
+                       var values = new List<KeyValuePair<string, object>>();
+                       var i = 0;
 
-            foreach (var taint in (await k8sClient.ListNodeAsync()).Items.Where(i => i.Spec.Taints != null).SelectMany(i => i.Spec.Taints))
-            {
-                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", taint.Key));
-                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", taint.Effect));
-                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
-                i++;
-            }
+                       foreach (var taint in (k8sClient.ListNodeAsync()).Result.Items.Where(i => i.Spec.Taints != null).SelectMany(i => i.Spec.Taints))
+                       {
+                           values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", taint.Key));
+                           values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", taint.Effect));
+                           values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
+                           i++;
+                       }
 
-            await InstallHelmChartAsync(master, "fluent-bit", releaseName: "neon-log-host", @namespace: "monitoring", timeout: 300, values: values);
+                       InstallHelmChartAsync(master, "fluent-bit", releaseName: "neon-log-host", @namespace: "monitoring", values: values).Wait();
+                   });
+
+            master.InvokeIdempotentAction("deploy/neon-log-host-ready",
+                   () =>
+                   {
+                       NeonHelper.WaitFor(
+                           () =>
+                           {
+                               var daemonsets = k8sClient.ListNamespacedDaemonSetAsync("monitoring", labelSelector: "release=neon-log-host").Result;
+                               if (daemonsets == null || daemonsets.Items.Count == 0)
+                               {
+                                   return false;
+                               }
+
+                               return daemonsets.Items.All(p => p.Status.NumberAvailable == p.Status.DesiredNumberScheduled);
+                           },
+                           timeout: TimeSpan.FromMinutes(20),
+                           pollInterval: TimeSpan.FromSeconds(10));
+                   });
+
+            await Task.CompletedTask;
         }
 
         /// <summary>
@@ -2512,20 +2886,44 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: fluentd";
 
-            var values = new List<KeyValuePair<string, object>>();
-            values.Add(new KeyValuePair<string, object>($"autoscaling.minReplicas", (Math.Max(1, cluster.Definition.Workers.Count() % 6))));
-            values.Add(new KeyValuePair<string, object>($"autoscaling.maxReplicas", (Math.Max(1, cluster.Definition.Workers.Count()))));
+            master.InvokeIdempotentAction("deploy/neon-log-collector",
+                   () =>
+                   {
+                       var values = new List<KeyValuePair<string, object>>();
+                       values.Add(new KeyValuePair<string, object>($"autoscaling.minReplicas", (Math.Max(1, cluster.Definition.Workers.Count() % 6))));
+                       values.Add(new KeyValuePair<string, object>($"autoscaling.maxReplicas", (Math.Max(1, cluster.Definition.Workers.Count()))));
 
-            int i = 0;
-            foreach (var t in await GetTaintsAsync(NodeLabels.LabelLogs, "true"))
-            {
-                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
-                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", t.Effect));
-                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
-                i++;
-            }
+                       int i = 0;
+                       foreach (var t in GetTaintsAsync(NodeLabels.LabelLogs, "true").Result)
+                       {
+                           values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
+                           values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", t.Effect));
+                           values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
+                           i++;
+                       }
 
-            await InstallHelmChartAsync(master, "fluentd", releaseName: "neon-log-collector", @namespace: "monitoring", timeout: 300, values: values);
+                       InstallHelmChartAsync(master, "fluentd", releaseName: "neon-log-collector", @namespace: "monitoring", values: values).Wait();
+                   });
+
+            master.InvokeIdempotentAction("deploy/neon-log-collector-ready",
+                   () =>
+                   {
+                       NeonHelper.WaitFor(
+                           () =>
+                           {
+                               var statefulsets = k8sClient.ListNamespacedStatefulSetAsync("monitoring", labelSelector: "release=neon-log-collector").Result;
+                               if (statefulsets == null || statefulsets.Items.Count == 0)
+                               {
+                                   return false;
+                               }
+
+                               return statefulsets.Items.All(p => p.Status.ReadyReplicas == p.Spec.Replicas);
+                           },
+                         timeout: TimeSpan.FromMinutes(20),
+                         pollInterval: TimeSpan.FromSeconds(10));
+                   });
+
+            await Task.CompletedTask;
         }
 
         /// <summary>
@@ -2536,18 +2934,42 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: kibana";
 
-            var values = new List<KeyValuePair<string, object>>();
+            master.InvokeIdempotentAction("deploy/neon-logs-kibana",
+                () =>
+                {
+                    var values = new List<KeyValuePair<string, object>>();
 
-            int i = 0;
-            foreach (var t in await GetTaintsAsync(NodeLabels.LabelLogs, "true"))
-            {
-                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
-                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", t.Effect));
-                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
-                i++;
-            }
+                    int i = 0;
+                    foreach (var t in GetTaintsAsync(NodeLabels.LabelLogs, "true").Result)
+                    {
+                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
+                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", t.Effect));
+                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
+                        i++;
+                    }
 
-            await InstallHelmChartAsync(master, "kibana", releaseName: "neon-logs-kibana", @namespace: "monitoring", timeout: 900, values: values, wait: false);
+                    InstallHelmChartAsync(master, "kibana", releaseName: "neon-logs-kibana", @namespace: "monitoring", values: values).Wait();
+            });
+
+            master.InvokeIdempotentAction("deploy/neon-logs-kibana-ready",
+                () =>
+                {
+                    NeonHelper.WaitFor(
+                        () =>
+                        {
+                            var deployments = k8sClient.ListNamespacedDeploymentAsync("monitoring", labelSelector: "release=neon-logs-kibana").Result;
+                            if (deployments == null || deployments.Items.Count == 0)
+                            {
+                                return false;
+                            }
+
+                            return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
+                        },
+                        timeout: TimeSpan.FromMinutes(10),
+                        pollInterval: TimeSpan.FromSeconds(10));
+            });
+
+            await Task.CompletedTask;
         }
 
         /// <summary>
@@ -2558,19 +2980,180 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: jaeger";
 
-            var values = new List<KeyValuePair<string, object>>();
+            master.InvokeIdempotentAction("deploy/neon-logs-jaeger",
+                   () =>
+                   {
+                       var values = new List<KeyValuePair<string, object>>();
 
-            int i = 0;
-            foreach (var t in await GetTaintsAsync(NodeLabels.LabelLogs, "true"))
-            {
-                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
-                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", t.Effect));
-                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
-                i++;
-            }
+                       int i = 0;
+                       foreach (var t in GetTaintsAsync(NodeLabels.LabelLogs, "true").Result)
+                       {
+                           values.Add(new KeyValuePair<string, object>($"ingester.tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
+                           values.Add(new KeyValuePair<string, object>($"ingester.tolerations[{i}].effect", t.Effect));
+                           values.Add(new KeyValuePair<string, object>($"ingester.tolerations[{i}].operator", "Exists"));
 
-            await InstallHelmChartAsync(master, "jaeger", releaseName: "neon-logs-jaeger", @namespace: "monitoring", timeout: 900, values: values, wait: false);
+                           values.Add(new KeyValuePair<string, object>($"agent.tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
+                           values.Add(new KeyValuePair<string, object>($"agent.tolerations[{i}].effect", t.Effect));
+                           values.Add(new KeyValuePair<string, object>($"agent.tolerations[{i}].operator", "Exists"));
+
+                           values.Add(new KeyValuePair<string, object>($"collector.tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
+                           values.Add(new KeyValuePair<string, object>($"collector.tolerations[{i}].effect", t.Effect));
+                           values.Add(new KeyValuePair<string, object>($"collector.tolerations[{i}].operator", "Exists"));
+
+                           values.Add(new KeyValuePair<string, object>($"query.tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
+                           values.Add(new KeyValuePair<string, object>($"query.tolerations[{i}].effect", t.Effect));
+                           values.Add(new KeyValuePair<string, object>($"query.tolerations[{i}].operator", "Exists"));
+
+                           values.Add(new KeyValuePair<string, object>($"esIndexCleaner.tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
+                           values.Add(new KeyValuePair<string, object>($"esIndexCleaner.tolerations[{i}].effect", t.Effect));
+                           values.Add(new KeyValuePair<string, object>($"esIndexCleaner.tolerations[{i}].operator", "Exists"));
+                           i++;
+                       }
+
+                       InstallHelmChartAsync(master, "jaeger", releaseName: "neon-logs-jaeger", @namespace: "monitoring", values: values).Wait();
+                   });
+
+            master.InvokeIdempotentAction("deploy/neon-logs-jaeger-ready",
+                   () =>
+                   {
+                       NeonHelper.WaitFor(
+                           () =>
+                           {
+                               var deployments = k8sClient.ListNamespacedDeploymentAsync("monitoring", labelSelector: "release=neon-logs-jaeger").Result;
+                               if (deployments == null || deployments.Items.Count < 2)
+                               {
+                                   return false;
+                               }
+
+                               return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
+                           },
+                            timeout: TimeSpan.FromMinutes(20),
+                            pollInterval: TimeSpan.FromSeconds(10));
+                   });
+
+            await Task.CompletedTask;
         }
+
+        /// <summary>
+        /// Installs a harbor registry and required components.
+        /// </summary>
+        /// <param name="master"></param>
+        /// <returns></returns>
+        private async Task InstallNeonRegistryAsync(LinuxSshProxy<NodeDefinition> master)
+        {
+            master.Status = "deploy: registry";
+
+            master.InvokeIdempotentAction("deploy/neon-system-registry-secret",
+                   () =>
+                   {
+                       var cert = TlsCertificate.CreateSelfSigned("*");
+
+                       var harborCert = new V1Secret()
+                       {
+                           Metadata = new V1ObjectMeta()
+                           {
+                               Name = "neon-registry-harbor"
+                           },
+                           Type = "Opaque",
+                           StringData = new Dictionary<string, string>()
+                            {
+                                { "tls.crt", cert.CertPemNormalized },
+                                { "tls.key", cert.KeyPemNormalized }
+                            }
+                       };
+
+                       k8sClient.CreateNamespacedSecretAsync(harborCert, "neon-system").Wait();
+                   });
+
+            master.InvokeIdempotentAction("deploy/neon-system-registry-redis",
+                   () =>
+                   {
+                       var values = new List<KeyValuePair<string, object>>();
+
+                       int i = 0;
+                       foreach (var t in GetTaintsAsync(NodeLabels.LabelNeonSystemRegistry, "true").Result)
+                       {
+                           values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
+                           values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", t.Effect));
+                           values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
+                           i++;
+                       }
+
+                       InstallHelmChartAsync(master, "redis-ha", releaseName: "neon-system-registry-redis", @namespace: "neon-system", values: values).Wait();
+                   });
+
+            master.InvokeIdempotentAction("deploy/neon-system-registry-redis-ready",
+                () =>
+                {
+                    NeonHelper.WaitFor(
+                        () =>
+                        {
+                            var statefulsets = k8sClient.ListNamespacedStatefulSetAsync("neon-system", labelSelector: "release=neon-system-registry-redis").Result;
+                            if (statefulsets == null || statefulsets.Items.Count == 0)
+                            {
+                                return false;
+                            }
+
+                            return statefulsets.Items.All(p => p.Status.ReadyReplicas == p.Spec.Replicas);
+                        },
+                        timeout: TimeSpan.FromMinutes(10),
+                        pollInterval: TimeSpan.FromSeconds(10));
+                });
+
+            master.InvokeIdempotentAction("deploy/neon-system-registry-harbor",
+                   () =>
+                   {
+                       var values = new List<KeyValuePair<string, object>>();
+
+                       int i = 0;
+                       foreach (var t in GetTaintsAsync(NodeLabels.LabelNeonSystemRegistry, "true").Result)
+                       {
+                           values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
+                           values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", t.Effect));
+                           values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
+                           i++;
+                       }
+
+                       InstallHelmChartAsync(master, "harbor", releaseName: "neon-system-registry-harbor", @namespace: "neon-system", values: values).Wait();
+                   });
+
+            master.InvokeIdempotentAction("deploy/neon-system-registry-harbor-ready",
+                () =>
+                {
+                    // Trivy is currently disabled by default
+                    //NeonHelper.WaitFor(
+                    //    () =>
+                    //    {
+                    //        var statefulsets = k8sClient.ListNamespacedStatefulSetAsync("neon-system", labelSelector: "release=neon-system-registry-harbor").Result;
+                    //        if (statefulsets == null || statefulsets.Items.Count == 0)
+                    //        {
+                    //            return false;
+                    //        }
+
+                    //        return statefulsets.Items.All(p => p.Status.ReadyReplicas == p.Spec.Replicas);
+                    //    },
+                    //    timeout: TimeSpan.FromMinutes(20),
+                    //    pollInterval: TimeSpan.FromSeconds(10));
+
+                    NeonHelper.WaitFor(
+                           () =>
+                           {
+                               var deployments = k8sClient.ListNamespacedDeploymentAsync("neon-system", labelSelector: "release=neon-system-registry-harbor").Result;
+                               if (deployments == null || deployments.Items.Count < 8)
+                               {
+                                   return false;
+                               }
+
+                               return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
+                           },
+                            timeout: TimeSpan.FromMinutes(20),
+                            pollInterval: TimeSpan.FromSeconds(10));
+                });
+
+            await Task.CompletedTask;
+
+        }
+        
 
         /// <summary>
         /// Installs the Neon Cluster Manager.
@@ -2580,7 +3163,31 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: neon-cluster-manager";
 
-            await InstallHelmChartAsync(master, "neon-cluster-manager", releaseName: "neon-cluster-manager", @namespace: "neon-system", timeout: 300);
+            master.InvokeIdempotentAction("deploy/neon-cluster-manager",
+                () =>
+                {
+                    InstallHelmChartAsync(master, "neon-cluster-manager", releaseName: "neon-cluster-manager", @namespace: "neon-system").Wait();
+                });
+
+            master.InvokeIdempotentAction("deploy/neon-cluster-manager-ready",
+                () =>
+                {
+                    NeonHelper.WaitFor(
+                        () =>
+                        {
+                            var deployments = k8sClient.ListNamespacedDeploymentAsync("neon-system", labelSelector: "release=neon-cluster-manager").Result;
+                            if (deployments == null || deployments.Items.Count == 0)
+                            {
+                                return false;
+                            }
+
+                            return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
+                        },
+                        timeout: TimeSpan.FromMinutes(10),
+                        pollInterval: TimeSpan.FromSeconds(10));
+                });
+
+            await Task.CompletedTask;
         }
 
         /// <summary>
@@ -2591,18 +3198,57 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: neon-system-db";
 
-            var values = new List<KeyValuePair<string, object>>();
+            master.InvokeIdempotentAction("deploy/neon-system-db",
+                () =>
+                {
+                    var values = new List<KeyValuePair<string, object>>();
 
-            int i = 0;
-            foreach (var t in await GetTaintsAsync(NodeLabels.LabelNeonSystemDb, "true"))
-            {
-                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
-                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", t.Effect));
-                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
-                i++;
-            }
+                    int i = 0;
+                    foreach (var t in GetTaintsAsync(NodeLabels.LabelNeonSystemDb, "true").Result)
+                    {
+                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
+                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", t.Effect));
+                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
+                        i++;
+                    }
 
-            await InstallHelmChartAsync(master, "citus-postgresql", releaseName: "neon-system-db", @namespace: "neon-system", values: values, timeout: 1200);
+                    InstallHelmChartAsync(master, "citus-postgresql", releaseName: "neon-system-db", @namespace: "neon-system", values: values).Wait();
+                });
+
+
+            master.InvokeIdempotentAction("deploy/neon-system-db-ready",
+                () =>
+                {
+                    NeonHelper.WaitFor(
+                        () =>
+                        {
+                            var statefulsets = k8sClient.ListNamespacedStatefulSetAsync("neon-system", labelSelector: "release=neon-system-db").Result;
+                            if (statefulsets == null || statefulsets.Items.Count < 2)
+                            {
+                                return false;
+                            }
+
+                            return statefulsets.Items.All(p => p.Status.ReadyReplicas == p.Spec.Replicas);
+                        },
+                        timeout: TimeSpan.FromMinutes(10),
+                        pollInterval: TimeSpan.FromSeconds(10));
+
+                    NeonHelper.WaitFor(
+                        () =>
+                        {
+                            var deployments = k8sClient.ListNamespacedDeploymentAsync("neon-system", labelSelector: "release=neon-system-db").Result;
+                            if (deployments == null || deployments.Items.Count == 0)
+                            {
+                                return false;
+                            }
+
+                            return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
+                        },
+                        timeout: TimeSpan.FromMinutes(10),
+                        pollInterval: TimeSpan.FromSeconds(10));
+                });
+
+            await Task.CompletedTask;
         }
 
         /// <summary>

@@ -6,6 +6,7 @@ metadata:
     app: {{ include "cluster-manager.name" . }}
     helm.sh/chart: {{ include "cluster-manager.chart" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
+    release: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
 spec:
   replicas: {{ .Values.replicaCount }}

@@ -41,7 +41,7 @@ metadata:
 type: Opaque
 data:
 {{- $rootCA := buildCustomCert $root.Values.tls.rootCA.cert $root.Values.tls.rootCA.key -}}
-{{- $replicas := (eq .name "yb-masters") | ternary $root.Values.replicas.master $root.Values.replicas.tserver -}}
+{{- $replicas := (contains .name "yb-masters") | ternary $root.Values.replicas.master $root.Values.replicas.tserver -}}
 {{- range $index := until ( int ( $replicas ) ) }}
 {{- $node := printf "%s-%d.%s.%s.svc.%s" $service.label $index $service.name $root.Release.Namespace $root.Values.domainName }}
 {{- $dns1 := printf "*.*.%s" $root.Release.Namespace }}
@@ -126,12 +126,12 @@ metadata:
 spec:
   serviceName: "{{ $root.Release.Name }}-{{ .name }}"
   podManagementPolicy: {{ $root.Values.PodManagementPolicy }}
-  {{ if eq .name "yb-masters" }}
+  {{ if contains .name "yb-masters" }}
   replicas: {{ $root.Values.replicas.master }}
   {{ else }}
   replicas: {{ $root.Values.replicas.tserver  }}
   {{ end }}
-  {{- $storageInfo := (eq .name "yb-masters") | ternary $root.Values.storage.master $root.Values.storage.tserver -}}
+  {{- $storageInfo := (contains .name "yb-masters") | ternary $root.Values.storage.master $root.Values.storage.tserver -}}
   {{ if not $root.Values.storage.ephemeral }}
   volumeClaimTemplates:
     {{- range $index := until (int ($storageInfo.count )) }}
@@ -162,7 +162,7 @@ spec:
   updateStrategy:
     type: RollingUpdate
     rollingUpdate:
-      {{ if eq .name "yb-masters" }}
+      {{ if contains .name "yb-masters" }}
       partition: {{ $root.Values.partition.master }}
       {{ else }}
       partition: {{ $root.Values.partition.tserver }}
@@ -173,15 +173,12 @@ spec:
   template:
     metadata:
       annotations:
-      {{ if eq .name "yb-masters" }}
+      {{ if contains .name "yb-masters" }}
         traffic.sidecar.istio.io/excludeInboundPorts: '7000'
         traffic.sidecar.istio.io/excludeOutboundPorts: '7000'
       {{ else }}
         traffic.sidecar.istio.io/excludeInboundPorts: '9000,11000,12000,13000'
         traffic.sidecar.istio.io/excludeOutboundPorts: '9000,11000,12000,13000'
-      {{ end }}
-      {{ if $root.Values.networkAnnotation }}
-{{ toYaml $root.Values.networkAnnotation | indent 8}}
       {{ end }}
       labels:
         app: "{{ .label }}"
@@ -197,6 +194,10 @@ spec:
       {{- if $root.Values.nodeSelector }}
       nodeSelector:
       {{ toYaml $root.Values.nodeSelector | indent 8 }}
+      {{- end }}
+      {{- with $root.Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
       {{- end }}
       affinity:
         # Set the anti-affinity selector scope to YB masters.
@@ -221,6 +222,34 @@ spec:
                   values:
                   - "{{ .label }}"
               topologyKey: kubernetes.io/hostname
+      {{ if contains .name "yb-tservers" }}
+      initContainers:
+      - name: chmod-er
+        image: busybox:latest
+        command:
+        - /bin/sh
+        - -c
+        - |
+          chmod 0750 -R /mnt/disk0/pg_data || :
+        securityContext:
+          runAsUser: 0
+        volumeMounts:
+          {{ if not $root.Values.storage.ephemeral }}
+          {{- range $index := until (int ($storageInfo.count)) }}
+          - name: datadir{{ $index }}
+            mountPath: /mnt/disk{{ $index }}
+            readOnly: false
+          {{- end }}
+          {{- end }}
+          {{- if $root.Values.tls.enabled }}
+          - name: {{ .label }}-yugabyte-tls-cert
+            mountPath: /opt/certs/yugabyte
+            readOnly: true
+          - name: yugabyte-tls-client-cert
+            mountPath: /root/.yugabytedb/
+            readOnly: true
+          {{- end }}
+      {{ end }}
       containers:
       - name: "{{ .label }}"
         image: "{{ $root.Values.Image.repository }}:{{ $root.Values.Image.tag }}"
@@ -257,7 +286,7 @@ spec:
             fieldRef:
               fieldPath: metadata.namespace
         resources:
-        {{ if eq .name "yb-masters" }}
+        {{ if contains .name "yb-masters" }}
 {{ toYaml $root.Values.resource.master | indent 10 }}
         {{ else }}
 {{ toYaml $root.Values.resource.tserver | indent 10 }}
@@ -268,7 +297,7 @@ spec:
         # https://github.com/yugabyte/charts/issues/11
         workingDir: "/mnt/disk0"
         command:
-        {{ if eq .name "yb-masters" }}
+        {{ if contains .name "yb-masters" }}
           - "/home/yugabyte/bin/yb-master"
           {{ if not $root.Values.storage.ephemeral }}
           - "--fs_data_dirs={{ template "yugabyte.fs_data_dirs" $storageInfo }}"
@@ -276,7 +305,7 @@ spec:
           - "--fs_data_dirs=/var/yugabyte"
           {{- end }}
           - "--rpc_bind_addresses=0.0.0.0:7100" # {{ printf "$(HOSTNAME).%s.$(NAMESPACE).svc.%s" .name $root.Values.domainName }},127.0.0.1"
-          - "--server_broadcast_addresses={{ printf "$(HOSTNAME).%s.$(NAMESPACE).svc.%s" .name $root.Values.domainName }}:7100"
+          - "--server_broadcast_addresses={{ printf "$(HOSTNAME).%s-%s.$(NAMESPACE).svc.%s" $root.Release.Name .name $root.Values.domainName }}:7100"
           {{ if $root.Values.isMultiAz }}
           - "--master_addresses={{ $root.Values.masterAddresses}}"
           - "--replication_factor={{ $root.Values.replicas.totalMasters }}"
@@ -309,7 +338,7 @@ spec:
         {{ else }}
           - "/home/yugabyte/bin/yb-tserver"
           - "--fs_data_dirs={{ template "yugabyte.fs_data_dirs" $storageInfo }}"
-          - "--server_broadcast_addresses={{ printf "$(HOSTNAME).%s.$(NAMESPACE).svc.%s" .name $root.Values.domainName }}:9100"
+          - "--server_broadcast_addresses={{ printf "$(HOSTNAME).%s-%s.$(NAMESPACE).svc.%s" $root.Release.Name .name $root.Values.domainName }}:9100"
           - "--rpc_bind_addresses=0.0.0.0:9100" # {{ printf "$(HOSTNAME).%s.$(NAMESPACE).svc.%s" .name $root.Values.domainName }},127.0.0.1"
           - "--cql_proxy_bind_address=0.0.0.0:9042"
           {{ if not $root.Values.disableYsql }}

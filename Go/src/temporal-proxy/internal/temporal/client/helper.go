@@ -47,7 +47,7 @@ const (
 
 type (
 
-	// ClientHelper holds configuration details for building
+	// Helper holds configuration details for building
 	// the temporal namespace client and the temporal client
 	// This is used for creating, update, and registering temporal namespaces
 	// and stoping/starting temporal workflows workers.
@@ -55,16 +55,14 @@ type (
 	// Contains:
 	//	- TemporalClientConfiguration -> configuration information for building the temporal workflow and namespace clients.
 	//	- *zap.Logger -> reference to a zap.Logger to log temporal client output to the console.
-	//	- *TemporalClientBuilder -> reference to a TemporalClientBuilder used to build the temporal namespace and clients.
 	// 	- client.NamespaceClient -> temporal namespace client instance used to interact with Temporal namespaces.
 	// 	- *WorkfloClientsMap -> a thread-safe map of temporal client instance mapped to their respective namespaces.
 	//  - *WorkersMap -> a thread-safe map of Temporal workers to an int64 Id.
 	// StopWorkerRequest.
 	// 	- time.Duration -> specifies the amount of time in seconds a reply has to be sent after a request has been received by the temporal-proxy.
-	ClientHelper struct {
+	Helper struct {
 		clientOptions   client.Options
 		Logger          *zap.Logger
-		Builder         *TemporalClientBuilder
 		NamespaceClient client.NamespaceClient
 		WorkflowClients *WorkflowClientsMap
 		Workers         *WorkersMap
@@ -79,56 +77,56 @@ type (
 	}
 )
 
-// NewClientHelper is the default constructor
-// for a new ClientHelper.
+// NewHelper is the default constructor
+// for a new Helper.
 //
-// returns *ClientHelper -> pointer to a newly created ClientHelper.
-func NewClientHelper() *ClientHelper {
-	helper := new(ClientHelper)
+// returns *Helper -> pointer to a newly created Helper.
+func NewHelper() *Helper {
+	helper := new(Helper)
 	helper.WorkflowClients = NewWorkflowClientsMap()
 	helper.Workers = NewWorkersMap()
 	return helper
 }
 
 //----------------------------------------------------------------------------------
-// ClientHelper instance methods
+// Helper instance methods
 
-// SetHostPort sets the hostPort in a ClientHelper.
+// SetHostPort sets the hostPort in a Helper.
 //
 // param value string --> the string value to set as the hostPort.
-func (helper *ClientHelper) SetHostPort(value string) {
+func (helper *Helper) SetHostPort(value string) {
 	helper.clientOptions.HostPort = value
 }
 
-// SetNamespace sets the namespace in a ClientHelper.
+// SetNamespace sets the namespace in a Helper.
 //
 // params value string -> the string value to set as the namespace.
-func (helper *ClientHelper) SetNamespace(value string) {
+func (helper *Helper) SetNamespace(value string) {
 	helper.clientOptions.Namespace = value
 }
 
-// SetClientOptions sets the client.Options of a ClientHelper.
+// SetClientOptions sets the client.Options of a Helper.
 //
 // param value client.Options -> client.Options to set.
-func (helper *ClientHelper) SetClientOptions(value client.Options) {
+func (helper *Helper) SetClientOptions(value client.Options) {
 	helper.clientOptions = value
 }
 
-// GetClientTimeout gets the ClientTimeout from a ClientHelper instance.
+// GetClientTimeout gets the ClientTimeout from a Helper instance.
 // specifies the amount of time in seconds a reply has to be sent after
 // a request has been received by the cadence-proxy.
 //
 // returns time.Duration -> time.Duration for the ClientTimeout.
-func (helper *ClientHelper) GetClientTimeout() time.Duration {
+func (helper *Helper) GetClientTimeout() time.Duration {
 	return helper.clientTimeout
 }
 
-// SetClientTimeout sets the ClientTimeout for a ClientHelper instance.
+// SetClientTimeout sets the ClientTimeout for a Helper instance.
 // specifies the amount of time in seconds a reply has to be sent after
 // a request has been received by the cadence-proxy.
 //
 // param value time.Duration -> time.Duration for the ClientTimeout.
-func (helper *ClientHelper) SetClientTimeout(value time.Duration) {
+func (helper *Helper) SetClientTimeout(value time.Duration) {
 	helper.clientTimeout = value
 }
 
@@ -143,7 +141,7 @@ func (helper *ClientHelper) SetClientTimeout(value time.Duration) {
 //
 // returns error -> error if any errors are thrown while trying to establish a
 // connection, or nil upon success.
-func (helper *ClientHelper) SetupTemporalClients(ctx context.Context, opts client.Options) error {
+func (helper *Helper) SetupTemporalClients(ctx context.Context, opts client.Options) error {
 	helper.SetClientOptions(opts)
 	if err := helper.SetupServiceConfig(ctx); err != nil {
 		defer func() {
@@ -154,20 +152,15 @@ func (helper *ClientHelper) SetupTemporalClients(ctx context.Context, opts clien
 	return nil
 }
 
-// SetupServiceConfig configures a ClientHelper's workflowserviceclient.Interface
-// Service.  It also sets the Logger, the TemporalClientBuilder, and acts as a helper for
+// SetupServiceConfig configures a Helper's workflowserviceclient.Interface
+// Service.  It also sets the Logger and acts as a helper for
 // creating new temporal workflow and namespace clients.
 //
 // params ctx context.Context -> go context to use to verify a connection has been established to the temporal server.
 //
 // returns error -> error if there were any problems configuring
 // or building the service client.
-func (helper *ClientHelper) SetupServiceConfig(ctx context.Context) error {
-
-	// Configure the ClientHelper.Builder
-
-	helper.Builder = NewBuilder(helper.Logger).
-		SetClientOptions(helper.clientOptions)
+func (helper *Helper) SetupServiceConfig(ctx context.Context) error {
 
 	// build namespace client
 
@@ -175,11 +168,18 @@ func (helper *ClientHelper) SetupServiceConfig(ctx context.Context) error {
 		helper.NamespaceClient.Close()
 	}
 
-	namespaceClient, err := helper.Builder.BuildTemporalNamespaceClient()
+	namespaceClient, err := client.NewNamespaceClient(helper.clientOptions)
 	if err != nil {
-		helper.Logger.Error("failed to build namespace temporal client.", zap.Error(err))
+
+		helper.Logger.Error("failed to create Temporal namespace client",
+			zap.String("HostPort", helper.clientOptions.HostPort),
+			zap.Error(err))
+
 		return err
 	}
+
+	helper.Logger.Info("successfully created Temporal namespace client",
+		zap.String("HostPort", helper.clientOptions.HostPort))
 
 	helper.NamespaceClient = namespaceClient
 
@@ -192,17 +192,25 @@ func (helper *ClientHelper) SetupServiceConfig(ctx context.Context) error {
 
 	// build the client
 
-	if c := helper.WorkflowClients.Get(helper.Builder.GetNamespace()); c != nil {
+	if c := helper.WorkflowClients.Get(helper.clientOptions.Namespace); c != nil {
 		c.Close()
 	}
 
-	client, err := helper.Builder.BuildClient()
+	client, err := client.NewClient(helper.clientOptions)
 	if err != nil {
-		helper.Logger.Error("failed to build namespace temporal client.", zap.Error(err))
-		return nil
+		helper.Logger.Error("Failed to create Temporal client",
+			zap.String("Namespace", helper.clientOptions.Namespace),
+			zap.String("HostPort", helper.clientOptions.HostPort),
+			zap.Error(err))
+
+		return err
 	}
 
-	_ = helper.WorkflowClients.Add(helper.Builder.GetNamespace(), client)
+	helper.Logger.Info("Successfully created temporal client",
+		zap.String("Namespace", helper.clientOptions.Namespace),
+		zap.String("HostPort", helper.clientOptions.HostPort))
+
+	_ = helper.WorkflowClients.Add(helper.clientOptions.Namespace, client)
 
 	return nil
 }
@@ -222,7 +230,7 @@ func (helper *ClientHelper) SetupServiceConfig(ctx context.Context) error {
 // 	call to the temporal server.
 // 	- returns error -> an error if the workflow could not be started, or nil if
 // 	the workflow was triggered successfully.
-func (helper *ClientHelper) StartWorker(
+func (helper *Helper) StartWorker(
 	namespace string,
 	taskqueue string,
 	options worker.Options,
@@ -245,7 +253,7 @@ func (helper *ClientHelper) StartWorker(
 // StopWorker stops a worker at the given workerID.
 //
 // param int64 -> the int64 Id of the worker to be stopped.
-func (helper *ClientHelper) StopWorker(workerID int64) error {
+func (helper *Helper) StopWorker(workerID int64) error {
 	worker := helper.Workers.Get(workerID)
 	if worker == nil {
 		return internal.ErrEntityNotExist
@@ -263,7 +271,7 @@ func (helper *ClientHelper) StopWorker(workerID int64) error {
 //	- workerID int64 -> the int64 Id of the worker to register the workflow.
 // 	- w func(ctx workflow.Context, input []byte) ([]byte, error) -> the workflow function.
 // 	- name string -> the string name of the workflow to register.
-func (helper *ClientHelper) WorkflowRegister(
+func (helper *Helper) WorkflowRegister(
 	workerID int64,
 	w func(ctx workflow.Context, input []byte) ([]byte, error),
 	name string) error {
@@ -283,7 +291,7 @@ func (helper *ClientHelper) WorkflowRegister(
 //	- workerID int64 -> the int64 Id of the worker to register the activity.
 // 	- a func(ctx context.Context, input []byte) ([]byte, error) -> the activity function.
 // 	- name string -> the string name of the activity to register.
-func (helper *ClientHelper) ActivityRegister(
+func (helper *Helper) ActivityRegister(
 	workerID int64,
 	a func(ctx context.Context, input []byte) ([]byte, error),
 	name string) error {
@@ -307,7 +315,7 @@ func (helper *ClientHelper) ActivityRegister(
 // returns:
 //	- *workflowservice.DescribeNamespaceResponse -> response to the describe namespace request.
 // 	- error -> error if one is thrown, nil if the method executed with no errors.
-func (helper *ClientHelper) DescribeNamespace(ctx context.Context, namespace string) (*workflowservice.DescribeNamespaceResponse, error) {
+func (helper *Helper) DescribeNamespace(ctx context.Context, namespace string) (*workflowservice.DescribeNamespaceResponse, error) {
 	resp, err := helper.NamespaceClient.Describe(ctx, namespace)
 	if err != nil {
 		return nil, err
@@ -327,7 +335,7 @@ func (helper *ClientHelper) DescribeNamespace(ctx context.Context, namespace str
 // 	to register the temporal namespace.
 //
 // returns error -> error if one is thrown, nil if the method executed with no errors.
-func (helper *ClientHelper) RegisterNamespace(ctx context.Context, request *workflowservice.RegisterNamespaceRequest) error {
+func (helper *Helper) RegisterNamespace(ctx context.Context, request *workflowservice.RegisterNamespaceRequest) error {
 	err := helper.NamespaceClient.Register(ctx, request)
 	if err != nil {
 		return err
@@ -347,7 +355,7 @@ func (helper *ClientHelper) RegisterNamespace(ctx context.Context, request *work
 // 	to Update the temporal namespace.
 //
 // returns error -> error if one is thrown, nil if the method executed with no errors.
-func (helper *ClientHelper) UpdateNamespace(ctx context.Context, request *workflowservice.UpdateNamespaceRequest) error {
+func (helper *Helper) UpdateNamespace(ctx context.Context, request *workflowservice.UpdateNamespaceRequest) error {
 	err := helper.NamespaceClient.Update(ctx, request)
 	if err != nil {
 		return err
@@ -372,7 +380,7 @@ func (helper *ClientHelper) UpdateNamespace(ctx context.Context, request *workfl
 // 	call to the temporal server.
 // 	- error -> an error if the workflow could not be started, or nil if
 // 	the workflow was triggered successfully.
-func (helper *ClientHelper) ExecuteWorkflow(
+func (helper *Helper) ExecuteWorkflow(
 	ctx context.Context,
 	namespace string,
 	options client.StartWorkflowOptions,
@@ -421,7 +429,7 @@ func (helper *ClientHelper) ExecuteWorkflow(
 // 	call to the temporal server.
 // 	- error -> an error if the workflow could not be started, or nil if
 // 	the workflow was triggered successfully.
-func (helper *ClientHelper) GetWorkflow(
+func (helper *Helper) GetWorkflow(
 	ctx context.Context,
 	workflowID string,
 	runID string,
@@ -454,7 +462,7 @@ func (helper *ClientHelper) GetWorkflow(
 //	- *workflowservice.DescribeTaskQueueResponse -> response to the describe task queue request.
 // 	request
 // 	- error -> error if one is thrown, nil if the method executed with no errors.
-func (helper *ClientHelper) DescribeTaskQueue(
+func (helper *Helper) DescribeTaskQueue(
 	ctx context.Context,
 	namespace string,
 	taskqueue string,
@@ -485,7 +493,7 @@ func (helper *ClientHelper) DescribeTaskQueue(
 //
 // returns error -> an error if the workflow could not be started, or nil if
 // the workflow was cancelled successfully.
-func (helper *ClientHelper) CancelWorkflow(
+func (helper *Helper) CancelWorkflow(
 	ctx context.Context,
 	workflowID string,
 	runID string,
@@ -520,7 +528,7 @@ func (helper *ClientHelper) CancelWorkflow(
 //
 // returns error -> an error if the workflow could not be started, or nil if
 // the workflow was terminated successfully.
-func (helper *ClientHelper) TerminateWorkflow(
+func (helper *Helper) TerminateWorkflow(
 	ctx context.Context,
 	workflowID string,
 	runID string,
@@ -568,7 +576,7 @@ func (helper *ClientHelper) TerminateWorkflow(
 //	- *workflow.Execution -> pointer to the resulting workflow execution from
 // 	starting the workflow.
 // 	- error -> error upon failure and nil upon success.
-func (helper *ClientHelper) SignalWithStartWorkflow(
+func (helper *Helper) SignalWithStartWorkflow(
 	ctx context.Context,
 	workflowID string,
 	namespace string,
@@ -619,7 +627,7 @@ func (helper *ClientHelper) SignalWithStartWorkflow(
 // 	describe workflow execution request.
 // 	- error -> an error if the workflow could not be started, or nil if
 // 	the workflow was cancelled successfully.
-func (helper *ClientHelper) DescribeWorkflowExecution(
+func (helper *Helper) DescribeWorkflowExecution(
 	ctx context.Context,
 	workflowID string,
 	runID string,
@@ -651,7 +659,7 @@ func (helper *ClientHelper) DescribeWorkflowExecution(
 // 	- arg interface{} -> the signaling arguments.
 //
 // returns error -> error upon failure and nil upon success.
-func (helper *ClientHelper) SignalWorkflow(
+func (helper *Helper) SignalWorkflow(
 	ctx context.Context,
 	workflowID string,
 	runID string,
@@ -695,7 +703,7 @@ func (helper *ClientHelper) SignalWorkflow(
 // returns:
 //	- converter.EncodedValue -> the encoded result value of querying a workflow.
 // 	- error -> error upon failure and nil upon success.
-func (helper *ClientHelper) QueryWorkflow(
+func (helper *Helper) QueryWorkflow(
 	ctx context.Context,
 	workflowID string,
 	runID string,
@@ -738,7 +746,7 @@ func (helper *ClientHelper) QueryWorkflow(
 // 	pararm completionError error -> error to complete the activity with.
 //
 // returns error -> error upon failure to complete the activity, nil upon success.
-func (helper *ClientHelper) CompleteActivity(
+func (helper *Helper) CompleteActivity(
 	ctx context.Context,
 	taskToken []byte,
 	namespace string,
@@ -783,7 +791,7 @@ func (helper *ClientHelper) CompleteActivity(
 // 	- temporalError *proxyerror.TemporalError -> error to complete the activity with.
 //
 // returns error -> error upon failure to complete the activity, nil upon success.
-func (helper *ClientHelper) CompleteActivityByID(
+func (helper *Helper) CompleteActivityByID(
 	ctx context.Context,
 	namespace string,
 	workflowID string,
@@ -835,7 +843,7 @@ func (helper *ClientHelper) CompleteActivityByID(
 // 	- details ...interface{} -> optional activity heartbeat details.
 //
 // returns error -> error upon failure to record activity heartbeat, nil upon success.
-func (helper *ClientHelper) RecordActivityHeartbeat(
+func (helper *Helper) RecordActivityHeartbeat(
 	ctx context.Context,
 	taskToken []byte,
 	namespace string,
@@ -868,7 +876,7 @@ func (helper *ClientHelper) RecordActivityHeartbeat(
 // 	- details ...interface{} -> optional activity heartbeat details.
 //
 // returns error -> error upon failure to record activity heartbeat, nil upon success.
-func (helper *ClientHelper) RecordActivityHeartbeatByID(
+func (helper *Helper) RecordActivityHeartbeatByID(
 	ctx context.Context,
 	namespace string,
 	workflowID string,
@@ -902,7 +910,7 @@ func (helper *ClientHelper) RecordActivityHeartbeatByID(
 }
 
 // CloseNamespaceClientConnection closes the connection to an existing Namespace client.
-func (helper *ClientHelper) CloseNamespaceClientConnection() {
+func (helper *Helper) CloseNamespaceClientConnection() {
 	helper.NamespaceClient.Close()
 	helper.NamespaceClient = nil
 }
@@ -910,7 +918,7 @@ func (helper *ClientHelper) CloseNamespaceClientConnection() {
 // CloseWorkflowClientConnection closes an existing Temporal client connection.
 //
 // returns error -> error thrown if there is an issue closing the client connection.
-func (helper *ClientHelper) CloseWorkflowClientConnection(namespace string) error {
+func (helper *Helper) CloseWorkflowClientConnection(namespace string) error {
 	client, err := helper.GetOrCreateWorkflowClient(namespace)
 	if err != nil {
 		return err
@@ -925,7 +933,7 @@ func (helper *ClientHelper) CloseWorkflowClientConnection(namespace string) erro
 // Destroy closes all Temporal namespace and client connections.
 //
 // returns error -> error thrown if there was an issue closing client connections.
-func (helper *ClientHelper) Destroy() error {
+func (helper *Helper) Destroy() error {
 	helper.CloseNamespaceClientConnection()
 
 	for v := range helper.WorkflowClients.clients {
@@ -944,10 +952,10 @@ func (helper *ClientHelper) Destroy() error {
 //
 // returns client.Client -> the WorkflowClient associated with
 // the specified namespace.
-func (helper *ClientHelper) GetOrCreateWorkflowClient(namespace string) (client.Client, error) {
+func (helper *Helper) GetOrCreateWorkflowClient(namespace string) (client.Client, error) {
 	wc := helper.WorkflowClients.Get(namespace)
 	if wc == nil {
-		wc, err := client.NewClient(helper.Builder.clientOptions)
+		wc, err := client.NewClient(helper.clientOptions)
 		if err != nil {
 			return nil, err
 		}
@@ -967,7 +975,7 @@ func (helper *ClientHelper) GetOrCreateWorkflowClient(namespace string) (client.
 //
 // returns error -> error if establishing a connection failed and nil
 // upon success.
-func (helper *ClientHelper) pollNamespace(
+func (helper *Helper) pollNamespace(
 	ctx context.Context,
 	channel chan error,
 	namespace string,
