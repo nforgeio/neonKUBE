@@ -4533,26 +4533,26 @@ namespace TestTemporal
         //---------------------------------------------------------------------
 
         [WorkflowInterface(TaskQueue = TemporalTestHelper .TaskQueue)]
-        public interface IWorkflowDefaultArg : IWorkflow
+        public interface IWorkflowDefaultNullableArg : IWorkflow
         {
             [WorkflowMethod(Name = "test")]
-            Task<string> TestAsync(string value = "default");
+            Task<TimeSpan?> TestAsync(TimeSpan? value = null);
 
             [WorkflowMethod(Name = "test-child")]
-            Task<string> TestChildAsync(bool useDefault, string value = "default");
+            Task<TimeSpan?> TestChildAsync(bool useDefault, TimeSpan? value = null);
         }
 
         [Workflow(AutoRegister = true)]
-        public class WorkflowDefaultArg : WorkflowBase, IWorkflowDefaultArg
+        public class WorkflowDefaultNullableArg : WorkflowBase, IWorkflowDefaultNullableArg
         {
-            public async Task<string> TestAsync(string value)
+            public async Task<TimeSpan?> TestAsync(TimeSpan? value = null)
             {
                 return await Task.FromResult(value);
             }
 
-            public async Task<string> TestChildAsync(bool useDefault, string value)
+            public async Task<TimeSpan?> TestChildAsync(bool useDefault, TimeSpan? value = null)
             {
-                var stub = Workflow.NewChildWorkflowStub<IWorkflowDefaultArg>();
+                var stub = Workflow.NewChildWorkflowStub<IWorkflowDefaultNullableArg>();
 
                 if (useDefault)
                 {
@@ -4567,28 +4567,28 @@ namespace TestTemporal
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Workflow_DefaultArg_External()
+        public async Task Workflow_DefaultNullableArg_External()
         {
             // Verify that calling an external workflow with default arguments works.
 
-            var stub = client.NewWorkflowStub<IWorkflowDefaultArg>();
-            Assert.Equal("default", await stub.TestAsync());
+            var stub = client.NewWorkflowStub<IWorkflowDefaultNullableArg>();
+            Assert.Null(await stub.TestAsync());
 
-            stub = client.NewWorkflowStub<IWorkflowDefaultArg>();
-            Assert.Equal("test", await stub.TestAsync("test"));
+            stub = client.NewWorkflowStub<IWorkflowDefaultNullableArg>();
+            Assert.Equal(TimeSpan.FromSeconds(10), await stub.TestAsync(TimeSpan.FromSeconds(10)));
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Workflow_DefaultArg_Child()
+        public async Task Workflow_DefaultNullableArg_Child()
         {
             // Verify that calling a child workflow with default arguments works.
 
-            var stub = client.NewWorkflowStub<IWorkflowDefaultArg>();
-            Assert.Equal("default", await stub.TestChildAsync(useDefault: true));
+            var stub = client.NewWorkflowStub<IWorkflowDefaultNullableArg>();
+            Assert.Null(await stub.TestChildAsync(useDefault: true));
 
-            stub = client.NewWorkflowStub<IWorkflowDefaultArg>();
-            Assert.Equal("test", await stub.TestChildAsync(useDefault: false, "test"));
+            stub = client.NewWorkflowStub<IWorkflowDefaultNullableArg>();
+            Assert.Equal(TimeSpan.FromSeconds(10), await stub.TestChildAsync(useDefault: false, TimeSpan.FromSeconds(10)));
         }
     }
 }
