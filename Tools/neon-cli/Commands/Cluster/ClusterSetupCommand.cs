@@ -2343,11 +2343,9 @@ rm -rf {chartName}*
             master.InvokeIdempotentAction("setup/neon-storage-openebs-nfs-install",
                   () =>
                   {
-                      var values = new List<KeyValuePair<string, object>>();
-
+                      var values  = new List<KeyValuePair<string, object>>();
                       var storage = cluster.Definition.Nodes.Where(n => n.OpenEBS).Sum(n => ByteUnits.Parse(n.Vm.OpenEbsDisk));
                       
-                      int i = 0;
                       values.Add(new KeyValuePair<string, object>($"persistence.size", $"{storage / 3}"));
                       
                       InstallHelmChartAsync(master, "nfs", releaseName: "neon-storage-nfs", @namespace: "openebs", values: values).Wait();
