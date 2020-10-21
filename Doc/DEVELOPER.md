@@ -64,12 +64,12 @@ Follow the steps below to configure a development or test workstation:
 
 7. Install **Visual Studio 2019 Community 16.3+** from [here](https://visualstudio.microsoft.com/thank-you-downloading-visual-studio/?sku=Community&rel=16)
 
-  * Select **all workloads** on the first panel
-  * Click **Individual components**, type *Git* in the search box and select **Git for Windows** and **GitHub extension for Visual Studio**
-  * Click **Install** (and take a coffee break)
-  * Install **.NET Core SDK 3.1.301 (Windows .NET Core Installer x64)** from [here](https://dotnet.microsoft.com/download/visual-studio-sdks)
-  * Apply any pending **Visual Studio updates**
-  * **Close** Visual Studio and install any updates
+   * Select **all workloads** on the first panel
+   * Click **Individual components**, type *Git* in the search box and select **Git for Windows** and **GitHub extension for Visual Studio**
+   * Click **Install** (and take a coffee break)
+   * Install **.NET Core SDK 3.1.301 (Windows .NET Core Installer x64)** from [here](https://dotnet.microsoft.com/download/visual-studio-sdks)
+   * Apply any pending **Visual Studio updates**
+   * **Close** Visual Studio and install any updates
   
 8. Create a **shortcut** for Visual Studio and configure it to run as **administrator**.  To build and run neonKUBE applications and services, **Visual Studio must be running with elevated privileges**.
 
