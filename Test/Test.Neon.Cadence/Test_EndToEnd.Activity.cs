@@ -1489,7 +1489,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Activity_DefaultNullableArg()
+        public async Task Activity_DefaultDefaultNullableArg()
         {
             // Normal Activity: Verify that calling an activitiy with default arguments works.
 
