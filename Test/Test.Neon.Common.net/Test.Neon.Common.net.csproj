@@ -419,6 +419,9 @@
     <Compile Include="..\Test.Neon.Common\System\Test_StringBuilder.cs">
       <Link>System\Test_StringBuilder.cs</Link>
     </Compile>
+    <Compile Include="..\Test.Neon.Common\System\Test_SystemAssumptions.cs">
+      <Link>System\Test_SystemAssumptions.cs</Link>
+    </Compile>
     <Compile Include="..\Test.Neon.Common\System\Test_TimeSpan.cs">
       <Link>System\Test_TimeSpan.cs</Link>
     </Compile>
