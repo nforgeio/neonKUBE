@@ -34,7 +34,9 @@ using Neon.Windows;
 namespace Neon.Service
 {
     /// <summary>
-    /// Base class for Kubernetes services that wish to use the neonKUBE unit testing conventions.
+    /// Handy base class for application services.  This class handles process termination signals when
+    /// running on Linux, OS/X, and similar environments and also provides some features to help you run
+    /// unit tests on your service.
     /// </summary>
     /// <remarks>
     /// <para>
