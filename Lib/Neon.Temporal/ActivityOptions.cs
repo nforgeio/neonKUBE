@@ -158,18 +158,21 @@ namespace Neon.Temporal
         /// default <see cref="TimeSpan.Zero"/> value uses the sum of 
         /// <see cref="ScheduleToStartTimeout"/> and <see cref="StartToCloseTimeout"/>.
         /// </summary>
+        [JsonConverter(typeof(GoTimeSpanJsonConverter))]
         public TimeSpan ScheduleToCloseTimeout { get; set; }
 
         /// <summary>
         /// Specifies the maximum time the activity be queued, waiting to be scheduled
         /// on a worker.  This defaults to <see cref="TemporalSettings.ActivityScheduleToStartTimeoutSeconds"/>.
         /// </summary>
+        [JsonConverter(typeof(GoTimeSpanJsonConverter))]
         public TimeSpan ScheduleToStartTimeout { get; set; } = TimeSpan.Zero;
 
         /// <summary>
         /// Specifies the maximum time the activity may take to run.  This defaults to
         /// <see cref="TemporalSettings.ActivityStartToCloseTimeoutSeconds"/>.
         /// </summary>
+        [JsonConverter(typeof(GoTimeSpanJsonConverter))]
         public TimeSpan StartToCloseTimeout { get; set; } = TimeSpan.Zero;
 
         /// <summary>
@@ -177,6 +180,7 @@ namespace Neon.Temporal
         /// back to Temporal.  This defaults to <see cref="TimeSpan.Zero"/> which indicates
         /// that no heartbeating is required.
         /// </summary>
+        [JsonConverter(typeof(GoTimeSpanJsonConverter))]
         public TimeSpan HeartbeatTimeout { get; set; }
 
         /// <summary>

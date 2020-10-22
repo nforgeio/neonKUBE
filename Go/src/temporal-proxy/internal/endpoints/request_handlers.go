@@ -2079,12 +2079,8 @@ func handleActivityExecuteRequest(requestCtx context.Context, request *messages.
 	// get the activity options, the context,
 	// and set the activity options on the context
 	ctx := workflow.WithActivityOptions(wectx.GetContext(), opts)
-	ctx = workflow.WithWorkflowNamespace(ctx, *request.GetNamespace())
+	//ctx = workflow.WithWorkflowNamespace(ctx, *request.GetNamespace())
 	future := workflow.ExecuteActivity(ctx, activityName, request.GetArgs())
-
-	// Send ACK: Commented out because its no longer needed.
-	// op := sendFutureACK(contextID, requestID, clientID)
-	// <-op.GetChannel()
 
 	// execute the activity
 	var result []byte
@@ -2133,7 +2129,7 @@ func handleActivityStartRequest(requestCtx context.Context, request *messages.Ac
 	// and set cancelation
 	var cancel workflow.CancelFunc
 	ctx := workflow.WithActivityOptions(wectx.GetContext(), opts)
-	ctx = workflow.WithWorkflowNamespace(ctx, *request.GetNamespace())
+	//ctx = workflow.WithWorkflowNamespace(ctx, *request.GetNamespace())
 	ctx, cancel = workflow.WithCancel(ctx)
 
 	//execute workflow
