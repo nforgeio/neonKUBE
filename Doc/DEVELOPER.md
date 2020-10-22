@@ -60,16 +60,13 @@ Follow the steps below to configure a development or test workstation:
     powershell Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser
     ```
 
-  `powershell Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser`
-
 7. Install **Visual Studio 2019 Community 16.3+** from [here](https://visualstudio.microsoft.com/thank-you-downloading-visual-studio/?sku=Community&rel=16)
 
-   * Select **all workloads** on the first panel
-   * Click **Individual components**, type *Git* in the search box and select **Git for Windows** and **GitHub extension for Visual Studio**
-   * Click **Install** (and take a coffee break)
-   * Install **.NET Core SDK 3.1.301 (Windows .NET Core Installer x64)** from [here](https://dotnet.microsoft.com/download/visual-studio-sdks)
-   * Apply any pending **Visual Studio updates**
-   * **Close** Visual Studio and install any updates
+  * Select **all workloads** on the first panel
+  * Click **Individual components**, type *Git* in the search box and select **Git for Windows** and **GitHub extension for Visual Studio**
+  * Click **Install** (and take a coffee break)
+  * Apply any pending **Visual Studio updates**
+  * **Close** Visual Studio and install any updates
   
 8. Create a **shortcut** for Visual Studio and configure it to run as **administrator**.  To build and run neonKUBE applications and services, **Visual Studio must be running with elevated privileges**.
 
@@ -153,19 +150,17 @@ Follow the steps below to configure a development or test workstation:
     
       ![WinSCP Hidden Files](Images/DEVELOPER/WinSCPHiddenFiles.png?raw=true)
 
-21. Install the latest release build of neonKUBE from [here](https://github.com/nforgeio/neonKUBE/releases)
+21. Restart Visual Studio (to pick up the environment changes).
 
-22. Restart Visual Studio (to pick up the environment changes).
-
-23. Confirm that the solution builds:
+22. Confirm that the solution builds:
 
     * Run **Visual Studio** as **administrator**
     * Open **$/neonKUBE.sln** (where **$** is the repo root directory)
     * Select **Build/Rebuild** Solution
 
-24. Install **InnoSetup** from the **$/External** directory using default settings.  This is required to build the Windows neonKUBE installer.
+23. Install **InnoSetup** from the **$/External** directory using default settings.  This is required to build the Windows neonKUBE installer.
 
-25. *Optional*: Install **OpenVPN**
+24. *Optional*: Install **OpenVPN**
 
     * Download the Windows Installer from [here](https://openvpn.net/index.php/open-source/downloads.html)
     * Run this command as administrator in a CMD window to install a second TAP interface:
@@ -174,11 +169,11 @@ Follow the steps below to configure a development or test workstation:
       ```
     * Obtain your WowRacks VPN credentials from another developer who has ADMIN access.
 
-26. *Optional*: Install **Notepad++** from [here](https://notepad-plus-plus.org/download)
+25. *Optional*: Install **Notepad++** from [here](https://notepad-plus-plus.org/download)
 
-27. *Optional*: Install **Postman** REST API tool from [here](https://www.getpostman.com/postman)
+26. *Optional*: Install **Postman** REST API tool from [here](https://www.getpostman.com/postman)
 
-28. *Optional*: Install **Cmdr/Mini** command shell:
+27. *Optional*: Install **Cmdr/Mini** command shell:
 
   * **IMPORTANT: Don't install the Full version** to avoid installing Linux command line tools that might conflict with the Cygwin tools installed earlier.
   * Download the ZIP archive from: [here](http://cmder.net/)
@@ -187,9 +182,9 @@ Follow the steps below to configure a development or test workstation:
   * Run Cmdr and configure settings as desired.
   * Consider removing the alias definitions in `$\config\user-aliases.cmd` file so that commands like `ls` will work properly.  I deleted all lines beneath the first `@echo off`.
 
-29. *Optional*: Install the latest version of **XCP-ng Center** from [here](https://github.com/xcp-ng/xenadmin/releases) if you'll need to manage Virtual Machines hosted on XCP-ng.
+28. *Optional*: Install the latest version of **XCP-ng Center** from [here](https://github.com/xcp-ng/xenadmin/releases) if you'll need to manage Virtual Machines hosted on XCP-ng.
 
-30. *Optional*: Developers who will be publishing releases will need to:
+29. *Optional*: Developers who will be publishing releases will need to:
 
     * **Download:** the latest recommended **nuget.exe** from [here](https://www.nuget.org/downloads) and put this somewhere in your `PATH`
     * Obtain a nuget API key from a senior developer and install the key on their workstation via:
@@ -198,16 +193,16 @@ Follow the steps below to configure a development or test workstation:
       ```
     * **Close:** all Visual Studio instances.
     * **Install:** the HTML Help Compiler by running `$/External/htmlhelp.exe` with the default options.  You can ignore any message about a newer version already being installed.
-    * **Unzip:** `$/External/SHFBInstaller_v2019.9.15.0.zip` to a temporary folder and run `SandcastleInstaller.exe`, then:
+    * **Unzip:** `$/External/SHFBInstaller_v2020.3.6.0.zip` to a temporary folder and run `SandcastleInstaller.exe`, then:
       * Click **Next** until you get to the **Sandcastle Help File Builder and Tools** page.
-      * Click **Next** and then **Install SHFB**
-      * Go through the wizard, accepting the licence and use the default options.
-      * Click **Finish** to close the SHFB installer.
-      * Click **Next** in the guided installation and then **Install Package** to install the Visual Studio package.
-      * Click **Next** and click **Install Schemas**
-      * **Optional:** Install Snippets (I don't don't install these myself)
-      * Click **Next** and **Close**.  Don't install the Visual Studio Spell Checker.
+      * Click **Install SHFB**
+	  * Click **Next** to the **Sandcastle Help File Builder Visual Studio Package** page.
+	  * Click **Install Package**
+	  * Click **Next**
+	  * Click **Install Schemas**
+      * Click **Next** until you get to the last page.
+      * Click **Close** to close the SHFB installer.
 
-31. *Optional*: Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
+30. *Optional*: Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
 
-32: *Optional:* Install the **AWS client version 2** from: [here](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-windows.html)
+31: *Optional:* Install the **AWS client version 2** from: [here](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-windows.html)
