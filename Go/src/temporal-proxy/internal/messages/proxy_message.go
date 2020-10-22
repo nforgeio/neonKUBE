@@ -72,6 +72,8 @@ type (
 		SetRequestID(value int64)
 		GetClientID() int64
 		SetClientID(value int64)
+		GetWorkerID() int64
+		SetWorkerID(value int64)
 		GetType() internal.MessageType
 		SetType(value internal.MessageType)
 	}
@@ -392,6 +394,20 @@ func (proxyMessage *ProxyMessage) GetClientID() int64 {
 // param value int64 -> the int64 value to set as a ProxyMessage's ClientId
 func (proxyMessage *ProxyMessage) SetClientID(value int64) {
 	proxyMessage.SetLongProperty("ClientId", value)
+}
+
+// GetWorkerID gets the WorkerId property from a ProxyMessage's properties map
+//
+// returns int64 -> A int64 corresponding to a ProxyMessage's WorkerId
+func (proxyMessage *ProxyMessage) GetWorkerID() int64 {
+	return proxyMessage.GetLongProperty("WorkerId")
+}
+
+// SetWorkerID sets the WorkerId property in a ProxyMessage's properties map
+//
+// param value int64 -> the int64 value to set as a ProxyMessage's WorkerId
+func (proxyMessage *ProxyMessage) SetWorkerID(value int64) {
+	proxyMessage.SetLongProperty("WorkerId", value)
 }
 
 // GetType gets the message type

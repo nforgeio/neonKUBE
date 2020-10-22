@@ -81,19 +81,18 @@ func handleConnectRequest(requestCtx context.Context, request *messages.ConnectR
 	// new ConnectReply
 	reply := messages.CreateReplyMessage(request)
 
-	// configure client options
+	// create and set the logger
+	logger := SetLogger(internal.LogLevel, internal.Debug)
+	clientHelper := proxyclient.NewHelper()
+	clientHelper.Logger = logger.Named(internal.ProxyLoggerName)
 
+	// configure client options
 	defaultNamespace := *request.GetNamespace()
 	opts := client.Options{
 		Identity:  *request.GetIdentity(),
 		HostPort:  *request.GetHostPort(),
 		Namespace: defaultNamespace,
 	}
-
-	// create and set the logger
-	logger := SetLogger(internal.LogLevel, internal.Debug)
-	clientHelper := proxyclient.NewHelper()
-	clientHelper.Logger = logger.Named(internal.ProxyLoggerName)
 
 	// configure the Helper
 	// setup the namespace, service, and workflow clients
@@ -517,6 +516,7 @@ func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages
 		Logger.Debug("Executing Workflow",
 			zap.String("Workflow", workflowName),
 			zap.Int64("ClientId", clientID),
+			zap.Int64("WorkerId", workerID),
 			zap.Int64("ContextId", contextID),
 			zap.Int64("RequestId", requestID),
 			zap.Int("ProcessId", os.Getpid()))
@@ -533,6 +533,7 @@ func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages
 		workflowInvokeRequest.SetContextID(contextID)
 		workflowInvokeRequest.SetArgs(input)
 		workflowInvokeRequest.SetClientID(clientID)
+		workflowInvokeRequest.SetWorkerID(workerID)
 
 		// get the WorkflowInfo (Namespace, WorkflowID, RunID, WorkflowType,
 		// TaskQueue, ExecutionStartToCloseTimeout)
