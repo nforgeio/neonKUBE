@@ -195,13 +195,11 @@ Follow the steps below to configure a development or test workstation:
     * **Install:** the HTML Help Compiler by running `$/External/htmlhelp.exe` with the default options.  You can ignore any message about a newer version already being installed.
     * **Unzip:** `$/External/SHFBInstaller_v2019.9.15.0.zip` to a temporary folder and run `SandcastleInstaller.exe`, then:
       * Click **Next** until you get to the **Sandcastle Help File Builder and Tools** page.
-      * Click **Next** and then **Install SHFB**
-      * Go through the wizard, accepting the licence and use the default options.
-      * Click **Finish** to close the SHFB installer.
-      * Click **Next** in the guided installation and then **Install Package** to install the Visual Studio package.
-      * Click **Next** and click **Install Schemas**
-      * **Optional:** Install Snippets (I don't don't install these myself)
-      * Click **Next** and **Close**.  Don't install the Visual Studio Spell Checker.
+      * Click **Install SHFB**
+	  * Contint with the setup and click **Yes** when asked to install the **SHFB Visual Studio Package**.
+	  * Click **Install Schemas**
+      * Click **Next** until you get to the last page.
+      * Click **Close** to close the SHFB installer.
 
 30. *Optional*: Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
 

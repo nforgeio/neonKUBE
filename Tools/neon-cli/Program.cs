@@ -138,36 +138,6 @@ You can disable the use of this encrypted folder by specifying
 
             PowerShell.PwshPath = KubeHelper.PwshPath;
 
-            // We need to verify that we're running with elevated permissions if we're not
-            // shimmed into a Docker container.
-
-            // $todo(jefflill):
-            //
-            // We're currently requiring elevated permissions for all commands, even those
-            // that don't actually require elevated permissions.  We may wish to relax this
-            // in the future.
-
-            if (!KubeHelper.InToolContainer)
-            {
-                if (NeonHelper.IsWindows)
-                {
-                    var identity  = WindowsIdentity.GetCurrent();
-                    var principal = new WindowsPrincipal(identity);
-
-                    if (!principal.IsInRole(WindowsBuiltInRole.Administrator))
-                    {
-                        Console.Error.WriteLine("*** ERROR: This command requires elevated administrator permissions.");
-                        Program.Exit(1);
-                    }
-                }
-                else if (NeonHelper.IsOSX)
-                {
-                    // $todo(jefflill): Do we really need this?
-
-                    // throw new NotImplementedException("$todo(jefflill): Implement OSX elevated permissions check.");
-                }
-            }
-
             // Ensure that all of the cluster hosting manager implementations are loaded.
 
             new HostingManagerFactory(() => HostingLoader.Initialize());
@@ -877,7 +847,7 @@ You can disable the use of this encrypted folder by specifying
                 }
                 else if (NeonHelper.IsOSX)
                 {
-                    // $todo(jefflill): Implement this
+                    // $todo(jefflill): Implement this?
                 }
             }
         }
