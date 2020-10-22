@@ -168,6 +168,13 @@ func (helper *Helper) SetupServiceConfig(ctx context.Context) error {
 		helper.NamespaceClient.Close()
 	}
 
+	// TODO: JACK -  Make sure that we figure this out.  Hack to get
+	// debugging working.
+
+	if internal.DebugPrelaunched {
+		helper.clientOptions.ConnectionOptions.DisableHealthCheck = true
+	}
+
 	namespaceClient, err := client.NewNamespaceClient(helper.clientOptions)
 	if err != nil {
 
@@ -241,7 +248,7 @@ func (helper *Helper) StartWorker(
 	}
 
 	worker := worker.New(client, taskqueue, options)
-	if worker.Start() != nil {
+	if err = worker.Start(); err != nil {
 		return 0, err
 	}
 
