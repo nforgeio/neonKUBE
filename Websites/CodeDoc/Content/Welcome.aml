@@ -181,7 +181,7 @@
       <content>
         <para>
           <mediaLinkInline><image xlink:href="NETStandard2.0"/></mediaLinkInline> This package includes the 
-          <codeEntityReference qualifyHint="false">T:Neon.Service.KubeService</codeEntityReference> 
+          <codeEntityReference qualifyHint="false">T:Neon.Service.NeonService</codeEntityReference> 
           class which handles a lot of the boilerplate code for a Kubernetes or other services including log integration,
           reacting to termination signals on Linux and OS/X as well as abstracting environment variables and
           configuration file access such that the same service code can run in unit tests as well as production.
@@ -286,7 +286,7 @@
           <legacyBold>Neon.Xunit</legacyBold> includes some Ansible related helpers
           as well a test fixtures for <legacyBold>ASP.NET</legacyBold>, <legacyBold>containers</legacyBold>, <legacyBold>Docker</legacyBold>, 
           <legacyBold>environment variables</legacyBold>, <legacyBold>local DNS hosts</legacyBold>, 
-          <codeEntityReference qualifyHint="false">T:Neon.Service.KubeService</codeEntityReference>,
+          <codeEntityReference qualifyHint="false">T:Neon.Service.NeonService</codeEntityReference>,
           <legacyBold>NATS Messaging/Streaming</legacyBold>, as well as the
           <codeEntityReference qualifyHint="false">T:Neon.Xunit.ComposedFixture</codeEntityReference>
           that can be used to combine other fixtures.

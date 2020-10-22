@@ -17,7 +17,7 @@
           provide a nice way to unit test your services.
         </para>
         <para>
-          <codeEntityReference qualifyHint="false">T:Neon.Service.KubeService</codeEntityReference> can be
+          <codeEntityReference qualifyHint="false">T:Neon.Service.NeonService</codeEntityReference> can be
           used as the base class for your service.
         </para>
         <para>
