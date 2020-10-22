@@ -194,15 +194,25 @@ namespace Neon.Temporal
                 return;
             }
 
+            // Register workflow implementations.
+
+            List<Type>      clonedActivityRegistrations;
+            List<Type>      clonedWorkflowRegistrations;
+
             using (await workerMutex.AcquireAsync())
             {
-                // Register workflow implementations.
-
-                foreach (var workflowType in registeredWorkflowTypes)
-                {
-                    await RegisterWorkflowImplementationAsync(workflowType);
-                }
+                clonedWorkflowRegistrations = registeredWorkflowTypes.ToList();
+                clonedActivityRegistrations = registeredActivityTypes.ToList();
             }
+
+            foreach (var workflowType in registeredWorkflowTypes)
+            {
+                await RegisterWorkflowImplementationAsync(workflowType);
+            }
+
+            // Start the worker.
+
+            await Client.StartWorkerAsync(this);
 
             isRunning = true;
         }

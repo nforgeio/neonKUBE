@@ -128,8 +128,7 @@ namespace Neon.Temporal.Internal
         CancelReply = 16,
 
         /// <summary>
-        /// <b>client --> proxy:</b> Indicates that the application is capable of handling workflows
-        /// and activities within a specific Temporal namespace and task lisk.
+        /// <b>client --> proxy:</b> Creates a new worker but doesn't start it.
         /// </summary>
         NewWorkerRequest = 17,
 
@@ -210,6 +209,16 @@ namespace Neon.Temporal.Internal
         /// <b>proxy --> client:</b> Sent in response to a <see cref="DescribeTaskQueueRequest"/> message.
         /// </summary>
         DescribeTaskQueueReply = 32,
+
+        /// <summary>
+        /// <b>client --> proxy:</b> Starts a worker so that it can begin executing workflows and activities.
+        /// </summary>
+        StartWorkerRequest = 33,
+
+        /// <summary>
+        /// <b>proxy --> client:</b> Sent in response to a <see cref="StartWorkerRequest"/> message.
+        /// </summary>
+        StartWorkerReply = 34,
 
         //---------------------------------------------------------------------
         // Workflow messages

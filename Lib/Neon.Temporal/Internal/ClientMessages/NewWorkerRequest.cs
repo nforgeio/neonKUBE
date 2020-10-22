@@ -25,8 +25,7 @@ using Neon.Temporal;
 namespace Neon.Temporal.Internal
 {
     /// <summary>
-    /// <b>client --> proxy:</b> Registers with Temporal that the current
-    /// connection is capable of executing task and/or activities.
+    /// <b>client --> proxy:</b> Creates a new worker but doesn't start it.
     /// </summary>
     [InternalProxyMessage(InternalMessageTypes.NewWorkerRequest)]
     internal class NewWorkerRequest : ProxyRequest

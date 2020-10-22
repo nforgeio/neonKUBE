@@ -1159,15 +1159,17 @@ namespace TestTemporal
 
                 message = ProxyMessage.Deserialize<NewWorkerRequest>(stream);
                 Assert.NotNull(message);
+                Assert.Equal(0, message.WorkerId);
                 Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Options);
 
                 // Round-trip
 
-                message.ClientId = 444;
+                message.ClientId  = 444;
                 message.RequestId = 555;
-                message.Options = new WorkerOptions() 
+                message.WorkerId  = 666;
+                message.Options   = new WorkerOptions() 
                 { 
                     TaskQueue = "my-tasks",
                     MaxConcurrentActivityExecutionSize = 1234 
@@ -1175,6 +1177,7 @@ namespace TestTemporal
 
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
+                Assert.Equal(666, message.WorkerId);
                 Assert.Equal("my-tasks", message.Options.TaskQueue);
                 Assert.Equal(1234, message.Options.MaxConcurrentActivityExecutionSize);
 
@@ -1186,6 +1189,7 @@ namespace TestTemporal
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
+                Assert.Equal(666, message.WorkerId);
                 Assert.Equal("my-tasks", message.Options.TaskQueue);
                 Assert.Equal(1234, message.Options.MaxConcurrentActivityExecutionSize);
 
@@ -1195,6 +1199,7 @@ namespace TestTemporal
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
+                Assert.Equal(666, message.WorkerId);
                 Assert.Equal("my-tasks", message.Options.TaskQueue);
                 Assert.Equal(1234, message.Options.MaxConcurrentActivityExecutionSize);
 
@@ -1204,6 +1209,7 @@ namespace TestTemporal
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
+                Assert.Equal(666, message.WorkerId);
                 Assert.Equal("my-tasks", message.Options.TaskQueue);
                 Assert.Equal(1234, message.Options.MaxConcurrentActivityExecutionSize);
             }
@@ -1234,9 +1240,9 @@ namespace TestTemporal
 
                 // Round-trip
 
-                message.ClientId = 444;
+                message.ClientId  = 444;
                 message.RequestId = 555;
-                message.WorkerId = 666;
+                message.WorkerId  = 666;
 
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
@@ -1266,6 +1272,124 @@ namespace TestTemporal
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.WorkerId);
+            }
+        }
+
+        
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
+        public void Test_StartWorkerRequest()
+        {
+            StartWorkerRequest message;
+
+            using (var stream = new MemoryStream())
+            {
+                message = new StartWorkerRequest();
+
+                Assert.Equal(InternalMessageTypes.StartWorkerReply, message.ReplyType);
+
+                // Empty message.
+
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<StartWorkerRequest>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
+                Assert.Equal(0, message.RequestId);
+                Assert.Equal(0, message.WorkerId);
+
+                // Round-trip
+
+                message.ClientId  = 444;
+                message.RequestId = 555;
+                message.WorkerId  = 666;
+
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(666, message.WorkerId);
+
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<StartWorkerRequest>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(666, message.WorkerId);
+
+                // Clone()
+
+                message = (StartWorkerRequest)message.Clone();
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(666, message.WorkerId);
+
+                // Echo the message via the associated [temporal-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(666, message.WorkerId);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
+        public void Test_StartWorkerReply()
+        {
+            StartWorkerReply message;
+
+            using (var stream = new MemoryStream())
+            {
+                message = new StartWorkerReply();
+
+                // Empty message.
+
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<StartWorkerReply>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
+                Assert.Equal(0, message.RequestId);
+                Assert.Null(message.Error);
+
+                // Round-trip
+
+                message.ClientId = 444;
+                message.RequestId = 555;
+
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<StartWorkerReply>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+
+                // Clone()
+
+                message = (StartWorkerReply)message.Clone();
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+
+                // Echo the message via the associated [temporal-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
             }
         }
 

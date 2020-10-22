@@ -161,6 +161,39 @@ namespace Neon.Temporal
         // Internal utilities
 
         /// <summary>
+        /// Signals Temporal to start a <see cref="Worker"/> (returned by a previous call to
+        /// <see cref="NewWorkerAsync(WorkerOptions)"/>).
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <remarks>
+        /// This method does nothing if the worker is already started.
+        /// </remarks>
+        internal async Task StartWorkerAsync(Worker worker)
+        {
+            Covenant.Requires<ArgumentNullException>(worker != null, nameof(worker));
+            EnsureNotDisposed(noClosingCheck: true);
+
+            if (!object.ReferenceEquals(worker.Client, this))
+            {
+                throw new InvalidOperationException("The worker passed does not belong to this client connection.");
+            }
+
+            lock (syncLock)
+            {
+                if (!idToWorker.ContainsKey(worker.WorkerId))
+                {
+                    // The worker does not exist so we're going to ignore this call.
+
+                    return;
+                }
+            }
+
+            var reply = (StopWorkerReply)(await CallProxyAsync(new StartWorkerRequest() { WorkerId = worker.WorkerId }));
+
+            reply.ThrowOnError();
+        }
+
+        /// <summary>
         /// Signals Temporal that it should stop invoking activities and workflows 
         /// for the specified <see cref="Worker"/> (returned by a previous call to
         /// <see cref="NewWorkerAsync(WorkerOptions)"/>).
@@ -183,7 +216,7 @@ namespace Neon.Temporal
             {
                 if (!idToWorker.ContainsKey(worker.WorkerId))
                 {
-                    // The worker does not exist.  We're going to ignore this.
+                    // The worker does not exist so we're going to ignore this call.
 
                     return;
                 }
