@@ -193,10 +193,12 @@ Follow the steps below to configure a development or test workstation:
       ```
     * **Close:** all Visual Studio instances.
     * **Install:** the HTML Help Compiler by running `$/External/htmlhelp.exe` with the default options.  You can ignore any message about a newer version already being installed.
-    * **Unzip:** `$/External/SHFBInstaller_v2019.9.15.0.zip` to a temporary folder and run `SandcastleInstaller.exe`, then:
+    * **Unzip:** `$/External/SHFBInstaller_v2020.3.6.0.zip` to a temporary folder and run `SandcastleInstaller.exe`, then:
       * Click **Next** until you get to the **Sandcastle Help File Builder and Tools** page.
       * Click **Install SHFB**
-	  * Contint with the setup and click **Yes** when asked to install the **SHFB Visual Studio Package**.
+	  * Click **Next** to the **Sandcastle Help File Builder Visual Studio Package** page.
+	  * Click **Install Package**
+	  * Click **Next**
 	  * Click **Install Schemas**
       * Click **Next** until you get to the last page.
       * Click **Close** to close the SHFB installer.
