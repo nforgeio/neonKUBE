@@ -70,6 +70,89 @@ namespace Neon.Temporal
         private Dictionary<long, ActivityBase>              idToActivity               = new Dictionary<long, ActivityBase>();
 
         /// <summary>
+        /// Registers an activity implementation with the temporal-proxy.
+        /// </summary>
+        /// <param name="activityType">The activity implementation type.</param>
+        /// <exception cref="RegistrationException">Thrown when there's a problem with the registration.</exception>
+        private async Task RegisterActivityImplementationAsync(Type activityType)
+        {
+            TemporalHelper.ValidateActivityImplementation(activityType);
+
+            // We need to register each activity method that implements an activity interface method
+            // with the same signature that that was tagged by [ActivityMethod].
+            //
+            // First, we'll create a dictionary that maps method signatures from any inherited
+            // interfaces that are tagged by [ActivityMethod] to the attribute.
+
+            var methodSignatureToAttribute = new Dictionary<string, ActivityMethodAttribute>();
+
+            foreach (var interfaceType in activityType.GetInterfaces())
+            {
+                foreach (var method in interfaceType.GetMethods(BindingFlags.Public | BindingFlags.Instance))
+                {
+                    var activityMethodAttribute = method.GetCustomAttribute<ActivityMethodAttribute>();
+
+                    if (activityMethodAttribute == null)
+                    {
+                        continue;
+                    }
+
+                    var signature = method.ToString();
+
+                    if (methodSignatureToAttribute.ContainsKey(signature))
+                    {
+                        throw new NotSupportedException($"Activity type [{activityType.FullName}] cannot implement the [{signature}] method from two different interfaces.");
+                    }
+
+                    methodSignatureToAttribute.Add(signature, activityMethodAttribute);
+                }
+            }
+
+            // Next, we need to register the activity methods that implement the
+            // activity interface.
+
+            foreach (var method in activityType.GetMethods())
+            {
+                if (!methodSignatureToAttribute.TryGetValue(method.ToString(), out var activityMethodAttribute))
+                {
+                    continue;
+                }
+
+                var activityTarget = TemporalHelper.GetActivityTarget(activityType, method.Name);
+
+                using (await workerMutex.AcquireAsync())
+                {
+                    if (nameToActivityRegistration.TryGetValue(activityTarget.ActivityTypeName, out var registration))
+                    {
+                        if (!object.ReferenceEquals(registration.ActivityType, registration.ActivityType))
+                        {
+                            throw new InvalidOperationException($"Conflicting activity type registration: Activity type [{activityType.FullName}] is already registered for activity type name [{activityTarget.ActivityTypeName}].");
+                        }
+                    }
+                    else
+                    {
+                        nameToActivityRegistration[activityTarget.ActivityTypeName] =
+                            new ActivityRegistration()
+                            {
+                                ActivityType                 = activityType,
+                                ActivityMethod               = method,
+                                ActivityMethodParameterTypes = method.GetParameterTypes()
+                            };
+                    }
+                }
+
+                var reply = (ActivityRegisterReply)await Client.CallProxyAsync(
+                    new ActivityRegisterRequest()
+                    {
+                        WorkerId = WorkerId,
+                        Name     = activityTarget.ActivityTypeName,
+                    });
+
+                reply.ThrowOnError();
+            }
+        }
+
+        /// <summary>
         /// Registers an activity implementation with Temporal.
         /// </summary>
         /// <typeparam name="TActivity">The <see cref="ActivityBase"/> derived class implementing the activity.</typeparam>
@@ -95,7 +178,7 @@ namespace Neon.Temporal
             EnsureNotDisposed();
             EnsureCanRegister();
 
-            lock (await workerMutex.AcquireAsync())
+            using (await workerMutex.AcquireAsync())
             {
                 var activityType = typeof(TActivity);
 
@@ -147,16 +230,16 @@ namespace Neon.Temporal
             EnsureNotDisposed();
             EnsureCanRegister();
 
-            foreach (var activityType in assembly.GetTypes().Where(t => t.IsClass))
+            using (await workerMutex.AcquireAsync())
             {
-                var activityAttribute = activityType.GetCustomAttribute<ActivityAttribute>();
-
-                if (activityAttribute != null && activityAttribute.AutoRegister)
+                foreach (var activityType in assembly.GetTypes().Where(t => t.IsClass))
                 {
-                    var activityTypeName = TemporalHelper.GetActivityTypeName(activityType, activityAttribute);
+                    var activityAttribute = activityType.GetCustomAttribute<ActivityAttribute>();
 
-                    using (await workerMutex.AcquireAsync())
+                    if (activityAttribute != null && activityAttribute.AutoRegister)
                     {
+                        var activityTypeName = TemporalHelper.GetActivityTypeName(activityType, activityAttribute);
+
                         if (registeredActivityTypes.Contains(activityType))
                         {
                             if (disableDuplicateCheck)

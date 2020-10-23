@@ -74,12 +74,11 @@ namespace Neon.Temporal
         private Dictionary<long, WorkflowBase>              idToWorkflow               = new Dictionary<long, WorkflowBase>();
 
         /// <summary>
-        /// Registers a workflow implementation.
+        /// Registers a workflow implementation with temporal-proxy.
         /// </summary>
         /// <param name="workflowType">The workflow implementation type.</param>
-        /// <param name="disableDuplicateCheck">Disable checks for duplicate workflow registrations.</param>
         /// <exception cref="RegistrationException">Thrown when there's a problem with the registration.</exception>
-        private async Task RegisterWorkflowImplementationAsync(Type workflowType, bool disableDuplicateCheck = false)
+        private async Task RegisterWorkflowImplementationAsync(Type workflowType)
         {
             TemporalHelper.ValidateWorkflowImplementation(workflowType);
 
@@ -118,42 +117,45 @@ namespace Neon.Temporal
             // Next, we need to register the workflow methods that implement the
             // workflow interface.
 
-            foreach (var method in workflowType.GetMethods())
+            using (await workerMutex.AcquireAsync())
             {
-                if (!methodSignatureToAttribute.TryGetValue(method.ToString(), out var workflowMethodAttribute))
+                foreach (var method in workflowType.GetMethods())
                 {
-                    continue;
-                }
-
-                var workflowTypeName = TemporalHelper.GetWorkflowTypeName(workflowType, workflowMethodAttribute);
-
-                if (nameToWorkflowRegistration.TryGetValue(workflowTypeName, out var existingRegistration))
-                {
-                    if (!object.ReferenceEquals(existingRegistration.WorkflowType, workflowType))
+                    if (!methodSignatureToAttribute.TryGetValue(method.ToString(), out var workflowMethodAttribute))
                     {
-                        throw new InvalidOperationException($"Conflicting workflow interface registration: Workflow interface [{workflowType.FullName}] is already registered for workflow type name [{workflowTypeName}].");
+                        continue;
                     }
-                }
-                else
-                {
-                    nameToWorkflowRegistration[workflowTypeName] =
-                        new WorkflowRegistration()
-                        {
-                            WorkflowType                 = workflowType,
-                            WorkflowMethod               = method,
-                            WorkflowMethodParameterTypes = method.GetParameterTypes(),
-                            MethodMap                    = methodMap
-                        };
-                }
 
-                var reply = (WorkflowRegisterReply)await Client.CallProxyAsync(
-                    new WorkflowRegisterRequest()
+                    var workflowTypeName = TemporalHelper.GetWorkflowTypeName(workflowType, workflowMethodAttribute);
+
+                    if (nameToWorkflowRegistration.TryGetValue(workflowTypeName, out var existingRegistration))
                     {
-                        Name     = workflowTypeName,
-                        WorkerId = WorkerId
-                    });
+                        if (!object.ReferenceEquals(existingRegistration.WorkflowType, workflowType))
+                        {
+                            throw new InvalidOperationException($"Conflicting workflow interface registration: Workflow interface [{workflowType.FullName}] is already registered for workflow type name [{workflowTypeName}].");
+                        }
+                    }
+                    else
+                    {
+                        nameToWorkflowRegistration[workflowTypeName] =
+                            new WorkflowRegistration()
+                            {
+                                WorkflowType                 = workflowType,
+                                WorkflowMethod               = method,
+                                WorkflowMethodParameterTypes = method.GetParameterTypes(),
+                                MethodMap                    = methodMap
+                            };
+                    }
 
-                reply.ThrowOnError();
+                    var reply = (WorkflowRegisterReply)await Client.CallProxyAsync(
+                        new WorkflowRegisterRequest()
+                        {
+                            WorkerId = WorkerId,
+                            Name     = workflowTypeName,
+                        });
+
+                    reply.ThrowOnError();
+                }
             }
         }
 
@@ -182,19 +184,22 @@ namespace Neon.Temporal
 
             var workflowType = typeof(TWorkflow);
 
-            if (registeredWorkflowTypes.Contains(workflowType))
+            using (await workerMutex.AcquireAsync())
             {
-                if (disableDuplicateCheck)
+                if (registeredWorkflowTypes.Contains(workflowType))
                 {
-                    return;
+                    if (disableDuplicateCheck)
+                    {
+                        return;
+                    }
+                    else
+                    {
+                        throw new RegistrationException($"Workflow implementation [{workflowType.FullName}] has already been registered.");
+                    }
                 }
-                else
-                {
-                    throw new RegistrationException($"Workflow implementation [{workflowType.FullName}] has already been registered.");
-                }
-            }
 
-            registeredWorkflowTypes.Add(workflowType);
+                registeredWorkflowTypes.Add(workflowType);
+            }
         }
 
         /// <summary>
@@ -228,13 +233,13 @@ namespace Neon.Temporal
             EnsureNotDisposed();
             EnsureCanRegister();
 
-            foreach (var workflowType in assembly.GetTypes().Where(t => t.IsClass))
+            using (await workerMutex.AcquireAsync())
             {
-                var workflowAttribute = workflowType.GetCustomAttribute<WorkflowAttribute>();
-
-                if (workflowAttribute != null && workflowAttribute.AutoRegister)
+                foreach (var workflowType in assembly.GetTypes().Where(t => t.IsClass))
                 {
-                    using (await workerMutex.AcquireAsync())
+                    var workflowAttribute = workflowType.GetCustomAttribute<WorkflowAttribute>();
+
+                    if (workflowAttribute != null && workflowAttribute.AutoRegister)
                     {
                         if (registeredWorkflowTypes.Contains(workflowType))
                         {
@@ -423,7 +428,7 @@ namespace Neon.Temporal
 
             // $hack(jefflill): 
             //
-            // We registered any synchronous signal names above even though we probably
+            // We registered synchronous signal names above even though we probably
             // shouldn't have.  This shouldn't really cause any trouble.
             //
             // If the workflow has any synchronous signals, we need to register the

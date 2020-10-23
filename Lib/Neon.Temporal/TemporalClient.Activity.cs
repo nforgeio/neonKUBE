@@ -66,7 +66,7 @@ namespace Neon.Temporal
         }
 
         /// <summary>
-        /// Used to send record activity heartbeat externally by task token.
+        /// Used to record an activity heartbeat externally by task token.
         /// </summary>
         /// <param name="taskToken">The opaque base-64 encoded activity task token.</param>
         /// <param name="details">Optional heartbeart details.</param>
@@ -90,7 +90,7 @@ namespace Neon.Temporal
         }
 
         /// <summary>
-        /// Used to send record activity heartbeat externally by <see cref="WorkflowExecution"/> and activity ID.
+        /// Used to record an activity heartbeat externally by <see cref="WorkflowExecution"/> and activity ID.
         /// </summary>
         /// <param name="execution">The workflow execution.</param>
         /// <param name="activityId">The activity ID.</param>

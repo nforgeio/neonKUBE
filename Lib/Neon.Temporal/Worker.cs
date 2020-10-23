@@ -194,7 +194,7 @@ namespace Neon.Temporal
                 return;
             }
 
-            // Register workflow implementations.
+            // Register activities and workflows with the proxy.
 
             List<Type>      clonedActivityRegistrations;
             List<Type>      clonedWorkflowRegistrations;
@@ -203,6 +203,11 @@ namespace Neon.Temporal
             {
                 clonedWorkflowRegistrations = registeredWorkflowTypes.ToList();
                 clonedActivityRegistrations = registeredActivityTypes.ToList();
+            }
+
+            foreach (var activityType in clonedActivityRegistrations)
+            {
+                await RegisterActivityImplementationAsync(activityType);
             }
 
             foreach (var workflowType in registeredWorkflowTypes)

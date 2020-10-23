@@ -65,8 +65,8 @@ namespace Neon.Temporal.Internal
             // Fetch the stub type and reflect the required constructors.
 
             this.stubType          = assembly.GetType(className);
-            this.normalConstructor = NeonHelper.GetConstructor(stubType, typeof(TemporalClient), typeof(IDataConverter), typeof(Workflow), typeof(string), typeof(ActivityOptions), typeof(System.Type));
-            this.localConstructor  = NeonHelper.GetConstructor(stubType, typeof(TemporalClient), typeof(IDataConverter), typeof(Workflow), typeof(Type), typeof(LocalActivityOptions), typeof(System.Type));
+            this.normalConstructor = NeonHelper.GetConstructor(stubType, typeof(TemporalClient), typeof(IDataConverter), typeof(Workflow), typeof(string), typeof(ActivityOptions), typeof(Type));
+            this.localConstructor  = NeonHelper.GetConstructor(stubType, typeof(TemporalClient), typeof(IDataConverter), typeof(Workflow), typeof(Type), typeof(LocalActivityOptions), typeof(Type));
         }
 
         /// <summary>

@@ -70,10 +70,10 @@ namespace TestTemporal
 
                 // Round-trip
 
-                message.ClientId = 444;
+                message.ClientId  = 444;
                 message.RequestId = 555;
-                message.WorkerId = 666;
-                message.Name = "my-name";
+                message.WorkerId  = 666;
+                message.Name      = "my-name";
                 message.DisableAlreadyRegisteredCheck = true;
 
                 Assert.Equal(444, message.ClientId);
@@ -90,8 +90,8 @@ namespace TestTemporal
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                 Assert.Equal(666, message.WorkerId);
-               Assert.Equal("my-name", message.Name);
+                Assert.Equal(666, message.WorkerId);
+                Assert.Equal("my-name", message.Name);
                 Assert.True(message.DisableAlreadyRegisteredCheck);
 
                 // Verify Clone()

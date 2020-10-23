@@ -47,20 +47,6 @@ namespace Neon.Temporal.Internal
         private static readonly string      genericTaskNamePrefix;
 
         /// <summary>
-        /// The optional separator string used to separate the base workflow type
-        /// name from the optional workflow method name.  This string may not be
-        /// embedded in a normal workflow type name.
-        /// </summary>
-        internal const string WorkflowTypeMethodSeparator = "::";
-
-        /// <summary>
-        /// The optional separator string used to separate the base activity type
-        /// name from the optional activity method name.  This string may not be
-        /// embedded in a normal activity type name.
-        /// </summary>
-        internal const string ActivityTypeMethodSeparator = "::";
-
-        /// <summary>
         /// Number of nanoseconds per second (spoiler alert: it's 1 billion).
         /// </summary>
         internal const long NanosecondsPerSecond = 1000000000L;
@@ -137,7 +123,7 @@ namespace Neon.Temporal.Internal
 
         /// <summary>
         /// Returns the Temporal workflow type name to be used for a workflow interface or
-        /// implementation class.
+        /// implementation class and optionally, a specific workflow method.
         /// </summary>
         /// <param name="workflowType">The workflow interface or implementation type.</param>
         /// <param name="workflowMethodAttribute">Optionally specifies the <see cref="WorkflowMethodAttribute"/> for the target method.</param>
@@ -500,9 +486,9 @@ namespace Neon.Temporal.Internal
         /// <exception cref="ActivityTypeException">Thrown if the name passed is not valid.</exception>
         internal static void ValidateActivityTypeName(string name)
         {
-            if (name != null && name.Contains(TemporalHelper.ActivityTypeMethodSeparator))
+            if (name != null && name.Contains("::"))
             {
-                throw new ActivityTypeException($"Activity type names cannot include: \"{TemporalHelper.ActivityTypeMethodSeparator}\".");
+                throw new ActivityTypeException($"Activity type names cannot include: \"::\".");
             }
         }
 
