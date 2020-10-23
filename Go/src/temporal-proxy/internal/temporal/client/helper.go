@@ -170,10 +170,7 @@ func (helper *Helper) SetupServiceConfig(ctx context.Context) error {
 
 	// TODO: JACK -  Make sure that we figure this out.  Hack to get
 	// debugging working.
-
-	if internal.DebugPrelaunched {
-		helper.clientOptions.ConnectionOptions.DisableHealthCheck = true
-	}
+	helper.clientOptions.ConnectionOptions.DisableHealthCheck = true
 
 	namespaceClient, err := client.NewNamespaceClient(helper.clientOptions)
 	if err != nil {
