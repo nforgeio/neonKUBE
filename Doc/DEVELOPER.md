@@ -32,7 +32,7 @@ Follow the steps below to configure a development or test workstation:
     * Select the **Advanced/Connection** tab on the left.
     * **Uncheck**: Use **port 80 and 443** for additional incoming connections.
 
-      ![Skype Connections](Doc/Images/Developer/SkypeConnections.png?raw=true)
+      ![Skype Connections](Images/Developer/SkypeConnections.png?raw=true)
     * **Restart Skype**
 
 4. Ensure that Hyper-V is installed and enabled:
@@ -41,7 +41,7 @@ Follow the steps below to configure a development or test workstation:
       ```
       systeminfo
       ```
-      ![Virtualization Info](Doc/Images/Developer/virtualization.png?raw=true)
+      ![Virtualization Info](Images/Developer/virtualization.png?raw=true)
 
     or a message saying that: **A hypervisor has been detected.**
 
@@ -49,7 +49,7 @@ Follow the steps below to configure a development or test workstation:
 
     c. Ensure that the check boxes highlighted in red below are checked:
 
-    ![Hyper-V Features](Doc/Images/Developer/hyper-v.png?raw=true) 
+    ![Hyper-V Features](Images/Developer/hyper-v.png?raw=true) 
 
     d. Reboot your machine as required.
 
@@ -83,7 +83,7 @@ Follow the steps below to configure a development or test workstation:
     * You'll need to create a DockerHub account if you don't already have one.
     * **Right-click** the Docker icon in the system tray and select **Settings...**
 
-      ![System Tray](Doc/Images/Developer/DockerSysTray.png?raw=true)
+      ![System Tray](Images/Developer/DockerSysTray.png?raw=true)
 
     * Select the **Shared Drives** tab click the check box to **share** the drive where you'll clone the project source code (typically drive C:)
     * Click **Apply** (You may need to enter your workstation **credentials**).
@@ -148,7 +148,7 @@ Follow the steps below to configure a development or test workstation:
     * *Optional*: The default PuTTY color scheme sucks (dark blue on a black background doesn’t work for me).  You can update the default scheme to Zenburn Light by **right-clicking** on the `$\External\zenburn-ligh-putty.reg` in **Windows Explorer** and selecting **Merge**
     * WinSCP: Enable **hidden files**.  Start **WinSCP**, select **View/Preferences...**, and then click **Panels** on the left and check **Show hidden files**:
     
-      ![WinSCP Hidden Files](Doc/Images/Developer/WinSCPHiddenFiles.png?raw=true)
+      ![WinSCP Hidden Files](Images/Developer/WinSCPHiddenFiles.png?raw=true)
 
 21. Restart Visual Studio (to pick up the environment changes).
 
