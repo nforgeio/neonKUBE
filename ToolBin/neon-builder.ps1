@@ -174,6 +174,7 @@ if ($tools)
 
     PublishCore "Tools\neon-cli\neon-cli.csproj"    "neon"
     PublishCore "Tools\unix-text\unix-text.csproj"  "unix-text"
+    PublishCore "Tools\modelgen\modelgen.csproj"    "modelgen"
 
     # Hack to publish OS/X version of [neon-cli] to the build folder.
 
