@@ -91,6 +91,7 @@ SetVersion Neon.Xunit.Cadence
 SetVersion Neon.Xunit.Couchbase
 SetVersion Neon.Xunit.Kube
 SetVersion Neon.Xunit.Temporal
+SetVersion Neon.Xunit.YugaByte
 
 # Build and publish the projects.
 
@@ -112,5 +113,6 @@ Publish Neon.Xunit.Cadence
 Publish Neon.Xunit.Couchbase
 Publish Neon.Xunit.Kube
 Publish Neon.Xunit.Temporal
+Publish Neon.Xunit.YugaByte
 
 pause
