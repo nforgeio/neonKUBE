@@ -176,7 +176,7 @@ namespace TestTemporal
                 WorkflowScheduleToStartTimeoutSeconds = 82,
             };
 
-            if (fixture.Start(fixtureSettings, stackDefinition: TemporalTestHelper.TemporalStackDefinition, reconnect: true, keepRunning: TemporalTestHelper.KeepTemporalServerOpen) == TestFixtureStatus.Started)
+            if (fixture.Start(fixtureSettings, composeFile: TemporalTestHelper.TemporalStackDefinition, reconnect: true, keepRunning: TemporalTestHelper.KeepTemporalServerOpen) == TestFixtureStatus.Started)
             {
                 // Initialize the default default client and worker.
 

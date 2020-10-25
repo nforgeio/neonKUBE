@@ -59,7 +59,7 @@ namespace TestTemporal
 
             this.fixture = fixture;
 
-            fixture.Start(settings, stackDefinition: TemporalTestHelper.TemporalStackDefinition, reconnect: true, keepRunning: TemporalTestHelper.KeepTemporalServerOpen, noClient: true);
+            fixture.Start(settings, composeFile: TemporalTestHelper.TemporalStackDefinition, reconnect: true, keepRunning: TemporalTestHelper.KeepTemporalServerOpen, noClient: true);
         }
 
         public void Dispose()

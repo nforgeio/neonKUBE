@@ -50,7 +50,7 @@ namespace TestTemporal
         /// <summary>
         /// Specifies the Docker stack definition used to execute Temporal unit tests.
         /// </summary>
-        public const string TemporalStackDefinition = TemporalFixture.DefaultStackDefinition;
+        public const string TemporalStackDefinition = TemporalFixture.DefaultComposeFile;
 
         /// <summary>
         /// <para>
