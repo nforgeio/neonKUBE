@@ -43,6 +43,9 @@
       <DocumentationSource sourceFile="..\..\Lib\Neon.Temporal\Neon.Temporal.csproj" />
       <DocumentationSource sourceFile="..\..\Lib\Neon.Xunit.Temporal\Neon.Xunit.Temporal.csproj" />
       <DocumentationSource sourceFile="..\..\Lib\Neon.Service\Neon.Service.csproj" />
+      <DocumentationSource sourceFile="..\..\Lib\Neon.Xunit.YugaByte\Neon.Xunit.YugaByte.csproj" />
+      <DocumentationSource sourceFile="..\..\Lib\Neon.Kube.XenServer\Neon.Kube.XenServer.csproj" />
+      <DocumentationSource sourceFile="..\..\Lib\Neon.HyperV\Neon.HyperV.csproj" />
     </DocumentationSources>
     <HelpFileFormat>HtmlHelp1, Website</HelpFileFormat>
     <SyntaxFilters>Standard</SyntaxFilters>

@@ -26,7 +26,7 @@ using Neon.Common;
 namespace Neon.Docker
 {
     /// <summary>
-    /// Internal namespace.
+    /// A partially completed Docker API client for .NET.  This is not likely to be enhanced further.
     /// </summary>
     [System.Runtime.CompilerServices.CompilerGenerated]
     class NamespaceDoc
