@@ -11,4 +11,4 @@ We are actively engaged in porting **Neon.Cadence** to Temporal and you can foll
 
 ---
 
-A .NET client for the Uber Cadence workflow platform.  You can get started with this here: [Neon.Cadence](https://doc.neonkube.com/Neon.Cadence-Overview.htm)
+A .NET client for the Uber Cadence workflow platform.  You can get started here: [Neon.Cadence](https://doc.neonkube.com/Neon.Cadence-Overview.htm)

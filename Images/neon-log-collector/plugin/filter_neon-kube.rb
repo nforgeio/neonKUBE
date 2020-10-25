@@ -1,7 +1,7 @@
 #------------------------------------------------------------------------------
 # FILE:         filter-neon-kube.rb
 # CONTRIBUTOR:  Jeff Lill, Marcus Bowyer
-# COPYRIGHT:    Copyright (c) 2016-2020 by neonFORGE, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2016-2020 by neonFORGE LLC.  All rights reserved.
 #
 # This Fluentd filter plugin detects container log events forwarded by Kubernetes 
 # and then attempts to extract and parse standard Neon fields from the message.

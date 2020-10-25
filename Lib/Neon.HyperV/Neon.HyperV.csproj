@@ -3,11 +3,11 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <Version>2.3.2</Version>
-    <Authors>Jeff Lill</Authors>
-    <Company>neonFORGE, LLC</Company>
-    <Product>Neon</Product>
-    <Description>Neon Hyper-V utilities.</Description>
-    <Copyright>Copyright © 2016-2020 by neonFORGE LLC.  All rights reserved.</Copyright>
+    <Authors>neonFORGE Team</Authors>
+    <Company>neonFORGE LLC</Company>
+    <Product>neonLIBRARY</Product>
+    <Description>**INTERNAL USE ONLY:** Windows Hyper-V extensions</Description>
+    <Copyright>Copyright © 2005-2020 by neonFORGE LLC.  All rights reserved.</Copyright>
     <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
     <FileVersion>0.0.0.0</FileVersion>

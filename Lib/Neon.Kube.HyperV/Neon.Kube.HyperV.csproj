@@ -3,10 +3,10 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <Version>2.1.0-internal</Version>
-    <Authors>Jeff Lill</Authors>
-    <Company>neonFORGE, LLC</Company>
-    <Description>neonKUBE Hyper-V Hosting.</Description>
-    <Copyright>Copyright © 2016-2020 by neonFORGE LLC.  All rights reserved.</Copyright>
+    <Authors>neonFORGE Team</Authors>
+    <Company>neonFORGE LLC</Company>
+    <Description>neonKUBE hosting manager for Windows Hyper-V on remote servers (e.g. production)</Description>
+    <Copyright>Copyright © 2005-2020 by neonFORGE LLC.  All rights reserved.</Copyright>
     <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
     <Product>neonKUBE</Product>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>

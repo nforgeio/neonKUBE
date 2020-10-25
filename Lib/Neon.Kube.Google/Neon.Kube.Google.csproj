@@ -3,12 +3,12 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <Version>2.1.0-internal</Version>
-    <Company>neonFORGE, LLC</Company>
+    <Company>neonFORGE LLC</Company>
     <Product>neonKUBE</Product>
-    <Description>neonKUBE Google Hosting.</Description>
-    <Copyright>Copyright © 2016-2020 by neonFORGE LLC.  All rights reserved.</Copyright>
+    <Description>neonKUBE hosting manager for Google Cloud</Description>
+    <Copyright>Copyright © 2005-2020 by neonFORGE LLC.  All rights reserved.</Copyright>
     <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
-    <Authors>Jeff Lill</Authors>
+    <Authors>neonFORGE Team</Authors>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
     <FileVersion>0.0.0.0</FileVersion>
     <PackageLicenseUrl></PackageLicenseUrl>

@@ -1,7 +1,7 @@
 #------------------------------------------------------------------------------
 # FILE:         filter-neon-istio-geoip.rb
 # CONTRIBUTOR:  Jeff Lill, Marcus Bowyer
-# COPYRIGHT:    Copyright (c) 2016-2020 by neonFORGE, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2016-2020 by neonFORGE LLC.  All rights reserved.
 #
 # This filter attempts to the map the [proxy.client_ip] IP address captured
 # by the [neon-proxy] filter into the corresponding physical location information.
