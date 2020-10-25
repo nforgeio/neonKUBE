@@ -138,6 +138,7 @@ if ($other)
     Publish "$image_root\\couchbase-dev"
     Publish "$image_root\\test"
     Publish "$image_root\\aws-cli"
+    Publish "$image_root\\yugabyte"
 }
 
 if ($services)
