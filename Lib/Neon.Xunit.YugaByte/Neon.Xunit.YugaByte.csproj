@@ -47,11 +47,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Npgsql" Version="4.1.5" />
-    <PackageReference Include="YugaByteCassandraCSharpDriver" Version="3.7.1" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
     <ProjectReference Include="..\Neon.Xunit\Neon.Xunit.csproj" />
   </ItemGroup>

@@ -40,13 +40,26 @@ namespace Neon.Xunit.YugaByte
     /// are not true.
     /// </para>
     /// <para>
-    /// See <see cref="Start(string, string, bool)"/>
+    /// See <see cref="Start(string, string, bool, int)"/>
     /// for more information about how this works.
     /// </para>
     /// </remarks>
     /// <threadsafety instance="true"/>
     public sealed class YugaByteFixture : DockerComposeFixture
     {
+        /// <summary>
+        /// <para>
+        /// Specifies the default Cassandra YSQL port to be exposed by the fixture.  This
+        /// is different from the Cassandra's default 9042 port to avoid conflcting with
+        /// the Cassandra DB deployed the Cadence and Temporal test fixtures.  This is 
+        /// a temporay hack:
+        /// </para>
+        /// <para>
+        /// https://github.com/nforgeio/neonKUBE/issues/1029
+        /// </para>
+        /// </summary>
+        public const int DefaultYcqlPort = 9099;
+
         /// <summary>
         /// The default Docker compose file text used to spin up YugaByte and it's related services
         /// by the <see cref="YugaByteFixture"/>.
@@ -64,13 +77,13 @@ services:
     container_name: yb-master-n1
     volumes:
     - yb-master-data-1:/mnt/master
-    command: [ ""/home/yugabyte/bin/yb-master"",
-               ""--fs_data_dirs=/mnt/master"",
-               ""--master_addresses=yb-master-n1:7100"",
-               ""--rpc_bind_addresses=yb-master-n1:7100"",
-               ""--replication_factor=1""]
+    command: [ '/home/yugabyte/bin/yb-master',
+               '--fs_data_dirs=/mnt/master',
+               '--master_addresses=yb-master-n1:7100',
+               '--rpc_bind_addresses=yb-master-n1:7100',
+               '--replication_factor=1']
     ports:
-    - ""7000:7000""
+    - '7000:7000'
     environment:
       SERVICE_7000_NAME: yb-master
 
@@ -78,26 +91,26 @@ services:
     image: yugabytedb/yugabyte:latest
     container_name: yb-tserver-n1
     volumes:
-      - yb-tserver-data-1:/mnt/tserver
-    command: [ ""/home/yugabyte/bin/yb-tserver"",
-               ""--fs_data_dirs=/mnt/tserver"",
-               ""--start_pgsql_proxy"",
-               ""--rpc_bind_addresses=yb-tserver-n1:9100"",
-               ""--tserver_master_addrs=yb-master-n1:7100""]
-      ports:
-      - ""9042:9042""
-      - ""5433:5433""
-      - ""9000:9000""
-      environment:
-        SERVICE_5433_NAME: ysql
-        SERVICE_9042_NAME: ycql
-        SERVICE_6379_NAME: yedis
-        SERVICE_9000_NAME: yb-tserver
-      depends_on:
-      - yb-master
+    - yb-tserver-data-1:/mnt/tserver
+    command: [ '/home/yugabyte/bin/yb-tserver',
+               '--fs_data_dirs=/mnt/tserver',
+               '--start_pgsql_proxy',
+               '--rpc_bind_addresses=yb-tserver-n1:9100',
+               '--tserver_master_addrs=yb-master-n1:7100']
+    ports:
+    - '9099:9042'
+    - '5433:5433'
+    - '9000:9000'
+    environment:
+      SERVICE_5433_NAME: ysql
+      SERVICE_9099_NAME: ycql
+      SERVICE_6379_NAME: yedis
+      SERVICE_9000_NAME: yb-tserver
+    depends_on:
+    - yb-master 
 ";
 
-        private readonly TimeSpan   warmupDelay = TimeSpan.FromSeconds(2);      // Time to allow the YugaByte compse application to start.
+        private readonly TimeSpan   warmupDelay = TimeSpan.FromSeconds(2);      // Time to allow the YugaByte compose application to start.
 
         /// <summary>
         /// Constructs the fixture.
@@ -107,12 +120,32 @@ services:
         }
 
         /// <summary>
+        /// Returns the connection string to be used by Cassandra clients to connect to the database.
+        /// </summary>
+        public string CassandraConnectionString { get; private set; }
+
+        /// <summary>
+        /// Returns the connection string to be used by Postgres clients to connecto to the database.
+        /// </summary>
+        public string PostgresConnectionString { get; private set; }
+
+        /// <summary>
+        /// Initializes the <see cref="CassandraConnectionString"/> and <see cref="PostgresConnectionString"/> properties.
+        /// </summary>
+        /// <param name="ycqlPort">The Cassandra YSQL port.</param>
+        private void SetConnectionString(int ycqlPort)
+        {
+            CassandraConnectionString = $"HOST=localhost;PORT={ycqlPort};";
+            PostgresConnectionString  = $"";
+        }
+
+        /// <summary>
         /// <para>
         /// Starts a YugaByte compose application if it's not already running.  You'll generally want
         /// to call this in your test class constructor instead of <see cref="ITestFixture.Start(Action)"/>.
         /// </para>
         /// <note>
-        /// You'll need to call <see cref="StartAsComposed(string, string, bool)"/>
+        /// You'll need to call <see cref="StartAsComposed(string, string, bool, int)"/>
         /// instead when this fixture is being added to a <see cref="ComposedFixture"/>.
         /// </note>
         /// </summary>
@@ -134,15 +167,21 @@ services:
         /// Optionally indicates that the compose application should remain running after the fixture is disposed.
         /// This is handy for using the Temporal web UI for port mortems after tests have completed.
         /// </param>
+        /// <param name="ycqlPort">
+        /// Specifies the port to be exposed by the Cassandra YSQL service.  This currently defaults to <see cref="DefaultYcqlPort"/>
+        /// to avoid conflicts with the Cassandra DBs deployed by the Cadence and Temporal test fixtures but we hope eventually
+        /// to change those to use a different port so we can revert this to the standard <b>9042</b> port.
+        /// </param>
         /// <returns>
         /// <see cref="TestFixtureStatus.Started"/> if the fixture wasn't previously started and
         /// this method call started it or <see cref="TestFixtureStatus.AlreadyRunning"/> if the 
         /// fixture was already running.
         /// </returns>
-        public new TestFixtureStatus Start(
+        public TestFixtureStatus Start(
             string      composeFile = DefaultComposeFile,
             string      name        = "yugabyte-dev",
-            bool        keepRunning = false)
+            bool        keepRunning = false,
+            int         ycqlPort    = DefaultYcqlPort)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(composeFile), nameof(composeFile));
 
@@ -152,7 +191,8 @@ services:
                     StartAsComposed(
                         composeFile:    composeFile, 
                         name:           name, 
-                        keepRunning:    keepRunning);
+                        keepRunning:    keepRunning,
+                        ycqlPort:       ycqlPort);
                 });
         }
 
@@ -174,13 +214,19 @@ services:
         /// </param>
         /// <param name="name">Optionally specifies the YugaByte compose application name (defaults to <c>yugabyte-dev</c>).</param>
         /// <param name="keepRunning">
-        /// Optionally indicates that the compse application should remain running after the fixture is disposed.
+        /// Optionally indicates that the compose application should remain running after the fixture is disposed.
         /// This is handy for using the Temporal web UI for port mortems after tests have completed.
         /// </param>
-        public new void StartAsComposed(
+        /// <param name="ycqlPort">
+        /// Specifies the port to be exposed by the Cassandra YSQL service.  This currently defaults to <see cref="DefaultYcqlPort"/>
+        /// to avoid conflicts with the Cassandra DBs deployed by the Cadence and Temporal test fixtures but we hope eventually
+        /// to change those to use a different port so we can revert this to the standard <b>9042</b> port.
+        /// </param>
+        public void StartAsComposed(
             string      composeFile  = DefaultComposeFile,
             string      name         = "yugabyte-dev",
-            bool        keepRunning  = false)
+            bool        keepRunning  = false,
+            int         ycqlPort     = DefaultYcqlPort)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(composeFile), nameof(composeFile));
 
@@ -190,7 +236,7 @@ services:
             {
                 // Start the YugaByte compose application.
 
-                base.StartAsComposed(name, composeFile, keepRunning);
+                base.StartAsComposed(name, composeFile.Replace("9099", ycqlPort.ToString()), keepRunning);
                 Thread.Sleep(warmupDelay);
             }
         }

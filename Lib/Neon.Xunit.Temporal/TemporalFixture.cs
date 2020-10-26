@@ -366,7 +366,7 @@ services:
             HttpClient.Dispose();
             HttpClient = null;
 
-            // Restart the Temporal Docker compse application.
+            // Restart the Temporal Docker compose application.
 
             base.Restart();
 
