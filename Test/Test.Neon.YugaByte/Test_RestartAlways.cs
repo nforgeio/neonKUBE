@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:	    Test_YugaByteFixture1.cs
+// FILE:	    Test_RestartAlways.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
 //
@@ -38,7 +38,7 @@ namespace TestYugaByte
     /// These tests verify that we can connect to via Cassandra and Postgres and also
     /// that <see cref="YugaByteFixture.Restart()"/> actually clears the database.
     /// </summary>
-    public class Test_YugaByteFixture1 : IClassFixture<YugaByteFixture>
+    public class Test_RestartAlways : IClassFixture<YugaByteFixture>
     {
         private YugaByteFixture     fixture;
         private ISession            cassandra;
@@ -46,26 +46,18 @@ namespace TestYugaByte
         private NpgsqlConnection    postgres;
         private string              postgresDatabase;
 
-        public Test_YugaByteFixture1(YugaByteFixture fixture)
+        public Test_RestartAlways(YugaByteFixture fixture)
         {
             if (fixture.Start() == TestFixtureStatus.AlreadyRunning)
             {
                 fixture.Restart();
+            }
 
-                this.fixture           = fixture;
-                this.cassandra         = fixture.CassandraSession;
-                this.cassandraKeyspace = fixture.CassandraSession.Keyspace;
-                this.postgres          = fixture.PostgresConnection;
-                this.postgresDatabase  = fixture.PostgresConnection.Database;
-            }
-            else
-            {
-                this.fixture           = fixture;
-                this.cassandra         = fixture.CassandraSession;
-                this.cassandraKeyspace = fixture.CassandraSession.Keyspace;
-                this.postgres          = fixture.PostgresConnection;
-                this.postgresDatabase  = fixture.PostgresConnection.Database;
-            }
+            this.fixture           = fixture;
+            this.cassandra         = fixture.CassandraSession;
+            this.cassandraKeyspace = fixture.CassandraSession.Keyspace;
+            this.postgres          = fixture.PostgresConnection;
+            this.postgresDatabase  = fixture.PostgresConnection.Database;
         }
 
         [Fact]

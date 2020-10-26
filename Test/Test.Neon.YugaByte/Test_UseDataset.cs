@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_YugaByteFixture2.cs
+// FILE:	    Test_UseDataset.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
 //
@@ -39,12 +39,12 @@ namespace TestYugaByte
     /// that we can initialize test databases and that the data will be retained across
     /// unit test runs.
     /// </summary>
-    public class Test_YugaByteFixture2 : IClassFixture<YugaByteFixture>
+    public class Test_UseDataset : IClassFixture<YugaByteFixture>
     {
         private ISession            cassandra;
         private NpgsqlConnection    postgres;
 
-        public Test_YugaByteFixture2(YugaByteFixture fixture)
+        public Test_UseDataset(YugaByteFixture fixture)
         {
             if (fixture.Start() == TestFixtureStatus.Started)
             {

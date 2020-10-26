@@ -58,12 +58,12 @@ namespace Neon.Xunit.YugaByte
         /// <summary>
         /// Specifies the default Cassandra keyspace.
         /// </summary>
-        private const string DefaultCassandraKeyspace = "test-cassandra";
+        private const string DefaultCassandraKeyspace = "test_cassandra";
 
         /// <summary>
         /// Specifies the default Postgres database.
         /// </summary>
-        private const string DefaultPostgresDatabase = "test-postgres";
+        private const string DefaultPostgresDatabase = "test_postgres";
 
         /// <summary>
         /// Specifies the Cassandra YCQL port to be exposed by the fixture.
@@ -154,11 +154,11 @@ services:
         /// </summary>
         /// <param name="name">Optionally specifies the Docker compose application name (defaults to <b>yugabyte-dev</b>).</param>
         /// <param name="cassandraKeyspace">
-        /// Optionally specifies the Cassandra keyspace.  This defaults to <b>test-cassandra</b>.  Note that
+        /// Optionally specifies the Cassandra keyspace.  This defaults to <b>test_cassandra</b>.  Note that
         /// the <paramref name="cassandraKeyspace"/> and <paramref name="postgresDatabase"/> must be different.
         /// </param>
         /// <param name="postgresDatabase">
-        /// Optionally specifies the Postgres database.  This defaults to <b>test-postgres</b>.  Note that
+        /// Optionally specifies the Postgres database.  This defaults to <b>test_postgres</b>.  Note that
         /// the <paramref name="cassandraKeyspace"/> and <paramref name="postgresDatabase"/> must be different.
         /// </param>
         /// <param name="keepRunning">
@@ -205,11 +205,11 @@ services:
         /// </summary>
         /// <param name="name">Optionally specifies the YugaByte compose application name (defaults to <b>yugabyte-dev</b>).</param>
         /// <param name="cassandraKeyspace">
-        /// Optionally specifies the Cassandra keyspace.  This defaults to <b>test-cassandra</b>.  Note that
+        /// Optionally specifies the Cassandra keyspace.  This defaults to <b>test_cassandra</b>.  Note that
         /// the <paramref name="cassandraKeyspace"/> and <paramref name="postgresDatabase"/> must be different.
         /// </param>
         /// <param name="postgresDatabase">
-        /// Optionally specifies the Postgres database.  This defaults to <b>test-postgres</b>.  Note that
+        /// Optionally specifies the Postgres database.  This defaults to <b>test_postgres</b>.  Note that
         /// the <paramref name="cassandraKeyspace"/> and <paramref name="postgresDatabase"/> must be different.
         /// </param>
         /// <param name="keepRunning">
