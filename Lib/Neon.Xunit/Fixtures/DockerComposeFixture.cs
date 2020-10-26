@@ -306,7 +306,7 @@ namespace Neon.Xunit
             // the unit tests before the fixture was disposed or an application with
             // the same name is already running for some other reason.
 
-            StopApplication(ApplicationName);
+            StopApplication(ApplicationName, customContainerNames);
 
             // Start the application.  Note that we're going to write the compose file
             // to a temporary file to accomplish this.
