@@ -68,7 +68,7 @@ namespace Neon.Xunit
         /// will not be prefixed by the application name.  The fixture needs to know these so
         /// it can remove the containers when required.
         /// </param>
-        public static void StopApplication(string name, string[] customContainerNames = null)
+        private static void StopApplication(string name, string[] customContainerNames = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
@@ -341,7 +341,7 @@ namespace Neon.Xunit
         /// Restarts the application.  This is a handy way to deploy a fresh instance with the
         /// same properties while running unit tests.
         /// </summary>
-        public void Restart()
+        public virtual void Restart()
         {
             Reset();
             StartApplication();
