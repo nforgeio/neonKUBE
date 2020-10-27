@@ -13,7 +13,7 @@
     <RootNamespace>CodeDoc</RootNamespace>
     <Name>CodeDoc</Name>
     <!-- SHFB properties -->
-    <FrameworkVersion>.NET Framework 4.6.2</FrameworkVersion>
+    <FrameworkVersion>Cross-platform (.NET Core/.NET Standard)</FrameworkVersion>
     <OutputPath>..\..\Build\codedoc\</OutputPath>
     <HtmlHelpName>neon</HtmlHelpName>
     <Language>en-US</Language>
@@ -38,13 +38,11 @@
       <DocumentationSource sourceFile="..\..\Lib\Neon.Xunit\Neon.Xunit.csproj" />
       <DocumentationSource sourceFile="..\..\Lib\Neon.Xunit.Cadence\Neon.Xunit.Cadence.csproj" />
       <DocumentationSource sourceFile="..\..\Lib\Neon.Xunit.Couchbase\Neon.Xunit.Couchbase.csproj" />
-      <DocumentationSource sourceFile="..\..\Lib\Neon.Xunit.Kube\Neon.Xunit.Kube.csproj" />
       <DocumentationSource sourceFile="..\..\Lib\Neon.Cryptography\Neon.Cryptography.csproj" />
       <DocumentationSource sourceFile="..\..\Lib\Neon.Temporal\Neon.Temporal.csproj" />
       <DocumentationSource sourceFile="..\..\Lib\Neon.Xunit.Temporal\Neon.Xunit.Temporal.csproj" />
       <DocumentationSource sourceFile="..\..\Lib\Neon.Service\Neon.Service.csproj" />
       <DocumentationSource sourceFile="..\..\Lib\Neon.Xunit.YugaByte\Neon.Xunit.YugaByte.csproj" />
-      <DocumentationSource sourceFile="..\..\Lib\Neon.Kube.XenServer\Neon.Kube.XenServer.csproj" />
       <DocumentationSource sourceFile="..\..\Lib\Neon.HyperV\Neon.HyperV.csproj" />
       <DocumentationSource sourceFile="..\..\Lib\Neon.YugaByte\Neon.YugaByte.csproj" />
     </DocumentationSources>

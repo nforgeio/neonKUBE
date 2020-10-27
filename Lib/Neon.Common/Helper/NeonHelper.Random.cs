@@ -36,6 +36,7 @@ namespace Neon.Common
         /// <summary>
         /// Returns an integer pseudo random number.
         /// </summary>
+        /// <returns>The random integer.</returns>
         public static int PseudoRandomInt()
         {
             lock (randLock)

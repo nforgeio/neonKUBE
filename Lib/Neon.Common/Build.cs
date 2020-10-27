@@ -46,7 +46,7 @@ namespace Neon
         /// <summary>
         /// The released library/package version.
         /// </summary>
-        public const string NeonLibraryVersion = "2.3.2";
+        public const string NeonLibraryVersion = "2.4.0";
 
         /// <summary>
         /// The released neonKUBE version.

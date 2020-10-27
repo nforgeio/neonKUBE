@@ -46,9 +46,8 @@ namespace NATS.Client
         /// Publishes an <see cref="IRoundtripData"/> instance to the given <paramref name="subject"/>.
         /// </summary>
         /// <param name="connection">The connection.</param>
-        /// <param name="subject">The subject to publish <paramref name="data"/> to over
-        /// the current connection.</param>
-        /// <param name="data">The data to to publish to the connected NATS server.</param>
+        /// <param name="subject">The subject used to publish <paramref name="data"/>.</param>
+        /// <param name="data">The data to be published to the NATS.</param>
         /// <remarks>
         /// <para>
         /// NATS implements a publish-subscribe message distribution model. NATS publish subscribe is a
@@ -73,10 +72,9 @@ namespace NATS.Client
         /// Publishes an <see cref="IRoundtripData"/> instance to the given <paramref name="subject"/>.
         /// </summary>
         /// <param name="connection">The connection.</param>
-        /// <param name="subject">The subject to publish <paramref name="data"/> to over
-        /// the current connection.</param>
+        /// <param name="subject">The subject used to publish <paramref name="data"/>.</param>
         /// <param name="reply">An optional reply subject.</param>
-        /// <param name="data">The data to to publish to the connected NATS server.</param>
+        /// <param name="data">The data to be published to the NATS.</param>
         /// <seealso cref="IConnection.Publish(string, byte[])"/>
         public static void Publish(this IConnection connection, string subject, string reply, IRoundtripData data)
         {
@@ -89,10 +87,11 @@ namespace NATS.Client
         /// Sends a request payload and returns the response <see cref="Msg"/>, or throws
         /// <see cref="NATSTimeoutException"/> if the <paramref name="timeout"/> expires.
         /// </summary>
+        /// <typeparam name="TRequest">Specifies the request type.</typeparam>
+        /// <typeparam name="TResponse">Specifies the response type.</typeparam>
         /// <param name="connection">The connection.</param>
-        /// <param name="subject">The subject to publish <paramref name="data"/> to over
-        /// the current connection.</param>
-        /// <param name="data">The data to to publish to the connected NATS server.</param>
+        /// <param name="subject">The subject used to publish <paramref name="data"/>.</param>
+        /// <param name="data">The data to be published to the NATS.</param>
         /// <param name="timeout">The number of milliseconds to wait.</param>
         /// <returns>A <see cref="Msg"/> with the response from the NATS server.</returns>
         /// <remarks>
@@ -122,10 +121,11 @@ namespace NATS.Client
         /// <summary>
         /// Sends a request payload and returns the response <see cref="Msg"/>.
         /// </summary>
+        /// <typeparam name="TRequest">Specifies the request type.</typeparam>
+        /// <typeparam name="TResponse">Specifies the response type.</typeparam>
         /// <param name="connection">The connection.</param>
-        /// <param name="subject">The subject to publish <paramref name="data"/> to over
-        /// the current connection.</param>
-        /// <param name="data">The data to to publish to the connected NATS server.</param>
+        /// <param name="subject">The subject used to publish <paramref name="data"/>.</param>
+        /// <param name="data">The data to be published to the NATS.</param>
         /// <returns>A <see cref="Msg"/> with the response from the NATS server.</returns>
         /// <remarks>
         /// <para>
@@ -160,10 +160,11 @@ namespace NATS.Client
         /// <summary>
         /// Asynchronously sends a request payload and returns the response <see cref="Msg"/>.
         /// </summary>
+        /// <typeparam name="TRequest">Specifies the request type.</typeparam>
+        /// <typeparam name="TResponse">Specifies the response type.</typeparam>
         /// <param name="connection">The connection.</param>
-        /// <param name="subject">The subject to publish <paramref name="data"/> to over
-        /// the current connection.</param>
-        /// <param name="data">The data to to publish to the connected NATS server.</param>
+        /// <param name="subject">The subject used to publish <paramref name="data"/>.</param>
+        /// <param name="data">The data to be published to the NATS.</param>
         /// <param name="timeout">Optional timeout in milliseconds.</param>
         /// <param name="token">Optional cancellation token.</param>
         /// <returns>A <see cref="Msg"/> with the response from the NATS server.</returns>
@@ -217,11 +218,9 @@ namespace NATS.Client
         /// <summary>
         /// Expresses interest in the given <paramref name="subject"/> to the NATS Server.
         /// </summary>
+        /// <typeparam name="TMessage">Specifies the message type.</typeparam>
         /// <param name="connection">The connection.</param>
-        /// <param name="subject">
-        /// The subject on which to listen for messages.  The subject can have
-        /// wildcards (partial: <c>*</c>, full: <c>&gt;</c>).
-        /// </param>
+        /// <param name="subject">The subject on which to listen for messages.</param>
         /// <returns>
         /// An <see cref="ISyncSubscription"/> to use to read any messages received
         /// from the NATS Server on the given <paramref name="subject"/>.
@@ -236,17 +235,16 @@ namespace NATS.Client
         /// <summary>
         /// Expresses interest in the given <paramref name="subject"/> to the NATS Server.
         /// </summary>
+        /// <typeparam name="TMessage">Specifies the message type.</typeparam>
+        /// <param name="connection">The connection.</param>
+        /// <param name="subject">The subject on which to listen for messages.</param>
+        /// <returns>An <see cref="IAsyncSubscription"/> to use to read any messages received
+        /// from the NATS Server on the given <paramref name="subject"/>.
+        /// </returns>
         /// <remarks>
         /// The <see cref="IAsyncSubscription"/> returned will not start receiving messages until
         /// <see cref="IAsyncSubscription.Start"/> is called.
         /// </remarks>
-        /// <param name="connection">The connection.</param>
-        /// <param name="subject">
-        /// The subject on which to listen for messages. 
-        /// The subject can have wildcards (partial: <c>*</c>, full: <c>&gt;</c>).</param>
-        /// <returns>An <see cref="IAsyncSubscription"/> to use to read any messages received
-        /// from the NATS Server on the given <paramref name="subject"/>.
-        /// </returns>
         /// <seealso cref="ISubscription.Subject"/>
         public static IAsyncSubscription<TMessage> SubscribeAsync<TMessage>(this IConnection connection, string subject)
             where TMessage : class, IRoundtripData, new()
@@ -258,11 +256,9 @@ namespace NATS.Client
         /// Expresses interest in the given <paramref name="subject"/> to the NATS Server, and begins delivering
         /// messages to the given event handler.
         /// </summary>
+        /// <typeparam name="TMessage">Specifies the message type.</typeparam>
         /// <param name="connection">The connection.</param>
-        /// <param name="subject">
-        /// The subject on which to listen for messages.
-        /// The subject can have wildcards (partial: <c>*</c>, full: <c>&gt;</c>).
-        /// </param>
+        /// <param name="subject">The subject on which to listen for messages.</param>
         /// <param name="handler">
         /// The <see cref="EventHandler{TEventArgs}"/> invoked when messages are received 
         /// on the returned <see cref="IAsyncSubscription"/>.
@@ -297,6 +293,7 @@ namespace NATS.Client
         /// <summary>
         /// Creates a synchronous queue subscriber on the given <paramref name="subject"/>.
         /// </summary>
+        /// <typeparam name="TMessage">Specifies the message type.</typeparam>
         /// <param name="connection">The connection.</param>
         /// <param name="subject">The subject on which to listen for messages.</param>
         /// <param name="queue">The name of the queue group in which to participate.</param>
@@ -321,6 +318,10 @@ namespace NATS.Client
         /// <summary>
         /// Creates an asynchronous queue subscriber on the given <paramref name="subject"/>.
         /// </summary>
+        /// <param name="connection">The connection.</param>
+        /// <param name="subject">
+        /// The subject on which to listen for messages.
+        /// </param>
         /// <param name="queue">The name of the queue group in which to participate.</param>
         /// <returns>
         /// An <see cref="IAsyncSubscription"/> to use to read any messages received
@@ -336,11 +337,6 @@ namespace NATS.Client
         /// <see cref="IAsyncSubscription.Start"/> is called.
         /// </para>
         /// </remarks>
-        /// <param name="connection">The connection.</param>
-        /// <param name="subject">
-        /// The subject on which to listen for messages.
-        /// The subject can have wildcards (partial: <c>*</c>, full: <c>&gt;</c>).
-        /// </param>
         /// <seealso cref="ISubscription.Subject"/>
         /// <seealso cref="ISubscription.Queue"/>
         public static IAsyncSubscription<TMessage> SubscribeAsync<TMessage>(this IConnection connection, string subject, string queue)
@@ -354,10 +350,7 @@ namespace NATS.Client
         /// messages to the given event handler.
         /// </summary>
         /// <param name="connection">The connection.</param>
-        /// <param name="subject">
-        /// The subject on which to listen for messages.
-        /// The subject can have wildcards (partial: <c>*</c>, full: <c>&gt;</c>).
-        /// </param>
+        /// <param name="subject">The subject on which to listen for messages.</param>
         /// <param name="queue">The name of the queue group in which to participate.</param>
         /// <param name="handler">
         /// The <see cref="EventHandler{MsgHandlerEventArgs}"/> invoked when messages are received 

@@ -1281,7 +1281,7 @@ namespace Couchbase
         /// </summary>
         /// <param name="bucket">The bucket.</param>
         /// <param name="key">The key.</param>
-        /// <param name="expiration"></param>
+        /// <param name="expiration">Specifies the time span for which the document will remain in the database without being deleted.</param>
         /// <returns>The operation result.</returns>
         public static async Task<IOperationResult> TouchSafeAsync(this IBucket bucket, string key, TimeSpan expiration)
         {
@@ -1298,7 +1298,7 @@ namespace Couchbase
         /// </summary>
         /// <param name="bucket">The bucket.</param>
         /// <param name="persistable">The document.</param>
-        /// <param name="expiration"></param>
+        /// <param name="expiration">Specifies the time span for which the document will remain in the database without being deleted.</param>
         /// <returns>The operation result.</returns>
         public static async Task<IOperationResult> TouchSafeAsync(this IBucket bucket, IPersistableType persistable, TimeSpan expiration)
         {
@@ -1591,6 +1591,7 @@ namespace Couchbase
         /// <param name="bucket">The bucket.</param>
         /// <param name="name">The index name.</param>
         /// <param name="state">Optionally specifies the desire state (defaults to <b>online</b>).</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task WaitForIndexAsync(this IBucket bucket, string name, string state = "online")
         {
             await SyncContext.ClearAsync;

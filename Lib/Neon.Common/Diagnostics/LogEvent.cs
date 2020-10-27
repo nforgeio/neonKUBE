@@ -46,7 +46,7 @@ namespace Neon.Diagnostics
         /// <param name="logLevel">The event log level.</param>
         /// <param name="message">Optionally specifies the event message.</param>
         /// <param name="activityId">Optionally specifies the event activity ID.</param>
-        /// <param name="e"></param>
+        /// <param name="e">Optionally specifies the exception being logged.</param>
         public LogEvent(
             string      module,
             string      contextId,

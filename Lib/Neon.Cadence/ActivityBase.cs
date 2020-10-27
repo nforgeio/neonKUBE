@@ -557,7 +557,9 @@ namespace Neon.Cadence
             this.logger                  = LogManager.Default.GetLogger(module: activityType.FullName);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Returns the activity.
+        /// </summary>
         public Activity Activity { get; set;  }
 
         /// <summary>
