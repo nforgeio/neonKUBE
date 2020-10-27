@@ -30,7 +30,7 @@ PLAYGROUND_DIR	= ./cmd/playground
 TEST_LOGS		= ./test/logs
 
 # test dirs
-NEON_TEST_DIR 	= $(NF_ROOT)/Test/Test.Neon.Temporal/bin/Debug/netcoreapp3.0
+NEON_TEST_DIR 	= $(NF_ROOT)/Test/Test.Neon.Temporal/bin/Debug/netcoreapp3.1
 TEST_DIRS 		= internal/messages  \
 				  internal/dotnet/logger
 
