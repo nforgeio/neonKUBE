@@ -2823,6 +2823,23 @@
             Identifies the .NET framework hosting the current process.
             </summary>
         </member>
+        <member name="F:Neon.Common.NeonHelper.NeonProdRegistry">
+            <summary>
+            Identifies the production cluster public Docker registry.
+            </summary>
+        </member>
+        <member name="F:Neon.Common.NeonHelper.NeonDevRegistry">
+            <summary>
+            Identifies the development cluster public Docker registry.
+            </summary>
+        </member>
+        <member name="P:Neon.Common.NeonHelper.NeonBranchRegistry">
+            <summary>
+            Returns the appropriate public Docker registry to be used for the git branch the
+            assembly was built from.  This returns <see cref="F:Neon.Common.NeonHelper.NeonProdRegistry"/> for release
+            branches and <see cref="F:Neon.Common.NeonHelper.NeonDevRegistry"/> for all other branches.
+            </summary>
+        </member>
         <member name="M:Neon.Common.NeonHelper.EscapeCsv(System.String)">
             <summary>
             Escapes a string passed so that is suitable for writing to
@@ -3310,29 +3327,31 @@
             </para>
             </remarks>
         </member>
-        <member name="M:Neon.Common.NeonHelper.WaitFor(System.Func{System.Boolean},System.TimeSpan,System.Nullable{System.TimeSpan})">
+        <member name="M:Neon.Common.NeonHelper.WaitFor(System.Func{System.Boolean},System.TimeSpan,System.Nullable{System.TimeSpan},System.String)">
             <summary>
             Waits for a boolean function to return <c>true</c>.
             </summary>
-            <param name="action">The boolean delegate.</param>
-            <param name="timeout">The maximum time to wait.</param>
-            <param name="pollTime">The time to wait between polling or <c>null</c> for a reasonable default.</param>
+            <param name="predicate">The boolean predicate.</param>
+            <param name="timeout">Optionally specifies the maximum time to wait.</param>
+            <param name="pollInterval">Optionally specifies time to wait between each predicate call or <c>null</c> for a reasonable default.</param>
+            <param name="timeoutMessage">Optionally overrides the <see cref="T:System.TimeoutException"/> message.</param>
             <exception cref="T:System.TimeoutException">Thrown if the never returned <c>true</c> before the timeout.</exception>
             <remarks>
-            This method periodically calls <paramref name="action"/> until it
+            This method periodically calls <paramref name="predicate"/> until it
             returns <c>true</c> or <pararef name="timeout"/> exceeded.
             </remarks>
         </member>
-        <member name="M:Neon.Common.NeonHelper.WaitForAsync(System.Func{System.Threading.Tasks.Task{System.Boolean}},System.TimeSpan,System.Nullable{System.TimeSpan})">
+        <member name="M:Neon.Common.NeonHelper.WaitForAsync(System.Func{System.Threading.Tasks.Task{System.Boolean}},System.TimeSpan,System.Nullable{System.TimeSpan},System.String)">
             <summary>
             Asynchronously waits for a boolean function to return <c>true</c>.
             </summary>
-            <param name="action">The boolean delegate.</param>
-            <param name="timeout">The maximum time to wait.</param>
-            <param name="pollTime">The time to wait between polling or <c>null</c> for a reasonable default.</param>
+            <param name="predicate">The boolean predicate.</param>
+            <param name="timeout">Optionally specifies the maximum time to wait.</param>
+            <param name="pollInterval">Optionally specifies time to wait between each predicate call or <c>null</c> for a reasonable default.</param>
+            <param name="timeoutMessage">Optionally overrides the <see cref="T:System.TimeoutException"/> message.</param>
             <exception cref="T:System.TimeoutException">Thrown if the never returned <c>true</c> before the timeout.</exception>
             <remarks>
-            This method periodically calls <paramref name="action"/> until it
+            This method periodically calls <paramref name="predicate"/> until it
             returns <c>true</c> or <pararef name="timeout"/> exceeded.
             </remarks>
         </member>
@@ -4780,6 +4799,26 @@
             initiated via <see cref="M:Neon.Common.ProgramRunner.Fork(Neon.Common.ProgramEntrypoint,System.String[])"/>.  This
             method will block until <see cref="M:Neon.Common.ProgramRunner.TerminateFork"/> is called.  The
             emulated program must exit cleanly when this returns.
+            </summary>
+        </member>
+        <member name="T:Neon.Common.TriState">
+            <summary>
+            Used to specify a tristate boolean with values: <b>true</b>, <b>false</b>, and <b>default</b>.
+            </summary>
+        </member>
+        <member name="F:Neon.Common.TriState.Default">
+            <summary>
+            Specifies the default behavior.
+            </summary>
+        </member>
+        <member name="F:Neon.Common.TriState.False">
+            <summary>
+            Specifies <c>false</c>.
+            </summary>
+        </member>
+        <member name="F:Neon.Common.TriState.True">
+            <summary>
+            Specifies <c>true</c>.
             </summary>
         </member>
         <member name="T:Neon.Common.NamespaceDoc">
@@ -9441,6 +9480,38 @@
             <param name="host">The string being tested.</param>
             <returns><c>true</c> if the hostname is valid.</returns>
         </member>
+        <member name="M:Neon.Net.NetHelper.ParseIPv4Address(System.String)">
+            <summary>
+            Parses an IPv4 address.
+            </summary>
+            <param name="input">The address text.</param>
+            <returns>The <see cref="T:System.Net.IPAddress"/>.</returns>
+            <exception cref="T:System.FormatException">Thrown for an invalid address.</exception>
+        </member>
+        <member name="M:Neon.Net.NetHelper.TryParseIPv4Address(System.String,System.Net.IPAddress@)">
+            <summary>
+            Attempts to parse an IPv4 address.
+            </summary>
+            <param name="input">The address text.</param>
+            <param name="address">Set to the parsed address on success.</param>
+            <returns><c>true</c> on success.</returns>
+        </member>
+        <member name="M:Neon.Net.NetHelper.ParseIPv6Address(System.String)">
+            <summary>
+            Parses an IPv6 address.
+            </summary>
+            <param name="input">The address text.</param>
+            <returns>The <see cref="T:System.Net.IPAddress"/>.</returns>
+            <exception cref="T:System.FormatException">Thrown for an invalid address.</exception>
+        </member>
+        <member name="M:Neon.Net.NetHelper.TryParseIPv6Address(System.String,System.Net.IPAddress@)">
+            <summary>
+            Attempts to parse an IPv4 address.
+            </summary>
+            <param name="input">The address text.</param>
+            <param name="address">Set to the parsed address on success.</param>
+            <returns><c>true</c> on success.</returns>
+        </member>
         <member name="M:Neon.Net.NetHelper.AddressEquals(System.Net.IPAddress,System.Net.IPAddress)">
             <summary>
             Determines whether two IP addresses are equal.
@@ -10049,6 +10120,11 @@
         <member name="F:Neon.Net.NetworkPorts.Temporal">
             <summary>
             Temporal primary cluster port.
+            </summary>
+        </member>
+        <member name="F:Neon.Net.NetworkPorts.KubernetesApi">
+            <summary>
+            Kubernetes API port.
             </summary>
         </member>
         <member name="M:Neon.Net.NetworkPorts.TryParse(System.String,System.Int32@)">
@@ -10721,7 +10797,7 @@
             Defines the Neon service names.  
             </summary>
         </member>
-        <member name="F:Neon.Service.NeonServices.ClusterManager">
+        <member name="F:Neon.Service.NeonServices.NeonClusterManager">
             <summary>
             Cluster Manager Operator.
             </summary>
@@ -12333,7 +12409,7 @@
             to wait for the timer to fire.
             </para>
             <para>
-            The <see cref="M:Neon.Time.RecurringTimer.Reset"/> and <see cref="M:Neon.Time.RecurringTimer.Reset(System.DateTime)"/> methods may be used to explictly
+            The <see cref="M:Neon.Time.RecurringTimer.Reset"/> and <see cref="M:Neon.Time.RecurringTimer.Reset(System.DateTime)"/> methods may be used to explicitly
             reset the timer to fire at the next scheduled time.  This may be useful for ensuring that
             short duration timers are properly reset after an operation that may take longer to
             complete than the timer interval.
@@ -14166,6 +14242,72 @@
             </summary>
             <param name="stream">The YAML stream.</param>
             <param name="text">The text to be loaded.</param>
+        </member>
+        <member name="T:ThisAssembly">
+            <summary>Provides access to the current assembly information.</summary>
+        </member>
+        <member name="T:ThisAssembly.Git">
+            <summary>Provides access to the git information for the current assembly.</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.IsDirty">
+            <summary>IsDirty: true</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.IsDirtyString">
+            <summary>IsDirtyString: true</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.RepositoryUrl">
+            <summary>Repository URL: https://github.com/nforgeio/neonKUBE</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.Branch">
+            <summary>Branch: master</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.Commit">
+            <summary>Commit: 47f8573a1</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.Sha">
+            <summary>Sha: 47f8573a18946e1d2998f51332a6b742317cbc7b</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.Commits">
+            <summary>Commits on top of base version: 111</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.Tag">
+            <summary>Tag: v2.3.2-111-g47f8573a1</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.BaseTag">
+            <summary>Base tag: v2.3.2</summary>
+        </member>
+        <member name="T:ThisAssembly.Git.BaseVersion">
+            <summary>Provides access to the base version information used to determine the <see cref="T:ThisAssembly.Git.SemVer" />.</summary>      
+        </member>
+        <member name="F:ThisAssembly.Git.BaseVersion.Major">
+            <summary>Major: 2</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.BaseVersion.Minor">
+            <summary>Minor: 3</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.BaseVersion.Patch">
+            <summary>Patch: 0</summary>
+        </member>
+        <member name="T:ThisAssembly.Git.SemVer">
+            <summary>Provides access to SemVer information for the current assembly.</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.SemVer.Major">
+            <summary>Major: 2</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.SemVer.Minor">
+            <summary>Minor: 3</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.SemVer.Patch">
+            <summary>Patch: 111</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.SemVer.Label">
+            <summary>Label: </summary>
+        </member>
+        <member name="F:ThisAssembly.Git.SemVer.DashLabel">
+            <summary>Label with dash prefix: </summary>
+        </member>
+        <member name="F:ThisAssembly.Git.SemVer.Source">
+            <summary>Source: Tag</summary>
         </member>
     </members>
 </doc>
