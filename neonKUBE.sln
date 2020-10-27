@@ -22,6 +22,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub", "GitHub", "{4442F1
 		.gitignore = .gitignore
 		.password-name = .password-name
 		buildenv.cmd = buildenv.cmd
+		global.json = global.json
 		kubernetes-version.txt = kubernetes-version.txt
 		LICENSE = LICENSE
 		neonDESKTOP-version.txt = neonDESKTOP-version.txt
@@ -319,7 +320,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "modelgen", "Tools\modelgen\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Xunit.YugaByte", "Lib\Neon.Xunit.YugaByte\Neon.Xunit.YugaByte.csproj", "{68E09764-A1CD-4DF0-8112-C6E610D4955F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.Neon.YugaByte", "Test\Test.Neon.YugaByte\Test.Neon.YugaByte.csproj", "{72C49374-CA5E-49BD-9A23-21158CBCE53D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.YugaByte", "Test\Test.Neon.YugaByte\Test.Neon.YugaByte.csproj", "{72C49374-CA5E-49BD-9A23-21158CBCE53D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
