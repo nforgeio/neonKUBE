@@ -91,6 +91,7 @@ GeneratedUxTypes.cs
 ###################
 ### Go Projects ###
 ###################
+
 *.test
 Go/pkg/**
 Go/**/test/logs/**

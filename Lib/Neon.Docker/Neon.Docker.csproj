@@ -4,14 +4,14 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neon.Docker</RootNamespace>
     <Version>2.3.2</Version>
-    <Authors>Jeff Lill</Authors>
-    <Company>neonFORGE, LLC</Company>
-    <Description>neonFORGE simple Docker REST API wrapper.</Description>
+    <Authors>neonFORGE Team</Authors>
+    <Company>neonFORGE LLC</Company>
+    <Description>INTERNAL USE ONLY: Docker REST API wrapper (partially completed)</Description>
     <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
-    <Copyright>Copyright © 2016-2018 by neonFORGE LLC.  All rights reserved.</Copyright>
+    <Copyright>Copyright © 2005-2020 by neonFORGE LLC.  All rights reserved.</Copyright>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
     <FileVersion>0.0.0.0</FileVersion>
-    <Product>Neon</Product>
+    <Product>neonLIBRARY</Product>
     <LangVersion>latest</LangVersion>
     <IsPackable>true</IsPackable>
     <PackageLicenseUrl></PackageLicenseUrl>
@@ -50,6 +50,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Properties\**" />
+    <EmbeddedResource Remove="Properties\**" />
+    <None Remove="Properties\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="System.Buffers" Version="4.5.1" />
     <PackageReference Include="System.Diagnostics.Contracts" Version="4.3.0" />
@@ -62,11 +68,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Properties\PublishProfiles\" />
-    <Folder Include="Properties\PublishProfiles\" />
   </ItemGroup>
 
   <ItemGroup>

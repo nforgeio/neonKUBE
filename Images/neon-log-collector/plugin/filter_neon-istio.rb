@@ -1,7 +1,7 @@
 #------------------------------------------------------------------------------
 # FILE:         filter-neon-istio.rb
 # CONTRIBUTOR:  Jeff Lill, Marcus Bowyer
-# COPYRIGHT:    Copyright (c) 2016-2020 by neonFORGE, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2016-2020 by neonFORGE LLC.  All rights reserved.
 #
 # This Fluentd filter plugin handles HAProxy traffic log events formatted using 
 # the standard TCP or HTTP log formats.  See [NeonClusterHelper.GetProxyLogFormat()]

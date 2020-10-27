@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:        Test_Options.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -176,7 +176,7 @@ namespace TestTemporal
                 WorkflowScheduleToStartTimeoutSeconds = 82,
             };
 
-            if (fixture.Start(fixtureSettings, stackDefinition: TemporalTestHelper.TemporalStackDefinition, reconnect: true, keepRunning: TemporalTestHelper.KeepTemporalServerOpen) == TestFixtureStatus.Started)
+            if (fixture.Start(fixtureSettings, composeFile: TemporalTestHelper.TemporalStackDefinition, reconnect: true, keepRunning: TemporalTestHelper.KeepTemporalServerOpen) == TestFixtureStatus.Started)
             {
                 // Initialize the default default client and worker.
 

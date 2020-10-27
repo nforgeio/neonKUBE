@@ -4,25 +4,25 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neon.Common</RootNamespace>
     <Version>2.3.2</Version>
-    <Company>neonFORGE, LLC</Company>
-    <Authors>Jeff Lill</Authors>
-    <Description>Neon common library.</Description>
+    <Company>neonFORGE LLC</Company>
+    <Authors>neonFORGE Team</Authors>
+    <Description>Useful classes used by other neonLIBRARY packages as well as neonFORGE applications</Description>
     <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
-    <Copyright>Copyright © 2016-2020 by neonFORGE LLC.  All rights reserved.</Copyright>
+    <Copyright>Copyright © 2005-2020 by neonFORGE LLC.  All rights reserved.</Copyright>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
     <FileVersion>0.0.0.0</FileVersion>
-    <Product>Neon</Product>
+    <Product>neonLIBRARY</Product>
     <LangVersion>latest</LangVersion>
     <IsPackable>true</IsPackable>
     <PackageLicenseUrl></PackageLicenseUrl>
-    <PackageProjectUrl>https://doc.neonkube.com/Neon.Common-Overview.htm</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Common/README.md</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <Configurations>Debug;Release;CodeDoc</Configurations>
     <PackageIcon>nuget-icon.png</PackageIcon>
-    <PackageTags>utilitu helpers</PackageTags>
+    <PackageTags>utility classes</PackageTags>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

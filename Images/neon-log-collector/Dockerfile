@@ -1,7 +1,7 @@
 #------------------------------------------------------------------------------
 # FILE:         Dockerfile
 # CONTRIBUTOR:  Marcus Bowyer
-# COPYRIGHT:    Copyright (c) 2016-2020 by neonFORGE, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2016-2020 by neonFORGE LLC.  All rights reserved.
 #
 # Fluent Bit deployed on each neonKUBE node that forwards log events to the
 # cluster log aggregator.

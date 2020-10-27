@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    CouchbaseFixture.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
 
 using System;
 using System.Collections.Generic;

@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    NamespaceDoc.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ using Neon.Common;
 namespace Neon.Docker
 {
     /// <summary>
-    /// Internal namespace.
+    /// A partially completed Docker API client for .NET.  This is not likely to be enhanced further.
     /// </summary>
     [System.Runtime.CompilerServices.CompilerGenerated]
     class NamespaceDoc

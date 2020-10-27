@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    DockerComposeFixture.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -61,7 +62,13 @@ namespace Neon.Xunit
         /// <summary>
         /// Stops any existing docker-compose application running with the same name passed.
         /// </summary>
-        public static void StopApplication(string name)
+        /// <param name="name">The application name.</param>
+        /// <param name="customContainerNames">
+        /// Optionally specifies custom container names deployed by the Docker Compose file that
+        /// will not be prefixed by the application name.  The fixture needs to know these so
+        /// it can remove the containers when required.
+        /// </param>
+        private static void StopApplication(string name, string[] customContainerNames = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
@@ -70,8 +77,8 @@ namespace Neon.Xunit
             //
             //      APPLICATION-NAME_*
             //
-            // We're going to assume that an existing docker-compose application is
-            // currently running if we find any of these and remove the application.
+            // or containers that match any of the custom container names passed and
+            // forcably remove them.
 
             var result = NeonHelper.ExecuteCapture(NeonHelper.DockerCli, new object[] { "ps", "--all", "--format", "{{.Names}}" });
 
@@ -88,13 +95,17 @@ namespace Neon.Xunit
                     {
                         containerNames.Add(line);
                     }
+                    else if (customContainerNames != null && customContainerNames.Contains(line))
+                    {
+                        containerNames.Add(line);
+                    }
                 }
             }
 
             if (containerNames.Count > 0)
             {
                 // Looks like the application is running, so we'll need to stop it.
-                // We have a couple problems to deal with:
+                // We have a couple problems to deal with:docker 
                 //
                 //      1. Normally you'd need the original compose file to bring the
                 //         application down cleanly via docker-compose.  The problem is
@@ -114,7 +125,7 @@ namespace Neon.Xunit
                 // To deal with both #1 and #2 above we're going to simply [rm --force] the application's
                 // containers explicitly as well as removing any lingering application networks.
 
-                // Remove the napplication containers:
+                // Remove the application containers:
 
                 result = NeonHelper.ExecuteCapture(NeonHelper.DockerCli, new object[] { "rm", "--force", containerNames });
 
@@ -153,6 +164,7 @@ namespace Neon.Xunit
 
         private string      composeFile;
         private bool        keepOpen;
+        private string[]    customContainerNames;
 
         /// <summary>
         /// Constructor.
@@ -180,7 +192,7 @@ namespace Neon.Xunit
         /// Starts the fixture by running a Docker compose application.
         /// </para>
         /// <note>
-        /// You'll need to call <see cref="StartAsComposed(string, string, bool)"/>
+        /// You'll need to call <see cref="StartAsComposed(string, string, bool, string[])"/>
         /// instead when this fixture is being added to a <see cref="ComposedFixture"/>.
         /// </note>
         /// </summary>
@@ -189,6 +201,11 @@ namespace Neon.Xunit
         /// <param name="keepOpen">
         /// Optionally indicates that the application should continue to run after the fixture is disposed.  
         /// This defaults to <c>false</c>.
+        /// </param>
+        /// <param name="customContainerNames">
+        /// Optionally specifies custom container names deployed by the Docker Compose file that
+        /// will not be prefixed by the application name.  The fixture needs to know these so
+        /// it can remove the containers when required.
         /// </param>
         /// <returns>
         /// <see cref="TestFixtureStatus.Started"/> if the fixture wasn't previously started and
@@ -207,12 +224,12 @@ namespace Neon.Xunit
         /// interrupted during debugging or when <paramref name="keepOpen"/><c>=true</c>.
         /// </note>
         /// </remarks>
-        public TestFixtureStatus Start(string name, string composeFile, bool keepOpen = false)
+        public TestFixtureStatus Start(string name, string composeFile, bool keepOpen = false, string[] customContainerNames = null)
         {
             return base.Start(
                 () =>
                 {
-                    StartAsComposed(name, composeFile, keepOpen);
+                    StartAsComposed(name, composeFile, keepOpen, customContainerNames);
                 });
         }
 
@@ -224,6 +241,11 @@ namespace Neon.Xunit
         /// <param name="keepOpen">
         /// Optionally indicates that the application should continue to run after the fixture is disposed.  
         /// This defaults to <c>false</c>.
+        /// </param>
+        /// <param name="customContainerNames">
+        /// Optionally specifies custom container names deployed by the Docker Compose file that
+        /// will not be prefixed by the application name.  The fixture needs to know these so
+        /// it can remove the containers when required.
         /// </param>
         /// <exception cref="InvalidOperationException">
         /// Thrown if this is not called from  within the <see cref="Action"/> method 
@@ -237,7 +259,7 @@ namespace Neon.Xunit
         /// interrupted during debugging or when <paramref name="keepOpen"/><c>=true</c>.
         /// </note>
         /// </remarks>
-        public void StartAsComposed(string name, string composeFile, bool keepOpen = false)
+        public void StartAsComposed(string name, string composeFile, bool keepOpen = false, string[] customContainerNames = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(composeFile), nameof(composeFile));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
@@ -249,9 +271,10 @@ namespace Neon.Xunit
                 return;
             }
 
-            this.ApplicationName = name;
-            this.composeFile     = composeFile;
-            this.keepOpen        = keepOpen;
+            this.ApplicationName      = name;
+            this.composeFile          = composeFile;
+            this.keepOpen             = keepOpen;
+            this.customContainerNames = customContainerNames;
 
             StartApplication();
         }
@@ -283,7 +306,7 @@ namespace Neon.Xunit
             // the unit tests before the fixture was disposed or an application with
             // the same name is already running for some other reason.
 
-            StopApplication(ApplicationName);
+            StopApplication(ApplicationName, customContainerNames);
 
             // Start the application.  Note that we're going to write the compose file
             // to a temporary file to accomplish this.
@@ -308,7 +331,7 @@ namespace Neon.Xunit
 
             if (!keepOpen)
             {
-                StopApplication(ApplicationName);
+                StopApplication(ApplicationName, customContainerNames);
             }
 
             base.Reset();
@@ -318,7 +341,7 @@ namespace Neon.Xunit
         /// Restarts the application.  This is a handy way to deploy a fresh instance with the
         /// same properties while running unit tests.
         /// </summary>
-        public void Restart()
+        public virtual void Restart()
         {
             Reset();
             StartApplication();

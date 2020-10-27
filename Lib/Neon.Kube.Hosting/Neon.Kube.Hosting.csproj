@@ -3,11 +3,11 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <Version>2.1.0-internal</Version>
-    <Authors>Jeff Lill</Authors>
-    <Company>neonFORGE, LLC</Company>
+    <Authors>neonFORGE Team</Authors>
+    <Company>neonFORGE LLC</Company>
     <Product>neonKUBE</Product>
-    <Description>neonKUBE Hosting Utilities</Description>
-    <Copyright>Copyright © 2016-2020 by neonFORGE LLC.  All rights reserved.</Copyright>
+    <Description>neonKUBE hosting common code</Description>
+    <Copyright>Copyright © 2005-2020 by neonFORGE LLC.  All rights reserved.</Copyright>
     <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
     <RootNamespace>Neon.Kube</RootNamespace>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>

@@ -2,7 +2,7 @@
 #------------------------------------------------------------------------------
 # FILE:         setup-node.sh
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -461,7 +461,7 @@ cat <<EOF >> /etc/systemd/journald.conf
 #------------------------------------------------------------------------------
 # FILE:         journald.conf
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -532,7 +532,7 @@ cat <<EOF > ${NEON_BIN_FOLDER}/neon-cleaner
 #------------------------------------------------------------------------------
 # FILE:         neon-cleaner
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.

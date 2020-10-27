@@ -1,3 +1,0 @@
-The [$/Doc/Images] folder holds the image files referenced by **MarkDown** documents located within the GithHub repository, with each subfolder holding the images for a specific MarkDown document (e.g. **DEVELOPER** for **$/Doc/DEVELOPER.md**).
-
-As a convention, each subfolder may include a **Source** folder.  These will hold any source documents (like Visio drawings) that were used to generate the image files.

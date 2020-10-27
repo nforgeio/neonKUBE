@@ -5,17 +5,17 @@
     <RootNamespace>Neon.Xunit.Kube</RootNamespace>
     <PackageId>Neon.Xunit.Kube</PackageId>
     <Version>2.3.2-internal</Version>
-    <Authors>Jeff Lill</Authors>
-    <Product>neonKUBE</Product>
-    <Description>neonKUBE Neon Xunit testing helpers.</Description>
-    <Copyright>Copyright © 2016-2020 by neonFORGE LLC.  All rights reserved.</Copyright>
+    <Authors>neonFORGE Team</Authors>
+    <Product>neonLIBRARY</Product>
+    <Description>Xunit extensions for neonKUBE</Description>
+    <Copyright>Copyright © 2005-2020 by neonFORGE LLC.  All rights reserved.</Copyright>
     <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
     <FileVersion>0.0.0.0</FileVersion>
     <LangVersion>latest</LangVersion>
     <IsPackable>true</IsPackable>
     <PackageLicenseUrl></PackageLicenseUrl>
-    <PackageProjectUrl>https://doc.neonkube.com/Neon.Xunit-Overview.htm</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Xunit.Kube/README.md</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
@@ -23,6 +23,7 @@
     <Configurations>Debug;Release;CodeDoc</Configurations>
     <PackageIcon>nuget-icon.png</PackageIcon>
     <PackageTags>xunit kubernetes</PackageTags>
+    <Company>neonFORGE LLC</Company>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">

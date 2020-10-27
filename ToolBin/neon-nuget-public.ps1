@@ -1,7 +1,7 @@
 #------------------------------------------------------------------------------
 # FILE:         neon-nuget-public.ps1
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -91,6 +91,7 @@ SetVersion Neon.Xunit.Cadence
 SetVersion Neon.Xunit.Couchbase
 SetVersion Neon.Xunit.Kube
 SetVersion Neon.Xunit.Temporal
+SetVersion Neon.Xunit.YugaByte
 
 # Build and publish the projects.
 
@@ -112,5 +113,6 @@ Publish Neon.Xunit.Cadence
 Publish Neon.Xunit.Couchbase
 Publish Neon.Xunit.Kube
 Publish Neon.Xunit.Temporal
+Publish Neon.Xunit.YugaByte
 
 pause

@@ -154,21 +154,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-build", "Tools\neon-bu
 		{756FB86B-29BC-4C6B-A19B-A624A9E9D367} = {756FB86B-29BC-4C6B-A19B-A624A9E9D367}
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DEVELOPER", "DEVELOPER", "{C825B67A-D3D3-4404-83E2-A8CED1C595E2}"
-	ProjectSection(SolutionItems) = preProject
-		Doc\Images\DEVELOPER\DockerLogo.png = Doc\Images\DEVELOPER\DockerLogo.png
-		Doc\Images\DEVELOPER\DockerNetwork.png = Doc\Images\DEVELOPER\DockerNetwork.png
-		Doc\Images\DEVELOPER\DockerSysTray.png = Doc\Images\DEVELOPER\DockerSysTray.png
-		Doc\Images\DEVELOPER\SkypeConnections.png = Doc\Images\DEVELOPER\SkypeConnections.png
-		Doc\Images\DEVELOPER\VisualStudioClone.png = Doc\Images\DEVELOPER\VisualStudioClone.png
-		Doc\Images\DEVELOPER\WinSCPHiddenFiles.png = Doc\Images\DEVELOPER\WinSCPHiddenFiles.png
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "IssueImages", "IssueImages", "{9C2A58E3-0686-4E98-80EB-30981CA48359}"
-	ProjectSection(SolutionItems) = preProject
-		Doc\IssueImages\README.md = Doc\IssueImages\README.md
-	EndProjectSection
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Service", "Lib\Neon.Service\Neon.Service.csproj", "{A26FC706-862F-4690-A626-B83A988A9411}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.Cryptography", "Test\Test.Neon.Cryptography\Test.Neon.Cryptography.csproj", "{274B582D-10B8-4030-9F0C-3337C5509D03}"
@@ -315,6 +300,26 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SSH", "SSH", "{83BFFEAD-48C
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-cluster-manager", "Services\neon-cluster-manager\neon-cluster-manager.csproj", "{08F02539-669E-49CB-802D-7DD3F7712D05}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Images", "Images", "{8AB98A6E-B8C3-4387-ADA8-BB3E2DDF3275}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Developer", "Developer", "{58D183E5-41FC-4A97-9942-42B5CFDC0854}"
+	ProjectSection(SolutionItems) = preProject
+		Doc\Images\Developer\DockerLogo.png = Doc\Images\Developer\DockerLogo.png
+		Doc\Images\Developer\DockerNetwork.png = Doc\Images\Developer\DockerNetwork.png
+		Doc\Images\Developer\DockerSysTray.png = Doc\Images\Developer\DockerSysTray.png
+		Doc\Images\Developer\hyper-v.png = Doc\Images\Developer\hyper-v.png
+		Doc\Images\Developer\SkypeConnections.png = Doc\Images\Developer\SkypeConnections.png
+		Doc\Images\Developer\virtualization.png = Doc\Images\Developer\virtualization.png
+		Doc\Images\Developer\VisualStudioClone.png = Doc\Images\Developer\VisualStudioClone.png
+		Doc\Images\Developer\WinSCPHiddenFiles.png = Doc\Images\Developer\WinSCPHiddenFiles.png
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "modelgen", "Tools\modelgen\modelgen.csproj", "{CC56824C-5D97-4525-BD40-0E22601A0E61}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Xunit.YugaByte", "Lib\Neon.Xunit.YugaByte\Neon.Xunit.YugaByte.csproj", "{68E09764-A1CD-4DF0-8112-C6E610D4955F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.Neon.YugaByte", "Test\Test.Neon.YugaByte\Test.Neon.YugaByte.csproj", "{72C49374-CA5E-49BD-9A23-21158CBCE53D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -1478,6 +1483,60 @@ Global
 		{08F02539-669E-49CB-802D-7DD3F7712D05}.Release|x64.Build.0 = Release|Any CPU
 		{08F02539-669E-49CB-802D-7DD3F7712D05}.Release|x86.ActiveCfg = Release|Any CPU
 		{08F02539-669E-49CB-802D-7DD3F7712D05}.Release|x86.Build.0 = Release|Any CPU
+		{CC56824C-5D97-4525-BD40-0E22601A0E61}.CodeDoc|Any CPU.ActiveCfg = Release|Any CPU
+		{CC56824C-5D97-4525-BD40-0E22601A0E61}.CodeDoc|Any CPU.Build.0 = Release|Any CPU
+		{CC56824C-5D97-4525-BD40-0E22601A0E61}.CodeDoc|x64.ActiveCfg = Release|Any CPU
+		{CC56824C-5D97-4525-BD40-0E22601A0E61}.CodeDoc|x64.Build.0 = Release|Any CPU
+		{CC56824C-5D97-4525-BD40-0E22601A0E61}.CodeDoc|x86.ActiveCfg = Release|Any CPU
+		{CC56824C-5D97-4525-BD40-0E22601A0E61}.CodeDoc|x86.Build.0 = Release|Any CPU
+		{CC56824C-5D97-4525-BD40-0E22601A0E61}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CC56824C-5D97-4525-BD40-0E22601A0E61}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CC56824C-5D97-4525-BD40-0E22601A0E61}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{CC56824C-5D97-4525-BD40-0E22601A0E61}.Debug|x64.Build.0 = Debug|Any CPU
+		{CC56824C-5D97-4525-BD40-0E22601A0E61}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{CC56824C-5D97-4525-BD40-0E22601A0E61}.Debug|x86.Build.0 = Debug|Any CPU
+		{CC56824C-5D97-4525-BD40-0E22601A0E61}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CC56824C-5D97-4525-BD40-0E22601A0E61}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CC56824C-5D97-4525-BD40-0E22601A0E61}.Release|x64.ActiveCfg = Release|Any CPU
+		{CC56824C-5D97-4525-BD40-0E22601A0E61}.Release|x64.Build.0 = Release|Any CPU
+		{CC56824C-5D97-4525-BD40-0E22601A0E61}.Release|x86.ActiveCfg = Release|Any CPU
+		{CC56824C-5D97-4525-BD40-0E22601A0E61}.Release|x86.Build.0 = Release|Any CPU
+		{68E09764-A1CD-4DF0-8112-C6E610D4955F}.CodeDoc|Any CPU.ActiveCfg = Release|Any CPU
+		{68E09764-A1CD-4DF0-8112-C6E610D4955F}.CodeDoc|Any CPU.Build.0 = Release|Any CPU
+		{68E09764-A1CD-4DF0-8112-C6E610D4955F}.CodeDoc|x64.ActiveCfg = Release|Any CPU
+		{68E09764-A1CD-4DF0-8112-C6E610D4955F}.CodeDoc|x64.Build.0 = Release|Any CPU
+		{68E09764-A1CD-4DF0-8112-C6E610D4955F}.CodeDoc|x86.ActiveCfg = Release|Any CPU
+		{68E09764-A1CD-4DF0-8112-C6E610D4955F}.CodeDoc|x86.Build.0 = Release|Any CPU
+		{68E09764-A1CD-4DF0-8112-C6E610D4955F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{68E09764-A1CD-4DF0-8112-C6E610D4955F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{68E09764-A1CD-4DF0-8112-C6E610D4955F}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{68E09764-A1CD-4DF0-8112-C6E610D4955F}.Debug|x64.Build.0 = Debug|Any CPU
+		{68E09764-A1CD-4DF0-8112-C6E610D4955F}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{68E09764-A1CD-4DF0-8112-C6E610D4955F}.Debug|x86.Build.0 = Debug|Any CPU
+		{68E09764-A1CD-4DF0-8112-C6E610D4955F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{68E09764-A1CD-4DF0-8112-C6E610D4955F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{68E09764-A1CD-4DF0-8112-C6E610D4955F}.Release|x64.ActiveCfg = Release|Any CPU
+		{68E09764-A1CD-4DF0-8112-C6E610D4955F}.Release|x64.Build.0 = Release|Any CPU
+		{68E09764-A1CD-4DF0-8112-C6E610D4955F}.Release|x86.ActiveCfg = Release|Any CPU
+		{68E09764-A1CD-4DF0-8112-C6E610D4955F}.Release|x86.Build.0 = Release|Any CPU
+		{72C49374-CA5E-49BD-9A23-21158CBCE53D}.CodeDoc|Any CPU.ActiveCfg = Release|Any CPU
+		{72C49374-CA5E-49BD-9A23-21158CBCE53D}.CodeDoc|Any CPU.Build.0 = Release|Any CPU
+		{72C49374-CA5E-49BD-9A23-21158CBCE53D}.CodeDoc|x64.ActiveCfg = Release|Any CPU
+		{72C49374-CA5E-49BD-9A23-21158CBCE53D}.CodeDoc|x64.Build.0 = Release|Any CPU
+		{72C49374-CA5E-49BD-9A23-21158CBCE53D}.CodeDoc|x86.ActiveCfg = Release|Any CPU
+		{72C49374-CA5E-49BD-9A23-21158CBCE53D}.CodeDoc|x86.Build.0 = Release|Any CPU
+		{72C49374-CA5E-49BD-9A23-21158CBCE53D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{72C49374-CA5E-49BD-9A23-21158CBCE53D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{72C49374-CA5E-49BD-9A23-21158CBCE53D}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{72C49374-CA5E-49BD-9A23-21158CBCE53D}.Debug|x64.Build.0 = Debug|Any CPU
+		{72C49374-CA5E-49BD-9A23-21158CBCE53D}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{72C49374-CA5E-49BD-9A23-21158CBCE53D}.Debug|x86.Build.0 = Debug|Any CPU
+		{72C49374-CA5E-49BD-9A23-21158CBCE53D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{72C49374-CA5E-49BD-9A23-21158CBCE53D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{72C49374-CA5E-49BD-9A23-21158CBCE53D}.Release|x64.ActiveCfg = Release|Any CPU
+		{72C49374-CA5E-49BD-9A23-21158CBCE53D}.Release|x64.Build.0 = Release|Any CPU
+		{72C49374-CA5E-49BD-9A23-21158CBCE53D}.Release|x86.ActiveCfg = Release|Any CPU
+		{72C49374-CA5E-49BD-9A23-21158CBCE53D}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1512,7 +1571,6 @@ Global
 		{23E8D775-B5CA-440B-ACF2-1F7C212FE5C3} = {1A3C35E5-1C30-44F2-AB46-F5E7F99E524C}
 		{8570DE4C-67AC-4E08-90C4-BB56D644FEA6} = {33866B5A-71FB-4430-9C0B-019B20644653}
 		{E8F07DAB-0ED0-4A2F-9DD3-DE8D73D72B89} = {FE7764F7-F5B5-4A92-9BE2-F51690EDF870}
-		{9C2A58E3-0686-4E98-80EB-30981CA48359} = {2CFE7466-98C4-490A-9519-4702DF7A4E15}
 		{A26FC706-862F-4690-A626-B83A988A9411} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
 		{274B582D-10B8-4030-9F0C-3337C5509D03} = {83DC75D5-800D-42F7-9812-BD198A62DD0B}
 		{1F5668B6-D39C-47C5-82AD-BF7C0F0A9178} = {83DC75D5-800D-42F7-9812-BD198A62DD0B}
@@ -1557,6 +1615,11 @@ Global
 		{F18B0E89-622F-4021-B2C8-C445BD009C5D} = {83DC75D5-800D-42F7-9812-BD198A62DD0B}
 		{83BFFEAD-48CE-428A-AFAC-4E79CAF9E2C4} = {1A3C35E5-1C30-44F2-AB46-F5E7F99E524C}
 		{08F02539-669E-49CB-802D-7DD3F7712D05} = {9BF7513A-5219-4862-A290-7D2A00589312}
+		{8AB98A6E-B8C3-4387-ADA8-BB3E2DDF3275} = {2CFE7466-98C4-490A-9519-4702DF7A4E15}
+		{58D183E5-41FC-4A97-9942-42B5CFDC0854} = {8AB98A6E-B8C3-4387-ADA8-BB3E2DDF3275}
+		{CC56824C-5D97-4525-BD40-0E22601A0E61} = {FE7764F7-F5B5-4A92-9BE2-F51690EDF870}
+		{68E09764-A1CD-4DF0-8112-C6E610D4955F} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
+		{72C49374-CA5E-49BD-9A23-21158CBCE53D} = {83DC75D5-800D-42F7-9812-BD198A62DD0B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5F2E7334-FE9C-4C03-AF1E-BB3B7D5531D9}

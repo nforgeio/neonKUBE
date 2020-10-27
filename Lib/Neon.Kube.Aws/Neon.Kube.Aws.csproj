@@ -3,13 +3,13 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <RootNamespace>Neon.Kube</RootNamespace>
-    <Authors>Jeff Lill</Authors>
+    <Authors>neonFORGE Team</Authors>
     <Version>2.1.0-internal</Version>
-    <Company>neonFORGE, LLC</Company>
+    <Company>neonFORGE LLC</Company>
     <Product>neonKUBE</Product>
-    <Description>neonKUBE AWS Hosting.</Description>
+    <Description>neonKUBE hosting manager for AWS</Description>
     <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
-    <Copyright>Copyright © 2016-2020 by neonFORGE LLC.  All rights reserved.</Copyright>
+    <Copyright>Copyright © 2005-2020 by neonFORGE LLC.  All rights reserved.</Copyright>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
     <FileVersion>0.0.0.0</FileVersion>
     <LangVersion>latest</LangVersion>

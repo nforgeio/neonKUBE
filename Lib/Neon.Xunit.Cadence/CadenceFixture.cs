@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    CadenceFixture.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -190,7 +190,7 @@ namespace Neon.Xunit.Cadence
         /// </summary>
         /// <param name="settings">Optional Cadence settings.</param>
         /// <param name="image">Optionally specifies the Cadence container image (defaults to <b>nkubeio/cadence-dev:latest</b>).</param>
-        /// <param name="name">Optionally specifies the Cadence container name (defaults to <c>cb-test</c>).</param>
+        /// <param name="name">Optionally specifies the Cadence container name (defaults to <c>cadence-dev</c>).</param>
         /// <param name="env">Optional environment variables to be passed to the Cadence container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
         /// <param name="defaultDomain">Optionally specifies the default domain for the fixture's client.  This defaults to <b>test-domain</b>.</param>
         /// <param name="logLevel">Specifies the Cadence log level.  This defaults to <see cref="LogLevel.None"/>.</param>

@@ -1,7 +1,7 @@
 #------------------------------------------------------------------------------
 # FILE:         neon-builder.ps1
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -174,6 +174,7 @@ if ($tools)
 
     PublishCore "Tools\neon-cli\neon-cli.csproj"    "neon"
     PublishCore "Tools\unix-text\unix-text.csproj"  "unix-text"
+    PublishCore "Tools\modelgen\modelgen.csproj"    "modelgen"
 
     # Hack to publish OS/X version of [neon-cli] to the build folder.
 

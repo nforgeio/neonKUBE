@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    TemporalFixture.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -29,15 +29,15 @@ using Xunit;
 namespace Neon.Xunit.Temporal
 {
     /// <summary>
-    /// Used to run Temporal server and it's related database and services as
-    /// a Docker stack on  the current machine as a test fixture while tests 
-    /// are being performed  and then deletes the stack when the fixture is
+    /// Used to run Temporal server and its related database and services as
+    /// a Docker compose application on  the current machine as a test fixture while tests 
+    /// are being performed  and then deletes the application when the fixture is
     /// disposed.
     /// </summary>
     /// <remarks>
     /// <para>
     /// This fixture assumes that Temporal is not currently running on the
-    /// local workstation or as a stack named <b>temporal-dev</b>.
+    /// local workstation or is running as as a application named <b>temporal-dev</b>.
     /// You may see port conflict errors if either of these conditions
     /// are not true.
     /// </para>
@@ -56,10 +56,10 @@ namespace Neon.Xunit.Temporal
     public sealed class TemporalFixture : DockerComposeFixture
     {
         /// <summary>
-        /// The default Docker compose file text used to spin up Temporal and it's related services
+        /// The default Docker compose file text used to spin up Temporal and its related services
         /// by the <see cref="TemporalFixture"/>.
         /// </summary>
-        public const string DefaultStackDefinition =
+        public const string DefaultComposeFile =
 @"version: '3.5'
 
 services:
@@ -111,7 +111,7 @@ services:
 
         /// <summary>
         /// <para>
-        /// Starts a Temporal stack if it's not already running.  You'll generally want
+        /// Starts a Temporal compose application if it's not already running.  You'll generally want
         /// to call this in your test class constructor instead of <see cref="ITestFixture.Start(Action)"/>.
         /// </para>
         /// <note>
@@ -120,10 +120,10 @@ services:
         /// </note>
         /// </summary>
         /// <param name="settings">Optional Temporal settings.</param>
-        /// <param name="stackDefinition">
+        /// <param name="composeFile">
         /// <para>
         /// Optionally specifies the Temporal Docker compose file text.  This defaults to
-        /// <see cref="DefaultStackDefinition"/> which configures Temporal server to start with
+        /// <see cref="DefaultComposeFile"/> which configures Temporal server to start with
         /// a new Cassandra database instance listening on port <b>9042</b> as well as the
         /// Temporal web UI running on port <b>8088</b>.  Temporal server is listening on
         /// its standard gRPC port <b>7233</b>.
@@ -133,7 +133,7 @@ services:
         /// a different backend database, etc.
         /// </para>
         /// </param>
-        /// <param name="name">Optionally specifies the Temporal stack name (defaults to <c>temporal-dev</c>).</param>
+        /// <param name="name">Optionally specifies the Docker compose application name (defaults to <c>temporal-dev</c>).</param>
         /// <param name="defaultNamespace">Optionally specifies the default namespace for the fixture's client.  This defaults to <b>test-namespace</b>.</param>
         /// <param name="logLevel">Specifies the Temporal log level.  This defaults to <see cref="LogLevel.None"/>.</param>
         /// <param name="reconnect">
@@ -142,7 +142,7 @@ services:
         /// second per test.
         /// </param>
         /// <param name="keepRunning">
-        /// Optionally indicates that the stack should remain running after the fixture is disposed.
+        /// Optionally indicates that the application should remain running after the fixture is disposed.
         /// This is handy for using the Temporal web UI for port mortems after tests have completed.
         /// </param>
         /// <param name="noClient">
@@ -164,7 +164,7 @@ services:
         /// <note>
         /// Some of the <paramref name="settings"/> properties will be ignored including 
         /// <see cref="TemporalSettings.HostPort"/>.  This will be replaced by the local
-        /// endpoint for the Temporal stack.  Also, the fixture will connect to the 
+        /// endpoint for the Temporal application.  Also, the fixture will connect to the 
         /// <b>default</b> Temporal namespace by default (unless another is specified).
         /// </note>
         /// <note>
@@ -175,7 +175,7 @@ services:
         /// </remarks>
         public TestFixtureStatus Start(
             TemporalSettings    settings         = null,
-            string              stackDefinition  = DefaultStackDefinition,
+            string              composeFile      = DefaultComposeFile,
             string              name             = "temporal-dev",
             string              defaultNamespace = Namespace,
             LogLevel            logLevel         = LogLevel.None,
@@ -184,14 +184,14 @@ services:
             bool                noClient         = false,
             bool                noReset          = false)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(stackDefinition), nameof(stackDefinition));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(composeFile), nameof(composeFile));
 
             return base.Start(
                 () =>
                 {
                     StartAsComposed(
                         settings:         settings, 
-                        stackDefinition:  stackDefinition, 
+                        composeFile:      composeFile, 
                         name:             name, 
                         defaultNamespace: defaultNamespace, 
                         logLevel:         logLevel,
@@ -206,10 +206,10 @@ services:
         /// Used to start the fixture within a <see cref="ComposedFixture"/>.
         /// </summary>
         /// <param name="settings">Optional Temporal settings.</param>
-        /// <param name="stackDefinition">
+        /// <param name="composeFile">
         /// <para>
         /// Optionally specifies the Temporal Docker compose file text.  This defaults to
-        /// <see cref="DefaultStackDefinition"/> which configures Temporal server to start with
+        /// <see cref="DefaultComposeFile"/> which configures Temporal server to start with
         /// a new Cassandra database instance listening on port <b>9042</b> as well as the
         /// Temporal web UI running on port <b>8088</b>.  Temporal server is listening on
         /// its standard gRPC port <b>7233</b>.
@@ -219,7 +219,7 @@ services:
         /// a different backend database, etc.
         /// </para>
         /// </param>
-        /// <param name="name">Optionally specifies the Temporal stack name (defaults to <c>cb-test</c>).</param>
+        /// <param name="name">Optionally specifies the Docker compose application name (defaults to <c>temporal-dev</c>).</param>
         /// <param name="defaultNamespace">Optionally specifies the default namespace for the fixture's client.  This defaults to <b>test-namespace</b>.</param>
         /// <param name="logLevel">Specifies the Temporal log level.  This defaults to <see cref="LogLevel.None"/>.</param>
         /// <param name="reconnect">
@@ -228,7 +228,7 @@ services:
         /// second per test.
         /// </param>
         /// <param name="keepRunning">
-        /// Optionally indicates that the stack should remain running after the fixture is disposed.
+        /// Optionally indicates that the compose application should remain running after the fixture is disposed.
         /// This is handy for using the Temporal web UI for port mortems after tests have completed.
         /// </param>
         /// <param name="noClient">
@@ -250,7 +250,7 @@ services:
         /// </remarks>
         public void StartAsComposed(
             TemporalSettings    settings         = null,
-            string              stackDefinition  = DefaultStackDefinition,
+            string              composeFile      = DefaultComposeFile,
             string              name             = "temporal-dev",
             string              defaultNamespace = Namespace,
             LogLevel            logLevel         = LogLevel.None,
@@ -259,7 +259,7 @@ services:
             bool                noClient         = false,
             bool                noReset          = false)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(stackDefinition), nameof(stackDefinition));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(composeFile), nameof(composeFile));
 
             base.CheckWithinAction();
 
@@ -279,9 +279,9 @@ services:
                     TemporalClient.Reset();
                 }
 
-                // Start the Temporal stack.
+                // Start the Temporal Docker compose application.
 
-                base.StartAsComposed(name, stackDefinition, keepRunning);
+                base.StartAsComposed(name, composeFile, keepRunning);
                 Thread.Sleep(warmupDelay);
 
                 // Initialize the settings.
@@ -353,7 +353,7 @@ services:
         public HttpClient ProxyClient { get; private set; }
 
         /// <summary>
-        /// Closes the existing Temporal connection and restarts the Cadence
+        /// Closes the existing Temporal connection and restarts the Temporal
         /// server and then establishes a new connection.
         /// </summary>
         public new void Restart()
@@ -366,7 +366,7 @@ services:
             HttpClient.Dispose();
             HttpClient = null;
 
-            // Restart the Temporal stack.
+            // Restart the Temporal Docker compose application.
 
             base.Restart();
 
@@ -382,7 +382,7 @@ services:
 
         /// <summary>
         /// This method completely resets the fixture by removing the Temporal 
-        /// stack from Docker.  Use <see cref="DockerComposeFixture.Restart"/> 
+        /// compose application from Docker.  Use <see cref="DockerComposeFixture.Restart"/> 
         /// if you just want to restart a fresh Temporal instance.
         /// </summary>
         public override void Reset()

@@ -3,18 +3,18 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <Version>2.3.2</Version>
-    <Authors>Jeff Lill</Authors>
-    <Company>neonFORGE, LLC</Company>
-    <Product>Neon</Product>
-    <Description>Neon website and API related classes and enhancements.</Description>
-    <Copyright>Copyright © 2016-2020 by neonFORGE LLC.  All rights reserved.</Copyright>
+    <Authors>neonFORGE Team</Authors>
+    <Company>neonFORGE LLC</Company>
+    <Product>neonLIBRARY</Product>
+    <Description>ASPNET extensions</Description>
+    <Copyright>Copyright © 2005-2020 by neonFORGE LLC.  All rights reserved.</Copyright>
     <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
     <FileVersion>0.0.0.0</FileVersion>
     <LangVersion>latest</LangVersion>
     <IsPackable>true</IsPackable>
     <PackageLicenseUrl></PackageLicenseUrl>
-    <PackageProjectUrl>https://doc.neonkube.com/Neon.Web-Overview.htm</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Web/README.md</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
@@ -58,8 +58,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\nuget-icon.png" Pack="true" PackagePath=""/>
-    <None Include="..\..\LICENSE" Pack="True" PackagePath=""/>
+    <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
+    <None Include="..\..\LICENSE" Pack="True" PackagePath="" />
   </ItemGroup>
 
 </Project>
