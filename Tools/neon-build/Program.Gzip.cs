@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Program.Shfb.cs
+// FILE:	    Program.Gzip.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
 //
