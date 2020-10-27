@@ -53,6 +53,8 @@ namespace NeonBuild
                 Program.Exit(1);
             }
 
+            targetPath = Path.GetFullPath(targetPath);
+
             Directory.CreateDirectory(Path.GetDirectoryName(targetPath));
 
             if (File.Exists(targetPath))
