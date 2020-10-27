@@ -26,7 +26,6 @@ using Newtonsoft.Json.Linq;
 using Npgsql;
 using Xunit;
 
-
 namespace Neon.Xunit.YugaByte
 {
     /// <summary>
