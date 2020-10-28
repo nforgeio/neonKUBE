@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_LinearRetryPolicy.cs
+// FILE:	    Test_RetryAsync_LinearRetryPolicy.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
 //
@@ -30,7 +30,7 @@ using Xunit;
 
 namespace TestCommon
 {
-    public class Test_LinearRetryPolicy
+    public class Test_RetryAsync_LinearRetryPolicy
     {
         private class TransientException : Exception
         {
@@ -350,8 +350,8 @@ namespace TestCommon
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task SuccessDelayedAggregateSingle()
         {
-            var policy = new LinearRetryPolicy(typeof(NotReadyException));
-            var times = new List<DateTime>();
+            var policy  = new LinearRetryPolicy(typeof(NotReadyException));
+            var times   = new List<DateTime>();
             var success = false;
 
             await policy.InvokeAsync(

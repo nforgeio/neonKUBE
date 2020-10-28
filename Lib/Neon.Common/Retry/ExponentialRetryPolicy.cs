@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Diagnostics;
@@ -236,6 +237,77 @@ namespace Neon.Retry
 
                     LogTransient(e);
                     await Task.Delay(adjustedDelay);
+
+                    interval = TimeSpan.FromTicks(interval.Ticks * 2);
+
+                    if (interval > MaxRetryInterval)
+                    {
+                        interval = MaxRetryInterval;
+                    }
+                }
+            }
+        }
+
+        /// <inheritdoc/>
+        public override void Invoke(Action action)
+        {
+            var attempts    = 0;
+            var sysDeadline = base.SysDeadline();
+            var interval    = InitialRetryInterval;
+
+            while (true)
+            {
+                try
+                {
+                    action();
+                    return;
+                }
+                catch (Exception e)
+                {
+                    var adjustedDelay = AdjustDelay(interval, sysDeadline);
+
+                    if (++attempts >= MaxAttempts || !transientDetector(e))
+                    {
+                        throw;
+                    }
+
+                    LogTransient(e);
+                    Thread.Sleep(adjustedDelay);
+
+                    interval = TimeSpan.FromTicks(interval.Ticks * 2);
+
+                    if (interval > MaxRetryInterval)
+                    {
+                        interval = MaxRetryInterval;
+                    }
+                }
+            }
+        }
+
+        /// <inheritdoc/>
+        public override TResult Invoke<TResult>(Func<TResult> action)
+        {
+            var attempts    = 0;
+            var sysDeadline = base.SysDeadline();
+            var interval    = InitialRetryInterval;
+
+            while (true)
+            {
+                try
+                {
+                    return action();
+                }
+                catch (Exception e)
+                {
+                    var adjustedDelay = AdjustDelay(interval, sysDeadline);
+
+                    if (++attempts >= MaxAttempts || !transientDetector(e) || adjustedDelay <= TimeSpan.Zero)
+                    {
+                        throw;
+                    }
+
+                    LogTransient(e);
+                    Thread.Sleep(adjustedDelay);
 
                     interval = TimeSpan.FromTicks(interval.Ticks * 2);
 

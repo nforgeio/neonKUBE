@@ -288,8 +288,8 @@ services:
 
                 var retry = new LinearRetryPolicy(e => true, maxAttempts: int.MaxValue, retryInterval: TimeSpan.FromSeconds(0.5), timeout: TimeSpan.FromSeconds(120));
 
-                retry.InvokeAsync(
-                    async () =>
+                retry.Invoke(
+                    () =>
                     {
                         // The [socket.Connect()] calls below will throw [SocketException] until
                         // Temporal starts listening on its RPC socket.
@@ -298,10 +298,7 @@ services:
 
                         socket.Connect(IPAddress.Loopback, NetworkPorts.Temporal);
                         socket.Close();
-
-                        await Task.CompletedTask;
-
-                    }).Wait();
+                    });
 
                 Thread.Sleep(TimeSpan.FromSeconds(2));  // Wait a bit longer for luck!
 
