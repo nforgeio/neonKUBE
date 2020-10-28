@@ -170,13 +170,11 @@ namespace Neon.Xunit
             var factory = new StanConnectionFactory();
             var retry   = new LinearRetryPolicy(exception => true, 20, TimeSpan.FromSeconds(0.5));
 
-            retry.InvokeAsync(
-                async () =>
+            retry.Invoke(
+                () =>
                 {
                     Connection = factory.CreateConnection("test-cluster", nameof(NatsStreamingFixture));
-                    await Task.CompletedTask;
-
-                }).Wait();
+                });
         }
 
         /// <summary>

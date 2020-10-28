@@ -280,13 +280,11 @@ services:
                 .WithPort(ycqlPort)
                 .Build();
 
-            retry.InvokeAsync(
-                async () =>
+            retry.Invoke(
+                () =>
                 {
                     CassandraSession = cluster.Connect();
-                    await Task.CompletedTask;
-
-                }).Wait();
+                });
 
             CassandraSession.Execute($"DROP KEYSPACE IF EXISTS \"{cassandraKeyspace}\"");
             CassandraSession.Execute($"CREATE KEYSPACE \"{cassandraKeyspace}\"");
@@ -297,13 +295,11 @@ services:
 
             PostgresConnection = new NpgsqlConnection($"host=127.0.0.1;port={ysqlPort};user id=yugabyte;password=");
 
-            retry.InvokeAsync(
-                async () =>
+            retry.Invoke(
+                () =>
                 {
                     PostgresConnection.Open();
-                    await Task.CompletedTask;
-
-                }).Wait();
+                });
 
             NpgsqlCommand command;
 

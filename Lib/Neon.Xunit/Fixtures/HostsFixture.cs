@@ -134,8 +134,8 @@ namespace Neon.Xunit
 
             // Update the [hosts] file.
 
-            retryFile.InvokeAsync(
-                async () =>
+            retryFile.Invoke(
+                () =>
                 {
                     if (File.Exists(HostsPath))
                     {
@@ -191,31 +191,27 @@ namespace Neon.Xunit
                     {
                         File.WriteAllText(HostsPath, sb.ToString());
                     }
-
-                    await Task.CompletedTask;
-
-                }).Wait();
+                });
 
             if (changed)
             {
                 // We need to verify that the local DNS resolver has picked up the change
                 // by verifying that none of the removed section hostnames resolve.
 
-                retryReady.InvokeAsync(
-                    async () =>
+                retryReady.Invoke(
+                    () =>
                     {
                         foreach (var sectionGuid in sectionGuids)
                         {
                             var hostname  = GetSectionHostname(sectionGuid);
-                            var addresses = await GetHostAddressesAsync(hostname);
+                            var addresses = GetHostAddresses(hostname);
 
                             if (addresses.Length > 0)
                             {
                                 throw new NotReadyException($"Waiting for [{hostname}] to be removed by the local DNS resolver.");
                             }
                         }
-
-                    }).Wait();
+                    });
             }
         }
 
@@ -230,7 +226,7 @@ namespace Neon.Xunit
         }
 
         /// <summary>
-        /// Performs a DNS lookup.
+        /// Performs an asynchronous DNS lookup.
         /// </summary>
         /// <param name="hostname">The target hostname.</param>
         /// <returns>The array of IP addresses resolved or an empty array if the hostname lookup failed.</returns>
@@ -242,7 +238,24 @@ namespace Neon.Xunit
             }
             catch (SocketException)
             {
-                return await Task.FromResult(new IPAddress[0]);
+                return await Task.FromResult(Array.Empty<IPAddress>());
+            }
+        }
+
+        /// <summary>
+        /// Performs a synchronous DNS lookup.
+        /// </summary>
+        /// <param name="hostname">The target hostname.</param>
+        /// <returns>The array of IP addresses resolved or an empty array if the hostname lookup failed.</returns>
+        private static IPAddress[] GetHostAddresses(string hostname)
+        {
+            try
+            {
+                return Dns.GetHostAddresses(hostname);
+            }
+            catch (SocketException)
+            {
+                return Array.Empty<IPAddress>();
             }
         }
 
@@ -342,13 +355,11 @@ namespace Neon.Xunit
 
                 sb.AppendLine($"# END-NEON-HOSTS-FIXTURE-{fixtureId}");
 
-                retryFile.InvokeAsync(
-                    async () =>
+                retryFile.Invoke(
+                    () =>
                     {
                         File.AppendAllText(HostsPath, sb.ToString());
-                        await Task.CompletedTask;
-
-                    }).Wait();
+                    });
 
                 if (NeonHelper.IsWindows)
                 {
@@ -377,17 +388,16 @@ namespace Neon.Xunit
                 // Wait for the local DNS resolver to indicate that it's picked
                 // up the changes by verifying that the section hostname resolves.
 
-                retryReady.InvokeAsync(
-                    async () =>
+                retryReady.Invoke(
+                    () =>
                     {
-                        var addresses = await GetHostAddressesAsync(sectionHostname);
+                        var addresses = GetHostAddresses(sectionHostname);
 
                         if (addresses.Length == 0)
                         {
                             throw new NotReadyException($"Waiting for [{sectionHostname}] to resolve by the local DNS resolver.");
                         }
-
-                    }).Wait();
+                    });
             }
         }
 

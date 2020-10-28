@@ -689,8 +689,8 @@ OPTIONS:
 
                     var dockerRetry = new LinearRetryPolicy(typeof(TransientException), maxAttempts: 5, retryInterval: TimeSpan.FromSeconds(5));
 
-                    dockerRetry.InvokeAsync(
-                        async () =>
+                    dockerRetry.Invoke(
+                        () =>
                         {
                             var response = node.SudoCommand("setup-docker.sh", node.DefaultRunOptions & ~RunOptions.FaultOnError);
 
@@ -698,10 +698,7 @@ OPTIONS:
                             {
                                 throw new TransientException(response.ErrorText);
                             }
-
-                            await Task.CompletedTask;
-
-                        }).Wait();
+                        });
 
                     // Clean up any cached APT files.
 
