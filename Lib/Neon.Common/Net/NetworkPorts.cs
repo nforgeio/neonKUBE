@@ -283,6 +283,16 @@ namespace Neon.Net
         /// </summary>
         public const int KubernetesApi = 6443;
 
+        /// <summary>
+        /// The Cassnadra database port.
+        /// </summary>
+        public const int Cassandra = 9042;
+
+        /// <summary>
+        /// The Postgres database port.
+        /// </summary>
+        public const int Postgres = 5433;
+
         private static Dictionary<string, int> wellKnownMap;
 
         private struct Map
@@ -353,7 +363,9 @@ namespace Neon.Net
                 new Map("aptcacherng", AppCacherNg),
                 new Map("cadence", Cadence),
                 new Map("temporal", Temporal),
-                new Map("kubernetes-api", KubernetesApi)
+                new Map("kubernetes-api", KubernetesApi),
+                new Map("cassandra", Cassandra),
+                new Map("postgres", Postgres)
             };
 
         wellKnownMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
