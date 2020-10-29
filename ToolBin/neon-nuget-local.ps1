@@ -72,6 +72,7 @@ SetVersion Neon.Xunit.Couchbase
 SetVersion Neon.Xunit.Kube
 SetVersion Neon.Xunit.Temporal
 SetVersion Neon.Xunit.YugaByte
+SetVersion Neon.YugaByte
 
 # Build and publish the projects.
 
@@ -94,6 +95,7 @@ Publish Neon.Xunit.Couchbase
 Publish Neon.Xunit.Kube
 Publish Neon.Xunit.Temporal
 Publish Neon.Xunit.YugaByte
+Publish Neon.YugaByte
 
 # Remove the generated standard nuget packages and replace them with the
 # packages including symbols and source code.

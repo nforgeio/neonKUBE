@@ -166,12 +166,12 @@ namespace Neon.Temporal
 
             TemporalHelper.ValidateActivityInterface(activityInterface);
 
-            this.parentWorkflow = parentWorkflow;
-            this.client         = parentWorkflow.Client;
-            this.hasStarted     = false;
+            this.parentWorkflow   = parentWorkflow;
+            this.client           = parentWorkflow.Client;
+            this.hasStarted       = false;
 
-            var activityTarget  = TemporalHelper.GetActivityTarget(activityInterface, methodName);
-            var methodAttribute = activityTarget.MethodAttribute;
+            var activityTarget    = TemporalHelper.GetActivityTarget(activityInterface, methodName);
+            var methodAttribute   = activityTarget.MethodAttribute;
 
             this.activityTypeName = activityTarget.ActivityTypeName;
             this.targetMethod     = activityTarget.TargetMethod;

@@ -23,10 +23,10 @@ using System.Reflection;
 
 using Neon.Common;
 
-namespace Neon.YugaByte
+namespace Neon.Xunit.YugaByte
 {
     /// <summary>
-    /// This namespace includes the YugaByte related utilities and extensions.
+    /// This namespace includes the YugaByte database Xunit test fixture.
     /// </summary>
     [System.Runtime.CompilerServices.CompilerGenerated]
     class NamespaceDoc

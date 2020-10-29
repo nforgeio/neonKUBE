@@ -89,7 +89,6 @@ services:
       - temporal
 ";
 
-        private readonly TimeSpan   warmupDelay = TimeSpan.FromSeconds(2);      // Time to allow Temporal server to start.
         private TemporalSettings    settings;
         private TemporalClient      client;
         private bool                reconnect;
@@ -280,7 +279,26 @@ services:
                 // Start the Temporal Docker compose application.
 
                 base.StartAsComposed(name, composeFile, keepRunning);
-                Thread.Sleep(warmupDelay);
+
+                // It can take Temporal server some time to start.  Rather than relying on the temporal-proxy
+                // to handle retries (which may take longer than the connect timeout), we're going to wait
+                // up to 120 seconds for Temporal to start listening on its RPC socket.
+
+                var retry = new LinearRetryPolicy(e => true, maxAttempts: int.MaxValue, retryInterval: TimeSpan.FromSeconds(0.5), timeout: TimeSpan.FromSeconds(120));
+
+                retry.Invoke(
+                    () =>
+                    {
+                        // The [socket.Connect()] calls below will throw [SocketException] until
+                        // Temporal starts listening on its RPC socket.
+
+                        var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+
+                        socket.Connect(IPAddress.Loopback, NetworkPorts.Temporal);
+                        socket.Close();
+                    });
+
+                Thread.Sleep(TimeSpan.FromSeconds(2));  // Wait a bit longer for luck!
 
                 // Initialize the settings.
 

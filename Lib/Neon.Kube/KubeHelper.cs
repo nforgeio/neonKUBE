@@ -211,14 +211,11 @@ namespace Neon.Kube
             var retry = new LinearRetryPolicy(typeof(IOException), maxAttempts: 10, retryInterval: TimeSpan.FromMilliseconds(200));
             var text = string.Empty;
 
-            retry.InvokeAsync(
-                async () => 
+            retry.Invoke(
+                () => 
                 {
-                    await Task.CompletedTask;
-
                     text = File.ReadAllText(path);
-
-                }).Wait();
+                });
 
             return text;
         }
@@ -238,14 +235,11 @@ namespace Neon.Kube
         {
             var retry = new LinearRetryPolicy(typeof(IOException), maxAttempts: 10, retryInterval: TimeSpan.FromMilliseconds(200));
 
-            retry.InvokeAsync(
-                async () =>
+            retry.Invoke(
+                () =>
                 {
-                    await Task.CompletedTask;
-
                     File.WriteAllText(path, text);
-
-                }).Wait();
+                });
 
             return text;
         }

@@ -331,8 +331,8 @@ namespace Neon.Xunit
             var argsString = NeonHelper.NormalizeExecArgs("pull", image);
             var pullRetry  = new LinearRetryPolicy(TransientDetector.Always, maxAttempts: 5, retryInterval: TimeSpan.FromSeconds(1));
 
-            pullRetry.InvokeAsync(
-                async () =>
+            pullRetry.Invoke(
+                () =>
                 {
                     result = NeonHelper.ExecuteCapture(NeonHelper.DockerCli, argsString);
 
@@ -340,10 +340,7 @@ namespace Neon.Xunit
                     {
                         throw new Exception($"Cannot pull container [{image}] - [exitcode={result.ExitCode}]: {result.ErrorText}");
                     }
-
-                    await Task.CompletedTask;
-
-                }).Wait();
+                });
 
             var dockerArgs = new List<string>();
 

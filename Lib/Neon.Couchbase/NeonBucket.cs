@@ -43,6 +43,15 @@ using Neon.Time;
 
 #pragma warning disable 0618    // Allow calls to wrapped obsolete members.
 
+// $todo(jefflill):
+//
+// The methods in this class do not override methods in a parent class so the
+// <inheritdoc/> tags don't actually do anything.  This means that these methods
+// won't generate any code documentation.
+//
+// I'm not entirely sure this is worth fixing since we're gravitating away from
+// Couchbase to YugaByte.  Perhaps something to work on during a vacation.
+
 namespace Couchbase
 {
     /// <summary>

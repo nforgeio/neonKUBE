@@ -78,6 +78,10 @@ namespace Neon.Temporal
         {
             TemporalHelper.ValidateActivityImplementation(activityType);
 
+            var interfaceType = TemporalHelper.GetActivityInterface(activityType);
+
+            TemporalHelper.ValidateActivityInterface(interfaceType);
+
             // We need to register each activity method that implements an activity interface method
             // with the same signature that that was tagged by [ActivityMethod].
             //
@@ -86,26 +90,23 @@ namespace Neon.Temporal
 
             var methodSignatureToAttribute = new Dictionary<string, ActivityMethodAttribute>();
 
-            foreach (var interfaceType in activityType.GetInterfaces())
+            foreach (var method in interfaceType.GetMethods(BindingFlags.Public | BindingFlags.Instance))
             {
-                foreach (var method in interfaceType.GetMethods(BindingFlags.Public | BindingFlags.Instance))
+                var activityMethodAttribute = method.GetCustomAttribute<ActivityMethodAttribute>();
+
+                if (activityMethodAttribute == null)
                 {
-                    var activityMethodAttribute = method.GetCustomAttribute<ActivityMethodAttribute>();
-
-                    if (activityMethodAttribute == null)
-                    {
-                        continue;
-                    }
-
-                    var signature = method.ToString();
-
-                    if (methodSignatureToAttribute.ContainsKey(signature))
-                    {
-                        throw new NotSupportedException($"Activity type [{activityType.FullName}] cannot implement the [{signature}] method from two different interfaces.");
-                    }
-
-                    methodSignatureToAttribute.Add(signature, activityMethodAttribute);
+                    continue;
                 }
+
+                var signature = method.ToString();
+
+                if (methodSignatureToAttribute.ContainsKey(signature))
+                {
+                    throw new NotSupportedException($"Activity type [{activityType.FullName}] cannot implement the [{signature}] method from two different interfaces.");
+                }
+
+                methodSignatureToAttribute.Add(signature, activityMethodAttribute);
             }
 
             // Next, we need to register the activity methods that implement the
@@ -118,7 +119,7 @@ namespace Neon.Temporal
                     continue;
                 }
 
-                var activityTarget = TemporalHelper.GetActivityTarget(activityType, method.Name);
+                var activityTarget = TemporalHelper.GetActivityTarget(interfaceType, activityMethodAttribute.Name);
 
                 using (await workerMutex.AcquireAsync())
                 {

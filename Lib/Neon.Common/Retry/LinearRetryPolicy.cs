@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Diagnostics;
@@ -181,7 +182,7 @@ namespace Neon.Retry
                     }
 
                     LogTransient(e);
-                    await Task.Delay(RetryInterval);
+                    await Task.Delay(adjustedDelay);
                 }
             }
         }
@@ -208,7 +209,62 @@ namespace Neon.Retry
                     }
 
                     LogTransient(e);
-                    await Task.Delay(RetryInterval);
+                    await Task.Delay(adjustedDelay);
+                }
+            }
+        }
+
+        /// <inheritdoc/>
+        public override void Invoke(Action action)
+        {
+            var attempts    = 0;
+            var sysDeadline = base.SysDeadline();
+
+            while (true)
+            {
+                try
+                {
+                    action();
+                    return;
+                }
+                catch (Exception e)
+                {
+                    var adjustedDelay = AdjustDelay(RetryInterval, sysDeadline);
+
+                    if (++attempts >= MaxAttempts || !transientDetector(e))
+                    {
+                        throw;
+                    }
+
+                    LogTransient(e);
+                    Thread.Sleep(adjustedDelay);
+                }
+            }
+        }
+
+        /// <inheritdoc/>
+        public override TResult Invoke<TResult>(Func<TResult> action)
+        {
+            var attempts    = 0;
+            var sysDeadline = base.SysDeadline();
+
+            while (true)
+            {
+                try
+                {
+                    return action();
+                }
+                catch (Exception e)
+                {
+                    var adjustedDelay = AdjustDelay(RetryInterval, sysDeadline);
+
+                    if (++attempts >= MaxAttempts || !transientDetector(e) || adjustedDelay <= TimeSpan.Zero)
+                    {
+                        throw;
+                    }
+
+                    LogTransient(e);
+                    Thread.Sleep(RetryInterval);
                 }
             }
         }
