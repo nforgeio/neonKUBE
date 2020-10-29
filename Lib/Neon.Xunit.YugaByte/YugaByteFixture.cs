@@ -67,12 +67,12 @@ namespace Neon.Xunit.YugaByte
         /// <summary>
         /// Specifies the Cassandra YCQL port to be exposed by the fixture.
         /// </summary>
-        private const int DefaultYcqlPort = 9099;    // $todo(jefflill): Change this back to 9042 after: https://github.com/nforgeio/neonKUBE/issues/1029
+        private const int DefaultYcqlPort = NetworkPorts.Cassandra;
 
         /// <summary>
         /// Specifies the Postgres YSQL port to be exposed by the fixture.
         /// </summary>
-        private const int DefaultYsqlPort = 5433;
+        private const int DefaultYsqlPort = NetworkPorts.Postgres;
 
         /// <summary>
         /// The default Docker compose file text used to spin up YugaByte and it's related services
