@@ -65,8 +65,6 @@ namespace Neon.Xunit.Temporal
 services:
   cassandra:
     image: cassandra:3.11
-    ports:
-      - ""9042:9042""
     deploy:
       resources:
         limits:
