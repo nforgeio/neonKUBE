@@ -403,11 +403,17 @@
     <Compile Include="..\Test.Neon.Common\Net\Test_Pinger.cs">
       <Link>Net\Test_Pinger.cs</Link>
     </Compile>
-    <Compile Include="..\Test.Neon.Common\Retry\Test_ExponentialRetryPolicy.cs">
-      <Link>Retry\Test_ExponentialRetryPolicy.cs</Link>
+    <Compile Include="..\Test.Neon.Common\Retry\Test_RetryAsync_ExponentialRetryPolicy.cs">
+      <Link>Retry\Test_RetryAsync_ExponentialRetryPolicy.cs</Link>
     </Compile>
-    <Compile Include="..\Test.Neon.Common\Retry\Test_LinearRetryPolicy.cs">
-      <Link>Retry\Test_LinearRetryPolicy.cs</Link>
+    <Compile Include="..\Test.Neon.Common\Retry\Test_RetryAsync_LinearRetryPolicy.cs">
+      <Link>Retry\Test_RetryAsync_LinearRetryPolicy.cs</Link>
+    </Compile>
+    <Compile Include="..\Test.Neon.Common\Retry\Test_RetrySync_ExponentialRetryPolicy.cs">
+      <Link>Retry\Test_RetrySync_ExponentialRetryPolicy.cs</Link>
+    </Compile>
+    <Compile Include="..\Test.Neon.Common\Retry\Test_RetrySync_LinearRetryPolicy.cs">
+      <Link>Retry\Test_RetrySync_LinearRetryPolicy.cs</Link>
     </Compile>
     <Compile Include="..\Test.Neon.Common\System\Test_AppDomainExtensions.cs">
       <Link>System\Test_AppDomainExtensions.cs</Link>
