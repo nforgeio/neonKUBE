@@ -195,7 +195,7 @@ namespace Neon.Kube
 
         // Path to the transient file on the Linux box whose presence indicates
         // that the server is still rebooting.
-        private readonly string RebootStatusPath = $"{KubeHostFolders.Tmpfs}/rebooting";
+        private readonly string RebootStatusPath = $"{KubeNodeFolders.Tmpfs}/rebooting";
 
         private readonly object syncLock   = new object();
         private bool            isDisposed = false;
@@ -525,7 +525,7 @@ namespace Neon.Kube
         /// <summary>
         /// The PATH to use on the remote server when executing commands in the
         /// session or <c>null</c>/empty to run commands without a path.  This
-        /// defaults to the standard Linux path and <see cref="KubeHostFolders.Bin"/>.
+        /// defaults to the standard Linux path and <see cref="KubeNodeFolders.Bin"/>.
         /// </summary>
         /// <remarks>
         /// <note>
@@ -533,7 +533,7 @@ namespace Neon.Kube
         /// multiple directories as required.
         /// </note>
         /// </remarks>
-        public string RemotePath { get; set; } = $"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:{KubeHostFolders.Bin}:{KubeHostFolders.Setup}";
+        public string RemotePath { get; set; } = $"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:{KubeNodeFolders.Bin}:{KubeNodeFolders.Setup}";
 
         /// <summary>
         /// Returns the username used to log into the remote node.
@@ -720,7 +720,7 @@ namespace Neon.Kube
                         var sudoDisableScript =
 $@"#!/bin/bash
 
-cat <<EOF > {KubeHostFolders.Home(Username)}/sudo-disable-prompt
+cat <<EOF > {KubeNodeFolders.Home(Username)}/sudo-disable-prompt
 #!/bin/bash
 echo ""%sudo    ALL=NOPASSWD: ALL"" > /etc/sudoers.d/nopasswd
 echo ""Defaults    !requiretty""  > /etc/sudoers.d/notty
@@ -730,31 +730,31 @@ chown root /etc/sudoers.d/*
 chmod 440 /etc/sudoers.d/*
 EOF
 
-chmod 770 {KubeHostFolders.Home(Username)}/sudo-disable-prompt
+chmod 770 {KubeNodeFolders.Home(Username)}/sudo-disable-prompt
 
-cat <<EOF > {KubeHostFolders.Home(Username)}/askpass
+cat <<EOF > {KubeNodeFolders.Home(Username)}/askpass
 #!/bin/bash
 echo {password}
 EOF
-chmod 770 {KubeHostFolders.Home(Username)}/askpass
+chmod 770 {KubeNodeFolders.Home(Username)}/askpass
 
-export SUDO_ASKPASS={KubeHostFolders.Home(Username)}/askpass
+export SUDO_ASKPASS={KubeNodeFolders.Home(Username)}/askpass
 
-sudo -A {KubeHostFolders.Home(Username)}/sudo-disable-prompt
-rm {KubeHostFolders.Home(Username)}/sudo-disable-prompt
-rm {KubeHostFolders.Home(Username)}/askpass
+sudo -A {KubeNodeFolders.Home(Username)}/sudo-disable-prompt
+rm {KubeNodeFolders.Home(Username)}/sudo-disable-prompt
+rm {KubeNodeFolders.Home(Username)}/askpass
 ";
                         using (var stream = new MemoryStream())
                         {
                             stream.Write(Encoding.UTF8.GetBytes(sudoDisableScript.Replace("\r", string.Empty)));
                             stream.Position = 0;
 
-                            scpClient.Upload(stream, $"{KubeHostFolders.Home(Username)}/sudo-disable");
-                            shellClient.RunCommand($"chmod 770 {KubeHostFolders.Home(Username)}/sudo-disable");
+                            scpClient.Upload(stream, $"{KubeNodeFolders.Home(Username)}/sudo-disable");
+                            shellClient.RunCommand($"chmod 770 {KubeNodeFolders.Home(Username)}/sudo-disable");
                         }
 
-                        shellClient.RunCommand($"{KubeHostFolders.Home(Username)}/sudo-disable");
-                        shellClient.RunCommand($"rm {KubeHostFolders.Home(Username)}/sudo-disable");
+                        shellClient.RunCommand($"{KubeNodeFolders.Home(Username)}/sudo-disable");
+                        shellClient.RunCommand($"rm {KubeNodeFolders.Home(Username)}/sudo-disable");
 
                         // Indicate that we shouldn't perform these operations again on this machine.
 
@@ -837,7 +837,7 @@ rm {KubeHostFolders.Home(Username)}/askpass
 
             try
             {
-                SudoCommand($"mkdir -p {KubeHostFolders.Tmpfs} && touch {RebootStatusPath}");
+                SudoCommand($"mkdir -p {KubeNodeFolders.Tmpfs} && touch {RebootStatusPath}");
                 LogLine("*** REBOOT");
                 SudoCommand("systemctl stop systemd-logind.service", RunOptions.LogOutput);
                 SudoCommand("reboot", RunOptions.Defaults | RunOptions.Shutdown);
@@ -1395,17 +1395,17 @@ rm {KubeHostFolders.Home(Username)}/askpass
         /// <summary>
         /// Returns the path to the user's home folder on the server.
         /// </summary>
-        public string HomeFolderPath => KubeHostFolders.Home(Username);
+        public string HomeFolderPath => KubeNodeFolders.Home(Username);
 
         /// <summary>
         /// Returns the path to the user's download folder on the server.
         /// </summary>
-        public string DownloadFolderPath => KubeHostFolders.Download(Username);
+        public string DownloadFolderPath => KubeNodeFolders.Download(Username);
 
         /// <summary>
         /// Returns the path to the user's upload folder on the server.
         /// </summary>
-        public string UploadFolderPath => KubeHostFolders.Upload(Username);
+        public string UploadFolderPath => KubeNodeFolders.Upload(Username);
 
         /// <summary>
         /// <para>
@@ -1478,27 +1478,27 @@ rm {KubeHostFolders.Home(Username)}/askpass
 
             // [~/.neon]
 
-            var folderPath = KubeHostFolders.NeonHome(Username);
+            var folderPath = KubeNodeFolders.NeonHome(Username);
             sshClient.RunCommand($"mkdir -p {folderPath} && chmod 700 {folderPath}");
 
             // [~/.neon/archive]
 
-            folderPath = KubeHostFolders.Archive(Username);
+            folderPath = KubeNodeFolders.Archive(Username);
             sshClient.RunCommand($"mkdir -p {folderPath} && chmod 700 {folderPath}");
 
             // [~/.neon/download]
 
-            folderPath = KubeHostFolders.Download(Username);
+            folderPath = KubeNodeFolders.Download(Username);
             sshClient.RunCommand($"mkdir -p {folderPath} && chmod 700 {folderPath}");
 
             // [~/.neon/exec]
 
-            folderPath = KubeHostFolders.Exec(Username);
+            folderPath = KubeNodeFolders.Exec(Username);
             sshClient.RunCommand($"mkdir -p {folderPath} && chmod 700 {folderPath}");
 
             // [~/.neon/upload]
 
-            folderPath = KubeHostFolders.Upload(Username);
+            folderPath = KubeNodeFolders.Upload(Username);
             sshClient.RunCommand($"mkdir -p {folderPath} && chmod 700 {folderPath}");
 
             //-----------------------------------------------------------------
@@ -2126,7 +2126,7 @@ rm {KubeHostFolders.Home(Username)}/askpass
 
                 // Upload the ZIP file to a temporary folder.
 
-                var bundleFolder = $"{KubeHostFolders.Exec(Username)}/{Guid.NewGuid().ToString("d")}";
+                var bundleFolder = $"{KubeNodeFolders.Exec(Username)}/{Guid.NewGuid().ToString("d")}";
                 var zipPath      = LinuxPath.Combine(bundleFolder, "__bundle.zip");
 
                 RunCommand($"mkdir {bundleFolder} && chmod 700 {bundleFolder}", RunOptions.LogOnErrorOnly);
@@ -2354,7 +2354,7 @@ rm {KubeHostFolders.Home(Username)}/askpass
 
             // Create the command folder.
 
-            var execFolder = $"{KubeHostFolders.Exec(Username)}";
+            var execFolder = $"{KubeNodeFolders.Exec(Username)}";
             var cmdFolder  = LinuxPath.Combine(execFolder, Guid.NewGuid().ToString("d"));
 
             SafeSshOperation("create command folder", () => sshClient.RunCommand($"mkdir {cmdFolder} && chmod 700 {cmdFolder}"));
@@ -3059,7 +3059,7 @@ echo $? > {cmdFolder}/exit
         /// </para>
         /// <para>
         /// This method tracks successful action completion by creating a file
-        /// on the node at <see cref="KubeHostFolders.State"/><b>/ACTION-ID</b>.
+        /// on the node at <see cref="KubeNodeFolders.State"/><b>/ACTION-ID</b>.
         /// To ensure idempotency, this method first checks for the existance of
         /// this file and returns immediately without invoking the action if it is 
         /// present.
@@ -3071,7 +3071,7 @@ echo $? > {cmdFolder}/exit
             Covenant.Requires<ArgumentException>(idempotentRegex.IsMatch(actionId), nameof(actionId));
             Covenant.Requires<ArgumentNullException>(action != null, nameof(action));
 
-            var stateFolder = KubeHostFolders.State;
+            var stateFolder = KubeNodeFolders.State;
             var slashPos    = actionId.LastIndexOf('/');
 
             if (slashPos != -1)

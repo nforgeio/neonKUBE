@@ -428,19 +428,19 @@ OPTIONS:
 
             switch (hostPlatform)
             {
-                case KubeHostPlatform.Linux:
+                case KubeClientPlatform.Linux:
 
                     kubeCtlUri = kubeSetupInfo.KubeCtlLinuxUri;
                     helmUri    = kubeSetupInfo.HelmLinuxUri;
                     break;
 
-                case KubeHostPlatform.Osx:
+                case KubeClientPlatform.Osx:
 
                     kubeCtlUri = kubeSetupInfo.KubeCtlOsxUri;
                     helmUri    = kubeSetupInfo.HelmOsxUri;
                     break;
 
-                case KubeHostPlatform.Windows:
+                case KubeClientPlatform.Windows:
 
                     kubeCtlUri = kubeSetupInfo.KubeCtlWindowsUri;
                     helmUri    = kubeSetupInfo.HelmWindowsUri;
@@ -487,12 +487,12 @@ OPTIONS:
 
                         switch (hostPlatform)
                         {
-                            case KubeHostPlatform.Linux:
-                            case KubeHostPlatform.Osx:
+                            case KubeClientPlatform.Linux:
+                            case KubeClientPlatform.Osx:
 
                                 throw new NotImplementedException($"Unsupported workstation platform [{hostPlatform}]");
 
-                            case KubeHostPlatform.Windows:
+                            case KubeClientPlatform.Windows:
 
                                 // The downloaded file is a ZIP archive for Windows.  We're going
                                 // to extract the [windows-amd64/helm.exe] file.
@@ -1452,7 +1452,7 @@ spec:
   ports:
   - port: 443
     targetPort: 8443
-    nodePort: {KubeHostPorts.KubeDashboard}
+    nodePort: {KubeNodePorts.KubeDashboard}
   selector:
     k8s-app: kubernetes-dashboard
 

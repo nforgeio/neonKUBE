@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeHostPlatform.cs
+// FILE:	    KubeNodePorts.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
 //
@@ -17,37 +17,40 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
-
-using Neon.Common;
-
-using Renci.SshNet;
 
 namespace Neon.Kube
 {
     /// <summary>
-    /// Enumerates the operating systems supported by neonKUBE.
+    /// Defines reserved node and cluster network ports.
     /// </summary>
-    public enum KubeHostPlatform
+    public static class KubeNodePorts
     {
         /// <summary>
-        /// Linux.
+        /// Port exposed by the Kubernetes API servers on the master nodes.
         /// </summary>
-        Linux,
+        public const int KubeApiServer = 6443;
 
         /// <summary>
-        /// Windows.
+        /// The first port reserved by Kubernetes for exposing service node ports.
         /// </summary>
-        Windows,
+        public const int KubeFirstNodePort = 30000;
 
         /// <summary>
-        /// OS/X
+        /// The last port reserved by Kubernetes for exposing service node ports.
         /// </summary>
-        Osx
+        public const int KubeLastNodePort = 32767;
+
+        // $todo(jefflill):
+        //
+        // Remove the [KubeDashboard] definition after we implement
+        // the neonKUBE gateway.
+
+        /// <summary>
+        /// The node port exposed by the Kubernetes dashboard service.
+        /// </summary>
+        public const int KubeDashboard = KubeFirstNodePort;
     }
 }

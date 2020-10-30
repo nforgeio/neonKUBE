@@ -719,7 +719,7 @@ namespace WinDesktop
                     var kubeDashboardProxy =
                         new ReverseProxy(
                             localPort: KubeHelper.ClientConfig.KubeDashboardProxyPort,
-                            remotePort: KubeHostPorts.KubeDashboard,
+                            remotePort: KubeNodePorts.KubeDashboard,
                             remoteHost: cluster.GetReachableMaster().Address.ToString(),
                             validCertificate: dashboardCert,
                             requestHandler: kubernetesDashboardRequestHandler);
