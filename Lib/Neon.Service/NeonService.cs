@@ -31,6 +31,8 @@ using Neon.IO;
 using Neon.Retry;
 using Neon.Windows;
 
+using Prometheus;
+
 namespace Neon.Service
 {
     /// <summary>

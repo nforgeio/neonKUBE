@@ -29,12 +29,16 @@ namespace Neon.Common
 {
     public static partial class NeonHelper
     {
-        private static bool     osChecked;
-        private static string   osDescription;
-        private static string   frameworkDescription;
-        private static bool     isWindows;
-        private static bool     isLinux;
-        private static bool     isOSX;
+        private static bool             osChecked;
+        private static string           osDescription;
+        private static NetFramework?    netFramework = null;
+        private static string           frameworkDescription;
+        private static bool             isWindows;
+        private static bool             isLinux;
+        private static bool             isOSX;
+        private static bool?            is64Bit;
+        private static bool?            isDevWorkstation;
+        private static bool?            isKubernetes;
 
         /// <summary>
         /// Detects the current operating system.
@@ -97,7 +101,52 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Returns <c>true</c> if the application is running on a Windows variant
+        /// Returns <c>true</c> if the application was built as 64-bit.
+        /// </summary>
+        public static bool Is64Bit
+        {
+            get
+            {
+                if (is64Bit.HasValue)
+                {
+                    return is64Bit.Value;
+                }
+
+                is64Bit = System.Runtime.InteropServices.Marshal.SizeOf<IntPtr>() == 8;
+
+                return is64Bit.Value;
+            }
+        }
+
+        /// <summary>
+        /// Returns <c>true</c> if the client was built as 32-bit.
+        /// </summary>
+        public static bool Is32BitBuild
+        {
+            get { return !Is64Bit; }
+        }
+
+        /// <summary>
+        /// Indicates whether the current application is running on a developer workstation.
+        /// This is determined by the presence of the <b>DEV_WORKSTATION</b> environment variable.
+        /// </summary>
+        public static bool IsDevWorkstation
+        {
+            get
+            {
+                if (isDevWorkstation.HasValue)
+                {
+                    return isDevWorkstation.Value;
+                }
+
+                isDevWorkstation = Environment.GetEnvironmentVariable("DEV_WORKSTATION") != null;
+
+                return isDevWorkstation.Value;
+            }
+        }
+
+        /// <summary>
+        /// Returns <c>true</c> if the current process is running on a Windows variant
         /// operating system.
         /// </summary>
         public static bool IsWindows
@@ -115,7 +164,7 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Returns <c>true</c> if the application is running on a Linux variant
+        /// Returns <c>true</c> if the current process is running on a Linux variant
         /// operating system.
         /// </summary>
         public static bool IsLinux
@@ -133,7 +182,7 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Returns <c>true</c> if the application is running on Max OSX.
+        /// Returns <c>true</c> if the current process is running on Max OSX.
         /// </summary>
         public static bool IsOSX
         {
@@ -146,6 +195,36 @@ namespace Neon.Common
 
                 DetectOS();
                 return isOSX;
+            }
+        }
+
+        /// <summary>
+        /// Returns <c>true</c> if the current process is running as a container on Kubernetes.
+        /// </summary>
+        public static bool IsKubernetes
+        {
+            get
+            {
+                // We'll use the existence of the KUBERNETES_SERVICE_HOST environment 
+                // variable to detect this:
+                //
+                //      https://kubernetes.io/docs/concepts/services-networking/connect-applications-service/#environment-variables
+
+                if (isKubernetes.HasValue)
+                {
+                    return isKubernetes.Value;
+                }
+
+                if (Environment.GetEnvironmentVariable("KUBERNETES_SERVICE_HOST") != null)
+                {
+                    isKubernetes = true;
+                }
+                else
+                {
+                    isKubernetes = false;
+                }
+
+                return isKubernetes.Value;
             }
         }
     }
