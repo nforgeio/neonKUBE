@@ -48,7 +48,7 @@
 
   <ItemGroup>
     <PackageReference Include="CouchbaseNetClient" Version="2.7.18" />
-    <PackageReference Include="GitInfo" Version="2.0.31">
+    <PackageReference Include="GitInfo" Version="2.1.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
