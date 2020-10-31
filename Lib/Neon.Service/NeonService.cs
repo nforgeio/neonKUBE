@@ -29,6 +29,7 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.IO;
+using Neon.Net;
 using Neon.Retry;
 using Neon.Windows;
 
@@ -229,6 +230,23 @@ namespace Neon.Service
     /// will consist of a single line of text <b>without line ending characters</b>.  You'll
     /// need to specify the fully qualified path to this file as an optional parameter to the 
     /// <see cref="NeonService"/> constructor.
+    /// </para>
+    /// <para><b>PROMETHEUS METRICS</b></para>
+    /// <para>
+    /// <see cref="NeonService"/> can enable services to publish Prmoetheus metrics with a
+    /// single line of code; simply set <see cref="NeonService.MetricsOptions"/>.<see cref="MetricsOptions.Mode"/> to
+    /// <see cref="MetricsMode.Scrape"/> before calling <see cref="RunAsync(bool)"/>.  This configures
+    /// your service to publish metrics via HTTP via <b>http://0.0.0.0:<see cref="NetworkPorts.NeonPrometheus"/>/metrics/</b>.
+    /// We've resistered port <see cref="NetworkPorts.NeonPrometheus"/> with Prometheus as a standard port
+    /// to be used for micro services running in Kubernetes or on other container platforms to make it 
+    /// easy configure scraping for a cluster.
+    /// </para>
+    /// <para>
+    /// You can also configure a custom port and path or configure metrics push to a Prometheus
+    /// Pushgateway using other <see cref="MetricsOptions"/> properties.  You can also fully customize
+    /// your Prometheus configuration by leaving this disabled in <see cref="NeonService.MetricsOptions"/>
+    /// and setting things up using the standard <b>prometheus-net</b> mechanisms before calling
+    /// <see cref="RunAsync(bool)"/>.
     /// </para>
     /// </remarks>
     public abstract class NeonService : IDisposable
