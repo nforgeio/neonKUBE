@@ -38,7 +38,7 @@ namespace TestCommon
 {
     public partial class Test_JsonClient
     {
-        private const string baseUri = "http://127.0.0.1:888/";
+        private readonly string baseUri = $"http://127.0.0.1:{NetHelper.GetUnusedIpPort(IPAddress.Loopback)}/";
 
         public class RequestDoc
         {
