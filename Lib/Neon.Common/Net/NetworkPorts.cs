@@ -293,6 +293,12 @@ namespace Neon.Net
         /// </summary>
         public const int Postgres = 5433;
 
+        /// <summary>
+        /// The standard Prometheus scraping port exposed by Neon related services,
+        /// including custom user services built on <b>Neon.Server</b> or <b>Neon.Web</b>.
+        /// </summary>
+        public const int NeonPrometheus = 9088;
+
         private static Dictionary<string, int> wellKnownMap;
 
         private struct Map

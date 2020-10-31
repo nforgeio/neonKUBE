@@ -128,6 +128,11 @@ namespace Neon.Common
         public static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
         /// <summary>
+        /// Returns the prefix to be used for Neon related Prometheus names.
+        /// </summary>
+        public const string NeonMetricsPrefix = "neon_";
+
+        /// <summary>
         /// The <see cref="Neon.Common.ServiceContainer"/> instance returned by 
         /// <see cref="ServiceContainer"/>.
         /// </summary>

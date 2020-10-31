@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
@@ -291,7 +292,7 @@ namespace Neon.Service
         private static string cachedPasswordsFolder;
 
         /// <summary>
-        /// Returns <c>true</c> if the class is running in test mode.
+        /// Returns <c>true</c> if the service is running in test mode.
         /// </summary>
         private static bool IsTestMode
         {
@@ -309,7 +310,7 @@ namespace Neon.Service
         }
 
         /// <summary>
-        /// Returns the path the folder holding the user specific Kubernetes files.
+        /// Returns the path the folder holding user-specific Kubernetes files.
         /// </summary>
         /// <returns>The folder path.</returns>
         private static string GetNeonKubeUserFolder()
@@ -430,6 +431,8 @@ namespace Neon.Service
         private Dictionary<string, string>      environmentVariables;
         private Dictionary<string, FileInfo>    configFiles;
         private string                          statusFilePath;
+        private MetricServer                    metricServer;
+        private MetricPusher                    metricPusher;
 
         /// <summary>
         /// Constructor.
@@ -630,6 +633,18 @@ namespace Neon.Service
         }
 
         /// <summary>
+        /// <para>
+        /// Prometheus metrics options.  To enable metrics collection for non-ASPNET applications,
+        /// we recommend that you simply set <see cref="MetricsOptions.Mode"/><c>==</c><see cref="MetricsMode.Scrape"/>
+        /// before calling <see cref="OnRunAsync"/>.
+        /// </para>
+        /// <para>
+        /// See <see cref="MetricsOptions"/> for more details.
+        /// </para>
+        /// </summary>
+        public MetricsOptions MetricsOptions { get; set; } = new MetricsOptions();
+
+        /// <summary>
         /// Returns the service's log manager.
         /// </summary>
         public ILogManager LogManager { get; private set; }
@@ -724,7 +739,7 @@ namespace Neon.Service
 
         /// <summary>
         /// Starts the service if it's not already running.  This will call <see cref="OnRunAsync"/>,
-        /// which actually implements the service.
+        /// which is your code that actually implements the service.
         /// </summary>
         /// <param name="disableProcessExit">
         /// Optionally specifies that the hosting process should not be terminated 
@@ -752,7 +767,7 @@ namespace Neon.Service
         /// <see cref="ProcessTerminator.CancellationToken"/> token's  
         /// <see cref="CancellationToken.IsCancellationRequested"/> property and 
         /// return from your <see cref="OnRunAsync"/> method when this is <c>true</c>.
-        /// This You'll need to perform this check frequently so you may need
+        /// You'll need to perform this check frequently so you may need
         /// to use timeouts to prevent blocking code from blocking for too long.
         /// </para>
         /// </remarks>
@@ -803,6 +818,40 @@ namespace Neon.Service
             Log = LogManager.GetLogger();
             Log.LogInfo(() => $"Starting [{Name}:{GitVersion}]");
 
+            // Initialize Prometheus metrics when enabled.
+
+            try
+            {
+                switch (MetricsOptions.Mode)
+                {
+                    case MetricsMode.Disabled:
+
+                        break;
+
+                    case MetricsMode.Scrape:
+                    case MetricsMode.ScrapeIgnoreErrors:
+
+                        metricServer = new MetricServer(MetricsOptions.Port, MetricsOptions.Path);
+                        break;
+
+                    case MetricsMode.Push:
+
+                        metricPusher = new MetricPusher(MetricsOptions.PushUrl, Name);
+                        break;
+
+                    default:
+
+                        throw new NotImplementedException();
+                }
+            }
+            catch
+            {
+                if (MetricsOptions.Mode != MetricsMode.ScrapeIgnoreErrors)
+                {
+                    throw;
+                }
+            }
+
             // Start and run the service.
 
             try
@@ -830,7 +879,7 @@ namespace Neon.Service
             }
             catch (Exception e)
             {
-                // We're gping to consider any exceptions caught here to be errors
+                // We're going to consider any exceptions caught here to be errors
                 // and return a non-zero exit code.  The service's [main()] method
                 // can examine the [ExceptionException] property to decide whether
                 // the exception should be considered an error or whether to return
@@ -845,6 +894,10 @@ namespace Neon.Service
             // Perform last rights for the service before it passes away.
 
             Log.LogInfo(() => $"Exiting [{Name}] with [exitcode={ExitCode}].");
+
+            await metricServer?.StopAsync();
+            await metricPusher?.StopAsync();
+
             Terminator.ReadyToExit();
 
             await SetStatusAsync(NeonServiceStatus.Terminated);
