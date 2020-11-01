@@ -23,6 +23,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -100,5 +101,78 @@ namespace Neon.Service
         /// Specifies the target Prometheus Pushgateway for <see cref="MetricsMode.Push"/> mode.
         /// </summary>
         public string PushUrl { get; set; } = null;
+
+        /// <summary>
+        /// Optionally specifies additional labels to be identify the source for <see cref="MetricsMode.Push"/> mode.
+        /// </summary>
+        public IList<Tuple<string, string>> PushLabels { get; set; } = new List<Tuple<string, string>>();
+
+        /// <summary>
+        /// Validates the options.
+        /// </summary>
+        /// <exception cref="ArgumentException">Thrown for any errors.</exception>
+        public void Validate()
+        {
+            switch (Mode)
+            {
+                case MetricsMode.Disabled:
+
+                    break;
+
+                case MetricsMode.Scrape:
+                case MetricsMode.ScrapeIgnoreErrors:
+
+                    if (!NetHelper.IsValidPort(Port))
+                    {
+                        throw new ArgumentNullException($"Metrics [Port={Port}] is not valid.");
+                    }
+
+                    if (string.IsNullOrEmpty(Path))
+                    {
+                        throw new ArgumentNullException("Metrics [Path] is required.");
+                    }
+
+                    if (Path.StartsWith("/"))
+                    {
+                        throw new ArgumentNullException($"Metrics [Path={Path}] cannot start with a slash [/].");
+                    }
+
+                    if (!Path.EndsWith("/"))
+                    {
+                        throw new ArgumentNullException($"Metrics [Path={Path}] must end with a slash [/].");
+                    }
+                    break;
+
+                case MetricsMode.Push:
+
+                    if (string.IsNullOrEmpty(PushUrl))
+                    {
+                        throw new ArgumentNullException("Metrics [PushUrl] is required.");
+                    }
+
+                    if (!Uri.TryCreate(PushUrl, UriKind.Absolute, out var uri))
+                    {
+                        throw new ArgumentNullException($"Metrics [PushUrl={PushUrl}] is not a valid URL.");
+                    }
+                    break;
+
+                default:
+
+                    throw new NotImplementedException();
+            }
+
+            if (PushLabels != null)
+            {
+                var labelNameRegex = new Regex(@"[a-zA-Z_][a-zA-Z0-9_]*");
+
+                foreach (var item in PushLabels)
+                {
+                    if (labelNameRegex.IsMatch(item.Item1))
+                    {
+                        throw new ArgumentException($"[{item.Item1}] is not a valid label.");
+                    }
+                }
+            }
+        }
     }
 }

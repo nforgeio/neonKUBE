@@ -236,7 +236,7 @@ namespace Neon.Service
     /// <see cref="NeonService"/> can enable services to publish Prmoetheus metrics with a
     /// single line of code; simply set <see cref="NeonService.MetricsOptions"/>.<see cref="MetricsOptions.Mode"/> to
     /// <see cref="MetricsMode.Scrape"/> before calling <see cref="RunAsync(bool)"/>.  This configures
-    /// your service to publish metrics via HTTP via <b>http://0.0.0.0:<see cref="NetworkPorts.NeonPrometheus"/>/metrics/</b>.
+    /// your service to publish metrics via HTTP via <b>http://0.0.0.0:</b><see cref="NetworkPorts.NeonPrometheus"/><b>/metrics/</b>.
     /// We've resistered port <see cref="NetworkPorts.NeonPrometheus"/> with Prometheus as a standard port
     /// to be used for micro services running in Kubernetes or on other container platforms to make it 
     /// easy configure scraping for a cluster.
@@ -838,6 +838,10 @@ namespace Neon.Service
 
             // Initialize Prometheus metrics when enabled.
 
+            MetricsOptions = MetricsOptions ?? new MetricsOptions();
+
+            MetricsOptions.Validate();
+
             try
             {
                 switch (MetricsOptions.Mode)
@@ -850,17 +854,23 @@ namespace Neon.Service
                     case MetricsMode.ScrapeIgnoreErrors:
 
                         metricServer = new MetricServer(MetricsOptions.Port, MetricsOptions.Path);
+                        metricServer.Start();
                         break;
 
                     case MetricsMode.Push:
 
-                        metricPusher = new MetricPusher(MetricsOptions.PushUrl, Name);
+                        metricPusher = new MetricPusher(MetricsOptions.PushUrl, Name, additionalLabels: MetricsOptions.PushLabels);
+                        metricPusher.Start();
                         break;
 
                     default:
 
                         throw new NotImplementedException();
                 }
+            }
+            catch (NotImplementedException)
+            {
+                throw;
             }
             catch
             {
@@ -913,8 +923,17 @@ namespace Neon.Service
 
             Log.LogInfo(() => $"Exiting [{Name}] with [exitcode={ExitCode}].");
 
-            await metricServer?.StopAsync();
-            await metricPusher?.StopAsync();
+            if (metricServer != null)
+            {
+                await metricServer.StopAsync();
+                metricServer = null;
+            }
+
+            if (metricPusher != null)
+            {
+                await metricPusher.StopAsync();
+                metricPusher = null;
+            }
 
             Terminator.ReadyToExit();
 
@@ -1011,7 +1030,7 @@ namespace Neon.Service
         /// <returns>The the progam exit code.</returns>
         /// <remarks>
         /// <para>
-        /// Services should perform any required initialization and then must call <see cref="SetRunningAsync()"/>
+        /// Services should perform any required initialization and then they must call <see cref="SetRunningAsync()"/>
         /// to indicate that the service should transition into the <see cref="NeonServiceStatus.Running"/>
         /// state.  This is very important because the service test fixture requires the service to be
         /// in the running state before it allows tests to proceed.  This is necessary to avoid unit test 

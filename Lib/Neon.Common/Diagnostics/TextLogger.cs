@@ -31,6 +31,8 @@ using Microsoft.Extensions.Logging;
 
 using Neon.Common;
 
+using Prometheus;
+
 namespace Neon.Diagnostics
 {
     /// <summary>
@@ -43,14 +45,7 @@ namespace Neon.Diagnostics
         //---------------------------------------------------------------------
         // Static members
 
-        private static readonly Prometheus.Counter DebugEventCount     = Prometheus.Metrics.CreateCounter(NeonHelper.NeonMetricsPrefix + "", "Number of logged DEBUG events.");
-        private static readonly Prometheus.Counter TransientEventCount = Prometheus.Metrics.CreateCounter(NeonHelper.NeonMetricsPrefix + "", "Number of logged TRANSIENT events.");
-        private static readonly Prometheus.Counter ErrorEventCount     = Prometheus.Metrics.CreateCounter(NeonHelper.NeonMetricsPrefix + "", "Number of logged ERROR events.");
-        private static readonly Prometheus.Counter SErrorEventCount    = Prometheus.Metrics.CreateCounter(NeonHelper.NeonMetricsPrefix + "", "Number of logged SERROR events.");
-        private static readonly Prometheus.Counter CriticalEventCount  = Prometheus.Metrics.CreateCounter(NeonHelper.NeonMetricsPrefix + "", "Number of logged CRITICAL events.");
-        private static readonly Prometheus.Counter InfoEventCount      = Prometheus.Metrics.CreateCounter(NeonHelper.NeonMetricsPrefix + "", "Number of logged INFO events.");
-        private static readonly Prometheus.Counter SInfoEventCount     = Prometheus.Metrics.CreateCounter(NeonHelper.NeonMetricsPrefix + "", "Number of logged SINFO events.");
-        private static readonly Prometheus.Counter WarnEventCount      = Prometheus.Metrics.CreateCounter(NeonHelper.NeonMetricsPrefix + "", "Number of logged WARN events.");
+        private static readonly Counter LogEventCountByLevel = Prometheus.Metrics.CreateCounter(NeonHelper.NeonMetricsPrefix + "log_events_total", "Number of logged events.", "level");
 
         //---------------------------------------------------------------------
         // Instance members
@@ -223,6 +218,62 @@ namespace Neon.Diagnostics
         /// <param name="activityId">The optional activity ID.</param>
         private void Log(LogLevel logLevel, string message, string activityId = null)
         {
+            // Increment the metrics counter for the event type.  Note that we're
+            // going to increment the count even when logging for the level is
+            // disabled.  This will help devops know when there might be issues
+            // they may need to investigate by changing the log level.
+
+            switch (logLevel)
+            {
+                case LogLevel.Critical:
+
+                    LogEventCountByLevel.WithLabels("critical").Inc();
+                    break;
+
+                case LogLevel.Debug:
+
+                    LogEventCountByLevel.WithLabels("debug").Inc();
+                    break;
+
+                case LogLevel.Transient:
+
+                    LogEventCountByLevel.WithLabels("transient").Inc();
+                    break;
+
+                case LogLevel.Error:
+
+                    LogEventCountByLevel.WithLabels("error").Inc();
+                    break;
+
+                case LogLevel.Info:
+
+                    LogEventCountByLevel.WithLabels("info").Inc();
+                    break;
+
+                case LogLevel.None:
+
+                    break;
+
+                case LogLevel.SError:
+
+                    LogEventCountByLevel.WithLabels("serror").Inc();
+                    break;
+
+                case LogLevel.SInfo:
+
+                    LogEventCountByLevel.WithLabels("sinfo").Inc();
+                    break;
+
+                case LogLevel.Warn:
+
+                    LogEventCountByLevel.WithLabels("warn").Inc();
+                    break;
+
+                default:
+
+                    throw new NotImplementedException();
+            }
+
             if (infoAsDebug && logLevel == LogLevel.Info)
             {
                 if (!IsLogDebugEnabled)
@@ -240,31 +291,26 @@ namespace Neon.Diagnostics
                 case LogLevel.Critical:
                     
                     level = "CRITICAL";
-                    CriticalEventCount.Inc();
                     break;
 
                 case LogLevel.Debug:       
                     
                     level = "DEBUG";
-                    DebugEventCount.Inc();
                     break;
 
                 case LogLevel.Transient:    
                     
                     level = "TRANSIENT";
-                    TransientEventCount.Inc();
                     break;
 
                 case LogLevel.Error:      
                     
                     level = "ERROR";
-                    ErrorEventCount.Inc();
                     break;
 
                 case LogLevel.Info:       
                     
                     level = "INFO";
-                    InfoEventCount.Inc();
                     break;
 
                 case LogLevel.None:    
@@ -275,19 +321,16 @@ namespace Neon.Diagnostics
                 case LogLevel.SError:     
                     
                     level = "SERROR";
-                    SErrorEventCount.Inc();
                     break;
 
                 case LogLevel.SInfo:  
                     
                     level = "SINFO";
-                    SErrorEventCount.Inc();
                     break;
 
                 case LogLevel.Warn:     
                     
                     level = "WARN";
-                    WarnEventCount.Inc();
                     break;
 
                 default:
