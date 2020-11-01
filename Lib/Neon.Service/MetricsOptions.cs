@@ -74,8 +74,7 @@ namespace Neon.Service
     /// <note>
     /// For ASPNET applications, we recommend that you leave metrics collection disabled here and 
     /// configure middleware to handle the metrics; this will automatically much more detailed web
-    /// related metrics.  You can use the standard <b>prometheus-net</b> middleware builder extension
-    /// or a slightly modifed builder extension from <b>Neon.Web</b>.
+    /// related metrics.  You can use the standard <b>prometheus-net</b> middleware builder extension.
     /// </note>
     /// </remarks>
     public class MetricsOptions
