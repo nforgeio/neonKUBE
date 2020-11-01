@@ -82,7 +82,7 @@ namespace TestNeonService
         /// <returns>The service instance.</returns>
         private ComplexService CreateService()
         {
-            return new ComplexService(CreateServiceMap(), "complex-service");
+            return new ComplexService("complex-service", serviceMap: CreateServiceMap());
         }
 
         [Fact]

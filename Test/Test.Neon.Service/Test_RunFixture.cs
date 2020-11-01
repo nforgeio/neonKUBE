@@ -130,7 +130,7 @@ namespace TestNeonService
             /// <returns>The service instance.</returns>
             private WebService CreateWebService()
             {
-                var service = new WebService(CreateServiceMap(), "web-service");
+                var service = new WebService("web-service", serviceMap: CreateServiceMap());
 
                 service.SetEnvironmentVariable("WEB_RESULT", "Hello World!");
 
@@ -143,7 +143,7 @@ namespace TestNeonService
             /// <returns>The service instance.</returns>
             private RelayService CreateRelayService()
             {
-                return new RelayService(CreateServiceMap(), "relay-service");
+                return new RelayService("relay-service", serviceMap: CreateServiceMap());
             }
 
             /// <summary>

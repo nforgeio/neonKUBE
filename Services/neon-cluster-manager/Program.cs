@@ -26,7 +26,7 @@ namespace NeonClusterManager
         /// <param name="args">The command line arguments.</param>
         public static void Main(string[] args)
         {
-            new NeonClusterManager(NeonServiceMap.Production, NeonServices.NeonClusterManager).RunAsync().Wait();
+            new NeonClusterManager(NeonServices.NeonClusterManager, serviceMap: NeonServiceMap.Production).RunAsync().Wait();
         }
     }
 }

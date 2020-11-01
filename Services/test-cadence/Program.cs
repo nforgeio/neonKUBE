@@ -60,7 +60,7 @@ namespace CadenceService
         /// </remarks>
         public static void Main(string[] args)
         {
-            new CadenceTester(NeonServiceMap.Production, NeonServices.TestCadence).RunAsync().Wait();
+            new CadenceTester(NeonServices.TestCadence, serviceMap: NeonServiceMap.Production).RunAsync().Wait();
         }
     }
 }

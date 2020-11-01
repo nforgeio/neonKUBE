@@ -60,7 +60,7 @@ namespace TemporalService
         /// </remarks>
         public static void Main(string[] args)
         {
-            new TemporalTester(NeonServiceMap.Production, NeonServices.TestTemporal).RunAsync().Wait();
+            new TemporalTester(NeonServices.TestTemporal, serviceMap: NeonServiceMap.Production).RunAsync().Wait();
         }
     }
 }

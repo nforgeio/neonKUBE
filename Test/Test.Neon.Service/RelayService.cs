@@ -84,13 +84,13 @@ namespace TestNeonService
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="serviceMap">The service map.</param>
         /// <param name="name">The service name.</param>
         /// <param name="branch">Optionally specifies the build branch.</param>
         /// <param name="commit">Optionally specifies the branch commit.</param>
         /// <param name="isDirty">Optionally specifies whether there are uncommit changes to the branch.</param>
-        public RelayService(ServiceMap serviceMap, string name, string branch = null, string commit = null, bool isDirty = false)
-            : base(serviceMap, name, branch, commit, isDirty)
+        /// <param name="serviceMap">Optionally specifies the service map.</param>
+        public RelayService(string name, string branch = null, string commit = null, bool isDirty = false, ServiceMap serviceMap = null)
+            : base(name, branch, commit, isDirty, serviceMap: serviceMap)
         {
         }
 

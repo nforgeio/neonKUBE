@@ -455,7 +455,6 @@ namespace Neon.Service
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="serviceMap">The service map describing this service and potentially other services.</param>
         /// <param name="name">The name of this service within <see cref="ServiceMap"/>.</param>
         /// <param name="branch">Optionally specifies the build branch.</param>
         /// <param name="commit">Optionally specifies the branch commit.</param>
@@ -463,6 +462,12 @@ namespace Neon.Service
         /// <param name="statusFilePath">
         /// Optionally specifies the path where the service will update its status (for external health probes).
         /// See the class documentation for more information <see cref="Neon.Service"/>.
+        /// </param>
+        /// <param name="serviceMap">
+        /// Optionally specifies a service map describing this service and potentially other services.
+        /// Service maps can be used to run services locally on developer workstations via <b>Neon.Xunit.NeonServiceFixture</b>
+        /// or other means to avoid port conflicts or to emulate a cluster of services without Kubernetes
+        /// or containers.  This is a somewhat advanced topic that needs documentation.
         /// </param>
         /// <exception cref="KeyNotFoundException">
         /// Thrown if there is no service description for <paramref name="name"/>
@@ -482,14 +487,13 @@ namespace Neon.Service
         /// </para>
         /// </remarks>
         public NeonService(
-            ServiceMap  serviceMap, 
             string      name, 
             string      branch         = null, 
             string      commit         = null, 
             bool        isDirty        = false,
-            string      statusFilePath = null)
+            string      statusFilePath = null,
+            ServiceMap  serviceMap     = null)
         {
-            Covenant.Requires<ArgumentNullException>(serviceMap != null, nameof(serviceMap));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
             if (!serviceMap.TryGetValue(name, out var description))
@@ -502,13 +506,13 @@ namespace Neon.Service
                 statusFilePath = null;
             }
 
-            this.ServiceMap           = serviceMap;
             this.Description          = description;
             this.InProduction         = !NeonHelper.IsDevWorkstation;
             this.Terminator           = new ProcessTerminator();
             this.environmentVariables = new Dictionary<string, string>();
             this.configFiles          = new Dictionary<string, FileInfo>();
             this.statusFilePath       = statusFilePath;
+            this.ServiceMap           = serviceMap;
 
             // Git version info:
 
