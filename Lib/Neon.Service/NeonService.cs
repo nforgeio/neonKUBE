@@ -20,6 +20,8 @@ using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics.Contracts;
 using System.IO;
+using System.Net;
+using System.Net.Sockets;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -34,6 +36,7 @@ using Neon.Retry;
 using Neon.Windows;
 
 using Prometheus;
+using System.Net.Http;
 
 namespace Neon.Service
 {
@@ -230,6 +233,33 @@ namespace Neon.Service
     /// will consist of a single line of text <b>without line ending characters</b>.  You'll
     /// need to specify the fully qualified path to this file as an optional parameter to the 
     /// <see cref="NeonService"/> constructor.
+    /// </para>
+    /// <para><b>SERVICE DEPENDENCIES</b></para>
+    /// <para>
+    /// Services often depend on other services to function, such as a database, rest API, etc.
+    /// <see cref="NeonService"/> provides an easy to use integrated way to wait for other
+    /// services to initialize themselves and become ready before your service will be allowed
+    /// to start.  This is a great way to avoid a blizzard of service failures and restarts
+    /// when starting a collection of related services on a platform like Kubernetes.
+    /// </para>
+    /// <para>
+    /// You can use the <see cref="Dependencies"/> property to control this in code via the
+    /// <see cref="ServiceDependencies"/> class or configure this via environment variables: 
+    /// </para>
+    /// <code>
+    /// NEON_SERVICE_DEPENDENCIES_URIS=http://foo.com;tcp://10.0.0.55:1234
+    /// NEON_SERVICE_DEPENDENCIES_TIMEOUT_SECONDS=30
+    /// NEON_SERVICE_DEPENDENCIES_WAIT_SECONDS=5
+    /// </code>
+    /// <para>
+    /// The basic idea is that the <see cref="RunAsync"/> call to start your service will
+    /// need to successfully to establish socket connections to any service dependecy URIs 
+    /// before your <see cref="OnRunAsync"/> method will be called.  Your service will be
+    /// terminated if any of the services cannot be reached after the specified timeout.
+    /// </para>
+    /// <para>
+    /// You can also specity an additional time to wait after all services are available
+    /// to give them a chance to perform additional internal initialization.
     /// </para>
     /// <para><b>PROMETHEUS METRICS</b></para>
     /// <para>
@@ -535,6 +565,15 @@ namespace Neon.Service
         }
 
         /// <summary>
+        /// Used to specify other services that must be reachable via the network before a
+        /// <see cref="NeonService"/> will be allowed to start.  This is exposed via the
+        /// <see cref="NeonService.Dependencies"/> where these values can be configured in
+        /// code before <see cref="NeonService.RunAsync(bool)"/> is called or they can
+        /// also be configured via environment variables as described in <see cref="ServiceDependencies"/>.
+        /// </summary>
+        public ServiceDependencies Dependencies { get; set; } = new ServiceDependencies();
+
+        /// <summary>
         /// Finalizer.
         /// </summary>
         ~NeonService()
@@ -600,12 +639,12 @@ namespace Neon.Service
         public string Name => Description.Name;
 
         /// <summary>
-        /// Returns the service map.
+        /// Returns the service map (if any).
         /// </summary>
         public ServiceMap ServiceMap { get; private set; }
 
         /// <summary>
-        /// Returns the service description for this service.
+        /// Returns the service description for this service (if any).
         /// </summary>
         public ServiceDescription Description { get; private set; }
 
@@ -761,7 +800,9 @@ namespace Neon.Service
 
         /// <summary>
         /// Starts the service if it's not already running.  This will call <see cref="OnRunAsync"/>,
-        /// which is your code that actually implements the service.
+        /// which is your code that actually implements the service.  Note that any service dependencies
+        /// specified by <see cref="Dependencies"/> will be verified as ready before <see cref="OnRunAsync"/>
+        /// will be called.
         /// </summary>
         /// <param name="disableProcessExit">
         /// Optionally specifies that the hosting process should not be terminated 
@@ -883,6 +924,74 @@ namespace Neon.Service
                     throw;
                 }
             }
+
+            // Verify that any service dependencies are ready.
+
+            var readyServices     = new HashSet<Uri>();
+            var notReadyUri       = (Uri)null;
+            var notReadyException = (Exception)null;
+
+            try
+            {
+                await NeonHelper.WaitForAsync(
+                    async () =>
+                    {
+                        foreach (var uri in Dependencies.Uris)
+                        {
+                            if (readyServices.Contains(uri))
+                            {
+                                continue;   // This one is malready ready
+                            }
+
+                            switch (uri.Scheme.ToUpperInvariant())
+                            {
+                                case "HTTP":
+                                case "HTTPS":
+                                case "TCP":
+
+                                    using (var socket = new Socket(SocketType.Stream, ProtocolType.Tcp))
+                                    {
+                                        try
+                                        {
+                                            var addresses = await Dns.GetHostAddressesAsync(uri.Host);
+
+                                            socket.Connect(new IPEndPoint(addresses.First(), uri.Port));
+                                        }
+                                        catch (SocketException e)
+                                        {
+                                            // Remember these so we can log something useful if we end up timing out.
+
+                                            notReadyUri = uri;
+                                            notReadyException = e;
+
+                                            return false;
+                                        }
+                                    }
+                                    break;
+
+                                default:
+
+                                    Log.LogWarn($"Service Dependency: [{uri}] has an unsupported scheme and will be ignored.  Only HTTP, HTTPS, and TCP URIs are allowed.");
+                                    readyServices.Add(uri);     // Add the bad URI so we won't try it again.
+                                    break;
+                            }
+                        }
+
+                        return true;
+                    },
+                    timeout: Dependencies.Timeout,
+                    pollInterval: TimeSpan.FromSeconds(1));
+            }
+            catch (TimeoutException)
+            {
+                // Report the problem and exit the service.
+
+                Log.LogError($"Service Dependency: [{notReadyUri}] is still not ready after waiting [{Dependencies.Timeout}].", notReadyException);
+                
+                return ExitCode = 1;
+            }
+
+            await Task.Delay(Dependencies.Wait);
 
             // Start and run the service.
 
