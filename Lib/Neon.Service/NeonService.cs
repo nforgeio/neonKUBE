@@ -61,23 +61,22 @@ namespace Neon.Service
     /// business.
     /// </para>
     /// <note>
-    /// Note that calling <see cref="SetRunningAsync()"/> after your service has initialized is very important
-    /// because the <b>NeonServiceFixture</b> requires won't allow tests to proceed until the service
+    /// Note that calling <see cref="SetRunningAsync()"/> after your service has initialized is important
+    /// because the <b>NeonServiceFixture</b> won't allow tests to proceed until the service
     /// indicates that it's ready.  This is necessary to avoid unit test race conditions.
     /// </note>
     /// <para>
-    /// Note that your  <see cref="OnRunAsync"/> method should generally not return until the 
+    /// Note that your <see cref="OnRunAsync"/> method should generally not return until the 
     /// <see cref="Terminator"/> signals it to stop.  Alternatively, you can throw a <see cref="ProgramExitException"/>
     /// with an optional process exit code to proactively exit your service.
     /// </para>
     /// <note>
-    /// All services should properly handle <see cref="Terminator"/> stop signals so unit tests will terminate
-    /// promptly.  Your terminate handler method must return within a set period of time (30 seconds by default) 
-    /// to avoid having your tests being forced to stop.  This is probably the trickiest implementation
-    /// task.  For truly asynchronous service implementations, you should consider passing
-    /// the <see cref="ProcessTerminator.CancellationToken"/> to all async methods you
-    /// call and then handle any <see cref="TaskCanceledException"/> exceptions thrown by
-    /// returning from <see cref="OnRunAsync"/>.
+    /// All services should properly handle <see cref="Terminator"/> stop signals so services deployed as
+    /// containers will stop promptly and cleanly (this also applies to services running in unit tests.  
+    /// Your terminate handler method must return within a set period of time (30 seconds by default) 
+    /// to avoid killed by by Docker or Kubernetes.  This is probably the trickiest thing you'll need to implement.
+    /// For asynchronous service implementations, you consider passing the <see cref="ProcessTerminator.CancellationToken"/>
+    /// to all async method calls.
     /// </note>
     /// <note>
     /// This class uses the <b>DEV_WORKSTATION</b> environment variable to determine whether
@@ -86,6 +85,7 @@ namespace Neon.Service
     /// defined for production environments.  You can use the <see cref="InProduction"/>
     /// or <see cref="InDevelopment"/> properties to check this.
     /// </note>
+    /// <code source="..\..\Snippets\Snippets.NeonService\Program-Basic.cs" language="c#" title="Simple example showing a basic service implementation:"/>
     /// <para><b>CONFIGURATION</b></para>
     /// <para>
     /// Services are generally configured using environment variables and/or configuration
@@ -138,7 +138,7 @@ namespace Neon.Service
     /// consistent way to run services in production as well as in tests, including tests
     /// running multiple services simultaneously.
     /// </para>
-    /// <para><b>SERVICE TERMINATION</b></para>
+    /// <para><b>DISPOSE IMPLEMENTATION</b></para>
     /// <para>
     /// All services, especially those that create unmanaged resources like ASP.NET services,
     /// sockets, NATS clients, HTTP clients, thread etc. should override and implement 
@@ -261,6 +261,7 @@ namespace Neon.Service
     /// You can also specity an additional time to wait after all services are available
     /// to give them a chance to perform additional internal initialization.
     /// </para>
+    /// <code source="..\..\Snippets\Snippets.NeonService\Program-Dependencies.cs" language="c#" title="Waiting for service dependencies:"/>
     /// <para><b>PROMETHEUS METRICS</b></para>
     /// <para>
     /// <see cref="NeonService"/> can enable services to publish Prometheus metrics with a
@@ -278,10 +279,11 @@ namespace Neon.Service
     /// and setting things up using the standard <b>prometheus-net</b> mechanisms before calling
     /// <see cref="RunAsync(bool)"/>.
     /// </para>
-    /// <para><b>NETCORE 3.0+ METRICS</b></para>
+    /// <code source="..\..\Snippets\Snippets.NeonService\Program-Dependencies.cs" language="c#" title="Waiting for service dependencies:"/>
+    /// <para><b>NETCORE Runtime METRICS</b></para>
     /// <para>
     /// We highly recommend that you also enable .NET Runtime related metrics for services targeting
-    /// .NET Core 3.0 or greater.
+    /// .NET Core 2.2 or greater.
     /// </para>
     /// <note>
     /// Although the .NET Core 2.2+ runtimes are supported, the runtime apparently has some issues that
@@ -289,15 +291,21 @@ namespace Neon.Service
     /// no support for any .NET Framework runtime.
     /// </note>
     /// <para>
-    /// Adding support for this is easy, simply add a reference to the <a href=https://www.nuget.org/packages/prometheus-net.DotNetRuntime">prometheus-net.DotNetRuntime</a>
+    /// Adding support for this is easy, simply add a reference to the <a href="https://www.nuget.org/packages/prometheus-net.DotNetRuntime">prometheus-net.DotNetRuntime</a>
     /// package to your service project and then assign a function callback to <see cref="MetricsOptions.GetCollector"/>
     /// that configures runtime metrics collection, like:
     /// </para>
-    /// <para>ADD SNIPPET HERE!</para>
+    /// <code source="..\..\Snippets\Snippets.NeonService\Program-Metrics.cs" language="c#" title="Service metrics example:"/>
     /// <para>
     /// You can also customize the the runtime metrics emitted like this:
     /// </para>
-    /// <para>ADD SNIPPET HERE!</para>
+    /// <code source="..\..\Snippets\Snippets.NeonService\Program-RuntimeMetrics.cs" language="c#" title="Service and .NET Runtime metrics:"/>
+    /// <para><b>SERVICE: FULL MEAL DEAL!</b></para>
+    /// <para>
+    /// Here's a reasonable template you can use to begin implementing your service projects with 
+    /// all features enabled:
+    /// </para>
+    /// <code source="..\..\Snippets\Snippets.NeonService\Program-FullMealDeal.cs" language="c#" title="Full Neon.Service template:"/>
     /// </remarks>
     public abstract class NeonService : IDisposable
     {
@@ -852,7 +860,7 @@ namespace Neon.Service
         /// </note>
         /// <para>
         /// Service implementations must honor <see cref="Terminator"/> termination
-        /// signals exiting the <see cref="OnRunAsync"/> method reasonably quickly (within
+        /// signals by exiting the <see cref="OnRunAsync"/> method reasonably quickly (within
         /// 30 seconds by default) when these occur.  They can do this by passing 
         /// <see cref="ProcessTerminator.CancellationToken"/> for <c>async</c> calls
         /// and then catching the <see cref="TaskCanceledException"/> and returning
