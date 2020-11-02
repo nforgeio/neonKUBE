@@ -107,6 +107,11 @@ namespace Neon.Service
         public IList<Tuple<string, string>> PushLabels { get; set; } = new List<Tuple<string, string>>();
 
         /// <summary>
+        /// Optionally configures a callback that can return an additional metrics collector for the service.
+        /// </summary>
+        public Func<IDisposable> GetCollector { get; set; }
+
+        /// <summary>
         /// Validates the options.
         /// </summary>
         /// <exception cref="ArgumentException">Thrown for any errors.</exception>

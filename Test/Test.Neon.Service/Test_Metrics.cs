@@ -36,6 +36,7 @@ using Neon.Tasks;
 using Neon.Xunit;
 
 using Prometheus;
+using Prometheus.DotNetRuntime;
 
 using Xunit;
 
@@ -134,6 +135,94 @@ namespace TestNeonService
             }
         }
 
+        public class TestServiceWithRuntimeMetrics : NeonService
+        {
+            //-----------------------------------------------------------------
+            // Static members
+
+            private static ServiceMap CreateServiceMap()
+            {
+                var serviceMap = new ServiceMap();
+
+                var description = new ServiceDescription()
+                {
+                    Name = "test-service"
+                };
+
+                serviceMap.Add(description);
+
+                return serviceMap;
+            }
+
+            //-----------------------------------------------------------------
+            // Instance members
+
+            private readonly Counter TestCounter = Metrics.CreateCounter("test_counter", "my test counter");
+
+            public TestServiceWithRuntimeMetrics()
+                : base("test-service", serviceMap: CreateServiceMap())
+            {
+            }
+
+            /// <summary>
+            /// Used to signal to the test case that the service has done its
+            /// thing and is ready to exit.
+            /// </summary>
+            public AsyncAutoResetEvent ReadyToExitEvent { get; set; } = new AsyncAutoResetEvent();
+
+            /// <summary>
+            /// Used by the test case to signal that the service should exit.
+            /// </summary>
+            public AsyncAutoResetEvent CanExitEvent { get; set; } = new AsyncAutoResetEvent();
+
+            /// <summary>
+            /// Implements the test service.
+            /// </summary>
+            /// <returns>The service exit code.</returns>
+            protected override async Task<int> OnRunAsync()
+            {
+                // Increment the test counter.
+
+                TestCounter.Inc();
+
+                // Log some events so we can verify that the default Neon.Diagnostics logger
+                // increments counters for the different log levels.
+
+                var orgLogLevel = LogManager.LogLevel;
+
+                try
+                {
+                    LogManager.LogLevel = LogLevel.Debug;
+
+                    var logger = LogManager.GetLogger(this.Name);
+
+                    logger.LogDebug("debug event");
+                    logger.LogInfo("info event");
+                    logger.LogSInfo("security info event");
+                    logger.LogWarn("warn event");
+                    logger.LogTransient("transient event");
+                    logger.LogError("error event");
+                    logger.LogSError("security error event");
+                    logger.LogCritical("critical event");
+
+                    // Signal to the test case that the service has done its thing
+                    // and is ready to exit.
+
+                    ReadyToExitEvent.Set();
+
+                    // Wait for the test to signal that the service can exit.
+
+                    await CanExitEvent.WaitAsync();
+
+                    return await Task.FromResult(0);
+                }
+                finally
+                {
+                    LogManager.LogLevel = orgLogLevel;
+                }
+            }
+        }
+
         //---------------------------------------------------------------------
         // Tests
 
@@ -155,11 +244,18 @@ namespace TestNeonService
                         continue;   // Ignore comments or blank lines
                     }
 
-                    var fields = line.Split(' ', 2);
-                    var name   = fields[0];
-                    var value  = double.Parse(fields[1]);
+                    try
+                    {
+                        var fields = line.Split(' ', 2);
+                        var name   = fields[0];
+                        var value  = double.Parse(fields[1]);
 
-                    metrics[name] = value;
+                        metrics[name] = value;
+                    }
+                    catch
+                    {
+                        // Ignore non-numeric metrics.
+                    }
                 }
             }
 
@@ -440,6 +536,61 @@ namespace TestNeonService
             Assert.True(metrics[@"neon_log_events_total{level=""debug""}"] > 0);
             Assert.True(metrics[@"neon_log_events_total{level=""serror""}"] > 0);
             Assert.True(metrics[@"neon_log_events_total{level=""info""}"] > 0);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonKube)]
+        public async Task RuntimeMetrics()
+        {
+            // Verify that we can also expose .NET Runtime exposes metrics via the [GetCollector()] callback.
+
+            var service     = new TestService();
+            var metricPort  = NetHelper.GetUnusedIpPort(IPAddress.Loopback);
+            var metricsPath = "foo/";
+
+            service.MetricsOptions.Mode         = MetricsMode.Scrape;
+            service.MetricsOptions.Port         = metricPort;
+            service.MetricsOptions.Path         = metricsPath;
+            service.MetricsOptions.GetCollector = () => DotNetRuntimeStatsBuilder.Default().StartCollecting();
+
+            var runTask = service.RunAsync();
+
+            // Wait for the test service to do its thing.
+
+            await service.ReadyToExitEvent.WaitAsync();
+
+            using (var httpClient = new HttpClient())
+            {
+                var scrapedMetrics = await httpClient.GetStringAsync($"http://127.0.0.1:{metricPort}/{metricsPath}");
+                var metrics        = ParseMetrics(scrapedMetrics);
+
+                // Verify the test counter.
+
+                Assert.True(metrics["test_counter"] > 0);
+
+                // Verify Neon logging counters.
+
+                Assert.True(metrics[@"neon_log_events_total{level=""warn""}"] > 0);
+                Assert.True(metrics[@"neon_log_events_total{level=""critical""}"] > 0);
+                Assert.True(metrics[@"neon_log_events_total{level=""transient""}"] > 0);
+                Assert.True(metrics[@"neon_log_events_total{level=""sinfo""}"] > 0);
+                Assert.True(metrics[@"neon_log_events_total{level=""error""}"] > 0);
+                Assert.True(metrics[@"neon_log_events_total{level=""debug""}"] > 0);
+                Assert.True(metrics[@"neon_log_events_total{level=""serror""}"] > 0);
+                Assert.True(metrics[@"neon_log_events_total{level=""info""}"] > 0);
+
+                // Verify some .NET Runtime metrics
+
+                Assert.True(metrics.ContainsKey(@"dotnet_jit_method_seconds_total{dynamic=""false""}"));
+                Assert.True(metrics.ContainsKey(@"dotnet_gc_cpu_ratio"));
+                Assert.True(metrics.ContainsKey(@"dotnet_jit_cpu_ratio"));
+            }
+
+            // Tell the service it can exit.
+
+            service.CanExitEvent.Set();
+
+            await runTask;
         }
     }
 }

@@ -263,7 +263,7 @@ namespace Neon.Service
     /// </para>
     /// <para><b>PROMETHEUS METRICS</b></para>
     /// <para>
-    /// <see cref="NeonService"/> can enable services to publish Prmoetheus metrics with a
+    /// <see cref="NeonService"/> can enable services to publish Prometheus metrics with a
     /// single line of code; simply set <see cref="NeonService.MetricsOptions"/>.<see cref="MetricsOptions.Mode"/> to
     /// <see cref="MetricsMode.Scrape"/> before calling <see cref="RunAsync(bool)"/>.  This configures
     /// your service to publish metrics via HTTP via <b>http://0.0.0.0:</b><see cref="NetworkPorts.NeonPrometheus"/><b>/metrics/</b>.
@@ -278,6 +278,26 @@ namespace Neon.Service
     /// and setting things up using the standard <b>prometheus-net</b> mechanisms before calling
     /// <see cref="RunAsync(bool)"/>.
     /// </para>
+    /// <para><b>NETCORE 3.0+ METRICS</b></para>
+    /// <para>
+    /// We highly recommend that you also enable .NET Runtime related metrics for services targeting
+    /// .NET Core 3.0 or greater.
+    /// </para>
+    /// <note>
+    /// Although the .NET Core 2.2+ runtimes are supported, the runtime apparently has some issues that
+    /// may prevent this from working properly, so that's not recommended.  Note that there's currently
+    /// no support for any .NET Framework runtime.
+    /// </note>
+    /// <para>
+    /// Adding support for this is easy, simply add a reference to the <a href=https://www.nuget.org/packages/prometheus-net.DotNetRuntime">prometheus-net.DotNetRuntime</a>
+    /// package to your service project and then assign a function callback to <see cref="MetricsOptions.GetCollector"/>
+    /// that configures runtime metrics collection, like:
+    /// </para>
+    /// <para>ADD SNIPPET HERE!</para>
+    /// <para>
+    /// You can also customize the the runtime metrics emitted like this:
+    /// </para>
+    /// <para>ADD SNIPPET HERE!</para>
     /// </remarks>
     public abstract class NeonService : IDisposable
     {
@@ -481,6 +501,7 @@ namespace Neon.Service
         private string                          statusFilePath;
         private MetricServer                    metricServer;
         private MetricPusher                    metricPusher;
+        private IDisposable                     metricCollector;
 
         /// <summary>
         /// Constructor.
@@ -924,6 +945,11 @@ namespace Neon.Service
 
                         throw new NotImplementedException();
                 }
+
+                if (MetricsOptions.GetCollector != null)
+                {
+                    metricCollector = MetricsOptions.GetCollector();
+                }
             }
             catch (NotImplementedException)
             {
@@ -999,7 +1025,25 @@ namespace Neon.Service
                 // Report the problem and exit the service.
 
                 Log.LogError($"Service Dependency: [{notReadyUri}] is still not ready after waiting [{Dependencies.Timeout}].", notReadyException);
-                
+
+                if (metricServer != null)
+                {
+                    await metricServer.StopAsync();
+                    metricServer = null;
+                }
+
+                if (metricPusher != null)
+                {
+                    await metricPusher.StopAsync();
+                    metricPusher = null;
+                }
+
+                if (metricCollector != null)
+                {
+                    metricCollector.Dispose();
+                    metricCollector = null;
+                }
+
                 return ExitCode = 1;
             }
 
@@ -1058,6 +1102,12 @@ namespace Neon.Service
             {
                 await metricPusher.StopAsync();
                 metricPusher = null;
+            }
+
+            if (metricCollector != null)
+            {
+                metricCollector.Dispose();
+                metricCollector = null;
             }
 
             Terminator.ReadyToExit();
