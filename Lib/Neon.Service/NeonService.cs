@@ -526,9 +526,21 @@ namespace Neon.Service
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
-            if (!serviceMap.TryGetValue(name, out var description))
+            if (serviceMap != null)
             {
-                throw new KeyNotFoundException($"The service map does not include a service definition for [{name}].");
+                if (!serviceMap.TryGetValue(name, out var description))
+                {
+                    throw new KeyNotFoundException($"The service map does not include a service definition for [{name}].");
+                }
+                else
+                {
+                    if (name != description.Name)
+                    {
+                        throw new ArgumentException($"Service [name={name}] does not match [description.Name={description.Name}.");
+                    }
+
+                    this.Description = description;
+                }
             }
 
             if (string.IsNullOrEmpty(statusFilePath))
@@ -536,7 +548,7 @@ namespace Neon.Service
                 statusFilePath = null;
             }
 
-            this.Description          = description;
+            this.Name                 = name;
             this.InProduction         = !NeonHelper.IsDevWorkstation;
             this.Terminator           = new ProcessTerminator();
             this.environmentVariables = new Dictionary<string, string>();
@@ -636,7 +648,7 @@ namespace Neon.Service
         /// <summary>
         /// Returns the service name.
         /// </summary>
-        public string Name => Description.Name;
+        public string Name { get; private set; }
 
         /// <summary>
         /// Returns the service map (if any).
@@ -858,7 +870,8 @@ namespace Neon.Service
             }
 
             // [disableProcessExit] will be typically passed as true when testing or
-            // debugging.  We'll let the terminator know so it won't do this.
+            // debugging.  We'll let the terminator know so it won't actually terminate
+            // the current process (which will actually be the unit test framework).
 
             if (disableProcessExit)
             {
@@ -884,7 +897,6 @@ namespace Neon.Service
             // Initialize Prometheus metrics when enabled.
 
             MetricsOptions = MetricsOptions ?? new MetricsOptions();
-
             MetricsOptions.Validate();
 
             try
@@ -979,7 +991,7 @@ namespace Neon.Service
 
                         return true;
                     },
-                    timeout: Dependencies.Timeout,
+                    timeout: Dependencies.TestTimeout ?? Dependencies.Timeout,
                     pollInterval: TimeSpan.FromSeconds(1));
             }
             catch (TimeoutException)

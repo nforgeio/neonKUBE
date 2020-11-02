@@ -77,7 +77,7 @@ namespace Neon.Service
 
             var urisVar = Environment.GetEnvironmentVariable("NEON_SERVICE_DEPENDENCIES_URIS");
 
-            if (string.IsNullOrEmpty(urisVar))
+            if (!string.IsNullOrEmpty(urisVar))
             {
                 var uris = urisVar.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
 
@@ -140,7 +140,7 @@ namespace Neon.Service
         /// are supported.  Any URIs found in the <c>NEON_SERVICE_DEPENDENCIES_URIS</c>
         /// environment variables will be added to this list.
         /// </summary>
-        public List<Uri> Uris = new List<Uri>();
+        public List<Uri> Uris { get; set; } = new List<Uri>();
 
         /// <summary>
         /// The maximum time to wait for the services specified by <see cref="Uris"/> to
@@ -148,13 +148,19 @@ namespace Neon.Service
         /// defaults to <b>120 seconds</b> or the <c>NEON_SERVICE_DEPENDENCIES_TIMEOUT_SECONDS</c>
         /// environment variable.
         /// </summary>
-        public TimeSpan Timeout = TimeSpan.FromSeconds(120);
+        public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(120);
+
+        /// <summary>
+        /// Used in internal unit tests to override <see cref="Timeout"/> so tests won't have
+        /// to wait so long for things to timeout.
+        /// </summary>
+        internal TimeSpan? TestTimeout { get; set; } = null;
 
         /// <summary>
         /// Additional time to wait after the services specified by <see cref="Uris"/> are
         /// ready before the service will be started.  This defaults to <b>0 seconds</b>
         /// or the <c>NEON_SERVICE_DEPENDENCIES_WAIT_SECONDS</c> environment variable.
         /// </summary>
-        public TimeSpan Wait = TimeSpan.Zero;
+        public TimeSpan Wait { get; set; } = TimeSpan.Zero;
     }
 }
