@@ -62,6 +62,7 @@ SetVersion Neon.HyperV
 SetVersion Neon.Service
 SetVersion Neon.ModelGen
 SetVersion Neon.Nats
+SetVersion Neon.SSH
 SetVersion Neon.SSH.NET
 SetVersion Neon.Temporal
 SetVersion Neon.Web
@@ -85,6 +86,7 @@ Publish Neon.HyperV
 Publish Neon.Service
 Publish Neon.ModelGen
 Publish Neon.Nats
+Publish Neon.SSH
 Publish Neon.SSH.NET
 Publish Neon.Temporal
 Publish Neon.Web

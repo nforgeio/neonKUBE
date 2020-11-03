@@ -45,6 +45,7 @@
       <DocumentationSource sourceFile="..\..\Lib\Neon.Xunit.YugaByte\Neon.Xunit.YugaByte.csproj" />
       <DocumentationSource sourceFile="..\..\Lib\Neon.HyperV\Neon.HyperV.csproj" />
       <DocumentationSource sourceFile="..\..\Lib\Neon.YugaByte\Neon.YugaByte.csproj" />
+      <DocumentationSource sourceFile="..\..\Lib\Neon.SSH\Neon.SSH.csproj" />
     </DocumentationSources>
     <HelpFileFormat>HtmlHelp1, Website</HelpFileFormat>
     <SyntaxFilters>Standard</SyntaxFilters>
