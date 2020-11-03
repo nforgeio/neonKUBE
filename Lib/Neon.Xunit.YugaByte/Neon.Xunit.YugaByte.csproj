@@ -18,6 +18,7 @@
     <FileVersion>0.0.0.0</FileVersion>
     <Authors>neonFORGE Team</Authors>
     <Configurations>Debug;Release;CodeDoc</Configurations>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
