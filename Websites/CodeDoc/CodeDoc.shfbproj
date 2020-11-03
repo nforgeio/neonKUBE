@@ -169,7 +169,7 @@ Copyright © Renci 2010-2017</NamespaceSummaryItem>
     <Folder Include="Content\Neon.Cadence" />
     <Folder Include="Content\Neon.Couchbase" />
     <Folder Include="Content\Neon.Cryptography" />
-    <Folder Include="Content\Neon.Kube.Service" />
+    <Folder Include="Content\Neon.Service" />
     <Folder Include="Content\Neon.ModelGen" />
     <Folder Include="Content\Neon.NATS" />
     <Folder Include="Content\Neon.SSH.NET" />
@@ -189,7 +189,7 @@ Copyright © Renci 2010-2017</NamespaceSummaryItem>
     <None Include="Content\Neon.Cadence\ActivityDetails\DendencyInjection.aml" />
     <None Include="Content\Neon.Cadence\OtherTopics\CrossPlatform.aml" />
     <None Include="Content\Neon.Cadence\WorkflowDetails\SyncSignals.aml" />
-    <None Include="Content\Neon.Kube.Service\Overview.aml" />
+    <None Include="Content\Neon.Service\Overview.aml" />
     <None Include="Content\Neon.Cadence\ActivityDetails\Basics.aml" />
     <None Include="Content\Neon.Cadence\ActivityDetails\ExternalCompletion.aml" />
     <None Include="Content\Neon.Cadence\ActivityDetails\Local.aml" />

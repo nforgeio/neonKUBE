@@ -295,9 +295,9 @@ namespace Neon.Net
 
         /// <summary>
         /// The standard Prometheus scraping port exposed by Neon related services,
-        /// including custom user services built on <b>Neon.Server</b> or <b>Neon.Web</b>.
+        /// including custom user services built on <b>Neon.Service</b>.
         /// </summary>
-        public const int NeonPrometheus = 9088;
+        public const int NeonPrometheus = 9762;
 
         private static Dictionary<string, int> wellKnownMap;
 
