@@ -37,8 +37,16 @@
           documentation for more details and examples.
         </para>
         <para>
+          <codeEntityReference qualifyHint="false">T:Neon.Service.ServiceDependencies</codeEntityReference>
+          can be used to define external network endpoints that need to be ready for the service to start.
+        </para>
+        <para>
+          <codeEntityReference qualifyHint="false">T:Neon.Service.MetricsOptions</codeEntityReference>
+          can be used to control whether the service exports Prometheus metrics.
+        </para>
+        <para>
           <codeEntityReference qualifyHint="false">T:Neon.Service.ProcessTerminator</codeEntityReference>
-          is the lower-level class that receives and handle Linux and OS/X termination signals.
+          is the lower-level class that receives and handles Linux and OS/X termination signals.
         </para>
       </content>
     </section>
