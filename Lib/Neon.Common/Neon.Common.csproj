@@ -30,8 +30,8 @@
     <DocumentationFile>bin\Debug\Neon.Common.xml</DocumentationFile>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-    <WarningsAsErrors></WarningsAsErrors>
-    <NoWarn>NU1605</NoWarn>
+    <WarningsAsErrors>NU1605</WarningsAsErrors>
+    <NoWarn></NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -39,8 +39,8 @@
     <DocumentationFile>bin\Release\Neon.Common.xml</DocumentationFile>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-    <WarningsAsErrors></WarningsAsErrors>
-    <NoWarn>NU1605</NoWarn>
+    <WarningsAsErrors>NU1605</WarningsAsErrors>
+    <NoWarn></NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CodeDoc|AnyCPU'">
@@ -48,8 +48,8 @@
     <DocumentationFile>bin\Release\Neon.Common.xml</DocumentationFile>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-    <WarningsAsErrors />
-    <NoWarn>NU1605</NoWarn>
+    <WarningsAsErrors>NU1605</WarningsAsErrors>
+    <NoWarn></NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

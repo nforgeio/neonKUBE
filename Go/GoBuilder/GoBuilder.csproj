@@ -9,22 +9,21 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <WarningsAsErrors></WarningsAsErrors>
-    <NoWarn>NU1605</NoWarn>
+    <WarningsAsErrors>NU1605</WarningsAsErrors>
+    <NoWarn></NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-    <WarningsAsErrors></WarningsAsErrors>
-    <NoWarn>NU1605</NoWarn>
+    <WarningsAsErrors>NU1605</WarningsAsErrors>
+    <NoWarn></NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CodeDoc|AnyCPU'">
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-    <WarningsAsErrors />
-    <NoWarn>NU1605</NoWarn>
+    <WarningsAsErrors>NU1605</WarningsAsErrors>
+    <NoWarn></NoWarn>
   </PropertyGroup>
 
   <Target Name="GoBuild" AfterTargets="BeforeCompile">

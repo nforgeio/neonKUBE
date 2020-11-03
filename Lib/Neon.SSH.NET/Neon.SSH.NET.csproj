@@ -26,22 +26,22 @@ This is a cloned and slightly updated build of https://www.nuget.org/packages/SS
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DocumentationFile>bin\Debug\Neon.SSH.NET.xml</DocumentationFile>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-    <WarningsAsErrors></WarningsAsErrors>
-    <NoWarn>NU1605</NoWarn>
+    <WarningsAsErrors>NU1605</WarningsAsErrors>
+    <NoWarn></NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DocumentationFile>bin\Release\Neon.SSH.NET.xml</DocumentationFile>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-    <WarningsAsErrors></WarningsAsErrors>
-    <NoWarn>NU1605</NoWarn>
+    <WarningsAsErrors>NU1605</WarningsAsErrors>
+    <NoWarn></NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CodeDoc|AnyCPU'">
     <DocumentationFile>bin\Release\Neon.SSH.NET.xml</DocumentationFile>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-    <WarningsAsErrors />
-    <NoWarn>NU1605</NoWarn>
+    <WarningsAsErrors>NU1605</WarningsAsErrors>
+    <NoWarn></NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">

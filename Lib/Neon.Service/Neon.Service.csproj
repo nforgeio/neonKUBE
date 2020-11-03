@@ -28,8 +28,8 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-    <WarningsAsErrors></WarningsAsErrors>
-    <NoWarn>NU1605</NoWarn>
+    <WarningsAsErrors>NU1605</WarningsAsErrors>
+    <NoWarn></NoWarn>
     <DocumentationFile>bin\Debug\Neon.Service.xml</DocumentationFile>
   </PropertyGroup>
 
