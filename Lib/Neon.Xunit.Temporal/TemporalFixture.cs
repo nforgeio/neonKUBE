@@ -72,19 +72,19 @@ services:
   temporal:
     image: temporalio/auto-setup:1.1.0
     ports:
-      - ""7233:7233""
+      - '7233:7233'
     environment:
-      - ""CASSANDRA_SEEDS=cassandra""
-      - ""DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development.yaml""
+      - 'CASSANDRA_SEEDS=cassandra'
+      - 'DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development.yaml'
     depends_on:
       - cassandra
   temporal-web:
     image: temporalio/web:1.1.0
     environment:
-      - ""TEMPORAL_GRPC_ENDPOINT=temporal:7233""
-      - ""TEMPORAL_PERMIT_WRITE_API=true""
+      - 'TEMPORAL_GRPC_ENDPOINT=temporal:7233'
+      - 'TEMPORAL_PERMIT_WRITE_API=true'
     ports:
-      - ""8088:8088""
+      - '8088:8088'
     depends_on:
       - temporal
 ";
