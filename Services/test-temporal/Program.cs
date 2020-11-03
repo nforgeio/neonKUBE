@@ -53,14 +53,10 @@ namespace TemporalService
         /// The program entry point.
         /// </summary>
         /// <param name="args">The command line arguments.</param>
-        /// <remarks>
-        /// <para>
-        /// This program registers 
-        /// </para>
-        /// </remarks>
-        public static void Main(string[] args)
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public async static Task Main(string[] args)
         {
-            new TemporalTester(NeonServices.TestTemporal, serviceMap: NeonServiceMap.Production).RunAsync().Wait();
+            await new TemporalTester(NeonServices.TestTemporal, serviceMap: NeonServiceMap.Production).RunAsync();
         }
     }
 }

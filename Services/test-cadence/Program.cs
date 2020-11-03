@@ -53,14 +53,10 @@ namespace CadenceService
         /// The program entry point.
         /// </summary>
         /// <param name="args">The command line arguments.</param>
-        /// <remarks>
-        /// <para>
-        /// This program registers 
-        /// </para>
-        /// </remarks>
-        public static void Main(string[] args)
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public async static Task Main(string[] args)
         {
-            new CadenceTester(NeonServices.TestCadence, serviceMap: NeonServiceMap.Production).RunAsync().Wait();
+            await new CadenceTester(NeonServices.TestCadence, serviceMap: NeonServiceMap.Production).RunAsync();
         }
     }
 }
