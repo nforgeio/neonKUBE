@@ -585,6 +585,13 @@ namespace Neon.Service
             this.statusFilePath       = statusFilePath;
             this.ServiceMap           = serviceMap;
 
+            // Update the Prometheus metrics port from the service description if present.
+
+            if (Description != null)
+            {
+                MetricsOptions.Port = Description.MetricsPort;
+            }
+
             // Git version info:
 
             this.GitVersion = null;
