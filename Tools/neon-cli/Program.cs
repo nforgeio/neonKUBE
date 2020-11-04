@@ -36,6 +36,7 @@ using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
 using Neon.IO;
+using Neon.SSH;
 using Neon.Windows;
 using Neon.Xunit.Kube;
 
@@ -588,7 +589,7 @@ You can disable the use of this encrypted folder by specifying
         public static bool Debug { get; set; }
 
         /// <summary>
-        /// Creates a <see cref="LinuxSshProxy{TMetadata}"/> for the specified host and server name,
+        /// Creates a <see cref="NodeSshProxy{TMetadata}"/> for the specified host and server name,
         /// configuring logging and the credentials as specified by the global command
         /// line options.
         /// </summary>
@@ -600,8 +601,8 @@ You can disable the use of this encrypted folder by specifying
         /// </param>
         /// 
         /// <typeparam name="TMetadata">Defines the metadata type the command wishes to associate with the server.</typeparam>
-        /// <returns>The <see cref="LinuxSshProxy{TMetadata}"/>.</returns>
-        public static LinuxSshProxy<TMetadata> CreateNodeProxy<TMetadata>(string name, IPAddress address, bool appendToLog)
+        /// <returns>The <see cref="NodeSshProxy{TMetadata}"/>.</returns>
+        public static NodeSshProxy<TMetadata> CreateNodeProxy<TMetadata>(string name, IPAddress address, bool appendToLog)
             where TMetadata : class
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
@@ -633,7 +634,7 @@ You can disable the use of this encrypted folder by specifying
                 return null;
             }
 
-            return new LinuxSshProxy<TMetadata>(name, address, sshCredentials, logWriter: logWriter);
+            return new NodeSshProxy<TMetadata>(name, address, sshCredentials, logWriter: logWriter);
         }
 
         /// <summary>

@@ -34,6 +34,7 @@ using Neon.HyperV;
 using Neon.IO;
 using Neon.Kube;
 using Neon.Net;
+using Neon.SSH;
 using Neon.XenServer;
 
 namespace NeonCli

@@ -50,6 +50,7 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
 using Neon.Net;
+using Neon.SSH;
 using Neon.Time;
 
 using INetworkSecurityGroup = Microsoft.Azure.Management.Network.Fluent.INetworkSecurityGroup;
@@ -187,7 +188,7 @@ namespace Neon.Kube
             /// </summary>
             /// <param name="node">The associated node proxy.</param>
             /// <param name="hostingManager">The parent hosting manager.</param>
-            public AzureVm(LinuxSshProxy<NodeDefinition> node, AzureHostingManager hostingManager)
+            public AzureVm(NodeSshProxy<NodeDefinition> node, AzureHostingManager hostingManager)
             {
                 Covenant.Requires<ArgumentNullException>(hostingManager != null, nameof(hostingManager));
 
@@ -198,7 +199,7 @@ namespace Neon.Kube
             /// <summary>
             /// Returns the associated node proxy.
             /// </summary>
-            public LinuxSshProxy<NodeDefinition> Node { get; private set; }
+            public NodeSshProxy<NodeDefinition> Node { get; private set; }
 
             /// <summary>
             /// Returns the node metadata (AKA its definition).
@@ -1077,7 +1078,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override string GetDataDisk(LinuxSshProxy<NodeDefinition> node)
+        public override string GetDataDisk(NodeSshProxy<NodeDefinition> node)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 
@@ -1558,7 +1559,7 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="node">The target node.</param>
         /// <param name="stepDelay">The step delay.</param>
-        private void CreateVm(LinuxSshProxy<NodeDefinition> node, TimeSpan stepDelay)
+        private void CreateVm(NodeSshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
             var azureNode = nameToVm[node.Name];
 
@@ -1631,7 +1632,7 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="node">The target node.</param>
         /// <param name="stepDelay">The step delay.</param>
-        private void ConfigureNode(LinuxSshProxy<NodeDefinition> node, TimeSpan stepDelay)
+        private void ConfigureNode(NodeSshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
             node.WaitForBoot();
 

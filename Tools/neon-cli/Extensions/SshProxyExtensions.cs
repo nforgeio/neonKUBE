@@ -34,7 +34,7 @@ using System.Runtime.InteropServices;
 namespace NeonCli
 {
     /// <summary>
-    /// <see cref="LinuxSshProxy{T}"/> extension methods.
+    /// <see cref="NodeSshProxy{T}"/> extension methods.
     /// </summary>
     public static class SshProxyExtension
     {
@@ -143,7 +143,7 @@ namespace NeonCli
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <param name="kubeSetupInfo">The Kubernetes setup details.</param>
         /// <param name="node">The target node.</param>
-        private static void SetClusterVariables(PreprocessReader preprocessReader, ClusterDefinition clusterDefinition, KubeSetupInfo kubeSetupInfo, LinuxSshProxy<NodeDefinition> node)
+        private static void SetClusterVariables(PreprocessReader preprocessReader, ClusterDefinition clusterDefinition, KubeSetupInfo kubeSetupInfo, NodeSshProxy<NodeDefinition> node)
         {
             Covenant.Requires<ArgumentNullException>(preprocessReader != null, nameof(preprocessReader));
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
@@ -318,7 +318,7 @@ namespace NeonCli
         /// <param name="kubeSetupInfo">The Kubernetes setup details.</param>
         /// <param name="file">The resource file.</param>
         /// <param name="targetPath">The target path on the remote server.</param>
-        private static void UploadFile<TMetadata>(this LinuxSshProxy<TMetadata> node, ClusterDefinition clusterDefinition, KubeSetupInfo kubeSetupInfo, ResourceFiles.File file, string targetPath)
+        private static void UploadFile<TMetadata>(this NodeSshProxy<TMetadata> node, ClusterDefinition clusterDefinition, KubeSetupInfo kubeSetupInfo, ResourceFiles.File file, string targetPath)
             where TMetadata : class
         {
             using (var input = file.ToStream())
@@ -344,7 +344,7 @@ namespace NeonCli
 
                             if (clusterDefinition != null)
                             {
-                                SetClusterVariables(preprocessReader, clusterDefinition, kubeSetupInfo, node as LinuxSshProxy<NodeDefinition>);
+                                SetClusterVariables(preprocessReader, clusterDefinition, kubeSetupInfo, node as NodeSshProxy<NodeDefinition>);
                             }
 
                             foreach (var line in preprocessReader.Lines())
@@ -373,7 +373,7 @@ namespace NeonCli
         /// <param name="node">The remote node.</param>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <param name="kubeSetupInfo">The Kubernetes setup details.</param>
-        public static void UploadConfigFiles<Metadata>(this LinuxSshProxy<Metadata> node, ClusterDefinition clusterDefinition, KubeSetupInfo kubeSetupInfo)
+        public static void UploadConfigFiles<Metadata>(this NodeSshProxy<Metadata> node, ClusterDefinition clusterDefinition, KubeSetupInfo kubeSetupInfo)
             where Metadata : class
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
@@ -409,7 +409,7 @@ namespace NeonCli
         /// <param name="server">The remote server.</param>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <param name="kubeSetupInfo">The Kubernetes setup details.</param>
-        public static void UploadResources<TMetadata>(this LinuxSshProxy<TMetadata> server, ClusterDefinition clusterDefinition, KubeSetupInfo kubeSetupInfo)
+        public static void UploadResources<TMetadata>(this NodeSshProxy<TMetadata> server, ClusterDefinition clusterDefinition, KubeSetupInfo kubeSetupInfo)
             where TMetadata : class
         {
             Covenant.Requires<ArgumentNullException>(server != null, nameof(server));

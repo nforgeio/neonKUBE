@@ -44,7 +44,7 @@ namespace Neon.Kube
         /// <param name="operationName">The idempotent operation name or <c>null</c> if the operation is not idempotent.</param>
         /// <param name="action">The action to be invoked.</param>
         /// <returns>The <see cref="ActionStep"/>.</returns>
-        public static ActionStep Create(string nodeName, string operationName, Action<LinuxSshProxy<NodeDefinition>> action)
+        public static ActionStep Create(string nodeName, string operationName, Action<NodeSshProxy<NodeDefinition>> action)
         {
             return new ActionStep(nodeName, operationName, action);
         }
@@ -54,7 +54,7 @@ namespace Neon.Kube
 
         private string                              nodeName;
         private string                              operationName;
-        private Action<LinuxSshProxy<NodeDefinition>>    action;
+        private Action<NodeSshProxy<NodeDefinition>>    action;
 
         /// <summary>
         /// Private constructor.
@@ -62,7 +62,7 @@ namespace Neon.Kube
         /// <param name="nodeName">The node name.</param>
         /// <param name="operationName">The idempotent operation name or <c>null</c> if the operation is not idempotent.</param>
         /// <param name="action">The action to be invoked.</param>
-        private ActionStep(string nodeName, string operationName, Action<LinuxSshProxy<NodeDefinition>> action)
+        private ActionStep(string nodeName, string operationName, Action<NodeSshProxy<NodeDefinition>> action)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
             Covenant.Requires<ArgumentNullException>(action != null, nameof(action));

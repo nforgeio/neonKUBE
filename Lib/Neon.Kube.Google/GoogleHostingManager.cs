@@ -155,7 +155,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override string GetDataDisk(LinuxSshProxy<NodeDefinition> node)
+        public override string GetDataDisk(NodeSshProxy<NodeDefinition> node)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 

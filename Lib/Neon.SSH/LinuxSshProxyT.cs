@@ -186,15 +186,18 @@ namespace Neon.SSH
         // that the server is still rebooting.
         private readonly string RebootStatusPath = $"{HostFolders.Tmpfs}/rebooting";
 
-        private readonly object syncLock   = new object();
-        private bool            isDisposed = false;
-        private SshCredentials  credentials;
-        private SshClient       sshClient;
-        private ScpClient       scpClient;
-        private TextWriter      logWriter;
-        private bool            isReady;
-        private string          status;
-        private string          faultMessage;
+        private readonly object     syncLock   = new object();
+        private bool                isDisposed = false;
+        private SshClient           sshClient;
+        private ScpClient           scpClient;
+        private bool                isReady;
+        private string              status;
+        private string              faultMessage;
+
+#pragma warning disable 1591
+        protected SshCredentials    credentials;
+        protected TextWriter        logWriter;
+#pragma warning restore 1591
 
         /// <summary>
         /// Constructs a <see cref="LinuxSshProxy{TMetadata}"/>.
@@ -296,19 +299,40 @@ namespace Neon.SSH
         /// <returns>The cloned <see cref="LinuxSshProxy{TMetadata}"/>.</returns>
         public LinuxSshProxy<TMetadata> Clone()
         {
-            var sshProxy = new LinuxSshProxy<TMetadata>(Name, Address, credentials)
-            {
-                Metadata  = this.Metadata,
-                OsName    = this.OsName,
-                OsVersion = this.OsVersion
-            };
+            var clone = new LinuxSshProxy<TMetadata>(Name, Address, credentials);
 
-            var connectionInfo = GetConnectionInfo();
+            CloneTo(this, clone);
 
-            sshClient = new SshClient(connectionInfo);
-            scpClient = new ScpClient(connectionInfo);
+            return clone;
+        }
 
-            return sshProxy;
+        /// <summary>
+        /// Used by derived classes to copy the base class state to a new
+        /// instance as well as configure the new connection's SSH and SCP
+        /// clients.
+        /// </summary>
+        /// <param name="source">The source proxy.</param>
+        /// <param name="target">The target proxy.</param>
+        protected static void CloneTo(LinuxSshProxy<TMetadata> source, LinuxSshProxy<TMetadata> target)
+        {
+            Covenant.Requires<ArgumentNullException>(source != null, nameof(source));
+            Covenant.Requires<ArgumentNullException>(target != null, nameof(target));
+
+            target.Name           = source.Name;
+            target.Address        = source.Address;
+            target.SshPort        = source.SshPort;
+            target.credentials    = source.credentials;
+            target.Metadata       = source.Metadata;
+            target.OsName         = source.OsName;
+            target.OsVersion      = source.OsVersion;
+            target.ConnectTimeout = source.ConnectTimeout;
+            target.FileTimeout    = source.FileTimeout;
+            target.RetryCount     = source.RetryCount;
+
+            var connectionInfo = source.GetConnectionInfo();
+
+            target.sshClient = new SshClient(connectionInfo);
+            target.scpClient = new ScpClient(connectionInfo);
         }
 
         /// <summary>
@@ -536,6 +560,18 @@ namespace Neon.SSH
             Covenant.Requires<ArgumentNullException>(newCredentials != null, nameof(newCredentials));
 
             this.credentials = newCredentials;
+        }
+
+        /// <summary>
+        /// Extracts the authentication method from SSH credentials.
+        /// </summary>
+        /// <param name="credentials">The credentials.</param>
+        /// <returns>The <see cref="AuthenticationMethod"/>.</returns>
+        protected AuthenticationMethod GetAuthenticationMethod(SshCredentials credentials)
+        {
+            Covenant.Requires<ArgumentNullException>(credentials != null, nameof(credentials));
+
+            return credentials.AuthenticationMethod;
         }
 
         /// <summary>

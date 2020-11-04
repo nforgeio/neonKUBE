@@ -33,6 +33,7 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.Kube;
 using Neon.Net;
+using Neon.SSH;
 
 namespace NeonCli
 {
@@ -411,11 +412,11 @@ Server Requirements:
 
                 cluster.Definition.ValidatePrivateNodeAddresses();
 
-                var ipAddressToServer = new Dictionary<IPAddress, LinuxSshProxy<NodeDefinition>>();
+                var ipAddressToServer = new Dictionary<IPAddress, NodeSshProxy<NodeDefinition>>();
 
                 foreach (var node in cluster.Nodes.OrderBy(n => n.Name))
                 {
-                    LinuxSshProxy<NodeDefinition> duplicateServer;
+                    NodeSshProxy<NodeDefinition> duplicateServer;
 
                     if (node.Address == IPAddress.Any)
                     {

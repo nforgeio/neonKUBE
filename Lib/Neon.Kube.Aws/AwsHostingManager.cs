@@ -39,6 +39,7 @@ using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Net;
+using Neon.SSH;
 using Neon.Time;
 
 using Amazon;
@@ -231,7 +232,7 @@ namespace Neon.Kube
             /// </summary>
             /// <param name="node">The associated node proxy.</param>
             /// <param name="hostingManager">The parent hosting manager.</param>
-            public AwsInstance(LinuxSshProxy<NodeDefinition> node, AwsHostingManager hostingManager)
+            public AwsInstance(NodeSshProxy<NodeDefinition> node, AwsHostingManager hostingManager)
             {
                 Covenant.Requires<ArgumentNullException>(hostingManager != null, nameof(hostingManager));
 
@@ -242,7 +243,7 @@ namespace Neon.Kube
             /// <summary>
             /// Returns the associated node proxy.
             /// </summary>
-            public LinuxSshProxy<NodeDefinition> Node { get; private set; }
+            public NodeSshProxy<NodeDefinition> Node { get; private set; }
 
             /// <summary>
             /// Returns the node metadata (AKA its definition).
@@ -1324,7 +1325,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override string GetDataDisk(LinuxSshProxy<NodeDefinition> node)
+        public override string GetDataDisk(NodeSshProxy<NodeDefinition> node)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 
@@ -2552,7 +2553,7 @@ namespace Neon.Kube
         /// Waits for the load balancer SSH target group for the node to become healthy.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task WaitForSshTargetAsync(LinuxSshProxy<NodeDefinition> node, TimeSpan stepDelay)
+        private async Task WaitForSshTargetAsync(NodeSshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
             node.Status = "waiting...";
 
@@ -2609,7 +2610,7 @@ namespace Neon.Kube
         /// <param name="node">The target node.</param>
         /// <param name="stepDelay">The step delay.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task CreateNodeInstanceAsync(LinuxSshProxy<NodeDefinition> node, TimeSpan stepDelay)
+        private async Task CreateNodeInstanceAsync(NodeSshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
             //-----------------------------------------------------------------
             // Create the instance if it doesn't already exist.

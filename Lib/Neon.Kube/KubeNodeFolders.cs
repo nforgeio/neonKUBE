@@ -25,6 +25,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Common;
+using Neon.SSH;
 
 using Renci.SshNet;
 
