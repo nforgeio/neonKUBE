@@ -21,6 +21,7 @@ using System.Data;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -51,6 +52,7 @@ namespace Neon.Service
     /// </para>
     /// <code>
     /// NEON_SERVICE_DEPENDENCIES_URIS=http://foo.com;tcp://10.0.0.55:1234
+    /// NEON_SERVICE_DEPENDENCIES_DISABLE_DNS_CHECK=false
     /// NEON_SERVICE_DEPENDENCIES_TIMEOUT_SECONDS=30
     /// NEON_SERVICE_DEPENDENCIES_WAIT_SECONDS=5
     /// </code>
@@ -61,9 +63,28 @@ namespace Neon.Service
     /// <note>
     /// Only HTTP, HTTPS, and TCP URIs are supported.
     /// </note>
+    /// <para>
+    /// We also verify that your service is able to perform DNS queries by default by
+    /// performing a DNS name lookup for <see cref="DnsCheckHostName"/> (<b>net-check.neoncloud.io</b>).
+    /// It doesn't matter that this host name is actually registered or that you're cluster has 
+    /// Internet access.  We're just looking for any response from the upstream DNS server
+    /// to determine whether the service has and network connectivity.
+    /// </para>
+    /// <para>
+    /// You can disable this by setting <see cref="DisableDnsCheck"/><b>true</b> or
+    /// the <c>NEON_SERVICE_DEPENDENCIES_DISABLE_DNS_CHECK</c> environment variable to
+    /// <c>false</c>.
+    /// </para>
     /// </remarks>
     public class ServiceDependencies
     {
+        /// <summary>
+        /// The host name used for the DNS availablity check.  It doesn't matter that this
+        /// host name is actually registered or that you're cluster has Internet access.
+        /// We're just looking for any response from the upstream DNS server.
+        /// </summary>
+        public const string DnsCheckHostName = "net-check.neoncloud.io";
+
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -98,6 +119,22 @@ namespace Neon.Service
                     {
                         textLogger.LogWarn($"Service Dependency: [{uriString}] is not a valid URI and will be ignored.");
                     }
+                }
+            }
+
+            // Parse: NEON_SERVICE_DEPENDENCIES_DISABLE_DNS_CHECK
+
+            var disableDnsCheckVar = Environment.GetEnvironmentVariable("NEON_SERVICE_DEPENDENCIES_DISABLE_DNS_CHECK");
+
+            if (!string.IsNullOrEmpty(disableDnsCheckVar))
+            {
+                if (NeonHelper.TryParseBool(disableDnsCheckVar, out var disableDnsCheck))
+                {
+                    DisableDnsCheck = disableDnsCheck;
+                }
+                else
+                {
+                    textLogger.LogWarn($"Service Dependency: [NEON_SERVICE_DEPENDENCIES_DISABLE_DNS_CHECK={disableDnsCheckVar}] is not a valid and will be ignored.");
                 }
             }
 
@@ -141,6 +178,25 @@ namespace Neon.Service
         /// environment variables will be added to this list.
         /// </summary>
         public List<Uri> Uris { get; set; } = new List<Uri>();
+
+        /// <summary>
+        /// Use this to disable the DNS availablity check for your service.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// We also verify that your service is able to perform DNS queries by default by
+        /// performing a DNS name lookup for <see cref="DnsCheckHostName"/> (<b>net-check.neoncloud.io</b>).
+        /// It doesn't matter that this host name is actually registered or that you're cluster has 
+        /// Internet access.  We're just looking for any response from the upstream DNS server
+        /// to determine whether the service has and network connectivity.
+        /// </para>
+        /// <para>
+        /// You can disable this by setting <see cref="DisableDnsCheck"/><b>true</b> or
+        /// the <c>NEON_SERVICE_DEPENDENCIES_DISABLE_DNS_CHECK</c> environment variable to
+        /// <c>false</c>.
+        /// </para>
+        /// </remarks>
+        public bool DisableDnsCheck { get; set; } = false;
 
         /// <summary>
         /// The maximum time to wait for the services specified by <see cref="Uris"/> to

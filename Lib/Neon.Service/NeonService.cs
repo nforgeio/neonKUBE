@@ -35,8 +35,8 @@ using Neon.Net;
 using Neon.Retry;
 using Neon.Windows;
 
+using DnsClient;
 using Prometheus;
-using System.Net.Http;
 
 namespace Neon.Service
 {
@@ -978,8 +978,20 @@ namespace Neon.Service
                 }
             }
 
-            // Verify that any service dependencies are ready.
+            // Verify that any required service dependencies are ready.
 
+            var dnsOptions = new LookupClientOptions()
+            {
+                ContinueOnDnsError      = false,
+                ContinueOnEmptyResponse = false,
+                Retries                 = 0,
+                ThrowDnsErrors          = false,
+                Timeout                 = TimeSpan.FromSeconds(2),
+                UseTcpFallback          = true
+            };
+
+            var dnsClient         = new LookupClient(dnsOptions);
+            var dnsAvailable      = Dependencies.DisableDnsCheck;
             var readyServices     = new HashSet<Uri>();
             var notReadyUri       = (Uri)null;
             var notReadyException = (Exception)null;
@@ -989,11 +1001,30 @@ namespace Neon.Service
                 await NeonHelper.WaitForAsync(
                     async () =>
                     {
+                        // Verify DNS availability first because services won't be available anyway
+                        // when there's no DNS.
+
+                        if (!dnsAvailable)
+                        {
+                            try
+                            {
+                                await dnsClient.QueryAsync(ServiceDependencies.DnsCheckHostName, QueryType.A);
+
+                                dnsAvailable = true;
+                            }
+                            catch (DnsResponseException e)
+                            {
+                                return e.Code == DnsResponseCode.ConnectionTimeout;
+                            }
+                        }
+
+                        // Verify the service dependencies next.
+
                         foreach (var uri in Dependencies.Uris)
                         {
                             if (readyServices.Contains(uri))
                             {
-                                continue;   // This one is malready ready
+                                continue;   // This one is already ready
                             }
 
                             switch (uri.Scheme.ToUpperInvariant())
