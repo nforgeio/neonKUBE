@@ -29,7 +29,7 @@ using Neon.Common;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Runs an <see cref="Action{SshProxy}"/> as a cluster setup step.
+    /// Runs an <see cref="Action{LinuxSshProxy}"/> as a cluster setup step.
     /// </summary>
     public class ActionStep : ConfigStep
     {
@@ -52,8 +52,8 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Instance members
 
-        private string                              nodeName;
-        private string                              operationName;
+        private string                                  nodeName;
+        private string                                  operationName;
         private Action<NodeSshProxy<NodeDefinition>>    action;
 
         /// <summary>

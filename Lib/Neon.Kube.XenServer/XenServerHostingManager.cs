@@ -210,7 +210,7 @@ namespace Neon.Kube
                 }
             }
 
-            // Build a list of [SshProxy] instances that map to the specified XenServer
+            // Build a list of [LinuxSshProxy] instances that map to the specified XenServer
             // hosts.  We'll use the [XenClient] instances as proxy metadata.
 
             var xenSshProxies = new List<NodeSshProxy<XenClient>>();

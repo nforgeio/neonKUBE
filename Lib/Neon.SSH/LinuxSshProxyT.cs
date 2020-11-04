@@ -105,7 +105,7 @@ namespace Neon.SSH
             //
             // SSH.NET appears to have an issue when attempting to establish multiple
             // connections to the same server at the same time.  We never saw this in
-            // the past because we were only using SshProxy to establish single connections
+            // the past because we were only using LinuxSshProxy to establish single connections
             // to any given server.
             //
             // This changed with the [HiveFixture] implementation that attempts to
@@ -1478,7 +1478,7 @@ rm {HostFolders.Home(Username)}/askpass
             EnsureScpConnection();
 
             //-----------------------------------------------------------------
-            // Ensure that the minimum set of user folders required by [SshProxy] exist
+            // Ensure that the minimum set of user folders required by [LinuxSshProxy] exist
             // for the current user.  These are all located in the user's home folder
             // so SUDO is not required to create them.
 

@@ -53,7 +53,7 @@ using Renci.SshNet.Common;
 //
 // Most of this code has been copied to the [Neon.SSH.NET] project under
 // the [Neon.SSH] namespace.  There's just a tiny bit of extra functionality
-// implemented by this and the derived [SshProxy] class.
+// implemented by this and the derived [LinuxSshProxy] class.
 //
 // We should convert this class to inherit from the [Neon.SSH.NET] class
 // so we don't have to maintain duplicate code.
