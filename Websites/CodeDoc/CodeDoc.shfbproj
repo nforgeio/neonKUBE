@@ -181,6 +181,7 @@ Copyright © Renci 2010-2017</NamespaceSummaryItem>
     <Folder Include="Content\Neon.Web" />
     <Folder Include="Content\Neon.Xunit" />
     <Folder Include="Content\Neon.Temporal" />
+    <Folder Include="Content\Neon.SSH" />
     <Folder Include="icons" />
     <Folder Include="media" />
     <Folder Include="media\Neon.Cadence" />
@@ -222,6 +223,7 @@ Copyright © Renci 2010-2017</NamespaceSummaryItem>
     <None Include="Content\Neon.ModelGen\Overview.aml" />
     <None Include="Content\Neon.NATS\Overview.aml" />
     <None Include="Content\Neon.SSH.NET\Overview.aml" />
+    <None Include="Content\Neon.SSH\Overview.aml" />
     <None Include="Content\Neon.Temporal\ActivityDetails\Basics.aml" />
     <None Include="Content\Neon.Temporal\ActivityDetails\DendencyInjection.aml" />
     <None Include="Content\Neon.Temporal\ActivityDetails\ExternalCompletion.aml" />
