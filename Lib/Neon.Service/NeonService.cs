@@ -516,14 +516,11 @@ namespace Neon.Service
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="name">The name of this service within <see cref="ServiceMap"/>.</param>\
+        /// <param name="name">The name of this service within <see cref="ServiceMap"/>.</param>
         /// <param name="version">
         /// Optionally specifies the version of your service formatted as a valid <see cref="SemanticVersion"/>.
         /// This will default to <b>"unknown"</b> when not set or when the value passed is invalid.
         /// </param>
-        /// <param name="branch">Optionally specifies the build branch.</param>
-        /// <param name="commit">Optionally specifies the branch commit.</param>
-        /// <param name="isDirty">Optionally specifies whether there are uncommit changes to the branch.</param>
         /// <param name="statusFilePath">
         /// Optionally specifies the path where the service will update its status (for external health probes).
         /// See the class documentation for more information <see cref="Neon.Service"/>.
@@ -538,25 +535,9 @@ namespace Neon.Service
         /// Thrown if there is no service description for <paramref name="name"/>
         /// within the <see cref="ServiceMap"/>.
         /// </exception>
-        /// <remarks>
-        /// <para>
-        /// For those of you using Git for source control, you'll want to pass the
-        /// information about the branch and latest commit you're you service was
-        /// built from here.  We use the <a href="https://www.nuget.org/packages/GitInfo/">GitInfo</a>
-        /// nuget package to obtain this information from the local Git repository.
-        /// </para>
-        /// <para>
-        /// Alternatively, you could try to map properties from your source
-        /// control environment to these parameters, pass your version string as 
-        /// <paramref name="branch"/>, or simply ignore these parameters.
-        /// </para>
-        /// </remarks>
         public NeonService(
             string      name, 
             string      version        = null,
-            string      branch         = null, 
-            string      commit         = null, 
-            bool        isDirty        = false,
             string      statusFilePath = null,
             ServiceMap  serviceMap     = null)
         {
@@ -605,25 +586,6 @@ namespace Neon.Service
             // Initialize the [neon_service_info] gauge.
 
             infoGauge.WithLabels(version).Set(1);
-
-            // Git version info:
-
-            this.GitVersion = null;
-
-            if (!string.IsNullOrEmpty(branch))
-            {
-                this.GitVersion = branch;
-
-                if (!string.IsNullOrEmpty(commit))
-                {
-                    this.GitVersion += $"-{commit}";
-                }
-
-                if (isDirty)
-                {
-                    this.GitVersion += $"-dirty";
-                }
-            }
         }
 
         /// <summary>
