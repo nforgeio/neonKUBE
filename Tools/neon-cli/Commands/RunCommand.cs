@@ -144,7 +144,7 @@ Pass a potentially encrypted file:
         }
 
         /// <inheritdoc/>
-        public override void Run(CommandLine commandLine)
+        public override async Task RunAsync(CommandLine commandLine)
         {
             if (commandLine.HasHelpOption)
             {
@@ -285,8 +285,8 @@ Pass a potentially encrypted file:
 
                         // Perform the subsitutions.
 
-                        var unprocessed = File.ReadAllText(path);
-                        var processed = string.Empty;
+                        var unprocessed      = File.ReadAllText(path);
+                        var processed        = string.Empty;
                         var linuxLineEndings = !unprocessed.Contains("\r\n");
 
                         using (var reader = new StreamReader(path))
@@ -377,10 +377,6 @@ Pass a potentially encrypted file:
 
                 Program.Exit(exitCode);
             }
-            catch
-            {
-                throw;
-            }
             finally
             {
                 foreach (var tempFile in tempFiles)
@@ -390,6 +386,7 @@ Pass a potentially encrypted file:
             }
 
             Program.Exit(0);
+            await Task.CompletedTask;
         }
 
         /// <summary>

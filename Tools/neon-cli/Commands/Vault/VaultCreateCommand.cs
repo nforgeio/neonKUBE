@@ -78,7 +78,7 @@ environment variable to the path to the editor executable file.
         }
 
         /// <inheritdoc/>
-        public override void Run(CommandLine commandLine)
+        public override async Task RunAsync(CommandLine commandLine)
         {
             if (commandLine.HasHelpOption)
             {
@@ -126,6 +126,7 @@ environment variable to the path to the editor executable file.
             }
 
             Program.Exit(0);
+            await Task.CompletedTask;
         }
     }
 }

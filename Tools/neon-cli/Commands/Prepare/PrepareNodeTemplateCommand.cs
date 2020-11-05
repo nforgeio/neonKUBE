@@ -122,7 +122,7 @@ node template.
         public override bool NeedsSshCredentials(CommandLine commandLine) => true;
 
         /// <inheritdoc/>
-        public override void Run(CommandLine commandLine)
+        public override async Task RunAsync(CommandLine commandLine)
         {
             if (commandLine.Arguments.Count() == 0)
             {
@@ -590,6 +590,7 @@ sfill -fllz /
             }
 
             Program.Exit(0);
+            await Task.CompletedTask;
         }
     }
 }

@@ -62,7 +62,7 @@ namespace NeonCli
         /// </summary>
         /// <param name="args">The command line arguments.</param>
         /// <returns>The exit code.</returns>
-        public static int Main(params string[] args)
+        public async static Task<int> Main(params string[] args)
         {
             string usage = $@"
 neonKUBE Management Tool: neon [v{Program.Version}]
@@ -380,11 +380,11 @@ You can disable the use of this encrypted folder by specifying
                     // We don't shift the command line for pass-thru commands 
                     // because we don't want to change the order of any options.
 
-                    command.Run(CommandLine);
+                    await command.RunAsync(CommandLine);
                 }
                 else
                 {
-                    command.Run(CommandLine.Shift(command.Words.Length));
+                    await command.RunAsync(CommandLine.Shift(command.Words.Length));
                 }
             }
             catch (ProgramExitException e)

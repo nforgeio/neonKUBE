@@ -75,6 +75,6 @@ namespace NeonCli
         public abstract void Help();
 
         /// <inheritdoc/>
-        public abstract void Run(CommandLine commandLine);
+        public abstract Task RunAsync(CommandLine commandLine);
     }
 }

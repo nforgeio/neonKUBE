@@ -81,7 +81,7 @@ NOTE: You don't need to specify a password name for this command
         }
 
         /// <inheritdoc/>
-        public override void Run(CommandLine commandLine)
+        public override async Task RunAsync(CommandLine commandLine)
         {
             if (commandLine.HasHelpOption)
             {
@@ -119,6 +119,7 @@ NOTE: You don't need to specify a password name for this command
             }
 
             Program.Exit(0);
+            await Task.CompletedTask;
         }
     }
 }

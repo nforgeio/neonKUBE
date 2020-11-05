@@ -74,7 +74,7 @@ OPTIONS:
         }
 
         /// <inheritdoc/>
-        public override void Run(CommandLine commandLine)
+        public override async Task RunAsync(CommandLine commandLine)
         {
             if (commandLine.HasHelpOption)
             {
@@ -129,6 +129,8 @@ OPTIONS:
                     Console.WriteLine();
                 }
             }
+
+            await Task.CompletedTask;
         }
     }
 }

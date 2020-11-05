@@ -88,7 +88,7 @@ NOTE: The search for the [.password-name] file will start from the
         }
 
         /// <inheritdoc/>
-        public override void Run(CommandLine commandLine)
+        public override async Task RunAsync(CommandLine commandLine)
         {
             if (commandLine.HasHelpOption)
             {
@@ -174,6 +174,7 @@ NOTE: The search for the [.password-name] file will start from the
             }
 
             Program.Exit(0);
+            await Task.CompletedTask;
         }
     }
 }

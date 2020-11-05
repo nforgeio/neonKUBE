@@ -75,7 +75,7 @@ ARGUMENTS:
         }
 
         /// <inheritdoc/>
-        public override void Run(CommandLine commandLine)
+        public override async Task RunAsync(CommandLine commandLine)
         {
             if (commandLine.HasHelpOption || commandLine.Arguments.Length == 0)
             {
@@ -88,6 +88,8 @@ ARGUMENTS:
                 Console.Error.WriteLine($"*** ERROR: Unexpected [{commandLine.Arguments[0]}] command.");
                 Program.Exit(1);
             }
+
+            await Task.CompletedTask;
         }
     }
 }

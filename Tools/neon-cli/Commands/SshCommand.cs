@@ -64,7 +64,7 @@ ARGUMENTS:
         }
 
         /// <inheritdoc/>
-        public override void Run(CommandLine commandLine)
+        public override async Task RunAsync(CommandLine commandLine)
         {
             if (commandLine.HasHelpOption)
             {
@@ -135,6 +135,7 @@ ARGUMENTS:
             }
 
             Process.Start(Program.PuttyPath, $"-l {clusterLogin.SshUsername} -pw {clusterLogin.SshPassword} {node.Address}:22");
+            await Task.CompletedTask;
         }
     }
 }

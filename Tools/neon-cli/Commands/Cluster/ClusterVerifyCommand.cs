@@ -63,7 +63,7 @@ ARGUMENTS:
         }
 
         /// <inheritdoc/>
-        public override void Run(CommandLine commandLine)
+        public override async Task RunAsync(CommandLine commandLine)
         {
             if (commandLine.Arguments.Length < 1)
             {
@@ -77,6 +77,8 @@ ARGUMENTS:
 
             Console.WriteLine("");
             Console.WriteLine("*** The cluster definition is OK.");
+
+            await Task.CompletedTask;
         }
     }
 }

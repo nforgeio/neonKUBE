@@ -54,8 +54,9 @@ namespace NeonClusterManager
             Log.LogInfo("Setting up Kibana index patterns.");
             using (var jsonClient = new JsonClient())
             {
-                jsonClient.BaseAddress = KubernetesClientConfiguration.IsInCluster() ?
-                    this.ServiceMap[NeonServices.Kibana].Endpoints.Default.Uri : new Uri($"http://localhost:{this.ServiceMap[NeonServices.Kibana].Endpoints.Default.Port}");
+                jsonClient.BaseAddress = KubernetesClientConfiguration.IsInCluster() 
+                    ? this.ServiceMap[NeonServices.Kibana].Endpoints.Default.Uri 
+                    : new Uri($"http://localhost:{this.ServiceMap[NeonServices.Kibana].Endpoints.Default.Port}");
 
                 Log.LogInfo(jsonClient.BaseAddress.ToString());
 
@@ -68,7 +69,7 @@ namespace NeonClusterManager
 
                 // Ensure that Kibana is ready before we submit any API requests.
 
-                retry.InvokeAsync(
+                await retry.InvokeAsync(
                     async () =>
                     {
                         var response = await jsonClient.GetAsync<dynamic>($"api/status");
@@ -78,12 +79,11 @@ namespace NeonClusterManager
                             Log.LogInfo("Kibana is not ready.");
                             throw new TransientException($"Kibana [state={response.status.overall.state}]");
                         }
-
-                    }).Wait();
+                    });
 
                 // Add the index pattern to Kibana.
 
-                retry.InvokeAsync(
+                await retry.Invoke(
                     async () =>
                     {
                         dynamic indexPattern = new ExpandoObject();
@@ -95,14 +95,13 @@ namespace NeonClusterManager
                         indexPattern.attributes = attributes;
 
                         await jsonClient.PostAsync($"api/saved_objects/index-pattern/logstash-*?overwrite=true", indexPattern);
-
-                    }).Wait();
+                    });
 
                 // Now we need to save a Kibana config document so that [logstash-*] will be
                 // the default index and the timestamp will be displayed as UTC and have a
                 // more useful terse format.
 
-                retry.InvokeAsync(
+                await retry.InvokeAsync(
                     async () =>
                     {
                         dynamic setting = new ExpandoObject();
@@ -115,8 +114,7 @@ namespace NeonClusterManager
 
                         setting.value = "UTC";
                         await jsonClient.PostAsync($"api/kibana/settings/dateFormat:tz", setting);
-
-                    }).Wait();
+                    });
             }
             Log.LogInfo("Kibana index patterns configured.");
             await Task.CompletedTask;

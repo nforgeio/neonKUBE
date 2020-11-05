@@ -81,7 +81,7 @@ The command returns a non-zero exit code for unencrypted files.
         }
 
         /// <inheritdoc/>
-        public override void Run(CommandLine commandLine)
+        public override async Task RunAsync(CommandLine commandLine)
         {
             if (commandLine.HasHelpOption)
             {
@@ -112,6 +112,7 @@ The command returns a non-zero exit code for unencrypted files.
             }
 
             Program.Exit(0);
+            await Task.CompletedTask;
         }
     }
 }
