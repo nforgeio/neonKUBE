@@ -2803,8 +2803,6 @@ rm -rf {chartName}*
                     }
 
                     InstallHelmChartAsync(master, "elasticsearch", releaseName: "neon-logs-elasticsearch", @namespace: "monitoring", timeout: 1200, values: values, wait: false).Wait();
-
-                    
                 });
 
             master.InvokeIdempotentAction("deploy/neon-logs-elasticsearch-ready",

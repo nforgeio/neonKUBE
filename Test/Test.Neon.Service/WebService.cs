@@ -102,7 +102,7 @@ namespace TestNeonService
         /// <param name="name">The service name.</param>
         /// <param name="serviceMap">Optionally specifies the service map.</param>
         public WebService(string name, ServiceMap serviceMap = null)
-            : base(name, ThisAssembly.Git.Branch, ThisAssembly.Git.Commit, ThisAssembly.Git.IsDirty, serviceMap: serviceMap)
+            : base(name, serviceMap: serviceMap)
         {
         }
 

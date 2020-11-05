@@ -348,7 +348,8 @@ namespace Neon.Service
         //---------------------------------------------------------------------
         // Static members
 
-        private static readonly char[] equalArray = new char[] { '=' };
+        private static readonly char[]  equalArray = new char[] { '=' };
+        private static readonly Gauge   infoGauge  = Metrics.CreateGauge("neon_service_info", "Describes your service version.", "version");
 
         /// <summary>
         /// This controls whether any <see cref="NeonService"/> instances will use the global
@@ -504,6 +505,7 @@ namespace Neon.Service
         private bool                            isRunning;
         private bool                            isDisposed;
         private bool                            stopPending;
+        private string                          version;
         private Dictionary<string, string>      environmentVariables;
         private Dictionary<string, FileInfo>    configFiles;
         private string                          statusFilePath;
@@ -514,7 +516,11 @@ namespace Neon.Service
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="name">The name of this service within <see cref="ServiceMap"/>.</param>
+        /// <param name="name">The name of this service within <see cref="ServiceMap"/>.</param>\
+        /// <param name="version">
+        /// Optionally specifies the version of your service formatted as a valid <see cref="SemanticVersion"/>.
+        /// This will default to <b>"unknown"</b> when not set or when the value passed is invalid.
+        /// </param>
         /// <param name="branch">Optionally specifies the build branch.</param>
         /// <param name="commit">Optionally specifies the branch commit.</param>
         /// <param name="isDirty">Optionally specifies whether there are uncommit changes to the branch.</param>
@@ -547,6 +553,7 @@ namespace Neon.Service
         /// </remarks>
         public NeonService(
             string      name, 
+            string      version        = null,
             string      branch         = null, 
             string      commit         = null, 
             bool        isDirty        = false,
@@ -554,6 +561,8 @@ namespace Neon.Service
             ServiceMap  serviceMap     = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+
+            version = version ?? string.Empty;
 
             if (serviceMap != null)
             {
@@ -580,6 +589,7 @@ namespace Neon.Service
             this.Name                 = name;
             this.InProduction         = !NeonHelper.IsDevWorkstation;
             this.Terminator           = new ProcessTerminator();
+            this.version              = global::Neon.Diagnostics.LogManager.VersionRegex.IsMatch(version) ? version : "unknown";
             this.environmentVariables = new Dictionary<string, string>();
             this.configFiles          = new Dictionary<string, FileInfo>();
             this.statusFilePath       = statusFilePath;
@@ -591,6 +601,10 @@ namespace Neon.Service
             {
                 MetricsOptions.Port = Description.MetricsPort;
             }
+
+            // Initialize the [neon_service_info] gauge.
+
+            infoGauge.WithLabels(version).Set(1);
 
             // Git version info:
 
@@ -914,21 +928,30 @@ namespace Neon.Service
                 Terminator.DisableProcessExit = true;
             }
 
-            // Initialize the logger.
+            // Initialize the log manager.
 
             if (GlobalLogging)
             {
-                LogManager = global::Neon.Diagnostics.LogManager.Default;
+                LogManager          = global::Neon.Diagnostics.LogManager.Default;
+                LogManager.Version = version;
             }
             else
             {
-                LogManager = new LogManager(parseLogLevel: false);
+                LogManager = new LogManager(parseLogLevel: false, version: this.version);
             }
 
             LogManager.SetLogLevel(GetEnvironmentVariable("LOG_LEVEL", "info"));
 
             Log = LogManager.GetLogger();
-            Log.LogInfo(() => $"Starting [{Name}:{GitVersion}]");
+
+            if (!string.IsNullOrEmpty(version))
+            {
+                Log.LogInfo(() => $"Starting [{Name}:{version}]");
+            }
+            else
+            {
+                Log.LogInfo(() => $"Starting [{Name}]");
+            }
 
             // Initialize Prometheus metrics when enabled.
 

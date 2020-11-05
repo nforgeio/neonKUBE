@@ -53,6 +53,7 @@ namespace Neon.Diagnostics
         private ILogManager     logManager;
         private string          module;
         private bool            infoAsDebug;
+        private string          version;
         private TextWriter      writer;
         private string          contextId;
         private Func<bool>      isLogEnabledFunc;
@@ -122,6 +123,7 @@ namespace Neon.Diagnostics
         {
             this.logManager       = logManager ?? LogManager.Disabled;
             this.module           = module;
+            this.version          = logManager.Version;
             this.writer           = writer ?? Console.Error;
             this.contextId        = contextId;
             this.isLogEnabledFunc = isLogEnabledFunc;
@@ -340,6 +342,13 @@ namespace Neon.Diagnostics
 
             message = Normalize(message);
 
+            var version = string.Empty;
+
+            if (!string.IsNullOrEmpty(this.version))
+            {
+                version = $" [version:{this.version}]";
+            }
+
             var module = string.Empty;
 
             if (!string.IsNullOrEmpty(this.module))
@@ -372,11 +381,11 @@ namespace Neon.Diagnostics
             {
                 var timestamp = DateTime.UtcNow.ToString(NeonHelper.DateFormatTZOffset);
 
-                writer.WriteLine($"[{timestamp}] [{level}]{module}{activity}{context}{index} {message}");
+                writer.WriteLine($"[{timestamp}] [{level}]{version}{module}{activity}{context}{index} {message}");
             }
             else
             {
-                writer.WriteLine($"[{level}]{module}{activity}{context}{index} {message}");
+                writer.WriteLine($"[{level}]{version}{module}{activity}{context}{index} {message}");
             }
         }
 

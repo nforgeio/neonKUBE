@@ -27,6 +27,8 @@ using System.Threading.Tasks;
 
 using Microsoft.Extensions.Logging;
 
+using Neon.Common;
+
 namespace Neon.Diagnostics
 {
     /// <summary>
@@ -96,7 +98,14 @@ namespace Neon.Diagnostics
         void Reset();
 
         /// <summary>
-        /// Specifies the level of events to be actually recorded.
+        /// The version of the current program or <c>null</c> if not known.
+        /// This should be formatted as a valid <see cref="SemanticVersion"/> when
+        /// not <c>null</c>.
+        /// </summary>
+        string Version { get; set;  }
+
+        /// <summary>
+        /// Specifies the level required for events to be actually recorded.
         /// </summary>
         LogLevel LogLevel { get; set; }
 
