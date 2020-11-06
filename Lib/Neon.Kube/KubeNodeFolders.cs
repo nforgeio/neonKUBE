@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeHostFolders.cs
+// FILE:	    KubeNodeFolders.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
 //
@@ -25,14 +25,14 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Common;
+using Neon.SSH;
 
 using Renci.SshNet;
 
 namespace Neon.Kube
 {
     /// <summary>
-    /// Enumerates the paths of important directories on cluster 
-    /// host servers.
+    /// Enumerates the paths of important directories on cluster node servers.
     /// </summary>
     /// <remarks>
     /// <note>
@@ -46,7 +46,7 @@ namespace Neon.Kube
     /// ver sure you know what you're doing when you make changes.
     /// </note>
     /// </remarks>
-    public static class KubeHostFolders
+    public static class KubeNodeFolders
     {
         /// <summary>
         /// Path to a user's <b>.neon</b> home directory.

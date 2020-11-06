@@ -81,7 +81,7 @@ ZIP archive.
         }
 
         /// <inheritdoc/>
-        public override void Run(CommandLine commandLine)
+        public override async Task RunAsync(CommandLine commandLine)
         {
             if (commandLine.HasHelpOption)
             {
@@ -155,6 +155,7 @@ ZIP archive.
             Console.WriteLine();
             Console.WriteLine($"[{passwordCount}] passwords imported.");
             Program.Exit(0);
+            await Task.CompletedTask;
         }
     }
 }

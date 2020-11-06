@@ -44,6 +44,9 @@ cat <<EOF > /etc/fluentd/template/logstash-template.json
       "activity_id": {
         "type": "keyword"
       },
+      "version": {
+        "type": "text"
+      },
       "cluster": {
         "type": "keyword"
       },

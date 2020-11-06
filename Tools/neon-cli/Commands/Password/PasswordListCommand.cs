@@ -66,7 +66,7 @@ USAGE:
         }
 
         /// <inheritdoc/>
-        public override void Run(CommandLine commandLine)
+        public override async Task RunAsync(CommandLine commandLine)
         {
             if (commandLine.HasHelpOption)
             {
@@ -80,6 +80,7 @@ USAGE:
             }
 
             Program.Exit(0);
+            await Task.CompletedTask;
         }
     }
 }

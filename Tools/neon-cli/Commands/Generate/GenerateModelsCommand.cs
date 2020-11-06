@@ -116,7 +116,7 @@ style design conventions.  See this GitHub issue for more information:
         }
 
         /// <inheritdoc/>
-        public override void Run(CommandLine commandLine)
+        public override async Task RunAsync(CommandLine commandLine)
         {
             if (commandLine.Arguments.Length == 0)
             {
@@ -201,6 +201,7 @@ style design conventions.  See this GitHub issue for more information:
             }
 
             Program.Exit(0);
+            await Task.CompletedTask;
         }
     }
 }

@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Renci.SshNet</RootNamespace>
-    <Version>2.4.0</Version>
+    <Version>2.6.0</Version>
     <Company>Renci</Company>
     <Product>neonLIBRARY</Product>
     <Description>SSH.NET is a Secure Shell (SSH) library for .NET, optimized for parallelism.
@@ -26,22 +26,22 @@ This is a cloned and slightly updated build of https://www.nuget.org/packages/SS
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DocumentationFile>bin\Debug\Neon.SSH.NET.xml</DocumentationFile>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-    <WarningsAsErrors></WarningsAsErrors>
-    <NoWarn>NU1605</NoWarn>
+    <WarningsAsErrors>NU1605</WarningsAsErrors>
+    <NoWarn></NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DocumentationFile>bin\Release\Neon.SSH.NET.xml</DocumentationFile>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-    <WarningsAsErrors></WarningsAsErrors>
-    <NoWarn>NU1605</NoWarn>
+    <WarningsAsErrors>NU1605</WarningsAsErrors>
+    <NoWarn></NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CodeDoc|AnyCPU'">
     <DocumentationFile>bin\Release\Neon.SSH.NET.xml</DocumentationFile>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-    <WarningsAsErrors />
-    <NoWarn>NU1605</NoWarn>
+    <WarningsAsErrors>NU1605</WarningsAsErrors>
+    <NoWarn></NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
@@ -57,11 +57,6 @@ This is a cloned and slightly updated build of https://www.nuget.org/packages/SS
   <ItemGroup>
     <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
     <None Include="..\..\LICENSE" Pack="True" PackagePath="" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
-    <ProjectReference Include="..\Neon.Cryptography\Neon.Cryptography.csproj" />
   </ItemGroup>
 
 </Project>

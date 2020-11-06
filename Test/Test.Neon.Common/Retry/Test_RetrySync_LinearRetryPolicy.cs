@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_ExponentialRetryPolicy.cs
+// FILE:	    Test_RetrySync_LinearRetryPolicy.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
 //
@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Common;
@@ -30,7 +31,7 @@ using Xunit;
 
 namespace TestCommon
 {
-    public class Test_ExponentialRetryPolicy
+    public class Test_RetrySync_LinearRetryPolicy
     {
         private class TransientException : Exception
         {
@@ -55,20 +56,11 @@ namespace TestCommon
         /// </summary>
         /// <param name="times"></param>
         /// <param name="policy"></param>
-        private void VerifyIntervals(List<DateTime> times, ExponentialRetryPolicy policy)
+        private void VerifyIntervals(List<DateTime> times, LinearRetryPolicy policy)
         {
-            var interval = policy.InitialRetryInterval;
-
             for (int i = 0; i < times.Count - 1; i++)
             {
-                Assert.True(VerifyInterval(times[i], times[i + 1], interval));
-
-                interval = TimeSpan.FromTicks(interval.Ticks * 2);
-
-                if (interval > policy.MaxRetryInterval)
-                {
-                    interval = policy.MaxRetryInterval;
-                }
+                Assert.True(VerifyInterval(times[i], times[i + 1], policy.RetryInterval));
             }
         }
 
@@ -76,28 +68,26 @@ namespace TestCommon
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Defaults()
         {
-            var policy = new ExponentialRetryPolicy(TransientDetector, sourceModule: "test");
+            var policy = new LinearRetryPolicy(TransientDetector);
 
             Assert.Equal(5, policy.MaxAttempts);
-            Assert.Equal(TimeSpan.FromSeconds(1), policy.InitialRetryInterval);
-            Assert.Equal(TimeSpan.FromHours(24), policy.MaxRetryInterval);
+            Assert.Equal(TimeSpan.FromSeconds(1), policy.RetryInterval);
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task FailAll()
+        public void FailAll()
         {
-            var policy = new ExponentialRetryPolicy(TransientDetector);
+            var policy = new LinearRetryPolicy(TransientDetector);
             var times  = new List<DateTime>();
 
-            await Assert.ThrowsAsync<TransientException>(
-                async () =>
+            Assert.Throws<TransientException>(
+                () =>
                 {
-                    await policy.InvokeAsync(
-                        async () =>
+                    policy.Invoke(
+                        () =>
                         {
                             times.Add(DateTime.UtcNow);
-                            await Task.CompletedTask;
                             throw new TransientException();
                         });
                 });
@@ -108,19 +98,18 @@ namespace TestCommon
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task FailAll_Result()
+        public void FailAll_Result()
         {
-            var policy = new ExponentialRetryPolicy(TransientDetector);
+            var policy = new LinearRetryPolicy(TransientDetector);
             var times  = new List<DateTime>();
 
-            await Assert.ThrowsAsync<TransientException>(
-                async () =>
+            Assert.Throws<TransientException>(
+                () =>
                 {
-                    await policy.InvokeAsync<string>(
-                        async () =>
+                    policy.Invoke<string>(
+                        () =>
                         {
                             times.Add(DateTime.UtcNow);
-                            await Task.CompletedTask;
                             throw new TransientException();
                         });
                 });
@@ -131,19 +120,18 @@ namespace TestCommon
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task FailImmediate()
+        public void FailImmediate()
         {
-            var policy = new ExponentialRetryPolicy(TransientDetector);
+            var policy = new LinearRetryPolicy(TransientDetector);
             var times  = new List<DateTime>();
 
-            await Assert.ThrowsAsync<NotImplementedException>(
-                async () =>
+            Assert.Throws<NotImplementedException>(
+                () =>
                 {
-                    await policy.InvokeAsync(
-                        async () =>
+                    policy.Invoke(
+                        () =>
                         {
                             times.Add(DateTime.UtcNow);
-                            await Task.CompletedTask;
                             throw new NotImplementedException();
                         });
                 });
@@ -153,19 +141,18 @@ namespace TestCommon
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task FailImmediate_Result()
+        public void FailImmediate_Result()
         {
-            var policy = new ExponentialRetryPolicy(TransientDetector);
+            var policy = new LinearRetryPolicy(TransientDetector);
             var times  = new List<DateTime>();
 
-            await Assert.ThrowsAsync<NotImplementedException>(
-                async () =>
+            Assert.Throws<NotImplementedException>(
+                () =>
                 {
-                    await policy.InvokeAsync<string>(
-                        async () =>
+                    policy.Invoke<string>(
+                        () =>
                         {
                             times.Add(DateTime.UtcNow);
-                            await Task.CompletedTask;
                             throw new NotImplementedException();
                         });
                 });
@@ -175,19 +162,18 @@ namespace TestCommon
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task FailDelayed()
+        public void FailDelayed()
         {
-            var policy = new ExponentialRetryPolicy(TransientDetector);
+            var policy = new LinearRetryPolicy(TransientDetector);
             var times  = new List<DateTime>();
 
-            await Assert.ThrowsAsync<NotImplementedException>(
-                async () =>
+            Assert.Throws<NotImplementedException>(
+                () =>
                 {
-                    await policy.InvokeAsync(
-                        async () =>
+                    policy.Invoke(
+                        () =>
                         {
                             times.Add(DateTime.UtcNow);
-                            await Task.CompletedTask;
 
                             if (times.Count < 2)
                             {
@@ -206,19 +192,18 @@ namespace TestCommon
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task FailDelayed_Result()
+        public void FailDelayed_Result()
         {
-            var policy = new ExponentialRetryPolicy(TransientDetector);
+            var policy = new LinearRetryPolicy(TransientDetector);
             var times  = new List<DateTime>();
 
-            await Assert.ThrowsAsync<NotImplementedException>(
-                async () =>
+            Assert.Throws<NotImplementedException>(
+                () =>
                 {
-                    await policy.InvokeAsync<string>(
-                        async () =>
+                    policy.Invoke<string>(
+                        () =>
                         {
                             times.Add(DateTime.UtcNow);
-                            await Task.CompletedTask;
 
                             if (times.Count < 2)
                             {
@@ -237,17 +222,16 @@ namespace TestCommon
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task SuccessImmediate()
+        public void SuccessImmediate()
         {
-            var policy  = new ExponentialRetryPolicy(TransientDetector);
+            var policy  = new LinearRetryPolicy(TransientDetector);
             var times   = new List<DateTime>();
             var success = false;
 
-            await policy.InvokeAsync(
-                async () =>
+            policy.Invoke(
+                () =>
                 {
                     times.Add(DateTime.UtcNow);
-                    await Task.CompletedTask;
 
                     success = true;
                 });
@@ -258,16 +242,15 @@ namespace TestCommon
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task SuccessImmediate_Result()
+        public void SuccessImmediate_Result()
         {
-            var policy = new ExponentialRetryPolicy(TransientDetector);
-            var times   = new List<DateTime>();
+            var policy = new LinearRetryPolicy(TransientDetector);
+            var times  = new List<DateTime>();
 
-            var success = await policy.InvokeAsync(
-                async () =>
+            var success = policy.Invoke(
+                () =>
                 {
                     times.Add(DateTime.UtcNow);
-                    await Task.CompletedTask;
 
                     return "WOOHOO!";
                 });
@@ -278,17 +261,16 @@ namespace TestCommon
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task SuccessDelayed()
+        public void SuccessDelayed()
         {
-            var policy  = new ExponentialRetryPolicy(TransientDetector);
+            var policy  = new LinearRetryPolicy(TransientDetector);
             var times   = new List<DateTime>();
             var success = false;
 
-            await policy.InvokeAsync(
-                async () =>
+            policy.Invoke(
+                () =>
                 {
                     times.Add(DateTime.UtcNow);
-                    await Task.CompletedTask;
 
                     if (times.Count < policy.MaxAttempts)
                     {
@@ -305,16 +287,15 @@ namespace TestCommon
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task SuccessDelayed_Result()
+        public void SuccessDelayed_Result()
         {
-            var policy  = new ExponentialRetryPolicy(TransientDetector);
-            var times   = new List<DateTime>();
+            var policy = new LinearRetryPolicy(TransientDetector);
+            var times  = new List<DateTime>();
 
-            var success = await policy.InvokeAsync(
-                async () =>
+            var success = policy.Invoke(
+                () =>
                 {
                     times.Add(DateTime.UtcNow);
-                    await Task.CompletedTask;
 
                     if (times.Count < policy.MaxAttempts)
                     {
@@ -331,17 +312,16 @@ namespace TestCommon
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task SuccessDelayedByType()
+        public void SuccessDelayedByType()
         {
-            var policy = new ExponentialRetryPolicy(typeof(NotReadyException));
-            var times = new List<DateTime>();
+            var policy  = new LinearRetryPolicy(typeof(NotReadyException));
+            var times   = new List<DateTime>();
             var success = false;
 
-            await policy.InvokeAsync(
-                async () =>
+            policy.Invoke(
+                () =>
                 {
                     times.Add(DateTime.UtcNow);
-                    await Task.CompletedTask;
 
                     if (times.Count < policy.MaxAttempts)
                     {
@@ -358,17 +338,16 @@ namespace TestCommon
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task SuccessDelayedAggregateSingle()
+        public void SuccessDelayedAggregateSingle()
         {
-            var policy = new ExponentialRetryPolicy(typeof(NotReadyException));
-            var times  = new List<DateTime>();
+            var policy  = new LinearRetryPolicy(typeof(NotReadyException));
+            var times   = new List<DateTime>();
             var success = false;
 
-            await policy.InvokeAsync(
-                async () =>
+            policy.Invoke(
+                () =>
                 {
                     times.Add(DateTime.UtcNow);
-                    await Task.CompletedTask;
 
                     if (times.Count < policy.MaxAttempts)
                     {
@@ -385,17 +364,16 @@ namespace TestCommon
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task SuccessDelayedAggregateArray()
+        public void SuccessDelayedAggregateArray()
         {
-            var policy  = new ExponentialRetryPolicy(new Type[] { typeof(NotReadyException), typeof(KeyNotFoundException) });
+            var policy  = new LinearRetryPolicy(new Type[] { typeof(NotReadyException), typeof(KeyNotFoundException) });
             var times   = new List<DateTime>();
             var success = false;
 
-            await policy.InvokeAsync(
-                async () =>
+            policy.Invoke(
+                () =>
                 {
                     times.Add(DateTime.UtcNow);
-                    await Task.CompletedTask;
 
                     if (times.Count < policy.MaxAttempts)
                     {
@@ -419,21 +397,19 @@ namespace TestCommon
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task SuccessCustom()
+        public void SuccessCustom()
         {
-            var policy  = new ExponentialRetryPolicy(TransientDetector, maxAttempts: 6, initialRetryInterval: TimeSpan.FromSeconds(0.5), maxRetryInterval: TimeSpan.FromSeconds(4));
+            var policy  = new LinearRetryPolicy(TransientDetector, maxAttempts: 4, retryInterval: TimeSpan.FromSeconds(2));
             var times   = new List<DateTime>();
             var success = false;
 
-            Assert.Equal(6, policy.MaxAttempts);
-            Assert.Equal(TimeSpan.FromSeconds(0.5), policy.InitialRetryInterval);
-            Assert.Equal(TimeSpan.FromSeconds(4), policy.MaxRetryInterval);
+            Assert.Equal(4, policy.MaxAttempts);
+            Assert.Equal(TimeSpan.FromSeconds(2), policy.RetryInterval);
 
-            await policy.InvokeAsync(
-                async () =>
+            policy.Invoke(
+                () =>
                 {
                     times.Add(DateTime.UtcNow);
-                    await Task.CompletedTask;
 
                     if (times.Count < policy.MaxAttempts)
                     {
@@ -450,20 +426,18 @@ namespace TestCommon
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task SuccessCustom_Result()
+        public void SuccessCustom_Result()
         {
-            var policy = new ExponentialRetryPolicy(TransientDetector, maxAttempts: 6, initialRetryInterval: TimeSpan.FromSeconds(0.5), maxRetryInterval: TimeSpan.FromSeconds(4));
+            var policy = new LinearRetryPolicy(TransientDetector, maxAttempts: 4, retryInterval: TimeSpan.FromSeconds(2));
             var times  = new List<DateTime>();
 
-            Assert.Equal(6, policy.MaxAttempts);
-            Assert.Equal(TimeSpan.FromSeconds(0.5), policy.InitialRetryInterval);
-            Assert.Equal(TimeSpan.FromSeconds(4), policy.MaxRetryInterval);
+            Assert.Equal(4, policy.MaxAttempts);
+            Assert.Equal(TimeSpan.FromSeconds(2), policy.RetryInterval);
 
-            var success = await policy.InvokeAsync(
-                async () =>
+            var success = policy.Invoke(
+                () =>
                 {
                     times.Add(DateTime.UtcNow);
-                    await Task.CompletedTask;
 
                     if (times.Count < policy.MaxAttempts)
                     {
@@ -480,24 +454,22 @@ namespace TestCommon
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task Timeout()
+        public void Timeout()
         {
-            var policy = new ExponentialRetryPolicy(TransientDetector, maxAttempts: 6, initialRetryInterval: TimeSpan.FromSeconds(0.5), maxRetryInterval: TimeSpan.FromSeconds(4), timeout: TimeSpan.FromSeconds(1.5));
+            var policy = new LinearRetryPolicy(TransientDetector, maxAttempts: 6, retryInterval: TimeSpan.FromSeconds(0.5), timeout: TimeSpan.FromSeconds(1.5));
             var times  = new List<DateTime>();
 
             Assert.Equal(6, policy.MaxAttempts);
-            Assert.Equal(TimeSpan.FromSeconds(0.5), policy.InitialRetryInterval);
-            Assert.Equal(TimeSpan.FromSeconds(4), policy.MaxRetryInterval);
+            Assert.Equal(TimeSpan.FromSeconds(0.5), policy.RetryInterval);
             Assert.Equal(TimeSpan.FromSeconds(1.5), policy.Timeout);
 
-            await Assert.ThrowsAsync<TransientException>(
-                async () =>
+            Assert.Throws<TransientException>(
+                () =>
                 {
-                    await policy.InvokeAsync(
-                        async () =>
+                    policy.Invoke(
+                        () =>
                         {
                             times.Add(DateTime.UtcNow);
-                            await Task.CompletedTask;
 
                             throw new TransientException();
                         });
@@ -512,23 +484,21 @@ namespace TestCommon
             // We'll wait a bit longer to enure that any (incorrect) deadline computed
             // by the policy when constructed above does not impact a subsequent run.
 
-            await Task.Delay(TimeSpan.FromSeconds(4));
+            Thread.Sleep(TimeSpan.FromSeconds(4));
 
             times.Clear();
 
             Assert.Equal(6, policy.MaxAttempts);
-            Assert.Equal(TimeSpan.FromSeconds(0.5), policy.InitialRetryInterval);
-            Assert.Equal(TimeSpan.FromSeconds(4), policy.MaxRetryInterval);
+            Assert.Equal(TimeSpan.FromSeconds(0.5), policy.RetryInterval);
             Assert.Equal(TimeSpan.FromSeconds(1.5), policy.Timeout);
 
-            await Assert.ThrowsAsync<TransientException>(
-                async () =>
+            Assert.Throws<TransientException>(
+                () =>
                 {
-                    await policy.InvokeAsync(
-                        async () =>
+                    policy.Invoke(
+                        () =>
                         {
                             times.Add(DateTime.UtcNow);
-                            await Task.CompletedTask;
 
                             throw new TransientException();
                         });

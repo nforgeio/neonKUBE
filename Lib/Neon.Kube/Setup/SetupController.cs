@@ -26,6 +26,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Common;
+using Neon.SSH;
 
 namespace Neon.Kube
 {
@@ -55,9 +56,9 @@ namespace Neon.Kube
             public bool                                         Quiet;
             public Action                                       SyncGlobalAction;
             public Func<Task>                                   AsyncGlobalAction;
-            public Action<LinuxSshProxy<NodeMetadata>, TimeSpan>     SyncNodeAction;
-            public Func<LinuxSshProxy<NodeMetadata>, TimeSpan, Task> AsyncNodeAction;
-            public Func<LinuxSshProxy<NodeMetadata>, bool>           Predicate;
+            public Action<NodeSshProxy<NodeMetadata>, TimeSpan>     SyncNodeAction;
+            public Func<NodeSshProxy<NodeMetadata>, TimeSpan, Task> AsyncNodeAction;
+            public Func<NodeSshProxy<NodeMetadata>, bool>           Predicate;
             public StepStatus                                   Status;
             public int                                          ParallelLimit;
             public TimeSpan                                     StepStagger;
@@ -70,7 +71,7 @@ namespace Neon.Kube
 
         private string                                          operationTitle;
         private string                                          operationStatus;
-        private List<LinuxSshProxy<NodeMetadata>>                    nodes;
+        private List<NodeSshProxy<NodeMetadata>>                    nodes;
         private List<Step>                                      steps;
         private Step                                            currentStep;
         private bool                                            error;
@@ -83,7 +84,7 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="operationTitle">Summarizes the high-level operation being performed.</param>
         /// <param name="nodes">The node proxies for the cluster nodes being manipulated.</param>
-        public SetupController(string operationTitle, IEnumerable<LinuxSshProxy<NodeMetadata>> nodes)
+        public SetupController(string operationTitle, IEnumerable<NodeSshProxy<NodeMetadata>> nodes)
             : this(new string[] { operationTitle }, nodes)
         {
         }
@@ -93,7 +94,7 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="operationTitle">Summarizes the high-level operation being performed.</param>
         /// <param name="nodes">The node proxies for the cluster nodes being manipulated.</param>
-        public SetupController(string[] operationTitle, IEnumerable<LinuxSshProxy<NodeMetadata>> nodes)
+        public SetupController(string[] operationTitle, IEnumerable<NodeSshProxy<NodeMetadata>> nodes)
         {
             var title = string.Empty;
 
@@ -232,7 +233,7 @@ namespace Neon.Kube
         public void AddWaitUntilOnlineStep(
             string                              stepLabel     = "connect", 
             string                              status        = null, 
-            Func<LinuxSshProxy<NodeMetadata>, bool>  nodePredicate = null, 
+            Func<NodeSshProxy<NodeMetadata>, bool>  nodePredicate = null, 
             bool                                quiet         = false, 
             TimeSpan?                           timeout       = null, 
             int                                 position      = -1)
@@ -278,7 +279,7 @@ namespace Neon.Kube
             string                              stepLabel, 
             TimeSpan                            delay, 
             string                              status        = null,
-            Func<LinuxSshProxy<NodeMetadata>, bool>  nodePredicate = null, 
+            Func<NodeSshProxy<NodeMetadata>, bool>  nodePredicate = null, 
             bool                                quiet         = false, 
             int                                 position      = -1)
         {
@@ -301,7 +302,7 @@ namespace Neon.Kube
         /// <param name="stepLabel">Brief step summary.</param>
         /// <param name="nodeAction">
         /// The action to be performed on each node.  Two parameters will be passed
-        /// to this action: the node's <see cref="LinuxSshProxy{T}"/> and a <see cref="TimeSpan"/>
+        /// to this action: the node's <see cref="NodeSshProxy{T}"/> and a <see cref="TimeSpan"/>
         /// indicating the amount of time the action should wait before performing
         /// the operation, if the operation hasn't already been performed.
         /// </param>
@@ -332,16 +333,16 @@ namespace Neon.Kube
         /// </param>
         public void AddNodeStep(
             string stepLabel,
-            Action<LinuxSshProxy<NodeMetadata>, TimeSpan>    nodeAction,
-            Func<LinuxSshProxy<NodeMetadata>, bool>          nodePredicate      = null,
+            Action<NodeSshProxy<NodeMetadata>, TimeSpan>    nodeAction,
+            Func<NodeSshProxy<NodeMetadata>, bool>          nodePredicate      = null,
             bool                                        quiet              = false,
             bool                                        noParallelLimit    = false,
             int                                         stepStaggerSeconds = 0,
             int                                         position           = -1,
             int                                         parallelLimit      = 0)
         {
-            nodeAction    = nodeAction ?? new Action<LinuxSshProxy<NodeMetadata>, TimeSpan>((n, d) => { });
-            nodePredicate = nodePredicate ?? new Func<LinuxSshProxy<NodeMetadata>, bool>(n => true);
+            nodeAction    = nodeAction ?? new Action<NodeSshProxy<NodeMetadata>, TimeSpan>((n, d) => { });
+            nodePredicate = nodePredicate ?? new Func<NodeSshProxy<NodeMetadata>, bool>(n => true);
 
             if (position < 0)
             {
@@ -372,7 +373,7 @@ namespace Neon.Kube
         /// <param name="stepLabel">Brief step summary.</param>
         /// <param name="nodeAction">
         /// The action to be performed on each node.  Two parameters will be passed
-        /// to this action: the node's <see cref="LinuxSshProxy{T}"/> and a <see cref="TimeSpan"/>
+        /// to this action: the node's <see cref="NodeSshProxy{T}"/> and a <see cref="TimeSpan"/>
         /// indicating the amount of time the action should wait before performing
         /// the operation, if the operation hasn't already been performed.
         /// </param>
@@ -403,16 +404,16 @@ namespace Neon.Kube
         /// </param>
         public void AddNodeStep(
             string stepLabel,
-            Func<LinuxSshProxy<NodeMetadata>, TimeSpan, Task>    nodeAction,
-            Func<LinuxSshProxy<NodeMetadata>, bool>              nodePredicate      = null,
+            Func<NodeSshProxy<NodeMetadata>, TimeSpan, Task>    nodeAction,
+            Func<NodeSshProxy<NodeMetadata>, bool>              nodePredicate      = null,
             bool                                            quiet              = false,
             bool                                            noParallelLimit    = false,
             int                                             stepStaggerSeconds = 0,
             int                                             position           = -1,
             int                                             parallelLimit      = 0)
         {
-            nodeAction    = nodeAction ?? new Func<LinuxSshProxy<NodeMetadata>, TimeSpan, Task>((n, d) => { return Task.CompletedTask; });
-            nodePredicate = nodePredicate ?? new Func<LinuxSshProxy<NodeMetadata>, bool>(n => true);
+            nodeAction    = nodeAction ?? new Func<NodeSshProxy<NodeMetadata>, TimeSpan, Task>((n, d) => { return Task.CompletedTask; });
+            nodePredicate = nodePredicate ?? new Func<NodeSshProxy<NodeMetadata>, bool>(n => true);
 
             if (position < 0)
             {
@@ -834,7 +835,7 @@ namespace Neon.Kube
         /// <param name="stepNodeNamesSet">The set of node names participating in the current step.</param>
         /// <param name="node">The node being queried.</param>
         /// <returns>The status prefix.</returns>
-        private string GetStatus(HashSet<string> stepNodeNamesSet, LinuxSshProxy<NodeMetadata> node)
+        private string GetStatus(HashSet<string> stepNodeNamesSet, NodeSshProxy<NodeMetadata> node)
         {
             if (stepNodeNamesSet != null && !stepNodeNamesSet.Contains(node.Name))
             {

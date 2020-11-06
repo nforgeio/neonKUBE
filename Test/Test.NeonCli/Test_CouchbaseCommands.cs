@@ -69,13 +69,13 @@ namespace Test.NeonCli
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
-        public void Base()
+        public async Task Base()
         {
             // Verify that base command returns some help.
 
             using (var runner = new ProgramRunner())
             {
-                var result = runner.Execute(Program.Main, "couchbase");
+                var result = await runner.ExecuteAsync(Program.Main, "couchbase");
 
                 Assert.Equal(0, result.ExitCode);
                 Assert.Contains("Performs Couchbase related operations.", result.OutputText);
@@ -119,7 +119,7 @@ namespace Test.NeonCli
             {
                 // Query using the [http://...] target format and passing the query on the command line.
 
-                var result = runner.Execute(Program.Main,
+                var result = await runner.ExecuteAsync(Program.Main,
                     "couchbase",
                     "query",
                     $"http://{endpoint.Address}:{endpoint.Port}@{username}:{password}:{bucketName}",
@@ -131,7 +131,7 @@ namespace Test.NeonCli
 
                 // Query again, but using the using the [couchbase://...] target format.
 
-                result = runner.Execute(Program.Main,
+                result = await runner.ExecuteAsync(Program.Main,
                     "couchbase",
                     "query",
                     $"couchbase://{endpoint.Address}:{endpoint.Port}@{username}:{password}:{bucketName}",
@@ -147,7 +147,7 @@ namespace Test.NeonCli
                 {
                     File.WriteAllText(tempFile.Path, $"select * from `{bucket.Name}`;");
 
-                    result = runner.Execute(Program.Main,
+                    result = await runner.ExecuteAsync(Program.Main,
                         "couchbase",
                         "query",
                         $"couchbase://{endpoint.Address}:{endpoint.Port}@{username}:{password}:{bucketName}",
@@ -160,7 +160,7 @@ namespace Test.NeonCli
 
                 // Pass the query as STDIN.
 
-                result = runner.ExecuteWithInput(Program.Main, $"select * from `{bucket.Name}`;",
+                result = await runner.ExecuteWithInputAsync(Program.Main, $"select * from `{bucket.Name}`;",
                     "couchbase",
                     "query",
                     $"couchbase://{endpoint.Address}:{endpoint.Port}@{username}:{password}:{bucketName}",
@@ -219,7 +219,7 @@ namespace Test.NeonCli
                 {
                     File.WriteAllText(tempFile.Path, sb.ToString());
 
-                    result = runner.Execute(Program.Main,
+                    result = await runner.ExecuteAsync(Program.Main,
                         "couchbase",
                         "upsert",
                         $"http://{endpoint.Address}:{endpoint.Port}@{username}:{password}:{bucketName}",
@@ -231,7 +231,7 @@ namespace Test.NeonCli
 
                     // Verify that the documents were written.
 
-                    result = runner.ExecuteWithInput(Program.Main, $"select * from `{bucket.Name}`;",
+                    result = await runner.ExecuteWithInputAsync(Program.Main, $"select * from `{bucket.Name}`;",
                         "couchbase",
                         "query",
                         $"couchbase://{endpoint.Address}:{endpoint.Port}@{username}:{password}:{bucketName}",
@@ -265,7 +265,7 @@ namespace Test.NeonCli
                 sb.AppendLine(howard.ToString(indented: false));
                 sb.AppendLine(john.ToString(indented: false));
 
-                result = runner.ExecuteWithInput(Program.Main, sb.ToString(),
+                result = await runner.ExecuteWithInputAsync(Program.Main, sb.ToString(),
                     "couchbase",
                     "upsert",
                     $"couchbase://{endpoint.Address}:{endpoint.Port}@{username}:{password}:{bucketName}",
@@ -277,7 +277,7 @@ namespace Test.NeonCli
 
                 // Verify that the documents were written.
 
-                result = runner.ExecuteWithInput(Program.Main, $"select * from `{bucket.Name}`;",
+                result = await runner.ExecuteWithInputAsync(Program.Main, $"select * from `{bucket.Name}`;",
                     "couchbase",
                     "query",
                     $"couchbase://{endpoint.Address}:{endpoint.Port}@{username}:{password}:{bucketName}",

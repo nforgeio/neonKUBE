@@ -70,7 +70,7 @@ ARGUMENTS:
         }
 
         /// <inheritdoc/>
-        public override void Run(CommandLine commandLine)
+        public override async Task RunAsync(CommandLine commandLine)
         {
             if (commandLine.HasHelpOption || commandLine.Arguments.Length == 0)
             {
@@ -114,7 +114,7 @@ ARGUMENTS:
 
             // Notify the desktop application.
 
-            KubeHelper.Desktop.Login().Wait();
+            await KubeHelper.Desktop.Login();
         }
     }
 }

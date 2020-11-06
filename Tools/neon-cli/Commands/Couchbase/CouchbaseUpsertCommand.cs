@@ -113,7 +113,7 @@ customize this in two ways:
         }
 
         /// <inheritdoc/>
-        public override void Run(CommandLine commandLine)
+        public override async Task RunAsync(CommandLine commandLine)
         {
             if (commandLine.HasHelpOption || commandLine.Arguments.Length == 0)
             {
@@ -233,6 +233,7 @@ customize this in two ways:
             }
 
             Program.Exit(0);
+            await Task.CompletedTask;
         }
     }
 }

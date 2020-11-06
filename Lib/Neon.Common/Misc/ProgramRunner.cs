@@ -31,11 +31,18 @@ using Neon.IO;
 namespace Neon.Common
 {
     /// <summary>
-    /// Program main entry point method signature.
+    /// Synchronous main entry point method signature.
     /// </summary>
     /// <param name="args">The command line arguments.</param>
     /// <returns>The exit code.</returns>
     public delegate int ProgramEntrypoint(params string[] args);
+
+    /// <summary>
+    /// Asynchronous main entry point method signature.
+    /// </summary>
+    /// <param name="args">The command line arguments.</param>
+    /// <returns>The exit code.</returns>
+    public delegate Task<int> ProgramEntrypointAsync(params string[] args);
 
     /// <summary>
     /// Used to implement unit tests on command line tools by simulating
@@ -212,6 +219,66 @@ namespace Neon.Common
         }
 
         /// <summary>
+        /// Executes a program entry point asynchronously, passing arguments and returning the result.
+        /// </summary>
+        /// <param name="mainAsync">The program entry point.</param>
+        /// <param name="args">The arguments.</param>
+        /// <returns>The <see cref="ExecuteResponse"/> returned by the simulated program run.</returns>
+        public async Task<ExecuteResponse> ExecuteAsync(ProgramEntrypointAsync mainAsync, params string[] args)
+        {
+            Covenant.Requires<ArgumentNullException>(mainAsync != null, nameof(mainAsync));
+
+            if (programThread != null)
+            {
+                throw new InvalidOperationException("Only one simulated [program] can run at a time.");
+            }
+
+            var orgSTDOUT = Console.Out;
+            var orgSTDERR = Console.Error;
+
+            try
+            {
+                // Capture standard output and error.
+
+                var sbOut = new StringBuilder();
+                var sbErr = new StringBuilder();
+
+                using (var stdOutCapture = new StringWriter(sbOut))
+                {
+                    using (var stdErrCapture = new StringWriter(sbErr))
+                    {
+                        var exitCode = 0;
+
+                        Console.SetOut(stdOutCapture);
+                        Console.SetError(stdErrCapture);
+
+                        // Simulate executing the program.
+
+                        programThread = new Thread(new ThreadStart(() => exitCode = mainAsync(args).Result));
+                        programThread.Start();
+                        programThread.Join();
+                        programThread = null;
+
+                        return await Task.FromResult(
+                            new ExecuteResponse()
+                            {
+                                ExitCode   = exitCode,
+                                OutputText = sbOut.ToString(),
+                                ErrorText  = sbErr.ToString()
+                            });
+                    }
+                }
+            }
+            finally
+            {
+                // Restore the standard files.
+
+                Console.SetOut(orgSTDOUT);
+                Console.SetError(orgSTDERR);
+            }
+        }
+
+        /// <summary>
         /// Opens the standard input stream.  This will return a stream with the
         /// input specified when <see cref="ExecuteWithInput(ProgramEntrypoint, byte[], string[])"/>
         /// or <see cref="ExecuteWithInput(ProgramEntrypoint, string, string[])"/> were called
@@ -312,6 +379,88 @@ namespace Neon.Common
         }
 
         /// <summary>
+        /// Executes a program entry point asynchronously, streaming some bytes as standard input,
+        /// passing arguments and returning the result.
+        /// </summary>
+        /// <param name="mainAsync">The program entry point.</param>
+        /// <param name="inputBytes">The bytes to be passed as standard input.</param>
+        /// <param name="args">The arguments.</param>
+        /// <returns>The <see cref="ExecuteResponse"/> returned by the simulated program run.</returns>
+        public async Task<ExecuteResponse> ExecuteWithInputAsync(ProgramEntrypointAsync mainAsync, byte[] inputBytes, params string[] args)
+        {
+            Covenant.Requires<ArgumentNullException>(mainAsync != null, nameof(mainAsync));
+            Covenant.Requires<ArgumentNullException>(inputBytes != null, nameof(inputBytes));
+
+            this.inputBytes = inputBytes;
+
+            if (programThread != null)
+            {
+                throw new InvalidOperationException("Only one simulated [program] can run at a time.");
+            }
+
+            var orgSTDOUT = Console.Out;
+            var orgSTDERR = Console.Error;
+
+            try
+            {
+                // Capture standard output and error and stream the input 
+                // text as STDIN.
+
+                var sbOut = new StringBuilder();
+                var sbErr = new StringBuilder();
+
+                using (var stdOutCapture = new StringWriter(sbOut))
+                {
+                    using (var stdErrCapture = new StringWriter(sbErr))
+                    {
+                        var exitCode = 0;
+
+                        Console.SetOut(stdOutCapture);
+                        Console.SetError(stdErrCapture);
+
+                        // Simulate executing the program.
+
+                        programThread = new Thread(new ThreadStart(() => exitCode = mainAsync(args).Result));
+                        programThread.Start();
+                        programThread.Join();
+                        programThread = null;
+
+                        return await Task.FromResult(
+                            new ExecuteResponse()
+                            {
+                                ExitCode   = exitCode,
+                                OutputText = sbOut.ToString(),
+                                ErrorText  = sbErr.ToString()
+                            });
+                    }
+                }
+            }
+            finally
+            {
+                // Restore the standard files.
+
+                Console.SetOut(orgSTDOUT);
+                Console.SetError(orgSTDERR);
+            }
+        }
+
+        /// <summary>
+        /// Executes a program entry point asynchronously, streaming some text as standard input,
+        /// passing arguments and returning the result.
+        /// </summary>
+        /// <param name="mainAsync">The program entry point.</param>
+        /// <param name="inputText">The text to be passed as standard input.</param>
+        /// <param name="args">The arguments.</param>
+        /// <returns>The <see cref="ExecuteResponse"/> returned by the simulated program run.</returns>
+        public async Task<ExecuteResponse> ExecuteWithInputAsync(ProgramEntrypointAsync mainAsync, string inputText, params string[] args)
+        {
+            Covenant.Requires<ArgumentNullException>(mainAsync != null, nameof(mainAsync));
+            Covenant.Requires<ArgumentNullException>(inputText != null, nameof(inputText));
+
+            return await ExecuteWithInputAsync(mainAsync, Encoding.UTF8.GetBytes(inputText), args);
+        }
+
+        /// <summary>
         /// <para>
         /// Executes a program entry point asynchronously, without waiting for the command to complete.
         /// This is useful for commands that don't terminate by themselves.  Call <see cref="TerminateFork()"/>
@@ -367,6 +516,22 @@ namespace Neon.Common
             {
                 throw new InvalidOperationException($"The program returned with [exitcode={programExitCode}] before calling [{nameof(ProgramReady)}].");
             }
+        }
+
+        /// <summary>
+        /// Executes a program entry point asynchronously, streaming some text as standard input,
+        /// passing arguments and returning the result.
+        /// </summary>
+        /// <param name="mainAsync">The program entry point.</param>
+        /// <param name="inputText">The text to be passed as standard input.</param>
+        /// <param name="args">The arguments.</param>
+        /// <returns>The <see cref="ExecuteResponse"/> returned by the simulated program run.</returns>
+        public async Task<ExecuteResponse> ExecuteWithInputAsync(ProgramEntrypoint mainAsync, string inputText, params string[] args)
+        {
+            Covenant.Requires<ArgumentNullException>(mainAsync != null, nameof(mainAsync));
+            Covenant.Requires<ArgumentNullException>(inputText != null, nameof(inputText));
+
+            return ExecuteWithInput(mainAsync, Encoding.UTF8.GetBytes(inputText), args);
         }
 
         /// <summary>

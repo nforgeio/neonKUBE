@@ -67,12 +67,12 @@ namespace Neon.Xunit.YugaByte
         /// <summary>
         /// Specifies the Cassandra YCQL port to be exposed by the fixture.
         /// </summary>
-        private const int DefaultYcqlPort = 9099;    // $todo(jefflill): Change this back to 9042 after: https://github.com/nforgeio/neonKUBE/issues/1029
+        private const int DefaultYcqlPort = NetworkPorts.Cassandra;
 
         /// <summary>
         /// Specifies the Postgres YSQL port to be exposed by the fixture.
         /// </summary>
-        private const int DefaultYsqlPort = 5433;
+        private const int DefaultYsqlPort = NetworkPorts.Postgres;
 
         /// <summary>
         /// The default Docker compose file text used to spin up YugaByte and it's related services
@@ -280,13 +280,11 @@ services:
                 .WithPort(ycqlPort)
                 .Build();
 
-            retry.InvokeAsync(
-                async () =>
+            retry.Invoke(
+                () =>
                 {
                     CassandraSession = cluster.Connect();
-                    await Task.CompletedTask;
-
-                }).Wait();
+                });
 
             CassandraSession.Execute($"DROP KEYSPACE IF EXISTS \"{cassandraKeyspace}\"");
             CassandraSession.Execute($"CREATE KEYSPACE \"{cassandraKeyspace}\"");
@@ -297,13 +295,11 @@ services:
 
             PostgresConnection = new NpgsqlConnection($"host=127.0.0.1;port={ysqlPort};user id=yugabyte;password=");
 
-            retry.InvokeAsync(
-                async () =>
+            retry.Invoke(
+                () =>
                 {
                     PostgresConnection.Open();
-                    await Task.CompletedTask;
-
-                }).Wait();
+                });
 
             NpgsqlCommand command;
 

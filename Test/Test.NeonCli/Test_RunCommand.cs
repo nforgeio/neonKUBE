@@ -40,20 +40,20 @@ namespace Test.NeonCli
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
-        public void Run()
+        public async Task Run()
         {
             using (var runner = new ProgramRunner())
             {
                 // Verify that the help command works.
 
-                var result = runner.Execute(Program.Main, "run", "--help");
+                var result = await runner.ExecuteAsync(Program.Main, "run", "--help");
 
                 Assert.Equal(0, result.ExitCode);
                 Assert.Contains("Runs a sub-command, optionally injecting settings and secrets and/or", result.OutputText);
 
                 // Verify ther error we get when there's no right command line.
 
-                result = runner.Execute(Program.Main, "run");
+                result = await runner.ExecuteAsync(Program.Main, "run");
 
                 Assert.NotEqual(0, result.ExitCode);
                 Assert.Contains("*** ERROR: Expected a command after a [--] argument.", result.ErrorText);
@@ -62,7 +62,7 @@ namespace Test.NeonCli
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
-        public void ReadVariables_Decrypted()
+        public async Task ReadVariables_Decrypted()
         {
             var orgDirectory = Environment.CurrentDirectory;
 
@@ -81,7 +81,7 @@ namespace Test.NeonCli
                             // Create a test password and a [.password-name] file in the
                             // temp test folder.
 
-                            var result = runner.Execute(Program.Main, $"password", "set", "test");
+                            var result = await runner.ExecuteAsync(Program.Main, $"password", "set", "test");
                             Assert.Equal(0, result.ExitCode);
 
                             File.WriteAllText(".password-name", "test");
@@ -105,7 +105,7 @@ TEST_B=B-VALUE
 TEST_C=C-VALUE
 TEST_D=D-VALUE
 ");
-                            result = runner.Execute(Program.Main, $"run", "var1.txt", "var2.txt", "--", "test.cmd", "_.TEST_A", "_.TEST_B", "_.TEST_C", "_.TEST_D");
+                            result = await runner.ExecuteAsync(Program.Main, $"run", "var1.txt", "var2.txt", "--", "test.cmd", "_.TEST_A", "_.TEST_B", "_.TEST_C", "_.TEST_D");
                             Assert.Equal(0, result.ExitCode);
 
                             var output = File.ReadAllText("output.txt");
@@ -129,7 +129,7 @@ TEST_D=D-VALUE
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
-        public void ReadVariables_Ecrypted()
+        public async Task ReadVariables_Ecrypted()
         {
             var orgDirectory = Environment.CurrentDirectory;
 
@@ -148,7 +148,7 @@ TEST_D=D-VALUE
                             // Create a test password and a [.password-name] file in the
                             // temp test folder.
 
-                            var result = runner.Execute(Program.Main, $"password", "set", "test");
+                            var result = await runner.ExecuteAsync(Program.Main, $"password", "set", "test");
                             Assert.Equal(0, result.ExitCode);
 
                             File.WriteAllText(".password-name", "test");
@@ -177,7 +177,7 @@ TEST_D=D-VALUE
                             File.WriteAllBytes("var2.txt", vault.Encrypt("var2.txt", "test"));
                             Assert.True(NeonVault.IsEncrypted("var2.txt"));
 
-                            result = runner.Execute(Program.Main, $"run", "var1.txt", "var2.txt", "--", "test.cmd", "_.TEST_A", "_.TEST_B", "_.TEST_C", "_.TEST_D");
+                            result = await runner.ExecuteAsync(Program.Main, $"run", "var1.txt", "var2.txt", "--", "test.cmd", "_.TEST_A", "_.TEST_B", "_.TEST_C", "_.TEST_D");
                             Assert.Equal(0, result.ExitCode);
 
                             var output = File.ReadAllText("output.txt");
@@ -201,7 +201,7 @@ TEST_D=D-VALUE
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
-        public void VariableOptions()
+        public async Task VariableOptions()
         {
             var orgDirectory = Environment.CurrentDirectory;
 
@@ -222,7 +222,7 @@ TEST_D=D-VALUE
 
                             File.WriteAllText("test.cmd", "echo %* > output.txt");
 
-                            var result = runner.Execute(Program.Main, $"run", "--TEST_A=A-VALUE", "--TEST_B=B-VALUE", "--TEST_C=C-VALUE", "--TEST_D=D-VALUE", "--", "test.cmd", "_.TEST_A", "_.TEST_B", "_.TEST_C", "_.TEST_D");
+                            var result = await runner.ExecuteAsync(Program.Main, $"run", "--TEST_A=A-VALUE", "--TEST_B=B-VALUE", "--TEST_C=C-VALUE", "--TEST_D=D-VALUE", "--", "test.cmd", "_.TEST_A", "_.TEST_B", "_.TEST_C", "_.TEST_D");
                             Assert.Equal(0, result.ExitCode);
 
                             var output = File.ReadAllText("output.txt");
@@ -244,7 +244,7 @@ TEST_D=D-VALUE
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
-        public void VariableInjectDecrypted()
+        public async Task VariableInjectDecrypted()
         {
             var orgDirectory = Environment.CurrentDirectory;
 
@@ -263,7 +263,7 @@ TEST_D=D-VALUE
                             // Create a test password and a [.password-name] file in the
                             // temp test folder.
 
-                            var result = runner.Execute(Program.Main, $"password", "set", "test");
+                            var result = await runner.ExecuteAsync(Program.Main, $"password", "set", "test");
                             Assert.Equal(0, result.ExitCode);
 
                             //-------------------------------------------------
@@ -279,7 +279,7 @@ $<<TEST_B>>
 $<<TEST_C>>
 $<<TEST_D>>
 ");
-                            result = runner.Execute(Program.Main, $"run", "--TEST_A=A-VALUE", "--TEST_B=B-VALUE", "--TEST_C=C-VALUE", "--TEST_D=D-VALUE", "--", "test.cmd", "_..file.txt");
+                            result = await runner.ExecuteAsync(Program.Main, $"run", "--TEST_A=A-VALUE", "--TEST_B=B-VALUE", "--TEST_C=C-VALUE", "--TEST_D=D-VALUE", "--", "test.cmd", "_..file.txt");
                             Assert.Equal(0, result.ExitCode);
 
                             var output = File.ReadAllText("output.txt");
@@ -302,7 +302,7 @@ $<<TEST_D>>
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
-        public void VariableInjectEncrypted()
+        public async Task VariableInjectEncrypted()
         {
             var orgDirectory = Environment.CurrentDirectory;
 
@@ -321,7 +321,7 @@ $<<TEST_D>>
                             // Create a test password and a [.password-name] file in the
                             // temp test folder.
 
-                            var result = runner.Execute(Program.Main, $"password", "set", "test");
+                            var result = await runner.ExecuteAsync(Program.Main, $"password", "set", "test");
                             Assert.Equal(0, result.ExitCode);
 
                             //-------------------------------------------------
@@ -340,7 +340,7 @@ $<<TEST_D>>
                             File.WriteAllBytes("file.txt", vault.Encrypt("file.txt", "test"));
                             Assert.True(NeonVault.IsEncrypted("file.txt"));
 
-                            result = runner.Execute(Program.Main, $"run", "--TEST_A=A-VALUE", "--TEST_B=B-VALUE", "--TEST_C=C-VALUE", "--TEST_D=D-VALUE", "--", "test.cmd", "_..file.txt");
+                            result = await runner.ExecuteAsync(Program.Main, $"run", "--TEST_A=A-VALUE", "--TEST_B=B-VALUE", "--TEST_C=C-VALUE", "--TEST_D=D-VALUE", "--", "test.cmd", "_..file.txt");
                             Assert.Equal(0, result.ExitCode);
 
                             var output = File.ReadAllText("output.txt");
@@ -363,7 +363,7 @@ $<<TEST_D>>
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
-        public void DecryptFile()
+        public async Task DecryptFile()
         {
             var orgDirectory = Environment.CurrentDirectory;
 
@@ -382,7 +382,7 @@ $<<TEST_D>>
                             // Create a test password and a [.password-name] file in the
                             // temp test folder.
 
-                            var result = runner.Execute(Program.Main, $"password", "set", "test");
+                            var result = await runner.ExecuteAsync(Program.Main, $"password", "set", "test");
                             Assert.Equal(0, result.ExitCode);
 
                             //-------------------------------------------------
@@ -396,7 +396,7 @@ $<<TEST_D>>
                             File.WriteAllBytes("file.txt", vault.Encrypt("file.txt", "test"));
                             Assert.True(NeonVault.IsEncrypted("file.txt"));
 
-                            result = runner.Execute(Program.Main, $"run", "--", "test.cmd", "_...file.txt");
+                            result = await runner.ExecuteAsync(Program.Main, $"run", "--", "test.cmd", "_...file.txt");
                             Assert.Equal(0, result.ExitCode);
 
                             var output = File.ReadAllText("output.txt");
@@ -414,7 +414,7 @@ $<<TEST_D>>
                             File.WriteAllBytes("file.txt", vault.Encrypt("file.txt", "test"));
                             Assert.True(NeonVault.IsEncrypted("file.txt"));
 
-                            result = runner.Execute(Program.Main, $"run", "--", "cat", "_...file.txt");
+                            result = await runner.ExecuteAsync(Program.Main, $"run", "--", "cat", "_...file.txt");
                             Assert.Equal(0, result.ExitCode);
 
                             Assert.Contains(plainText, result.OutputText);
@@ -432,7 +432,7 @@ $<<TEST_D>>
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
-        public void StandardFiles()
+        public async Task StandardFiles()
         {
             // We had a problem with [NeonHelper_Execute] where standard output
             // and standard error streams weren't being relayed back to the
@@ -456,7 +456,7 @@ $<<TEST_D>>
 
                             File.WriteAllText("test.txt", "Hello World!");
 
-                            var result = runner.Execute(Program.Main, $"run", "--", "cat", "test.txt");
+                            var result = await runner.ExecuteAsync(Program.Main, $"run", "--", "cat", "test.txt");
                             Assert.Equal(0, result.ExitCode);
                             Assert.Contains("Hello World!", result.AllText);
                         }
@@ -471,7 +471,7 @@ $<<TEST_D>>
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
-        public void Options()
+        public async Task Options()
         {
             var orgDirectory = Environment.CurrentDirectory;
 
@@ -490,7 +490,7 @@ $<<TEST_D>>
 
                             File.WriteAllText("test.cmd", "echo %* > output.txt");
 
-                            var result = runner.Execute(Program.Main, $"run", "--", "test.cmd", "-foo", "--bar=foobar", "--hello", "world");
+                            var result = await runner.ExecuteAsync(Program.Main, $"run", "--", "test.cmd", "-foo", "--bar=foobar", "--hello", "world");
                             Assert.Equal(0, result.ExitCode);
 
                             Assert.Contains("-foo --bar=foobar --hello world", File.ReadAllText("output.txt"));

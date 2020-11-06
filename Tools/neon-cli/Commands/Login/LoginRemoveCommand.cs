@@ -85,7 +85,7 @@ USER@CLUSTER[/NAMESPACE is not specified.
         }
 
         /// <inheritdoc/>
-        public override void Run(CommandLine commandLine)
+        public override async Task RunAsync(CommandLine commandLine)
         {
             KubeConfigContext   context     = null;
             KubeContextName     contextName = null;
@@ -134,7 +134,7 @@ USER@CLUSTER[/NAMESPACE is not specified.
 
             // Notify the desktop application.
 
-            KubeHelper.Desktop.UpdateUIAsync().Wait();
+            await KubeHelper.Desktop.UpdateUIAsync();
         }
     }
 }

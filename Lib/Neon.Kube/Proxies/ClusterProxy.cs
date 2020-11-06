@@ -34,12 +34,13 @@ using Neon.Common;
 using Neon.IO;
 using Neon.Net;
 using Neon.Retry;
+using Neon.SSH;
 using Neon.Time;
 
 namespace Neon.Kube
 {
     /// <summary>
-    /// Creates a <see cref="LinuxSshProxy{TMetadata}"/> for the specified host and server name,
+    /// Creates a <see cref="NodeSshProxy{TMetadata}"/> for the specified host and server name,
     /// configuring logging and the credentials as specified by the global command
     /// line options.
     /// </summary>
@@ -49,8 +50,8 @@ namespace Neon.Kube
     /// Pass <c>true</c> to append to an existing log file (or create one if necessary)
     /// or <c>false</c> to replace any existing log file with a new one.
     /// </param>
-    /// <returns>The <see cref="LinuxSshProxy{TMetadata}"/>.</returns>
-    public delegate LinuxSshProxy<NodeDefinition> NodeProxyCreator(string name, IPAddress address, bool appendToLog);
+    /// <returns>The <see cref="NodeSshProxy{TMetadata}"/>.</returns>
+    public delegate NodeSshProxy<NodeDefinition> NodeProxyCreator(string name, IPAddress address, bool appendToLog);
 
     /// <summary>
     /// Used to remotely manage a cluster via SSH/SCP.
@@ -135,7 +136,7 @@ namespace Neon.Kube
 
                         if (context != null && context.Extension != null)
                         {
-                            return new LinuxSshProxy<NodeDefinition>(name, address, context.Extension.SshCredentials);
+                            return new NodeSshProxy<NodeDefinition>(name, address, context.Extension.SshCredentials);
                         }
                         else
                         {
@@ -144,7 +145,7 @@ namespace Neon.Kube
                             // we need a cluster proxy for global things (like managing a hosting
                             // environment) where we won't need access to specific cluster nodes.
 
-                            return new LinuxSshProxy<NodeDefinition>(name, address, SshCredentials.None);
+                            return new NodeSshProxy<NodeDefinition>(name, address, SshCredentials.None);
                         }
                     };
             }
@@ -157,7 +158,7 @@ namespace Neon.Kube
 
             // Initialize the cluster nodes.
 
-            var nodes = new List<LinuxSshProxy<NodeDefinition>>();
+            var nodes = new List<NodeSshProxy<NodeDefinition>>();
 
             foreach (var nodeDefinition in Definition.SortedNodes)
             {
@@ -220,12 +221,12 @@ namespace Neon.Kube
         /// <summary>
         /// Returns the read-only list of cluster node proxies.
         /// </summary>
-        public IReadOnlyList<LinuxSshProxy<NodeDefinition>> Nodes { get; private set; }
+        public IReadOnlyList<NodeSshProxy<NodeDefinition>> Nodes { get; private set; }
 
         /// <summary>
         /// Returns the first cluster master node as sorted by name.
         /// </summary>
-        public LinuxSshProxy<NodeDefinition> FirstMaster { get; private set; }
+        public NodeSshProxy<NodeDefinition> FirstMaster { get; private set; }
 
         /// <summary>
         /// Specifies the <see cref="RunOptions"/> to use when executing commands that 
@@ -238,7 +239,7 @@ namespace Neon.Kube
         /// <summary>
         /// Enumerates the cluster master node proxies sorted in ascending order by name.
         /// </summary>
-        public IEnumerable<LinuxSshProxy<NodeDefinition>> Masters
+        public IEnumerable<NodeSshProxy<NodeDefinition>> Masters
         {
             get { return Nodes.Where(n => n.Metadata.IsMaster).OrderBy(n => n.Name); }
         }
@@ -246,18 +247,18 @@ namespace Neon.Kube
         /// <summary>
         /// Enumerates the cluster worker node proxies sorted in ascending order by name.
         /// </summary>
-        public IEnumerable<LinuxSshProxy<NodeDefinition>> Workers
+        public IEnumerable<NodeSshProxy<NodeDefinition>> Workers
         {
             get { return Nodes.Where(n => n.Metadata.IsWorker).OrderBy(n => n.Name); }
         }
 
         /// <summary>
-        /// Returns the <see cref="LinuxSshProxy{TMetadata}"/> instance for a named node.
+        /// Returns the <see cref="NodeSshProxy{TMetadata}"/> instance for a named node.
         /// </summary>
         /// <param name="nodeName">The node name.</param>
         /// <returns>The node definition.</returns>
         /// <exception cref="KeyNotFoundException">Thrown if the name node is not present in the cluster.</exception>
-        public LinuxSshProxy<NodeDefinition> GetNode(string nodeName)
+        public NodeSshProxy<NodeDefinition> GetNode(string nodeName)
         {
             var node = Nodes.SingleOrDefault(n => string.Compare(n.Name, nodeName, StringComparison.OrdinalIgnoreCase) == 0);
 
@@ -270,11 +271,11 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Looks for the <see cref="LinuxSshProxy{TMetadata}"/> instance for a named node.
+        /// Looks for the <see cref="NodeSshProxy{TMetadata}"/> instance for a named node.
         /// </summary>
         /// <param name="nodeName">The node name.</param>
         /// <returns>The node proxy instance or <c>null</c> if the named node does not exist.</returns>
-        public LinuxSshProxy<NodeDefinition> FindNode(string nodeName)
+        public NodeSshProxy<NodeDefinition> FindNode(string nodeName)
         {
             return Nodes.SingleOrDefault(n => string.Compare(n.Name, nodeName, StringComparison.OrdinalIgnoreCase) == 0);
         }
@@ -288,7 +289,7 @@ namespace Neon.Kube
         /// Thrown if no masters are reachable and <paramref name="failureMode"/> 
         /// is passed as <see cref="ReachableHostMode.Throw"/>.
         /// </exception>
-        public LinuxSshProxy<NodeDefinition> GetReachableMaster(ReachableHostMode failureMode = ReachableHostMode.ReturnFirst)
+        public NodeSshProxy<NodeDefinition> GetReachableMaster(ReachableHostMode failureMode = ReachableHostMode.ReturnFirst)
         {
             var masterAddresses = Nodes
                 .Where(n => n.Metadata.IsMaster)
@@ -318,7 +319,7 @@ namespace Neon.Kube
         /// Thrown if no nodes matching the predicate are reachable and <paramref name="failureMode"/> 
         /// is passed as <see cref="ReachableHostMode.Throw"/>.
         /// </exception>
-        public LinuxSshProxy<NodeDefinition> GetReachableNode(Func<LinuxSshProxy<NodeDefinition>, bool> predicate, ReachableHostMode failureMode = ReachableHostMode.ReturnFirst)
+        public NodeSshProxy<NodeDefinition> GetReachableNode(Func<NodeSshProxy<NodeDefinition>, bool> predicate, ReachableHostMode failureMode = ReachableHostMode.ReturnFirst)
         {
             var nodeAddresses = Nodes
                 .Where(predicate)
@@ -361,7 +362,7 @@ namespace Neon.Kube
         /// <param name="outputEncoding">Optionally specifies the output text encoding (defaults to UTF-8).</param>
         /// <param name="permissions">Optionally specifies target file permissions (must be <c>chmod</c> compatible).</param>
         /// <returns>The steps.</returns>
-        public IEnumerable<ConfigStep> GetFileUploadSteps(IEnumerable<LinuxSshProxy<NodeDefinition>> nodes, string path, string text, int tabStop = 0, Encoding outputEncoding = null, string permissions = null)
+        public IEnumerable<ConfigStep> GetFileUploadSteps(IEnumerable<NodeSshProxy<NodeDefinition>> nodes, string path, string text, int tabStop = 0, Encoding outputEncoding = null, string permissions = null)
         {
             Covenant.Requires<ArgumentNullException>(nodes != null, nameof(nodes));
 
@@ -385,11 +386,11 @@ namespace Neon.Kube
         /// <param name="outputEncoding">Optionally specifies the output text encoding (defaults to UTF-8).</param>
         /// <param name="permissions">Optionally specifies target file permissions (must be <c>chmod</c> compatible).</param>
         /// <returns>The steps.</returns>
-        public IEnumerable<ConfigStep> GetFileUploadSteps(LinuxSshProxy<NodeDefinition> node, string path, string text, int tabStop = 0, Encoding outputEncoding = null, string permissions = null)
+        public IEnumerable<ConfigStep> GetFileUploadSteps(NodeSshProxy<NodeDefinition> node, string path, string text, int tabStop = 0, Encoding outputEncoding = null, string permissions = null)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 
-            return GetFileUploadSteps(new List<LinuxSshProxy<NodeDefinition>>() { node }, path, text, tabStop, outputEncoding, permissions);
+            return GetFileUploadSteps(new List<NodeSshProxy<NodeDefinition>>() { node }, path, text, tabStop, outputEncoding, permissions);
         }
 
         /// <summary>

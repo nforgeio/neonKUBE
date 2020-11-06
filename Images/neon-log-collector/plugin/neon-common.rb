@@ -67,6 +67,8 @@ module NeonCommon
                 return "info";
             when "sinfo"
                 return "sinfo";
+            when "transient"
+                return "transient"
             when "debug", "trace", "t"
                 return "debug";
         end
@@ -74,7 +76,7 @@ module NeonCommon
         return nil;
     end
 
-    # This method sets the record's [level] field one of the log level strings below
+    # This method sets the record's [level] field to one of the log level strings below
     # by examining one or more of the record's fields:
     #
     #       emergency   System is unusable (not emitted by services).
@@ -86,8 +88,9 @@ module NeonCommon
     #       notice      Something unusual has occurred but is not an error.
     #       info        Normal operational messages that require no action.
     #       sinfo       Normal operational security messages that require no action.
+    #       transient   Failure that will be retried
     #       debug       Developer/diagnostic information.
-    #       unknown     Log level could not be determined.
+    #       other       Log level could not be determined.
     #
     # The current implementation tries the following:
     #
@@ -327,12 +330,12 @@ module NeonCommon
         end
     end
 
-    # This Fluentd filter plugin attempts to set the record's [activity-id], 
+    # This Fluentd filter plugin attempts to set the record's [activity-id], [version]
     # [module], and [index] and fields by examining the event [message].  Currently, this 
-    # supports  the optional activity, module, and index fields emitted by the Neon 
-    # logging classes, like:
+    # supports  the optional [activity], [version], [module], and [index] fields emitted
+    # by the Neon loggers, like:
     #
-    #       [activity-id:<id>] [module:<name>] [index:#]
+    #       [activity-id:<id>] [version:<semantic-version>] [module:<name>] [index:#]
     #
     def extractOtherFields(tag, time, record)
 
@@ -351,6 +354,22 @@ module NeonCommon
 
             if field != ""
                 record["activity_id"] = field;
+            end
+
+            record["message"] = message[(match.length..-1)];
+        end
+
+        # Extract the [version], if present.
+
+        message = record["message"];
+
+        if message =~ /^(?<match>\s*\[\s*version:\s*(?<version>[^\]]*)\s*\]\s*)/i
+            
+            match = $~["match"];
+            field = $~["version"];
+
+            if field != ""
+                record["version"] = field.strip;
             end
 
             record["message"] = message[(match.length..-1)];

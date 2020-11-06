@@ -33,6 +33,7 @@ using Neon.ModelGen;
 using Neon.Common;
 using Neon.Kube;
 using Neon.Net;
+using Neon.SSH;
 
 namespace NeonCli
 {
@@ -100,7 +101,7 @@ of a hack that assumes a text file where NEWLINEs at the end don't matter.
         }
 
         /// <inheritdoc/>
-        public override void Run(CommandLine commandLine)
+        public override async Task RunAsync(CommandLine commandLine)
         {
             if (commandLine.Arguments.Length != 2)
             {
@@ -112,7 +113,7 @@ of a hack that assumes a text file where NEWLINEs at the end don't matter.
             var vfdPath     = commandLine.Arguments.ElementAtOrDefault(1);
             var credentials = SshCredentials.FromUserPassword("sysadmin", "sysadmin0000");
 
-            using (var server = new LinuxSshProxy<string>("vm-fhd", ipAddress, credentials))
+            using (var server = new NodeSshProxy<string>("vm-fhd", ipAddress, credentials))
             {
                 server.WaitForBoot();
 
@@ -184,6 +185,7 @@ of a hack that assumes a text file where NEWLINEs at the end don't matter.
             }
 
             Program.Exit(0);
+            await Task.CompletedTask;
         }
     }
 }

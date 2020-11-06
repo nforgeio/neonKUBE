@@ -34,6 +34,7 @@ using Neon.HyperV;
 using Neon.IO;
 using Neon.Kube;
 using Neon.Net;
+using Neon.SSH;
 using Neon.XenServer;
 
 namespace NeonCli
@@ -121,7 +122,7 @@ node template.
         public override bool NeedsSshCredentials(CommandLine commandLine) => true;
 
         /// <inheritdoc/>
-        public override void Run(CommandLine commandLine)
+        public override async Task RunAsync(CommandLine commandLine)
         {
             if (commandLine.Arguments.Count() == 0)
             {
@@ -305,7 +306,7 @@ fi
                 var neonNodePrepScript =
 $@"# Ensure that the neon binary folder exists.
 
-mkdir -p {KubeHostFolders.Bin}
+mkdir -p {KubeNodeFolders.Bin}
 
 # Create the systemd unit file.
 
@@ -317,7 +318,7 @@ After=systemd-networkd.service
 
 [Service]
 Type=oneshot
-ExecStart={KubeHostFolders.Bin}/neon-node-prep.sh
+ExecStart={KubeNodeFolders.Bin}/neon-node-prep.sh
 RemainAfterExit=false
 StandardOutput=journal+console
 
@@ -327,7 +328,7 @@ EOF
 
 # Create the service script.
 
-cat <<EOF > {KubeHostFolders.Bin}/neon-node-prep.sh
+cat <<EOF > {KubeNodeFolders.Bin}/neon-node-prep.sh
 #!/bin/bash
 #------------------------------------------------------------------------------
 # FILE:	        neon-node-prep.sh
@@ -422,7 +423,7 @@ rm -rf /media/neon-node-prep
 touch /etc/neon-node-prep
 EOF
 
-chmod 744 {KubeHostFolders.Bin}/neon-node-prep.sh
+chmod 744 {KubeNodeFolders.Bin}/neon-node-prep.sh
 
 # Configure [neon-node-prep] to start at boot.
 
@@ -589,6 +590,7 @@ sfill -fllz /
             }
 
             Program.Exit(0);
+            await Task.CompletedTask;
         }
     }
 }

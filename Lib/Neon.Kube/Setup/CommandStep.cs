@@ -25,6 +25,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Common;
+using Neon.SSH;
 
 namespace Neon.Kube
 {
@@ -160,7 +161,7 @@ namespace Neon.Kube
         /// Actually executes the command on the node.
         /// </summary>
         /// <param name="node">The target node.</param>
-        private void Execute(LinuxSshProxy<NodeDefinition> node)
+        private void Execute(NodeSshProxy<NodeDefinition> node)
         {
             var status = this.ToString();
 

@@ -43,6 +43,7 @@ using Neon.Cryptography;
 using Neon.HyperV;
 using Neon.IO;
 using Neon.Net;
+using Neon.SSH;
 using Neon.Time;
 
 namespace Neon.Kube
@@ -292,7 +293,7 @@ namespace Neon.Kube
         public override bool RequiresAdminPrivileges => true;
 
         /// <inheritdoc/>
-        public override string GetDataDisk(LinuxSshProxy<NodeDefinition> node)
+        public override string GetDataDisk(NodeSshProxy<NodeDefinition> node)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 
@@ -569,7 +570,7 @@ namespace Neon.Kube
         /// Creates a Hyper-V virtual machine for a cluster node.
         /// </summary>
         /// <param name="node">The target node.</param>
-        private void ProvisionVM(LinuxSshProxy<NodeDefinition> node)
+        private void ProvisionVM(NodeSshProxy<NodeDefinition> node)
         {
             using (var hyperv = new HyperVClient())
             {

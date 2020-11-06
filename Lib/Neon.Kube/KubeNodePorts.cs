@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    IBashCommandFormatter.cs
+// FILE:	    KubeNodePorts.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
 //
@@ -17,38 +17,40 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
-
-using Neon.Common;
-using Neon.IO;
-using Neon.Net;
-using Neon.Retry;
-using Neon.Time;
-
-using ICSharpCode.SharpZipLib.Zip;
-
-using Renci.SshNet;
-using Renci.SshNet.Common;
-using System.Net;
 
 namespace Neon.Kube
 {
     /// <summary>
-    /// Describes a type implementation that can render a nicely formatted Bash command.
+    /// Defines reserved node and cluster network ports.
     /// </summary>
-    public interface IBashCommandFormatter
+    public static class KubeNodePorts
     {
         /// <summary>
-        /// Renders a nicely formatted Bash command.  Note that the string returned may
-        /// include multipe lines with continuation characters.
+        /// Port exposed by the Kubernetes API servers on the master nodes.
         /// </summary>
-        /// <param name="comment">The optional comment to be included in the output.</param>
-        /// <returns>The formatted Bash command.</returns>
-        string ToBash(string comment = null);
+        public const int KubeApiServer = 6443;
+
+        /// <summary>
+        /// The first port reserved by Kubernetes for exposing service node ports.
+        /// </summary>
+        public const int KubeFirstNodePort = 30000;
+
+        /// <summary>
+        /// The last port reserved by Kubernetes for exposing service node ports.
+        /// </summary>
+        public const int KubeLastNodePort = 32767;
+
+        // $todo(jefflill):
+        //
+        // Remove the [KubeDashboard] definition after we implement
+        // the neonKUBE gateway.
+
+        /// <summary>
+        /// The node port exposed by the Kubernetes dashboard service.
+        /// </summary>
+        public const int KubeDashboard = KubeFirstNodePort;
     }
 }

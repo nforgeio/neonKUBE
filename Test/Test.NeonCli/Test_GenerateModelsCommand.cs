@@ -106,7 +106,7 @@ namespace Test.NeonCli
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
-        public void AllTargets()
+        public async Task AllTargets()
         {
             using (new KubeTestManager())
             {
@@ -115,7 +115,7 @@ namespace Test.NeonCli
                     // Verify that all types are generated when no targets
                     // are specified.
 
-                    var result = runner.Execute(Program.Main, "generate", "models", $"--source-namespace={typeof(Test_GenerateDataModelsCommand).Namespace}", thisAssemblyPath);
+                    var result = await runner.ExecuteAsync(Program.Main, "generate", "models", $"--source-namespace={typeof(Test_GenerateDataModelsCommand).Namespace}", thisAssemblyPath);
                     Assert.Equal(0, result.ExitCode);
 
                     var sourceCode = result.OutputText;
@@ -134,7 +134,7 @@ namespace Test.NeonCli
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
-        public void Filter1()
+        public async Task Filter1()
         {
             using (new KubeTestManager())
             {
@@ -143,7 +143,7 @@ namespace Test.NeonCli
                     // Verify that all types are generated when no targets
                     // are specified.
 
-                    var result = runner.Execute(Program.Main, "generate", "models", $"--source-namespace={typeof(Test_GenerateDataModelsCommand).Namespace}", "--targets=1", thisAssemblyPath);
+                    var result = await runner.ExecuteAsync(Program.Main, "generate", "models", $"--source-namespace={typeof(Test_GenerateDataModelsCommand).Namespace}", "--targets=1", thisAssemblyPath);
                     Assert.Equal(0, result.ExitCode);
 
                     var sourceCode = result.OutputText;
@@ -162,7 +162,7 @@ namespace Test.NeonCli
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
-        public void Filter2()
+        public async Task Filter2()
         {
             using (new KubeTestManager())
             {
@@ -171,7 +171,7 @@ namespace Test.NeonCli
                     // Verify that all types are generated when no targets
                     // are specified.
 
-                    var result = runner.Execute(Program.Main, "generate", "models", $"--source-namespace={typeof(Test_GenerateDataModelsCommand).Namespace}", "--targets=2", thisAssemblyPath);
+                    var result = await runner.ExecuteAsync(Program.Main, "generate", "models", $"--source-namespace={typeof(Test_GenerateDataModelsCommand).Namespace}", "--targets=2", thisAssemblyPath);
                     Assert.Equal(0, result.ExitCode);
 
                     var sourceCode = result.OutputText;
@@ -190,7 +190,7 @@ namespace Test.NeonCli
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
-        public void FilterClient()
+        public async Task FilterClient()
         {
             using (new KubeTestManager())
             {
@@ -199,7 +199,7 @@ namespace Test.NeonCli
                     // Verify that all types are generated when no targets
                     // are specified.
 
-                    var result = runner.Execute(Program.Main, "generate", "models", $"--source-namespace={typeof(Test_GenerateDataModelsCommand).Namespace}", "--targets=client", thisAssemblyPath);
+                    var result = await runner.ExecuteAsync(Program.Main, "generate", "models", $"--source-namespace={typeof(Test_GenerateDataModelsCommand).Namespace}", "--targets=client", thisAssemblyPath);
                     Assert.Equal(0, result.ExitCode);
 
                     var sourceCode = result.OutputText;
@@ -218,7 +218,7 @@ namespace Test.NeonCli
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
-        public void Filter3AndClient()
+        public async Task Filter3AndClient()
         {
             using (new KubeTestManager())
             {
@@ -227,7 +227,7 @@ namespace Test.NeonCli
                     // Verify that all types are generated when no targets
                     // are specified.
 
-                    var result = runner.Execute(Program.Main, "generate", "models", $"--source-namespace={typeof(Test_GenerateDataModelsCommand).Namespace}", "--targets=3,client", thisAssemblyPath);
+                    var result = await runner.ExecuteAsync(Program.Main, "generate", "models", $"--source-namespace={typeof(Test_GenerateDataModelsCommand).Namespace}", "--targets=3,client", thisAssemblyPath);
                     Assert.Equal(0, result.ExitCode);
 
                     var sourceCode = result.OutputText;
@@ -246,7 +246,7 @@ namespace Test.NeonCli
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
-        public void SourceNamespace()
+        public async Task SourceNamespace()
         {
             using (new KubeTestManager())
             {
@@ -255,7 +255,7 @@ namespace Test.NeonCli
                     // Verify that all types are generated when no targets
                     // are specified.
 
-                    var result = runner.Execute(Program.Main, "generate", "models", $"--source-namespace={typeof(FooBar.Class4).Namespace}", thisAssemblyPath);
+                    var result = await runner.ExecuteAsync(Program.Main, "generate", "models", $"--source-namespace={typeof(FooBar.Class4).Namespace}", thisAssemblyPath);
                     Assert.Equal(0, result.ExitCode);
 
                     var sourceCode = result.OutputText;
@@ -274,7 +274,7 @@ namespace Test.NeonCli
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
-        public void NoServices()
+        public async Task NoServices()
         {
             using (new KubeTestManager())
             {
@@ -283,7 +283,7 @@ namespace Test.NeonCli
                     // Verify that all types are generated when no targets
                     // are specified.
 
-                    var result = runner.Execute(Program.Main, "generate", "models", $"--source-namespace={typeof(Test_GenerateDataModelsCommand).Namespace}", "--no-services", thisAssemblyPath);
+                    var result = await runner.ExecuteAsync(Program.Main, "generate", "models", $"--source-namespace={typeof(Test_GenerateDataModelsCommand).Namespace}", "--no-services", thisAssemblyPath);
                     Assert.Equal(0, result.ExitCode);
 
                     var sourceCode = result.OutputText;

@@ -1047,19 +1047,16 @@ namespace Neon.Temporal.Internal
 
             if (string.IsNullOrEmpty(methodName))
             {
-                // Look for the entrypoint method with a null or empty method name.
+                // Look for the entrypoint method with a null or empty method name specified by [ActivityMethod].
 
                 foreach (var method in activityInterface.GetMethods())
                 {
                     methodAttribute = method.GetCustomAttribute<ActivityMethodAttribute>();
 
-                    if (methodAttribute != null)
+                    if (methodAttribute != null && string.IsNullOrEmpty(methodAttribute.Name))
                     {
-                        if (string.IsNullOrEmpty(methodAttribute.Name))
-                        {
-                            targetMethod = method;
-                            break;
-                        }
+                        targetMethod = method;
+                        break;
                     }
                 }
             }

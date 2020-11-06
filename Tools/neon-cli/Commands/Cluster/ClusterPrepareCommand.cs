@@ -33,6 +33,7 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.Kube;
 using Neon.Net;
+using Neon.SSH;
 
 namespace NeonCli
 {
@@ -111,7 +112,7 @@ Server Requirements:
         }
         
         /// <inheritdoc/>
-        public override void Run(CommandLine commandLine)
+        public override async Task RunAsync(CommandLine commandLine)
         {
             if (commandLine.HasHelpOption)
             {
@@ -176,7 +177,7 @@ Server Requirements:
 
             try
             {
-                KubeHelper.Desktop.StartOperationAsync($"Preparing [{cluster.Name}]").Wait();
+                await KubeHelper.Desktop.StartOperationAsync($"Preparing [{cluster.Name}]");
 
                 //-----------------------------------------------------------------
                 // Try to ensure that no servers are already deployed on the IP addresses defined
@@ -411,11 +412,11 @@ Server Requirements:
 
                 cluster.Definition.ValidatePrivateNodeAddresses();
 
-                var ipAddressToServer = new Dictionary<IPAddress, LinuxSshProxy<NodeDefinition>>();
+                var ipAddressToServer = new Dictionary<IPAddress, NodeSshProxy<NodeDefinition>>();
 
                 foreach (var node in cluster.Nodes.OrderBy(n => n.Name))
                 {
-                    LinuxSshProxy<NodeDefinition> duplicateServer;
+                    NodeSshProxy<NodeDefinition> duplicateServer;
 
                     if (node.Address == IPAddress.Any)
                     {
@@ -517,11 +518,11 @@ Server Requirements:
 
                 if (!failed)
                 {
-                    KubeHelper.Desktop.EndOperationAsync($"Cluster [{cluster.Name}] has been prepared and is ready for setup.").Wait();
+                    await KubeHelper.Desktop.EndOperationAsync($"Cluster [{cluster.Name}] has been prepared and is ready for setup.");
                 }
                 else
                 {
-                    KubeHelper.Desktop.EndOperationAsync($"Cluster [{cluster.Name}] prepare has failed.", failed: true).Wait();
+                    await KubeHelper.Desktop.EndOperationAsync($"Cluster [{cluster.Name}] prepare has failed.", failed: true);
                 }
             }
         }

@@ -77,7 +77,7 @@ REMARKS:
         }
 
         /// <inheritdoc/>
-        public override void Run(CommandLine commandLine)
+        public override async Task RunAsync(CommandLine commandLine)
         {
             KubeContextName contextName = null;
 
@@ -140,6 +140,8 @@ REMARKS:
             {
                 File.WriteAllText(path, yaml);
             }
+
+            await Task.CompletedTask;
         }
     }
 }

@@ -88,7 +88,7 @@ namespace TestNeonService
         /// <returns>The service instance.</returns>
         private QueueService CreateQueueService()
         {
-            var service = new QueueService(CreateServiceMap(), "queue-service");
+            var service = new QueueService("queue-service", serviceMap: CreateServiceMap());
 
             service.SetEnvironmentVariable("NATS_URI", NatsFixture.ConnectionUri);
             service.SetEnvironmentVariable("NATS_QUEUE", "test");

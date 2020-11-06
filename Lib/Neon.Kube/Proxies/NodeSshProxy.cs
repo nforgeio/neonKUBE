@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    LinuxSshProxy.cs
+// FILE:	    NodeSshProxy.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
 //
@@ -33,6 +33,7 @@ using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Net;
 using Neon.Retry;
+using Neon.SSH;
 using Neon.Time;
 
 using ICSharpCode.SharpZipLib.Zip;
@@ -48,7 +49,7 @@ namespace Neon.Kube
     /// <summary>
     /// <para>
     /// Uses an SSH/SCP connection to provide access to Linux machines to access
-    /// files, run commands, etc.  This is a simplified version of <see cref="LinuxSshProxy{TMetadata}"/> 
+    /// files, run commands, etc.  This is a simplified version of <see cref="NodeSshProxy{TMetadata}"/> 
     /// that doesn't require the specification of a metadata type.
     /// </para>
     /// <note>
@@ -66,15 +67,15 @@ namespace Neon.Kube
     /// Call <see cref="LinuxSshProxy{TMetaData}.Dispose()"/> or <see cref="LinuxSshProxy{TMetaData}.Disconnect()"/> to close the connection.
     /// </para>
     /// <note>
-    /// You can use <see cref="LinuxSshProxy{TMetaData}.Clone()"/> to make a copy of a proxy that can be
+    /// You can use <see cref="NodeSshProxy{TMetaData}.Clone()"/> to make a copy of a proxy that can be
     /// used to perform parallel operations against the same machine.
     /// </note>
     /// </remarks>
     /// <threadsafety instance="false"/>
-    public class LinuxSshProxy : LinuxSshProxy<object>, IDisposable
+    public class NodeSshProxy : NodeSshProxy<object>, IDisposable
     {
         /// <summary>
-        /// Constructs a <see cref="LinuxSshProxy"/>.
+        /// Constructs a <see cref="NodeSshProxy"/>.
         /// </summary>
         /// <param name="name">The display name for the server.</param>
         /// <param name="address">The private cluster IP address for the server.</param>
@@ -84,7 +85,7 @@ namespace Neon.Kube
         /// <exception cref="ArgumentNullException">
         /// Thrown if <paramref name="name"/> or if <paramref name="credentials"/> is <c>null</c>.
         /// </exception>
-        public LinuxSshProxy(string name, IPAddress address, SshCredentials credentials, int port = NetworkPorts.SSH, TextWriter logWriter = null)
+        public NodeSshProxy(string name, IPAddress address, SshCredentials credentials, int port = NetworkPorts.SSH, TextWriter logWriter = null)
             : base(name, address, credentials, port, logWriter)
         {
         }

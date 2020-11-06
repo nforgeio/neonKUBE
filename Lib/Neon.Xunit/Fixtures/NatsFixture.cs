@@ -157,14 +157,11 @@ namespace Neon.Xunit
             var factory = new ConnectionFactory();
             var retry   = new LinearRetryPolicy(exception => true, 20, TimeSpan.FromSeconds(0.5));
 
-            retry.InvokeAsync(
-                async () =>
+            retry.Invoke(
+                () =>
                 {
                     Connection = factory.CreateConnection($"nats://{GetHostInterface(hostInterface, forConnection: true)}:4222");
-
-                    await Task.CompletedTask;
-
-                }).Wait();
+                });
         }
 
         /// <summary>
@@ -185,13 +182,11 @@ namespace Neon.Xunit
             var factory = new ConnectionFactory();
             var retry   = new LinearRetryPolicy(exception => true, 20, TimeSpan.FromSeconds(0.5));
 
-            retry.InvokeAsync(
-                async () =>
+            retry.Invoke(
+                () =>
                 {
                     Connection = factory.CreateConnection($"nats://{GetHostInterface(hostInterface, forConnection: true)}:4222");
-                    await Task.CompletedTask;
-
-                }).Wait();
+                });
 
             return Connection;
         }

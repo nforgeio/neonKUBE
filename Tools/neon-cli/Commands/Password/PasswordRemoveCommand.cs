@@ -87,7 +87,7 @@ This command removes a named password or all passwords.
         }
 
         /// <inheritdoc/>
-        public override void Run(CommandLine commandLine)
+        public override async Task RunAsync(CommandLine commandLine)
         {
             if (commandLine.HasHelpOption)
             {
@@ -138,6 +138,7 @@ This command removes a named password or all passwords.
             }
 
             Program.Exit(0);
+            await Task.CompletedTask;
         }
     }
 }

@@ -521,7 +521,7 @@ EOF
 
 # $todo(jefflill):
 #
-# The [SshProxy] neon-cleaner assumes that nobody is going to have SshProxy 
+# The neon-cleaner assumes that nobody is going to have LinuxSshProxy 
 # commands that run for more than one day (which is pretty likely).  A better approach
 # would be to look for temporary command folders THAT HAVE COMPLETED (e.g. HAVE
 # an [exit] code file) and are older than one day (or perhaps even older than an
@@ -553,13 +553,13 @@ cat <<EOF > ${NEON_BIN_FOLDER}/neon-cleaner
 #      as a security measure.  These commands could include
 #      sensitive information such as credentials, etc.
 #
-#   2. Purge temporary Neon command files uploaded by SshProxy.  These
+#   2. Purge temporary Neon command files uploaded by LinuxSshProxy.  These
 #      are located within folder beneath [/dev/shm/neonkube/cmd].  Although
-#      SshProxy removes these files after commands finish executing, it
+#      LinuxSshProxy removes these files after commands finish executing, it
 #      is possible to see these accumulate if the session was interrupted.
 #      We'll purge folders and files older than one day.
 #
-$   3. Clean the temporary file SshProxy upload and execute folders.
+$   3. Clean the temporary file LinuxSshProxy upload and execute folders.
 
 history_path1=${HOME}/.bash_history
 history_path2=/root/.bash_history
@@ -587,14 +587,14 @@ do
         fi
     fi
 
-    # Clean the [SshProxy] temporary download files.
+    # Clean the [LinuxSshProxy] temporary download files.
 
     if [ -d "$/home/sysadmin/.neon/download" ] ; then
         echo "[INFO] Cleaning: /home/sysadmin/.neon/download"
         find "/home/sysadmin/.neon/download/*" -type d -ctime +1 | xargs rm -rf
     fi
 
-    # Clean the [SshProxy] temporary exec files.
+    # Clean the [LinuxSshProxy] temporary exec files.
 
     if [ -d "/home/sysadmin/.neon/exec" ] ; then
         echo "[INFO] Cleaning: "/home/sysadmin/.neon/exec""

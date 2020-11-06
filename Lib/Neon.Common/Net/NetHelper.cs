@@ -393,8 +393,8 @@ namespace Neon.Net
             var existingHosts = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
             var different     = false;
 
-            retryFile.InvokeAsync(
-                async () =>
+            retryFile.Invoke(
+                () =>
                 {
                     var beginMarker = $"# NEON-BEGIN-";
                     var endMarker   = $"# NEON-END-";
@@ -516,10 +516,8 @@ namespace Neon.Net
                         lines.Add(endMarker);
                     }
 
-                    File.WriteAllLines(hostsPath, lines.ToArray());
-                    await Task.CompletedTask;
-                    
-                }).Wait();
+                    File.WriteAllLines(hostsPath, lines.ToArray());  
+                });
 
             if (!different)
             {
@@ -601,10 +599,10 @@ namespace Neon.Net
 
                 var retryCount = 0;
 
-                retryReady.InvokeAsync(
-                    async () =>
+                retryReady.Invoke(
+                    () =>
                     {
-                        var addresses = await GetHostAddressesAsync(updateHost);
+                        var addresses = GetHostAddresses(updateHost);
 
                         if (hostEntries?.Count > 0)
                         {
@@ -633,7 +631,7 @@ namespace Neon.Net
                             }
                         }
 
-                    }).Wait();
+                    });
             }
 #endif
         }
@@ -699,7 +697,24 @@ namespace Neon.Net
         }
 
         /// <summary>
-        /// Performs a DNS lookup.
+        /// Performs a synchronous DNS lookup.
+        /// </summary>
+        /// <param name="hostname">The target hostname.</param>
+        /// <returns>The array of IP addresses resolved or an empty array if the hostname lookup failed.</returns>
+        private static IPAddress[] GetHostAddresses(string hostname)
+        {
+            try
+            {
+                return Dns.GetHostAddresses(hostname);
+            }
+            catch (SocketException)
+            {
+                return Array.Empty<IPAddress>();
+            }
+        }
+
+        /// <summary>
+        /// Performs an asynchronous DNS lookup.
         /// </summary>
         /// <param name="hostname">The target hostname.</param>
         /// <returns>The array of IP addresses resolved or an empty array if the hostname lookup failed.</returns>

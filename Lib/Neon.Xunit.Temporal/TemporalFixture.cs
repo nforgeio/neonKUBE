@@ -65,8 +65,6 @@ namespace Neon.Xunit.Temporal
 services:
   cassandra:
     image: cassandra:3.11
-    ports:
-      - ""9042:9042""
     deploy:
       resources:
         limits:
@@ -74,24 +72,23 @@ services:
   temporal:
     image: temporalio/auto-setup:1.1.0
     ports:
-      - ""7233:7233""
+      - '7233:7233'
     environment:
-      - ""CASSANDRA_SEEDS=cassandra""
-      - ""DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development.yaml""
+      - 'CASSANDRA_SEEDS=cassandra'
+      - 'DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development.yaml'
     depends_on:
       - cassandra
   temporal-web:
     image: temporalio/web:1.1.0
     environment:
-      - ""TEMPORAL_GRPC_ENDPOINT=temporal:7233""
-      - ""TEMPORAL_PERMIT_WRITE_API=true""
+      - 'TEMPORAL_GRPC_ENDPOINT=temporal:7233'
+      - 'TEMPORAL_PERMIT_WRITE_API=true'
     ports:
-      - ""8088:8088""
+      - '8088:8088'
     depends_on:
       - temporal
 ";
 
-        private readonly TimeSpan   warmupDelay = TimeSpan.FromSeconds(2);      // Time to allow Temporal server to start.
         private TemporalSettings    settings;
         private TemporalClient      client;
         private bool                reconnect;
@@ -282,7 +279,26 @@ services:
                 // Start the Temporal Docker compose application.
 
                 base.StartAsComposed(name, composeFile, keepRunning);
-                Thread.Sleep(warmupDelay);
+
+                // It can take Temporal server some time to start.  Rather than relying on the temporal-proxy
+                // to handle retries (which may take longer than the connect timeout), we're going to wait
+                // up to 120 seconds for Temporal to start listening on its RPC socket.
+
+                var retry = new LinearRetryPolicy(e => true, maxAttempts: int.MaxValue, retryInterval: TimeSpan.FromSeconds(0.5), timeout: TimeSpan.FromSeconds(120));
+
+                retry.Invoke(
+                    () =>
+                    {
+                        // The [socket.Connect()] calls below will throw [SocketException] until
+                        // Temporal starts listening on its RPC socket.
+
+                        var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+
+                        socket.Connect(IPAddress.Loopback, NetworkPorts.Temporal);
+                        socket.Close();
+                    });
+
+                Thread.Sleep(TimeSpan.FromSeconds(2));  // Wait a bit longer for luck!
 
                 // Initialize the settings.
 

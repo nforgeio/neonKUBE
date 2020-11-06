@@ -84,6 +84,12 @@ namespace Neon.Retry
         /// <inheritdoc/>
         public abstract Task<TResult> InvokeAsync<TResult>(Func<Task<TResult>> action);
 
+        /// <inheritdoc/>
+        public abstract void Invoke(Action action);
+
+        /// <inheritdoc/>
+        public abstract TResult Invoke<TResult>(Func<TResult> action);
+
         /// <summary>
         /// Logs a transient exception that will be retried if logging
         /// is enabled.
