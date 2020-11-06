@@ -229,11 +229,6 @@ namespace Neon.Kube
         // Define host compute related labels.
 
         /// <summary>
-        /// Reserved label name for <see cref="LabelHostname"/>.
-        /// </summary>
-        public const string LabelHostname = ClusterDefinition.ReservedLabelPrefix + "compute.hostname";
-
-        /// <summary>
         /// Reserved label name for <see cref="ComputeCores"/>.
         /// </summary>
         public const string LabelComputeCores = ClusterDefinition.ReservedLabelPrefix + "compute.cores";
@@ -265,6 +260,11 @@ namespace Neon.Kube
 
         //---------------------------------------------------------------------
         // Define physical host labels.
+
+        /// <summary>
+        /// Reserved label name for <see cref="LabelPhysicalMachine"/>.
+        /// </summary>
+        public const string LabelPhysicalMachine = ClusterDefinition.ReservedLabelPrefix + "physical.machine";
 
         /// <summary>
         /// Reserved label name for <see cref="LabelPhysicalPower"/>.
@@ -311,7 +311,7 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "PhysicalMachine", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [YamlMember(Alias = "physicalMachine", ApplyNamingConventions = false)]
         [DefaultValue("")]
-        public string Hostname { get; set; } = string.Empty;
+        public string PhysicalMachine { get; set; } = string.Empty;
 
         /// <summary>
         /// <para>
@@ -519,7 +519,7 @@ namespace Neon.Kube
                 list.Add(new KeyValuePair<string, object>(LabelComputeRamMiB,               ComputeRam));
 
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalLocation,            PhysicalLocation));
-                list.Add(new KeyValuePair<string, object>(LabelHostname,             Hostname));
+                list.Add(new KeyValuePair<string, object>(LabelPhysicalMachine,             PhysicalMachine));
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalAvailabilitytSet,    PhysicalAvailabilitySet));
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalPower,               PhysicalPower));
 
@@ -610,7 +610,6 @@ namespace Neon.Kube
                         }
                         break;
 
-                    case LabelHostname:                     Node.Labels.Hostname                = label.Value; break;
                     case LabelStorageSize:                  ParseCheck(label, () => { Node.Labels.StorageSize = label.Value; }); break;
                     case LabelStorageLocal:                 Node.Labels.StorageLocal            = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
                     case LabelStorageHDD:                   Node.Labels.StorageHDD              = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
@@ -620,6 +619,7 @@ namespace Neon.Kube
                     case LabelComputeCores:                 ParseCheck(label, () => { Node.Labels.ComputeCores = int.Parse(label.Value); }); break;
                     case LabelComputeRamMiB:                ParseCheck(label, () => { Node.Labels.ComputeRam = int.Parse(label.Value); }); break;
 
+                    case LabelPhysicalMachine:              Node.Labels.PhysicalMachine         = label.Value; break;
                     case LabelPhysicalLocation:             Node.Labels.PhysicalLocation        = label.Value; break;
                     case LabelPhysicalAvailabilitytSet:     Node.Labels.PhysicalAvailabilitySet = label.Value; break;
                     case LabelPhysicalPower:                Node.Labels.PhysicalPower           = label.Value; break;
