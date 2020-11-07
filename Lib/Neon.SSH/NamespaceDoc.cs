@@ -46,7 +46,7 @@ namespace Neon.SSH
     /// </para>
     /// <note>
     /// This package has been tested against remote machines running Ubuntu 18.04+ and will probably run
-    /// fine on many other Debian-based distributions.  Redhat and other non-Debian distributions probably
+    /// fine on many other Debian-based distributions.  RedHat and other non-Debian distributions probably
     /// won't be compatible.
     /// </note>
     /// </summary>
