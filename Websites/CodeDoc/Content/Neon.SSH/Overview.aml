@@ -19,7 +19,7 @@
         </para>
         <para>
           This package has only been tested against remote systems running Ubuntu 18.04+ and will probaby work against many other Debian-based distributions.
-          Redhat and other non-Debian distributions probably won't be compatible.
+          RedHat and other non-Debian distributions probably won't be compatible.
         </para>
         <para>
           Here are some of the important types:

@@ -2530,7 +2530,7 @@ usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups roo
         /// </para>
         /// <note>
         /// This doesn't work for the <see cref="HostingEnvironment.BareMetal"/> hosting manager which
-        /// needs to actually look for unpartitioned block devices that can be used to provision cStore.
+        /// needs to actually look for unpartitioned block devices that can be used to provision cStor.
         /// </note>
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>

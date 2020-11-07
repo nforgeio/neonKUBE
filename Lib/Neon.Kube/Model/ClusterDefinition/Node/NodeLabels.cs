@@ -126,7 +126,7 @@ namespace Neon.Kube
         public const string LabelIngress = ClusterDefinition.ReservedLabelPrefix + "node.ingress";
 
         /// <summary>
-        /// Reserved label name used to indicate that a node host an OpenEBS cStore block device.
+        /// Reserved label name used to indicate that a node host an OpenEBS cStor block device.
         /// </summary>
         public const string LabelOpenEbs = ClusterDefinition.ReservedLabelPrefix + "node.openebs";
 

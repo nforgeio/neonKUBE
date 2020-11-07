@@ -145,7 +145,7 @@ namespace Neon.Kube
             // credentials are configured correctly.
             //
             // Then scan the cluster nodes for unpartitioned block devices and mark those nodes
-            // to host an OpenEBS cStore.  Note that at least one machine in the cluster must
+            // to host an OpenEBS cStor.  Note that at least one machine in the cluster must
             // have an unpartitioned block device.
 
             var checkErrors = new List<Tuple<string, string>>();    // (nodeName, errorMessage)

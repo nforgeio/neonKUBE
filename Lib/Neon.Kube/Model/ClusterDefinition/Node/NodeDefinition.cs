@@ -166,13 +166,13 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Indicates that this node will provide a cStore block device for the cStorePool
+        /// Indicates that this node will provide a cStor block device for the cStorePool
         /// maintained by the cluster OpenEBS service that provides cloud optimized storage.
         /// This defaults to <c>false</c>
         /// </para>
         /// <note>
         /// If all nodes have <see cref="OpenEBS"/> set to <c>false</c> then most neonKUBE 
-        /// hosting managers will automatically choose the nodes that will host the cStore
+        /// hosting managers will automatically choose the nodes that will host the cStor
         /// block devices by configuring up to three nodes to do this, favoring worker nodes
         /// over masters when possible.
         /// </note>
@@ -180,7 +180,7 @@ namespace Neon.Kube
         /// The <see cref="HostingEnvironment.BareMetal"/> hosting manager works a bit differently
         /// from the others.  It requires that at least one node have <see cref="OpenEBS"/><c>=true</c>
         /// and that node must have an empty unpartitioned block device available to be provisoned
-        /// as an cStore.
+        /// as an cStor.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "OpenEbs", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]

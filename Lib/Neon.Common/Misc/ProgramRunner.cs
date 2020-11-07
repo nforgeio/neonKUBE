@@ -519,22 +519,6 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Executes a program entry point asynchronously, streaming some text as standard input,
-        /// passing arguments and returning the result.
-        /// </summary>
-        /// <param name="mainAsync">The program entry point.</param>
-        /// <param name="inputText">The text to be passed as standard input.</param>
-        /// <param name="args">The arguments.</param>
-        /// <returns>The <see cref="ExecuteResponse"/> returned by the simulated program run.</returns>
-        public async Task<ExecuteResponse> ExecuteWithInputAsync(ProgramEntrypoint mainAsync, string inputText, params string[] args)
-        {
-            Covenant.Requires<ArgumentNullException>(mainAsync != null, nameof(mainAsync));
-            Covenant.Requires<ArgumentNullException>(inputText != null, nameof(inputText));
-
-            return ExecuteWithInput(mainAsync, Encoding.UTF8.GetBytes(inputText), args);
-        }
-
-        /// <summary>
         /// <para>
         /// Called by programs executed via <see cref="Fork(ProgramEntrypoint, string[])"/>
         /// when the program has initialized itself enough to be ready for testing.

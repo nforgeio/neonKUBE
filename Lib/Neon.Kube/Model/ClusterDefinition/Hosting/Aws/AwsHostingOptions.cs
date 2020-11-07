@@ -282,7 +282,7 @@ namespace Neon.Kube
         public string DefaultVolumeSize { get; set; } = defaultVolumeSize;
 
         /// <summary>
-        /// Specifies the default AWS volume type to use for OpenEBS cStore disks.  This defaults
+        /// Specifies the default AWS volume type to use for OpenEBS cStor disks.  This defaults
         /// to <see cref="AwsVolumeType.Gp2"/> which is SSD based and offers a reasonable
         /// compromise between performance and cost.  This can be overridden for specific
         /// cluster nodes via <see cref="AwsNodeOptions.OpenEBSVolumeType"/>.
@@ -294,7 +294,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// Specifies the default AWS volume size to be used when creating 
-        /// OpenEBS cStore disks.  This defaults to <b>128 GiB</b> but can
+        /// OpenEBS cStor disks.  This defaults to <b>128 GiB</b> but can
         /// be overridden for specific cluster nodes via <see cref="AwsNodeOptions.OpenEBSVolumeSize"/>.
         /// </summary>
         /// <remarks>
