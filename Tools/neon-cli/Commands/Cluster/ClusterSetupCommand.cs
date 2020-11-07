@@ -74,9 +74,9 @@ namespace NeonCli
             /// <param name="owner">Optional file owner.</param>
             public RemoteFile(string path, string permissions = "600", string owner = "root:root")
             {
-                this.Path = path;
+                this.Path        = path;
                 this.Permissions = permissions;
-                this.Owner = owner;
+                this.Owner       = owner;
             }
 
             /// <summary>
@@ -329,12 +329,12 @@ OPTIONS:
 
                     controller.AddGlobalStep("etc HA", SetupEtcHaProxy);
                     controller.AddNodeStep("setup kubernetes", SetupKubernetes);
-                    controller.AddGlobalStep("setup cluster", SetupCluster);
+                    controller.AddGlobalStep("setup cluster", SetupClusterAsync);
 
                     controller.AddGlobalStep("taint nodes", TaintNodes);
                     if (cluster.Definition.Monitor.Enabled)
                     {
-                        controller.AddGlobalStep("setup monitoring", SetupMonitoring);
+                        controller.AddGlobalStep("setup monitoring", SetupMonitoringAsync);
                     }
 
                     //-----------------------------------------------------------------
@@ -893,7 +893,7 @@ rm -rf linux-amd64
         /// Initializes the cluster on the first manager, then joins the remaining
         /// masters and workers to the cluster.
         /// </summary>
-        private void SetupCluster()
+        private async Task SetupClusterAsync()
         {
             var firstMaster = cluster.FirstMaster;
 
@@ -1223,7 +1223,6 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             worker.Status = "joined";
                         });
                 });
-
 
             firstMaster.InvokeIdempotentAction("setup/workstation",
                 () =>
@@ -1732,7 +1731,7 @@ spec:
 
             // Setup openebs.
 
-            firstMaster.InvokeIdempotentAction("setup/cluster-deploy-openebs",
+            await firstMaster.InvokeIdempotentActionAsync("setup/cluster-deploy-openebs",
                 async () =>
                 {
                     await InstallOpenEBSAsync(firstMaster);
@@ -1756,7 +1755,7 @@ spec:
 
             // Setup neon-system-db.
 
-            firstMaster.InvokeIdempotentAction("setup/cluster-deploy-neon-system-db",
+            await firstMaster.InvokeIdempotentActionAsync("setup/cluster-deploy-neon-system-db",
                 async () =>
                 {
                     await InstallSystemDbAsync(firstMaster);
@@ -1764,7 +1763,7 @@ spec:
 
             // Setup neon-cluster-manager.
 
-            firstMaster.InvokeIdempotentAction("setup/cluster-deploy-cluster-manager",
+            await firstMaster.InvokeIdempotentActionAsync("setup/cluster-deploy-cluster-manager",
                 async () =>
                 {
                     await InstallClusterManagerAsync(firstMaster);
@@ -1772,7 +1771,7 @@ spec:
 
             // Setup neon-registry.
 
-            firstMaster.InvokeIdempotentAction("setup/cluster-deploy-neon-registry",
+            await firstMaster.InvokeIdempotentActionAsync("setup/cluster-deploy-neon-registry",
                 async () =>
                 {
                     await InstallNeonRegistryAsync(firstMaster);
@@ -1780,7 +1779,7 @@ spec:
 
             // Setup Kiali.
 
-            firstMaster.InvokeIdempotentAction("setup/cluster-deploy-kiali",
+            await firstMaster.InvokeIdempotentActionAsync("setup/cluster-deploy-kiali",
                 async () =>
                 {
                     await InstallKialiAsync(firstMaster);
@@ -1983,13 +1982,13 @@ istioctl install -f istio-cni.yaml
         /// <summary>
         /// Initializes the EFK stack and other monitoring services.
         /// </summary>
-        private void SetupMonitoring()
+        private async Task SetupMonitoringAsync()
         {
             var firstMaster = cluster.FirstMaster;
 
             // Setup Kubernetes.
 
-            firstMaster.InvokeIdempotentAction("setup/cluster-deploy-kubernetes-setup",
+            await firstMaster.InvokeIdempotentActionAsync("setup/cluster-deploy-kubernetes-setup",
                 async () =>
                 {
                     await KubeSetupAsync(firstMaster);
@@ -1997,7 +1996,7 @@ istioctl install -f istio-cni.yaml
 
             //// Install an Prometheus cluster to the monitoring namespace
 
-            firstMaster.InvokeIdempotentAction("setup/cluster-deploy-neon-metrics",
+            await firstMaster.InvokeIdempotentActionAsync("setup/cluster-deploy-neon-metrics",
                 async () =>
                 {
                     await InstallNeonMetricsAsync(firstMaster);
@@ -2007,15 +2006,15 @@ istioctl install -f istio-cni.yaml
 
             if (cluster.Definition.Monitor.Logs.Enabled)
             {
-                firstMaster.InvokeIdempotentAction("setup/cluster-deploy-elasticsearch",
-                async () =>
-                {
-                    await InstallElasticSearchAsync(firstMaster);
-                });
+                await firstMaster.InvokeIdempotentActionAsync("setup/cluster-deploy-elasticsearch",
+                    async () =>
+                    {
+                        await InstallElasticSearchAsync(firstMaster);
+                    });
 
                 // Setup Fluentd.
 
-                firstMaster.InvokeIdempotentAction("setup/cluster-deploy-fluentd",
+                await firstMaster.InvokeIdempotentActionAsync("setup/cluster-deploy-fluentd",
                     async () =>
                     {
                         await InstallFluentdAsync(firstMaster);
@@ -2023,7 +2022,7 @@ istioctl install -f istio-cni.yaml
 
                 // Setup Fluent-Bit.
 
-                firstMaster.InvokeIdempotentAction("setup/cluster-deploy-fluent-bit",
+                await firstMaster.InvokeIdempotentActionAsync("setup/cluster-deploy-fluent-bit",
                     async () =>
                     {
                         await InstallFluentBitAsync(firstMaster);
@@ -2031,7 +2030,7 @@ istioctl install -f istio-cni.yaml
 
                 // Setup Kibana.
 
-                firstMaster.InvokeIdempotentAction("setup/cluster-deploy-kibana",
+                await firstMaster.InvokeIdempotentActionAsync("setup/cluster-deploy-kibana",
                     async () =>
                     {
                         await InstallKibanaAsync(firstMaster);
@@ -2039,7 +2038,7 @@ istioctl install -f istio-cni.yaml
 
                 // Setup Jaeger.
 
-                firstMaster.InvokeIdempotentAction("setup/cluster-deploy-jaeger",
+                await firstMaster.InvokeIdempotentActionAsync("setup/cluster-deploy-jaeger",
                     async () =>
                     {
                         await InstallJaegerAsync(firstMaster);
@@ -2058,13 +2057,13 @@ istioctl install -f istio-cni.yaml
         /// <param name="values">Optional values to override Helm chart values.</param>
         /// <returns></returns>
         private async Task InstallHelmChartAsync(
-            NodeSshProxy<NodeDefinition>            master,
+            NodeSshProxy<NodeDefinition>        master,
             string                              chartName,
             string                              releaseName = null,
-            string                              @namespace = "default",
-            int                                 timeout    = 300,
-            bool                                wait       = false,
-            List<KeyValuePair<string, object>>  values     = null)
+            string                              @namespace  = "default",
+            int                                 timeout     = 300,
+            bool                                wait        = false,
+            List<KeyValuePair<string, object>>  values      = null)
         {
             if (string.IsNullOrEmpty(releaseName))
             {
@@ -2129,9 +2128,10 @@ done
 rm -rf {chartName}*
 ";
 
-            var tries = 0;
-            var success = false;
-            Exception exception = null;
+            var tries     = 0;
+            var success   = false;
+            var exception = (Exception)null;
+
             while (tries < 3 && !success)
             {
                 try
@@ -2188,7 +2188,7 @@ rm -rf {chartName}*
                     });
                 });
 
-            master.InvokeIdempotentAction("setup/neon-storage-openebs-install",
+            await master.InvokeIdempotentActionAsync("setup/neon-storage-openebs-install",
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
@@ -2207,7 +2207,7 @@ rm -rf {chartName}*
                     await InstallHelmChartAsync(master, "openebs", releaseName: "neon-storage", values: values, @namespace: "openebs");
                 });
 
-            master.InvokeIdempotentAction("setup/neon-storage-openebs-install-ready",
+            await master.InvokeIdempotentActionAsync("setup/neon-storage-openebs-install-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(
@@ -2239,7 +2239,7 @@ rm -rf {chartName}*
                         pollInterval: clusterOpRetryInterval);
                    });
 
-            master.InvokeIdempotentAction("setup/neon-storage-openebs-cstor-poolcluster",
+            await master.InvokeIdempotentActionAsync("setup/neon-storage-openebs-cstor-poolcluster",
                 async () =>
                 {
                     var cStorPoolCluster = new V1CStorPoolCluster()
@@ -2301,7 +2301,7 @@ rm -rf {chartName}*
                     k8sClient.CreateNamespacedCustomObject(cStorPoolCluster, V1CStorPoolCluster.KubeGroup, V1CStorPoolCluster.KubeApiVersion, "openebs", "cstorpoolclusters");
                 });
 
-            master.InvokeIdempotentAction("setup/neon-storage-openebs-cstor-ready",
+            await master.InvokeIdempotentActionAsync("setup/neon-storage-openebs-cstor-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(
@@ -2340,18 +2340,17 @@ rm -rf {chartName}*
                     k8sClient.CreateStorageClass(storageClass);
                 });
 
-            master.InvokeIdempotentAction("setup/neon-storage-openebs-nfs-install",
+            await master.InvokeIdempotentActionAsync("setup/neon-storage-openebs-nfs-install",
                 async () =>
                 {
-                    var values  = new List<KeyValuePair<string, object>>();
-                    var storage = cluster.Definition.Nodes.Where(n => n.OpenEBS).Sum(n => ByteUnits.Parse(n.Vm.OpenEbsDisk));
+                    var values = new List<KeyValuePair<string, object>>();
                       
-                    values.Add(new KeyValuePair<string, object>($"persistence.size", $"{storage / 3}"));
+                    values.Add(new KeyValuePair<string, object>($"persistence.size", ByteUnits.Parse(cluster.Definition.OpenEbs.NfsSize)));
                       
                     await InstallHelmChartAsync(master, "nfs", releaseName: "neon-storage-nfs", @namespace: "openebs", values: values);
                 });
 
-            master.InvokeIdempotentAction("setup/neon-storage-openebs-nfs-ready",
+            await master.InvokeIdempotentActionAsync("setup/neon-storage-openebs-nfs-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(
@@ -2391,7 +2390,7 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: kiali";
            
-            master.InvokeIdempotentAction("setup/kiali",
+            await master.InvokeIdempotentActionAsync("setup/kiali",
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
@@ -2408,7 +2407,7 @@ rm -rf {chartName}*
                     await InstallHelmChartAsync(master, "kiali", releaseName: "kiali-operator", @namespace: "istio-system", values: values, wait: false);
                 });
 
-            master.InvokeIdempotentAction("setup/kiali-ready",
+            await master.InvokeIdempotentActionAsync("setup/kiali-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(
@@ -2451,7 +2450,7 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: neon-metrics-etcd-cluster";
 
-            master.InvokeIdempotentAction("deploy/neon-metrics-etcd-cluster",
+            await master.InvokeIdempotentActionAsync("deploy/neon-metrics-etcd-cluster",
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
@@ -2472,7 +2471,7 @@ rm -rf {chartName}*
                     await InstallHelmChartAsync(master, "etcd-cluster", releaseName: "neon-metrics-etcd", @namespace: "monitoring", values: values);
                 });
 
-            master.InvokeIdempotentAction("deploy/neon-metrics-etcd-cluster-ready",
+            await master.InvokeIdempotentActionAsync("deploy/neon-metrics-etcd-cluster-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(
@@ -2503,7 +2502,7 @@ rm -rf {chartName}*
 
             var cortexValues = new List<KeyValuePair<string, object>>();
 
-            master.InvokeIdempotentAction("deploy/neon-metrics-prometheus",
+            await master.InvokeIdempotentActionAsync("deploy/neon-metrics-prometheus",
                 async () =>
                 {
                     master.Status = "deploy: neon-metrics-prometheus";
@@ -2535,7 +2534,7 @@ rm -rf {chartName}*
                     await InstallHelmChartAsync(master, "prometheus-operator", releaseName: "neon-metrics-prometheus", @namespace: "monitoring", values: values, wait: false);
                 });
 
-            master.InvokeIdempotentAction("deploy/neon-metrics-prometheus-ready",
+            await master.InvokeIdempotentActionAsync("deploy/neon-metrics-prometheus-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(
@@ -2590,7 +2589,7 @@ rm -rf {chartName}*
                 cortexValues.Add(new KeyValuePair<string, object>($"cortexConfig.ingester.lifecycler.ring.kvstore.store", "inmemory"));
             }
 
-            master.InvokeIdempotentAction("deploy/neon-metrics-cortex",
+            await master.InvokeIdempotentActionAsync("deploy/neon-metrics-cortex",
                 async () =>
                 {
                     switch (cluster.Definition.Monitor.Metrics.Storage)
@@ -2626,7 +2625,7 @@ rm -rf {chartName}*
                     await InstallHelmChartAsync(master, "cortex", releaseName: "neon-metrics-cortex", @namespace: "monitoring", values: cortexValues);
                 });
 
-            master.InvokeIdempotentAction("deploy/neon-metrics-cortex-ready",
+            await master.InvokeIdempotentActionAsync("deploy/neon-metrics-cortex-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(
@@ -2644,7 +2643,7 @@ rm -rf {chartName}*
                         pollInterval: clusterOpRetryInterval);
                 });
 
-            master.InvokeIdempotentAction("deploy/istio-prometheus",
+            await master.InvokeIdempotentActionAsync("deploy/istio-prometheus",
                 async () =>
                 {
                     master.Status = "deploy: neon-metrics-istio";
@@ -2652,7 +2651,7 @@ rm -rf {chartName}*
                     await InstallHelmChartAsync(master, "istio-prometheus", @namespace: "monitoring");
                 });
 
-            master.InvokeIdempotentAction("deploy/neon-metrics-grafana",
+            await master.InvokeIdempotentActionAsync("deploy/neon-metrics-grafana",
                 async () =>
                 {
                     master.Status = "deploy: neon-metrics-grafana";
@@ -2671,7 +2670,7 @@ rm -rf {chartName}*
                     await InstallHelmChartAsync(master, "grafana", releaseName: "neon-metrics-grafana", @namespace: "monitoring", values: values, wait: false);
                 });
 
-            master.InvokeIdempotentAction("deploy/neon-metrics-grafana-ready",
+            await master.InvokeIdempotentActionAsync("deploy/neon-metrics-grafana-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(
@@ -2700,7 +2699,7 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: metrics storage (yugabyte)";
 
-            master.InvokeIdempotentAction("deploy/neon-metrics-db",
+            await master.InvokeIdempotentActionAsync("deploy/neon-metrics-db",
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
@@ -2731,7 +2730,7 @@ rm -rf {chartName}*
                     await InstallHelmChartAsync(master, "yugabyte", releaseName: "neon-metrics-db", @namespace: "monitoring", values: values);
                 });
 
-            master.InvokeIdempotentAction("deploy/neon-metrics-db-ready",
+            await master.InvokeIdempotentActionAsync("deploy/neon-metrics-db-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(
@@ -2760,7 +2759,7 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: elasticsearch";
 
-            master.InvokeIdempotentAction("deploy/neon-logs-elasticsearch",
+            await master.InvokeIdempotentActionAsync("deploy/neon-logs-elasticsearch",
                 async () =>
                 {
                     var monitorOptions = cluster.Definition.Monitor;
@@ -2805,7 +2804,7 @@ rm -rf {chartName}*
                     await InstallHelmChartAsync(master, "elasticsearch", releaseName: "neon-logs-elasticsearch", @namespace: "monitoring", timeout: 1200, values: values, wait: false);
                 });
 
-            master.InvokeIdempotentAction("deploy/neon-logs-elasticsearch-ready",
+            await master.InvokeIdempotentActionAsync("deploy/neon-logs-elasticsearch-ready",
                 async () =>
                 { 
                     await NeonHelper.WaitForAsync(
@@ -2834,7 +2833,7 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: fluent-bit";
 
-            master.InvokeIdempotentAction("deploy/neon-log-host",
+            await master.InvokeIdempotentActionAsync("deploy/neon-log-host",
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
@@ -2851,7 +2850,7 @@ rm -rf {chartName}*
                     await InstallHelmChartAsync(master, "fluent-bit", releaseName: "neon-log-host", @namespace: "monitoring", values: values);
                 });
 
-            master.InvokeIdempotentAction("deploy/neon-log-host-ready",
+            await master.InvokeIdempotentActionAsync("deploy/neon-log-host-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(
@@ -2880,7 +2879,7 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: fluentd";
 
-            master.InvokeIdempotentAction("deploy/neon-log-collector",
+            await master.InvokeIdempotentActionAsync("deploy/neon-log-collector",
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
@@ -2899,7 +2898,7 @@ rm -rf {chartName}*
                     await InstallHelmChartAsync(master, "fluentd", releaseName: "neon-log-collector", @namespace: "monitoring", values: values);
                 });
 
-            master.InvokeIdempotentAction("deploy/neon-log-collector-ready",
+            await master.InvokeIdempotentActionAsync("deploy/neon-log-collector-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(
@@ -2928,7 +2927,7 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: kibana";
 
-            master.InvokeIdempotentAction("deploy/neon-logs-kibana",
+            await master.InvokeIdempotentActionAsync("deploy/neon-logs-kibana",
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
@@ -2945,7 +2944,7 @@ rm -rf {chartName}*
                     await InstallHelmChartAsync(master, "kibana", releaseName: "neon-logs-kibana", @namespace: "monitoring", values: values);
             });
 
-            master.InvokeIdempotentAction("deploy/neon-logs-kibana-ready",
+            await master.InvokeIdempotentActionAsync("deploy/neon-logs-kibana-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(
@@ -2974,7 +2973,7 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: jaeger";
 
-            master.InvokeIdempotentAction("deploy/neon-logs-jaeger",
+            await master.InvokeIdempotentActionAsync("deploy/neon-logs-jaeger",
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
@@ -3007,7 +3006,7 @@ rm -rf {chartName}*
                     await InstallHelmChartAsync(master, "jaeger", releaseName: "neon-logs-jaeger", @namespace: "monitoring", values: values);
                 });
 
-            master.InvokeIdempotentAction("deploy/neon-logs-jaeger-ready",
+            await master.InvokeIdempotentActionAsync("deploy/neon-logs-jaeger-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(
@@ -3037,7 +3036,7 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: registry";
 
-            master.InvokeIdempotentAction("deploy/neon-system-registry-secret",
+            await master.InvokeIdempotentActionAsync("deploy/neon-system-registry-secret",
                 async () =>
                 {
                     var cert = TlsCertificate.CreateSelfSigned("*");
@@ -3059,7 +3058,7 @@ rm -rf {chartName}*
                     await k8sClient.CreateNamespacedSecretAsync(harborCert, "neon-system");
                    });
 
-            master.InvokeIdempotentAction("deploy/neon-system-registry-redis",
+            await master.InvokeIdempotentActionAsync("deploy/neon-system-registry-redis",
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
@@ -3076,7 +3075,7 @@ rm -rf {chartName}*
                     await InstallHelmChartAsync(master, "redis-ha", releaseName: "neon-system-registry-redis", @namespace: "neon-system", values: values);
                 });
 
-            master.InvokeIdempotentAction("deploy/neon-system-registry-redis-ready",
+            await master.InvokeIdempotentActionAsync("deploy/neon-system-registry-redis-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(
@@ -3095,7 +3094,7 @@ rm -rf {chartName}*
                         pollInterval: clusterOpRetryInterval);
                 });
 
-            master.InvokeIdempotentAction("deploy/neon-system-registry-harbor",
+            await master.InvokeIdempotentActionAsync("deploy/neon-system-registry-harbor",
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
@@ -3112,7 +3111,7 @@ rm -rf {chartName}*
                     await InstallHelmChartAsync(master, "harbor", releaseName: "neon-system-registry-harbor", @namespace: "neon-system", values: values);
                 });
 
-            master.InvokeIdempotentAction("deploy/neon-system-registry-harbor-ready",
+            await master.InvokeIdempotentActionAsync("deploy/neon-system-registry-harbor-ready",
                 async () =>
                 {
                     // Trivy is currently disabled by default
@@ -3156,13 +3155,13 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: neon-cluster-manager";
 
-            master.InvokeIdempotentAction("deploy/neon-cluster-manager",
+            await master.InvokeIdempotentActionAsync("deploy/neon-cluster-manager",
                 async () =>
                 {
                     await InstallHelmChartAsync(master, "neon-cluster-manager", releaseName: "neon-cluster-manager", @namespace: "neon-system");
                 });
 
-            master.InvokeIdempotentAction("deploy/neon-cluster-manager-ready",
+            await master.InvokeIdempotentActionAsync("deploy/neon-cluster-manager-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(
@@ -3191,7 +3190,7 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: neon-system-db";
 
-            master.InvokeIdempotentAction("deploy/neon-system-db",
+            await master.InvokeIdempotentActionAsync("deploy/neon-system-db",
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
@@ -3208,7 +3207,7 @@ rm -rf {chartName}*
                     await InstallHelmChartAsync(master, "citus-postgresql", releaseName: "neon-system-db", @namespace: "neon-system", values: values);
                 });
 
-            master.InvokeIdempotentAction("deploy/neon-system-db-ready",
+            await master.InvokeIdempotentActionAsync("deploy/neon-system-db-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(

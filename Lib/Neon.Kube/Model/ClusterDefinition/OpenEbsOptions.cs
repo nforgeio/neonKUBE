@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    M3DBOptions.cs
-// CONTRIBUTOR: Marcus Bowyer
+// FILE:	    OpenEbsOptions.cs
+// CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,39 +36,35 @@ using YamlDotNet.Serialization;
 using Neon.Common;
 using Neon.IO;
 
-using k8s.Models;
-
 namespace Neon.Kube
 {
     /// <summary>
-    /// Specifies the options for configuring the cluster integrated M3DB 
-    /// metrics stack: <a href="https://M3DB.io/">https://M3DB.io/</a>
+    /// Specifies cluster OpenEBS options.
     /// </summary>
-    public class M3DBOptions
+    public class OpenEbsOptions
     {
-        /// <summary>
-        /// Compute Resources required by Elasticsearch.
-        /// </summary>
-        [JsonProperty(PropertyName = "Resources", Required = Required.Default)]
-        [YamlMember(Alias = "resources", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public V1ResourceRequirements Resources { get; set; } = null;
+        private const string minNfsSize = "10 GiB";
 
         /// <summary>
-        /// Etcd options.
+        /// The size of the NFS file system to be created for the cluster.  This defaults
+        /// to <b>10 GiB</b> and cannot be any smaller than this.
         /// </summary>
-        [JsonProperty(PropertyName = "Etcd", Required = Required.Default)]
-        [YamlMember(Alias = "etcd", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public EtcdOptions Etcd { get; set; } = null;
+        [JsonProperty(PropertyName = "NfsSize", Required = Required.Default)]
+        [YamlMember(Alias = "nfsSize", ApplyNamingConventions = false)]
+        [DefaultValue(minNfsSize)]
+        public string NfsSize { get; set; } = minNfsSize;
 
         /// <summary>
-        /// Indicates disk size for M3DB nodes.  
-        /// This defaults to <c>false</c>.
+        /// Validates the options.
         /// </summary>
-        [JsonProperty(PropertyName = "DiskSize", Required = Required.Default)]
-        [YamlMember(Alias = "diskSize", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public ResourceQuantity DiskSize { get; set; } = null;
+        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
+        [Pure]
+        internal void Validate(ClusterDefinition clusterDefinition)
+        {
+            NfsSize = NfsSize ?? minNfsSize;
+
+            ClusterDefinition.ValidateSize(NfsSize, typeof(OpenEbsOptions), nameof(NfsSize), minimum: minNfsSize);
+        }
     }
 }

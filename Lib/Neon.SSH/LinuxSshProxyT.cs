@@ -3056,7 +3056,7 @@ echo $? > {cmdFolder}/exit
         /// on the node before.
         /// </summary>
         /// <param name="actionId">The node-unique action ID.</param>
-        /// <param name="action">Tbe action to be performed.</param>
+        /// <param name="action">The action to be performed.</param>
         /// <returns><c>true</c> if the action was invoked.</returns>
         /// <remarks>
         /// <para>
@@ -3074,6 +3074,76 @@ echo $? > {cmdFolder}/exit
         /// </para>
         /// </remarks>
         public bool InvokeIdempotentAction(string actionId, Action action)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(actionId), nameof(actionId));
+            Covenant.Requires<ArgumentException>(idempotentRegex.IsMatch(actionId), nameof(actionId));
+            Covenant.Requires<ArgumentNullException>(action != null, nameof(action));
+
+            if (action.GetMethodInfo().ReturnType != typeof(void))
+            {
+                // Ensure that a "void" async method isn't being passed because that
+                // would be treated as fire-and-forget and is not what developers
+                // will expect.
+
+                throw new ArgumentException($"Possible async delegate passed to [{nameof(InvokeIdempotentAction)}()]", nameof(action));
+            }
+
+            var stateFolder = HostFolders.State;
+            var slashPos    = actionId.LastIndexOf('/');
+
+            if (slashPos != -1)
+            {
+                // Extract any folder path from the activity ID and add it to
+                // the state folder path.
+
+                stateFolder = LinuxPath.Combine(stateFolder, actionId.Substring(0, slashPos));
+                actionId    = actionId.Substring(slashPos + 1);
+
+                Covenant.Assert(actionId.Length > 0);
+            }
+
+            var statePath = LinuxPath.Combine(stateFolder, actionId);
+
+            SudoCommand($"mkdir -p {stateFolder}");
+
+            if (FileExists(statePath))
+            {
+                return false;
+            }
+
+            action();
+
+            if (!IsFaulted)
+            {
+                SudoCommand($"touch {statePath}");
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Invokes a named action asynchronously on the node if it has never been been performed
+        /// on the node before.
+        /// </summary>
+        /// <param name="actionId">The node-unique action ID.</param>
+        /// <param name="action">The asynchronous action to be performed.</param>
+        /// <returns><c>true</c> if the action was invoked.</returns>
+        /// <remarks>
+        /// <para>
+        /// <paramref name="actionId"/> must uniquely identify the action on the node.
+        /// This may include letters, digits, dashes and periods as well as one or
+        /// more forward slashes that can be used to organize idempotent status files
+        /// into folders.
+        /// </para>
+        /// <para>
+        /// This method tracks successful action completion by creating a file
+        /// on the node at <see cref="HostFolders.State"/><b>/ACTION-ID</b>.
+        /// To ensure idempotency, this method first checks for the existance of
+        /// this file and returns immediately without invoking the action if it is 
+        /// present.
+        /// </para>
+        /// </remarks>
+        public async Task<bool> InvokeIdempotentActionAsync(string actionId, Func<Task> action)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(actionId), nameof(actionId));
             Covenant.Requires<ArgumentException>(idempotentRegex.IsMatch(actionId), nameof(actionId));
@@ -3102,7 +3172,7 @@ echo $? > {cmdFolder}/exit
                 return false;
             }
 
-            action();
+            await action();
 
             if (!IsFaulted)
             {

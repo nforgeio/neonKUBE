@@ -182,9 +182,10 @@ namespace Neon.Kube
         /// <param name="sizeValue">The size value string.</param>
         /// <param name="optionsType">Type of the property holding the size property (used for error reporting).</param>
         /// <param name="propertyName">The size property name (used for error reporting).</param>
+        /// <param name="minimum">Optionally specifies the m inimum size as <see cref="ByteUnits"/>.</param>
         /// <returns>The size converted into a <c>long</c>.</returns>
         /// <exception cref="ClusterDefinitionException">Thrown if the size is not valid.</exception>
-        public static long ValidateSize(string sizeValue, Type optionsType, string propertyName)
+        public static long ValidateSize(string sizeValue, Type optionsType, string propertyName, string minimum = null)
         {
             if (string.IsNullOrEmpty(sizeValue))
             {
@@ -194,6 +195,11 @@ namespace Neon.Kube
             if (!ByteUnits.TryParse(sizeValue, out var size))
             {
                 throw new ClusterDefinitionException($"[{optionsType.Name}.{propertyName}={sizeValue}] cannot be parsed.");
+            }
+
+            if (!string.IsNullOrEmpty(minimum) && size < ByteUnits.Parse(minimum))
+            {
+                throw new ClusterDefinitionException($"[{optionsType.Name}.{propertyName}={sizeValue}] cannot be less than [{minimum}].");
             }
 
             return (long)size;
@@ -257,6 +263,13 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "Debug", Required = Required.Always)]
         [YamlMember(Alias = "debug", ApplyNamingConventions = false)]
         public DebugOptions Debug { get; set; } = new DebugOptions();
+
+        /// <summary>
+        /// Specifies the cluster OpenEbs related options.
+        /// </summary>
+        [JsonProperty(PropertyName = "OpenEbs", Required = Required.Always)]
+        [YamlMember(Alias = "openEbs", ApplyNamingConventions = false)]
+        public OpenEbsOptions OpenEbs { get; set; } = new OpenEbsOptions();
 
         /// <summary>
         /// Specifies cluster security options.
@@ -677,6 +690,7 @@ namespace Neon.Kube
             // Validate the properties.
 
             Debug       = Debug ?? new DebugOptions();
+            OpenEbs     = OpenEbs ?? new OpenEbsOptions();
             Security    = Security ?? new SecurityOptions();
             Provisioner = Provisioner ?? defaultProvisioner;
             Kubernetes  = Kubernetes ?? new KubernetesOptions();
@@ -688,6 +702,7 @@ namespace Neon.Kube
             Network     = Network ?? new NetworkOptions();
 
             Debug.Validate(this);
+            OpenEbs.Validate(this);
             Security.Validate(this);
             Kubernetes.Validate(this);
             Docker.Validate(this);

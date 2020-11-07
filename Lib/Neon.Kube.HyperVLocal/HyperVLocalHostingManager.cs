@@ -196,25 +196,10 @@ namespace Neon.Kube
 
             foreach (var node in cluster.Definition.Nodes)
             {
-                if (string.IsNullOrEmpty(node.Labels.PhysicalMachine))
-                {
-                    node.Labels.PhysicalMachine = Environment.MachineName;
-                }
-
-                if (node.Labels.ComputeCores == 0)
-                {
-                    node.Labels.ComputeCores = cluster.Definition.Hosting.Vm.Processors;
-                }
-
-                if (node.Labels.ComputeRam == 0)
-                {
-                    node.Labels.ComputeRam = (int)(ClusterDefinition.ValidateSize(cluster.Definition.Hosting.Vm.Memory, typeof(HostingOptions), nameof(HostingOptions.Vm.Memory))/ ByteUnits.MebiBytes);
-                }
-
-                if (string.IsNullOrEmpty(node.Labels.StorageSize))
-                {
-                    node.Labels.StorageSize = ByteUnits.ToGiB(node.Vm.GetMemory(cluster.Definition));
-                }
+                node.Labels.PhysicalMachine = Environment.MachineName;
+                node.Labels.ComputeCores    = cluster.Definition.Hosting.Vm.Processors;
+                node.Labels.ComputeRam      = (int)(ClusterDefinition.ValidateSize(cluster.Definition.Hosting.Vm.Memory, typeof(HostingOptions), nameof(HostingOptions.Vm.Memory))/ ByteUnits.MebiBytes);
+                node.Labels.StorageSize     = ByteUnits.ToGiB(node.Vm.GetMemory(cluster.Definition));
             }
 
             // Perform the provisioning operations.

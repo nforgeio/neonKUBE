@@ -262,14 +262,14 @@ namespace Neon.Kube
         // Define physical host labels.
 
         /// <summary>
-        /// Reserved label name for <see cref="LabelPhysicalPower"/>.
-        /// </summary>
-        public const string LabelPhysicalLocation = ClusterDefinition.ReservedLabelPrefix + "physical.location";
-
-        /// <summary>
         /// Reserved label name for <see cref="LabelPhysicalMachine"/>.
         /// </summary>
         public const string LabelPhysicalMachine = ClusterDefinition.ReservedLabelPrefix + "physical.machine";
+
+        /// <summary>
+        /// Reserved label name for <see cref="LabelPhysicalPower"/>.
+        /// </summary>
+        public const string LabelPhysicalLocation = ClusterDefinition.ReservedLabelPrefix + "physical.location";
 
         /// <summary>
         /// Reserved label name for <see cref="PhysicalAvailabilitySet"/>.
@@ -619,8 +619,8 @@ namespace Neon.Kube
                     case LabelComputeCores:                 ParseCheck(label, () => { Node.Labels.ComputeCores = int.Parse(label.Value); }); break;
                     case LabelComputeRamMiB:                ParseCheck(label, () => { Node.Labels.ComputeRam = int.Parse(label.Value); }); break;
 
-                    case LabelPhysicalLocation:             Node.Labels.PhysicalLocation        = label.Value; break;
                     case LabelPhysicalMachine:              Node.Labels.PhysicalMachine         = label.Value; break;
+                    case LabelPhysicalLocation:             Node.Labels.PhysicalLocation        = label.Value; break;
                     case LabelPhysicalAvailabilitytSet:     Node.Labels.PhysicalAvailabilitySet = label.Value; break;
                     case LabelPhysicalPower:                Node.Labels.PhysicalPower           = label.Value; break;
 
