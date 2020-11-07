@@ -174,13 +174,15 @@ namespace Neon.Kube
         /// <returns>The size in bytes.</returns>
         public long GetOpenEbsDisk(ClusterDefinition clusterDefinition)
         {
+            var minOpenEbsSize = "50 GiB";
+
             if (!string.IsNullOrEmpty(OpenEbsDisk))
             {
-                return ClusterDefinition.ValidateSize(OpenEbsDisk, this.GetType(), nameof(OpenEbsDisk));
+                return ClusterDefinition.ValidateSize(OpenEbsDisk, this.GetType(), nameof(OpenEbsDisk), minimum: minOpenEbsSize);
             }
             else
             {
-                return ClusterDefinition.ValidateSize(clusterDefinition.Hosting.Vm.OpenEbsDisk, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Hosting.Vm.OpenEbsDisk));
+                return ClusterDefinition.ValidateSize(clusterDefinition.Hosting.Vm.OpenEbsDisk, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Hosting.Vm.OpenEbsDisk), minimum: minOpenEbsSize);
             }
         }
 
