@@ -304,7 +304,7 @@ namespace Neon.XenServer
 
                     // Rename the disk to "operating system".
 
-                    client.SafeInvoke("vdi-param-set", $"uuid={vdiUuid}", $"name-label=OS disk", $"name-description=Operating system");
+                    client.SafeInvoke("vdi-param-set", $"uuid={vdiUuid}", $"name-label={name}: OS disk", $"name-description=Operating system");
                 }
 
                 // Configure any additional disks.

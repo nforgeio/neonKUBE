@@ -576,7 +576,7 @@ namespace Neon.Kube
         private const string dataDeviceName = "/dev/sdb";
 
         /// <summary>
-        /// Identifies the target VM block device for the OpenEBS oStore disk. 
+        /// Identifies the target VM block device for the OpenEBS cStor disk. 
         /// </summary>
         private const string openEBSDeviceName = "/dev/sdf";
 

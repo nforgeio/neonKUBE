@@ -280,11 +280,11 @@ namespace Neon.Kube
 
                         if (xenClient.Machine.DiskCount(vm) < 2)
                         {
-                            // We haven't created the oStore disk yet.
+                            // We haven't created the cStor disk yet.
 
                             var disk = new XenVirtualDisk()
                             {
-                                Name        = "openebs",
+                                Name        = $"{GetVmName(node)}: openebs",
                                 Size        = node.Metadata.Vm.GetOpenEbsDisk(cluster.Definition),
                                 Description = "OpenEBS cStor"
                             };
