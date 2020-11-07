@@ -2581,7 +2581,7 @@ rm -rf {chartName}*
                         pollInterval: clusterOpRetryInterval);
                 });
 
-            if (cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count() > 1)
+            if (cluster.Definition.Monitor.Metrics.Storage == MetricsStorageOptions.Yugabyte)
             {
                 await InstallEtcdAsync(master);
             }
@@ -2596,6 +2596,8 @@ rm -rf {chartName}*
                     switch (cluster.Definition.Monitor.Metrics.Storage)
                     {
                         case MetricsStorageOptions.Ephemeral:
+                            cortexValues.Add(new KeyValuePair<string, object>($"cortexConfig.schema.configs[0].store", $"boltdb"));
+                            cortexValues.Add(new KeyValuePair<string, object>($"cortexConfig.schema.configs[0].object_store", $"filesystem"));
                             break;
                         case MetricsStorageOptions.Filesystem:
                             // create folders
@@ -2618,7 +2620,7 @@ rm -rf {chartName}*
                         i++;
                     }
 
-                    var replicas = Math.Max((cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count() / 3), 1);
+                    var replicas = Math.Min(3, (cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count()));
                     cortexValues.Add(new KeyValuePair<string, object>($"replicas", replicas));
 
                     await InstallHelmChartAsync(master, "cortex", releaseName: "neon-metrics-cortex", @namespace: "monitoring", values: cortexValues);
