@@ -167,7 +167,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the size of the OpenEBS cStore disk to be created for this node when
+        /// Returns the size of the OpenEBS cStor disk to be created for this node when
         /// hosted on a hypervisor.
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>

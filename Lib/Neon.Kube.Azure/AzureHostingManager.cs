@@ -437,7 +437,7 @@ namespace Neon.Kube
         private const int dataDiskLun = 1;
 
         /// <summary>
-        /// Logical unit number for a node's optional OpenEBS cStore disk.
+        /// Logical unit number for a node's optional OpenEBS cStor disk.
         /// </summary>
         private const int openEBSDiskLun = 2;
 
@@ -898,7 +898,7 @@ namespace Neon.Kube
             KubeHelper.EnsureIngressNodes(cluster.Definition);
 
             // We need to ensure that at least one node will host the OpenEBS
-            // cStore block device.
+            // cStor block device.
 
             KubeHelper.EnsureOpenEbsNodes(cluster.Definition);
 
@@ -991,7 +991,7 @@ namespace Neon.Kube
                     KubeHelper.InitializeNode(node, secureSshPassword);
                 });
 
-            // We need to add any required OpenEBS cStore disks after the node has been otherwise
+            // We need to add any required OpenEBS cStor disks after the node has been otherwise
             // prepared.  We need to do this here because if we created the data and OpenEBS disks
             // when the VM is initially created, the disk setup scripts executed during prepare
             // won't be able to distinguish between the two disk.
@@ -1009,7 +1009,7 @@ namespace Neon.Kube
 
                     if (azureNode.Vm.DataDisks.Count < 1)   // Note that the OS disk doesn't count.
                     {
-                        node.Status = "openebs: add cstore disk";
+                        node.Status = "openebs: add cStor disk";
 
                         azureNode.Vm
                             .Update()
