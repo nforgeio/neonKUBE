@@ -189,25 +189,10 @@ namespace Neon.Kube
 
             foreach (var node in cluster.Definition.Nodes)
             {
-                if (string.IsNullOrEmpty(node.Labels.PhysicalMachine))
-                {
-                    node.Labels.PhysicalMachine = node.Vm.Host;
-                }
-
-                if (node.Labels.ComputeCores == 0)
-                {
-                    node.Labels.ComputeCores = node.Vm.GetProcessors(cluster.Definition);
-                }
-
-                if (node.Labels.ComputeRam == 0)
-                {
-                    node.Labels.ComputeRam = (int)(node.Vm.GetMemory(cluster.Definition) / ByteUnits.MebiBytes);
-                }
-
-                if (string.IsNullOrEmpty(node.Labels.StorageSize))
-                {
-                    node.Labels.StorageSize = ByteUnits.ToGiB(node.Vm.GetOsDisk(cluster.Definition));
-                }
+                node.Labels.PhysicalMachine = node.Vm.Host;
+                node.Labels.ComputeCores    = node.Vm.GetProcessors(cluster.Definition);
+                node.Labels.ComputeRam      = (int)(node.Vm.GetMemory(cluster.Definition) / ByteUnits.MebiBytes);
+                node.Labels.StorageSize     = ByteUnits.ToGiB(node.Vm.GetOsDisk(cluster.Definition));
             }
 
             // Build a list of [LinuxSshProxy] instances that map to the specified XenServer

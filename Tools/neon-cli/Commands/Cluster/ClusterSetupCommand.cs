@@ -2057,13 +2057,13 @@ istioctl install -f istio-cni.yaml
         /// <param name="values">Optional values to override Helm chart values.</param>
         /// <returns></returns>
         private async Task InstallHelmChartAsync(
-            NodeSshProxy<NodeDefinition>            master,
+            NodeSshProxy<NodeDefinition>        master,
             string                              chartName,
             string                              releaseName = null,
-            string                              @namespace = "default",
-            int                                 timeout    = 300,
-            bool                                wait       = false,
-            List<KeyValuePair<string, object>>  values     = null)
+            string                              @namespace  = "default",
+            int                                 timeout     = 300,
+            bool                                wait        = false,
+            List<KeyValuePair<string, object>>  values      = null)
         {
             if (string.IsNullOrEmpty(releaseName))
             {
@@ -2128,9 +2128,10 @@ done
 rm -rf {chartName}*
 ";
 
-            var tries = 0;
-            var success = false;
-            Exception exception = null;
+            var tries     = 0;
+            var success   = false;
+            var exception = (Exception)null;
+
             while (tries < 3 && !success)
             {
                 try
@@ -2342,10 +2343,9 @@ rm -rf {chartName}*
             await master.InvokeIdempotentActionAsync("setup/neon-storage-openebs-nfs-install",
                 async () =>
                 {
-                    var values  = new List<KeyValuePair<string, object>>();
-                    var storage = cluster.Definition.Nodes.Where(n => n.OpenEBS).Sum(n => ByteUnits.Parse(n.Vm.OpenEbsDisk));
+                    var values = new List<KeyValuePair<string, object>>();
                       
-                    values.Add(new KeyValuePair<string, object>($"persistence.size", $"{storage / 3}"));
+                    values.Add(new KeyValuePair<string, object>($"persistence.size", ByteUnits.Parse(cluster.Definition.OpenEbs.NfsSize)));
                       
                     await InstallHelmChartAsync(master, "nfs", releaseName: "neon-storage-nfs", @namespace: "openebs", values: values);
                 });

@@ -67,7 +67,6 @@ namespace Neon.Kube
 		//---------------------------------------------------------------------
 		// Static members
 
-
 		/// <summary>
 		/// Static constructor.
 		/// </summary>
