@@ -59,7 +59,7 @@ USAGE:
         }
 
         /// <inheritdoc/>
-        public override void Run(CommandLine commandLine)
+        public override async Task RunAsync(CommandLine commandLine)
         {
             Console.WriteLine("");
 
@@ -77,7 +77,7 @@ USAGE:
 
             // Notify the desktop application.
 
-            KubeHelper.Desktop.Logout().Wait();
+            await KubeHelper.Desktop.Logout();
         }
     }
 }

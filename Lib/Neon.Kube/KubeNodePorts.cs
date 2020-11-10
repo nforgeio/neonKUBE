@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeHostPorts.cs
+// FILE:	    KubeNodePorts.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
 //
@@ -24,9 +24,9 @@ using System.Threading.Tasks;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Defines reserved local node and cluster network ports.
+    /// Defines reserved node and cluster network ports.
     /// </summary>
-    public static class KubeHostPorts
+    public static class KubeNodePorts
     {
         /// <summary>
         /// Port exposed by the Kubernetes API servers on the master nodes.

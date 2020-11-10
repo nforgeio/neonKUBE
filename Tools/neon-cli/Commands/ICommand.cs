@@ -95,7 +95,7 @@ namespace NeonCli
         /// Runs the command.
         /// </summary>
         /// <param name="commandLine">The command line.</param>
-        void Run(CommandLine commandLine);
+        Task RunAsync(CommandLine commandLine);
     }
 
     [ContractClassFor(typeof(ICommand))]
@@ -117,9 +117,11 @@ namespace NeonCli
             return false;
         }
 
-        public void Run(CommandLine commandLine)
+        public async Task RunAsync(CommandLine commandLine)
         {
             Covenant.Requires<ArgumentNullException>(commandLine != null, nameof(commandLine));
+
+            await Task.CompletedTask;
         }
     }
 }

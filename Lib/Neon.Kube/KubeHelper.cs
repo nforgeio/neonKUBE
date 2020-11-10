@@ -46,6 +46,7 @@ using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Net;
 using Neon.Retry;
+using Neon.SSH;
 using Neon.Windows;
 using Neon.Cryptography;
 
@@ -371,23 +372,23 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the <see cref="KubeHostPlatform"/> for the current workstation.
+        /// Returns the <see cref="KubeClientPlatform"/> for the current workstation.
         /// </summary>
-        public static KubeHostPlatform HostPlatform
+        public static KubeClientPlatform HostPlatform
         {
             get
             {
                 if (NeonHelper.IsLinux)
                 {
-                    return KubeHostPlatform.Linux;
+                    return KubeClientPlatform.Linux;
                 }
                 else if (NeonHelper.IsOSX)
                 {
-                    return KubeHostPlatform.Osx;
+                    return KubeClientPlatform.Osx;
                 }
                 else if (NeonHelper.IsWindows)
                 {
-                    return KubeHostPlatform.Windows;
+                    return KubeClientPlatform.Windows;
                 }
                 else
                 {
@@ -762,23 +763,23 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="platform">Identifies the platform.</param>
         /// <returns>The folder path.</returns>
-        public static string GetPlatformCacheFolder(KubeHostPlatform platform)
+        public static string GetPlatformCacheFolder(KubeClientPlatform platform)
         {
             string subfolder;
 
             switch (platform)
             {
-                case KubeHostPlatform.Linux:
+                case KubeClientPlatform.Linux:
 
                     subfolder = "linux";
                     break;
 
-                case KubeHostPlatform.Osx:
+                case KubeClientPlatform.Osx:
 
                     subfolder = "osx";
                     break;
 
-                case KubeHostPlatform.Windows:
+                case KubeClientPlatform.Windows:
 
                     subfolder = "windows";
                     break;
@@ -802,7 +803,7 @@ namespace Neon.Kube
         /// <param name="component">The component name.</param>
         /// <param name="version">The component version (or <c>null</c>).</param>
         /// <returns>The component file path.</returns>
-        public static string GetCachedComponentPath(KubeHostPlatform platform, string component, string version)
+        public static string GetCachedComponentPath(KubeClientPlatform platform, string component, string version)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(component), nameof(component));
 
@@ -1175,7 +1176,7 @@ namespace Neon.Kube
 
             switch (hostPlatform)
             {
-                case KubeHostPlatform.Windows:
+                case KubeClientPlatform.Windows:
 
                     targetPath = Path.Combine(targetPath, "kubectl.exe");
 
@@ -1275,8 +1276,8 @@ namespace Neon.Kube
                     }
                     break;
 
-                case KubeHostPlatform.Linux:
-                case KubeHostPlatform.Osx:
+                case KubeClientPlatform.Linux:
+                case KubeClientPlatform.Osx:
                 default:
 
                     throw new NotImplementedException($"[{hostPlatform}] support is not implemented.");
@@ -1309,7 +1310,7 @@ namespace Neon.Kube
 
             switch (hostPlatform)
             {
-                case KubeHostPlatform.Windows:
+                case KubeClientPlatform.Windows:
 
                     targetPath = Path.Combine(targetPath, "helm.exe");
 
@@ -1365,8 +1366,8 @@ namespace Neon.Kube
                     }
                     break;
 
-                case KubeHostPlatform.Linux:
-                case KubeHostPlatform.Osx:
+                case KubeClientPlatform.Linux:
+                case KubeClientPlatform.Osx:
                 default:
 
                     throw new NotImplementedException($"[{hostPlatform}] support is not implemented.");
@@ -2256,7 +2257,7 @@ exit 0
         /// <param name="sshPassword">The current <b>sysadmin</b> password.</param>
         /// <param name="updateDistribution">Optionally upgrade the node's Linux distribution.  This defaults to <c>false</c>.</param>
         /// <param name="logWriter">Action that writes a line of text to the operation output log or console (or <c>null</c>).</param>
-        public static void InitializeNode(LinuxSshProxy<NodeDefinition> node, string sshPassword, bool updateDistribution = false, Action<string> logWriter = null)
+        public static void InitializeNode(NodeSshProxy<NodeDefinition> node, string sshPassword, bool updateDistribution = false, Action<string> logWriter = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(sshPassword), nameof(sshPassword));
 
@@ -2473,7 +2474,7 @@ usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups roo
         /// cluster.  This faults the nodeproxy on faliure.
         /// </summary>
         /// <param name="node">The target node.</param>
-        internal static void VerifyNodeOperatingSystem(LinuxSshProxy<NodeDefinition> node)
+        internal static void VerifyNodeOperatingSystem(NodeSshProxy<NodeDefinition> node)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 
@@ -2529,7 +2530,7 @@ usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups roo
         /// </para>
         /// <note>
         /// This doesn't work for the <see cref="HostingEnvironment.BareMetal"/> hosting manager which
-        /// needs to actually look for unpartitioned block devices that can be used to provision cStore.
+        /// needs to actually look for unpartitioned block devices that can be used to provision cStor.
         /// </note>
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>

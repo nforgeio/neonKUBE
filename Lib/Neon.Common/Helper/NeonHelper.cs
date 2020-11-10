@@ -128,17 +128,9 @@ namespace Neon.Common
         public static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
         /// <summary>
-        /// Indicates whether the current application was built as 32 or 64-bit or <c>null</c>
-        /// if this hasn't been determined yet.
+        /// Returns the prefix to be used for Neon related Prometheus names.
         /// </summary>
-        private static bool? is64Bit;
-
-        /// <summary>
-        /// Indicates whether the current application is running on a developer workstation
-        /// or <c>null</c> if this hasn't been determined yet.  This is determined by the
-        /// presence of the <b>DEV_WORKSTATION</b> environment variable.
-        /// </summary>
-        private static bool? isDevWorkstation;
+        public const string NeonMetricsPrefix = "neon_";
 
         /// <summary>
         /// The <see cref="Neon.Common.ServiceContainer"/> instance returned by 
@@ -152,11 +144,6 @@ namespace Neon.Common
         /// <see cref="RegisterMisspelledUtf8Provider()"/> for more information.
         /// </summary>
         private static bool specialUtf8EncodingProvider = false;
-
-        /// <summary>
-        /// Identifies the framework hosting the current process.
-        /// </summary>
-        private static NetFramework? netFramework = null;
 
         /// <summary>
         /// The root dependency injection service container used by Neon class libraries. 
@@ -193,51 +180,6 @@ namespace Neon.Common
             }
 
             set { serviceContainer = value; }
-        }
-
-        /// <summary>
-        /// Returns <c>true</c> if the application was built as 64-bit.
-        /// </summary>
-        public static bool Is64Bit
-        {
-            get
-            {
-                if (is64Bit.HasValue)
-                {
-                    return is64Bit.Value;
-                }
-
-                is64Bit = System.Runtime.InteropServices.Marshal.SizeOf<IntPtr>() == 8;
-
-                return is64Bit.Value;
-            }
-        }
-
-        /// <summary>
-        /// Indicates whether the current application is running on a developer workstation.
-        /// This is determined by the presence of the <b>DEV_WORKSTATION</b> environment variable.
-        /// </summary>
-        public static bool IsDevWorkstation
-        {
-            get
-            {
-                if (isDevWorkstation.HasValue)
-                {
-                    return isDevWorkstation.Value;
-                }
-
-                isDevWorkstation = Environment.GetEnvironmentVariable("DEV_WORKSTATION") != null;
-
-                return isDevWorkstation.Value;
-            }
-        }
-
-        /// <summary>
-        /// Returns <c>true</c> if the client was built as 32-bit.
-        /// </summary>
-        public static bool Is32BitBuild
-        {
-            get { return !Is64Bit; }
         }
 
         /// <summary>

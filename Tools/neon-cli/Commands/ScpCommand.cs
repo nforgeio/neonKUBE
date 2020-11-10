@@ -64,7 +64,7 @@ ARGUMENTS:
         }
 
         /// <inheritdoc/>
-        public override void Run(CommandLine commandLine)
+        public override async Task RunAsync(CommandLine commandLine)
         {
             if (commandLine.HasHelpOption)
             {
@@ -148,6 +148,7 @@ ARGUMENTS:
             }
 
             Process.Start(Program.WinScpPath, $@"scp://{clusterLogin.SshUsername}:{clusterLogin.SshPassword}@{node.Address}:22 /hostkey=""{fingerprint}"" /newinstance /rawsettings Shell=""sudo%20-s"" compression=1");
+            await Task.CompletedTask;
         }
     }
 }

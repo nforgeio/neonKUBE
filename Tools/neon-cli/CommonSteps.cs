@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -27,7 +28,7 @@ using System.Threading.Tasks;
 using Neon.Common;
 using Neon.Kube;
 using Neon.IO;
-using System.Diagnostics.Contracts;
+using Neon.SSH;
 
 namespace NeonCli
 {
@@ -41,7 +42,7 @@ namespace NeonCli
         /// </summary>
         /// <param name="node">The target cluster node.</param>
         /// <param name="stepDelay">Ignored.</param>
-        public static void VerifyOS(LinuxSshProxy<NodeDefinition> node, TimeSpan stepDelay)
+        public static void VerifyOS(NodeSshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
             KubeHelper.VerifyNodeOperatingSystem(node);
         }
@@ -51,7 +52,7 @@ namespace NeonCli
         /// </summary>
         /// <param name="node">The target node.</param>
         /// <param name="stepDelayed">Ignored.</param>
-        public static void ConfigureOpenSsh(LinuxSshProxy<NodeDefinition> node, TimeSpan stepDelayed)
+        public static void ConfigureOpenSsh(NodeSshProxy<NodeDefinition> node, TimeSpan stepDelayed)
         {
             // Upload the OpenSSH server configuration, restart OpenSSH and
             // then disconnect and wait for the OpenSSH to restart.
@@ -66,7 +67,7 @@ namespace NeonCli
         /// </summary>
         /// <param name="node">The server to be updated.</param>
         /// <param name="clusterDefinition">The cluster definition.</param>
-        public static void ConfigureEnvironmentVariables(LinuxSshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
+        public static void ConfigureEnvironmentVariables(NodeSshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
         {
             node.Status = "environment variables";
 
@@ -92,9 +93,9 @@ namespace NeonCli
                     {
                         if (line.StartsWith("PATH="))
                         {
-                            if (!line.Contains(KubeHostFolders.Bin))
+                            if (!line.Contains(KubeNodeFolders.Bin))
                             {
-                                sb.AppendLine(line + $":/snap/bin:{KubeHostFolders.Bin}");
+                                sb.AppendLine(line + $":/snap/bin:{KubeNodeFolders.Bin}");
                             }
                             else
                             {
@@ -142,11 +143,11 @@ namespace NeonCli
                 sb.AppendLine($"NEON_NODE_HDD={node.Metadata.Labels.StorageHDD.ToString().ToLowerInvariant()}");
             }
 
-            sb.AppendLine($"NEON_BIN_FOLDER={KubeHostFolders.Bin}");
-            sb.AppendLine($"NEON_CONFIG_FOLDER={KubeHostFolders.Config}");
-            sb.AppendLine($"NEON_SETUP_FOLDER={KubeHostFolders.Setup}");
-            sb.AppendLine($"NEON_STATE_FOLDER={KubeHostFolders.State}");
-            sb.AppendLine($"NEON_TMPFS_FOLDER={KubeHostFolders.Tmpfs}");
+            sb.AppendLine($"NEON_BIN_FOLDER={KubeNodeFolders.Bin}");
+            sb.AppendLine($"NEON_CONFIG_FOLDER={KubeNodeFolders.Config}");
+            sb.AppendLine($"NEON_SETUP_FOLDER={KubeNodeFolders.Setup}");
+            sb.AppendLine($"NEON_STATE_FOLDER={KubeNodeFolders.State}");
+            sb.AppendLine($"NEON_TMPFS_FOLDER={KubeNodeFolders.Tmpfs}");
 
             // Kubernetes related variables for masters.
 
@@ -165,7 +166,7 @@ namespace NeonCli
         /// </summary>
         /// <param name="node">The target node.</param>
         /// <param name="clusterLogin">The cluster login.</param>
-        public static void ConfigureSshKey(LinuxSshProxy<NodeDefinition> node, ClusterLogin clusterLogin)
+        public static void ConfigureSshKey(NodeSshProxy<NodeDefinition> node, ClusterLogin clusterLogin)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
             Covenant.Requires<ArgumentNullException>(clusterLogin != null, nameof(clusterLogin));
@@ -259,13 +260,13 @@ systemctl restart sshd
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <param name="kubeSetupInfo">Kubernetes setup details.</param>
         /// <param name="shutdown">Optionally shuts down the node.</param>
-        public static void PrepareNode(LinuxSshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition, KubeSetupInfo kubeSetupInfo, HostingManager hostingManager, bool shutdown = false)
+        public static void PrepareNode(NodeSshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition, KubeSetupInfo kubeSetupInfo, HostingManager hostingManager, bool shutdown = false)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
             Covenant.Requires<ArgumentNullException>(kubeSetupInfo != null, nameof(kubeSetupInfo));
 
-            if (node.FileExists($"{KubeHostFolders.State}/setup/prepared"))
+            if (node.FileExists($"{KubeNodeFolders.State}/setup/prepared"))
             {
                 return;     // Already prepared
             }
@@ -313,20 +314,20 @@ fi
 
             node.Status = "prepare: neonKUBE host folders";
 
-            node.SudoCommand($"mkdir -p {KubeHostFolders.Bin}", RunOptions.LogOnErrorOnly);
-            node.SudoCommand($"chmod 750 {KubeHostFolders.Bin}", RunOptions.LogOnErrorOnly);
+            node.SudoCommand($"mkdir -p {KubeNodeFolders.Bin}", RunOptions.LogOnErrorOnly);
+            node.SudoCommand($"chmod 750 {KubeNodeFolders.Bin}", RunOptions.LogOnErrorOnly);
 
-            node.SudoCommand($"mkdir -p {KubeHostFolders.Config}", RunOptions.LogOnErrorOnly);
-            node.SudoCommand($"chmod 750 {KubeHostFolders.Config}", RunOptions.LogOnErrorOnly);
+            node.SudoCommand($"mkdir -p {KubeNodeFolders.Config}", RunOptions.LogOnErrorOnly);
+            node.SudoCommand($"chmod 750 {KubeNodeFolders.Config}", RunOptions.LogOnErrorOnly);
 
-            node.SudoCommand($"mkdir -p {KubeHostFolders.Setup}", RunOptions.LogOnErrorOnly);
-            node.SudoCommand($"chmod 750 {KubeHostFolders.Setup}", RunOptions.LogOnErrorOnly);
+            node.SudoCommand($"mkdir -p {KubeNodeFolders.Setup}", RunOptions.LogOnErrorOnly);
+            node.SudoCommand($"chmod 750 {KubeNodeFolders.Setup}", RunOptions.LogOnErrorOnly);
 
-            node.SudoCommand($"mkdir -p {KubeHostFolders.State}", RunOptions.LogOnErrorOnly);
-            node.SudoCommand($"chmod 750 {KubeHostFolders.State}", RunOptions.LogOnErrorOnly);
+            node.SudoCommand($"mkdir -p {KubeNodeFolders.State}", RunOptions.LogOnErrorOnly);
+            node.SudoCommand($"chmod 750 {KubeNodeFolders.State}", RunOptions.LogOnErrorOnly);
 
-            node.SudoCommand($"mkdir -p {KubeHostFolders.State}/setup", RunOptions.LogOnErrorOnly);
-            node.SudoCommand($"chmod 750 {KubeHostFolders.State}/setup", RunOptions.LogOnErrorOnly);
+            node.SudoCommand($"mkdir -p {KubeNodeFolders.State}/setup", RunOptions.LogOnErrorOnly);
+            node.SudoCommand($"chmod 750 {KubeNodeFolders.State}/setup", RunOptions.LogOnErrorOnly);
 
             //-----------------------------------------------------------------
             // Other configuration.
@@ -391,7 +392,7 @@ systemctl restart rsyslog.service
 
             // Indicate that the node has been fully prepared.
 
-            node.SudoCommand($"touch {KubeHostFolders.State}/setup/prepared");
+            node.SudoCommand($"touch {KubeNodeFolders.State}/setup/prepared");
 
             // Shutdown the node if requested.
 

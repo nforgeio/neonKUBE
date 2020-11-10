@@ -19,6 +19,7 @@ using System;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 
 using Microsoft.AspNetCore;
@@ -34,6 +35,7 @@ using Microsoft.Extensions.Options;
 using Neon.Common;
 using Neon.Data;
 using Neon.Diagnostics;
+using Prometheus;
 
 namespace Neon.Web
 {
@@ -110,9 +112,6 @@ namespace Neon.Web
 
             return builder;
         }
-
-        //---------------------------------------------------------------------
-        // IMvcBuilder extensions
 
         /// <summary>
         /// Performs Neon related initialization including adding the the <see cref="RoundTripJsonInputFormatter"/>,

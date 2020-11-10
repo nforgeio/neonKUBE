@@ -34,6 +34,7 @@ using Newtonsoft.Json;
 using Neon.Common;
 using Neon.Kube;
 using Neon.Net;
+using Neon.SSH;
 
 // $todo(jefflill): Verify that there are no unexpected nodes in the cluster.
 
@@ -49,7 +50,7 @@ namespace NeonCli
         /// </summary>
         /// <param name="node">The master node.</param>
         /// <param name="clusterDefinition">The cluster definition.</param>
-        public static void CheckMaster(LinuxSshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
+        public static void CheckMaster(NodeSshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
             Covenant.Requires<ArgumentException>(node.Metadata.IsMaster, nameof(node));
@@ -68,7 +69,7 @@ namespace NeonCli
         /// </summary>
         /// <param name="node">The server node.</param>
         /// <param name="clusterDefinition">The cluster definition.</param>
-        public static void CheckWorker(LinuxSshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
+        public static void CheckWorker(NodeSshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
             Covenant.Requires<ArgumentException>(node.Metadata.IsWorker, nameof(node));
@@ -87,7 +88,7 @@ namespace NeonCli
         /// </summary>
         /// <param name="node">The master node.</param>
         /// <param name="clusterDefinition">The cluster definition.</param>
-        private static void CheckMasterNtp(LinuxSshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
+        private static void CheckMasterNtp(NodeSshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
         {
             // We're going to use [ntpq -pw] to query the configured time sources.
             // We should get something back that looks like
@@ -179,7 +180,7 @@ namespace NeonCli
         /// </summary>
         /// <param name="node">The worker node.</param>
         /// <param name="clusterDefinition">The cluster definition.</param>
-        private static void CheckWorkerNtp(LinuxSshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
+        private static void CheckWorkerNtp(NodeSshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
         {
             // We're going to use [ntpq -pw] to query the configured time sources.
             // We should get something back that looks like

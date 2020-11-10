@@ -34,6 +34,7 @@ using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
 using Neon.Net;
+using Neon.SSH;
 
 namespace Neon.XenServer
 {
@@ -53,7 +54,7 @@ namespace Neon.XenServer
     /// <para>
     /// The workaround is to simnply connect to the XenServer host via SSH
     /// and perform commands using the <b>xe</b> command line tool installed
-    /// with XenServer.  We're going to take advantage of the <see cref="LinuxSshProxy{TMetadata}"/>
+    /// with XenServer.  We're going to take advantage of the <see cref="NodeSshProxy{TMetadata}"/>
     /// class to handle the SSH connection and command execution.
     /// </para>
     /// <para>
@@ -118,7 +119,7 @@ namespace Neon.XenServer
 
             Address           = addressOrFQDN;
             Name              = name;
-            SshProxy          = new LinuxSshProxy<XenClient>(addressOrFQDN, address, SshCredentials.FromUserPassword(username, password), logWriter: logWriter);
+            SshProxy          = new NodeSshProxy<XenClient>(addressOrFQDN, address, SshCredentials.FromUserPassword(username, password), logWriter: logWriter);
             SshProxy.Metadata = this;
             runOptions        = RunOptions.IgnoreRemotePath;
 
@@ -154,7 +155,7 @@ namespace Neon.XenServer
         /// <summary>
         /// Returns the SSH proxy for the XenServer host.
         /// </summary>
-        public LinuxSshProxy<XenClient> SshProxy { get; private set; }
+        public NodeSshProxy<XenClient> SshProxy { get; private set; }
 
         /// <summary>
         /// Implements the XenServer storage repository operations.

@@ -46,11 +46,11 @@ namespace Test.NeonCli
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
-        public void Vault()
+        public async Task Vault()
         {
             using (var runner = new ProgramRunner())
             {
-                var result = runner.Execute(Program.Main, "vault");
+                var result = await runner.ExecuteAsync(Program.Main, "vault");
 
                 Assert.Equal(0, result.ExitCode);
             }
@@ -58,7 +58,7 @@ namespace Test.NeonCli
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
-        public void VaultCreate()
+        public async Task VaultCreate()
         {
             using (var manager = new KubeTestManager())
             {
@@ -81,7 +81,7 @@ namespace Test.NeonCli
                             {
                                 // Verify that the PATH argument is required.
 
-                                var result = runner.Execute(Program.Main, "vault", "create");
+                                var result = await runner.ExecuteAsync(Program.Main, "vault", "create");
 
                                 Assert.NotEqual(0, result.ExitCode);
                                 Assert.Contains("*** ERROR: The PATH argument is required.", result.ErrorText);
@@ -89,7 +89,7 @@ namespace Test.NeonCli
                                 // Verify that the PASSWORD-NAME argument is required when there's
                                 // no default [.password-name] file.
 
-                                result = runner.Execute(Program.Main, "vault", "create", "test1.txt");
+                                result = await runner.ExecuteAsync(Program.Main, "vault", "create", "test1.txt");
 
                                 Assert.NotEqual(0, result.ExitCode);
                                 Assert.Contains("*** ERROR: A PASSWORD-NAME argument or [.password-name] file is required.", result.ErrorText);
@@ -97,7 +97,7 @@ namespace Test.NeonCli
                                 // Verify that we can create an encrypted file with an explicitly 
                                 // named password.
 
-                                result = runner.Execute(Program.Main, "vault", "create", "test2.txt", passwordFile.Name);
+                                result = await runner.ExecuteAsync(Program.Main, "vault", "create", "test2.txt", passwordFile.Name);
 
                                 Assert.Equal(0, result.ExitCode);
                                 Assert.True(NeonVault.IsEncrypted("test2.txt", out var passwordName));
@@ -106,14 +106,14 @@ namespace Test.NeonCli
 
                                 // Verify that we see an error for a missing password.
 
-                                result = runner.Execute(Program.Main, "vault", "create", "test3.txt", missingPasswordName);
+                                result = await runner.ExecuteAsync(Program.Main, "vault", "create", "test3.txt", missingPasswordName);
 
                                 Assert.NotEqual(0, result.ExitCode);
                                 Assert.Contains($"*** ERROR: [CryptographicException]: Password named [{missingPasswordName}] not found or is blank or whitespace.", result.ErrorText);
 
                                 // Verify that we see an error for an invalid password.
 
-                                result = runner.Execute(Program.Main, "vault", "create", "test4.txt", badPasswordName);
+                                result = await runner.ExecuteAsync(Program.Main, "vault", "create", "test4.txt", badPasswordName);
 
                                 Assert.NotEqual(0, result.ExitCode);
                                 Assert.Contains($"*** ERROR: [CryptographicException]: Password name [bad/password] contains invalid characters.  Only ASCII letters, digits, underscores, dashs and dots are allowed.", result.ErrorText);
@@ -123,7 +123,7 @@ namespace Test.NeonCli
 
                                 File.WriteAllText(".password-name", passwordFile.Name);
 
-                                result = runner.Execute(Program.Main, "vault", "create", "test5.txt");
+                                result = await runner.ExecuteAsync(Program.Main, "vault", "create", "test5.txt");
                                 Assert.Equal(0, result.ExitCode);
                                 Assert.True(NeonVault.IsEncrypted("test5.txt", out passwordName));
                                 Assert.Equal(passwordFile.Name, passwordName);
@@ -135,7 +135,7 @@ namespace Test.NeonCli
                                 Directory.CreateDirectory("subfolder");
                                 Environment.CurrentDirectory = Path.Combine(Environment.CurrentDirectory, "subfolder");
 
-                                result = runner.Execute(Program.Main, "vault", "create", "test6.txt");
+                                result = await runner.ExecuteAsync(Program.Main, "vault", "create", "test6.txt");
                                 Assert.Equal(0, result.ExitCode);
                                 Assert.True(NeonVault.IsEncrypted("test6.txt", out passwordName));
                                 Assert.Equal(passwordFile.Name, passwordName);
@@ -154,7 +154,7 @@ namespace Test.NeonCli
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
-        public void VaulteEdit()
+        public async Task VaulteEdit()
         {
             using (var manager = new KubeTestManager())
             {
@@ -177,7 +177,7 @@ namespace Test.NeonCli
                             {
                                 // Verify that the PATH argument is required.
 
-                                var result = runner.Execute(Program.Main, "vault", "edit");
+                                var result = await runner.ExecuteAsync(Program.Main, "vault", "edit");
 
                                 Assert.NotEqual(0, result.ExitCode);
                                 Assert.Contains("*** ERROR: The PATH argument is required.", result.ErrorText);
@@ -185,7 +185,7 @@ namespace Test.NeonCli
                                 // Verify that we can create an encrypted file with an explicitly 
                                 // named password.
 
-                                result = runner.Execute(Program.Main, "vault", "create", "test1.txt", passwordFile.Name);
+                                result = await runner.ExecuteAsync(Program.Main, "vault", "create", "test1.txt", passwordFile.Name);
 
                                 Assert.Equal(0, result.ExitCode);
                                 Assert.True(NeonVault.IsEncrypted("test1.txt", out var passwordName));
@@ -196,7 +196,7 @@ namespace Test.NeonCli
 
                                 NeonHelper.OpenEditorHandler = path => File.WriteAllText(path, editedPlainText);
 
-                                result = runner.Execute(Program.Main, "vault", "edit", "test1.txt", passwordFile.Name);
+                                result = await runner.ExecuteAsync(Program.Main, "vault", "edit", "test1.txt", passwordFile.Name);
 
                                 Assert.Equal(0, result.ExitCode);
                                 Assert.True(NeonVault.IsEncrypted("test1.txt", out passwordName));
@@ -207,7 +207,7 @@ namespace Test.NeonCli
 
                                 File.WriteAllText("unencrypted.txt", plainText);
 
-                                result = runner.Execute(Program.Main, "vault", "edit", "unencrypted.txt");
+                                result = await runner.ExecuteAsync(Program.Main, "vault", "edit", "unencrypted.txt");
 
                                 Assert.NotEqual(0, result.ExitCode);
                                 Assert.Contains("*** ERROR: The [unencrypted.txt] file is not encrypted.", result.ErrorText);
@@ -225,7 +225,7 @@ namespace Test.NeonCli
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
-        public void VaultDecrypt()
+        public async Task VaultDecrypt()
         {
             using (var manager = new KubeTestManager())
             {
@@ -248,21 +248,21 @@ namespace Test.NeonCli
                             {
                                 // Verify that the SOURCE argument is required.
 
-                                var result = runner.Execute(Program.Main, "vault", "decrypt");
+                                var result = await runner.ExecuteAsync(Program.Main, "vault", "decrypt");
 
                                 Assert.NotEqual(0, result.ExitCode);
                                 Assert.Contains("*** ERROR: The SOURCE argument is required.", result.ErrorText);
 
                                 // Verify that the TARGET argument is required.
 
-                                result = runner.Execute(Program.Main, "vault", "decrypt");
+                                result = await runner.ExecuteAsync(Program.Main, "vault", "decrypt");
 
                                 Assert.NotEqual(0, result.ExitCode);
                                 Assert.Contains("*** ERROR: The SOURCE argument is required.", result.ErrorText);
 
                                 // Verify that the SOURCE-PATH argument is required.
 
-                                result = runner.Execute(Program.Main, "vault", "decrypt", "test.txt");
+                                result = await runner.ExecuteAsync(Program.Main, "vault", "decrypt", "test.txt");
 
                                 Assert.NotEqual(0, result.ExitCode);
                                 Assert.Contains("*** ERROR: The TARGET argument is required.", result.ErrorText);
@@ -270,7 +270,7 @@ namespace Test.NeonCli
                                 // Verify that we can create an encrypted file with an explicitly 
                                 // named password.
 
-                                result = runner.Execute(Program.Main, "vault", "create", "test1.txt", passwordFile.Name);
+                                result = await runner.ExecuteAsync(Program.Main, "vault", "create", "test1.txt", passwordFile.Name);
 
                                 Assert.Equal(0, result.ExitCode);
                                 Assert.True(NeonVault.IsEncrypted("test1.txt", out var passwordName));
@@ -279,7 +279,7 @@ namespace Test.NeonCli
 
                                 // Verify that we can decrypt the file.
 
-                                result = runner.Execute(Program.Main, "vault", "decrypt", "test1.txt", "decrypted.txt");
+                                result = await runner.ExecuteAsync(Program.Main, "vault", "decrypt", "test1.txt", "decrypted.txt");
 
                                 Assert.Equal(0, result.ExitCode);
                                 Assert.True(NeonVault.IsEncrypted("test1.txt", out passwordName));
@@ -299,7 +299,7 @@ namespace Test.NeonCli
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
-        public void VaultEncrypt()
+        public async Task VaultEncrypt()
         {
             using (var manager = new KubeTestManager())
             {
@@ -322,7 +322,7 @@ namespace Test.NeonCli
                             {
                                 // Verify that the PATH argument is required.
 
-                                var result = runner.Execute(Program.Main, "vault", "encrypt");
+                                var result = await runner.ExecuteAsync(Program.Main, "vault", "encrypt");
 
                                 Assert.NotEqual(0, result.ExitCode);
                                 Assert.Contains("*** ERROR: The PATH argument is required.", result.ErrorText);
@@ -330,7 +330,7 @@ namespace Test.NeonCli
                                 // Verify that the TARGET argument is required when [--password-name]
                                 // or [--p] is not present.
 
-                                result = runner.Execute(Program.Main, "vault", "decrypt", "source.txt");
+                                result = await runner.ExecuteAsync(Program.Main, "vault", "decrypt", "source.txt");
 
                                 Assert.NotEqual(0, result.ExitCode);
                                 Assert.Contains("*** ERROR: The TARGET argument is required.", result.ErrorText);
@@ -340,7 +340,7 @@ namespace Test.NeonCli
 
                                 File.WriteAllText("test1.txt", plainText);
 
-                                result = runner.Execute(Program.Main, "vault", "encrypt", "test1.txt", $"--password-name={passwordFile.Name}");
+                                result = await runner.ExecuteAsync(Program.Main, "vault", "encrypt", "test1.txt", $"--password-name={passwordFile.Name}");
 
                                 Assert.Equal(0, result.ExitCode);
                                 Assert.True(NeonVault.IsEncrypted("test1.txt", out var passwordName));
@@ -352,7 +352,7 @@ namespace Test.NeonCli
 
                                 File.WriteAllText("test2.txt", plainText);
 
-                                result = runner.Execute(Program.Main, "vault", "encrypt", "test2.txt", $"-p={passwordFile.Name}");
+                                result = await runner.ExecuteAsync(Program.Main, "vault", "encrypt", "test2.txt", $"-p={passwordFile.Name}");
 
                                 Assert.Equal(0, result.ExitCode);
                                 Assert.True(NeonVault.IsEncrypted("test2.txt", out passwordName));
@@ -365,7 +365,7 @@ namespace Test.NeonCli
 
                                 File.WriteAllText("test3.txt", plainText);
 
-                                result = runner.Execute(Program.Main, "vault", "encrypt", "test3.txt");
+                                result = await runner.ExecuteAsync(Program.Main, "vault", "encrypt", "test3.txt");
 
                                 Assert.NotEqual(0, result.ExitCode);
                                 Assert.Contains("*** ERROR: A PASSWORD-NAME argument or [.password-name] file is required.", result.ErrorText);
@@ -376,7 +376,7 @@ namespace Test.NeonCli
 
                                 File.WriteAllText("test4.txt", plainText);
 
-                                result = runner.Execute(Program.Main, "vault", "encrypt", "test4.txt", "test4.encypted.txt");
+                                result = await runner.ExecuteAsync(Program.Main, "vault", "encrypt", "test4.txt", "test4.encypted.txt");
 
                                 Assert.NotEqual(0, result.ExitCode);
                                 Assert.Contains("*** ERROR: A PASSWORD-NAME argument or [.password-name] file is required.", result.ErrorText);
@@ -386,7 +386,7 @@ namespace Test.NeonCli
 
                                 File.WriteAllText("test5.txt", plainText);
 
-                                result = runner.Execute(Program.Main, "vault", "encrypt", "test5.txt", "test5.encypted.txt", passwordName);
+                                result = await runner.ExecuteAsync(Program.Main, "vault", "encrypt", "test5.txt", "test5.encypted.txt", passwordName);
 
                                 Assert.Equal(0, result.ExitCode);
                                 Assert.True(NeonVault.IsEncrypted("test5.encypted.txt", out passwordName));
@@ -398,7 +398,7 @@ namespace Test.NeonCli
 
                                 File.WriteAllText("test6.txt", plainText);
 
-                                result = runner.Execute(Program.Main, "vault", "encrypt", "test6.txt", "test6.encypted.txt", $"--password-name={passwordName}");
+                                result = await runner.ExecuteAsync(Program.Main, "vault", "encrypt", "test6.txt", "test6.encypted.txt", $"--password-name={passwordName}");
 
                                 Assert.Equal(0, result.ExitCode);
                                 Assert.True(NeonVault.IsEncrypted("test6.encypted.txt", out passwordName));
@@ -410,7 +410,7 @@ namespace Test.NeonCli
                                 File.WriteAllText("test7.txt", plainText);
                                 File.WriteAllText(".password-name", passwordName);
 
-                                result = runner.Execute(Program.Main, "vault", "encrypt", "test7.txt");
+                                result = await runner.ExecuteAsync(Program.Main, "vault", "encrypt", "test7.txt");
 
                                 Assert.Equal(0, result.ExitCode);
                                 Assert.True(NeonVault.IsEncrypted("test7.txt", out passwordName));
@@ -426,7 +426,7 @@ namespace Test.NeonCli
                                 {
                                     File.WriteAllText(tempFile.Path, plainText);
 
-                                    result = runner.Execute(Program.Main, "vault", "encrypt", tempFile.Path, "test8.encrypted.txt");
+                                    result = await runner.ExecuteAsync(Program.Main, "vault", "encrypt", tempFile.Path, "test8.encrypted.txt");
 
                                     Assert.Equal(0, result.ExitCode);
                                     Assert.True(NeonVault.IsEncrypted("test8.encrypted.txt", out passwordName));
@@ -447,7 +447,7 @@ namespace Test.NeonCli
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
-        public void VaultPasswordName()
+        public async Task VaultPasswordName()
         {
             using (var manager = new KubeTestManager())
             {
@@ -470,7 +470,7 @@ namespace Test.NeonCli
                             {
                                 // Verify that the PATH argument is required.
 
-                                var result = runner.Execute(Program.Main, "vault", "password-name");
+                                var result = await runner.ExecuteAsync(Program.Main, "vault", "password-name");
 
                                 Assert.NotEqual(0, result.ExitCode);
                                 Assert.Contains("*** ERROR: The PATH argument is required.", result.ErrorText);
@@ -478,7 +478,7 @@ namespace Test.NeonCli
                                 // Verify that we can create an encrypted file with an explicitly 
                                 // named password.
 
-                                result = runner.Execute(Program.Main, "vault", "create", "test1.txt", passwordFile.Name);
+                                result = await runner.ExecuteAsync(Program.Main, "vault", "create", "test1.txt", passwordFile.Name);
 
                                 Assert.Equal(0, result.ExitCode);
                                 Assert.True(NeonVault.IsEncrypted("test1.txt", out var passwordName));
@@ -487,7 +487,7 @@ namespace Test.NeonCli
 
                                 // Verify that we can get the password with a line ending.
 
-                                result = runner.Execute(Program.Main, "vault", "password-name", "test1.txt", passwordFile.Name);
+                                result = await runner.ExecuteAsync(Program.Main, "vault", "password-name", "test1.txt", passwordFile.Name);
 
                                 Assert.Equal(0, result.ExitCode);
                                 Assert.Contains(passwordFile.Name, result.OutputText);
@@ -495,7 +495,7 @@ namespace Test.NeonCli
 
                                 // Verify that we can get the password without a line ending.
 
-                                result = runner.Execute(Program.Main, "vault", "password-name", "-n", "test1.txt", passwordFile.Name);
+                                result = await runner.ExecuteAsync(Program.Main, "vault", "password-name", "-n", "test1.txt", passwordFile.Name);
 
                                 Assert.Equal(0, result.ExitCode);
                                 Assert.Equal(passwordFile.Name, result.OutputText);

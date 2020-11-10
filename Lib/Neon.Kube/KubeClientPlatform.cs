@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    NamespaceDoc.cs
+// FILE:	    KubeClientPlatform.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
 //
@@ -28,20 +28,27 @@ using Neon.Common;
 
 using Renci.SshNet;
 
-namespace Neon.SSH
+namespace Neon.Kube
 {
     /// <summary>
-    /// <note>
-    /// <b>EXPERIMENTAL:</b> The types in this namespace are probably not generally useful at this time,
-    /// and may never be.  We reserve the right to modify or refactor these at will.
-    /// </note>
-    /// <para>
-    /// This namespace includes the <see cref="LinuxSshProxy{TMetadata}"/>, <see cref="LinuxSshProxy"/>
-    /// and related classes that wrap and extend the base SSH.NET class with additional support for
-    /// managing remote Linux machines via SSH.
-    /// </para>
+    /// Enumerates the operating systems supported by neonKUBE client applications
+    /// used on developer or operator workstations to manage remote neonKUBE clusters.  
     /// </summary>
-    public class NamespaceDoc
+    public enum KubeClientPlatform
     {
+        /// <summary>
+        /// Linux.
+        /// </summary>
+        Linux,
+
+        /// <summary>
+        /// Windows.
+        /// </summary>
+        Windows,
+
+        /// <summary>
+        /// OS/X
+        /// </summary>
+        Osx
     }
 }

@@ -80,7 +80,7 @@ OPTIONS:
         }
 
         /// <inheritdoc/>
-        public override void Run(CommandLine commandLine)
+        public override async Task RunAsync(CommandLine commandLine)
         {
             if (commandLine.Arguments.Length != 2)
             {
@@ -114,6 +114,7 @@ OPTIONS:
             KubeHelper.CreateIsoFile(sourceFolder, isoPath, label);
 
             Program.Exit(0);
+            await Task.CompletedTask;
         }
     }
 }

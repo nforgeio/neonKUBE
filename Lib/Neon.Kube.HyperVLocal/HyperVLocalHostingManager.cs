@@ -43,6 +43,7 @@ using Neon.Cryptography;
 using Neon.HyperV;
 using Neon.IO;
 using Neon.Net;
+using Neon.SSH;
 using Neon.Time;
 
 namespace Neon.Kube
@@ -186,7 +187,7 @@ namespace Neon.Kube
             KubeHelper.EnsureIngressNodes(cluster.Definition);
 
             // We need to ensure that at least one node will host the OpenEBS
-            // cStore block device.
+            // cStor block device.
 
             KubeHelper.EnsureOpenEbsNodes(cluster.Definition);
 
@@ -195,25 +196,10 @@ namespace Neon.Kube
 
             foreach (var node in cluster.Definition.Nodes)
             {
-                if (string.IsNullOrEmpty(node.Labels.PhysicalMachine))
-                {
-                    node.Labels.PhysicalMachine = Environment.MachineName;
-                }
-
-                if (node.Labels.ComputeCores == 0)
-                {
-                    node.Labels.ComputeCores = cluster.Definition.Hosting.Vm.Processors;
-                }
-
-                if (node.Labels.ComputeRam == 0)
-                {
-                    node.Labels.ComputeRam = (int)(ClusterDefinition.ValidateSize(cluster.Definition.Hosting.Vm.Memory, typeof(HostingOptions), nameof(HostingOptions.Vm.Memory))/ ByteUnits.MebiBytes);
-                }
-
-                if (string.IsNullOrEmpty(node.Labels.StorageSize))
-                {
-                    node.Labels.StorageSize = ByteUnits.ToGiB(node.Vm.GetMemory(cluster.Definition));
-                }
+                node.Labels.PhysicalMachine = Environment.MachineName;
+                node.Labels.ComputeCores    = cluster.Definition.Hosting.Vm.Processors;
+                node.Labels.ComputeRam      = (int)(ClusterDefinition.ValidateSize(cluster.Definition.Hosting.Vm.Memory, typeof(HostingOptions), nameof(HostingOptions.Vm.Memory))/ ByteUnits.MebiBytes);
+                node.Labels.StorageSize     = ByteUnits.ToGiB(node.Vm.GetMemory(cluster.Definition));
             }
 
             // Perform the provisioning operations.
@@ -240,7 +226,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override void AddPostPrepareSteps(SetupController<NodeDefinition> setupController)
         {
-            // We need to add any required OpenEBS cStore disks after the node has been otherwise
+            // We need to add any required OpenEBS cStor disks after the node has been otherwise
             // prepared.  We need to do this here because if we created the data and OpenEBS disks
             // when the VM is initially created, the disk setup scripts executed during prepare
             // won't be able to distinguish between the two disks.
@@ -266,7 +252,7 @@ namespace Neon.Kube
                             node.Status = "openebs: stop VM";
                             hyperv.StopVm(vmName);
 
-                            node.Status = "openebs: add cstore disk";
+                            node.Status = "openebs: add cStor disk";
                             hyperv.AddVmDrive(vmName,
                                 new VirtualDrive()
                                 {
@@ -292,7 +278,7 @@ namespace Neon.Kube
         public override bool RequiresAdminPrivileges => true;
 
         /// <inheritdoc/>
-        public override string GetDataDisk(LinuxSshProxy<NodeDefinition> node)
+        public override string GetDataDisk(NodeSshProxy<NodeDefinition> node)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 
@@ -569,7 +555,7 @@ namespace Neon.Kube
         /// Creates a Hyper-V virtual machine for a cluster node.
         /// </summary>
         /// <param name="node">The target node.</param>
-        private void ProvisionVM(LinuxSshProxy<NodeDefinition> node)
+        private void ProvisionVM(NodeSshProxy<NodeDefinition> node)
         {
             using (var hyperv = new HyperVClient())
             {

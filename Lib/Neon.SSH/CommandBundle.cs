@@ -82,7 +82,7 @@ namespace Neon.SSH
         /// included in the output.
         /// </param>
         /// <returns>List of normalized arguments.</returns>
-        internal static List<string> NormalizeArgs(IEnumerable<object> args, bool keepArgBreaks = false)
+        public static List<string> NormalizeArgs(IEnumerable<object> args, bool keepArgBreaks = false)
         {
             var normalized = new List<string>();
 

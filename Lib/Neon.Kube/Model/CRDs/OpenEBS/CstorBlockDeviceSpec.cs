@@ -61,7 +61,7 @@ namespace Neon.Kube
         /// </summary>
         [JsonProperty(PropertyName = "devLinks", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public List<string> DevLinks { get; set; }
+        public List<BlockDeviceDevLink> DevLinks { get; set; }
 
         /// <summary>
         /// Filesystem information about the block device.

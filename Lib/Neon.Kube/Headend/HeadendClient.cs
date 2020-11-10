@@ -201,7 +201,7 @@ namespace Neon.Kube
             {
                 using (var zip = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
                 {
-                    using (StreamReader reader = new StreamReader(await (await gitHubClient.HttpClient.GetAsync($"nforgeio/neonKUBE/{branch}/Charts/tree.txt")).Content.ReadAsStreamAsync()))
+                    using (var reader = new StreamReader(await (await gitHubClient.HttpClient.GetAsync($"nforgeio/neonKUBE/{branch}/Charts/tree.txt")).Content.ReadAsStreamAsync()))
                     {
                         var tree = reader.ReadToEnd();
 

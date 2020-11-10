@@ -39,6 +39,7 @@ using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Net;
+using Neon.SSH;
 using Neon.Time;
 
 using Amazon;
@@ -231,7 +232,7 @@ namespace Neon.Kube
             /// </summary>
             /// <param name="node">The associated node proxy.</param>
             /// <param name="hostingManager">The parent hosting manager.</param>
-            public AwsInstance(LinuxSshProxy<NodeDefinition> node, AwsHostingManager hostingManager)
+            public AwsInstance(NodeSshProxy<NodeDefinition> node, AwsHostingManager hostingManager)
             {
                 Covenant.Requires<ArgumentNullException>(hostingManager != null, nameof(hostingManager));
 
@@ -242,7 +243,7 @@ namespace Neon.Kube
             /// <summary>
             /// Returns the associated node proxy.
             /// </summary>
-            public LinuxSshProxy<NodeDefinition> Node { get; private set; }
+            public NodeSshProxy<NodeDefinition> Node { get; private set; }
 
             /// <summary>
             /// Returns the node metadata (AKA its definition).
@@ -575,7 +576,7 @@ namespace Neon.Kube
         private const string dataDeviceName = "/dev/sdb";
 
         /// <summary>
-        /// Identifies the target VM block device for the OpenEBS oStore disk. 
+        /// Identifies the target VM block device for the OpenEBS cStor disk. 
         /// </summary>
         private const string openEBSDeviceName = "/dev/sdf";
 
@@ -1086,7 +1087,7 @@ namespace Neon.Kube
             KubeHelper.EnsureIngressNodes(cluster.Definition);
 
             // We need to ensure that at least one node will host the OpenEBS
-            // cStore block device.
+            // cStor block device.
 
             KubeHelper.EnsureOpenEbsNodes(cluster.Definition);
 
@@ -1149,7 +1150,7 @@ namespace Neon.Kube
                     KubeHelper.InitializeNode(node, secureSshPassword);
                 });
 
-            // We need to add any required OpenEBS cStore disks after the node has been otherwise
+            // We need to add any required OpenEBS cStor disks after the node has been otherwise
             // prepared.  We need to do this here because if we created the data and OpenEBS disks
             // when the VM is initially created, the disk setup scripts executed during prepare
             // won't be able to distinguish between the two disks.
@@ -1186,7 +1187,7 @@ namespace Neon.Kube
 
                     if (volume == null)
                     {
-                        node.Status = "openebs: create cstore volume";
+                        node.Status = "openebs: create cStor volume";
 
                         var volumeResponse = await ec2Client.CreateVolumeAsync(
                             new CreateVolumeRequest()
@@ -1206,7 +1207,7 @@ namespace Neon.Kube
                     await NeonHelper.WaitForAsync(
                         async () =>
                         {
-                            node.Status = "openebs: waiting for cstore volume...";
+                            node.Status = "openebs: waiting for cStor volume...";
 
                             var volumePagenator = ec2Client.Paginators.DescribeVolumes(new DescribeVolumesRequest() { Filters = clusterFilter });
 
@@ -1240,7 +1241,7 @@ namespace Neon.Kube
 
                     // AWS defaults to deleting volumes on termination only for the
                     // volumes created along with the new instance.  We want the 
-                    // OpenEBS cStore volume to be deleted as well.
+                    // OpenEBS cStor volume to be deleted as well.
 
                     await ec2Client.ModifyInstanceAttributeAsync(
                         new ModifyInstanceAttributeRequest()
@@ -1324,7 +1325,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override string GetDataDisk(LinuxSshProxy<NodeDefinition> node)
+        public override string GetDataDisk(NodeSshProxy<NodeDefinition> node)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 
@@ -2552,7 +2553,7 @@ namespace Neon.Kube
         /// Waits for the load balancer SSH target group for the node to become healthy.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task WaitForSshTargetAsync(LinuxSshProxy<NodeDefinition> node, TimeSpan stepDelay)
+        private async Task WaitForSshTargetAsync(NodeSshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
             node.Status = "waiting...";
 
@@ -2609,7 +2610,7 @@ namespace Neon.Kube
         /// <param name="node">The target node.</param>
         /// <param name="stepDelay">The step delay.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task CreateNodeInstanceAsync(LinuxSshProxy<NodeDefinition> node, TimeSpan stepDelay)
+        private async Task CreateNodeInstanceAsync(NodeSshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
             //-----------------------------------------------------------------
             // Create the instance if it doesn't already exist.

@@ -82,7 +82,7 @@ namespace TestNeonService
         /// <returns>The service instance.</returns>
         private WebService CreateService()
         {
-            return new WebService(CreateServiceMap(), "web-service");
+            return new WebService("web-service", serviceMap: CreateServiceMap());
         }
 
         [Fact]

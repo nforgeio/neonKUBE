@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    IBashCommandFormatter.cs
-// CONTRIBUTOR: Jeff Lill
+// FILE:	    DevLinkType.cs
+// CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,38 +17,41 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
+
 using Neon.Common;
-using Neon.IO;
 using Neon.Net;
-using Neon.Retry;
-using Neon.Time;
-
-using ICSharpCode.SharpZipLib.Zip;
-
-using Renci.SshNet;
-using Renci.SshNet.Common;
-using System.Net;
 
 namespace Neon.Kube
 {
     /// <summary>
-    /// Describes a type implementation that can render a nicely formatted Bash command.
+    /// Enumerates the possible device link types.
     /// </summary>
-    public interface IBashCommandFormatter
+    [JsonConverter(typeof(StringEnumConverter))]
+    public enum DevLinkType
     {
         /// <summary>
-        /// Renders a nicely formatted Bash command.  Note that the string returned may
-        /// include multipe lines with continuation characters.
+        /// Device links listed by ID.
         /// </summary>
-        /// <param name="comment">The optional comment to be included in the output.</param>
-        /// <returns>The formatted Bash command.</returns>
-        string ToBash(string comment = null);
+        [EnumMember(Value = "by-id")]
+        ById = 0,
+
+        /// <summary>
+        /// Device links listed by path.
+        /// </summary>
+        [EnumMember(Value = "by-path")]
+        ByPath
     }
 }

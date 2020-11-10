@@ -42,6 +42,7 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
 using Neon.Net;
+using Neon.SSH;
 using Neon.Time;
 
 namespace Neon.Kube
@@ -144,7 +145,7 @@ namespace Neon.Kube
             // credentials are configured correctly.
             //
             // Then scan the cluster nodes for unpartitioned block devices and mark those nodes
-            // to host an OpenEBS cStore.  Note that at least one machine in the cluster must
+            // to host an OpenEBS cStor.  Note that at least one machine in the cluster must
             // have an unpartitioned block device.
 
             var checkErrors = new List<Tuple<string, string>>();    // (nodeName, errorMessage)
@@ -332,7 +333,7 @@ namespace Neon.Kube
         /// Connects the proxy to the node.
         /// </summary>
         /// <param name="node">The target node.</param>
-        private void Connect(LinuxSshProxy<NodeDefinition> node)
+        private void Connect(NodeSshProxy<NodeDefinition> node)
         {
             // We'll start by using the insecure credentials to connect to the node.
             // It is possible though that a first provisiong run failed the first time
@@ -382,7 +383,7 @@ namespace Neon.Kube
         /// Performs low-level node initialization.
         /// </summary>
         /// <param name="node">The target node.</param>
-        private void Congfigure(LinuxSshProxy<NodeDefinition> node)
+        private void Congfigure(NodeSshProxy<NodeDefinition> node)
         {
             string nodeSshPassword;
 
@@ -399,7 +400,7 @@ namespace Neon.Kube
         /// secure password and reconnects the node using the new password.
         /// </summary>
         /// <param name="node">The target node.</param>
-        private void SetSecurePassword(LinuxSshProxy<NodeDefinition> node)
+        private void SetSecurePassword(NodeSshProxy<NodeDefinition> node)
         {
             node.Status = "setting secure password";
 
@@ -426,7 +427,7 @@ echo '{KubeConst.SysAdminUsername}:{secureSshPassword}' | chpasswd
         /// corresponding node labels in the cluster definition.
         /// </summary>
         /// <param name="node">The target node.</param>
-        private void DetectLabels(LinuxSshProxy<NodeDefinition> node)
+        private void DetectLabels(NodeSshProxy<NodeDefinition> node)
         {
             CommandResponse result;
 
@@ -502,7 +503,7 @@ echo '{KubeConst.SysAdminUsername}:{secureSshPassword}' | chpasswd
         }
 
         /// <inheritdoc/>
-        public override string GetDataDisk(LinuxSshProxy<NodeDefinition> node)
+        public override string GetDataDisk(NodeSshProxy<NodeDefinition> node)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 

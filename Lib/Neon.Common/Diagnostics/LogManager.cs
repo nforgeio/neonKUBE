@@ -23,6 +23,7 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -69,6 +70,11 @@ namespace Neon.Diagnostics
         // Static members
 
         /// <summary>
+        /// Returns the <see cref="Regex"/> used for validating program version strings.
+        /// </summary>
+        public static Regex VersionRegex { get; private set; } = new Regex(@"[0-9a-zA-Z\.-_/]+");
+
+        /// <summary>
         /// <para>
         /// The default <see cref="ILogManager"/> that can be used by applications that don't
         /// use dependency injection.  This defaults to an instance of <see cref="LogManager"/>
@@ -113,29 +119,43 @@ namespace Neon.Diagnostics
         //---------------------------------------------------------------------
         // Instance members
 
-        private object                          syncRoot       = new object();
-        private Dictionary<string, INeonLogger> moduleToLogger = new Dictionary<string, INeonLogger>();
-        private LogLevel                        logLevel       = LogLevel.Info;
-        private TextWriter                      writer         = null;
-        private long                            emitCount;
-        private LoggerCreatorDelegate           loggerCreator;
-
         // $todo(jefflill):
         //
         // Using [syncRoot] to implement thread safety via a [Monitor] may introduce
         // some performance overhead for ASP.NET sites with lots of traffic.  It
         // may be worth investigating whether a [SpinLock] might be better.
 
+        private readonly object                             syncRoot       = new object();
+        private readonly Dictionary<string, INeonLogger>    moduleToLogger = new Dictionary<string, INeonLogger>();
+        private readonly TextWriter                         writer         = null;
+
+        private LogLevel                                    logLevel       = LogLevel.Info;
+        private long                                        emitCount;
+        private LoggerCreatorDelegate                       loggerCreator;
+
         /// <summary>
         /// Default constructor.
         /// </summary>
         /// <param name="parseLogLevel">Indicates that the <b>LOG-LEVEL</b> environment variable should be parsed (defaults to <c>true</c>).</param>
+        /// <param name="version">
+        /// Optionally specifies the semantic version of the current program.  This can be an somewhat string 
+        /// arbitrary string that matches this regex: <b>"[0-9a-zA-Z\.-_/]+"</b>.  This defaults to <c>null</c>.
+        /// </param>
         /// <param name="writer">Optionally specifies the output writer.  This defaults to <see cref="Console.Error"/>.</param>
-        public LogManager(bool parseLogLevel = true, TextWriter writer = null)
+        public LogManager(bool parseLogLevel = true, string version = null, TextWriter writer = null)
         {
             if (parseLogLevel && !Enum.TryParse<LogLevel>(Environment.GetEnvironmentVariable("LOG_LEVEL"), true, out logLevel))
             {
                 logLevel = LogLevel.Info;
+            }
+
+            if (!string.IsNullOrEmpty(version) && VersionRegex.IsMatch(version))
+            {
+                this.Version = version;
+            }
+            else
+            {
+                this.Version = "unknown";
             }
 
             this.writer = writer;
@@ -177,6 +197,9 @@ namespace Neon.Diagnostics
                 TestLogger.ClearEvents();
             }
         }
+
+        /// <inheritdoc/>
+        public string Version { get; set; } = null;
 
         /// <inheritdoc/>
         public LogLevel LogLevel

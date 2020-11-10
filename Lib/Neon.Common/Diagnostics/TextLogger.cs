@@ -31,6 +31,8 @@ using Microsoft.Extensions.Logging;
 
 using Neon.Common;
 
+using Prometheus;
+
 namespace Neon.Diagnostics
 {
     /// <summary>
@@ -40,9 +42,18 @@ namespace Neon.Diagnostics
     /// </summary>
     public class TextLogger : INeonLogger, ILogger
     {
+        //---------------------------------------------------------------------
+        // Static members
+
+        private static readonly Counter LogEventCountByLevel = Prometheus.Metrics.CreateCounter(NeonHelper.NeonMetricsPrefix + "log_events_total", "Number of logged events.", "level");
+
+        //---------------------------------------------------------------------
+        // Instance members
+
         private ILogManager     logManager;
         private string          module;
         private bool            infoAsDebug;
+        private string          version;
         private TextWriter      writer;
         private string          contextId;
         private Func<bool>      isLogEnabledFunc;
@@ -112,6 +123,7 @@ namespace Neon.Diagnostics
         {
             this.logManager       = logManager ?? LogManager.Disabled;
             this.module           = module;
+            this.version          = logManager.Version;
             this.writer           = writer ?? Console.Error;
             this.contextId        = contextId;
             this.isLogEnabledFunc = isLogEnabledFunc;
@@ -208,6 +220,62 @@ namespace Neon.Diagnostics
         /// <param name="activityId">The optional activity ID.</param>
         private void Log(LogLevel logLevel, string message, string activityId = null)
         {
+            // Increment the metrics counter for the event type.  Note that we're
+            // going to increment the count even when logging for the level is
+            // disabled.  This will help devops know when there might be issues
+            // they may need to investigate by changing the log level.
+
+            switch (logLevel)
+            {
+                case LogLevel.Critical:
+
+                    LogEventCountByLevel.WithLabels("critical").Inc();
+                    break;
+
+                case LogLevel.Debug:
+
+                    LogEventCountByLevel.WithLabels("debug").Inc();
+                    break;
+
+                case LogLevel.Transient:
+
+                    LogEventCountByLevel.WithLabels("transient").Inc();
+                    break;
+
+                case LogLevel.Error:
+
+                    LogEventCountByLevel.WithLabels("error").Inc();
+                    break;
+
+                case LogLevel.Info:
+
+                    LogEventCountByLevel.WithLabels("info").Inc();
+                    break;
+
+                case LogLevel.None:
+
+                    break;
+
+                case LogLevel.SError:
+
+                    LogEventCountByLevel.WithLabels("serror").Inc();
+                    break;
+
+                case LogLevel.SInfo:
+
+                    LogEventCountByLevel.WithLabels("sinfo").Inc();
+                    break;
+
+                case LogLevel.Warn:
+
+                    LogEventCountByLevel.WithLabels("warn").Inc();
+                    break;
+
+                default:
+
+                    throw new NotImplementedException();
+            }
+
             if (infoAsDebug && logLevel == LogLevel.Info)
             {
                 if (!IsLogDebugEnabled)
@@ -222,15 +290,50 @@ namespace Neon.Diagnostics
 
             switch (logLevel)
             {
-                case LogLevel.Critical:     level = "CRITICAL"; break;
-                case LogLevel.Debug:        level = "DEBUG"; break;
-                case LogLevel.Transient:    level = "TRANSIENT"; break;
-                case LogLevel.Error:        level = "ERROR"; break;
-                case LogLevel.Info:         level = "INFO"; break;
-                case LogLevel.None:         level = "NONE"; break;
-                case LogLevel.SError:       level = "SERROR"; break;
-                case LogLevel.SInfo:        level = "SINFO"; break;
-                case LogLevel.Warn:         level = "WARN"; break;
+                case LogLevel.Critical:
+                    
+                    level = "CRITICAL";
+                    break;
+
+                case LogLevel.Debug:       
+                    
+                    level = "DEBUG";
+                    break;
+
+                case LogLevel.Transient:    
+                    
+                    level = "TRANSIENT";
+                    break;
+
+                case LogLevel.Error:      
+                    
+                    level = "ERROR";
+                    break;
+
+                case LogLevel.Info:       
+                    
+                    level = "INFO";
+                    break;
+
+                case LogLevel.None:    
+                    
+                    level = "NONE"; 
+                    break;
+
+                case LogLevel.SError:     
+                    
+                    level = "SERROR";
+                    break;
+
+                case LogLevel.SInfo:  
+                    
+                    level = "SINFO";
+                    break;
+
+                case LogLevel.Warn:     
+                    
+                    level = "WARN";
+                    break;
 
                 default:
 
@@ -238,6 +341,13 @@ namespace Neon.Diagnostics
             }
 
             message = Normalize(message);
+
+            var version = string.Empty;
+
+            if (!string.IsNullOrEmpty(this.version))
+            {
+                version = $" [version:{this.version}]";
+            }
 
             var module = string.Empty;
 
@@ -271,11 +381,11 @@ namespace Neon.Diagnostics
             {
                 var timestamp = DateTime.UtcNow.ToString(NeonHelper.DateFormatTZOffset);
 
-                writer.WriteLine($"[{timestamp}] [{level}]{module}{activity}{context}{index} {message}");
+                writer.WriteLine($"[{timestamp}] [{level}]{version}{module}{activity}{context}{index} {message}");
             }
             else
             {
-                writer.WriteLine($"[{level}]{module}{activity}{context}{index} {message}");
+                writer.WriteLine($"[{level}]{version}{module}{activity}{context}{index} {message}");
             }
         }
 

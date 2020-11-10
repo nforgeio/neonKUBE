@@ -75,7 +75,7 @@ OPTIONS:
         }
 
         /// <inheritdoc/>
-        public override void Run(CommandLine commandLine)
+        public override async Task RunAsync(CommandLine commandLine)
         {
             if (commandLine.Arguments.Length < 1)
             {
@@ -137,6 +137,8 @@ OPTIONS:
                 KubeHelper.Config.CurrentContext = newLogin.Context.Name;
                 KubeHelper.Config.Save();
             }
+
+            await Task.CompletedTask;
         }
     }
 }

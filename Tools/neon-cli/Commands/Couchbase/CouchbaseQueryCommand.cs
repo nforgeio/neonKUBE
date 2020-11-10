@@ -85,7 +85,7 @@ command line, as a text file, or as text passed on STDIN.
         }
 
         /// <inheritdoc/>
-        public override void Run(CommandLine commandLine)
+        public override async Task RunAsync(CommandLine commandLine)
         {
             if (commandLine.HasHelpOption || commandLine.Arguments.Length == 0)
             {
@@ -167,6 +167,7 @@ command line, as a text file, or as text passed on STDIN.
             }
 
             Program.Exit(0);
+            await Task.CompletedTask;
         }
     }
 }

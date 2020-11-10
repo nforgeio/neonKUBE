@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    RemoteCommandException.cs
+// FILE:	    MetricsMode.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
 //
@@ -20,33 +20,49 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Common;
+using Neon.Cryptography;
+using Neon.Diagnostics;
 using Neon.IO;
-using Neon.Net;
 using Neon.Retry;
-using Neon.Time;
+using Neon.Windows;
 
-namespace Neon.Kube
+namespace Neon.Service
 {
     /// <summary>
-    /// Indicates that a remote command execution failed.
+    /// Used control how or whether a <see cref="NeonService"/>  publishes Prometheus metrics.
     /// </summary>
-    public class RemoteCommandException : Exception
+    public enum MetricsMode
     {
         /// <summary>
-        /// Constructor.
+        /// Metrics publishing is disabled.
         /// </summary>
-        /// <param name="message">The exception message.</param>
-        /// <param name="innerException">The optional inner exception.</param>
-        public RemoteCommandException(string message, Exception innerException = null)
-            : base(message, innerException)
-        {
-        }
+        Disabled = 0,
+
+        /// <summary>
+        /// Metrics will be scraped by Prometheus.
+        /// </summary>
+        Scrape,
+
+        /// <summary>
+        /// <para>
+        /// Metrics will scraped by Prometheus but any port conflicts or any endpoint
+        /// registration errors thrown by <b>HttpListener</b> on Windows will be ignored.
+        /// </para>
+        /// <note>
+        /// This mode is really intended for test environments where these errors aren't
+        /// relevent.  We don't recommend this for production deployments.
+        /// </note>
+        /// </summary>
+        ScrapeIgnoreErrors,
+
+        /// <summary>
+        /// Metrics will be pushed to a Prometheus <b>Pushgateway</b>.
+        /// </summary>
+        Push
     }
 }

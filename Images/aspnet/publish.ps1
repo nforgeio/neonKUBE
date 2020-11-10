@@ -80,6 +80,7 @@ if ($allVersions)
 	Build 3.0.0-bionic
 	Build 3.1.0-bionic
 	Build 3.1.1-bionic
+	Build 3.1.5-bionic
 }
 
-Build 3.1.5-bionic -latest
+Build 3.1.9-bionic -latest

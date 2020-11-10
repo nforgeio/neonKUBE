@@ -40,20 +40,20 @@ namespace Test.NeonCli
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
-        public void Base()
+        public async Task Base()
         {
             using (var runner = new ProgramRunner())
             {
                 // Verify that base command returns some help.
 
-                var result = runner.Execute(Program.Main);
+                var result = await runner.ExecuteAsync(Program.Main);
 
                 Assert.Equal(0, result.ExitCode);
                 Assert.Contains("neonKUBE Management Tool: neon", result.OutputText);
 
                 // Verify that we see an error for an unrecognized command.,
 
-                result = runner.Execute(Program.Main, "invalid-command");
+                result = await runner.ExecuteAsync(Program.Main, "invalid-command");
 
                 Assert.NotEqual(0, result.ExitCode);
             }
@@ -61,31 +61,31 @@ namespace Test.NeonCli
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
-        public void Version()
+        public async Task Version()
         {
             using (var runner = new ProgramRunner())
             {
-                var result = runner.Execute(Program.Main, "version");
+                var result = await runner.ExecuteAsync(Program.Main, "version");
                 Assert.Equal(0, result.ExitCode);
                 Assert.Equal(Build.NeonDesktopVersion, result.OutputText.Trim());
 
-                result = runner.Execute(Program.Main, "version", "-n");
+                result = await runner.ExecuteAsync(Program.Main, "version", "-n");
                 Assert.Equal(0, result.ExitCode);
                 Assert.Equal(Build.NeonDesktopVersion, result.OutputText.Trim());
                 Assert.DoesNotContain('\n', result.OutputText);
 
-                result = runner.Execute(Program.Main, "version", "-n", "--git");
+                result = await runner.ExecuteAsync(Program.Main, "version", "-n", "--git");
                 Assert.Equal(0, result.ExitCode);
                 Assert.Equal($"{Build.NeonDesktopVersion}/{ThisAssembly.Git.Branch}-{ThisAssembly.Git.Commit}", result.OutputText.Trim());
                 Assert.DoesNotContain('\n', result.OutputText);
 
-                result = runner.Execute(Program.Main, "version", $"--minimum={Program.Version}");
+                result = await runner.ExecuteAsync(Program.Main, "version", $"--minimum={Program.Version}");
                 Assert.Equal(0, result.ExitCode);
 
-                result = runner.Execute(Program.Main, "version", $"--minimum=0");
+                result = await runner.ExecuteAsync(Program.Main, "version", $"--minimum=0");
                 Assert.Equal(0, result.ExitCode);
 
-                result = runner.Execute(Program.Main, "version", $"--minimum=64000.0.0");
+                result = await runner.ExecuteAsync(Program.Main, "version", $"--minimum=64000.0.0");
                 Assert.NotEqual(0, result.ExitCode);
 
                 var curVersion   = SemanticVersion.Parse(Program.Version);
@@ -93,7 +93,7 @@ namespace Test.NeonCli
 
                 Assert.True(newerVersion > curVersion);
 
-                result = runner.Execute(Program.Main, "version", $"--minimum={newerVersion}");
+                result = await runner.ExecuteAsync(Program.Main, "version", $"--minimum={newerVersion}");
                 Assert.NotEqual(0, result.ExitCode);
             }
         }

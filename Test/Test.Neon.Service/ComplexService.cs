@@ -102,10 +102,10 @@ namespace TestNeonService
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="serviceMap">The service map.</param>
         /// <param name="name">The service name.</param>
-        public ComplexService(ServiceMap serviceMap, string name)
-            : base(serviceMap, name, ThisAssembly.Git.Branch, ThisAssembly.Git.Commit, ThisAssembly.Git.IsDirty)
+        /// <param name="serviceMap">Optionally specifies the service map.</param>
+        public ComplexService(string name, ServiceMap serviceMap = null)
+            : base(name, serviceMap: serviceMap)
         {
         }
 

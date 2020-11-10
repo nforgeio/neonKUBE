@@ -17,8 +17,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics.Contracts;
 using System.IO;
+using System.Net;
+using System.Net.Sockets;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -28,8 +31,12 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.IO;
+using Neon.Net;
 using Neon.Retry;
 using Neon.Windows;
+
+using DnsClient;
+using Prometheus;
 
 namespace Neon.Service
 {
@@ -54,23 +61,22 @@ namespace Neon.Service
     /// business.
     /// </para>
     /// <note>
-    /// Note that calling <see cref="SetRunningAsync()"/> after your service has initialized is very important
-    /// because the <b>NeonServiceFixture</b> requires won't allow tests to proceed until the service
+    /// Note that calling <see cref="SetRunningAsync()"/> after your service has initialized is important
+    /// because the <b>NeonServiceFixture</b> won't allow tests to proceed until the service
     /// indicates that it's ready.  This is necessary to avoid unit test race conditions.
     /// </note>
     /// <para>
-    /// Note that your  <see cref="OnRunAsync"/> method should generally not return until the 
+    /// Note that your <see cref="OnRunAsync"/> method should generally not return until the 
     /// <see cref="Terminator"/> signals it to stop.  Alternatively, you can throw a <see cref="ProgramExitException"/>
     /// with an optional process exit code to proactively exit your service.
     /// </para>
     /// <note>
-    /// All services should properly handle <see cref="Terminator"/> stop signals so unit tests will terminate
-    /// promptly.  Your terminate handler method must return within a set period of time (30 seconds by default) 
-    /// to avoid having your tests being forced to stop.  This is probably the trickiest implementation
-    /// task.  For truly asynchronous service implementations, you should consider passing
-    /// the <see cref="ProcessTerminator.CancellationToken"/> to all async methods you
-    /// call and then handle any <see cref="TaskCanceledException"/> exceptions thrown by
-    /// returning from <see cref="OnRunAsync"/>.
+    /// All services should properly handle <see cref="Terminator"/> stop signals so services deployed as
+    /// containers will stop promptly and cleanly (this also applies to services running in unit tests.  
+    /// Your terminate handler method must return within a set period of time (30 seconds by default) 
+    /// to avoid killed by by Docker or Kubernetes.  This is probably the trickiest thing you'll need to implement.
+    /// For asynchronous service implementations, you consider passing the <see cref="ProcessTerminator.CancellationToken"/>
+    /// to all async method calls.
     /// </note>
     /// <note>
     /// This class uses the <b>DEV_WORKSTATION</b> environment variable to determine whether
@@ -79,6 +85,7 @@ namespace Neon.Service
     /// defined for production environments.  You can use the <see cref="InProduction"/>
     /// or <see cref="InDevelopment"/> properties to check this.
     /// </note>
+    /// <code source="..\..\Snippets\Snippets.NeonService\Program-Basic.cs" language="c#" title="Simple example showing a basic service implementation:"/>
     /// <para><b>CONFIGURATION</b></para>
     /// <para>
     /// Services are generally configured using environment variables and/or configuration
@@ -131,7 +138,7 @@ namespace Neon.Service
     /// consistent way to run services in production as well as in tests, including tests
     /// running multiple services simultaneously.
     /// </para>
-    /// <para><b>SERVICE TERMINATION</b></para>
+    /// <para><b>DISPOSE IMPLEMENTATION</b></para>
     /// <para>
     /// All services, especially those that create unmanaged resources like ASP.NET services,
     /// sockets, NATS clients, HTTP clients, thread etc. should override and implement 
@@ -227,6 +234,78 @@ namespace Neon.Service
     /// need to specify the fully qualified path to this file as an optional parameter to the 
     /// <see cref="NeonService"/> constructor.
     /// </para>
+    /// <para><b>SERVICE DEPENDENCIES</b></para>
+    /// <para>
+    /// Services often depend on other services to function, such as a database, rest API, etc.
+    /// <see cref="NeonService"/> provides an easy to use integrated way to wait for other
+    /// services to initialize themselves and become ready before your service will be allowed
+    /// to start.  This is a great way to avoid a blizzard of service failures and restarts
+    /// when starting a collection of related services on a platform like Kubernetes.
+    /// </para>
+    /// <para>
+    /// You can use the <see cref="Dependencies"/> property to control this in code via the
+    /// <see cref="ServiceDependencies"/> class or configure this via environment variables: 
+    /// </para>
+    /// <code>
+    /// NEON_SERVICE_DEPENDENCIES_URIS=http://foo.com;tcp://10.0.0.55:1234
+    /// NEON_SERVICE_DEPENDENCIES_TIMEOUT_SECONDS=30
+    /// NEON_SERVICE_DEPENDENCIES_WAIT_SECONDS=5
+    /// </code>
+    /// <para>
+    /// The basic idea is that the <see cref="RunAsync"/> call to start your service will
+    /// need to successfully to establish socket connections to any service dependecy URIs 
+    /// before your <see cref="OnRunAsync"/> method will be called.  Your service will be
+    /// terminated if any of the services cannot be reached after the specified timeout.
+    /// </para>
+    /// <para>
+    /// You can also specity an additional time to wait after all services are available
+    /// to give them a chance to perform additional internal initialization.
+    /// </para>
+    /// <code source="..\..\Snippets\Snippets.NeonService\Program-Dependencies.cs" language="c#" title="Waiting for service dependencies:"/>
+    /// <para><b>PROMETHEUS METRICS</b></para>
+    /// <para>
+    /// <see cref="NeonService"/> can enable services to publish Prometheus metrics with a
+    /// single line of code; simply set <see cref="NeonService.MetricsOptions"/>.<see cref="MetricsOptions.Mode"/> to
+    /// <see cref="MetricsMode.Scrape"/> before calling <see cref="RunAsync(bool)"/>.  This configures
+    /// your service to publish metrics via HTTP via <b>http://0.0.0.0:</b><see cref="NetworkPorts.NeonPrometheus"/><b>/metrics/</b>.
+    /// We've resistered port <see cref="NetworkPorts.NeonPrometheus"/> with Prometheus as a standard port
+    /// to be used for micro services running in Kubernetes or on other container platforms to make it 
+    /// easy configure scraping for a cluster.
+    /// </para>
+    /// <para>
+    /// You can also configure a custom port and path or configure metrics push to a Prometheus
+    /// Pushgateway using other <see cref="MetricsOptions"/> properties.  You can also fully customize
+    /// your Prometheus configuration by leaving this disabled in <see cref="NeonService.MetricsOptions"/>
+    /// and setting things up using the standard <b>prometheus-net</b> mechanisms before calling
+    /// <see cref="RunAsync(bool)"/>.
+    /// </para>
+    /// <code source="..\..\Snippets\Snippets.NeonService\Program-Dependencies.cs" language="c#" title="Waiting for service dependencies:"/>
+    /// <para><b>NETCORE Runtime METRICS</b></para>
+    /// <para>
+    /// We highly recommend that you also enable .NET Runtime related metrics for services targeting
+    /// .NET Core 2.2 or greater.
+    /// </para>
+    /// <note>
+    /// Although the .NET Core 2.2+ runtimes are supported, the runtime apparently has some issues that
+    /// may prevent this from working properly, so that's not recommended.  Note that there's currently
+    /// no support for any .NET Framework runtime.
+    /// </note>
+    /// <para>
+    /// Adding support for this is easy, simply add a reference to the <a href="https://www.nuget.org/packages/prometheus-net.DotNetRuntime">prometheus-net.DotNetRuntime</a>
+    /// package to your service project and then assign a function callback to <see cref="MetricsOptions.GetCollector"/>
+    /// that configures runtime metrics collection, like:
+    /// </para>
+    /// <code source="..\..\Snippets\Snippets.NeonService\Program-Metrics.cs" language="c#" title="Service metrics example:"/>
+    /// <para>
+    /// You can also customize the the runtime metrics emitted like this:
+    /// </para>
+    /// <code source="..\..\Snippets\Snippets.NeonService\Program-RuntimeMetrics.cs" language="c#" title="Service and .NET Runtime metrics:"/>
+    /// <para><b>SERVICE: FULL MEAL DEAL!</b></para>
+    /// <para>
+    /// Here's a reasonable template you can use to begin implementing your service projects with 
+    /// all features enabled:
+    /// </para>
+    /// <code source="..\..\Snippets\Snippets.NeonService\Program-FullMealDeal.cs" language="c#" title="Full Neon.Service template:"/>
     /// </remarks>
     public abstract class NeonService : IDisposable
     {
@@ -269,7 +348,8 @@ namespace Neon.Service
         //---------------------------------------------------------------------
         // Static members
 
-        private static readonly char[] equalArray = new char[] { '=' };
+        private static readonly char[]  equalArray = new char[] { '=' };
+        private static readonly Gauge   infoGauge  = Metrics.CreateGauge("neon_service_info", "Describes your service version.", "version");
 
         /// <summary>
         /// This controls whether any <see cref="NeonService"/> instances will use the global
@@ -289,7 +369,7 @@ namespace Neon.Service
         private static string cachedPasswordsFolder;
 
         /// <summary>
-        /// Returns <c>true</c> if the class is running in test mode.
+        /// Returns <c>true</c> if the service is running in test mode.
         /// </summary>
         private static bool IsTestMode
         {
@@ -307,7 +387,7 @@ namespace Neon.Service
         }
 
         /// <summary>
-        /// Returns the path the folder holding the user specific Kubernetes files.
+        /// Returns the path the folder holding user-specific Kubernetes files.
         /// </summary>
         /// <returns>The folder path.</returns>
         private static string GetNeonKubeUserFolder()
@@ -425,53 +505,61 @@ namespace Neon.Service
         private bool                            isRunning;
         private bool                            isDisposed;
         private bool                            stopPending;
+        private string                          version;
         private Dictionary<string, string>      environmentVariables;
         private Dictionary<string, FileInfo>    configFiles;
         private string                          statusFilePath;
+        private MetricServer                    metricServer;
+        private MetricPusher                    metricPusher;
+        private IDisposable                     metricCollector;
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="serviceMap">The service map describing this service and potentially other services.</param>
         /// <param name="name">The name of this service within <see cref="ServiceMap"/>.</param>
-        /// <param name="branch">Optionally specifies the build branch.</param>
-        /// <param name="commit">Optionally specifies the branch commit.</param>
-        /// <param name="isDirty">Optionally specifies whether there are uncommit changes to the branch.</param>
+        /// <param name="version">
+        /// Optionally specifies the version of your service formatted as a valid <see cref="SemanticVersion"/>.
+        /// This will default to <b>"unknown"</b> when not set or when the value passed is invalid.
+        /// </param>
         /// <param name="statusFilePath">
         /// Optionally specifies the path where the service will update its status (for external health probes).
         /// See the class documentation for more information <see cref="Neon.Service"/>.
+        /// </param>
+        /// <param name="serviceMap">
+        /// Optionally specifies a service map describing this service and potentially other services.
+        /// Service maps can be used to run services locally on developer workstations via <b>Neon.Xunit.NeonServiceFixture</b>
+        /// or other means to avoid port conflicts or to emulate a cluster of services without Kubernetes
+        /// or containers.  This is a somewhat advanced topic that needs documentation.
         /// </param>
         /// <exception cref="KeyNotFoundException">
         /// Thrown if there is no service description for <paramref name="name"/>
         /// within the <see cref="ServiceMap"/>.
         /// </exception>
-        /// <remarks>
-        /// <para>
-        /// For those of you using Git for source control, you'll want to pass the
-        /// information about the branch and latest commit you're you service was
-        /// built from here.  We use the <a href="https://www.nuget.org/packages/GitInfo/">GitInfo</a>
-        /// nuget package to obtain this information from the local Git repository.
-        /// </para>
-        /// <para>
-        /// Alternatively, you could try to map properties from your source
-        /// control environment to these parameters, pass your version string as 
-        /// <paramref name="branch"/>, or simply ignore these parameters.
-        /// </para>
-        /// </remarks>
         public NeonService(
-            ServiceMap  serviceMap, 
             string      name, 
-            string      branch         = null, 
-            string      commit         = null, 
-            bool        isDirty        = false,
-            string      statusFilePath = null)
+            string      version        = null,
+            string      statusFilePath = null,
+            ServiceMap  serviceMap     = null)
         {
-            Covenant.Requires<ArgumentNullException>(serviceMap != null, nameof(serviceMap));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
-            if (!serviceMap.TryGetValue(name, out var description))
+            version = version ?? string.Empty;
+
+            if (serviceMap != null)
             {
-                throw new KeyNotFoundException($"The service map does not include a service definition for [{name}].");
+                if (!serviceMap.TryGetValue(name, out var description))
+                {
+                    throw new KeyNotFoundException($"The service map does not include a service definition for [{name}].");
+                }
+                else
+                {
+                    if (name != description.Name)
+                    {
+                        throw new ArgumentException($"Service [name={name}] does not match [description.Name={description.Name}.");
+                    }
+
+                    this.Description = description;
+                }
             }
 
             if (string.IsNullOrEmpty(statusFilePath))
@@ -479,33 +567,35 @@ namespace Neon.Service
                 statusFilePath = null;
             }
 
-            this.ServiceMap           = serviceMap;
-            this.Description          = description;
+            this.Name                 = name;
             this.InProduction         = !NeonHelper.IsDevWorkstation;
             this.Terminator           = new ProcessTerminator();
+            this.version              = global::Neon.Diagnostics.LogManager.VersionRegex.IsMatch(version) ? version : "unknown";
             this.environmentVariables = new Dictionary<string, string>();
             this.configFiles          = new Dictionary<string, FileInfo>();
             this.statusFilePath       = statusFilePath;
+            this.ServiceMap           = serviceMap;
 
-            // Git version info:
+            // Update the Prometheus metrics port from the service description if present.
 
-            this.GitVersion = null;
-
-            if (!string.IsNullOrEmpty(branch))
+            if (Description != null)
             {
-                this.GitVersion = branch;
-
-                if (!string.IsNullOrEmpty(commit))
-                {
-                    this.GitVersion += $"-{commit}";
-                }
-
-                if (isDirty)
-                {
-                    this.GitVersion += $"-dirty";
-                }
+                MetricsOptions.Port = Description.MetricsPort;
             }
+
+            // Initialize the [neon_service_info] gauge.
+
+            infoGauge.WithLabels(version).Set(1);
         }
+
+        /// <summary>
+        /// Used to specify other services that must be reachable via the network before a
+        /// <see cref="NeonService"/> will be allowed to start.  This is exposed via the
+        /// <see cref="NeonService.Dependencies"/> where these values can be configured in
+        /// code before <see cref="NeonService.RunAsync(bool)"/> is called or they can
+        /// also be configured via environment variables as described in <see cref="ServiceDependencies"/>.
+        /// </summary>
+        public ServiceDependencies Dependencies { get; set; } = new ServiceDependencies();
 
         /// <summary>
         /// Finalizer.
@@ -570,15 +660,15 @@ namespace Neon.Service
         /// <summary>
         /// Returns the service name.
         /// </summary>
-        public string Name => Description.Name;
+        public string Name { get; private set; }
 
         /// <summary>
-        /// Returns the service map.
+        /// Returns the service map (if any).
         /// </summary>
         public ServiceMap ServiceMap { get; private set; }
 
         /// <summary>
-        /// Returns the service description for this service.
+        /// Returns the service description for this service (if any).
         /// </summary>
         public ServiceDescription Description { get; private set; }
 
@@ -626,6 +716,18 @@ namespace Neon.Service
                 }
             }
         }
+
+        /// <summary>
+        /// <para>
+        /// Prometheus metrics options.  To enable metrics collection for non-ASPNET applications,
+        /// we recommend that you simply set <see cref="MetricsOptions.Mode"/><c>==</c><see cref="MetricsMode.Scrape"/>
+        /// before calling <see cref="OnRunAsync"/>.
+        /// </para>
+        /// <para>
+        /// See <see cref="MetricsOptions"/> for more details.
+        /// </para>
+        /// </summary>
+        public MetricsOptions MetricsOptions { get; set; } = new MetricsOptions();
 
         /// <summary>
         /// Returns the service's log manager.
@@ -722,7 +824,9 @@ namespace Neon.Service
 
         /// <summary>
         /// Starts the service if it's not already running.  This will call <see cref="OnRunAsync"/>,
-        /// which actually implements the service.
+        /// which is your code that actually implements the service.  Note that any service dependencies
+        /// specified by <see cref="Dependencies"/> will be verified as ready before <see cref="OnRunAsync"/>
+        /// will be called.
         /// </summary>
         /// <param name="disableProcessExit">
         /// Optionally specifies that the hosting process should not be terminated 
@@ -739,7 +843,7 @@ namespace Neon.Service
         /// </note>
         /// <para>
         /// Service implementations must honor <see cref="Terminator"/> termination
-        /// signals exiting the <see cref="OnRunAsync"/> method reasonably quickly (within
+        /// signals by exiting the <see cref="OnRunAsync"/> method reasonably quickly (within
         /// 30 seconds by default) when these occur.  They can do this by passing 
         /// <see cref="ProcessTerminator.CancellationToken"/> for <c>async</c> calls
         /// and then catching the <see cref="TaskCanceledException"/> and returning
@@ -750,7 +854,7 @@ namespace Neon.Service
         /// <see cref="ProcessTerminator.CancellationToken"/> token's  
         /// <see cref="CancellationToken.IsCancellationRequested"/> property and 
         /// return from your <see cref="OnRunAsync"/> method when this is <c>true</c>.
-        /// This You'll need to perform this check frequently so you may need
+        /// You'll need to perform this check frequently so you may need
         /// to use timeouts to prevent blocking code from blocking for too long.
         /// </para>
         /// </remarks>
@@ -778,28 +882,203 @@ namespace Neon.Service
             }
 
             // [disableProcessExit] will be typically passed as true when testing or
-            // debugging.  We'll let the terminator know so it won't do this.
+            // debugging.  We'll let the terminator know so it won't actually terminate
+            // the current process (which will actually be the unit test framework).
 
             if (disableProcessExit)
             {
                 Terminator.DisableProcessExit = true;
             }
 
-            // Initialize the logger.
+            // Initialize the log manager.
 
             if (GlobalLogging)
             {
-                LogManager = global::Neon.Diagnostics.LogManager.Default;
+                LogManager          = global::Neon.Diagnostics.LogManager.Default;
+                LogManager.Version = version;
             }
             else
             {
-                LogManager = new LogManager(parseLogLevel: false);
+                LogManager = new LogManager(parseLogLevel: false, version: this.version);
             }
 
             LogManager.SetLogLevel(GetEnvironmentVariable("LOG_LEVEL", "info"));
 
             Log = LogManager.GetLogger();
-            Log.LogInfo(() => $"Starting [{Name}:{GitVersion}]");
+
+            if (!string.IsNullOrEmpty(version))
+            {
+                Log.LogInfo(() => $"Starting [{Name}:{version}]");
+            }
+            else
+            {
+                Log.LogInfo(() => $"Starting [{Name}]");
+            }
+
+            // Initialize Prometheus metrics when enabled.
+
+            MetricsOptions = MetricsOptions ?? new MetricsOptions();
+            MetricsOptions.Validate();
+
+            try
+            {
+                switch (MetricsOptions.Mode)
+                {
+                    case MetricsMode.Disabled:
+
+                        break;
+
+                    case MetricsMode.Scrape:
+                    case MetricsMode.ScrapeIgnoreErrors:
+
+                        metricServer = new MetricServer(MetricsOptions.Port, MetricsOptions.Path);
+                        metricServer.Start();
+                        break;
+
+                    case MetricsMode.Push:
+
+                        metricPusher = new MetricPusher(MetricsOptions.PushUrl, Name, additionalLabels: MetricsOptions.PushLabels);
+                        metricPusher.Start();
+                        break;
+
+                    default:
+
+                        throw new NotImplementedException();
+                }
+
+                if (MetricsOptions.GetCollector != null)
+                {
+                    metricCollector = MetricsOptions.GetCollector();
+                }
+            }
+            catch (NotImplementedException)
+            {
+                throw;
+            }
+            catch
+            {
+                if (MetricsOptions.Mode != MetricsMode.ScrapeIgnoreErrors)
+                {
+                    throw;
+                }
+            }
+
+            // Verify that any required service dependencies are ready.
+
+            var dnsOptions = new LookupClientOptions()
+            {
+                ContinueOnDnsError      = false,
+                ContinueOnEmptyResponse = false,
+                Retries                 = 0,
+                ThrowDnsErrors          = false,
+                Timeout                 = TimeSpan.FromSeconds(2),
+                UseTcpFallback          = true
+            };
+
+            var dnsClient         = new LookupClient(dnsOptions);
+            var dnsAvailable      = Dependencies.DisableDnsCheck;
+            var readyServices     = new HashSet<Uri>();
+            var notReadyUri       = (Uri)null;
+            var notReadyException = (Exception)null;
+
+            try
+            {
+                await NeonHelper.WaitForAsync(
+                    async () =>
+                    {
+                        // Verify DNS availability first because services won't be available anyway
+                        // when there's no DNS.
+
+                        if (!dnsAvailable)
+                        {
+                            try
+                            {
+                                await dnsClient.QueryAsync(ServiceDependencies.DnsCheckHostName, QueryType.A);
+
+                                dnsAvailable = true;
+                            }
+                            catch (DnsResponseException e)
+                            {
+                                return e.Code == DnsResponseCode.ConnectionTimeout;
+                            }
+                        }
+
+                        // Verify the service dependencies next.
+
+                        foreach (var uri in Dependencies.Uris)
+                        {
+                            if (readyServices.Contains(uri))
+                            {
+                                continue;   // This one is already ready
+                            }
+
+                            switch (uri.Scheme.ToUpperInvariant())
+                            {
+                                case "HTTP":
+                                case "HTTPS":
+                                case "TCP":
+
+                                    using (var socket = new Socket(SocketType.Stream, ProtocolType.Tcp))
+                                    {
+                                        try
+                                        {
+                                            var addresses = await Dns.GetHostAddressesAsync(uri.Host);
+
+                                            socket.Connect(new IPEndPoint(addresses.First(), uri.Port));
+                                        }
+                                        catch (SocketException e)
+                                        {
+                                            // Remember these so we can log something useful if we end up timing out.
+
+                                            notReadyUri = uri;
+                                            notReadyException = e;
+
+                                            return false;
+                                        }
+                                    }
+                                    break;
+
+                                default:
+
+                                    Log.LogWarn($"Service Dependency: [{uri}] has an unsupported scheme and will be ignored.  Only HTTP, HTTPS, and TCP URIs are allowed.");
+                                    readyServices.Add(uri);     // Add the bad URI so we won't try it again.
+                                    break;
+                            }
+                        }
+
+                        return true;
+                    },
+                    timeout: Dependencies.TestTimeout ?? Dependencies.Timeout,
+                    pollInterval: TimeSpan.FromSeconds(1));
+            }
+            catch (TimeoutException)
+            {
+                // Report the problem and exit the service.
+
+                Log.LogError($"Service Dependency: [{notReadyUri}] is still not ready after waiting [{Dependencies.Timeout}].", notReadyException);
+
+                if (metricServer != null)
+                {
+                    await metricServer.StopAsync();
+                    metricServer = null;
+                }
+
+                if (metricPusher != null)
+                {
+                    await metricPusher.StopAsync();
+                    metricPusher = null;
+                }
+
+                if (metricCollector != null)
+                {
+                    metricCollector.Dispose();
+                    metricCollector = null;
+                }
+
+                return ExitCode = 1;
+            }
+
+            await Task.Delay(Dependencies.Wait);
 
             // Start and run the service.
 
@@ -828,7 +1107,7 @@ namespace Neon.Service
             }
             catch (Exception e)
             {
-                // We're gping to consider any exceptions caught here to be errors
+                // We're going to consider any exceptions caught here to be errors
                 // and return a non-zero exit code.  The service's [main()] method
                 // can examine the [ExceptionException] property to decide whether
                 // the exception should be considered an error or whether to return
@@ -843,6 +1122,25 @@ namespace Neon.Service
             // Perform last rights for the service before it passes away.
 
             Log.LogInfo(() => $"Exiting [{Name}] with [exitcode={ExitCode}].");
+
+            if (metricServer != null)
+            {
+                await metricServer.StopAsync();
+                metricServer = null;
+            }
+
+            if (metricPusher != null)
+            {
+                await metricPusher.StopAsync();
+                metricPusher = null;
+            }
+
+            if (metricCollector != null)
+            {
+                metricCollector.Dispose();
+                metricCollector = null;
+            }
+
             Terminator.ReadyToExit();
 
             await SetStatusAsync(NeonServiceStatus.Terminated);
@@ -938,7 +1236,7 @@ namespace Neon.Service
         /// <returns>The the progam exit code.</returns>
         /// <remarks>
         /// <para>
-        /// Services should perform any required initialization and then must call <see cref="SetRunningAsync()"/>
+        /// Services should perform any required initialization and then they must call <see cref="SetRunningAsync()"/>
         /// to indicate that the service should transition into the <see cref="NeonServiceStatus.Running"/>
         /// state.  This is very important because the service test fixture requires the service to be
         /// in the running state before it allows tests to proceed.  This is necessary to avoid unit test 

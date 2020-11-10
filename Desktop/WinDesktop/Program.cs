@@ -126,7 +126,7 @@ namespace WinDesktop
         }
 
         /// <summary>
-        /// Creates a <see cref="LinuxSshProxy{TMetadata}"/> for the specified host and server name,
+        /// Creates a <see cref="NodeSshProxy{TMetadata}"/> for the specified host and server name,
         /// configuring logging and the credentials as specified by the global command
         /// line options.
         /// </summary>
@@ -137,15 +137,15 @@ namespace WinDesktop
         /// or <c>false</c> to replace any existing log file with a new one.
         /// </param>
         /// <typeparam name="TMetadata">Defines the metadata type the command wishes to associate with the server.</typeparam>
-        /// <returns>The <see cref="LinuxSshProxy{TMetadata}"/>.</returns>
-        public static LinuxSshProxy<TMetadata> CreateNodeProxy<TMetadata>(string name, IPAddress address, bool appendToLog)
+        /// <returns>The <see cref="NodeSshProxy{TMetadata}"/>.</returns>
+        public static NodeSshProxy<TMetadata> CreateNodeProxy<TMetadata>(string name, IPAddress address, bool appendToLog)
             where TMetadata : class
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
             var sshCredentials = KubeHelper.CurrentContext.Extension.SshCredentials; ;
 
-            return new LinuxSshProxy<TMetadata>(name, address, sshCredentials);
+            return new NodeSshProxy<TMetadata>(name, address, sshCredentials);
         }
 
         /// <summary>

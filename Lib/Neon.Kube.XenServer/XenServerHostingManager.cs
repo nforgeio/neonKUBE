@@ -31,6 +31,8 @@ using Neon.Common;
 using Neon.Net;
 using Neon.XenServer;
 using Neon.IO;
+using Neon.SSH;
+
 using k8s.Models;
 
 namespace Neon.Kube
@@ -178,7 +180,7 @@ namespace Neon.Kube
             KubeHelper.EnsureIngressNodes(cluster.Definition);
 
             // We need to ensure that at least one node will host the OpenEBS
-            // cStore block device.
+            // cStor block device.
 
             KubeHelper.EnsureOpenEbsNodes(cluster.Definition);
 
@@ -187,31 +189,16 @@ namespace Neon.Kube
 
             foreach (var node in cluster.Definition.Nodes)
             {
-                if (string.IsNullOrEmpty(node.Labels.PhysicalMachine))
-                {
-                    node.Labels.PhysicalMachine = node.Vm.Host;
-                }
-
-                if (node.Labels.ComputeCores == 0)
-                {
-                    node.Labels.ComputeCores = node.Vm.GetProcessors(cluster.Definition);
-                }
-
-                if (node.Labels.ComputeRam == 0)
-                {
-                    node.Labels.ComputeRam = (int)(node.Vm.GetMemory(cluster.Definition) / ByteUnits.MebiBytes);
-                }
-
-                if (string.IsNullOrEmpty(node.Labels.StorageSize))
-                {
-                    node.Labels.StorageSize = ByteUnits.ToGiB(node.Vm.GetOsDisk(cluster.Definition));
-                }
+                node.Labels.PhysicalMachine = node.Vm.Host;
+                node.Labels.ComputeCores    = node.Vm.GetProcessors(cluster.Definition);
+                node.Labels.ComputeRam      = (int)(node.Vm.GetMemory(cluster.Definition) / ByteUnits.MebiBytes);
+                node.Labels.StorageSize     = ByteUnits.ToGiB(node.Vm.GetOsDisk(cluster.Definition));
             }
 
-            // Build a list of [SshProxy] instances that map to the specified XenServer
+            // Build a list of [LinuxSshProxy] instances that map to the specified XenServer
             // hosts.  We'll use the [XenClient] instances as proxy metadata.
 
-            var xenSshProxies = new List<LinuxSshProxy<XenClient>>();
+            var xenSshProxies = new List<NodeSshProxy<XenClient>>();
 
             xenHosts = new List<XenClient>();
 
@@ -262,7 +249,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override void AddPostPrepareSteps(SetupController<NodeDefinition> setupController)
         {
-            // We need to add any required OpenEBS cStore disks after the node has been otherwise
+            // We need to add any required OpenEBS cStor disks after the node has been otherwise
             // prepared.  We need to do this here because if we created the data and OpenEBS disks
             // when the VM is initially created, the disk setup scripts executed during prepare
             // won't be able to distinguish between the two disks.
@@ -293,19 +280,19 @@ namespace Neon.Kube
 
                         if (xenClient.Machine.DiskCount(vm) < 2)
                         {
-                            // We haven't created the oStore disk yet.
+                            // We haven't created the cStor disk yet.
 
                             var disk = new XenVirtualDisk()
                             {
-                                Name        = "openebs",
+                                Name        = $"{GetVmName(node)}: openebs",
                                 Size        = node.Metadata.Vm.GetOpenEbsDisk(cluster.Definition),
-                                Description = "OpenEBS cStore"
+                                Description = "OpenEBS cStor"
                             };
 
                             node.Status = "openebs: stop VM";
                             xenClient.Machine.Shutdown(vm);
 
-                            node.Status = "openebs: add cstore disk";
+                            node.Status = "openebs: add cStor disk";
                             xenClient.Machine.AddDisk(vm, disk);
 
                             node.Status = "openebs: restart VM";
@@ -322,7 +309,7 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="xenHost">The target XenServer.</param>
         /// <returns>The list of nodes to be hosted on the XenServer.</returns>
-        private List<LinuxSshProxy<NodeDefinition>> GetHostedNodes(XenClient xenHost)
+        private List<NodeSshProxy<NodeDefinition>> GetHostedNodes(XenClient xenHost)
         {
             var nodeDefinitions = cluster.Definition.NodeDefinitions.Values;
 
@@ -336,7 +323,7 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="node">The target node.</param>
         /// <returns>The virtual machine name.</returns>
-        private string GetVmName(LinuxSshProxy<NodeDefinition> node)
+        private string GetVmName(NodeSshProxy<NodeDefinition> node)
         {
             return $"{cluster.Definition.Hosting.Vm.GetVmNamePrefix(cluster.Definition)}{node.Name}";
         }
@@ -345,7 +332,7 @@ namespace Neon.Kube
         /// Verify that the XenServer is ready to provision the cluster virtual machines.
         /// </summary>
         /// <param name="xenSshProxy">The XenServer SSH proxy.</param>
-        private void VerifyReady(LinuxSshProxy<XenClient> xenSshProxy)
+        private void VerifyReady(NodeSshProxy<XenClient> xenSshProxy)
         {
             // $todo(jefflill):
             //
@@ -389,7 +376,7 @@ namespace Neon.Kube
         /// Install the virtual machine template on the XenServer if it's not already present.
         /// </summary>
         /// <param name="xenSshProxy">The XenServer SSH proxy.</param>
-        private void CheckVmTemplate(LinuxSshProxy<XenClient> xenSshProxy)
+        private void CheckVmTemplate(NodeSshProxy<XenClient> xenSshProxy)
         {
             var xenHost      = xenSshProxy.Metadata;
             var templateName = GetXenTemplateName();
@@ -427,7 +414,7 @@ namespace Neon.Kube
         /// Provision the virtual machines on the XenServer.
         /// </summary>
         /// <param name="xenSshProxy">The XenServer SSH proxy.</param>
-        private void ProvisionVM(LinuxSshProxy<XenClient> xenSshProxy)
+        private void ProvisionVM(NodeSshProxy<XenClient> xenSshProxy)
         {
             var xenHost  = xenSshProxy.Metadata;
             var hostInfo = xenHost.GetHostInfo();
@@ -539,7 +526,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override string GetDataDisk(LinuxSshProxy<NodeDefinition> node)
+        public override string GetDataDisk(NodeSshProxy<NodeDefinition> node)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 

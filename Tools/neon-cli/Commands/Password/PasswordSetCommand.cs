@@ -72,7 +72,7 @@ This command creates or updates a named password.
         }
 
         /// <inheritdoc/>
-        public override void Run(CommandLine commandLine)
+        public override async Task RunAsync(CommandLine commandLine)
         {
             if (commandLine.HasHelpOption)
             {
@@ -131,6 +131,7 @@ This command creates or updates a named password.
 
             File.WriteAllText(Path.Combine(KubeHelper.PasswordsFolder, passwordName), password);
             Program.Exit(0);
+            await Task.CompletedTask;
         }
     }
 }

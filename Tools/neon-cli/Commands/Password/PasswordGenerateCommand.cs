@@ -67,7 +67,7 @@ The generated password will be written to standard output.
         }
 
         /// <inheritdoc/>
-        public override void Run(CommandLine commandLine)
+        public override async Task RunAsync(CommandLine commandLine)
         {
             if (commandLine.HasHelpOption)
             {
@@ -89,6 +89,7 @@ The generated password will be written to standard output.
 
             Console.Write(NeonHelper.GetCryptoRandomPassword(length));
             Program.Exit(0);
+            await Task.CompletedTask;
         }
     }
 }

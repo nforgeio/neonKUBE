@@ -156,5 +156,12 @@ namespace Neon.Service
         [JsonProperty(PropertyName = "Endpoints", Required = Required.Always)]
         [YamlMember(Alias = "endpoints", ApplyNamingConventions = false)]
         public ServiceEndpoints Endpoints { get; set; } = new ServiceEndpoints();
+
+        /// <summary>
+        /// The service's Prometheus metrics exporter port.
+        /// </summary>
+        [JsonProperty(PropertyName = "MetricsPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "metricsPort", ApplyNamingConventions = false)]
+        public int MetricsPort { get; set; } = NetworkPorts.NeonPrometheus;
     }
 }
