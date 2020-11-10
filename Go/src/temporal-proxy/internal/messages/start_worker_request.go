@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:		stop_worker_request.go
+// FILE:		start_worker_request.go
 // CONTRIBUTOR: John C Burns
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -23,25 +23,25 @@ import (
 
 type (
 
-	// StopWorkerRequest is ProxyRequest of MessageType
-	// StopWorkerRequest.
+	// StartWorkerRequest is ProxyRequest of MessageType
+	// StartWorkerRequest.
 	//
-	// A StopWorkerRequest contains a reference to a
+	// A StartWorkerRequest contains a reference to a
 	// ProxyReply struct in memory
-	StopWorkerRequest struct {
+	StartWorkerRequest struct {
 		*ProxyRequest
 	}
 )
 
-// NewStopWorkerRequest is the default constructor for a StopWorkerRequest
+// NewStartWorkerRequest is the default constructor for a StartWorkerRequest
 //
-// returns *StopWorkerRequest -> a reference to a newly initialized
-// StopWorkerRequest in memory
-func NewStopWorkerRequest() *StopWorkerRequest {
-	request := new(StopWorkerRequest)
+// returns *StartWorkerRequest -> a reference to a newly initialized
+// StartWorkerRequest in memory
+func NewStartWorkerRequest() *StartWorkerRequest {
+	request := new(StartWorkerRequest)
 	request.ProxyRequest = NewProxyRequest()
-	request.SetType(internal.StopWorkerRequest)
-	request.SetReplyType(internal.StopWorkerReply)
+	request.SetType(internal.StartWorkerRequest)
+	request.SetReplyType(internal.StartWorkerReply)
 
 	return request
 }
@@ -50,15 +50,15 @@ func NewStopWorkerRequest() *StopWorkerRequest {
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
 // Clone inherits docs from ProxyRequest.Clone()
-func (request *StopWorkerRequest) Clone() IProxyMessage {
-	stopWorkerRequest := NewStopWorkerRequest()
-	var messageClone IProxyMessage = stopWorkerRequest
+func (request *StartWorkerRequest) Clone() IProxyMessage {
+	startWorkerRequest := NewStartWorkerRequest()
+	var messageClone IProxyMessage = startWorkerRequest
 	request.CopyTo(messageClone)
 
 	return messageClone
 }
 
 // CopyTo inherits docs from ProxyRequest.CopyTo()
-func (request *StopWorkerRequest) CopyTo(target IProxyMessage) {
+func (request *StartWorkerRequest) CopyTo(target IProxyMessage) {
 	request.ProxyRequest.CopyTo(target)
 }

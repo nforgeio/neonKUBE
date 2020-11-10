@@ -132,6 +132,12 @@ func CreateNewTypedMessage(messageType internal.MessageType) IProxyMessage {
 		message = NewNewWorkerRequest()
 
 	// StopWorker
+	case internal.StartWorkerRequest:
+		message = NewStartWorkerRequest()
+	case internal.StartWorkerReply:
+		message = NewStartWorkerReply()
+
+	// StopWorker
 	case internal.StopWorkerRequest:
 		message = NewStopWorkerRequest()
 	case internal.StopWorkerReply:

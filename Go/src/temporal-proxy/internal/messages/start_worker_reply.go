@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:		new_worker_reply.go
+// FILE:		start_worker_reply.go
 // CONTRIBUTOR: John C Burns
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -23,22 +23,23 @@ import (
 
 type (
 
-	// NewWorkerReply is a ProxyReply of MessageType
-	// NewWorkerReply.  It holds a reference to a ProxyReply in memory
-	NewWorkerReply struct {
+	// StartWorkerReply is a ProxyReply of MessageType
+	// StartWorkerReply It holds a reference to a
+	// ProxyReply in memory
+	StartWorkerReply struct {
 		*ProxyReply
 	}
 )
 
-// NewNewWorkerReply is the default constructor for
-// a NewWorkerReply
+// NewStartWorkerReply is the default constructor for
+// a StartWorkerReply
 //
-// returns *NewWorkerReply -> a pointer to a newly initialized
-// NewWorkerReply in memory
-func NewNewWorkerReply() *NewWorkerReply {
-	reply := new(NewWorkerReply)
+// returns *StartWorkerReply -> pointer to a newly initialized
+// StartWorkerReply in memory
+func NewStartWorkerReply() *StartWorkerReply {
+	reply := new(StartWorkerReply)
 	reply.ProxyReply = NewProxyReply()
-	reply.SetType(internal.NewWorkerReply)
+	reply.SetType(internal.StartWorkerReply)
 
 	return reply
 }
@@ -47,25 +48,20 @@ func NewNewWorkerReply() *NewWorkerReply {
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
 // Build inherits docs from ProxyReply.Build()
-func (reply *NewWorkerReply) Build(e error, result ...interface{}) {
+func (reply *StartWorkerReply) Build(e error, result ...interface{}) {
 	reply.ProxyReply.Build(e)
-	if len(result) > 0 {
-		if v, ok := result[0].(int64); ok {
-			reply.SetWorkerID(v)
-		}
-	}
 }
 
 // Clone inherits docs from ProxyReply.Clone()
-func (reply *NewWorkerReply) Clone() IProxyMessage {
-	newWorkerReply := NewNewWorkerReply()
-	var messageClone IProxyMessage = newWorkerReply
+func (reply *StartWorkerReply) Clone() IProxyMessage {
+	startWorkerReply := NewStartWorkerReply()
+	var messageClone IProxyMessage = startWorkerReply
 	reply.CopyTo(messageClone)
 
 	return messageClone
 }
 
 // CopyTo inherits docs from ProxyReply.CopyTo()
-func (reply *NewWorkerReply) CopyTo(target IProxyMessage) {
+func (reply *StartWorkerReply) CopyTo(target IProxyMessage) {
 	reply.ProxyReply.CopyTo(target)
 }

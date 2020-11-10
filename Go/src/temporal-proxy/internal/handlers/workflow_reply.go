@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:		reply_handlers.go
+// FILE:		workflow_reply.go
 // CONTRIBUTOR: John C Burns
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -22,20 +22,12 @@ import (
 	"os"
 	"time"
 
-	"go.temporal.io/sdk/activity"
 	"go.temporal.io/sdk/workflow"
 	"go.uber.org/zap"
 
 	"temporal-proxy/internal"
 	"temporal-proxy/internal/messages"
 )
-
-// -------------------------------------------------------------------------
-// client message types
-
-func handleLogReply(reply *messages.LogReply, op *Operation) error {
-	return op.SendChannel(true, reply.GetError())
-}
 
 // -------------------------------------------------------------------------
 // Workflow message types
@@ -159,78 +151,4 @@ func handleWorkflowFutureReadyReply(reply *messages.WorkflowFutureReadyReply, op
 
 	// set the reply
 	return op.SendChannel(true, nil)
-}
-
-// -------------------------------------------------------------------------
-// Activity message types
-
-func handleActivityInvokeReply(reply *messages.ActivityInvokeReply, op *Operation) error {
-	defer ActivityContexts.Remove(op.GetContextID())
-
-	requestID := reply.GetRequestID()
-	contextID := op.GetContextID()
-	Logger.Debug("Settling Activity",
-		zap.Int64("ClientId", reply.GetClientID()),
-		zap.Int64("ActivityContextId", contextID),
-		zap.Int64("RequestId", requestID),
-		zap.Int("ProcessId", os.Getpid()))
-
-	// ActivityContext at the specified WorflowContextID
-	if actx := ActivityContexts.Get(contextID); actx == nil {
-		return internal.ErrEntityNotExist
-	}
-
-	// get error values
-	err := reply.GetError()
-
-	// check if the activity is to be
-	// completed externally
-	var result interface{}
-	if reply.GetPending() {
-		result = activity.ErrResultPending
-		err = nil
-	} else {
-		result = reply.GetResult()
-	}
-
-	// set the reply
-	return op.SendChannel(result, err)
-}
-
-func handleActivityStoppingReply(reply *messages.ActivityStoppingReply, op *Operation) error {
-	requestID := reply.GetRequestID()
-	contextID := op.GetContextID()
-	Logger.Debug("Settling Activity Stopping",
-		zap.Int64("ClientId", reply.GetClientID()),
-		zap.Int64("ActivityContextId", contextID),
-		zap.Int64("RequestId", requestID),
-		zap.Int("ProcessId", os.Getpid()))
-
-	// ActivityContext at the specified WorflowContextID
-	if actx := ActivityContexts.Get(contextID); actx == nil {
-		return internal.ErrEntityNotExist
-	}
-
-	// set the reply
-	return op.SendChannel(true, reply.GetError())
-}
-
-func handleActivityInvokeLocalReply(reply *messages.ActivityInvokeLocalReply, op *Operation) error {
-	defer ActivityContexts.Remove(op.GetContextID())
-
-	requestID := reply.GetRequestID()
-	contextID := op.GetContextID()
-	Logger.Debug("Settling Local Activity",
-		zap.Int64("ClientId", reply.GetClientID()),
-		zap.Int64("ActivityContextId", contextID),
-		zap.Int64("RequestId", requestID),
-		zap.Int("ProcessId", os.Getpid()))
-
-	// ActivityContext at the specified WorflowContextID
-	if actx := ActivityContexts.Get(contextID); actx == nil {
-		return internal.ErrEntityNotExist
-	}
-
-	// set the reply
-	return op.SendChannel(reply.GetResult(), reply.GetError())
 }

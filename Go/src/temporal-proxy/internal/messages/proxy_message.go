@@ -345,6 +345,7 @@ func (proxyMessage *ProxyMessage) Serialize(allowUnspecified bool) ([]byte, erro
 func (proxyMessage *ProxyMessage) CopyTo(target IProxyMessage) {
 	target.SetRequestID(proxyMessage.GetRequestID())
 	target.SetClientID(proxyMessage.GetClientID())
+	target.SetWorkerID(proxyMessage.GetWorkerID())
 	target.SetType(proxyMessage.GetType())
 }
 

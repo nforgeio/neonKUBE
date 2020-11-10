@@ -205,6 +205,16 @@ const (
 	/// </summary>
 	DescribeTaskQueueReply MessageType = 32
 
+	/// <summary>
+	/// <b>client --> proxy:</b> Starts a worker so that it can begin executing workflows and activities.
+	/// </summary>
+	StartWorkerRequest MessageType = 33
+
+	/// <summary>
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="StartWorkerRequest"/> message.
+	/// </summary>
+	StartWorkerReply MessageType = 34
+
 	//---------------------------------------------------------------------
 	// Workflow messages
 	//

@@ -69,22 +69,6 @@ func (request *ActivityRegisterRequest) SetName(value *string) {
 	request.SetStringProperty("Name", value)
 }
 
-// GetWorkerID gets a ActivityRegisterRequest's WorkerID value
-// from its properties map
-//
-// returns int64 -> long Id of the worker to register the workflow.
-func (request *ActivityRegisterRequest) GetWorkerID() int64 {
-	return request.GetLongProperty("WorkerId")
-}
-
-// SetWorkerID sets a ActivityRegisterRequest's WorkerID value
-// in its properties map.
-//
-// param value int64 -> long Id of the worker to register the workflow.
-func (request *ActivityRegisterRequest) SetWorkerID(value int64) {
-	request.SetLongProperty("WorkerId", value)
-}
-
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
@@ -102,6 +86,5 @@ func (request *ActivityRegisterRequest) CopyTo(target IProxyMessage) {
 	request.ActivityRequest.CopyTo(target)
 	if v, ok := target.(*ActivityRegisterRequest); ok {
 		v.SetName(request.GetName())
-		v.SetWorkerID(request.GetWorkerID())
 	}
 }

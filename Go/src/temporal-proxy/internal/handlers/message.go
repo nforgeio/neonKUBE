@@ -245,6 +245,12 @@ func handleIProxyRequest(request messages.IProxyRequest) (err error) {
 				reply = handleNewWorkerRequest(ctx, v)
 			}
 
+		// StartWorkerRequest
+		case internal.StartWorkerRequest:
+			if v, ok := request.(*messages.StartWorkerRequest); ok {
+				reply = handleStartWorkerRequest(ctx, v)
+			}
+
 		// StopWorkerRequest
 		case internal.StopWorkerRequest:
 			if v, ok := request.(*messages.StopWorkerRequest); ok {

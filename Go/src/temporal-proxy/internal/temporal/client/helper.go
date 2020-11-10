@@ -219,7 +219,7 @@ func (helper *Helper) SetupServiceConfig(ctx context.Context) error {
 	return nil
 }
 
-// StartWorker starts a workflow worker and activity worker based on configured options.
+// NewWorker creates a workflow worker and activity worker based on configured options.
 // The worker will listen for workflows registered with the same taskqueue.
 //
 // params:
@@ -230,11 +230,10 @@ func (helper *Helper) SetupServiceConfig(ctx context.Context) error {
 // 	the temporal-proxy.
 //
 // returns:
-//	- string -> the int64 Id of the new worker.
-// 	call to the temporal server.
+//	- int64 -> the int64 Id of the new worker.
 // 	- returns error -> an error if the workflow could not be started, or nil if
 // 	the workflow was triggered successfully.
-func (helper *Helper) StartWorker(
+func (helper *Helper) NewWorker(
 	namespace string,
 	taskqueue string,
 	options worker.Options,
@@ -245,13 +244,29 @@ func (helper *Helper) StartWorker(
 	}
 
 	worker := worker.New(client, taskqueue, options)
-	if err = worker.Start(); err != nil {
-		return 0, err
-	}
-
 	workerID := helper.Workers.Add(NextWorkerID(), worker)
 
 	return workerID, nil
+}
+
+// StartWorker starts an existing worker.
+//
+// params:
+//	- namespace string -> the namespace that identifies the client to start the worker with.
+// 	- taskqueue string -> the name of the group of temporal workflows for the worker to listen for.
+// 	- options worker.Options -> Options used to configure a worker instance.
+//	- workerID int64 -> the id of the new worker that will be mapped internally in
+// 	the temporal-proxy.
+//
+//  returns error -> an error if the workflow could not be started, or nil if
+// 	the workflow was triggered successfully.
+func (helper *Helper) StartWorker(workerID int64) error {
+	worker := helper.Workers.Get(workerID)
+	if err := worker.Start(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // StopWorker stops a worker at the given workerID.

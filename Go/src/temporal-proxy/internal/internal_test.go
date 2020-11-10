@@ -102,14 +102,15 @@ func (s *UnitTestSuite) setupTestSuiteServer() {
 		), zap.AddCaller())
 	defer l.Sync()
 
-	// create the new server instance,
-	// set the routes, and start the server listening
-	// on host:port 127.0.0.1:5000
-	s.instance = server.NewInstance(_listenAddress, l)
+	s.instance = server.NewInstance(&server.InstanceConfig{
+		Address:        _listenAddress,
+		Logger:         l,
+		MessageHandler: handlers.MessageHandler,
+		EchoHandler:    handlers.EchoHandler,
+	})
+
 	handlers.Instance = s.instance
 	handlers.Logger = l.Named(internal.ProxyLoggerName)
-
-	handlers.SetupRoutes(s.instance.Router)
 }
 
 // --------------------------------------------------------------------------
@@ -1683,6 +1684,100 @@ func (s *UnitTestSuite) TestNewWorkerRequest() {
 		s.Equal("my-tasks", *v.GetTaskQueue())
 		s.Equal(1234, v.GetOptions().MaxConcurrentActivityExecutionSize)
 		s.Equal(float64(2), v.GetOptions().WorkerActivitiesPerSecond)
+	}
+}
+
+func (s *UnitTestSuite) TestStartWorkerRequest() {
+	var message messages.IProxyMessage = messages.NewStartWorkerRequest()
+	proxyMessage := message.GetProxyMessage()
+
+	serializedMessage, err := proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.StartWorkerRequest); ok {
+		s.Equal(int64(0), v.GetRequestID())
+		s.Equal(int64(0), v.GetWorkerID())
+
+		// Round-trip
+
+		v.SetRequestID(int64(555))
+		s.Equal(int64(555), v.GetRequestID())
+
+		v.SetWorkerID(int64(666))
+		s.Equal(int64(666), v.GetWorkerID())
+	}
+
+	proxyMessage = message.GetProxyMessage()
+	serializedMessage, err = proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.StartWorkerRequest); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal(int64(666), v.GetWorkerID())
+	}
+
+	message, err = s.echoToConnection(message)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.StartWorkerRequest); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal(int64(666), v.GetWorkerID())
+	}
+}
+
+func (s *UnitTestSuite) TestStartWorkerReply() {
+	var message messages.IProxyMessage = messages.NewStartWorkerReply()
+	proxyMessage := message.GetProxyMessage()
+
+	serializedMessage, err := proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.StartWorkerReply); ok {
+		s.Equal(int64(0), v.GetRequestID())
+		s.Nil(v.GetError())
+
+		// Round-trip
+
+		v.SetRequestID(int64(555))
+		s.Equal(int64(555), v.GetRequestID())
+
+		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
+		s.True(internal.IsApplicationError(v.GetError()))
+	}
+
+	proxyMessage = message.GetProxyMessage()
+	serializedMessage, err = proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.StartWorkerReply); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.True(internal.IsApplicationError(v.GetError()))
+	}
+
+	message, err = s.echoToConnection(message)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.StartWorkerReply); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.True(internal.IsApplicationError(v.GetError()))
 	}
 }
 

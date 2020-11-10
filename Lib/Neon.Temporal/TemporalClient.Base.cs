@@ -188,7 +188,7 @@ namespace Neon.Temporal
                 }
             }
 
-            var reply = (StopWorkerReply)(await CallProxyAsync(new StartWorkerRequest() { WorkerId = worker.WorkerId }));
+            var reply = (StartWorkerReply)(await CallProxyAsync(new StartWorkerRequest() { WorkerId = worker.WorkerId }));
 
             reply.ThrowOnError();
         }

@@ -35,7 +35,7 @@ namespace Neon.Temporal.Internal
         /// </summary>
         public StartWorkerReply()
         {
-            Type = InternalMessageTypes.NewWorkerReply;
+            Type = InternalMessageTypes.StartWorkerReply;
         }
 
         /// <inheritdoc/>
