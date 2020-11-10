@@ -117,17 +117,17 @@ namespace Neon.Temporal
             // Next, we need to register the workflow methods that implement the
             // workflow interface.
 
-            using (await workerMutex.AcquireAsync())
+            foreach (var method in workflowType.GetMethods())
             {
-                foreach (var method in workflowType.GetMethods())
+                if (!methodSignatureToAttribute.TryGetValue(method.ToString(), out var workflowMethodAttribute))
                 {
-                    if (!methodSignatureToAttribute.TryGetValue(method.ToString(), out var workflowMethodAttribute))
-                    {
-                        continue;
-                    }
+                    continue;
+                }
 
-                    var workflowTypeName = TemporalHelper.GetWorkflowTypeName(workflowType, workflowMethodAttribute);
+                var workflowTypeName = TemporalHelper.GetWorkflowTypeName(workflowType, workflowMethodAttribute);
 
+                lock (nameToWorkflowRegistration)
+                {
                     if (nameToWorkflowRegistration.TryGetValue(workflowTypeName, out var existingRegistration))
                     {
                         if (!object.ReferenceEquals(existingRegistration.WorkflowType, workflowType))
@@ -146,16 +146,16 @@ namespace Neon.Temporal
                                 MethodMap                    = methodMap
                             };
                     }
-
-                    var reply = (WorkflowRegisterReply)await Client.CallProxyAsync(
-                        new WorkflowRegisterRequest()
-                        {
-                            WorkerId = WorkerId,
-                            Name     = workflowTypeName,
-                        });
-
-                    reply.ThrowOnError();
                 }
+
+                var reply = (WorkflowRegisterReply)await Client.CallProxyAsync(
+                    new WorkflowRegisterRequest()
+                    {
+                        WorkerId = WorkerId,
+                        Name     = workflowTypeName,
+                    });
+
+                reply.ThrowOnError();
             }
         }
 
@@ -184,7 +184,7 @@ namespace Neon.Temporal
 
             var workflowType = typeof(TWorkflow);
 
-            using (await workerMutex.AcquireAsync())
+            lock (registeredWorkflowTypes)
             {
                 if (registeredWorkflowTypes.Contains(workflowType))
                 {
@@ -233,7 +233,7 @@ namespace Neon.Temporal
             EnsureNotDisposed();
             EnsureCanRegister();
 
-            using (await workerMutex.AcquireAsync())
+            lock (registeredWorkflowTypes)
             {
                 foreach (var workflowType in assembly.GetTypes().Where(t => t.IsClass))
                 {
@@ -268,7 +268,7 @@ namespace Neon.Temporal
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
 
-            using (await workerMutex.AcquireAsync())
+            lock (nameToWorkflowRegistration)
             {
                 if (this.nameToWorkflowRegistration.TryGetValue(workflowTypeName, out var registration))
                 {
@@ -288,7 +288,7 @@ namespace Neon.Temporal
         /// <returns>The <see cref="Workflow"/> or <c>null</c>.</returns>
         private async Task<WorkflowBase> GetWorkflowAsync(long contextId)
         {
-            using (await workerMutex.AcquireAsync())
+            lock (idToWorkflow)
             {
                 if (idToWorkflow.TryGetValue(contextId, out var workflow))
                 {
@@ -357,7 +357,7 @@ namespace Neon.Temporal
 
             var contextId = request.ContextId;
 
-            using (await workerMutex.AcquireAsync())
+            lock (idToWorkflow)
             {
                 if (idToWorkflow.TryGetValue(contextId, out workflow))
                 {
@@ -366,16 +366,16 @@ namespace Neon.Temporal
                         Error = new TemporalError($"A workflow with [ContextId={contextId}] is already running on this worker.")
                     };
                 }
+            }
 
-                registration = await GetWorkflowRegistrationAsync(request.WorkflowType);
+            registration = await GetWorkflowRegistrationAsync(request.WorkflowType);
 
-                if (registration == null)
+            if (registration == null)
+            {
+                return new WorkflowInvokeReply()
                 {
-                    return new WorkflowInvokeReply()
-                    {
-                        Error = new TemporalError($"Workflow type name [Type={request.WorkflowType}] is not registered for this worker.")
-                    };
-                }
+                    Error = new TemporalError($"Workflow type name [Type={request.WorkflowType}] is not registered for this worker.")
+                };
             }
 
             workflow = (WorkflowBase)Activator.CreateInstance(registration.WorkflowType);
@@ -394,7 +394,7 @@ namespace Neon.Temporal
 
             Workflow.Current = workflow.Workflow;   // Initialize the ambient workflow information.
 
-            using (await workerMutex.AcquireAsync())
+            lock (idToWorkflow)
             {
                 idToWorkflow.Add(contextId, workflow);
             }

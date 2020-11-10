@@ -43,9 +43,9 @@ namespace Neon.Temporal
     /// </remarks>
     public sealed partial class Worker : IDisposable
     {
-        private AsyncMutex      workerMutex = new AsyncMutex();
-        private bool            isRunning   = false;
-        private INeonLogger     log         = LogManager.Default.GetLogger<WorkflowBase>();
+        private bool            isRunning          = false;
+        private bool            allowRegistrations = true;
+        private INeonLogger     log                = LogManager.Default.GetLogger<WorkflowBase>();
         private WorkerOptions   options;
 
         /// <summary>
@@ -69,23 +69,20 @@ namespace Neon.Temporal
         /// <inheritdoc/>
         public void Dispose()
         {
-            using (workerMutex.AcquireAsync().GetAwaiter().GetResult())
+            if (IsDisposed)
             {
-                if (IsDisposed)
-                {
-                    return;
-                }
-
-                IsDisposed = true;
-
-                if (isRunning)
-                {
-                    Client.StopWorkerAsync(this).Wait();
-                    Client = null;
-                }
-
-                GC.SuppressFinalize(this);
+                return;
             }
+
+            IsDisposed = true;
+
+            if (isRunning)
+            {
+                Client.StopWorkerAsync(this).Wait();
+                Client = null;
+            }
+
+            GC.SuppressFinalize(this);
         }
 
         /// <summary>
@@ -136,7 +133,7 @@ namespace Neon.Temporal
         /// <exception cref="InvalidOperationException">Thrown when the worker has already started.</exception>
         private void EnsureCanRegister()
         {
-            if (isRunning)
+            if (!allowRegistrations)
             {
                 throw new InvalidOperationException("Cannot register workflow or activity implementations after a worker has started.");
             }
@@ -199,9 +196,15 @@ namespace Neon.Temporal
             List<Type>      clonedActivityRegistrations;
             List<Type>      clonedWorkflowRegistrations;
 
-            using (await workerMutex.AcquireAsync())
+            allowRegistrations = false;
+
+            lock (registeredWorkflowTypes)
             {
                 clonedWorkflowRegistrations = registeredWorkflowTypes.ToList();
+            }
+
+            lock (registeredActivityTypes)
+            {
                 clonedActivityRegistrations = registeredActivityTypes.ToList();
             }
 

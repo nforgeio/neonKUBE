@@ -121,7 +121,7 @@ namespace Neon.Temporal
 
                 var activityTarget = TemporalHelper.GetActivityTarget(interfaceType, activityMethodAttribute.Name);
 
-                using (await workerMutex.AcquireAsync())
+                lock (nameToActivityRegistration)
                 {
                     if (nameToActivityRegistration.TryGetValue(activityTarget.ActivityTypeName, out var registration))
                     {
@@ -179,7 +179,7 @@ namespace Neon.Temporal
             EnsureNotDisposed();
             EnsureCanRegister();
 
-            using (await workerMutex.AcquireAsync())
+            lock (registeredActivityTypes)
             {
                 var activityType = typeof(TActivity);
 
@@ -231,7 +231,7 @@ namespace Neon.Temporal
             EnsureNotDisposed();
             EnsureCanRegister();
 
-            using (await workerMutex.AcquireAsync())
+            lock (registeredActivityTypes)
             {
                 foreach (var activityType in assembly.GetTypes().Where(t => t.IsClass))
                 {
@@ -395,7 +395,7 @@ namespace Neon.Temporal
             ActivityRegistration    invokeInfo;
             ActivityBase            activity;
 
-            using (await workerMutex.AcquireAsync())
+            lock (nameToActivityRegistration)
             {
                 if (!nameToActivityRegistration.TryGetValue(request.Activity, out invokeInfo))
                 {
@@ -448,7 +448,7 @@ namespace Neon.Temporal
             }
             finally
             {
-                using (await workerMutex.AcquireAsync())
+                lock (idToActivity)
                 {
                     idToActivity.Remove(activity.ContextId);
                 }
@@ -464,7 +464,7 @@ namespace Neon.Temporal
         {
             ActivityBase    activity;
 
-            using (await workerMutex.AcquireAsync())
+            lock (idToActivity)
             {
                 if (idToActivity.TryGetValue(request.ContextId, out activity))
                 {

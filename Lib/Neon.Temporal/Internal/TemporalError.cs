@@ -26,6 +26,7 @@ using Newtonsoft.Json;
 
 using Neon.Common;
 using Neon.Temporal;
+using YamlDotNet.Serialization;
 
 namespace Neon.Temporal.Internal
 {
@@ -109,9 +110,17 @@ namespace Neon.Temporal.Internal
                 case "terminated":  return TemporalErrorType.Terminated;
                 case "timeout":     return TemporalErrorType.Timeout;
 
+                // $todo(jefflill): 
+                //    
+                // Temporal has refactored how errors work and we're now seeing other
+                // strings.  I believe this is from the [temporal-proxy] but perhaps not.
+                // We'll treat these as "custom" until we have a chance to refactor
+                // error handling.
+
                 default:
 
-                    throw new NotImplementedException();
+                    return TemporalErrorType.Custom;
+                    //throw new NotImplementedException();
             }
         }
 
