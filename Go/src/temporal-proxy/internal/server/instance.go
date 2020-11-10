@@ -28,38 +28,51 @@ import (
 	"github.com/go-chi/chi"
 )
 
-// Instance is a server instance that contains
-// a reference to an http.Server in memory,
-// a reference to an existing zap.Logger,
-// and a reference to an existing chi.Mux
-type Instance struct {
-	httpServer      *http.Server
-	Logger          *zap.Logger
-	Router          *chi.Mux
-	ShutdownChannel chan bool
-}
+type (
+	// InstanceConfig takes config values to
+	// create a new Instance
+	InstanceConfig struct {
+		Address        string
+		Logger         *zap.Logger
+		MessageHandler func(w http.ResponseWriter, r *http.Request)
+		EchoHandler    func(w http.ResponseWriter, r *http.Request)
+	}
+
+	// Instance is a server instance that contains
+	// a reference to an http.Server in memory,
+	// a reference to an existing zap.Logger,
+	// and a reference to an existing chi.Mux
+	Instance struct {
+		httpServer      *http.Server
+		Logger          *zap.Logger
+		Router          *chi.Mux
+		ShutdownChannel chan bool
+	}
+)
 
 // NewInstance initializes a new instance of the server Instance
-//
-// param addr string -> the desired address for the server to
-// listen and serve on
-//
-// param logger *zap.Logger -> zap logger for the server to log
-// with.
-//
-// returns *Instance -> Pointer to an Instance object
-func NewInstance(addr string, logger *zap.Logger) *Instance {
+// from a config.
+func NewInstance(config *InstanceConfig) *Instance {
+	router := chi.NewRouter()
+	logger := config.Logger
 
-	// Router defines new chi router to set up the routes
-	var router = chi.NewRouter()
+	var err error
+	if logger == nil {
+		logger, err = zap.NewDevelopment()
+	}
 
-	// do any server instance setup here
+	if err != nil {
+		panic("could not configure logger")
+	}
+
 	s := &Instance{
 		Router:          router,
-		httpServer:      &http.Server{Addr: addr, Handler: router},
+		httpServer:      &http.Server{Addr: config.Address, Handler: router},
 		ShutdownChannel: make(chan bool),
 		Logger:          logger.Named("server   "),
 	}
+
+	SetupRoutes(s.Router, config.MessageHandler, config.EchoHandler)
 
 	return s
 }

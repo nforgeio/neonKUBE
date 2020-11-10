@@ -15,7 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package handlers
+package server
 
 import (
 	"net/http"
@@ -31,7 +31,7 @@ var Debug bool
 
 // SetupRoutes sets up the chi middleware
 // and the route tree
-func SetupRoutes(router *chi.Mux) {
+func SetupRoutes(router *chi.Mux, messageHandler func(w http.ResponseWriter, r *http.Request), echoHandler func(w http.ResponseWriter, r *http.Request)) {
 
 	// Group the 2 endpoint routes together to utilize
 	// same middleware stack
@@ -44,8 +44,8 @@ func SetupRoutes(router *chi.Mux) {
 		router.Use(middleware.Recoverer)
 
 		// cadence-proxy endpoints
-		router.Put("/", MessageHandler)
-		router.Put("/echo", EchoHandler)
+		router.Put("/", messageHandler)
+		router.Put("/echo", echoHandler)
 
 		// endpoints for test paths
 		router.Mount("/test", TestRouter())

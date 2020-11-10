@@ -84,7 +84,12 @@ func main() {
 
 	// create the instance, set the routes,
 	// and start the server
-	instance := server.NewInstance(address, l)
+	instance := server.NewInstance(&server.InstanceConfig{
+		Address:        address,
+		Logger:         l,
+		MessageHandler: handlers.MessageHandler,
+		EchoHandler:    handlers.EchoHandler,
+	})
 
 	// set server instance and
 	// logger for endpoints
@@ -94,7 +99,6 @@ func main() {
 	handlers.LoggerClientID = clientID
 	handlers.Instance = instance
 	handlers.HttpClient = client
-	handlers.SetupRoutes(instance.Router)
 
 	// start the server
 	instance.Start()
