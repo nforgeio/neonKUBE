@@ -20,8 +20,8 @@ package messages
 import (
 	"time"
 
-	internal "temporal-proxy/internal"
-	dotnetlogger "temporal-proxy/internal/dotnet/logger"
+	"temporal-proxy/internal"
+	"temporal-proxy/internal/log"
 )
 
 type (
@@ -73,21 +73,21 @@ func (request *LogRequest) SetTimeUtc(value time.Time) {
 // GetLogLevel gets the LogLevel property from an LogRequest
 // in its properties map.  Identifies the log level.
 //
-// returns dotnetlogger.LogLevel -> LogRequest's LogLevel
-func (request *LogRequest) GetLogLevel() dotnetlogger.LogLevel {
+// returns log.Level -> LogRequest's LogLevel
+func (request *LogRequest) GetLogLevel() log.Level {
 	str := request.GetStringProperty("LogLevel")
 	if str == nil {
-		return dotnetlogger.None
+		return log.None
 	}
 
-	return dotnetlogger.ParseLogLevel(*str)
+	return log.ParseLevel(*str)
 }
 
 // SetLogLevel sets the LogLevel property in an INitializeRequest's
 // properties map.  Identifies the log level.
 //
-// param value dotnetlogger.LogLevel -> LogRequest's LogLevel
-func (request *LogRequest) SetLogLevel(value dotnetlogger.LogLevel) {
+// param value log.Level -> LogRequest's LogLevel
+func (request *LogRequest) SetLogLevel(value log.Level) {
 	str := value.String()
 	request.SetStringProperty("LogLevel", &str)
 }

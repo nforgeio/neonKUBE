@@ -15,7 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package endpoints
+package handlers
 
 import (
 	"context"
@@ -26,7 +26,7 @@ import (
 	"go.uber.org/zap/zapcore"
 
 	"temporal-proxy/internal"
-	dotnetlogger "temporal-proxy/internal/dotnet/logger"
+	log "temporal-proxy/internal/log"
 	"temporal-proxy/internal/messages"
 )
 
@@ -125,7 +125,7 @@ func sendLogRequest(ctx context.Context, entry zapcore.Entry) error {
 	requestID := NextRequestID()
 	logRequest := messages.NewLogRequest()
 	logMessage := entry.Message
-	logLevel, err := dotnetlogger.ZapLevelToLogLevel(entry.Level)
+	logLevel, err := log.ZapLevelToLevel(entry.Level)
 	if err != nil {
 		return err
 	}

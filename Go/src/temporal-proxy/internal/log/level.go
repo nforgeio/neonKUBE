@@ -15,7 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package dotnetlogger
+package log
 
 import (
 	"fmt"
@@ -24,58 +24,58 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-// LogLevel enumerates the possible log levels.  Note that the relative
+// Level enumerates the possible log levels.  Note that the relative
 // ordinal values of  these definitions are used when deciding
-// to log an event when a specific LogLevel is
+// to log an event when a specific Level is
 // set.  Only events with log levels less than or equal to the
 // current level will be logged.
-type LogLevel int32
+type Level int32
 
 const (
 	// None - Logging is disabled.
-	None LogLevel = 0
+	None Level = 0
 
 	// Debug - Describes detailed debug or diagnostic information.
-	Debug LogLevel = 1
+	Debug Level = 1
 
 	// SInfo - Describes a non-error security operation or condition, such as a
 	// a successful login or authentication.
-	SInfo LogLevel = 2
+	SInfo Level = 2
 
 	// Info -Describes a normal operation or condition.
-	Info LogLevel = 3
+	Info Level = 3
 
 	// Warn - An unusual condition has been detected that may ultimately lead to an error.
-	Warn LogLevel = 4
+	Warn Level = 4
 
 	// Error - An error has been detected.
-	Error LogLevel = 5
+	Error Level = 5
 
 	// SError - A security related error has occurred.  Errors indicate a problem that may be
 	// transient, be recovered from, or are perhaps more serious.
-	SError LogLevel = 6
+	SError Level = 6
 
 	// Critical - A critical or fatal error has been detected.  These errors indicate that
 	// a very serious failure has occurred that may have crashed the program or
 	// at least seriousoly impacts its functioning.
-	Critical LogLevel = 7
+	Critical Level = 7
 )
 
-// Enabled checks a LogLevel against a zapcore.Level
+// Enabled checks a Level against a zapcore.Level
 // to see if logging should be enabled for that level.
-// With this method LogLevel implements zapcore.LevelEnabler
+// With this method Level implements zapcore.LevelEnabler
 // interface.
 //
 // param zapLvl zapcore.Level -> the zapcore.Level to check against.
 //
 // return bool -> true if logging should be enabled at the
 // zapcore.Level input, false if it should not be.
-func (l LogLevel) Enabled(zapLvl zapcore.Level) bool {
+func (l Level) Enabled(zapLvl zapcore.Level) bool {
 	if l == None {
 		return false
 	}
 
-	lvl, err := ZapLevelToLogLevel(zapLvl)
+	lvl, err := ZapLevelToLevel(zapLvl)
 	if err != nil {
 		panic(err)
 	}
@@ -85,7 +85,7 @@ func (l LogLevel) Enabled(zapLvl zapcore.Level) bool {
 
 // String translates a LogLeve enum into
 // the corresponding string
-func (l LogLevel) String() string {
+func (l Level) String() string {
 	switch l {
 	case None:
 		return "None"
@@ -108,9 +108,9 @@ func (l LogLevel) String() string {
 	}
 }
 
-// ParseLogLevel takes a string value and returns
-// the corresponding LogLevel
-func ParseLogLevel(value string) LogLevel {
+// ParseLevel takes a string value and returns
+// the corresponding Level
+func ParseLevel(value string) Level {
 	value = strings.ToUpper(value)
 	switch value {
 	case "NONE":
@@ -134,18 +134,18 @@ func ParseLogLevel(value string) LogLevel {
 	}
 }
 
-// LogLevelToZapLevel takes a LogLeve and attempts
+// LevelToZapLevel takes a LogLeve and attempts
 // to map it to a zapcore.Level.  If it can, then it returns
 // the corresponding zapcore.Level, if not zapcore.InfoLevel is returned
 // along with an error.
 //
-// param value LogLevel -> LogLevel to map to zapcore.Level.
+// param value Level -> Level to map to zapcore.Level.
 //
-// returns zapcore.Level -> zapcore.Level that maps to the input LogLevel,
+// returns zapcore.Level -> zapcore.Level that maps to the input Level,
 // or zapcore.InfoLevel upon failure to map.
 //
 // returns error -> error upon failure to map to a zapcore.Level.
-func LogLevelToZapLevel(value LogLevel) (zapcore.Level, error) {
+func LevelToZapLevel(value Level) (zapcore.Level, error) {
 	switch value {
 	case Debug:
 		return zapcore.DebugLevel, nil
@@ -162,22 +162,22 @@ func LogLevelToZapLevel(value LogLevel) (zapcore.Level, error) {
 	case Critical:
 		return zapcore.PanicLevel, nil
 	default:
-		return zapcore.InfoLevel, fmt.Errorf("input LogLevel %s does not map to existing zapcore.level", value.String())
+		return zapcore.InfoLevel, fmt.Errorf("input Level %s does not map to existing zapcore.level", value.String())
 	}
 }
 
-// ZapLevelToLogLevel attempts to map a zapcore.Level to a
-// LogLevel.
+// ZapLevelToLevel attempts to map a zapcore.Level to a
+// Level.
 //
 // param value zapcore.Level -> zapcore.Level to attempt to map
-// to LogLevel.
+// to Level.
 //
-// returns LogLevel -> LogLevel corresponding to input
+// returns Level -> Level corresponding to input
 // zapcore.Level.
 //
 // returns error -> error if the input zapcore.Level cannot be
-// mapped to a LogLevel.
-func ZapLevelToLogLevel(value zapcore.Level) (LogLevel, error) {
+// mapped to a Level.
+func ZapLevelToLevel(value zapcore.Level) (Level, error) {
 	switch value {
 	case zapcore.DebugLevel:
 		return Debug, nil
@@ -194,6 +194,6 @@ func ZapLevelToLogLevel(value zapcore.Level) (LogLevel, error) {
 	case zapcore.FatalLevel:
 		return Critical, nil
 	default:
-		return Info, fmt.Errorf("input zapcore.Level %s does not map to existing LogLevel", value.String())
+		return Info, fmt.Errorf("input zapcore.Level %s does not map to existing Level", value.String())
 	}
 }

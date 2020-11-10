@@ -18,8 +18,7 @@
 package messages
 
 import (
-	internal "temporal-proxy/internal"
-	proxytemporal "temporal-proxy/internal/temporal"
+	"temporal-proxy/internal"
 )
 
 type (
@@ -64,14 +63,14 @@ func (reply *ActivityGetLocalResultReply) SetResult(value []byte) {
 // GetReplayStatus gets the ReplayStatus from a ActivityGetLocalResultReply's properties
 // map.
 //
-// returns proxytemporal.ReplayStatus -> the current history replay
+// returns internal.ReplayStatus -> the current history replay
 // state of an activity
-func (reply *ActivityGetLocalResultReply) GetReplayStatus() proxytemporal.ReplayStatus {
+func (reply *ActivityGetLocalResultReply) GetReplayStatus() internal.ReplayStatus {
 	replayStatusPtr := reply.GetStringProperty("ReplayStatus")
 	if replayStatusPtr == nil {
-		return proxytemporal.ReplayStatusUnspecified
+		return internal.ReplayStatusUnspecified
 	}
-	replayStatus := proxytemporal.StringToReplayStatus(*replayStatusPtr)
+	replayStatus := internal.StringToReplayStatus(*replayStatusPtr)
 
 	return replayStatus
 }
@@ -79,9 +78,9 @@ func (reply *ActivityGetLocalResultReply) GetReplayStatus() proxytemporal.Replay
 // SetReplayStatus sets the ReplayStatus in a WorkflowInvokeRequest's properties
 // map.
 //
-// param value proxytemporal.ReplayStatus -> the current history replay
+// param value internal.ReplayStatus -> the current history replay
 // state of an activity
-func (reply *ActivityGetLocalResultReply) SetReplayStatus(value proxytemporal.ReplayStatus) {
+func (reply *ActivityGetLocalResultReply) SetReplayStatus(value internal.ReplayStatus) {
 	status := value.String()
 	reply.SetStringProperty("ReplayStatus", &status)
 }
@@ -97,7 +96,7 @@ func (reply *ActivityGetLocalResultReply) Build(e error, result ...interface{}) 
 			if _v, _ok := v[0].([]byte); _ok {
 				reply.SetResult(_v)
 			}
-			if _v, _ok := v[1].(proxytemporal.ReplayStatus); _ok {
+			if _v, _ok := v[1].(internal.ReplayStatus); _ok {
 				reply.SetReplayStatus(_v)
 			}
 		}

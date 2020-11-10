@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:		dotnetlogger_test.go
+// FILE:		log_test.go
 // CONTRIBUTOR: John C Burns
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -15,12 +15,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package dotnetlogger_test
+package log_test
 
 import (
 	"testing"
 
-	dotnetlogger "temporal-proxy/internal/dotnet/logger"
+	"temporal-proxy/internal/log"
 
 	"go.uber.org/goleak"
 	"go.uber.org/zap/zapcore"
@@ -30,7 +30,7 @@ import (
 
 var (
 	// log levels
-	none, debug, sinfo, info, warn, errorlvl, serror, critical dotnetlogger.LogLevel
+	none, debug, sinfo, info, warn, errorlvl, serror, critical log.Level
 )
 
 type (
@@ -56,14 +56,14 @@ func TestUnitTestSuite(t *testing.T) {
 }
 
 func (s *UnitTestSuite) setupTestSuiteServer() {
-	none = dotnetlogger.None
-	debug = dotnetlogger.Debug
-	sinfo = dotnetlogger.SInfo
-	info = dotnetlogger.Info
-	warn = dotnetlogger.Warn
-	errorlvl = dotnetlogger.Error
-	serror = dotnetlogger.SError
-	critical = dotnetlogger.Critical
+	none = log.None
+	debug = log.Debug
+	sinfo = log.SInfo
+	info = log.Info
+	warn = log.Warn
+	errorlvl = log.Error
+	serror = log.SError
+	critical = log.Critical
 }
 
 func (s *UnitTestSuite) Test_Enabled() {
@@ -152,73 +152,73 @@ func (s *UnitTestSuite) Test_String() {
 }
 
 func (s *UnitTestSuite) Test_ParseLogLeve() {
-	s.Equal(dotnetlogger.None, dotnetlogger.ParseLogLevel(none.String()))
-	s.Equal(dotnetlogger.Debug, dotnetlogger.ParseLogLevel(debug.String()))
-	s.Equal(dotnetlogger.SInfo, dotnetlogger.ParseLogLevel(sinfo.String()))
-	s.Equal(dotnetlogger.Info, dotnetlogger.ParseLogLevel(info.String()))
-	s.Equal(dotnetlogger.Warn, dotnetlogger.ParseLogLevel(warn.String()))
-	s.Equal(dotnetlogger.SError, dotnetlogger.ParseLogLevel(serror.String()))
-	s.Equal(dotnetlogger.Error, dotnetlogger.ParseLogLevel(errorlvl.String()))
-	s.Equal(dotnetlogger.Critical, dotnetlogger.ParseLogLevel(critical.String()))
-	s.Equal(dotnetlogger.None, dotnetlogger.ParseLogLevel("-1"))
+	s.Equal(log.None, log.ParseLevel(none.String()))
+	s.Equal(log.Debug, log.ParseLevel(debug.String()))
+	s.Equal(log.SInfo, log.ParseLevel(sinfo.String()))
+	s.Equal(log.Info, log.ParseLevel(info.String()))
+	s.Equal(log.Warn, log.ParseLevel(warn.String()))
+	s.Equal(log.SError, log.ParseLevel(serror.String()))
+	s.Equal(log.Error, log.ParseLevel(errorlvl.String()))
+	s.Equal(log.Critical, log.ParseLevel(critical.String()))
+	s.Equal(log.None, log.ParseLevel("-1"))
 }
 
-func (s *UnitTestSuite) Test_LogLevelToZapLevel() {
-	a, err := dotnetlogger.LogLevelToZapLevel(none)
+func (s *UnitTestSuite) Test_LevelToZapLevel() {
+	a, err := log.LevelToZapLevel(none)
 	s.Error(err)
 	s.Equal(zapcore.InfoLevel, a)
 
-	a, err = dotnetlogger.LogLevelToZapLevel(debug)
+	a, err = log.LevelToZapLevel(debug)
 	s.NoError(err)
 	s.Equal(zapcore.DebugLevel, a)
 
-	a, err = dotnetlogger.LogLevelToZapLevel(sinfo)
+	a, err = log.LevelToZapLevel(sinfo)
 	s.NoError(err)
 	s.Equal(zapcore.InfoLevel, a)
 
-	a, err = dotnetlogger.LogLevelToZapLevel(info)
+	a, err = log.LevelToZapLevel(info)
 	s.NoError(err)
 	s.Equal(zapcore.InfoLevel, a)
 
-	a, err = dotnetlogger.LogLevelToZapLevel(info)
+	a, err = log.LevelToZapLevel(info)
 	s.NoError(err)
 	s.Equal(zapcore.InfoLevel, a)
 
-	a, err = dotnetlogger.LogLevelToZapLevel(warn)
+	a, err = log.LevelToZapLevel(warn)
 	s.NoError(err)
 	s.Equal(zapcore.WarnLevel, a)
 
-	a, err = dotnetlogger.LogLevelToZapLevel(errorlvl)
+	a, err = log.LevelToZapLevel(errorlvl)
 	s.NoError(err)
 	s.Equal(zapcore.ErrorLevel, a)
 
-	a, err = dotnetlogger.LogLevelToZapLevel(serror)
+	a, err = log.LevelToZapLevel(serror)
 	s.NoError(err)
 	s.Equal(zapcore.ErrorLevel, a)
 
-	a, err = dotnetlogger.LogLevelToZapLevel(critical)
+	a, err = log.LevelToZapLevel(critical)
 	s.NoError(err)
 	s.Equal(zapcore.PanicLevel, a)
 }
 
-func (s *UnitTestSuite) Test_ZapLevelToLogLevel() {
-	a, err := dotnetlogger.ZapLevelToLogLevel(zapcore.DebugLevel)
+func (s *UnitTestSuite) Test_ZapLevelToLevel() {
+	a, err := log.ZapLevelToLevel(zapcore.DebugLevel)
 	s.NoError(err)
-	s.Equal(dotnetlogger.Debug, a)
+	s.Equal(log.Debug, a)
 
-	a, err = dotnetlogger.ZapLevelToLogLevel(zapcore.InfoLevel)
+	a, err = log.ZapLevelToLevel(zapcore.InfoLevel)
 	s.NoError(err)
-	s.Equal(dotnetlogger.Info, a)
+	s.Equal(log.Info, a)
 
-	a, err = dotnetlogger.ZapLevelToLogLevel(zapcore.WarnLevel)
+	a, err = log.ZapLevelToLevel(zapcore.WarnLevel)
 	s.NoError(err)
-	s.Equal(dotnetlogger.Warn, a)
+	s.Equal(log.Warn, a)
 
-	a, err = dotnetlogger.ZapLevelToLogLevel(zapcore.ErrorLevel)
+	a, err = log.ZapLevelToLevel(zapcore.ErrorLevel)
 	s.NoError(err)
-	s.Equal(dotnetlogger.Error, a)
+	s.Equal(log.Error, a)
 
-	a, err = dotnetlogger.ZapLevelToLogLevel(zapcore.PanicLevel)
+	a, err = log.ZapLevelToLevel(zapcore.PanicLevel)
 	s.NoError(err)
-	s.Equal(dotnetlogger.Critical, a)
+	s.Equal(log.Critical, a)
 }

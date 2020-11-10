@@ -15,7 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package messages_test
+package internal_test
 
 import (
 	"bytes"
@@ -50,11 +50,10 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"temporal-proxy/internal"
-	dotnetlogger "temporal-proxy/internal/dotnet/logger"
-	"temporal-proxy/internal/endpoints"
+	"temporal-proxy/internal/handlers"
+	"temporal-proxy/internal/log"
 	"temporal-proxy/internal/messages"
 	"temporal-proxy/internal/server"
-	proxytemporal "temporal-proxy/internal/temporal"
 )
 
 type (
@@ -97,7 +96,7 @@ func (s *UnitTestSuite) setupTestSuiteServer() {
 	// set the initialization logger
 	l := zap.New(
 		zapcore.NewCore(
-			endpoints.NewEncoder(),
+			handlers.NewEncoder(),
 			zapcore.Lock(os.Stdout),
 			zapcore.DebugLevel,
 		), zap.AddCaller())
@@ -107,10 +106,10 @@ func (s *UnitTestSuite) setupTestSuiteServer() {
 	// set the routes, and start the server listening
 	// on host:port 127.0.0.1:5000
 	s.instance = server.NewInstance(_listenAddress, l)
-	endpoints.Instance = s.instance
-	endpoints.Logger = l.Named(internal.ProxyLoggerName)
+	handlers.Instance = s.instance
+	handlers.Logger = l.Named(internal.ProxyLoggerName)
 
-	endpoints.SetupRoutes(s.instance.Router)
+	handlers.SetupRoutes(s.instance.Router)
 }
 
 // --------------------------------------------------------------------------
@@ -170,7 +169,7 @@ func (s *UnitTestSuite) TestInitializeRequest() {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetLibraryAddress())
 		s.Equal(int32(0), v.GetLibraryPort())
-		s.Equal(dotnetlogger.None, v.GetLogLevel())
+		s.Equal(log.None, v.GetLogLevel())
 
 		// Round-trip
 
@@ -184,8 +183,8 @@ func (s *UnitTestSuite) TestInitializeRequest() {
 		v.SetLibraryPort(int32(666))
 		s.Equal(int32(666), v.GetLibraryPort())
 
-		v.SetLogLevel(dotnetlogger.Critical)
-		s.Equal(dotnetlogger.Critical, v.GetLogLevel())
+		v.SetLogLevel(log.Critical)
+		s.Equal(log.Critical, v.GetLogLevel())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -200,7 +199,7 @@ func (s *UnitTestSuite) TestInitializeRequest() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("1.2.3.4", *v.GetLibraryAddress())
 		s.Equal(int32(666), v.GetLibraryPort())
-		s.Equal(dotnetlogger.Critical, v.GetLogLevel())
+		s.Equal(log.Critical, v.GetLogLevel())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -211,7 +210,7 @@ func (s *UnitTestSuite) TestInitializeRequest() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("1.2.3.4", *v.GetLibraryAddress())
 		s.Equal(int32(666), v.GetLibraryPort())
-		s.Equal(dotnetlogger.Critical, v.GetLogLevel())
+		s.Equal(log.Critical, v.GetLogLevel())
 	}
 }
 
@@ -1794,7 +1793,7 @@ func (s *UnitTestSuite) TestLogRequest() {
 
 	if v, ok := message.(*messages.LogRequest); ok {
 		s.Equal(int64(0), v.GetRequestID())
-		s.Equal(dotnetlogger.None, v.GetLogLevel())
+		s.Equal(log.None, v.GetLogLevel())
 		s.Equal(time.Time{}, v.GetTimeUtc())
 		s.False(v.GetFromTemporal())
 		s.Nil(v.GetLogMessage())
@@ -1804,8 +1803,8 @@ func (s *UnitTestSuite) TestLogRequest() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetLogLevel(dotnetlogger.Error)
-		s.Equal(dotnetlogger.Error, v.GetLogLevel())
+		v.SetLogLevel(log.Error)
+		s.Equal(log.Error, v.GetLogLevel())
 
 		v.SetTimeUtc(time.Date(2019, time.May, 27, 0, 0, 0, 0, time.UTC))
 		s.Equal(time.Date(2019, time.May, 27, 0, 0, 0, 0, time.UTC), v.GetTimeUtc())
@@ -1828,7 +1827,7 @@ func (s *UnitTestSuite) TestLogRequest() {
 
 	if v, ok := message.(*messages.LogRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(dotnetlogger.Error, v.GetLogLevel())
+		s.Equal(log.Error, v.GetLogLevel())
 		s.Equal(time.Date(2019, time.May, 27, 0, 0, 0, 0, time.UTC), v.GetTimeUtc())
 		s.True(v.GetFromTemporal())
 		s.Equal("test-msg", *v.GetLogMessage())
@@ -1840,7 +1839,7 @@ func (s *UnitTestSuite) TestLogRequest() {
 
 	if v, ok := message.(*messages.LogRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(dotnetlogger.Error, v.GetLogLevel())
+		s.Equal(log.Error, v.GetLogLevel())
 		s.Equal(time.Date(2019, time.May, 27, 0, 0, 0, 0, time.UTC), v.GetTimeUtc())
 		s.True(v.GetFromTemporal())
 		s.Equal("test-msg", *v.GetLogMessage())
@@ -2484,7 +2483,7 @@ func (s *UnitTestSuite) TestWorkflowInvokeRequest() {
 		s.Nil(v.GetWorkflowType())
 		s.Nil(v.GetTaskQueue())
 		s.Equal(time.Duration(0), v.GetExecutionStartToCloseTimeout())
-		s.Equal(proxytemporal.ReplayStatusUnspecified, v.GetReplayStatus())
+		s.Equal(internal.ReplayStatusUnspecified, v.GetReplayStatus())
 
 		// Round-trip
 
@@ -2525,8 +2524,8 @@ func (s *UnitTestSuite) TestWorkflowInvokeRequest() {
 		v.SetExecutionStartToCloseTimeout(time.Hour * 24)
 		s.Equal(time.Hour*24, v.GetExecutionStartToCloseTimeout())
 
-		v.SetReplayStatus(proxytemporal.ReplayStatusNotReplaying)
-		s.Equal(proxytemporal.ReplayStatusNotReplaying, v.GetReplayStatus())
+		v.SetReplayStatus(internal.ReplayStatusNotReplaying)
+		s.Equal(internal.ReplayStatusNotReplaying, v.GetReplayStatus())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -2548,7 +2547,7 @@ func (s *UnitTestSuite) TestWorkflowInvokeRequest() {
 		s.Equal("my-runid", *v.GetRunID())
 		s.Equal("my-workflowtype", *v.GetWorkflowType())
 		s.Equal(time.Hour*24, v.GetExecutionStartToCloseTimeout())
-		s.Equal(proxytemporal.ReplayStatusNotReplaying, v.GetReplayStatus())
+		s.Equal(internal.ReplayStatusNotReplaying, v.GetReplayStatus())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -2566,7 +2565,7 @@ func (s *UnitTestSuite) TestWorkflowInvokeRequest() {
 		s.Equal("my-runid", *v.GetRunID())
 		s.Equal("my-workflowtype", *v.GetWorkflowType())
 		s.Equal(time.Hour*24, v.GetExecutionStartToCloseTimeout())
-		s.Equal(proxytemporal.ReplayStatusNotReplaying, v.GetReplayStatus())
+		s.Equal(internal.ReplayStatusNotReplaying, v.GetReplayStatus())
 	}
 }
 
@@ -4487,7 +4486,7 @@ func (s *UnitTestSuite) TestWorkflowQueryInvokeRequest() {
 		s.Equal(int64(0), v.GetContextID())
 		s.Nil(v.GetQueryName())
 		s.Nil(v.GetQueryArgs())
-		s.Equal(proxytemporal.ReplayStatusUnspecified, v.GetReplayStatus())
+		s.Equal(internal.ReplayStatusUnspecified, v.GetReplayStatus())
 
 		// Round-trip
 
@@ -4504,8 +4503,8 @@ func (s *UnitTestSuite) TestWorkflowQueryInvokeRequest() {
 		v.SetQueryArgs([]byte{0, 1, 2, 3, 4})
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetQueryArgs())
 
-		v.SetReplayStatus(proxytemporal.ReplayStatusReplaying)
-		s.Equal(proxytemporal.ReplayStatusReplaying, v.GetReplayStatus())
+		v.SetReplayStatus(internal.ReplayStatusReplaying)
+		s.Equal(internal.ReplayStatusReplaying, v.GetReplayStatus())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -4521,7 +4520,7 @@ func (s *UnitTestSuite) TestWorkflowQueryInvokeRequest() {
 		s.Equal(int64(666), v.GetContextID())
 		s.Equal("query", *v.GetQueryName())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetQueryArgs())
-		s.Equal(proxytemporal.ReplayStatusReplaying, v.GetReplayStatus())
+		s.Equal(internal.ReplayStatusReplaying, v.GetReplayStatus())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -4533,7 +4532,7 @@ func (s *UnitTestSuite) TestWorkflowQueryInvokeRequest() {
 		s.Equal(int64(666), v.GetContextID())
 		s.Equal("query", *v.GetQueryName())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetQueryArgs())
-		s.Equal(proxytemporal.ReplayStatusReplaying, v.GetReplayStatus())
+		s.Equal(internal.ReplayStatusReplaying, v.GetReplayStatus())
 	}
 }
 
@@ -4823,7 +4822,7 @@ func (s *UnitTestSuite) TestWorkflowSignalInvokeRequest() {
 		s.Equal(int64(0), v.GetContextID())
 		s.Nil(v.GetSignalName())
 		s.Nil(v.GetSignalArgs())
-		s.Equal(proxytemporal.ReplayStatusUnspecified, v.GetReplayStatus())
+		s.Equal(internal.ReplayStatusUnspecified, v.GetReplayStatus())
 
 		// Round-trip
 
@@ -4840,8 +4839,8 @@ func (s *UnitTestSuite) TestWorkflowSignalInvokeRequest() {
 		v.SetSignalArgs([]byte{0, 1, 2, 3, 4})
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetSignalArgs())
 
-		v.SetReplayStatus(proxytemporal.ReplayStatusReplaying)
-		s.Equal(proxytemporal.ReplayStatusReplaying, v.GetReplayStatus())
+		v.SetReplayStatus(internal.ReplayStatusReplaying)
+		s.Equal(internal.ReplayStatusReplaying, v.GetReplayStatus())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -4857,7 +4856,7 @@ func (s *UnitTestSuite) TestWorkflowSignalInvokeRequest() {
 		s.Equal(int64(666), v.GetContextID())
 		s.Equal("signal", *v.GetSignalName())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetSignalArgs())
-		s.Equal(proxytemporal.ReplayStatusReplaying, v.GetReplayStatus())
+		s.Equal(internal.ReplayStatusReplaying, v.GetReplayStatus())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -4869,7 +4868,7 @@ func (s *UnitTestSuite) TestWorkflowSignalInvokeRequest() {
 		s.Equal(int64(666), v.GetContextID())
 		s.Equal("signal", *v.GetSignalName())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetSignalArgs())
-		s.Equal(proxytemporal.ReplayStatusReplaying, v.GetReplayStatus())
+		s.Equal(internal.ReplayStatusReplaying, v.GetReplayStatus())
 	}
 }
 
@@ -7783,17 +7782,17 @@ func (s *UnitTestSuite) TestWorkflowReply() {
 	if v, ok := message.(*messages.WorkflowReply); ok {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetError())
-		s.Equal(proxytemporal.ReplayStatusUnspecified, v.GetReplayStatus())
+		s.Equal(internal.ReplayStatusUnspecified, v.GetReplayStatus())
 
 		// Round-trip
 		v.SetRequestID(int64(555))
 		v.SetError(internal.NewTemporalError(errors.New("foo"), internal.ApplicationError))
-		v.SetReplayStatus(proxytemporal.ReplayStatusReplaying)
+		v.SetReplayStatus(internal.ReplayStatusReplaying)
 
 		s.Equal(int64(555), v.GetRequestID())
 		s.True(internal.IsApplicationError(v.GetError()))
 		s.Equal("foo", v.GetError().Error())
-		s.Equal(proxytemporal.ReplayStatusReplaying, v.GetReplayStatus())
+		s.Equal(internal.ReplayStatusReplaying, v.GetReplayStatus())
 
 		// serialize the new message
 		serializedMessage, err := v.Serialize(true)
@@ -7811,7 +7810,7 @@ func (s *UnitTestSuite) TestWorkflowReply() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.True(internal.IsApplicationError(v.GetError()))
 		s.Equal("foo", v.GetError().Error())
-		s.Equal(proxytemporal.ReplayStatusReplaying, v.GetReplayStatus())
+		s.Equal(internal.ReplayStatusReplaying, v.GetReplayStatus())
 	}
 }
 

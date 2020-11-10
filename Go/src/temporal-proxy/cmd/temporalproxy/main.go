@@ -26,7 +26,7 @@ import (
 	"go.uber.org/zap/zapcore"
 
 	"temporal-proxy/internal"
-	"temporal-proxy/internal/endpoints"
+	"temporal-proxy/internal/handlers"
 	"temporal-proxy/internal/server"
 )
 
@@ -65,7 +65,7 @@ func main() {
 	// set the initialization logger
 	l := zap.New(
 		zapcore.NewCore(
-			endpoints.NewEncoder(),
+			handlers.NewEncoder(),
 			zapcore.Lock(os.Stdout),
 			logLevel))
 
@@ -90,11 +90,11 @@ func main() {
 	// logger for endpoints
 	// set HTTPClient
 	// setup the routes
-	endpoints.Logger = l.Named("init         ")
-	endpoints.LoggerClientID = clientID
-	endpoints.Instance = instance
-	endpoints.HttpClient = client
-	endpoints.SetupRoutes(instance.Router)
+	handlers.Logger = l.Named("init         ")
+	handlers.LoggerClientID = clientID
+	handlers.Instance = instance
+	handlers.HttpClient = client
+	handlers.SetupRoutes(instance.Router)
 
 	// start the server
 	instance.Start()

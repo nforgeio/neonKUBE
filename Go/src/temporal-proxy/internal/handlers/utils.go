@@ -15,7 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package endpoints
+package handlers
 
 import (
 	"bytes"
@@ -29,7 +29,6 @@ import (
 
 	"temporal-proxy/internal"
 	"temporal-proxy/internal/messages"
-	proxytemporal "temporal-proxy/internal/temporal"
 	proxyclient "temporal-proxy/internal/temporal/client"
 )
 
@@ -115,30 +114,30 @@ func setReplayStatus(ctx workflow.Context, message messages.IProxyMessage) {
 	switch s := message.(type) {
 	case messages.IWorkflowReply:
 		if isReplaying {
-			s.SetReplayStatus(proxytemporal.ReplayStatusReplaying)
+			s.SetReplayStatus(internal.ReplayStatusReplaying)
 		} else {
-			s.SetReplayStatus(proxytemporal.ReplayStatusNotReplaying)
+			s.SetReplayStatus(internal.ReplayStatusNotReplaying)
 		}
 
 	case *messages.WorkflowInvokeRequest:
 		if isReplaying {
-			s.SetReplayStatus(proxytemporal.ReplayStatusReplaying)
+			s.SetReplayStatus(internal.ReplayStatusReplaying)
 		} else {
-			s.SetReplayStatus(proxytemporal.ReplayStatusNotReplaying)
+			s.SetReplayStatus(internal.ReplayStatusNotReplaying)
 		}
 
 	case *messages.WorkflowQueryInvokeRequest:
 		if isReplaying {
-			s.SetReplayStatus(proxytemporal.ReplayStatusReplaying)
+			s.SetReplayStatus(internal.ReplayStatusReplaying)
 		} else {
-			s.SetReplayStatus(proxytemporal.ReplayStatusNotReplaying)
+			s.SetReplayStatus(internal.ReplayStatusNotReplaying)
 		}
 
 	case *messages.WorkflowSignalInvokeRequest:
 		if isReplaying {
-			s.SetReplayStatus(proxytemporal.ReplayStatusReplaying)
+			s.SetReplayStatus(internal.ReplayStatusReplaying)
 		} else {
-			s.SetReplayStatus(proxytemporal.ReplayStatusNotReplaying)
+			s.SetReplayStatus(internal.ReplayStatusNotReplaying)
 		}
 	}
 }

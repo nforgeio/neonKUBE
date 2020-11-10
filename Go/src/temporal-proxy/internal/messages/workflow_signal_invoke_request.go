@@ -18,8 +18,7 @@
 package messages
 
 import (
-	internal "temporal-proxy/internal"
-	proxytemporal "temporal-proxy/internal/temporal"
+	"temporal-proxy/internal"
 )
 
 type (
@@ -92,14 +91,14 @@ func (request *WorkflowSignalInvokeRequest) SetSignalArgs(value []byte) {
 // map. For workflow requests related to an executing workflow,
 // this will indicate the current history replay state.
 //
-// returns proxytemporal.ReplayStatus -> the current history replay
+// returns internal.ReplayStatus -> the current history replay
 // state of a workflow
-func (request *WorkflowSignalInvokeRequest) GetReplayStatus() proxytemporal.ReplayStatus {
+func (request *WorkflowSignalInvokeRequest) GetReplayStatus() internal.ReplayStatus {
 	replayStatusPtr := request.GetStringProperty("ReplayStatus")
 	if replayStatusPtr == nil {
-		return proxytemporal.ReplayStatusUnspecified
+		return internal.ReplayStatusUnspecified
 	}
-	replayStatus := proxytemporal.StringToReplayStatus(*replayStatusPtr)
+	replayStatus := internal.StringToReplayStatus(*replayStatusPtr)
 
 	return replayStatus
 }
@@ -108,9 +107,9 @@ func (request *WorkflowSignalInvokeRequest) GetReplayStatus() proxytemporal.Repl
 // map. For workflow requests related to an executing workflow,
 // this will indicate the current history replay state.
 //
-// param value proxytemporal.ReplayStatus -> the current history replay
+// param value internal.ReplayStatus -> the current history replay
 // state of a workflow
-func (request *WorkflowSignalInvokeRequest) SetReplayStatus(value proxytemporal.ReplayStatus) {
+func (request *WorkflowSignalInvokeRequest) SetReplayStatus(value internal.ReplayStatus) {
 	status := value.String()
 	request.SetStringProperty("ReplayStatus", &status)
 }
