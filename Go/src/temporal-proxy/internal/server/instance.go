@@ -62,7 +62,7 @@ func NewInstance(config *InstanceConfig) *Instance {
 	}
 
 	if err != nil {
-		panic("could not configure logger")
+		panic(err)
 	}
 
 	s := &Instance{
