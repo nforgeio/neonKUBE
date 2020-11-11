@@ -67,6 +67,8 @@ OPTIONS:
                                   from the source assembly.
 
     --persisted                 - Generate database persistence related code.
+                                  
+                                  NOTE: This only supports Couchbase
 
     --ux=xaml                   - Generate additional code for the specified
                                   UX framework.  Currently, only [xaml] is
@@ -76,7 +78,7 @@ OPTIONS:
 
     --targets=LIST              - Specifies the comma separated list of target 
                                   names.  Any input models that are not tagged
-                                  with these target will not be generated.
+                                  with one of these names will not be generated.
 
     --debug-allow-stepinto      - Indicates that generated class methods will
                                   not include the [DebuggerStepThrough]
