@@ -30,7 +30,7 @@ using k8s.Models;
 
 namespace NeonClusterManager
 {
-    public partial class NeonClusterManager : NeonService
+    public partial class Service : NeonService
     {
         private static TimeSpan logPurgerInterval;
 
@@ -41,7 +41,7 @@ namespace NeonClusterManager
         /// </summary>
         /// <param name="name">The service name.</param>
         /// <param name="serviceMap">Optionally specifies the service map.</param>
-        public NeonClusterManager(string name, ServiceMap serviceMap = null)
+        public Service(string name, ServiceMap serviceMap = null)
             : base(name, serviceMap: serviceMap)
         {
         }

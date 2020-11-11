@@ -56,7 +56,7 @@ namespace TemporalService
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async static Task Main(string[] args)
         {
-            await new TemporalTester(NeonServices.TestTemporal, serviceMap: NeonServiceMap.Production).RunAsync();
+            await new Service(NeonServices.TestTemporal, serviceMap: NeonServiceMap.Production).RunAsync();
         }
     }
 }

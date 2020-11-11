@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    NeonSystemSetup.cs
+// FILE:	    Service.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2016-2020 by neonFORGE LLC.  All rights reserved.
 
@@ -29,7 +29,7 @@ using k8s;
 
 namespace NeonClusterManager
 {
-    public partial class NeonClusterManager : NeonService
+    public partial class Service : NeonService
     {
         private static string connString = "Host=neon-system-db-citus-postgresql.neon-system;Username=postgres;Password=0987654321;Database=postgres";
 

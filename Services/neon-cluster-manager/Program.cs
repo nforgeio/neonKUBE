@@ -27,7 +27,7 @@ namespace NeonClusterManager
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async static Task Main(string[] args)
         {
-            await new NeonClusterManager(NeonServices.NeonClusterManager, serviceMap: NeonServiceMap.Production).RunAsync();
+            await new Service(NeonServices.NeonClusterManager, serviceMap: NeonServiceMap.Production).RunAsync();
         }
     }
 }

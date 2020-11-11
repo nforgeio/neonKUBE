@@ -1,5 +1,5 @@
 ﻿//------------------------------------------------------------------------------
-// FILE:         TemporalTester.cs
+// FILE:         Service.cs
 // CONTRIBUTOR:  Marcus Bowyer
 // COPYRIGHT:    Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
 
@@ -18,14 +18,14 @@ using Neon.Temporal;
 
 namespace TemporalService
 {
-    public partial class TemporalTester : NeonService
+    public partial class Service : NeonService
     {
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="name">The service name.</param>
         /// <param name="serviceMap">Optionally specifies the service map.</param>
-        public TemporalTester(string name, ServiceMap serviceMap = null)
+        public Service(string name, ServiceMap serviceMap = null)
             : base(name, serviceMap: serviceMap)
         {
         }

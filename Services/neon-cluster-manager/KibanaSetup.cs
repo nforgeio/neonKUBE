@@ -27,7 +27,7 @@ using k8s;
 
 namespace NeonClusterManager
 {
-    public partial class NeonClusterManager : NeonService
+    public partial class Service : NeonService
     {
         /// <summary>
         /// Handles purging of old <b>logstash</b> and <b>metricbeat</b> Elasticsearch indexes.
