@@ -2361,6 +2361,7 @@ namespace Neon.Temporal
                     return (ActivityExecuteLocalReply)await Client.CallProxyAsync(
                         new ActivityExecuteLocalRequest()
                         {
+                            WorkerId       = Worker.WorkerId,
                             ContextId      = ContextId,
                             ActivityTypeId = activityActionId,
                             Args           = args,

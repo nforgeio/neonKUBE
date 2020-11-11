@@ -516,6 +516,7 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 	contextID := request.GetContextID()
 	clientID := request.GetClientID()
 	requestID := request.GetRequestID()
+	workerID := request.GetWorkerID()
 	activityTypeID := request.GetActivityTypeID()
 	Logger.Debug("ActivityExecuteLocalRequest Received",
 		zap.Int64("ActivityTypeId", activityTypeID),
@@ -548,6 +549,7 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 		activityInvokeLocalRequest.SetActivityTypeID(activityTypeID)
 		activityInvokeLocalRequest.SetActivityContextID(activityContextID)
 		activityInvokeLocalRequest.SetClientID(clientID)
+		activityInvokeLocalRequest.SetWorkerID(workerID)
 
 		// create the Operation for this request and add it to the operations map
 		op := NewOperation(requestID, activityInvokeLocalRequest)

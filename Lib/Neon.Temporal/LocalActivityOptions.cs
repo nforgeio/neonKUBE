@@ -20,6 +20,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
 
+using Newtonsoft.Json;
+
 using Neon.Common;
 using Neon.Temporal;
 using Neon.Temporal.Internal;
@@ -75,6 +77,7 @@ namespace Neon.Temporal
         /// <summary>
         /// Optionally specifies the maximum time the activity can run.
         /// </summary>
+        [JsonConverter(typeof(GoTimeSpanJsonConverter))]
         public TimeSpan ScheduleToCloseTimeout { get; set; }
 
         /// <summary>
