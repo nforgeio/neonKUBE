@@ -2,11 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-
     <IsPackable>false</IsPackable>
-
+    <LangVersion>latest</LangVersion>
     <RootNamespace>TestYugaByte</RootNamespace>
-
     <Configurations>Debug;Release;CodeDoc</Configurations>
   </PropertyGroup>
 

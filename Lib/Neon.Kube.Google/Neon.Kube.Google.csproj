@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>latest</LangVersion>
     <Version>2.1.0-internal</Version>
     <Company>neonFORGE LLC</Company>
     <Product>neonKUBE</Product>
