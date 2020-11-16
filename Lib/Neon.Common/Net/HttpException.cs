@@ -41,7 +41,27 @@ namespace Neon.Net
                 return string.Empty;
             }
 
-            return $", reason=[{reasonPhrase}]";
+            return $" reason=[{reasonPhrase}]";
+        }
+
+        private static string GetStatusString(HttpStatusCode statusCode)
+        {
+            if ((int)statusCode <= 0)
+            {
+                return string.Empty;
+            }
+
+            return $" status=[{(int)statusCode}]";
+        }
+
+        private static string GetMethodString(string method)
+        {
+            if (string.IsNullOrEmpty(method))
+            {
+                return string.Empty;
+            }
+
+            return $" method={method}";
         }
 
         private static string GetUriString(string uri)
@@ -51,96 +71,76 @@ namespace Neon.Net
                 return string.Empty;
             }
 
-            return $", uri=[{uri}]";
+            return $" uri={uri}";
         }
 
         /// <summary>
-        /// Constructs an exception message using an inner exception.
+        /// Constructs an exception message using an inner <see cref="HttpException"/> if passed or 
         /// </summary>
-        /// <param name="message">The base message.</param>
-        /// <param name="innerException">The inner exception or <c>null</c>.</param>
-        private static string GetMessage(string message, Exception innerException)
+        /// <param name="reasonPhrase">The HTTP response peason phrase (or <c>null</c>).</param>
+        /// <param name="requestUri">Optionally specifies the request URL.</param>
+        /// <param name="requestMethod">Optionally specifies the request method.</param>
+        /// <param name="statusCode">Optionally specifies the response status code.</param>
+        private static string GetMessage(string reasonPhrase, string requestUri = null, string requestMethod = null, HttpStatusCode statusCode = (HttpStatusCode)0)
         {
-            var httpException = innerException as HttpException;
-
-            if (httpException != null)
-            {
-                return $"{message} [status={(int)httpException.StatusCode}{GetReasonString(httpException.ReasonPhrase)}{GetUriString(httpException.RequestUri)}]";
-            }
-            else
-            {
-                return message;
-            }
+            return $"HTTP ERROR: {GetStatusString(statusCode)}{GetMethodString(requestMethod)}{GetUriString(requestUri)}{GetReasonString(reasonPhrase)}";
         }
 
         //---------------------------------------------------------------------
         // Instance members
 
         /// <summary>
-        /// Constructor.
+        /// Constructs an exception from the request and response details passed.
         /// </summary>
-        /// <param name="message">Exception message.</param>
-        /// <param name="innerException">Optional inner exception.</param>
-        /// <param name="requestUri">The optional request URL.</param>
-        public HttpException(string message, Exception innerException = null, string requestUri = null)
-            : base(GetMessage(message, innerException))
+        /// <param name="reasonPhrase">The HTTP response reason phrase (or <c>null</c>).</param>
+        /// <param name="requestUri">Optionally specifies the request URL.</param>
+        /// <param name="requestMethod">Optionally specifies the request method.</param>
+        /// <param name="statusCode">Optionally specifies the response status code.</param>
+        public HttpException(string reasonPhrase = null, string requestUri = null, string requestMethod = null, HttpStatusCode statusCode = (HttpStatusCode)0)
+            : base(GetMessage(reasonPhrase, requestUri, requestMethod, statusCode))
         {
-            var httpException = innerException as HttpException;
-
-            if (httpException != null)
-            {
-                this.StatusCode   = httpException.StatusCode;
-                this.RequestUri   = httpException.RequestUri;
-                this.ReasonPhrase = httpException.ReasonPhrase ?? string.Empty;
-            }
-            else
-            {
-                this.StatusCode   = (HttpStatusCode)0;
-                this.RequestUri   = requestUri;
-                this.ReasonPhrase = message;
-            }
+            this.RequestUri    = requestUri;
+            this.RequestMethod = requestMethod;
+            this.ReasonPhrase  = reasonPhrase ?? string.Empty;
+            this.StatusCode    = statusCode;
         }
 
         /// <summary>
-        /// Constructor.
+        /// Constructs an exception from a <see cref="HttpRequestException"/> and optional
+        /// request details.
         /// </summary>
-        /// <param name="innerException">The inner exception.</param>
-        /// <param name="requestUri">The optional request URL.</param>
-        public HttpException(Exception innerException, string requestUri = null)
-            : base($"[exception={innerException.GetType().Name}({innerException.Message}){GetUriString(requestUri)}]")
+        /// <param name="requestException">The <see cref="HttpRequestException"/>.</param>
+        /// <param name="requestUri">Optionally specifies the request URL.</param>
+        /// <param name="requestMethod">Optionally specifies the request method.</param>
+        public HttpException(HttpRequestException requestException, string requestUri = null, string requestMethod = null)
+            : base(GetMessage(requestException.Message ?? string.Empty, requestUri, requestMethod), requestException)
         {
-            this.StatusCode   = (HttpStatusCode)0;
-            this.RequestUri   = requestUri;
-            this.ReasonPhrase = innerException.Message;
+            Covenant.Requires<ArgumentNullException>(requestException != null, nameof(requestException));
+
+            this.RequestUri    = requestUri;
+            this.RequestMethod = requestMethod;
+            this.ReasonPhrase  = requestException.Message;
+            this.StatusCode    = (HttpStatusCode)0;
         }
-
-        /// <summary>
-        /// Constructor.
-        /// </summary>
-        /// <param name="statusCode">The HTTP response status code.</param>
-        /// <param name="reasonPhrase">The HTTP response peason phrase (or <c>null</c>).</param>
-        /// <param name="requestUri">The optional request URL.</param>
-        public HttpException(HttpStatusCode statusCode, string reasonPhrase = null, string requestUri = null)
-            : base($"[status={(int)statusCode}{GetReasonString(reasonPhrase)}{GetUriString(requestUri)}]: {statusCode}")
-        {
-            this.StatusCode   = statusCode;
-            this.RequestUri   = requestUri;
-            this.ReasonPhrase = reasonPhrase ?? string.Empty;
-        }
-
-        /// <summary>
-        /// Returns the HTTP response status code.
-        /// </summary>
-        public HttpStatusCode StatusCode { get; private set; }
-
-        /// <summary>
-        /// Returns the request URI.
-        /// </summary>
-        public string RequestUri { get; private set; }
 
         /// <summary>
         /// Returns the HTTP response status message.
         /// </summary>
         public string ReasonPhrase { get; private set; }
+
+        /// <summary>
+        /// Returns the request URI when known.
+        /// </summary>
+        public string RequestUri { get; private set; }
+
+        /// <summary>
+        /// Returns the request requestMethod when known.
+        /// </summary>
+        public string RequestMethod { get; private set; }
+
+        /// <summary>
+        /// Returns the HTTP response status code.
+        /// </summary>
+        public HttpStatusCode StatusCode { get; private set; }
     }
 }

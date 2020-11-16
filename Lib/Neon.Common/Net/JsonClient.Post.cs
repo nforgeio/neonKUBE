@@ -81,7 +81,7 @@ namespace Neon.Net
                         }
 
                         var httpResponse = await client.PostAsync(requestUri, CreateContent(document), cancellationToken: cancellationToken, headers: headers, activity: logActivity);
-                        var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
+                        var jsonResponse = new JsonResponse(requestUri, "POST", httpResponse, await httpResponse.Content.ReadAsStringAsync());
 
                         jsonResponse.EnsureSuccess();
 
@@ -133,7 +133,7 @@ namespace Neon.Net
                         }
 
                         var httpResponse = await client.PostAsync(requestUri, CreateContent(document), cancellationToken: cancellationToken, headers: headers, activity: logActivity);
-                        var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
+                        var jsonResponse = new JsonResponse(requestUri, "POST", httpResponse, await httpResponse.Content.ReadAsStringAsync());
 
                         jsonResponse.EnsureSuccess();
 
@@ -141,7 +141,7 @@ namespace Neon.Net
                     }
                     catch (HttpRequestException e)
                     {
-                        throw new HttpException(e, requestUri);
+                        throw new HttpException(e, "POST", requestUri);
                     }
                 });
 
@@ -191,7 +191,7 @@ namespace Neon.Net
                         }
 
                         var httpResponse = await client.PostAsync(requestUri, CreateContent(document), cancellationToken: cancellationToken, headers: headers, activity: logActivity);
-                        var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
+                        var jsonResponse = new JsonResponse(requestUri, "POST", httpResponse, await httpResponse.Content.ReadAsStringAsync());
 
                         jsonResponse.EnsureSuccess();
 
@@ -199,7 +199,7 @@ namespace Neon.Net
                     }
                     catch (HttpRequestException e)
                     {
-                        throw new HttpException(e, requestUri);
+                        throw new HttpException(e, "POST", requestUri);
                     }
                 });
         }
@@ -242,11 +242,11 @@ namespace Neon.Net
 
                         var httpResponse = await client.PostAsync(requestUri, CreateContent(document), cancellationToken: cancellationToken, headers: headers, activity: logActivity);
 
-                        return new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
+                        return new JsonResponse(requestUri, "POST", httpResponse, await httpResponse.Content.ReadAsStringAsync());
                     }
                     catch (HttpRequestException e)
                     {
-                        throw new HttpException(e, requestUri);
+                        throw new HttpException(e, "POST", requestUri);
                     }
                 });
         }
@@ -294,11 +294,11 @@ namespace Neon.Net
 
                         var httpResponse = await client.PostAsync(requestUri, CreateContent(document), cancellationToken: cancellationToken, headers: headers, activity: logActivity);
 
-                        return new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
+                        return new JsonResponse(requestUri, "POST", httpResponse, await httpResponse.Content.ReadAsStringAsync());
                     }
                     catch (HttpRequestException e)
                     {
-                        throw new HttpException(e, requestUri);
+                        throw new HttpException(e, "POST", requestUri);
                     }
                 });
         }

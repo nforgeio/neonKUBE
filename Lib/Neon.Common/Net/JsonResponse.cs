@@ -47,9 +47,10 @@ namespace Neon.Net
         /// Constructs a <see cref="JsonResponse"/> from a lower level <see cref="HttpResponseMessage"/>.
         /// </summary>
         /// <param name="requestUri">The request URI.</param>
-        /// <param name="httpRespose">The low-level response.</param>
+        /// <param name="requestMethod">The request method.</param>
+        /// <param name="httpRespose">The low-level HTTP response.</param>
         /// <param name="responseText">The response text.</param>
-        public JsonResponse(string requestUri, HttpResponseMessage httpRespose, string responseText)
+        public JsonResponse(string requestUri, string requestMethod, HttpResponseMessage httpRespose, string responseText)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(requestUri), nameof(requestUri));
             Covenant.Requires<ArgumentNullException>(httpRespose != null, nameof(httpRespose));
@@ -66,8 +67,9 @@ namespace Neon.Net
                     httpRespose.Content.Headers.ContentType.MediaType.Equals("text/json", StringComparison.OrdinalIgnoreCase)
                 );
 
-            this.RequestUri   = requestUri;
-            this.HttpResponse = httpRespose;
+            this.RequestUri    = requestUri;
+            this.RequestMethod = requestMethod;
+            this.HttpResponse  = httpRespose;
 
             if (httpRespose.Content.Headers.ContentType != null
                 && jsonContent
@@ -82,6 +84,11 @@ namespace Neon.Net
         /// Returns the request URI.
         /// </summary>
         public string RequestUri { get; private set; }
+
+        /// <summary>
+        /// Returns the request method.
+        /// </summary>
+        public string RequestMethod { get; private set; }
 
         /// <summary>
         /// Returns the low-level HTTP response.
@@ -150,7 +157,7 @@ namespace Neon.Net
         {
             if (!IsSuccess)
             {
-                throw new HttpException(HttpResponse.StatusCode, HttpResponse.ReasonPhrase, RequestUri);
+                throw new HttpException(HttpResponse.ReasonPhrase, RequestUri, RequestMethod, HttpResponse.StatusCode);
             }
         }
     }

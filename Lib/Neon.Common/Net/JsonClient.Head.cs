@@ -57,11 +57,11 @@ namespace Neon.Net
         /// <exception cref="HttpException">Thrown when the server responds with an HTTP error status code.</exception>
         public async Task HeadAsync(
             string              uri, 
-            object              document = null, 
-            ArgDictionary       args = null, 
-            ArgDictionary       headers = null,
+            object              document          = null, 
+            ArgDictionary       args              = null, 
+            ArgDictionary       headers           = null,
             CancellationToken   cancellationToken = default, 
-            LogActivity         logActivity = default)
+            LogActivity         logActivity       = default)
         {
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri), nameof(uri));
@@ -81,7 +81,7 @@ namespace Neon.Net
                         }
 
                         var httpResponse = await client.HeadAsync(requestUri, CreateContent(document), cancellationToken: cancellationToken, headers: headers, activity: logActivity);
-                        var jsonResponse = new JsonResponse(requestUri, httpResponse, null);
+                        var jsonResponse = new JsonResponse(requestUri, "HEAD", httpResponse, null);
 
                         jsonResponse.EnsureSuccess();
 
@@ -89,7 +89,7 @@ namespace Neon.Net
                     }
                     catch (HttpRequestException e)
                     {
-                        throw new HttpException(e, requestUri);
+                        throw new HttpException(e, "HEAD", requestUri);
                     }
                 });
         }
@@ -109,11 +109,11 @@ namespace Neon.Net
         /// <exception cref="HttpException">Thrown when the server responds with an HTTP error status code.</exception>
         public async Task HeadAsync<TResult>(
             string              uri, 
-            object              document = null, 
-            ArgDictionary       args = null, 
-            ArgDictionary       headers = null,
+            object              document          = null, 
+            ArgDictionary       args              = null, 
+            ArgDictionary       headers           = null,
             CancellationToken   cancellationToken = default, 
-            LogActivity         logActivity = default)
+            LogActivity         logActivity       = default)
         {
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri), nameof(uri));
@@ -133,7 +133,7 @@ namespace Neon.Net
                         }
 
                         var httpResponse = await client.HeadAsync(requestUri, CreateContent(document), cancellationToken: cancellationToken, headers: headers, activity: logActivity);
-                        var jsonResponse = new JsonResponse(requestUri, httpResponse, null);
+                        var jsonResponse = new JsonResponse(requestUri, "HEAD", httpResponse, null);
 
                         jsonResponse.EnsureSuccess();
 
@@ -141,7 +141,7 @@ namespace Neon.Net
                     }
                     catch (HttpRequestException e)
                     {
-                        throw new HttpException(e, requestUri);
+                        throw new HttpException(e, "HEAD", requestUri);
                     }
                 });
         }
@@ -163,11 +163,11 @@ namespace Neon.Net
         public async Task HeadAsync(
             IRetryPolicy        retryPolicy, 
             string              uri,
-            object              document = null, 
-            ArgDictionary       args = null, 
-            ArgDictionary       headers = null,
+            object              document          = null, 
+            ArgDictionary       args              = null, 
+            ArgDictionary       headers           = null,
             CancellationToken   cancellationToken = default, 
-            LogActivity         logActivity = default)
+            LogActivity         logActivity       = default)
         {
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri), nameof(uri));
@@ -189,7 +189,7 @@ namespace Neon.Net
                         }
 
                         var httpResponse = await client.HeadAsync(requestUri, CreateContent(document), cancellationToken: cancellationToken, headers: headers, activity: logActivity);
-                        var jsonResponse = new JsonResponse(requestUri, httpResponse, null);
+                        var jsonResponse = new JsonResponse(requestUri, "HEAD", httpResponse, null);
 
                         jsonResponse.EnsureSuccess();
 
@@ -197,7 +197,7 @@ namespace Neon.Net
                     }
                     catch (HttpRequestException e)
                     {
-                        throw new HttpException(e, requestUri);
+                        throw new HttpException(e, "HEAD", requestUri);
                     }
                 });
         }
@@ -215,11 +215,11 @@ namespace Neon.Net
         /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
         public async Task<JsonResponse> HeadUnsafeAsync(
             string              uri,
-            object              document = null, 
-            ArgDictionary       args = null, 
-            ArgDictionary       headers = null,
+            object              document          = null, 
+            ArgDictionary       args              = null, 
+            ArgDictionary       headers           = null,
             CancellationToken   cancellationToken = default, 
-            LogActivity         logActivity = default)
+            LogActivity         logActivity       = default)
         {
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri), nameof(uri));
@@ -240,11 +240,11 @@ namespace Neon.Net
 
                         var httpResponse = await client.HeadAsync(requestUri, CreateContent(document), cancellationToken: cancellationToken, headers: headers, activity: logActivity);
 
-                        return new JsonResponse(requestUri, httpResponse, null);
+                        return new JsonResponse(requestUri, "HEAD", httpResponse, null);
                     }
                     catch (HttpRequestException e)
                     {
-                        throw new HttpException(e, requestUri);
+                        throw new HttpException(e, "HEAD", requestUri);
                     }
                 });
         }
@@ -265,11 +265,11 @@ namespace Neon.Net
         public async Task<JsonResponse> HeadUnsafeAsync(
             IRetryPolicy        retryPolicy, 
             string              uri, 
-            object              document = null,
-            ArgDictionary       args = null, 
-            ArgDictionary       headers = null,
+            object              document          = null,
+            ArgDictionary       args              = null, 
+            ArgDictionary       headers           = null,
             CancellationToken   cancellationToken = default, 
-            LogActivity         logActivity = default)
+            LogActivity         logActivity       = default)
         {
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri), nameof(uri));
@@ -292,11 +292,11 @@ namespace Neon.Net
 
                         var httpResponse = await client.HeadAsync(requestUri, CreateContent(document), cancellationToken: cancellationToken, headers: headers, activity: logActivity);
 
-                        return new JsonResponse(requestUri, httpResponse, null);
+                        return new JsonResponse(requestUri, "HEAD", httpResponse, null);
                     }
                     catch (HttpRequestException e)
                     {
-                        throw new HttpException(e, requestUri);
+                        throw new HttpException(e, "HEAD", requestUri);
                     }
                 });
         }
