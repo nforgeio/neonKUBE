@@ -20,8 +20,9 @@ calculate_heap_sizes()
         Linux)
             if `grep -q 'docker\|lxc' /proc/1/cgroup`
             then
-                # running in Docker.
-                system_memory_in_mb=$((`cat /sys/fs/cgroup/memory/memory.limit_in_bytes`/1024/1024))
+                # running in a container.
+                system_memory_in_bytes=`cat /sys/fs/cgroup/memory/memory.limit_in_bytes`
+                let system_memory_in_mb=$system_memory_in_bytes/1024/1024
                 system_cpu_cores=`nproc`
             else
                 system_memory_in_mb=`free -m | awk '/:/ {print $2;exit}'`
@@ -49,6 +50,9 @@ calculate_heap_sizes()
             system_cpu_cores="2"
         ;;
     esac
+
+    echo "system_memory_in_bytes = $system_memory_in_bytes" >  /cassandra-debug.txt
+    echo "system_memory_in_mb    = $system_memory_in_mb"    >> /cassandra-debug.txt
 
     # some systems like the raspberry pi don't report cores, use at least 1
     if [ "$system_cpu_cores" -lt "1" ]
