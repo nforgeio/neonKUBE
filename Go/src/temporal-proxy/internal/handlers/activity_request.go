@@ -63,6 +63,7 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 		Logger.Debug("Executing Activity",
 			zap.String("Activity", activityName),
 			zap.Int64("ClientId", clientID),
+			zap.Int64("WorkerId", workerID),
 			zap.Int64("ActivityContextId", contextID),
 			zap.Int64("RequestId", requestID),
 			zap.Int("ProcessId", os.Getpid()))
@@ -80,6 +81,7 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 		activityInvokeRequest.SetContextID(contextID)
 		activityInvokeRequest.SetActivity(&activityName)
 		activityInvokeRequest.SetClientID(clientID)
+		activityInvokeRequest.SetWorkerID(workerID)
 
 		// create the Operation for this request and add it to the operations map
 		op := NewOperation(requestID, activityInvokeRequest)
@@ -97,6 +99,7 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 			Logger.Debug("Stopping Activity",
 				zap.String("Activity", activityName),
 				zap.Int64("ClientId", clientID),
+				zap.Int64("WorkerId", workerID),
 				zap.Int64("ActivityContextId", contextID),
 				zap.Int64("RequestId", requestID),
 				zap.Int("ProcessId", os.Getpid()))
@@ -121,6 +124,7 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 			Logger.Debug("ActivityStoppingRequest sent",
 				zap.String("Activity", activityName),
 				zap.Int64("ClientId", clientID),
+				zap.Int64("WorkerId", workerID),
 				zap.Int64("ActivityContextId", contextID),
 				zap.Int64("RequestId", requestID),
 				zap.Int("ProcessId", os.Getpid()))
@@ -135,6 +139,7 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 		Logger.Debug("ActivityInvokeRequest sent",
 			zap.String("Activity", activityName),
 			zap.Int64("ClientId", clientID),
+			zap.Int64("WorkerId", workerID),
 			zap.Int64("ActivityContextId", contextID),
 			zap.Int64("RequestId", requestID),
 			zap.Int("ProcessId", os.Getpid()))
@@ -146,6 +151,7 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 			Logger.Error("Activity Failed With Error",
 				zap.String("Activity", activityName),
 				zap.Int64("ClientId", clientID),
+				zap.Int64("WorkerId", workerID),
 				zap.Int64("ActivityContextId", contextID),
 				zap.Int64("RequestId", requestID),
 				zap.Error(s),
@@ -157,6 +163,7 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 			Logger.Info("Activity Completed Successfully",
 				zap.String("Activity", activityName),
 				zap.Int64("ClientId", clientID),
+				zap.Int64("WorkerId", workerID),
 				zap.Int64("ActivityContextId", contextID),
 				zap.Int64("RequestId", requestID),
 				zap.ByteString("Result", s),
@@ -168,6 +175,7 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 			Logger.Error("Activity Result unexpected",
 				zap.String("Activity", activityName),
 				zap.Int64("ClientId", clientID),
+				zap.Int64("WorkerId", workerID),
 				zap.Int64("ActivityContextId", contextID),
 				zap.Int64("RequestId", requestID),
 				zap.Any("Result", s),
@@ -521,6 +529,7 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 	Logger.Debug("ActivityExecuteLocalRequest Received",
 		zap.Int64("ActivityTypeId", activityTypeID),
 		zap.Int64("ClientId", clientID),
+		zap.Int64("WorkerId", workerID),
 		zap.Int64("RequestId", requestID),
 		zap.Int64("ContextId", contextID),
 		zap.Int("ProcessId", os.Getpid()))
@@ -564,6 +573,7 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 			zap.Int64("ActivityTypeId", activityTypeID),
 			zap.Int64("ClientId", clientID),
 			zap.Int64("ContextId", contextID),
+			zap.Int64("WorkerId", workerID),
 			zap.Int64("ActivityContextId", activityContextID),
 			zap.Int64("RequestId", requestID),
 			zap.Int("ProcessId", os.Getpid()))
@@ -576,6 +586,7 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 				zap.Int64("ActivityTypeId", activityTypeID),
 				zap.Int64("ClientId", clientID),
 				zap.Int64("ContextId", contextID),
+				zap.Int64("WorkerId", workerID),
 				zap.Int64("ActivityContextId", activityContextID),
 				zap.Int64("RequestId", requestID),
 				zap.Error(s),
@@ -588,6 +599,7 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 				zap.Int64("ActivityTypeId", activityTypeID),
 				zap.Int64("ClientId", clientID),
 				zap.Int64("ContextId", contextID),
+				zap.Int64("WorkerId", workerID),
 				zap.Int64("ActivityContextId", activityContextID),
 				zap.Int64("RequestId", requestID),
 				zap.Any("Result", s),
@@ -600,6 +612,7 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 				zap.Int64("ActivityTypeId", activityTypeID),
 				zap.Int64("ClientId", clientID),
 				zap.Int64("ContextId", contextID),
+				zap.Int64("WorkerId", workerID),
 				zap.Int64("ActivityContextId", activityContextID),
 				zap.Int64("RequestId", requestID),
 				zap.Any("Result", s),
@@ -639,6 +652,7 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 func handleActivityStartLocalRequest(requestCtx context.Context, request *messages.ActivityStartLocalRequest) messages.IProxyReply {
 	contextID := request.GetContextID()
 	clientID := request.GetClientID()
+	workerID := request.GetWorkerID()
 	requestID := request.GetRequestID()
 	activityID := request.GetActivityID()
 	activityTypeID := request.GetActivityTypeID()
@@ -647,6 +661,7 @@ func handleActivityStartLocalRequest(requestCtx context.Context, request *messag
 		zap.Int64("ActivityId", activityID),
 		zap.Int64("ClientId", clientID),
 		zap.Int64("ContextId", contextID),
+		zap.Int64("WorkerId", workerID),
 		zap.Int64("RequestId", requestID),
 		zap.Int("ProcessId", os.Getpid()))
 
@@ -689,6 +704,7 @@ func handleActivityStartLocalRequest(requestCtx context.Context, request *messag
 			zap.Int64("ActivityTypeId", activityTypeID),
 			zap.Int64("ClientId", clientID),
 			zap.Int64("ContextId", contextID),
+			zap.Int64("WorkerId", workerID),
 			zap.Int64("ActivityContextId", activityContextID),
 			zap.Int64("RequestId", requestID),
 			zap.Int("ProcessId", os.Getpid()))
@@ -701,6 +717,7 @@ func handleActivityStartLocalRequest(requestCtx context.Context, request *messag
 				zap.Int64("ActivityTypeId", activityTypeID),
 				zap.Int64("ClientId", clientID),
 				zap.Int64("ContextId", contextID),
+				zap.Int64("WorkerId", workerID),
 				zap.Int64("ActivityContextId", activityContextID),
 				zap.Int64("RequestId", requestID),
 				zap.Error(s),
@@ -713,6 +730,7 @@ func handleActivityStartLocalRequest(requestCtx context.Context, request *messag
 				zap.Int64("ActivityTypeId", activityTypeID),
 				zap.Int64("ClientId", clientID),
 				zap.Int64("ContextId", contextID),
+				zap.Int64("WorkerId", workerID),
 				zap.Int64("ActivityContextId", activityContextID),
 				zap.Int64("RequestId", requestID),
 				zap.Any("Result", s),
@@ -725,6 +743,7 @@ func handleActivityStartLocalRequest(requestCtx context.Context, request *messag
 				zap.Int64("ActivityTypeId", activityTypeID),
 				zap.Int64("ClientId", clientID),
 				zap.Int64("ContextId", contextID),
+				zap.Int64("WorkerId", workerID),
 				zap.Int64("ActivityContextId", activityContextID),
 				zap.Int64("RequestId", requestID),
 				zap.Any("Result", s),

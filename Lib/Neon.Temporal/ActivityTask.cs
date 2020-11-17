@@ -70,6 +70,7 @@ namespace Neon.Temporal
         /// The maximum time between heartbeats.  <see cref="TimeSpan.Zero"/> 
         /// indicates that no heartbeating is required.
         /// </summary>
+        [JsonConverter(typeof(GoTimeSpanJsonConverter))]
         public TimeSpan HeartbeatTimeout { get; set; }
 
         /// <summary>
