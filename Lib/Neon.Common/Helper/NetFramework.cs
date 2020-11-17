@@ -58,6 +58,11 @@ namespace Neon.Common
         /// <summary>
         /// .NET Native
         /// </summary>
-        Native
+        Native,
+
+        /// <summary>
+        /// .NET 5.0 and later
+        /// </summary>
+        Net
     }
 }

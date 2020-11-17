@@ -51,6 +51,10 @@ namespace TestCommon
             {
                 Assert.Equal(NetFramework.Native, NeonHelper.Framework);
             }
+            else if (framework == (".NET"))
+            {
+                Assert.Equal(NetFramework.Net, NeonHelper.Framework);
+            }
             else
             {
                 Assert.Equal(NetFramework.Unknown, NeonHelper.Framework);

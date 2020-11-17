@@ -965,6 +965,7 @@ namespace Neon.Cadence.Internal
             switch (NeonHelper.Framework)
             {
                 case NetFramework.Core:
+                case NetFramework.Net:
 
                     return LoadAssemblyNetCore(stream);
 
