@@ -51,9 +51,6 @@ calculate_heap_sizes()
         ;;
     esac
 
-    echo "system_memory_in_bytes = $system_memory_in_bytes" >  /cassandra-debug.txt
-    echo "system_memory_in_mb    = $system_memory_in_mb"    >> /cassandra-debug.txt
-
     # some systems like the raspberry pi don't report cores, use at least 1
     if [ "$system_cpu_cores" -lt "1" ]
     then
