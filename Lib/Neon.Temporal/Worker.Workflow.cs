@@ -264,7 +264,7 @@ namespace Neon.Temporal
         /// </summary>
         /// <param name="workflowTypeName">The Temporal workflow type name.</param>
         /// <returns>The <see cref="WorkflowRegistration"/> or <c>null</c> if the type was not found.</returns>
-        private async Task<WorkflowRegistration> GetWorkflowRegistrationAsync(string workflowTypeName)
+        private WorkflowRegistration GetWorkflowRegistration(string workflowTypeName)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
 
@@ -368,7 +368,7 @@ namespace Neon.Temporal
                 }
             }
 
-            registration = await GetWorkflowRegistrationAsync(request.WorkflowType);
+            registration = GetWorkflowRegistration(request.WorkflowType);
 
             if (registration == null)
             {
