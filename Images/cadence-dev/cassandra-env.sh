@@ -22,7 +22,7 @@ calculate_heap_sizes()
             then
                 # running in a container.
                 system_memory_in_bytes=`cat /sys/fs/cgroup/memory/memory.limit_in_bytes`
-                let system_memory_in_mb=$system_memory_in_bytes/1024/1024
+                system_memory_in_mb=$(( $system_memory_in_bytes / 1024 / 1024 ))
                 system_cpu_cores=`nproc`
             else
                 system_memory_in_mb=`free -m | awk '/:/ {print $2;exit}'`
