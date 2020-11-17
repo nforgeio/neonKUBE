@@ -286,7 +286,7 @@ namespace Neon.Temporal
         /// </summary>
         /// <param name="contextId">The workflow context ID.</param>
         /// <returns>The <see cref="Workflow"/> or <c>null</c>.</returns>
-        private async Task<WorkflowBase> GetWorkflowAsync(long contextId)
+        private WorkflowBase GetWorkflow(long contextId)
         {
             lock (idToWorkflow)
             {
@@ -335,7 +335,7 @@ namespace Neon.Temporal
                     break;
 
                 default:
-
+                    
                     throw new InvalidOperationException($"Unexpected message type [{request.Type}].");
             }
 
@@ -574,7 +574,7 @@ namespace Neon.Temporal
             {
                 WorkflowBase.CallContext.Value = WorkflowCallContext.Signal;
 
-                var workflow = await GetWorkflowAsync(request.ContextId);
+                var workflow = GetWorkflow(request.ContextId);
 
                 if (workflow != null)
                 {
@@ -638,7 +638,7 @@ namespace Neon.Temporal
             {
                 WorkflowBase.CallContext.Value = WorkflowCallContext.Signal;
 
-                var workflow = await GetWorkflowAsync(request.ContextId);
+                var workflow = GetWorkflow(request.ContextId);
 
                 if (workflow != null)
                 {
@@ -803,7 +803,7 @@ namespace Neon.Temporal
             {
                 WorkflowBase.CallContext.Value = WorkflowCallContext.Query;
 
-                var workflow = await GetWorkflowAsync(request.ContextId);
+                var workflow = GetWorkflow(request.ContextId);
 
                 if (workflow != null)
                 {
@@ -931,7 +931,7 @@ namespace Neon.Temporal
             {
                 WorkflowBase.CallContext.Value = WorkflowCallContext.Activity;
 
-                var workflow = await GetWorkflowAsync(request.ContextId);
+                var workflow = GetWorkflow(request.ContextId);
 
                 if (workflow != null)
                 {
