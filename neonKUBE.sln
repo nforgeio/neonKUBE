@@ -34,6 +34,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub", "GitHub", "{4442F1
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Lib", "Lib", "{DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}"
 	ProjectSection(SolutionItems) = preProject
+		Lib\global.json = Lib\global.json
 		Lib\nuget-icon.png = Lib\nuget-icon.png
 	EndProjectSection
 EndProject
@@ -46,6 +47,9 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Xunit", "Lib\Neon.Xunit\Neon.Xunit.csproj", "{468E440F-2284-483D-A54A-EC540C85F76E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{FE7764F7-F5B5-4A92-9BE2-F51690EDF870}"
+	ProjectSection(SolutionItems) = preProject
+		Tools\global.json = Tools\global.json
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "unix-text", "Tools\unix-text\unix-text.csproj", "{66229C6D-EC7E-4340-8BC0-6C9E6EF830C6}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -133,6 +137,9 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.Kube", "Test\Test.Neon.Kube\Test.Neon.Kube.csproj", "{41302EE4-1607-4BE1-A2C6-C881C3D05740}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Desktop", "Desktop", "{33866B5A-71FB-4430-9C0B-019B20644653}"
+	ProjectSection(SolutionItems) = preProject
+		Desktop\global.json = Desktop\global.json
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Cryptography", "Lib\Neon.Cryptography\Neon.Cryptography.csproj", "{E77C7D25-275F-4DD6-B572-7317FED20393}"
 EndProject
@@ -215,6 +222,9 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Charts", "Charts\Charts.csproj", "{47AA8345-3CE7-49A9-87F8-1A2D175C2804}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Services", "Services", "{9BF7513A-5219-4862-A290-7D2A00589312}"
+	ProjectSection(SolutionItems) = preProject
+		Services\global.json = Services\global.json
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.NeonCli", "Test\Test.NeonCli\Test.NeonCli.csproj", "{9F508BA8-DE43-4D48-AF91-B03E009C0BD4}"
 EndProject
