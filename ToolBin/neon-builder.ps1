@@ -148,7 +148,6 @@ if (-not $nobuild)
         exit 1
     }
 
-
     ""
     "**********************************************************"
     "***                   BUILD SOLUTION                   ***"
@@ -282,7 +281,7 @@ if ($codedoc)
         exit 1
     }
 
-    & "$msbuild" "$nfSolution" -p:Configuration=CodeDoc
+    & "$msbuild" "$nfSolution" -p:Configuration=CodeDoc -restore
 
     if (-not $?)
     {
