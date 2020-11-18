@@ -51,7 +51,7 @@ namespace Neon
         /// <summary>
         /// The released neonKUBE version.
         /// </summary>
-        public const string NeonDesktopVersion = "2.2.0-alpha";
+        public const string NeonDesktopVersion = "2.3.0-alpha";
 
         /// <summary>
         /// The released neonKUBE cluster version.
