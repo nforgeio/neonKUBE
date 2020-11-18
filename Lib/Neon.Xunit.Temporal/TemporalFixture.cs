@@ -304,7 +304,7 @@ services:
 
                 settings = settings ?? new TemporalSettings()
                 {
-                    HostPort        = $"127.0.0.1:{NetworkPorts.Temporal}",
+                    HostPort        = $"localhost:{NetworkPorts.Temporal}",
                     CreateNamespace = true,
                     Namespace       = defaultNamespace,
                     ProxyLogLevel   = logLevel,

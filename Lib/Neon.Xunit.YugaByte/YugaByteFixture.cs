@@ -276,7 +276,7 @@ services:
             // Establish the Cassandra session, recreating the keyspace.
 
             var cluster = Cluster.Builder()
-                .AddContactPoint("127.0.0.1")
+                .AddContactPoint("localhost")
                 .WithPort(ycqlPort)
                 .Build();
 
@@ -293,7 +293,7 @@ services:
 
             // Establish the Postgres connection, recreating the database.
 
-            PostgresConnection = new NpgsqlConnection($"host=127.0.0.1;port={ysqlPort};user id=yugabyte;password=");
+            PostgresConnection = new NpgsqlConnection($"host=localhost;port={ysqlPort};user id=yugabyte;password=");
 
             retry.Invoke(
                 () =>
@@ -309,7 +309,7 @@ services:
             command = new NpgsqlCommand($"CREATE DATABASE \"{postgresDatabase}\"", PostgresConnection);
             command.ExecuteNonQuery();
 
-            PostgresConnection = new NpgsqlConnection($"host=127.0.0.1;database={postgresDatabase};port={ysqlPort};user id=yugabyte;password=");
+            PostgresConnection = new NpgsqlConnection($"host=localhost;database={postgresDatabase};port={ysqlPort};user id=yugabyte;password=");
             PostgresConnection.Open();
         }
     }
