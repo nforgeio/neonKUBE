@@ -20,6 +20,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
+using System.Reflection;
+using System.Threading;
 
 using Neon.Common;
 using Neon.Service;
@@ -52,12 +54,109 @@ namespace Neon.Xunit
     /// to a reasonable default.  These will be reflected and called when the first
     /// <see cref="TestFixture"/> is created by the test runner for every test class.
     /// </para>
+    /// <para><b>PERFORMANCE TUNING</b></para>
+    /// <para>
+    /// One use case we've found valuable is to use <see cref="ComposedFixture"/> to enulate
+    /// an entire cluster of services as a unit test or in a console application.  The idea
+    /// is to have the unit test or console app code reference all of your service assemblies
+    /// and then add these services to a <see cref="ComposedFixture"/> as well as any database
+    /// and/or workflow engines and then start the composed fixtures.
+    /// </para>
+    /// <para>
+    /// This can require a lot of memory and CPU, but it can be really nice to have an entire
+    /// service running in Visual Studio where you can set breakpoints anywhere.  We've emulated
+    /// clusters with well over 75 services this way.
+    /// </para>
+    /// <para>
+    /// One of the problems we encountered is that it can take several minutes for the all of
+    /// the services and other subfixtures to start because they are started one at a time
+    /// by default.  We've enhanced this class so that you can optionally start groups of 
+    /// subfixtures in parallel via the optional <c>group</c> parameter.  By default,
+    /// this is passed as <b>-1</b>, indicating that subfixtures with <c>group=-1</c> will
+    /// be started one at a time in the group they were added to the <see cref="ComposedFixture"/>
+    /// and these will be started before any other fixtures.  This results in the same behavior
+    /// as older versions of the fixture.
+    /// </para>
+    /// <para>
+    /// Fixtures added with <c>group</c> passed as zero or a positive number are started when
+    /// you call <see cref="Start(Action)"/>.  This starts the subfixtures in the same group in
+    /// parallel with any others in the group.  Note that we'll start at the lowest group number 
+    /// and wait for all fixtures to start before moving on to the next group.
+    /// </para>
     /// </remarks>
     /// <threadsafety instance="false"/>
     public class ComposedFixture : TestFixture, IEnumerable<KeyValuePair<string, ITestFixture>>
     {
+        //---------------------------------------------------------------------
+        // Private types
+
+        /// <summary>
+        /// Holds information about a NeonServ subfixture.
+        /// </summary>
+        private struct SubFixture
+        {
+            public readonly ITestFixture    Fixture;
+            public readonly bool            IsNeonService;
+            public readonly object          ActionTarget;
+            public readonly MethodInfo      ActionMethod;
+            public readonly object          ServiceCreator;
+            public readonly TimeSpan        RunningTimeout;
+            public readonly int             Group;
+
+            /// <summary>
+            /// Constructor for non-<see cref="NeonServiceFixture{TService}"/> fixtures.
+            /// </summary>
+            /// <param name="fixture">The subfixture.</param>
+            /// <param name="actionTarget">The optional fixture action instance.</param>
+            /// <param name="actionMethod">The optional fixture action method.</param>
+            /// <param name="group">The fixture group.</param>
+            public SubFixture(ITestFixture fixture, object actionTarget, MethodInfo actionMethod, int group)
+            {
+                // $hack(jefflill):
+                //
+                // I'm having the caller pass the action instance and method manually to
+                // avoid casting errors.  There's probably a cleaner way to do this but
+                // this'll work fine.
+
+                this.Fixture        = fixture;
+                this.IsNeonService  = false;
+                this.ActionTarget   = actionTarget;
+                this.ActionMethod   = actionMethod;
+                this.ServiceCreator = null;
+                this.RunningTimeout = default;
+                this.Group          = group;
+            }
+
+            /// <summary>
+            /// Constructor for <see cref="NeonServiceFixture{TService}"/> fixtures.
+            /// </summary>
+            /// <param name="fixture">The subfixture.</param>
+            /// <param name="serviceCreator">The service creator function as an object.</param>
+            /// <param name="runningTimeout">Specifies the maximum time to wait for the service to transition to the running state.</param>
+            /// <param name="group">The fixture group.</param>
+            public SubFixture(ITestFixture fixture, object serviceCreator, TimeSpan runningTimeout, int group)
+            {
+                // $hack(jefflill):
+                //
+                // I'm having the caller pass the action instance and method manually to
+                // avoid casting errors.  There's probably a cleaner way to do this but
+                // this'll work fine.
+
+                this.Fixture        = fixture;
+                this.IsNeonService  = true;
+                this.ActionTarget   = null;
+                this.ActionMethod   = null;
+                this.ServiceCreator = serviceCreator;
+                this.RunningTimeout = runningTimeout;
+                this.Group          = group;
+            }
+        }
+
+        //---------------------------------------------------------------------
+        // Implementation
+
         private Dictionary<string, ITestFixture>    nameToFixture;
-        private List<ITestFixture>                  fixtureList;
+        private List<SubFixture>                    fixtureList;
 
         /// <summary>
         /// Constructor.
@@ -65,7 +164,7 @@ namespace Neon.Xunit
         public ComposedFixture()
         {
             nameToFixture = new Dictionary<string, ITestFixture>(StringComparer.InvariantCultureIgnoreCase);
-            fixtureList   = new List<ITestFixture>();
+            fixtureList   = new List<SubFixture>();
         }
 
         /// <summary>
@@ -82,33 +181,47 @@ namespace Neon.Xunit
         /// <typeparam name="TFixture">The new fixture type.</typeparam>
         /// <param name="name">The fixture name (case insenstitive).</param>
         /// <param name="subFixture">The subfixture instance.</param>
-        /// <param name="action">The optional <see cref="Action"/> to be called when the fixture is initialized.</param>
+        /// <param name="action">
+        /// The optional <see cref="Action"/> to be called when the fixture is initialized.  This can
+        /// be used for things like waiting until the service is actually ready before returning.
+        /// </param>
+        /// <param name="group">
+        /// Optionally specifies the fixture group.  Fixtures with <paramref name="group"/><c>=-1</c> (the default)
+        /// will be started one by one before all other fixtures.  Fixtures with a non-negative group will
+        /// be started in parallel on a separate thread from all other fixtures in the group and we'll be
+        /// starting the lowest numbered groups first.
+        /// </param>
         /// <remarks>
         /// <note>
         /// This method doesn't work for <see cref="NeonServiceFixture{TService}"/> based fixtures.  Use
-        /// <see cref="AddServiceFixture{TService}(string, NeonServiceFixture{TService}, Func{TService})"/> instead.
+        /// <see cref="AddServiceFixture{TService}(string, NeonServiceFixture{TService}, Func{TService}, TimeSpan, int)"/> instead.
         /// </note>
         /// </remarks>
-        public void AddFixture<TFixture>(string name, TFixture subFixture, Action<TFixture> action = null)
-            where TFixture : ITestFixture
+        public void AddFixture<TFixture>(string name, TFixture subFixture, Action<TFixture> action = null, int group = -1)
+            where TFixture : class, ITestFixture
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
             Covenant.Requires<ArgumentNullException>(subFixture != null, nameof(subFixture));
             Covenant.Requires<InvalidOperationException>(!subFixture.IsRunning, "A subfixture cannot be added after it has already been initialized.");
+            Covenant.Requires<ArgumentException>(group >= -1, nameof(group));
 
             var fixtureType = typeof(TFixture);
 
-            if (fixtureType.IsGenericType && fixtureType.Name == typeof(NeonServiceFixture<NeonService>).Name)
+            if (fixtureType.IsGenericType && fixtureType.FullName == typeof(NeonServiceFixture<NeonService>).FullName)
             {
-                throw new InvalidOperationException($"This method doesn't work for [{nameof(NeonServiceFixture<NeonService>)}] fixtures.  Use [AddServiceFixture<TService>()] instead.");
+                throw new InvalidOperationException($"This method doesn't work for [{nameof(NeonServiceFixture<NeonService>)}] fixtures.  Use [AddServiceFixture<TService>(...)] instead.");
             }
 
             CheckDisposed();
             CheckWithinAction();
 
-            subFixture.Start(() => action?.Invoke(subFixture));
             nameToFixture.Add(name, subFixture);
-            fixtureList.Add(subFixture);
+            fixtureList.Add(new SubFixture(subFixture, action?.Target, action?.Method, group));
+
+            if (group == -1)
+            {
+                subFixture.Start(() => action?.Invoke(subFixture));
+            }
         }
 
         /// <summary>
@@ -117,26 +230,50 @@ namespace Neon.Xunit
         /// <typeparam name="TService">The service type (derived from <see cref="NeonService"/>.</typeparam>
         /// <param name="name">The fixture name (case insenstitive).</param>
         /// <param name="subFixture">The subfixture being added.</param>
-        /// <param name="serviceCreator">Callback that creates and returns the new service instance.</param>
-        public void AddServiceFixture<TService>(string name, NeonServiceFixture<TService> subFixture, Func<TService> serviceCreator)
+        /// <param name="serviceCreator">
+        /// <para>
+        /// Callback that creates and returns the new service instance.
+        /// </para>
+        /// <note>
+        /// It's can be useful for the <paramref name="serviceCreator"/> the service creator to wait for the
+        /// service to actually be ready before returning (e.g. that it is listening for requests,...).
+        /// </note>
+        /// <param name="runningTimeout">
+        /// Optionally specifies maximum time to wait for the service to transition to the running state.
+        /// </param>
+        /// <param name="group">
+        /// Optionally specifies the fixture group.  Fixtures with <paramref name="group"/><c>=-1</c> (the default)
+        /// will be started one by one before all other fixtures.  Fixtures with a non-negative group will
+        /// be started in parallel on a separate thread from all other fixtures in the group and we'll be
+        /// starting the lowest numbered groups first.
+        /// </param>
+        /// </param>
+        public void AddServiceFixture<TService>(string name, NeonServiceFixture<TService> subFixture, Func<TService> serviceCreator, TimeSpan runningTimeout = default, int group = -1)
             where TService : NeonService
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
             Covenant.Requires<ArgumentNullException>(subFixture != null, nameof(subFixture));
+            Covenant.Requires<ArgumentNullException>(serviceCreator != null, nameof(serviceCreator));
             Covenant.Requires<InvalidOperationException>(!subFixture.IsRunning, "A subfixture cannot be added after it has already been initialized.");
+            Covenant.Requires<ArgumentException>(group >= -1, nameof(group));
 
             CheckDisposed();
             CheckWithinAction();
 
-            subFixture.Start(serviceCreator);
             nameToFixture.Add(name, subFixture);
-            fixtureList.Add(subFixture);
+            fixtureList.Add(new SubFixture(subFixture, serviceCreator, runningTimeout, group));
+
+            if (group == -1)
+            {
+                subFixture.Start(serviceCreator);
+            }
         }
 
         /// <summary>
         /// Starts the fixture if it hasn't already been started including invoking the optional
         /// <see cref="Action"/> when the first time <see cref="Start(Action)"/> is called for
-        /// a fixture instance.
+        /// a fixture instance.  This method also starts any fixtures that arr members of a 
+        /// group that should be started in parallel on separate threads.
         /// </summary>
         /// <param name="action">
         /// <para>
@@ -173,10 +310,104 @@ namespace Neon.Xunit
                 InAction = true;
 
                 action?.Invoke();
+
+                // Start any fixture groups from lowest to highest in parallel
+                // on separate threads.
+
+                var groups = new HashSet<int>();
+
+                foreach (var group in fixtureList
+                    .Where(f => f.Group >= 0)
+                    .Select(f => f.Group))
+                {
+                    if (!groups.Contains(group))
+                    {
+                        groups.Add(group);
+                    }
+                }
+
+                if (groups.Count > 0)
+                {
+                    var fixtureThreads    = new List<Thread>();
+                    var fixtureExceptions = new List<Exception>();
+
+                    foreach (var group in groups.OrderBy(g => g))
+                    {
+                        foreach (var subFixture in fixtureList.Where(sf => sf.Group == group))
+                        {
+                            var thread = new Thread(
+                                new ParameterizedThreadStart(
+                                    arg =>
+                                    {
+                                        try
+                                        {
+                                            var sf = (SubFixture)arg;
+
+                                            if (sf.IsNeonService)
+                                            {
+                                                // $hack(jefflill):
+                                                //
+                                                // Using reflection, locate the correct subfixture [Start(Func<TService>, TimeSpan] 
+                                                // method and then call it, passing the service creator function and running timeout.
+
+                                                var startMethod = (MethodInfo)null;
+
+                                                foreach (var method in sf.Fixture.GetType().GetMethods().Where(mi => mi.Name == "Start"))
+                                                {
+                                                    var paramTypes = method.GetParameterTypes();
+
+                                                    if (paramTypes.Length != 2)
+                                                    {
+                                                        continue;
+                                                    }
+
+                                                    if (paramTypes[0].Name == "Func`1" && paramTypes[1].FullName == "System.TimeSpan")
+                                                    {
+                                                        startMethod = method;
+                                                        break;
+                                                    }
+                                                }
+
+                                                Covenant.Assert(startMethod != null, "The fixture's [Start(Func<TService>, TimeSpan)] method signature must have changed.");
+
+                                                startMethod.Invoke(sf.Fixture, new object[] { sf.ServiceCreator, sf.RunningTimeout });
+                                            }
+                                            else
+                                            {
+                                                // $hack(jefflill): Using reflection to call the fixture's start method.
+
+                                                sf.Fixture.Start(() => sf.ActionMethod?.Invoke(sf.ActionTarget, new object[] { subFixture.Fixture }));
+                                            }
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            lock (fixtureExceptions)
+                                            {
+                                                fixtureExceptions.Add(e);
+                                            }
+                                        }
+                                    }));
+
+                            fixtureThreads.Add(thread);
+                            thread.Start(subFixture);
+
+                            // Wait for all fixtured in the group to complete.
+
+                            NeonHelper.WaitAll(fixtureThreads);
+                        }
+
+                        if (fixtureExceptions.Count > 0)
+                        {
+                            throw new AggregateException(fixtureExceptions);
+                        }
+
+                        fixtureThreads.Clear();
+                    }
+                }
             }
             finally
             {
-                InAction      = false;
+                InAction  = false;
                 IsRunning = true;       // Setting this even if the action failed.
             }
 
@@ -188,7 +419,7 @@ namespace Neon.Xunit
         /// </summary>
         public IEnumerable<ITestFixture> Children
         {
-            get { return fixtureList; }
+            get { return fixtureList.Select(f => f.Fixture); }
         }
 
         /// <summary>
@@ -208,7 +439,7 @@ namespace Neon.Xunit
 
         /// <summary>
         /// Returns the fixture at the specified index (based on the order
-        /// the fixture was added.
+        /// the fixture was added).
         /// </summary>
         /// <param name="index"></param>
         /// <returns>The test fixture.</returns>
@@ -218,7 +449,7 @@ namespace Neon.Xunit
             get
             {
                 CheckDisposed();
-                return fixtureList[index];
+                return fixtureList[index].Fixture;
             }
         }
 
@@ -242,7 +473,7 @@ namespace Neon.Xunit
                 // reversed order from how they were created to avoid any 
                 // dependancy conflicts.
 
-                foreach (var fixture in fixtureList.Reverse<ITestFixture>())
+                foreach (var fixture in fixtureList.Select(f => f.Fixture).Reverse<ITestFixture>())
                 {
                     fixture.Dispose();
                 }
@@ -256,7 +487,7 @@ namespace Neon.Xunit
         {
             // Reset all of the subfixtures.
 
-            foreach (var fixture in fixtureList.Reverse<ITestFixture>())
+            foreach (var fixture in fixtureList.Select(f => f.Fixture).Reverse<ITestFixture>())
             {
                 fixture.Reset();
             }
