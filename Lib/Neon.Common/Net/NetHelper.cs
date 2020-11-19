@@ -983,6 +983,16 @@ namespace Neon.Net
                 .FirstOrDefault(
                     netInterface =>
                     {
+                        // Make sure that the interface has IPv4 addresses assigned and also that
+                        // the interface is assigned a default gateway.
+
+                        var ipProperties = netInterface.GetIPProperties();
+
+                        if (ipProperties == null || ipProperties.GatewayAddresses.IsEmpty())
+                        {
+                            return false;
+                        }
+
                         // Filter out loopback interfaces, TAP interfaces and interfaces that aren't up.
 
                         if (netInterface.NetworkInterfaceType == NetworkInterfaceType.Loopback || 
@@ -992,10 +1002,6 @@ namespace Neon.Net
                         {
                             return false;
                         }
-
-                        // Make sure that the interface has IPv4 addresses assigned.
-
-                        var ipProperties = netInterface.GetIPProperties();
 
                         if (ipProperties == null)
                         {
