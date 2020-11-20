@@ -187,9 +187,10 @@ namespace Neon.Xunit
         /// </param>
         /// <param name="group">
         /// Optionally specifies the fixture group.  Fixtures with <paramref name="group"/><c>=-1</c> (the default)
-        /// will be started one by one before all other fixtures.  Fixtures with a non-negative group will
-        /// be started in parallel on a separate thread from all other fixtures in the group and we'll be
-        /// starting the lowest numbered groups first.
+        /// will be started one by one before all other fixtures.  Fixtures with a <c>group >= 0</c> will
+        /// be started in parallel by group starting at the lowest group.  All of the fixtures in the same
+        /// group will be started in parallel on separate threads and the <see cref="ComposedFixture"/> will
+        /// wait until all fixtures in a group have started before advancing to the next group.
         /// </param>
         /// <remarks>
         /// <note>
@@ -243,9 +244,10 @@ namespace Neon.Xunit
         /// </param>
         /// <param name="group">
         /// Optionally specifies the fixture group.  Fixtures with <paramref name="group"/><c>=-1</c> (the default)
-        /// will be started one by one before all other fixtures.  Fixtures with a non-negative group will
-        /// be started in parallel on a separate thread from all other fixtures in the group and we'll be
-        /// starting the lowest numbered groups first.
+        /// will be started one by one before all other fixtures.  Fixtures with a <c>group >= 0</c> will
+        /// be started in parallel by group starting at the lowest group.  All of the fixtures in the same
+        /// group will be started in parallel on separate threads and the <see cref="ComposedFixture"/> will
+        /// wait until all fixtures in a group have started before advancing to the next group.
         /// </param>
         /// </param>
         public void AddServiceFixture<TService>(string name, NeonServiceFixture<TService> subFixture, Func<TService> serviceCreator, TimeSpan runningTimeout = default, int group = -1)
