@@ -228,18 +228,15 @@ namespace Neon.Xunit
         /// <summary>
         /// Adds a named <see cref="NeonServiceFixture{TService}"/> fixture.
         /// </summary>
-        /// <typeparam name="TService">The service type (derived from <see cref="NeonService"/>.</typeparam>
+        /// <typeparam name="TService">The service type (derived from <see cref="NeonService"/>).</typeparam>
         /// <param name="name">The fixture name (case insenstitive).</param>
         /// <param name="subFixture">The subfixture being added.</param>
         /// <param name="serviceCreator">
         /// <para>
         /// Callback that creates and returns the new service instance.
         /// </para>
-        /// <note>
-        /// It's can be useful for the <paramref name="serviceCreator"/> the service creator to wait for the
-        /// service to actually be ready before returning (e.g. that it is listening for requests,...).
-        /// </note>
-        /// <param name="runningTimeout">
+        /// </param>
+        /// <param name="startTimeout">
         /// Optionally specifies maximum time to wait for the service to transition to the running state.
         /// </param>
         /// <param name="group">
@@ -249,8 +246,7 @@ namespace Neon.Xunit
         /// group will be started in parallel on separate threads and the <see cref="ComposedFixture"/> will
         /// wait until all fixtures in a group have started before advancing to the next group.
         /// </param>
-        /// </param>
-        public void AddServiceFixture<TService>(string name, NeonServiceFixture<TService> subFixture, Func<TService> serviceCreator, TimeSpan runningTimeout = default, int group = -1)
+        public void AddServiceFixture<TService>(string name, NeonServiceFixture<TService> subFixture, Func<TService> serviceCreator, TimeSpan startTimeout = default, int group = -1)
             where TService : NeonService
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
@@ -263,7 +259,7 @@ namespace Neon.Xunit
             CheckWithinAction();
 
             nameToFixture.Add(name, subFixture);
-            fixtureList.Add(new SubFixture(subFixture, serviceCreator, runningTimeout, group));
+            fixtureList.Add(new SubFixture(subFixture, serviceCreator, startTimeout, group));
 
             if (group == -1)
             {
