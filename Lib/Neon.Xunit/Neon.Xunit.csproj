@@ -58,7 +58,7 @@
     <PackageReference Include="NATS.Client" Version="0.11.0" />
     <PackageReference Include="STAN.Client" Version="0.3.0" />
     <PackageReference Include="xunit" Version="2.4.1" />
-    <PackageReference Include="YamlDotNet" Version="8.1.2" />
+    <PackageReference Include="YamlDotNet" Version="9.1.0" />
   </ItemGroup>
 
   <ItemGroup>

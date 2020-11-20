@@ -22,7 +22,7 @@
     <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
     <PackageReference Include="System.Security.Principal.Windows" Version="5.0.0" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
-    <PackageReference Include="YamlDotNet" Version="8.1.2" />
+    <PackageReference Include="YamlDotNet" Version="9.1.0" />
   </ItemGroup>
 
   <ItemGroup>
