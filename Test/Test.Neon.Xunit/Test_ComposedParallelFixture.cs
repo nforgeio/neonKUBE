@@ -101,7 +101,7 @@ namespace TestXunit
             composedFixture.Start(
                 () =>
                 {
-                    // Start Couchbase and Cadence together as [group 0].
+                    // Start Couchbase and Cadence together as [group=0].
 
                     composedFixture.AddFixture("couchbase", new CouchbaseFixture(),
                         couchbaseFixture =>
@@ -117,26 +117,61 @@ namespace TestXunit
                         },
                         group: 0);
 
-                    // Start NATS and a container as [group 1].
+                    // Add a [CodeFixture] as [group=1] and have it initialize write to
+                    // Couchbase to simulate initializing a database and also configure 
+                    // environment variables and configuration files for the services
+                    // via a service map.
+
+                    var serviceMap = new ServiceMap();
+
+                    serviceMap.Add("my-service-1", new ServiceDescription());
+                    serviceMap.Add("my-service-2", new ServiceDescription());
+
+                    composedFixture.AddFixture<CodeFixture>("code", new CodeFixture(),
+                        codeFixture =>
+                        {
+                            // Write a key to the database.
+
+                            var couchbaseFixture = (CouchbaseFixture)composedFixture["couchbase"];
+                            var bucket           = couchbaseFixture.Bucket;
+
+                            bucket.UpsertSafeAsync("test", "HELLO WORLD!").Wait();
+
+                            // Configure the services via the service map.
+
+                            var service1Description = serviceMap["my-service-1"];
+                            var service2Description = serviceMap["my-service-2"];
+
+                            service1Description.TestEnvironmentVariables.Add("service", "service1");
+                            service1Description.TestTextConfigFiles.Add("/config.txt", "HELLO SERVICE1!");
+                            service1Description.TestBinaryConfigFiles.Add("/config.dat", new byte[] { 0, 1, 2, 3, 4 });
+
+                            service2Description.TestEnvironmentVariables.Add("service", "service2");
+                            service2Description.TestTextConfigFiles.Add("/config.txt", "HELLO SERVICE2!");
+                            service2Description.TestBinaryConfigFiles.Add("/config.dat", new byte[] { 5, 6, 7, 8, 9 });
+                        },
+                        group: 1);
+
+                    // Start NATS and a container as [group=2].
 
                     composedFixture.AddFixture("nats", new NatsFixture(),
                         natsFixture =>
                         {
                             natsFixture.StartAsComposed();
                         },
-                        group: 1);
+                        group: 2);
 
                     composedFixture.AddFixture("container", new ContainerFixture(),
                         containerFixture =>
                         {
                             containerFixture.StartAsComposed("my-container", $"{NeonHelper.NeonBranchRegistry}/test:latest");
                         },
-                        group: 1);
+                        group: 2);
 
-                    // Start two Neon services as [group 2].
+                    // Start two Neon services as [group=3].
 
-                    composedFixture.AddServiceFixture("service1", new NeonServiceFixture<MyService1>(), () => new MyService1(), group: 2);
-                    composedFixture.AddServiceFixture("service2", new NeonServiceFixture<MyService2>(), () => new MyService2(), group: 2);
+                    composedFixture.AddServiceFixture("service1", new NeonServiceFixture<MyService1>(), () => new MyService1(), serviceMap, group: 3);
+                    composedFixture.AddServiceFixture("service2", new NeonServiceFixture<MyService2>(), () => new MyService2(), serviceMap, group: 3);
                 });
 
             this.fixture = composedFixture;
@@ -167,6 +202,16 @@ namespace TestXunit
 
             NeonHelper.WaitFor(() => service1Fixture.Service.Status == NeonServiceStatus.Running, timeout: TimeSpan.FromSeconds(10));
             NeonHelper.WaitFor(() => service2Fixture.Service.Status == NeonServiceStatus.Running, timeout: TimeSpan.FromSeconds(10));
+
+            // ...and that they have the configuration settings set by the [CodeFixture].
+
+            Assert.Equal("service1", service1Fixture.Service.GetEnvironmentVariable("service"));
+            Assert.Equal("HELLO SERVICE1!", File.ReadAllText(service1Fixture.Service.GetConfigFilePath("/config.txt")));
+            Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, File.ReadAllBytes(service1Fixture.Service.GetConfigFilePath("/config.dat")));
+
+            Assert.Equal("service2", service2Fixture.Service.GetEnvironmentVariable("service"));
+            Assert.Equal("HELLO SERVICE2!", File.ReadAllText(service2Fixture.Service.GetConfigFilePath("/config.txt")));
+            Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, File.ReadAllBytes(service2Fixture.Service.GetConfigFilePath("/config.dat")));
         }
     }
 }

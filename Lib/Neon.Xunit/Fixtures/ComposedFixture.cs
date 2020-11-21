@@ -54,7 +54,7 @@ namespace Neon.Xunit
     /// to a reasonable default.  These will be reflected and called when the first
     /// <see cref="TestFixture"/> is created by the test runner for every test class.
     /// </para>
-    /// <para><b>PERFORMANCE TUNING</b></para>
+    /// <para><b>INTEGRATION TESTING</b></para>
     /// <para>
     /// One use case we've found valuable is to use <see cref="ComposedFixture"/> to enulate
     /// an entire cluster of services as a unit test or in a console application.  The idea
@@ -83,6 +83,18 @@ namespace Neon.Xunit
     /// parallel with any others in the group.  Note that we'll start at the lowest group number 
     /// and wait for all fixtures to start before moving on to the next group.
     /// </para>
+    /// <para>
+    /// <see cref="CodeFixture"/> can be used as a way to inject custom code what will
+    /// be executed while <see cref="ComposedFixture"/> is starting subfixtures.  The basic
+    /// idea is to add things like database fixtures as <b>group=0</b> and then add a
+    /// <see cref="CodeFixture"/> with a custom action as <b>group=1</b> followed by
+    /// <see cref="NeonServiceFixture{TService}"/> and/or other fixtures as <b>group=2+</b>.
+    /// </para>
+    /// <para>
+    /// Then the <see cref="ComposedFixture"/> will start the database first, followed by the
+    /// <see cref="CodeFixture"/> where the action has an opportunity to initialize the database
+    /// before the remaining fixtures are started.
+    /// </para>
     /// </remarks>
     /// <threadsafety instance="false"/>
     public class ComposedFixture : TestFixture, IEnumerable<KeyValuePair<string, ITestFixture>>
@@ -100,7 +112,8 @@ namespace Neon.Xunit
             public readonly object          ActionTarget;
             public readonly MethodInfo      ActionMethod;
             public readonly object          ServiceCreator;
-            public readonly TimeSpan        RunningTimeout;
+            public readonly ServiceMap      ServiceMap;
+            public readonly TimeSpan        StartTimeout;
             public readonly int             Group;
 
             /// <summary>
@@ -123,7 +136,8 @@ namespace Neon.Xunit
                 this.ActionTarget   = actionTarget;
                 this.ActionMethod   = actionMethod;
                 this.ServiceCreator = null;
-                this.RunningTimeout = default;
+                this.ServiceMap     = null;
+                this.StartTimeout   = default;
                 this.Group          = group;
             }
 
@@ -132,9 +146,10 @@ namespace Neon.Xunit
             /// </summary>
             /// <param name="fixture">The subfixture.</param>
             /// <param name="serviceCreator">The service creator function as an object.</param>
-            /// <param name="runningTimeout">Specifies the maximum time to wait for the service to transition to the running state.</param>
+            /// <param name="serviceMap">Specifies the service map, if any.</param>
+            /// <param name="startTimeout">Specifies the maximum time to wait for the service to transition to the running state.</param>
             /// <param name="group">The fixture group.</param>
-            public SubFixture(ITestFixture fixture, object serviceCreator, TimeSpan runningTimeout, int group)
+            public SubFixture(ITestFixture fixture, object serviceCreator, ServiceMap serviceMap, TimeSpan startTimeout, int group)
             {
                 // $hack(jefflill):
                 //
@@ -147,7 +162,8 @@ namespace Neon.Xunit
                 this.ActionTarget   = null;
                 this.ActionMethod   = null;
                 this.ServiceCreator = serviceCreator;
-                this.RunningTimeout = runningTimeout;
+                this.StartTimeout   = startTimeout;
+                this.ServiceMap     = serviceMap;
                 this.Group          = group;
             }
         }
@@ -195,7 +211,7 @@ namespace Neon.Xunit
         /// <remarks>
         /// <note>
         /// This method doesn't work for <see cref="NeonServiceFixture{TService}"/> based fixtures.  Use
-        /// <see cref="AddServiceFixture{TService}(string, NeonServiceFixture{TService}, Func{TService}, TimeSpan, int)"/> instead.
+        /// <see cref="AddServiceFixture{TService}(string, NeonServiceFixture{TService}, Func{TService}, ServiceMap, TimeSpan, int)"/> instead.
         /// </note>
         /// </remarks>
         public void AddFixture<TFixture>(string name, TFixture subFixture, Action<TFixture> action = null, int group = -1)
@@ -236,6 +252,12 @@ namespace Neon.Xunit
         /// Callback that creates and returns the new service instance.
         /// </para>
         /// </param>
+        /// <param name="serviceMap">
+        /// Optionally specifies a <see cref="ServiceMap"/>.  When a service map is passed and there's
+        /// a <see cref="ServiceDescription"/> for the created service, then the fixture will configure
+        /// the service with <see cref="ServiceDescription.TestEnvironmentVariables"/>, <see cref="ServiceDescription.TestBinaryConfigFiles"/>,
+        /// and <see cref="ServiceDescription.TestTextConfigFiles"/> before starting the service.
+        /// </param>
         /// <param name="startTimeout">
         /// Optionally specifies maximum time to wait for the service to transition to the running state.
         /// </param>
@@ -246,7 +268,7 @@ namespace Neon.Xunit
         /// group will be started in parallel on separate threads and the <see cref="ComposedFixture"/> will
         /// wait until all fixtures in a group have started before advancing to the next group.
         /// </param>
-        public void AddServiceFixture<TService>(string name, NeonServiceFixture<TService> subFixture, Func<TService> serviceCreator, TimeSpan startTimeout = default, int group = -1)
+        public void AddServiceFixture<TService>(string name, NeonServiceFixture<TService> subFixture, Func<TService> serviceCreator, ServiceMap serviceMap = null, TimeSpan startTimeout = default, int group = -1)
             where TService : NeonService
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
@@ -259,19 +281,18 @@ namespace Neon.Xunit
             CheckWithinAction();
 
             nameToFixture.Add(name, subFixture);
-            fixtureList.Add(new SubFixture(subFixture, serviceCreator, startTimeout, group));
+            fixtureList.Add(new SubFixture(subFixture, serviceCreator, serviceMap, startTimeout, group));
 
             if (group == -1)
             {
-                subFixture.Start(serviceCreator);
+                subFixture.Start(serviceCreator, serviceMap);
             }
         }
 
         /// <summary>
         /// Starts the fixture if it hasn't already been started including invoking the optional
         /// <see cref="Action"/> when the first time <see cref="Start(Action)"/> is called for
-        /// a fixture instance.  This method also starts any fixtures that arr members of a 
-        /// group that should be started in parallel on separate threads.
+        /// a fixture instance.
         /// </summary>
         /// <param name="action">
         /// <para>
@@ -354,21 +375,21 @@ namespace Neon.Xunit
                                                 {
                                                     var paramTypes = method.GetParameterTypes();
 
-                                                    if (paramTypes.Length != 2)
+                                                    if (paramTypes.Length != 3)
                                                     {
                                                         continue;
                                                     }
 
-                                                    if (paramTypes[0].Name == "Func`1" && paramTypes[1].FullName == "System.TimeSpan")
+                                                    if (paramTypes[0].Name == "Func`1" && paramTypes[1] == typeof(ServiceMap) && paramTypes[2] == typeof(TimeSpan))
                                                     {
                                                         startMethod = method;
                                                         break;
                                                     }
                                                 }
 
-                                                Covenant.Assert(startMethod != null, "The fixture's [Start(Func<TService>, TimeSpan)] method signature must have changed.");
+                                                Covenant.Assert(startMethod != null, "The fixture's [Start(Func<TService>, ServiceMap, TimeSpan)] method signature must have changed.");
 
-                                                startMethod.Invoke(sf.Fixture, new object[] { sf.ServiceCreator, sf.RunningTimeout });
+                                                startMethod.Invoke(sf.Fixture, new object[] { sf.ServiceCreator, sf.ServiceMap, sf.StartTimeout });
                                             }
                                             else
                                             {
