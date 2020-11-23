@@ -281,7 +281,7 @@ namespace Neon.HyperV
 
             try
             {
-                powershell.Execute($"{hyperVNamespace}Set-VM -Name \"{machineName}\" -ProcessorCount {processorCount} -MemoryMinimumBytes {memorySize} -MemoryMaximumBytes {memorySize}");
+                powershell.Execute($"{hyperVNamespace}Set-VM -Name \"{machineName}\" -ProcessorCount {processorCount} -StaticMemory -MemoryStartupBytes {memorySize}");
             }
             catch (Exception e)
             {
