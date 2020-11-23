@@ -594,6 +594,28 @@ namespace Neon.Common
         }
 
         /// <summary>
+        /// Waits for all of the threads passed to complete.  This method does nothing
+        /// when <paramref name="threads"/> is <c>null</c> or empty.  Also and <c>null</c>
+        /// threads passed will be ignored.
+        /// </summary>
+        /// <param name="threads">The threads.</param>
+        public static void WaitAll(IEnumerable<Thread> threads)
+        {
+            if (threads == null)
+            {
+                return;
+            }
+
+            foreach (var thread in threads)
+            {
+                if (thread != null)
+                {
+                    thread.Join();
+                }
+            }
+        }
+
+        /// <summary>
         /// Asynchronously waits for all of the <see cref="Task"/>s passed to complete.
         /// </summary>
         /// <param name="tasks">The tasks being performed.</param>

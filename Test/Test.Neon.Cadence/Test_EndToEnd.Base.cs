@@ -312,6 +312,11 @@ namespace TestCadence
 
             var utcNow = DateTime.UtcNow;
 
+            // Adjust the time backwards by 5 seconds because we're seeing some
+            // differences between the workstation clock and the WSL2 clock?
+
+            utcNow = utcNow - TimeSpan.FromSeconds(5);
+
             // Execute a workflow and then verify that we can describe it.
 
             const string workflowId = "my-base-workflow";

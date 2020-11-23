@@ -92,9 +92,9 @@ elseif ((-not $base) -and (-not $dotnet) -and (-not $other))
     # Build .NET and other images, but not base images, 
     # by default.
 
-    $dotnet = $true
-    $other  = $true
-    $services   = $true
+    $dotnet   = $true
+    $other    = $true
+    $services = $true
 }
 
 # Purge any local Docker images as well as the image build cache.
@@ -143,9 +143,9 @@ if ($other)
 
 if ($services)
 {
-    Publish "$image_root\\cluster-manager"
     Publish "$image_root\\test-cadence"
     Publish "$image_root\\test-temporal"
+    Publish "$image_root\\neon-cluster-manager"
     Publish "$image_root\\neon-log-collector"
     Publish "$image_root\\neon-log-host"
 }

@@ -175,7 +175,7 @@ namespace Neon.Xunit
     /// </list>
     /// <note>
     /// <see cref="DockerFixture"/> derives from <see cref="ComposedFixture"/> so you can
-    /// use <see cref="ComposedFixture.AddFixture{TFixture}(string, TFixture, Action{TFixture})"/>
+    /// use <see cref="ComposedFixture.AddFixture{TFixture}(string, TFixture, Action{TFixture}, int)"/>
     /// to add additional fixtures within your custom initialization action for advanced scenarios.
     /// </note>
     /// <para>

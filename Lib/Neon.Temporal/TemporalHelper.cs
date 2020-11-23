@@ -930,6 +930,7 @@ namespace Neon.Temporal.Internal
             switch (NeonHelper.Framework)
             {
                 case NetFramework.Core:
+                case NetFramework.Net:
 
                     return LoadAssemblyNetCore(stream);
 

@@ -188,7 +188,7 @@ Follow the steps below to configure a development or test workstation:
 
 29. *Optional*: Developers who will be publishing releases will need to:
 
-    * **Download:** the latest recommended **nuget.exe** from [here](https://www.nuget.org/downloads) and put this somewhere in your `PATH`
+    * **Download:** the latest recommended (at least **v5.8.0**) **nuget.exe** from [here](https://www.nuget.org/downloads) and put this somewhere in your `PATH`
     * Obtain a nuget API key from a senior developer and install the key on their workstation via:
       ```
       nuget SetApiKey APIKEY

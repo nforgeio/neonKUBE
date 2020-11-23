@@ -455,6 +455,7 @@ namespace Neon.Cadence
                 switch (NeonHelper.Framework)
                 {
                     case NetFramework.Core:
+                    case NetFramework.Net:
 
                         InitializeNetCore(address, settings);
                         break;
@@ -476,6 +477,7 @@ namespace Neon.Cadence
                 switch (NeonHelper.Framework)
                 {
                     case NetFramework.Core:
+                    case NetFramework.Net:
 
                         CoreDispose();
                         break;

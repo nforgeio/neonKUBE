@@ -163,5 +163,23 @@ namespace Neon.Service
         [JsonProperty(PropertyName = "MetricsPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "metricsPort", ApplyNamingConventions = false)]
         public int MetricsPort { get; set; } = NetworkPorts.NeonPrometheus;
+
+        /// <summary>
+        /// Used to hold environment variables that will be set when deploying the service in a test
+        /// via <c>NeonServiceFixture</c>.
+        /// </summary>
+        public Dictionary<string, string> TestEnvironmentVariables { get; set; } = new Dictionary<string, string>();
+
+        /// <summary>
+        /// Used to hold text configuration files that will be set when deploying the service in a test
+        /// via <c>NeonServiceFixture</c>.
+        /// </summary>
+        public Dictionary<string, string> TestTextConfigFiles { get; set; } = new Dictionary<string, string>();
+
+        /// <summary>
+        /// Used to hold binary configuration files that will be set when deploying the service in a test
+        /// via <c>NeonServiceFixture</c>.
+        /// </summary>
+        public Dictionary<string, byte[]> TestBinaryConfigFiles { get; set; } = new Dictionary<string, byte[]>();
     }
 }

@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 using Neon.Common;
@@ -50,6 +51,19 @@ namespace TestCommon
             else if (framework.StartsWith(".NET Native"))
             {
                 Assert.Equal(NetFramework.Native, NeonHelper.Framework);
+            }
+
+            // .NET 5.0 and beyond will have framework descriptions like
+            // ".NET 5.0.0", ".NET 6.0.0",...
+            //
+            // We're going to treat all of these as the new .NET 5+ framework
+            // (the last framework you'll ever need :)
+
+            var netRegex = new Regex(@"^.NET \d");
+
+            if (netRegex.IsMatch(RuntimeInformation.FrameworkDescription))
+            {
+                Assert.Equal(NetFramework.Net, NeonHelper.Framework);
             }
             else
             {

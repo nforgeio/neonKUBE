@@ -444,6 +444,7 @@ namespace Neon.Temporal
                 switch (NeonHelper.Framework)
                 {
                     case NetFramework.Core:
+                    case NetFramework.Net:
 
                         InitializeNetCore(address, settings);
                         break;
@@ -465,6 +466,7 @@ namespace Neon.Temporal
                 switch (NeonHelper.Framework)
                 {
                     case NetFramework.Core:
+                    case NetFramework.Net:
 
                         CoreDispose();
                         break;

@@ -491,7 +491,7 @@ namespace Test.NeonCli
 
                                 Assert.Equal(0, result.ExitCode);
                                 Assert.Contains(passwordFile.Name, result.OutputText);
-                                Assert.Contains("\n", result.OutputText);
+                                Assert.Contains('\n', result.OutputText);
 
                                 // Verify that we can get the password without a line ending.
 

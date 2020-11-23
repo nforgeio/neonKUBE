@@ -72,7 +72,7 @@ namespace Neon.Xunit
         public TService Service { get; private set; }
 
         /// <summary>
-        /// <b>DON'T USE THIS:</b> Use <see cref="Start(Func{TService}, TimeSpan)"/> instead for this fixture.
+        /// <b>DON'T USE THIS:</b> Use <see cref="Start(Func{TService}, ServiceMap, TimeSpan)"/> instead for this fixture.
         /// </summary>
         /// <param name="action">The initialization action.</param>
         /// <returns>
@@ -90,7 +90,15 @@ namespace Neon.Xunit
         /// the fixture is not already running.
         /// </summary>
         /// <param name="serviceCreator">Callback that creates and returns the new service instance.</param>
-        /// <param name="runningTimeout">
+        /// <param name="serviceMap">
+        /// Optionally passed as the service map describing an emulated deployment.  When this is
+        /// not <c>null</c>, the fixture will call <see cref="NeonService.Name"/> on the service
+        /// returned by your service creator function and then look up the service by name from
+        /// the <paramref name="serviceMap"/>.  If an entry exists for the service, the fixture will
+        /// add any environment variables or configuration files from the <see cref="ServiceDescription"/>
+        /// to the <see cref="NeonService"/> before starting it.
+        /// </param>
+        /// <param name="readyTimeout">
         /// Optionally specifies the maximum time the fixture should wait for the service to transition
         /// to the <see cref="NeonServiceStatus.Running"/> state.  This defaults to <b>30 seconds</b>.
         /// </param>
@@ -101,7 +109,7 @@ namespace Neon.Xunit
         /// </returns>
         /// <exception cref="TimeoutException">
         /// Thrown if the service didn't transition to the running (or terminated) state 
-        /// within <paramref name="runningTimeout"/>.
+        /// within <paramref name="readyTimeout"/>.
         /// </exception>
         /// <remarks>
         /// <para>
@@ -110,7 +118,7 @@ namespace Neon.Xunit
         /// and configuration files as required.  The callback should <b>not start</b> the service.
         /// </para>
         /// </remarks>
-        public TestFixtureStatus Start(Func<TService> serviceCreator = null, TimeSpan runningTimeout = default)
+        public TestFixtureStatus Start(Func<TService> serviceCreator, ServiceMap serviceMap = null, TimeSpan readyTimeout = default)
         {
             Covenant.Requires<ArgumentNullException>(serviceCreator != null, nameof(serviceCreator));
 
@@ -119,7 +127,7 @@ namespace Neon.Xunit
             return base.Start(
                 () =>
                 {
-                    StartAsComposed(serviceCreator, runningTimeout);
+                    StartAsComposed(serviceCreator, serviceMap, readyTimeout);
                 });
         }
 
@@ -127,21 +135,29 @@ namespace Neon.Xunit
         /// Used to start the fixture within a <see cref="ComposedFixture"/>.
         /// </summary>
         /// <param name="serviceCreator">Callback that creates and returns the new service instance.</param>
-        /// <param name="runningTimeout">
+        /// <param name="serviceMap">
+        /// Optionally passed as the service map describing an emulated deployment.  When this is
+        /// not <c>null</c>, the fixture will call <see cref="NeonService.Name"/> on the service
+        /// returned by your service creator function and then look up the service by name from
+        /// the <paramref name="serviceMap"/>.  If an entry exists for the service, the fixture will
+        /// add any environment variables or configuration files from the <see cref="ServiceDescription"/>
+        /// to the <see cref="NeonService"/> before starting it.
+        /// </param>
+        /// <param name="readyTimeout">
         /// Optionally specifies the maximum time the fixture should wait for the service to transition
         /// to the <see cref="NeonServiceStatus.Running"/> state.  This defaults to <b>30 seconds</b>.
         /// </param>
         /// <exception cref="TimeoutException">
         /// Thrown if the service didn't transition to the running (or terminated) state
-        /// within <paramref name="runningTimeout"/>.
+        /// within <paramref name="readyTimeout"/>.
         /// </exception>
-        public void StartAsComposed(Func<TService> serviceCreator = null, TimeSpan runningTimeout = default)
+        public void StartAsComposed(Func<TService> serviceCreator, ServiceMap serviceMap = null, TimeSpan readyTimeout = default)
         {
             Covenant.Requires<ArgumentNullException>(serviceCreator != null, nameof(serviceCreator));
 
-            if (runningTimeout == default)
+            if (readyTimeout == default)
             {
-                runningTimeout = defaultRunningTimeout;
+                readyTimeout = defaultRunningTimeout;
             }
 
             base.CheckWithinAction();
@@ -154,13 +170,52 @@ namespace Neon.Xunit
             Service = serviceCreator();
             Covenant.Assert(Service != null);
 
+            // Configure the service is a service map was passed and there's a service description
+            // for the service.
+
+            if (serviceMap != null && serviceMap.TryGetValue(Service.Name, out var serviceDescription))
+            {
+                foreach (var item in serviceDescription.TestEnvironmentVariables)
+                {
+                    Service.SetEnvironmentVariable(item.Key, item.Value);
+                }
+
+                foreach (var item in serviceDescription.TestTextConfigFiles)
+                {
+                    var path = item.Key;
+                    var text = item.Value;
+
+                    if (string.IsNullOrEmpty(path))
+                    {
+                        continue;
+                    }
+
+                    Service.SetConfigFile(path, text ?? string.Empty);
+                }
+
+                foreach (var item in serviceDescription.TestBinaryConfigFiles)
+                {
+                    var path  = item.Key;
+                    var bytes = item.Value;
+
+                    if (string.IsNullOrEmpty(path))
+                    {
+                        continue;
+                    }
+
+                    Service.SetConfigFile(path, bytes ?? Array.Empty<byte>());
+                }
+            }
+
+            // Start the service.
+
             serviceTask = Service.RunAsync();
 
             // Wait for the service to signal that it's running or has terminated.
 
             try
             {
-                NeonHelper.WaitFor(() => Service.Status == NeonServiceStatus.Running || Service.Status == NeonServiceStatus.Terminated, runningTimeout);
+                NeonHelper.WaitFor(() => Service.Status == NeonServiceStatus.Running || Service.Status == NeonServiceStatus.Terminated, readyTimeout);
 
                 if (Service.ExitException != null)
                 {
@@ -171,7 +226,7 @@ namespace Neon.Xunit
             {
                 // Throw a nicer exception that explains what's happened in more detail.
 
-                throw new TimeoutException($"Service [{Service.Name}]'s [{typeof(TService).Name}.OnRunAsync()] method did not call [{nameof(NeonService.SetRunningAsync)}()] within [{runningTimeout}] indicating that the service is ready.  Ensure that [{nameof(NeonService.SetRunningAsync)}()] is being called or increase the timeout.");
+                throw new TimeoutException($"Service [{Service.Name}]'s [{typeof(TService).Name}.OnRunAsync()] method did not call [{nameof(NeonService.SetRunningAsync)}()] within [{readyTimeout}] indicating that the service is ready.  Ensure that [{nameof(NeonService.SetRunningAsync)}()] is being called or increase the timeout.");
             }
 
             IsRunning = Service.Status == NeonServiceStatus.Running;

@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Common;
@@ -215,6 +216,69 @@ namespace TestCommon
 
             Assert.False(NeonHelper.TryParseNullableBool("   ", out value));
             Assert.False(NeonHelper.TryParseNullableBool("ILLEGAL", out value));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void WaitAll()
+        {
+            // Verify NOP when thread is NULL.
+
+            NeonHelper.WaitAll(null);
+
+            // Verify NOP when there are no threads.
+
+            NeonHelper.WaitAll(new Thread[0]);
+
+            // Verify NOP when a NULL thread is passed.
+
+            NeonHelper.WaitAll(new Thread[] { null });
+
+            // Verify that we can wait on a couple of threads.
+            // This is a bit fragile due to hardcoded sleep delays.
+
+            var threads = new List<Thread>();
+
+            threads.Add(
+                new Thread(
+                    new ThreadStart(
+                        () =>
+                        {
+                            Thread.Sleep(TimeSpan.FromSeconds(2));
+                        })
+                    ));
+
+            threads.Add(
+                new Thread(
+                    new ThreadStart(
+                        () =>
+                        {
+                            Thread.Sleep(TimeSpan.FromSeconds(2));
+                        })
+                    ));
+
+            // Start the threads.
+
+            foreach (var thread in threads)
+            {
+                thread.Start();
+            }
+
+            // The threads should still be running due to the sleep delays.
+
+            foreach (var thread in threads)
+            {
+                Assert.True(thread.IsAlive);
+            }
+
+            NeonHelper.WaitAll(threads);
+
+            // The threads should both be terminated now.
+
+            foreach (var thread in threads)
+            {
+                Assert.False(thread.IsAlive);
+            }
         }
     }
 }

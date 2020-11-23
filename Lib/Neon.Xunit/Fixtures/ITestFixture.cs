@@ -116,7 +116,7 @@ namespace Neon.Xunit
     {
         /// <summary>
         /// Starts the fixture if it hasn't already been started including invoking the optional
-        /// <see cref="Action"/> when the first time <see cref="Start(Action)"/> is called for
+        /// <see cref="Action"/> the first time <see cref="Start(Action)"/> is called for
         /// a fixture instance.
         /// </summary>
         /// <param name="action">

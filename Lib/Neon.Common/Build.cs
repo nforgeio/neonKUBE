@@ -46,12 +46,12 @@ namespace Neon
         /// <summary>
         /// The released library/package version.
         /// </summary>
-        public const string NeonLibraryVersion = "2.6.0";
+        public const string NeonLibraryVersion = "2.9.0";
 
         /// <summary>
         /// The released neonKUBE version.
         /// </summary>
-        public const string NeonDesktopVersion = "2.2.0-alpha";
+        public const string NeonDesktopVersion = "2.3.0-alpha";
 
         /// <summary>
         /// The released neonKUBE cluster version.
