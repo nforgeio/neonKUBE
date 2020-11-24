@@ -37,6 +37,7 @@ using Neon.Windows;
 
 using DnsClient;
 using Prometheus;
+using Neon.Tasks;
 
 namespace Neon.Service
 {
@@ -501,7 +502,8 @@ namespace Neon.Service
         //---------------------------------------------------------------------
         // Instance members
 
-        private readonly object                 syncLock = new object();
+        private readonly object                 syncLock   = new object();
+        private readonly AsyncMutex             asyncMutex = new AsyncMutex();
         private bool                            isRunning;
         private bool                            isDisposed;
         private bool                            stopPending;
@@ -765,24 +767,41 @@ namespace Neon.Service
         /// <param name="status">The new status.</param>
         public async Task SetStatusAsync(NeonServiceStatus status)
         {
-            this.Status = status;
-
-            if (statusFilePath != null)
+            using (await asyncMutex.AcquireAsync())
             {
-                // We're going to use a retry policy to handle the rare situations
-                // where the health poll and this method try to access this file 
-                // at the exact same moment.
+                if (this.Status == status)
+                {
+                    return;
+                }
 
-                var policy = new LinearRetryPolicy(e => e is IOException, maxAttempts: 10, retryInterval: TimeSpan.FromMilliseconds(100));
+                this.Status = status;
 
-                await policy.InvokeAsync(
-                    async () =>
-                    {
-                        using (var output = new FileStream(statusFilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite))
+                if (status == NeonServiceStatus.Unhealthy)
+                {
+                    Log.LogWarn($"[{Name}] status transitioned to: {status}");
+                }
+                else
+                {
+                    Log.LogInfo($"[{Name}] status transitioned to: {status}");
+                }
+
+                if (statusFilePath != null)
+                {
+                    // We're going to use a retry policy to handle the rare situations
+                    // where the health poll and this method try to access this file 
+                    // at the exact same moment.
+
+                    var policy = new LinearRetryPolicy(e => e is IOException, maxAttempts: 10, retryInterval: TimeSpan.FromMilliseconds(100));
+
+                    await policy.InvokeAsync(
+                        async () =>
                         {
-                            await output.WriteAsync(Encoding.UTF8.GetBytes(NeonHelper.EnumToString(status)));
-                        }
-                    });
+                            using (var output = new FileStream(statusFilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite))
+                            {
+                                await output.WriteAsync(Encoding.UTF8.GetBytes(NeonHelper.EnumToString(status)));
+                            }
+                        });
+                }
             }
         }
 
