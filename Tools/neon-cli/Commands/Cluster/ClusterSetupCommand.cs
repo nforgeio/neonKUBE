@@ -2718,6 +2718,11 @@ rm -rf {chartName}*
                     values.Add(new KeyValuePair<string, object>($"storage.master.size", $"{Math.Round(ybDiskSize / 3, 2)}{ybDiskUnit}"));
                     values.Add(new KeyValuePair<string, object>($"storage.tserver.size", $"{Math.Round(2 * (ybDiskSize / 3), 2)}{ybDiskUnit}"));
 
+                    var metricsMemory = cluster.Definition.Nodes.Where(n => n.Labels.Metrics).FirstOrDefault().Vm.GetMemory(cluster.Definition);
+
+                    values.Add(new KeyValuePair<string, object>($"resource.master.limits.memory", $"{Math.Round(ybDiskSize / 3, 2)}{ybDiskUnit}"));
+                    values.Add(new KeyValuePair<string, object>($"storage.tserver.size", $"{Math.Round(2 * (ybDiskSize / 3), 2)}{ybDiskUnit}"));
+
                     int i = 0;
                     foreach (var t in await GetTaintsAsync(NodeLabels.LabelMetrics, "true"))
                     {
@@ -3063,6 +3068,8 @@ rm -rf {chartName}*
                 {
                     var values = new List<KeyValuePair<string, object>>();
 
+                    values.Add(new KeyValuePair<string, object>($"replicas", $"{cluster.Definition.Masters.Count()}"));
+
                     int i = 0;
                     foreach (var t in await GetTaintsAsync(NodeLabels.LabelNeonSystemRegistry, "true"))
                     {
@@ -3194,6 +3201,10 @@ rm -rf {chartName}*
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
+
+                    values.Add(new KeyValuePair<string, object>($"master.replicas", $"{cluster.Definition.Masters.Count()}"));
+                    values.Add(new KeyValuePair<string, object>($"manager.replicas", $"{cluster.Definition.Masters.Count()}"));
+                    values.Add(new KeyValuePair<string, object>($"worker.replicas", $"{cluster.Definition.Masters.Count()}"));
 
                     int i = 0;
                     foreach (var t in await GetTaintsAsync(NodeLabels.LabelNeonSystemDb, "true"))
