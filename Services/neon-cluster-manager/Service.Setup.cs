@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Service.cs
+// FILE:	    Service.Setup.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2016-2020 by neonFORGE LLC.  All rights reserved.
 

@@ -368,6 +368,7 @@ OPTIONS:
 
                     // Indicate that setup is complete.
 
+                    clusterLogin.ClusterDefinition.ClearSetupState();
                     clusterLogin.SetupDetails.SetupPending = false;
                     clusterLogin.Save();
 

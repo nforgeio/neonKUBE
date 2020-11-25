@@ -208,6 +208,8 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Instance members
 
+        private object      syncLock = new object();
+
         /// <summary>
         /// Default constructor.
         /// </summary>
@@ -475,6 +477,121 @@ namespace Neon.Kube
         public Dictionary<string, NodeDefinition> NodeDefinitions { get; set; } = new Dictionary<string, NodeDefinition>(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
+        /// <para>
+        /// Holds temporary state required by various components during cluster setup.  This is a case-insensitive
+        /// string dictionary that will be maintained during cluster setup and is persisted to disk to support 
+        /// restarting and continuing cluster setup when necessary.  This property will be set to <c>null</c>
+        /// after cluster setup is complete, so this is a suitable place for storing generated secure credentials.
+        /// </para>
+        /// <para>
+        /// As a convention, dictionary keys should use a dot notation like <b>neon-cluster-manager.connstring</b>
+        /// to avoid naming conflicts and to make it clear what's what during debugging.
+        /// </para>
+        /// <note>
+        /// <b>IMPORTANT:</b> Do not reference this dictionary directly.  Use <see cref="SetSetupState(string, string)"/>,
+        /// <see cref="GetSetupState(string)"/>, and <see cref="RemoveSetupState(string)"/>.  This will protect the
+        /// dictionary when multiple threads try to access it which is entirely possible since <see cref="SetupController{NodeMetadata}"/>
+        /// implicitly performs operations using multiple threads.
+        /// </note>
+        /// <note>
+        /// <b>IMPORTANT:</b> Any changes to this state <b>persisted automatically</b>.  You'll need to call
+        /// <see cref="ClusterLogin.Save()"/> on the cluster login holding the cluster definition.
+        /// </note>
+        /// </summary>
+        [JsonProperty(PropertyName = "SetupState", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "setupState", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public Dictionary<string, string> SetupState { get; set; } = null;
+
+        /// <summary>
+        /// Adds or updates an item in <see cref="SetupState"/>.  Use this instead of accessing the dictionary
+        /// directly for thread safety.
+        /// </summary>
+        /// <param name="key">The item key.</param>
+        /// <param name="value">The item value.</param>
+        public void SetSetupState(string key, string value)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(key), nameof(key));
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
+
+            lock (syncLock)
+            {
+                if (SetupState == null)
+                {
+                    SetupState = new Dictionary<string, string>(StringComparer.CurrentCultureIgnoreCase);
+                }
+
+                SetupState[key] = value;
+            }
+        }
+
+        /// <summary>
+        /// Retrieves the value of an item from <see cref="SetupState"/> when it exists, or 
+        /// <c>null</c> when it does not exist.  Use this instead of accessing the dictionary
+        /// directly for thread safety.
+        /// </summary>
+        /// <param name="key">The item key.</param>
+        /// <returns>The item value or <c>null</c> if the item doesn't exist.</returns>
+        public string GetSetupState(string key)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(key), nameof(key));
+
+            lock (syncLock)
+            {
+                if (SetupState == null)
+                {
+                    SetupState = new Dictionary<string, string>(StringComparer.CurrentCultureIgnoreCase);
+                }
+
+                if (SetupState.TryGetValue(key, out var value))
+                {
+                    return value;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Removes an item from <see cref="SetupState"/> if it exists and does notthing
+        /// when the item doesn't exist.  Use this instead of accessing the dictionary
+        /// directly for thread safety.
+        /// </summary>
+        /// <param name="key">The item key.</param>
+        public void RemoveSetupState(string key)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(key), nameof(key));
+
+            lock (syncLock)
+            {
+                if (SetupState == null)
+                {
+                    SetupState = new Dictionary<string, string>(StringComparer.CurrentCultureIgnoreCase);
+                }
+
+                if (SetupState.ContainsKey(key))
+                {
+                    SetupState.Remove(key);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Removes any temporary setup related state including <see cref="SetupState"/> as well
+        /// as temporary state used by the hosting managers.
+        /// </summary>
+        public void ClearSetupState()
+        {
+            lock (syncLock)
+            {
+                SetupState = null;
+                Hosting?.ClearSecrets();
+            }
+        }
+
+        /// <summary>
         /// Enumerates all cluster node definitions.
         /// </summary>
         [JsonIgnore]
@@ -667,6 +784,18 @@ namespace Neon.Kube
 
                 ipAddressToNode.Add(address, node);
             }
+        }
+
+        /// <summary>
+        /// Adds a node to the cluster.
+        /// </summary>
+        /// <param name="node">The new node.</param>
+        public void AddNode(NodeDefinition node)
+        {
+            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
+            Covenant.Requires<ArgumentException>(NeonHelper.DoesNotThrow(() => node.Validate(this)), nameof(node));
+
+            NodeDefinitions.Add(node.Name, node);
         }
 
         /// <summary>
@@ -867,18 +996,6 @@ namespace Neon.Kube
 
                 node.Labels.PhysicalAvailabilitySet = node.IsMaster ? "master" : "worker";
             }
-        }
-
-        /// <summary>
-        /// Adds a node to the cluster.
-        /// </summary>
-        /// <param name="node">The new node.</param>
-        public void AddNode(NodeDefinition node)
-        {
-            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
-            Covenant.Requires<ArgumentException>(NeonHelper.DoesNotThrow(() => node.Validate(this)), nameof(node));
-
-            NodeDefinitions.Add(node.Name, node);
         }
     }
 }
