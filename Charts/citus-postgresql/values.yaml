@@ -95,13 +95,7 @@ prometheus:
   image: wrouesnel/postgres_exporter
   imageTag: v0.5.1
   port: 9187
-  resources:
-    limits:
-      cpu: 100m
-      memory: 256Mi
-    requests:
-      cpu: 100m
-      memory: 256Mi
+  resources: {}
   disableDefaultMetrics: false
   logLevel: "info"
   queries: |-
