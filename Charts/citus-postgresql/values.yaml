@@ -15,7 +15,7 @@ tolerations:
 
 ## Citus Worker
 worker:
-  replicaCount: 3
+  replicas: 3
   citusType: "citus-worker"
   extraConfigs:
   updateStrategy:
@@ -33,6 +33,7 @@ worker:
 
 ## Citus Master
 master:
+  replicas: 3
   citusType: "citus-master"
   extraConfigs:
   resources: {}
