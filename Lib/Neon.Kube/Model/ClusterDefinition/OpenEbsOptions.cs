@@ -65,6 +65,19 @@ namespace Neon.Kube
             NfsSize = NfsSize ?? minNfsSize;
 
             ClusterDefinition.ValidateSize(NfsSize, typeof(OpenEbsOptions), nameof(NfsSize), minimum: minNfsSize);
+
+            if (!clusterDefinition.Nodes.Any(n => n.OpenEBS))
+            {
+                foreach (var w in clusterDefinition.Workers)
+                {
+                    w.OpenEBS = true;
+                }
+            }
+
+            foreach (var n in clusterDefinition.Nodes.Where(n => n.OpenEBS))
+            {
+                n.Labels.OpenEBS = true;
+            }
         }
     }
 }
