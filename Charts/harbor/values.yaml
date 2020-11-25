@@ -207,13 +207,13 @@ persistence:
       storageClass: "nfs"
       subPath: ""
       accessMode: ReadWriteMany
-      size: 5Gi
+      size: 1Gi
     jobservice:
       existingClaim: ""
       storageClass: "nfs"
       subPath: ""
       accessMode: ReadWriteMany
-      size: 10Gi
+      size: 1Gi
     # If external database is used, the following settings for database will
     # be ignored
     database:
