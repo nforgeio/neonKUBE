@@ -313,6 +313,9 @@
     <Compile Include="..\Test.Neon.Common\Helper\Test_NeonHelper.cs">
       <Link>Helper\Test_NeonHelper.cs</Link>
     </Compile>
+    <Compile Include="..\Test.Neon.Common\Helper\Test_NeonHelper.IO.cs">
+      <Link>Helper\Test_NeonHelper.IO.cs</Link>
+    </Compile>
     <Compile Include="..\Test.Neon.Common\Helper\Test_NeonHelper.Json.cs">
       <Link>Helper\Test_NeonHelper.Json.cs</Link>
     </Compile>
