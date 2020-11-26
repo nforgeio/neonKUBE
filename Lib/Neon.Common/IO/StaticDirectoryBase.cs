@@ -30,11 +30,19 @@ using Neon.Common;
 namespace Neon.IO
 {
     /// <summary>
+    /// <para>
     /// Helper class that can be used by <see cref="IStaticDirectory"/> implementations.
+    /// </para>
+    /// <note>
+    /// Implementations derived from this class will use case insensitive file and
+    /// directory name mapping.
+    /// </note>
     /// </summary>
     public abstract class StaticDirectoryBase : IStaticDirectory
     {
-        private StaticDirectoryBase     root;
+        private object                              syncLock = new object();
+        private StaticDirectoryBase                 root;
+        private Dictionary<string, StaticFileBase>  pathToFile;     // Maintained by the root directory
 
         /// <summary>
         /// Protected constructor.
@@ -91,7 +99,61 @@ namespace Neon.IO
         /// <inheritdoc/>
         public virtual IStaticFile GetFile(string path)
         {
+            // We're going to do accomplish this with three steps:
+            //
+            // 1. Convert relative paths to absolute, leaving any ".."
+            //    segments in place.
+
+
+
+            // 2. Process any ".." segments.
+
+
+            // 3. Walk the tree of directories, looking for the file.
+            
             throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Implemented by the root directory in a file system to quickly search
+        /// for a file by fully qualified path.
+        /// </summary>
+        /// <param name="path">The target file path.</param>
+        /// <returns>The <see cref="StaticFileBase"/> for the file if present, otherwise <c>null</c>.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if this is not the root node.</exception>
+        private StaticFileBase FindFile(string path)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path), nameof(path));
+            Covenant.Requires<InvalidOperationException>(Parent != null, "This is not the root node.");
+
+            // Note this this is a static file system, so we can rely on the
+            // fact that set of files present can no longer be changed when
+            // it's possible for this method to be called.
+            //
+            // The first time this method is called, we'll initialize the 
+            // the [pathToFile] dictionary before performing the lookup.
+
+            lock (syncLock)
+            {
+                if (pathToFile == null)
+                {
+                    pathToFile = new Dictionary<string, StaticFileBase>(StringComparer.InvariantCultureIgnoreCase);
+
+                    foreach (var file in GetFiles())
+                    {
+                        pathToFile[file.Path] = (StaticFileBase)file;
+                    }
+                }
+            }
+
+            if (pathToFile.TryGetValue(path, out var targetFile))
+            {
+                return targetFile;
+            }
+            else
+            {
+                return null;
+            }
         }
 
         /// <summary>

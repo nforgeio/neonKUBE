@@ -28,7 +28,13 @@ using Neon.Common;
 namespace Neon.IO
 {
     /// <summary>
+    /// <para>
     /// Helper class that can be used by <see cref="IStaticFile"/> implementations.
+    /// </para>
+    /// <note>
+    /// Implementations derived from this class will use case insensitive file and
+    /// directory name mapping.
+    /// </note>
     /// </summary>
     public abstract class StaticFileBase : IStaticFile
     {

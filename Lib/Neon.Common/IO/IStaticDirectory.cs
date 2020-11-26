@@ -38,7 +38,15 @@ namespace Neon.IO
     /// <see cref="IStaticFile"/> instances loaded from an assembly's embedded resources
     /// via the <see cref="AssemblyExtensions.GetStaticDirectory(Assembly, string)"/> extension method.
     /// </para>
+    /// <note>
+    /// <b>IMPORTANT: </b>Implementations need to be thread-safe.
+    /// </note>
+    /// <note>
+    /// In general, file and directory name lookup case sensitivity should probably be
+    /// case insensitive for most purposes but this is an implementation specific detail. 
+    /// </note>
     /// </summary>
+    /// <threadsafety instance="true"/>
     public interface IStaticDirectory
     {
         /// <summary>
