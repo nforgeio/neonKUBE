@@ -19,7 +19,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
+using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -39,53 +41,155 @@ namespace Neon.IO
         /// </summary>
         /// <param name="root">The root directory or <c>null</c> if this is the root.</param>
         /// <param name="parent">The parent directory or <c>null</c> for the root directory.</param>
-        /// <param name="path">Specifies the logical Lunix-style path to directory.</param>
-        protected StaticDirectoryBase(StaticDirectoryBase root, StaticDirectoryBase parent, string path)
+        /// <param name="name">The directory name (this must be <c>null</c> for the root directory.</param>
+        protected StaticDirectoryBase(StaticDirectoryBase root, StaticDirectoryBase parent, string name)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
+
+            if (root == null)
+            {
+                if (parent != null)
+                {
+                    throw new ArgumentNullException($"[{nameof(parent)}] must be NULL when [{nameof(root)}] is NULL.");
+                }
+
+                if (!string.IsNullOrEmpty(name))
+                {
+                    throw new ArgumentNullException($"[{nameof(name)}] must be NULL or empty when [{nameof(root)}] is NULL.");
+                }
+            }
+            else
+            {
+                Covenant.Requires<ArgumentNullException>(parent != null);
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+            }
 
             this.root   = root ?? this;
             this.Parent = parent;
-            this.Path   = path;
+            this.Name   = name;
+            this.Path   = GetPath();
         }
-
-        /// <summary>
-        /// Returns the parent directory or <c>null</c> when this is the root directory.
-        /// </summary>
-        public virtual IStaticDirectory Parent { get; private set; }
-
-        /// <summary>
-        /// Returns the logical Linux style path to this directory relative to the
-        /// root directory,
-        /// </summary>
-        public virtual string Path { get; private set;}
 
         /// <summary>
         /// Returns the list of subdirectories present in this directory.
         /// </summary>
-        public virtual List<StaticDirectoryBase> Directories { get; private set; } = new List<StaticDirectoryBase>();
+        protected virtual List<StaticDirectoryBase> Directories { get; private set; } = new List<StaticDirectoryBase>();
 
         /// <summary>
         /// Returns the list of files present in this directory.
         /// </summary>
-        public virtual List<StaticFileBase> Files { get; private set; } = new List<StaticFileBase>();
+        protected virtual List<StaticFileBase> Files { get; private set; } = new List<StaticFileBase>();
 
         /// <inheritdoc/>
-        public IEnumerable<IStaticDirectory> GetDirectories(string searchPattern = null, SearchOption options = SearchOption.TopDirectoryOnly)
+        public virtual IStaticDirectory Parent { get; private set; }
+
+        /// <inheritdoc/>
+        public virtual string Name { get; private set; }
+
+        /// <inheritdoc/>
+        public virtual string Path { get; private set;}
+
+        /// <inheritdoc/>
+        public virtual IStaticFile GetFile(string path)
         {
             throw new NotImplementedException();
         }
 
-        /// <inheritdoc/>
-        public IStaticFile GetFile(string path)
+        /// <summary>
+        /// Returns the fully qualified path to the directory.
+        /// </summary>
+        /// <returns>The Linux style path.</returns>
+        internal string GetPath()
         {
-            throw new NotImplementedException();
+            var directoryNames   = new List<string>();
+            var currentDirectory = this;
+
+            while (currentDirectory.Parent != null)
+            {
+                directoryNames.Add(currentDirectory.Name);
+                currentDirectory = (StaticDirectoryBase)currentDirectory.Parent;
+            }
+
+            directoryNames.Reverse();
+
+            var path = string.Empty;
+
+            foreach (var directoryName in directoryNames)
+            {
+                path += "/" + directoryName;
+            }
+
+            return path;
         }
 
         /// <inheritdoc/>
-        public IEnumerable<IStaticFile> GetFiles(string searchPattern = null, SearchOption options = SearchOption.TopDirectoryOnly)
+        public virtual IEnumerable<IStaticFile> GetFiles(string searchPattern = null, SearchOption options = SearchOption.TopDirectoryOnly)
         {
-            throw new NotImplementedException();
+            var regex = NeonHelper.FileWildcardRegex(searchPattern ?? "*.*");
+            var items = new List<StaticFileBase>();
+
+            AddFiles(items, regex, options);
+
+            return items.OrderBy(item => item.Name, StringComparer.InvariantCultureIgnoreCase).ToList();
+        }
+
+        /// <inheritdoc/>
+        public virtual IEnumerable<IStaticDirectory> GetDirectories(string searchPattern, SearchOption options)
+        {
+            var regex = NeonHelper.FileWildcardRegex(searchPattern ?? "*.*");
+            var items = new List<StaticDirectoryBase>();
+
+            AddDirectories(items, regex, options);
+
+            return items.OrderBy(item => item.Name, StringComparer.InvariantCultureIgnoreCase).ToList();
+        }
+
+        /// <summary>
+        /// Adds files whose names match the search pattern to the list passed, recursively walking
+        /// subdirectories when requested.
+        /// </summary>
+        /// <param name="items">The output directory list.</param>
+        /// <param name="searchPattern">Specifies the search pattern.</param>
+        /// <param name="options">Specifies the recursion option.</param>
+        private void AddFiles(List<StaticFileBase> items, Regex searchPattern, SearchOption options)
+        {
+            foreach (var file in Files)
+            {
+                if (searchPattern.IsMatch(file.Name))
+                {
+                    items.Add(file);
+                }
+
+                if (options == SearchOption.AllDirectories)
+                {
+                    foreach (var directory in Directories)
+                    {
+                        directory.AddFiles(items, searchPattern, options);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Adds directories whose names match the search pattern to the list passed, recursively walking
+        /// subdirectories when requested.
+        /// </summary>
+        /// <param name="items">The output directory list.</param>
+        /// <param name="searchPattern">Specifies the search pattern.</param>
+        /// <param name="options">Specifies the recursion option.</param>
+        private void AddDirectories(List<StaticDirectoryBase> items, Regex searchPattern, SearchOption options)
+        {
+            foreach (var directory in Directories)
+            {
+                if (searchPattern.IsMatch(directory.Name))
+                {
+                    items.Add(directory);
+                }
+
+                if (options == SearchOption.AllDirectories)
+                {
+                    AddDirectories(items, searchPattern, options);
+                }
+            }
         }
     }
 }

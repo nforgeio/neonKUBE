@@ -19,6 +19,7 @@ using System;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Reflection;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -43,6 +44,9 @@ namespace Neon.IO
         }
 
         /// <inheritdoc/>
+        public virtual string Name { get; private set; }
+
+        /// <inheritdoc/>
         public virtual string Path { get; private set; }
 
         /// <inheritdoc/>
@@ -52,9 +56,21 @@ namespace Neon.IO
         public abstract Task<byte[]> ReadAllBytesAsync();
 
         /// <inheritdoc/>
-        public abstract string ReadAllText();
+        public abstract string ReadAllText(Encoding encoding = null);
 
         /// <inheritdoc/>
-        public abstract Task<string> ReadAllTextAsync();
+        public abstract Task<string> ReadAllTextAsync(Encoding encoding = null);
+
+        /// <inheritdoc/>
+        public abstract TextReader OpenReader(Encoding encoding = null);
+
+        /// <inheritdoc/>
+        public abstract Task<TextReader> OpenReaderAsync(Encoding encoding = null);
+
+        /// <inheritdoc/>
+        public abstract Stream OpenStream();
+
+        /// <inheritdoc/>
+        public abstract Task<Stream> OpenStreamAsync();
     }
 }

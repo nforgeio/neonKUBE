@@ -42,7 +42,12 @@ namespace Neon.IO
     public interface IStaticDirectory
     {
         /// <summary>
-        /// Returns the Linux style fully qualified path for the static directory relative to
+        /// Returns the directory name.
+        /// </summary>
+        public string Name { get; }
+
+        /// <summary>
+        /// Returns the fully qualified Linux style path for the static directory relative to
         /// the static root directory.
         /// </summary>
         public string Path { get; }
@@ -64,7 +69,7 @@ namespace Neon.IO
 
         /// <summary>
         /// Returns the files beneath the current directory, optionally matching files by
-        /// name as well as optionally searching recusively searching subdirectories..
+        /// name as well as optionally searching recursively searching subdirectories..
         /// </summary>
         /// <param name="searchPattern">Optionally specifies a directory name pattern using standard file system wild cards like <b>[*]</b> and <b>[?]</b></param>
         /// <param name="options">Optionally requires a recursive search.</param>

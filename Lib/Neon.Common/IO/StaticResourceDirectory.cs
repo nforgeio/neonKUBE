@@ -31,7 +31,7 @@ namespace Neon.IO
     /// Implements the <see cref="IStaticDirectory"/> abstraction over as virtual
     /// directory of embedded <see cref="Assembly"/> resources.
     /// </summary>
-    public class StaticResourceDirectory : StaticDirectoryBase
+    internal class StaticResourceDirectory : StaticDirectoryBase
     {
         /// <summary>
         /// Constructor.
@@ -39,7 +39,7 @@ namespace Neon.IO
         /// <param name="root">The root directory or <c>null</c> if this is the root.</param>
         /// <param name="parent">The parent directory or <c>null</c> for the root directory.</param>
         /// <param name="path">Specifies the logical Lunix-style path to directory.</param>
-        public StaticResourceDirectory(StaticResourceDirectory root, StaticResourceDirectory parent, string path)
+        internal StaticResourceDirectory(StaticResourceDirectory root, StaticResourceDirectory parent, string path)
             : base(root, parent, path)
         {
         }

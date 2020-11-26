@@ -18,6 +18,7 @@
 using System;
 using System.IO;
 using System.Reflection;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -40,7 +41,12 @@ namespace Neon.IO
     public interface IStaticFile
     {
         /// <summary>
-        /// Returns the Linux style fully qualified path for the static file relative to
+        /// Returns the file name.
+        /// </summary>
+        public string Name { get; }
+
+        /// <summary>
+        /// Returns the fully qualified Linux style path for the static file relative to
         /// the static root directory.
         /// </summary>
         public string Path { get; }
@@ -48,14 +54,40 @@ namespace Neon.IO
         /// <summary>
         /// Reads the file contents as a UTF-8 encoded string.
         /// </summary>
+        /// <param name="encoding">Optionally specifies the text encoding.  This defaults to <b>UTF-8</b>,</param>
         /// <returns>The file contents.</returns>
-        public string ReadAllText();
+        public string ReadAllText(Encoding encoding = null);
 
         /// <summary>
         /// Asynchronously reads the file contents as a UTF-8 encoded string.
         /// </summary>
+        /// <param name="encoding">Optionally specifies the text encoding.  This defaults to <b>UTF-8</b>,</param>
         /// <returns>The file contents.</returns>
-        public Task<string> ReadAllTextAsync();
+        public Task<string> ReadAllTextAsync(Encoding encoding = null);
+
+        /// <summary>
+        /// <para>
+        /// Opens a text reader for the file contents.
+        /// </para>
+        /// <note>
+        /// You are responsible disposing the reader returned when you're done with it.
+        /// </note>
+        /// </summary>
+        /// <param name="encoding">Optionally specifies the text encoding.  This defaults to <b>UTF-8</b>,</param>
+        /// <returns></returns>
+        public TextReader OpenReader(Encoding encoding = null);
+
+        /// <summary>
+        /// <para>
+        /// Asychronously opens a text reader for the file contents.
+        /// </para>
+        /// <note>
+        /// You are responsible disposing the reader returned when you're done with it.
+        /// </note>
+        /// </summary>
+        /// <param name="encoding">Optionally specifies the text encoding.  This defaults to <b>UTF-8</b>,</param>
+        /// <returns></returns>
+        public Task<TextReader> OpenReaderAsync(Encoding encoding = null);
 
         /// <summary>
         /// Reads the file contents as bytes.
@@ -68,5 +100,27 @@ namespace Neon.IO
         /// </summary>
         /// <returns>The file contents.</returns>
         public Task<byte[]> ReadAllBytesAsync();
+
+        /// <summary>
+        /// <para>
+        /// Opens a stream on the file contents.
+        /// </para>
+        /// <note>
+        /// You are responsible disposing the reader returned when you're done with it.
+        /// </note>
+        /// </summary>
+        /// <returns>The <see cref="Stream"/>.</returns>
+        public Stream OpenStream();
+
+        /// <summary>
+        /// <para>
+        /// Asychronously opens a stream on the file contents.
+        /// </para>
+        /// <note>
+        /// You are responsible disposing the reader returned when you're done with it.
+        /// </note>
+        /// </summary>
+        /// <returns>The <see cref="Stream"/>.</returns>
+        public Task<Stream> OpenStreamAsync();
     }
 }

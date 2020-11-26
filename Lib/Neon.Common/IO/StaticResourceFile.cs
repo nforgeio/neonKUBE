@@ -30,7 +30,7 @@ namespace Neon.IO
     /// <summary>
     /// Implements the <see cref="IStaticFile"/> abstractionreferencing an embedded <see cref="Assembly"/> resource.
     /// </summary>
-    public class StaticResourceFile : StaticFileBase
+    internal class StaticResourceFile : StaticFileBase
     {
         private Assembly    assembly;
         private string      resourceName;
@@ -41,7 +41,7 @@ namespace Neon.IO
         /// <param name="assembly">The source assembly.</param>
         /// <param name="resourceName">The name of the resource in the assembly manifest.</param>
         /// <param name="path">The logical path to this file.</param>
-        public StaticResourceFile(Assembly assembly, string resourceName, string path)
+        internal StaticResourceFile(Assembly assembly, string resourceName, string path)
             : base(path)
         {
             Covenant.Requires<ArgumentNullException>(assembly != null);
@@ -49,6 +49,30 @@ namespace Neon.IO
 
             this.assembly     = assembly;
             this.resourceName = resourceName;
+        }
+
+        /// <inheritdoc/>
+        public override TextReader OpenReader(Encoding encoding = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <inheritdoc/>
+        public override Task<TextReader> OpenReaderAsync(Encoding encoding = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <inheritdoc/>
+        public override Stream OpenStream()
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <inheritdoc/>
+        public override Task<Stream> OpenStreamAsync()
+        {
+            throw new NotImplementedException();
         }
 
         /// <inheritdoc/>
@@ -70,11 +94,13 @@ namespace Neon.IO
         }
 
         /// <inheritdoc/>
-        public override string ReadAllText()
+        public override string ReadAllText(Encoding encoding = null)
         {
+            encoding = encoding ?? Encoding.UTF8;
+
             using (var stream = assembly.GetManifestResourceStream(resourceName))
             {
-                using (var reader = new StreamReader(stream))
+                using (var reader = new StreamReader(stream, encoding))
                 {
                     return reader.ReadToEnd();
                 }
@@ -82,11 +108,13 @@ namespace Neon.IO
         }
 
         /// <inheritdoc/>
-        public async override Task<string> ReadAllTextAsync()
+        public async override Task<string> ReadAllTextAsync(Encoding encoding = null)
         {
+            encoding = encoding ?? Encoding.UTF8;
+
             using (var stream = assembly.GetManifestResourceStream(resourceName))
             {
-                using (var reader = new StreamReader(stream))
+                using (var reader = new StreamReader(stream, encoding))
                 {
                     return await reader.ReadToEndAsync();
                 }
