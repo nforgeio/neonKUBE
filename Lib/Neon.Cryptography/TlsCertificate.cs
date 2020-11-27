@@ -283,7 +283,7 @@ namespace Neon.Cryptography
                 // The latest OpenSSL release candidate for (v1.1.1) includes 
                 // a new command line option for this but the current release
                 // does not, so we're going to generate a temporary config
-                // file specifiying this.
+                // file specifying this.
 
                 var configPath = Path.Combine(tempFolder, "cert.conf");
                 var sbConfig   = new StringBuilder();
@@ -409,7 +409,7 @@ subjectAltName         = @alt_names
                 // The latest OpenSSL release candidate for (v1.1.1) includes 
                 // a new command line option for this but the current release
                 // does not, so we're going to generate a temporary config
-                // file specifiying this.
+                // file specifying this.
 
                 var configPath = Path.Combine(tempFolder, "cert.conf");
                 var sbConfig   = new StringBuilder();
