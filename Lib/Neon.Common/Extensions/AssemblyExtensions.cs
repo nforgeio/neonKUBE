@@ -39,66 +39,136 @@ namespace System
         // Private types
 
         /// <summary>
-        /// Wraps an embedded resource so it can be included in a static file system.
+        /// Used to emulate resource directories.
         /// </summary>
-        private class StaticResourceFile : StaticFileBase
+        private class StaticResourceDirectory : StaticDirectoryBase
         {
             /// <summary>
             /// Constructor.
             /// </summary>
+            /// <param name="root">The root directory or <c>null</c> if this is the root.</param>
+            /// <param name="parent">The parent directory or <c>null</c> for the root directory.</param>
+            /// <param name="name">The directory name (this must be <c>null</c> for the root directory.</param>
+            public StaticResourceDirectory(StaticResourceDirectory root, StaticResourceDirectory parent, string name)
+                : base(root, parent, name)
+            {
+            }
+
+            /// <summary>
+            /// Adds a subdirectory.
+            /// </summary>
+            /// <param name="directory">The child resource directory.</param>
+            internal void AddDirectory(StaticResourceDirectory directory)
+            {
+                Covenant.Requires<ArgumentNullException>(directory != null, nameof(directory));
+
+                base.Directories.Add(directory);
+            }
+
+            /// <summary>
+            /// Adds a file.
+            /// </summary>
+            /// <param name="file">The resource file.</param>
+            internal void AddFile(StaticResourceFile file)
+            {
+                Covenant.Requires<ArgumentNullException>(file != null, nameof(file));
+
+                base.Files.Add(file);
+            }
+        }
+
+        /// <summary>
+        /// Wraps an embedded resource so it can be included in a static file system.
+        /// </summary>
+        private class StaticResourceFile : StaticFileBase
+        {
+            private Assembly    assembly;
+            private string      resourceName;
+
+            /// <summary>
+            /// Constructor.
+            /// </summary>
             /// <param name="path">The virtual path of the file within the file system.</param>
-            /// <param name="resourceName">The full name of the resource in assembly manifest.</param>
-            public StaticResourceFile(string path, string resourceName)
+            /// <param name="assembly">The source assembly.</param>
+            /// <param name="resourceName">The full name of the resource within the assembly.</param>
+            public StaticResourceFile(string path, Assembly assembly, string resourceName)
                 : base(path)
             {
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path), nameof(path));
+                Covenant.Requires<ArgumentNullException>(assembly != null, nameof(assembly));
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(resourceName), nameof(resourceName));
+
+                this.assembly      = assembly;
+                this.resourceName = resourceName;
             }
 
             /// <inheritdoc/>
             public override TextReader OpenReader(Encoding encoding = null)
             {
-                throw new NotImplementedException();
+                return new StreamReader(
+                    assembly.GetManifestResourceStream(resourceName),
+                    encoding ?? Encoding.UTF8,
+                    bufferSize: 8192,
+                    detectEncodingFromByteOrderMarks: true,
+                    leaveOpen: false);
             }
 
             /// <inheritdoc/>
-            public override Task<TextReader> OpenReaderAsync(Encoding encoding = null)
+            public async override Task<TextReader> OpenReaderAsync(Encoding encoding = null)
             {
-                throw new NotImplementedException();
+                return await Task.FromResult(OpenReader(encoding));
             }
 
             /// <inheritdoc/>
             public override Stream OpenStream()
             {
-                throw new NotImplementedException();
+                return assembly.GetManifestResourceStream(resourceName);
             }
 
             /// <inheritdoc/>
-            public override Task<Stream> OpenStreamAsync()
+            public async override Task<Stream> OpenStreamAsync()
             {
-                throw new NotImplementedException();
+                return await Task.FromResult(assembly.GetManifestResourceStream(resourceName));
             }
 
             /// <inheritdoc/>
             public override byte[] ReadAllBytes()
             {
-                throw new NotImplementedException();
+                using (var stream = OpenStream())
+                {
+                    return stream.ReadToEnd();
+                }
             }
 
             /// <inheritdoc/>
-            public override Task<byte[]> ReadAllBytesAsync()
+            public async override Task<byte[]> ReadAllBytesAsync()
             {
-                throw new NotImplementedException();
+                var stream = await OpenStreamAsync();
+
+                using (stream)
+                {
+                    return await stream.ReadToEndAsync();
+                }
             }
 
             /// <inheritdoc/>
             public override string ReadAllText(Encoding encoding = null)
             {
-                throw new NotImplementedException();
+                using (var reader = OpenReader(encoding))
+                {
+                    return reader.ReadToEnd();
+                }
             }
 
             /// <inheritdoc/>
-            public override Task<string> ReadAllTextAsync(Encoding encoding = null)
+            public async override Task<string> ReadAllTextAsync(Encoding encoding = null)
             {
-                throw new NotImplementedException();
+                var reader = await OpenReaderAsync(encoding);
+
+                using (reader)
+                {
+                    return await reader.ReadToEndAsync();
+                }
             }
         }
 
@@ -204,12 +274,125 @@ namespace System
         ///         sample1.txt
         ///         sample2.txt
         /// </code>
+        /// <para><b>RESOURCE NAMING AMBIGUITIES</b></para>
+        /// <para>
+        /// When creating the file system from resource names, it's possible to encounter situations
+        /// where it's not possible to distingish between a a directory and a file name.  For example:
+        /// </para>
+        /// <code>
+        /// company.my-project.resources.resource1.dat
+        /// </code>
+        /// <para>
+        /// Here are some possibilities:
+        /// </para>
+        /// <list type="bullet">
+        ///     <item>
+        ///     path is <b>/company.my-project.resources.resource1</b> and the file name <b>dat</b>
+        ///     </item>
+        ///     <item>
+        ///     path is <b>/company.my-project.resources</b> and the file name <b>resource1.dat</b>
+        ///     </item>
+        ///     <item>
+        ///     path is <b>/company.my-project</b> and the file name <b>.resources.resource1.dat</b>
+        ///     </item>
+        /// </list>
+        /// <para>
+        /// There is really no way for this method to know what the original resource source files
+        /// and directory paths were.  To resolve this, we're going to assume that resource file
+        /// names include a file extension with a single dot and that any additional dots will form
+        /// the file's parent directory path.  
+        /// </para>
+        /// <para>
+        /// What this means is that your resource file names must include a file extension.  So, file 
+        /// names like this are OK:
+        /// </para>
+        /// <code>
+        /// schema.sql
+        /// config.json
+        /// </code>
+        /// <para>
+        /// You should avoid file names like:
+        /// </para>
+        /// <code>
+        /// schema.1.sql
+        /// </code>
+        /// <para>
+        /// and use something like a dash instead so that <b>schema</b> won't be considered to
+        /// be part of the file's parent directory path:
+        /// </para>
+        /// <code>
+        /// schema-1.sql
+        /// </code>
         /// </remarks>
         public static IStaticDirectory GetResourceFileSystem(this Assembly assembly, string resourcePrefix = null)
         {
-            var resourceNames = assembly.GetManifestResourceNames();
+            if (!string.IsNullOrEmpty(resourcePrefix))
+            {
+                if (resourcePrefix.Last() != '.')
+                {
+                    resourcePrefix += '.';
+                }
+            }
 
-            return null;
+            var pathToDirectory       = new Dictionary<string, StaticResourceDirectory>(StringComparer.InvariantCultureIgnoreCase);
+            var resourceNames         = assembly.GetManifestResourceNames();
+            var filteredResourceNames = string.IsNullOrEmpty(resourcePrefix)
+                                            ? resourceNames
+                                            : resourceNames
+                                                  .Where(name => name.StartsWith(resourcePrefix) && name != resourcePrefix)
+                                                  .Select(name => name.Substring(resourcePrefix.Length));
+            // Add the root directory.
+
+            var root = new StaticResourceDirectory(root: null, parent: null, string.Empty);
+
+            pathToDirectory["/"] = root;
+
+            foreach (var resourceName in filteredResourceNames)
+            {
+                // Split the resource name into the directory path and filename parts.
+
+                var pos      = resourceName.LastIndexOf('.');
+                var path     = (string)null;
+                var filename = (string)null;
+
+                if (pos == -1)
+                {
+                    // This is the one special case where a file may not have an
+                    // extension.  This only happens when an extension-less file is
+                    // located in the root directory.
+
+                    path     = "/";
+                    filename = resourceName;
+                }
+                else
+                {
+                    path     = "/" + resourcePrefix.Substring(0, pos).Replace('.', '/');
+                    filename = resourcePrefix.Substring(pos + 1);
+                }
+
+                if (!pathToDirectory.TryGetValue(path, out var directory))
+                {
+                    // Create the new directory, ensuring that any parent
+                    // directories exist as well.
+
+                    var parent = root;
+
+                    foreach (var directoryName in path.Split('/'))
+                    {
+                        if (!pathToDirectory.TryGetValue(directoryName, out directory))
+                        {
+                            directory = new StaticResourceDirectory(root, parent, directoryName);
+                            parent.AddDirectory(directory);
+                        }
+
+                        parent = directory;
+                    }
+
+                    parent.AddFile(new StaticResourceFile(LinuxPath.Combine(path, filename), assembly, resourceName));
+                }
+            }
+
+            return root;
         }
     }
 }

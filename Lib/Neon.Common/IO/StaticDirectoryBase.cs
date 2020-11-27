@@ -133,7 +133,7 @@ namespace Neon.IO
             }
 
             // Note this this is a static file system, so we can rely on the
-            // fact that set of files present can no longer be changed when
+            // fact that set of files present can no longer be changed ater
             // it's possible for this method to be called.
             //
             // The first time this method is called, we'll initialize the 
@@ -165,7 +165,18 @@ namespace Neon.IO
         /// <inheritdoc/>
         public IStaticDirectory GetDirectory(string path)
         {
-            throw new NotImplementedException();
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path), nameof(path));
+            Covenant.Requires<ArgumentException>(!path.Contains("/../"), $"{nameof(path)}: Relative path segments like \"/../\" are not supported.");
+            Covenant.Requires<ArgumentException>(!path.StartsWith("./"), $"{nameof(path)}: Relative path segments like \"./\" are not supported.");
+
+            var directory = FindDirectory(path);
+
+            if (directory == null)
+            {
+                throw new FileNotFoundException($"Directory [{path}] not found.");
+            }
+
+            return directory;
         }
 
         /// <summary>
@@ -187,7 +198,7 @@ namespace Neon.IO
             }
 
             // Note this this is a static file system, so we can rely on the
-            // fact that set of files present can no longer be changed when
+            // fact that set of files present can no longer be changed after
             // it's possible for this method to be called.
             //
             // The first time this method is called, we'll initialize the 
