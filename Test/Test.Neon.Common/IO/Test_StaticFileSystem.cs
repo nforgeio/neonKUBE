@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -31,75 +32,60 @@ using Xunit;
 
 namespace TestCommon
 {
+    // IMPLEMENTATION NOTE:
+    // --------------------
+    // We're going to combine testing of the [StaticDirectoryBase] and [StaticFileBase]
+    // together with the [Assembly.GetResourceFileSystem()] extension method and related
+    // internal classes.
+    //
+    // This will kill two birds with one stone and is an honest test anyway.  The resource
+    // file system will be rooted at [Test.Neon.Common/Resources] and the virtual file
+    // structure should look like this:
+    // 
+    //      /
+    //          TextFile1.txt
+    //          TextFile2.txt
+    //
+    //          Folder1/
+    //              TextFile3.txt
+    //              TextFile4.txt
+    //
+    //              Folder3/
+    //                  TextFile5.txt
+    //
+    //          Folder2/
+    //              TextFile6.txt
+    //              TextFile7.txt
+    //
+    //              Folder4/
+    //                  TextFile8.txt
+    //
+    // The text files will each have 10 lines of UTF-8 text like:
+    //
+    //      TextFile#.txt:
+    //      Line 1
+    //      Line 2
+    //      Line 3
+    //      Line 4
+    //      Line 5
+    //      Line 6
+    //      Line 7
+    //      Line 8
+    //      Line 9
+    //
+    // When "#" will match the number in the file's name.
+
+    // $todo(jefflill): I'm only testing UTF-8 encoding at this time.
+
     public class Test_StaticFileSystem
     {
-        //---------------------------------------------------------------------
-        // Private types
-
-        private class File : StaticFileBase
-        {
-            public File(string name)
-                : base(name)
-            {
-            }
-
-            public override TextReader OpenReader(Encoding encoding = null)
-            {
-                throw new NotImplementedException();
-            }
-
-            public override Task<TextReader> OpenReaderAsync(Encoding encoding = null)
-            {
-                throw new NotImplementedException();
-            }
-
-            public override Stream OpenStream()
-            {
-                throw new NotImplementedException();
-            }
-
-            public override Task<Stream> OpenStreamAsync()
-            {
-                throw new NotImplementedException();
-            }
-
-            public override byte[] ReadAllBytes()
-            {
-                throw new NotImplementedException();
-            }
-
-            public override Task<byte[]> ReadAllBytesAsync()
-            {
-                throw new NotImplementedException();
-            }
-
-            public override string ReadAllText(Encoding encoding = null)
-            {
-                throw new NotImplementedException();
-            }
-
-            public override Task<string> ReadAllTextAsync(Encoding encoding = null)
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public class Directory : StaticDirectoryBase
-        {
-            public Directory(StaticDirectoryBase root, StaticDirectoryBase parent, string name)
-                : base(root, parent, name)
-            {
-            }
-        }
-
-        //---------------------------------------------------------------------
-        // Implementation
+        private IStaticDirectory    fsAll;          // This file system is rooted at: /
+        private IStaticDirectory    fsResources;    // This file system is rooted at: /Resources
 
         public Test_StaticFileSystem()
         {
-            // Initialize a few static file systems for testing.
-
-
+            fsAll       = Assembly.GetExecutingAssembly().GetResourceFileSystem();
+            fsResources = Assembly.GetExecutingAssembly().GetResourceFileSystem("/Resources");
         }
 
         [Fact]

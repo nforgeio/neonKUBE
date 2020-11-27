@@ -36,7 +36,8 @@ namespace Neon.IO
     /// <para>
     /// This is currently used to emulate a tree of <see cref="IStaticDirectory"/> and 
     /// <see cref="IStaticFile"/> instances loaded from an assembly's embedded resources
-    /// via the <see cref="AssemblyExtensions.GetStaticDirectory(Assembly, string)"/> extension method.
+    /// via the <see cref="AssemblyExtensions.GetResourceFileSystem(Assembly, string)"/> 
+    /// extension method.
     /// </para>
     /// <note>
     /// <b>IMPORTANT: </b>Implementations need to be thread-safe.
@@ -85,12 +86,33 @@ namespace Neon.IO
         public IEnumerable<IStaticFile> GetFiles(string searchPattern = null, SearchOption options = SearchOption.TopDirectoryOnly);
 
         /// <summary>
+        /// <para>
         /// Gets a file via a Linux style path.  This path can be absolute relative to the 
-        /// status root directory or it can be relative to the current directory.
+        /// root directory or it can be relative to the current directory.
+        /// </para>
+        /// <note>
+        /// Relative paths including <b>/../</b> notation to move up a directory or <b>./</b>
+        /// to specify the current directory are not supported.
+        /// </note>
         /// </summary>
         /// <param name="path">The file path (absolute or relative).</param>
         /// <returns>The file.</returns>
         /// <exception cref="FileNotFoundException">Thrown if the file doesn't exist.</exception>
         public IStaticFile GetFile(string path);
+
+        /// <summary>
+        /// <para>
+        /// Gets a directory via a Linux style path.  This path can be absolute relative to the 
+        /// root directory or it can be relative to the current directory.
+        /// </para>
+        /// <note>
+        /// Relative paths including <b>/../</b> notation to move up a directory or <b>./</b>
+        /// to specify the current directory are not supported.
+        /// </note>
+        /// </summary>
+        /// <param name="path">The file path (absolute or relative).</param>
+        /// <returns>The directory.</returns>
+        /// <exception cref="FileNotFoundException">Thrown if the directory doesn't exist.</exception>
+        public IStaticDirectory GetDirectory(string path);
     }
 }

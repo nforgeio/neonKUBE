@@ -40,9 +40,10 @@ namespace Neon.IO
     /// </summary>
     public abstract class StaticDirectoryBase : IStaticDirectory
     {
-        private object                              syncLock = new object();
-        private StaticDirectoryBase                 root;
-        private Dictionary<string, StaticFileBase>  pathToFile;     // Maintained by the root directory
+        private object                                  syncLock = new object();
+        private StaticDirectoryBase                     root;
+        private Dictionary<string, StaticFileBase>      pathToFile;         // Used by the root directory only
+        private Dictionary<string, StaticDirectoryBase> pathToDirectory;    // Used by the root directory only
 
         /// <summary>
         /// Protected constructor.
@@ -99,24 +100,23 @@ namespace Neon.IO
         /// <inheritdoc/>
         public virtual IStaticFile GetFile(string path)
         {
-            // We're going to do accomplish this with three steps:
-            //
-            // 1. Convert relative paths to absolute, leaving any ".."
-            //    segments in place.
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path), nameof(path));
+            Covenant.Requires<ArgumentException>(!path.Contains("/../"), $"{nameof(path)}: Relative path segments like \"/../\" are not supported.");
+            Covenant.Requires<ArgumentException>(!path.StartsWith("./"), $"{nameof(path)}: Relative path segments like \"./\" are not supported.");
 
+            var file = FindFile(path);
 
+            if (file == null)
+            {
+                throw new FileNotFoundException($"File [{path}] not found.");
+            }
 
-            // 2. Process any ".." segments.
-
-
-            // 3. Walk the tree of directories, looking for the file.
-            
-            throw new NotImplementedException();
+            return file;
         }
 
         /// <summary>
         /// Implemented by the root directory in a file system to quickly search
-        /// for a file by fully qualified path.
+        /// for a file via a fully qualified path.
         /// </summary>
         /// <param name="path">The target file path.</param>
         /// <returns>The <see cref="StaticFileBase"/> for the file if present, otherwise <c>null</c>.</returns>
@@ -124,7 +124,13 @@ namespace Neon.IO
         private StaticFileBase FindFile(string path)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path), nameof(path));
-            Covenant.Requires<InvalidOperationException>(Parent != null, "This is not the root node.");
+
+            // Forward to the root directory when this isn't the root.
+
+            if (this.Parent != null)
+            {
+                return this.root.FindFile(path);
+            }
 
             // Note this this is a static file system, so we can rely on the
             // fact that set of files present can no longer be changed when
@@ -139,7 +145,7 @@ namespace Neon.IO
                 {
                     pathToFile = new Dictionary<string, StaticFileBase>(StringComparer.InvariantCultureIgnoreCase);
 
-                    foreach (var file in GetFiles())
+                    foreach (var file in GetFiles(options: SearchOption.AllDirectories))
                     {
                         pathToFile[file.Path] = (StaticFileBase)file;
                     }
@@ -149,6 +155,60 @@ namespace Neon.IO
             if (pathToFile.TryGetValue(path, out var targetFile))
             {
                 return targetFile;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        /// <inheritdoc/>
+        public IStaticDirectory GetDirectory(string path)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Implemented by the root directory in a file system to quickly search
+        /// for a directory via a fully qualified path.
+        /// </summary>
+        /// <param name="path">The target directory path.</param>
+        /// <returns>The <see cref="StaticDirectoryBase"/> for the file if present, otherwise <c>null</c>.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if this is not the root node.</exception>
+        private StaticDirectoryBase FindDirectory(string path)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path), nameof(path));
+
+            // Forward to the root directory when this isn't the root.
+
+            if (this.Parent != null)
+            {
+                return this.root.FindDirectory(path);
+            }
+
+            // Note this this is a static file system, so we can rely on the
+            // fact that set of files present can no longer be changed when
+            // it's possible for this method to be called.
+            //
+            // The first time this method is called, we'll initialize the 
+            // the [pathToDirectory] dictionary before performing the lookup.
+
+            lock (syncLock)
+            {
+                if (pathToDirectory == null)
+                {
+                    pathToDirectory = new Dictionary<string, StaticDirectoryBase>(StringComparer.InvariantCultureIgnoreCase);
+
+                    foreach (var directory in GetDirectories(options: SearchOption.AllDirectories))
+                    {
+                        pathToDirectory[directory.Path] = (StaticDirectoryBase)directory;
+                    }
+                }
+            }
+
+            if (pathToDirectory.TryGetValue(path, out var targetDirectory))
+            {
+                return targetDirectory;
             }
             else
             {
@@ -195,7 +255,7 @@ namespace Neon.IO
         }
 
         /// <inheritdoc/>
-        public virtual IEnumerable<IStaticDirectory> GetDirectories(string searchPattern, SearchOption options)
+        public virtual IEnumerable<IStaticDirectory> GetDirectories(string searchPattern = null, SearchOption options = SearchOption.TopDirectoryOnly)
         {
             var regex = NeonHelper.FileWildcardRegex(searchPattern ?? "*.*");
             var items = new List<StaticDirectoryBase>();
