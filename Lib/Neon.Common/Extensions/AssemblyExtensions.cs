@@ -55,14 +55,15 @@ namespace System
             }
 
             /// <summary>
-            /// Adds a subdirectory.
+            /// Adds a subdirectory if it doesn't already exist.
             /// </summary>
             /// <param name="directory">The child resource directory.</param>
-            internal void AddDirectory(StaticResourceDirectory directory)
+            /// <returns>The existing <see cref="StaticResourceDirectory"/> or <paramref name="directory"/> if it was added</returns>
+            internal StaticResourceDirectory AddDirectory(StaticResourceDirectory directory)
             {
                 Covenant.Requires<ArgumentNullException>(directory != null, nameof(directory));
 
-                base.Directories.Add(directory);
+                return (StaticResourceDirectory)base.AddDirectory(directory);
             }
 
             /// <summary>
@@ -73,7 +74,7 @@ namespace System
             {
                 Covenant.Requires<ArgumentNullException>(file != null, nameof(file));
 
-                base.Files.Add(file);
+                base.AddFile(file);
             }
         }
 
@@ -98,7 +99,7 @@ namespace System
                 Covenant.Requires<ArgumentNullException>(assembly != null, nameof(assembly));
                 Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(resourceName), nameof(resourceName));
 
-                this.assembly      = assembly;
+                this.assembly     = assembly;
                 this.resourceName = resourceName;
             }
 
@@ -154,7 +155,7 @@ namespace System
             /// <inheritdoc/>
             public override string ReadAllText(Encoding encoding = null)
             {
-                using (var reader = OpenReader(encoding))
+                using (var reader = OpenReader(encoding ?? Encoding.UTF8))
                 {
                     return reader.ReadToEnd();
                 }
@@ -163,7 +164,7 @@ namespace System
             /// <inheritdoc/>
             public async override Task<string> ReadAllTextAsync(Encoding encoding = null)
             {
-                var reader = await OpenReaderAsync(encoding);
+                var reader = await OpenReaderAsync(encoding ?? Encoding.UTF8);
 
                 using (reader)
                 {
@@ -343,9 +344,9 @@ namespace System
                                                   .Select(name => name.Substring(resourcePrefix.Length));
             // Add the root directory.
 
-            var root = new StaticResourceDirectory(root: null, parent: null, string.Empty);
+            var root = new StaticResourceDirectory(root: null, parent: null, name: string.Empty);
 
-            pathToDirectory["/"] = root;
+            pathToDirectory[root.Name] = root;
 
             foreach (var resourceName in filteredResourceNames)
             {
@@ -357,17 +358,30 @@ namespace System
 
                 if (pos == -1)
                 {
-                    // This is the one special case where a file may not have an
-                    // extension.  This only happens when an extension-less file is
-                    // located in the root directory.
+                    // Special case of a file without an extension.  This can happen
+                    // when a resource prefix is used.  This can only happen at the
+                    // file system root directory.
 
                     path     = "/";
                     filename = resourceName;
                 }
                 else
                 {
-                    path     = "/" + resourcePrefix.Substring(0, pos).Replace('.', '/');
-                    filename = resourcePrefix.Substring(pos + 1);
+                    // The second dot from the end will indicate start of the file name
+                    // when there is a second dot.
+
+                    pos = resourceName.LastIndexOf('.', pos - 1);
+
+                    if (pos != -1)
+                    {
+                        path     = "/" + resourceName.Substring(0, pos).Replace('.', '/');
+                        filename = resourceName.Substring(pos + 1);
+                    }
+                    else
+                    {
+                        path     = "/";
+                        filename = resourceName;
+                    }
                 }
 
                 if (!pathToDirectory.TryGetValue(path, out var directory))
@@ -377,19 +391,18 @@ namespace System
 
                     var parent = root;
 
-                    foreach (var directoryName in path.Split('/'))
+                    foreach (var directoryName in path.Split('/').Skip(1))
                     {
                         if (!pathToDirectory.TryGetValue(directoryName, out directory))
                         {
-                            directory = new StaticResourceDirectory(root, parent, directoryName);
-                            parent.AddDirectory(directory);
+                            directory = parent.AddDirectory(new StaticResourceDirectory(root, parent, directoryName));
                         }
 
                         parent = directory;
                     }
-
-                    parent.AddFile(new StaticResourceFile(LinuxPath.Combine(path, filename), assembly, resourceName));
                 }
+
+                directory.AddFile(new StaticResourceFile(LinuxPath.Combine(path, filename), assembly, resourceName));
             }
 
             return root;

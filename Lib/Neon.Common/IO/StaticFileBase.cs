@@ -47,6 +47,7 @@ namespace Neon.IO
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
 
             this.Path = path;
+            this.Name = LinuxPath.GetFileName(path);
         }
 
         /// <inheritdoc/>
@@ -78,5 +79,11 @@ namespace Neon.IO
 
         /// <inheritdoc/>
         public abstract Task<Stream> OpenStreamAsync();
+
+        /// <inheritdoc/>
+        public override string ToString()
+        {
+            return Path;
+        }
     }
 }
