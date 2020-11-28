@@ -1812,40 +1812,29 @@ rm /tmp/calico.yaml
                     master.SudoCommand(CommandBundle.FromScript(script));
 
                     // Wait for Calico and CoreDNS pods to report that they're running.
-
-                    // $todo(jefflill):
-                    //
-                    // This is a horrible hack.  I'm going to examine the [kubectl get pods]
-                    // response by skipping the column headers and then ensuring that each
-                    // remaining line includes a " Running " string.  If one or more lines
-                    // don't include this then we're not ready.
-                    //
-                    // [kubectl wait] as an experimental command that we should investigate
-                    // in the future:
-                    //
-                    //      https://github.com/nforgeio/neonKUBE/issues/424
-                    //
-                    // We're going to wait a maximum of 120 seconds.
+                    // We're going to wait a maximum of 300 seconds.
 
                     NeonHelper.WaitFor(
                         () =>
                         {
-                            var response = master.SudoCommand("kubectl get pods --all-namespaces", RunOptions.LogOnErrorOnly);
+                            var pods = k8sClient.ListPodForAllNamespaces();
 
-                            using (var reader = new StringReader(response.OutputText))
+                            foreach (var pod in pods.Items)
                             {
-                                foreach (var line in reader.Lines().Skip(1))
+                                if (pod.Status.Phase != "Running")
                                 {
-                                    if (!line.Contains(" Running "))
+                                    if (pod.Metadata.Name.Contains("coredns") && pod.Status.Phase == "Pending")
                                     {
-                                        return false;
+                                        master.SudoCommand("kubectl rollout restart --namespace kube-system deployment/coredns", RunOptions.LogOnErrorOnly);
                                     }
+
+                                    return false;
                                 }
                             }
 
                             return true;
                         },
-                        timeout:      TimeSpan.FromSeconds(120),
+                        timeout:      TimeSpan.FromSeconds(300),
                         pollInterval: TimeSpan.FromSeconds(1));
                 });
         }
@@ -3069,7 +3058,13 @@ rm -rf {chartName}*
                 {
                     var values = new List<KeyValuePair<string, object>>();
 
-                    values.Add(new KeyValuePair<string, object>($"replicas", $"{cluster.Definition.Masters.Count()}"));
+                    var replicas = cluster.Definition.Masters.Count();
+                    values.Add(new KeyValuePair<string, object>($"replicas", $"{replicas}"));
+
+                    if (replicas == 1)
+                    {
+                        values.Add(new KeyValuePair<string, object>($"nodeSelector", new JObject()));
+                    }
 
                     int i = 0;
                     foreach (var t in await GetTaintsAsync(NodeLabels.LabelNeonSystemRegistry, "true"))
