@@ -9,7 +9,7 @@ metadata:
     heritage: {{ .Release.Service }}
 spec:
   serviceName: {{ template "citus-postgresql.fullname" . }}-worker
-  replicas: {{ .Values.worker.replicaCount }}
+  replicas: {{ .Values.worker.replicas }}
   selector:
     matchLabels:
       app: {{ template "citus-postgresql.name" . }}-worker

@@ -391,6 +391,20 @@ namespace Neon.Kube
         [DefaultValue(false)]
         public bool Istio { get; set; } = false;
 
+        /// <summary>
+        /// Reserved label name for <see cref="OpenEBS"/>.
+        /// </summary>
+        public const string LabelOpenEBS = ClusterDefinition.ReservedLabelPrefix + "openEbs";
+
+        /// <summary>
+        /// <b>io.neonkube.openEbs.enabled</b> [<c>bool</c>]: Indicates that OpenEBS 
+        /// will be deployed to this node.  This defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "OpenEbs", Required = Required.Default)]
+        [YamlMember(Alias = "openEbs", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool OpenEBS { get; set; } = false;
+
         //---------------------------------------------------------------------
         // Define the neon-system related labels.
 
