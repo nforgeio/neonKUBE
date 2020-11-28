@@ -106,31 +106,31 @@ namespace TestCommon
                 .Where(directory => directory.Name == "TestCommon")
                 .Single();
 
-            Assert.Contains("IO", directory.GetDirectories().Select(directory => directory.Name));
+            Assert.Contains("IORes", directory.GetDirectories().Select(directory => directory.Name));
             Assert.Empty(directory.GetFiles().Select(file => file.Name));
 
-            // Directory: /TestCommon/IO/
+            // Directory: /TestCommon/IORes/
 
             directory = fs.GetDirectories()
                 .Where(directory => directory.Name == "TestCommon")
                 .Single();
 
             directory = directory.GetDirectories()
-                .Where(directory => directory.Name == "IO")
+                .Where(directory => directory.Name == "IORes")
                 .Single();
 
             Assert.Single(directory.GetDirectories());
             Assert.Contains("Resources", directory.GetDirectories().Select(directory => directory.Name));
             Assert.Empty(directory.GetFiles());
 
-            // Directory: /TestCommon/IO/Resources/
+            // Directory: /TestCommon/IORes/Resources/
 
             directory = fs.GetDirectories()
                 .Where(directory => directory.Name == "TestCommon")
                 .Single();
 
             directory = directory.GetDirectories()
-                .Where(directory => directory.Name == "IO")
+                .Where(directory => directory.Name == "IORes")
                 .Single();
 
             directory = directory.GetDirectories()
@@ -145,14 +145,14 @@ namespace TestCommon
             Assert.Contains("TextFile1.txt", directory.GetFiles().Select(file => file.Name));
             Assert.Contains("TextFile2.txt", directory.GetFiles().Select(file => file.Name));
 
-            // Directory: /TestCommon/IO/Resources/Folder1/
+            // Directory: /TestCommon/IORes/Resources/Folder1/
 
             directory = fs.GetDirectories()
                 .Where(directory => directory.Name == "TestCommon")
                 .Single();
 
             directory = directory.GetDirectories()
-                .Where(directory => directory.Name == "IO")
+                .Where(directory => directory.Name == "IORes")
                 .Single();
 
             directory = directory.GetDirectories()
@@ -170,14 +170,14 @@ namespace TestCommon
             Assert.Contains("TextFile3.txt", directory.GetFiles().Select(file => file.Name));
             Assert.Contains("TextFile4.txt", directory.GetFiles().Select(file => file.Name));
 
-            // Directory: /TestCommon/IO/Resources/Folder1/Folder3/
+            // Directory: /TestCommon/IORes/Resources/Folder1/Folder3/
 
             directory = fs.GetDirectories()
                 .Where(directory => directory.Name == "TestCommon")
                 .Single();
 
             directory = directory.GetDirectories()
-                .Where(directory => directory.Name == "IO")
+                .Where(directory => directory.Name == "IORes")
                 .Single();
 
             directory = directory.GetDirectories()
@@ -197,14 +197,14 @@ namespace TestCommon
             Assert.Single(directory.GetFiles());
             Assert.Contains("TextFile5.txt", directory.GetFiles().Select(file => file.Name));
 
-            // Directory: /TestCommon/IO/Resources/Folder2/
+            // Directory: /TestCommon/IORes/Resources/Folder2/
 
             directory = fs.GetDirectories()
                 .Where(directory => directory.Name == "TestCommon")
                 .Single();
 
             directory = directory.GetDirectories()
-                .Where(directory => directory.Name == "IO")
+                .Where(directory => directory.Name == "IORes")
                 .Single();
 
             directory = directory.GetDirectories()
@@ -222,14 +222,14 @@ namespace TestCommon
             Assert.Contains("TextFile6.txt", directory.GetFiles().Select(file => file.Name));
             Assert.Contains("TextFile7.txt", directory.GetFiles().Select(file => file.Name));
 
-            // Directory: /TestCommon/IO/Resources/Folder2/Folder4/
+            // Directory: /TestCommon/IORes/Resources/Folder2/Folder4/
 
             directory = fs.GetDirectories()
                 .Where(directory => directory.Name == "TestCommon")
                 .Single();
 
             directory = directory.GetDirectories()
-                .Where(directory => directory.Name == "IO")
+                .Where(directory => directory.Name == "IORes")
                 .Single();
 
             directory = directory.GetDirectories()
@@ -266,14 +266,14 @@ namespace TestCommon
                 .Where(directory => directory.Name == "TestCommon")
                 .Single();
 
-            // Directory: /TestCommon/IO/
+            // Directory: /TestCommon/IORes/
 
             directory = fs.GetDirectories()
                 .Where(directory => directory.Name == "TestCommon")
                 .Single();
 
             directory = directory.GetDirectories()
-                .Where(directory => directory.Name == "IO")
+                .Where(directory => directory.Name == "IORes")
                 .Single();
 
             directory = directory.GetDirectories()
@@ -311,55 +311,55 @@ namespace TestCommon
             var files = fs.GetFiles(options: SearchOption.AllDirectories);
 
             Assert.Equal(8, files.Count());
-            Assert.Contains("/TestCommon/IO/Resources/TextFile1.txt", files.Select(file => file.Path));
-            Assert.Contains("/TestCommon/IO/Resources/TextFile2.txt", files.Select(file => file.Path));
-            Assert.Contains("/TestCommon/IO/Resources/Folder1/TextFile3.txt", files.Select(file => file.Path));
-            Assert.Contains("/TestCommon/IO/Resources/Folder1/TextFile4.txt", files.Select(file => file.Path));
-            Assert.Contains("/TestCommon/IO/Resources/Folder1/Folder3/TextFile5.txt", files.Select(file => file.Path));
-            Assert.Contains("/TestCommon/IO/Resources/Folder2/TextFile6.txt", files.Select(file => file.Path));
-            Assert.Contains("/TestCommon/IO/Resources/Folder2/TextFile7.txt", files.Select(file => file.Path));
-            Assert.Contains("/TestCommon/IO/Resources/Folder2/Folder4/TextFile8.txt", files.Select(file => file.Path));
+            Assert.Contains("/TestCommon/IORes/Resources/TextFile1.txt", files.Select(file => file.Path));
+            Assert.Contains("/TestCommon/IORes/Resources/TextFile2.txt", files.Select(file => file.Path));
+            Assert.Contains("/TestCommon/IORes/Resources/Folder1/TextFile3.txt", files.Select(file => file.Path));
+            Assert.Contains("/TestCommon/IORes/Resources/Folder1/TextFile4.txt", files.Select(file => file.Path));
+            Assert.Contains("/TestCommon/IORes/Resources/Folder1/Folder3/TextFile5.txt", files.Select(file => file.Path));
+            Assert.Contains("/TestCommon/IORes/Resources/Folder2/TextFile6.txt", files.Select(file => file.Path));
+            Assert.Contains("/TestCommon/IORes/Resources/Folder2/TextFile7.txt", files.Select(file => file.Path));
+            Assert.Contains("/TestCommon/IORes/Resources/Folder2/Folder4/TextFile8.txt", files.Select(file => file.Path));
 
             // Pattern match
 
             files = fs.GetFiles(searchPattern: "TextFile3.txt", options: SearchOption.AllDirectories);
 
             Assert.Single(files);
-            Assert.Contains("/TestCommon/IO/Resources/Folder1/TextFile3.txt", files.Select(file => file.Path));
+            Assert.Contains("/TestCommon/IORes/Resources/Folder1/TextFile3.txt", files.Select(file => file.Path));
 
             files = fs.GetFiles(searchPattern: "*.txt", options: SearchOption.AllDirectories);
 
             Assert.Equal(8, files.Count());
-            Assert.Contains("/TestCommon/IO/Resources/TextFile1.txt", files.Select(file => file.Path));
-            Assert.Contains("/TestCommon/IO/Resources/TextFile2.txt", files.Select(file => file.Path));
-            Assert.Contains("/TestCommon/IO/Resources/Folder1/TextFile3.txt", files.Select(file => file.Path));
-            Assert.Contains("/TestCommon/IO/Resources/Folder1/TextFile4.txt", files.Select(file => file.Path));
-            Assert.Contains("/TestCommon/IO/Resources/Folder1/Folder3/TextFile5.txt", files.Select(file => file.Path));
-            Assert.Contains("/TestCommon/IO/Resources/Folder2/TextFile6.txt", files.Select(file => file.Path));
-            Assert.Contains("/TestCommon/IO/Resources/Folder2/TextFile7.txt", files.Select(file => file.Path));
-            Assert.Contains("/TestCommon/IO/Resources/Folder2/Folder4/TextFile8.txt", files.Select(file => file.Path));
+            Assert.Contains("/TestCommon/IORes/Resources/TextFile1.txt", files.Select(file => file.Path));
+            Assert.Contains("/TestCommon/IORes/Resources/TextFile2.txt", files.Select(file => file.Path));
+            Assert.Contains("/TestCommon/IORes/Resources/Folder1/TextFile3.txt", files.Select(file => file.Path));
+            Assert.Contains("/TestCommon/IORes/Resources/Folder1/TextFile4.txt", files.Select(file => file.Path));
+            Assert.Contains("/TestCommon/IORes/Resources/Folder1/Folder3/TextFile5.txt", files.Select(file => file.Path));
+            Assert.Contains("/TestCommon/IORes/Resources/Folder2/TextFile6.txt", files.Select(file => file.Path));
+            Assert.Contains("/TestCommon/IORes/Resources/Folder2/TextFile7.txt", files.Select(file => file.Path));
+            Assert.Contains("/TestCommon/IORes/Resources/Folder2/Folder4/TextFile8.txt", files.Select(file => file.Path));
 
             // List from a subdirectory.
 
-            var directory = fs.GetDirectory("/TestCommon/IO/Resources/Folder1");
+            var directory = fs.GetDirectory("/TestCommon/IORes/Resources/Folder1");
             
             files = directory.GetFiles(options: SearchOption.AllDirectories);
 
             Assert.Equal(3, files.Count());
-            Assert.Contains("/TestCommon/IO/Resources/Folder1/TextFile3.txt", files.Select(file => file.Path));
-            Assert.Contains("/TestCommon/IO/Resources/Folder1/TextFile4.txt", files.Select(file => file.Path));
-            Assert.Contains("/TestCommon/IO/Resources/Folder1/Folder3/TextFile5.txt", files.Select(file => file.Path));
+            Assert.Contains("/TestCommon/IORes/Resources/Folder1/TextFile3.txt", files.Select(file => file.Path));
+            Assert.Contains("/TestCommon/IORes/Resources/Folder1/TextFile4.txt", files.Select(file => file.Path));
+            Assert.Contains("/TestCommon/IORes/Resources/Folder1/Folder3/TextFile5.txt", files.Select(file => file.Path));
 
             // Extra test to ensure that an extra trailing "/" in a directory path is ignored.
 
-            directory = fs.GetDirectory("/TestCommon/IO/Resources/Folder1/");
+            directory = fs.GetDirectory("/TestCommon/IORes/Resources/Folder1/");
             
             files = directory.GetFiles(options: SearchOption.AllDirectories);
 
             Assert.Equal(3, files.Count());
-            Assert.Contains("/TestCommon/IO/Resources/Folder1/TextFile3.txt", files.Select(file => file.Path));
-            Assert.Contains("/TestCommon/IO/Resources/Folder1/TextFile4.txt", files.Select(file => file.Path));
-            Assert.Contains("/TestCommon/IO/Resources/Folder1/Folder3/TextFile5.txt", files.Select(file => file.Path));
+            Assert.Contains("/TestCommon/IORes/Resources/Folder1/TextFile3.txt", files.Select(file => file.Path));
+            Assert.Contains("/TestCommon/IORes/Resources/Folder1/TextFile4.txt", files.Select(file => file.Path));
+            Assert.Contains("/TestCommon/IORes/Resources/Folder1/Folder3/TextFile5.txt", files.Select(file => file.Path));
         }
 
         [Fact]
@@ -377,41 +377,41 @@ namespace TestCommon
 
             directory = fs.GetDirectories("TestCommon").Single();
 
-            Assert.Single(directory.GetDirectories("IO"));
+            Assert.Single(directory.GetDirectories("IORes"));
             Assert.Empty(directory.GetDirectories("NOT-FOUND"));
 
-            // Directory: /TestCommon/IO/
+            // Directory: /TestCommon/IORes/
 
             directory = fs.GetDirectories("TestCommon").Single();
-            directory = directory.GetDirectories("IO").Single();
+            directory = directory.GetDirectories("IORes").Single();
 
             Assert.Single(directory.GetDirectories("Resources"));
             Assert.Empty(directory.GetDirectories("NOT-FOUND"));
 
-            // Directory: /TestCommon/IO/Resources/
+            // Directory: /TestCommon/IORes/Resources/
 
             directory = fs.GetDirectories("TestCommon").Single();
-            directory = directory.GetDirectories("IO").Single();
+            directory = directory.GetDirectories("IORes").Single();
             directory = directory.GetDirectories("Resources").Single();
 
             Assert.Single(directory.GetDirectories("Folder1"));
             Assert.Single(directory.GetDirectories("Folder2"));
             Assert.Empty(directory.GetDirectories("NOT-FOUND"));
 
-            // Directory: /TestCommon/IO/Resources/Folder1/
+            // Directory: /TestCommon/IORes/Resources/Folder1/
 
             directory = fs.GetDirectories("TestCommon").Single();
-            directory = directory.GetDirectories("IO").Single();
+            directory = directory.GetDirectories("IORes").Single();
             directory = directory.GetDirectories("Resources").Single();
             directory = directory.GetDirectories("Folder1").Single();
 
             Assert.Single(directory.GetDirectories("Folder3"));
             Assert.Empty(directory.GetDirectories("NOT-FOUND"));
 
-            // Directory: /TestCommon/IO/Resources/Folder2/
+            // Directory: /TestCommon/IORes/Resources/Folder2/
 
             directory = fs.GetDirectories("TestCommon").Single();
-            directory = directory.GetDirectories("IO").Single();
+            directory = directory.GetDirectories("IORes").Single();
             directory = directory.GetDirectories("Resources").Single();
             directory = directory.GetDirectories("Folder2").Single();
 
@@ -427,12 +427,12 @@ namespace TestCommon
 
             Assert.Equal(7, directories.Count());
             Assert.Single(directories.Where(directory => directory.Path == "/TestCommon"));
-            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IO"));
-            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IO/Resources"));
-            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IO/Resources/Folder1"));
-            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IO/Resources/Folder1/Folder3"));
-            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IO/Resources/Folder2"));
-            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IO/Resources/Folder2/Folder4"));
+            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes"));
+            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes/Resources"));
+            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes/Resources/Folder1"));
+            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes/Resources/Folder1/Folder3"));
+            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes/Resources/Folder2"));
+            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes/Resources/Folder2/Folder4"));
         }
 
         [Fact]
@@ -445,12 +445,12 @@ namespace TestCommon
 
             Assert.Equal(7, directories.Count());
             Assert.Single(directories.Where(directory => directory.Path == "/TestCommon"));
-            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IO"));
-            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IO/Resources"));
-            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IO/Resources/Folder1"));
-            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IO/Resources/Folder1/Folder3"));
-            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IO/Resources/Folder2"));
-            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IO/Resources/Folder2/Folder4"));
+            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes"));
+            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes/Resources"));
+            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes/Resources/Folder1"));
+            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes/Resources/Folder1/Folder3"));
+            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes/Resources/Folder2"));
+            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes/Resources/Folder2/Folder4"));
 
             // Filter by: *.*
             
@@ -458,32 +458,32 @@ namespace TestCommon
 
             Assert.Equal(7, directories.Count());
             Assert.Single(directories.Where(directory => directory.Path == "/TestCommon"));
-            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IO"));
-            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IO/Resources"));
-            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IO/Resources/Folder1"));
-            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IO/Resources/Folder1/Folder3"));
-            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IO/Resources/Folder2"));
-            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IO/Resources/Folder2/Folder4"));
+            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes"));
+            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes/Resources"));
+            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes/Resources/Folder1"));
+            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes/Resources/Folder1/Folder3"));
+            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes/Resources/Folder2"));
+            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes/Resources/Folder2/Folder4"));
 
             // Filter by: F*
 
             directories = fs.GetDirectories("F*", SearchOption.AllDirectories);
 
             Assert.Equal(4, directories.Count());
-            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IO/Resources/Folder1"));
-            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IO/Resources/Folder1/Folder3"));
-            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IO/Resources/Folder2"));
-            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IO/Resources/Folder2/Folder4"));
+            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes/Resources/Folder1"));
+            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes/Resources/Folder1/Folder3"));
+            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes/Resources/Folder2"));
+            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes/Resources/Folder2/Folder4"));
 
             // Filter by: Folder?
 
             directories = fs.GetDirectories("Folder?", SearchOption.AllDirectories);
 
             Assert.Equal(4, directories.Count());
-            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IO/Resources/Folder1"));
-            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IO/Resources/Folder1/Folder3"));
-            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IO/Resources/Folder2"));
-            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IO/Resources/Folder2/Folder4"));
+            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes/Resources/Folder1"));
+            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes/Resources/Folder1/Folder3"));
+            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes/Resources/Folder2"));
+            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes/Resources/Folder2/Folder4"));
         }
 
         [Fact]
@@ -493,41 +493,41 @@ namespace TestCommon
 
             // From the root directory.
 
-            Assert.Equal("/TestCommon/IO/Resources/TextFile1.txt", fs.GetFile("/TestCommon/IO/Resources/TextFile1.txt").Path);
-            Assert.Equal("/TestCommon/IO/Resources/TextFile2.txt", fs.GetFile("/TestCommon/IO/Resources/TextFile2.txt").Path);
+            Assert.Equal("/TestCommon/IORes/Resources/TextFile1.txt", fs.GetFile("/TestCommon/IORes/Resources/TextFile1.txt").Path);
+            Assert.Equal("/TestCommon/IORes/Resources/TextFile2.txt", fs.GetFile("/TestCommon/IORes/Resources/TextFile2.txt").Path);
 
-            Assert.Equal("/TestCommon/IO/Resources/Folder1/TextFile3.txt", fs.GetFile("/TestCommon/IO/Resources/Folder1/TextFile3.txt").Path);
-            Assert.Equal("/TestCommon/IO/Resources/Folder1/TextFile4.txt", fs.GetFile("/TestCommon/IO/Resources/Folder1/TextFile4.txt").Path);
-            Assert.Equal("/TestCommon/IO/Resources/Folder1/Folder3/TextFile5.txt", fs.GetFile("/TestCommon/IO/Resources/Folder1/Folder3/TextFile5.txt").Path);
+            Assert.Equal("/TestCommon/IORes/Resources/Folder1/TextFile3.txt", fs.GetFile("/TestCommon/IORes/Resources/Folder1/TextFile3.txt").Path);
+            Assert.Equal("/TestCommon/IORes/Resources/Folder1/TextFile4.txt", fs.GetFile("/TestCommon/IORes/Resources/Folder1/TextFile4.txt").Path);
+            Assert.Equal("/TestCommon/IORes/Resources/Folder1/Folder3/TextFile5.txt", fs.GetFile("/TestCommon/IORes/Resources/Folder1/Folder3/TextFile5.txt").Path);
 
-            Assert.Equal("/TestCommon/IO/Resources/Folder2/TextFile6.txt", fs.GetFile("/TestCommon/IO/Resources/Folder2/TextFile6.txt").Path);
-            Assert.Equal("/TestCommon/IO/Resources/Folder2/TextFile7.txt", fs.GetFile("/TestCommon/IO/Resources/Folder2/TextFile7.txt").Path);
-            Assert.Equal("/TestCommon/IO/Resources/Folder2/Folder4/TextFile8.txt", fs.GetFile("/TestCommon/IO/Resources/Folder2/Folder4/TextFile8.txt").Path);
+            Assert.Equal("/TestCommon/IORes/Resources/Folder2/TextFile6.txt", fs.GetFile("/TestCommon/IORes/Resources/Folder2/TextFile6.txt").Path);
+            Assert.Equal("/TestCommon/IORes/Resources/Folder2/TextFile7.txt", fs.GetFile("/TestCommon/IORes/Resources/Folder2/TextFile7.txt").Path);
+            Assert.Equal("/TestCommon/IORes/Resources/Folder2/Folder4/TextFile8.txt", fs.GetFile("/TestCommon/IORes/Resources/Folder2/Folder4/TextFile8.txt").Path);
 
-            Assert.Throws<FileNotFoundException>(() => fs.GetFile("/TestCommon/IO/Resources/Folder2/NOT-FOUND.txt"));
+            Assert.Throws<FileNotFoundException>(() => fs.GetFile("/TestCommon/IORes/Resources/Folder2/NOT-FOUND.txt"));
 
             // From a subdirectory.
 
-            var directory = fs.GetDirectory("/TestCommon/IO/Resources/Folder2/Folder4");
+            var directory = fs.GetDirectory("/TestCommon/IORes/Resources/Folder2/Folder4");
 
-            Assert.Equal("/TestCommon/IO/Resources/TextFile1.txt", directory.GetFile("/TestCommon/IO/Resources/TextFile1.txt").Path);
-            Assert.Equal("/TestCommon/IO/Resources/TextFile2.txt", directory.GetFile("/TestCommon/IO/Resources/TextFile2.txt").Path);
+            Assert.Equal("/TestCommon/IORes/Resources/TextFile1.txt", directory.GetFile("/TestCommon/IORes/Resources/TextFile1.txt").Path);
+            Assert.Equal("/TestCommon/IORes/Resources/TextFile2.txt", directory.GetFile("/TestCommon/IORes/Resources/TextFile2.txt").Path);
 
-            Assert.Equal("/TestCommon/IO/Resources/Folder1/TextFile3.txt", directory.GetFile("/TestCommon/IO/Resources/Folder1/TextFile3.txt").Path);
-            Assert.Equal("/TestCommon/IO/Resources/Folder1/TextFile4.txt", directory.GetFile("/TestCommon/IO/Resources/Folder1/TextFile4.txt").Path);
-            Assert.Equal("/TestCommon/IO/Resources/Folder1/Folder3/TextFile5.txt", fs.GetFile("/TestCommon/IO/Resources/Folder1/Folder3/TextFile5.txt").Path);
+            Assert.Equal("/TestCommon/IORes/Resources/Folder1/TextFile3.txt", directory.GetFile("/TestCommon/IORes/Resources/Folder1/TextFile3.txt").Path);
+            Assert.Equal("/TestCommon/IORes/Resources/Folder1/TextFile4.txt", directory.GetFile("/TestCommon/IORes/Resources/Folder1/TextFile4.txt").Path);
+            Assert.Equal("/TestCommon/IORes/Resources/Folder1/Folder3/TextFile5.txt", fs.GetFile("/TestCommon/IORes/Resources/Folder1/Folder3/TextFile5.txt").Path);
 
-            Assert.Equal("/TestCommon/IO/Resources/Folder2/TextFile6.txt", directory.GetFile("/TestCommon/IO/Resources/Folder2/TextFile6.txt").Path);
-            Assert.Equal("/TestCommon/IO/Resources/Folder2/TextFile7.txt", directory.GetFile("/TestCommon/IO/Resources/Folder2/TextFile7.txt").Path);
-            Assert.Equal("/TestCommon/IO/Resources/Folder2/Folder4/TextFile8.txt", directory.GetFile("/TestCommon/IO/Resources/Folder2/Folder4/TextFile8.txt").Path);
+            Assert.Equal("/TestCommon/IORes/Resources/Folder2/TextFile6.txt", directory.GetFile("/TestCommon/IORes/Resources/Folder2/TextFile6.txt").Path);
+            Assert.Equal("/TestCommon/IORes/Resources/Folder2/TextFile7.txt", directory.GetFile("/TestCommon/IORes/Resources/Folder2/TextFile7.txt").Path);
+            Assert.Equal("/TestCommon/IORes/Resources/Folder2/Folder4/TextFile8.txt", directory.GetFile("/TestCommon/IORes/Resources/Folder2/Folder4/TextFile8.txt").Path);
 
             // Relative path.
 
-            Assert.Equal("/TestCommon/IO/Resources/Folder2/Folder4/TextFile8.txt", directory.GetFile("TextFile8.txt").Path);
+            Assert.Equal("/TestCommon/IORes/Resources/Folder2/Folder4/TextFile8.txt", directory.GetFile("TextFile8.txt").Path);
 
             // Not found.
 
-            Assert.Throws<FileNotFoundException>(() => directory.GetFile("/TestCommon/IO/Resources/Folder2/NOT-FOUND.txt"));
+            Assert.Throws<FileNotFoundException>(() => directory.GetFile("/TestCommon/IORes/Resources/Folder2/NOT-FOUND.txt"));
         }
 
         [Fact]
@@ -538,36 +538,36 @@ namespace TestCommon
             // From the root directory.
 
             Assert.Equal("/TestCommon", fs.GetDirectory("/TestCommon").Path);
-            Assert.Equal("/TestCommon/IO", fs.GetDirectory("/TestCommon/IO").Path);
-            Assert.Equal("/TestCommon/IO/Resources", fs.GetDirectory("/TestCommon/IO/Resources").Path);
-            Assert.Equal("/TestCommon/IO/Resources/Folder1", fs.GetDirectory("/TestCommon/IO/Resources/Folder1").Path);
-            Assert.Equal("/TestCommon/IO/Resources/Folder1/Folder3", fs.GetDirectory("/TestCommon/IO/Resources/Folder1/Folder3").Path);
-            Assert.Equal("/TestCommon/IO/Resources/Folder2", fs.GetDirectory("/TestCommon/IO/Resources/Folder2").Path);
-            Assert.Equal("/TestCommon/IO/Resources/Folder2/Folder4", fs.GetDirectory("/TestCommon/IO/Resources/Folder2/Folder4").Path);
+            Assert.Equal("/TestCommon/IORes", fs.GetDirectory("/TestCommon/IORes").Path);
+            Assert.Equal("/TestCommon/IORes/Resources", fs.GetDirectory("/TestCommon/IORes/Resources").Path);
+            Assert.Equal("/TestCommon/IORes/Resources/Folder1", fs.GetDirectory("/TestCommon/IORes/Resources/Folder1").Path);
+            Assert.Equal("/TestCommon/IORes/Resources/Folder1/Folder3", fs.GetDirectory("/TestCommon/IORes/Resources/Folder1/Folder3").Path);
+            Assert.Equal("/TestCommon/IORes/Resources/Folder2", fs.GetDirectory("/TestCommon/IORes/Resources/Folder2").Path);
+            Assert.Equal("/TestCommon/IORes/Resources/Folder2/Folder4", fs.GetDirectory("/TestCommon/IORes/Resources/Folder2/Folder4").Path);
 
-            Assert.Throws<FileNotFoundException>(() => fs.GetDirectory("/TestCommon/IO/Resources/NOT-FOUND.txt"));
+            Assert.Throws<FileNotFoundException>(() => fs.GetDirectory("/TestCommon/IORes/Resources/NOT-FOUND.txt"));
 
             // From a subdirectory.
 
-            var directory = fs.GetDirectory("/TestCommon/IO/Resources/Folder2/Folder4");
+            var directory = fs.GetDirectory("/TestCommon/IORes/Resources/Folder2/Folder4");
 
             Assert.Equal("/TestCommon", directory.GetDirectory("/TestCommon").Path);
-            Assert.Equal("/TestCommon/IO", directory.GetDirectory("/TestCommon/IO").Path);
-            Assert.Equal("/TestCommon/IO/Resources", directory.GetDirectory("/TestCommon/IO/Resources").Path);
-            Assert.Equal("/TestCommon/IO/Resources/Folder1", directory.GetDirectory("/TestCommon/IO/Resources/Folder1").Path);
-            Assert.Equal("/TestCommon/IO/Resources/Folder1/Folder3", directory.GetDirectory("/TestCommon/IO/Resources/Folder1/Folder3").Path);
-            Assert.Equal("/TestCommon/IO/Resources/Folder2", directory.GetDirectory("/TestCommon/IO/Resources/Folder2").Path);
-            Assert.Equal("/TestCommon/IO/Resources/Folder2/Folder4", directory.GetDirectory("/TestCommon/IO/Resources/Folder2/Folder4").Path);
+            Assert.Equal("/TestCommon/IORes", directory.GetDirectory("/TestCommon/IORes").Path);
+            Assert.Equal("/TestCommon/IORes/Resources", directory.GetDirectory("/TestCommon/IORes/Resources").Path);
+            Assert.Equal("/TestCommon/IORes/Resources/Folder1", directory.GetDirectory("/TestCommon/IORes/Resources/Folder1").Path);
+            Assert.Equal("/TestCommon/IORes/Resources/Folder1/Folder3", directory.GetDirectory("/TestCommon/IORes/Resources/Folder1/Folder3").Path);
+            Assert.Equal("/TestCommon/IORes/Resources/Folder2", directory.GetDirectory("/TestCommon/IORes/Resources/Folder2").Path);
+            Assert.Equal("/TestCommon/IORes/Resources/Folder2/Folder4", directory.GetDirectory("/TestCommon/IORes/Resources/Folder2/Folder4").Path);
 
             // Relative path.
 
-            directory = fs.GetDirectory("/TestCommon/IO/Resources/Folder2");
+            directory = fs.GetDirectory("/TestCommon/IORes/Resources/Folder2");
 
-            Assert.Equal("/TestCommon/IO/Resources/Folder2/Folder4", directory.GetDirectory("Folder4").Path);
+            Assert.Equal("/TestCommon/IORes/Resources/Folder2/Folder4", directory.GetDirectory("Folder4").Path);
 
             // Not found.
 
-            Assert.Throws<FileNotFoundException>(() => fs.GetDirectory("/TestCommon/IO/Resources/NOT-FOUND.txt"));
+            Assert.Throws<FileNotFoundException>(() => fs.GetDirectory("/TestCommon/IORes/Resources/NOT-FOUND.txt"));
         }
 
         //---------------------------------------------------------------------
@@ -578,7 +578,7 @@ namespace TestCommon
         {
             // Verify that an filtered filesystem has the directories and files that we expect.
 
-            var fs        = Assembly.GetExecutingAssembly().GetResourceFileSystem("TestCommon.IO.Resources");
+            var fs        = Assembly.GetExecutingAssembly().GetResourceFileSystem("TestCommon.IORes.Resources");
             var directory = fs;
 
             // Directory: /
@@ -651,7 +651,7 @@ namespace TestCommon
         [Fact]
         public void Partial_List_Files()
         {
-            var fs        = Assembly.GetExecutingAssembly().GetResourceFileSystem("TestCommon.IO.Resources");
+            var fs        = Assembly.GetExecutingAssembly().GetResourceFileSystem("TestCommon.IORes.Resources");
             var directory = fs;
 
             var files = directory.GetFiles();
@@ -678,7 +678,7 @@ namespace TestCommon
         [Fact]
         public void Partial_List_Files_Recursively()
         {
-            var fs = Assembly.GetExecutingAssembly().GetResourceFileSystem("TestCommon.IO.Resources");
+            var fs = Assembly.GetExecutingAssembly().GetResourceFileSystem("TestCommon.IORes.Resources");
 
             // List from root.
 
@@ -739,7 +739,7 @@ namespace TestCommon
         [Fact]
         public void Partial_List_Directories()
         {
-            var fs        = Assembly.GetExecutingAssembly().GetResourceFileSystem("TestCommon.IO.Resources");
+            var fs        = Assembly.GetExecutingAssembly().GetResourceFileSystem("TestCommon.IORes.Resources");
             var directory = fs;
 
             // Directory: /Folder1/
@@ -760,7 +760,7 @@ namespace TestCommon
         [Fact]
         public void Partial_List_Directories_Recursively()
         {
-            var fs = Assembly.GetExecutingAssembly().GetResourceFileSystem("TestCommon.IO.Resources");
+            var fs = Assembly.GetExecutingAssembly().GetResourceFileSystem("TestCommon.IORes.Resources");
 
             // List from root.
 
@@ -821,7 +821,7 @@ namespace TestCommon
         [Fact]
         public void Partial_GetFile()
         {
-            var fs = Assembly.GetExecutingAssembly().GetResourceFileSystem("TestCommon.IO.Resources");
+            var fs = Assembly.GetExecutingAssembly().GetResourceFileSystem("TestCommon.IORes.Resources");
 
             // From the root directory.
 
@@ -865,7 +865,7 @@ namespace TestCommon
         [Fact]
         public void Partial_GetDirectory()
         {
-            var fs = Assembly.GetExecutingAssembly().GetResourceFileSystem("TestCommon.IO.Resources");
+            var fs = Assembly.GetExecutingAssembly().GetResourceFileSystem("TestCommon.IORes.Resources");
 
             // From the root directory.
 
@@ -897,13 +897,199 @@ namespace TestCommon
             Assert.Throws<FileNotFoundException>(() => fs.GetDirectory("//NOT-FOUND.txt"));
         }
 
+
+        //---------------------------------------------------------------------
+        // Resource file read tests for non-filtered resources.
+
+        [Fact]
+        public void All_ReadAllText()
+        {
+            var fs   = Assembly.GetExecutingAssembly().GetResourceFileSystem();
+            var file = fs.GetFile("/TestCommon/IORes/Resources/TextFile1.txt");
+
+            Assert.Equal(
+@"TextFile1.txt:
+Line 1
+Line 2
+Line 3
+Line 4
+Line 5
+Line 6
+Line 7
+Line 8
+Line 9
+",
+                file.ReadAllText());
+        }
+
+        [Fact]
+        public async Task All_ReadAllTextAsync()
+        {
+            var fs   = Assembly.GetExecutingAssembly().GetResourceFileSystem();
+            var file = fs.GetFile("/TestCommon/IORes/Resources/TextFile2.txt");
+
+            Assert.Equal(
+@"TextFile2.txt:
+Line 1
+Line 2
+Line 3
+Line 4
+Line 5
+Line 6
+Line 7
+Line 8
+Line 9
+",
+                await file.ReadAllTextAsync());
+        }
+
+        [Fact]
+        public void All_ReadAllBytes()
+        {
+            var fs   = Assembly.GetExecutingAssembly().GetResourceFileSystem();
+            var file = fs.GetFile("/TestCommon/IORes/Resources/Folder1/TextFile3.txt");
+
+            Assert.Equal(
+@"TextFile3.txt:
+Line 1
+Line 2
+Line 3
+Line 4
+Line 5
+Line 6
+Line 7
+Line 8
+Line 9
+",
+                Encoding.UTF8.GetString(file.ReadAllBytes()));
+        }
+
+        [Fact]
+        public async Task All_ReadAllBytesAsync()
+        {
+            var fs   = Assembly.GetExecutingAssembly().GetResourceFileSystem();
+            var file = fs.GetFile("/TestCommon/IORes/Resources/Folder1/TextFile4.txt");
+
+            Assert.Equal(
+@"TextFile4.txt:
+Line 1
+Line 2
+Line 3
+Line 4
+Line 5
+Line 6
+Line 7
+Line 8
+Line 9
+",
+                Encoding.UTF8.GetString(await file.ReadAllBytesAsync()));
+        }
+
+        [Fact]
+        public void All_OpenReader()
+        {
+            var fs   = Assembly.GetExecutingAssembly().GetResourceFileSystem();
+            var file = fs.GetFile("/TestCommon/IORes/Resources/Folder1/Folder3/TextFile5.txt");
+
+            using (var reader = file.OpenReader())
+            {
+                Assert.Equal(
+@"TextFile5.txt:
+Line 1
+Line 2
+Line 3
+Line 4
+Line 5
+Line 6
+Line 7
+Line 8
+Line 9
+",
+                reader.ReadToEnd());                
+            }
+        }
+
+        [Fact]
+        public async Task All_OpenReaderAsync()
+        {
+            var fs     = Assembly.GetExecutingAssembly().GetResourceFileSystem();
+            var file   = fs.GetFile("/TestCommon/IORes/Resources/Folder2/Folder4/TextFile8.txt");
+            var reader = await file.OpenReaderAsync();
+
+            using (reader)
+            {
+                Assert.Equal(
+@"TextFile8.txt:
+Line 1
+Line 2
+Line 3
+Line 4
+Line 5
+Line 6
+Line 7
+Line 8
+Line 9
+",
+                await reader.ReadToEndAsync());
+            }
+        }
+
+        [Fact]
+        public void All_OpenStream()
+        {
+            var fs   = Assembly.GetExecutingAssembly().GetResourceFileSystem();
+            var file = fs.GetFile("/TestCommon/IORes/Resources/Folder1/Folder3/TextFile5.txt");
+
+            using (var stream = file.OpenStream())
+            {
+                Assert.Equal(
+@"TextFile5.txt:
+Line 1
+Line 2
+Line 3
+Line 4
+Line 5
+Line 6
+Line 7
+Line 8
+Line 9
+",
+                Encoding.UTF8.GetString(stream.ReadToEnd()));
+            }
+        }
+
+        [Fact]
+        public async Task All_OpenStreamAsync()
+        {
+            var fs     = Assembly.GetExecutingAssembly().GetResourceFileSystem();
+            var file   = fs.GetFile("/TestCommon/IORes/Resources/Folder2/Folder4/TextFile8.txt");
+            var stream = await file.OpenStreamAsync();
+
+            using (stream)
+            {
+                Assert.Equal(
+@"TextFile8.txt:
+Line 1
+Line 2
+Line 3
+Line 4
+Line 5
+Line 6
+Line 7
+Line 8
+Line 9
+",
+                Encoding.UTF8.GetString(await stream.ReadToEndAsync()));
+            }
+        }
+
         //---------------------------------------------------------------------
         // Resource file read tests for filtered resources.
 
         [Fact]
         public void Partial_ReadAllText()
         {
-            var fs   = Assembly.GetExecutingAssembly().GetResourceFileSystem("TestCommon.IO.Resources");
+            var fs   = Assembly.GetExecutingAssembly().GetResourceFileSystem("TestCommon.IORes.Resources");
             var file = fs.GetFile("/TextFile1.txt");
 
             Assert.Equal(
@@ -924,7 +1110,7 @@ Line 9
         [Fact]
         public async Task Partial_ReadAllTextAsync()
         {
-            var fs   = Assembly.GetExecutingAssembly().GetResourceFileSystem("TestCommon.IO.Resources");
+            var fs   = Assembly.GetExecutingAssembly().GetResourceFileSystem("TestCommon.IORes.Resources");
             var file = fs.GetFile("/TextFile2.txt");
 
             Assert.Equal(
@@ -945,7 +1131,7 @@ Line 9
         [Fact]
         public void Partial_ReadAllBytes()
         {
-            var fs   = Assembly.GetExecutingAssembly().GetResourceFileSystem("TestCommon.IO.Resources");
+            var fs   = Assembly.GetExecutingAssembly().GetResourceFileSystem("TestCommon.IORes.Resources");
             var file = fs.GetFile("/Folder1/TextFile3.txt");
 
             Assert.Equal(
@@ -966,7 +1152,7 @@ Line 9
         [Fact]
         public async Task Partial_ReadAllBytesAsync()
         {
-            var fs   = Assembly.GetExecutingAssembly().GetResourceFileSystem("TestCommon.IO.Resources");
+            var fs   = Assembly.GetExecutingAssembly().GetResourceFileSystem("TestCommon.IORes.Resources");
             var file = fs.GetFile("/Folder1/TextFile4.txt");
 
             Assert.Equal(
@@ -987,7 +1173,7 @@ Line 9
         [Fact]
         public void Partial_OpenReader()
         {
-            var fs   = Assembly.GetExecutingAssembly().GetResourceFileSystem("TestCommon.IO.Resources");
+            var fs   = Assembly.GetExecutingAssembly().GetResourceFileSystem("TestCommon.IORes.Resources");
             var file = fs.GetFile("/Folder1/Folder3/TextFile5.txt");
 
             using (var reader = file.OpenReader())
@@ -1011,7 +1197,7 @@ Line 9
         [Fact]
         public async Task Partial_OpenReaderAsync()
         {
-            var fs     = Assembly.GetExecutingAssembly().GetResourceFileSystem("TestCommon.IO.Resources");
+            var fs     = Assembly.GetExecutingAssembly().GetResourceFileSystem("TestCommon.IORes.Resources");
             var file   = fs.GetFile("/Folder2/Folder4/TextFile8.txt");
             var reader = await file.OpenReaderAsync();
 
@@ -1036,7 +1222,7 @@ Line 9
         [Fact]
         public void Partial_OpenStream()
         {
-            var fs   = Assembly.GetExecutingAssembly().GetResourceFileSystem("TestCommon.IO.Resources");
+            var fs   = Assembly.GetExecutingAssembly().GetResourceFileSystem("TestCommon.IORes.Resources");
             var file = fs.GetFile("/Folder1/Folder3/TextFile5.txt");
 
             using (var stream = file.OpenStream())
@@ -1060,7 +1246,7 @@ Line 9
         [Fact]
         public async Task Partial_OpenStreamAsync()
         {
-            var fs     = Assembly.GetExecutingAssembly().GetResourceFileSystem("TestCommon.IO.Resources");
+            var fs     = Assembly.GetExecutingAssembly().GetResourceFileSystem("TestCommon.IORes.Resources");
             var file   = fs.GetFile("/Folder2/Folder4/TextFile8.txt");
             var stream = await file.OpenStreamAsync();
 

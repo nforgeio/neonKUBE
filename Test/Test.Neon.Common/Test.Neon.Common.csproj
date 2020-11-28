@@ -30,14 +30,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="IO\Resources\Folder1\Folder3\TextFile5.txt" />
-    <None Remove="IO\Resources\Folder1\TextFile3.txt" />
-    <None Remove="IO\Resources\Folder1\TextFile4.txt" />
-    <None Remove="IO\Resources\Folder2\Folder4\TextFile8.txt" />
-    <None Remove="IO\Resources\Folder2\TextFile6.txt" />
-    <None Remove="IO\Resources\Folder2\TextFile7.txt" />
-    <None Remove="IO\Resources\TextFile1.txt" />
-    <None Remove="IO\Resources\TextFile2.txt" />
+    <None Remove="IORes\Resources\Folder1\Folder3\TextFile5.txt" />
+    <None Remove="IORes\Resources\Folder1\TextFile3.txt" />
+    <None Remove="IORes\Resources\Folder1\TextFile4.txt" />
+    <None Remove="IORes\Resources\Folder2\Folder4\TextFile8.txt" />
+    <None Remove="IORes\Resources\Folder2\TextFile6.txt" />
+    <None Remove="IORes\Resources\Folder2\TextFile7.txt" />
+    <None Remove="IORes\Resources\TextFile1.txt" />
+    <None Remove="IORes\Resources\TextFile2.txt" />
   </ItemGroup>
 
   <ItemGroup>
@@ -56,14 +56,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="IO\Resources\Folder1\Folder3\TextFile5.txt" />
-    <EmbeddedResource Include="IO\Resources\Folder1\TextFile3.txt" />
-    <EmbeddedResource Include="IO\Resources\Folder1\TextFile4.txt" />
-    <EmbeddedResource Include="IO\Resources\Folder2\Folder4\TextFile8.txt" />
-    <EmbeddedResource Include="IO\Resources\Folder2\TextFile6.txt" />
-    <EmbeddedResource Include="IO\Resources\Folder2\TextFile7.txt" />
-    <EmbeddedResource Include="IO\Resources\TextFile1.txt" />
-    <EmbeddedResource Include="IO\Resources\TextFile2.txt" />
+    <EmbeddedResource Include="IORes\Resources\Folder1\Folder3\TextFile5.txt" />
+    <EmbeddedResource Include="IORes\Resources\Folder1\TextFile3.txt" />
+    <EmbeddedResource Include="IORes\Resources\Folder1\TextFile4.txt" />
+    <EmbeddedResource Include="IORes\Resources\Folder2\Folder4\TextFile8.txt" />
+    <EmbeddedResource Include="IORes\Resources\Folder2\TextFile6.txt" />
+    <EmbeddedResource Include="IORes\Resources\Folder2\TextFile7.txt" />
+    <EmbeddedResource Include="IORes\Resources\TextFile1.txt" />
+    <EmbeddedResource Include="IORes\Resources\TextFile2.txt" />
   </ItemGroup>
 
   <ItemGroup>
