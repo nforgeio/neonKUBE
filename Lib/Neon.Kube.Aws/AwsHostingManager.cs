@@ -1091,7 +1091,7 @@ namespace Neon.Kube
 
             KubeHelper.EnsureOpenEbsNodes(cluster.Definition);
 
-            // AWS doesn't initialize a password for new instance so we need to specifiy
+            // AWS doesn't initialize a password for new instance so we need to specify
             // the SSH key when the instances are provisioned and then upload and enable 
             // the SSH password ourselves.
 

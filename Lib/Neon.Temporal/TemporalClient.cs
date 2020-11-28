@@ -765,12 +765,12 @@ namespace Neon.Temporal
                 else if (NeonHelper.IsOSX)
                 {
                     resourcePath = "Neon.Temporal.Resources.temporal-proxy.osx.gz";
-                    binaryPath = Path.Combine(binaryFolder, "temporal-proxy");
+                    binaryPath   = Path.Combine(binaryFolder, "temporal-proxy");
                 }
                 else if (NeonHelper.IsLinux)
                 {
                     resourcePath = "Neon.Temporal.Resources.temporal-proxy.linux.gz";
-                    binaryPath = Path.Combine(binaryFolder, "temporal-proxy");
+                    binaryPath   = Path.Combine(binaryFolder, "temporal-proxy");
                 }
                 else
                 {
@@ -914,7 +914,7 @@ namespace Neon.Temporal
         {
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(settings != null, nameof(settings));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(settings.Namespace), nameof(settings.Namespace), "You must specifiy a non-empty Temporal namespace in settings.");
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(settings.Namespace), nameof(settings.Namespace), "You must specify a non-empty Temporal namespace in settings.");
 
             settings = settings.Clone();    // Configure the client using cloned settings
 

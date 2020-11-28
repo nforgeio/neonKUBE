@@ -28,6 +28,7 @@ using System.Reflection;
 using System.Runtime.Serialization;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -289,6 +290,57 @@ namespace Neon.Common
                     return ms.ToArray();
                 }
             }
+        }
+
+        /// <summary>
+        /// Generates a case insensitive <see cref="Regex"/> equivalent to a standard file name wildcard
+        /// pattern using <b>[*]</b> and <b>[?]</b> characters.
+        /// </summary>
+        /// <param name="pattern">The file name wildcard pattern.</param>
+        /// <returns>The corresponding <see cref="Regex"/>.</returns>
+        public static Regex FileWildcardRegex(string pattern)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(pattern), nameof(pattern));
+
+            // Special case: "*.*" to match everything.
+
+            if (pattern == "*.*")
+            {
+                return new Regex(@"^.+$");
+            }
+
+            var reservedRegexChars = new HashSet<char> { '\\', '^', '$', '.', '|', '?', '*', '+', '(', ')', '[', '{' };
+            var regexPattern       = "^";
+
+            foreach (var ch in pattern)
+            {
+                if ((int)ch < 32 || ch == '\\' || ch == '/')
+                {
+                    throw new ArgumentException($"Pattern [{pattern}] includes an invalid character.");
+                }
+
+                if (ch == '*')
+                {
+                    regexPattern += ".*?";
+                }
+                else if (ch == '?')
+                {
+                    regexPattern += ".{1}?";
+                }
+                else if (reservedRegexChars.Contains(ch))
+                {
+                    regexPattern += '\\';
+                    regexPattern += ch;
+                }
+                else
+                {
+                    regexPattern += ch;
+                }
+            }
+
+            regexPattern += '$';
+
+            return new Regex(regexPattern, RegexOptions.IgnoreCase);
         }
     }
 }

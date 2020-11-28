@@ -104,7 +104,7 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="addressOrSubnet">
         /// Specifies the IP address or subnet or you may also specify <b>"any"</b>
-        /// to specifiy all possible IP addresses.
+        /// to specify all possible IP addresses.
         /// </param>
         /// <param name="action">Specifies whether network traffic is to be allowed or denied.</param>
         public AddressRule(string addressOrSubnet, AddressRuleAction action)
