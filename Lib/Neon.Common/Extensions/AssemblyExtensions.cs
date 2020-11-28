@@ -340,8 +340,7 @@ namespace System
             var filteredResourceNames = string.IsNullOrEmpty(resourcePrefix)
                                             ? resourceNames
                                             : resourceNames
-                                                  .Where(name => name.StartsWith(resourcePrefix) && name != resourcePrefix)
-                                                  .Select(name => name.Substring(resourcePrefix.Length));
+                                                  .Where(name => name.StartsWith(resourcePrefix) && name != resourcePrefix);
             // Add the root directory.
 
             var root = new StaticResourceDirectory(root: null, parent: null, name: string.Empty);
@@ -352,9 +351,10 @@ namespace System
             {
                 // Split the resource name into the directory path and filename parts.
 
-                var pos      = resourceName.LastIndexOf('.');
-                var path     = (string)null;
-                var filename = (string)null;
+                var trimmedName = resourceName.Substring(resourcePrefix?.Length ?? 0);
+                var pos         = trimmedName.LastIndexOf('.');
+                var path        = (string)null;
+                var filename    = (string)null;
 
                 if (pos == -1)
                 {
@@ -363,24 +363,24 @@ namespace System
                     // file system root directory.
 
                     path     = "/";
-                    filename = resourceName;
+                    filename = trimmedName;
                 }
                 else
                 {
                     // The second dot from the end will indicate start of the file name
                     // when there is a second dot.
 
-                    pos = resourceName.LastIndexOf('.', pos - 1);
+                    pos = trimmedName.LastIndexOf('.', pos - 1);
 
                     if (pos != -1)
                     {
-                        path     = "/" + resourceName.Substring(0, pos).Replace('.', '/');
-                        filename = resourceName.Substring(pos + 1);
+                        path     = "/" + trimmedName.Substring(0, pos).Replace('.', '/');
+                        filename = trimmedName.Substring(pos + 1);
                     }
                     else
                     {
                         path     = "/";
-                        filename = resourceName;
+                        filename = trimmedName;
                     }
                 }
 

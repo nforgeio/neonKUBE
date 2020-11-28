@@ -898,10 +898,10 @@ namespace TestCommon
         }
 
         //---------------------------------------------------------------------
-        // Resource file read tests.
+        // Resource file read tests for filtered resources.
 
         [Fact]
-        public void ReadAllText()
+        public void Partial_ReadAllText()
         {
             var fs   = Assembly.GetExecutingAssembly().GetResourceFileSystem("TestCommon.IO.Resources");
             var file = fs.GetFile("/TextFile1.txt");
@@ -922,38 +922,164 @@ Line 9
         }
 
         [Fact]
-        public async Task ReadAllTextAsync()
+        public async Task Partial_ReadAllTextAsync()
         {
+            var fs   = Assembly.GetExecutingAssembly().GetResourceFileSystem("TestCommon.IO.Resources");
+            var file = fs.GetFile("/TextFile2.txt");
+
+            Assert.Equal(
+@"TextFile2.txt:
+Line 1
+Line 2
+Line 3
+Line 4
+Line 5
+Line 6
+Line 7
+Line 8
+Line 9
+",
+                await file.ReadAllTextAsync());
         }
 
         [Fact]
-        public void ReadAllBytes()
+        public void Partial_ReadAllBytes()
         {
+            var fs   = Assembly.GetExecutingAssembly().GetResourceFileSystem("TestCommon.IO.Resources");
+            var file = fs.GetFile("/Folder1/TextFile3.txt");
+
+            Assert.Equal(
+@"TextFile3.txt:
+Line 1
+Line 2
+Line 3
+Line 4
+Line 5
+Line 6
+Line 7
+Line 8
+Line 9
+",
+                Encoding.UTF8.GetString(file.ReadAllBytes()));
         }
 
         [Fact]
-        public async Task ReadAllBytesAsync()
+        public async Task Partial_ReadAllBytesAsync()
         {
+            var fs   = Assembly.GetExecutingAssembly().GetResourceFileSystem("TestCommon.IO.Resources");
+            var file = fs.GetFile("/Folder1/TextFile4.txt");
+
+            Assert.Equal(
+@"TextFile4.txt:
+Line 1
+Line 2
+Line 3
+Line 4
+Line 5
+Line 6
+Line 7
+Line 8
+Line 9
+",
+                Encoding.UTF8.GetString(await file.ReadAllBytesAsync()));
         }
 
         [Fact]
-        public void OpenReader()
+        public void Partial_OpenReader()
         {
+            var fs   = Assembly.GetExecutingAssembly().GetResourceFileSystem("TestCommon.IO.Resources");
+            var file = fs.GetFile("/Folder1/Folder3/TextFile5.txt");
+
+            using (var reader = file.OpenReader())
+            {
+                Assert.Equal(
+@"TextFile5.txt:
+Line 1
+Line 2
+Line 3
+Line 4
+Line 5
+Line 6
+Line 7
+Line 8
+Line 9
+",
+                reader.ReadToEnd());                
+            }
         }
 
         [Fact]
-        public async Task OpenReaderAsync()
+        public async Task Partial_OpenReaderAsync()
         {
+            var fs     = Assembly.GetExecutingAssembly().GetResourceFileSystem("TestCommon.IO.Resources");
+            var file   = fs.GetFile("/Folder2/Folder4/TextFile8.txt");
+            var reader = await file.OpenReaderAsync();
+
+            using (reader)
+            {
+                Assert.Equal(
+@"TextFile8.txt:
+Line 1
+Line 2
+Line 3
+Line 4
+Line 5
+Line 6
+Line 7
+Line 8
+Line 9
+",
+                await reader.ReadToEndAsync());
+            }
         }
 
         [Fact]
-        public void OpenStream()
+        public void Partial_OpenStream()
         {
+            var fs   = Assembly.GetExecutingAssembly().GetResourceFileSystem("TestCommon.IO.Resources");
+            var file = fs.GetFile("/Folder1/Folder3/TextFile5.txt");
+
+            using (var stream = file.OpenStream())
+            {
+                Assert.Equal(
+@"TextFile5.txt:
+Line 1
+Line 2
+Line 3
+Line 4
+Line 5
+Line 6
+Line 7
+Line 8
+Line 9
+",
+                Encoding.UTF8.GetString(stream.ReadToEnd()));
+            }
         }
 
         [Fact]
-        public async Task OpenStreamAsync()
+        public async Task Partial_OpenStreamAsync()
         {
+            var fs     = Assembly.GetExecutingAssembly().GetResourceFileSystem("TestCommon.IO.Resources");
+            var file   = fs.GetFile("/Folder2/Folder4/TextFile8.txt");
+            var stream = await file.OpenStreamAsync();
+
+            using (stream)
+            {
+                Assert.Equal(
+@"TextFile8.txt:
+Line 1
+Line 2
+Line 3
+Line 4
+Line 5
+Line 6
+Line 7
+Line 8
+Line 9
+",
+                Encoding.UTF8.GetString(await stream.ReadToEndAsync()));
+            }
         }
     }
 }

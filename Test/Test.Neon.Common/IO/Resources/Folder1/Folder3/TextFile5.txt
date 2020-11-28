@@ -1,4 +1,4 @@
-﻿TextFile5.txt:
+TextFile5.txt:
 Line 1
 Line 2
 Line 3
