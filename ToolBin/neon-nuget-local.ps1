@@ -54,6 +54,7 @@ function Publish
 # Update the project versions.
 
 SetVersion Neon.Cadence
+SetVersion Neon.Cassandra
 SetVersion Neon.Common
 SetVersion Neon.Couchbase
 SetVersion Neon.Cryptography
@@ -62,6 +63,7 @@ SetVersion Neon.HyperV
 SetVersion Neon.Service
 SetVersion Neon.ModelGen
 SetVersion Neon.Nats
+SetVersion Neon.Postgres
 SetVersion Neon.SSH
 SetVersion Neon.SSH.NET
 SetVersion Neon.Temporal
@@ -78,6 +80,7 @@ SetVersion Neon.YugaByte
 # Build and publish the projects.
 
 Publish Neon.Cadence
+Publish Neon.Cassandra
 Publish Neon.Common
 Publish Neon.Couchbase
 Publish Neon.Cryptography
@@ -86,6 +89,7 @@ Publish Neon.HyperV
 Publish Neon.Service
 Publish Neon.ModelGen
 Publish Neon.Nats
+Publish Neon.Postgres
 Publish Neon.SSH
 Publish Neon.SSH.NET
 Publish Neon.Temporal
