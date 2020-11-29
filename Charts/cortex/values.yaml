@@ -88,10 +88,6 @@ cortexConfig:
       directory: /tmp/cortex/index
     filesystem:
       directory: /tmp/cortex/chunks
-    tsdb:
-      dir: /tmp/cortex/tsdb
-    bucket_store:
-      sync_dir: /tmp/cortex/tsdb-sync
     delete_store:
       store: boltdb
     cassandra:
