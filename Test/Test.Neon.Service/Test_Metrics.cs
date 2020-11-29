@@ -531,11 +531,11 @@ namespace TestNeonService
                             context.Response.StatusCode = 200;
                             context.Response.OutputStream.Close();
 
-                            metrics = ParseMetrics(rawMetrics);
+                            var receivedMetrics = ParseMetrics(rawMetrics);
 
-                            if (metrics["test_counter"] > 0)
+                            if (receivedMetrics["test_counter"] > 0 && metrics == null)
                             {
-                                break;
+                                metrics = receivedMetrics;
                             }
                         }
                     });
