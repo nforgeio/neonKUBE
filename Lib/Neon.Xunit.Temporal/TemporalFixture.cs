@@ -317,8 +317,7 @@ services:
                 {
                     // Establish the Temporal connection.
 
-                    Client = TemporalClient.ConnectAsync(settings).Result;
-
+                    Client     = TemporalClient.ConnectAsync(settings).Result;
                     HttpClient = new HttpClient()
                     {
                         BaseAddress = Client.ListenUri

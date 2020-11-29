@@ -8,7 +8,7 @@
     <ProjectGuid>{7E701039-1C1E-4878-9E85-964FD7A4F1A5}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Test.Neon.Common.net</RootNamespace>
+    <RootNamespace>TestCommon</RootNamespace>
     <AssemblyName>Test.Neon.Common.net</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -313,6 +313,9 @@
     <Compile Include="..\Test.Neon.Common\Helper\Test_NeonHelper.cs">
       <Link>Helper\Test_NeonHelper.cs</Link>
     </Compile>
+    <Compile Include="..\Test.Neon.Common\Helper\Test_NeonHelper.IO.cs">
+      <Link>Helper\Test_NeonHelper.IO.cs</Link>
+    </Compile>
     <Compile Include="..\Test.Neon.Common\Helper\Test_NeonHelper.Json.cs">
       <Link>Helper\Test_NeonHelper.Json.cs</Link>
     </Compile>
@@ -333,6 +336,9 @@
     </Compile>
     <Compile Include="..\Test.Neon.Common\IO\Test_PreprocessReader.cs">
       <Link>IO\Test_PreprocessReader.cs</Link>
+    </Compile>
+    <Compile Include="..\Test.Neon.Common\IO\Test_StaticFileSystem.cs">
+      <Link>IO\Test_StaticFileSystem.cs</Link>
     </Compile>
     <Compile Include="..\Test.Neon.Common\IO\Test_Stream.cs">
       <Link>IO\Test_Stream.cs</Link>
@@ -499,6 +505,16 @@
       <Project>{468e440f-2284-483d-a54a-ec540c85f76e}</Project>
       <Name>Neon.Xunit</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="IORes\Resources\Folder1\Folder3\TextFile5.txt" />
+    <EmbeddedResource Include="IORes\Resources\Folder1\TextFile3.txt" />
+    <EmbeddedResource Include="IORes\Resources\Folder1\TextFile4.txt" />
+    <EmbeddedResource Include="IORes\Resources\Folder2\Folder4\TextFile8.txt" />
+    <EmbeddedResource Include="IORes\Resources\Folder2\TextFile6.txt" />
+    <EmbeddedResource Include="IORes\Resources\Folder2\TextFile7.txt" />
+    <EmbeddedResource Include="IORes\Resources\TextFile1.txt" />
+    <EmbeddedResource Include="IORes\Resources\TextFile2.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
