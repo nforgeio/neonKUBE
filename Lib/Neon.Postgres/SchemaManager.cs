@@ -299,6 +299,30 @@ namespace Neon.Postgres
     ///         </description>
     ///     </item>
     /// </list>
+    /// <para><b>SCRIPTS AS EMBEDDED RESOURCES</b></para>
+    /// <para>
+    /// In addition to reading SQL scripts as standard files, the <see cref="SchemaManager"/> can
+    /// also read scripts from embedded resources.  This is an easy and clean way to include these
+    /// scripts in a program or library.  Here's what you need to do:
+    /// </para>
+    /// <list type="number">
+    ///     <item>
+    ///     Create a folder in your project to hold your SQL script files.
+    ///     </item>
+    ///     <item>
+    ///     Add your scripts to the new folder, saving them with **UTF-8 encoding**.
+    ///     </item>
+    ///     <item>
+    ///     Select your script files in the <b>Solution Explorer</b> and then left-click
+    ///     on them and select **Properties**.  Set **Build Action** to **Embedded resource**.
+    ///     </item>
+    ///     <item>
+    ///     You'll be using the <see cref="SchemaManager.SchemaManager(NpgsqlConnection, string, IStaticDirectory, Dictionary{string, string})"/>
+    ///     override constructor and you'll be passing an <see cref="IStaticDirectory"/> that emulates a read-only file system
+    ///     constructed from embedded resources.  You'll need to call <see cref="AssemblyExtensions.GetResourceFileSystem(Assembly, string)"/>
+    ///     to obtain this directory, passing a string identifying resource name prefix that identifies your virtual folder.
+    ///     </item>
+    /// </list>
     /// </remarks>
     public class SchemaManager : IDisposable
     {
@@ -315,7 +339,7 @@ namespace Neon.Postgres
         private Dictionary<int, string>     versionToScript;
 
         /// <summary>
-        /// Constructor.
+        /// Constructs an instance that loads scripts from files.
         /// </summary>
         /// <param name="masterConnection">
         /// The master database connection to be used for creating the target database.  This connection must have been made for a Postgres
@@ -392,6 +416,78 @@ namespace Neon.Postgres
         }
 
         /// <summary>
+        /// Constructs an instance that loads scripts from embedded resources.
+        /// </summary>
+        /// <param name="masterConnection">
+        /// The master database connection to be used for creating the target database.  This connection must have been made for a Postgres
+        /// superuser or a user with the <b>CREATEDB</b> privilege and must not reference a specific database.
+        /// </param>
+        /// <param name="databaseName">The database name to be used.</param>
+        /// <param name="scriptDirectory">The embedded resource directory returned by a call to <see cref="AssemblyExtensions.GetResourceFileSystem(Assembly, string)"/>.</param>
+        /// <param name="variables">Optionally specifies script variables.</param>
+        /// <exception cref="FileNotFoundException">
+        /// Thrown if there's no directory at <see cref="scriptFolder"/> or when there's no
+        /// <b>schema-0.script</b> file in the directory.
+        /// </exception>
+        public SchemaManager(NpgsqlConnection masterConnection, string databaseName, IStaticDirectory scriptDirectory, Dictionary<string, string> variables = null)
+        {
+            Covenant.Requires<ArgumentNullException>(masterConnection != null, nameof(masterConnection));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(databaseName), nameof(databaseName));
+            Covenant.Requires<ArgumentNullException>(scriptDirectory != null, nameof(scriptDirectory));
+
+            this.masterConnection = masterConnection;
+            this.targetConnection = null;
+            this.databaseName     = databaseName;
+            this.scriptFolder     = scriptDirectory.Path;
+
+            // Initialize the variables dictionary.
+
+            if (variables != null)
+            {
+                foreach (var item in variables)
+                {
+                    this.variables[item.Key] = item.Value;
+                }
+            }
+
+            this.variables["database"] = databaseName;
+
+            // List the script files and load them into a dictionary keyed by the schema version
+            // parsed from the file name.  We'll also check for duplicate schema files that differ
+            // only by leading zeros in the name.
+
+            var versionToScript = new Dictionary<int, string>();
+            var scriptNameRegex = new Regex(@"schema-(?<version>\d+).script$");
+
+            foreach (var scriptFile in scriptDirectory.GetFiles("*.script"))
+            {
+                var scriptName = scriptFile.Name;
+                var match      = scriptNameRegex.Match(scriptName);
+
+                if (!match.Success)
+                {
+                    throw new SchemaManagerException($"Unexpected script file [{scriptFile}].");
+                }
+
+                var scriptVersion = int.Parse(match.Groups["version"].Value);
+
+                if (versionToScript.ContainsKey(scriptVersion))
+                {
+                    throw new SchemaManagerException($"There are multiple script files for schema [version={scriptVersion}].");
+                }
+
+                versionToScript.Add(scriptVersion, LoadScript(scriptFile));
+            }
+
+            if (!versionToScript.ContainsKey(0))
+            {
+                throw new FileNotFoundException($"[schema-0.script] database creation script not found in: {Path.GetDirectoryName(scriptFolder)}");
+            }
+
+            this.versionToScript = versionToScript;
+        }
+
+        /// <summary>
         /// Finalizer.
         /// </summary>
         ~SchemaManager()
@@ -431,9 +527,26 @@ namespace Neon.Postgres
         /// <returns>The processed script text.</returns>
         private string LoadScript(string scriptPath)
         {
-            using (var streamReader = new StreamReader(scriptPath))
+            using (var reader = new StreamReader(scriptPath))
             {
-                using (var preprocessReader = new PreprocessReader(streamReader, variables))
+                using (var preprocessReader = new PreprocessReader(reader, variables))
+                {
+                    return preprocessReader.ReadToEnd();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Reads the script text from an embedded resource file, replacing any variable references with the
+        /// variable's value.
+        /// </summary>
+        /// <param name="scriptFile">The embedded resurce script file.</param>
+        /// <returns>The processed script text.</returns>
+        private string LoadScript(IStaticFile scriptFile)
+        {
+            using (var reader = scriptFile.OpenReader())
+            {
+                using (var preprocessReader = new PreprocessReader(reader, variables))
                 {
                     return preprocessReader.ReadToEnd();
                 }
@@ -798,7 +911,7 @@ CREATE TABLE IF NOT EXISTS {DbInfoTableName} (
             {
                 // Record the error.
 
-                var updateCommand = new NpgsqlCommand("UPDATE {DbInfoTableName} SET error = (@error), update_finish_utc = (now() at time zone 'utc');", TargetConnection);
+                var updateCommand = new NpgsqlCommand($"UPDATE {DbInfoTableName} SET error = (@error), update_finish_utc = (now() at time zone 'utc');", TargetConnection);
 
                 updateCommand.Parameters.AddWithValue("error", e.Message);
                 await updateCommand.ExecuteNonQueryAsync();

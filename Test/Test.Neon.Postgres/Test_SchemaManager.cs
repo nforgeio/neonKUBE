@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -911,6 +912,20 @@ INSERT INTO my_table (version) values (1);",
                     Assert.Equal(4, status.Version);
                     Assert.Equal(4, (int)await schemaManager.TargetConnection.ExecuteScalarAsync("SELECT version FROM my_table;"));
                 }
+            }
+        }
+
+        [Fact]
+        public async Task EmbeddedScripts()
+        {
+            // Verify that we can process scripts loaded from embedded resources.
+
+            var databaseName = GetUniqueDatabaseName();
+
+            using (var schemaManager = new SchemaManager(postgres, databaseName, Assembly.GetExecutingAssembly().GetResourceFileSystem("Test.Neon.Postgres.Scripts")))
+            {
+                await schemaManager.CreateDatabaseAsync();
+                await schemaManager.UpgradeDatabaseAsync();
             }
         }
     }

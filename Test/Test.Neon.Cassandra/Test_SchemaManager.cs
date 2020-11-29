@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -32,7 +33,6 @@ using Neon.Xunit.YugaByte;
 using Cassandra;
 
 using Xunit;
-using System.Reflection;
 
 namespace Test.Neon.Cassandra
 {

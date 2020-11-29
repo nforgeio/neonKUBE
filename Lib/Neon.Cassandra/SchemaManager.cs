@@ -310,7 +310,7 @@ namespace Neon.Cassandra
     ///     Create a folder in your project to hold your SQL script files.
     ///     </item>
     ///     <item>
-    ///     Add your scripts to the new folder.
+    ///     Add your scripts to the new folder, saving them with **UTF-8 encoding**.
     ///     </item>
     ///     <item>
     ///     Select your script files in the <b>Solution Explorer</b> and then left-click
@@ -426,6 +426,7 @@ namespace Neon.Cassandra
         {
             Covenant.Requires<ArgumentNullException>(session != null, nameof(session));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(keyspace), nameof(keyspace));
+            Covenant.Requires<ArgumentNullException>(scriptDirectory != null, nameof(scriptDirectory));
 
             this.session      = session;
             this.keyspace     = keyspace;
