@@ -449,7 +449,7 @@ namespace Neon.Temporal
                         InitializeNetCore(address, settings);
                         break;
 
-                    case NetFramework.Framework:
+                    case NetFramework.NetFramework:
 
                         InitializeNetFramework(address, settings);
                         break;
@@ -471,7 +471,7 @@ namespace Neon.Temporal
                         CoreDispose();
                         break;
 
-                    case NetFramework.Framework:
+                    case NetFramework.NetFramework:
 
                         NetDispose();
                         break;

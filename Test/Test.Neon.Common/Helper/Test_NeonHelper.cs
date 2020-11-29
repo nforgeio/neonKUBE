@@ -46,7 +46,7 @@ namespace TestCommon
             }
             else if (framework.StartsWith(".NET Framework"))
             {
-                Assert.Equal(NetFramework.Framework, NeonHelper.Framework);
+                Assert.Equal(NetFramework.NetFramework, NeonHelper.Framework);
             }
             else if (framework.StartsWith(".NET Native"))
             {
@@ -67,7 +67,7 @@ namespace TestCommon
             }
             else
             {
-                Assert.Equal(NetFramework.Unknown, NeonHelper.Framework);
+                Assert.Equal(NetFramework.NetFramework, NeonHelper.Framework);
             }
         }
 

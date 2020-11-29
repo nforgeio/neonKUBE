@@ -460,7 +460,7 @@ namespace Neon.Cadence
                         InitializeNetCore(address, settings);
                         break;
 
-                    case NetFramework.Framework:
+                    case NetFramework.NetFramework:
 
                         InitializeNetFramework(address, settings);
                         break;
@@ -482,7 +482,7 @@ namespace Neon.Cadence
                         CoreDispose();
                         break;
 
-                    case NetFramework.Framework:
+                    case NetFramework.NetFramework:
 
                         NetDispose();
                         break;

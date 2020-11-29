@@ -934,7 +934,7 @@ namespace Neon.Temporal.Internal
 
                     return LoadAssemblyNetCore(stream);
 
-                case NetFramework.Framework:
+                case NetFramework.NetFramework:
 
                     return LoadAssemblyNetFramework(stream);
 
