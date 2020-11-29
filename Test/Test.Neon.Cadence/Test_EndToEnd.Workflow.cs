@@ -328,10 +328,13 @@ namespace TestCadence
             var startUtcNow = DateTime.UtcNow;
             var sleepTime   = TimeSpan.FromSeconds(5);
             var wakeTimeUtc = startUtcNow + sleepTime;
+            var fudge       = TimeSpan.FromMilliseconds(50);    // WSL2 distro must have some clock skew
 
             await stub.SleepUntilUtcAsync(wakeTimeUtc);
 
-            Assert.True(DateTime.UtcNow - startUtcNow >= sleepTime);
+            var endUtcNow = DateTime.UtcNow;
+
+            Assert.True(endUtcNow - startUtcNow >= sleepTime - fudge || endUtcNow - startUtcNow <= sleepTime - fudge);
 
             // Verify that scheduling a sleep time in the past is
             // essentially a NOP.
