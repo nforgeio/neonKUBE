@@ -4,7 +4,7 @@
 
 image:
   repository: quay.io/cortexproject/cortex
-  tag: v1.3.0
+  tag: v1.5.0
   pullPolicy: IfNotPresent
 
 serviceAccount:
@@ -78,10 +78,10 @@ cortexConfig:
       schema: v10
       index:
         prefix: index_
-        period: 168h
+        period: 24h
       chunks:
         prefix: chunk_
-        period: 168h
+        period: 24h
 
   storage:
     boltdb:
@@ -96,6 +96,11 @@ cortexConfig:
       timeout: 15s
       connect_timeout: 15s
       max_retries: 5
+
+  table_manager:
+    retention_deletes_enabled: true
+    retention_period: 48h
+
 
 
 strategy:
