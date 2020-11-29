@@ -32,6 +32,7 @@ using Neon.Xunit.YugaByte;
 using Cassandra;
 
 using Xunit;
+using System.Reflection;
 
 namespace Test.Neon.Cassandra
 {
@@ -1026,6 +1027,20 @@ INSERT INTO my_table (key, version) values (1, 1);",
                             Assert.Equal(4, row.GetValue<int>("version"));
                         });
                 }
+            }
+        }
+
+        [Fact]
+        public async Task EmbeddedScripts()
+        {
+            // Verify that we can process scripts loaded from embedded resources.
+
+            var keyspaceName = GetUniqueKeyspaceName();
+
+            using (var schemaManager = new SchemaManager(cassandra, keyspaceName, Assembly.GetExecutingAssembly().GetResourceFileSystem("Test.Neon.Cassandra.Scripts")))
+            {
+                await schemaManager.CreateKeyspaceAsync();
+                await schemaManager.UpgradeKeyspaceAsync();
             }
         }
     }
