@@ -40,13 +40,16 @@ function Publish
     # exist first and then build and copy the package there.  We'll need to inspect the project
     # file passed to discover the package name and version.
 
-    $publishPath    = [io.path]::combine($env:NUGET_LOCAL_FEED, $project, $version)
+    $newVersion     = "10000.0.$version-local"
+    $publishPath    = [io.path]::combine($env:NUGET_LOCAL_FEED, "$project.$newVersion")
     $projectPath    = [io.path]::combine($env:NF_ROOT, "Lib", "$project", "$project" + ".csproj")
     $orgProjectFile = Get-Content "$projectPath" -Encoding utf8
     $regex          = [regex]'<Version>(.*)</Version>'
-    $match          = $regex.Match($projectFile)
+    $match          = $regex.Match($orgProjectFile)
     $orgVersion     = $match.Groups[1].Value
-    $tmpProjectFile = $orgProjectFile.Replace("<Version>$orgVersion</Version>", "<Version>$version</Version>")
+    $tmpProjectFile = $orgProjectFile.Replace("<Version>$orgVersion</Version>", "<Version>$newVersion</Version>")
+
+    Copy-Item "$projectPath" "$projectPath.org"
     
     $tmpProjectFile | Out-File -FilePath "$projectPath" -Encoding utf8
 
@@ -63,7 +66,8 @@ function Publish
 
     # Restore the project file.
 
-    $orgProjectFile | Out-File -FilePath "$projectPath" -Encoding utf8
+    Copy-Item "$projectPath.org" "$projectPath"
+    Remove-Item "$projectPath.org"
 }
 
 # Verify that the [NUGET_LOCAL_FEED] environment variable exists and references an
@@ -102,35 +106,35 @@ $versionPath = [io.path]::combine($env:NUGET_LOCAL_FEED, "next-version.txt")
 
 if (-not (Test-Path "$versionPath")) {
     "0" | Out-File -FilePath $versionPath -Encoding ASCII
-)
+}
 
-$version = [int]::Parse(Get-Content -FilePath "$versionPath" -First 1)
+$version = [int]::Parse($(Get-Content -Path "$versionPath" -First 1))
 
 # Build and publish the projects.
 
 Publish Neon.Cadence            $version
-# Publish Neon.Cassandra          $version
-# Publish Neon.Common             $version
-# Publish Neon.Couchbase          $version
-# Publish Neon.Cryptography       $version
-# Publish Neon.Docker             $version
-# Publish Neon.HyperV             $version
-# Publish Neon.Service            $version
-# Publish Neon.ModelGen           $version
-# Publish Neon.Nats               $version
-# Publish Neon.Postgres           $version
-# Publish Neon.SSH                $version
-# Publish Neon.SSH.NET            $version
-# Publish Neon.Temporal           $version
-# Publish Neon.Web                $version
-# Publish Neon.XenServer          $version
-# Publish Neon.Xunit              $version
-# Publish Neon.Xunit.Cadence      $version
-# Publish Neon.Xunit.Couchbase    $version
-# Publish Neon.Xunit.Kube         $version
-# Publish Neon.Xunit.Temporal     $version
-# Publish Neon.Xunit.YugaByte     $version
-# Publish Neon.YugaByte           $version
+Publish Neon.Cassandra          $version
+Publish Neon.Common             $version
+Publish Neon.Couchbase          $version
+Publish Neon.Cryptography       $version
+Publish Neon.Docker             $version
+Publish Neon.HyperV             $version
+Publish Neon.Service            $version
+Publish Neon.ModelGen           $version
+Publish Neon.Nats               $version
+Publish Neon.Postgres           $version
+Publish Neon.SSH                $version
+Publish Neon.SSH.NET            $version
+Publish Neon.Temporal           $version
+Publish Neon.Web                $version
+Publish Neon.XenServer          $version
+Publish Neon.Xunit              $version
+Publish Neon.Xunit.Cadence      $version
+Publish Neon.Xunit.Couchbase    $version
+Publish Neon.Xunit.Kube         $version
+Publish Neon.Xunit.Temporal     $version
+Publish Neon.Xunit.YugaByte     $version
+Publish Neon.YugaByte           $version
 
 # Increment the minor version.
 
