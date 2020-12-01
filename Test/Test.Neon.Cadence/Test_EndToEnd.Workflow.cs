@@ -2267,8 +2267,7 @@ namespace TestCadence
         {
             await SyncContext.ClearAsync;
 
-            var stub = client.NewWorkflowStub<IWorkflowParallel>();
-
+            var stub    = client.NewWorkflowStub<IWorkflowParallel>();
             var results = await stub.RunAsync(10);
 
             Assert.Equal(10, results.Count);
