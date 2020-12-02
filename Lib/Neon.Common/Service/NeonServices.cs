@@ -23,14 +23,25 @@ namespace Neon.Service
     public static class NeonServices
     {
         /// <summary>
-        /// Cluster Manager Operator.
+        /// Cluster manager operator.
         /// </summary>
-        public const string NeonClusterManager = "neon-cluster-manager";
+        public const string ClusterManager = "neon-cluster-manager";
 
         /// <summary>
         /// Elasticsearch.
         /// </summary>
         public const string Elasticsearch = "neon-logs-elasticsearch";
+
+        /// <summary>
+        /// Neon identity service, AKA a Secure Token Service (STS).
+        /// </summary>
+        public const string IdentityService = "neon-identity-service";
+
+        /// <summary>
+        /// Operator that manages the <see cref="IdentityService"/> instances as well as
+        /// the related database.
+        /// </summary>
+        public const string IdentityOperator = "neon-identity-operator";
 
         /// <summary>
         /// Kibana.
