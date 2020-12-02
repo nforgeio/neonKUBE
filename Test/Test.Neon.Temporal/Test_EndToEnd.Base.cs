@@ -119,7 +119,7 @@ namespace TestTemporal
             Console.WriteLine($"Latency (average): {1.0 / totalTps}");
         }
 
-        [Fact]
+        [SlowFact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Base_Domain()
         {
@@ -174,7 +174,7 @@ namespace TestTemporal
             await Assert.ThrowsAsync<EntityNotExistsException>(async () => await client.UpdateNamespaceAsync("does-not-exist", updateDomainRequest));
         }
 
-        [Fact]
+        [SlowFact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Base_ListDomains()
         {
@@ -265,9 +265,9 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [SlowFact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
-        public async Task Base_DescribeTaslQueue()
+        public async Task Base_DescribeTaskQueue()
         {
             await SyncContext.ClearAsync;
 
@@ -304,7 +304,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [SlowFact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Base_DescribeWorkflowExecutionAsync()
         {
@@ -348,7 +348,7 @@ namespace TestTemporal
             Assert.True(description.ExeecutionInfo.ExecutionTime <= description.ExeecutionInfo.CloseTime - description.ExeecutionInfo.StartTime);
         }
 
-        [Fact]
+        [SlowFact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public void Base_ExtractTemporalProxy()
         {

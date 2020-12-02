@@ -136,7 +136,6 @@ namespace Neon.Temporal.Internal
             Covenant.Requires<ArgumentNullException>(dataConverter != null, nameof(dataConverter));
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
-            Covenant.Requires<ArgumentNullException>(options != null, nameof(options));
             Covenant.Requires<ArgumentNullException>(workflowInterface != null, nameof(workflowInterface));
 
             options = options ?? new ChildWorkflowOptions();

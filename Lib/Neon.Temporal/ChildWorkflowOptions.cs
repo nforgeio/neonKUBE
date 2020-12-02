@@ -21,7 +21,10 @@ using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.Reflection;
 
+using Newtonsoft.Json;
+
 using Neon.Common;
+using Neon.Data;
 using Neon.Temporal;
 using Neon.Temporal.Internal;
 
@@ -196,24 +199,28 @@ namespace Neon.Temporal
         /// Specifies the maximum time the child workflow may execute from start
         /// to finish.  This defaults to <see cref="TemporalSettings.WorkflowStartToCloseTimeoutSeconds"/>.
         /// </summary>
+        [JsonConverter(typeof(GoTimeSpanJsonConverter))]
         public TimeSpan StartToCloseTimeout { get; set; } = TimeSpan.Zero;
 
         /// <summary>
         /// Optionally specifies the default maximum time a workflow can wait between being scheduled
         /// and actually begin executing.  This defaults to <c>24 hours</c>.
         /// </summary>
+        [JsonConverter(typeof(GoTimeSpanJsonConverter))]
         public TimeSpan ScheduleToStartTimeout { get; set; }
 
         /// <summary>
         /// Optionally specifies the decision task timeout for the child workflow.
         /// This defaults to <see cref="TemporalSettings.WorkflowDecisionTaskTimeout"/>.
         /// </summary>
+        [JsonConverter(typeof(GoTimeSpanJsonConverter))]
         public TimeSpan DecisionTaskTimeout { get; set; } = TimeSpan.FromSeconds(10);
 
         /// <summary>
         /// Optionally specifies what happens to the child workflow when the parent is terminated.
         /// This defaults to <see cref="ParentClosePolicy.RequestCancel"/>.
         /// </summary>
+        [JsonConverter(typeof(IntegerEnumConverter<ParentClosePolicy>))]
         public ParentClosePolicy ChildPolicy { get; set; } = ParentClosePolicy.RequestCancel;
 
         /// <summary>
@@ -229,6 +236,7 @@ namespace Neon.Temporal
         /// the workflow entry point method or <see cref="TemporalSettings.WorkflowIdReusePolicy"/>
         /// (which also defaults to <see cref="WorkflowIdReusePolicy.AllowDuplicate"/>.
         /// </summary>
+        [JsonConverter(typeof(IntegerEnumConverter<WorkflowIdReusePolicy>))]
         public WorkflowIdReusePolicy WorkflowIdReusePolicy { get; set; } = WorkflowIdReusePolicy.UseDefault;
 
         /// <summary>
