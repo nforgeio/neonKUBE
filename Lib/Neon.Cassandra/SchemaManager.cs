@@ -345,21 +345,21 @@ namespace Neon.Cassandra
         /// for a Postgres superuser or a user with global <b>CREATE</b> permission.
         /// </param>
         /// <param name="keyspace">The keyspace name to be used.</param>
-        /// <param name="scriptFolder">The path to the file system folder holding the keyspace schema scripts.</param>
+        /// <param name="schemaFolder">The path to the file system folder holding the keyspace schema scripts.</param>
         /// <param name="variables">Optionally specifies script variables.</param>
         /// <exception cref="FileNotFoundException">
         /// Thrown if there's no directory at <see cref="scriptFolder"/> or when there's no
         /// <b>schema-0.script</b> file in the directory.
         /// </exception>
-        public SchemaManager(ISession session, string keyspace, string scriptFolder, Dictionary<string, string> variables = null)
+        public SchemaManager(ISession session, string keyspace, string schemaFolder, Dictionary<string, string> variables = null)
         {
             Covenant.Requires<ArgumentNullException>(session != null, nameof(session));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(keyspace), nameof(keyspace));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(scriptFolder), nameof(scriptFolder));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(schemaFolder), nameof(schemaFolder));
 
             this.session      = session;
             this.keyspace     = keyspace;
-            this.scriptFolder = scriptFolder;
+            this.scriptFolder = schemaFolder;
 
             // Initialize the variables dictionary.
 
@@ -380,7 +380,7 @@ namespace Neon.Cassandra
             var versionToScript = new Dictionary<int, string>();
             var scriptNameRegex = new Regex(@"schema-(?<version>\d+).script$");
 
-            foreach (var scriptPath in Directory.GetFiles(scriptFolder, "*.script"))
+            foreach (var scriptPath in Directory.GetFiles(schemaFolder, "*.script"))
             {
                 var scriptName = Path.GetFileName(scriptPath);
                 var match      = scriptNameRegex.Match(scriptName);
@@ -402,7 +402,7 @@ namespace Neon.Cassandra
 
             if (!versionToScript.ContainsKey(0))
             {
-                throw new FileNotFoundException($"[schema-0.script] keyspace creation script not found in: {Path.GetDirectoryName(scriptFolder)}");
+                throw new FileNotFoundException($"[schema-0.script] keyspace creation script not found in: {Path.GetDirectoryName(schemaFolder)}");
             }
 
             this.versionToScript = versionToScript;
@@ -416,21 +416,21 @@ namespace Neon.Cassandra
         /// for a Postgres superuser or a user with global <b>CREATE</b> permission.
         /// </param>
         /// <param name="keyspace">The keyspace name to be used.</param>
-        /// <param name="scriptDirectory">The embedded resource directory returned by a call to <see cref="AssemblyExtensions.GetResourceFileSystem(Assembly, string)"/>.</param>
+        /// <param name="schemaDirectory">The embedded resource directory returned by a call to <see cref="AssemblyExtensions.GetResourceFileSystem(Assembly, string)"/>.</param>
         /// <param name="variables">Optionally specifies script variables.</param>
         /// <exception cref="FileNotFoundException">
         /// Thrown if there's no directory at <see cref="scriptFolder"/> or when there's no
         /// <b>schema-0.script</b> file in the directory.
         /// </exception>
-        public SchemaManager(ISession session, string keyspace, IStaticDirectory scriptDirectory, Dictionary<string, string> variables = null)
+        public SchemaManager(ISession session, string keyspace, IStaticDirectory schemaDirectory, Dictionary<string, string> variables = null)
         {
             Covenant.Requires<ArgumentNullException>(session != null, nameof(session));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(keyspace), nameof(keyspace));
-            Covenant.Requires<ArgumentNullException>(scriptDirectory != null, nameof(scriptDirectory));
+            Covenant.Requires<ArgumentNullException>(schemaDirectory != null, nameof(schemaDirectory));
 
             this.session      = session;
             this.keyspace     = keyspace;
-            this.scriptFolder = scriptDirectory.Path;
+            this.scriptFolder = schemaDirectory.Path;
 
             // Initialize the variables dictionary.
 
@@ -451,7 +451,7 @@ namespace Neon.Cassandra
             var versionToScript = new Dictionary<int, string>();
             var scriptNameRegex = new Regex(@"schema-(?<version>\d+).script$");
 
-            foreach (var scriptFile in scriptDirectory.GetFiles("*.script"))
+            foreach (var scriptFile in schemaDirectory.GetFiles("*.script"))
             {
                 var scriptName = scriptFile.Name;
                 var match      = scriptNameRegex.Match(scriptName);

@@ -346,27 +346,27 @@ namespace Neon.Postgres
         /// superuser or a user with the <b>CREATEDB</b> privilege and must not reference a specific database.
         /// </param>
         /// <param name="databaseName">The database name to be used.</param>
-        /// <param name="scriptFolder">The path to the file system folder holding the database schema scripts.</param>
+        /// <param name="schemaFolder">The path to the file system folder holding the database schema scripts.</param>
         /// <param name="variables">Optionally specifies script variables.</param>
         /// <exception cref="FileNotFoundException">
         /// Thrown if there's no directory at <see cref="scriptFolder"/> or when there's no
         /// <b>schema-0.script</b> file in the directory.
         /// </exception>
-        public SchemaManager(NpgsqlConnection masterConnection, string databaseName, string scriptFolder, Dictionary<string, string> variables = null)
+        public SchemaManager(NpgsqlConnection masterConnection, string databaseName, string schemaFolder, Dictionary<string, string> variables = null)
         {
             Covenant.Requires<ArgumentNullException>(masterConnection != null, nameof(masterConnection));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(databaseName), nameof(databaseName));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(scriptFolder), nameof(scriptFolder));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(schemaFolder), nameof(schemaFolder));
 
-            if (!Directory.Exists(scriptFolder))
+            if (!Directory.Exists(schemaFolder))
             {
-                throw new FileNotFoundException($"Script folder not found at: {scriptFolder}");
+                throw new FileNotFoundException($"Script folder not found at: {schemaFolder}");
             }
 
             this.masterConnection = masterConnection;
             this.targetConnection = null;
             this.databaseName     = databaseName;
-            this.scriptFolder     = scriptFolder;
+            this.scriptFolder     = schemaFolder;
 
             // Initialize the variables dictionary.
 
@@ -387,7 +387,7 @@ namespace Neon.Postgres
             var versionToScript = new Dictionary<int, string>();
             var scriptNameRegex = new Regex(@"schema-(?<version>\d+).script$");
 
-            foreach (var scriptPath in Directory.GetFiles(scriptFolder, "*.script"))
+            foreach (var scriptPath in Directory.GetFiles(schemaFolder, "*.script"))
             {
                 var scriptName = Path.GetFileName(scriptPath);
                 var match      = scriptNameRegex.Match(scriptName);
@@ -409,7 +409,7 @@ namespace Neon.Postgres
 
             if (!versionToScript.ContainsKey(0))
             {
-                throw new FileNotFoundException($"[schema-0.script] database creation script not found in: {Path.GetDirectoryName(scriptFolder)}");
+                throw new FileNotFoundException($"[schema-0.script] database creation script not found in: {Path.GetDirectoryName(schemaFolder)}");
             }
 
             this.versionToScript = versionToScript;
@@ -423,22 +423,22 @@ namespace Neon.Postgres
         /// superuser or a user with the <b>CREATEDB</b> privilege and must not reference a specific database.
         /// </param>
         /// <param name="databaseName">The database name to be used.</param>
-        /// <param name="scriptDirectory">The embedded resource directory returned by a call to <see cref="AssemblyExtensions.GetResourceFileSystem(Assembly, string)"/>.</param>
+        /// <param name="schemaDirectory">The embedded resource directory returned by a call to <see cref="AssemblyExtensions.GetResourceFileSystem(Assembly, string)"/>.</param>
         /// <param name="variables">Optionally specifies script variables.</param>
         /// <exception cref="FileNotFoundException">
         /// Thrown if there's no directory at <see cref="scriptFolder"/> or when there's no
         /// <b>schema-0.script</b> file in the directory.
         /// </exception>
-        public SchemaManager(NpgsqlConnection masterConnection, string databaseName, IStaticDirectory scriptDirectory, Dictionary<string, string> variables = null)
+        public SchemaManager(NpgsqlConnection masterConnection, string databaseName, IStaticDirectory schemaDirectory, Dictionary<string, string> variables = null)
         {
             Covenant.Requires<ArgumentNullException>(masterConnection != null, nameof(masterConnection));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(databaseName), nameof(databaseName));
-            Covenant.Requires<ArgumentNullException>(scriptDirectory != null, nameof(scriptDirectory));
+            Covenant.Requires<ArgumentNullException>(schemaDirectory != null, nameof(schemaDirectory));
 
             this.masterConnection = masterConnection;
             this.targetConnection = null;
             this.databaseName     = databaseName;
-            this.scriptFolder     = scriptDirectory.Path;
+            this.scriptFolder     = schemaDirectory.Path;
 
             // Initialize the variables dictionary.
 
@@ -459,7 +459,7 @@ namespace Neon.Postgres
             var versionToScript = new Dictionary<int, string>();
             var scriptNameRegex = new Regex(@"schema-(?<version>\d+).script$");
 
-            foreach (var scriptFile in scriptDirectory.GetFiles("*.script"))
+            foreach (var scriptFile in schemaDirectory.GetFiles("*.script"))
             {
                 var scriptName = scriptFile.Name;
                 var match      = scriptNameRegex.Match(scriptName);
