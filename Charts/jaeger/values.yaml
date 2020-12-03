@@ -171,7 +171,7 @@ ingester:
     create: false
     name:
   nodeSelector: 
-    neonkube.io/monitor.logs: "true"
+    neonkube.io/monitor.logs-internal: "true"
   tolerations: []
   affinity: {}
   podAnnotations: {}
@@ -221,7 +221,7 @@ agent:
     create: true
     name:
   nodeSelector: 
-    neonkube.io/monitor.logs: "true"
+    neonkube.io/monitor.logs-internal: "true"
   tolerations: []
   affinity: {}
   podAnnotations: {}
@@ -292,7 +292,7 @@ collector:
     create: true
     name:
   nodeSelector: 
-    neonkube.io/monitor.logs: "true"
+    neonkube.io/monitor.logs-internal: "true"
   tolerations: []
   affinity: {}
   podAnnotations: {}
@@ -394,7 +394,7 @@ query:
     create: true
     name:
   nodeSelector: 
-    neonkube.io/monitor.logs: "true"
+    neonkube.io/monitor.logs-internal: "true"
   tolerations: []
   affinity: {}
   podAnnotations: {}
@@ -447,7 +447,7 @@ spark:
     create: true
     name:
   nodeSelector: 
-    neonkube.io/monitor.logs: "true"
+    neonkube.io/monitor.logs-internal: "true"
   tolerations: []
   affinity: {}
   extraSecretMounts: []
@@ -484,7 +484,7 @@ esIndexCleaner:
     create: true
     name:
   nodeSelector: 
-    neonkube.io/monitor.logs: "true"
+    neonkube.io/monitor.logs-internal: "true"
   tolerations: []
   affinity: {}
   extraSecretMounts: []
@@ -539,7 +539,7 @@ hotrod:
     create: true
     name:
   nodeSelector:
-    neonkube.io/monitor.logs: "true"
+    neonkube.io/monitor.logs-internal: "true"
   tolerations: []
   affinity: {}
   tracing:
