@@ -31,7 +31,7 @@ namespace Neon.Xunit.YugaByte
     /// <summary>
     /// Used to run YugaByte database server and its related and services as
     /// a Docker compose application on the current machine as a test fixture while tests 
-    /// are being performed  and then deletes the ap[plication when the fixture is
+    /// are being performed  and then deletes the application when the fixture is
     /// disposed.
     /// </summary>
     /// <remarks>
