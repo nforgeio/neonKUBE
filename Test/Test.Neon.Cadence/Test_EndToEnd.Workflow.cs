@@ -328,10 +328,13 @@ namespace TestCadence
             var startUtcNow = DateTime.UtcNow;
             var sleepTime   = TimeSpan.FromSeconds(5);
             var wakeTimeUtc = startUtcNow + sleepTime;
+            var fudge       = TimeSpan.FromMilliseconds(50);    // WSL2 distro must have some clock skew
 
             await stub.SleepUntilUtcAsync(wakeTimeUtc);
 
-            Assert.True(DateTime.UtcNow - startUtcNow >= sleepTime);
+            var endUtcNow = DateTime.UtcNow;
+
+            Assert.True(endUtcNow - startUtcNow >= sleepTime - fudge || endUtcNow - startUtcNow <= sleepTime - fudge);
 
             // Verify that scheduling a sleep time in the past is
             // essentially a NOP.
@@ -2180,6 +2183,99 @@ namespace TestCadence
             var stub = client.NewWorkflowStub<IWorkflowParent>();
 
             Assert.True(await stub.ParallelLocalActivity());
+        }
+
+        //---------------------------------------------------------------------
+
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
+        public interface IWorkflowParallel : IWorkflow
+        {
+            [WorkflowMethod]
+            Task<List<string>> RunAsync(int activityCount);
+        }
+
+        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
+        public interface IDoSomethingActivity : IActivity
+        {
+            [ActivityMethod(Name = "DoSomething")]
+            Task<string> DoSomethingAsync(int arg);
+        }
+
+        [Activity(AutoRegister = true)]
+        public class DoSomethingActivity : ActivityBase, IDoSomethingActivity
+        {
+            public async Task<string> DoSomethingAsync(int arg)
+            {
+                // Activity methods can pretty much do anything including
+                // starting new processes and threads, communicating with
+                // other services, reading/writing files, interacting with
+                // GPUs, etc.
+                //
+                // In this example, we're just pausing execution for a
+                // random delay between 0-2 seconds.
+
+                var delay = NeonHelper.PseudoRandomTimespan(TimeSpan.FromSeconds(2));
+
+                await Task.Delay(delay);
+
+                return $"[arg={arg}]: Delayed for: {delay}";
+            }
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class WorkflowParallel : WorkflowBase, IWorkflowParallel
+        {
+            public async Task<List<string>> RunAsync(int activityCount)
+            {
+                // This workflow runs the requested number of activities in parallel
+                // and then waits for them to complete, appending the activity result
+                // to the [results] list.
+                //
+                // We're going to use an [ActivityFutureStub<T>] to accomplish this.
+                // These stubs return an [IAsyncFuture<T>] which you can use to await
+                // the activity completion and result via a call to [IAsyncFuture<T>.GetAsync()].
+
+                var results = new List<string>();
+                var futures = new List<IAsyncFuture<string>>();
+
+                // Start each activity and remember its future.  This doesn't wait
+                // for the activity to complete, so all of the activities will 
+                // essentially be started in parallel.
+
+                for (int i = 0; i < activityCount; i++)
+                {
+                    var stub = Workflow.NewActivityFutureStub<IDoSomethingActivity>("DoSomething");
+                    
+                    futures.Add(await stub.StartAsync<string>(i));
+                }
+
+                // Wait for each activity future to complete and append each activity
+                // result to the results list.
+
+                foreach (var future in futures)
+                {
+                    results.Add(await future.GetAsync());
+                }
+
+                return results;
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_Parallel()
+        {
+            await SyncContext.ClearAsync;
+
+            var stub    = client.NewWorkflowStub<IWorkflowParallel>();
+            var results = await stub.RunAsync(10);
+
+            Assert.Equal(10, results.Count);
+
+            for (int i = 0; i < 10; i++)
+            {
+                Assert.Contains($"[arg={i}]", results[i]);
+            }
         }
 
         //---------------------------------------------------------------------

@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
@@ -72,7 +73,7 @@ namespace TestNeonService
             private readonly Counter TestCounter = Metrics.CreateCounter("test_counter", "my test counter");
 
             public TestService()
-                : base("test-service", serviceMap: CreateServiceMap())
+                : base("test-service", version: "1.0", serviceMap: CreateServiceMap())
             {
             }
 
@@ -93,11 +94,7 @@ namespace TestNeonService
             /// <returns>The service exit code.</returns>
             protected override async Task<int> OnRunAsync()
             {
-                // Increment the test counter.
-
-                TestCounter.Inc();
-
-                // Log some events so we can verify that the default Neon.Diagnostics logger
+                // Log some events so we can verify that the default [Neon.Diagnostics] logger
                 // increments counters for the different log levels.
 
                 var orgLogLevel = LogManager.LogLevel;
@@ -116,6 +113,10 @@ namespace TestNeonService
                     logger.LogError("error event");
                     logger.LogSError("security error event");
                     logger.LogCritical("critical event");
+
+                    // Increment the test counter.
+
+                    TestCounter.Inc();
 
                     // Signal to the test case that the service has done its thing
                     // and is ready to exit.
@@ -492,7 +493,8 @@ namespace TestNeonService
 
             // Start an emulated Pushgateway to receive the metrics.
 
-            string receivedMetrics;
+            string                      rawMetrics;
+            Dictionary<string, double>  metrics = null;
 
             using (var listener = new HttpListener())
             {
@@ -501,14 +503,42 @@ namespace TestNeonService
 
                 var runTask = service.RunAsync();
 
-                // $note(jefflill): This call will hang if the service doesn't push anything.
+                // Loop for up to 2 minutes until we receive metrics with a non-zero [test_counter]
 
-                var context = await listener.GetContextAsync();
-                var request = context.Request;
+                var stopwatch = new Stopwatch();
 
-                Assert.Equal("POST", request.HttpMethod);
+                stopwatch.Start();
 
-                receivedMetrics = Encoding.UTF8.GetString(await request.InputStream.ReadToEndAsync());
+                _ = Task.Run(
+                    async () =>
+                    {
+                        while (true)
+                        {
+                            if (stopwatch.Elapsed >= TimeSpan.FromMinutes(2))
+                            {
+                                throw new TimeoutException("Timeout waiting for non-zero [test_counter].");
+                            }
+
+                            // $note(jefflill): This call will hang if the service doesn't push anything.
+
+                            var context = await listener.GetContextAsync();
+                            var request = context.Request;
+
+                            Assert.Equal("POST", request.HttpMethod);
+
+                            rawMetrics = Encoding.UTF8.GetString(await request.InputStream.ReadToEndAsync());
+
+                            context.Response.StatusCode = 200;
+                            context.Response.OutputStream.Close();
+
+                            var receivedMetrics = ParseMetrics(rawMetrics);
+
+                            if (receivedMetrics["test_counter"] > 0 && metrics == null)
+                            {
+                                metrics = receivedMetrics;
+                            }
+                        }
+                    });
 
                 // Wait for the test service to do its thing.
 
@@ -518,9 +548,9 @@ namespace TestNeonService
 
                 service.CanExitEvent.Set();
                 await runTask;
-            }
 
-            var metrics = ParseMetrics(receivedMetrics);
+                listener.Close();
+            }
 
             // Verify the test counter.
 

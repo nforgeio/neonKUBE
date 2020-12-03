@@ -1,0 +1,3 @@
+CREATE TABLE my_table (version integer);
+GO           
+INSERT INTO my_table (version) values (1);

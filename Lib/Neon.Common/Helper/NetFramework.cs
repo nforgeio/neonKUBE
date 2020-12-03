@@ -53,7 +53,7 @@ namespace Neon.Common
         /// <summary>
         /// .NET Framework
         /// </summary>
-        Framework,
+        NetFramework,
 
         /// <summary>
         /// .NET Native

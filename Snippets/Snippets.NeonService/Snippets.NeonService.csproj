@@ -3,11 +3,12 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
+    <Configurations>Debug;Release;CodeDoc</Configurations>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="prometheus-net" Version="4.0.0" />
-    <PackageReference Include="prometheus-net.DotNetRuntime" Version="3.4.0" />
+    <PackageReference Include="prometheus-net.DotNetRuntime" Version="3.4.1" />
   </ItemGroup>
 
   <ItemGroup>

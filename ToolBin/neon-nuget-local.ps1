@@ -25,85 +25,119 @@ if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
     exit
 }
 
-function SetVersion
-{
-    [CmdletBinding()]
-    param (
-        [Parameter(Position=0, Mandatory=1)]
-        [string]$project
-    )
-
-	neon-build pack-version "$env:NF_ROOT\neonLIBRARY-version.txt" "$env:NF_ROOT\Lib\$project\$project.csproj"
-}
-
 function Publish
 {
     [CmdletBinding()]
     param (
         [Parameter(Position=0, Mandatory=1)]
-        [string]$project
+        [string]$project,
+        [Parameter(Position=1, Mandatory=1)]
+        [int]$version
     )
 
-	dotnet pack "$env:NF_ROOT\Lib\$project\$project.csproj" -c Debug --include-symbols --include-source -o "$env:NF_build\nuget"
+    # The package will be published to [%NUGET_LOCAL_FEED%\NAME\VERSION\NAME.VERSION.nupkg] where
+    # NAME is the package name and VERSION is the version.  We need to ensure that the directories
+    # exist first and then build and copy the package there.  We'll need to inspect the project
+    # file passed to discover the package name and version.
+
+    $newVersion     = "10000.0.$version-local"
+    $publishPath    = [io.path]::combine($env:NUGET_LOCAL_FEED, "$project.$newVersion")
+    $projectPath    = [io.path]::combine($env:NF_ROOT, "Lib", "$project", "$project" + ".csproj")
+    $orgProjectFile = Get-Content "$projectPath" -Encoding utf8
+    $regex          = [regex]'<Version>(.*)</Version>'
+    $match          = $regex.Match($orgProjectFile)
+    $orgVersion     = $match.Groups[1].Value
+    $tmpProjectFile = $orgProjectFile.Replace("<Version>$orgVersion</Version>", "<Version>$newVersion</Version>")
+
+    Copy-Item "$projectPath" "$projectPath.org"
+    
+    $tmpProjectFile | Out-File -FilePath "$projectPath" -Encoding utf8
+
+    if (-not (Test-Path "$publishPath")) {
+        New-Item -Path "$publishPath" -ItemType Directory
+    }
+
+    dotnet pack "$env:NF_ROOT\Lib\$project\$project.csproj" -c Release -o "$publishPath"
+   
+    # NOTE: We're not using this because including source and symbols above because
+    # doesn't seem to to work.
+    #
+	# dotnet pack "$env:NF_ROOT\Lib\$project\$project.csproj" -c Debug --include-symbols --include-source -o "$env:NUGET_LOCAL_FEED"
+
+    # Restore the project file.
+
+    Copy-Item "$projectPath.org" "$projectPath"
+    Remove-Item "$projectPath.org"
 }
 
-# Copy the version from [$/product-version] into [$/Lib/Neon/Common/Build.cs]
+# Verify that the [NUGET_LOCAL_FEED] environment variable exists and references an
+# existing folder that will act as our local nuget feed.
 
-& neon-build build-version
+if ("$env:NUGET_LOCAL_FEED" -eq "") {
+    echo "ERROR: [NUGET_LOCAL_FEED] environment variable does not exist."
+    pause
+    exit 1
+}
 
-# Update the project versions.
+if (-not (Test-Path "$env:NUGET_LOCAL_FEED")) {
+    New-Item -Path "$env:NUGET_LOCAL_FEED" -ItemType Directory
+}
 
-SetVersion Neon.Cadence
-SetVersion Neon.Common
-SetVersion Neon.Couchbase
-SetVersion Neon.Cryptography
-SetVersion Neon.Docker
-SetVersion Neon.HyperV
-SetVersion Neon.Service
-SetVersion Neon.ModelGen
-SetVersion Neon.Nats
-SetVersion Neon.SSH
-SetVersion Neon.SSH.NET
-SetVersion Neon.Temporal
-SetVersion Neon.Web
-SetVersion Neon.XenServer
-SetVersion Neon.Xunit
-SetVersion Neon.Xunit.Cadence
-SetVersion Neon.Xunit.Couchbase
-SetVersion Neon.Xunit.Kube
-SetVersion Neon.Xunit.Temporal
-SetVersion Neon.Xunit.YugaByte
-SetVersion Neon.YugaByte
+# We're going to track the local minor version number at:
+#
+#       %NUGET_LOCAL_FEED%\next-version.txt
+#
+# This will include the integer value for the next preview tag and
+# will be initialized to 0 when the file is not present.  We'll
+# read this value and pass it to the publish function which will
+# temporarily change the project's package version to:
+#
+#       10000.0.#-local
+#
+# where # is the next minor version number.  The function will
+# publish the package and then restore the nuget version to its
+# original value.  Using a preview tag will help ensure that 
+# other projects won't reference any of these packages by accident.
+#
+# After publishing all of the packages, we'll increment the
+# value in the version file.
+
+$versionPath = [io.path]::combine($env:NUGET_LOCAL_FEED, "next-version.txt")
+
+if (-not (Test-Path "$versionPath")) {
+    "0" | Out-File -FilePath $versionPath -Encoding ASCII
+}
+
+$version = [int]::Parse($(Get-Content -Path "$versionPath" -First 1))
 
 # Build and publish the projects.
 
-Publish Neon.Cadence
-Publish Neon.Common
-Publish Neon.Couchbase
-Publish Neon.Cryptography
-Publish Neon.Docker
-Publish Neon.HyperV
-Publish Neon.Service
-Publish Neon.ModelGen
-Publish Neon.Nats
-Publish Neon.SSH
-Publish Neon.SSH.NET
-Publish Neon.Temporal
-Publish Neon.Web
-Publish Neon.XenServer
-Publish Neon.Xunit
-Publish Neon.Xunit.Cadence
-Publish Neon.Xunit.Couchbase
-Publish Neon.Xunit.Kube
-Publish Neon.Xunit.Temporal
-Publish Neon.Xunit.YugaByte
-Publish Neon.YugaByte
+Publish Neon.Cadence            $version
+Publish Neon.Cassandra          $version
+Publish Neon.Common             $version
+Publish Neon.Couchbase          $version
+Publish Neon.Cryptography       $version
+Publish Neon.Docker             $version
+Publish Neon.HyperV             $version
+Publish Neon.Service            $version
+Publish Neon.ModelGen           $version
+Publish Neon.Nats               $version
+Publish Neon.Postgres           $version
+Publish Neon.SSH                $version
+Publish Neon.SSH.NET            $version
+Publish Neon.Temporal           $version
+Publish Neon.Web                $version
+Publish Neon.XenServer          $version
+Publish Neon.Xunit              $version
+Publish Neon.Xunit.Cadence      $version
+Publish Neon.Xunit.Couchbase    $version
+Publish Neon.Xunit.Kube         $version
+Publish Neon.Xunit.Temporal     $version
+Publish Neon.Xunit.YugaByte     $version
+Publish Neon.YugaByte           $version
 
-# Remove the generated standard nuget packages and replace them with the
-# packages including symbols and source code.
+# Increment the minor version.
 
-# Get-ChildItem "$env:NF_BUILD\nuget\*.symbols.nupkg"  | Rename-Item -NewName { $_.Name -replace '.symbols.nupkg', '.symbols.tmp' }
-# Remove-Item -Path "$env:NF_BUILD\nuget\*.nupkg"
-# Get-ChildItem "$env:NF_BUILD\nuget\*.symbols.tmp"  | Rename-Item -NewName { $_.Name -replace '.symbols.tmp', '.nupkg' }
+($version + 1).ToString() | Out-File -FilePath $versionPath -Encoding ASCII
 
 pause

@@ -933,8 +933,8 @@ namespace Neon.Temporal
         /// <summary>
         /// <b>INTERNAL USE ONLY:</b> Optionally indicates that the <b>temporal-proxy</b> will
         /// already be running for debugging purposes.  When this is <c>true</c>, the 
-        /// <b>temporal-client</b> be hardcoded to listen on <b>127.0.0.1:5001</b> and
-        /// the <b>temporal-proxy</b> will be assumed to be listening on <b>127.0.0.1:5000</b>.
+        /// <b>temporal-client</b> be hardcoded to listen on <b>localhost:5001</b> and
+        /// the <b>temporal-proxy</b> will be assumed to be listening on <b>localhost:5000</b>.
         /// This defaults to <c>false.</c>
         /// </summary>
         [JsonIgnore]

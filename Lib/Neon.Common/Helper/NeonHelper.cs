@@ -220,7 +220,7 @@ namespace Neon.Common
                 }
                 else if (RuntimeInformation.FrameworkDescription.StartsWith(".NET Framework"))
                 {
-                    return (netFramework = NetFramework.Framework).Value;
+                    return (netFramework = NetFramework.NetFramework).Value;
                 }
                 else if (RuntimeInformation.FrameworkDescription.StartsWith(".NET Native"))
                 {

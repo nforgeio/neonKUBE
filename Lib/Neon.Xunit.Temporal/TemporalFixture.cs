@@ -62,13 +62,27 @@ namespace Neon.Xunit.Temporal
         public const string DefaultComposeFile =
 @"version: '3.5'
 
+# IMPORTANT NOTE: 
+#
+# We're setting the Cassandra container memory limit to 1024M below and
+# then passing the [MAX_HEAP_SIZE=924M] environment variable which tells
+# Cassandra how much memory it can allocate.  This number is 100M lower
+# than the container limit to account for additional RAM overhead for
+# Bash, etc.
+#
+# This means that you'll need to adjust [MAX_HEAP_SIZE] whenever you
+# change the memory limit.
+
 services:
   cassandra:
     image: cassandra:3.11
+    environment:
+      - HEAP_NEWSIZE=1M
+      - MAX_HEAP_SIZE=1000M
     deploy:
       resources:
         limits:
-          memory: 1G
+          memory: 1024M
   temporal:
     image: temporalio/auto-setup:1.1.0
     ports:

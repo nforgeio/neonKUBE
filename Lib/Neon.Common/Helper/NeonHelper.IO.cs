@@ -92,6 +92,8 @@ namespace Neon.Common
                 {
                     // Intentionally ignoring errors.
                 }
+
+                Directory.Delete(folder);
             }
         }
 

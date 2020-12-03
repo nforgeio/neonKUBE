@@ -102,6 +102,12 @@ namespace Neon.Service
         public string PushUrl { get; set; } = null;
 
         /// <summary>
+        /// Specifies how often metrics will be pushed to the target Prometheus Pushgateway for 
+        /// <see cref="MetricsMode.Push"/> mode.  This defaults to <b>5 seconds</b>.
+        /// </summary>
+        public TimeSpan PushInterval { get; set; } = TimeSpan.FromSeconds(5);
+
+        /// <summary>
         /// Optionally specifies additional labels to be identify the source for <see cref="MetricsMode.Push"/> mode.
         /// </summary>
         public IList<Tuple<string, string>> PushLabels { get; set; } = new List<Tuple<string, string>>();

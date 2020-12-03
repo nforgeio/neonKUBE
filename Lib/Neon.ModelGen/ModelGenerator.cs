@@ -113,7 +113,7 @@ namespace Neon.ModelGen
 
             // NOTE: 
             // 
-            // We need thr the NETStandard reference assembly so that
+            // We need the the NETStandard reference assembly so that
             // compilation will actually work.
             // 
             // We've set [PreserveCompilationContext=true] in [Neon.ModelGen.csproj]

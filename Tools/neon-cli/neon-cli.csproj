@@ -15,7 +15,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="KubernetesClient" Version="3.0.12" />
+    <PackageReference Include="KubernetesClient" Version="3.0.16" />
     <PackageReference Include="Microsoft.Windows.Compatibility" Version="5.0.0" />
     <PackageReference Include="System.Diagnostics.StackTrace" Version="4.3.0" />
     <PackageReference Include="System.Runtime" Version="4.3.1" />

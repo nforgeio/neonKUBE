@@ -956,7 +956,7 @@ namespace Neon.Service
 
                     case MetricsMode.Push:
 
-                        metricPusher = new MetricPusher(MetricsOptions.PushUrl, Name, additionalLabels: MetricsOptions.PushLabels);
+                        metricPusher = new MetricPusher(MetricsOptions.PushUrl, job: Name, intervalMilliseconds: 100 /* (long)MetricsOptions.PushInterval.TotalMilliseconds */, additionalLabels: MetricsOptions.PushLabels);
                         metricPusher.Start();
                         break;
 
