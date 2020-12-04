@@ -1981,5 +1981,55 @@ namespace Neon.Common
                 return dockerComposeCli;
             }
         }
+
+        /// <summary>
+        /// Determines whether a <paramref name="value"/> is within <paramref name="expected"/> - <paramref name="delta"/>
+        /// and <paramref name="value"/> + <paramref name="delta"/> inclusive.  This is useful for unit tests 
+        /// where there might be an minor allowable variance due to clock skew, etc.
+        /// </summary>
+        /// <param name="expected">The expected value.</param>
+        /// <param name="value">The value being tested.</param>
+        /// <param name="delta">The allowed variance.</param>
+        /// <returns><c>true</c> when the two datetime values are within <paramref name="delta"/> of each other.</returns>
+        public static bool IsWithin(DateTime expected, DateTime value, TimeSpan delta)
+        {
+            if (expected < value - delta)
+            {
+                return false;
+            }
+            else if (expected > value + delta)
+            {
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// Determines whether a <paramref name="value"/> is within <paramref name="expected"/> - <paramref name="delta"/>
+        /// and <paramref name="value"/> + <paramref name="delta"/> inclusive.  This is useful for unit tests 
+        /// where there might be an minor allowable variance due to clock skew, etc.
+        /// </summary>
+        /// <param name="expected">The expected value.</param>
+        /// <param name="value">The value being tested.</param>
+        /// <param name="delta">The allowed variance.</param>
+        /// <returns><c>true</c> when the two datetime values are within <paramref name="delta"/> of each other.</returns>
+        public static bool IsWithin(DateTimeOffset expected, DateTimeOffset value, TimeSpan delta)
+        {
+            if (expected < value - delta)
+            {
+                return false;
+            }
+            else if (expected > value + delta)
+            {
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+        }
     }
 }

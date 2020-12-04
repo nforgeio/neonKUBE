@@ -280,5 +280,41 @@ namespace TestCommon
                 Assert.False(thread.IsAlive);
             }
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void Within_DateTime()
+        {
+            var expected = new DateTime(2020, 12, 4, 10, 58, 0);
+            var value    = expected;
+
+            Assert.True(NeonHelper.IsWithin(expected, value, TimeSpan.Zero));
+            Assert.False(NeonHelper.IsWithin(expected, value + TimeSpan.FromMilliseconds(1), TimeSpan.Zero));
+            Assert.False(NeonHelper.IsWithin(expected, value - TimeSpan.FromMilliseconds(1), TimeSpan.Zero));
+
+            Assert.True(NeonHelper.IsWithin(expected, value, TimeSpan.Zero));
+            Assert.True(NeonHelper.IsWithin(expected, value + TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(1)));
+            Assert.True(NeonHelper.IsWithin(expected, value - TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(1)));
+            Assert.False(NeonHelper.IsWithin(expected, value + TimeSpan.FromMilliseconds(1.5), TimeSpan.FromMilliseconds(1)));
+            Assert.False(NeonHelper.IsWithin(expected, value - TimeSpan.FromMilliseconds(1.5), TimeSpan.FromMilliseconds(1)));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void Within_DateTimeOffset()
+        {
+            var expected = new DateTimeOffset(2020, 12, 4, 10, 58, 0, TimeSpan.FromHours(-7));
+            var value    = expected;
+
+            Assert.True(NeonHelper.IsWithin(expected, value, TimeSpan.Zero));
+            Assert.False(NeonHelper.IsWithin(expected, value + TimeSpan.FromMilliseconds(1), TimeSpan.Zero));
+            Assert.False(NeonHelper.IsWithin(expected, value - TimeSpan.FromMilliseconds(1), TimeSpan.Zero));
+
+            Assert.True(NeonHelper.IsWithin(expected, value, TimeSpan.Zero));
+            Assert.True(NeonHelper.IsWithin(expected, value + TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(1)));
+            Assert.True(NeonHelper.IsWithin(expected, value - TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(1)));
+            Assert.False(NeonHelper.IsWithin(expected, value + TimeSpan.FromMilliseconds(1.5), TimeSpan.FromMilliseconds(1)));
+            Assert.False(NeonHelper.IsWithin(expected, value - TimeSpan.FromMilliseconds(1.5), TimeSpan.FromMilliseconds(1)));
+        }
     }
 }
