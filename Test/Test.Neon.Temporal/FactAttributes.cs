@@ -54,11 +54,12 @@ namespace TestTemporal
     /// Use this to disable tests failing due to problems with our Temporal 
     /// error handling implementation.
     /// </summary>
-    public class FactFailErrors : FactAttribute
+    public class Fact_Failing_Errors : FactAttribute
     {
-        public FactFailErrors()
+        public Fact_Failing_Errors()
         {
             Skip = "Failing due to our error handling implementation.";
+            //Skip = null;
         }
     }
 
@@ -66,22 +67,61 @@ namespace TestTemporal
     /// Use this to disable tests failing due to other JSON serialization implementations
     /// (or lack thereof).
     /// </summary>
-    public class FactFailJson : FactAttribute
+    public class Fact_Failing_Json : FactAttribute
     {
-        public FactFailJson()
+        public Fact_Failing_Json()
         {
             Skip = "Failing due to JSON serialization.";
+            //Skip = null;
+        }
+    }
+
+    /// <summary>
+    /// Use this to disable tests failing due to incomplete interop test implementation.
+    /// </summary>
+    public class Fact_Failing_Interop : FactAttribute
+    {
+        public Fact_Failing_Interop()
+        {
+            Skip = "Failing due to incomplete interop test implementation.";
+            //Skip = null;
         }
     }
 
     /// <summary>
     /// Use this to disable tests failing due to other problems.
     /// </summary>
-    public class FactFailOther : FactAttribute
+    public class Fact_Failing_BadWorkerId : FactAttribute
     {
-        public FactFailOther()
+        public Fact_Failing_BadWorkerId()
+        {
+            Skip = "Failing due [workerId == 0].";
+            Skip = null;
+        }
+    }
+
+    /// <summary>
+    /// Use this to disable tests failing due Invoke() not being called correctly,
+    /// probably in a generated stub.
+    /// </summary>
+    public class Fact_NoInvokeTarget : FactAttribute
+    {
+        public Fact_NoInvokeTarget()
+        {
+            Skip = "Failing due to calling Invoke() on an instance method without a target instance.";
+            Skip = null;
+        }
+    }
+
+    /// <summary>
+    /// Use this to disable tests failing due to other problems.
+    /// </summary>
+    public class Fact_Failing_Other : FactAttribute
+    {
+        public Fact_Failing_Other()
         {
             Skip = "Failing due to other reasons.";
+            //Skip = null;
         }
     }
 }
