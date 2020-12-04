@@ -109,7 +109,7 @@ readinessProbe:
 
 imagePullSecrets: []
 nodeSelector: 
-  neonkube.io/monitor.logs: "true"
+  neonkube.io/monitor.logs-internal: "true"
 tolerations: 
 - key: "neonkube.io/logs"
   operator: "Exists"

@@ -144,7 +144,7 @@ autoscaling:
 terminationGracePeriodSeconds: 90
 
 nodeSelector: 
-  neonkube.io/monitor.logs: "true"
+  neonkube.io/monitor.logs-internal: "true"
 
 tolerations: []
 

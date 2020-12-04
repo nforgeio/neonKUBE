@@ -111,7 +111,7 @@ strategy:
 
 annotations: {}
 nodeSelector:
-  neonkube.io/monitor.metrics: 'true'
+  neonkube.io/monitor.metrics-internal: 'true'
 
 affinity: {}
 

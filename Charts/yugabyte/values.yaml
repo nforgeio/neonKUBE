@@ -174,7 +174,7 @@ serviceMonitor:
 resources: {}
 
 nodeSelector: 
-  neonkube.io/monitor.metrics: "true"
+  neonkube.io/monitor.metrics-internal: "true"
 
 tolerations: []
 
