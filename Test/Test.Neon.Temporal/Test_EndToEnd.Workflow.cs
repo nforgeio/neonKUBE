@@ -125,7 +125,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact(Skip = "Pending Fix")]
+        [FactFailOther]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public void Workflow_GetWorkflowTypeName()
         {
@@ -1165,7 +1165,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact(Skip = "Pending Fix")]
+        [FactFailOther]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_SignalOnce()
         {
@@ -1183,7 +1183,7 @@ namespace TestTemporal
             Assert.Equal(new List<string>() { "my-signal-1" }, await task);
         }
 
-        [Fact(Skip = "Pending Fix")]
+        [FactFailOther]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_SignalTwice()
         {
@@ -1205,7 +1205,7 @@ namespace TestTemporal
             Assert.Contains("my-signal-2", results);
         }
 
-        [Fact(Skip = "Pending Fix")]
+        [FactFailErrors]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_SignalBeforeStart()
         {
@@ -1299,7 +1299,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact(Skip = "Pending Fix")]
+        [FactFailOther]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_QueryOnce()
         {
@@ -1315,7 +1315,7 @@ namespace TestTemporal
             Assert.Equal(new List<string>() { "my-query:1" }, await task);
         }
 
-        [Fact(Skip = "Pending Fix")]
+        [FactFailOther]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_QueryTwice()
         {
@@ -1337,7 +1337,7 @@ namespace TestTemporal
             Assert.Contains("my-query:2", results);
         }
 
-        [Fact(Skip = "Pending Fix")]
+        [FactFailOther]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_QueryNoResult()
         {
@@ -1534,7 +1534,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact(Skip = "Pending Fix")]
+        [FactFailOther]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_Complex()
         {
@@ -2018,7 +2018,7 @@ namespace TestTemporal
             Assert.True(WorkflowChild.WasExecuted);
         }
 
-        [Fact(Skip = "Pending Fix")]
+        [FactFailOther]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_FutureChild_ArgsAndResult()
         {
@@ -2050,7 +2050,7 @@ namespace TestTemporal
             Assert.True(WorkflowChild.WasExecuted);
         }
 
-        [Fact(Skip = "Pending Fix")]
+        [FactFailOther]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_ChildSignal()
         {
@@ -2068,7 +2068,7 @@ namespace TestTemporal
             Assert.Contains("my-signal", WorkflowChild.ReceivedSignals);
         }
 
-        [Fact(Skip = "Pending Fix")]
+        [FactFailOther]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_ChildQuery()
         {
@@ -2100,7 +2100,7 @@ namespace TestTemporal
             Assert.Equal("Hello Jeff!", await stub.NestedHelloChildAsync("Jeff"));
         }
 
-        [Fact(Skip = "Pending Fix")]
+        [FactFailOther]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_FutureActivity_NoArgsResult()
         {
@@ -2114,7 +2114,7 @@ namespace TestTemporal
             Assert.True(await stub.FutureActivity_NoArgsResult());
         }
 
-        [Fact(Skip = "Pending Fix")]
+        [FactFailOther]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_FutureLocalActivity_NoArgsResult()
         {
@@ -2128,7 +2128,7 @@ namespace TestTemporal
             Assert.True(await stub.FutureLocalActivity_NoArgsResult());
         }
 
-        [Fact(Skip = "Pending Fix")]
+        [FactFailOther]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_FutureActivity_ArgsResult()
         {
@@ -2142,7 +2142,7 @@ namespace TestTemporal
             Assert.True(await stub.FutureActivity_ArgsResult());
         }
 
-        [Fact(Skip = "Pending Fix")]
+        [FactFailOther]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_FutureLocalActivity_ArgsResult()
         {
@@ -2156,7 +2156,7 @@ namespace TestTemporal
             Assert.True(await stub.FutureLocalActivity_ArgsResult());
         }
 
-        [Fact(Skip = "Pending Fix")]
+        [FactFailOther]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_ParallelActivity()
         {
@@ -2169,7 +2169,7 @@ namespace TestTemporal
             Assert.True(await stub.ParallelActivity());
         }
 
-        [Fact(Skip = "Pending Fix")]
+        [FactFailOther]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_ParallelLocalActivity()
         {
@@ -2258,7 +2258,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact(Skip = "Pending Fix")]
+        [FactFailOther]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_Parallel()
         {
@@ -2329,7 +2329,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact(Skip = "Pending Fix")]
+        [FactFailErrors]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_WithError()
         {
@@ -2369,7 +2369,7 @@ namespace TestTemporal
             Task<string> HelloAsync(string name);
         }
 
-        [Fact(Skip = "Pending Fix")]
+        [FactFailErrors]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_Unregistered()
         {
@@ -2494,7 +2494,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact(Skip = "Pending Fix")]
+        [FactFailJson]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_Info()
         {
@@ -2844,7 +2844,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact(Skip = "Pending Fix")]
+        [FactFailOther]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_ExternalWorkflowStub_ById_NoResult()
         {
@@ -2859,7 +2859,7 @@ namespace TestTemporal
             Assert.True(await stub.HelloTestByIdNoResultAsync());
         }
 
-        [Fact(Skip = "Pending Fix")]
+        [FactFailOther]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_ExternalWorkflowStub_ById_WithResult()
         {
@@ -2874,7 +2874,7 @@ namespace TestTemporal
             Assert.True(await stub.HelloTestByIdWithResultAsync());
         }
 
-        [Fact(Skip = "Pending Fix")]
+        [FactFailOther]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_ExternalWorkflowStub_ByExecution_NoResult()
         {
@@ -2889,7 +2889,7 @@ namespace TestTemporal
             Assert.True(await stub.HelloTestByExecutionNoResultAsync());
         }
 
-        [Fact(Skip = "Pending Fix")]
+        [FactFailOther]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_ExternalWorkflowStub_ByExecution_WithResult()
         {
@@ -2904,7 +2904,7 @@ namespace TestTemporal
             Assert.True(await stub.HelloTestByExecutionWithResultAsync());
         }
 
-        [Fact(Skip = "Pending Fix")]
+        [SlowFact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_ExternalWaitForLongTime()
         {
@@ -3125,7 +3125,7 @@ namespace TestTemporal
             Assert.NotEmpty(untypedStub.Execution.RunId);
         }
 
-        [Fact(Skip = "Pending Fix")]
+        [FactFailOther]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_FutureChild_WithResult()
         {
@@ -3140,7 +3140,7 @@ namespace TestTemporal
             Assert.True(await stub.ChildStubWithResultAsync());
         }
 
-        [Fact(Skip = "Pending Fix")]
+        [FactFailOther]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_Future_WithResult()
         {
@@ -3154,7 +3154,7 @@ namespace TestTemporal
             Assert.Equal("Hello Jeff!", await future.GetAsync());
         }
 
-        [Fact(Skip = "Pending Fix")]
+        [FactFailOther]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_Future_WithoutResult()
         {
@@ -3295,7 +3295,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact(Skip = "Pending Fix")]
+        [FactFailErrors]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_ExternalIdNoReuse()
         {
@@ -3379,7 +3379,7 @@ namespace TestTemporal
             Assert.Equal("Hello Jill!", await stub.HelloWithAttributeAsync("Jill"));
         }
 
-        [Fact(Skip = "Pending Fix")]
+        [FactFailErrors]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_ChildIdNoReuse()
         {
@@ -3543,7 +3543,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact(Skip = "Pending Fix")]
+        [FactFailOther]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_UntypedChildFuture_WithNoResult()
         {
@@ -3557,7 +3557,7 @@ namespace TestTemporal
             Assert.True(await stub.WithNoResult() && !WorkflowUntypedChildFuture.Error);
         }
 
-        [Fact(Skip = "Pending Fix")]
+        [FactFailOther]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_UntypedChildFuture_WithResult()
         {
@@ -3992,7 +3992,7 @@ namespace TestTemporal
             Assert.Null(await stub.QueueToSelf_Timeout());
         }
 
-        [Fact(Skip = "Pending Fix")]
+        [FactFailErrors]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_Queue_TimeoutWithDequeue()
         {
@@ -4022,7 +4022,7 @@ namespace TestTemporal
             Assert.Null(await stub.QueueToSelf_WithClose());
         }
 
-        [Fact(Skip = "Pending Fix")]
+        [FactFailOther]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_Queue_FromSignal_Single()
         {
@@ -4042,7 +4042,7 @@ namespace TestTemporal
             Assert.Contains(received, v => v == "signal: 0");
         }
 
-        [Fact(Skip = "Pending Fix")]
+        [FactFailOther]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_Queue_FromSignal_Multiple()
         {
@@ -4077,7 +4077,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact(Skip = "Pending Fix")]
+        [FactFailErrors]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_Queue_CloseViaSignal()
         {
@@ -4184,7 +4184,7 @@ namespace TestTemporal
             Assert.Equal(27, person.Age);
         }
 
-        [Fact(Skip = "Pending Fix")]
+        [FactFailOther]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_Queue_ViaExternalStub_ByExecution()
         {
@@ -4205,7 +4205,7 @@ namespace TestTemporal
             Assert.Contains(received, v => v == "signal: 0");
         }
 
-        [Fact(Skip = "Pending Fix")]
+        [FactFailOther]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_Queue_ViaExternalStub_ByIDs()
         {
@@ -4369,7 +4369,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact(Skip = "Pending Fix")]
+        [FactFailErrors]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_StartToCloseTimeout()
         {
@@ -4390,7 +4390,7 @@ namespace TestTemporal
             await Assert.ThrowsAsync<StartToCloseTimeoutException>(async () => await stub.SleepAsync(sleepTime));
         }
 
-        [Fact(Skip = "Pending Fix")]
+        [FactFailErrors]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Activity_StartToCloseTimeout()
         {
@@ -4404,7 +4404,7 @@ namespace TestTemporal
             Assert.True(await stub.ActivityTimeout());
         }
 
-        [Fact(Skip = "Pending Fix")]
+        [FactFailErrors]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Activity_HeartbeatTimeout()
         {
@@ -4418,7 +4418,7 @@ namespace TestTemporal
             Assert.True(await stub.ActivityHeartbeatTimeoutAsync());
         }
 
-        [Fact(Skip = "Pending Fix")]
+        [FactFailErrors]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Activity_DotNetException()
         {
@@ -4435,7 +4435,7 @@ namespace TestTemporal
 
         //---------------------------------------------------------------------
 
-        [Fact(Skip = "Pending Fix")]
+        [FactFailJson]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_Container()
         {
