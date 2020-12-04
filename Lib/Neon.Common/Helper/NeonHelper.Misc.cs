@@ -1983,53 +1983,49 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Determines whether a <paramref name="value"/> is within <paramref name="expected"/> - <paramref name="delta"/>
-        /// and <paramref name="value"/> + <paramref name="delta"/> inclusive.  This is useful for unit tests 
+        /// Determines whether a <paramref name="value"/> is within <paramref name="expected"/> - <paramref name="maxDelta"/>
+        /// and <paramref name="value"/> + <paramref name="maxDelta"/> inclusive.  This is useful for unit tests 
         /// where there might be an minor allowable variance due to clock skew, etc.
         /// </summary>
         /// <param name="expected">The expected value.</param>
         /// <param name="value">The value being tested.</param>
-        /// <param name="delta">The allowed variance.</param>
-        /// <returns><c>true</c> when the two datetime values are within <paramref name="delta"/> of each other.</returns>
-        public static bool IsWithin(DateTime expected, DateTime value, TimeSpan delta)
+        /// <param name="maxDelta">The allowed variance.</param>
+        /// <returns><c>true</c> when the two datetime values are within <paramref name="maxDelta"/> of each other.</returns>
+        public static bool IsWithin(DateTime expected, DateTime value, TimeSpan maxDelta)
         {
-            if (expected < value - delta)
+            Covenant.Requires<ArgumentException>(maxDelta >= TimeSpan.Zero, nameof(maxDelta));
+
+            var delta = value - expected;
+
+            if (delta < TimeSpan.Zero)
             {
-                return false;
+                delta = -delta;
             }
-            else if (expected > value + delta)
-            {
-                return false;
-            }
-            else
-            {
-                return true;
-            }
+
+            return delta <= maxDelta;
         }
 
         /// <summary>
-        /// Determines whether a <paramref name="value"/> is within <paramref name="expected"/> - <paramref name="delta"/>
-        /// and <paramref name="value"/> + <paramref name="delta"/> inclusive.  This is useful for unit tests 
+        /// Determines whether a <paramref name="value"/> is within <paramref name="expected"/> - <paramref name="maxDelta"/>
+        /// and <paramref name="value"/> + <paramref name="maxDelta"/> inclusive.  This is useful for unit tests 
         /// where there might be an minor allowable variance due to clock skew, etc.
         /// </summary>
         /// <param name="expected">The expected value.</param>
         /// <param name="value">The value being tested.</param>
-        /// <param name="delta">The allowed variance.</param>
-        /// <returns><c>true</c> when the two datetime values are within <paramref name="delta"/> of each other.</returns>
-        public static bool IsWithin(DateTimeOffset expected, DateTimeOffset value, TimeSpan delta)
+        /// <param name="maxDelta">The allowed variance.</param>
+        /// <returns><c>true</c> when the two datetime values are within <paramref name="maxDelta"/> of each other.</returns>
+        public static bool IsWithin(DateTimeOffset expected, DateTimeOffset value, TimeSpan maxDelta)
         {
-            if (expected < value - delta)
+            Covenant.Requires<ArgumentException>(maxDelta >= TimeSpan.Zero, nameof(maxDelta));
+
+            var delta = value - expected;
+
+            if (delta < TimeSpan.Zero)
             {
-                return false;
+                delta = -delta;
             }
-            else if (expected > value + delta)
-            {
-                return false;
-            }
-            else
-            {
-                return true;
-            }
+
+            return delta <= maxDelta;
         }
     }
 }
