@@ -114,5 +114,21 @@ namespace TestCadence
         /// Identifies the test clients.
         /// </summary>
         public const string ClientIdentity = "unit-test";
+
+        /// <summary>
+        /// <para>
+        /// There appears to be a slight difference between the Windows and the WSL2 clocks
+        /// that can surface when unit tests run Docker containers on WSL2.  We'll be using
+        /// <see cref="NeonHelper.IsWithin(DateTime, DateTime, TimeSpan)"/> and this fudge
+        /// factor when comparing date/times in our tests.
+        /// </para>
+        /// <note>
+        /// We're using a value of 1.5 seconds here which is excessive.  There are some unit
+        /// tests that should probabably recoded such that the workflow actually returns its
+        /// start time rather than having the unit test try to determine this after the workflow
+        /// returns by assuming that it will return promptly.
+        /// </note>
+        /// </summary>
+        public static readonly TimeSpan TimeFudge = TimeSpan.FromSeconds(1.5);
     }
 }
