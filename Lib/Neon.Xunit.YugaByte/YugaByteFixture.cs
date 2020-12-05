@@ -91,26 +91,26 @@ namespace Neon.Xunit.YugaByte
 
 services:
   yb-master:
-    image: yugabytedb/yugabyte:latest
+    image: yugabytedb/yugabyte:2.2.5.0-b2
     container_name: yb-master-n1
     command: [ '/home/yugabyte/bin/yb-master',
                '--fs_data_dirs=/mnt/master',
                '--master_addresses=yb-master-n1:7100',
                '--rpc_bind_addresses=yb-master-n1:7100',
-               '--replication_factor=1']
+               '--replication_factor=1' ]
     ports:
       - '7000:7000'
     environment:
       SERVICE_7000_NAME: yb-master
 
   yb-tserver:
-    image: yugabytedb/yugabyte:latest
+    image: yugabytedb/yugabyte:2.2.5.0-b2
     container_name: yb-tserver-n1
     command: [ '/home/yugabyte/bin/yb-tserver',
                '--fs_data_dirs=/mnt/tserver',
                '--start_pgsql_proxy',
                '--rpc_bind_addresses=yb-tserver-n1:9100',
-               '--tserver_master_addrs=yb-master-n1:7100']
+               '--tserver_master_addrs=yb-master-n1:7100' ]
     ports:
       - 'YCQLPORT:9042'
       - 'YSQLPORT:5433'
