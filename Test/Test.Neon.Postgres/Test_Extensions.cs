@@ -31,6 +31,7 @@ using Neon.Xunit.YugaByte;
 
 using Cassandra;
 using Npgsql;
+using NpgsqlTypes;
 
 using Xunit;
 
@@ -112,6 +113,55 @@ INSERT INTO enumerate_table (value) values (9);
             {
                 Assert.Contains(i, values);
             }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonPostgres)]
+        public async Task PrepareCommand_NoArg()
+        {
+            var preparedCommand = new PreparedCommand(postgres, "SELECT value FROM enumerate_table WHERE value = @value;");
+            var command         = preparedCommand.Clone();
+            var values          = new HashSet<int>();
+
+            using (var reader = await command.ExecuteReaderAsync())
+            {
+                await foreach (var row in reader.ToAsyncEnumerable())
+                {
+                    values.Add(row.GetInt32(0));
+                }
+            }
+
+            for (int i = 0; i < 10; i++)
+            {
+                Assert.Contains(i, values);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonPostgres)]
+        public async Task PrepareCommand_Arg()
+        {
+            var singleParameters = new Dictionary<string, NpgsqlDbType>()
+            {
+                { "Value", NpgsqlDbType.Integer }
+            };
+
+            var preparedCommand = new PreparedCommand(postgres, "SELECT value FROM enumerate_table WHERE value = @value;", singleParameters);
+            var command         = preparedCommand.Clone();
+            var values          = new HashSet<int>();
+
+            command.Parameters["value"].Value = 5;
+
+            using (var reader = await command.ExecuteReaderAsync())
+            {
+                await foreach (var row in reader.ToAsyncEnumerable())
+                {
+                    values.Add(row.GetInt32(0));
+                }
+            }
+
+            Assert.Single(values);
+            Assert.Contains(values, v => v == 5);
         }
     }
 }
