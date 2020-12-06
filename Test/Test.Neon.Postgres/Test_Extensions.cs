@@ -75,6 +75,7 @@ INSERT INTO enumerate_table (value) values (9);
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonPostgres)]
         public void Enumerate()
         {
             var values = new HashSet<int>();
@@ -94,6 +95,7 @@ INSERT INTO enumerate_table (value) values (9);
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonPostgres)]
         public async Task EnumerateAsync()
         {
             var values = new HashSet<int>();

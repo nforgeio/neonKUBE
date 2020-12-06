@@ -93,5 +93,25 @@ namespace Neon.Xunit
         /// Identifies <b>Neon.Web</b> tests.
         /// </summary>
         public const string NeonWeb = "Neon.Web";
+
+        /// <summary>
+        /// Identifies <b>Neon.YugaByte</b> tests.
+        /// </summary>
+        public const string NeonYugaByte = "Neon.YugaByte";
+
+        /// <summary>
+        /// Identifies <b>Neon.Postgres</b> tests.
+        /// </summary>
+        public const string NeonPostgres = "Neon.Postgres";
+
+        /// <summary>
+        /// Identifies <b>Neon.Cassandra</b> tests.
+        /// </summary>
+        public const string NeonCassandra = "Neon.Cassandra";
+
+        /// <summary>
+        /// Identifies <b>Neon.Identity</b> tests.
+        /// </summary>
+        public const string NeonIdentity = "Neon.Identity";
     }
 }
