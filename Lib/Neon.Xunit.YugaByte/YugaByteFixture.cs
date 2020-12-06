@@ -204,12 +204,12 @@ services:
         /// </summary>
         /// <param name="name">Optionally specifies the YugaByte compose application name (defaults to <b>yugabyte-dev</b>).</param>
         /// <param name="cassandraKeyspace">
-        /// Optionally specifies the Cassandra keyspace.  This defaults to <b>test_cassandra</b>.  Note that
-        /// the <paramref name="cassandraKeyspace"/> and <paramref name="postgresDatabase"/> must be different.
+        /// Optionally specifies the name of the test Cassandra keyspace to be created.  This defaults to <b>test_cassandra</b>.
+        /// Note that the <paramref name="cassandraKeyspace"/> and <paramref name="postgresDatabase"/> must be different.
         /// </param>
         /// <param name="postgresDatabase">
-        /// Optionally specifies the Postgres database.  This defaults to <b>test_postgres</b>.  Note that
-        /// the <paramref name="cassandraKeyspace"/> and <paramref name="postgresDatabase"/> must be different.
+        /// Optionally specifies the name of the test Postgres database to be created.  This defaults to <b>test_postgres</b>.
+        /// Note that the <paramref name="cassandraKeyspace"/> and <paramref name="postgresDatabase"/> must be different.
         /// </param>
         /// <param name="keepRunning">
         /// Optionally indicates that the compose application should remain running after the fixture is disposed.
@@ -232,6 +232,10 @@ services:
             int         ycqlPort          = DefaultYcqlPort,
             int         ysqlPort          = DefaultYsqlPort)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(cassandraKeyspace), nameof(cassandraKeyspace));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(postgresDatabase), nameof(postgresDatabase));
+            Covenant.Requires<ArgumentException>(!cassandraKeyspace.Equals(postgresDatabase, StringComparison.InvariantCultureIgnoreCase));
+
             base.CheckWithinAction();
 
             this.cassandraKeyspace = cassandraKeyspace;
