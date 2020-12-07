@@ -2589,10 +2589,12 @@ rm -rf {chartName}*
                             cortexValues.Add(new KeyValuePair<string, object>($"cortexConfig.schema.configs[0].object_store", $"filesystem"));
                             break;
                         case MetricsStorageOptions.Filesystem:
+                            cortexValues.Add(new KeyValuePair<string, object>($"replicas", Math.Min(3, (cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count()))));
                             // create folders
                             break;
                         case MetricsStorageOptions.Yugabyte:
                             await InstallMetricsYugabyteAsync(master);
+                            cortexValues.Add(new KeyValuePair<string, object>($"replicas", Math.Min(3, (cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count()))));
                             break;
                         default:
                             break;
@@ -2609,8 +2611,6 @@ rm -rf {chartName}*
                         i++;
                     }
 
-                    var replicas = Math.Min(3, (cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count()));
-                    cortexValues.Add(new KeyValuePair<string, object>($"replicas", replicas));
 
                     await InstallHelmChartAsync(master, "cortex", releaseName: "neon-metrics-cortex", @namespace: "monitoring", values: cortexValues);
                 });
@@ -2760,8 +2760,14 @@ rm -rf {chartName}*
                     var monitorOptions = cluster.Definition.Monitor;
                     var values         = new List<KeyValuePair<string, object>>();
 
-                    values.Add(new KeyValuePair<string, object>("replicas", cluster.Nodes.Where(n => n.Metadata.Labels.Logs).Count()));
-                    values.Add(new KeyValuePair<string, object>("volumeClaimTemplate.resources.requests.storage", monitorOptions.Logs.DiskSize));
+                    var replicas = Math.Max(1, cluster.Nodes.Count() / 5);
+                    if (replicas > cluster.Nodes.Where(n => n.Metadata.Labels.Logs).Count())
+                    {
+                        replicas = cluster.Nodes.Where(n => n.Metadata.Labels.Logs).Count();
+                    }
+
+                    values.Add(new KeyValuePair<string, object>("replicas", replicas));
+                    values.Add(new KeyValuePair<string, object>("volumeClaimTemplate.resources.requests.storage", ByteUnits.Parse(monitorOptions.Logs.DiskSize)));
 
                     if (cluster.Nodes.Where(n => n.Metadata.Labels.Logs).Count() == 1)
                     {
@@ -3061,9 +3067,10 @@ rm -rf {chartName}*
                     var replicas = cluster.Definition.Masters.Count();
                     values.Add(new KeyValuePair<string, object>($"replicas", $"{replicas}"));
 
-                    if (replicas == 1)
+                    if (replicas < 2)
                     {
-                        values.Add(new KeyValuePair<string, object>($"nodeSelector", new JObject()));
+                        values.Add(new KeyValuePair<string, object>($"hardAntiAffinity", false));
+                        values.Add(new KeyValuePair<string, object>($"sentinel.quorum", 1));
                     }
 
                     int i = 0;
@@ -3102,13 +3109,31 @@ rm -rf {chartName}*
                 {
                     var values = new List<KeyValuePair<string, object>>();
 
-                    int i = 0;
+                    var redisConnStr = "";
+                    for (int i = 0; i < cluster.Definition.Masters.Count(); i++)
+                    {
+                        if (i > 0)
+                        {
+                            redisConnStr += ";";
+                        }
+
+                        redisConnStr += $"neon-system-registry-redis-ha-server-{i}.neon-system-registry-redis-ha:26379";
+                    }
+
+                    values.Add(new KeyValuePair<string, object>($"redis.external.addr", redisConnStr));
+
+                    if (cluster.Definition.Masters.Count() > 1)
+                    {
+                        values.Add(new KeyValuePair<string, object>($"redis.external.sentinelMasterSet", "master"));
+                    }
+
+                    int j = 0;
                     foreach (var t in await GetTaintsAsync(NodeLabels.LabelNeonSystemRegistry, "true"))
                     {
-                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
-                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", t.Effect));
-                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
-                        i++;
+                        values.Add(new KeyValuePair<string, object>($"tolerations[{j}].key", $"{t.Key.Split("=")[0]}"));
+                        values.Add(new KeyValuePair<string, object>($"tolerations[{j}].effect", t.Effect));
+                        values.Add(new KeyValuePair<string, object>($"tolerations[{j}].operator", "Exists"));
+                        j++;
                     }
 
                     await InstallHelmChartAsync(master, "harbor", releaseName: "neon-system-registry-harbor", @namespace: "neon-system", values: values);

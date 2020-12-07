@@ -91,19 +91,26 @@ namespace Neon.Kube
 
             if (!clusterDefinition.Nodes.Any(n => n.Labels.Metrics))
             {
-                if (clusterDefinition.Kubernetes.AllowPodsOnMasters.GetValueOrDefault())
+                if (clusterDefinition.Kubernetes.AllowPodsOnMasters.GetValueOrDefault() == true)
                 {
                     foreach (var n in clusterDefinition.Nodes)
                     {
-                        n.Labels.Metrics = true;
+                        n.Labels.MetricsInternal = true;
                     }
                 }
                 else
                 {
-                    foreach (var w in clusterDefinition.Nodes.Where(n => n.IsWorker))
+                    foreach (var n in clusterDefinition.Workers)
                     {
-                        w.Labels.Metrics = true;
+                        n.Labels.MetricsInternal = true;
                     }
+                }
+            }
+            else
+            {
+                foreach (var n in clusterDefinition.Nodes.Where(n => n.Labels.Metrics))
+                {
+                    n.Labels.MetricsInternal = true;
                 }
             }
         }
