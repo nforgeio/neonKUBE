@@ -231,10 +231,6 @@ namespace Neon.Postgres
         /// Optionally specifies that the command is to be prepared immediately rather than
         /// waiting for it's first execution (the default).
         /// </param>
-        /// <exception cref="NotSupportedException">
-        /// Not all possible <see cref="NpgsqlDbType"/> parameter types are supported at this time.
-        /// This exception will be thrown for unsupported types.
-        /// </exception>
         public PreparedCommand(NpgsqlConnection connection, string sqlText, Dictionary<string, NpgsqlDbType> paramDefinitions = null, bool prepareImmediately = false)
         {
             Covenant.Requires<ArgumentNullException>(connection != null);
@@ -245,89 +241,9 @@ namespace Neon.Postgres
 
             if (paramDefinitions != null)
             {
-                var defaultTime   = NeonHelper.UnixEpoch;
-                var defaultTimeTz = new DateTimeOffset(NeonHelper.UnixEpoch, TimeSpan.Zero);
-
                 foreach (var item in paramDefinitions)
                 {
-                    object defaultArg;
-
-                    switch (item.Value)
-                    {
-                        case NpgsqlDbType.Boolean:      defaultArg = false;         break;
-                        case NpgsqlDbType.Char:         defaultArg = ' ';           break;
-                        case NpgsqlDbType.Date:         defaultArg = defaultTime;   break;
-                        case NpgsqlDbType.Double:       defaultArg = 0;             break;
-                        case NpgsqlDbType.Integer:      defaultArg = 0;             break;
-                        case NpgsqlDbType.Interval:     defaultArg = TimeSpan.Zero; break;
-                        case NpgsqlDbType.Json:         defaultArg = string.Empty;  break;
-                        case NpgsqlDbType.Jsonb:        defaultArg = string.Empty;  break;
-                        case NpgsqlDbType.Money:        defaultArg = 0;             break;
-                        case NpgsqlDbType.Numeric:      defaultArg = 0;             break;
-                        case NpgsqlDbType.Real:         defaultArg = 0;             break;
-                        case NpgsqlDbType.Smallint:     defaultArg = 0;             break;
-                        case NpgsqlDbType.Text:         defaultArg = string.Empty;  break;
-                        case NpgsqlDbType.Timestamp:    defaultArg = defaultTime;   break;
-                        case NpgsqlDbType.TimestampTz:  defaultArg = defaultTimeTz; break;
-                        case NpgsqlDbType.TimeTz:       defaultArg = false;         break;
-                        case NpgsqlDbType.Uuid:         defaultArg = Guid.Empty;    break;
-                        case NpgsqlDbType.Varchar:      defaultArg = string.Empty;  break;
-                        case NpgsqlDbType.Xml:          defaultArg = string.Empty;  break;
-
-                        // These parameter types are not supported.
-
-                        case NpgsqlDbType.Array:
-                        case NpgsqlDbType.Bigint:
-                        case NpgsqlDbType.Bit:
-                        case NpgsqlDbType.Box:
-                        case NpgsqlDbType.Bytea:
-                        case NpgsqlDbType.Cid:
-                        case NpgsqlDbType.Cidr:
-                        case NpgsqlDbType.Circle:
-                        case NpgsqlDbType.Citext:
-                        case NpgsqlDbType.Geography:
-                        case NpgsqlDbType.Geometry:
-                        case NpgsqlDbType.Hstore:
-                        case NpgsqlDbType.Inet:
-                        case NpgsqlDbType.Int2Vector:
-                        case NpgsqlDbType.InternalChar:
-                        case NpgsqlDbType.JsonPath:
-                        case NpgsqlDbType.Line:
-                        case NpgsqlDbType.LQuery:
-                        case NpgsqlDbType.LSeg:
-                        case NpgsqlDbType.LTree:
-                        case NpgsqlDbType.LTxtQuery:
-                        case NpgsqlDbType.MacAddr:
-                        case NpgsqlDbType.MacAddr8:
-                        case NpgsqlDbType.Name:
-                        case NpgsqlDbType.Oid:
-                        case NpgsqlDbType.Oidvector:
-                        case NpgsqlDbType.Path:
-                        case NpgsqlDbType.PgLsn:
-                        case NpgsqlDbType.Point:
-                        case NpgsqlDbType.Polygon:
-                        case NpgsqlDbType.Range:
-                        case NpgsqlDbType.Refcursor:
-                        case NpgsqlDbType.Regconfig:
-                        case NpgsqlDbType.Regtype:
-                        case NpgsqlDbType.Tid:
-                        case NpgsqlDbType.Time:
-                        case NpgsqlDbType.TsQuery:
-                        case NpgsqlDbType.TsVector:
-                        case NpgsqlDbType.Unknown:
-                        case NpgsqlDbType.Varbit:
-                        case NpgsqlDbType.Xid:
-
-#pragma warning disable CS0618 // Type or member is obsolete
-                        case NpgsqlDbType.Abstime:
-#pragma warning restore CS0618 // Type or member is obsolete
-
-                        default:
-
-                            throw new NotSupportedException($"The [{nameof(NpgsqlDbType)}.{item.Value}] parameter type is not supported by [{nameof(PreparedCommand)}] at this time.");
-                    }
-
-                    command.Parameters.Add(item.Key, item.Value).Value = defaultArg;
+                    command.Parameters.Add(item.Key, item.Value).Value = DBNull.Value;
                 }
             }
 
@@ -382,6 +298,8 @@ namespace Neon.Postgres
                 }
             }
 
+            clonedStatement.CommandTimeout = this.CommandTimeout;
+
             return clonedStatement;
         }
 
@@ -400,5 +318,10 @@ namespace Neon.Postgres
         /// </note>
         /// </summary>
         public NpgsqlParameterCollection Parameters => command.Parameters; 
+
+        /// <summary>
+        /// The command timeout in seconds.  This defaults to <b>30 seconds</b>.
+        /// </summary>
+        public int CommandTimeout { get; set; } = 30;
     }
 }
