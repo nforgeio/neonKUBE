@@ -14,7 +14,7 @@ imagePullSecrets: []
 # - name: "image-pull-secret"
 
 ## replicas number for each component
-replicas: 3
+replicas: 1
 
 ## read-only replicas
 ## indexed slaves get never promoted to be master
@@ -220,7 +220,7 @@ redis:
 ## Sentinel specific configuration options
 sentinel:
   port: 26379
-  quorum: 2
+  quorum: 1
   config:
     ## Additional sentinel conf options can be added below. Only options that
     ## are expressed in the format simialar to 'sentinel xxx mymaster xxx' will
