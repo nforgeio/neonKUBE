@@ -1907,6 +1907,11 @@ namespace Neon.Temporal
         /// <returns>The <see cref="Worker"/> or <c>null</c>.</returns>
         internal Worker GetWorkerById(long workerId)
         {
+            if (workerId <= 0)
+            {
+                throw new ArgumentException($"Invalid: workerId={workerId}", nameof(workerId));
+            }
+
             lock (syncLock)
             {
                 if (idToWorker.TryGetValue(workerId, out var worker))

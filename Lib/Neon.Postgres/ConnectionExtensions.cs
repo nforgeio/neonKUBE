@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Reflection;
@@ -225,6 +226,7 @@ namespace Neon.Postgres
         /// </summary>
         /// <param name="connection">The database connection.</param>
         /// <param name="cmdText">The SQL command.</param>
+        /// <param name="behavior">Optionally specifies the command behavior.</param>
         /// <param name="transaction">Optionally specifies the transaction.</param>
         /// <returns>The <see cref="NpgsqlDataReader"/>.</returns>
         /// <remarks>
@@ -236,7 +238,8 @@ namespace Neon.Postgres
         /// </remarks>
         public static NpgsqlDataReader ExecuteReader(
             this NpgsqlConnection   connection,
-            string                  cmdText, 
+            string                  cmdText,
+            CommandBehavior         behavior    = CommandBehavior.Default,
             NpgsqlTransaction       transaction = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(cmdText), nameof(cmdText));
@@ -252,7 +255,7 @@ namespace Neon.Postgres
                 command = new NpgsqlCommand(cmdText, connection, transaction);
             }
 
-            return command.ExecuteReader();
+            return command.ExecuteReader(behavior);
         }
 
         /// <summary>
@@ -261,6 +264,7 @@ namespace Neon.Postgres
         /// </summary>
         /// <param name="connection">The database connection.</param>
         /// <param name="cmdText">The SQL command.</param>
+        /// <param name="behavior">Optionally specifies the command behavior.</param>
         /// <param name="cancellationToken">Optional cancellation token.</param>
         /// <param name="transaction">Optionally specifies the transaction.</param>
         /// <returns>The <see cref="NpgsqlDataReader"/>.</returns>
@@ -274,6 +278,7 @@ namespace Neon.Postgres
         public async static Task<NpgsqlDataReader> ExecuteReaderAsync(
             this NpgsqlConnection   connection,
             string                  cmdText, 
+            CommandBehavior         behavior          = CommandBehavior.Default,
             CancellationToken       cancellationToken = default,
             NpgsqlTransaction       transaction       = null)
         {
@@ -290,7 +295,7 @@ namespace Neon.Postgres
                 command = new NpgsqlCommand(cmdText, connection, transaction);
             }
 
-            return await command.ExecuteReaderAsync(cancellationToken);
+            return await command.ExecuteReaderAsync(behavior, cancellationToken);
         }
 
         /// <summary>

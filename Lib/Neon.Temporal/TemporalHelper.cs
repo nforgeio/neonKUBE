@@ -1163,15 +1163,6 @@ namespace Neon.Temporal.Internal
 
             var workflowTypeName = TemporalHelper.GetWorkflowTypeName(workflowInterface, methodAttribute);
 
-            if (methodAttribute.IsFullName)
-            {
-                workflowTypeName = methodAttribute.Name;
-            }
-            else if (!string.IsNullOrEmpty(methodAttribute.Name))
-            {
-                workflowTypeName += $"::{methodAttribute.Name}";
-            }
-
             return (workflowTypeName, targetMethod, methodAttribute);
         }
 

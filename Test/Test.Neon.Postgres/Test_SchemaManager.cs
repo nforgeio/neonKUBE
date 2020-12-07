@@ -111,6 +111,7 @@ namespace Test.Neon.Postgres
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonPostgres)]
         public async Task Constructor_NoScripts()
         {
             // Verify that we detect the situation where the script folder has no scripts.
@@ -130,6 +131,7 @@ namespace Test.Neon.Postgres
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonPostgres)]
         public async Task Constructor_NoCreateScript()
         {
             // Verify that we detect the situation where the script folder has some scripts
@@ -153,6 +155,7 @@ namespace Test.Neon.Postgres
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonPostgres)]
         public async Task Create()
         {
             // Verify that the schema manager can create a database.
@@ -180,6 +183,7 @@ namespace Test.Neon.Postgres
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonPostgres)]
         public async Task Create_DatabaseExists()
         {
             // Verify that the schema manager database creation handles the case
@@ -220,6 +224,7 @@ namespace Test.Neon.Postgres
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonPostgres)]
         public async Task Create_DatabaseExists_NoDBInfo()
         {
             // Verify that create throws an exception when the database already
@@ -250,6 +255,7 @@ namespace Test.Neon.Postgres
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonPostgres)]
         public async Task Update_MissingScript()
         {
             // Verify that we detect the situation where the script folder has a database
@@ -278,6 +284,7 @@ namespace Test.Neon.Postgres
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonPostgres)]
         public async Task Update_MissingDBInfo()
         {
             // Verify that update detects when the target database doesn't
@@ -316,6 +323,7 @@ namespace Test.Neon.Postgres
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonPostgres)]
         public async Task Update_InvalidDBInfo()
         {
             // Verify that update detects when the target database has a DBINFO
@@ -350,6 +358,7 @@ namespace Test.Neon.Postgres
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonPostgres)]
         public async Task Update_Required()
         {
             // Verify that update actually applies required updates.
@@ -442,6 +451,7 @@ INSERT INTO my_table (version) values (1);",
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonPostgres)]
         public async Task Update_NotRequired()
         {
             // Verify that update does not apply updates that have already
@@ -532,6 +542,7 @@ INSERT INTO my_table (version) values (101);",
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonPostgres)]
         public async Task Update_Stop()
         {
             // Verify that we can stop updates at a specific version.
@@ -602,7 +613,8 @@ INSERT INTO my_table (version) values (1);",
         }
 
         [Fact]
-        async Task Update_Stop_Error()
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonPostgres)]
+        public async Task Update_Stop_Error()
         {
             // Verify that we're not allowed to stop at a version lower
             // than the current database version.
@@ -676,6 +688,7 @@ INSERT INTO my_table (version) values (1);",
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonPostgres)]
         public async Task Scripts_WithLeadingZeros()
         {
             // Verify that we support script file names with leading zeros in
@@ -769,7 +782,8 @@ INSERT INTO my_table (version) values (1);",
         }
 
         [Fact]
-        async Task Updater_Conflict()
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonPostgres)]
+        public async Task Updater_Conflict()
         {
             // Verify that we can detect when another updater appears to be 
             // updating the database.
@@ -842,7 +856,8 @@ INSERT INTO my_table (version) values (1);",
         }
 
         [Fact]
-        async Task Updater_Error()
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonPostgres)]
+        public async Task Updater_Error()
         {
             // Verify that we can detect when another updater appears to be 
             // failed due to a simulated script execution error.
@@ -916,6 +931,7 @@ INSERT INTO my_table (version) values (1);",
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonPostgres)]
         public async Task EmbeddedScripts()
         {
             // Verify that we can process scripts loaded from embedded resources.

@@ -249,6 +249,9 @@
     <Compile Include="..\Test.Neon.Temporal\AssemblyInfo.cs">
       <Link>AssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="..\Test.Neon.Temporal\FactAttributes.cs">
+      <Link>FactAttributes.cs</Link>
+    </Compile>
     <Compile Include="..\Test.Neon.Temporal\TemporalTestHelper.cs">
       <Link>TemporalTestHelper.cs</Link>
     </Compile>

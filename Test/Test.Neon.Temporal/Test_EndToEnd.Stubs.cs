@@ -147,7 +147,7 @@ namespace TestTemporal
             }
         }
 
-        [SlowFact]
+        [Fact_Failing_Other]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task WorkflowStub_Start_Untyped()
         {
@@ -168,7 +168,7 @@ namespace TestTemporal
             await Assert.ThrowsAsync<InvalidOperationException>(async () => await stub.StartAsync("Jeff"));
         }
 
-        [SlowFact]
+        [Fact_Failing_Other]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task WorkflowStub_Execute_Untyped()
         {
@@ -199,7 +199,7 @@ namespace TestTemporal
 
         }
 
-        [SlowFact]
+        [Fact_Failing_Other]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task WorkflowStub_Attach_Untyped()
         {
@@ -229,7 +229,7 @@ namespace TestTemporal
             Assert.Equal("Hello Jeff!", await stub.GetResultAsync<string>());
         }
 
-        [SlowFact]
+        [Fact_Failing_Other]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task WorkflowStub_Signal_Untyped()
         {

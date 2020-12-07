@@ -55,16 +55,16 @@ namespace Neon.Postgres
     ///         </description>
     ///     </item>
     ///     <item>
-    ///         <term><see cref="ConnectionExtensions.ExecuteReader(NpgsqlConnection, string, NpgsqlTransaction)"/></term>
+    ///         <term><see cref="ConnectionExtensions.ExecuteReader(NpgsqlConnection, string, System.Data.CommandBehavior, NpgsqlTransaction)"/></term>
     ///         <description>
     ///         A shortcut for executing a query directly on a connection without
     ///         having to create a <see cref="NpgsqlCommand"/> first.
     ///         </description>
     ///     </item>
     ///     <item>
-    ///         <term><see cref="ConnectionExtensions.ExecuteReader(NpgsqlConnection, string, NpgsqlTransaction)"/></term>
+    ///         <term><see cref="ConnectionExtensions.ExecuteReaderAsync(NpgsqlConnection, string, System.Data.CommandBehavior, System.Threading.CancellationToken, NpgsqlTransaction)"/></term>
     ///         <description>
-    ///         A shortcut for executing a query directly on a connection without
+    ///         A shortcut for asynchronously executing a query directly on a connection without
     ///         having to create a <see cref="NpgsqlCommand"/> first.  This method calls an
     ///         action for each row returned by the query.
     ///         </description>

@@ -1981,5 +1981,51 @@ namespace Neon.Common
                 return dockerComposeCli;
             }
         }
+
+        /// <summary>
+        /// Determines whether a <paramref name="value"/> is within <paramref name="expected"/> - <paramref name="maxDelta"/>
+        /// and <paramref name="value"/> + <paramref name="maxDelta"/> inclusive.  This is useful for unit tests 
+        /// where there might be an minor allowable variance due to clock skew, etc.
+        /// </summary>
+        /// <param name="expected">The expected value.</param>
+        /// <param name="value">The value being tested.</param>
+        /// <param name="maxDelta">The allowed variance.</param>
+        /// <returns><c>true</c> when the two datetime values are within <paramref name="maxDelta"/> of each other.</returns>
+        public static bool IsWithin(DateTime expected, DateTime value, TimeSpan maxDelta)
+        {
+            Covenant.Requires<ArgumentException>(maxDelta >= TimeSpan.Zero, nameof(maxDelta));
+
+            var delta = value - expected;
+
+            if (delta < TimeSpan.Zero)
+            {
+                delta = -delta;
+            }
+
+            return delta <= maxDelta;
+        }
+
+        /// <summary>
+        /// Determines whether a <paramref name="value"/> is within <paramref name="expected"/> - <paramref name="maxDelta"/>
+        /// and <paramref name="value"/> + <paramref name="maxDelta"/> inclusive.  This is useful for unit tests 
+        /// where there might be an minor allowable variance due to clock skew, etc.
+        /// </summary>
+        /// <param name="expected">The expected value.</param>
+        /// <param name="value">The value being tested.</param>
+        /// <param name="maxDelta">The allowed variance.</param>
+        /// <returns><c>true</c> when the two datetime values are within <paramref name="maxDelta"/> of each other.</returns>
+        public static bool IsWithin(DateTimeOffset expected, DateTimeOffset value, TimeSpan maxDelta)
+        {
+            Covenant.Requires<ArgumentException>(maxDelta >= TimeSpan.Zero, nameof(maxDelta));
+
+            var delta = value - expected;
+
+            if (delta < TimeSpan.Zero)
+            {
+                delta = -delta;
+            }
+
+            return delta <= maxDelta;
+        }
     }
 }

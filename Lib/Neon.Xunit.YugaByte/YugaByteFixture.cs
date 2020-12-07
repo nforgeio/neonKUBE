@@ -91,26 +91,26 @@ namespace Neon.Xunit.YugaByte
 
 services:
   yb-master:
-    image: yugabytedb/yugabyte:latest
+    image: yugabytedb/yugabyte:2.2.5.0-b2
     container_name: yb-master-n1
     command: [ '/home/yugabyte/bin/yb-master',
                '--fs_data_dirs=/mnt/master',
                '--master_addresses=yb-master-n1:7100',
                '--rpc_bind_addresses=yb-master-n1:7100',
-               '--replication_factor=1']
+               '--replication_factor=1' ]
     ports:
       - '7000:7000'
     environment:
       SERVICE_7000_NAME: yb-master
 
   yb-tserver:
-    image: yugabytedb/yugabyte:latest
+    image: yugabytedb/yugabyte:2.2.5.0-b2
     container_name: yb-tserver-n1
     command: [ '/home/yugabyte/bin/yb-tserver',
                '--fs_data_dirs=/mnt/tserver',
                '--start_pgsql_proxy',
                '--rpc_bind_addresses=yb-tserver-n1:9100',
-               '--tserver_master_addrs=yb-master-n1:7100']
+               '--tserver_master_addrs=yb-master-n1:7100' ]
     ports:
       - 'YCQLPORT:9042'
       - 'YSQLPORT:5433'
@@ -204,12 +204,12 @@ services:
         /// </summary>
         /// <param name="name">Optionally specifies the YugaByte compose application name (defaults to <b>yugabyte-dev</b>).</param>
         /// <param name="cassandraKeyspace">
-        /// Optionally specifies the Cassandra keyspace.  This defaults to <b>test_cassandra</b>.  Note that
-        /// the <paramref name="cassandraKeyspace"/> and <paramref name="postgresDatabase"/> must be different.
+        /// Optionally specifies the name of the test Cassandra keyspace to be created.  This defaults to <b>test_cassandra</b>.
+        /// Note that the <paramref name="cassandraKeyspace"/> and <paramref name="postgresDatabase"/> must be different.
         /// </param>
         /// <param name="postgresDatabase">
-        /// Optionally specifies the Postgres database.  This defaults to <b>test_postgres</b>.  Note that
-        /// the <paramref name="cassandraKeyspace"/> and <paramref name="postgresDatabase"/> must be different.
+        /// Optionally specifies the name of the test Postgres database to be created.  This defaults to <b>test_postgres</b>.
+        /// Note that the <paramref name="cassandraKeyspace"/> and <paramref name="postgresDatabase"/> must be different.
         /// </param>
         /// <param name="keepRunning">
         /// Optionally indicates that the compose application should remain running after the fixture is disposed.
@@ -232,6 +232,10 @@ services:
             int         ycqlPort          = DefaultYcqlPort,
             int         ysqlPort          = DefaultYsqlPort)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(cassandraKeyspace), nameof(cassandraKeyspace));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(postgresDatabase), nameof(postgresDatabase));
+            Covenant.Requires<ArgumentException>(!cassandraKeyspace.Equals(postgresDatabase, StringComparison.InvariantCultureIgnoreCase));
+
             base.CheckWithinAction();
 
             this.cassandraKeyspace = cassandraKeyspace;

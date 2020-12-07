@@ -328,13 +328,12 @@ namespace TestCadence
             var startUtcNow = DateTime.UtcNow;
             var sleepTime   = TimeSpan.FromSeconds(5);
             var wakeTimeUtc = startUtcNow + sleepTime;
-            var fudge       = TimeSpan.FromMilliseconds(50);    // WSL2 distro must have some clock skew
 
             await stub.SleepUntilUtcAsync(wakeTimeUtc);
 
-            var endUtcNow = DateTime.UtcNow;
+            var utcNow = DateTime.UtcNow;
 
-            Assert.True(endUtcNow - startUtcNow >= sleepTime - fudge || endUtcNow - startUtcNow <= sleepTime - fudge);
+            Assert.True(NeonHelper.IsWithin(utcNow, wakeTimeUtc, CadenceTestHelper.TimeFudge));
 
             // Verify that scheduling a sleep time in the past is
             // essentially a NOP.
@@ -345,7 +344,7 @@ namespace TestCadence
 
             await stub.SleepUntilUtcAsync(startUtcNow - TimeSpan.FromDays(1));
 
-            Assert.True(DateTime.UtcNow - startUtcNow < TimeSpan.FromSeconds(2));
+            Assert.True(NeonHelper.IsWithin(DateTime.UtcNow, startUtcNow, CadenceTestHelper.TimeFudge));
         }
 
         //---------------------------------------------------------------------

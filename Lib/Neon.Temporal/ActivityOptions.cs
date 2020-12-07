@@ -51,6 +51,8 @@ namespace Neon.Temporal
         {
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
 
+            options = options ?? new ActivityOptions();
+
             ActivityInterfaceAttribute  interfaceAttribute = null;
             ActivityMethodAttribute     methodAttribute    = null;
 
