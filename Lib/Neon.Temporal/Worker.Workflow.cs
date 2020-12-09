@@ -408,7 +408,8 @@ namespace Neon.Temporal
                     new WorkflowSignalSubscribeRequest()
                     {
                         ContextId  = contextId,
-                        SignalName = signalName
+                        SignalName = signalName,
+                        WorkerId   = this.WorkerId
                     });
 
                 reply.ThrowOnError();
@@ -420,7 +421,8 @@ namespace Neon.Temporal
                     new WorkflowSetQueryHandlerRequest()
                     {
                         ContextId = contextId,
-                        QueryName = queryType
+                        QueryName = queryType,
+                        WorkerId  = this.WorkerId
                     });
 
                 reply.ThrowOnError();
@@ -443,7 +445,8 @@ namespace Neon.Temporal
                     new WorkflowSignalSubscribeRequest()
                     {
                         ContextId  = contextId,
-                        SignalName = TemporalClient.SignalSync
+                        SignalName = TemporalClient.SignalSync,
+                        WorkerId   = this.WorkerId
                     });
 
                 signalSubscribeReply.ThrowOnError();
@@ -452,7 +455,8 @@ namespace Neon.Temporal
                     new WorkflowSetQueryHandlerRequest()
                     {
                         ContextId = contextId,
-                        QueryName = TemporalClient.QuerySyncSignal
+                        QueryName = TemporalClient.QuerySyncSignal,
+                        WorkerId  = this.WorkerId
                     });
 
                 querySubscribeReply.ThrowOnError();

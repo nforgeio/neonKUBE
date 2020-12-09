@@ -956,11 +956,13 @@ func handleWorkflowSignalChildRequest(requestCtx context.Context, request *messa
 	childID := request.GetChildID()
 	clientID := request.GetClientID()
 	requestID := request.GetRequestID()
+	workerID := request.GetWorkerID()
 	signalName := *request.GetSignalName()
 	Logger.Debug("WorkflowSignalChildRequest Received",
 		zap.String("Signal", signalName),
 		zap.Int64("ChildId", childID),
 		zap.Int64("ClientId", clientID),
+		zap.Int64("WorkerId", workerID),
 		zap.Int64("ContextId", contextID),
 		zap.Int64("RequestId", requestID),
 		zap.Int("ProcessId", os.Getpid()))
@@ -990,10 +992,6 @@ func handleWorkflowSignalChildRequest(requestCtx context.Context, request *messa
 		ctx,
 		signalName,
 		request.GetSignalArgs())
-
-	// Send ACK: Commented out because its no longer needed.
-	// op := sendFutureACK(contextID, requestID, clientID)
-	// <-op.GetChannel()
 
 	// wait on the future
 	var result []byte
