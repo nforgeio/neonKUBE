@@ -294,11 +294,11 @@ services:
 
                 base.StartAsComposed(name, composeFile, keepRunning);
 
-                // It can take Temporal server some time to start.  Rather than relying on the temporal-proxy
+                // It can take Temporal server some time to start.  Rather than relying on [temporal-proxy]
                 // to handle retries (which may take longer than the connect timeout), we're going to wait
-                // up to 120 seconds for Temporal to start listening on its RPC socket.
+                // up to 4 minutes for Temporal to start listening on its RPC socket.
 
-                var retry = new LinearRetryPolicy(e => true, maxAttempts: int.MaxValue, retryInterval: TimeSpan.FromSeconds(0.5), timeout: TimeSpan.FromSeconds(120));
+                var retry = new LinearRetryPolicy(e => true, maxAttempts: int.MaxValue, retryInterval: TimeSpan.FromSeconds(0.5), timeout: TimeSpan.FromMinutes(4));
 
                 retry.Invoke(
                     () =>
