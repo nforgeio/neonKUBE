@@ -447,13 +447,24 @@ namespace Neon.Kube
         public const string LabelLogs = ClusterDefinition.ReservedLabelPrefix + "monitor.logs";
 
         /// <summary>
+        /// Reserved label name for <see cref="LogsInternal"/>.
+        /// </summary>
+        public const string LabelLogsInternal = ClusterDefinition.ReservedLabelPrefix + "monitor.logs-internal";
+
+        /// <summary>
         /// Reserved label name for <see cref="Metrics"/>.
         /// </summary>
         public const string LabelMetrics = ClusterDefinition.ReservedLabelPrefix + "monitor.metrics";
 
         /// <summary>
-        /// <b>io.neonkube.monitor.logs</b> [<c>bool</c>]: Indicates that Elasticsearch 
-        /// will be deployed to this node if <see cref="LogOptions.Enabled"/> is <c>true</c>.  
+        /// Reserved label name for <see cref="MetricsInternal"/>.
+        /// </summary>
+        public const string LabelMetricsInternal = ClusterDefinition.ReservedLabelPrefix + "monitor.metrics-internal";
+
+        /// <summary>
+        /// <b>io.neonkube.monitor.logs</b> [<c>bool</c>]: Indicates the user has 
+        /// specified that Elasticsearch should be deployed to this node 
+        /// if <see cref="LogOptions.Enabled"/> is <c>true</c>.  
         /// This defaults to <c>false</c>.
         /// </summary>
         [JsonProperty(PropertyName = "Logs", Required = Required.Default)]
@@ -462,14 +473,35 @@ namespace Neon.Kube
         public bool Logs { get; set; } = false;
 
         /// <summary>
-        /// <b>io.neonkube.monitor.metrics</b> [<c>bool</c>]: Indicates that Metrics 
-        /// will be deployed to this node if <see cref="MetricsOptions.Enabled"/> is <c>true</c>.  
+        /// <b>io.neonkube.monitor.logs-internal</b> [<c>bool</c>]: Indicates that Elasticsearch 
+        /// will be deployed to this node if <see cref="LogOptions.Enabled"/> is <c>true</c>.  
+        /// This defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "LogsInternal", Required = Required.Default)]
+        [YamlMember(Alias = "logsInternal", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool LogsInternal { get; set; } = false;
+
+        /// <summary>
+        /// <b>io.neonkube.monitor.metrics</b> [<c>bool</c>]: Indicates the user has specified
+        /// that Metrics should be deployed to this node if 
+        /// <see cref="MetricsOptions.Enabled"/> is <c>true</c>.  
         /// This defaults to <c>false</c>.
         /// </summary>
         [JsonProperty(PropertyName = "Metrics", Required = Required.Default)]
         [YamlMember(Alias = "metrics", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public bool Metrics { get; set; } = false;
+
+        /// <summary>
+        /// <b>io.neonkube.monitor.metrics-internal</b> [<c>bool</c>]: Indicates that Metrics 
+        /// will be deployed to this node if <see cref="MetricsOptions.Enabled"/> is <c>true</c>.  
+        /// This defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "MetricsInternal", Required = Required.Default)]
+        [YamlMember(Alias = "metricsInternal", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool MetricsInternal { get; set; } = false;
 
         //---------------------------------------------------------------------
         // Custom labels
@@ -543,8 +575,10 @@ namespace Neon.Kube
                 list.Add(new KeyValuePair<string, object>(LabelIstio,                       NeonHelper.ToBoolString(Istio)));
 
                 list.Add(new KeyValuePair<string, object>(LabelLogs,                        NeonHelper.ToBoolString(Logs)));
+                list.Add(new KeyValuePair<string, object>(LabelLogsInternal,                NeonHelper.ToBoolString(LogsInternal)));
 
                 list.Add(new KeyValuePair<string, object>(LabelMetrics,                     NeonHelper.ToBoolString(Metrics)));
+                list.Add(new KeyValuePair<string, object>(LabelMetricsInternal,             NeonHelper.ToBoolString(MetricsInternal)));
 
                 return list;
             }
