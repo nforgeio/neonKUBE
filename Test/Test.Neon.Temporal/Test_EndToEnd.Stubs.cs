@@ -60,10 +60,10 @@ namespace TestTemporal
             [WorkflowMethod(Name = "TestWorkflowStub_Execute[wait-for-queries]", IsFullName = true)]
             Task<List<string>> GetQueriesAsync();
 
-            [SignalMethod(name: "TestWorkflowStub_Execute::signal")]
+            [SignalMethod(name: "signal")]
             Task SignalAsync(string signal);
 
-            [QueryMethod(name: "TestWorkflowStub_Execute::query")]
+            [QueryMethod(name: "query")]
             Task<string> QueryAsync(string query);
         }
 
@@ -143,7 +143,7 @@ namespace TestTemporal
                     queries.Add(query);
                 }
 
-                return await Task.FromResult(query);
+                return await Task.FromResult($"Received: {query}");
             }
         }
 
@@ -253,6 +253,32 @@ namespace TestTemporal
             Assert.Equal(2, received.Count);
             Assert.Contains("my-signal-1", received);
             Assert.Contains("my-signal-2", received);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
+        public async Task WorkflowStub_Query_Untyped()
+        {
+            await SyncContext.ClearAsync;
+
+            // Use an untyped workflow stub to execute a workflow and then
+            // verify that we're able to send signals to it.
+
+            TestWorkflowStub_Execute.Reset();
+
+            var stub = client.NewUntypedWorkflowStub("TestWorkflowStub_Execute[wait-for-queries]", new WorkflowOptions() { TaskQueue = TemporalTestHelper.TaskQueue });
+
+            await stub.StartAsync();
+            await TestWorkflowStub_Execute.WaitUntilRunningAsync();
+
+            Assert.Equal("Received: my-query-1", await stub.QueryAsync<string>("query", "my-query-1"));
+            Assert.Equal("Received: my-query-2", await stub.QueryAsync<string>("query", "my-query-2"));
+
+            var received = await stub.GetResultAsync<List<string>>();
+
+            Assert.Equal(2, received.Count);
+            Assert.Contains("my-query-1", received);
+            Assert.Contains("my-query-2", received);
         }
     }
 }

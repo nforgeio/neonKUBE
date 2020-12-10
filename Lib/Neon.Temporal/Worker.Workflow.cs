@@ -329,13 +329,8 @@ namespace Neon.Temporal
                     reply = await OnQueryAsync((WorkflowQueryInvokeRequest)request);
                     break;
 
-                case InternalMessageTypes.ActivityInvokeLocalRequest:
-
-                    reply = await OnInvokeLocalActivity((ActivityInvokeLocalRequest)request);
-                    break;
-
                 default:
-                    
+
                     throw new InvalidOperationException($"Unexpected message type [{request.Type}].");
             }
 

@@ -89,6 +89,18 @@ namespace TestTemporal
     }
 
     /// <summary>
+    /// Use this to disable tests failing due to workerId==0.
+    /// </summary>
+    public class Fact_BadWorkerId : FactAttribute
+    {
+        public Fact_BadWorkerId()
+        {
+            Skip = "Failing due to: workerId=0.";
+            Skip = null;
+        }
+    }
+
+    /// <summary>
     /// Use this to disable tests failing due to other problems.
     /// </summary>
     public class Fact_Failing_Other : FactAttribute
@@ -96,7 +108,7 @@ namespace TestTemporal
         public Fact_Failing_Other()
         {
             Skip = "Failing due to other reasons.";
-            //Skip = null;
+            Skip = null;
         }
     }
 }

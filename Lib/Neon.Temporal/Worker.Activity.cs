@@ -372,6 +372,11 @@ namespace Neon.Temporal
                     reply = await OnActivityInvokeRequest((ActivityInvokeRequest)request);
                     break;
 
+                case InternalMessageTypes.ActivityInvokeLocalRequest:
+
+                    reply = await OnInvokeLocalActivity((ActivityInvokeLocalRequest)request);
+                    break;
+
                 case InternalMessageTypes.ActivityStoppingRequest:
 
                     reply = await ActivityStoppingRequest((ActivityStoppingRequest)request);
