@@ -227,11 +227,11 @@ namespace Neon.Postgres
         /// Not all possible parameter types are supported by the common ones are at this time.
         /// </note>
         /// </param>
-        /// <param name="prepareImmediately">
+        /// <param name="prepareNow">
         /// Optionally specifies that the command is to be prepared immediately rather than
         /// waiting for it's first execution (the default).
         /// </param>
-        public PreparedCommand(NpgsqlConnection connection, string sqlText, Dictionary<string, NpgsqlDbType> paramDefinitions = null, bool prepareImmediately = false)
+        public PreparedCommand(NpgsqlConnection connection, string sqlText, Dictionary<string, NpgsqlDbType> paramDefinitions = null, bool prepareNow = false)
         {
             Covenant.Requires<ArgumentNullException>(connection != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(sqlText));
@@ -247,7 +247,7 @@ namespace Neon.Postgres
                 }
             }
 
-            if (prepareImmediately)
+            if (prepareNow)
             {
                 command.Prepare();
                 command.ExecuteNonQuery();

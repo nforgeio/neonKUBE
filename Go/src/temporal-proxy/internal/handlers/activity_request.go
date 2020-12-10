@@ -75,16 +75,16 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 
 		// Send a ActivityInvokeRequest to the Neon.Temporal Lib
 		// temporal-client
-		activityInvokeRequest := messages.NewActivityInvokeRequest()
-		activityInvokeRequest.SetRequestID(requestID)
-		activityInvokeRequest.SetArgs(input)
-		activityInvokeRequest.SetContextID(contextID)
-		activityInvokeRequest.SetActivity(&activityName)
-		activityInvokeRequest.SetClientID(clientID)
-		activityInvokeRequest.SetWorkerID(workerID)
+		invokeRequest := messages.NewActivityInvokeRequest()
+		invokeRequest.SetRequestID(requestID)
+		invokeRequest.SetArgs(input)
+		invokeRequest.SetContextID(contextID)
+		invokeRequest.SetActivity(&activityName)
+		invokeRequest.SetClientID(clientID)
+		invokeRequest.SetWorkerID(workerID)
 
 		// create the Operation for this request and add it to the operations map
-		op := NewOperation(requestID, activityInvokeRequest)
+		op := NewOperation(requestID, invokeRequest)
 		op.SetChannel(make(chan interface{}))
 		op.SetContextID(contextID)
 		Operations.Add(requestID, op)
@@ -105,21 +105,22 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 				zap.Int("ProcessId", os.Getpid()))
 
 			// send an ActivityStoppingRequest to the client
-			activityStoppingRequest := messages.NewActivityStoppingRequest()
-			activityStoppingRequest.SetRequestID(requestID)
-			activityStoppingRequest.SetActivityID(&activityName)
-			activityStoppingRequest.SetContextID(contextID)
-			activityStoppingRequest.SetClientID(clientID)
+			stoppingRequest := messages.NewActivityStoppingRequest()
+			stoppingRequest.SetRequestID(requestID)
+			stoppingRequest.SetActivityID(&activityName)
+			stoppingRequest.SetContextID(contextID)
+			stoppingRequest.SetClientID(clientID)
+			stoppingRequest.SetWorkerID(workerID)
 
 			// create the Operation for this request and add it to the operations map
 			stoppingReplyChan := make(chan interface{})
-			op := NewOperation(requestID, activityStoppingRequest)
+			op := NewOperation(requestID, stoppingRequest)
 			op.SetChannel(stoppingReplyChan)
 			op.SetContextID(contextID)
 			Operations.Add(requestID, op)
 
 			// send the request and wait for the reply
-			go sendMessage(activityStoppingRequest)
+			go sendMessage(stoppingRequest)
 
 			Logger.Debug("ActivityStoppingRequest sent",
 				zap.String("Activity", activityName),
@@ -134,7 +135,7 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 
 		// run go routines
 		go s()
-		go sendMessage(activityInvokeRequest)
+		go sendMessage(invokeRequest)
 
 		Logger.Debug("ActivityInvokeRequest sent",
 			zap.String("Activity", activityName),
@@ -551,23 +552,23 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 		// Send a ActivityInvokeLocalRequest to the Neon.Temporal Lib
 		// temporal-client
 		requestID := NextRequestID()
-		activityInvokeLocalRequest := messages.NewActivityInvokeLocalRequest()
-		activityInvokeLocalRequest.SetRequestID(requestID)
-		activityInvokeLocalRequest.SetContextID(contextID)
-		activityInvokeLocalRequest.SetArgs(input)
-		activityInvokeLocalRequest.SetActivityTypeID(activityTypeID)
-		activityInvokeLocalRequest.SetActivityContextID(activityContextID)
-		activityInvokeLocalRequest.SetClientID(clientID)
-		activityInvokeLocalRequest.SetWorkerID(workerID)
+		invokeRequest := messages.NewActivityInvokeLocalRequest()
+		invokeRequest.SetRequestID(requestID)
+		invokeRequest.SetContextID(contextID)
+		invokeRequest.SetArgs(input)
+		invokeRequest.SetActivityTypeID(activityTypeID)
+		invokeRequest.SetActivityContextID(activityContextID)
+		invokeRequest.SetClientID(clientID)
+		invokeRequest.SetWorkerID(workerID)
 
 		// create the Operation for this request and add it to the operations map
-		op := NewOperation(requestID, activityInvokeLocalRequest)
+		op := NewOperation(requestID, invokeRequest)
 		op.SetChannel(make(chan interface{}))
 		op.SetContextID(activityContextID)
 		Operations.Add(requestID, op)
 
 		// send the request
-		go sendMessage(activityInvokeLocalRequest)
+		go sendMessage(invokeRequest)
 
 		Logger.Debug("ActivityInvokeLocalRequest sent",
 			zap.Int64("ActivityTypeId", activityTypeID),
@@ -683,22 +684,22 @@ func handleActivityStartLocalRequest(requestCtx context.Context, request *messag
 		// Send a ActivityInvokeLocalRequest to the Neon.Temporal Lib
 		// temporal-client
 		requestID := NextRequestID()
-		activityInvokeLocalRequest := messages.NewActivityInvokeLocalRequest()
-		activityInvokeLocalRequest.SetRequestID(requestID)
-		activityInvokeLocalRequest.SetContextID(contextID)
-		activityInvokeLocalRequest.SetArgs(input)
-		activityInvokeLocalRequest.SetActivityTypeID(activityTypeID)
-		activityInvokeLocalRequest.SetActivityContextID(activityContextID)
-		activityInvokeLocalRequest.SetClientID(clientID)
+		invokeRequest := messages.NewActivityInvokeLocalRequest()
+		invokeRequest.SetRequestID(requestID)
+		invokeRequest.SetContextID(contextID)
+		invokeRequest.SetArgs(input)
+		invokeRequest.SetActivityTypeID(activityTypeID)
+		invokeRequest.SetActivityContextID(activityContextID)
+		invokeRequest.SetClientID(clientID)
 
 		// create the Operation for this request and add it to the operations map
-		op := NewOperation(requestID, activityInvokeLocalRequest)
+		op := NewOperation(requestID, invokeRequest)
 		op.SetChannel(make(chan interface{}))
 		op.SetContextID(activityContextID)
 		Operations.Add(requestID, op)
 
 		// send the request
-		go sendMessage(activityInvokeLocalRequest)
+		go sendMessage(invokeRequest)
 
 		Logger.Debug("ActivityInvokeLocalRequest sent",
 			zap.Int64("ActivityTypeId", activityTypeID),

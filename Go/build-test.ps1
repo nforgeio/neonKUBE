@@ -82,7 +82,44 @@ Set-Location $orgDirectory
 
 # $todo(jefflill): Implement this!
 
+# Ensure that the build output folder exist.
 
+$outputPath = Join-Path -Path $buildPath -ChildPath "temporal"
+
+if (!(test-path $outputPath))
+{
+    New-Item -ItemType Directory -Force -Path $outputPath
+}
+
+# Common Cadence client configuration
+
+Set-Location "$projectPath\temporal"
+cp config.yaml "$outputPath\config.yaml"
+
+#----------------------------------------------------------
+# cwf-args
+
+Set-Location "$projectPath\temporal\twf-args"
+
+echo "Building twf-args" > "$logPath"
+
+$env:GOOS   = "windows"
+$env:GOARCH = "amd64"
+
+go build -o "$outputPath\twf-args.exe" . >> "$logPath" 2>&1
+
+$exitCode = $lastExitCode
+
+if ($exitCode -ne 0)
+{
+    Write-Error "*** ERROR: [go-test] WINDOWS build failed.  Check build logs: $logPath"
+    Set-Location $orgDirectory
+    exit $exitCode
+}
+
+echo "Build success" >> "$logPath" 2>&1
+
+Set-Location $orgDirectory
 
 
 #-----------------------------------------------------------

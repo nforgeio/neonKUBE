@@ -142,6 +142,29 @@ namespace Neon.Temporal.Internal
         private static int              nextClassId = -1;
         private static readonly object  syncLock    = new object();
 
+#if DEBUG
+        /// <summary>
+        /// Set this to folder path where generate stub source files should be
+        /// written when debugging stub generation.
+        /// </summary>
+        private static string debugSourceFolder = @"C:\temp\stubs";
+        //private static string debugSourceFolder = null;
+
+        /// <summary>
+        /// Used to insert debug logging code into a generated workflow or activity
+        /// stub.  This code will append a line of text to the [log.txt] file in
+        /// the debug stub source folder.
+        /// </summary>
+        /// <param name="sb">The generated source string builder.</param>
+        /// <param name="text">The text to be logged.</param>
+        private static void LogDebug(this StringBuilder sb, string text)
+        {
+            var logPath = Path.Combine(debugSourceFolder, "log.txt");
+
+            sb.AppendLine($"System.IO.File.AppendAllText(@\"{logPath}\", $@\"{text}\" + Environment.NewLine);");
+        }
+#endif
+
         // These dictionaries map workflow interfaces to their dynamically generated stubs
         // for external and child workflows.
 
@@ -379,6 +402,18 @@ namespace Neon.Temporal.Internal
             {
                 return (WorkflowStub)workflowStubConstructor.Invoke(new object[] { client, workflowTypeName, execution, options });
             }
+
+#if DEBUG
+            /// <summary>
+            /// Used for generating debugging logs to check for NULL values.
+            /// </summary>
+            /// <param name=""value"">The value being checked.</param>
+            /// <returns>Returns ""NULL"" if the object passed is <c>null</c>, ""NOT-NULL"" otherwise.</returns>
+            public static string IsNull(object value)
+            {
+                return value == null ? ""NULL"" : ""NOT-NULL"";
+            }
+#endif
         }
 ");
         }
@@ -566,7 +601,10 @@ namespace Neon.Temporal.Internal
             var stubFullClassName = $"Neon.Temporal.Stubs.{stubClassName}";
             var interfaceFullName = NormalizeTypeName(workflowInterface);
             var sbSource          = new StringBuilder();
-
+#if DEBUG
+            sbSource.AppendLine("#define DEBUG");
+            sbSource.AppendLine();
+#endif
             sbSource.AppendLine("#pragma warning disable CS0169  // Disable unreferenced field warnings.");
             sbSource.AppendLine("#pragma warning disable CS0649  // Disable unset field warnings.");
             sbSource.AppendLine();
@@ -987,13 +1025,17 @@ namespace Neon.Temporal.Internal
                             sbSource.AppendLine();
                             sbSource.AppendLine($"           return this.dataConverter.FromData<{TemporalHelper.TypeNameToSource(details.ReturnType)}>(___resultBytes);");
                         }
-
                     }
                     else
                     {
+                        sbSource.LogDebug("*** 1");
                         sbSource.AppendLine($"            var ___argBytes = {SerializeArgsExpression(details.Method.GetParameters())};");
                         sbSource.AppendLine();
+                        sbSource.LogDebug($"*** 2: client    = {{___StubHelper.IsNull(client)}}");
+                        sbSource.LogDebug($"*** 2: execution = {{___StubHelper.IsNull(execution)}}");
+                        sbSource.LogDebug($"*** 2: options   = {{___StubHelper.IsNull(options)}}");
                         sbSource.AppendLine($"            await ___StubHelper.SignalWorkflowAsync(this.client, this.execution, {StringLiteral(details.SignalMethodAttribute.Name)}, ___argBytes, this.options.Namespace);");
+                        sbSource.LogDebug("*** 3");
                     }
                 }
 
@@ -1054,7 +1096,17 @@ namespace Neon.Temporal.Internal
             sbSource.AppendLine($"    }}");
             sbSource.AppendLine($"}}");
 
+            //-----------------------------------------------------------------
+            // Debug builds can optionally write the generated source code to a
+            // folder for debugging purposes.
+#if DEBUG
+            if (!string.IsNullOrEmpty(debugSourceFolder))
+            {
+                Directory.CreateDirectory(debugSourceFolder);
 
+                File.WriteAllText(Path.Combine(debugSourceFolder, $"{stubClassName}.cs"), sbSource.ToString());
+            }
+#endif
             //-----------------------------------------------------------------
             // Compile the new workflow stub class into an assembly.
 
@@ -1397,7 +1449,10 @@ namespace Neon.Temporal.Internal
             var stubFullClassName = $"Neon.Temporal.Stubs.{stubClassName}";
             var interfaceFullName = NormalizeTypeName(activityInterface);
             var sbSource          = new StringBuilder();
-
+#if DEBUG
+            sbSource.AppendLine("#define DEBUG");
+            sbSource.AppendLine();
+#endif
             sbSource.AppendLine($"using System;");
             sbSource.AppendLine($"using System.Collections.Generic;");
             sbSource.AppendLine($"using System.ComponentModel;");
@@ -1574,6 +1629,17 @@ namespace Neon.Temporal.Internal
             sbSource.AppendLine($"}}");
 
             //-----------------------------------------------------------------
+            // Debug builds can optionally write the generated source code to a
+            // folder for debugging purposes.
+#if DEBUG
+            if (!string.IsNullOrEmpty(debugSourceFolder))
+            {
+                Directory.CreateDirectory(debugSourceFolder);
+
+                File.WriteAllText(Path.Combine(debugSourceFolder, $"{stubClassName}.cs"), sbSource.ToString());
+            }
+#endif
+            //-----------------------------------------------------------------
             // Compile the new activity stub class into an assembly.
 
             var source     = sbSource.ToString();
@@ -1593,8 +1659,13 @@ namespace Neon.Temporal.Internal
                 references.Add(MetadataReference.CreateFromFile(assembly.Location));
             }
 
+#if DEBUG
+            var optimizationLevel = OptimizationLevel.Debug;
+#else
+            var optimizationLevel = OptimizationLevel.Release;
+#endif
             var assemblyName    = $"Neon-Temporal-WorkflowStub-{classId}";
-            var compilerOptions = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, optimizationLevel: OptimizationLevel.Release);
+            var compilerOptions = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, optimizationLevel: optimizationLevel);
             var compilation     = CSharpCompilation.Create(assemblyName, new[] { syntaxTree }, references, compilerOptions);
             var dllStream       = new MemoryStream();
 

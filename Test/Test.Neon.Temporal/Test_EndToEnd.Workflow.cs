@@ -2102,7 +2102,7 @@ namespace TestTemporal
             Assert.Equal("Hello Jeff!", await stub.NestedHelloChildAsync("Jeff"));
         }
 
-        [Fact_Failing_BadWorkerId]
+        [Fact_Failing_Other]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_FutureActivity_NoArgsResult()
         {
@@ -2116,7 +2116,7 @@ namespace TestTemporal
             Assert.True(await stub.FutureActivity_NoArgsResult());
         }
 
-        [Fact_Failing_BadWorkerId]
+        [Fact_Failing_Other]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_FutureLocalActivity_NoArgsResult()
         {
@@ -2130,7 +2130,7 @@ namespace TestTemporal
             Assert.True(await stub.FutureLocalActivity_NoArgsResult());
         }
 
-        [Fact_Failing_BadWorkerId]
+        [Fact_Failing_Other]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_FutureActivity_ArgsResult()
         {
@@ -2144,7 +2144,7 @@ namespace TestTemporal
             Assert.True(await stub.FutureActivity_ArgsResult());
         }
 
-        [Fact_Failing_BadWorkerId]
+        [Fact_Failing_Other]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_FutureLocalActivity_ArgsResult()
         {

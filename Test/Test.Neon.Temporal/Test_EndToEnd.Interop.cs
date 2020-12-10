@@ -183,7 +183,7 @@ namespace TestTemporal
 
         //---------------------------------------------------------------------
 
-        [Fact_Failing_Interop]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Interop_Workflow_Untyped()
         {
@@ -399,7 +399,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact_Failing_Interop]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Interop_Activity_Untyped()
         {
@@ -435,7 +435,7 @@ namespace TestTemporal
 
         //---------------------------------------------------------------------
 
-        [Fact_Failing_Interop]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Interop_Workflow_StubFullName()
         {
@@ -509,7 +509,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact_Failing_Interop]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Interop_Activity_StubFullName()
         {

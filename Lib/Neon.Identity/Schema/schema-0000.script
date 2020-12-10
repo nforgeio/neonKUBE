@@ -1,0 +1,6 @@
+﻿-- Create the identity server database.
+
+CREATE DATABASE ${database} WITH
+    TEMPLATE template0
+    ENCODING 'UTF8';
+GO

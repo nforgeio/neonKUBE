@@ -78,35 +78,35 @@ func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages
 
 		// Send a WorkflowInvokeRequest to the Neon.Temporal Lib
 		// temporal-client
-		workflowInvokeRequest := messages.NewWorkflowInvokeRequest()
-		workflowInvokeRequest.SetRequestID(requestID)
-		workflowInvokeRequest.SetContextID(contextID)
-		workflowInvokeRequest.SetArgs(input)
-		workflowInvokeRequest.SetClientID(clientID)
-		workflowInvokeRequest.SetWorkerID(workerID)
+		invokeRequest := messages.NewWorkflowInvokeRequest()
+		invokeRequest.SetRequestID(requestID)
+		invokeRequest.SetContextID(contextID)
+		invokeRequest.SetArgs(input)
+		invokeRequest.SetClientID(clientID)
+		invokeRequest.SetWorkerID(workerID)
 
 		// get the WorkflowInfo (Namespace, WorkflowID, RunID, WorkflowType,
 		// TaskQueue, ExecutionStartToCloseTimeout)
 		// from the context
 		workflowInfo := workflow.GetInfo(ctx)
-		workflowInvokeRequest.SetNamespace(&workflowInfo.Namespace)
-		workflowInvokeRequest.SetWorkflowID(&workflowInfo.WorkflowExecution.ID)
-		workflowInvokeRequest.SetRunID(&workflowInfo.WorkflowExecution.RunID)
-		workflowInvokeRequest.SetWorkflowType(&workflowInfo.WorkflowType.Name)
-		workflowInvokeRequest.SetTaskQueue(&workflowInfo.TaskQueueName)
-		workflowInvokeRequest.SetExecutionStartToCloseTimeout(time.Duration(int64(workflowInfo.WorkflowExecutionTimeout) * int64(time.Second)))
+		invokeRequest.SetNamespace(&workflowInfo.Namespace)
+		invokeRequest.SetWorkflowID(&workflowInfo.WorkflowExecution.ID)
+		invokeRequest.SetRunID(&workflowInfo.WorkflowExecution.RunID)
+		invokeRequest.SetWorkflowType(&workflowInfo.WorkflowType.Name)
+		invokeRequest.SetTaskQueue(&workflowInfo.TaskQueueName)
+		invokeRequest.SetExecutionStartToCloseTimeout(time.Duration(int64(workflowInfo.WorkflowExecutionTimeout) * int64(time.Second)))
 
 		// set ReplayStatus
-		setReplayStatus(ctx, workflowInvokeRequest)
+		setReplayStatus(ctx, invokeRequest)
 
 		// create the Operation for this request and add it to the operations map
-		op := NewOperation(requestID, workflowInvokeRequest)
+		op := NewOperation(requestID, invokeRequest)
 		op.SetChannel(make(chan interface{}))
 		op.SetContextID(contextID)
 		Operations.Add(requestID, op)
 
-		// send workflowInvokeRequest
-		go sendMessage(workflowInvokeRequest)
+		// send invokeRequest
+		go sendMessage(invokeRequest)
 
 		Logger.Debug("WorkflowInvokeRequest sent",
 			zap.String("Workflow", workflowName),
@@ -528,10 +528,12 @@ func handleWorkflowGetResultRequest(requestCtx context.Context, request *message
 func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *messages.WorkflowSignalSubscribeRequest) messages.IProxyReply {
 	contextID := request.GetContextID()
 	clientID := request.GetClientID()
+	workerID := request.GetWorkerID()
 	signalName := *request.GetSignalName()
 	Logger.Debug("WorkflowSignalSubscribeRequest Received",
 		zap.String("SignalName", signalName),
 		zap.Int64("ClientId", clientID),
+		zap.Int64("WorkerId", workerID),
 		zap.Int64("ContextId", request.GetContextID()),
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int("ProcessId", os.Getpid()))
@@ -560,24 +562,25 @@ func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *m
 
 		// create the WorkflowSignalInvokeRequest
 		requestID := NextRequestID()
-		workflowSignalInvokeRequest := messages.NewWorkflowSignalInvokeRequest()
-		workflowSignalInvokeRequest.SetRequestID(requestID)
-		workflowSignalInvokeRequest.SetContextID(contextID)
-		workflowSignalInvokeRequest.SetSignalArgs(signalArgs)
-		workflowSignalInvokeRequest.SetSignalName(&signalName)
-		workflowSignalInvokeRequest.SetClientID(clientID)
+		invokeRequest := messages.NewWorkflowSignalInvokeRequest()
+		invokeRequest.SetRequestID(requestID)
+		invokeRequest.SetContextID(contextID)
+		invokeRequest.SetSignalArgs(signalArgs)
+		invokeRequest.SetSignalName(&signalName)
+		invokeRequest.SetClientID(clientID)
+		invokeRequest.SetWorkerID(workerID)
 
 		// set ReplayStatus
-		setReplayStatus(ctx, workflowSignalInvokeRequest)
+		setReplayStatus(ctx, invokeRequest)
 
 		// create the Operation for this request and add it to the operations map
-		op := NewOperation(requestID, workflowSignalInvokeRequest)
+		op := NewOperation(requestID, invokeRequest)
 		op.SetChannel(make(chan interface{}))
 		op.SetContextID(contextID)
 		Operations.Add(requestID, op)
 
 		// send the request
-		go sendMessage(workflowSignalInvokeRequest)
+		go sendMessage(invokeRequest)
 
 		// wait to be unblocked
 		result := <-op.GetChannel()
@@ -586,6 +589,7 @@ func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *m
 			Logger.Error("signal failed with error",
 				zap.String("Signal", signalName),
 				zap.Int64("ClientId", clientID),
+				zap.Int64("WorkerId", workerID),
 				zap.Int64("ContextId", contextID),
 				zap.Int64("RequestId", requestID),
 				zap.Error(s))
@@ -594,6 +598,7 @@ func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *m
 			Logger.Info("signal completed successfully",
 				zap.String("Signal", signalName),
 				zap.Int64("ClientId", clientID),
+				zap.Int64("WorkerId", workerID),
 				zap.Int64("ContextId", contextID),
 				zap.Int64("RequestId", requestID),
 				zap.Bool("Success", s))
@@ -602,6 +607,7 @@ func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *m
 			Logger.Error("signal result unexpected",
 				zap.String("Signal", signalName),
 				zap.Int64("ClientId", clientID),
+				zap.Int64("WorkerId", workerID),
 				zap.Int64("ContextId", contextID),
 				zap.Int64("RequestId", requestID),
 				zap.Any("Result", s))
@@ -950,11 +956,13 @@ func handleWorkflowSignalChildRequest(requestCtx context.Context, request *messa
 	childID := request.GetChildID()
 	clientID := request.GetClientID()
 	requestID := request.GetRequestID()
+	workerID := request.GetWorkerID()
 	signalName := *request.GetSignalName()
 	Logger.Debug("WorkflowSignalChildRequest Received",
 		zap.String("Signal", signalName),
 		zap.Int64("ChildId", childID),
 		zap.Int64("ClientId", clientID),
+		zap.Int64("WorkerId", workerID),
 		zap.Int64("ContextId", contextID),
 		zap.Int64("RequestId", requestID),
 		zap.Int("ProcessId", os.Getpid()))
@@ -984,10 +992,6 @@ func handleWorkflowSignalChildRequest(requestCtx context.Context, request *messa
 		ctx,
 		signalName,
 		request.GetSignalArgs())
-
-	// Send ACK: Commented out because its no longer needed.
-	// op := sendFutureACK(contextID, requestID, clientID)
-	// <-op.GetChannel()
 
 	// wait on the future
 	var result []byte
@@ -1043,11 +1047,13 @@ func handleWorkflowCancelChildRequest(requestCtx context.Context, request *messa
 func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *messages.WorkflowSetQueryHandlerRequest) messages.IProxyReply {
 	contextID := request.GetContextID()
 	clientID := request.GetClientID()
+	workerID := request.GetWorkerID()
 	queryName := *request.GetQueryName()
 	Logger.Debug("WorkflowSetQueryHandlerRequest Received",
 		zap.String("QueryName", queryName),
 		zap.Int64("ClientId", clientID),
 		zap.Int64("ContextId", contextID),
+		zap.Int64("WorkerId", workerID),
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int("ProcessId", os.Getpid()))
 
@@ -1069,32 +1075,35 @@ func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *m
 			zap.String("Query", queryName),
 			zap.Int64("ClientId", clientID),
 			zap.Int64("ContextId", contextID),
+			zap.Int64("WorkerId", workerID),
 			zap.Int64("RequestId", requestID),
 			zap.Int("ProcessId", os.Getpid()))
 
-		workflowQueryInvokeRequest := messages.NewWorkflowQueryInvokeRequest()
-		workflowQueryInvokeRequest.SetRequestID(requestID)
-		workflowQueryInvokeRequest.SetContextID(contextID)
-		workflowQueryInvokeRequest.SetQueryArgs(queryArgs)
-		workflowQueryInvokeRequest.SetQueryName(&queryName)
-		workflowQueryInvokeRequest.SetClientID(clientID)
+		invokeRequest := messages.NewWorkflowQueryInvokeRequest()
+		invokeRequest.SetRequestID(requestID)
+		invokeRequest.SetContextID(contextID)
+		invokeRequest.SetQueryArgs(queryArgs)
+		invokeRequest.SetQueryName(&queryName)
+		invokeRequest.SetClientID(clientID)
+		invokeRequest.SetWorkerID(workerID)
 
 		// set ReplayStatus
-		setReplayStatus(ctx, workflowQueryInvokeRequest)
+		setReplayStatus(ctx, invokeRequest)
 
 		// create the Operation for this request and add it to the operations map
-		op := NewOperation(requestID, workflowQueryInvokeRequest)
+		op := NewOperation(requestID, invokeRequest)
 		op.SetContextID(contextID)
 		op.SetChannel(make(chan interface{}))
 		Operations.Add(requestID, op)
 
 		// send the request
-		go sendMessage(workflowQueryInvokeRequest)
+		go sendMessage(invokeRequest)
 
 		Logger.Debug("WorkflowQueryInvoke sent",
 			zap.String("Query", queryName),
 			zap.Int64("ClientId", clientID),
 			zap.Int64("ContextId", contextID),
+			zap.Int64("WorkerId", workerID),
 			zap.Int64("RequestId", requestID),
 			zap.Int("ProcessId", os.Getpid()))
 
@@ -1106,6 +1115,7 @@ func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *m
 				zap.String("Query", queryName),
 				zap.Int64("ClientId", clientID),
 				zap.Int64("ContextId", contextID),
+				zap.Int64("WorkerId", workerID),
 				zap.Int64("RequestId", requestID),
 				zap.Error(s),
 				zap.Int("ProcessId", os.Getpid()))
@@ -1117,6 +1127,7 @@ func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *m
 				zap.String("Query", queryName),
 				zap.Int64("ClientId", clientID),
 				zap.Int64("ContextId", contextID),
+				zap.Int64("WorkerId", workerID),
 				zap.Int64("RequestId", requestID),
 				zap.ByteString("Result", s),
 				zap.Int("ProcessId", os.Getpid()))
@@ -1128,6 +1139,7 @@ func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *m
 				zap.String("Query", queryName),
 				zap.Int64("ClientId", clientID),
 				zap.Int64("ContextId", contextID),
+				zap.Int64("WorkerId", workerID),
 				zap.Int64("RequestId", requestID),
 				zap.Any("Result", s),
 				zap.Int("ProcessId", os.Getpid()))

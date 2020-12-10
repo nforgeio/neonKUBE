@@ -1,0 +1,37 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+    <RootNamespace>NeonIdentityOperator</RootNamespace>
+    <Configurations>Debug;Release;CodeDoc</Configurations>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DocumentationFile>bin\Debug\neon-identity-operator.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DocumentationFile>bin\Release\neon-identity-operator.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CodeDoc|AnyCPU'">
+    <DocumentationFile>bin\CodeDoc\neon-identity-operator.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Neon.Common" Version="10000.0.9-local" />
+    <PackageReference Include="Neon.Postgres" Version="10000.0.9-local" />
+    <PackageReference Include="Neon.Service" Version="10000.0.9-local" />
+    <PackageReference Include="Npgsql" Version="5.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Lib\Neon.Common\Neon.Common.csproj" />
+    <ProjectReference Include="..\..\Lib\Neon.Identity\Neon.Identity.csproj" />
+    <ProjectReference Include="..\..\Lib\Neon.Postgres\Neon.Postgres.csproj" />
+    <ProjectReference Include="..\..\Lib\Neon.Service\Neon.Service.csproj" />
+  </ItemGroup>
+
+</Project>
