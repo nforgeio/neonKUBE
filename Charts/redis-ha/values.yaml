@@ -205,7 +205,7 @@ redis:
   config:
     ## Additional redis conf options can be added below
     ## For all available options see http://download.redis.io/redis-stable/redis.conf
-    min-replicas-to-write: 1
+    min-replicas-to-write: 0
     min-replicas-max-lag: 5   # Value in seconds
     maxmemory: "0"       # Max memory to use for each redis instance. Default is unlimited.
     maxmemory-policy: "volatile-lru"  # Max memory policy to use for each redis instance. Default is volatile-lru.
