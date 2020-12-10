@@ -3297,7 +3297,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact_Failing_Json]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_ExternalIdNoReuse()
         {
