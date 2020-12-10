@@ -355,7 +355,7 @@ namespace Neon.Temporal
         }
 
         /// <summary>
-        /// Called to handle activity related requests received from the <b>temporal-proxy</b>.
+        /// Called to handle activity related request messages received from the <b>temporal-proxy</b>.
         /// </summary>
         /// <param name="request">The request message.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>

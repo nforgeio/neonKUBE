@@ -57,7 +57,7 @@ namespace TestTemporal
         //---------------------------------------------------------------------
         // Implementation
 
-        private const int maxWaitSeconds = 5;
+        private const int maxWaitSeconds = 10;
 
         private static readonly TimeSpan allowedVariation = TimeSpan.FromSeconds(10);
         private static readonly TimeSpan workflowTimeout  = TimeSpan.FromSeconds(20);

@@ -468,7 +468,7 @@ namespace Neon.Temporal
         /// </summary>
         /// <param name="args">The workflow arguments.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task ExecutesAsync(params object[] args)
+        public async Task ExecuteAsync(params object[] args)
         {
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
@@ -488,7 +488,7 @@ namespace Neon.Temporal
         /// <typeparam name="TResult">The workflow result type.</typeparam>
         /// <param name="args">The workflow arguments.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task<TResult> ExecutesAsync<TResult>(params object[] args)
+        public async Task<TResult> ExecuteAsync<TResult>(params object[] args)
         {
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));

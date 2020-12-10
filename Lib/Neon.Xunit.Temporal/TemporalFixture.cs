@@ -312,7 +312,7 @@ services:
                         socket.Close();
                     });
 
-                Thread.Sleep(TimeSpan.FromSeconds(2));  // Wait a bit longer for luck!
+                Thread.Sleep(TimeSpan.FromSeconds(5));  // Wait a bit longer for luck!
 
                 // Initialize the settings.
 
