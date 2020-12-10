@@ -2130,7 +2130,7 @@ namespace TestTemporal
             Assert.True(await stub.FutureLocalActivity_NoArgsResult());
         }
 
-        [Fact_Failing_Other]
+        [Fact_BadWorkerId]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_FutureActivity_ArgsResult()
         {
@@ -2171,7 +2171,7 @@ namespace TestTemporal
             Assert.True(await stub.ParallelActivity());
         }
 
-        [Fact_Failing_Other]
+        [Fact_BadWorkerId]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_ParallelLocalActivity()
         {
