@@ -18,7 +18,7 @@ func main() {
 
 	var configPath string
 
-	flag.StringVar(&configPath, "config", "", "Path to the Cadence Server configuration file.")
+	flag.StringVar(&configPath, "config", "", "Path to the temporal Server configuration file.")
 
 	// Parse the -stopfile=<path> command line option which specifies
 	// the path to the file whose existence will stop execution of this
@@ -33,20 +33,20 @@ func main() {
 	flag.StringVar(&readyFile, "readyfile", "", "Path to the program ready file.")
 
 	// Parse the -tasklist=<name> command line option which specifies the
-	// Cadence tasklist where the workflows and activities will be registered.
+	// Temporal tasklist where the workflows and activities will be registered.
 	// This defaults to "wf-args".
 
 	var taskQueue string
 
-	flag.StringVar(&taskQueue, "tasklist", "wf-args", "Target Cadence task list.")
+	flag.StringVar(&taskQueue, "tasklist", "wf-args", "Target Temporal task list.")
 
-	// Parse the -domain=<name> command line option which specifies the
-	// Cadence domain where the workflows and activities will be registered.
-	// This defaults to "test-domain".
+	// Parse the -namespace=<name> command line option which specifies the
+	// Temporal namespace where the workflows and activities will be registered.
+	// This defaults to "test-namespace".
 
-	var domain string
+	var namespace string
 
-	flag.StringVar(&domain, "domain", "test-domain", "Target Cadence domain.")
+	flag.StringVar(&namespace, "namespace", "test-namespace", "Target Temporal namespace.")
 
 	// Parse and verify the command line options.
 
@@ -64,6 +64,8 @@ func main() {
 
 	workerOptions := worker.Options{}
 
+	h.CreateWorker(namespace, taskQueue, workerOptions)
+
 	h.Worker.RegisterWorkflow(NoArgsWorkflow)
 	h.Worker.RegisterActivity(NoArgsActivity)
 	h.Worker.RegisterWorkflow(OneArgWorkflow)
@@ -77,7 +79,7 @@ func main() {
 	h.Worker.RegisterWorkflow(ErrorWorkflow)
 	h.Worker.RegisterWorkflow(StringErrorWorkflow)
 
-	h.StartWorkers(domain, taskQueue, workerOptions)
+	h.StartWorker()
 
 	if test {
 
@@ -103,7 +105,7 @@ func main() {
 			WorkflowTaskTimeout:      time.Minute,
 		}
 
-		h.ExecuteWorkflow(workflowOptions, OneArgWorkflow, "CADENCE")
+		h.ExecuteWorkflow(workflowOptions, OneArgWorkflow, "Temporal")
 
 		//-----------------------------------------------------
 		// TwoArgs
@@ -169,7 +171,7 @@ func main() {
 			WorkflowTaskTimeout:      time.Minute,
 		}
 
-		h.ExecuteStringErrorWorkflow(workflowOptions, StringErrorWorkflow, "CADENCE", "")
+		h.ExecuteStringErrorWorkflow(workflowOptions, StringErrorWorkflow, "Temporal", "")
 
 		workflowOptions = client.StartWorkflowOptions{
 			ID:                       "TEST:ResultErrTest-ERROR-" + uuid.New(),
@@ -221,7 +223,7 @@ func main() {
 		time.Sleep(60 * time.Second)
 	}
 
-	// Stop the Cadence worker gracefully.
+	// Stop the Temporal worker gracefully.
 
 	h.Logger.Info("STOPPING...")
 	h.StopWorkers()
