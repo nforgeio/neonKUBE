@@ -287,6 +287,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "cadence", "cadence", "{B755
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "temporal", "temporal", "{166FC5A4-9105-4E94-B1EB-567F869850A1}"
+	ProjectSection(SolutionItems) = preProject
+		Go\test\temporal\config.yaml = Go\test\temporal\config.yaml
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "cwf-args", "cwf-args", "{161A8603-1E04-4E7E-923E-DF2D8D0D3327}"
 	ProjectSection(SolutionItems) = preProject
@@ -385,6 +388,22 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-identity-service", "Services\neon-identity-service\neon-identity-service.csproj", "{ABAE6A0B-1D89-46F7-8EF5-37AE3656E724}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test_Identity", "Test\Test.Neon.Identity\Test_Identity.csproj", "{7FB300E1-B0DE-4104-8F16-26B4D3547471}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "twf-args", "twf-args", "{20FB148A-B72F-439E-B17D-1AA38A0CF975}"
+	ProjectSection(SolutionItems) = preProject
+		Go\test\temporal\twf-args\arrayArg.go = Go\test\temporal\twf-args\arrayArg.go
+		Go\test\temporal\twf-args\arrayArgs.go = Go\test\temporal\twf-args\arrayArgs.go
+		Go\test\temporal\twf-args\errTest.go = Go\test\temporal\twf-args\errTest.go
+		Go\test\temporal\twf-args\go.mod = Go\test\temporal\twf-args\go.mod
+		Go\test\temporal\twf-args\go.sum = Go\test\temporal\twf-args\go.sum
+		Go\test\temporal\twf-args\main.go = Go\test\temporal\twf-args\main.go
+		Go\test\temporal\twf-args\noargs.go = Go\test\temporal\twf-args\noargs.go
+		Go\test\temporal\twf-args\onearg.go = Go\test\temporal\twf-args\onearg.go
+		Go\test\temporal\twf-args\sample_helper.go = Go\test\temporal\twf-args\sample_helper.go
+		Go\test\temporal\twf-args\test-wf-args.exe = Go\test\temporal\twf-args\test-wf-args.exe
+		Go\test\temporal\twf-args\twoArgs.go = Go\test\temporal\twf-args\twoArgs.go
+		Go\test\temporal\twf-args\util.go = Go\test\temporal\twf-args\util.go
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -1913,6 +1932,7 @@ Global
 		{E8492753-0341-4C74-AA08-7CB5E254355D} = {9BF7513A-5219-4862-A290-7D2A00589312}
 		{ABAE6A0B-1D89-46F7-8EF5-37AE3656E724} = {9BF7513A-5219-4862-A290-7D2A00589312}
 		{7FB300E1-B0DE-4104-8F16-26B4D3547471} = {83DC75D5-800D-42F7-9812-BD198A62DD0B}
+		{20FB148A-B72F-439E-B17D-1AA38A0CF975} = {166FC5A4-9105-4E94-B1EB-567F869850A1}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5F2E7334-FE9C-4C03-AF1E-BB3B7D5531D9}
