@@ -189,7 +189,7 @@ namespace Neon.Temporal
         private bool createNamespace = false;
 
         /// <summary>
-        /// Specifies the default Temporal task queue for this client.  This is optional and defaults to <c>null</c>.
+        /// Specifies the default Temporal task queue for this client.  This is optional and defaults to <c>"default"</c>.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -215,7 +215,7 @@ namespace Neon.Temporal
             }
         }
 
-        private string defaultTaskQueue = null;
+        private string defaultTaskQueue = "default";
 
         /// <summary>
         /// Optionally specifies the maximum time the client should wait for synchronous 
