@@ -328,9 +328,9 @@ namespace TestTemporal
 
             Assert.NotNull(description);
 
-            Assert.NotNull(description.ExeecutionInfo);
-            Assert.Equal(workflowId, description.ExeecutionInfo.Execution.WorkflowId);
-            Assert.NotNull(description.ExeecutionInfo.Execution.RunId);
+            Assert.NotNull(description.ExecutionInfo);
+            Assert.Equal(workflowId, description.ExecutionInfo.Execution.WorkflowId);
+            Assert.NotNull(description.ExecutionInfo.Execution.RunId);
             Assert.Empty(description.PendingActivities);
             Assert.Empty(description.PendingChildren);
 
@@ -338,14 +338,14 @@ namespace TestTemporal
 
             // Ensure that the status properties are reasonable.
 
-            Assert.True(description.ExeecutionInfo.HasStarted);
-            Assert.False(description.ExeecutionInfo.IsRunning);
-            Assert.True(description.ExeecutionInfo.IsClosed);
+            Assert.True(description.ExecutionInfo.HasStarted);
+            Assert.False(description.ExecutionInfo.IsRunning);
+            Assert.True(description.ExecutionInfo.IsClosed);
 
-            Assert.True(description.ExeecutionInfo.StartTime >= utcNow);
-            Assert.True(description.ExeecutionInfo.CloseTime >= utcNow);
-            Assert.True(description.ExeecutionInfo.CloseTime >= description.ExeecutionInfo.StartTime);
-            Assert.True(description.ExeecutionInfo.ExecutionTime <= description.ExeecutionInfo.CloseTime - description.ExeecutionInfo.StartTime);
+            Assert.True(description.ExecutionInfo.StartTime >= utcNow);
+            Assert.True(description.ExecutionInfo.CloseTime >= utcNow);
+            Assert.True(description.ExecutionInfo.CloseTime >= description.ExecutionInfo.StartTime);
+            Assert.True(description.ExecutionInfo.ExecutionTime <= description.ExecutionInfo.CloseTime - description.ExecutionInfo.StartTime);
         }
 
         [Fact]

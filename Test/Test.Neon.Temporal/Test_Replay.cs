@@ -333,7 +333,7 @@ namespace TestTemporal
 
                         if (firstPass)
                         {
-                            firstPass = false;
+                            firstPass     = false;
                             originalValue = await Workflow.SideEffectAsync<string>(() => "my-value");
 
                             await DecisionAsync();
@@ -560,7 +560,7 @@ namespace TestTemporal
 
                         if (firstPass)
                         {
-                            firstPass = false;
+                            firstPass     = false;
                             originalValue = await localActivityStub.RunAsync("Hello World!");
 
                             await DecisionAsync();
