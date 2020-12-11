@@ -1167,7 +1167,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact_Failing_BadWorkerId]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_SignalOnce()
         {
@@ -1185,7 +1185,7 @@ namespace TestTemporal
             Assert.Equal(new List<string>() { "my-signal-1" }, await task);
         }
 
-        [Fact_Failing_BadWorkerId]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_SignalTwice()
         {
@@ -1301,7 +1301,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact_Failing_BadWorkerId]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_QueryOnce()
         {
@@ -1317,7 +1317,7 @@ namespace TestTemporal
             Assert.Equal(new List<string>() { "my-query:1" }, await task);
         }
 
-        [Fact_Failing_BadWorkerId]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_QueryTwice()
         {
@@ -1339,7 +1339,7 @@ namespace TestTemporal
             Assert.Contains("my-query:2", results);
         }
 
-        [Fact_Failing_BadWorkerId]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_QueryNoResult()
         {
@@ -1536,7 +1536,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact_Failing_BadWorkerId]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_Complex()
         {
@@ -2052,7 +2052,7 @@ namespace TestTemporal
             Assert.True(WorkflowChild.WasExecuted);
         }
 
-        [Fact_Failing_BadWorkerId]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_ChildSignal()
         {
@@ -2070,7 +2070,7 @@ namespace TestTemporal
             Assert.Contains("my-signal", WorkflowChild.ReceivedSignals);
         }
 
-        [Fact_Failing_Other]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_ChildQuery()
         {
@@ -2102,7 +2102,7 @@ namespace TestTemporal
             Assert.Equal("Hello Jeff!", await stub.NestedHelloChildAsync("Jeff"));
         }
 
-        [Fact_Failing_Other]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_FutureActivity_NoArgsResult()
         {
@@ -2116,7 +2116,7 @@ namespace TestTemporal
             Assert.True(await stub.FutureActivity_NoArgsResult());
         }
 
-        [Fact_Failing_Other]
+        [Fact_BadWorkerId]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_FutureLocalActivity_NoArgsResult()
         {
@@ -2130,7 +2130,7 @@ namespace TestTemporal
             Assert.True(await stub.FutureLocalActivity_NoArgsResult());
         }
 
-        [Fact_Failing_Other]
+        [Fact_BadWorkerId]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_FutureActivity_ArgsResult()
         {
@@ -2144,7 +2144,7 @@ namespace TestTemporal
             Assert.True(await stub.FutureActivity_ArgsResult());
         }
 
-        [Fact_Failing_Other]
+        [Fact_BadWorkerId]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_FutureLocalActivity_ArgsResult()
         {
@@ -2158,7 +2158,7 @@ namespace TestTemporal
             Assert.True(await stub.FutureLocalActivity_ArgsResult());
         }
 
-        [Fact_Failing_BadWorkerId]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_ParallelActivity()
         {
@@ -2171,7 +2171,7 @@ namespace TestTemporal
             Assert.True(await stub.ParallelActivity());
         }
 
-        [Fact_Failing_Other]
+        [Fact_BadWorkerId]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_ParallelLocalActivity()
         {
@@ -2260,7 +2260,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact_Failing_BadWorkerId]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_Parallel()
         {
@@ -2846,7 +2846,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact_Failing_Other]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_ExternalWorkflowStub_ById_NoResult()
         {
@@ -2861,7 +2861,7 @@ namespace TestTemporal
             Assert.True(await stub.HelloTestByIdNoResultAsync());
         }
 
-        [Fact_Failing_Other]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_ExternalWorkflowStub_ById_WithResult()
         {
@@ -2876,7 +2876,7 @@ namespace TestTemporal
             Assert.True(await stub.HelloTestByIdWithResultAsync());
         }
 
-        [Fact_NoInvokeTarget]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_ExternalWorkflowStub_ByExecution_NoResult()
         {
@@ -2891,7 +2891,7 @@ namespace TestTemporal
             Assert.True(await stub.HelloTestByExecutionNoResultAsync());
         }
 
-        [Fact_NoInvokeTarget]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_ExternalWorkflowStub_ByExecution_WithResult()
         {
@@ -3127,7 +3127,7 @@ namespace TestTemporal
             Assert.NotEmpty(untypedStub.Execution.RunId);
         }
 
-        [Fact_Failing_BadWorkerId]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_FutureChild_WithResult()
         {
@@ -3297,7 +3297,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact_Failing_Other]
+        [Fact_Failing_Json]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_ExternalIdNoReuse()
         {
@@ -3381,7 +3381,7 @@ namespace TestTemporal
             Assert.Equal("Hello Jill!", await stub.HelloWithAttributeAsync("Jill"));
         }
 
-        [Fact_Failing_Errors]
+        [Fact_Failing_Json]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_ChildIdNoReuse()
         {
@@ -3545,7 +3545,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact_Failing_BadWorkerId]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_UntypedChildFuture_WithNoResult()
         {
@@ -3559,7 +3559,7 @@ namespace TestTemporal
             Assert.True(await stub.WithNoResult() && !WorkflowUntypedChildFuture.Error);
         }
 
-        [Fact_Failing_BadWorkerId]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_UntypedChildFuture_WithResult()
         {
@@ -3994,7 +3994,7 @@ namespace TestTemporal
             Assert.Null(await stub.QueueToSelf_Timeout());
         }
 
-        [Fact_Failing_BadWorkerId]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_Queue_TimeoutWithDequeue()
         {
@@ -4024,7 +4024,7 @@ namespace TestTemporal
             Assert.Null(await stub.QueueToSelf_WithClose());
         }
 
-        [Fact_Failing_BadWorkerId]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_Queue_FromSignal_Single()
         {
@@ -4044,7 +4044,7 @@ namespace TestTemporal
             Assert.Contains(received, v => v == "signal: 0");
         }
 
-        [Fact_Failing_BadWorkerId]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_Queue_FromSignal_Multiple()
         {
@@ -4079,7 +4079,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact_Failing_BadWorkerId]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_Queue_CloseViaSignal()
         {
@@ -4186,7 +4186,7 @@ namespace TestTemporal
             Assert.Equal(27, person.Age);
         }
 
-        [Fact_Failing_BadWorkerId]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_Queue_ViaExternalStub_ByExecution()
         {
@@ -4207,7 +4207,7 @@ namespace TestTemporal
             Assert.Contains(received, v => v == "signal: 0");
         }
 
-        [Fact_Failing_Other]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_Queue_ViaExternalStub_ByIDs()
         {

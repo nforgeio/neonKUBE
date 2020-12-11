@@ -374,7 +374,7 @@ proxy:
 nginx:
   image:
     repository: goharbor/nginx-photon
-    tag: v2.1.0
+    tag: v2.1.1
   # set the service account to be used, default if left empty
   serviceAccountName: ""
   replicas: 1
@@ -396,7 +396,7 @@ nginx:
 portal:
   image:
     repository: goharbor/harbor-portal
-    tag: v2.1.0
+    tag: v2.1.1
   # set the service account to be used, default if left empty
   serviceAccountName: ""
   replicas: 1
@@ -418,7 +418,7 @@ portal:
 core:
   image:
     repository: goharbor/harbor-core
-    tag: v2.1.0
+    tag: v2.1.1
   # set the service account to be used, default if left empty
   serviceAccountName: ""
   replicas: 1
@@ -456,7 +456,7 @@ core:
 jobservice:
   image:
     repository: goharbor/harbor-jobservice
-    tag: v2.1.0
+    tag: v2.1.1
   replicas: 1
   # set the service account to be used, default if left empty
   serviceAccountName: ""
@@ -488,7 +488,7 @@ registry:
   registry:
     image:
       repository: goharbor/registry-photon
-      tag: v2.1.0
+      tag: v2.1.1
     # resources:
     #  requests:
     #    memory: 256Mi
@@ -496,7 +496,7 @@ registry:
   controller:
     image:
       repository: goharbor/harbor-registryctl
-      tag: v2.1.0
+      tag: v2.1.1
 
     # resources:
     #  requests:
@@ -548,7 +548,7 @@ chartmuseum:
   absoluteUrl: false
   image:
     repository: goharbor/chartmuseum-photon
-    tag: v2.1.0
+    tag: v2.1.1
   replicas: 1
   # resources:
   #  requests:
@@ -572,7 +572,7 @@ clair:
   clair:
     image:
       repository: goharbor/clair-photon
-      tag: v2.1.0
+      tag: v2.1.1
     # resources:
     #  requests:
     #    memory: 256Mi
@@ -580,7 +580,7 @@ clair:
   adapter:
     image:
       repository: goharbor/clair-adapter-photon
-      tag: v2.1.0
+      tag: v2.1.1
     # resources:
     #  requests:
     #    memory: 256Mi
@@ -607,7 +607,7 @@ trivy:
     # repository the repository for Trivy adapter image
     repository: goharbor/trivy-adapter-photon
     # tag the tag for Trivy adapter image
-    tag: v2.1.0
+    tag: v2.1.1
   # set the service account to be used, default if left empty
   serviceAccountName: ""
   # replicas the number of Pod replicas
@@ -669,7 +669,7 @@ notary:
     serviceAccountName: ""
     image:
       repository: goharbor/notary-server-photon
-      tag: v2.1.0
+      tag: v2.1.1
     replicas: 1
     # resources:
     #  requests:
@@ -680,7 +680,7 @@ notary:
     serviceAccountName: ""
     image:
       repository: goharbor/notary-signer-photon
-      tag: v2.1.0
+      tag: v2.1.1
     replicas: 1
     # resources:
     #  requests:
@@ -713,7 +713,7 @@ database:
     serviceAccountName: ""
     image:
       repository: goharbor/harbor-db
-      tag: v2.1.0
+      tag: v2.1.1
     # The initial superuser password for internal database
     password: "changeit"
     # resources:
@@ -764,7 +764,7 @@ redis:
     serviceAccountName: ""
     image:
       repository: goharbor/redis-photon
-      tag: v2.1.0
+      tag: v2.1.1
     # resources:
     #  requests:
     #    memory: 256Mi
@@ -781,7 +781,7 @@ redis:
     # support redis, redis+sentinel
     # addr for redis: <host_redis>:<port_redis>
     # addr for redis+sentinel: <host_sentinel1>:<port_sentinel1>,<host_sentinel2>:<port_sentinel2>,<host_sentinel3>:<port_sentinel3>
-    addr: "neon-system-registry-redis-ha-server-0.neon-system-registry-redis-ha:6379"
+    addr: "neon-system-registry-redis-announce-0:6379"
     # The name of the set of Redis instances to monitor, it must be set to support redis+sentinel
     sentinelMasterSet: ""
     # The "coreDatabaseIndex" must be "0" as the library Harbor

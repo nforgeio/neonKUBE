@@ -119,78 +119,78 @@ namespace TestTemporal
             Console.WriteLine($"Latency (average): {1.0 / totalTps}");
         }
 
-        [Fact_Failing_Errors]
+        [Fact_Failing_Json]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
-        public async Task Base_Domain()
+        public async Task Base_Namespace()
         {
             await SyncContext.ClearAsync;
 
-            // Exercise the Temporal domain operations.
+            // Exercise the Temporal namespace operations.
 
             //-----------------------------------------------------------------
-            // RegisterDomain:
+            // RegisterNamespace:
 
             await Assert.ThrowsAsync<ArgumentNullException>(async () => await client.RegisterNamespaceAsync(name: null));
-            await Assert.ThrowsAsync<ArgumentException>(async () => await client.RegisterNamespaceAsync(name: "domain-0", retentionDays: -1));
+            await Assert.ThrowsAsync<ArgumentException>(async () => await client.RegisterNamespaceAsync(name: "namespace-0", retentionDays: -1));
 
-            await client.RegisterNamespaceAsync("domain-0", "this is domain-0", "jeff@lilltek.com", retentionDays: 14);
-            await Assert.ThrowsAsync<NamespaceAlreadyExistsException>(async () => await client.RegisterNamespaceAsync(name: "domain-0"));
+            await client.RegisterNamespaceAsync("namespace-0", "this is namespace-0", "jeff@lilltek.com", retentionDays: 14);
+            await Assert.ThrowsAsync<NamespaceAlreadyExistsException>(async () => await client.RegisterNamespaceAsync(name: "namespace-0"));
 
             //-----------------------------------------------------------------
-            // DescribeDomain:
+            // DescribeNamespace:
 
-            var domainDescribeReply = await client.DescribeNamespaceAsync("domain-0");
+            var namespaceDescribeReply = await client.DescribeNamespaceAsync("namespacxe-0");
 
-            Assert.False(domainDescribeReply.Configuration.EmitMetrics);
-            Assert.Equal(14, domainDescribeReply.Configuration.RetentionDays);
-            Assert.Equal("domain-0", domainDescribeReply.NamespaceInfo.Name);
-            Assert.Equal("this is domain-0", domainDescribeReply.NamespaceInfo.Description);
-            Assert.Equal("jeff@lilltek.com", domainDescribeReply.NamespaceInfo.OwnerEmail);
-            Assert.Equal(NamespaceStatus.Registered, domainDescribeReply.NamespaceInfo.Status);
+            Assert.False(namespaceDescribeReply.Configuration.EmitMetrics);
+            Assert.Equal(14, namespaceDescribeReply.Configuration.RetentionDays);
+            Assert.Equal("namsepace-0", namespaceDescribeReply.NamespaceInfo.Name);
+            Assert.Equal("this is namespace-0", namespaceDescribeReply.NamespaceInfo.Description);
+            Assert.Equal("jeff@lilltek.com", namespaceDescribeReply.NamespaceInfo.OwnerEmail);
+            Assert.Equal(NamespaceStatus.Registered, namespaceDescribeReply.NamespaceInfo.Status);
 
             await Assert.ThrowsAsync<EntityNotExistsException>(async () => await client.DescribeNamespaceAsync("does-not-exist"));
 
             //-----------------------------------------------------------------
-            // UpdateDomain:
+            // UpdateNamespace:
 
-            var updateDomainRequest = new UpdateNamespaceRequest();
+            var updateNamespaceRequest = new UpdateNamespaceRequest();
 
-            updateDomainRequest.Options.EmitMetrics    = true;
-            updateDomainRequest.Options.RetentionDays  = 77;
-            updateDomainRequest.NamespaceInfo.OwnerEmail  = "foo@bar.com";
-            updateDomainRequest.NamespaceInfo.Description = "new description";
+            updateNamespaceRequest.Options.EmitMetrics    = true;
+            updateNamespaceRequest.Options.RetentionDays  = 77;
+            updateNamespaceRequest.NamespaceInfo.OwnerEmail  = "foo@bar.com";
+            updateNamespaceRequest.NamespaceInfo.Description = "new description";
 
-            await client.UpdateNamespaceAsync("domain-0", updateDomainRequest);
+            await client.UpdateNamespaceAsync("namespace-0", updateNamespaceRequest);
 
-            domainDescribeReply = await client.DescribeNamespaceAsync("domain-0");
+            namespaceDescribeReply = await client.DescribeNamespaceAsync("namespace-0");
 
-            Assert.True(domainDescribeReply.Configuration.EmitMetrics);
-            Assert.Equal(77, domainDescribeReply.Configuration.RetentionDays);
-            Assert.Equal("domain-0", domainDescribeReply.NamespaceInfo.Name);
-            Assert.Equal("new description", domainDescribeReply.NamespaceInfo.Description);
-            Assert.Equal("foo@bar.com", domainDescribeReply.NamespaceInfo.OwnerEmail);
-            Assert.Equal(NamespaceStatus.Registered, domainDescribeReply.NamespaceInfo.Status);
+            Assert.True(namespaceDescribeReply.Configuration.EmitMetrics);
+            Assert.Equal(77, namespaceDescribeReply.Configuration.RetentionDays);
+            Assert.Equal("namespace-0", namespaceDescribeReply.NamespaceInfo.Name);
+            Assert.Equal("new description", namespaceDescribeReply.NamespaceInfo.Description);
+            Assert.Equal("foo@bar.com", namespaceDescribeReply.NamespaceInfo.OwnerEmail);
+            Assert.Equal(NamespaceStatus.Registered, namespaceDescribeReply.NamespaceInfo.Status);
 
-            await Assert.ThrowsAsync<EntityNotExistsException>(async () => await client.UpdateNamespaceAsync("does-not-exist", updateDomainRequest));
+            await Assert.ThrowsAsync<EntityNotExistsException>(async () => await client.UpdateNamespaceAsync("does-not-exist", updateNamespaceRequest));
         }
 
-        [Fact_Failing_Other]
+        [Fact_Failing_Json]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
-        public async Task Base_ListDomains()
+        public async Task Base_ListNamespaces()
         {
             await SyncContext.ClearAsync;
 
-            // Register 100 new domains and then list them in various ways 
+            // Register 100 new namespaces and then list them in various ways 
             // to verify that works.
             //
-            // NOTE: The [test-domain] created by the Temporal fixture will exist
-            //       and there may be other domains left over that were created
-            //       by other tests.  Temporal also creates at least one domain 
+            // NOTE: The [test-namespace] created by the Temporal fixture will exist
+            //       and there may be other namespaces left over that were created
+            //       by other tests.  Temporal also creates at least one namespace 
             //       for its own purposes.
 
-            const int testDomainCount = 100;
+            const int testNamespaceCount = 100;
 
-            for (int i = 0; i < testDomainCount; i++)
+            for (int i = 0; i < testNamespaceCount; i++)
             {
                 var retentionDays = i + 7;
 
@@ -202,72 +202,72 @@ namespace TestTemporal
                 await client.RegisterNamespaceAsync($"my-namespace-{i}", $"This is my-namespace-{i}", $"jeff-{i}@lilltek.com", retentionDays: retentionDays);
             }
 
-            // List all of the domains in one page.
+            // List all of the namespaces in one page.
 
-            var domainPage = await client.ListNamespacesAsync(testDomainCount * 2);
+            var namespacePage = await client.ListNamespacesAsync(testNamespaceCount * 2);
 
-            Assert.NotNull(domainPage);
-            Assert.True(domainPage.Namespaces.Count >= testDomainCount + 1);
-            Assert.Null(domainPage.NextPageToken);
+            Assert.NotNull(namespacePage);
+            Assert.True(namespacePage.Namespaces.Count >= testNamespaceCount + 1);
+            Assert.Null(namespacePage.NextPageToken);
 
             // Verify that we listed the default namespace as well as the 
-            // domains we just registered.
+            // namespaces we just registered.
 
-            Assert.Contains(domainPage.Namespaces, d => d.NamespaceInfo.Name == client.Settings.Namespace);
+            Assert.Contains(namespacePage.Namespaces, d => d.NamespaceInfo.Name == client.Settings.Namespace);
 
-            for (int i = 0; i < testDomainCount; i++)
+            for (int i = 0; i < testNamespaceCount; i++)
             {
-                Assert.Contains(domainPage.Namespaces, d => d.NamespaceInfo.Name == $"my-namespace-{i}");
+                Assert.Contains(namespacePage.Namespaces, d => d.NamespaceInfo.Name == $"my-namespace-{i}");
             }
 
-            // Verify some of the domain fields for the domains we just registered.
+            // Verify some of the namespace fields for the namespaces we just registered.
 
-            foreach (var domain in domainPage.Namespaces)
+            foreach (var @namespace in namespacePage.Namespaces)
             {
-                if (!domain.NamespaceInfo.Name.StartsWith("my-namespace-"))
+                if (!@namespace.NamespaceInfo.Name.StartsWith("my-namespace-"))
                 {
                     continue;
                 }
 
-                var p  = domain.NamespaceInfo.Name.LastIndexOf('-');
-                var id = int.Parse(domain.NamespaceInfo.Name.Substring(p + 1));
+                var p  = @namespace.NamespaceInfo.Name.LastIndexOf('-');
+                var id = int.Parse(@namespace.NamespaceInfo.Name.Substring(p + 1));
 
-                Assert.Equal($"This is my-namespace-{id}", domain.NamespaceInfo.Description);
-                Assert.Equal($"jeff-{id}@lilltek.com", domain.NamespaceInfo.OwnerEmail);
-                Assert.Equal(NamespaceStatus.Registered, domain.NamespaceInfo.Status);
-                Assert.True(((7 + id) == domain.Configuration.RetentionDays) || (30 == domain.Configuration.RetentionDays));
+                Assert.Equal($"This is my-namespace-{id}", @namespace.NamespaceInfo.Description);
+                Assert.Equal($"jeff-{id}@lilltek.com", @namespace.NamespaceInfo.OwnerEmail);
+                Assert.Equal(NamespaceStatus.Registered, @namespace.NamespaceInfo.Status);
+                Assert.True(((7 + id) == @namespace.Configuration.RetentionDays) || (30 == @namespace.Configuration.RetentionDays));
             }
 
-            // List all of the domains, one to each page of results.
+            // List all of the namespaces, one to each page of results.
 
-            var domainCount   = domainPage.Namespaces.Count;
+            var namespceCount = namespacePage.Namespaces.Count;
             var nextPageToken = (byte[])null;
 
-            for (int i = 0; i < domainCount; i++)
+            for (int i = 0; i < namespceCount; i++)
             {
-                domainPage    = await client.ListNamespacesAsync(1, nextPageToken);
-                nextPageToken = domainPage.NextPageToken;
+                namespacePage    = await client.ListNamespacesAsync(1, nextPageToken);
+                nextPageToken = namespacePage.NextPageToken;
 
-                Assert.NotNull(domainPage);
+                Assert.NotNull(namespacePage);
 
                 // We should see a next page token for all pages except
                 // for the last.
 
-                if (i < domainCount)
+                if (i < namespceCount)
                 {
-                    Assert.NotNull(domainPage.NextPageToken);
-                    Assert.NotEmpty(domainPage.NextPageToken);
+                    Assert.NotNull(namespacePage.NextPageToken);
+                    Assert.NotEmpty(namespacePage.NextPageToken);
                 }
                 else
                 {
-                    Assert.Null(domainPage.NextPageToken);
+                    Assert.Null(namespacePage.NextPageToken);
                 }
             }
         }
 
         [Fact_Failing_Json]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
-        public async Task Base_DescribeTaskQueue()
+        public async Task Base_DescribeQueueList()
         {
             await SyncContext.ClearAsync;
 
@@ -304,7 +304,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact_Failing_Other]
+        [Fact_Failing_Json]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Base_DescribeWorkflowExecutionAsync()
         {

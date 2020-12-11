@@ -89,38 +89,13 @@ namespace TestTemporal
     }
 
     /// <summary>
-    /// Use this to disable tests failing due to other problems.
+    /// Use this to disable tests failing due to workerId==0.
     /// </summary>
-    public class Fact_Failing_BadWorkerId : FactAttribute
+    public class Fact_BadWorkerId : FactAttribute
     {
-        public Fact_Failing_BadWorkerId()
+        public Fact_BadWorkerId()
         {
-            Skip = "Failing due [workerId == 0].";
-            Skip = null;
-        }
-    }
-
-    /// <summary>
-    /// Use this to disable tests failing due Invoke() not being called correctly,
-    /// probably in a generated stub.
-    /// </summary>
-    public class Fact_NoInvokeTarget : FactAttribute
-    {
-        public Fact_NoInvokeTarget()
-        {
-            Skip = "Failing due to calling Invoke() on an instance method without a target instance.";
-            Skip = null;
-        }
-    }
-
-    /// <summary>
-    /// Use this to disable tests failing due to other problems.
-    /// </summary>
-    public class Fact_Failing_Other : FactAttribute
-    {
-        public Fact_Failing_Other()
-        {
-            Skip = "Failing due to other reasons.";
+            Skip = "Failing due to: workerId=0.";
             //Skip = null;
         }
     }

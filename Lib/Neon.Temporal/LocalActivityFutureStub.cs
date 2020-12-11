@@ -249,7 +249,8 @@ namespace Neon.Temporal
                             ActivityId     = activityId,
                             ActivityTypeId = activityActionId,
                             Args           = TemporalHelper.ArgsToBytes(dataConverter, args),
-                            Options        = options
+                            Options        = options,
+                            WorkerId       = parentWorkflow.Worker.WorkerId
                         });
                 });
 
@@ -322,7 +323,8 @@ namespace Neon.Temporal
                             ActivityId     = activityId,
                             ActivityTypeId = activityActionId,
                             Args           = TemporalHelper.ArgsToBytes(dataConverter, args),
-                            Options        = options
+                            Options        = options,
+                            WorkerId       = parentWorkflow.Worker.WorkerId
                         });
                 });
 

@@ -181,7 +181,7 @@ namespace TestCadence
 
             var stub = client.NewUntypedWorkflowStub("TestWorkflowStub_Execute::hello", new WorkflowOptions() { TaskList = CadenceTestHelper.TaskList });
 
-            Assert.Equal("Hello Jeff!", await stub.ExecutesAsync<string>("Jeff"));
+            Assert.Equal("Hello Jeff!", await stub.ExecuteAsync<string>("Jeff"));
 
             // Verify that we're not allowed to reuse the stub.
 
@@ -191,12 +191,11 @@ namespace TestCadence
 
             stub = client.NewUntypedWorkflowStub("TestWorkflowStub_Execute::nop", new WorkflowOptions() { TaskList = CadenceTestHelper.TaskList });
 
-            await stub.ExecutesAsync();
+            await stub.ExecuteAsync();
 
             // Verify that we're not allowed to reuse the stub.
 
             await Assert.ThrowsAsync<InvalidOperationException>(async () => await stub.StartAsync("Jeff"));
-
         }
 
         [Fact]
@@ -240,7 +239,7 @@ namespace TestCadence
 
             TestWorkflowStub_Execute.Reset();
 
-            var stub = client.NewUntypedWorkflowStub($"TestWorkflowStub_Execute::wait-for-signals", new WorkflowOptions() { TaskList = CadenceTestHelper.TaskList });
+            var stub = client.NewUntypedWorkflowStub("TestWorkflowStub_Execute::wait-for-signals", new WorkflowOptions() { TaskList = CadenceTestHelper.TaskList });
 
             await stub.StartAsync();
             await TestWorkflowStub_Execute.WaitUntilRunningAsync();
