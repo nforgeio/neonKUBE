@@ -186,9 +186,9 @@ namespace TestTemporal
                     await worker.RegisterWorkflowAsync<WorkflowWithResult3>();
                     await worker.StartAsync();
                 
-                    var stub1 = client.NewWorkflowStub<IWorkflowWithResult3>();
+                    var stub = client.NewWorkflowStub<IWorkflowWithResult3>();
 
-                    Assert.Equal("WF3 says: Hello Jack!", await stub1.HelloAsync("Jack"));
+                    Assert.Equal("WF3 says: Hello Jack!", await stub.HelloAsync("Jack"));
                 }
             }
 
@@ -199,9 +199,9 @@ namespace TestTemporal
                     await worker.RegisterWorkflowAsync<WorkflowWithResult4>();
                     await worker.StartAsync();
 
-                    var stub1 = client.NewWorkflowStub<IWorkflowWithResult4>();
+                    var stub = client.NewWorkflowStub<IWorkflowWithResult4>();
 
-                    Assert.Equal("WF4 says: Hello Jack!", await stub1.HelloAsync("Jack"));
+                    Assert.Equal("WF4 says: Hello Jack!", await stub.HelloAsync("Jack"));
                 }
             }
         }
