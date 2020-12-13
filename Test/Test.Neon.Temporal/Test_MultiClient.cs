@@ -40,7 +40,7 @@ using Xunit;
 
 namespace TestTemporal
 {
-    public class Test_MultiClient : IClassFixture<TemporalFixture>, IDisposable
+    public class Test_MultiClient : IClassFixture<TemporalFixture>
     {
         private TemporalFixture  fixture;
 
@@ -60,10 +60,6 @@ namespace TestTemporal
             this.fixture = fixture;
 
             fixture.Start(settings, composeFile: TemporalTestHelper.TemporalStackDefinition, reconnect: true, keepRunning: TemporalTestHelper.KeepTemporalServerOpen, noClient: true);
-        }
-
-        public void Dispose()
-        {
         }
 
         //---------------------------------------------------------------------
