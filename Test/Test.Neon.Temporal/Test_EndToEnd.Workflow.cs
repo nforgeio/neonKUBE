@@ -298,19 +298,34 @@ namespace TestTemporal
 
         //---------------------------------------------------------------------
 
+        public class WorkflowSleepUntilResult
+        {
+            public DateTime StartTimeUtc { get; set; }
+            public DateTime WakeTimeUtc { get; set; }
+        }
+
         [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IWorkflowSleepUntil : IWorkflow
         {
             [WorkflowMethod]
-            Task SleepUntilUtcAsync(DateTime wakeTimeUtc);
+            Task<WorkflowSleepUntilResult> SleepUntilUtcAsync(TimeSpan sleepInterval);
         }
 
         [Workflow(AutoRegister = true)]
         public class WorkflowSleepUntil : WorkflowBase, IWorkflowSleepUntil
         {
-            public async Task SleepUntilUtcAsync(DateTime wakeTimeUtc)
+            public async Task<WorkflowSleepUntilResult> SleepUntilUtcAsync(TimeSpan sleepInterval)
             {
-                await Workflow.SleepUntilUtcAsync(wakeTimeUtc);
+                var result = new WorkflowSleepUntilResult()
+                {
+                    StartTimeUtc = await Workflow.UtcNowAsync()
+                };
+
+                await Workflow.SleepUntilUtcAsync(result.StartTimeUtc + sleepInterval);
+
+                result.WakeTimeUtc = await Workflow.UtcNowAsync();
+
+                return result;
             }
         }
 
@@ -325,26 +340,18 @@ namespace TestTemporal
             // Verify that Workflow.SleepUntilAsync() can schedule a
             // wake time in the future.
 
-            var startUtcNow = DateTime.UtcNow;
-            var sleepTime   = TimeSpan.FromSeconds(5);
-            var wakeTimeUtc = startUtcNow + sleepTime;
+            var sleepInterval = TimeSpan.FromSeconds(5);
+            var result        = await stub.SleepUntilUtcAsync(sleepInterval);
 
-            await stub.SleepUntilUtcAsync(wakeTimeUtc);
+            Assert.True(NeonHelper.IsWithin(result.WakeTimeUtc, result.StartTimeUtc + sleepInterval, TemporalTestHelper.TimeFudge));
 
-            var utcNow = DateTime.UtcNow;
-
-            Assert.True(NeonHelper.IsWithin(utcNow, wakeTimeUtc, TemporalTestHelper.TimeFudge));
-
-            // Verify that scheduling a sleep time in the past is
+            // Verify that scheduling a sleep-until time in the past is
             // essentially a NOP.
 
-            stub = client.NewWorkflowStub<IWorkflowSleepUntil>();
+            stub   = client.NewWorkflowStub<IWorkflowSleepUntil>();
+            result = await stub.SleepUntilUtcAsync(TimeSpan.FromDays(-1));
 
-            startUtcNow = DateTime.UtcNow;
-
-            await stub.SleepUntilUtcAsync(startUtcNow - TimeSpan.FromDays(1));
-
-            Assert.True(NeonHelper.IsWithin(DateTime.UtcNow, startUtcNow, TemporalTestHelper.TimeFudge));
+            Assert.True(NeonHelper.IsWithin(result.WakeTimeUtc, result.StartTimeUtc, TemporalTestHelper.TimeFudge));
         }
 
         //---------------------------------------------------------------------
