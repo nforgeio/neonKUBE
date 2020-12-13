@@ -67,7 +67,7 @@ namespace TestTemporal
 
         public Test_EndToEnd(TemporalFixture fixture)
         {
-            // Setup a service for activity dependency injection testing if it doesn't
+            // Configure a service for activity dependency injection testing if it doesn't
             // already exist.
 
             if (NeonHelper.ServiceContainer.GetService<ActivityDependency>() == null)
@@ -86,7 +86,7 @@ namespace TestTemporal
                 DebugPrelaunched       = TemporalTestHelper.DebugPrelaunched,
                 DebugDisableHeartbeats = TemporalTestHelper.DebugDisableHeartbeats,
                 ClientIdentity         = TemporalTestHelper.ClientIdentity,
-                DefaultTaskQueue       = TemporalTestHelper.TaskQueue,
+                DefaultTaskQueue       = TemporalTestHelper.TaskQueue
             };
 
             if (fixture.Start(settings, composeFile: TemporalTestHelper.TemporalStackDefinition, reconnect: true, keepRunning: TemporalTestHelper.KeepTemporalServerOpen) == TestFixtureStatus.Started)

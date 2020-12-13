@@ -732,7 +732,7 @@ namespace Neon.Temporal
         /// the Java and GOLANG clients which will only call the function once.
         /// The .NET implementation calls the function every time 
         /// <see cref="MutableSideEffectAsync{T}(string, Func{T})"/>
-        /// is called but it will ignore the all but the first call's result.
+        /// is called but it will ignore all but the first call's result.
         /// </para>
         /// <para>
         /// This is an artifact of how the .NET client is currently implemented
@@ -819,7 +819,7 @@ namespace Neon.Temporal
         /// the Java and GOLANG clients which will only call the function once.
         /// The .NET implementation calls the function every time 
         /// <see cref="MutableSideEffectAsync(Type, string, Func{object})"/>
-        /// is called but it will ignore the all but the first call's result.
+        /// is called but it will ignore all but the first call's result.
         /// </para>
         /// <para>
         /// This is an artifact of how the .NET client is currently implemented
