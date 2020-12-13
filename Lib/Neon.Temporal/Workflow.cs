@@ -2361,11 +2361,11 @@ namespace Neon.Temporal
                     return (ActivityExecuteLocalReply)await Client.CallProxyAsync(
                         new ActivityExecuteLocalRequest()
                         {
-                            WorkerId       = this.Worker.WorkerId,
                             ContextId      = ContextId,
+                            WorkerId       = Worker.WorkerId,
                             ActivityTypeId = activityActionId,
                             Args           = args,
-                            Options        = options,
+                            Options        = options
                         });
                 });
 

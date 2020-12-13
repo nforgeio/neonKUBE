@@ -246,11 +246,11 @@ namespace Neon.Temporal
                         new ActivityStartLocalRequest()
                         {
                             ContextId      = parentWorkflow.ContextId,
+                            WorkerId       = parentWorkflow.Worker.WorkerId,
                             ActivityId     = activityId,
                             ActivityTypeId = activityActionId,
                             Args           = TemporalHelper.ArgsToBytes(dataConverter, args),
-                            Options        = options,
-                            WorkerId       = parentWorkflow.Worker.WorkerId
+                            Options        = options
                         });
                 });
 
@@ -320,11 +320,11 @@ namespace Neon.Temporal
                         new ActivityStartLocalRequest()
                         {
                             ContextId      = parentWorkflow.ContextId,
+                            WorkerId       = parentWorkflow.Worker.WorkerId,
                             ActivityId     = activityId,
                             ActivityTypeId = activityActionId,
                             Args           = TemporalHelper.ArgsToBytes(dataConverter, args),
-                            Options        = options,
-                            WorkerId       = parentWorkflow.Worker.WorkerId
+                            Options        = options
                         });
                 });
 
