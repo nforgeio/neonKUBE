@@ -45,7 +45,7 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Static members
 
-        internal const string DefaultMemory      = "4 GiB";
+        internal const string DefaultMemory      = "8 GiB";
         internal const string DefaultOsDisk      = "128 GiB";
         internal const string DefaultOpenEbsDisk = "128 GiB";
 

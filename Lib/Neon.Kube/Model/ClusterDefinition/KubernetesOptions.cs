@@ -211,13 +211,30 @@ namespace Neon.Kube
                 {
                     m.Labels.NeonSystemDb = true;
                 }
+
+                if (clusterDefinition.Masters.Count() < 3)
+                {
+                    foreach (var w in clusterDefinition.Workers)
+                    {
+                        w.Labels.NeonSystemDb = true;
+                    }
+                }
             }
 
-            if (!clusterDefinition.Nodes.Any(n => n.Labels.NeonSystemRegistry))
+            if (!clusterDefinition.Nodes.Any(n => n.Labels.NeonSystemRegistry)
+                && clusterDefinition.Nodes.Count() > 1)
             {
                 foreach (var m in clusterDefinition.Masters)
                 {
                     m.Labels.NeonSystemRegistry = true;
+                }
+
+                if (clusterDefinition.Masters.Count() < 3)
+                {
+                    foreach (var w in clusterDefinition.Workers)
+                    {
+                        w.Labels.NeonSystemRegistry = true;
+                    }
                 }
             }
 

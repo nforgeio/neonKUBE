@@ -121,7 +121,7 @@ OPTIONS:
         private const string        joinCommandMarker      = "kubeadm join";
         private const int           maxJoinAttempts        = 5;
         private readonly TimeSpan   joinRetryDelay         = TimeSpan.FromSeconds(5);
-        private readonly TimeSpan   clusterOpTimeout       = TimeSpan.FromMinutes(10);
+        private readonly TimeSpan   clusterOpTimeout       = TimeSpan.FromMinutes(20);
         private readonly TimeSpan   clusterOpRetryInterval = TimeSpan.FromSeconds(10);
 
         private KubeConfigContext       kubeContext;
@@ -1773,11 +1773,14 @@ spec:
 
             // Setup neon-registry.
 
-            await firstMaster.InvokeIdempotentActionAsync("setup/cluster-deploy-neon-registry",
-                async () =>
-                {
-                    await InstallNeonRegistryAsync(firstMaster);
-                });
+            if (cluster.Definition.Nodes.Where(n => n.Labels.NeonSystemRegistry).Any())
+            {
+                await firstMaster.InvokeIdempotentActionAsync("setup/cluster-deploy-neon-registry",
+                    async () =>
+                    {
+                        await InstallNeonRegistryAsync(firstMaster);
+                    });
+            }
 
             // Setup Kiali.
 
@@ -2186,7 +2189,7 @@ rm -rf {chartName}*
 
                     if (cluster.Definition.Workers.Count() >= 3)
                     {
-                        var replicas = Math.Max(2, cluster.Definition.Workers.Count() / 3);
+                        var replicas = Math.Max(1, cluster.Definition.Workers.Count() / 3);
                         values.Add(new KeyValuePair<string, object>($"apiserver.replicas", replicas));
                         values.Add(new KeyValuePair<string, object>($"provisioner.replicas", replicas));
                         values.Add(new KeyValuePair<string, object>($"localprovisioner.replicas", replicas));
@@ -2583,10 +2586,20 @@ rm -rf {chartName}*
             await master.InvokeIdempotentActionAsync("deploy/neon-metrics-cortex",
                 async () =>
                 {
+                    if (cluster.Definition.Nodes.Any(n => n.Vm.GetMemory(cluster.Definition) < 4294965097L))
+                    {
+                        cortexValues.Add(new KeyValuePair<string, object>($"cortexConfig.ingester.retain_period", $"120s"));
+                        cortexValues.Add(new KeyValuePair<string, object>($"cortexConfig.ingester.metadata_retain_period", $"5m"));
+                        cortexValues.Add(new KeyValuePair<string, object>($"cortexConfig.querier.batch_iterators", true));
+                        cortexValues.Add(new KeyValuePair<string, object>($"cortexConfig.querier.max_samples", 10000000));
+                        cortexValues.Add(new KeyValuePair<string, object>($"cortexConfig.table_manager.retention_period", "12h"));
+                    }
+
                     switch (cluster.Definition.Monitor.Metrics.Storage)
                     {
                         case MetricsStorageOptions.Ephemeral:
                             cortexValues.Add(new KeyValuePair<string, object>($"cortexConfig.schema.configs[0].store", $"boltdb"));
+                            cortexValues.Add(new KeyValuePair<string, object>($"cortexConfig.schema.configs[0].object_store", $"filesystem"));
                             cortexValues.Add(new KeyValuePair<string, object>($"cortexConfig.schema.configs[0].object_store", $"filesystem"));
                             break;
                         case MetricsStorageOptions.Filesystem:
@@ -2596,6 +2609,7 @@ rm -rf {chartName}*
                         case MetricsStorageOptions.Yugabyte:
                             await InstallMetricsYugabyteAsync(master);
                             cortexValues.Add(new KeyValuePair<string, object>($"replicas", Math.Min(3, (cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count()))));
+                            cortexValues.Add(new KeyValuePair<string, object>($"cortexConfig.ingester.lifecycler.ring.replication_factor", 3));
                             break;
                         default:
                             break;
@@ -2762,9 +2776,9 @@ rm -rf {chartName}*
                     var values         = new List<KeyValuePair<string, object>>();
 
                     var replicas = Math.Max(1, cluster.Nodes.Count() / 5);
-                    if (replicas > cluster.Nodes.Where(n => n.Metadata.Labels.Logs).Count())
+                    if (replicas > cluster.Nodes.Where(n => n.Metadata.Labels.LogsInternal).Count())
                     {
-                        replicas = cluster.Nodes.Where(n => n.Metadata.Labels.Logs).Count();
+                        replicas = cluster.Nodes.Where(n => n.Metadata.Labels.LogsInternal).Count();
                     }
 
                     values.Add(new KeyValuePair<string, object>("replicas", replicas));
@@ -2885,8 +2899,8 @@ rm -rf {chartName}*
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
-                    values.Add(new KeyValuePair<string, object>($"autoscaling.minReplicas", (Math.Max(1, cluster.Definition.Workers.Count() % 6))));
-                    values.Add(new KeyValuePair<string, object>($"autoscaling.maxReplicas", (Math.Max(1, cluster.Definition.Workers.Count()))));
+                    values.Add(new KeyValuePair<string, object>($"autoscaling.minReplicas", (Math.Max(1, cluster.Definition.Workers.Count() / 6))));
+                    values.Add(new KeyValuePair<string, object>($"autoscaling.maxReplicas", (Math.Max(1, cluster.Definition.Workers.Count() / 4))));
 
                     int i = 0;
                     foreach (var t in await GetTaintsAsync(NodeLabels.LabelLogs, "true"))
@@ -3065,7 +3079,7 @@ rm -rf {chartName}*
                 {
                     var values = new List<KeyValuePair<string, object>>();
 
-                    var replicas = cluster.Definition.Masters.Count();
+                    var replicas = Math.Min(3, cluster.Definition.Masters.Count());
                     values.Add(new KeyValuePair<string, object>($"replicas", $"{replicas}"));
 
                     if (replicas < 2)
@@ -3110,21 +3124,21 @@ rm -rf {chartName}*
                 {
                     var values = new List<KeyValuePair<string, object>>();
 
-                    var redisConnStr = "";
-                    for (int i = 0; i < cluster.Definition.Masters.Count(); i++)
-                    {
-                        if (i > 0)
-                        {
-                            redisConnStr += ";";
-                        }
-
-                        redisConnStr += $"neon-system-registry-redis-ha-server-{i}.neon-system-registry-redis-ha:26379";
-                    }
-
-                    values.Add(new KeyValuePair<string, object>($"redis.external.addr", redisConnStr));
-
                     if (cluster.Definition.Masters.Count() > 1)
                     {
+                        var redisConnStr = "";
+                        for (int i = 0; i < Math.Min(3, cluster.Definition.Masters.Count()); i++)
+                        {
+                            if (i > 0)
+                            {
+                                redisConnStr += ",";
+                            }
+
+                            redisConnStr += $"neon-system-registry-redis-announce-{i}:26379";
+                        }
+
+                        values.Add(new KeyValuePair<string, object>($"redis.external.addr", redisConnStr));
+
                         values.Add(new KeyValuePair<string, object>($"redis.external.sentinelMasterSet", "master"));
                     }
 
@@ -3224,9 +3238,16 @@ rm -rf {chartName}*
                 {
                     var values = new List<KeyValuePair<string, object>>();
 
-                    values.Add(new KeyValuePair<string, object>($"master.replicas", $"{cluster.Definition.Masters.Count()}"));
-                    values.Add(new KeyValuePair<string, object>($"manager.replicas", $"{cluster.Definition.Masters.Count()}"));
-                    values.Add(new KeyValuePair<string, object>($"worker.replicas", $"{cluster.Definition.Masters.Count()}"));
+                    var replicas = Math.Max(1, cluster.Definition.Masters.Count() / 5);
+
+                    values.Add(new KeyValuePair<string, object>($"master.replicas", replicas));
+                    values.Add(new KeyValuePair<string, object>($"manager.replicas", replicas));
+                    values.Add(new KeyValuePair<string, object>($"worker.replicas", replicas));
+
+                    if (replicas < 2)
+                    {
+                        values.Add(new KeyValuePair<string, object>($"manager.minimumWorkers", "1"));
+                    }
 
                     int i = 0;
                     foreach (var t in await GetTaintsAsync(NodeLabels.LabelNeonSystemDb, "true"))
