@@ -225,7 +225,10 @@ func handleActivityExecuteRequest(requestCtx context.Context, request *messages.
 	// get the activity options, the context,
 	// and set the activity options on the context
 	ctx := workflow.WithActivityOptions(wectx.GetContext(), opts)
-	//ctx = workflow.WithWorkflowNamespace(ctx, *request.GetNamespace())
+	if v := request.GetNamespace(); v != nil {
+		ctx = workflow.WithWorkflowNamespace(ctx, *request.GetNamespace())
+	}
+
 	future := workflow.ExecuteActivity(ctx, activityName, request.GetArgs())
 
 	// execute the activity
@@ -273,10 +276,11 @@ func handleActivityStartRequest(requestCtx context.Context, request *messages.Ac
 	// get the activity options, the context,
 	// and set the activity options on the context
 	// and set cancelation
-	var cancel workflow.CancelFunc
-	ctx := workflow.WithActivityOptions(wectx.GetContext(), opts)
-	//ctx = workflow.WithWorkflowNamespace(ctx, *request.GetNamespace())
-	ctx, cancel = workflow.WithCancel(ctx)
+	ctx, cancel := workflow.WithCancel(wectx.GetContext())
+	ctx = workflow.WithActivityOptions(ctx, opts)
+	if v := request.GetNamespace(); v != nil {
+		ctx = workflow.WithWorkflowNamespace(ctx, *request.GetNamespace())
+	}
 
 	//execute workflow
 	future := workflow.ExecuteActivity(ctx, activity, request.GetArgs())
@@ -324,6 +328,7 @@ func handleActivityGetResultRequest(requestCtx context.Context, request *message
 		reply.Build(err)
 		return reply
 	}
+
 	reply.Build(nil, result)
 
 	return reply
@@ -691,6 +696,7 @@ func handleActivityStartLocalRequest(requestCtx context.Context, request *messag
 		invokeRequest.SetActivityTypeID(activityTypeID)
 		invokeRequest.SetActivityContextID(activityContextID)
 		invokeRequest.SetClientID(clientID)
+		invokeRequest.SetWorkerID(workerID)
 
 		// create the Operation for this request and add it to the operations map
 		op := NewOperation(requestID, invokeRequest)

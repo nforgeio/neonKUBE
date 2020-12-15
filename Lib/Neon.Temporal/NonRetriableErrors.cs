@@ -27,7 +27,7 @@ using Neon.Temporal.Internal;
 namespace Neon.Temporal
 {
     /// <summary>
-    /// Used in conjunction with <see cref="RetryOptions"/> to specify errors that
+    /// Used in conjunction with <see cref="RetryPolicy"/> to specify errors that
     /// <b>will not</b> cause a workflow related operation to be retried.
     /// </summary>
     public static class NonRetriableErrors

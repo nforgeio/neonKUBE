@@ -22,6 +22,8 @@ using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Threading.Tasks;
 
+using Newtonsoft.Json;
+
 using Neon.Common;
 using Neon.Temporal;
 using Neon.Temporal.Internal;
@@ -38,24 +40,28 @@ namespace Neon.Temporal
         /// Optionally overrides the current workflow's timeout for the restarted
         /// workflow when this value is greater than <see cref="TimeSpan.Zero"/>.
         /// </summary>
+        [JsonConverter(typeof(GoTimeSpanJsonConverter))]
         public TimeSpan ExecutionStartToCloseTimeout { get; set; }
 
         /// <summary>
         /// Optionally overrides the current workflow's timeout for the restarted
         /// workflow when this value is greater than <see cref="TimeSpan.Zero"/>.
         /// </summary>
+        [JsonConverter(typeof(GoTimeSpanJsonConverter))]
         public TimeSpan ScheduleToCloseTimeout { get; set; }
 
         /// <summary>
         /// Optionally overrides the current workflow's timeout for the restarted
         /// workflow when this value is greater than <see cref="TimeSpan.Zero"/>.
         /// </summary>
+        [JsonConverter(typeof(GoTimeSpanJsonConverter))]
         public TimeSpan ScheduleToStartTimeout { get; set; }
 
         /// <summary>
         /// Optionally overrides the current workflow's decision task timeout for 
         /// the restarted workflow when this value is greater than <see cref="TimeSpan.Zero"/>.
         /// </summary>
+        [JsonConverter(typeof(GoTimeSpanJsonConverter))]
         public TimeSpan TaskStartToCloseTimeout { get; set; }
 
         /// <summary>
@@ -76,6 +82,6 @@ namespace Neon.Temporal
         /// <summary>
         /// Optionally overrides the current workflow's retry options when restarting.
         /// </summary>
-        public RetryOptions RetryOptions { get; set; }
+        public RetryPolicy RetryPolicy { get; set; }
     }
 }

@@ -73,7 +73,7 @@ namespace Neon.Temporal
         /// <param name="scheduleToCloseTimeout">Optional schedule to close timeout for the new execution.</param>
         /// <param name="scheduleToStartTimeout">Optional schedule to start timeout for the new execution.</param>
         /// <param name="decisionTaskTimeout">Optional decision task start to close timeout for the new execution.</param>
-        /// <param name="retryOptions">Optional retry options for the new execution.</param>
+        /// <param name="retryPolicy">Optional retry options for the new execution.</param>
         public ContinueAsNewException(
             byte[]          args                   = null,
             string          workflow               = null,
@@ -83,7 +83,7 @@ namespace Neon.Temporal
             TimeSpan        scheduleToCloseTimeout = default,
             TimeSpan        scheduleToStartTimeout = default,
             TimeSpan        decisionTaskTimeout    = default,
-            RetryOptions    retryOptions           = null)
+            RetryPolicy     retryPolicy           = null)
 
             : base()
         {
@@ -95,7 +95,7 @@ namespace Neon.Temporal
             this.ScheduleToStartTimeout = scheduleToStartTimeout;
             this.ScheduleToCloseTimeout = scheduleToCloseTimeout;
             this.DecisionTaskTimeout    = decisionTaskTimeout;
-            this.RetryOptions           = retryOptions;
+            this.RetryPolicy            = retryPolicy;
         }
 
         /// <summary>
@@ -111,12 +111,12 @@ namespace Neon.Temporal
             {
                 this.Workflow               = options.Workflow;
                 this.Namespace              = options.Namespace;
-                this.TaskQueue               = options.TaskQueue;
+                this.TaskQueue              = options.TaskQueue;
                 this.StartToCloseTimeout    = options.ExecutionStartToCloseTimeout;
                 this.ScheduleToStartTimeout = options.ScheduleToStartTimeout;
                 this.ScheduleToCloseTimeout = options.ScheduleToCloseTimeout;
                 this.DecisionTaskTimeout    = options.TaskStartToCloseTimeout;
-                this.RetryOptions           = options.RetryOptions;
+                this.RetryPolicy            = options.RetryPolicy;
             }
         }
 
@@ -163,6 +163,6 @@ namespace Neon.Temporal
         /// <summary>
         /// Optionally specifies the new retry options for the next workflow execution.
         /// </summary>
-        public RetryOptions RetryOptions { get; private set; } 
+        public RetryPolicy RetryPolicy { get; private set; } 
     }
 }

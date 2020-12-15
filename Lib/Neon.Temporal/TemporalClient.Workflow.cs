@@ -549,11 +549,11 @@ namespace Neon.Temporal
                 {
                     var description = await DescribeWorkflowExecutionAsync(execution.WorkflowId, execution.RunId, @namespace);
 
-                    if (description.ExeecutionInfo.IsRunning)
+                    if (description.ExecutionInfo.IsRunning)
                     {
                         return;
                     }
-                    else if (description.ExeecutionInfo.IsClosed)
+                    else if (description.ExecutionInfo.IsClosed)
                     {
                         throw new SyncSignalException($"{typeof(SyncSignalException).FullName}: Wait for workflow [workflowID={execution.WorkflowId}, runID={execution.RunId}] failed because the worflow is closed.");
                     }
@@ -842,7 +842,7 @@ namespace Neon.Temporal
                 new WorkflowSignalWithStartRequest()
                 {
                     Workflow     = workflowTypeName,
-                    WorkflowId   = options.WorkflowId,
+                    WorkflowId   = options.Id,
                     Options      = options,
                     SignalName   = signalName,
                     SignalArgs   = signalArgs,

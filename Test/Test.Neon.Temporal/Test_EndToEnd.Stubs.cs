@@ -48,16 +48,16 @@ namespace TestTemporal
         [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface ITestWorkflowStub_Execute : IWorkflow
         {
-            [WorkflowMethod(Name = "hello")]
+            [WorkflowMethod(Name = "TestWorkflowStub_Execute[hello]", IsFullName = true)]
             Task<string> HelloAsync(string name);
 
-            [WorkflowMethod(Name = "nop")]
+            [WorkflowMethod(Name = "TestWorkflowStub_Execute[nop]", IsFullName = true)]
             Task NopAsync();
 
-            [WorkflowMethod(Name = "wait-for-signals")]
+            [WorkflowMethod(Name = "TestWorkflowStub_Execute[wait-for-signals]", IsFullName = true)]
             Task<List<string>> GetSignalsAsync();
 
-            [WorkflowMethod(Name = "wait-for-queries")]
+            [WorkflowMethod(Name = "TestWorkflowStub_Execute[wait-for-queries]", IsFullName = true)]
             Task<List<string>> GetQueriesAsync();
 
             [SignalMethod(name: "signal")]
@@ -143,11 +143,11 @@ namespace TestTemporal
                     queries.Add(query);
                 }
 
-                return await Task.FromResult(query);
+                return await Task.FromResult($"Received: {query}");
             }
         }
 
-        [Fact_Failing_Other]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task WorkflowStub_Start_Untyped()
         {
@@ -157,7 +157,7 @@ namespace TestTemporal
 
             TestWorkflowStub_Execute.Reset();
 
-            var stub      = client.NewUntypedWorkflowStub("TestWorkflowStub_Execute::hello", new WorkflowOptions() { TaskQueue = TemporalTestHelper.TaskQueue });
+            var stub      = client.NewUntypedWorkflowStub("TestWorkflowStub_Execute[hello]", new WorkflowOptions() { TaskQueue = TemporalTestHelper.TaskQueue });
             var execution = await stub.StartAsync("Jeff");
 
             Assert.NotNull(execution);
@@ -168,7 +168,7 @@ namespace TestTemporal
             await Assert.ThrowsAsync<InvalidOperationException>(async () => await stub.StartAsync("Jeff"));
         }
 
-        [Fact_Failing_Other]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task WorkflowStub_Execute_Untyped()
         {
@@ -179,9 +179,9 @@ namespace TestTemporal
 
             TestWorkflowStub_Execute.Reset();
 
-            var stub = client.NewUntypedWorkflowStub("TestWorkflowStub_Execute::hello", new WorkflowOptions() { TaskQueue = TemporalTestHelper.TaskQueue });
+            var stub = client.NewUntypedWorkflowStub("TestWorkflowStub_Execute[hello]", new WorkflowOptions() { TaskQueue = TemporalTestHelper.TaskQueue });
 
-            Assert.Equal("Hello Jeff!", await stub.ExecutesAsync<string>("Jeff"));
+            Assert.Equal("Hello Jeff!", await stub.ExecuteAsync<string>("Jeff"));
 
             // Verify that we're not allowed to reuse the stub.
 
@@ -189,17 +189,17 @@ namespace TestTemporal
 
             // Try this again with a workflow method that doesn't return a result.
 
-            stub = client.NewUntypedWorkflowStub("TestWorkflowStub_Execute::nop", new WorkflowOptions() { TaskQueue = TemporalTestHelper.TaskQueue });
+            stub = client.NewUntypedWorkflowStub("TestWorkflowStub_Execute[nop]", new WorkflowOptions() { TaskQueue = TemporalTestHelper.TaskQueue });
 
-            await stub.ExecutesAsync();
+            await stub.ExecuteAsync();
 
-            // Verify that we're not allowed to reuse the stub.
+            // Verify that we're not allowed to reuse that stub either stub.
 
             await Assert.ThrowsAsync<InvalidOperationException>(async () => await stub.StartAsync("Jeff"));
 
         }
 
-        [Fact_Failing_Other]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task WorkflowStub_Attach_Untyped()
         {
@@ -209,7 +209,7 @@ namespace TestTemporal
 
             TestWorkflowStub_Execute.Reset();
 
-            var stub      = client.NewUntypedWorkflowStub("TestWorkflowStub_Execute::hello", new WorkflowOptions() { TaskQueue = TemporalTestHelper.TaskQueue });
+            var stub      = client.NewUntypedWorkflowStub("TestWorkflowStub_Execute[hello]", new WorkflowOptions() { TaskQueue = TemporalTestHelper.TaskQueue });
             var execution = await stub.StartAsync("Jeff");
 
             Assert.NotNull(execution);
@@ -229,7 +229,7 @@ namespace TestTemporal
             Assert.Equal("Hello Jeff!", await stub.GetResultAsync<string>());
         }
 
-        [Fact_Failing_Other]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task WorkflowStub_Signal_Untyped()
         {
@@ -240,7 +240,7 @@ namespace TestTemporal
 
             TestWorkflowStub_Execute.Reset();
 
-            var stub = client.NewUntypedWorkflowStub($"{nameof(TestWorkflowStub_Execute)}::wait-for-signals", new WorkflowOptions() { TaskQueue = TemporalTestHelper.TaskQueue });
+            var stub = client.NewUntypedWorkflowStub("TestWorkflowStub_Execute[wait-for-signals]", new WorkflowOptions() { TaskQueue = TemporalTestHelper.TaskQueue });
 
             await stub.StartAsync();
             await TestWorkflowStub_Execute.WaitUntilRunningAsync();
@@ -253,6 +253,32 @@ namespace TestTemporal
             Assert.Equal(2, received.Count);
             Assert.Contains("my-signal-1", received);
             Assert.Contains("my-signal-2", received);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
+        public async Task WorkflowStub_Query_Untyped()
+        {
+            await SyncContext.ClearAsync;
+
+            // Use an untyped workflow stub to execute a workflow and then
+            // verify that we're able to send signals to it.
+
+            TestWorkflowStub_Execute.Reset();
+
+            var stub = client.NewUntypedWorkflowStub("TestWorkflowStub_Execute[wait-for-queries]", new WorkflowOptions() { TaskQueue = TemporalTestHelper.TaskQueue });
+
+            await stub.StartAsync();
+            await TestWorkflowStub_Execute.WaitUntilRunningAsync();
+
+            Assert.Equal("Received: my-query-1", await stub.QueryAsync<string>("query", "my-query-1"));
+            Assert.Equal("Received: my-query-2", await stub.QueryAsync<string>("query", "my-query-2"));
+
+            var received = await stub.GetResultAsync<List<string>>();
+
+            Assert.Equal(2, received.Count);
+            Assert.Contains("my-query-1", received);
+            Assert.Contains("my-query-2", received);
         }
     }
 }

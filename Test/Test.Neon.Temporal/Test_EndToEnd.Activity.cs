@@ -403,7 +403,7 @@ namespace TestTemporal
             // Activity Task info.
 
             Assert.NotNull(LocalActivityWithouthResult.Info);
-            Assert.Null(LocalActivityWithouthResult.Info.ActivityTypeName);     // This is NULL for local activities
+            Assert.Null(LocalActivityWithouthResult.Info.ActivityType);     // This is NULL for local activities
             Assert.Equal(TemporalTestHelper.TaskQueue, LocalActivityWithouthResult.Info.TaskQueue);
             Assert.Equal("test-namespace", LocalActivityWithouthResult.Info.WorkflowNamespace);
         }

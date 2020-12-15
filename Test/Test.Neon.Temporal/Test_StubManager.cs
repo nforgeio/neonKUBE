@@ -56,7 +56,7 @@ namespace TestTemporal
             {
                 this.Workflow = new Workflow(
                     parent:             new WorkflowBase(),
-                    worker:             new Worker(new TemporalClient(), 1, new WorkerOptions()),
+                    worker:             new Worker(new TemporalClient(), 1, new WorkerOptions() { Namespace = "default", TaskQueue = "default" }),
                     contextId:          1,
                     workflowTypeName:   typeof(DummyWorkflow).FullName,
                     @namespace:         "my-namespace",

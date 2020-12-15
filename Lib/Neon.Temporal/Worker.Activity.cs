@@ -355,7 +355,7 @@ namespace Neon.Temporal
         }
 
         /// <summary>
-        /// Called to handle activity related requests received from the <b>temporal-proxy</b>.
+        /// Called to handle activity related request messages received from the <b>temporal-proxy</b>.
         /// </summary>
         /// <param name="request">The request message.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
@@ -370,6 +370,11 @@ namespace Neon.Temporal
                 case InternalMessageTypes.ActivityInvokeRequest:
 
                     reply = await OnActivityInvokeRequest((ActivityInvokeRequest)request);
+                    break;
+
+                case InternalMessageTypes.ActivityInvokeLocalRequest:
+
+                    reply = await OnInvokeLocalActivity((ActivityInvokeLocalRequest)request);
                     break;
 
                 case InternalMessageTypes.ActivityStoppingRequest:
@@ -452,6 +457,65 @@ namespace Neon.Temporal
                 {
                     idToActivity.Remove(activity.ContextId);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Handles workflow local activity invocations.
+        /// </summary>
+        /// <param name="request">The request message.</param>
+        /// <returns>The reply message.</returns>
+        internal async Task<ActivityInvokeLocalReply> OnInvokeLocalActivity(ActivityInvokeLocalRequest request)
+        {
+            Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
+
+            try
+            {
+                WorkflowBase.CallContext.Value = WorkflowCallContext.Activity;
+
+                var workflow = GetWorkflow(request.ContextId);
+
+                if (workflow != null)
+                {
+                    var activityAction = workflow.GetActivityAction(request.ActivityTypeId);
+
+                    if (activityAction == null)
+                    {
+                        return new ActivityInvokeLocalReply()
+                        {
+                            Error = new EntityNotExistsException($"Activity type does not exist for [activityTypeId={request.ActivityTypeId}].").ToTemporalError()
+                        };
+                    }
+
+                    var workerArgs = new WorkerArgs() { Worker = this, ContextId = request.ActivityContextId };
+                    var activity   = CreateLocalActivity(activityAction, request.ActivityContextId);
+                    var result     = await activity.OnInvokeAsync(request.Args);
+
+                    return new ActivityInvokeLocalReply()
+                    {
+                        Result = result
+                    };
+                }
+                else
+                {
+                    return new ActivityInvokeLocalReply()
+                    {
+                        Error = new EntityNotExistsException($"Workflow with [contextID={request.ContextId}] does not exist.").ToTemporalError()
+                    };
+                }
+            }
+            catch (Exception e)
+            {
+                log.LogError(e);
+
+                return new ActivityInvokeLocalReply()
+                {
+                    Error = new TemporalError(e)
+                };
+            }
+            finally
+            {
+                WorkflowBase.CallContext.Value = WorkflowCallContext.None;
             }
         }
 

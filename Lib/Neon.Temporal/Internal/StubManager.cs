@@ -402,7 +402,6 @@ namespace Neon.Temporal.Internal
             {
                 return (WorkflowStub)workflowStubConstructor.Invoke(new object[] { client, workflowTypeName, execution, options });
             }
-
 #if DEBUG
             /// <summary>
             /// Used for generating debugging logs to check for NULL values.
@@ -658,6 +657,9 @@ namespace Neon.Temporal.Internal
             sbSource.AppendLine();
             sbSource.AppendLine($"        public {stubClassName}(TemporalClient client, IDataConverter dataConverter, string workflowTypeName, WorkflowOptions options, System.Type workflowInterface = null)");
             sbSource.AppendLine($"        {{");
+#if DEBUG
+            sbSource.LogDebug($"{stubClassName}: CREATE A");
+#endif
             sbSource.AppendLine($"            this.client            = client;");
             sbSource.AppendLine($"            this.dataConverter     = dataConverter;");
             sbSource.AppendLine($"            this.workflowTypeName  = workflowTypeName;");
@@ -671,6 +673,9 @@ namespace Neon.Temporal.Internal
             sbSource.AppendLine();
             sbSource.AppendLine($"        public {stubClassName}(TemporalClient client, IDataConverter dataConverter, string workflowId, string runId = null, string @namespace = null)");
             sbSource.AppendLine($"        {{");
+#if DEBUG
+            sbSource.LogDebug($"{stubClassName}: CREATE B");
+#endif
             sbSource.AppendLine($"            this.client         = client;");
             sbSource.AppendLine($"            this.dataConverter  = dataConverter;");
             sbSource.AppendLine($"            this.hasStarted     = true;");
@@ -683,6 +688,9 @@ namespace Neon.Temporal.Internal
             sbSource.AppendLine();
             sbSource.AppendLine($"        public {stubClassName}(TemporalClient client, IDataConverter dataConverter, WorkflowExecution execution, string @namespace)");
             sbSource.AppendLine($"        {{");
+#if DEBUG
+            sbSource.LogDebug($"{stubClassName}: CREATE C");
+#endif
             sbSource.AppendLine($"            this.client         = client;");
             sbSource.AppendLine($"            this.dataConverter  = dataConverter;");
             sbSource.AppendLine($"            this.hasStarted     = true;");
@@ -696,11 +704,16 @@ namespace Neon.Temporal.Internal
             sbSource.AppendLine();
             sbSource.AppendLine($"        public {stubClassName}(TemporalClient client, IDataConverter dataConverter, Workflow parentWorkflow, string workflowTypeName, ChildWorkflowOptions options, System.Type workflowInterface)");
             sbSource.AppendLine($"        {{");
+#if DEBUG
+            sbSource.LogDebug($"{stubClassName}: CREATE D");
+            sbSource.LogDebug($"{stubClassName}: options: {{___StubHelper.IsNull(options)}}");
+#endif
             sbSource.AppendLine($"            this.client            = client;");
             sbSource.AppendLine($"            this.dataConverter     = dataConverter;");
             sbSource.AppendLine($"            this.parentWorkflow    = parentWorkflow;");
             sbSource.AppendLine($"            this.workflowTypeName  = workflowTypeName;");
             sbSource.AppendLine($"            this.isChild           = true;");
+            sbSource.AppendLine($"            this.childOptions      = options;");
             sbSource.AppendLine($"            this.workflowInterface = workflowInterface;");
             sbSource.AppendLine($"            this.executingEvent    = new AsyncManualResetEvent(initialState: false);");
             sbSource.AppendLine($"        }}");
@@ -710,6 +723,9 @@ namespace Neon.Temporal.Internal
             sbSource.AppendLine();
             sbSource.AppendLine($"        public {stubClassName}(TemporalClient client, IDataConverter dataConverter, Workflow parentWorkflow, string workflowTypeName, ChildExecution execution)");
             sbSource.AppendLine($"        {{");
+#if DEBUG
+            sbSource.LogDebug($"{stubClassName}: CREATE E");
+#endif
             sbSource.AppendLine($"            this.client           = client;");
             sbSource.AppendLine($"            this.dataConverter    = dataConverter;");
             sbSource.AppendLine($"            this.hasStarted       = true;");
@@ -724,6 +740,9 @@ namespace Neon.Temporal.Internal
             sbSource.AppendLine();
             sbSource.AppendLine($"        public {stubClassName}(TemporalClient client, IDataConverter dataConverter, string workflowTypeName, ContinueAsNewOptions options)");
             sbSource.AppendLine($"        {{");
+#if DEBUG
+            sbSource.LogDebug($"{stubClassName}: CREATE F");
+#endif
             sbSource.AppendLine($"            this.client                        = client;");
             sbSource.AppendLine($"            this.dataConverter                 = dataConverter;");
             sbSource.AppendLine($"            this.continueAsNew                 = true;");
@@ -737,6 +756,9 @@ namespace Neon.Temporal.Internal
             sbSource.AppendLine();
             sbSource.AppendLine($"        public {stubClassName}(TemporalClient client, IDataConverter dataConverter, Workflow parentWorkflow, WorkflowExecution execution)");
             sbSource.AppendLine($"        {{");
+#if DEBUG
+            sbSource.LogDebug($"{stubClassName}: CREATE G");
+#endif
             sbSource.AppendLine($"            this.client         = client;");
             sbSource.AppendLine($"            this.dataConverter  = dataConverter;");
             sbSource.AppendLine($"            this.parentWorkflow = parentWorkflow;");
@@ -750,6 +772,9 @@ namespace Neon.Temporal.Internal
             sbSource.AppendLine();
             sbSource.AppendLine($"        public {stubClassName}(TemporalClient client, IDataConverter dataConverter, Workflow parentWorkflow, string workflowId, string @namespace)");
             sbSource.AppendLine($"        {{");
+#if DEBUG
+            sbSource.LogDebug($"{stubClassName}: CREATE H");
+#endif
             sbSource.AppendLine($"            this.client         = client;");
             sbSource.AppendLine($"            this.dataConverter  = dataConverter;");
             sbSource.AppendLine($"            this.parentWorkflow = parentWorkflow;");
@@ -763,6 +788,9 @@ namespace Neon.Temporal.Internal
             sbSource.AppendLine();
             sbSource.AppendLine($"        public async Task<WorkflowStub> ToUntypedAsync()");
             sbSource.AppendLine($"        {{");
+#if DEBUG
+            sbSource.LogDebug($"{stubClassName}: ToUntyped()");
+#endif
             sbSource.AppendLine($"            await SyncContext.ClearAsync;");
             sbSource.AppendLine($"            await WaitForExecutionAsync();");
             sbSource.AppendLine();
@@ -934,7 +962,7 @@ namespace Neon.Temporal.Internal
                     sbSource.AppendLine();
                     sbSource.AppendLine($"            executingEvent.Set();");
                     sbSource.AppendLine();
-                    sbSource.AppendLine($"            ___resultBytes = await ___StubHelper.GetWorkflowResultAsync(this.client, this.execution, ___options.Namespace);");
+                    sbSource.AppendLine($"            ___resultBytes = await ___StubHelper.GetWorkflowResultAsync(this.client, this.execution, ___options?.Namespace);");
 
                     if (!details.IsVoid)
                     {
@@ -1018,7 +1046,7 @@ namespace Neon.Temporal.Internal
                         sbSource.AppendLine($"            var ___argBytes        = {SerializeArgsExpression(details.Method.GetParameters())};");
                         sbSource.AppendLine($"            var ___signalCall      = new SyncSignalCall({StringLiteral(signalAttribute.Name)}, ___signalId, ___argBytes);");
                         sbSource.AppendLine($"            var ___signalCallBytes = TemporalHelper.ArgsToBytes(this.dataConverter, new object[] {{ ___signalCall }});");
-                        sbSource.AppendLine($"            var ___resultBytes     = await ___StubHelper.SyncSignalWorkflowAsync(this.client, this.execution, {StringLiteral(details.SignalMethodAttribute.Name)}, ___signalId, ___signalCallBytes, this.options.Namespace);");
+                        sbSource.AppendLine($"            var ___resultBytes     = await ___StubHelper.SyncSignalWorkflowAsync(this.client, this.execution, {StringLiteral(details.SignalMethodAttribute.Name)}, ___signalId, ___signalCallBytes, this.options?.Namespace);");
 
                         if (details.ReturnType != typeof(void))
                         {
@@ -1034,7 +1062,7 @@ namespace Neon.Temporal.Internal
                         sbSource.LogDebug($"*** 2: client    = {{___StubHelper.IsNull(client)}}");
                         sbSource.LogDebug($"*** 2: execution = {{___StubHelper.IsNull(execution)}}");
                         sbSource.LogDebug($"*** 2: options   = {{___StubHelper.IsNull(options)}}");
-                        sbSource.AppendLine($"            await ___StubHelper.SignalWorkflowAsync(this.client, this.execution, {StringLiteral(details.SignalMethodAttribute.Name)}, ___argBytes, this.options.Namespace);");
+                        sbSource.AppendLine($"            await ___StubHelper.SignalWorkflowAsync(this.client, this.execution, {StringLiteral(details.SignalMethodAttribute.Name)}, ___argBytes, this.options?.Namespace);");
                         sbSource.LogDebug("*** 3");
                     }
                 }
@@ -1067,7 +1095,7 @@ namespace Neon.Temporal.Internal
                 {
                     sbSource.AppendLine();
                     sbSource.AppendLine($"            var ___argBytes    = {SerializeArgsExpression(details.Method.GetParameters())};");
-                    sbSource.AppendLine($"            var ___resultBytes = await ___StubHelper.QueryWorkflowAsync(this.client, this.childExecution.Execution, {StringLiteral(details.QueryMethodAttribute.Name)}, ___argBytes, this.childOptions.Namespace);");
+                    sbSource.AppendLine($"            var ___resultBytes = await ___StubHelper.QueryWorkflowAsync(this.client, this.childExecution.Execution, {StringLiteral(details.QueryMethodAttribute.Name)}, ___argBytes, this.childOptions?.Namespace);");
 
                     if (!details.IsVoid)
                     {
@@ -1079,7 +1107,7 @@ namespace Neon.Temporal.Internal
                 {
                     sbSource.AppendLine();
                     sbSource.AppendLine($"            var ___argBytes    = {SerializeArgsExpression(details.Method.GetParameters())};");
-                    sbSource.AppendLine($"            var ___resultBytes = await ___StubHelper.QueryWorkflowAsync(this.client, this.execution, {StringLiteral(details.QueryMethodAttribute.Name)}, ___argBytes, this.options.Namespace);");
+                    sbSource.AppendLine($"            var ___resultBytes = await ___StubHelper.QueryWorkflowAsync(this.client, this.execution, {StringLiteral(details.QueryMethodAttribute.Name)}, ___argBytes, this.options?.Namespace);");
 
                     if (!details.IsVoid)
                     {

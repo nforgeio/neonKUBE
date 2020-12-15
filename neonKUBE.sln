@@ -400,7 +400,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "twf-args", "twf-args", "{20
 		Go\test\temporal\twf-args\noargs.go = Go\test\temporal\twf-args\noargs.go
 		Go\test\temporal\twf-args\onearg.go = Go\test\temporal\twf-args\onearg.go
 		Go\test\temporal\twf-args\sample_helper.go = Go\test\temporal\twf-args\sample_helper.go
-		Go\test\temporal\twf-args\test-wf-args.exe = Go\test\temporal\twf-args\test-wf-args.exe
 		Go\test\temporal\twf-args\twoArgs.go = Go\test\temporal\twf-args\twoArgs.go
 		Go\test\temporal\twf-args\util.go = Go\test\temporal\twf-args\util.go
 	EndProjectSection

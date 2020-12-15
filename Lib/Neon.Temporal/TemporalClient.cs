@@ -1221,12 +1221,12 @@ namespace Neon.Temporal
                         case InternalMessageTypes.WorkflowInvokeRequest:
                         case InternalMessageTypes.WorkflowSignalInvokeRequest:
                         case InternalMessageTypes.WorkflowQueryInvokeRequest:
-                        case InternalMessageTypes.ActivityInvokeLocalRequest:
 
                             await client.GetWorkerById(request.WorkerId).OnProxyRequestAsync(request);
                             break;
 
                         case InternalMessageTypes.ActivityInvokeRequest:
+                        case InternalMessageTypes.ActivityInvokeLocalRequest:
                         case InternalMessageTypes.ActivityStoppingRequest:
 
                             await client.GetWorkerById(request.WorkerId).OnActivityProxyRequestAsync(request);
@@ -1235,7 +1235,7 @@ namespace Neon.Temporal
                         default:
 
                             httpReply.StatusCode = StatusCodes.Status400BadRequest;
-                            httpReply.Message = $"[temporal-client] does not support [{request.Type}] messages from the [temporal-proxy].";
+                            httpReply.Message    = $"[temporal-client] does not support [{request.Type}] messages from the [temporal-proxy].";
                             break;
                     }
                 });

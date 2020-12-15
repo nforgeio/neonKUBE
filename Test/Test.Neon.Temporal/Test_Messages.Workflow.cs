@@ -1553,7 +1553,7 @@ namespace TestTemporal
                     ParentClosePolicy       = ParentClosePolicy.RequestCancel
                 },
 
-                ExeecutionInfo = new WorkflowExecutionInfo()
+                ExecutionInfo = new WorkflowExecutionInfo()
                 {
                     Execution       = new WorkflowExecution("workflow-id", "run-id"),
                     TypeName        = "my-workflow",
@@ -1624,25 +1624,25 @@ namespace TestTemporal
 
             //---------------------------------------------
 
-            var status = description.ExeecutionInfo;
+            var status = description.ExecutionInfo;
 
             Assert.NotNull(status);
             Assert.NotNull(status.Execution);
-            Assert.Equal(expected.ExeecutionInfo.Execution.WorkflowId, status.Execution.WorkflowId);
-            Assert.Equal(expected.ExeecutionInfo.Execution.RunId, status.Execution.RunId);
+            Assert.Equal(expected.ExecutionInfo.Execution.WorkflowId, status.Execution.WorkflowId);
+            Assert.Equal(expected.ExecutionInfo.Execution.RunId, status.Execution.RunId);
             Assert.NotNull(status.TypeName);
-            Assert.Equal(expected.ExeecutionInfo.TypeName, status.TypeName);
-            Assert.Equal(expected.ExeecutionInfo.StartTime, status.StartTime);
-            Assert.Equal(expected.ExeecutionInfo.CloseTime, status.CloseTime);
-            Assert.Equal(expected.ExeecutionInfo.CloseStatus, status.CloseStatus);
-            Assert.Equal(expected.ExeecutionInfo.HistoryLength, status.HistoryLength);
-            Assert.Equal(expected.ExeecutionInfo.ParentNamespace, status.ParentNamespace);
+            Assert.Equal(expected.ExecutionInfo.TypeName, status.TypeName);
+            Assert.Equal(expected.ExecutionInfo.StartTime, status.StartTime);
+            Assert.Equal(expected.ExecutionInfo.CloseTime, status.CloseTime);
+            Assert.Equal(expected.ExecutionInfo.CloseStatus, status.CloseStatus);
+            Assert.Equal(expected.ExecutionInfo.HistoryLength, status.HistoryLength);
+            Assert.Equal(expected.ExecutionInfo.ParentNamespace, status.ParentNamespace);
 
             Assert.NotNull(status.ParentExecution);
-            Assert.Equal(expected.ExeecutionInfo.ParentExecution.WorkflowId, status.ParentExecution.WorkflowId);
-            Assert.Equal(expected.ExeecutionInfo.ParentExecution.RunId, status.ParentExecution.RunId);
+            Assert.Equal(expected.ExecutionInfo.ParentExecution.WorkflowId, status.ParentExecution.WorkflowId);
+            Assert.Equal(expected.ExecutionInfo.ParentExecution.RunId, status.ParentExecution.RunId);
 
-            Assert.Equal(expected.ExeecutionInfo.ExecutionTime, status.ExecutionTime);
+            Assert.Equal(expected.ExecutionInfo.ExecutionTime, status.ExecutionTime);
 
             //---------------------------------------------
 
@@ -1677,11 +1677,11 @@ namespace TestTemporal
             //---------------------------------------------
 
             Assert.NotNull(status.Memo);
-            Assert.Equal(expected.ExeecutionInfo.Memo.Count, status.Memo.Count);
+            Assert.Equal(expected.ExecutionInfo.Memo.Count, status.Memo.Count);
 
-            for (int i = 0; i < expected.ExeecutionInfo.Memo.Count; i++)
+            for (int i = 0; i < expected.ExecutionInfo.Memo.Count; i++)
             {
-                var refField = expected.ExeecutionInfo.Memo.ToArray()[i];
+                var refField = expected.ExecutionInfo.Memo.ToArray()[i];
                 var field    = status.Memo.ToArray()[i];
 
                 Assert.Equal(refField.Key, field.Key);
@@ -2772,7 +2772,7 @@ namespace TestTemporal
             Assert.Equal(expected.StartToCloseTimeout, actual.StartToCloseTimeout);
             Assert.Equal(expected.DecisionTaskTimeout, actual.DecisionTaskTimeout);
             Assert.Equal(expected.WorkflowIdReusePolicy, actual.WorkflowIdReusePolicy);
-            Assert.Equal(expected.RetryOptions.MaximumAttempts, actual.RetryOptions.MaximumAttempts);
+            Assert.Equal(expected.RetryPolicy.MaximumAttempts, actual.RetryPolicy.MaximumAttempts);
         }
 
         [Fact]
@@ -2815,7 +2815,7 @@ namespace TestTemporal
                     StartToCloseTimeout    = TimeSpan.FromSeconds(2),
                     DecisionTaskTimeout    = TimeSpan.FromSeconds(3),
                     WorkflowIdReusePolicy  = WorkflowIdReusePolicy.RejectDuplicate,
-                    RetryOptions           = new RetryOptions()
+                    RetryPolicy            = new RetryPolicy()
                     {
                         MaximumAttempts = 100
                     }

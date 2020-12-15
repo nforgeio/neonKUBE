@@ -92,13 +92,8 @@ func (reply *ActivityGetLocalResultReply) SetReplayStatus(value internal.ReplayS
 func (reply *ActivityGetLocalResultReply) Build(e error, result ...interface{}) {
 	reply.ActivityReply.Build(e)
 	if len(result) > 0 {
-		if v, ok := result[0].([]interface{}); ok {
-			if _v, _ok := v[0].([]byte); _ok {
-				reply.SetResult(_v)
-			}
-			if _v, _ok := v[1].(internal.ReplayStatus); _ok {
-				reply.SetReplayStatus(_v)
-			}
+		if v, ok := result[0].([]byte); ok {
+			reply.SetResult(v)
 		}
 	}
 }

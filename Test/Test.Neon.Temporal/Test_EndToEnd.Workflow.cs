@@ -298,19 +298,34 @@ namespace TestTemporal
 
         //---------------------------------------------------------------------
 
+        public class WorkflowSleepUntilResult
+        {
+            public DateTime StartTimeUtc { get; set; }
+            public DateTime WakeTimeUtc { get; set; }
+        }
+
         [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IWorkflowSleepUntil : IWorkflow
         {
             [WorkflowMethod]
-            Task SleepUntilUtcAsync(DateTime wakeTimeUtc);
+            Task<WorkflowSleepUntilResult> SleepUntilUtcAsync(TimeSpan sleepInterval);
         }
 
         [Workflow(AutoRegister = true)]
         public class WorkflowSleepUntil : WorkflowBase, IWorkflowSleepUntil
         {
-            public async Task SleepUntilUtcAsync(DateTime wakeTimeUtc)
+            public async Task<WorkflowSleepUntilResult> SleepUntilUtcAsync(TimeSpan sleepInterval)
             {
-                await Workflow.SleepUntilUtcAsync(wakeTimeUtc);
+                var result = new WorkflowSleepUntilResult()
+                {
+                    StartTimeUtc = await Workflow.UtcNowAsync()
+                };
+
+                await Workflow.SleepUntilUtcAsync(result.StartTimeUtc + sleepInterval);
+
+                result.WakeTimeUtc = await Workflow.UtcNowAsync();
+
+                return result;
             }
         }
 
@@ -325,26 +340,18 @@ namespace TestTemporal
             // Verify that Workflow.SleepUntilAsync() can schedule a
             // wake time in the future.
 
-            var startUtcNow = DateTime.UtcNow;
-            var sleepTime   = TimeSpan.FromSeconds(5);
-            var wakeTimeUtc = startUtcNow + sleepTime;
+            var sleepInterval = TimeSpan.FromSeconds(5);
+            var result        = await stub.SleepUntilUtcAsync(sleepInterval);
 
-            await stub.SleepUntilUtcAsync(wakeTimeUtc);
+            Assert.True(NeonHelper.IsWithin(result.WakeTimeUtc, result.StartTimeUtc + sleepInterval, TemporalTestHelper.TimeFudge));
 
-            var utcNow = DateTime.UtcNow;
-
-            Assert.True(NeonHelper.IsWithin(utcNow, wakeTimeUtc, TemporalTestHelper.TimeFudge));
-
-            // Verify that scheduling a sleep time in the past is
+            // Verify that scheduling a sleep-until time in the past is
             // essentially a NOP.
 
-            stub = client.NewWorkflowStub<IWorkflowSleepUntil>();
+            stub   = client.NewWorkflowStub<IWorkflowSleepUntil>();
+            result = await stub.SleepUntilUtcAsync(TimeSpan.FromDays(-1));
 
-            startUtcNow = DateTime.UtcNow;
-
-            await stub.SleepUntilUtcAsync(startUtcNow - TimeSpan.FromDays(1));
-
-            Assert.True(NeonHelper.IsWithin(DateTime.UtcNow, startUtcNow, TemporalTestHelper.TimeFudge));
+            Assert.True(NeonHelper.IsWithin(result.WakeTimeUtc, result.StartTimeUtc, TemporalTestHelper.TimeFudge));
         }
 
         //---------------------------------------------------------------------
@@ -529,7 +536,7 @@ namespace TestTemporal
 
             var options = new WorkflowOptions()
             {
-                WorkflowId   = "cron-workflow",
+                Id           = "cron-workflow",
                 CronSchedule = "0/1 * * * *"
             };
 
@@ -1167,7 +1174,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact_Failing_BadWorkerId]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_SignalOnce()
         {
@@ -1185,7 +1192,7 @@ namespace TestTemporal
             Assert.Equal(new List<string>() { "my-signal-1" }, await task);
         }
 
-        [Fact_Failing_BadWorkerId]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_SignalTwice()
         {
@@ -1301,7 +1308,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact_Failing_BadWorkerId]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_QueryOnce()
         {
@@ -1317,7 +1324,7 @@ namespace TestTemporal
             Assert.Equal(new List<string>() { "my-query:1" }, await task);
         }
 
-        [Fact_Failing_BadWorkerId]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_QueryTwice()
         {
@@ -1339,7 +1346,7 @@ namespace TestTemporal
             Assert.Contains("my-query:2", results);
         }
 
-        [Fact_Failing_BadWorkerId]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_QueryNoResult()
         {
@@ -1536,7 +1543,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact_Failing_BadWorkerId]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_Complex()
         {
@@ -2052,7 +2059,7 @@ namespace TestTemporal
             Assert.True(WorkflowChild.WasExecuted);
         }
 
-        [Fact_Failing_BadWorkerId]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_ChildSignal()
         {
@@ -2070,7 +2077,7 @@ namespace TestTemporal
             Assert.Contains("my-signal", WorkflowChild.ReceivedSignals);
         }
 
-        [Fact_Failing_Other]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_ChildQuery()
         {
@@ -2102,7 +2109,7 @@ namespace TestTemporal
             Assert.Equal("Hello Jeff!", await stub.NestedHelloChildAsync("Jeff"));
         }
 
-        [Fact_Failing_Other]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_FutureActivity_NoArgsResult()
         {
@@ -2116,7 +2123,7 @@ namespace TestTemporal
             Assert.True(await stub.FutureActivity_NoArgsResult());
         }
 
-        [Fact_Failing_Other]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_FutureLocalActivity_NoArgsResult()
         {
@@ -2130,7 +2137,7 @@ namespace TestTemporal
             Assert.True(await stub.FutureLocalActivity_NoArgsResult());
         }
 
-        [Fact_Failing_Other]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_FutureActivity_ArgsResult()
         {
@@ -2144,7 +2151,7 @@ namespace TestTemporal
             Assert.True(await stub.FutureActivity_ArgsResult());
         }
 
-        [Fact_Failing_Other]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_FutureLocalActivity_ArgsResult()
         {
@@ -2158,7 +2165,7 @@ namespace TestTemporal
             Assert.True(await stub.FutureLocalActivity_ArgsResult());
         }
 
-        [Fact_Failing_BadWorkerId]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_ParallelActivity()
         {
@@ -2171,7 +2178,7 @@ namespace TestTemporal
             Assert.True(await stub.ParallelActivity());
         }
 
-        [Fact_Failing_Other]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_ParallelLocalActivity()
         {
@@ -2190,7 +2197,13 @@ namespace TestTemporal
         public interface IWorkflowParallel : IWorkflow
         {
             [WorkflowMethod]
-            Task<List<string>> RunAsync(int activityCount);
+            Task<string> RunAsync(int arg);
+
+            [WorkflowMethod(Name = "RunParallelWorkflowsAsync")]
+            Task<List<string>> RunParallelWorkflowsAsync(int workflowCount);
+
+            [WorkflowMethod(Name = "RunParallelActivitiesAsync")]
+            Task<List<string>> RunParallelActivitiesAsync(int activityCount);
         }
 
         [ActivityInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
@@ -2224,10 +2237,57 @@ namespace TestTemporal
         [Workflow(AutoRegister = true)]
         public class WorkflowParallel : WorkflowBase, IWorkflowParallel
         {
-            public async Task<List<string>> RunAsync(int activityCount)
+            public async Task<string> RunAsync(int arg)
+            {
+                // We're just pausing execution for a random delay between 0-2 seconds
+                // and return a result.
+
+                var delay = NeonHelper.PseudoRandomTimespan(TimeSpan.FromSeconds(2));
+
+                await Workflow.SleepAsync(delay);
+
+                return $"[arg={arg}]: Delayed for: {delay}";
+            }
+
+            public async Task<List<string>> RunParallelWorkflowsAsync(int workflowCount)
+            {
+                // This workflow runs the requested number of child workflows in parallel
+                // and then waits for them to complete, appending each workflow result
+                // to the [results] list.
+                //
+                // We're going to use a [WorkflowFutureStub<T>] to accomplish this.
+                // These stubs return an [IAsyncFuture<T>] which you can use to await
+                // the workflow completion and result via a call to [IAsyncFuture<T>.GetAsync()].
+
+                var results = new List<string>();
+                var futures = new List<IAsyncFuture<string>>();
+
+                // Start each workflow and remember its future.  This doesn't wait
+                // for the workflow to complete, so all of the workflows will 
+                // essentially be started in parallel.
+
+                for (int i = 0; i < workflowCount; i++)
+                {
+                    var stub = Workflow.NewChildWorkflowFutureStub<IDoSomethingActivity>("DoSomething");
+
+                    futures.Add(await stub.StartAsync<string>(i));
+                }
+
+                // Wait for each activity future to complete and append the activity
+                // results to the results list.
+
+                foreach (var future in futures)
+                {
+                    results.Add(await future.GetAsync());
+                }
+
+                return results;
+            }
+
+            public async Task<List<string>> RunParallelActivitiesAsync(int activityCount)
             {
                 // This workflow runs the requested number of activities in parallel
-                // and then waits for them to complete, appending the activity result
+                // and then waits for them to complete, appending each activity result
                 // to the [results] list.
                 //
                 // We're going to use an [ActivityFutureStub<T>] to accomplish this.
@@ -2248,8 +2308,8 @@ namespace TestTemporal
                     futures.Add(await stub.StartAsync<string>(i));
                 }
 
-                // Wait for each activity future to complete and append each activity
-                // result to the results list.
+                // Wait for each activity future to complete and append the activity
+                // results to the results list.
 
                 foreach (var future in futures)
                 {
@@ -2260,18 +2320,31 @@ namespace TestTemporal
             }
         }
 
-        [Fact_Failing_BadWorkerId]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_Parallel()
         {
             await SyncContext.ClearAsync;
 
-            var stub    = client.NewWorkflowStub<IWorkflowParallel>();
-            var results = await stub.RunAsync(10);
+            var count   = 1;
+            var futures = new List<ExternalWorkflowFuture<string>>();
+            var results = new List<string>();
 
-            Assert.Equal(10, results.Count);
+            for (int i = 0; i < count; i++)
+            {
+                var stub = client.NewWorkflowFutureStub<IWorkflowParallel>();
 
-            for (int i = 0; i < 10; i++)
+                futures.Add(await stub.StartAsync<string>(i));
+            }
+
+            foreach (var future in futures)
+            {
+                results.Add(await future.GetAsync());
+            }
+
+            Assert.Equal(count, results.Count);
+
+            for (int i = 0; i < count; i++)
             {
                 Assert.Contains($"[arg={i}]", results[i]);
             }
@@ -2496,7 +2569,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact_Failing_Json]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_Info()
         {
@@ -2508,7 +2581,7 @@ namespace TestTemporal
             var options = new WorkflowOptions()
             {
                 Namespace  = client.Settings.Namespace,
-                WorkflowId = "my-workflow-id"
+                Id         = "my-workflow-id"
             };
 
             var stub = client.NewWorkflowStub<IWorkflowInfo>(options: options, workflowTypeName: "my-workflow-info-type");
@@ -2517,9 +2590,9 @@ namespace TestTemporal
             Assert.Equal(options.Namespace, info.Domain);
             Assert.NotEmpty(info.RunId);
             Assert.Equal(TemporalTestHelper.TaskQueue, info.TaskQueue);
-            Assert.Equal(options.WorkflowId, info.WorkflowId);
+            Assert.Equal(options.Id, info.WorkflowId);
             Assert.Equal("my-workflow-info-type", info.WorkflowType);
-            Assert.Equal(options.WorkflowId, info.ExecutionWorkflowId);
+            Assert.Equal(options.Id, info.ExecutionWorkflowId);
             Assert.NotEmpty(info.ExecutionRunId);
 
             // $todo(jefflill):
@@ -2846,7 +2919,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact_Failing_Other]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_ExternalWorkflowStub_ById_NoResult()
         {
@@ -2861,7 +2934,7 @@ namespace TestTemporal
             Assert.True(await stub.HelloTestByIdNoResultAsync());
         }
 
-        [Fact_Failing_Other]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_ExternalWorkflowStub_ById_WithResult()
         {
@@ -2876,7 +2949,7 @@ namespace TestTemporal
             Assert.True(await stub.HelloTestByIdWithResultAsync());
         }
 
-        [Fact_NoInvokeTarget]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_ExternalWorkflowStub_ByExecution_NoResult()
         {
@@ -2891,7 +2964,7 @@ namespace TestTemporal
             Assert.True(await stub.HelloTestByExecutionNoResultAsync());
         }
 
-        [Fact_NoInvokeTarget]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_ExternalWorkflowStub_ByExecution_WithResult()
         {
@@ -3127,7 +3200,7 @@ namespace TestTemporal
             Assert.NotEmpty(untypedStub.Execution.RunId);
         }
 
-        [Fact_Failing_BadWorkerId]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_FutureChild_WithResult()
         {
@@ -3297,7 +3370,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact_Failing_Other]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_ExternalIdNoReuse()
         {
@@ -3307,7 +3380,7 @@ namespace TestTemporal
 
             var options = new WorkflowOptions()
             {
-                WorkflowId            = $"Workflow_ExternalIdNoReuse-{Guid.NewGuid().ToString("d")}",
+                Id                    = $"Workflow_ExternalIdNoReuse-{Guid.NewGuid().ToString("d")}",
                 WorkflowIdReusePolicy = WorkflowIdReusePolicy.RejectDuplicate
             };
 
@@ -3337,7 +3410,7 @@ namespace TestTemporal
 
             var options = new WorkflowOptions()
             {
-                WorkflowId            = $"Workflow_ExternalIdReuseViaOptions-{Guid.NewGuid().ToString("d")}",
+                Id                    = $"Workflow_ExternalIdReuseViaOptions-{Guid.NewGuid().ToString("d")}",
                 WorkflowIdReusePolicy = WorkflowIdReusePolicy.AllowDuplicate
             };
 
@@ -3365,7 +3438,7 @@ namespace TestTemporal
 
             var options = new WorkflowOptions()
             {
-                WorkflowId = $"Workflow_ExternalIdReuseViaAttribute-{Guid.NewGuid().ToString("d")}",
+                Id = $"Workflow_ExternalIdReuseViaAttribute-{Guid.NewGuid().ToString("d")}",
             };
 
             // Do the first run.
@@ -3545,7 +3618,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact_Failing_BadWorkerId]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_UntypedChildFuture_WithNoResult()
         {
@@ -3559,7 +3632,7 @@ namespace TestTemporal
             Assert.True(await stub.WithNoResult() && !WorkflowUntypedChildFuture.Error);
         }
 
-        [Fact_Failing_BadWorkerId]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_UntypedChildFuture_WithResult()
         {
@@ -3994,7 +4067,7 @@ namespace TestTemporal
             Assert.Null(await stub.QueueToSelf_Timeout());
         }
 
-        [Fact_Failing_BadWorkerId]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_Queue_TimeoutWithDequeue()
         {
@@ -4024,7 +4097,7 @@ namespace TestTemporal
             Assert.Null(await stub.QueueToSelf_WithClose());
         }
 
-        [Fact_Failing_BadWorkerId]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_Queue_FromSignal_Single()
         {
@@ -4044,7 +4117,7 @@ namespace TestTemporal
             Assert.Contains(received, v => v == "signal: 0");
         }
 
-        [Fact_Failing_BadWorkerId]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_Queue_FromSignal_Multiple()
         {
@@ -4079,7 +4152,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact_Failing_BadWorkerId]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_Queue_CloseViaSignal()
         {
@@ -4186,7 +4259,7 @@ namespace TestTemporal
             Assert.Equal(27, person.Age);
         }
 
-        [Fact_Failing_BadWorkerId]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_Queue_ViaExternalStub_ByExecution()
         {
@@ -4207,7 +4280,7 @@ namespace TestTemporal
             Assert.Contains(received, v => v == "signal: 0");
         }
 
-        [Fact_Failing_Other]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_Queue_ViaExternalStub_ByIDs()
         {
@@ -4529,7 +4602,7 @@ namespace TestTemporal
                     var stub = client.NewWorkflowStub<IBusyworkWorkflow>(
                         new WorkflowOptions()
                         {
-                            WorkflowId = $"busywork-{Guid.NewGuid().ToString("d")}",
+                            Id          = $"busywork-{Guid.NewGuid().ToString("d")}",
                             TaskQueue   = taskQueue
                         });
 

@@ -69,6 +69,22 @@ func (request *WorkflowRegisterRequest) SetName(value *string) {
 	request.SetStringProperty("Name", value)
 }
 
+// GetDisableAlreadyRegisteredCheck gets a WorkflowRegisterRequest's DisableAlreadyRegisteredCheck value
+// from its properties map
+//
+// returns bool
+func (request *WorkflowRegisterRequest) GetDisableAlreadyRegisteredCheck() bool {
+	return request.GetBoolProperty("DisableAlreadyRegisteredCheck")
+}
+
+// SetDisableAlreadyRegisteredCheck sets a WorkflowRegisterRequest's DisableAlreadyRegisteredCheck value
+// in its properties map
+//
+// param value bool
+func (request *WorkflowRegisterRequest) SetDisableAlreadyRegisteredCheck(value bool) {
+	request.SetBoolProperty("DisableAlreadyRegisteredCheck", value)
+}
+
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
@@ -86,5 +102,6 @@ func (request *WorkflowRegisterRequest) CopyTo(target IProxyMessage) {
 	request.WorkflowRequest.CopyTo(target)
 	if v, ok := target.(*WorkflowRegisterRequest); ok {
 		v.SetName(request.GetName())
+		v.SetDisableAlreadyRegisteredCheck(request.GetDisableAlreadyRegisteredCheck())
 	}
 }

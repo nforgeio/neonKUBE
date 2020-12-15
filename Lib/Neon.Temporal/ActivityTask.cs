@@ -39,7 +39,7 @@ namespace Neon.Temporal
         /// <summary>
         /// The parent workflow type name.
         /// </summary>
-        public string WorkflowTypeName { get; set; }
+        public WorkflowType WorkflowType { get; set; }
 
         /// <summary>
         /// The parent workflow namespace.
@@ -59,7 +59,7 @@ namespace Neon.Temporal
         /// <summary>
         /// The activity type name.
         /// </summary>
-        public string ActivityTypeName { get; set; }
+        public ActivityType ActivityType { get; set; }
 
         /// <summary>
         /// The activity task queue.
@@ -86,7 +86,7 @@ namespace Neon.Temporal
         /// <summary>
         /// Time when the activity will timeout.
         /// </summary>
-        public DateTime DeadlineTime { get; set; }
+        public DateTime Deadline { get; set; }
 
         /// <summary>
         /// Indicates how many times the activity was been restarted.  This will be zero

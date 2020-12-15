@@ -1107,7 +1107,7 @@ func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *m
 			zap.Int64("RequestId", requestID),
 			zap.Int("ProcessId", os.Getpid()))
 
-		// wait for ActivityInvokeReply
+		// wait for InvokeReply
 		result := <-op.GetChannel()
 		switch s := result.(type) {
 		case error:

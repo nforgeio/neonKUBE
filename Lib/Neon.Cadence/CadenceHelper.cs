@@ -162,7 +162,7 @@ namespace Neon.Cadence.Internal
         /// </para>
         /// <para>
         /// Otherwise, we'll return the fully qualified name of the workflow interface
-        /// with the leadting "I" removed.
+        /// with the leading "I" removed.
         /// </para>
         /// </remarks>
         internal static string GetWorkflowTypeName(Type workflowType, WorkflowAttribute workflowAttribute)
@@ -201,6 +201,25 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
+        /// Returns the workflow type name for a workflow interface and target method.
+        /// </summary>
+        /// <typeparam name="TWorkflowInterface">The workflow interface.</typeparam>
+        /// <param name="methodName">
+        /// Optionally specifies the target method name (as specified in the <c>[WorkflowMethod]</c>
+        /// attribiute tagging the workflow method within the interface.
+        /// </param>
+        /// <returns>The workflow type name for the workflow interface and target method.</returns>
+        /// <exception cref="ArgumentException">Thrown if target method does not exist.</exception>
+        /// <remarks>
+        /// <paramref name="methodName"/> is optional.  When this is passed as <c>null</c>
+        /// or empty, the default workflow method will be targeted (if any).
+        /// </remarks>
+        public static string GetWorkflowTypeName<TWorkflowInterface>(string methodName = null)
+        {
+            return GetWorkflowTarget(typeof(TWorkflowInterface), methodName).WorkflowTypeName;
+        }
+
+        /// <summary>
         /// Returns the Cadence activity type name to be used for an activity interface or
         /// implementation class.
         /// </summary>
@@ -214,7 +233,7 @@ namespace Neon.Cadence.Internal
         /// </para>
         /// <para>
         /// Otherwise, we'll return the fully qualified name of the activity interface
-        /// with the leadting "I" removed.
+        /// with the leading "I" removed.
         /// </para>
         /// </remarks>
         internal static string GetActivityTypeName(Type activityType, ActivityAttribute activityAttribute)
@@ -250,6 +269,26 @@ namespace Neon.Cadence.Internal
             }
 
             return TypeNameToSource(fullName);
+        }
+
+        /// <summary>
+        /// Returns the Cadence activity type name for an activity interface and target method.
+        /// </summary>
+        /// <typeparam name="TActivityInterface">The workflow interface.</typeparam>
+        /// <param name="methodName">
+        /// Optionally specifies the target method name (as specified in the <c>[WorkflowMethod]</c>
+        /// attribiute tagging the workflow method within the interface.
+        /// </param>
+        /// <returns>The workflow type name for the workflow interface and target method.</returns>
+        /// <exception cref="ArgumentException">Thrown if target method does not exist.</exception>
+        /// <remarks>
+        /// <paramref name="methodName"/> is optional.  When this is passed as <c>null</c>
+        /// or empty, the default workflow method will be targeted (if any).
+        /// </remarks>
+        public static string GetActivityTypeName<TActivityInterface>(string methodName = null)
+            where TActivityInterface : IActivity
+        {
+            return GetActivityTarget(typeof(TActivityInterface), methodName).ActivityTypeName;
         }
 
         /// <summary>
@@ -1216,25 +1255,6 @@ namespace Neon.Cadence.Internal
             }
 
             return (workflowTypeName, targetMethod, methodAttribute);
-        }
-
-        /// <summary>
-        /// Returns the workflow type name for a workflow interface and target method.
-        /// </summary>
-        /// <typeparam name="TWorkflowInterface">The workflow interface.</typeparam>
-        /// <param name="methodName">
-        /// Optionally specifies the target method name (as specified in the <c>[WorkflowMethod]</c>
-        /// attribiute tagging the workflow method within the interface.
-        /// </param>
-        /// <returns>The workflow type name for the workflow interface and target method.</returns>
-        /// <exception cref="ArgumentException">Thrown if target method does not exist.</exception>
-        /// <remarks>
-        /// <paramref name="methodName"/> is optional.  When this is passed as <c>null</c>
-        /// or empty, the default workflow method will be targeted (if any).
-        /// </remarks>
-        public static string GetWorkflowTypeName<TWorkflowInterface>(string methodName = null)
-        {
-            return GetWorkflowTarget(typeof(TWorkflowInterface), methodName).WorkflowTypeName;
         }
 
         /// <summary>

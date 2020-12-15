@@ -83,7 +83,7 @@ namespace Neon.Temporal
         /// <summary>
         /// The activity retry options.
         /// </summary>
-        public RetryOptions RetryOptions { get; set; } = null;
+        public RetryPolicy RetryPolicy { get; set; } = null;
 
         /// <summary>
         /// Returns a shallow copy of the instance.
@@ -94,7 +94,7 @@ namespace Neon.Temporal
             return new LocalActivityOptions()
             {
                 ScheduleToCloseTimeout = this.ScheduleToCloseTimeout,
-                RetryOptions           = this.RetryOptions
+                RetryPolicy            = this.RetryPolicy
             };
         }
     }
