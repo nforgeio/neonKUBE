@@ -41,7 +41,7 @@ using Xunit;
 
 namespace TestTemporal
 {
-    public partial class Test_EndToEnd : IClassFixture<TemporalFixture>, IDisposable
+    public partial class Test_EndToEnd : IClassFixture<TemporalFixture>
     {
         //---------------------------------------------------------------------
         // Private types
@@ -64,11 +64,10 @@ namespace TestTemporal
 
         private TemporalFixture     fixture;
         private TemporalClient      client;
-        private HttpClient          proxyClient;
 
         public Test_EndToEnd(TemporalFixture fixture)
         {
-            // Setup a service for activity dependency injection testing if it doesn't
+            // Configure a service for activity dependency injection testing if it doesn't
             // already exist.
 
             if (NeonHelper.ServiceContainer.GetService<ActivityDependency>() == null)
@@ -87,14 +86,13 @@ namespace TestTemporal
                 DebugPrelaunched       = TemporalTestHelper.DebugPrelaunched,
                 DebugDisableHeartbeats = TemporalTestHelper.DebugDisableHeartbeats,
                 ClientIdentity         = TemporalTestHelper.ClientIdentity,
-                DefaultTaskQueue       = TemporalTestHelper.TaskQueue,
+                DefaultTaskQueue       = TemporalTestHelper.TaskQueue
             };
 
             if (fixture.Start(settings, composeFile: TemporalTestHelper.TemporalStackDefinition, reconnect: true, keepRunning: TemporalTestHelper.KeepTemporalServerOpen) == TestFixtureStatus.Started)
             {
-                this.fixture     = fixture;
-                this.client      = fixture.Client;
-                this.proxyClient = new HttpClient() { BaseAddress = client.ProxyUri };
+                this.fixture = fixture;
+                this.client  = fixture.Client;
 
                 // Create a worker and register the workflow and activity 
                 // implementations to let Temporal know we're open for business.
@@ -106,18 +104,8 @@ namespace TestTemporal
             }
             else
             {
-                this.fixture     = fixture;
-                this.client      = fixture.Client;
-                this.proxyClient = new HttpClient() { BaseAddress = client.ProxyUri };
-            }
-        }
-
-        public void Dispose()
-        {
-            if (proxyClient != null)
-            {
-                proxyClient.Dispose();
-                proxyClient = null;
+                this.fixture = fixture;
+                this.client  = fixture.Client;
             }
         }
     }

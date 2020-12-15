@@ -1235,7 +1235,7 @@ namespace Neon.Temporal
                         default:
 
                             httpReply.StatusCode = StatusCodes.Status400BadRequest;
-                            httpReply.Message = $"[temporal-client] does not support [{request.Type}] messages from the [temporal-proxy].";
+                            httpReply.Message    = $"[temporal-client] does not support [{request.Type}] messages from the [temporal-proxy].";
                             break;
                     }
                 });

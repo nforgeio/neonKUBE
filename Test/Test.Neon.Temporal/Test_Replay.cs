@@ -59,7 +59,7 @@ namespace TestTemporal
     // perform the specified operation on the first pass, trigger a replay, and
     // then ensure that the operation returned the same results on the second pass.
 
-    public class Test_Replay : IClassFixture<TemporalFixture>, IDisposable
+    public class Test_Replay : IClassFixture<TemporalFixture>
     {
         private const int maxWaitSeconds = 5;
 
@@ -79,7 +79,8 @@ namespace TestTemporal
                 Debug                  = TemporalTestHelper.Debug,
                 DebugPrelaunched       = TemporalTestHelper.DebugPrelaunched,
                 DebugDisableHeartbeats = TemporalTestHelper.DebugDisableHeartbeats,
-                ClientIdentity         = TemporalTestHelper.ClientIdentity
+                ClientIdentity         = TemporalTestHelper.ClientIdentity,
+                DefaultTaskQueue       = TemporalTestHelper.TaskQueue
             };
 
             if (fixture.Start(settings, composeFile: TemporalTestHelper.TemporalStackDefinition, reconnect: true, keepRunning: TemporalTestHelper.KeepTemporalServerOpen) == TestFixtureStatus.Started)
@@ -100,10 +101,6 @@ namespace TestTemporal
                 this.fixture = fixture;
                 this.client  = fixture.Client;
             }
-        }
-
-        public void Dispose()
-        {
         }
 
         //---------------------------------------------------------------------
@@ -333,7 +330,7 @@ namespace TestTemporal
 
                         if (firstPass)
                         {
-                            firstPass = false;
+                            firstPass     = false;
                             originalValue = await Workflow.SideEffectAsync<string>(() => "my-value");
 
                             await DecisionAsync();
@@ -560,7 +557,7 @@ namespace TestTemporal
 
                         if (firstPass)
                         {
-                            firstPass = false;
+                            firstPass     = false;
                             originalValue = await localActivityStub.RunAsync("Hello World!");
 
                             await DecisionAsync();

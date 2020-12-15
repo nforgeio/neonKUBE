@@ -220,6 +220,7 @@ namespace NeonIdentityService
         /// <returns>The <see cref="Client"/> information or <c>null</c> when the client doesn't exist.</returns>
         public async Task<Client> FindClientByIdAsync(string clientId)
         {
+            await Task.CompletedTask;
             throw new NotImplementedException();
 
             //await using (var connection = await connectionOpenerAsync())
