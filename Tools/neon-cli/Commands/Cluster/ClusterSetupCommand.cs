@@ -121,7 +121,7 @@ OPTIONS:
         private const string        joinCommandMarker      = "kubeadm join";
         private const int           maxJoinAttempts        = 5;
         private readonly TimeSpan   joinRetryDelay         = TimeSpan.FromSeconds(5);
-        private readonly TimeSpan   clusterOpTimeout       = TimeSpan.FromMinutes(10);
+        private readonly TimeSpan   clusterOpTimeout       = TimeSpan.FromMinutes(20);
         private readonly TimeSpan   clusterOpRetryInterval = TimeSpan.FromSeconds(10);
 
         private KubeConfigContext       kubeContext;
@@ -2775,9 +2775,9 @@ rm -rf {chartName}*
                     var values         = new List<KeyValuePair<string, object>>();
 
                     var replicas = Math.Max(1, cluster.Nodes.Count() / 5);
-                    if (replicas > cluster.Nodes.Where(n => n.Metadata.Labels.Logs).Count())
+                    if (replicas > cluster.Nodes.Where(n => n.Metadata.Labels.LogsInternal).Count())
                     {
-                        replicas = cluster.Nodes.Where(n => n.Metadata.Labels.Logs).Count();
+                        replicas = cluster.Nodes.Where(n => n.Metadata.Labels.LogsInternal).Count();
                     }
 
                     values.Add(new KeyValuePair<string, object>("replicas", replicas));
