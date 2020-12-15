@@ -466,7 +466,8 @@ Server Requirements:
                     new SetupController<NodeDefinition>(operation, cluster.Nodes)
                     {
                         ShowStatus  = !Program.Quiet,
-                        MaxParallel = Program.MaxParallel
+                        MaxParallel = Program.MaxParallel,
+                        ShowElapsed = true
                     };
 
                 // Prepare the nodes.

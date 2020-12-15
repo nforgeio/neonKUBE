@@ -281,8 +281,9 @@ OPTIONS:
                     var controller =
                         new SetupController<NodeDefinition>(new string[] { "cluster", "setup", $"[{cluster.Name}]" }, cluster.Nodes)
                         {
-                            ShowStatus = !Program.Quiet,
-                            MaxParallel = Program.MaxParallel
+                            ShowStatus  = !Program.Quiet,
+                            MaxParallel = Program.MaxParallel,
+                            ShowElapsed = true
                         };
 
                     controller.AddGlobalStep("download binaries", () => WorkstationBinaries());
