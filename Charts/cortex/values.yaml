@@ -67,7 +67,7 @@ cortexConfig:
           etcd:
             endpoints:
               - neon-metrics-etcd:2379
-        replication_factor: 1
+        replication_factor: 3
 
   # Use yugabyte as storage -for both index store and chunks store.
   schema:
@@ -122,8 +122,8 @@ tolerations:
 
 resources:
   limits:
-    cpu: 750m
-    memory: 512Mi
+    cpu: 1
+    memory: 1Gi
   requests:
     cpu: 100m
     memory: 256Mi

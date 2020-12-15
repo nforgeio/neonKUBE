@@ -17,7 +17,7 @@ output:
   scheme: http
   sslVersion: TLSv1
   buffer_chunk_limit: 64MB
-  buffer_queue_limit: 4GB
+  buffer_queue_limit: 32
 
 env: {}
 
