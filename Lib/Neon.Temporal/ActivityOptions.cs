@@ -197,8 +197,8 @@ namespace Neon.Temporal
         /// </summary>
         /// <remarks>
         /// <para>
-        /// When <see cref="RetryOptions.ExpirationInterval"/> is specified and it is larger than the activity's 
-        /// <see cref="ScheduleToStartTimeout"/>, then the <see cref="RetryOptions.ExpirationInterval"/> will override 
+        /// When <see cref="RetryPolicy.ExpirationInterval"/> is specified and it is larger than the activity's 
+        /// <see cref="ScheduleToStartTimeout"/>, then the <see cref="RetryPolicy.ExpirationInterval"/> will override 
         /// activity's <see cref="ScheduleToStartTimeout"/>. This is to avoid retrying on <see cref="ScheduleToStartTimeout"/>
         /// error which only happen when worker is not picking up the task within the timeout.
         /// </para>
@@ -209,7 +209,7 @@ namespace Neon.Temporal
         /// The same applies to <see cref="StartToCloseTimeout"/>.
         /// </para>
         /// </remarks>
-        public RetryOptions RetryOptions { get; set; }
+        public RetryPolicy RetryPolicy { get; set; }
 
         /// <summary>
         /// Returns a shallow clone of the current instance.
@@ -221,7 +221,7 @@ namespace Neon.Temporal
             {
                 Namespace              = this.Namespace,
                 HeartbeatTimeout       = this.HeartbeatTimeout,
-                RetryOptions           = this.RetryOptions,
+                RetryPolicy            = this.RetryPolicy,
                 ScheduleToCloseTimeout = this.ScheduleToCloseTimeout,
                 ScheduleToStartTimeout = this.ScheduleToStartTimeout,
                 StartToCloseTimeout    = this.StartToCloseTimeout,

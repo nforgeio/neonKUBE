@@ -2772,7 +2772,7 @@ namespace TestTemporal
             Assert.Equal(expected.StartToCloseTimeout, actual.StartToCloseTimeout);
             Assert.Equal(expected.DecisionTaskTimeout, actual.DecisionTaskTimeout);
             Assert.Equal(expected.WorkflowIdReusePolicy, actual.WorkflowIdReusePolicy);
-            Assert.Equal(expected.RetryOptions.MaximumAttempts, actual.RetryOptions.MaximumAttempts);
+            Assert.Equal(expected.RetryPolicy.MaximumAttempts, actual.RetryPolicy.MaximumAttempts);
         }
 
         [Fact]
@@ -2815,7 +2815,7 @@ namespace TestTemporal
                     StartToCloseTimeout    = TimeSpan.FromSeconds(2),
                     DecisionTaskTimeout    = TimeSpan.FromSeconds(3),
                     WorkflowIdReusePolicy  = WorkflowIdReusePolicy.RejectDuplicate,
-                    RetryOptions           = new RetryOptions()
+                    RetryPolicy            = new RetryPolicy()
                     {
                         MaximumAttempts = 100
                     }

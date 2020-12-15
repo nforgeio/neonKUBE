@@ -536,7 +536,7 @@ namespace TestTemporal
 
             var options = new WorkflowOptions()
             {
-                WorkflowId   = "cron-workflow",
+                Id           = "cron-workflow",
                 CronSchedule = "0/1 * * * *"
             };
 
@@ -2123,7 +2123,7 @@ namespace TestTemporal
             Assert.True(await stub.FutureActivity_NoArgsResult());
         }
 
-        [Fact_BadWorkerId]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_FutureLocalActivity_NoArgsResult()
         {
@@ -2178,7 +2178,7 @@ namespace TestTemporal
             Assert.True(await stub.ParallelActivity());
         }
 
-        [Fact_BadWorkerId]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_ParallelLocalActivity()
         {
@@ -2569,7 +2569,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact_Failing_Json]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_Info()
         {
@@ -2581,7 +2581,7 @@ namespace TestTemporal
             var options = new WorkflowOptions()
             {
                 Namespace  = client.Settings.Namespace,
-                WorkflowId = "my-workflow-id"
+                Id         = "my-workflow-id"
             };
 
             var stub = client.NewWorkflowStub<IWorkflowInfo>(options: options, workflowTypeName: "my-workflow-info-type");
@@ -2590,9 +2590,9 @@ namespace TestTemporal
             Assert.Equal(options.Namespace, info.Domain);
             Assert.NotEmpty(info.RunId);
             Assert.Equal(TemporalTestHelper.TaskQueue, info.TaskQueue);
-            Assert.Equal(options.WorkflowId, info.WorkflowId);
+            Assert.Equal(options.Id, info.WorkflowId);
             Assert.Equal("my-workflow-info-type", info.WorkflowType);
-            Assert.Equal(options.WorkflowId, info.ExecutionWorkflowId);
+            Assert.Equal(options.Id, info.ExecutionWorkflowId);
             Assert.NotEmpty(info.ExecutionRunId);
 
             // $todo(jefflill):
@@ -3370,7 +3370,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact_Failing_Json]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_ExternalIdNoReuse()
         {
@@ -3380,7 +3380,7 @@ namespace TestTemporal
 
             var options = new WorkflowOptions()
             {
-                WorkflowId            = $"Workflow_ExternalIdNoReuse-{Guid.NewGuid().ToString("d")}",
+                Id                    = $"Workflow_ExternalIdNoReuse-{Guid.NewGuid().ToString("d")}",
                 WorkflowIdReusePolicy = WorkflowIdReusePolicy.RejectDuplicate
             };
 
@@ -3410,7 +3410,7 @@ namespace TestTemporal
 
             var options = new WorkflowOptions()
             {
-                WorkflowId            = $"Workflow_ExternalIdReuseViaOptions-{Guid.NewGuid().ToString("d")}",
+                Id                    = $"Workflow_ExternalIdReuseViaOptions-{Guid.NewGuid().ToString("d")}",
                 WorkflowIdReusePolicy = WorkflowIdReusePolicy.AllowDuplicate
             };
 
@@ -3438,7 +3438,7 @@ namespace TestTemporal
 
             var options = new WorkflowOptions()
             {
-                WorkflowId = $"Workflow_ExternalIdReuseViaAttribute-{Guid.NewGuid().ToString("d")}",
+                Id = $"Workflow_ExternalIdReuseViaAttribute-{Guid.NewGuid().ToString("d")}",
             };
 
             // Do the first run.
@@ -3454,7 +3454,7 @@ namespace TestTemporal
             Assert.Equal("Hello Jill!", await stub.HelloWithAttributeAsync("Jill"));
         }
 
-        [Fact_Failing_Json]
+        [Fact_Failing_Errors]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_ChildIdNoReuse()
         {
@@ -4602,7 +4602,7 @@ namespace TestTemporal
                     var stub = client.NewWorkflowStub<IBusyworkWorkflow>(
                         new WorkflowOptions()
                         {
-                            WorkflowId = $"busywork-{Guid.NewGuid().ToString("d")}",
+                            Id          = $"busywork-{Guid.NewGuid().ToString("d")}",
                             TaskQueue   = taskQueue
                         });
 

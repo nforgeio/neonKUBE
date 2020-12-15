@@ -54,7 +54,7 @@ namespace Neon.Temporal
 
         /// <summary>
         /// The Temporal error reason used for specifying non-retryable errors
-        /// within a <see cref="RetryOptions"/> instance.
+        /// within a <see cref="RetryPolicy"/> instance.
         /// </summary>
         internal string Reason
         {

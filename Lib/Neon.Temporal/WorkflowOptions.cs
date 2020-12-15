@@ -196,7 +196,7 @@ namespace Neon.Temporal
         /// Optionally specifies the business ID for a workflow.  This defaults
         /// to a generated UUID.
         /// </summary>
-        public string WorkflowId { get; set; } = null;
+        public string Id { get; set; } = null;
 
         /// <summary>
         /// Optionally specifies the target Temporal namespace.  This defaults to the namespace
@@ -257,9 +257,9 @@ namespace Neon.Temporal
         public WorkflowIdReusePolicy WorkflowIdReusePolicy { get; set; } = Temporal.WorkflowIdReusePolicy.UseDefault;
         
         /// <summary>
-        /// Optional retry options for the workflow.
+        /// Optional retry policy for the workflow.
         /// </summary>
-        public RetryOptions RetryOptions { get; set; }
+        public RetryPolicy RetryPolicy { get; set; }
 
         /// <summary>
         /// Optionally specifies a recurring schedule for the workflow.  This can be set to a string specifying
@@ -341,15 +341,15 @@ namespace Neon.Temporal
         {
             return new WorkflowOptions()
             {
-                 Namespace             = this.Namespace,
+                Namespace              = this.Namespace,
                 TaskQueue              = this.TaskQueue,
                 CronSchedule           = this.CronSchedule,
                 ScheduleToStartTimeout = this.ScheduleToStartTimeout,
                 StartToCloseTimeout    = this.StartToCloseTimeout,
                 Memo                   = this.Memo,
-                RetryOptions           = this.RetryOptions,
+                RetryPolicy            = this.RetryPolicy,
                 DecisionTaskTimeout    = this.DecisionTaskTimeout,
-                WorkflowId             = this.WorkflowId,
+                Id                     = this.Id,
                 WorkflowIdReusePolicy  = this.WorkflowIdReusePolicy
             };
         }

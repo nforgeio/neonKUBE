@@ -265,7 +265,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact_Failing_Json]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Base_DescribeQueueList()
         {
@@ -273,7 +273,7 @@ namespace TestTemporal
 
             // Verify some information about decision tasks.
 
-            var description = await client.DescribeQueueListAsync(TemporalTestHelper.TaskQueue, TaskQueueType.Decision);
+            var description = await client.DescribeQueueListAsync(TemporalTestHelper.TaskQueue, TaskQueueType.Workflow);
 
             Assert.NotNull(description);
 
@@ -304,7 +304,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact_Failing_Json]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Base_DescribeWorkflowExecutionAsync()
         {
@@ -319,7 +319,7 @@ namespace TestTemporal
             var stub = client.NewWorkflowStub<IBaseWorkflow>(
                 new WorkflowOptions() 
                 {
-                    WorkflowId = workflowId
+                    Id = workflowId
                 });
 
             await stub.RunAsync();

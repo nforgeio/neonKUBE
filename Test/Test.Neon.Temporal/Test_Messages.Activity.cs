@@ -216,7 +216,7 @@ namespace TestTemporal
                     StartToCloseTimeout    = TimeSpan.FromSeconds(3),
                     HeartbeatTimeout       = TimeSpan.FromSeconds(4),
                     WaitForCancellation    = true,
-                    RetryOptions           = new RetryOptions() { MaximumInterval = TimeSpan.FromSeconds(5) }
+                    RetryPolicy           = new RetryPolicy() { MaximumInterval = TimeSpan.FromSeconds(5) }
                 };
 
                 Assert.Equal(444, message.ClientId);
@@ -230,8 +230,8 @@ namespace TestTemporal
                 Assert.Equal(TimeSpan.FromSeconds(3), message.Options.StartToCloseTimeout);
                 Assert.Equal(TimeSpan.FromSeconds(4), message.Options.HeartbeatTimeout);
                 Assert.True(message.Options.WaitForCancellation);
-                Assert.NotNull(message.Options.RetryOptions);
-                Assert.Equal(TimeSpan.FromSeconds(5), message.Options.RetryOptions.MaximumInterval);
+                Assert.NotNull(message.Options.RetryPolicy);
+                Assert.Equal(TimeSpan.FromSeconds(5), message.Options.RetryPolicy.MaximumInterval);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -250,8 +250,8 @@ namespace TestTemporal
                 Assert.Equal(TimeSpan.FromSeconds(3), message.Options.StartToCloseTimeout);
                 Assert.Equal(TimeSpan.FromSeconds(4), message.Options.HeartbeatTimeout);
                 Assert.True(message.Options.WaitForCancellation);
-                Assert.NotNull(message.Options.RetryOptions);
-                Assert.Equal(TimeSpan.FromSeconds(5), message.Options.RetryOptions.MaximumInterval);
+                Assert.NotNull(message.Options.RetryPolicy);
+                Assert.Equal(TimeSpan.FromSeconds(5), message.Options.RetryPolicy.MaximumInterval);
 
                 // Verify Clone()
 
@@ -268,8 +268,8 @@ namespace TestTemporal
                 Assert.Equal(TimeSpan.FromSeconds(3), message.Options.StartToCloseTimeout);
                 Assert.Equal(TimeSpan.FromSeconds(4), message.Options.HeartbeatTimeout);
                 Assert.True(message.Options.WaitForCancellation);
-                Assert.NotNull(message.Options.RetryOptions);
-                Assert.Equal(TimeSpan.FromSeconds(5), message.Options.RetryOptions.MaximumInterval);
+                Assert.NotNull(message.Options.RetryPolicy);
+                Assert.Equal(TimeSpan.FromSeconds(5), message.Options.RetryPolicy.MaximumInterval);
 
                 // Echo the message via the associated [temporal-proxy] and verify.
 
@@ -286,8 +286,8 @@ namespace TestTemporal
                 Assert.Equal(TimeSpan.FromSeconds(3), message.Options.StartToCloseTimeout);
                 Assert.Equal(TimeSpan.FromSeconds(4), message.Options.HeartbeatTimeout);
                 Assert.True(message.Options.WaitForCancellation);
-                Assert.NotNull(message.Options.RetryOptions);
-                Assert.Equal(TimeSpan.FromSeconds(5), message.Options.RetryOptions.MaximumInterval);
+                Assert.NotNull(message.Options.RetryPolicy);
+                Assert.Equal(TimeSpan.FromSeconds(5), message.Options.RetryPolicy.MaximumInterval);
             }
         }
 
@@ -1018,7 +1018,7 @@ namespace TestTemporal
                 message.Options = new LocalActivityOptions()
                 {
                     ScheduleToCloseTimeout = TimeSpan.FromSeconds(1),
-                    RetryOptions = new RetryOptions() { MaximumInterval = TimeSpan.FromSeconds(5) }
+                    RetryPolicy = new RetryPolicy() { MaximumInterval = TimeSpan.FromSeconds(5) }
                 };
 
                 Assert.Equal(444, message.ClientId);
@@ -1026,8 +1026,8 @@ namespace TestTemporal
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.NotNull(message.Options);
                 Assert.Equal(TimeSpan.FromSeconds(1), message.Options.ScheduleToCloseTimeout);
-                Assert.NotNull(message.Options.RetryOptions);
-                Assert.Equal(TimeSpan.FromSeconds(5), message.Options.RetryOptions.MaximumInterval);
+                Assert.NotNull(message.Options.RetryPolicy);
+                Assert.Equal(TimeSpan.FromSeconds(5), message.Options.RetryPolicy.MaximumInterval);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -1040,8 +1040,8 @@ namespace TestTemporal
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.NotNull(message.Options);
                 Assert.Equal(TimeSpan.FromSeconds(1), message.Options.ScheduleToCloseTimeout);
-                Assert.NotNull(message.Options.RetryOptions);
-                Assert.Equal(TimeSpan.FromSeconds(5), message.Options.RetryOptions.MaximumInterval);
+                Assert.NotNull(message.Options.RetryPolicy);
+                Assert.Equal(TimeSpan.FromSeconds(5), message.Options.RetryPolicy.MaximumInterval);
 
                 // Verify Clone()
 
@@ -1052,8 +1052,8 @@ namespace TestTemporal
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.NotNull(message.Options);
                 Assert.Equal(TimeSpan.FromSeconds(1), message.Options.ScheduleToCloseTimeout);
-                Assert.NotNull(message.Options.RetryOptions);
-                Assert.Equal(TimeSpan.FromSeconds(5), message.Options.RetryOptions.MaximumInterval);
+                Assert.NotNull(message.Options.RetryPolicy);
+                Assert.Equal(TimeSpan.FromSeconds(5), message.Options.RetryPolicy.MaximumInterval);
 
                 // Echo the message via the associated [temporal-proxy] and verify.
 
@@ -1064,8 +1064,8 @@ namespace TestTemporal
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.NotNull(message.Options);
                 Assert.Equal(TimeSpan.FromSeconds(1), message.Options.ScheduleToCloseTimeout);
-                Assert.NotNull(message.Options.RetryOptions);
-                Assert.Equal(TimeSpan.FromSeconds(5), message.Options.RetryOptions.MaximumInterval);
+                Assert.NotNull(message.Options.RetryPolicy);
+                Assert.Equal(TimeSpan.FromSeconds(5), message.Options.RetryPolicy.MaximumInterval);
             }
         }
 
@@ -1327,8 +1327,8 @@ namespace TestTemporal
         {
             Assert.Equal(expected.ActivityId , actual.ActivityId);
             Assert.Equal(expected.Attempt , actual.Attempt);
-            Assert.Equal(expected.ActivityTypeName , actual.ActivityTypeName);
-            Assert.Equal(expected.DeadlineTime , actual.DeadlineTime);
+            Assert.Equal(expected.ActivityType.Name , actual.ActivityType.Name);
+            Assert.Equal(expected.Deadline , actual.Deadline);
             Assert.Equal(expected.HeartbeatTimeout , actual.HeartbeatTimeout);
             Assert.Equal(expected.ScheduledTime, actual.ScheduledTime);
             Assert.Equal(expected.StartedTime , actual.StartedTime);
@@ -1337,7 +1337,7 @@ namespace TestTemporal
             Assert.Equal(expected.WorkflowNamespace , actual.WorkflowNamespace);
             Assert.Equal(expected.WorkflowExecution.WorkflowId , actual.WorkflowExecution.WorkflowId);
             Assert.Equal(expected.WorkflowExecution.RunId , actual.WorkflowExecution.RunId);
-            Assert.Equal(expected.WorkflowTypeName , actual.WorkflowTypeName);
+            Assert.Equal(expected.WorkflowType.Name , actual.WorkflowType.Name);
         }
 
         [Fact]
@@ -1375,10 +1375,10 @@ namespace TestTemporal
 
                 var expected = new ActivityTask()
                 {
-                    ActivityId        = "666",
-                    Attempt           = 4,
-                    ActivityTypeName  = "my-activity",
-                    DeadlineTime      = new DateTime(2020, 5, 24, 1, 48, 0),
+                    ActivityId = "666",
+                    Attempt = 4,
+                    ActivityType      = new ActivityType { Name = "my-activity"},
+                    Deadline          = new DateTime(2020, 5, 24, 1, 48, 0),
                     HeartbeatTimeout  = TimeSpan.FromSeconds(5),
                     ScheduledTime     = new DateTime(2020, 5, 24, 1, 49, 0),
                     StartedTime       = new DateTime(2020, 5, 24, 1, 50, 0),
@@ -1386,7 +1386,7 @@ namespace TestTemporal
                     TaskToken         = Convert.ToBase64String(new byte[] { 0, 1, 2, 3, 4 }),
                     WorkflowNamespace = "my-namespace",
                     WorkflowExecution = new WorkflowExecution("777", "888"),
-                    WorkflowTypeName  = "my-workflow" 
+                    WorkflowType      = new WorkflowType { Name = "my-workflow" }
                 };
 
                 message.Info = expected;
@@ -1613,7 +1613,7 @@ namespace TestTemporal
                     StartToCloseTimeout    = TimeSpan.FromSeconds(3),
                     HeartbeatTimeout       = TimeSpan.FromSeconds(4),
                     WaitForCancellation    = true,
-                    RetryOptions           = new RetryOptions() { MaximumInterval = TimeSpan.FromSeconds(5) }
+                    RetryPolicy           = new RetryPolicy() { MaximumInterval = TimeSpan.FromSeconds(5) }
                 };
 
                 Assert.Equal(444, message.ClientId);
@@ -1628,8 +1628,8 @@ namespace TestTemporal
                 Assert.Equal(TimeSpan.FromSeconds(3), message.Options.StartToCloseTimeout);
                 Assert.Equal(TimeSpan.FromSeconds(4), message.Options.HeartbeatTimeout);
                 Assert.True(message.Options.WaitForCancellation);
-                Assert.NotNull(message.Options.RetryOptions);
-                Assert.Equal(TimeSpan.FromSeconds(5), message.Options.RetryOptions.MaximumInterval);
+                Assert.NotNull(message.Options.RetryPolicy);
+                Assert.Equal(TimeSpan.FromSeconds(5), message.Options.RetryPolicy.MaximumInterval);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -1649,8 +1649,8 @@ namespace TestTemporal
                 Assert.Equal(TimeSpan.FromSeconds(3), message.Options.StartToCloseTimeout);
                 Assert.Equal(TimeSpan.FromSeconds(4), message.Options.HeartbeatTimeout);
                 Assert.True(message.Options.WaitForCancellation);
-                Assert.NotNull(message.Options.RetryOptions);
-                Assert.Equal(TimeSpan.FromSeconds(5), message.Options.RetryOptions.MaximumInterval);
+                Assert.NotNull(message.Options.RetryPolicy);
+                Assert.Equal(TimeSpan.FromSeconds(5), message.Options.RetryPolicy.MaximumInterval);
 
                 // Verify Clone()
 
@@ -1668,8 +1668,8 @@ namespace TestTemporal
                 Assert.Equal(TimeSpan.FromSeconds(3), message.Options.StartToCloseTimeout);
                 Assert.Equal(TimeSpan.FromSeconds(4), message.Options.HeartbeatTimeout);
                 Assert.True(message.Options.WaitForCancellation);
-                Assert.NotNull(message.Options.RetryOptions);
-                Assert.Equal(TimeSpan.FromSeconds(5), message.Options.RetryOptions.MaximumInterval);
+                Assert.NotNull(message.Options.RetryPolicy);
+                Assert.Equal(TimeSpan.FromSeconds(5), message.Options.RetryPolicy.MaximumInterval);
 
                 // Echo the message via the associated [temporal-proxy] and verify.
 
@@ -1687,8 +1687,8 @@ namespace TestTemporal
                 Assert.Equal(TimeSpan.FromSeconds(3), message.Options.StartToCloseTimeout);
                 Assert.Equal(TimeSpan.FromSeconds(4), message.Options.HeartbeatTimeout);
                 Assert.True(message.Options.WaitForCancellation);
-                Assert.NotNull(message.Options.RetryOptions);
-                Assert.Equal(TimeSpan.FromSeconds(5), message.Options.RetryOptions.MaximumInterval);
+                Assert.NotNull(message.Options.RetryPolicy);
+                Assert.Equal(TimeSpan.FromSeconds(5), message.Options.RetryPolicy.MaximumInterval);
             }
         }
 
@@ -1929,7 +1929,7 @@ namespace TestTemporal
                 message.Options = new LocalActivityOptions()
                 {
                     ScheduleToCloseTimeout = TimeSpan.FromSeconds(1),
-                    RetryOptions = new RetryOptions() { MaximumInterval = TimeSpan.FromSeconds(5) }
+                    RetryPolicy = new RetryPolicy() { MaximumInterval = TimeSpan.FromSeconds(5) }
                 };
 
                 Assert.Equal(444, message.ClientId);
@@ -1939,8 +1939,8 @@ namespace TestTemporal
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.NotNull(message.Options);
                 Assert.Equal(TimeSpan.FromSeconds(1), message.Options.ScheduleToCloseTimeout);
-                Assert.NotNull(message.Options.RetryOptions);
-                Assert.Equal(TimeSpan.FromSeconds(5), message.Options.RetryOptions.MaximumInterval);
+                Assert.NotNull(message.Options.RetryPolicy);
+                Assert.Equal(TimeSpan.FromSeconds(5), message.Options.RetryPolicy.MaximumInterval);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -1955,8 +1955,8 @@ namespace TestTemporal
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.NotNull(message.Options);
                 Assert.Equal(TimeSpan.FromSeconds(1), message.Options.ScheduleToCloseTimeout);
-                Assert.NotNull(message.Options.RetryOptions);
-                Assert.Equal(TimeSpan.FromSeconds(5), message.Options.RetryOptions.MaximumInterval);
+                Assert.NotNull(message.Options.RetryPolicy);
+                Assert.Equal(TimeSpan.FromSeconds(5), message.Options.RetryPolicy.MaximumInterval);
 
                 // Verify Clone()
 
@@ -1969,8 +1969,8 @@ namespace TestTemporal
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.NotNull(message.Options);
                 Assert.Equal(TimeSpan.FromSeconds(1), message.Options.ScheduleToCloseTimeout);
-                Assert.NotNull(message.Options.RetryOptions);
-                Assert.Equal(TimeSpan.FromSeconds(5), message.Options.RetryOptions.MaximumInterval);
+                Assert.NotNull(message.Options.RetryPolicy);
+                Assert.Equal(TimeSpan.FromSeconds(5), message.Options.RetryPolicy.MaximumInterval);
 
                 // Echo the message via the associated [temporal-proxy] and verify.
 
@@ -1983,8 +1983,8 @@ namespace TestTemporal
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.NotNull(message.Options);
                 Assert.Equal(TimeSpan.FromSeconds(1), message.Options.ScheduleToCloseTimeout);
-                Assert.NotNull(message.Options.RetryOptions);
-                Assert.Equal(TimeSpan.FromSeconds(5), message.Options.RetryOptions.MaximumInterval);
+                Assert.NotNull(message.Options.RetryPolicy);
+                Assert.Equal(TimeSpan.FromSeconds(5), message.Options.RetryPolicy.MaximumInterval);
             }
         }
 

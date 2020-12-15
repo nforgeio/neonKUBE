@@ -69,6 +69,22 @@ func (request *ActivityRegisterRequest) SetName(value *string) {
 	request.SetStringProperty("Name", value)
 }
 
+// GetDisableAlreadyRegisteredCheck gets a ActivityRegisterRequest's DisableAlreadyRegisteredCheck value
+// from its properties map
+//
+// returns bool
+func (request *ActivityRegisterRequest) GetDisableAlreadyRegisteredCheck() bool {
+	return request.GetBoolProperty("DisableAlreadyRegisteredCheck")
+}
+
+// SetDisableAlreadyRegisteredCheck sets a ActivityRegisterRequest's DisableAlreadyRegisteredCheck value
+// in its properties map
+//
+// param value bool
+func (request *ActivityRegisterRequest) SetDisableAlreadyRegisteredCheck(value bool) {
+	request.SetBoolProperty("DisableAlreadyRegisteredCheck", value)
+}
+
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
@@ -86,5 +102,6 @@ func (request *ActivityRegisterRequest) CopyTo(target IProxyMessage) {
 	request.ActivityRequest.CopyTo(target)
 	if v, ok := target.(*ActivityRegisterRequest); ok {
 		v.SetName(request.GetName())
+		v.SetDisableAlreadyRegisteredCheck(request.GetDisableAlreadyRegisteredCheck())
 	}
 }

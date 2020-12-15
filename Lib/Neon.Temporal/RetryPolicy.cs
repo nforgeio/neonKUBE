@@ -33,12 +33,12 @@ namespace Neon.Temporal
     /// <summary>
     /// Describes a Temporal retry policy.
     /// </summary>
-    public class RetryOptions
+    public class RetryPolicy
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public RetryOptions()
+        public RetryPolicy()
         {
         }
 
@@ -46,7 +46,7 @@ namespace Neon.Temporal
         /// Constructs an instance from a <see cref="LinearRetryPolicy"/>.
         /// </summary>
         /// <param name="policy">The policy.</param>
-        public RetryOptions(LinearRetryPolicy policy)
+        public RetryPolicy(LinearRetryPolicy policy)
         {
             Covenant.Requires<ArgumentNullException>(policy != null, nameof(policy));
 
@@ -65,7 +65,7 @@ namespace Neon.Temporal
         /// Constructs an instance from a <see cref="ExponentialRetryPolicy"/>,
         /// </summary>
         /// <param name="policy">The policy.</param>
-        public RetryOptions(ExponentialRetryPolicy policy)
+        public RetryPolicy(ExponentialRetryPolicy policy)
         {
             Covenant.Requires<ArgumentNullException>(policy != null, nameof(policy));
 

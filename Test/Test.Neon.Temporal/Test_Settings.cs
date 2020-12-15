@@ -113,7 +113,7 @@ namespace TestTemporal
 
                 var options = new WorkflowOptions()
                 {
-                    WorkflowId = $"Workflow_ExternalIdNoReuse-{Guid.NewGuid().ToString("d")}"
+                    Id = $"Workflow_ExternalIdNoReuse-{Guid.NewGuid().ToString("d")}"
                 };
 
                 var stub = client.NewWorkflowStub<IWorkflowIdReuse>(options);
@@ -156,7 +156,7 @@ namespace TestTemporal
 
                 var options = new WorkflowOptions()
                 {
-                    WorkflowId = $"Workflow_ExternalIdReuseViaOptions-{Guid.NewGuid().ToString("d")}"
+                    Id = $"Workflow_ExternalIdReuseViaOptions-{Guid.NewGuid().ToString("d")}"
                 };
 
                 var stub = client.NewWorkflowStub<IWorkflowIdReuse>(options);

@@ -240,9 +240,9 @@ namespace Neon.Temporal
         public WorkflowIdReusePolicy WorkflowIdReusePolicy { get; set; } = WorkflowIdReusePolicy.UseDefault;
 
         /// <summary>
-        /// Optionally specifies retry options.
+        /// Optionally specifies retry policy.
         /// </summary>
-        public RetryOptions RetryOptions { get; set; } = null;
+        public RetryPolicy RetryPolicy { get; set; } = null;
 
         /// <summary>
         /// Optionally specifies a recurring schedule for the workflow.  This can be set to a string specifying
@@ -317,7 +317,7 @@ namespace Neon.Temporal
                 CronSchedule           = this.CronSchedule,
                 ChildPolicy            = this.ChildPolicy,
                 StartToCloseTimeout    = this.StartToCloseTimeout,
-                RetryOptions           = this.RetryOptions,
+                RetryPolicy            = this.RetryPolicy,
                 ScheduleToStartTimeout = this.ScheduleToStartTimeout,
                 TaskQueue              = this.TaskQueue,
                 DecisionTaskTimeout    = this.DecisionTaskTimeout,
@@ -338,12 +338,12 @@ namespace Neon.Temporal
             {
                 Namespace              = this.Namespace,
                 Memo                   = null,
-                RetryOptions           = this.RetryOptions,
+                RetryPolicy            = this.RetryPolicy,
                 StartToCloseTimeout    = this.StartToCloseTimeout,
                 ScheduleToStartTimeout = this.ScheduleToStartTimeout,
                 TaskQueue              = this.TaskQueue,
                 DecisionTaskTimeout    = this.DecisionTaskTimeout,
-                WorkflowId             = this.WorkflowId,
+                Id                     = this.WorkflowId,
                 WorkflowIdReusePolicy  = this.WorkflowIdReusePolicy
             };
         }

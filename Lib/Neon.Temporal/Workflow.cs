@@ -477,7 +477,7 @@ namespace Neon.Temporal
                 scheduleToCloseTimeout:     options.ScheduleToCloseTimeout,
                 scheduleToStartTimeout:     options.ScheduleToStartTimeout,
                 decisionTaskTimeout:        options.TaskStartToCloseTimeout,
-                retryOptions:               options.RetryOptions);
+                retryPolicy:                options.RetryPolicy);
         }
 
         /// <summary>

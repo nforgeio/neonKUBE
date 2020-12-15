@@ -181,7 +181,7 @@ namespace Neon.Temporal
             {
                 // This doesn't make sense for local activities.
 
-                ActivityTask.ActivityTypeName = null;
+                ActivityTask.ActivityType = null;
 
                 return await InvokeAsync(Client, args);
             }

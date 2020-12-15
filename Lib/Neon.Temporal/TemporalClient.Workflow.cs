@@ -842,7 +842,7 @@ namespace Neon.Temporal
                 new WorkflowSignalWithStartRequest()
                 {
                     Workflow     = workflowTypeName,
-                    WorkflowId   = options.WorkflowId,
+                    WorkflowId   = options.Id,
                     Options      = options,
                     SignalName   = signalName,
                     SignalArgs   = signalArgs,

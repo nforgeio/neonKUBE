@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TaskQueueType.cs
-// CONTRIBUTOR: Jeff Lill
+// FILE:	    WorkflowType.cs
+// CONTRIBUTOR: John C Burns
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,38 +17,18 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Runtime.Serialization;
-
-using Newtonsoft.Json;
-
-using Neon.Common;
-using Neon.Temporal;
-using Neon.Temporal.Internal;
+using System.Text;
 
 namespace Neon.Temporal
 {
     /// <summary>
-    /// Used to distinguish between decision (AKA workflow) and activity task lists.
+    /// WorkflowType identifies a Temporal workflow type
     /// </summary>
-    public enum TaskQueueType
+    public class WorkflowType
     {
         /// <summary>
-        /// Identifies and unspecified task queue.
+        /// The <see cref="string"/> Name of the workflow type.
         /// </summary>
-        [EnumMember(Value = "TASK_QUEUE_TYPE_UNSPECIFIED")]
-        Unspecified,
-        
-        /// <summary>
-        /// Identifies decision (AKA workflow) task lists.
-        /// </summary>
-        [EnumMember(Value = "TASK_QUEUE_TYPE_WORKFLOW")]
-        Workflow,
-
-        /// <summary>
-        /// Identifies activity task lists.
-        /// </summary>
-        [EnumMember(Value = "TASK_QUEUE_TYPE_ACTIVITY")]
-        Activity
+        public string Name { get; set; }
     }
 }
