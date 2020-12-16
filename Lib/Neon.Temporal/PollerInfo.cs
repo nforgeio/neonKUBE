@@ -33,7 +33,7 @@ namespace Neon.Temporal
         /// <summary>
         /// The last time the poller accessed Temporal.
         /// </summary>
-        public DateTime LastAccessTime { get; set; }
+        public DateTime? LastAccessTime { get; set; }
 
         /// <summary>
         /// Identifies the poller.

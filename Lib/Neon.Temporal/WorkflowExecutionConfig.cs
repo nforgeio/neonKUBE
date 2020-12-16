@@ -19,6 +19,8 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 
+using Newtonsoft.Json;
+
 using Neon.Common;
 using Neon.Temporal;
 using Neon.Temporal.Internal;
@@ -28,32 +30,29 @@ namespace Neon.Temporal
     /// <summary>
     /// Describes a workflow's configuration.
     /// </summary>
-    public class WorkflowConfiguration
+    public class WorkflowExecutionConfig
     {
         /// <summary>
         /// Identifies the task queue where the workflow was scheduled.
         /// </summary>
-        public string TaskQueue { get; set; }
-
-        /// <summary>
-        /// Identifies the type of a task queue.
-        /// </summary>
-        public TaskQueueType TaskQueueKind { get; set; }
+        public TaskQueue TaskQueue { get; set; }
 
         /// <summary>
         /// Maximum time the entire workflow may take to complete end-to-end.
         /// </summary>
-        public TimeSpan StartToCloseTimeout { get; set; }
+        [JsonConverter(typeof(GoTimeSpanJsonConverter))]
+        public TimeSpan WorkflowExecutionTimeout { get; set; }
+
+        /// <summary>
+        /// Maximum time a single workflow run may take to complete.
+        /// </summary>
+        [JsonConverter(typeof(GoTimeSpanJsonConverter))]
+        public TimeSpan WorkflowRunTimeout { get; set; }
 
         /// <summary>
         /// Maximum time a workflow task/decision may take to complete.
         /// </summary>
-        public TimeSpan TaskStartToCloseTimeout { get; set; }
-
-        /// <summary>
-        /// The termination policy to apply to the child workflow when
-        /// the parent workflow is terminated.
-        /// </summary>
-        public ParentClosePolicy ParentClosePolicy { get; set; }
+        [JsonConverter(typeof(GoTimeSpanJsonConverter))]
+        public TimeSpan DefaultWorkflowTaskTimeout { get; set; }
     }
 }

@@ -335,7 +335,7 @@ namespace TestTemporal
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
-        public void Test_DomainDescribeRequest()
+        public void Test_NamespaceDescribeRequest()
         {
             NamespaceDescribeRequest message;
 
@@ -397,7 +397,7 @@ namespace TestTemporal
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
-        public void Test_DomainDescribeReply()
+        public void Test_NamespaceDescribeReply()
         {
             NamespaceDescribeReply message;
 
@@ -493,7 +493,7 @@ namespace TestTemporal
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
-        public void Test_DomainRegisterRequest()
+        public void Test_NamespaceRegisterRequest()
         {
             NamespaceRegisterRequest message;
 
@@ -579,7 +579,7 @@ namespace TestTemporal
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
-        public void Test_DomainRegisterReply()
+        public void Test_NamespaceRegisterReply()
         {
             NamespaceRegisterReply message;
 
@@ -639,7 +639,7 @@ namespace TestTemporal
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
-        public void Test_DomainUpdateRequest()
+        public void Test_NamespaceUpdateRequest()
         {
             NamespaceUpdateRequest message;
 
@@ -725,7 +725,7 @@ namespace TestTemporal
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
-        public void Test_DomainUpdateReply()
+        public void Test_NamespaceUpdateReply()
         {
             NamespaceUpdateReply message;
 
@@ -1733,7 +1733,7 @@ namespace TestTemporal
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
-        public void Test_DomainDeprecateRequest()
+        public void Test_NamespaceDeprecateRequest()
         {
             NamespaceDeprecateRequest message;
 
@@ -1801,7 +1801,7 @@ namespace TestTemporal
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
-        public void Test_DomainDeprecateReply()
+        public void Test_NamespaceDeprecateReply()
         {
             NamespaceDeprecateReply message;
 
@@ -2101,7 +2101,7 @@ namespace TestTemporal
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
-        public void Test_DomainListRequest()
+        public void Test_NamespaceListRequest()
         {
             NamespaceListRequest message;
 
@@ -2288,7 +2288,7 @@ namespace TestTemporal
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
-        public void Test_DomainListReply()
+        public void Test_NamespaceListReply()
         {
             NamespaceListReply message;
 
@@ -2423,7 +2423,7 @@ namespace TestTemporal
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
-        public void Test_DescribeTaskQueue()
+        public void Test_DescribeTaskQueueReply()
         {
             DescribeTaskQueueReply message;
 

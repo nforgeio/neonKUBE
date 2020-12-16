@@ -20,6 +20,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 
+using Newtonsoft.Json;
+
 using Neon.Common;
 using Neon.Temporal;
 using Neon.Temporal.Internal;
@@ -39,7 +41,7 @@ namespace Neon.Temporal
         /// <summary>
         /// Identifies the workflow implementation.
         /// </summary>
-        public string TypeName { get; set; }
+        public WorkflowType Type { get; set; }
 
         /// <summary>
         /// Workflow start time or <c>null</c> if the workflow hasn't started yet.
@@ -58,6 +60,11 @@ namespace Neon.Temporal
         public bool HasStarted => StartTime != null;
 
         /// <summary>
+        /// Workflow execution status describing the state of the workflow.
+        /// </summary>
+        public WorkflowExecutionStatus WorkflowExecutionStatus { get; set; }
+
+        /// <summary>
         /// Returns <c>true</c> if the workflow has been completed.
         /// </summary>
         public bool IsClosed => CloseTime != null;
@@ -68,11 +75,6 @@ namespace Neon.Temporal
         public bool IsRunning => HasStarted && !IsClosed;
 
         /// <summary>
-        /// The status for a closed workflow.
-        /// </summary>
-        public WorkflowCloseStatus CloseStatus { get; set; }
-
-        /// <summary>
         /// Workflow history length.
         /// </summary>
         public long HistoryLength { get; set; }
@@ -81,7 +83,7 @@ namespace Neon.Temporal
         /// Identifies the namespece where the parent workflow is running
         /// (or <c>null</c>).
         /// </summary>
-        public string ParentNamespace { get; set; }
+        public string ParentNamespaceId { get; set; }
 
         /// <summary>
         /// Identfies the parent workflow (or <c>null</c>).
@@ -91,11 +93,17 @@ namespace Neon.Temporal
         /// <summary>
         /// The workflow execution time.
         /// </summary>
+        [JsonConverter(typeof(GoTimeSpanJsonConverter))]
         public TimeSpan ExecutionTime { get; set; }
 
         /// <summary>
         /// Optional workflow metadata.
         /// </summary>
         public Dictionary<string, byte[]> Memo { get; set; }
+
+        /// <summary>
+        /// The Task Queue the worker is running on.
+        /// </summary>
+        public string TaskQueue { get; set; }
     }
 }

@@ -1544,27 +1544,27 @@ namespace TestTemporal
         {
             var description = new WorkflowDescription()
             {
-                Configuration = new WorkflowConfiguration()
+                ExecutionConfig = new WorkflowExecutionConfig()
                 {
-                    TaskQueue               = "my-taskqueue",
-                    TaskQueueKind           = TaskQueueType.Activity,
-                    StartToCloseTimeout     = TimeSpan.FromSeconds(1),
-                    TaskStartToCloseTimeout = TimeSpan.FromSeconds(2),
-                    ParentClosePolicy       = ParentClosePolicy.RequestCancel
+                    TaskQueue                  = new TaskQueue { Name = "my-taskqueue", Kind = TaskQueueKind.Normal },
+                    WorkflowExecutionTimeout   = TimeSpan.FromSeconds(1),
+                    DefaultWorkflowTaskTimeout = TimeSpan.FromSeconds(2),
+                    WorkflowRunTimeout         = TimeSpan.FromSeconds(4)
                 },
 
-                ExecutionInfo = new WorkflowExecutionInfo()
+                WorkflowExecutionInfo = new WorkflowExecutionInfo()
                 {
-                    Execution       = new WorkflowExecution("workflow-id", "run-id"),
-                    TypeName        = "my-workflow",
-                    StartTime       = new DateTime(2020, 5, 23, 13, 21, 0),
-                    CloseTime       = new DateTime(2020, 5, 23, 13, 22, 0),
-                    CloseStatus     = WorkflowCloseStatus.ContinuedAsNew,
-                    HistoryLength   = 5000,
-                    ParentNamespace = "parent-namespace",
-                    ParentExecution = new WorkflowExecution("parent-id", "parent-runid"),
-                    ExecutionTime   = TimeSpan.FromSeconds(6000),
-                    Memo            = new Dictionary<string, byte[]>() { { "foo", new byte[] { 0, 1, 2, 3, 4 } } }
+                    Execution               = new WorkflowExecution("workflow-id", "run-id"),
+                    Type                    = new WorkflowType { Name = "my-workflow" },
+                    StartTime               = new DateTime(2020, 5, 23, 13, 21, 0),
+                    CloseTime               = new DateTime(2020, 5, 23, 13, 22, 0),
+                    WorkflowExecutionStatus = WorkflowExecutionStatus.ContinuedAsNew,
+                    HistoryLength           = 5000,
+                    ParentNamespaceId       = "parent-namespace",
+                    ParentExecution         = new WorkflowExecution("parent-id", "parent-runid"),
+                    ExecutionTime           = TimeSpan.FromSeconds(6000),
+                    Memo                    = new Dictionary<string, byte[]>() { { "foo", new byte[] { 0, 1, 2, 3, 4 } } },
+                    TaskQueue               = "my-taskqueue"
                 },
 
                 PendingActivities = new List<PendingActivityInfo>()
@@ -1613,36 +1613,38 @@ namespace TestTemporal
 
             //---------------------------------------------
 
-            var config = description.Configuration;
+            var config = description.ExecutionConfig;
 
             Assert.NotNull(config);
             Assert.NotNull(config.TaskQueue);
-            Assert.Equal(expected.Configuration.TaskQueue, config.TaskQueue);
-            Assert.Equal(expected.Configuration.StartToCloseTimeout, config.StartToCloseTimeout);
-            Assert.Equal(expected.Configuration.TaskStartToCloseTimeout, config.TaskStartToCloseTimeout);
-            Assert.Equal(expected.Configuration.ParentClosePolicy, config.ParentClosePolicy);
+            Assert.Equal(expected.ExecutionConfig.TaskQueue.Name, config.TaskQueue.Name);
+            Assert.Equal(expected.ExecutionConfig.TaskQueue.Kind, config.TaskQueue.Kind);
+            Assert.Equal(expected.ExecutionConfig.WorkflowExecutionTimeout, config.WorkflowExecutionTimeout);
+            Assert.Equal(expected.ExecutionConfig.DefaultWorkflowTaskTimeout, config.DefaultWorkflowTaskTimeout);
+            Assert.Equal(expected.ExecutionConfig.WorkflowRunTimeout, config.WorkflowRunTimeout);
 
             //---------------------------------------------
 
-            var status = description.ExecutionInfo;
+            var status = description.WorkflowExecutionInfo;
 
             Assert.NotNull(status);
             Assert.NotNull(status.Execution);
-            Assert.Equal(expected.ExecutionInfo.Execution.WorkflowId, status.Execution.WorkflowId);
-            Assert.Equal(expected.ExecutionInfo.Execution.RunId, status.Execution.RunId);
-            Assert.NotNull(status.TypeName);
-            Assert.Equal(expected.ExecutionInfo.TypeName, status.TypeName);
-            Assert.Equal(expected.ExecutionInfo.StartTime, status.StartTime);
-            Assert.Equal(expected.ExecutionInfo.CloseTime, status.CloseTime);
-            Assert.Equal(expected.ExecutionInfo.CloseStatus, status.CloseStatus);
-            Assert.Equal(expected.ExecutionInfo.HistoryLength, status.HistoryLength);
-            Assert.Equal(expected.ExecutionInfo.ParentNamespace, status.ParentNamespace);
+            Assert.Equal(expected.WorkflowExecutionInfo.Execution.WorkflowId, status.Execution.WorkflowId);
+            Assert.Equal(expected.WorkflowExecutionInfo.Execution.RunId, status.Execution.RunId);
+            Assert.NotNull(status.Type);
+            Assert.Equal(expected.WorkflowExecutionInfo.Type.Name, status.Type.Name);
+            Assert.Equal(expected.WorkflowExecutionInfo.StartTime, status.StartTime);
+            Assert.Equal(expected.WorkflowExecutionInfo.CloseTime, status.CloseTime);
+            Assert.Equal(expected.WorkflowExecutionInfo.WorkflowExecutionStatus, status.WorkflowExecutionStatus);
+            Assert.Equal(expected.WorkflowExecutionInfo.HistoryLength, status.HistoryLength);
+            Assert.Equal(expected.WorkflowExecutionInfo.ParentNamespaceId, status.ParentNamespaceId);
+            Assert.Equal(expected.WorkflowExecutionInfo.TaskQueue, status.TaskQueue);
 
             Assert.NotNull(status.ParentExecution);
-            Assert.Equal(expected.ExecutionInfo.ParentExecution.WorkflowId, status.ParentExecution.WorkflowId);
-            Assert.Equal(expected.ExecutionInfo.ParentExecution.RunId, status.ParentExecution.RunId);
+            Assert.Equal(expected.WorkflowExecutionInfo.ParentExecution.WorkflowId, status.ParentExecution.WorkflowId);
+            Assert.Equal(expected.WorkflowExecutionInfo.ParentExecution.RunId, status.ParentExecution.RunId);
 
-            Assert.Equal(expected.ExecutionInfo.ExecutionTime, status.ExecutionTime);
+            Assert.Equal(expected.WorkflowExecutionInfo.ExecutionTime, status.ExecutionTime);
 
             //---------------------------------------------
 
@@ -1671,17 +1673,17 @@ namespace TestTemporal
 
             Assert.Equal("my-workflow-id", pendingChild.WorkflowId);
             Assert.Equal("my-run-id", pendingChild.RunId);
-            Assert.Equal("my-workflow-typename", pendingChild.WorkflowTypeName);
+            Assert.Equal("my-workflow", pendingChild.WorkflowTypeName);
             Assert.Equal(16000, pendingChild.InitiatedId);
 
             //---------------------------------------------
 
             Assert.NotNull(status.Memo);
-            Assert.Equal(expected.ExecutionInfo.Memo.Count, status.Memo.Count);
+            Assert.Equal(expected.WorkflowExecutionInfo.Memo.Count, status.Memo.Count);
 
-            for (int i = 0; i < expected.ExecutionInfo.Memo.Count; i++)
+            for (int i = 0; i < expected.WorkflowExecutionInfo.Memo.Count; i++)
             {
-                var refField = expected.ExecutionInfo.Memo.ToArray()[i];
+                var refField = expected.WorkflowExecutionInfo.Memo.ToArray()[i];
                 var field    = status.Memo.ToArray()[i];
 
                 Assert.Equal(refField.Key, field.Key);

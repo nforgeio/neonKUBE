@@ -328,24 +328,24 @@ namespace TestTemporal
 
             Assert.NotNull(description);
 
-            Assert.NotNull(description.ExecutionInfo);
-            Assert.Equal(workflowId, description.ExecutionInfo.Execution.WorkflowId);
-            Assert.NotNull(description.ExecutionInfo.Execution.RunId);
+            Assert.NotNull(description.WorkflowExecutionInfo);
+            Assert.Equal(workflowId, description.WorkflowExecutionInfo.Execution.WorkflowId);
+            Assert.NotNull(description.WorkflowExecutionInfo.Execution.RunId);
             Assert.Empty(description.PendingActivities);
             Assert.Empty(description.PendingChildren);
 
-            Assert.Equal(TemporalTestHelper.TaskQueue, description.Configuration.TaskQueue);
+            Assert.Equal(TemporalTestHelper.TaskQueue, description.ExecutionConfig.TaskQueue.Name);
 
             // Ensure that the status properties are reasonable.
 
-            Assert.True(description.ExecutionInfo.HasStarted);
-            Assert.False(description.ExecutionInfo.IsRunning);
-            Assert.True(description.ExecutionInfo.IsClosed);
+            Assert.True(description.WorkflowExecutionInfo.HasStarted);
+            Assert.False(description.WorkflowExecutionInfo.IsRunning);
+            Assert.True(description.WorkflowExecutionInfo.IsClosed);
 
-            Assert.True(description.ExecutionInfo.StartTime >= utcNow);
-            Assert.True(description.ExecutionInfo.CloseTime >= utcNow);
-            Assert.True(description.ExecutionInfo.CloseTime >= description.ExecutionInfo.StartTime);
-            Assert.True(description.ExecutionInfo.ExecutionTime <= description.ExecutionInfo.CloseTime - description.ExecutionInfo.StartTime);
+            Assert.True(description.WorkflowExecutionInfo.StartTime >= utcNow);
+            Assert.True(description.WorkflowExecutionInfo.CloseTime >= utcNow);
+            Assert.True(description.WorkflowExecutionInfo.CloseTime >= description.WorkflowExecutionInfo.StartTime);
+            Assert.True(description.WorkflowExecutionInfo.ExecutionTime <= description.WorkflowExecutionInfo.CloseTime - description.WorkflowExecutionInfo.StartTime);
         }
 
         [Fact]

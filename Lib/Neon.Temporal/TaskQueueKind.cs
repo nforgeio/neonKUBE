@@ -32,15 +32,21 @@ namespace Neon.Temporal
     public enum TaskQueueKind
     {
         /// <summary>
+        /// Unspecified.
+        /// </summary>
+        [EnumMember(Value = "UNSPECIFIED")]
+        Unspecified = 0,
+
+        /// <summary>
         /// Normal.
         /// </summary>
         [EnumMember(Value = "NORMAL")]
-        Normal = 0,
+        Normal = 1,
 
         /// <summary>
         /// Sticky.
         /// </summary>
         [EnumMember(Value = "STICKY")]
-        Sticky = 1
+        Sticky = 2
     }
 }

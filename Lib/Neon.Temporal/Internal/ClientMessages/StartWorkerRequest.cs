@@ -44,7 +44,7 @@ namespace Neon.Temporal.Internal
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new NewWorkerRequest();
+            var clone = new StartWorkerRequest();
 
             CopyTo(clone);
 
