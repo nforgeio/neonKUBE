@@ -2080,7 +2080,7 @@ istioctl install -f istio-cni.yaml
                     {
                         case nameof(String):
 
-                            valueOverrides += $"--set-string {value.Key}={value.Value} \\\n";
+                            valueOverrides += $"--set-string {value.Key}=\"{value.Value}\" \\\n";
                             break;
 
                         case nameof(Int32):
@@ -3130,7 +3130,7 @@ rm -rf {chartName}*
                         {
                             if (i > 0)
                             {
-                                redisConnStr += ",";
+                                redisConnStr += "\\,";
                             }
 
                             redisConnStr += $"neon-system-registry-redis-announce-{i}:26379";
