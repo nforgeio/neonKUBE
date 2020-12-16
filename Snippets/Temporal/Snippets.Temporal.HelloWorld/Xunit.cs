@@ -40,6 +40,7 @@ namespace MyTests
             var settings = new TemporalSettings()
             {
                 Namespace       = "test-domain",
+                TaskQueue       = "test-tasks",
                 ProxyLogLevel   = LogLevel.Info,
                 CreateNamespace = true          // <-- this ensures that the default namespace exists
             };
@@ -66,7 +67,7 @@ namespace MyTests
                 // Create a worker and register the workflow and activity 
                 // implementations to let Temporal know we're open for business.
 
-                var worker = client.NewWorkerAsync(new WorkerOptions() { TaskQueue = "test-tasks" }).Result;
+                var worker = client.NewWorkerAsync().Result;
 
                 worker.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).Wait();
                 worker.StartAsync().Wait();

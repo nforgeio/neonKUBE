@@ -35,23 +35,6 @@ namespace Neon.Temporal
     public class WorkerOptions
     {
         /// <summary>
-        /// Optionally specifies the Temporal namespace for the worker.  This defaults to
-        /// <see cref="TemporalSettings.Namespace"/>.
-        /// </summary>
-        public string Namespace { get; set; }
-
-        /// <summary>
-        /// <para>
-        /// Optionally specifies the Temporal task queue for the worker.  This defaults to
-        /// <see cref="TemporalSettings.DefaultTaskQueue"/>.
-        /// </para>
-        /// <note>
-        /// You must ensure that this is not <c>null</c> or empty.
-        /// </note>
-        /// </summary>
-        public string TaskQueue { get; set; }
-
-        /// <summary>
         /// Optionally sets set the maximum concurrent activity executions this worker can have.
         /// The zero value of this uses the default value.  Defaults to <b>1000</b>.
         /// </summary>

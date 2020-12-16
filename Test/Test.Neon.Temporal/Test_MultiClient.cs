@@ -140,9 +140,13 @@ namespace TestTemporal
                 await worker1.RegisterWorkflowAsync<WorkflowWithResult1>();
                 await worker1.StartAsync();
 
+                var client2Settings = fixture.Settings.Clone();
+
+                client2Settings.TaskQueue = "taskqueue-2";
+
                 using (var client2 = await TemporalClient.ConnectAsync(fixture.Settings))
                 {
-                    var worker2 = await client1.NewWorkerAsync(new WorkerOptions() { TaskQueue = "taskqueue-2" });
+                    var worker2 = await client1.NewWorkerAsync();
 
                     await worker2.RegisterWorkflowAsync<WorkflowWithResult1>();
                     await worker2.StartAsync();
@@ -381,9 +385,17 @@ namespace TestTemporal
             {
                 // Initialize the non-worker clients.
 
-                TemporalClient  client1;
-                TemporalClient  client2;
-                TemporalClient  client3;
+                TemporalClient      client1;
+                TemporalClient      client2;
+                TemporalClient      client3;
+
+                TemporalSettings    settings1 = fixture.Settings.Clone();
+                TemporalSettings    settings2 = fixture.Settings.Clone();
+                TemporalSettings    settings3 = fixture.Settings.Clone();
+
+                settings1.TaskQueue = "taskqueue-1";
+                settings2.TaskQueue = "taskqueue-2";
+                settings3.TaskQueue = "taskqueue-3";
 
                 clients.Add(client1 = await TemporalClient.ConnectAsync(fixture.Settings));
                 clients.Add(client2 = await TemporalClient.ConnectAsync(fixture.Settings));
@@ -397,19 +409,19 @@ namespace TestTemporal
 
                 // Initialize and start the workers.
 
-                var worker1 = await workerClient1.NewWorkerAsync(new WorkerOptions() { TaskQueue = "taskqueue-1" });
+                var worker1 = await workerClient1.NewWorkerAsync();
 
                 await worker1.RegisterActivityAsync<ActivityWorker1>();
                 await worker1.RegisterWorkflowAsync<WorkflowWorker1>();
                 await worker1.StartAsync();
 
-                var worker2 = await workerClient1.NewWorkerAsync(new WorkerOptions() { TaskQueue = "taskqueue-2" });
+                var worker2 = await workerClient1.NewWorkerAsync();
 
                 await worker2.RegisterActivityAsync<ActivityWorker2>();
                 await worker2.RegisterWorkflowAsync<WorkflowWorker2>();
                 await worker2.StartAsync();
 
-                var worker3 = await workerClient1.NewWorkerAsync(new WorkerOptions() { TaskQueue = "taskqueue-3" });
+                var worker3 = await workerClient1.NewWorkerAsync();
 
                 await worker3.RegisterActivityAsync<ActivityWorker3>();
                 await worker3.RegisterWorkflowAsync<WorkflowWorker3>();

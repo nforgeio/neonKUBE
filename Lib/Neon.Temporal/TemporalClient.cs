@@ -180,7 +180,7 @@ namespace Neon.Temporal
     /// </para>
     /// <note>
     /// You may specify a default task queue when connecting a <see cref="TemporalClient"/> via
-    /// <see cref="TemporalSettings.DefaultTaskQueue"/> (which defaults to <c>null</c>).  This may
+    /// <see cref="TemporalSettings.TaskQueue"/> (which defaults to <c>null</c>).  This may
     /// be convienent for simple deployments.
     /// </note>
     /// <para>
