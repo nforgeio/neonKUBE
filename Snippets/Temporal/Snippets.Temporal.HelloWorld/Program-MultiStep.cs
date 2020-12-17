@@ -81,6 +81,7 @@ namespace HelloWorld_MultiStep
             var settings = new TemporalSettings()
             {
                 Namespace       = "my-namespace",
+                TaskQueue       = "my-tasks",
                 CreateNamespace = true,
                 HostPort        = "localhost:7933"
             };
@@ -90,7 +91,7 @@ namespace HelloWorld_MultiStep
                 // Create a worker and register the workflow and activity 
                 // implementations to let Temporal know we're open for business.
 
-                var worker = await client.NewWorkerAsync(new WorkerOptions() { TaskQueue = "my-tasks" });
+                var worker = await client.NewWorkerAsync();
 
                 await worker.RegisterAssemblyAsync(Assembly.GetExecutingAssembly());
                 await worker.StartAsync();

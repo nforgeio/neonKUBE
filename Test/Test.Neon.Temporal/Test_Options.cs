@@ -110,7 +110,7 @@ namespace TestTemporal
             test1Settings = new TemporalSettings()
             {
                 Namespace                             = "test1-namespace",
-                DefaultTaskQueue                      = "test1-taskqueue",
+                TaskQueue                      = "test1-taskqueue",
                 ProxyLogLevel                         = TemporalTestHelper.ProxyLogLevel,
                 CreateNamespace                       = true,
                 Debug                                 = TemporalTestHelper.Debug,
@@ -133,7 +133,7 @@ namespace TestTemporal
             test2Settings = new TemporalSettings()
             {
                 Namespace                             = "test2-namespace",
-                DefaultTaskQueue                      = "test2-taskqueue",
+                TaskQueue                      = "test2-taskqueue",
                 ProxyLogLevel                         = TemporalTestHelper.ProxyLogLevel,
                 CreateNamespace                       = true,
                 Debug                                 = TemporalTestHelper.Debug,
@@ -155,7 +155,7 @@ namespace TestTemporal
 
             test3Settings = new TemporalSettings()
             {
-                DefaultTaskQueue                      = null,
+                TaskQueue                      = null,
                 ProxyLogLevel                         = TemporalTestHelper.ProxyLogLevel,
                 CreateNamespace                       = true,
                 Debug                                 = TemporalTestHelper.Debug,
@@ -784,7 +784,7 @@ namespace TestTemporal
                 options =>
                 {
                     Assert.Equal(test1Settings.Namespace, options.Namespace);
-                    Assert.Equal(test1Settings.DefaultTaskQueue, options.TaskQueue);
+                    Assert.Equal(test1Settings.TaskQueue, options.TaskQueue);
                     Assert.Equal(test1Settings.WorkflowDecisionTaskTimeout, options.DecisionTaskTimeout);
                     Assert.Equal(test1Settings.WorkflowStartToCloseTimeout, options.StartToCloseTimeout);
                     Assert.Equal(test1Settings.WorkflowScheduleToStartTimeout, options.ScheduleToStartTimeout);
@@ -797,7 +797,7 @@ namespace TestTemporal
                 options =>
                 {
                     Assert.Equal(test2Settings.Namespace, options.Namespace);
-                    Assert.Equal(test2Settings.DefaultTaskQueue, options.TaskQueue);
+                    Assert.Equal(test2Settings.TaskQueue, options.TaskQueue);
                     Assert.Equal(test2Settings.WorkflowDecisionTaskTimeout, options.DecisionTaskTimeout);
                     Assert.Equal(test2Settings.WorkflowStartToCloseTimeout, options.StartToCloseTimeout);
                     Assert.Equal(test2Settings.WorkflowScheduleToStartTimeout, options.ScheduleToStartTimeout);
@@ -896,7 +896,7 @@ namespace TestTemporal
                 options =>
                 {
                     Assert.Equal(test1Settings.Namespace, options.Namespace);
-                    Assert.Equal(test1Settings.DefaultTaskQueue, options.TaskQueue);
+                    Assert.Equal(test1Settings.TaskQueue, options.TaskQueue);
                     Assert.Equal(test1Settings.WorkflowDecisionTaskTimeout, options.DecisionTaskTimeout);
                     Assert.Equal(test1Settings.WorkflowStartToCloseTimeout, options.StartToCloseTimeout);
                     Assert.Equal(test1Settings.WorkflowScheduleToStartTimeout, options.ScheduleToStartTimeout);
@@ -909,7 +909,7 @@ namespace TestTemporal
                 options =>
                 {
                     Assert.Equal(test2Settings.Namespace, options.Namespace);
-                    Assert.Equal(test2Settings.DefaultTaskQueue, options.TaskQueue);
+                    Assert.Equal(test2Settings.TaskQueue, options.TaskQueue);
                     Assert.Equal(test2Settings.WorkflowDecisionTaskTimeout, options.DecisionTaskTimeout);
                     Assert.Equal(test2Settings.WorkflowStartToCloseTimeout, options.StartToCloseTimeout);
                     Assert.Equal(test2Settings.WorkflowScheduleToStartTimeout, options.ScheduleToStartTimeout);
@@ -1009,7 +1009,7 @@ namespace TestTemporal
                 options =>
                 {
                     Assert.Equal(test1Settings.Namespace, options.Namespace);
-                    Assert.Equal(test1Settings.DefaultTaskQueue, options.TaskQueue);
+                    Assert.Equal(test1Settings.TaskQueue, options.TaskQueue);
                     Assert.Equal(test1Settings.ActivityScheduleToCloseTimeout, options.ScheduleToCloseTimeout);
                     Assert.Equal(test1Settings.ActivityStartToCloseTimeout, options.StartToCloseTimeout);
                     Assert.Equal(test1Settings.ActivityScheduleToStartTimeout, options.ScheduleToStartTimeout);
@@ -1021,7 +1021,7 @@ namespace TestTemporal
                 options =>
                 {
                     Assert.Equal(test2Settings.Namespace, options.Namespace);
-                    Assert.Equal(test2Settings.DefaultTaskQueue, options.TaskQueue);
+                    Assert.Equal(test2Settings.TaskQueue, options.TaskQueue);
                     Assert.Equal(test2Settings.ActivityScheduleToCloseTimeout, options.ScheduleToCloseTimeout);
                     Assert.Equal(test2Settings.ActivityStartToCloseTimeout, options.StartToCloseTimeout);
                     Assert.Equal(test2Settings.ActivityScheduleToStartTimeout, options.ScheduleToStartTimeout);

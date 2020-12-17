@@ -204,7 +204,7 @@ namespace Neon.Temporal
         [JsonProperty(PropertyName = "DefaultTaskQueue", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "defaultTaskQueue", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public string DefaultTaskQueue
+        public string TaskQueue
         {
             get => defaultTaskQueue;
 
@@ -1076,7 +1076,7 @@ namespace Neon.Temporal
                 DebugIgnoreHeartbeats                 = this.DebugIgnoreHeartbeats,
                 DebugIgnoreTimeouts                   = this.DebugIgnoreTimeouts,
                 DebugPrelaunched                      = this.DebugPrelaunched,
-                DefaultTaskQueue                      = this.DefaultTaskQueue,
+                TaskQueue                      = this.TaskQueue,
                 Namespace                             = this.Namespace,
                 HeartbeatIntervalSeconds              = this.HeartbeatIntervalSeconds,
                 HeartbeatTimeoutSeconds               = this.HeartbeatTimeoutSeconds,

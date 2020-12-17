@@ -90,27 +90,10 @@ namespace Neon.Temporal
 
             options = options ?? new WorkerOptions();
 
-            if (string.IsNullOrEmpty(options.Namespace))
-            {
-                options.Namespace = Settings.Namespace;
-            }
-
-            if (string.IsNullOrEmpty(options.TaskQueue))
-            {
-                options.TaskQueue = Settings.DefaultTaskQueue;
-
-                if (string.IsNullOrEmpty(options.TaskQueue))
-                {
-                    throw new ArgumentException("Worker cannot be started without a task queue.  Please specify this via [WorkerOptions.TaskQueue] or [TemporalSettings.DefaultTaskQueue].");
-                }
-            }
-
             var reply = (NewWorkerReply)(await CallProxyAsync(
                 new NewWorkerRequest()
                 {
-                    Namespace = options.Namespace,
-                    TaskQueue = options.TaskQueue,
-                    Options   = options
+                    Options = options
                 }));
 
             reply.ThrowOnError();

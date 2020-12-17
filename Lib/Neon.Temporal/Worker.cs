@@ -58,8 +58,6 @@ namespace Neon.Temporal
         {
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
             Covenant.Requires<ArgumentNullException>(options != null, nameof(options));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(options.Namespace), nameof(options.Namespace));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(options.TaskQueue), nameof(options.TaskQueue));
 
             this.Client   = client;
             this.WorkerId = workerId;

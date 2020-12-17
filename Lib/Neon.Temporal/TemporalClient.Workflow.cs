@@ -155,7 +155,7 @@ namespace Neon.Temporal
 
             if (string.IsNullOrEmpty(options.TaskQueue))
             {
-                throw new ArgumentNullException($"The workflow [{nameof(WorkflowOptions)}.{nameof(WorkflowOptions.TaskQueue)}] must be specified when the client doesn't set [{nameof(TemporalSettings)}.{nameof(TemporalSettings.DefaultTaskQueue)}].");
+                throw new ArgumentNullException($"The workflow [{nameof(WorkflowOptions)}.{nameof(WorkflowOptions.TaskQueue)}] must be specified when the client doesn't set [{nameof(TemporalSettings)}.{nameof(TemporalSettings.TaskQueue)}].");
             }
 
             if (string.IsNullOrEmpty(options.Namespace))
@@ -387,7 +387,7 @@ namespace Neon.Temporal
 
             if (string.IsNullOrEmpty(options.TaskQueue))
             {
-                throw new ArgumentNullException($"The workflow [{nameof(WorkflowOptions)}.{nameof(WorkflowOptions.TaskQueue)}] must be specified when the client doesn't set [{nameof(TemporalSettings)}.{nameof(TemporalSettings.DefaultTaskQueue)}].");
+                throw new ArgumentNullException($"The workflow [{nameof(WorkflowOptions)}.{nameof(WorkflowOptions.TaskQueue)}] must be specified when the client doesn't set [{nameof(TemporalSettings)}.{nameof(TemporalSettings.TaskQueue)}].");
             }
 
             if (string.IsNullOrEmpty(options.Namespace))

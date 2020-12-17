@@ -113,7 +113,7 @@ namespace Neon.Temporal
 
                 if (string.IsNullOrEmpty(options.TaskQueue))
                 {
-                    options.TaskQueue = client.Settings.DefaultTaskQueue;
+                    options.TaskQueue = client.Settings.TaskQueue;
                 }
 
                 if (string.IsNullOrEmpty(options.TaskQueue))

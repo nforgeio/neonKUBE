@@ -1171,14 +1171,12 @@ namespace TestTemporal
                 message.WorkerId  = 666;
                 message.Options   = new WorkerOptions() 
                 { 
-                    TaskQueue = "my-tasks",
                     MaxConcurrentActivityExecutionSize = 1234 
                 };
 
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.WorkerId);
-                Assert.Equal("my-tasks", message.Options.TaskQueue);
                 Assert.Equal(1234, message.Options.MaxConcurrentActivityExecutionSize);
 
                 stream.SetLength(0);
@@ -1190,7 +1188,6 @@ namespace TestTemporal
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.WorkerId);
-                Assert.Equal("my-tasks", message.Options.TaskQueue);
                 Assert.Equal(1234, message.Options.MaxConcurrentActivityExecutionSize);
 
                 // Clone()
@@ -1200,7 +1197,6 @@ namespace TestTemporal
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.WorkerId);
-                Assert.Equal("my-tasks", message.Options.TaskQueue);
                 Assert.Equal(1234, message.Options.MaxConcurrentActivityExecutionSize);
 
                 // Echo the message via the associated [temporal-proxy] and verify.
@@ -1210,7 +1206,6 @@ namespace TestTemporal
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.WorkerId);
-                Assert.Equal("my-tasks", message.Options.TaskQueue);
                 Assert.Equal(1234, message.Options.MaxConcurrentActivityExecutionSize);
             }
         }

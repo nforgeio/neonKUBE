@@ -51,17 +51,18 @@ namespace Neon.Kube
 
         private class Step
         {
-            public int                                          Number;
-            public string                                       Label;
-            public bool                                         Quiet;
-            public Action                                       SyncGlobalAction;
-            public Func<Task>                                   AsyncGlobalAction;
+            public int                                              Number;
+            public string                                           Label;
+            public bool                                             Quiet;
+            public Action                                           SyncGlobalAction;
+            public Func<Task>                                       AsyncGlobalAction;
             public Action<NodeSshProxy<NodeMetadata>, TimeSpan>     SyncNodeAction;
             public Func<NodeSshProxy<NodeMetadata>, TimeSpan, Task> AsyncNodeAction;
             public Func<NodeSshProxy<NodeMetadata>, bool>           Predicate;
-            public StepStatus                                   Status;
-            public int                                          ParallelLimit;
-            public TimeSpan                                     StepStagger;
+            public StepStatus                                       Status;
+            public int                                              ParallelLimit;
+            public TimeSpan                                         StepStagger;
+            public TimeSpan                                         ElapsedTime;
         }
 
         //---------------------------------------------------------------------
@@ -69,15 +70,15 @@ namespace Neon.Kube
 
         private const int UnlimitedParallel = 500;  // Treat this as "unlimited"
 
-        private string                                          operationTitle;
-        private string                                          operationStatus;
+        private string                                              operationTitle;
+        private string                                              operationStatus;
         private List<NodeSshProxy<NodeMetadata>>                    nodes;
-        private List<Step>                                      steps;
-        private Step                                            currentStep;
-        private bool                                            error;
-        private bool                                            hasNodeSteps;
-        private StringBuilder                                   sbDisplay;
-        private string                                          lastDisplay;
+        private List<Step>                                          steps;
+        private Step                                                currentStep;
+        private bool                                                error;
+        private bool                                                hasNodeSteps;
+        private StringBuilder                                       sbDisplay;
+        private string                                              lastDisplay;
 
         /// <summary>
         /// Constructor.
@@ -145,6 +146,17 @@ namespace Neon.Kube
         /// Returns the number of setup steps.
         /// </summary>
         public int StepCount => steps.Count;
+
+        /// <summary>
+        /// Optionally displays the elapsed time for each step as well as the overall
+        /// operation when setup completes (or fails).
+        /// </summary>
+        public bool ShowElapsed { get; set; } = false;
+
+        /// <summary>
+        /// Returns the time spent performing setup after setup has completed (or failed).
+        /// </summary>
+        public TimeSpan ElapsedTime { get; private set; }
 
         /// <summary>
         /// Sets the <see cref="LinuxSshProxy{TMetadata}.DefaultRunOptions"/> property for
@@ -276,12 +288,12 @@ namespace Neon.Kube
         /// to be inserted into the step list.
         /// </param>
         public void AddDelayStep(
-            string                              stepLabel, 
-            TimeSpan                            delay, 
-            string                              status        = null,
+            string                                  stepLabel, 
+            TimeSpan                                delay, 
+            string                                  status        = null,
             Func<NodeSshProxy<NodeMetadata>, bool>  nodePredicate = null, 
-            bool                                quiet         = false, 
-            int                                 position      = -1)
+            bool                                    quiet         = false, 
+            int                                     position      = -1)
         {
             AddNodeStep(stepLabel,
                 (node, stepDeley) =>
@@ -335,11 +347,11 @@ namespace Neon.Kube
             string stepLabel,
             Action<NodeSshProxy<NodeMetadata>, TimeSpan>    nodeAction,
             Func<NodeSshProxy<NodeMetadata>, bool>          nodePredicate      = null,
-            bool                                        quiet              = false,
-            bool                                        noParallelLimit    = false,
-            int                                         stepStaggerSeconds = 0,
-            int                                         position           = -1,
-            int                                         parallelLimit      = 0)
+            bool                                            quiet              = false,
+            bool                                            noParallelLimit    = false,
+            int                                             stepStaggerSeconds = 0,
+            int                                             position           = -1,
+            int                                             parallelLimit      = 0)
         {
             nodeAction    = nodeAction ?? new Action<NodeSshProxy<NodeMetadata>, TimeSpan>((n, d) => { });
             nodePredicate = nodePredicate ?? new Func<NodeSshProxy<NodeMetadata>, bool>(n => true);
@@ -406,11 +418,11 @@ namespace Neon.Kube
             string stepLabel,
             Func<NodeSshProxy<NodeMetadata>, TimeSpan, Task>    nodeAction,
             Func<NodeSshProxy<NodeMetadata>, bool>              nodePredicate      = null,
-            bool                                            quiet              = false,
-            bool                                            noParallelLimit    = false,
-            int                                             stepStaggerSeconds = 0,
-            int                                             position           = -1,
-            int                                             parallelLimit      = 0)
+            bool                                                quiet              = false,
+            bool                                                noParallelLimit    = false,
+            int                                                 stepStaggerSeconds = 0,
+            int                                                 position           = -1,
+            int                                                 parallelLimit      = 0)
         {
             nodeAction    = nodeAction ?? new Func<NodeSshProxy<NodeMetadata>, TimeSpan, Task>((n, d) => { return Task.CompletedTask; });
             nodePredicate = nodePredicate ?? new Func<NodeSshProxy<NodeMetadata>, bool>(n => true);
@@ -445,6 +457,10 @@ namespace Neon.Kube
         /// <returns><c>true</c> if all steps completed successfully.</returns>
         public bool Run(bool leaveNodesConnected = false)
         {
+            var stopWatch = new Stopwatch();
+
+            stopWatch.Start();
+
             // Number the steps.  Note that quiet steps don't 
             // get their own step number.
 
@@ -500,6 +516,8 @@ namespace Neon.Kube
             }
             finally
             {
+                ElapsedTime = stopWatch.Elapsed;
+
                 if (!leaveNodesConnected)
                 {
                     // Disconnect all of the nodes.
@@ -511,11 +529,40 @@ namespace Neon.Kube
                 }
 
                 Console.WriteLine();    // Add an extra line after the status to look nice.
+
+                if (ShowElapsed)
+                {
+                    var totalLabel    = "Total Setup Time";
+                    var maxLabelWidth = steps.Max(step => step.Label.Length);
+
+                    if (maxLabelWidth < totalLabel.Length)
+                    {
+                        maxLabelWidth = totalLabel.Length;
+                    }
+
+                    Console.WriteLine("Elapsed Step Times");
+                    Console.WriteLine("------------------");
+
+                    var fill = string.Empty;
+
+                    foreach (var step in steps)
+                    {
+                        fill = new string(' ', maxLabelWidth - step.Label.Length);
+
+                        Console.WriteLine($"{step.Label}:    {fill}{step.ElapsedTime} ({step.ElapsedTime.TotalSeconds} sec)");
+                    }
+
+                    fill = new string(' ', maxLabelWidth - totalLabel.Length);
+
+                    Console.WriteLine();
+                    Console.WriteLine(new string('-', totalLabel.Length + 1));
+                    Console.WriteLine($"{totalLabel}:    {fill}{ElapsedTime} ({ElapsedTime.TotalSeconds} sec)");
+                }
             }
         }
 
         /// <summary>
-        /// Sets the optation status text.
+        /// Sets the operation status text.
         /// </summary>
         /// <param name="status">The optional operation status text.</param>
         public void SetOperationStatus(string status = null)
@@ -524,15 +571,15 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Performs an operation step on the selected nodes.
+        /// Performs an operation step on the selected nodes (if any).
         /// </summary>
         /// <param name="step">A step being performed.</param>
         /// <returns><c>true</c> if the step succeeded.</returns>
         /// <remarks>
         /// <para>
         /// This method begins by setting the <see cref="LinuxSshProxy{TMetadata}.IsReady"/>
-        /// state of each selected node to <c>false</c> and then it starts a new thread for
-        /// each node and performs the action on these servnodeer threads.
+        /// state of each selected nodes to <c>false</c> and then it starts a new thread for
+        /// each node and performs the action on these threads.
         /// </para>
         /// <para>
         /// In parallel, the method spins on the current thread, displaying status while
@@ -549,283 +596,294 @@ namespace Neon.Kube
         /// </remarks>
         private bool PerformStep(Step step)
         {
-            if (error)
+            var stopWatch = new Stopwatch();
+
+            stopWatch.Start();
+
+            try
             {
-                return false;
-            }
-
-            step.Status = StepStatus.Running;
-
-            var stepNodes        = nodes.Where(step.Predicate);
-            var stepNodeNamesSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-            foreach (var node in stepNodes)
-            {
-                stepNodeNamesSet.Add(node.Name);
-
-                node.IsReady = false;
-            }
-
-            foreach (var node in nodes)
-            {
-                if (stepNodeNamesSet.Contains(node.Name))
+                if (error)
                 {
-                    node.Status = string.Empty;
+                    return false;
+                }
+
+                step.Status = StepStatus.Running;
+
+                var stepNodes        = nodes.Where(step.Predicate);
+                var stepNodeNamesSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+                foreach (var node in stepNodes)
+                {
+                    stepNodeNamesSet.Add(node.Name);
+
+                    node.IsReady = false;
+                }
+
+                foreach (var node in nodes)
+                {
+                    if (stepNodeNamesSet.Contains(node.Name))
+                    {
+                        node.Status = string.Empty;
+                    }
+                    else
+                    {
+                        node.Status = string.Empty;
+                    }
+                }
+
+                DisplayStatus(stepNodeNamesSet);
+
+                var parallelOptions = new ParallelOptions()
+                {
+                    MaxDegreeOfParallelism = step.ParallelLimit > 0 ? step.ParallelLimit : MaxParallel
+                };
+
+                NeonHelper.ThreadRun(
+                    () =>
+                    {
+                        if (step.SyncNodeAction != null)
+                        {
+                            // Compute the amount of time to delay before executing
+                            // the step on each node.  We're going to spread the step
+                            // delay evenly across the nodes.
+                            //
+                            // Note that this only works when [NodeMetadata==NodeDefinition]
+
+                            if (typeof(NodeMetadata) == typeof(NodeDefinition))
+                            {
+                                if (step.StepStagger <= TimeSpan.Zero || stepNodes.Count() <= 1)
+                                {
+                                    foreach (var node in stepNodes)
+                                    {
+                                        (node.Metadata as NodeDefinition).StepDelay = TimeSpan.Zero;
+                                    }
+                                }
+                                else
+                                {
+                                    var delay = TimeSpan.Zero;
+
+                                    foreach (var node in stepNodes)
+                                    {
+                                        (node.Metadata as NodeDefinition).StepDelay = delay;
+                                        delay += step.StepStagger;
+                                    }
+                                }
+                            }
+
+                            // Execute the step on the selected nodes.
+
+                            Parallel.ForEach(stepNodes, parallelOptions,
+                                node =>
+                                {
+                                    try
+                                    {
+                                        var nodeDefinition = node.Metadata as NodeDefinition;
+                                        var stepDelay      = TimeSpan.Zero;
+
+                                        if (nodeDefinition != null && nodeDefinition.StepDelay > TimeSpan.Zero)
+                                        {
+                                            stepDelay = nodeDefinition.StepDelay;
+                                        }
+
+                                        step.SyncNodeAction(node, stepDelay);
+
+                                        node.Status  = "[x] DONE";
+                                        node.IsReady = true;
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        node.Fault(NeonHelper.ExceptionError(e));
+                                        node.LogException(e);
+                                    }
+                                });
+                        }
+                        else if (step.AsyncNodeAction != null)
+                        {
+                            // Compute the amount of time to delay before executing
+                            // the step on each node.  We're going to spread the step
+                            // delay evenly across the nodes.
+                            //
+                            // Note that this only works when [NodeMetadata==NodeDefinition]
+
+                            if (typeof(NodeMetadata) == typeof(NodeDefinition))
+                            {
+                                if (step.StepStagger <= TimeSpan.Zero || stepNodes.Count() <= 1)
+                                {
+                                    foreach (var node in stepNodes)
+                                    {
+                                        (node.Metadata as NodeDefinition).StepDelay = TimeSpan.Zero;
+                                    }
+                                }
+                                else
+                                {
+                                    var delay = TimeSpan.Zero;
+
+                                    foreach (var node in stepNodes)
+                                    {
+                                        (node.Metadata as NodeDefinition).StepDelay = delay;
+                                        delay += step.StepStagger;
+                                    }
+                                }
+                            }
+
+                            // Execute the step on the selected nodes.
+
+                            Parallel.ForEach(stepNodes, parallelOptions,
+                                node =>
+                                {
+                                    try
+                                    {
+                                        var nodeDefinition = node.Metadata as NodeDefinition;
+                                        var stepDelay      = TimeSpan.Zero;
+
+                                        if (nodeDefinition != null && nodeDefinition.StepDelay > TimeSpan.Zero)
+                                        {
+                                            stepDelay = nodeDefinition.StepDelay;
+                                        }
+
+                                        var runTask = Task.Run(
+                                            async () =>
+                                            {
+                                                await step.AsyncNodeAction(node, stepDelay);
+                                            });
+
+                                        runTask.Wait();
+
+                                        node.Status  = "[x] DONE";
+                                        node.IsReady = true;
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        var aggregateException = e as AggregateException;
+
+                                        if (aggregateException != null && aggregateException.InnerExceptions.Count == 1)
+                                        {
+                                            e = aggregateException.InnerExceptions.Single();
+                                        }
+
+                                        node.Fault(NeonHelper.ExceptionError(e));
+                                        node.LogException(e);
+                                    }
+                                });
+                        }
+                        else if (step.SyncGlobalAction != null)
+                        {
+                            try
+                            {
+                                step.SyncGlobalAction();
+                            }
+                            catch (Exception e)
+                            {
+                                // $todo(jefflill):
+                                //
+                                // We're going to report global step exceptions as if they
+                                // happened on the first master node because there's no
+                                // other place to log this in the current design.
+                                //
+                                // I suppose we could create a [global.log] file or something
+                                // and put this there and also indicate this somewhere in
+                                // the console output, but this is not worth messing with
+                                // right now.
+
+                                if (typeof(NodeMetadata) == typeof(NodeDefinition))
+                                {
+                                    var firstMaster = nodes
+                                        .Where(n => (n.Metadata as NodeDefinition).IsMaster)
+                                        .OrderBy(n => n.Name)
+                                        .First();
+
+                                    firstMaster.Fault(NeonHelper.ExceptionError(e));
+                                    firstMaster.LogException(e);
+                                }
+                            }
+
+                            foreach (var node in stepNodes)
+                            {
+                                node.IsReady = true;
+                            }
+                        }
+                        else if (step.AsyncGlobalAction != null)
+                        {
+                            try
+                            {
+                                var runTask = Task.Run(
+                                    async () =>
+                                    {
+                                        await step.AsyncGlobalAction();
+                                    });
+
+                                runTask.Wait();
+                            }
+                            catch (Exception e)
+                            {
+                                var aggregateException = e as AggregateException;
+
+                                if (aggregateException != null && aggregateException.InnerExceptions.Count == 1)
+                                {
+                                    e = aggregateException.InnerExceptions.Single();
+                                }
+
+                                // $todo(jefflill):
+                                //
+                                // We're going to report global step exceptions as if they
+                                // happened on the first master node because there's no
+                                // other place to log this in the current design.
+                                //
+                                // I suppose we could create a [global.log] file or something
+                                // and put this there and also indicate this somewhere in
+                                // the console output, but this is not worth messing with
+                                // right now.
+
+                                if (typeof(NodeMetadata) == typeof(NodeDefinition))
+                                {
+                                    var firstMaster = nodes
+                                        .Where(n => (n.Metadata as NodeDefinition).IsMaster)
+                                        .OrderBy(n => n.Name)
+                                        .First();
+
+                                    firstMaster.Fault(NeonHelper.ExceptionError(e));
+                                    firstMaster.LogException(e);
+                                }
+                            }
+
+                            foreach (var node in stepNodes)
+                            {
+                                node.IsReady = true;
+                            }
+                        }
+                    });
+
+                while (true)
+                {
+                    DisplayStatus(stepNodeNamesSet);
+
+                    if (stepNodes.Count(n => !n.IsReady) == 0)
+                    {
+                        DisplayStatus(stepNodeNamesSet);
+                        break;
+                    }
+
+                    Thread.Sleep(TimeSpan.FromMilliseconds(100));
+                }
+
+                error = stepNodes.FirstOrDefault(n => n.IsFaulted) != null;
+
+                if (error)
+                {
+                    step.Status = StepStatus.Failed;
+
+                    return false;
                 }
                 else
                 {
-                    node.Status = string.Empty;
+                    step.Status = StepStatus.Done;
+
+                    return true;
                 }
             }
-
-            DisplayStatus(stepNodeNamesSet);
-
-            var parallelOptions = new ParallelOptions()
+            finally
             {
-                MaxDegreeOfParallelism = step.ParallelLimit > 0 ? step.ParallelLimit : MaxParallel
-            };
-
-            NeonHelper.ThreadRun(
-                () =>
-                {
-                    if (step.SyncNodeAction != null)
-                    {
-                        // Compute the amount of time to delay before executing
-                        // the step on each node.  We're going to spread the step
-                        // delay evenly across the nodes.
-                        //
-                        // Note that this only works when [NodeMetadata==NodeDefinition]
-
-                        if (typeof(NodeMetadata) == typeof(NodeDefinition))
-                        {
-                            if (step.StepStagger <= TimeSpan.Zero || stepNodes.Count() <= 1)
-                            {
-                                foreach (var node in stepNodes)
-                                {
-                                    (node.Metadata as NodeDefinition).StepDelay = TimeSpan.Zero;
-                                }
-                            }
-                            else
-                            {
-                                var delay = TimeSpan.Zero;
-
-                                foreach (var node in stepNodes)
-                                {
-                                    (node.Metadata as NodeDefinition).StepDelay = delay;
-                                    delay += step.StepStagger;
-                                }
-                            }
-                        }
-
-                        // Execute the step on the selected nodes.
-
-                        Parallel.ForEach(stepNodes, parallelOptions,
-                            node =>
-                            {
-                                try
-                                {
-                                    var nodeDefinition = node.Metadata as NodeDefinition;
-                                    var stepDelay      = TimeSpan.Zero;
-
-                                    if (nodeDefinition != null && nodeDefinition.StepDelay > TimeSpan.Zero)
-                                    {
-                                        stepDelay = nodeDefinition.StepDelay;
-                                    }
-
-                                    step.SyncNodeAction(node, stepDelay);
-
-                                    node.Status  = "[x] DONE";
-                                    node.IsReady = true;
-                                }
-                                catch (Exception e)
-                                {
-                                    node.Fault(NeonHelper.ExceptionError(e));
-                                    node.LogException(e);
-                                }
-                            });
-                    }
-                    else if (step.AsyncNodeAction != null)
-                    {
-                        // Compute the amount of time to delay before executing
-                        // the step on each node.  We're going to spread the step
-                        // delay evenly across the nodes.
-                        //
-                        // Note that this only works when [NodeMetadata==NodeDefinition]
-
-                        if (typeof(NodeMetadata) == typeof(NodeDefinition))
-                        {
-                            if (step.StepStagger <= TimeSpan.Zero || stepNodes.Count() <= 1)
-                            {
-                                foreach (var node in stepNodes)
-                                {
-                                    (node.Metadata as NodeDefinition).StepDelay = TimeSpan.Zero;
-                                }
-                            }
-                            else
-                            {
-                                var delay = TimeSpan.Zero;
-
-                                foreach (var node in stepNodes)
-                                {
-                                    (node.Metadata as NodeDefinition).StepDelay = delay;
-                                    delay += step.StepStagger;
-                                }
-                            }
-                        }
-
-                        // Execute the step on the selected nodes.
-
-                        Parallel.ForEach(stepNodes, parallelOptions,
-                            node =>
-                            {
-                                try
-                                {
-                                    var nodeDefinition = node.Metadata as NodeDefinition;
-                                    var stepDelay      = TimeSpan.Zero;
-
-                                    if (nodeDefinition != null && nodeDefinition.StepDelay > TimeSpan.Zero)
-                                    {
-                                        stepDelay = nodeDefinition.StepDelay;
-                                    }
-
-                                    var runTask = Task.Run(
-                                        async () =>
-                                        {
-                                            await step.AsyncNodeAction(node, stepDelay);
-                                        });
-
-                                    runTask.Wait();
-
-                                    node.Status  = "[x] DONE";
-                                    node.IsReady = true;
-                                }
-                                catch (Exception e)
-                                {
-                                    var aggregateException = e as AggregateException;
-
-                                    if (aggregateException != null && aggregateException.InnerExceptions.Count == 1)
-                                    {
-                                        e = aggregateException.InnerExceptions.Single();
-                                    }
-
-                                    node.Fault(NeonHelper.ExceptionError(e));
-                                    node.LogException(e);
-                                }
-                            });
-                    }
-                    else if (step.SyncGlobalAction != null)
-                    {
-                        try
-                        {
-                            step.SyncGlobalAction();
-                        }
-                        catch (Exception e)
-                        {
-                            // $todo(jefflill):
-                            //
-                            // We're going to report global step exceptions as if they
-                            // happened on the first master node because there's no
-                            // other place to log this in the current design.
-                            //
-                            // I suppose we could create a [global.log] file or something
-                            // and put this there and also indicate this somewhere in
-                            // the console output, but this is not worth messing with
-                            // right now.
-
-                            if (typeof(NodeMetadata) == typeof(NodeDefinition))
-                            {
-                                var firstMaster = nodes
-                                    .Where(n => (n.Metadata as NodeDefinition).IsMaster)
-                                    .OrderBy(n => n.Name)
-                                    .First();
-
-                                firstMaster.Fault(NeonHelper.ExceptionError(e));
-                                firstMaster.LogException(e);
-                            }
-                        }
-
-                        foreach (var node in stepNodes)
-                        {
-                            node.IsReady = true;
-                        }
-                    }
-                    else if (step.AsyncGlobalAction != null)
-                    {
-                        try
-                        {
-                            var runTask = Task.Run(
-                                async () =>
-                                {
-                                    await step.AsyncGlobalAction();
-                                });
-
-                            runTask.Wait();
-                        }
-                        catch (Exception e)
-                        {
-                            var aggregateException = e as AggregateException;
-
-                            if (aggregateException != null && aggregateException.InnerExceptions.Count == 1)
-                            {
-                                e = aggregateException.InnerExceptions.Single();
-                            }
-
-                            // $todo(jefflill):
-                            //
-                            // We're going to report global step exceptions as if they
-                            // happened on the first master node because there's no
-                            // other place to log this in the current design.
-                            //
-                            // I suppose we could create a [global.log] file or something
-                            // and put this there and also indicate this somewhere in
-                            // the console output, but this is not worth messing with
-                            // right now.
-
-                            if (typeof(NodeMetadata) == typeof(NodeDefinition))
-                            {
-                                var firstMaster = nodes
-                                    .Where(n => (n.Metadata as NodeDefinition).IsMaster)
-                                    .OrderBy(n => n.Name)
-                                    .First();
-
-                                firstMaster.Fault(NeonHelper.ExceptionError(e));
-                                firstMaster.LogException(e);
-                            }
-                        }
-
-                        foreach (var node in stepNodes)
-                        {
-                            node.IsReady = true;
-                        }
-                    }
-                });
-
-            while (true)
-            {
-                DisplayStatus(stepNodeNamesSet);
-
-                if (stepNodes.Count(n => !n.IsReady) == 0)
-                {
-                    DisplayStatus(stepNodeNamesSet);
-                    break;
-                }
-
-                Thread.Sleep(TimeSpan.FromMilliseconds(100));
-            }
-
-            error = stepNodes.FirstOrDefault(n => n.IsFaulted) != null;
-
-            if (error)
-            {
-                step.Status = StepStatus.Failed;
-
-                return false;
-            }
-            else
-            {
-                step.Status = StepStatus.Done;
-
-                return true;
+                step.ElapsedTime = stopWatch.Elapsed;
             }
         }
 
