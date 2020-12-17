@@ -3171,9 +3171,20 @@ rm -rf {chartName}*
                     //    timeout: TimeSpan.FromMinutes(20),
                     //    pollInterval: clusterOpRetryInterval);
 
+                    var start = DateTime.UtcNow;
                     await NeonHelper.WaitForAsync(
                            async () =>
                            {
+                               // Restart pods if they aren't happy after 3 minutes.
+                               if (DateTime.UtcNow > start.AddMinutes(3))
+                               {
+                                   var pods = await k8sClient.ListNamespacedPodAsync("neon-system", labelSelector: "release=neon-system-registry-harbor");
+                                   foreach (var p in pods.Items.Where(i => i.Status.Phase != "Running"))
+                                   {
+                                       await k8sClient.DeleteNamespacedPodAsync(p.Name(), "neon-system");
+                                   }
+                                   start = DateTime.UtcNow;
+                               }
                                var deployments = await k8sClient.ListNamespacedDeploymentAsync("neon-system", labelSelector: "release=neon-system-registry-harbor");
                                if (deployments == null || deployments.Items.Count < 8)
                                {
@@ -3182,7 +3193,7 @@ rm -rf {chartName}*
 
                                return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
                            },
-                           timeout: TimeSpan.FromMinutes(20),
+                           timeout: TimeSpan.FromMinutes(30),
                            pollInterval: clusterOpRetryInterval);
                 });
 
