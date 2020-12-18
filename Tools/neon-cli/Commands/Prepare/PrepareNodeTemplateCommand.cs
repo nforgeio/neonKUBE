@@ -449,7 +449,7 @@ sfill -fllz /
                     Console.WriteLine("Clean:    VM");
                     node.SudoCommand(CommandBundle.FromScript(cleanScript), RunOptions.FaultOnError);
                  
-                    // Shut the the VM down so the user can compress and upload
+                    // Shut down the VM so the user can compress and upload
                     // the disk image.
 
                     Console.WriteLine("Shutdown: VM");

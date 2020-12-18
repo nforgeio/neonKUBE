@@ -359,7 +359,7 @@ OPTIONS:
 
                     if (!controller.Run())
                     {
-                        // Write the operation end/failed to all cluster node logs.
+                        // Write the operation end/failed marker to all cluster node logs.
 
                         cluster.LogLine(logFailedMarker);
 
@@ -376,7 +376,6 @@ OPTIONS:
                     // Write the operation end marker to all cluster node logs.
 
                     cluster.LogLine(logEndMarker);
-
                 }
                 catch
                 {
