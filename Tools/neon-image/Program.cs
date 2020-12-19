@@ -59,7 +59,9 @@ namespace NeonImage
         public async static Task<int> Main(params string[] args)
         {
             string usage = $@"
-neonKUBE VM image generation: neon-image [v{Program.Version}]
+INTERNAL USE ONLY: neonKUBE VM image generation tool
+
+neon-image [v{Program.Version}]
 {Build.Copyright}
 
 COMMAND SUMMARY:

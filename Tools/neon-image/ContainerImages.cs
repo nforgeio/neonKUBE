@@ -125,6 +125,7 @@ redis:6.0.7-alpine
 squareup/ghostunnel:v1.4.1
 wrouesnel/postgres_exporter:v0.5.1
 ";
+
         /// <summary>
         /// Static constructor.
         /// </summary>

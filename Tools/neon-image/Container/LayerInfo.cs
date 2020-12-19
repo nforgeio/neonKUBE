@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ContainerManifest.cs
+// FILE:	    LayerInfo.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
 //
@@ -33,21 +33,34 @@ using Neon.Common;
 namespace NeonImage
 {
     /// <summary>
-    /// Models a container manifest as returned by <b>docker manifest inspect</b> (non-verbose).
+    /// Describes a layer from a container manifest.
     /// </summary>
-    public class ContainerManifest
+    public class LayerInfo
     {
-        // These properties are parsed from [docker manifest inspect] command results.
-
-        public int schemaVersion { get; set; }
-        public string mediaType { get; set; }
-        public ContainerLayer config { get; set; }
-        public List<ContainerLayer> Layers { get; set; } = new List<ContainerLayer>();
+        /// <summary>
+        /// The layer ID.
+        /// </summary>
+        public string Id { get; set; }
 
         /// <summary>
-        /// Returns the total size of the container image in bytes.
+        /// The parent layer ID or <c>null</c> for the root layer.
         /// </summary>
-        [JsonIgnore]
-        public long TotalSize => config.size + Layers.Sum(layer => layer.size);
+        public string ParentId { get; set; }
+
+        /// <summary>
+        /// The compressed layer size in bytes.
+        /// </summary>
+        public long CompressedSize { get; set; }
+
+        /// <summary>
+        /// Returns <c>true</c> for root layers.
+        /// </summary>
+        public bool IsRoot => ParentId == null;
+
+        /// <summary>
+        /// Returns <c>true</c> if the layer is shared by multiple required
+        /// container images.
+        /// </summary>
+        public bool IsShared { get; set; }
     }
 }
