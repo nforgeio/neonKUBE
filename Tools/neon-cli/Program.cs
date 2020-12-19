@@ -121,7 +121,7 @@ OPTIONS:
 
 REMARKS:
 
-By default, any tempory files generated will be written to your 
+By default, any temporary files generated will be written to your 
 [$HOME/.neonkube/temp] folder which is encrypted at rest for
 Windows 10 PRO and Windows Server workstations.  This encryption
 may cause some problems (e.g. a [neon run ...] command that 
