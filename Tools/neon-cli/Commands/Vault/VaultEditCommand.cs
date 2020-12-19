@@ -69,10 +69,7 @@ NOTE: You don't need to specify a password name for this command
       because the password name is saved within encrypted files.
 ";
         /// <inheritdoc/>
-        public override string[] Words
-        {
-            get { return new string[] { "vault", "edit" }; }
-        }
+        public override string[] Words => new string[] { "vault", "edit" }; 
 
         /// <inheritdoc/>
         public override void Help()

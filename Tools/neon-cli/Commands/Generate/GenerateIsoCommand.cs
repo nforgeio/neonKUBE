@@ -62,16 +62,10 @@ OPTIONS:
 ";
 
         /// <inheritdoc/>
-        public override string[] Words
-        {
-            get { return new string[] { "generate", "iso" }; }
-        }
+        public override string[] Words => new string[] { "generate", "iso" }; 
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions
-        {
-            get { return new string[] { "--linux" }; }
-        }
+        public override string[] ExtendedOptions => new string[] { "--linux" };
 
         /// <inheritdoc/>
         public override void Help()

@@ -134,16 +134,10 @@ OPTIONS:
         private string                  branch;
 
         /// <inheritdoc/>
-        public override string[] Words
-        {
-            get { return new string[] { "cluster", "setup" }; }
-        }
+        public override string[] Words => new string[] { "cluster", "setup" };
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions
-        {
-            get { return new string[] { "--unredacted", "--force" }; }
-        }
+        public override string[] ExtendedOptions => new string[] { "--unredacted", "--force" };
 
         /// <inheritdoc/>
         public override void Help()

@@ -52,10 +52,7 @@ ARGUMENTS:
                   This defaults to the first master.
 ";
         /// <inheritdoc/>
-        public override string[] Words
-        {
-            get { return new string[] { "scp" }; }
-        }
+        public override string[] Words => new string[] { "scp" }; 
 
         /// <inheritdoc/>
         public override void Help()

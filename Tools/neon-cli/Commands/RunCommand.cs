@@ -129,10 +129,7 @@ Pass a potentially encrypted file:
         NeonVault vault = new NeonVault(Program.LookupPassword);
 
         /// <inheritdoc/>
-        public override string[] Words
-        {
-            get { return new string[] { "run" }; }
-        }
+        public override string[] Words => new string[] { "run" }; 
 
         /// <inheritdoc/>
         public override bool CheckOptions => false;

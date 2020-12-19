@@ -62,10 +62,7 @@ NOTE: We explicitly don't support decrypting a file in-place to discourage
       easy to do.
 ";
         /// <inheritdoc/>
-        public override string[] Words
-        {
-            get { return new string[] { "vault", "decrypt" }; }
-        }
+        public override string[] Words => new string[] { "vault", "decrypt" }; 
 
         /// <inheritdoc/>
         public override void Help()

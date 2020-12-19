@@ -60,10 +60,7 @@ This command creates or updates a named password.
 ";
 
         /// <inheritdoc/>
-        public override string[] Words
-        {
-            get { return new string[] { "password", "set" }; }
-        }
+        public override string[] Words => new string[] { "password", "set" }; 
 
         /// <inheritdoc/>
         public override void Help()

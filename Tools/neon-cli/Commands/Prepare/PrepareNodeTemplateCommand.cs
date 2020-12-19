@@ -104,10 +104,7 @@ node template.
 ";
 
         /// <inheritdoc/>
-        public override string[] Words
-        {
-            get { return new string[] { "prepare", "node-template" }; }
-        }
+        public override string[] Words => new string[] { "prepare", "node-template" }; 
 
         /// <inheritdoc/>
         public override string[] ExtendedOptions => new string[] { "--hyperv", "--xenserver", "--host-address", "--host-password", "--vm-name", "--update" };

@@ -100,16 +100,10 @@ style design conventions.  See this GitHub issue for more information:
 ";
 
         /// <inheritdoc/>
-        public override string[] Words
-        {
-            get { return new string[] { "generate", "models" }; }
-        }
+        public override string[] Words => new string[] { "generate", "models" }; 
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions
-        {
-            get { return new string[] { "--source-namespace", "--target-namespace", "--persisted", "--ux", "--no-services", "--targets", "--debug-allow-stepinto", "--v1compatible" }; }
-        }
+        public override string[] ExtendedOptions => new string[] { "--source-namespace", "--target-namespace", "--persisted", "--ux", "--no-services", "--targets", "--debug-allow-stepinto", "--v1compatible" }; 
 
         /// <inheritdoc/>
         public override void Help()

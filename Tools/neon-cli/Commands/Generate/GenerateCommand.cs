@@ -49,10 +49,7 @@ USAGE:
 ";
 
         /// <inheritdoc/>
-        public override string[] Words
-        {
-            get { return new string[] { "generate" }; }
-        }
+        public override string[] Words => new string[] { "generate" };
 
         /// <inheritdoc/>
         public override void Help()

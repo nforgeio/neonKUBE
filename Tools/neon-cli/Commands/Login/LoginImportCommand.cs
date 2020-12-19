@@ -57,16 +57,10 @@ OPTIONS:
 ";
 
         /// <inheritdoc/>
-        public override string[] Words
-        {
-            get { return new string[] { "login", "import" }; }
-        }
+        public override string[] Words => new string[] { "login", "import" }; 
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions
-        {
-            get { return new string[] { "--nologin", "--force" }; }
-        }
+        public override string[] ExtendedOptions => new string[] { "--nologin", "--force" }; 
 
         /// <inheritdoc/>
         public override void Help()

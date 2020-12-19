@@ -63,10 +63,7 @@ ARGUMENTS:
 ";
 
         /// <inheritdoc/>
-        public override string[] Words
-        {
-            get { return new string[] { "password" }; }
-        }
+        public override string[] Words => new string[] { "password" }; 
 
         /// <inheritdoc/>
         public override void Help()

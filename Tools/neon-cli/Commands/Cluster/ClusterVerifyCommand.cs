@@ -51,10 +51,7 @@ ARGUMENTS:
 ";
 
         /// <inheritdoc/>
-        public override string[] Words
-        {
-            get { return new string[] { "cluster", "verify" }; }
-        }
+        public override string[] Words => new string[] { "cluster", "verify" };
 
         /// <inheritdoc/>
         public override void Help()

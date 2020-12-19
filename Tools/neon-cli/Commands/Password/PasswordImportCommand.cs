@@ -63,10 +63,7 @@ ZIP archive.
 ";
 
         /// <inheritdoc/>
-        public override string[] Words
-        {
-            get { return new string[] { "password", "import" }; }
-        }
+        public override string[] Words => new string[] { "password", "import" }; 
 
         /// <inheritdoc/>
         public override void Help()

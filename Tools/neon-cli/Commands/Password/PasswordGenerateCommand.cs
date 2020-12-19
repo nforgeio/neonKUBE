@@ -55,10 +55,7 @@ The generated password will be written to standard output.
 ";
 
         /// <inheritdoc/>
-        public override string[] Words
-        {
-            get { return new string[] { "password", "generate" }; }
-        }
+        public override string[] Words => new string[] { "password", "generate" }; 
 
         /// <inheritdoc/>
         public override void Help()

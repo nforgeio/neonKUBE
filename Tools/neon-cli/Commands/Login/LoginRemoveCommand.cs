@@ -61,22 +61,13 @@ USER@CLUSTER[/NAMESPACE is not specified.
 ";
 
         /// <inheritdoc/>
-        public override string[] Words
-        {
-            get { return new string[] { "login", "remove" }; }
-        }
+        public override string[] Words => new string[] { "login", "remove" }; 
 
         /// <inheritdoc/>
-        public override string[] AltWords
-        {
-            get { return new string[] { "login", "rm" }; }
-        }
+        public override string[] AltWords => new string[] { "login", "rm" }; 
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions
-        {
-            get { return new string[] { "--force" }; }
-        }
+        public override string[] ExtendedOptions => new string[] { "--force" }; 
 
         /// <inheritdoc/>
         public override void Help()

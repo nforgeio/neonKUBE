@@ -105,10 +105,7 @@ customize the editor by setting the EDITOR environment variable to the path
 to the editor executable file.
 ";
         /// <inheritdoc/>
-        public override string[] Words
-        {
-            get { return new string[] { "vault" }; }
-        }
+        public override string[] Words => new string[] { "vault" }; 
 
         /// <inheritdoc/>
         public override void Help()

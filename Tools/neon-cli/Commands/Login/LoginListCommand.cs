@@ -76,16 +76,10 @@ USAGE:
 ";
 
         /// <inheritdoc/>
-        public override string[] Words
-        {
-            get { return new string[] { "login", "list" }; }
-        }
+        public override string[] Words => new string[] { "login", "list" }; 
 
         /// <inheritdoc/>
-        public override string[] AltWords
-        {
-            get { return new string[] { "login", "ls" }; }
-        }
+        public override string[] AltWords => new string[] { "login", "ls" }; 
 
         /// <inheritdoc/>
         public override void Help()
