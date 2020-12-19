@@ -38,11 +38,11 @@ namespace NeonImage
     public class VersionCommand : CommandBase
     {
         private const string usage = @"
-Prints the [neon-cli] version.
+Prints the [neon-iimage] version.
 
 USAGE:
 
-    neon version [OPTIONS]
+    neon-image version [OPTIONS]
 
 OPTIONS:
 

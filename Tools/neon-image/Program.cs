@@ -64,8 +64,9 @@ neonKUBE VM image generation: neon-image [v{Program.Version}]
 
 COMMAND SUMMARY:
 
-    neon help               COMMAND
-    neon version            [-n] [--git] [--minimum=VERSION]
+    neon-image help         COMMAND
+    neon-image pull
+    neon-image version      [-n] [--git] [--minimum=VERSION]
 
 ARGUMENTS:
 
@@ -110,6 +111,8 @@ OPTIONS:
 
                 var commands = new List<ICommand>()
                 {
+                    new AnalyzeCommand(),
+                    new PullCommand(),
                     new VersionCommand()
                 };
 
@@ -247,34 +250,6 @@ OPTIONS:
 #pragma warning disable 0436
         public static string GitBranch => ThisAssembly.Git.Branch;
 #pragma warning restore 0436
-
-        /// <summary>
-        /// Path to the WinSCP program executable.
-        /// </summary>
-        public static string WinScpPath
-        {
-            get { return Path.Combine(Environment.GetEnvironmentVariable("ProgramFiles(x86)"), @"WinSCP\WinSCP.exe"); }
-        }
-
-        /// <summary>
-        /// Path to the PuTTY program executable.
-        /// </summary>
-        public static string PuttyPath
-        {
-            get
-            {
-                // Look for a x64 or x86 version of PuTTY at their default install locations.
-
-                var path = Path.Combine(Environment.GetEnvironmentVariable("ProgramFiles"), @"PuTTY\putty.exe");
-
-                if (File.Exists(path))
-                {
-                    return path;
-                }
-
-                return Path.Combine(Environment.GetEnvironmentVariable("ProgramFiles(x86)"), @"PuTTY\putty.exe");
-            }
-        }
 
         /// <summary>
         /// Attempts to match the command line to the <see cref="ICommand"/> to be used
@@ -446,27 +421,6 @@ OPTIONS:
         }
 
         /// <summary>
-        /// Returns a <see cref="ClusterProxy"/> for the current Kubernetes context.
-        /// </summary>
-        /// <returns>The <see cref="ClusterProxy"/>.</returns>
-        /// <remarks>
-        /// <note>
-        /// This method will terminate the program with an error message when not logged
-        /// into a neonKUBE cluster.
-        /// </note>
-        /// </remarks>
-        public static ClusterProxy GetCluster()
-        {
-            if (KubeHelper.CurrentContext == null)
-            {
-                Console.Error.WriteLine("*** ERROR: You are not logged into a cluster.");
-                Program.Exit(1);
-            }
-
-            return new ClusterProxy(KubeHelper.CurrentContext, Program.CreateNodeProxy<NodeDefinition>);
-        }
-
-        /// <summary>
         /// Presents the user with a yes/no question and waits for a response.
         /// </summary>
         /// <param name="prompt">The question prompt.</param>
@@ -497,60 +451,6 @@ OPTIONS:
             finally
             {
                 Console.WriteLine();
-            }
-        }
-
-        /// <summary>
-        /// Uses WinSCP to convert an OpenSSH PEM formatted key to the PPK format
-        /// required by PuTTY/WinSCP.  This works only on Windows.
-        /// </summary>
-        /// <param name="kubeLogin">The cluster login.</param>
-        /// <param name="pemKey">The OpenSSH PEM key.</param>
-        /// <returns>The converted PPPK key.</returns>
-        /// <exception cref="NotImplementedException">Thrown when not running on Windows.</exception>
-        /// <exception cref="Win32Exception">Thrown if WinSCP could not be executed.</exception>
-        public static string ConvertPUBtoPPK(ClusterLogin kubeLogin, string pemKey)
-        {
-            if (!NeonHelper.IsWindows)
-            {
-                throw new NotImplementedException("Not implemented for non-Windows platforms.");
-            }
-
-            var programPath = "winscp.com";
-            var pemKeyPath  = Path.Combine(KubeHelper.TempFolder, Guid.NewGuid().ToString("d"));
-            var ppkKeyPath  = Path.Combine(KubeHelper.TempFolder, Guid.NewGuid().ToString("d"));
-
-            try
-            {
-                File.WriteAllText(pemKeyPath, pemKey);
-
-                var result = NeonHelper.ExecuteCapture(programPath, $@"/keygen ""{pemKeyPath}"" /comment=""{kubeLogin.ClusterDefinition.Name} Key"" /output=""{ppkKeyPath}""");
-
-                if (result.ExitCode != 0)
-                {
-                    Console.WriteLine(result.OutputText);
-                    Console.Error.WriteLine(result.ErrorText);
-                    Program.Exit(result.ExitCode);
-                }
-
-                return File.ReadAllText(ppkKeyPath);
-            }
-            catch (Win32Exception)
-            {
-                Console.Error.WriteLine($"*** ERROR: Cannot launch [{programPath}].");
-                throw;
-            }
-            finally
-            {
-                if (File.Exists(pemKeyPath))
-                {
-                    File.Delete(pemKeyPath);
-                }
-
-                if (File.Exists(ppkKeyPath))
-                {
-                    File.Delete(ppkKeyPath);
-                }
             }
         }
 
@@ -594,31 +494,6 @@ OPTIONS:
         }
 
         /// <summary>
-        /// <para>
-        /// Recursively executes a <b>neon-cli</b> command by launching a new
-        /// instance of the tool with the arguments passed and capturing the
-        /// process output streams.
-        /// </para>
-        /// <note>
-        /// This does not recurse into  a container, it simply launches a new
-        /// process instance of the program in the current environment with
-        /// the arguments passed.
-        /// </note>
-        /// </summary>
-        /// <param name="args">The arguments.</param>
-        /// <returns>The process response.</returns>
-        public static ExecuteResponse ExecuteRecurseCaptureStreams(params object[] args)
-        {
-            // We need to prepend the program assembly path to the arguments.
-
-            var argList = new List<object>(args);
-
-            argList.Insert(0, NeonHelper.GetEntryAssemblyPath());
-
-            return NeonHelper.ExecuteCapture("dotnet", argList.ToArray());
-        }
-
-        /// <summary>
         /// Verify that the current user has administrator privileges, exiting
         /// the application if this is not the case.
         /// </summary>
@@ -657,190 +532,6 @@ OPTIONS:
         }
 
         /// <summary>
-        /// Optionally set to the registry to be used to override any explicit or implicit <b>nkubeio</b>
-        /// or <b>nkubedev</b> organizations specified when deploying or updating a neonKUBE.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// This property is <c>null</c> by default but may be specified using the <b>--image-reg=REGISTRY</b>
-        /// command line option.  The main purpose of this is support development and testing scenarios.
-        /// </para>
-        /// </remarks>
-        public static string DockerImageReg { get; private set; } = null;
-
-        /// <summary>
-        /// Optionally set to the tag to be used to override any explicit or implicit <b>:latest</b>
-        /// image tags specified when deploying or updating a neonKUBE.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// This property is <c>null</c> by default but may be specified using the <b>--image-tag=TAG</b>
-        /// command line option.  The main purpose of this is support development and testing by specifying
-        /// something like <b>--image-tag=BRANCH-latest</b>, where <b>BRANCH</b> is the current development
-        /// branch.
-        /// </para>
-        /// <para>
-        /// This will direct <b>neon-cli</b> to use images built from the branch rather than the default
-        /// production images without needing to modify cluster configuration files.  All the developer
-        /// needs to do is ensure that all of the required images were built from that branch first and
-        /// then published to Docker Hub.
-        /// </para>
-        /// </remarks>
-        public static string DockerImageTag { get; private set; } = null;
-
-        /// <summary>
-        /// Resolves a Docker Image name/tag into the image specification to be actually deployed, taking
-        /// the <see cref="DockerImageReg"/> and <see cref="DockerImageTag"/> properties into account.
-        /// </summary>
-        /// <param name="image">The input image specification.</param>
-        /// <returns>The output specification.</returns>
-        /// <remarks>
-        /// <para>
-        /// If <see cref="DockerImageReg"/> is empty and <paramref name="image"/> specifies the 
-        /// <see cref="KubeConst.NeonProdRegistry"/> and the Git branch used to build <b>neon-cli</b>
-        /// is not <b>PROD</b>, then the image registry will be set to <see cref="KubeConst.NeonDevRegistry"/>.
-        /// This ensures that non-production <b>neon-cli </b> builds will use the development Docker
-        /// images by default.
-        /// </para>
-        /// <para>
-        /// If <see cref="DockerImageReg"/> is not empty  and <paramref name="image"/> specifies the 
-        /// <see cref="KubeConst.NeonProdRegistry"/> then <see cref="DockerImageReg"/> will
-        /// replace the registry in the image.
-        /// </para>
-        /// <para>
-        /// If <see cref="DockerImageTag"/> is empty, then this method simply returns the <paramref name="image"/>
-        /// argument as passed.  Otherwise, if the image argument implicitly or explicitly specifies the 
-        /// <b>:latest</b> tag, then the image returned will be tagged with <see cref="DockerImageTag"/>
-        /// when that's not empty or <b>:latest</b> for the <b>PROD</b> branch or <b>:BRANCH-latest</b> 
-        /// for non-<b>PROD</b> branches.
-        /// </para>
-        /// <para>
-        /// In all cases where <paramref name="image"/> specifies a non-latest tag, then the argument
-        /// will be returned unchanged.
-        /// </para>
-        /// </remarks>
-        public static string ResolveDockerImage(string image)
-        {
-            if (string.IsNullOrEmpty(image))
-            {
-                return image;
-            }
-
-            // Extract the registry from the image.  Note that this will
-            // be empty for official images on Docker Hub.
-
-            var registry = (string)null;
-            var p        = image.IndexOf('/');
-
-            if (p != -1)
-            {
-                registry = image.Substring(0, p);
-            }
-
-            if (!string.IsNullOrEmpty(registry) && registry == NeonHelper.NeonProdRegistry)
-            {
-                var imageWithoutRegistry = image.Substring(registry.Length);
-
-                if (!string.IsNullOrEmpty(DockerImageReg))
-                {
-                    image = DockerImageReg + imageWithoutRegistry;
-                }
-                else if (!IsRelease)
-                {
-                    image = NeonHelper.NeonDevRegistry + imageWithoutRegistry;
-                }
-            }
-
-            if (string.IsNullOrEmpty(image))
-            {
-                return image;
-            }
-
-            var normalized = image;
-
-            if (normalized.IndexOf(':') == -1)
-            {
-                // The image implicitly specifies [:latest].
-
-                normalized += ":latest";
-            }
-
-            if (normalized.EndsWith(":latest"))
-            {
-                if (!string.IsNullOrEmpty(DockerImageTag))
-                {
-                    return normalized.Replace(":latest", $":{DockerImageTag}");
-                }
-                else if (IsRelease)
-                {
-                    return normalized;
-                }
-                else
-                {
-#pragma warning disable 0436
-                    return normalized.Replace(":latest", $":{ThisAssembly.Git.Branch.ToLowerInvariant()}-latest");
-#pragma warning restore 0436
-                }
-            }
-            else
-            {
-                return image;
-            }
-        }
-
-        /// <summary>
-        /// Searches the directory holding a file as well as any ancestor directories
-        /// for the first <b>.password-name</b> file specifying a default password name.
-        /// </summary>
-        /// <param name="filePath">The file path.</param>
-        /// <returns>The default password name if one was found or <c>null</c>.</returns>
-        public static string GetDefaultPasswordName(string filePath)
-        {
-            var folderPath = Path.GetDirectoryName(Path.GetFullPath(filePath));
-
-            try
-            {
-                while (true)
-                {
-                    var passwordNamePath = Path.Combine(folderPath, ".password-name");
-
-                    if (File.Exists(passwordNamePath))
-                    {
-                        var passwordName = File.ReadLines(passwordNamePath).First().Trim();
-
-                        if (passwordName == string.Empty)
-                        {
-                            // An empty [.password-name] file will block further searching.
-
-                            return null;
-                        }
-
-                        return passwordName;
-                    }
-
-                    if (Path.GetPathRoot(folderPath) == folderPath)
-                    {
-                        // We're at the file system root.
-
-                        return null;
-                    }
-
-                    // Advance to the parent folder.
-
-                    folderPath = Path.GetFullPath(Path.Combine(folderPath, ".."));
-                }
-            }
-            catch (UnauthorizedAccessException)
-            {
-                // We will see this if the current user doesn't have permissions to
-                // walk the file directories all the way up to the root of the
-                // file system.  We'll just return NULL in this case.
-
-                return null;
-            }
-        }
-
-        /// <summary>
         /// Returns a password based on its name.
         /// </summary>
         /// <param name="passwordName">The password name.</param>
@@ -856,6 +547,21 @@ OPTIONS:
             else
             {
                 return null;
+            }
+        }
+
+        /// <summary>
+        /// Pulls all of the required images into the local Docker container image cache.
+        /// </summary>
+        public static void PullImages()
+        {
+            foreach (var image in ContainerImages.Required)
+            {
+                Console.WriteLine($"Pulling: {image}");
+
+                var response = NeonHelper.ExecuteCapture("docker.exe", new object[] { "pull", image });
+
+                response.EnsureSuccess();
             }
         }
     }
