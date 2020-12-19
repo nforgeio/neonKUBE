@@ -119,6 +119,15 @@ Publish Neon.Couchbase          $version
 Publish Neon.Cryptography       $version
 Publish Neon.Docker             $version
 Publish Neon.HyperV             $version
+Publish Neon.Kube               $version
+Publish Neon.Kube.Aws           $version
+Publish Neon.Kube.Azure         $version
+Publish Neon.Kube.BareMetal     $version
+Publish Neon.Kube.Google        $version
+Publish Neon.Kube.Hosting       $version
+Publish Neon.Kube.HyperV        $version
+Publish Neon.Kube.HyperVLocal   $version
+Publish Neon.Kube.XenServer     $version
 Publish Neon.Service            $version
 Publish Neon.ModelGen           $version
 Publish Neon.Nats               $version
