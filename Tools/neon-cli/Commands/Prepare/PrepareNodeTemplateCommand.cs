@@ -45,11 +45,11 @@ namespace NeonCli
     public class PrepareCommand : CommandBase
     {
         private const string usage = @"
-Performs basic cluster provisioning and management.
+Prepares the base Neon VM image for a hosting environment.
 
 USAGE:
 
-    neon prepare node-template OPTION ADDRESS
+    neon prepare [ OPTIONS ] ADDRESS
 
 ARGUMENTS:
 
