@@ -37,20 +37,20 @@ function Build
 {
 	param
 	(
-		[parameter(Mandatory=$true, Position=1)][string] $dotnetVersion,
 		[switch]$latest = $false
 	)
 
-	$registry    = GetRegistry "aspnet"
-	$tag         = $dotnetVersion
+	$registry    = GetRegistry "cluster-aspnet"
+	$tag         = $neonKUBE_Version
 	$tagAsLatest = TagAsLatest
 
 	# Build and publish the images.
 
-	. ./build.ps1 -registry $registry -version $dotnetVersion -tag $tag
+	. ./build.ps1 -registry $registry -tag $tag
     PushImage "${registry}:$tag"
 
 	if ($latest -and $tagAsLatest)
+	{
 		Exec { docker tag "${registry}:$tag" "${registry}:latest" }
 		PushImage "${registry}:latest"
 	}
@@ -60,10 +60,6 @@ $noImagePush = $nopush
 
 if ($allVersions)
 {
-	Build 3.0.0-bionic
-	Build 3.1.0-bionic
-	Build 3.1.1-bionic
-	Build 3.1.5-bionic
 }
 
-Build 3.1.9-bionic -latest
+Build -latest

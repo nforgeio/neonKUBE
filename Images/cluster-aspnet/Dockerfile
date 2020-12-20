@@ -20,7 +20,7 @@
 # ARGUMENTS:
 #
 #   ORGANIZATION    - The Docker Hub organization
-#   CLUSTER_VERSION - The neonbKUBE cluster version
+#   CLUSTER_VERSION - The neonKUBE cluster version
 #   DOTNET_VERSION  - The ASP.NET Core version (e.g. "3.1.0")
 
 ARG         ORGANIZATION

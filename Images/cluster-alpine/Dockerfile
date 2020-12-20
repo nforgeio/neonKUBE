@@ -20,7 +20,7 @@
 # ARGUMENTS:
 #
 #   ORGANIZATION    - The Docker Hub organization
-#   ALPINT_VERSION  - The base ALPINE image tag (e.g. "3.4")
+#   ALPINE_VERSION  - The base ALPINE image tag (e.g. "3.4")
 
 ARG         ORGANIZATION
 ARG         ALPINE_VERSION
@@ -30,4 +30,4 @@ STOPSIGNAL  SIGTERM
 
 # Copy common scripts to the root.
 
-COPY _common/*.sh           /
+COPY _common/*.sh   /

@@ -17,18 +17,17 @@
 
 # Builds a [nkubeio/dotnet-aspnet] image.
 #
-# Usage: powershell -file build.ps1 REGISTRY VERSION TAG
+# Usage: powershell -file build.ps1 REGISTRY TAG
 
 param 
 (
 	[parameter(Mandatory=$true,Position=1)][string] $registry,
-	[parameter(Mandatory=$true,Position=2)][string] $version,
 	[parameter(Mandatory=$true,Position=3)][string] $tag
 )
 
 "   "
 "======================================="
-"* ASPNET:" + $tag
+"* CLUSTER-ASPNET:" + $tag
 "======================================="
 
 $organization = DockerOrg
@@ -42,7 +41,7 @@ copy ..\_common\*.* .\_common
 
 # Build the image.
 
-Exec { docker build -t "${registry}:$tag" --build-arg "ORGANIZATION=$organization" --build-arg "CLUSTER_VERSION=$neonKUBE_Version" --build-arg "DOTNET_VERSION=$version" . }
+Exec { docker build -t "${registry}:$tag" --build-arg "ORGANIZATION=$organization" --build-arg "CLUSTER_VERSION=$neonKUBE_Version" . }
 
 # Clean up
 
