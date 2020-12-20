@@ -20,7 +20,6 @@ param
 
 $appname      = "test-temporal"
 $organization = DockerOrg
-$branch       = GitBranch
 
 # Copy the common scripts.
 
@@ -43,7 +42,7 @@ Exec { core-layers $appname "$pwd\bin" }
 
 # Build the image.
 
-Exec { docker build -t "${registry}:$tag" --build-arg "APPNAME=$appname" --build-arg "ORGANIZATION=$organization" --build-arg "BRANCH=$branch" . }
+Exec { docker build -t "${registry}:$tag" --build-arg "APPNAME=$appname" --build-arg "ORGANIZATION=$organization" . }
 
 # Clean up
 

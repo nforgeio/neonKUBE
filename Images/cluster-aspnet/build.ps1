@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Builds the Alpine base images.
+# Builds a [nkubeio/dotnet-aspnet] image.
 #
 # Usage: powershell -file build.ps1 REGISTRY VERSION TAG
 
@@ -28,8 +28,10 @@ param
 
 "   "
 "======================================="
-"* ALPINE:" + $tag
+"* ASPNET:" + $tag
 "======================================="
+
+$organization = DockerOrg
 
 # Copy the common scripts.
 
@@ -40,7 +42,7 @@ copy ..\_common\*.* .\_common
 
 # Build the image.
 
-Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$version" . }
+Exec { docker build -t "${registry}:$tag" --build-arg "ORGANIZATION=$organization" --build-arg "CLUSTER_VERSION=$neonKUBE_Version" --build-arg "DOTNET_VERSION=$version" . }
 
 # Clean up
 

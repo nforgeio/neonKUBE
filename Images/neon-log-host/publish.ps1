@@ -51,4 +51,4 @@ if ($allVersions)
 {
 }
 
-Build NeonKubeVersion -latest
+Build $neonKUBE_Version -latest

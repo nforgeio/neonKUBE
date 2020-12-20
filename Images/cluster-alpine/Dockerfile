@@ -15,25 +15,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Base Alpine image.
+# Base Cluster Alpine image.
 #
 # ARGUMENTS:
 #
-#   VERSION         - The base ALPINE image tag (e.g. "3.4")
+#   ORGANIZATION    - The Docker Hub organization
+#   ALPINT_VERSION  - The base ALPINE image tag (e.g. "3.4")
 
-ARG         VERSION
-FROM        alpine:${VERSION}
+ARG         ORGANIZATION
+ARG         ALPINE_VERSION
+FROM        ${ORGANIZATION}/alpine:${ALPINE_VERSION}
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 
-# Install the [tini] INIT manager.
+# Copy common scripts to the root.
 
-RUN apk add --no-cache tini ca-certificates
-
-# Add a file to tweak the DNS resolver's [/etc/resolve.conf] settings.
-
-COPY resolv.conf.head.sh    /etc/resolv.conf.head
-
-# Set timezone to UTC
-
-ENV TZ=UTC
+COPY _common/*.sh           /

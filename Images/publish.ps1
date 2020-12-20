@@ -118,11 +118,12 @@ if ($base)
     # Base OS images:
 
     & Publish "$image_root\\alpine"
+    & Publish "$image_root\\cluster-alpine"
 }
 
 if ($dotnetBase)
 {
-    & Publish "$image_root\\aspnet"
+    & Publish "$image_root\\cluster-aspnet"
 }
 
 if ($other)

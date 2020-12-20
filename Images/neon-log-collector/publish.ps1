@@ -46,4 +46,4 @@ function Build
 
 $noImagePush = $nopush
 
-Build NeonKubeVersion -latest
+Build $neonKUBE_Version -latest

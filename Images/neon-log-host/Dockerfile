@@ -5,14 +5,7 @@
 #
 # Fluent Bit deployed on each neonKUBE node that forwards log events to the
 # cluster log aggregator.
-#
-# ARGUMENTS:
-#
-#   ORGANIZATION    - The Docker Hub organization
-#   BRANCH          - The current GitHub branch
 
-ARG         ORGANIZATION
-ARG         BRANCH
 FROM        ${ORGANIZATION}/fluent-bit:${BRANCH}-latest
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM

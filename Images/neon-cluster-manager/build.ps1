@@ -20,7 +20,6 @@ param
 
 $appname      = "neon-cluster-manager"
 $organization = DockerOrg
-$branch       = GitBranch
 
 # Copy the common scripts.
 

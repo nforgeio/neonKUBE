@@ -193,14 +193,6 @@ function GitBranch
 }
 
 #------------------------------------------------------------------------------
-# Returns the current neonKUBE cluster version.
-
-function NeonKubeVersion
-{
-	return $neonKUBE_Version
-}
-
-#------------------------------------------------------------------------------
 # Returns the current Git branch, date, and commit formatted as a Docker image tag
 # along with an optional dirty branch indicator.
 

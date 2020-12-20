@@ -1,6 +1,6 @@
 ﻿#------------------------------------------------------------------------------
 # FILE:         publish.ps1
-# CONTRIBUTOR:  Marcus Bowyer
+# CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Builds the neon-cluster-manager images and pushes them to Docker Hub.
+# Builds the Alpine images and pushes them to Docker Hub.
 #
 # NOTE: You must be logged into Docker Hub.
 #
@@ -38,16 +38,17 @@ function Build
 	param
 	(
 		[parameter(Mandatory=$true, Position=1)][string] $version,
+		[parameter(Mandatory=$true, Position=2)][string] $alpineVersion,
 		[switch]$latest = $false
 	)
 
-	$registry    = GetRegistry "neon-cluster-manager"
+	$registry    = GetRegistry "cluster-alpine"
 	$tag         = $version
 	$tagAsLatest = TagAsLatest
 
 	# Build and publish the images.
 
-	. ./build.ps1 -registry $registry -tag $tag
+	. ./build.ps1 -registry $registry -version $alpineVersion -tag $tag
     PushImage "${registry}:$tag"
 
 	if ($latest -and $tagAsLatest)
@@ -63,4 +64,4 @@ if ($allVersions)
 {
 }
 
-Build $neonKUBE_Version -latest
+Build $neonKUBE_Version 3.12.3 -latest
