@@ -117,30 +117,30 @@ if ($base)
 
     # Base OS images:
 
-    Publish "$image_root\\alpine"
+    & Publish "$image_root\\alpine"
 }
 
 if ($dotnetBase)
 {
-    Publish "$image_root\\aspnet"
+    & Publish "$image_root\\aspnet"
 }
 
 if ($other)
 {
-    Publish "$image_root\\nats"
-    Publish "$image_root\\nats-streaming"
-    Publish "$image_root\\cadence-dev"
-    Publish "$image_root\\couchbase-dev"
-    Publish "$image_root\\test"
-    Publish "$image_root\\aws-cli"
-    Publish "$image_root\\yugabyte"
+    & Publish "$image_root\\nats"
+    & Publish "$image_root\\nats-streaming"
+    & Publish "$image_root\\cadence-dev"
+    & Publish "$image_root\\couchbase-dev"
+    & Publish "$image_root\\test"
+    & Publish "$image_root\\aws-cli"
+    & Publish "$image_root\\yugabyte"
 }
 
 if ($services)
 {
-    Publish "$image_root\\test-cadence"
-    Publish "$image_root\\test-temporal"
-    Publish "$image_root\\neon-cluster-manager"
-    Publish "$image_root\\neon-log-collector"
-    Publish "$image_root\\neon-log-host"
+    & Publish "$image_root\\test-cadence"
+    & Publish "$image_root\\test-temporal"
+    & Publish "$image_root\\neon-cluster-manager"
+    & Publish "$image_root\\neon-log-collector"
+    & Publish "$image_root\\neon-log-host"
 }

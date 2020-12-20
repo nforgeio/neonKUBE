@@ -41,35 +41,18 @@ function Build
 		[switch]$latest = $false
 	)
 
-	$registry = GetRegistry "aspnet"
-	$date     = UtcDate
-	$branch   = GitBranch
-	$tag      = "$branch-$dotnetVersion"
+	$registry    = GetRegistry "aspnet"
+	$tag         = $dotnetVersion
+	$tagAsLatest = TagAsLatest
 
 	# Build and publish the images.
 
 	. ./build.ps1 -registry $registry -version $dotnetVersion -tag $tag
     PushImage "${registry}:$tag"
 
-	if (IsRelease)
-	{
-		Exec { docker tag "${registry}:$tag" "${registry}:$dotnetVersion" }
-		PushImage "${registry}:$dotnetVersion"
-
-		Exec { docker tag "${registry}:$tag" "${registry}:$dotnetVersion-$date" }
-		PushImage "${registry}:$dotnetVersion-$date"
-	}
-
-	if ($latest)
-	{
-		if (TagAsLatest)
-		{
-			Exec { docker tag "${registry}:$tag" "${registry}:latest" }
-			PushImage "${registry}:latest"
-		}
-
-        Exec { docker tag "${registry}:$tag" "${registry}:${branch}-latest" }
-		PushImage "${registry}:${branch}-latest"
+	if ($latest -and $tagAsLatest)
+		Exec { docker tag "${registry}:$tag" "${registry}:latest" }
+		PushImage "${registry}:latest"
 	}
 }
 

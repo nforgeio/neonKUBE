@@ -29,21 +29,19 @@ function Build
 		[switch]$latest = $False
 	)
 
-	$registry = GetRegistry "neon-log-host"
-	$tag      = $version
+	$registry    = GetRegistry "neon-log-host"
+	$tag         = $version
+	$tagAsLatest = TagAsLatest
 
 	# Build and publish the images.
 
 	. ./build.ps1 -registry $registry -tag $tag
 	PushImage "${registry}:$tag"
 
-	if ($latest)
+	if (($latest) -and (TagAsLatest))
 	{
-		if (TagAsLatest)
-		{
-			Exec { docker tag "${registry}:$tag" "${registry}:latest" }
-			PushImage "${registry}:latest"
-		}
+		Exec { docker tag "${registry}:$tag" "${registry}:latest" }
+		PushImage "${registry}:latest"
 	}
 }
 

@@ -41,21 +41,19 @@ function Build
 		[switch]$latest = $false
 	)
 
-	$registry = GetRegistry "neon-cluster-manager"
-	$tag      = $version
+	$registry    = GetRegistry "neon-cluster-manager"
+	$tag         = $version
+	$tagAsLatest = TagAsLatest
 
 	# Build and publish the images.
 
 	. ./build.ps1 -registry $registry -tag $tag
     PushImage "${registry}:$tag"
 
-	if ($latest)
+	if ($latest -and $tagAsLatest)
 	{
-		if (TagAsLatest)
-		{
-			Exec { docker tag "${registry}:$tag" "${registry}:latest" }
-			PushImage "${registry}:latest"
-		}
+		Exec { docker tag "${registry}:$tag" "${registry}:latest" }
+		PushImage "${registry}:latest"
 	}
 }
 

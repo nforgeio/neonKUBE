@@ -41,29 +41,19 @@ function Build
 		[switch]$latest = $false
 	)
 
-	$registry = GetRegistry "yugabyte"
-	$date     = UtcDate
-	$branch   = GitBranch
-	$tag      = $yugabyteVersion
+	$registry    = GetRegistry "yugabyte"
+	$tag         = $yugabyteVersion
+	$tagAsLatest = TagAsLatest
 
 	# Build and publish the images.
 
 	. ./build.ps1 -registry $registry -version $yugabyteVersion -tag $tag
     PushImage "${registry}:$tag"
 
-	if (IsRelease)
+	if ($latest -and $tagAsLatest)
 	{
-		Exec { docker tag "${registry}:$tag" "${registry}:$yugabyteVersion" }
-		PushImage "${registry}:$yugabyteVersion"
-	}
-
-	if ($latest)
-	{
-		if (TagAsLatest)
-		{
-			Exec { docker tag "${registry}:$tag" "${registry}:latest" }
-			PushImage "${registry}:latest"
-		}
+		Exec { docker tag "${registry}:$tag" "${registry}:latest" }
+		PushImage "${registry}:latest"
 	}
 }
 

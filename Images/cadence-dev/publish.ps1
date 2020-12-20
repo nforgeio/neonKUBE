@@ -44,35 +44,19 @@ function Build
 		[switch]$latest = $false
 	)
 
-	$registry = GetRegistry "cadence-dev"
-	$date     = UtcDate
-	$branch   = GitBranch
-	$tag      = "$branch-$version"
+	$registry    = GetRegistry "cadence-dev"
+	$tag         = $version
+	$tagAsLatest = TagAsLatest
 
 	# Build and publish the images.
 
 	. ./build.ps1 -registry $registry -version $version -goVersion $goVersion -uiVersion $uiVersion -tag $tag
     PushImage "${registry}:$tag"
 
-	if (IsRelease)
+	if ($latest -and $tagAsLatest)
 	{
-		Exec { docker tag "${registry}:$tag" "${registry}:$version" }
-		PushImage "${registry}:$version"
-
-		Exec { docker tag "${registry}:$tag" "${registry}:$version-$date" }
-		PushImage "${registry}:$version-$date"
-	}
-
-	if ($latest)
-	{
-		if (TagAsLatest)
-		{
-			Exec { docker tag "${registry}:$tag" "${registry}:latest" }
-			PushImage "${registry}:latest"
-		}
-
-        Exec { docker tag "${registry}:$tag" "${registry}:${branch}-latest" }
-		PushImage "${registry}:${branch}-latest"
+		Exec { docker tag "${registry}:$tag" "${registry}:latest" }
+		PushImage "${registry}:latest"
 	}
 }
 
