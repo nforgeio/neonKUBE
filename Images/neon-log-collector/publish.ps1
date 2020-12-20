@@ -24,12 +24,12 @@ function Build
 {
 	param
 	(
+		[parameter(Mandatory=$true, Position=1)][string] $version,
 		[switch]$latest = $False
 	)
 
 	$registry = GetRegistry "neon-log-collector"
-	$tag      = ImageTag
-	$branch   = GitBranch
+	$tag      = $version
 
 	# Build and publish the images.
 
@@ -38,17 +38,14 @@ function Build
 
 	if ($latest)
 	{
-		if ($true)
+		if (TagAsLatest)
 		{
 			Exec { docker tag "${registry}:$tag" "${registry}:latest" }
 			PushImage "${registry}:latest"
 		}
-
-        Exec { docker tag "${registry}:$tag" "${registry}:${branch}-latest" }
-		PushImage "${registry}:${branch}-latest"
 	}
 }
 
 $noImagePush = $nopush
 
-Build -latest
+Build NeonKubeVersion -latest

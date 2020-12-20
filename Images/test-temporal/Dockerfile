@@ -22,8 +22,8 @@
 
 ARG         ORGANIZATION
 ARG         BRANCH
-FROM        ${ORGANIZATION}/dotnet
-MAINTAINER  marcus@loopie.io
+FROM        ${ORGANIZATION}/aspnet
+MAINTAINER  marcus@euarctos.com
 STOPSIGNAL  SIGTERM
 ARG         APPNAME
 

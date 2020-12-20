@@ -23,7 +23,7 @@
 
 param 
 (
-	  [switch]$allVersions = $false,
+	[switch]$allVersions = $false,
     [switch]$nopush = $false
 )
 
@@ -42,23 +42,12 @@ function Build
 	)
 
 	$registry = GetRegistry "neon-cluster-manager"
-	$date     = UtcDate
-	$branch   = GitBranch
-	$tag      = "$branch-$version"
+	$tag      = $version
 
 	# Build and publish the images.
 
 	. ./build.ps1 -registry $registry -tag $tag
     PushImage "${registry}:$tag"
-
-	if (IsRelease)
-	{
-		Exec { docker tag "${registry}:$tag" "${registry}:$version" }
-		PushImage "${registry}:$version"
-
-		Exec { docker tag "${registry}:$tag" "${registry}:$version-$date" }
-		PushImage "${registry}:$version-$date"
-	}
 
 	if ($latest)
 	{
@@ -67,9 +56,6 @@ function Build
 			Exec { docker tag "${registry}:$tag" "${registry}:latest" }
 			PushImage "${registry}:latest"
 		}
-
-        Exec { docker tag "${registry}:$tag" "${registry}:${branch}-latest" }
-		PushImage "${registry}:${branch}-latest"
 	}
 }
 
@@ -79,4 +65,4 @@ if ($allVersions)
 {
 }
 
-Build 0.12.2 -latest
+Build NeonKubeVersion -latest

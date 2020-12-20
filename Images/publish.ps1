@@ -118,15 +118,10 @@ if ($base)
     # Base OS images:
 
     Publish "$image_root\\alpine"
-
-    # Other base images:
-
-    Publish "$image_root\\haproxy"
 }
 
 if ($dotnetBase)
 {
-    Publish "$image_root\\dotnet"
     Publish "$image_root\\aspnet"
 }
 

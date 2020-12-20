@@ -24,7 +24,7 @@
 # NOTE:
 #
 # It appears that that latest point release will be installed when you specify
-# only the major and minor version (e.g. spcifying "2.1" will actually install
+# only the major and minor version (e.g. specifying "2.1" will actually install
 # "2.1.5" if that's the latest point release).  This means you only need to
 # rebuild the image to pick up the latest point release.
 

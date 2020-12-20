@@ -20,8 +20,8 @@
 #   ORGANIZATION    - The Docker Hub organization
 
 ARG         ORGANIZATION
-FROM        ${ORGANIZATION}/dotnet
-MAINTAINER  marcus@loopie.io
+FROM        ${ORGANIZATION}/aspnet
+MAINTAINER  marcus@euarctos.com
 STOPSIGNAL  SIGTERM
 ARG         APPNAME
 
