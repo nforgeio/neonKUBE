@@ -67,13 +67,9 @@ jaegertracing/jaeger-query:1.19.2
 jettech/kube-webhook-certgen:v1.0.0
 k8s.gcr.io/coredns:1.7.0
 k8s.gcr.io/etcd:3.4.13-0
-k8s.gcr.io/kube-apiserver:v1.19.2
 k8s.gcr.io/kube-apiserver:v1.19.5
-k8s.gcr.io/kube-controller-manager:v1.19.2
 k8s.gcr.io/kube-controller-manager:v1.19.5
-k8s.gcr.io/kube-proxy:v1.19.2
 k8s.gcr.io/kube-proxy:v1.19.5
-k8s.gcr.io/kube-scheduler:v1.19.2
 k8s.gcr.io/kube-scheduler:v1.19.5
 k8s.gcr.io/pause:3.2
 kiwigrid/k8s-sidecar:0.1.151
@@ -93,7 +89,6 @@ openebs/cstor-volume-manager-amd64:2.1.0
 openebs/cstor-webhook-amd64:2.1.0
 openebs/cvc-operator-amd64:2.1.0
 openebs/linux-utils:2.1.0
-openebs/linux-utils:2.1.0
 openebs/m-apiserver:2.1.0
 openebs/m-exporter:2.1.0
 openebs/node-disk-manager:0.8.1
@@ -102,7 +97,6 @@ openebs/openebs-k8s-provisioner:2.1.0
 openebs/provisioner-localpv:2.1.0
 openebs/snapshot-controller:2.1.0
 openebs/snapshot-provisioner:2.1.0
-quay.io/coreos/configmap-reload:v0.0.1
 quay.io/coreos/configmap-reload:v0.0.1
 quay.io/coreos/kube-state-metrics:v1.7.1
 quay.io/coreos/prometheus-config-reloader:v0.32.0
