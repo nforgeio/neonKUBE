@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Base Cluster Alpine image.
+# Base Cluster Ubuntu image.
 #
 # ARGUMENTS:
 #
@@ -31,3 +31,10 @@ STOPSIGNAL  SIGTERM
 # Copy common scripts to the root.
 
 COPY _common/*.sh   /
+
+RUN apt update -y \
+    && apt install -y curl wget gnupg
+
+ENV TINI_VERSION v0.19.0
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /sbin/tini
+RUN chmod +x /sbin/tini
