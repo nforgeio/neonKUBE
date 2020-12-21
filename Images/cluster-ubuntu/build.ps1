@@ -15,14 +15,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Builds the Alpine cluster base image.
+# Builds the Ubuntu cluster base image.
 #
-# Usage: powershell -file build.ps1 REGISTRY VERSION TAG
+# Usage: powershell -file build.ps1 REGISTRY UBUNTU_TAG TAG
 
 param 
 (
 	[parameter(Mandatory=$true,Position=1)][string] $registry,
-	[parameter(Mandatory=$true,Position=2)][string] $version,
+	[parameter(Mandatory=$true,Position=2)][string] $ubuntuTag,
 	[parameter(Mandatory=$true,Position=3)][string] $tag
 )
 
@@ -42,7 +42,7 @@ copy ..\_common\*.* .\_common
 
 # Build the image.
 
-Exec { docker build -t "${registry}:$tag" --build-arg "ORGANIZATION=$organization" --build-arg "UBUNTU_VERSION=$version" . }
+Exec { docker build -t "${registry}:$tag" --build-arg "ORGANIZATION=$organization" --build-arg "UBUNTU_TAG=$ubuntuTag" . }
 
 # Clean up
 

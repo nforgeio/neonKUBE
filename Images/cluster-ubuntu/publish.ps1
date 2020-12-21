@@ -38,7 +38,7 @@ function Build
 	param
 	(
 		[parameter(Mandatory=$true, Position=1)][string] $version,
-		[parameter(Mandatory=$true, Position=2)][string] $ubuntuVersion,
+		[parameter(Mandatory=$true, Position=2)][string] $ubuntuTag,
 		[switch]$latest = $false
 	)
 
@@ -48,7 +48,7 @@ function Build
 
 	# Build and publish the images.
 
-	. ./build.ps1 -registry $registry -version $ubuntuVersion -tag $tag
+	. ./build.ps1 -registry $registry -ubuntuTag $ubuntuTag -tag $tag
     PushImage "${registry}:$tag"
 
 	if ($latest -and $tagAsLatest)

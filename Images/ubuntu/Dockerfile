@@ -37,5 +37,5 @@ ENV TZ=UTC
 # Install TINI, CA certificates, and other commonly useful packages.
 
 RUN apt-get update \
-    && apt-get install -yq tini ca-certificates nano \
+    && apt-get install -yq tini ca-certificates wget nano \
     && apt-get clean

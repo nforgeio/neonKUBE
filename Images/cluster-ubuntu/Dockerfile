@@ -20,11 +20,11 @@
 # ARGUMENTS:
 #
 #   ORGANIZATION    - The Docker Hub organization
-#   UBUNTU_VERSION  - The base Ubuntu image tag (e.g. "ubuntu-20.04-20201220")
+#   UBUNTU_TAG      - The base Ubuntu image tag (e.g. "20.04-20201220")
 
 ARG         ORGANIZATION
-ARG         UBUNTU_VERSION
-FROM        ${ORGANIZATION}/ubuntu:${UBUNTU_VERSION}
+ARG         UBUNTU_TAG
+FROM        ${ORGANIZATION}/ubuntu:${UBUNTU_TAG}
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 
