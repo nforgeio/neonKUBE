@@ -1739,10 +1739,10 @@ spec:
                     await InstallOpenEBSAsync(firstMaster);
                 });
 
-            firstMaster.InvokeIdempotentAction("setup/cluster-neon-system-namespace",
-                () =>
+            await firstMaster.InvokeIdempotentActionAsync("setup/cluster-neon-system-namespace",
+                async () =>
                 {
-                    k8sClient.CreateNamespace(new V1Namespace()
+                    await k8sClient.CreateNamespaceAsync(new V1Namespace()
                     {
                         Metadata = new V1ObjectMeta()
                         {
@@ -3182,9 +3182,12 @@ rm -rf {chartName}*
                                    var pods = await k8sClient.ListNamespacedPodAsync("neon-system", labelSelector: "release=neon-system-registry-harbor");
                                    foreach (var p in pods.Items.Where(i => i.Status.Phase != "Running"))
                                    {
-                                       await k8sClient.DeleteNamespacedPodAsync(p.Name(), "neon-system");
+                                       if (p.Status.ContainerStatuses.Any(c => c.RestartCount > 0))
+                                       {
+                                           start = DateTime.UtcNow;
+                                           await k8sClient.DeleteNamespacedPodAsync(p.Name(), "neon-system");
+                                       }
                                    }
-                                   start = DateTime.UtcNow;
                                }
                                var deployments = await k8sClient.ListNamespacedDeploymentAsync("neon-system", labelSelector: "release=neon-system-registry-harbor");
                                if (deployments == null || deployments.Items.Count < 8)
