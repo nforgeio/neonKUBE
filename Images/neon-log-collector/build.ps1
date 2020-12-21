@@ -25,7 +25,7 @@ $image_root = "$env:NF_ROOT\\Images"
 "* neon-log-collector:" + $tag
 "======================================="
 
-$appname      = "neon-cluster-manager"
+$appname      = "neon-log-collector"
 $organization = DockerOrg
 
 # Copy the common scripts.

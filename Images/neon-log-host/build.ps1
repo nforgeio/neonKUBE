@@ -19,8 +19,8 @@ param
 "* NEON-LOG-HOST:" + $tag
 "======================================="
 
+$appname      = "neon-log-host"
 $organization = DockerOrg
-$branch       = GitBranch
 
 # Copy the common scripts.
 
@@ -31,7 +31,7 @@ copy ..\_common\*.* .\_common
 
 # Build the image.
 
-Exec { docker build -t "${registry}:$tag" --build-arg "ORGANIZATION=$organization" --build-arg "BRANCH=$branch" . }
+Exec { docker build -t "${registry}:$tag" --build-arg "ORGANIZATION=$organization" --build-arg "CLUSTER_VERSION=$neonKUBE_Version" --build-arg "APPNAME=$appname" --build-arg "MAXMIND_KEY=$maxmind_key" . }
 
 # Clean up
 
