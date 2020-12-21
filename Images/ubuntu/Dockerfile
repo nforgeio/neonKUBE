@@ -15,19 +15,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Base Cluster Alpine image.
+# Base Ubuntu image.
 #
 # ARGUMENTS:
 #
-#   ORGANIZATION    - The Docker Hub organization
-#   ALPINE_VERSION  - The base ALPINE image tag (e.g. "3.4")
+#   IMAGE_DIGEST    - The base ubuntu image DIGEST (e.g. "ubuntu@sha256:4e4bc990609ed865e07afc8427c30ffdddca5153fd4e82c20d8f0783a291e241")
 
-ARG         ORGANIZATION
-ARG         ALPINE_VERSION
-FROM        ${ORGANIZATION}/alpine:${ALPINE_VERSION}
+ARG         IMAGE_DIGEST
+FROM        ${IMAGE_DIGEST}
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 
-# Copy common scripts to the root.
+# Add a file to tweak the DNS resolver's [/etc/resolve.conf] settings.
 
-COPY _common/*.sh   /
+COPY resolv.conf.head.sh    /etc/resolv.conf.head
+
+# Set timezone to UTC
+
+ENV TZ=UTC
+
+# Install TINI, CA certificates, and other commonly useful packages.
+
+RUN apt-get update \
+    && apt-get install -yq tini ca-certificates nano \
+    && apt-get clean

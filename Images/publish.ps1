@@ -117,8 +117,8 @@ if ($base)
 
     # Base OS images:
 
-    & Publish "$image_root\\alpine"
-    & Publish "$image_root\\cluster-alpine"
+    & Publish "$image_root\\ubuntu"
+    & Publish "$image_root\\cluster-ubuntu"
 }
 
 if ($dotnetBase)
@@ -132,7 +132,6 @@ if ($other)
     & Publish "$image_root\\nats-streaming"
     & Publish "$image_root\\cadence-dev"
     & Publish "$image_root\\couchbase-dev"
-    & Publish "$image_root\\test"
     & Publish "$image_root\\aws-cli"
     & Publish "$image_root\\yugabyte"
 }

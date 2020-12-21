@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Builds the Alpine images and pushes them to Docker Hub.
+# Builds the Ubuntu images and pushes them to Docker Hub.
 #
 # NOTE: You must be logged into Docker Hub.
 #
@@ -38,16 +38,17 @@ function Build
 	param
 	(
 		[parameter(Mandatory=$true, Position=1)][string] $version,
+		[parameter(Mandatory=$true, Position=2)][string] $ubuntuVersion,
 		[switch]$latest = $false
 	)
 
-	$registry    = GetRegistry "alpine"
+	$registry    = GetRegistry "cluster-ubuntu"
 	$tag         = $version
 	$tagAsLatest = TagAsLatest
 
 	# Build and publish the images.
 
-	. ./build.ps1 -registry $registry -version $version -tag $tag
+	. ./build.ps1 -registry $registry -version $ubuntuVersion -tag $tag
     PushImage "${registry}:$tag"
 
 	if ($latest -and $tagAsLatest)
@@ -63,4 +64,4 @@ if ($allVersions)
 {
 }
 
-Build 3.12.3 -latest
+Build $neonKUBE_Version "20.04-20201220" -latest

@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Builds the Test images and pushes them to Docker Hub.
+# Builds the Ubuntu base images and pushes them to Docker Hub.
 #
 # NOTE: You must be logged into Docker Hub.
 #
@@ -23,7 +23,7 @@
 
 param 
 (
-	[switch]$all = $false,
+	[switch]$allVersions = $false,
     [switch]$nopush = $false
 )
 
@@ -38,16 +38,17 @@ function Build
 	param
 	(
 		[parameter(Mandatory=$true, Position=1)][string] $version,
+		[parameter(Mandatory=$true, Position=2)][string] $imageDigest,
 		[switch]$latest = $false
 	)
 
-	$registry    = GetRegistry "test"
+	$registry    = GetRegistry "ubuntu"
 	$tag         = $version
 	$tagAsLatest = TagAsLatest
 
 	# Build and publish the images.
 
-	. ./build.ps1 -registry $registry -version $version -tag $tag
+	. ./build.ps1 -registry $registry -imageDigest $imageDigest -tag $tag
     PushImage "${registry}:$tag"
 
 	if ($latest -and $tagAsLatest)
@@ -59,9 +60,8 @@ function Build
 
 $noImagePush = $nopush
 
-# The image is tiny so we're going to always build
-# all versions which will all be the same anyway.
+if ($allVersions)
+{
+}
 
-Build 0
-Build 1
-Build 2 -latest
+Build "20.04-20201220" "ubuntu@sha256:4e4bc990609ed865e07afc8427c30ffdddca5153fd4e82c20d8f0783a291e241" -latest

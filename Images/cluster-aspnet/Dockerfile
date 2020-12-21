@@ -21,25 +21,27 @@
 #
 #   ORGANIZATION    - The Docker Hub organization
 #   CLUSTER_VERSION - The neonKUBE cluster version
-#   DOTNET_VERSION  - The ASP.NET Core version (e.g. "3.1.0")
+#   DOWNLOAD_URL    - URL to the ASPNETCORE runtime download
 
 ARG         ORGANIZATION
 ARG         CLUSTER_VERSION
-ARG         DOTNET_VERSION
-FROM        ${ORGANIZATION}/cluster-alpine:${CLUSTER_VERSION}
+FROM        ${ORGANIZATION}/cluster-ubuntu:${CLUSTER_VERSION}
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
+ARG         DOWNLOAD_URL
 
 # Opt-out of .NET Core telemetry.
 
 ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
 
-# Install .NET ASPNETCORE v3.1.10 (from https://docs.microsoft.com/en-us/dotnet/core/install/linux-alpine#scripted-install)
+# Install ASPNETCORE (from https://docs.microsoft.com/en-us/dotnet/core/install/linux-ubuntu)
 
-RUN apk add --no-cache icu-libs krb5-libs libgcc libintl libssl1.1 libstdc++ zlib \
-    && wget -O /tmp/aspnet.tar.gz https://download.visualstudio.microsoft.com/download/pr/43727db2-e279-42cc-b733-f44edfe0b203/3ec40e0dc73278ad0c33c4283026103a/aspnetcore-runtime-3.1.10-linux-musl-x64.tar.gz \
+RUN apt-get update \
+    && apt-get install -yq apt-transport-https wget \
+    && apt-get clean \
+    && wget --quiet -O /tmp/aspnet.tar.gz ${DOWNLOAD_URL} \
     && mkdir -p /lib/dotnet \
     && tar zxf /tmp/aspnet.tar.gz -C /lib/dotnet \
     && rm /tmp/aspnet.tar.gz \
-    && echo "export DOTNET_ROOT=/lib/dotnet" >> /etc/profile \
-    && echo "export PATH=\$PATH:/lib/dotnet" >> /etc/profile
+    && echo "export DOTNET_ROOT=/lib/dotnet"  > /etc/bash.bashrc \
+    && echo "export PATH=\$PATH:/lib/dotnet" >> /etc/bash.bashrc

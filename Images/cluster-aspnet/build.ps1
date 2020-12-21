@@ -15,13 +15,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Builds a [nkubeio/dotnet-aspnet] image.
+# Builds the cluster ASPNETCORE base image.
 #
 # Usage: powershell -file build.ps1 REGISTRY TAG
 
 param 
 (
 	[parameter(Mandatory=$true,Position=1)][string] $registry,
+	[parameter(Mandatory=$true,Position=2)][string] $downloadUrl,
 	[parameter(Mandatory=$true,Position=3)][string] $tag
 )
 
@@ -41,7 +42,7 @@ copy ..\_common\*.* .\_common
 
 # Build the image.
 
-Exec { docker build -t "${registry}:$tag" --build-arg "ORGANIZATION=$organization" --build-arg "CLUSTER_VERSION=$neonKUBE_Version" . }
+Exec { docker build -t "${registry}:$tag" --build-arg "ORGANIZATION=$organization" --build-arg "CLUSTER_VERSION=$neonKUBE_Version" --build-arg "DOWNLOAD_URL=$downloadUrl" . }
 
 # Clean up
 

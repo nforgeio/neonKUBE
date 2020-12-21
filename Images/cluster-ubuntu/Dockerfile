@@ -15,25 +15,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This base image deploys a simple container/or service used
-# for cluster unit tests.
+# Base Cluster Alpine image.
 #
 # ARGUMENTS:
 #
 #   ORGANIZATION    - The Docker Hub organization
-#   BRANCH          - The current GitHub branch
+#   UBUNTU_VERSION  - The base Ubuntu image tag (e.g. "ubuntu-20.04-20201220")
 
 ARG         ORGANIZATION
-ARG         BRANCH
-FROM        ${ORGANIZATION}/alpine:${BRANCH}-latest
+ARG         UBUNTU_VERSION
+FROM        ${ORGANIZATION}/ubuntu:${UBUNTU_VERSION}
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 
-# Set timezone to UTC
-ENV TZ=UTC
+# Copy common scripts to the root.
 
-COPY docker-entrypoint.sh   /
-
-RUN chmod 777 /docker-entrypoint.sh
-
-ENTRYPOINT ["/sbin/tini", "-g", "--", "/docker-entrypoint.sh"]
+COPY _common/*.sh   /

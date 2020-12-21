@@ -37,6 +37,7 @@ function Build
 {
 	param
 	(
+		[parameter(Mandatory=$true,Position=1)][string] $downloadUrl,
 		[switch]$latest = $false
 	)
 
@@ -46,7 +47,7 @@ function Build
 
 	# Build and publish the images.
 
-	. ./build.ps1 -registry $registry -tag $tag
+	. ./build.ps1 -registry $registry -downloadUrl $downloadUrl -tag $tag
     PushImage "${registry}:$tag"
 
 	if ($latest -and $tagAsLatest)
@@ -62,4 +63,4 @@ if ($allVersions)
 {
 }
 
-Build -latest
+Build "https://download.visualstudio.microsoft.com/download/pr/eca743d3-030f-4b1b-bd15-3573091f1c02/f3e464abc31deb7bc2747ed6cc1a8f5c/aspnetcore-runtime-3.1.10-linux-x64.tar.gz" -latest

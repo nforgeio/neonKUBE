@@ -15,24 +15,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Builds the cluster Alpine base images.
+# Builds the Ubuntu 20.04 base image.
 #
-# Usage: powershell -file build.ps1 REGISTRY VERSION TAG
+# Usage: powershell -file build.ps1 REGISTRY IMAGE-DIGEST TAG
 
 param 
 (
 	[parameter(Mandatory=$true,Position=1)][string] $registry,
-	[parameter(Mandatory=$true,Position=2)][string] $version,
+	[parameter(Mandatory=$true,Position=2)][string] $imageDigest,
 	[parameter(Mandatory=$true,Position=3)][string] $tag
 )
 
 "   "
 "======================================="
-"* TEST:" + $tag
+"* UBUNTU:" + $tag
 "======================================="
-
-$organization = DockerOrg
-$branch       = GitBranch
 
 # Copy the common scripts.
 
@@ -43,7 +40,7 @@ copy ..\_common\*.* .\_common
 
 # Build the image.
 
-Exec { docker build -t "${registry}:$tag" --build-arg "ORGANIZATION=$organization" --build-arg "BRANCH=$branch" . }
+Exec { docker build -t "${registry}:$tag" --build-arg "IMAGE_DIGEST=$imageDigest" . }
 
 # Clean up
 
