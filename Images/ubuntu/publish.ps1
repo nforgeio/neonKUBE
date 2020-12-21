@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Builds the [nkubeio/dotnet-aspnet] images and pushes them to Docker Hub.
+# Builds the Ubuntu base images and pushes them to Docker Hub.
 #
 # NOTE: You must be logged into Docker Hub.
 #
@@ -37,39 +37,24 @@ function Build
 {
 	param
 	(
-		[parameter(Mandatory=$true, Position=1)][string] $dotnetVersion,
+		[parameter(Mandatory=$true, Position=1)][string] $version,
+		[parameter(Mandatory=$true, Position=2)][string] $imageDigest,
 		[switch]$latest = $false
 	)
 
-	$registry = GetRegistry "aspnet"
-	$date     = UtcDate
-	$branch   = GitBranch
-	$tag      = "$branch-$dotnetVersion"
+	$registry    = GetRegistry "ubuntu"
+	$tag         = $version
+	$tagAsLatest = TagAsLatest
 
 	# Build and publish the images.
 
-	. ./build.ps1 -registry $registry -version $dotnetVersion -tag $tag
+	. ./build.ps1 -registry $registry -imageDigest $imageDigest -tag $tag
     PushImage "${registry}:$tag"
 
-	if (IsRelease)
+	if ($latest -and $tagAsLatest)
 	{
-		Exec { docker tag "${registry}:$tag" "${registry}:$dotnetVersion" }
-		PushImage "${registry}:$dotnetVersion"
-
-		Exec { docker tag "${registry}:$tag" "${registry}:$dotnetVersion-$date" }
-		PushImage "${registry}:$dotnetVersion-$date"
-	}
-
-	if ($latest)
-	{
-		if (TagAsLatest)
-		{
-			Exec { docker tag "${registry}:$tag" "${registry}:latest" }
-			PushImage "${registry}:latest"
-		}
-
-        Exec { docker tag "${registry}:$tag" "${registry}:${branch}-latest" }
-		PushImage "${registry}:${branch}-latest"
+		Exec { docker tag "${registry}:$tag" "${registry}:latest" }
+		PushImage "${registry}:latest"
 	}
 }
 
@@ -77,10 +62,6 @@ $noImagePush = $nopush
 
 if ($allVersions)
 {
-	Build 3.0.0-bionic
-	Build 3.1.0-bionic
-	Build 3.1.1-bionic
-	Build 3.1.5-bionic
 }
 
-Build 3.1.9-bionic -latest
+Build "20.04-20201220" "ubuntu@sha256:4e4bc990609ed865e07afc8427c30ffdddca5153fd4e82c20d8f0783a291e241" -latest

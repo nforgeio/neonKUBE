@@ -33,7 +33,11 @@ $src_tools_path    = "$src_path\\Tools"
 
 # TINI init manager binary download URL (obtained from: https://github.com/krallin/tini/releases)
 
-$tini_url = "https://neonkube.s3-us-west-2.amazonaws.com/misc/tini-0.18.0"
+$tini_url = "https://neonkube.s3-us-west-2.amazonaws.com/misc/tini-0.19.0"
+
+# neonKUBE cluster release Version.
+
+$neonKUBE_Version = Get-Content "$env:NF_ROOT\neonKUBE-version.txt" -First 1
 
 #------------------------------------------------------------------------------
 # Executes a command, throwing an exception for non-zero error codes.
@@ -225,7 +229,7 @@ function IsRelease
 }
 
 #------------------------------------------------------------------------------
-# Returns $true if images build from the current Git branch should be tagged
+# Returns $true if images built from the current Git branch should be tagged
 # with [:latest] when pushed to Docker Hub.  This will return $true for any
 # release branch starting with "release-" as well as the MASTER branch.
 #

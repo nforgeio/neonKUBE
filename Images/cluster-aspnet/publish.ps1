@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Builds the HAProxy images and pushes them to Docker Hub.
+# Builds the [nkubeio/dotnet-aspnet] images and pushes them to Docker Hub.
 #
 # NOTE: You must be logged into Docker Hub.
 #
@@ -37,39 +37,23 @@ function Build
 {
 	param
 	(
-		[parameter(Mandatory=$true, Position=1)][string] $version,
+		[parameter(Mandatory=$true,Position=1)][string] $downloadUrl,
 		[switch]$latest = $false
 	)
 
-	$registry = GetRegistry "haproxy"
-	$date     = UtcDate
-	$branch   = GitBranch
-	$tag      = "$branch-$version"
+	$registry    = GetRegistry "cluster-aspnet"
+	$tag         = $neonKUBE_Version
+	$tagAsLatest = TagAsLatest
 
 	# Build and publish the images.
 
-	. ./build.ps1 -registry $registry -version $version -tag $tag
+	. ./build.ps1 -registry $registry -downloadUrl $downloadUrl -tag $tag
     PushImage "${registry}:$tag"
 
-	if (IsRelease)
+	if ($latest -and $tagAsLatest)
 	{
-		Exec { docker tag "${registry}:$tag" "${registry}:$version" }
-		PushImage "${registry}:$version"
-
-		Exec { docker tag "${registry}:$tag" "${registry}:$version-$date" }
-		PushImage "${registry}:$version-$date"
-	}
-
-	if ($latest)
-	{
-		if (TagAsLatest)
-		{
-			Exec { docker tag "${registry}:$tag" "${registry}:latest" }
-			PushImage "${registry}:latest"
-		}
-
-        Exec { docker tag "${registry}:$tag" "${registry}:${branch}-latest" }
-		PushImage "${registry}:${branch}-latest"
+		Exec { docker tag "${registry}:$tag" "${registry}:latest" }
+		PushImage "${registry}:latest"
 	}
 }
 
@@ -79,4 +63,4 @@ if ($allVersions)
 {
 }
 
-Build 1.9.2 -latest
+Build "https://download.visualstudio.microsoft.com/download/pr/eca743d3-030f-4b1b-bd15-3573091f1c02/f3e464abc31deb7bc2747ed6cc1a8f5c/aspnetcore-runtime-3.1.10-linux-x64.tar.gz" -latest

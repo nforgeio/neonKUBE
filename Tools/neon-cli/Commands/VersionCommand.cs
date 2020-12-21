@@ -56,16 +56,10 @@ OPTIONS:
                           if the tool is older than VERSION.
 ";
         /// <inheritdoc/>
-        public override string[] Words
-        {
-            get { return new string[] { "version" }; }
-        }
+        public override string[] Words => new string[] { "version" }; 
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions
-        {
-            get { return new string[] { "-n", "--git", "--minimum" }; }
-        }
+        public override string[] ExtendedOptions => new string[] { "-n", "--git", "--minimum" };
 
         /// <inheritdoc/>
         public override void Help()

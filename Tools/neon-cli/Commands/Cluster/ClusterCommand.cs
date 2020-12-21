@@ -48,10 +48,7 @@ USAGE:
 ";
 
         /// <inheritdoc/>
-        public override string[] Words
-        {
-            get { return new string[] { "cluster" }; }
-        }
+        public override string[] Words => new string[] { "cluster" };
 
         /// <inheritdoc/>
         public override void Help()

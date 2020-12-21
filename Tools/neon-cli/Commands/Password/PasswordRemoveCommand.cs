@@ -63,22 +63,13 @@ This command removes a named password or all passwords.
 ";
 
         /// <inheritdoc/>
-        public override string[] Words
-        {
-            get { return new string[] { "password", "remove" }; }
-        }
+        public override string[] Words => new string[] { "password", "remove" }; 
 
         /// <inheritdoc/>
-        public override string[] AltWords
-        {
-            get { return new string[] { "password", "rm" }; }
-        }
+        public override string[] AltWords => new string[] { "password", "rm" }; 
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions
-        {
-            get { return new string[] { "--force" }; }
-        }
+        public override string[] ExtendedOptions => new string[] { "--force" }; 
 
         /// <inheritdoc/>
         public override void Help()

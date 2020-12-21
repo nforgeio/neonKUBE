@@ -69,10 +69,7 @@ instead.
 ";
 
         /// <inheritdoc/>
-        public override string[] Words
-        {
-            get { return new string[] { "password", "export" }; }
-        }
+        public override string[] Words => new string[] { "password", "export" }; 
 
         /// <inheritdoc/>
         public override void Help()

@@ -19,16 +19,19 @@
 #
 # ARGUMENTS:
 #
-#   VERSION         - The YugaByte source image tag (like: "2.2.3.0-b35")
-#
-# NOTE:
-#
-# It appears that that latest point release will be installed when you specify
-# only the major and minor version (e.g. spcifying "2.1" will actually install
-# "2.1.5" if that's the latest point release).  This means you only need to
-# rebuild the image to pick up the latest point release.
+#   ORGANIZATION    - The Docker Hub organization
+#   UBUNTU_TAG      - The base Ubuntu image tag (e.g. "20.04-20201220")
+#   VERSION         - The Yugabyte version
 
-ARG         VERSION
-FROM        yugabytedb/yugabyte:${VERSION}
+ARG         ORGANIZATION
+ARG         UBUNTU_TAG
+FROM        ${ORGANIZATION}/ubuntu:${UBUNTU_TAG}
 MAINTAINER  jeff@lilltek.com
+ARG         VERSION
 
+RUN wget --quiet -O /yugabyte.tar.gz https://downloads.yugabyte.com/yugabyte-${VERSION}-linux.tar.gz \
+    && tar xvfz yugabyte.tar.gz \
+    && mv yugabyte-${VERSION} yugabyte \
+    && rm yugabyte.tar.gz \
+    && cd yugabyte \
+    && ./bin/post_install.sh

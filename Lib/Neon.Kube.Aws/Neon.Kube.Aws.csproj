@@ -4,10 +4,10 @@
     <TargetFramework>netstandard2.1</TargetFramework>
     <RootNamespace>Neon.Kube</RootNamespace>
     <Authors>neonFORGE Team</Authors>
-    <Version>2.1.0-internal</Version>
+    <Version>2.10.0-internal</Version>
     <Company>neonFORGE LLC</Company>
     <Product>neonKUBE</Product>
-    <Description>neonKUBE hosting manager for AWS</Description>
+    <Description>[Internal use only]: neonKUBE hosting manager for bare metal environment for AWS</Description>
     <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
     <Copyright>Copyright © 2005-2020 by neonFORGE LLC.  All rights reserved.</Copyright>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>

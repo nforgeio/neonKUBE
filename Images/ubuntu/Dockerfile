@@ -15,26 +15,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# neonKUBE HAProxy image.
+# Base Ubuntu image.
 #
 # ARGUMENTS:
 #
-#   VERSION         - The base HAProxy image version (e.g. "1.6.9")
+#   IMAGE_DIGEST    - The base ubuntu image DIGEST (e.g. "ubuntu@sha256:4e4bc990609ed865e07afc8427c30ffdddca5153fd4e82c20d8f0783a291e241")
 
-ARG         VERSION
-FROM        haproxy:${VERSION}-alpine
+ARG         IMAGE_DIGEST
+FROM        ${IMAGE_DIGEST}
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 
-# Install the [tini] INIT manager.
+# Add a file to tweak the DNS resolver's [/etc/resolve.conf] settings.
 
-RUN apk add --no-cache tini ca-certificates
+COPY resolv.conf.head.sh    /etc/resolv.conf.head
 
-# Configure the service.
+# Set timezone to UTC
 
-COPY docker-entrypoint.sh   /
-COPY _common/*.sh           /
+ENV TZ=UTC
 
-RUN chmod 700 /*.sh
+# Install TINI, CA certificates, and other commonly useful packages.
 
-ENTRYPOINT ["/sbin/tini", "-g", "--", "/docker-entrypoint.sh"]
+RUN apt-get update \
+    && apt-get install -yq tini ca-certificates wget nano \
+    && apt-get clean

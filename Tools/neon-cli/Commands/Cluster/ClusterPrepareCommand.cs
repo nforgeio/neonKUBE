@@ -88,22 +88,13 @@ Server Requirements:
         private string          packageCaches;
 
         /// <inheritdoc/>
-        public override string[] Words
-        {
-            get { return new string[] { "cluster", "prepare" }; }
-        }
+        public override string[] Words => new string[] { "cluster", "prepare" };
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions
-        {
-            get { return new string[] { "--package-cache", "--unredacted", "--remove-templates" }; }
-        }
+        public override string[] ExtendedOptions => new string[] { "--package-cache", "--unredacted", "--remove-templates" };
 
         /// <inheritdoc/>
-        public override bool NeedsSshCredentials(CommandLine commandLine)
-        {
-            return !commandLine.HasOption("--remove-templates");
-        }
+        public override bool NeedsSshCredentials(CommandLine commandLine) => !commandLine.HasOption("--remove-templates");
 
         /// <inheritdoc/>
         public override void Help()

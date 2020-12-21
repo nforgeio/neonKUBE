@@ -54,10 +54,7 @@ COMMANDS:
     upsert      - Upserts JSON documents to the bucket.
 ";
         /// <inheritdoc/>
-        public override string[] Words
-        {
-            get { return new string[] { "couchbase" }; }
-        }
+        public override string[] Words => new string[] { "couchbase" };
 
         /// <inheritdoc/>
         public override void Help()

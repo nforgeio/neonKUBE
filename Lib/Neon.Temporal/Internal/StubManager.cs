@@ -1056,14 +1056,9 @@ namespace Neon.Temporal.Internal
                     }
                     else
                     {
-                        sbSource.LogDebug("*** 1");
                         sbSource.AppendLine($"            var ___argBytes = {SerializeArgsExpression(details.Method.GetParameters())};");
                         sbSource.AppendLine();
-                        sbSource.LogDebug($"*** 2: client    = {{___StubHelper.IsNull(client)}}");
-                        sbSource.LogDebug($"*** 2: execution = {{___StubHelper.IsNull(execution)}}");
-                        sbSource.LogDebug($"*** 2: options   = {{___StubHelper.IsNull(options)}}");
                         sbSource.AppendLine($"            await ___StubHelper.SignalWorkflowAsync(this.client, this.execution, {StringLiteral(details.SignalMethodAttribute.Name)}, ___argBytes, this.options?.Namespace);");
-                        sbSource.LogDebug("*** 3");
                     }
                 }
 

@@ -18,10 +18,12 @@
 # ARGUMENTS:
 #
 #   ORGANIZATION    - The Docker Hub organization
+#   CLUSTER_VERSION - The neonKUBE cluster version
 
 ARG         ORGANIZATION
-FROM        ${ORGANIZATION}/dotnet
-MAINTAINER  marcus@loopie.io
+ARG         CLUSTER_VERSION
+FROM        ${ORGANIZATION}/cluster-aspnet:${CLUSTER_VERSION}
+MAINTAINER  marcus@euarctos.com
 STOPSIGNAL  SIGTERM
 ARG         APPNAME
 

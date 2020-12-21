@@ -73,10 +73,7 @@ command line, as a text file, or as text passed on STDIN.
 
 ";
         /// <inheritdoc/>
-        public override string[] Words
-        {
-            get { return new string[] { "couchbase", "query" }; }
-        }
+        public override string[] Words => new string[] { "couchbase", "query" }; 
 
         /// <inheritdoc/>
         public override void Help()

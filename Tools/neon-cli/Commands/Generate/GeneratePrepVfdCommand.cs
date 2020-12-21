@@ -89,10 +89,7 @@ of a hack that assumes a text file where NEWLINEs at the end don't matter.
 ";
 
         /// <inheritdoc/>
-        public override string[] Words
-        {
-            get { return new string[] { "generate", "prep-vfd" }; }
-        }
+        public override string[] Words => new string[] { "generate", "prep-vfd" };
 
         /// <inheritdoc/>
         public override void Help()

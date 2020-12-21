@@ -48,16 +48,10 @@ USAGE:
 ";
 
         /// <inheritdoc/>
-        public override string[] Words
-        {
-            get { return new string[] { "password", "list" }; }
-        }
+        public override string[] Words => new string[] { "password", "list" }; 
 
         /// <inheritdoc/>
-        public override string[] AltWords
-        {
-            get { return new string[] { "password", "ls" }; }
-        }
+        public override string[] AltWords => new string[] { "password", "ls" }; 
 
         /// <inheritdoc/>
         public override void Help()
