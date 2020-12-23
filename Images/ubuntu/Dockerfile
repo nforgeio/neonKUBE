@@ -30,6 +30,10 @@ STOPSIGNAL  SIGTERM
 
 COPY resolv.conf.head.sh    /etc/resolv.conf.head
 
+# Copy common helper scripts (most logging related)
+
+COPY docker-entrypoint.sh   /
+
 # Set timezone to UTC
 
 ENV TZ=UTC
@@ -38,4 +42,5 @@ ENV TZ=UTC
 
 RUN apt-get update \
     && apt-get install -yq tini ca-certificates wget nano \
-    && apt-get clean
+    && apt-get clean \
+    && chmod 700 /*.sh

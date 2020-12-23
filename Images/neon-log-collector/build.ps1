@@ -25,17 +25,6 @@ $image_root = "$env:NF_ROOT\\Images"
 "* neon-log-collector:" + $tag
 "======================================="
 
-# Copy the common scripts.
-
-DeleteFolder _common
-
-mkdir _common
-copy ..\_common\*.* .\_common
-
 # Build the image.
 $maxmind_key = neon run -- cat "_...$src_images_path\neon-log-collector\maxmind"
 Exec { docker build -t "${registry}:$tag" --build-arg "MAXMIND_KEY=$maxmind_key" . }
-
-# Clean up
-
-DeleteFolder _common

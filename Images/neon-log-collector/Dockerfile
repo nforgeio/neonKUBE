@@ -31,7 +31,6 @@ RUN mkdir -p /geoip \
     && wget -nv https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-City\&license_key=${MAXMIND_KEY}\&suffix=tar.gz -O /geoip/database.mmdb.tar.gz
 
 COPY *.sh           /
-COPY _common/*.sh   /
 COPY fluent.conf    /etc/fluent
 COPY plugin/*       /etc/fluent/plugin/
 COPY conf/*         /etc/fluent/config.d/

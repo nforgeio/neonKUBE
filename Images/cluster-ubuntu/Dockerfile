@@ -27,7 +27,3 @@ ARG         UBUNTU_TAG
 FROM        ${ORGANIZATION}/ubuntu:${UBUNTU_TAG}
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
-
-# Copy common scripts to the root.
-
-COPY _common/*.sh   /

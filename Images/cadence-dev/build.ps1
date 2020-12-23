@@ -36,15 +36,6 @@ param
 "* CADENCE_UI_VERSION:" + $uiVersion
 "======================================="
 
-# Copy the common scripts.
-DeleteFolder _common
-
-mkdir _common
-copy ..\_common\*.* .\_common
-
 # Build the image.
 
 Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$version" --build-arg "GO_VERSION=$goVersion" --build-arg "UI_VERSION=$uiVersion" . }
-
-# Clean up
-DeleteFolder _common

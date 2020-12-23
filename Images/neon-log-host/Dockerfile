@@ -24,7 +24,6 @@ COPY conf/fluent-bit.conf \
      /fluent-bit/etc/
 
 COPY docker-entrypoint.sh   /
-COPY _common/*.sh           /
 RUN chmod 700 /*.sh
 
 # Entry point
