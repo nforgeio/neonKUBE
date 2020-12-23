@@ -43,7 +43,7 @@ function Build
 	)
 
 	$registry    = GetRegistry "cluster-ubuntu"
-	$tag         = $version
+	$tag         = $neonKUBE_Version
 	$tagAsLatest = TagAsLatest
 
 	# Build and publish the images.
