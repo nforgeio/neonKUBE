@@ -26,10 +26,7 @@ param
 	[parameter(Mandatory=$true,Position=3)][string] $tag
 )
 
-"   "
-"================================================="
-"* YUGABYTE:" + $tag
-"================================================="
+Log-ImageBuild $registry $tag
 
 # Build the image.
 

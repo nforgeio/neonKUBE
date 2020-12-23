@@ -14,10 +14,7 @@ param
 
 )
 
-"   "
-"================================================="
-"* NEON-LOG-HOST:" + $tag
-"================================================="
+Log-ImageBuild $registry $tag
 
 $organization = DockerOrg
 $branch       = GitBranch

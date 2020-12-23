@@ -300,6 +300,24 @@ function IsDirty
 }
 
 #------------------------------------------------------------------------------
+# Writes text to STDOUT that marks the beginning on a Docker image build. 
+
+function Log-ImageBuild
+{
+    [CmdletBinding()]
+    param 
+	(
+        [Parameter(Position=0, Mandatory=1)] [string] $registry,
+        [Parameter(Position=1, Mandatory=1)] [string] $tag
+    )
+
+	"   "
+	"==========================================================="
+	"* " + $registry + ":" + $tag
+	"==========================================================="
+}
+
+#------------------------------------------------------------------------------
 # Makes any text files that will be included in Docker images Linux safe, by
 # converting CRLF line endings to LF and replacing TABs with spaces.
 

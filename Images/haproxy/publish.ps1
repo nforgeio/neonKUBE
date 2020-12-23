@@ -62,4 +62,4 @@ if ($allVersions)
 {
 }
 
-Build 1.9.2 -latest
+Build "1.9.2" -latest

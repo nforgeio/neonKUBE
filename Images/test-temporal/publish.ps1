@@ -63,4 +63,4 @@ if ($allVersions)
 {
 }
 
-Build 0.0.1 -latest
+Build "0.0.1" -latest

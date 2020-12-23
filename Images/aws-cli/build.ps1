@@ -19,10 +19,7 @@
 #
 # Usage: powershell -file build.ps1
 
-"   "
-"================================================="
-"* AWS-CLI"
-"================================================="
+Log-ImageBuild "aws-cli" "latest"
 
 # Build the image.
 

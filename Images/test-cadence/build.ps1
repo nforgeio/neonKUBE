@@ -13,10 +13,7 @@ param
 	[parameter(Mandatory=$True,Position=2)][string] $tag
 )
 
-"   "
-"================================================="
-"* test-cadence:" + $tag
-"================================================="
+Log-ImageBuild $registry $tag
 
 $appname      = "test-cadence"
 $organization = DockerOrg

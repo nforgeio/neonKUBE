@@ -13,10 +13,7 @@ param
 	[parameter(Mandatory=$True,Position=2)][string] $tag
 )
 
-"   "
-"================================================="
-"* neon-cluster-manager:" + $tag
-"================================================="
+Log-ImageBuild $registry $tag
 
 $appname      = "neon-cluster-manager"
 $organization = DockerOrg

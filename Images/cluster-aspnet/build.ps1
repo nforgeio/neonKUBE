@@ -26,10 +26,7 @@ param
 	[parameter(Mandatory=$true,Position=3)][string] $tag
 )
 
-"   "
-"================================================="
-"* CLUSTER-ASPNET:" + $tag
-"================================================="
+Log-ImageBuild $registry $tag
 
 $organization = DockerOrg
 

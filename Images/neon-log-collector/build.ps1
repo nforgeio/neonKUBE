@@ -20,10 +20,7 @@ $image_root = "$env:NF_ROOT\\Images"
 . $image_root/includes.ps1
 #----------------------------------------------------------
 
-"   "
-"================================================="
-"* neon-log-collector:" + $tag
-"================================================="
+Log-ImageBuild $registry $tag
 
 # Build the image.
 $maxmind_key = neon run -- cat "_...$src_images_path\neon-log-collector\maxmind"

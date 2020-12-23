@@ -26,10 +26,7 @@ param
 	[parameter(Mandatory=$true,Position=3)][string] $tag
 )
 
-"   "
-"================================================="
-"* UBUNTU:" + $tag
-"================================================="
+Log-ImageBuild $registry $tag
 
 # Copy the common scripts.
 

@@ -26,10 +26,7 @@ param
 	[parameter(Mandatory=$true,Position=3)][string] $tag
 )
 
-"   "
-"================================================="
-"* COUCHBASE-DEV:" + $tag
-"================================================="
+Log-ImageBuild $registry $tag
 
 # Build the image.
 
