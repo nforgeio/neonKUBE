@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Builds the Ubuntu cluster base image.
+# Builds the cluster Ubuntu base image.
 #
 # Usage: powershell -file build.ps1 REGISTRY UBUNTU_TAG TAG
 
