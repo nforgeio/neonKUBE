@@ -75,10 +75,10 @@ k8s.gcr.io/pause:3.2
 kiwigrid/k8s-sidecar:0.1.151
 kubernetesui/dashboard:v2.0.4
 kubernetesui/metrics-scraper:v1.0.1
-nkubedev/haproxy:latest
-nkubedev/neon-cluster-manager:latest
-nkubedev/neon-log-collector:latest
-nkubedev/neon-log-host:latest
+ghcr.io/neonrelease-dev/haproxy:latest
+ghcr.io/neonrelease-dev/neon-cluster-manager:latest
+ghcr.io/neonrelease-dev/neon-log-collector:latest
+ghcr.io/neonrelease-dev/neon-log-host:latest
 openebs/admission-server:2.1.0
 openebs/cspc-operator-amd64:2.1.0
 openebs/cstor-csi-driver:2.1.0

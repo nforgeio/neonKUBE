@@ -81,7 +81,7 @@ namespace Neon.Xunit
         /// </summary>
         /// <param name="image">
         /// Optionally specifies the NATS-STREAMING container image.  This defaults to 
-        /// <b>nkubeio/nats-streaming:latest</b> or <b>nkubedev/nats-streaming:latest</b>
+        /// <b>ghcr.io/neonrelease/nats-streaming:latest</b> or <b>ghcr.io/neonrelease-dev/nats-streaming:latest</b>
         /// depending on whether the assembly was built from a git release branch
         /// or not.
         /// </param>
@@ -109,7 +109,7 @@ namespace Neon.Xunit
         /// </summary>
         /// <param name="image">
         /// Optionally specifies the NATS container image.  This defaults to 
-        /// <b>nkubeio/nats-streaming:latest</b> or <b>nkubedev/nats-streaming:latest</b>
+        /// <b>ghcr.io/neonrelease/nats-streaming:latest</b> or <b>ghcr.io/neonrelease-dev/nats-streaming:latest</b>
         /// depending on whether the assembly was built from a git release branch
         /// or not.
         /// </param>

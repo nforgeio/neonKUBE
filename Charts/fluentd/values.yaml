@@ -4,7 +4,7 @@
 
 
 image:
-  organization: nkubeio
+  organization: ghcr.io/neonrelease
   repository: neon-log-collector
   tag: latest
   pullPolicy: Always

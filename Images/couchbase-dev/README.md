@@ -50,6 +50,6 @@ docker run --detach \
     -p 11209-11211:11209-11211 \
     -p 18091-18096:18091-18096 \
     -p 21100-21299:21100-21299 \
-    nkubeio/couchbase-dev
+    ghcr.io/neonrelease/couchbase-dev
 ````
 &nbsp;

@@ -91,7 +91,7 @@ namespace TestKube
             // Deploy a very simple service and then verify that the
             // service details were parsed correctly.
 
-            fixture.CreateService("test", "nkubeio/test");
+            fixture.CreateService("test", "ghcr.io/neonrelease/test");
 
             var info = fixture.ListServices().Single(s => s.Name == "test");
             var details = fixture.InspectService("test", strict);
@@ -114,7 +114,7 @@ namespace TestKube
 
             // Spec.TaskTemplate.ContainerSpec
 
-            Assert.Equal("nkubeio/test:latest", details.Spec.TaskTemplate.ContainerSpec.ImageWithoutSHA);
+            Assert.Equal("ghcr.io/neonrelease/test:latest", details.Spec.TaskTemplate.ContainerSpec.ImageWithoutSHA);
             Assert.Equal(10000000000L, details.Spec.TaskTemplate.ContainerSpec.StopGracePeriod);
             Assert.Equal(ServiceIsolationMode.Default, details.Spec.TaskTemplate.ContainerSpec.Isolation);
 
@@ -196,7 +196,7 @@ namespace TestKube
         {
             // Verify that we can deploy and parse service labels.
 
-            fixture.CreateService("test", "nkubeio/test",
+            fixture.CreateService("test", "ghcr.io/neonrelease/test",
                 dockerArgs: 
                     new string[]
                     {
@@ -218,7 +218,7 @@ namespace TestKube
         {
             // Verify that we can specify environment variables.
 
-            fixture.CreateService("test", "nkubeio/test",
+            fixture.CreateService("test", "ghcr.io/neonrelease/test",
                 dockerArgs:
                     new string[]
                     {
@@ -242,7 +242,7 @@ namespace TestKube
         {
             // Verify that we can specify DNS configuration.
 
-            fixture.CreateService("test", "nkubeio/test",
+            fixture.CreateService("test", "ghcr.io/neonrelease/test",
                 dockerArgs:
                     new string[]
                     {
@@ -265,7 +265,7 @@ namespace TestKube
         {
             // Verify that we can specify the container command and arguments.
 
-            fixture.CreateService("test", "nkubeio/test",
+            fixture.CreateService("test", "ghcr.io/neonrelease/test",
                 dockerArgs:
                     new string[]
                     {
@@ -296,12 +296,12 @@ namespace TestKube
             // containers in the builds since 18.03.
             //
             // I've also removed the user/group initialization in the
-            // [nkubeio/test] container's Dockerfile because it didn't
+            // [ghcr.io/neonrelease/test] container's Dockerfile because it didn't
             // really make a lot of sense.
 
             // Verify that we can specify misc container properties.
 
-            fixture.CreateService("test", "nkubeio/test",
+            fixture.CreateService("test", "ghcr.io/neonrelease/test",
                 dockerArgs:
                     new string[]
                     {
@@ -334,7 +334,7 @@ namespace TestKube
         {
             // Verify that we can customize health checks.
 
-            fixture.CreateService("test", "nkubeio/test",
+            fixture.CreateService("test", "ghcr.io/neonrelease/test",
                 dockerArgs:
                     new string[]
                     {
@@ -358,7 +358,7 @@ namespace TestKube
 
             fixture.ClearServices();
 
-            fixture.CreateService("test", "nkubeio/test",
+            fixture.CreateService("test", "ghcr.io/neonrelease/test",
                 dockerArgs:
                     new string[]
                     {
@@ -377,7 +377,7 @@ namespace TestKube
         {
             // Verify that we can specify service secrets.
 
-            fixture.CreateService("test", "nkubeio/test",
+            fixture.CreateService("test", "ghcr.io/neonrelease/test",
                 dockerArgs:
                     new string[]
                     {
@@ -405,7 +405,7 @@ namespace TestKube
         {
             // Verify that we can specify service configs.
 
-            fixture.CreateService("test", "nkubeio/test",
+            fixture.CreateService("test", "ghcr.io/neonrelease/test",
                 dockerArgs:
                     new string[]
                     {
@@ -433,7 +433,7 @@ namespace TestKube
         {
             // Deploy a service in GLOBAL (not replicated mode) and verify.
 
-            fixture.CreateService("test", "nkubeio/test",
+            fixture.CreateService("test", "ghcr.io/neonrelease/test",
                 dockerArgs: 
                 new string[]
                     {
@@ -453,7 +453,7 @@ namespace TestKube
         {
             // Deploy a service in DNSRR mode and verify.
 
-            fixture.CreateService("test", "nkubeio/test",
+            fixture.CreateService("test", "ghcr.io/neonrelease/test",
                 dockerArgs:
                 new string[]
                     {
@@ -473,7 +473,7 @@ namespace TestKube
         {
             // Deploy a service with port mappings and verify.
 
-            fixture.CreateService("test", "nkubeio/test",
+            fixture.CreateService("test", "ghcr.io/neonrelease/test",
                 dockerArgs:
                 new string[]
                     {
@@ -533,7 +533,7 @@ namespace TestKube
                 // Volume mount (note that we're not verifying some properties 
                 // like volume drivers, labels, etc.):
 
-                fixture.CreateService("test", "nkubeio/test",
+                fixture.CreateService("test", "ghcr.io/neonrelease/test",
                     dockerArgs:
                     new string[]
                         {
@@ -554,7 +554,7 @@ namespace TestKube
 
                 fixture.ClearServices();
 
-                fixture.CreateService("test", "nkubeio/test",
+                fixture.CreateService("test", "ghcr.io/neonrelease/test",
                     dockerArgs:
                     new string[]
                         {
@@ -580,7 +580,7 @@ namespace TestKube
 
                 var tempPath = tempFolder.Path.Replace("\\", "/");
 
-                fixture.CreateService("test", "nkubeio/test",
+                fixture.CreateService("test", "ghcr.io/neonrelease/test",
                     dockerArgs:
                     new string[]
                         {
@@ -610,7 +610,7 @@ namespace TestKube
 
                 fixture.ClearServices();
 
-                fixture.CreateService("test", "nkubeio/test",
+                fixture.CreateService("test", "ghcr.io/neonrelease/test",
                     dockerArgs:
                     new string[]
                         {
@@ -646,7 +646,7 @@ namespace TestKube
 
             // Deploy a simple test service.
 
-            fixture.CreateService("test", "nkubeio/test",
+            fixture.CreateService("test", "ghcr.io/neonrelease/test",
                 dockerArgs:
                     new string[]
                     {

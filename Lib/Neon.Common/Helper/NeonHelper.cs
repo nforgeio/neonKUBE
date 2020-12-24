@@ -249,12 +249,12 @@ namespace Neon.Common
         /// <summary>
         /// Identifies the production cluster public Docker registry.
         /// </summary>
-        public const string NeonProdRegistry = "nkubeio";
+        public const string NeonProdRegistry = "ghcr.io/neonrelease";
 
         /// <summary>
         /// Identifies the development cluster public Docker registry.
         /// </summary>
-        public const string NeonDevRegistry = "nkubedev";
+        public const string NeonDevRegistry = "ghcr.io/neonrelease-dev";
 
         /// <summary>
         /// Returns the appropriate public Docker registry to be used for the git branch the

@@ -233,8 +233,8 @@ function IsRelease
 # with [:latest] when pushed to Docker Hub.  This will return $true for any
 # release branch starting with "release-" as well as the MASTER branch.
 #
-# This has the effect of tagging release builds with [:latest] in [nkubeio]
-# for release branches and MASTER branch builds with [:lasest] in [nkubedev].
+# This has the effect of tagging release builds with [:latest] in [ghcr.io/neonrelease]
+# for release branches and MASTER branch builds with [:lasest] in [ghcr.io/neonrelease-dev].
 
 function TagAsLatest
 {
@@ -251,11 +251,11 @@ function GetRegistry($image)
 {
 	if (IsRelease)
 	{
-		return "nkubeio/" + $image
+		return "ghcr.io/neonrelease/" + $image
 	}
 	else
 	{
-		return "nkubedev/" + $image
+		return "ghcr.io/neonrelease-dev/" + $image
 	}
 }
 
@@ -266,11 +266,11 @@ function DockerOrg
 {
 	if (IsRelease)
 	{
-		return "nkubeio"
+		return "ghcr.io/neonrelease"
 	}
 	else
 	{
-		return "nkubedev"
+		return "ghcr.io/neonrelease-dev"
 	}
 }
 

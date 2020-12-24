@@ -22,7 +22,7 @@ image:
 apiserver:
   enabled: true
   image:
-    organization: nkubeio
+    organization: ghcr.io/neonrelease
     repository: cluster-openebs-m-apiserver
     tag: latest
   replicas: 1
@@ -181,17 +181,17 @@ jiva:
 cstor:
   pool:
     image:
-      organization: nkubeio
+      organization: ghcr.io/neonrelease
       repository: cluster-openebs-cstor-pool
       tag: latest
   poolMgmt:
     image:
-      organization: nkubeio
+      organization: ghcr.io/neonrelease
       repository: cluster-openebs-cstor-pool-manager
       tag: latest
   target:
     image:
-      organization: nkubeio
+      organization: ghcr.io/neonrelease
       repository: cluster-openebs-cstor-istgt
       tag: latest
   volumeMgmt:
@@ -200,7 +200,7 @@ cstor:
 
 helper:
   image:
-    organization: nkubeio
+    organization: ghcr.io/neonrelease
     repository: cluster-openebs-linux-utils
     tag: latest
 
@@ -220,7 +220,7 @@ policies:
   monitoring:
     enabled: true
     image:
-      organization: nkubeio
+      organization: ghcr.io/neonrelease
       repository: cluster-openebs-m-exporter
       tag: latest
 

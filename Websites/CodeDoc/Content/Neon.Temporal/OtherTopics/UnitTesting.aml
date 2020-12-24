@@ -19,12 +19,7 @@
           In the meantime, the <legacyBold>Neon.Xunit.Temporal</legacyBold> nuget package provides
           the <codeEntityReference qualifyHint="false">T:Neon.Xunit.Temporal.TemporalFixture</codeEntityReference>
           for use by tests authored for the popular Xunit test framework.  This fixture spins up
-          <externalLink>
-            <linkText>nkubeio/Temporal-dev</linkText>
-            <linkUri>https://hub.docker.com/repository/docker/nkubeio/Temporal-dev</linkUri>
-          </externalLink>
-          as a Docker container on the local machine.  This combines Temporal server and UX with
-          a Cassandra database node into a single managable entity that starts out in a pristine
+          a Temporal Server and UX as well as the Cassandra backing database as a Docker Compose app.
           state.
         </para>
         <para>
@@ -38,7 +33,7 @@
           This example defines a simple workflow interface and implementation along with an Xunit
           test class.  The interesting part happens in the constructor.  Essentially what's happening
           here is that Xunit and the <codeEntityReference qualifyHint="false">T:Neon.Xunit.Temporal.TemporalFixture</codeEntityReference>
-          are coordinating such that the <legacyBold>nkubeio/Temporal-dev</legacyBold> container is
+          are coordinating such that the <legacyBold>ghcr.io/neonrelease/Temporal-dev</legacyBold> container is
           started or restarted for the first test executed and then is reused for subsequent tests
           defined by the class.
         </para>
