@@ -5,7 +5,7 @@
 replicaCount: 1
 
 image:
-  repository: nkubedev/neon-cluster-manager
+  repository: ghcr.io/neonrelease/neon-cluster-manager
   tag: latest
   pullPolicy: Always
 

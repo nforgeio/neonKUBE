@@ -21,7 +21,7 @@ secretMounts: []
 #    path: /usr/share/elasticsearch/config/certs
 
 image:
-  organization: nkubeio
+  organization: ghcr.io/neonrelease
   repository: cluster-kibana
   tag: latest
   pullPolicy: Always

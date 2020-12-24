@@ -364,13 +364,13 @@ namespace Neon.Xunit
                 //      services:
                 //
                 //        service1:
-                //          image: nkubeio/test
+                //          image: ghcr.io/neonrelease/test
                 //          command: sleep 100000
                 //          deploy:
                 //            replicas: 1
                 //
                 //        service2:
-                //          image: nkubeio/test
+                //          image: ghcr.io/neonrelease/test
                 //          command: sleep 100000
                 //          deploy:
                 //            replicas: 2

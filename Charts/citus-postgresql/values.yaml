@@ -3,7 +3,7 @@ fullnameOverride: ""
 imagePullSecrets: ""
 
 image:
-  organization: nkubeio
+  organization: ghcr.io/neonrelease
   repository: cluster-citus
   tag: latest
   pullPolicy: Always
@@ -63,7 +63,7 @@ service:
 manager:
   replicas: 3
   image:
-    organization: nkubeio
+    organization: ghcr.io/neonrelease
     repository: cluster-citus
     tag: latest
     pullPolicy: Always

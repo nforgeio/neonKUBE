@@ -20,7 +20,7 @@
         <para>
           We're making some sample Temporal applications and unit tests available in our
           <externalLink>
-            <linkText>nforgeio/Temporal-samples</linkText>
+            <linkText>Temporal Samples</linkText>
             <linkUri>https://github.com/nforgeio/Temporal-samples</linkUri>
           </externalLink>
           GitHub repository.  These have been tested on Windows 10 and a later version
@@ -60,10 +60,10 @@
         </alert>
         <para>
           You'll find examples using <codeEntityReference qualifyHint="false">F:Neon.Xunit.Temporal.TemporalFixture</codeEntityReference>
-          in our samples reporistory:
+          in our samples repository:
           <externalLink>
-            <linkText>nkubio/Temporal-dev</linkText>
-            <linkUri>https://hub.docker.com/repository/docker/nkubeio/Temporal-dev</linkUri>
+            <linkText>Temporal Samples</linkText>
+            <linkUri>https://github.com/nforgeio/Temporal-samples</linkUri>
           </externalLink>
         </para>
         <para>

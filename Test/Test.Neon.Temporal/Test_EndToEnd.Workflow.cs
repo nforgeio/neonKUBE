@@ -4518,7 +4518,7 @@ namespace TestTemporal
 
             await SyncContext.ClearAsync;
 
-            // Start the [nkubeio/test-temporal:latest] Docker image locally, having it
+            // Start the [ghcr.io/neonrelease/test-temporal:latest] Docker image locally, having it
             // connect to the local Temporal cluster and then start a bunch of workflows that
             // will be executed by the container and verify that they completed.
 
@@ -4545,7 +4545,7 @@ namespace TestTemporal
             // It might be useful to uncomment/modify this line while
             // debugging changes to the [test-temporal] Docker image.
 
-            // TestTemporalImage = "nkubedev/test-temporal:temporal-latest";
+            // TestTemporalImage = "ghcr.io/neonrelease/test-temporal:temporal-latest";
 
             NeonHelper.Execute(NeonHelper.DockerCli,
                 new object[]

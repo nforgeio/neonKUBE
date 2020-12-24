@@ -29,7 +29,7 @@ using Xunit;
 namespace Neon.Xunit.Cadence
 {
     /// <summary>
-    /// Used to run the Docker <b>nkubeio/cadence-dev</b> container on 
+    /// Used to run the Docker <b>ghcr.io/neonrelease/cadence-dev</b> container on 
     /// the current machine as a test fixture while tests are being performed 
     /// and then deletes the container when the fixture is disposed.
     /// </summary>
@@ -99,7 +99,7 @@ namespace Neon.Xunit.Cadence
         /// </note>
         /// </summary>
         /// <param name="settings">Optional Cadence settings.</param>
-        /// <param name="image">Optionally specifies the Cadence container image (defaults to <b>nkubeio/cadence-dev:latest</b>).</param>
+        /// <param name="image">Optionally specifies the Cadence container image (defaults to <b>ghcr.io/neonrelease/cadence-dev:latest</b>).</param>
         /// <param name="name">Optionally specifies the Cadence container name (defaults to <c>cadence-dev</c>).</param>
         /// <param name="env">Optional environment variables to be passed to the Cadence container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
         /// <param name="defaultDomain">Optionally specifies the default domain for the fixture's client.  This defaults to <b>test-domain</b>.</param>
@@ -152,7 +152,7 @@ namespace Neon.Xunit.Cadence
         /// </remarks>
         public TestFixtureStatus Start(
             CadenceSettings     settings        = null,
-            string              image           = "nkubeio/cadence-dev:latest",
+            string              image           = "ghcr.io/neonrelease/cadence-dev:latest",
             string              name            = "cadence-dev",
             string[]            env             = null,
             string              defaultDomain   = DefaultDomain,
@@ -189,7 +189,7 @@ namespace Neon.Xunit.Cadence
         /// Used to start the fixture within a <see cref="ComposedFixture"/>.
         /// </summary>
         /// <param name="settings">Optional Cadence settings.</param>
-        /// <param name="image">Optionally specifies the Cadence container image (defaults to <b>nkubeio/cadence-dev:latest</b>).</param>
+        /// <param name="image">Optionally specifies the Cadence container image (defaults to <b>ghcr.io/neonrelease/cadence-dev:latest</b>).</param>
         /// <param name="name">Optionally specifies the Cadence container name (defaults to <c>cadence-dev</c>).</param>
         /// <param name="env">Optional environment variables to be passed to the Cadence container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
         /// <param name="defaultDomain">Optionally specifies the default domain for the fixture's client.  This defaults to <b>test-domain</b>.</param>
@@ -231,7 +231,7 @@ namespace Neon.Xunit.Cadence
         /// </remarks>
         public void StartAsComposed(
             CadenceSettings     settings        = null,
-            string              image           = "nkubeio/cadence-dev:latest",
+            string              image           = "ghcr.io/neonrelease/cadence-dev:latest",
             string              name            = "cadence-dev",
             string[]            env             = null,
             string              defaultDomain   = DefaultDomain,

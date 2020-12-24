@@ -20,7 +20,7 @@
         <para>
           We're making some sample Cadence applications and unit tests available in our
           <externalLink>
-            <linkText>nforgeio/cadence-samples</linkText>
+            <linkText>Cadence Samples</linkText>
             <linkUri>https://github.com/nforgeio/cadence-samples</linkUri>
           </externalLink>
           GitHub repository.  These have been tested on Windows 10 and a later version
@@ -41,15 +41,10 @@
           In the meantime, you can reference the <legacyBold>Neon.Xunit.Cadence</legacyBold> 
           nugate package in your unit test projects and use the
           <codeEntityReference qualifyHint="false">T:Neon.Xunit.Cadence.CadenceFixture</codeEntityReference>
-          to quickly spin up a 
-          <externalLink>
-            <linkText>nkubio/cadence-dev</linkText>
-            <linkUri>https://hub.docker.com/repository/docker/nkubeio/cadence-dev</linkUri>
-          </externalLink>
-          Docker container on your local workstation so that you can run your
-          tests.  This Docker image includes the Cadence backend and UX services with
-          a Cassandra database, including everything you'll need to run your workflows
-          and activities.
+          to quickly spin up a <b>ghcr.io/neonrelease/cadence-dev</b> Docker container on 
+          your local workstation so that you can run your tests.  This Docker image includes 
+          the Cadence backend and UX services with a Cassandra database, including everything
+          you'll need to run your workflows and activities.
         </para>
         <alert class="warning">
           <para>
@@ -67,10 +62,10 @@
         </alert>
         <para>
           You'll find examples using <codeEntityReference qualifyHint="false">T:Neon.Xunit.Cadence.CadenceFixture</codeEntityReference>
-          in our samples reporistory:
+          in our samples repository:
           <externalLink>
-            <linkText>nkubio/cadence-dev</linkText>
-            <linkUri>https://hub.docker.com/repository/docker/nkubeio/cadence-dev</linkUri>
+            <linkText>Cadence Samples</linkText>
+            <linkUri>https://github.com/nforgeio/cadence-samples</linkUri>
           </externalLink>
         </para>
       </content>

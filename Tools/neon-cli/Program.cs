@@ -854,8 +854,8 @@ You can disable the use of this encrypted folder by specifying
         }
 
         /// <summary>
-        /// Optionally set to the registry to be used to override any explicit or implicit <b>nkubeio</b>
-        /// or <b>nkubedev</b> organizations specified when deploying or updating a neonKUBE.
+        /// Optionally set to the registry to be used to override any explicit or implicit <b>ghcr.io/neonrelease</b>
+        /// or <b>ghcr.io/neonrelease-dev</b> organizations specified when deploying or updating a neonKUBE.
         /// </summary>
         /// <remarks>
         /// <para>

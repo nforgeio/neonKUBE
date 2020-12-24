@@ -15,12 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Builds the [nkubeio/dotnet-aspnet] images and pushes them to Docker Hub.
-#
-# NOTE: You must be logged into Docker Hub.
-#
-# Usage: powershell -file ./publish.ps1 [-all]
-
 param 
 (
 	[switch]$allVersions = $false,
