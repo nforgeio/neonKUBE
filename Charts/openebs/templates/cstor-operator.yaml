@@ -657,9 +657,9 @@ spec:
         #- name: OPENEBS_IO_CSTOR_POOL_SPARSE_DIR
         #  value: "/var/openebs/sparse"
         - name: OPENEBS_IO_CSPI_MGMT_IMAGE
-          value: "openebs/cstor-pool-manager-amd64:2.1.0"
+          value: "{{ .Values.cstor.poolMgmt.image.organization }}/{{ .Values.cstor.poolMgmt.image.repository }}:{{ .Values.cstor.poolMgmt.image.tag }}"
         - name: OPENEBS_IO_CSTOR_POOL_IMAGE
-          value: "openebs/cstor-pool:2.1.0"
+          value: "{{ .Values.cstor.pool.image.organization }}/{{ .Values.cstor.pool.image.repository }}:{{ .Values.cstor.pool.image.tag }}"
         - name:  OPENEBS_IO_CSTOR_POOL_EXPORTER_IMAGE
           value: "openebs/m-exporter:2.1.0"
         - name: RESYNC_INTERVAL
@@ -713,11 +713,11 @@ spec:
             fieldRef:
               fieldPath: spec.serviceAccountName
         - name: OPENEBS_IO_CSTOR_TARGET_IMAGE
-          value: "openebs/cstor-istgt:2.1.0"
+          value: "{{ .Values.cstor.target.image.organization }}/{{ .Values.cstor.target.image.repository }}:{{ .Values.cstor.target.image.tag }}"
         - name:  OPENEBS_IO_CSTOR_VOLUME_MGMT_IMAGE
           value: "openebs/cstor-volume-manager-amd64:2.1.0"
         - name:  OPENEBS_IO_VOLUME_MONITOR_IMAGE
-          value: "openebs/m-exporter:2.1.0"
+          value: "{{ .Values.policies.monitoring.image.organization }}/{{ .Values.policies.monitoring.image.repository }}:{{ .Values.policies.monitoring.image.tag }}"
 ---
 apiVersion: v1
 kind: Service

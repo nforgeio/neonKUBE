@@ -21,8 +21,10 @@ image:
 
 apiserver:
   enabled: true
-  image: "openebs/m-apiserver"
-  imageTag: "2.1.0"
+  image:
+    organization: nkubeio
+    repository: cluster-openebs-m-apiserver
+    tag: latest
   replicas: 1
   ports:
     externalPort: 5656
@@ -178,14 +180,20 @@ jiva:
 
 cstor:
   pool:
-    image: "openebs/cstor-pool"
-    imageTag: "2.1.0"
+    image:
+      organization: nkubeio
+      repository: cluster-openebs-cstor-pool
+      tag: latest
   poolMgmt:
-    image: "openebs/cstor-pool-mgmt"
-    imageTag: "2.1.0"
+    image:
+      organization: nkubeio
+      repository: cluster-openebs-cstor-pool-manager
+      tag: latest
   target:
-    image: "openebs/cstor-istgt"
-    imageTag: "2.1.0"
+    image:
+      organization: nkubeio
+      repository: cluster-openebs-cstor-istgt
+      tag: latest
   volumeMgmt:
     image: "openebs/cstor-volume-mgmt"
     imageTag: "2.1.0"
@@ -209,8 +217,10 @@ crd:
 policies:
   monitoring:
     enabled: true
-    image: "openebs/m-exporter"
-    imageTag: "2.1.0"
+    image:
+      organization: nkubeio
+      repository: cluster-openebs-cstor-pool
+      tag: latest
 
 analytics:
   enabled: false
