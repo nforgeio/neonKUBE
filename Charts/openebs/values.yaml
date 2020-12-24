@@ -199,8 +199,10 @@ cstor:
     imageTag: "2.1.0"
 
 helper:
-  image: "openebs/linux-utils"
-  imageTag: "2.1.0"
+  image:
+    organization: nkubeio
+    repository: cluster-openebs-linux-utils
+    tag: latest
 
 featureGates:
   enabled: true
@@ -219,7 +221,7 @@ policies:
     enabled: true
     image:
       organization: nkubeio
-      repository: cluster-openebs-cstor-pool
+      repository: cluster-openebs-m-exporter
       tag: latest
 
 analytics:

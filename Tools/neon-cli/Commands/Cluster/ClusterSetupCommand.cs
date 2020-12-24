@@ -2180,6 +2180,20 @@ rm -rf {chartName}*
                 {
                     var values = new List<KeyValuePair<string, object>>();
 
+                    values.Add(new KeyValuePair<string, object>("cstor.apiserver.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("cstor.apiserver.image.tag", "latest"));
+                    values.Add(new KeyValuePair<string, object>("cstor.pool.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("cstor.pool.image.tag", "latest"));
+                    values.Add(new KeyValuePair<string, object>("cstor.poolMgmt.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("cstor.poolMgmt.image.tag", "latest"));
+                    values.Add(new KeyValuePair<string, object>("cstor.target.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("cstor.target.image.tag", "latest"));
+                    values.Add(new KeyValuePair<string, object>("helper.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("helper.image.tag", "latest"));
+                    values.Add(new KeyValuePair<string, object>("policies.monitoring.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("policies.monitoring.image.tag", "latest"));
+
+
                     if (cluster.Definition.Workers.Count() >= 3)
                     {
                         var replicas = Math.Max(1, cluster.Definition.Workers.Count() / 3);
@@ -2768,6 +2782,8 @@ rm -rf {chartName}*
                     var monitorOptions = cluster.Definition.Monitor;
                     var values         = new List<KeyValuePair<string, object>>();
 
+                    values.Add(new KeyValuePair<string, object>("image.organization", NeonHelper.NeonBranchRegistry));
+
                     var replicas = Math.Max(1, cluster.Nodes.Count() / 5);
                     if (replicas > cluster.Nodes.Where(n => n.Metadata.Labels.LogsInternal).Count())
                     {
@@ -2846,8 +2862,11 @@ rm -rf {chartName}*
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
-                    var i = 0;
 
+                    values.Add(new KeyValuePair<string, object>($"image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>($"image.tag", "latest"));
+
+                    var i = 0;
                     foreach (var taint in (await k8sClient.ListNodeAsync()).Items.Where(i => i.Spec.Taints != null).SelectMany(i => i.Spec.Taints))
                     {
                         values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", taint.Key));
@@ -2892,6 +2911,10 @@ rm -rf {chartName}*
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
+
+                    values.Add(new KeyValuePair<string, object>($"image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>($"image.tag", "latest"));
+
                     values.Add(new KeyValuePair<string, object>($"autoscaling.minReplicas", (Math.Max(1, cluster.Definition.Workers.Count() / 6))));
                     values.Add(new KeyValuePair<string, object>($"autoscaling.maxReplicas", (Math.Max(1, cluster.Definition.Workers.Count() / 4))));
 
@@ -2940,6 +2963,8 @@ rm -rf {chartName}*
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
+
+                    values.Add(new KeyValuePair<string, object>("image.organization", NeonHelper.NeonBranchRegistry));
 
                     int i = 0;
                     foreach (var t in await GetTaintsAsync(NodeLabels.LabelLogs, "true"))
@@ -3244,6 +3269,12 @@ rm -rf {chartName}*
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
+
+                    values.Add(new KeyValuePair<string, object>($"image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>($"image.tag", "latest"));
+
+                    values.Add(new KeyValuePair<string, object>($"manager.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>($"manager.image.tag", "latest"));
 
                     var replicas = Math.Max(1, cluster.Definition.Masters.Count() / 5);
 
