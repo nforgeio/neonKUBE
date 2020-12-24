@@ -16,24 +16,15 @@
 # limitations under the License.
 
 ARG         ORGANIZATION
-ARG         BASE_TAG
-FROM        ${ORGANIZATION}/td-agent-bit:${BASE_TAG}
+ARG         CLUSTER_VERSION
+FROM        ${ORGANIZATION}/cluster-ubuntu:${CLUSTER_VERSION}
 MAINTAINER  marcus@euarctos.com
 STOPSIGNAL  SIGTERM
+ARG         VERSION
 
-# Configuration files
-COPY conf/td-agent-bit.conf \
-     conf/parsers.conf \
-     conf/plugins.conf \
-     conf/functions.lua \
-     conf/td-agent-bit-filter.conf \
-     conf/td-agent-bit-input.conf \
-     conf/td-agent-bit-output.conf \
-     conf/td-agent-bit-service.conf \
-     /td-agent-bit/etc/
 
-COPY docker-entrypoint.sh   /
-RUN chmod 700 /*.sh
-
-# Entry point
-ENTRYPOINT ["/tini", "-g", "--", "/docker-entrypoint.sh"]
+RUN wget -qO - https://packages.fluentbit.io/fluentbit.key | apt-key add - \
+    && echo "deb https://packages.fluentbit.io/ubuntu/focal focal main" >> /etc/apt/sources.list \
+    && apt update -y \
+    && apt install -y td-agent-bit=${VERSION} \
+    && apt-get clean

@@ -1,39 +1,43 @@
 #------------------------------------------------------------------------------
 # FILE:         Dockerfile
 # CONTRIBUTOR:  Marcus Bowyer
-# COPYRIGHT:    Copyright (c) 2016-2020 by neonFORGE LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
 #
-# Fluent Bit deployed on each neonKUBE node that forwards log events to the
-# cluster log aggregator.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-FROM        gcr.io/google-containers/fluentd-elasticsearch:v2.4.0
-MAINTAINER  marcus@marcusbowyer.co.uk
+ARG         ORGANIZATION
+ARG         BASE_TAG
+FROM        ${ORGANIZATION}/td-agent:${BASE_TAG}
+MAINTAINER  marcus@euarctos.com
 STOPSIGNAL  SIGTERM
 ARG         MAXMIND_KEY
 
-ENV TINI_VERSION v0.19.0
-ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /sbin/tini
-RUN chmod +x /sbin/tini
-
-RUN apt-get update \
-    && apt-get install -yq wget \
-    && apt-get clean -yq
-
-RUN /usr/local/bin/fluent-gem install fluent-plugin-dedot_filter \
-    && /usr/local/bin/fluent-gem install fluent-plugin-record-modifier \
-    && /usr/local/bin/fluent-gem install fluent-plugin-kubernetes_metadata_filter \
-    && /usr/local/bin/fluent-gem install fluent-plugin-elasticsearch \
-    && /usr/local/bin/fluent-gem install maxminddb \
-    && /usr/local/bin/fluent-gem install ipaddress \
-    && /usr/local/bin/fluent-gem install browser
+RUN /usr/sbin/td-agent-gem install fluent-plugin-dedot_filter \
+    && /usr/sbin/td-agent-gem install fluent-plugin-record-modifier \
+    && /usr/sbin/td-agent-gem install fluent-plugin-kubernetes_metadata_filter \
+    && /usr/sbin/td-agent-gem install fluent-plugin-elasticsearch \
+    && /usr/sbin/td-agent-gem install maxminddb \
+    && /usr/sbin/td-agent-gem install ipaddress \
+    && /usr/sbin/td-agent-gem install browser
 
 RUN mkdir -p /geoip \
     && wget -nv https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-City\&license_key=${MAXMIND_KEY}\&suffix=tar.gz -O /geoip/database.mmdb.tar.gz
 
 COPY *.sh           /
-COPY fluent.conf    /etc/fluent
+COPY fluent.conf /etc/fluent/fluent.conf
 COPY plugin/*       /etc/fluent/plugin/
 COPY conf/*         /etc/fluent/config.d/
+
 
 RUN chmod 700 /*.sh
 

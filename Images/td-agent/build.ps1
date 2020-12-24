@@ -15,14 +15,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Builds the Neon Log Collector image.
+# Builds the TD Agent base image.
 #
-# Usage: powershell -file build.ps1 REGISTRY UBUNTU_TAG TAG
+# Usage: powershell -file build.ps1 REGISTRY IMAGE-DIGEST TAG
 
 param 
 (
 	[parameter(Mandatory=$true,Position=1)][string] $registry,
-	[parameter(Mandatory=$true,Position=2)][string] $baseTag,
+	[parameter(Mandatory=$true,Position=2)][string] $version,
 	[parameter(Mandatory=$true,Position=3)][string] $tag
 )
 
@@ -31,5 +31,4 @@ Log-ImageBuild $registry $tag
 $organization = DockerOrg
 
 # Build the image.
-$maxmind_key = neon run -- cat "_...$src_images_path\neon-log-collector\maxmind"
-Exec { docker build -t "${registry}:$tag" --build-arg "ORGANIZATION=$organization" --build-arg "CLUSTER_VERSION=$neonKUBE_Version" --build-arg "BASE_TAG=$baseTag" --build-arg "MAXMIND_KEY=$maxmind_key" . }
+Exec { docker build -t "${registry}:$tag" --build-arg "ORGANIZATION=$organization" --build-arg "VERSION=$version" --build-arg "CLUSTER_VERSION=$neonKUBE_Version" . }

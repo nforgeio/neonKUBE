@@ -16,24 +16,15 @@
 # limitations under the License.
 
 ARG         ORGANIZATION
-ARG         BASE_TAG
-FROM        ${ORGANIZATION}/td-agent-bit:${BASE_TAG}
+ARG         CLUSTER_VERSION
+FROM        ${ORGANIZATION}/cluster-ubuntu:${CLUSTER_VERSION}
 MAINTAINER  marcus@euarctos.com
 STOPSIGNAL  SIGTERM
+ARG         VERSION
 
-# Configuration files
-COPY conf/td-agent-bit.conf \
-     conf/parsers.conf \
-     conf/plugins.conf \
-     conf/functions.lua \
-     conf/td-agent-bit-filter.conf \
-     conf/td-agent-bit-input.conf \
-     conf/td-agent-bit-output.conf \
-     conf/td-agent-bit-service.conf \
-     /td-agent-bit/etc/
 
-COPY docker-entrypoint.sh   /
-RUN chmod 700 /*.sh
-
-# Entry point
-ENTRYPOINT ["/tini", "-g", "--", "/docker-entrypoint.sh"]
+RUN wget -qO - https://packages.treasuredata.com/GPG-KEY-td-agent | apt-key add - \
+    && echo "deb http://packages.treasuredata.com/4/ubuntu/focal/ focal contrib" > /etc/apt/sources.list.d/treasure-data.list \
+    && apt update -y \
+    && apt install -y td-agent=${VERSION} gcc ruby-dev rubygems make g++ \
+    && apt-get clean

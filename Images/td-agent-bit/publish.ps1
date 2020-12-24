@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Builds the Neon Log Host images and pushes them to Docker Hub.
+# Builds the TD Agent Bit base images and pushes them to Docker Hub.
 #
 # NOTE: You must be logged into Docker Hub.
 #
@@ -38,17 +38,16 @@ function Build
 	param
 	(
 		[parameter(Mandatory=$true, Position=1)][string] $version,
-		[parameter(Mandatory=$true, Position=2)][string] $baseTag,
 		[switch]$latest = $false
 	)
 
-	$registry    = GetRegistry "neon-log-host"
+	$registry    = GetRegistry "td-agent-bit"
 	$tag         = $version
 	$tagAsLatest = TagAsLatest
 
 	# Build and publish the images.
 
-	. ./build.ps1 -registry $registry -baseTag $baseTag -tag $tag
+	. ./build.ps1 -registry $registry -version $version -tag $tag
     PushImage "${registry}:$tag"
 
 	if ($latest -and $tagAsLatest)
@@ -64,4 +63,4 @@ if ($allVersions)
 {
 }
 
-Build $neonKUBE_Version "1.6.9" -latest
+Build "1.6.9" -latest
