@@ -14,25 +14,11 @@ param
 
 )
 
-"   "
-"======================================="
-"* NEON-LOG-HOST:" + $tag
-"======================================="
+Log-ImageBuild $registry $tag
 
-$appname      = "neon-log-host"
 $organization = DockerOrg
-
-# Copy the common scripts.
-
-DeleteFolder _common
-
-mkdir _common
-copy ..\_common\*.* .\_common
+$branch       = GitBranch
 
 # Build the image.
 
-Exec { docker build -t "${registry}:$tag" --build-arg "ORGANIZATION=$organization" --build-arg "CLUSTER_VERSION=$neonKUBE_Version" --build-arg "APPNAME=$appname" --build-arg "MAXMIND_KEY=$maxmind_key" . }
-
-# Clean up
-
-DeleteFolder _common
+Exec { docker build -t "${registry}:$tag" --build-arg "ORGANIZATION=$organization" --build-arg "BRANCH=$branch" . }

@@ -26,22 +26,8 @@ param
 	[parameter(Mandatory=$true,Position=3)][string] $tag
 )
 
-"   "
-"======================================="
-"* COUCHBASE-DEV:" + $tag
-"======================================="
-
-# Copy the common scripts.
-
-DeleteFolder _common
-
-mkdir _common
-copy ..\_common\*.* .\_common
+Log-ImageBuild $registry $tag
 
 # Build the image.
 
 Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$version" . }
-
-# Clean up
-
-DeleteFolder _common

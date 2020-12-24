@@ -26,9 +26,6 @@ param
 	[parameter(Mandatory=$true,Position=3)][string] $tag
 )
 
-"   "
-"======================================="
-"* NATS-STREAMING:" + $tag
-"======================================="
+Log-ImageBuild $registry $tag
 
 Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$version" . }

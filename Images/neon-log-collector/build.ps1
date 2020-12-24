@@ -20,25 +20,8 @@ $image_root = "$env:NF_ROOT\\Images"
 . $image_root/includes.ps1
 #----------------------------------------------------------
 
-"   "
-"======================================="
-"* neon-log-collector:" + $tag
-"======================================="
-
-$appname      = "neon-log-collector"
-$organization = DockerOrg
-
-# Copy the common scripts.
-
-DeleteFolder _common
-
-mkdir _common
-copy ..\_common\*.* .\_common
+Log-ImageBuild $registry $tag
 
 # Build the image.
 $maxmind_key = neon run -- cat "_...$src_images_path\neon-log-collector\maxmind"
-Exec { docker build -t "${registry}:$tag" --build-arg "ORGANIZATION=$organization" --build-arg "CLUSTER_VERSION=$neonKUBE_Version" --build-arg "APPNAME=$appname" --build-arg "MAXMIND_KEY=$maxmind_key" . }
-
-# Clean up
-
-DeleteFolder _common
+Exec { docker build -t "${registry}:$tag" --build-arg "MAXMIND_KEY=$maxmind_key" . }

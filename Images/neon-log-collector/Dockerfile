@@ -6,35 +6,34 @@
 # Fluent Bit deployed on each neonKUBE node that forwards log events to the
 # cluster log aggregator.
 
-ARG         ORGANIZATION
-ARG         CLUSTER_VERSION
-FROM        ${ORGANIZATION}/cluster-ubuntu:${CLUSTER_VERSION}
+FROM        gcr.io/google-containers/fluentd-elasticsearch:v2.4.0
+MAINTAINER  marcus@marcusbowyer.co.uk
 STOPSIGNAL  SIGTERM
-ARG         APPNAME
 ARG         MAXMIND_KEY
 
-RUN curl https://packages.treasuredata.com/GPG-KEY-td-agent | apt-key add - \
-    && echo "deb http://packages.treasuredata.com/4/ubuntu/focal/ focal contrib" > /etc/apt/sources.list.d/treasure-data.list \
-    && apt update -y \
-    && apt install -y td-agent gcc ruby-dev rubygems make g++
+ENV TINI_VERSION v0.19.0
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /sbin/tini
+RUN chmod +x /sbin/tini
 
-RUN /usr/sbin/td-agent-gem install fluent-plugin-dedot_filter \
-    && /usr/sbin/td-agent-gem install fluent-plugin-record-modifier \
-    && /usr/sbin/td-agent-gem install fluent-plugin-kubernetes_metadata_filter \
-    && /usr/sbin/td-agent-gem install fluent-plugin-elasticsearch \
-    && /usr/sbin/td-agent-gem install maxminddb \
-    && /usr/sbin/td-agent-gem install ipaddress \
-    && /usr/sbin/td-agent-gem install browser
+RUN apt-get update \
+    && apt-get install -yq wget \
+    && apt-get clean -yq
+
+RUN /usr/local/bin/fluent-gem install fluent-plugin-dedot_filter \
+    && /usr/local/bin/fluent-gem install fluent-plugin-record-modifier \
+    && /usr/local/bin/fluent-gem install fluent-plugin-kubernetes_metadata_filter \
+    && /usr/local/bin/fluent-gem install fluent-plugin-elasticsearch \
+    && /usr/local/bin/fluent-gem install maxminddb \
+    && /usr/local/bin/fluent-gem install ipaddress \
+    && /usr/local/bin/fluent-gem install browser
 
 RUN mkdir -p /geoip \
     && wget -nv https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-City\&license_key=${MAXMIND_KEY}\&suffix=tar.gz -O /geoip/database.mmdb.tar.gz
 
 COPY *.sh           /
-COPY _common/*.sh   /
-COPY fluent.conf /etc/fluent/fluent.conf
+COPY fluent.conf    /etc/fluent
 COPY plugin/*       /etc/fluent/plugin/
 COPY conf/*         /etc/fluent/config.d/
-
 
 RUN chmod 700 /*.sh
 

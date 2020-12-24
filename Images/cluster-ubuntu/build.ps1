@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Builds the Ubuntu cluster base image.
+# Builds the cluster Ubuntu base image.
 #
 # Usage: powershell -file build.ps1 REGISTRY UBUNTU_TAG TAG
 
@@ -26,24 +26,10 @@ param
 	[parameter(Mandatory=$true,Position=3)][string] $tag
 )
 
-"   "
-"======================================="
-"* CLUSTER-UBUNTU:" + $tag
-"======================================="
+Log-ImageBuild $registry $tag
 
 $organization = DockerOrg
-
-# Copy the common scripts.
-
-DeleteFolder _common
-
-mkdir _common
-copy ..\_common\*.* .\_common
 
 # Build the image.
 
 Exec { docker build -t "${registry}:$tag" --build-arg "ORGANIZATION=$organization" --build-arg "UBUNTU_TAG=$ubuntuTag" . }
-
-# Clean up
-
-DeleteFolder _common

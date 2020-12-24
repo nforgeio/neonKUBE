@@ -13,20 +13,10 @@ param
 	[parameter(Mandatory=$True,Position=2)][string] $tag
 )
 
-"   "
-"======================================="
-"* neon-cluster-manager:" + $tag
-"======================================="
+Log-ImageBuild $registry $tag
 
 $appname      = "neon-cluster-manager"
 $organization = DockerOrg
-
-# Copy the common scripts.
-
-DeleteFolder _common
-
-mkdir _common
-copy ..\_common\*.* .\_common
 
 # Build and publish the app to a local [bin] folder.
 
@@ -47,4 +37,4 @@ Exec { docker build -t "${registry}:$tag" --build-arg "ORGANIZATION=$organizatio
 # Clean up
 
 DeleteFolder bin
-DeleteFolder _common
+

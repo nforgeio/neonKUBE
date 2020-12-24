@@ -119,6 +119,10 @@ if ($base)
 
     & Publish "$image_root\\ubuntu"
     & Publish "$image_root\\cluster-ubuntu"
+
+    # Other base images:
+
+    Publish "$image_root\\haproxy"
 }
 
 if ($dotnetBase)

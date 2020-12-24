@@ -63,4 +63,4 @@ if ($allVersions)
 {
 }
 
-Build community-6.0.0 -latest
+Build "community-6.0.0" -latest

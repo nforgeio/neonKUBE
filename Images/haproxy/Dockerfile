@@ -1,5 +1,5 @@
-﻿#------------------------------------------------------------------------------
-# FILE:         build.ps1
+#------------------------------------------------------------------------------
+# FILE:         Dockerfile
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
 #
@@ -15,17 +15,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Builds the NATS image.
+# neonKUBE HAProxy image.
 #
-# Usage: powershell -file build.ps1 REGISTRY VERSION TAG
+# ARGUMENTS:
+#
+#   VERSION         - The base HAProxy image version (e.g. "1.6.9")
 
-param 
-(
-	[parameter(Mandatory=$true,Position=1)][string] $registry,
-	[parameter(Mandatory=$true,Position=2)][string] $version,
-	[parameter(Mandatory=$true,Position=3)][string] $tag
-)
+ARG         VERSION
+FROM        haproxy:${VERSION}-alpine
+MAINTAINER  jeff@lilltek.com
+STOPSIGNAL  SIGTERM
 
-Log-ImageBuild $registry $tag
+# Install the [tini] INIT manager.
 
-Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$version" . }
+RUN apk add --no-cache tini ca-certificates
+
+# Configure the service.
+
+COPY docker-entrypoint.sh   /
+COPY _common/*.sh           /
+
+RUN chmod 700 /*.sh
+
+ENTRYPOINT ["/sbin/tini", "-g", "--", "/docker-entrypoint.sh"]

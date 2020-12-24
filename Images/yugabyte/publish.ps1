@@ -37,8 +37,7 @@ function Build
 {
 	param
 	(
-		[parameter(Mandatory=$true, Position=1)][string] $ubuntuTag,
-		[parameter(Mandatory=$true, Position=2)][string] $yugabyteVersion,
+		[parameter(Mandatory=$true, Position=1)][string] $yugabyteVersion,
 		[switch]$latest = $false
 	)
 
@@ -48,7 +47,7 @@ function Build
 
 	# Build and publish the images.
 
-	. ./build.ps1 -registry $registry -ubuntuTag $ubuntuTag -version $yugabyteVersion -tag $tag
+	. ./build.ps1 -registry $registry -yugabyteVersion $yugabyteVersion -tag $tag
     PushImage "${registry}:$tag"
 
 	if ($latest -and $tagAsLatest)
@@ -64,4 +63,4 @@ if ($allVersions)
 {
 }
 
-Build "20.04-20201220" 2.5.0.0 -latest
+Build "2.5.1.0-b153" -latest

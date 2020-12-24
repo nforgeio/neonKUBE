@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Builds the NATS image.
+# Builds the Neon HAProxy base images.
 #
 # Usage: powershell -file build.ps1 REGISTRY VERSION TAG
 
@@ -28,4 +28,17 @@ param
 
 Log-ImageBuild $registry $tag
 
+# Copy the common scripts.
+
+DeleteFolder _common
+
+mkdir _common
+copy ..\_common\*.* .\_common
+
+# Build the image.
+
 Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$version" . }
+
+# Clean up
+
+DeleteFolder _common

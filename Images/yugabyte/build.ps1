@@ -22,18 +22,12 @@
 param 
 (
 	[parameter(Mandatory=$true,Position=1)][string] $registry,
-	[parameter(Mandatory=$true,Position=2)][string] $ubuntuTag,
-	[parameter(Mandatory=$true,Position=3)][string] $version,
-	[parameter(Mandatory=$true,Position=4)][string] $tag
+	[parameter(Mandatory=$true,Position=2)][string] $yugabyteVersion,
+	[parameter(Mandatory=$true,Position=3)][string] $tag
 )
 
-"   "
-"======================================="
-"* YUGABYTE:" + $tag
-"======================================="
-
-$organization = DockerOrg
+Log-ImageBuild $registry $tag
 
 # Build the image.
 
-Exec { docker build -t "${registry}:$tag" --build-arg "ORGANIZATION=$organization" --build-arg "UBUNTU_TAG=$ubuntuTag" --build-arg "VERSION=$version" . }
+Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$yugabyteVersion" . }

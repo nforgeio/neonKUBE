@@ -13,20 +13,10 @@ param
 	[parameter(Mandatory=$True,Position=2)][string] $tag
 )
 
-"   "
-"======================================="
-"* test-temporal:" + $tag
-"======================================="
+Log-ImageBuild $registry $tag
 
 $appname      = "test-temporal"
 $organization = DockerOrg
-
-# Copy the common scripts.
-
-DeleteFolder _common
-
-mkdir _common
-copy ..\_common\*.* .\_common
 
 # Build and publish the app to a local [bin] folder.
 
@@ -47,4 +37,4 @@ Exec { docker build -t "${registry}:$tag" --build-arg "APPNAME=$appname" --build
 # Clean up
 
 DeleteFolder bin
-DeleteFolder _common
+

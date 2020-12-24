@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Builds the NATS images and pushes them to Docker Hub.
+# Builds the HAProxy images and pushes them to Docker Hub.
 #
 # NOTE: You must be logged into Docker Hub.
 #
@@ -41,9 +41,8 @@ function Build
 		[switch]$latest = $false
 	)
 
-	$registry    = GetRegistry "nats"
-	$tag         = $version
-	$tagAsLatest = TagAsLatest
+	$registry = GetRegistry "haproxy"
+	$tag      = $version
 
 	# Build and publish the images.
 
@@ -63,4 +62,4 @@ if ($allVersions)
 {
 }
 
-Build "1.4.1" -latest
+Build "1.9.2" -latest
