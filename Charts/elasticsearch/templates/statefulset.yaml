@@ -124,8 +124,8 @@ spec:
       {{- end }}
       containers:
       - name: "{{ template "name" . }}"
-        image: "{{ .Values.image }}:{{ .Values.imageTag }}"
-        imagePullPolicy: "{{ .Values.imagePullPolicy }}"
+        image: "{{ .Values.image.organization }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: "{{ .Values.image.pullPolicy }}"
         readinessProbe:
 {{ toYaml .Values.readinessProbe | indent 10 }}
           exec:

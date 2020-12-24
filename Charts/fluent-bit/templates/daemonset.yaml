@@ -55,7 +55,7 @@ spec:
       serviceAccountName: {{ template "fluent-bit.serviceAccountName" . }}
       containers:
       - name: neon-log-host
-        image: "{{ .Values.image.fluent_bit.repository }}:{{ .Values.image.fluent_bit.tag }}"
+        image: "{{ .Values.image.organization }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: "{{ .Values.image.pullPolicy }}"
         env:
 {{ toYaml .Values.env | indent 10 }}

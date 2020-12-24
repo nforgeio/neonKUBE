@@ -104,8 +104,8 @@ spec:
           subPath: queries.yaml
       {{- end }}
       - name: citus
-        image: "{{ .Values.image }}:{{ .Values.imageTag }}"
-        imagePullPolicy: "{{ .Values.imagePullPolicy }}"
+        image: "{{ .Values.image.organization }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: "{{ .Values.image.pullPolicy }}"
         command: ["/bin/sh"]
         args:
         - "-xc"

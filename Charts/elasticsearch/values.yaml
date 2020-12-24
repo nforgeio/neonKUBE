@@ -42,9 +42,11 @@ secretMounts: []
 #    secretName: elastic-certificates
 #    path: /usr/share/elasticsearch/config/certs
 
-image: "docker.elastic.co/elasticsearch/elasticsearch"
-imageTag: "7.9.1"
-imagePullPolicy: "IfNotPresent"
+image:
+  organization: nkubeio
+  repository: cluster-elasticsearch
+  tag: latest
+  pullPolicy: Always
 
 podAnnotations: {}
   # iam.amazonaws.com/role: es-cluster

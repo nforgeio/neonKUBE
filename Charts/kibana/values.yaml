@@ -20,9 +20,11 @@ secretMounts: []
 #    secretName: elastic-certificates
 #    path: /usr/share/elasticsearch/config/certs
 
-image: "docker.elastic.co/kibana/kibana"
-imageTag: "7.9.1"
-imagePullPolicy: "IfNotPresent"
+image:
+  organization: nkubeio
+  repository: cluster-kibana
+  tag: latest
+  pullPolicy: Always
 
 resources: {}
 

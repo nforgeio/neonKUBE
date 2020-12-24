@@ -63,7 +63,8 @@ spec:
       - name: kibana
         securityContext:
 {{ toYaml .Values.securityContext | indent 10 }}
-        image: "{{ .Values.image }}:{{ .Values.imageTag }}"
+        image: "{{ .Values.image.organization }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: "{{ .Values.image.pullPolicy }}"
         env:
           {{- if .Values.elasticsearchURL }}
           - name: ELASTICSEARCH_URL
