@@ -23,7 +23,8 @@ STOPSIGNAL  SIGTERM
 ARG         VERSION
 
 
-RUN wget -qO - https://packages.fluentbit.io/fluentbit.key | apt-key add - \
+RUN apt install -y gnupg \
+    && wget -qO - https://packages.fluentbit.io/fluentbit.key | apt-key add - \
     && echo "deb https://packages.fluentbit.io/ubuntu/focal focal main" >> /etc/apt/sources.list \
     && apt update -y \
     && apt install -y td-agent-bit=${VERSION} \
