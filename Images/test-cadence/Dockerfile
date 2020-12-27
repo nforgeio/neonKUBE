@@ -22,7 +22,7 @@
 
 ARG         ORGANIZATION
 ARG         BRANCH
-FROM        ${ORGANIZATION}/aspnet
+FROM        ${ORGANIZATION}/cluster-aspnet
 MAINTAINER  marcus@euarctos.com
 STOPSIGNAL  SIGTERM
 ARG         APPNAME
