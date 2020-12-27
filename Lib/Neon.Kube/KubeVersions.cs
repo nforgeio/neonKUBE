@@ -70,7 +70,7 @@ namespace Neon.Kube
         /// <summary>
         /// The version of Istio to install.
         /// </summary>
-        public const string IstioVersion = "1.7.1";
+        public const string IstioVersion = "1.7.6";
 
         /// <summary>
         /// The version of Helm to be installed.

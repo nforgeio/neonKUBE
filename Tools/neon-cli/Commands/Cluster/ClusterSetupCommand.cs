@@ -1874,8 +1874,8 @@ metadata:
   namespace: istio-system
   name: istiocontrolplane
 spec:
-  hub: docker.io/istio
-  tag: {KubeVersions.IstioVersion}
+  hub: {NeonHelper.NeonBranchRegistry}
+  tag: {KubeConst.LatestClusterVersion}
   meshConfig:
     rootNamespace: istio-system
   components:
@@ -2181,17 +2181,17 @@ rm -rf {chartName}*
                     var values = new List<KeyValuePair<string, object>>();
 
                     values.Add(new KeyValuePair<string, object>("cstor.apiserver.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("cstor.apiserver.image.tag", "latest"));
+                    values.Add(new KeyValuePair<string, object>("cstor.apiserver.image.tag", KubeConst.LatestClusterVersion));
                     values.Add(new KeyValuePair<string, object>("cstor.pool.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("cstor.pool.image.tag", "latest"));
+                    values.Add(new KeyValuePair<string, object>("cstor.pool.image.tag", KubeConst.LatestClusterVersion));
                     values.Add(new KeyValuePair<string, object>("cstor.poolMgmt.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("cstor.poolMgmt.image.tag", "latest"));
+                    values.Add(new KeyValuePair<string, object>("cstor.poolMgmt.image.tag", KubeConst.LatestClusterVersion));
                     values.Add(new KeyValuePair<string, object>("cstor.target.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("cstor.target.image.tag", "latest"));
+                    values.Add(new KeyValuePair<string, object>("cstor.target.image.tag", KubeConst.LatestClusterVersion));
                     values.Add(new KeyValuePair<string, object>("helper.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("helper.image.tag", "latest"));
+                    values.Add(new KeyValuePair<string, object>("helper.image.tag", KubeConst.LatestClusterVersion));
                     values.Add(new KeyValuePair<string, object>("policies.monitoring.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("policies.monitoring.image.tag", "latest"));
+                    values.Add(new KeyValuePair<string, object>("policies.monitoring.image.tag", KubeConst.LatestClusterVersion));
 
 
                     if (cluster.Definition.Workers.Count() >= 3)
@@ -2864,7 +2864,7 @@ rm -rf {chartName}*
                     var values = new List<KeyValuePair<string, object>>();
 
                     values.Add(new KeyValuePair<string, object>($"image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>($"image.tag", "latest"));
+                    values.Add(new KeyValuePair<string, object>($"image.tag", KubeConst.LatestClusterVersion));
 
                     var i = 0;
                     foreach (var taint in (await k8sClient.ListNodeAsync()).Items.Where(i => i.Spec.Taints != null).SelectMany(i => i.Spec.Taints))
@@ -2913,7 +2913,7 @@ rm -rf {chartName}*
                     var values = new List<KeyValuePair<string, object>>();
 
                     values.Add(new KeyValuePair<string, object>($"image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>($"image.tag", "latest"));
+                    values.Add(new KeyValuePair<string, object>($"image.tag", KubeConst.LatestClusterVersion));
 
                     values.Add(new KeyValuePair<string, object>($"autoscaling.minReplicas", (Math.Max(1, cluster.Definition.Workers.Count() / 6))));
                     values.Add(new KeyValuePair<string, object>($"autoscaling.maxReplicas", (Math.Max(1, cluster.Definition.Workers.Count() / 4))));
@@ -3271,10 +3271,10 @@ rm -rf {chartName}*
                     var values = new List<KeyValuePair<string, object>>();
 
                     values.Add(new KeyValuePair<string, object>($"image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>($"image.tag", "latest"));
+                    values.Add(new KeyValuePair<string, object>($"image.tag", KubeConst.LatestClusterVersion));
 
                     values.Add(new KeyValuePair<string, object>($"manager.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>($"manager.image.tag", "latest"));
+                    values.Add(new KeyValuePair<string, object>($"manager.image.tag", KubeConst.LatestClusterVersion));
 
                     var replicas = Math.Max(1, cluster.Definition.Masters.Count() / 5);
 
