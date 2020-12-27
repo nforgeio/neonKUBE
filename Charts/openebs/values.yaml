@@ -19,11 +19,40 @@ image:
   pullPolicy: IfNotPresent
   repository: ""
 
+cspcOperator:
+  image:
+    organization: ghcr.io/neonrelease
+    repository: openebs-cvc-operator-amd64
+    tag: latest
+    
+csiResizer:
+  image:
+    organization: ghcr.io/neonrelease
+    repository: k8scsi-csi-resizer
+    tag: latest
+    
+csiSnapshotter:
+  image:
+    organization: ghcr.io/neonrelease
+    repository: k8scsi-csi-snapshotter
+    tag: latest
+    
+snapshotController:
+  image:
+    organization: ghcr.io/neonrelease
+    repository: k8scsi-csi-snapshotter
+    tag: latest
+
+cvcOperator:
+  image:
+    organization: ghcr.io/neonrelease
+    repository: openebs-provisioner-localpv
+    tag: latest
 apiserver:
   enabled: true
   image:
     organization: ghcr.io/neonrelease
-    repository: cluster-openebs-m-apiserver
+    repository: openebs-m-apiserver
     tag: latest
   replicas: 1
   ports:
@@ -69,8 +98,10 @@ provisioner:
 
 localprovisioner:
   enabled: true
-  image: "openebs/provisioner-localpv"
-  imageTag: "2.1.0"
+  image:
+    organization: ghcr.io/neonrelease
+    repository: openebs-provisioner-localpv
+    tag: latest
   replicas: 1
   enableLeaderElection: true
   basePath: "/var/openebs/local"
@@ -88,11 +119,15 @@ localprovisioner:
 snapshotOperator:
   enabled: true
   controller:
-    image: "openebs/snapshot-controller"
-    imageTag: "2.1.0"
+    image:
+      organization: ghcr.io/neonrelease
+      repository: snapshot-controller
+      tag: latest
   provisioner:
-    image: "openebs/snapshot-provisioner"
-    imageTag: "2.1.0"
+    image:
+      organization: ghcr.io/neonrelease
+      repository: openebs-snapshot-provisioner
+      tag: latest
   replicas: 1
   enableLeaderElection: true
   upgradeStrategy: "Recreate"
@@ -182,17 +217,17 @@ cstor:
   pool:
     image:
       organization: ghcr.io/neonrelease
-      repository: cluster-openebs-cstor-pool
+      repository: openebs-cstor-pool
       tag: latest
   poolMgmt:
     image:
       organization: ghcr.io/neonrelease
-      repository: cluster-openebs-cstor-pool-manager
+      repository: openebs-cstor-pool-manager
       tag: latest
   target:
     image:
       organization: ghcr.io/neonrelease
-      repository: cluster-openebs-cstor-istgt
+      repository: openebs-cstor-istgt
       tag: latest
   volumeMgmt:
     image: "openebs/cstor-volume-mgmt"
@@ -201,7 +236,7 @@ cstor:
 helper:
   image:
     organization: ghcr.io/neonrelease
-    repository: cluster-openebs-linux-utils
+    repository: openebs-linux-utils
     tag: latest
 
 featureGates:
@@ -221,7 +256,7 @@ policies:
     enabled: true
     image:
       organization: ghcr.io/neonrelease
-      repository: cluster-openebs-m-exporter
+      repository: openebs-m-exporter
       tag: latest
 
 analytics:

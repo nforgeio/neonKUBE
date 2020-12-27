@@ -256,7 +256,7 @@ spec:
       serviceAccount: openebs-cstor-csi-controller-sa
       containers:
         - name: csi-resizer
-          image: quay.io/k8scsi/csi-resizer:v0.4.0
+          value: "{{ .Values.csiResizer.image.organization }}/{{ .Values.csiResizer.image.repository }}:{{ .Values.csiResizer.image.tag }}"
           args:
             - "--v=5"
             - "--csi-address=$(ADDRESS)"
@@ -269,7 +269,7 @@ spec:
             - name: socket-dir
               mountPath: /var/lib/csi/sockets/pluginproxy/
         - name: csi-snapshotter
-          image: quay.io/k8scsi/csi-snapshotter:v2.0.1
+          value: "{{ .Values.csiSnapshotter.image.organization }}/{{ .Values.csiSnapshotter.image.repository }}:{{ .Values.csiSnapshotter.image.tag }}"
           args:
             - "--csi-address=$(ADDRESS)"
           env:
@@ -280,7 +280,7 @@ spec:
             - name: socket-dir
               mountPath: /var/lib/csi/sockets/pluginproxy/
         - name: snapshot-controller
-          image: quay.io/k8scsi/snapshot-controller:v2.0.1
+          value: "{{ .Values.snapshotController.image.organization }}/{{ .Values.snapshotController.image.repository }}:{{ .Values.snapshotController.image.tag }}"
           args:
             - "--v=5"
             - "--leader-election=false"
@@ -631,7 +631,7 @@ spec:
       containers:
       - name: cspc-operator
         imagePullPolicy: IfNotPresent
-        image: openebs/cspc-operator-amd64:2.1.0
+        image: "{{ .Values.cspcOperator.image.organization }}/{{ .Values.cspcOperator.image.repository }}:{{ .Values.cspcOperator.image.tag }}"
         env:
         - name: OPENEBS_NAMESPACE
           valueFrom:
@@ -693,7 +693,7 @@ spec:
       containers:
       - name: cvc-operator
         imagePullPolicy: IfNotPresent
-        image: openebs/cvc-operator-amd64:2.1.0
+        image: "{{ .Values.cvcOperator.image.organization }}/{{ .Values.cvcOperator.image.repository }}:{{ .Values.cvcOperator.image.tag }}"
         env:
         # OPENEBS_IO_BASE_DIR is used to configure base directory for openebs on host path.
         # Where OpenEBS can store required files. Default base path will be /var/openebs
