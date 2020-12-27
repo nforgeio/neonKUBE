@@ -22,7 +22,7 @@ image:
 cspcOperator:
   image:
     organization: ghcr.io/neonrelease
-    repository: openebs-cvc-operator-amd64
+    repository: openebs-cspc-operator-amd64
     tag: latest
     
 csiResizer:
@@ -46,8 +46,9 @@ snapshotController:
 cvcOperator:
   image:
     organization: ghcr.io/neonrelease
-    repository: openebs-provisioner-localpv
+    repository: openebs-cvc-operator-amd64
     tag: latest
+
 apiserver:
   enabled: true
   image:
@@ -121,7 +122,7 @@ snapshotOperator:
   controller:
     image:
       organization: ghcr.io/neonrelease
-      repository: snapshot-controller
+      repository: k8scsi-snapshot-controller
       tag: latest
   provisioner:
     image:

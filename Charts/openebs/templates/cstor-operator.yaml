@@ -661,7 +661,7 @@ spec:
         - name: OPENEBS_IO_CSTOR_POOL_IMAGE
           value: "{{ .Values.cstor.pool.image.organization }}/{{ .Values.cstor.pool.image.repository }}:{{ .Values.cstor.pool.image.tag }}"
         - name:  OPENEBS_IO_CSTOR_POOL_EXPORTER_IMAGE
-          value: "openebs/m-exporter:2.1.0"
+          value: "{{ .Values.policies.monitoring.image.organization }}/{{ .Values.policies.monitoring.image.repository }}:{{ .Values.policies.monitoring.image.tag }}"
         - name: RESYNC_INTERVAL
           value: "30"
 ---
