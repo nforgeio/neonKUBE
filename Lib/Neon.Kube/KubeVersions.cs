@@ -35,7 +35,7 @@ namespace Neon.Kube
         /// <summary>
         /// The version of Kubernetes to be installed.
         /// </summary>
-        public const string KubernetesVersion = "1.19.2";
+        public const string KubernetesVersion = "1.19.5";
 
         /// <summary>
         /// The version of the Kubernetes dashboard to be installed.
@@ -45,17 +45,17 @@ namespace Neon.Kube
         /// <summary>
         /// The package version for Kubernetes admin service.
         /// </summary>
-        public const string KubeAdminPackageVersion = "1.19.2-00";
+        public const string KubeAdminPackageVersion = "1.19.5-00";
 
         /// <summary>
         /// The package version for the Kubernetes cli.
         /// </summary>
-        public const string KubeCtlPackageVersion = "1.19.2-00";
+        public const string KubeCtlPackageVersion = "1.19.5-00";
 
         /// <summary>
         /// The package version for the Kubelet service.
         /// </summary>
-        public const string KubeletPackageVersion = "1.19.2-00";
+        public const string KubeletPackageVersion = "1.19.5-00";
 
         /// <summary>
         /// The version of Docker to be installed.
