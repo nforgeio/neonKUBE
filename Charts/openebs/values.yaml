@@ -40,7 +40,7 @@ csiSnapshotter:
 snapshotController:
   image:
     organization: ghcr.io/neonrelease
-    repository: k8scsi-csi-snapshotter
+    repository: k8scsi-snapshot-controller
     tag: latest
 
 cvcOperator:
@@ -122,7 +122,7 @@ snapshotOperator:
   controller:
     image:
       organization: ghcr.io/neonrelease
-      repository: k8scsi-snapshot-controller
+      repository: openebs-snapshot-controller
       tag: latest
   provisioner:
     image:
