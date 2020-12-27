@@ -22,7 +22,7 @@
 param 
 (
 	[parameter(Mandatory=$true,Position=1)][string] $registry,
-	[parameter(Mandatory=$true,Position=2)][string] $version,
+	[parameter(Mandatory=$true,Position=2)][string] $haproxyVersion,
 	[parameter(Mandatory=$true,Position=3)][string] $tag
 )
 
@@ -37,7 +37,7 @@ copy ..\_common\*.* .\_common
 
 # Build the image.
 
-Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$version" . }
+Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$haproxyVersion" . }
 
 # Clean up
 

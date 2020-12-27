@@ -38,6 +38,7 @@ function Build
 	param
 	(
 		[parameter(Mandatory=$true, Position=1)][string] $version,
+		[parameter(Mandatory=$true, Position=2)][string] $haproxyVersion,
 		[switch]$latest = $false
 	)
 
@@ -46,7 +47,7 @@ function Build
 
 	# Build and publish the images.
 
-	. ./build.ps1 -registry $registry -version $version -tag $tag
+	. ./build.ps1 -registry $registry -haproxyVersion $haproxyVersion -tag $tag
     PushImage "${registry}:$tag"
 
 	if ($latest -and $tagAsLatest)
@@ -62,4 +63,4 @@ if ($allVersions)
 {
 }
 
-Build "1.9.2" -latest
+Build $neonKUBE_Version "1.9.2" -latest
