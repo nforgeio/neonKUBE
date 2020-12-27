@@ -51,8 +51,11 @@ cr:
   namespace: ""
 
   spec:
+    version: "1.27"
     istio_namespace: istio-system
     deployment:
+      image_name: quay.io/kiali/kiali
+      image_version: v1.27.0
       accessible_namespaces:
       - '**'
     external_services:
