@@ -811,7 +811,7 @@ $@"
                             "-v=/etc/neonkube/neon-etc-proxy.cfg:/etc/haproxy/haproxy.cfg",
                             "--network=host",
                             "--log-driver=json-file",
-                            $"{NeonHelper.NeonBranchRegistry}/haproxy"
+                            $"{NeonHelper.NeonBranchRegistry}/haproxy:{KubeConst.LatestClusterVersion}"
                         );
                     });
             }
@@ -906,7 +906,7 @@ rm -rf linux-amd64
                         () =>
                         {
                             firstMaster.Status = "pull: kubernetes images...";
-                            firstMaster.SudoCommand("kubeadm config images pull");
+                            firstMaster.SudoCommand($"kubeadm config images pull --image-repository {NeonHelper.NeonBranchRegistry} --kubernetes-version v{KubeVersions.KubernetesVersion}");
                         });
 
                     firstMaster.InvokeIdempotentAction("setup/cluster-init",
@@ -946,6 +946,7 @@ apiVersion: kubeadm.k8s.io/v1beta2
 kind: ClusterConfiguration
 clusterName: {cluster.Name}
 kubernetesVersion: ""v{KubeVersions.KubernetesVersion}""
+imageRepository: ""{NeonHelper.NeonBranchRegistry}""
 apiServer:
   extraArgs:
     logging-format: json
@@ -2179,19 +2180,34 @@ rm -rf {chartName}*
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
-
-                    values.Add(new KeyValuePair<string, object>("cstor.apiserver.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("cstor.apiserver.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("apiserver.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("apiserver.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("csiResizer.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("csiResizer.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("csiSnapshotter.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("csiSnapshotter.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("cspcOperator.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("cspcOperator.image.tag", KubeConst.LatestClusterVersion));
                     values.Add(new KeyValuePair<string, object>("cstor.pool.image.organization", NeonHelper.NeonBranchRegistry));
                     values.Add(new KeyValuePair<string, object>("cstor.pool.image.tag", KubeConst.LatestClusterVersion));
                     values.Add(new KeyValuePair<string, object>("cstor.poolMgmt.image.organization", NeonHelper.NeonBranchRegistry));
                     values.Add(new KeyValuePair<string, object>("cstor.poolMgmt.image.tag", KubeConst.LatestClusterVersion));
                     values.Add(new KeyValuePair<string, object>("cstor.target.image.organization", NeonHelper.NeonBranchRegistry));
                     values.Add(new KeyValuePair<string, object>("cstor.target.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("cvcOperator.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("cvcOperator.image.tag", KubeConst.LatestClusterVersion));
                     values.Add(new KeyValuePair<string, object>("helper.image.organization", NeonHelper.NeonBranchRegistry));
                     values.Add(new KeyValuePair<string, object>("helper.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("localprovisioner.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("localprovisioner.image.tag", KubeConst.LatestClusterVersion));
                     values.Add(new KeyValuePair<string, object>("policies.monitoring.image.organization", NeonHelper.NeonBranchRegistry));
                     values.Add(new KeyValuePair<string, object>("policies.monitoring.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("snapshotController.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("snapshotController.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("snapshotOperator.controller.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("snapshotOperator.controller.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("snapshotOperator.provisioner.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("snapshotOperator.provisioner.image.tag", KubeConst.LatestClusterVersion));
 
 
                     if (cluster.Definition.Workers.Count() >= 3)
