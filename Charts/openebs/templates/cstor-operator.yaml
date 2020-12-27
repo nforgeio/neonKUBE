@@ -256,7 +256,7 @@ spec:
       serviceAccount: openebs-cstor-csi-controller-sa
       containers:
         - name: csi-resizer
-          value: "{{ .Values.csiResizer.image.organization }}/{{ .Values.csiResizer.image.repository }}:{{ .Values.csiResizer.image.tag }}"
+          image: "{{ .Values.csiResizer.image.organization }}/{{ .Values.csiResizer.image.repository }}:{{ .Values.csiResizer.image.tag }}"
           args:
             - "--v=5"
             - "--csi-address=$(ADDRESS)"
@@ -269,7 +269,7 @@ spec:
             - name: socket-dir
               mountPath: /var/lib/csi/sockets/pluginproxy/
         - name: csi-snapshotter
-          value: "{{ .Values.csiSnapshotter.image.organization }}/{{ .Values.csiSnapshotter.image.repository }}:{{ .Values.csiSnapshotter.image.tag }}"
+          image: "{{ .Values.csiSnapshotter.image.organization }}/{{ .Values.csiSnapshotter.image.repository }}:{{ .Values.csiSnapshotter.image.tag }}"
           args:
             - "--csi-address=$(ADDRESS)"
           env:
@@ -280,7 +280,7 @@ spec:
             - name: socket-dir
               mountPath: /var/lib/csi/sockets/pluginproxy/
         - name: snapshot-controller
-          value: "{{ .Values.snapshotController.image.organization }}/{{ .Values.snapshotController.image.repository }}:{{ .Values.snapshotController.image.tag }}"
+          image: "{{ .Values.snapshotController.image.organization }}/{{ .Values.snapshotController.image.repository }}:{{ .Values.snapshotController.image.tag }}"
           args:
             - "--v=5"
             - "--leader-election=false"
