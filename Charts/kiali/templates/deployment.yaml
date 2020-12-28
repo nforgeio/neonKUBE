@@ -39,7 +39,7 @@ spec:
       {{- end }}
       containers:
       - name: operator
-        image: "{{ .Values.image.repo }}:{{ .Values.image.tag }}"
+        image: "{{ .Values.image.organization }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy | default "Always" }}
         args:
         - "--zap-level=info"

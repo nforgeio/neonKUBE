@@ -3,8 +3,9 @@
 # and development.
 
 image:
-  repository: quay.io/cortexproject/cortex
-  tag: v1.5.0
+  organization: ghcr.io/neonrelease
+  repository: cortexproject-cortex
+  tag: latest
   pullPolicy: IfNotPresent
 
 serviceAccount:
