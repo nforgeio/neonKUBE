@@ -3,7 +3,7 @@ fullnameOverride: ""
 
 image:
   organization: quay.io/kiali
-  repo: kiali-operator
+  repository: kiali-operator
   tag: v1.27.0
   pullPolicy: Always
   pullSecrets: []
