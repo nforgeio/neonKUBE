@@ -44,7 +44,7 @@ secretMounts: []
 
 image:
   organization: ghcr.io/neonrelease
-  repository: cluster-elasticsearch
+  repository: blacktop-elasticsearch
   tag: latest
   pullPolicy: Always
 

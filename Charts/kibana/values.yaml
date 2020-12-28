@@ -22,7 +22,7 @@ secretMounts: []
 
 image:
   organization: ghcr.io/neonrelease
-  repository: cluster-kibana
+  repository: kibana
   tag: latest
   pullPolicy: Always
 
