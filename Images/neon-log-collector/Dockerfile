@@ -38,7 +38,6 @@ COPY fluent.conf /etc/fluent/fluent.conf
 COPY plugin/*       /etc/fluent/plugin/
 COPY conf/*         /etc/fluent/config.d/
 
-
 RUN chmod 700 /*.sh
 
 # Entry point
