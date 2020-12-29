@@ -25,7 +25,7 @@ ARG         MAXMIND_KEY
 RUN /usr/sbin/td-agent-gem install fluent-plugin-dedot_filter \
     && /usr/sbin/td-agent-gem install fluent-plugin-record-modifier \
     && /usr/sbin/td-agent-gem install fluent-plugin-kubernetes_metadata_filter \
-    && /usr/sbin/td-agent-gem install fluent-plugin-elasticsearch \
+    && /usr/sbin/td-agent-gem install fluent-plugin-elasticsearch \ 
     && /usr/sbin/td-agent-gem install maxminddb \
     && /usr/sbin/td-agent-gem install ipaddress \
     && /usr/sbin/td-agent-gem install browser
@@ -34,12 +34,12 @@ RUN mkdir -p /geoip \
     && wget -nv https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-City\&license_key=${MAXMIND_KEY}\&suffix=tar.gz -O /geoip/database.mmdb.tar.gz
 
 COPY *.sh           /
-COPY fluent.conf /etc/fluent/fluent.conf
-COPY plugin/*       /etc/fluent/plugin/
-COPY conf/*         /etc/fluent/config.d/
+COPY td-agent.conf  /etc/td-agent/td-agent.conf
+COPY plugin/*       /etc/td-agent/plugin/
+COPY conf/*         /etc/td-agent/config.d/
 
 
 RUN chmod 700 /*.sh
 
 # Entry point
-ENTRYPOINT ["/sbin/tini", "-g", "--", "/docker-entrypoint.sh"]
+ENTRYPOINT ["tini", "-g", "--", "/docker-entrypoint.sh"]

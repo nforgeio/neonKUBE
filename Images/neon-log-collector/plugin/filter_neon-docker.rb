@@ -3,7 +3,7 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2020 by neonFORGE LLC.  All rights reserved.
 #
-# This Fluentd filter plugin detects container log events forwarded by Docker 
+# This td-agent filter plugin detects container log events forwarded by Docker 
 # and then attempts to extract and parse standard Neon fields from the message.
 
 require 'fluent/filter'

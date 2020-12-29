@@ -3,7 +3,7 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2020 by neonFORGE LLC.  All rights reserved.
 #
-# This Fluentd filter plugin detects container log events for services
+# This td-agent filter plugin detects container log events for services
 # hosted by systemd and then attempts to extract and parse standard Neon
 # fields from the message.
 
@@ -189,7 +189,7 @@ module Fluent
                     elsif message.length < 2 || message[0] != '{' || message[message.length-1] != '}'
 
                         # Consider all other non-JSON events as INFO and
-                        # use the Fluentd time.
+                        # use the td-agent time.
 
                         record["@timestamp"] = formatTimestamp(Time.at(time));
                         record["level"]      = "info";

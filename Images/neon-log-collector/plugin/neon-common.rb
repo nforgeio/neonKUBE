@@ -221,7 +221,7 @@ module NeonCommon
                   record["@timestamp"] = formatTimestamp(Time.parse(date));
                 end
             else
-                # Use the Fluentd injestion time.
+                # Use the td-agent injestion time.
                 record["@timestamp"] = formatTimestamp(Time.at(time));
             end
             
@@ -229,7 +229,7 @@ module NeonCommon
 
         rescue
 
-            # Handle any parsing errors by recording the Fluentd injestion time.
+            # Handle any parsing errors by recording the td-agent injestion time.
 
             record["@timestamp"] = formatTimestamp(Time.at(time));
             return record;
@@ -238,7 +238,7 @@ module NeonCommon
 
     # This method attempts to extract the best timestamp for a log event by looking
     # for a recognized time format within at the beginning of the log message.  The 
-    # Fluentd event time will be used if the message didn't include a valid time.
+    # td-agent event time will be used if the message didn't include a valid time.
     #
     # Recognized timestamps will be stripped from the message.
     #
@@ -323,14 +323,14 @@ module NeonCommon
 
         rescue
 
-            # Handle any parsing errors by recording the Fluentd injestion time.
+            # Handle any parsing errors by recording the td-agent injestion time.
 
             record["@timestamp"] = formatTimestamp(Time.at(time));
             return record;
         end
     end
 
-    # This Fluentd filter plugin attempts to set the record's [activity-id], [version]
+    # This td-agent filter plugin attempts to set the record's [activity-id], [version]
     # [module], and [index] and fields by examining the event [message].  Currently, this 
     # supports  the optional [activity], [version], [module], and [index] fields emitted
     # by the Neon loggers, like:
