@@ -1,14 +1,14 @@
 #!/bin/bash
 #------------------------------------------------------------------------------
-# This script generates the [/etc/fluentd/template/logstash-template.json] file.
+# This script generates the [/etc/td-agent/template/logstash-template.json] file.
 #
 # These variables MUST be defined.  [docker-entrypoint.sh] takes care of this.
 
-mkdir -p /etc/fluentd/template
-chmod 600 /etc/fluentd
-chmod 600 /etc/fluentd/template
+mkdir -p /etc/td-agent/template
+chmod 600 /etc/td-agent
+chmod 600 /etc/td-agent/template
 
-cat <<EOF > /etc/fluentd/template/logstash-template.json
+cat <<EOF > /etc/td-agent/template/logstash-template.json
 {
   "template": "logstash-*",
   "index_patterns": [ "logstash-*" ],
@@ -338,4 +338,4 @@ cat <<EOF > /etc/fluentd/template/logstash-template.json
 }
 EOF
 
-chmod 600 /etc/fluentd/template/logstash-template.json
+chmod 600 /etc/td-agent/template/logstash-template.json
