@@ -79,18 +79,10 @@ spec:
 {{ toYaml .Values.extraEnvs | indent 10 }}
 {{- end }}
         readinessProbe:
-{{ toYaml .Values.readinessProbe | indent 10 }}
-          exec:
-            command:
-              - sh
-              - -c
-              - |
-                #!/usr/bin/env bash -e
-                http () {
-                    wget -O /dev/null "$@" "{{ .Values.protocol }}://localhost:{{ .Values.httpPort }}${path}" >/dev/null 2>&1;
-                }
-
-                http "{{ .Values.healthCheckPath }}"
+          httpGet:
+            path: /app/kibana
+            port: http
+            scheme: HTTP
         ports:
         - containerPort: {{ .Values.httpPort }}
           name: http
