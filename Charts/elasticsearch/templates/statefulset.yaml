@@ -145,7 +145,7 @@ spec:
                     else
                       BASIC_AUTH=''
                     fi
-                    curl -XGET -s -k --fail ${BASIC_AUTH} {{ .Values.protocol }}://127.0.0.1:{{ .Values.httpPort }}${path}
+                    wget -O /dev/null ${BASIC_AUTH} http://127.0.0.1:9200${path} >/dev/null 2>&1;
                 }
 
                 if [ -f "${START_FILE}" ]; then
