@@ -2649,6 +2649,8 @@ rm -rf {chartName}*
                         i++;
                     }
 
+                    cortexValues.Add(new KeyValuePair<string, object>("image.organization", NeonHelper.NeonBranchRegistry));
+                    cortexValues.Add(new KeyValuePair<string, object>("image.tag", KubeConst.LatestClusterVersion));
 
                     await InstallHelmChartAsync(master, "cortex", releaseName: "neon-metrics-cortex", @namespace: "monitoring", values: cortexValues);
                 });
@@ -3249,7 +3251,12 @@ rm -rf {chartName}*
             await master.InvokeIdempotentActionAsync("deploy/neon-cluster-manager",
                 async () =>
                 {
-                    await InstallHelmChartAsync(master, "neon-cluster-manager", releaseName: "neon-cluster-manager", @namespace: "neon-system");
+                    var values = new List<KeyValuePair<string, object>>();
+
+                    values.Add(new KeyValuePair<string, object>("image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("image.tag", KubeConst.LatestClusterVersion));
+
+                    await InstallHelmChartAsync(master, "neon-cluster-manager", releaseName: "neon-cluster-manager", @namespace: "neon-system", values: values);
                 });
 
             await master.InvokeIdempotentActionAsync("deploy/neon-cluster-manager-ready",
