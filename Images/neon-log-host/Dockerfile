@@ -30,7 +30,7 @@ COPY conf/td-agent-bit.conf \
      conf/td-agent-bit-input.conf \
      conf/td-agent-bit-output.conf \
      conf/td-agent-bit-service.conf \
-     /td-agent-bit/etc/
+     /etc/td-agent-bit/
 
 COPY docker-entrypoint.sh   /
 RUN chmod 700 /*.sh
