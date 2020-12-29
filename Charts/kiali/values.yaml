@@ -52,7 +52,7 @@ cr:
   namespace: ""
 
   spec:
-    version: "v1.24"
+    version: default
     istio_namespace: istio-system
     deployment:
       image_name: quay.io/kiali/kiali
