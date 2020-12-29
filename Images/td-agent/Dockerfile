@@ -22,7 +22,6 @@ MAINTAINER  marcus@euarctos.com
 STOPSIGNAL  SIGTERM
 ARG         VERSION
 
-
 RUN apt install -y gnupg \
     && wget -qO - https://packages.treasuredata.com/GPG-KEY-td-agent | apt-key add - \
     && echo "deb http://packages.treasuredata.com/4/ubuntu/focal/ focal contrib" > /etc/apt/sources.list.d/treasure-data.list \

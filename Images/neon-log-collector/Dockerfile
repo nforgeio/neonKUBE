@@ -38,7 +38,6 @@ COPY td-agent.conf  /etc/td-agent/td-agent.conf
 COPY plugin/*       /etc/td-agent/plugin/
 COPY conf/*         /etc/td-agent/config.d/
 
-
 RUN chmod 700 /*.sh
 
 # Entry point

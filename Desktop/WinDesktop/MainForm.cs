@@ -112,9 +112,10 @@ namespace WinDesktop
 
             // Initialize the client state.
 
-            proxies = new List<ReverseProxy>();
+            proxies      = new List<ReverseProxy>();
             portForwards = new List<PortForward>();
-            Headend = new HeadendClient();
+            Headend      = new HeadendClient();
+
             KubeHelper.LoadClientConfig();
         }
 
@@ -167,7 +168,7 @@ namespace WinDesktop
             notifyIcon.Icon             = disconnectedIcon;
             notifyIcon.ContextMenuStrip = contextMenuStrip = new ContextMenuStrip();
             notifyIcon.Visible          = true;
-            contextMenuStrip.Opening    += ContextMenuOpening;
+            contextMenuStrip.Opening   += ContextMenuOpening;
 
             // Setup a timer to periodically keep the UI in sync with any changes.
 
