@@ -34,6 +34,19 @@ ARG         DOWNLOAD_URL
 
 ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
 
+# Run  in globalization-invariant mode.
+
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
+
+# Set dotnet root.
+ENV DOTNET_ROOT=/lib/dotnet
+ENV PATH=$PATH:/lib/dotnet
+
+# Set timezone to UTC.
+
+ENV TZ=UTC
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
 # Install ASPNETCORE (from https://docs.microsoft.com/en-us/dotnet/core/install/linux-ubuntu)
 
 RUN apt-get update \
@@ -42,6 +55,4 @@ RUN apt-get update \
     && wget --quiet -O /tmp/aspnet.tar.gz ${DOWNLOAD_URL} \
     && mkdir -p /lib/dotnet \
     && tar zxf /tmp/aspnet.tar.gz -C /lib/dotnet \
-    && rm /tmp/aspnet.tar.gz \
-    && echo "export DOTNET_ROOT=/lib/dotnet"  > /etc/bash.bashrc \
-    && echo "export PATH=\$PATH:/lib/dotnet" >> /etc/bash.bashrc
+    && rm /tmp/aspnet.tar.gz
