@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #------------------------------------------------------------------------------
 # FILE:         docker-entrypoint.sh
 # CONTRIBUTOR:  Marcus Bowyer
