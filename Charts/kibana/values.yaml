@@ -43,16 +43,9 @@ kibanaConfig: {}
 
 # If Pod Security Policy in use it may be required to specify security context as well as service account
 
-podSecurityContext:
-  fsGroup: 1000
+podSecurityContext: {}
 
-securityContext:
-  capabilities:
-    drop:
-    - ALL
-  # readOnlyRootFilesystem: true
-  runAsNonRoot: true
-  runAsUser: 1000
+securityContext: {}
 
 serviceAccount: ""
 

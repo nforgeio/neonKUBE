@@ -87,12 +87,6 @@ spec:
               - |
                 #!/usr/bin/env bash -e
                 http () {
-                    local path="${1}"
-                    set -- -XGET -s --fail
-
-                    if [ -n "${ELASTIC_USERNAME}" ] && [ -n "${ELASTIC_PASSWORD}" ]; then
-                      set -- "$@" -u "${ELASTIC_USERNAME}:${ELASTIC_PASSWORD}"
-                    fi
                     wget -O /dev/null "$@" "{{ .Values.protocol }}://localhost:{{ .Values.httpPort }}${path}" >/dev/null 2>&1;
                 }
 
