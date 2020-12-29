@@ -27,3 +27,6 @@ ARG         UBUNTU_TAG
 FROM        ${ORGANIZATION}/ubuntu:${UBUNTU_TAG}
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
+
+COPY _common/*.sh           /
+RUN chmod 700 /*.sh

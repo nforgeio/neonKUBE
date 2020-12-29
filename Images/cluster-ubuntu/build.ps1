@@ -30,6 +30,17 @@ Log-ImageBuild $registry $tag
 
 $organization = DockerOrg
 
+# Copy the common scripts.
+
+DeleteFolder _common
+
+mkdir _common
+copy ..\_common\*.* .\_common
+
 # Build the image.
 
 Exec { docker build -t "${registry}:$tag" --build-arg "ORGANIZATION=$organization" --build-arg "UBUNTU_TAG=$ubuntuTag" . }
+
+# Clean up
+
+DeleteFolder _common
