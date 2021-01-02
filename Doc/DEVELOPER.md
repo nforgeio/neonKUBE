@@ -206,8 +206,46 @@ Follow the steps below to configure a development or test workstation:
       * Click **Next** until you get to the last page.
       * Click **Close** to close the SHFB installer.
 
-30. *Optional*: Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
 
-31: *Optional:* Install the **AWS client version 2** from: [here](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-windows.html)
+30. *Optional*: Developers who will be publishing releases will need to configure your Personal Access Token (PAT) and GitHub username for GitHub registery access:
 
-32: *Optional:* Developers authorized to perform releases will need to following the README.md instructions in the neonCLOUD repo to configure credentials for the GitHub Releases and the Container Registry.
+    * Go to: https://github.com (and login if necessary)
+    * Click your **Profile Picture** at the top-right and click **Settings**
+    * Click **Developer settings** in the left panel towards the bottom
+    * Click **personal access tokens** in the left panel
+    * Click the **Generate new token** button
+    * Enter this as the note: **PAT**
+    * Check:
+      * **repo**
+      * **workflow**
+      * **write:packages** 
+      * **delete:packages**
+      * **admin:org
+      * **gist**
+    * Click **Generate Token**
+    * Copy the token hex to the clipboard
+    * _optional:_ Save the token to your Dashlane GitHub page
+    * Open a command Windows with admin priviledges
+    * Execute the commands below to save the token and your GitHub username as environment variables:
+    ```
+    set GITHUB_USERNAME=YOUR-GITHUB-USERNAME
+    set GITHUB_PAT=YOUR-TOKEN
+
+    setx GITHUB_USERNAME %GITHUB_USERNAME% /M
+    setx GITHUB_PAT %GITHUB_PAT% /M
+    ```
+    * Login the docker-cli using the new credentials:
+    ```
+    echo %GITHUB_PAT% | docker login ghcr.io -u %GITHUB_USERNAME% --password-stdin
+    ```
+    * Login the githib-cli using the new credentials:
+    ```
+    echo %GITHUB_PAT% | gh auth login --with-token
+    ```
+    * Close and reopen any Visual Studio or command windows to pick up the change.
+
+31. *Optional*: Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
+
+32: *Optional:* Install the **AWS client version 2** from: [here](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-windows.html)
+
+33: *Optional:* Developers authorized to perform releases will need to following the README.md instructions in the neonCLOUD repo to configure credentials for the GitHub Releases and the Container Registry.
