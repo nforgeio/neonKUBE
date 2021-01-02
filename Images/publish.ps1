@@ -31,7 +31,10 @@ param
     [switch]$services    = $false,      # Rebuild all service images
     [switch]$nopush      = $false,      # Don't push to the registry
     [switch]$noprune     = $false,      # Don't prune the local Docker cache
-    [switch]$allVersions = $false       # Rebuild all image versions
+    [switch]$allVersions = $false,      # Rebuild all image versions
+    [switch]$noprune     = $false,      # Don't prune the local Docker cache
+    [switch]$rel         = $false,      # Override current branch and publish to: ghcr.io/neonrelease
+    [switch]$dev         = $false       # Override current branch and publish to: ghcr.io/neonrelease-dev
 )
 
 #----------------------------------------------------------
@@ -117,8 +120,8 @@ if ($base)
 
     # Base OS images:
 
-    & Publish "$image_root\\ubuntu"
-    & Publish "$image_root\\cluster-ubuntu"
+    Publish "$image_root\\ubuntu"
+    Publish "$image_root\\cluster-ubuntu"
 
     # Other base images:
 
@@ -129,23 +132,23 @@ if ($base)
 
 if ($dotnetBase)
 {
-    & Publish "$image_root\\cluster-aspnet"
+    Publish "$image_root\\cluster-aspnet"
 }
 
 if ($other)
 {
-    & Publish "$image_root\\nats"
-    & Publish "$image_root\\nats-streaming"
-    & Publish "$image_root\\cadence-dev"
-    & Publish "$image_root\\couchbase-dev"
-    & Publish "$image_root\\yugabyte"
+    Publish "$image_root\\nats"
+    Publish "$image_root\\nats-streaming"
+    Publish "$image_root\\cadence-dev"
+    Publish "$image_root\\couchbase-dev"
+    Publish "$image_root\\yugabyte"
 }
 
 if ($services)
 {
-    & Publish "$image_root\\test-cadence"
-    & Publish "$image_root\\test-temporal"
-    & Publish "$image_root\\neon-cluster-manager"
-    & Publish "$image_root\\neon-log-collector"
-    & Publish "$image_root\\neon-log-host"
+    Publish "$image_root\\test-cadence"
+    Publish "$image_root\\test-temporal"
+    Publish "$image_root\\neon-cluster-manager"
+    Publish "$image_root\\neon-log-collector"
+    Publish "$image_root\\neon-log-host"
 }
