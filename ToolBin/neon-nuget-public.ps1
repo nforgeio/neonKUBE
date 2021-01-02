@@ -69,7 +69,7 @@ function Publish
 
 # Copy the version from [$/product-version] into [$/Lib/Neon/Common/Build.cs]
 
-& neon-build build-version
+neon-build build-version
 
 # Update the project versions.
 

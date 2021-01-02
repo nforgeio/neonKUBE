@@ -25,7 +25,6 @@ param
 (
     [switch]$all         = $false,      # Rebuild all images
     [switch]$base        = $false,      # Rebuild base images
-    [switch]$dotnetBase  = $false,      # Rebuild base .NET images
     [switch]$dotnet      = $false,      # Rebuild .NET based images
     [switch]$other       = $false,      # Rebuild all other images (usually script based)
     [switch]$services    = $false,      # Rebuild all service images
@@ -84,11 +83,10 @@ function Publish
 
 if ($all)
 {
-    $base       = $true
-    $dotnetBase = $true
-    $dotnet     = $true
-    $other      = $true
-    $services   = $true
+    $base     = $true
+    $dotnet   = $true
+    $other    = $true
+    $services = $true
 }
 elseif ((-not $base) -and (-not $dotnet) -and (-not $other))
 {
@@ -116,23 +114,11 @@ if (-not $noprune)
 
 if ($base)
 {
-    $dotnetBase = $true
-
-    # Base OS images:
-
-    Publish "$image_root\\ubuntu"
-    Publish "$image_root\\cluster-ubuntu"
-
     # Other base images:
 
     Publish "$image_root\\haproxy"
     Publish "$image_root\\td-agent"
     Publish "$image_root\\td-agent-bit"
-}
-
-if ($dotnetBase)
-{
-    Publish "$image_root\\cluster-aspnet"
 }
 
 if ($other)
