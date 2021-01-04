@@ -3175,6 +3175,31 @@ rm -rf {chartName}*
                 {
                     var values = new List<KeyValuePair<string, object>>();
 
+                    values.Add(new KeyValuePair<string, object>("nginx.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("nginx.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("portal.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("portal.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("core.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("core.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("jobservice.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("jobservice.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("registry.registry.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("registry.registry.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("registry.controller.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("registry.controller.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("chartmuseum.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("chartmuseum.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("clair.clair.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("clair.clair.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("clair.adapter.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("clair.adapter.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("trivy.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("trivy.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("notary.server.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("notary.server.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("notary.signer.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("notary.signer.image.tag", KubeConst.LatestClusterVersion));
+                    
                     if (cluster.Definition.Masters.Count() > 1)
                     {
                         var redisConnStr = "";
