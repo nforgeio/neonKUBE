@@ -2412,6 +2412,13 @@ rm -rf {chartName}*
                 {
                     var values = new List<KeyValuePair<string, object>>();
 
+
+                    values.Add(new KeyValuePair<string, object>("image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("image.tag", KubeConst.LatestClusterVersion));
+
+                    values.Add(new KeyValuePair<string, object>("cr.spec.deployment.image_name", $"{NeonHelper.NeonBranchRegistry}/kiali-kiali"));
+                    values.Add(new KeyValuePair<string, object>("cr.spec.deployment.image_version", KubeConst.LatestClusterVersion));
+
                     int i = 0;
                     foreach (var t in await GetTaintsAsync(NodeLabels.LabelIstio, "true"))
                     {
