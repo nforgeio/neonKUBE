@@ -2990,6 +2990,7 @@ rm -rf {chartName}*
                     var values = new List<KeyValuePair<string, object>>();
 
                     values.Add(new KeyValuePair<string, object>("image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("image.tag", KubeConst.LatestClusterVersion));
 
                     int i = 0;
                     foreach (var t in await GetTaintsAsync(NodeLabels.LabelLogs, "true"))
@@ -3036,6 +3037,13 @@ rm -rf {chartName}*
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
+
+                    values.Add(new KeyValuePair<string, object>("agent.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("agent.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("collector.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("collector.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("query.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("query.image.tag", KubeConst.LatestClusterVersion));
 
                     int i = 0;
                     foreach (var t in await GetTaintsAsync(NodeLabels.LabelLogs, "true"))
