@@ -8,7 +8,7 @@
     <Company>neonFORGE LLC</Company>
     <Product>neonLIBRARY</Product>
     <Description>YugaByteDB related utilities and extensions</Description>
-    <Copyright>Copyright © 2005-2020 by neonFORGE LLC.  All rights reserved.</Copyright>
+    <Copyright>Copyright © 2005-2021 by neonFORGE LLC.  All rights reserved.</Copyright>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.YugaByte/README.md</PackageProjectUrl>
     <PackageIcon>nuget-icon.png</PackageIcon>
