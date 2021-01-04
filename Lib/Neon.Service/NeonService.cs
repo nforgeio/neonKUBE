@@ -654,8 +654,8 @@ namespace Neon.Service
 
         /// <summary>
         /// Returns <c>true</c> when the service is running in development
-        /// or test mode, when the <b>DEV_WORKSTATION</b> environment variable is
-        /// <b>defined</b>.
+        /// or test mode, when the <b>DEV_WORKSTATION</b> environment variable 
+        /// is <b>defined</b>.
         /// </summary>
         public bool InDevelopment => !InProduction;
 
@@ -778,11 +778,11 @@ namespace Neon.Service
 
                 if (status == NeonServiceStatus.Unhealthy)
                 {
-                    Log.LogWarn($"[{Name}] status transitioned to: {status}");
+                    Log.LogWarn($"[{Name}] status is now: {status}");
                 }
                 else
                 {
-                    Log.LogInfo($"[{Name}] status transitioned to: {status}");
+                    Log.LogInfo($"[{Name}] status is now: {status}");
                 }
 
                 if (statusFilePath != null)
