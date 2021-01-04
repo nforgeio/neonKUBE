@@ -4,7 +4,7 @@ fullnameOverride: ""
 image:
   organization: ghcr.io/neonrelease
   repository: kiali-kiali-operator
-  tag: v1.27.0
+  tag: latest
   pullPolicy: Always
   pullSecrets: []
 
@@ -56,7 +56,7 @@ cr:
     istio_namespace: istio-system
     deployment:
       image_name: ghcr.io/neonrelease/kiali-kiali
-      image_version: v1.27.0
+      image_version: latest
       accessible_namespaces:
       - '**'
     external_services:
