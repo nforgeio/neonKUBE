@@ -192,7 +192,7 @@ agent:
   annotations: {}
   image:
     organization: ghcr.io/neonrelease
-    repository: jaeger-agent
+    repository: jaegertracing-jaeger-agent
     tag: latest
   imagePullSecrets: []
   pullPolicy: IfNotPresent
@@ -258,7 +258,7 @@ collector:
   annotations: {}
   image:
     organization: ghcr.io/neonrelease
-    repository: jaeger-collector
+    repository: jaegertracing-jaeger-collector
     tag: latest
   imagePullSecrets: []
   pullPolicy: IfNotPresent
@@ -362,7 +362,7 @@ query:
   annotations: {}
   image:
     organization: ghcr.io/neonrelease
-    repository: jaeger-query
+    repository: jaegertracing-jaeger-query
     tag: latest
   imagePullSecrets: []
   pullPolicy: IfNotPresent
