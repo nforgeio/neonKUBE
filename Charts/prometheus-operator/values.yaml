@@ -228,8 +228,9 @@ alertmanager:
     ## Image of Alertmanager
     ##
     image:
-      repository: quay.io/prometheus/alertmanager
-      tag: v0.19.0
+      organization: ghcr.io/neonrelease
+      repository: prometheus-alertmanager
+      tag: latest
 
     ## If true then the user will be responsible to provide a secret with alertmanager configuration
     ## So when true the config part will be ignored (including templateFiles) and the one in the secret will be used
@@ -468,6 +469,18 @@ grafana:
     #   target_label: nodename
     #   replacement: $1
     #   action: replace
+
+kubeStateMetrics:
+  image:
+    organization: ghcr.io/neonrelease
+    repository: coreos-kube-state-metrics
+    tag: latest
+
+nodeExporter:
+  image:
+    organization: ghcr.io/neonrelease
+    repository: coreos-node-exporter
+    tag: latest
 
 ## Component scraping the kube api server
 ##

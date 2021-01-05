@@ -28,7 +28,7 @@ spec:
 {{- end }}
       containers:
         - name: node-exporter
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          image: {{ .Values.nodeExporter.image.organization }}/{{ .Values.nodeExporter.image.repository }}:{{ .Values.nodeExporter.image.tag }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:
             - --path.procfs=/host/proc

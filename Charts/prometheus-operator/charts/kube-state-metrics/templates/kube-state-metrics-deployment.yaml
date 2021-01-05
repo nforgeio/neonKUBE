@@ -18,7 +18,7 @@ spec:
       serviceAccountName: kube-state-metrics
       containers:
       - name: kube-state-metrics
-        image: quay.io/coreos/kube-state-metrics:v1.7.1
+        image: {{ .Values.kubeStateMetrics.image.organization }}/{{ .Values.kubeStateMetrics.image.repository }}:{{ .Values.kubeStateMetrics.image.tag }}
         ports:
         - name: http-metrics
           containerPort: 8080
