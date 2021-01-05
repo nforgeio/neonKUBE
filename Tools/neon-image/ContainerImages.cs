@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    ContainerImages.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -208,12 +208,90 @@ squareup/ghostunnel:v1.4.1
 wrouesnel/postgres_exporter:v0.5.1
 ";
 
+        private const string requiredAsText3 = @"
+ghcr.io/neonrelease-dev/bakdata-citus-membership-manager:0.1.0-alpha
+ghcr.io/neonrelease-dev/blacktop-elasticsearch:0.1.0-alpha
+ghcr.io/neonrelease-dev/blacktop-kibana:0.1.0-alpha
+ghcr.io/neonrelease-dev/busybox:0.1.0-alpha
+ghcr.io/neonrelease-dev/calico-cni:0.1.0-alpha
+ghcr.io/neonrelease-dev/calico-kube-controllers:0.1.0-alpha
+ghcr.io/neonrelease-dev/calico-node:0.1.0-alpha
+ghcr.io/neonrelease-dev/calico-pod2daemon-flexvol:0.1.0-alpha
+ghcr.io/neonrelease-dev/citusdata-citus:0.1.0-alpha
+ghcr.io/neonrelease-dev/coredns:0.1.0-alpha
+ghcr.io/neonrelease-dev/coredns-coredns:0.1.0-alpha
+ghcr.io/neonrelease-dev/coredns-plugin:0.1.0-alpha
+ghcr.io/neonrelease-dev/coreos-configmap-reload:0.1.0-alpha
+ghcr.io/neonrelease-dev/coreos-kube-state-metrics:0.1.0-alpha
+ghcr.io/neonrelease-dev/coreos-prometheus-config-reloader:0.1.0-alpha
+ghcr.io/neonrelease-dev/coreos-prometheus-operator:0.1.0-alpha
+ghcr.io/neonrelease-dev/cortexproject-cortex:0.1.0-alpha
+ghcr.io/neonrelease-dev/curlimages-curl:0.1.0-alpha
+ghcr.io/neonrelease-dev/etcd:0.1.0-alpha
+ghcr.io/neonrelease-dev/goharbor-chartmuseum-photon:0.1.0-alpha
+ghcr.io/neonrelease-dev/goharbor-clair-adapter-photon:0.1.0-alpha
+ghcr.io/neonrelease-dev/goharbor-clair-photon:0.1.0-alpha
+ghcr.io/neonrelease-dev/goharbor-harbor-core:0.1.0-alpha
+ghcr.io/neonrelease-dev/goharbor-harbor-jobservice:0.1.0-alpha
+ghcr.io/neonrelease-dev/goharbor-harbor-portal:0.1.0-alpha
+ghcr.io/neonrelease-dev/goharbor-harbor-registryctl:0.1.0-alpha
+ghcr.io/neonrelease-dev/goharbor-notary-server-photon:0.1.0-alpha
+ghcr.io/neonrelease-dev/goharbor-registry-photon:0.1.0-alpha
+ghcr.io/neonrelease-dev/goharbor-signer-photon:0.1.0-alpha
+ghcr.io/neonrelease-dev/grafana:0.1.0-alpha
+ghcr.io/neonrelease-dev/install-cni:0.1.0-alpha
+ghcr.io/neonrelease-dev/jaegertracing-jaeger-agent:0.1.0-alpha
+ghcr.io/neonrelease-dev/jaegertracing-jaeger-collector:0.1.0-alpha
+ghcr.io/neonrelease-dev/jaegertracing-jaeger-query:0.1.0-alpha
+ghcr.io/neonrelease-dev/jettech-kube-webhook-certgen:0.1.0-alpha
+ghcr.io/neonrelease-dev/k8scsi-csi-attacher:0.1.0-alpha
+ghcr.io/neonrelease-dev/k8scsi-csi-cluster-driver-registrar:0.1.0-alpha
+ghcr.io/neonrelease-dev/k8scsi-csi-node-driver-registrar:0.1.0-alpha
+ghcr.io/neonrelease-dev/k8scsi-csi-provisioner:0.1.0-alpha
+ghcr.io/neonrelease-dev/k8scsi-csi-resizer:0.1.0-alpha
+ghcr.io/neonrelease-dev/k8scsi-csi-snapshotter:0.1.0-alpha
+ghcr.io/neonrelease-dev/k8scsi-snapshot-controller:0.1.0-alpha
+ghcr.io/neonrelease-dev/kiali-kiali:0.1.0-alpha
+ghcr.io/neonrelease-dev/kiali-kiali-operator:0.1.0-alpha
+ghcr.io/neonrelease-dev/kiwigrid-sidecar:0.1.0-alpha
+ghcr.io/neonrelease-dev/kube-apiserver:0.1.0-alpha
+ghcr.io/neonrelease-dev/kube-controller-manager:0.1.0-alpha
+ghcr.io/neonrelease-dev/kube-proxy:0.1.0-alpha
+ghcr.io/neonrelease-dev/kubernetes_incubator-nfs-provisioner:0.1.0-alpha
+ghcr.io/neonrelease-dev/kubernetesui-dashboard:0.1.0-alpha
+ghcr.io/neonrelease-dev/kubernetesui-metrics-scraper:0.1.0-alpha
+ghcr.io/neonrelease-dev/kube-scheduler:0.1.0-alpha
+ghcr.io/neonrelease-dev/openebs-admission-server:0.1.0-alpha
+ghcr.io/neonrelease-dev/openebs-cspc-operator-amd64:0.1.0-alpha
+ghcr.io/neonrelease-dev/openebs-cstor-base:0.1.0-alpha
+ghcr.io/neonrelease-dev/openebs-cstor-istgt:0.1.0-alpha
+ghcr.io/neonrelease-dev/openebs-cstor-pool:0.1.0-alpha
+ghcr.io/neonrelease-dev/openebs-cstor-pool-manager:0.1.0-alpha
+ghcr.io/neonrelease-dev/openebs-cvc-operator-amd64:0.1.0-alpha
+ghcr.io/neonrelease-dev/openebs-linux-utils:0.1.0-alpha
+ghcr.io/neonrelease-dev/openebs-m-apiserver:0.1.0-alpha
+ghcr.io/neonrelease-dev/openebs-m-exporter:0.1.0-alpha
+ghcr.io/neonrelease-dev/openebs-provisioner-localpv:0.1.0-alpha
+ghcr.io/neonrelease-dev/openebs-snapshot-controller:0.1.0-alpha
+ghcr.io/neonrelease-dev/openebs-snapshot-provisioner:0.1.0-alpha
+ghcr.io/neonrelease-dev/operator:0.1.0-alpha
+ghcr.io/neonrelease-dev/pause:0.1.0-alpha
+ghcr.io/neonrelease-dev/pilot:0.1.0-alpha
+ghcr.io/neonrelease-dev/prometheus-alertmanager:0.1.0-alpha
+ghcr.io/neonrelease-dev/prometheus-node-exporter:0.1.0-alpha
+ghcr.io/neonrelease-dev/prometheus-prometheus:0.1.0-alpha
+ghcr.io/neonrelease-dev/proxyv2:0.1.0-alpha
+ghcr.io/neonrelease-dev/redis:0.1.0-alpha
+ghcr.io/neonrelease-dev/squareup-ghostunnel:0.1.0-alpha
+ghcr.io/neonrelease-dev/wrouesnel-postgres-exporter:0.1.0-alpha
+";
+
         /// <summary>
         /// Static constructor.
         /// </summary>
         static ContainerImages()
         {
-            using (var reader = new StringReader(requiredAsText2))
+            using (var reader = new StringReader(requiredAsText3))
             {
                 foreach (var line in reader.Lines())
                 {

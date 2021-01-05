@@ -1,7 +1,7 @@
 ﻿#------------------------------------------------------------------------------
 # FILE:         includes.ps1
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -151,7 +151,7 @@ function PushImage
 		# there.  Perhaps this is something we could do after implementing [neon-cli]
 		# registry commands.
 
-		& docker push "$Image" | Tee-Object -Variable pushOutput
+		docker push "$Image" | Tee-Object -Variable pushOutput
 
 		$exitCode = $LastExitCode
 
@@ -225,7 +225,7 @@ function IsRelease
 {
     $branch = GitBranch
 
-	return $branch -like "release-*"
+	return $rel -or ($branch -like "release-*")
 }
 
 #------------------------------------------------------------------------------
@@ -240,15 +240,36 @@ function TagAsLatest
 {
 	$branch = GitBranch
 
-	return ($branch -like "release-*") -or ($branch -eq "master")
+	return $rel -or ($branch -like "release-*") -or ($branch -eq "master")
 }
 
 #------------------------------------------------------------------------------
 # Prefixes the image name passed with the target Docker Hub organization 
-# for the current Git branch.
+# for the current Git branch by default such that when the current branch
+# name starts with "release-" the image will be pushed to "ghcr.io/neonrelease/"
+# otherwise it will be pushed to "ghcr.io/neonrelease-dev/".
+#
+# This default behavior can be overridden by setting the [$rel] or [$dev] Variable
+# to $true.  These are generally passed as arguments to the root publish script.
 
 function GetRegistry($image)
 {
+	if ($dev -and $rel)
+	{
+		'ERROR: $dev and $rel cannot both be $true.'
+		exit 1
+	}
+
+	if ($dev)
+	{
+		return "ghcr.io/neonrelease-dev/" + $image
+	}
+	
+	if ($rel)
+	{
+		return "ghcr.io/neonrelease/" + $image
+	}
+
 	if (IsRelease)
 	{
 		return "ghcr.io/neonrelease/" + $image

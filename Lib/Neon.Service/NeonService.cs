@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    NeonService.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@ namespace Neon.Service
     /// make them easier to test via integration with the <b>ServiceFixture</b> from
     /// the <b>Neon.Xunit</b> library by providing some useful abstractions over 
     /// service configuration, startup and shutdown including a <see cref="ProcessTerminator"/>
-    /// to handle termination signals from Kubernetes.
+    /// to handle termination signals from Linux or Kubernetes.
     /// </para>
     /// <para>
     /// This class is pretty easy to use.  Simply derive your service class from <see cref="NeonService"/>
@@ -73,7 +73,7 @@ namespace Neon.Service
     /// </para>
     /// <note>
     /// All services should properly handle <see cref="Terminator"/> stop signals so services deployed as
-    /// containers will stop promptly and cleanly (this also applies to services running in unit tests.  
+    /// containers will stop promptly and cleanly (this also applies to services running in unit tests).  
     /// Your terminate handler method must return within a set period of time (30 seconds by default) 
     /// to avoid killed by by Docker or Kubernetes.  This is probably the trickiest thing you'll need to implement.
     /// For asynchronous service implementations, you consider passing the <see cref="ProcessTerminator.CancellationToken"/>
@@ -103,9 +103,8 @@ namespace Neon.Service
     /// </para>
     /// <para>
     /// This class provides some abstractions for managing environment variables and 
-    /// configuration files so that services running in production and services running
-    /// in a local unit test can configure themselves using the same code for both
-    /// environments. 
+    /// configuration files so that services running in production or as a unit test
+    /// can configure themselves using the same code for both environments. 
     /// </para>
     /// <para>
     /// Services should use the <see cref="GetEnvironmentVariable(string, string)"/> method to 
@@ -118,7 +117,7 @@ namespace Neon.Service
     /// </para>
     /// <para>
     /// You may also use the <see cref="LoadEnvironmentVariables(string, Func{string, string})"/>
-    /// method to load environment variables from a text file (potentially encrypted via
+    /// methods to load environment variables from a text file (potentially encrypted via
     /// <see cref="NeonVault"/>).  This will typically be done only for unit tests.
     /// </para>
     /// <para>
@@ -648,14 +647,15 @@ namespace Neon.Service
         /// <summary>
         /// Returns <c>true</c> when the service is running in production,
         /// when the <b>DEV_WORKSTATION</b> environment variable is
-        /// <b>not defined</b>.
+        /// <b>not defined</b>.  The <c>NeonServiceFixure</c> will set this
+        /// to <c>true</c> explicitly as well.
         /// </summary>
-        public bool InProduction { get; private set; }
+        public bool InProduction { get; internal set; }
 
         /// <summary>
         /// Returns <c>true</c> when the service is running in development
-        /// or test mode, when the <b>DEV_WORKSTATION</b> environment variable is
-        /// <b>defined</b>.
+        /// or test mode, when the <b>DEV_WORKSTATION</b> environment variable 
+        /// is <b>defined</b>.
         /// </summary>
         public bool InDevelopment => !InProduction;
 
@@ -778,11 +778,11 @@ namespace Neon.Service
 
                 if (status == NeonServiceStatus.Unhealthy)
                 {
-                    Log.LogWarn($"[{Name}] status transitioned to: {status}");
+                    Log.LogWarn($"[{Name}] status is now: {status}");
                 }
                 else
                 {
-                    Log.LogInfo($"[{Name}] status transitioned to: {status}");
+                    Log.LogInfo($"[{Name}] status is now: {status}");
                 }
 
                 if (statusFilePath != null)
