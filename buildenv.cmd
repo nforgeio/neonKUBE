@@ -42,7 +42,6 @@ set NF_SAMPLES_CADENCE=%NF_ROOT%\..\cadence-samples
 set NEON_SKIPSLOWTESTS=1
 set DOTNETPATH=%WINDIR%\Microsoft.NET\Framework64\v4.0.30319
 set WINSDKPATH=C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.6 Tools\x64
-set NUGET_LOCAL_FEED=C:\NugetFeed
 
 REM Persist the environment variables.
 
@@ -62,14 +61,12 @@ setx DOTNET_CLI_TELEMETRY_OPTOUT 1 /M
 setx DOTNETPATH "%DOTNETPATH%" /M
 setx DEV_WORKSTATION 1 /M
 setx OPENSSL_CONF "%NF_ROOT%\External\OpenSSL\openssl.cnf" /M
-setx NUGET_LOCAL_FEED "%NUGET_LOCAL_FEED%" /M
 
 REM Make sure required folders exist.
 
 if not exist "%NF_TEMP%" mkdir "%NF_TEMP%"
 if not exist "%NF_TOOLBIN%" mkdir "%NF_TOOLBIN%"
 if not exist "%NF_BUILD%" mkdir "%NF_BUILD%"
-if not exist "%NUGET_LOCAL_FEED%" mkdir "%NUGET_LOCAL_FEED%"
 
 REM Configure the PATH.
 REM
@@ -106,4 +103,7 @@ set KUBECONFIG=%USERPROFILE%\.kube\admin.conf
 reg add HKCU\Environment /v KUBECONFIG /t REG_EXPAND_SZ /d %USERPROFILE%\.kube\config /f 
 
 :done
+@echo "============================================================================================"
+@echo "* Be sure to close and reopen Visual Studio and any command windows to pick up the changes *"
+@echo "============================================================================================"
 pause
