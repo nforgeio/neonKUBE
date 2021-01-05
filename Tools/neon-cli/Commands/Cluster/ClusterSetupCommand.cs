@@ -3359,6 +3359,8 @@ rm -rf {chartName}*
 
                     values.Add(new KeyValuePair<string, object>($"image.organization", NeonHelper.NeonBranchRegistry));
                     values.Add(new KeyValuePair<string, object>($"image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>($"prometheus.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>($"prometheus.image.tag", KubeConst.LatestClusterVersion));
 
                     values.Add(new KeyValuePair<string, object>($"manager.image.organization", NeonHelper.NeonBranchRegistry));
                     values.Add(new KeyValuePair<string, object>($"manager.image.tag", KubeConst.LatestClusterVersion));
