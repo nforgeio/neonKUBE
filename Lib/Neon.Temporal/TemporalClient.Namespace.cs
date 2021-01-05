@@ -137,58 +137,11 @@ namespace Neon.Temporal
 
             return new NamespaceDescription()
             {
-                NamespaceInfo = new NamespaceInfo()
-                {
-                    Description = reply.NamespaceInfoDescription,
-                    Name        = reply.NamespaceInfoName,
-                    OwnerEmail  = reply.NamespaceInfoOwnerEmail,
-                    Status      = reply.NamespaceInfoStatus
-                },
-
-                Configuration = new NamespaceConfiguration()
-                {
-                    EmitMetrics   = reply.ConfigurationEmitMetrics,
-                    RetentionDays = reply.ConfigurationRetentionDays
-                },
-            };
-        }
-
-        /// <summary>
-        /// Describes a Temporal namespace by UUID.
-        /// </summary>
-        /// <param name="uuid">The namespace ID.</param>
-        /// <returns>The <see cref="NamespaceDescription"/>.</returns>
-        public async Task<NamespaceDescription> DescribeNamespaceByIdAsync(string uuid)
-        {
-            await SyncContext.ClearAsync;
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uuid), nameof(uuid));
-            EnsureNotDisposed();
-
-            var namespaceDescribeRequest =
-                new NamespaceDescribeRequest()
-                {
-                    Uuid = uuid,
-                };
-
-            var reply = (NamespaceDescribeReply)await CallProxyAsync(namespaceDescribeRequest);
-
-            reply.ThrowOnError();
-
-            return new NamespaceDescription()
-            {
-                NamespaceInfo = new NamespaceInfo()
-                {
-                    Description = reply.NamespaceInfoDescription,
-                    Name        = reply.NamespaceInfoName,
-                    OwnerEmail  = reply.NamespaceInfoOwnerEmail,
-                    Status      = reply.NamespaceInfoStatus
-                },
-
-                Configuration = new NamespaceConfiguration()
-                {
-                    EmitMetrics   = reply.ConfigurationEmitMetrics,
-                    RetentionDays = reply.ConfigurationRetentionDays
-                },
+                NamespaceInfo     = reply.NamespaceInfo,
+                Config            = reply.NamespaceConfig,
+                IsGlobalNamespace = reply.IsGlobalNamespace,
+                FailoverVersion   = reply.FailoverVersion,
+                ReplicationConfig = reply.NamespaceReplicationConfig
             };
         }
 
@@ -213,8 +166,6 @@ namespace Neon.Temporal
                     Name                       = name,
                     UpdatedInfoDescription     = request.NamespaceInfo.Description,
                     UpdatedInfoOwnerEmail      = request.NamespaceInfo.OwnerEmail,
-                    ConfigurationEmitMetrics   = request.Options.EmitMetrics,
-                    ConfigurationRetentionDays = request.Options.RetentionDays,
                     SecurityToken              = Settings.SecurityToken
                 };
 

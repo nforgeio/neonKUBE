@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ArchivalStatus.cs
-// CONTRIBUTOR: Jeff Lill
+// FILE:	    BadBinaries.cs
+// CONTRIBUTOR: John Burns
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,30 +17,15 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Runtime.Serialization;
-
-using Neon.Common;
-using Neon.Temporal;
-using Neon.Temporal.Internal;
+using System.Text;
 
 namespace Neon.Temporal
 {
     /// <summary>
-    /// Controls archival.
+    /// Temporal Bad Binaries.
     /// </summary>
-    public enum ArchivalStatus
+    public class BadBinaries
     {
-        /// <summary>
-        /// Disables archival.
-        /// </summary>
-        [EnumMember(Value = "DISABLED")]
-        Disabled = 0,
-
-        /// <summary>
-        /// Enables archival.
-        /// </summary>
-        [EnumMember(Value = "ENABLED")]
-        Enabled
+        public Dictionary<string, BadBinaryInfo> Binaries;
     }
 }

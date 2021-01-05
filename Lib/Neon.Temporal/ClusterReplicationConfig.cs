@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    UpdateNamespaceRequest.cs
-// CONTRIBUTOR: Jeff Lill
+// FILE:	    ClusterReplicationConfig.cs
+// CONTRIBUTOR: John Burns
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,32 +17,21 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
+using System.Text;
 
-using Neon.Common;
-using Neon.Temporal;
-using Neon.Temporal.Internal;
+using Newtonsoft.Json;
 
 namespace Neon.Temporal
 {
     /// <summary>
-    /// Holds the changes to be made to a Temporal namespace.
+    /// Defines configuration for cluster replication.
     /// </summary>
-    public class UpdateNamespaceRequest
+    public class ClusterReplicationConfig
     {
         /// <summary>
-        /// The namespace name.
+        /// The Name of the replication cluster.
         /// </summary>
-        public string Name { get; set; }
-
-        /// <summary>
-        /// The updated basic namespace properties.
-        /// </summary>
-        public UpdateNamespaceInfo NamespaceInfo { get; set; } = new UpdateNamespaceInfo();
-
-        /// <summary>
-        /// The updated namespace options.
-        /// </summary>
-        public NamespaceConfig Options { get; set; } = new NamespaceConfig();
+        [JsonProperty(PropertyName = "cluster_name")]
+        public string ClusterName { get; set; }
     }
 }

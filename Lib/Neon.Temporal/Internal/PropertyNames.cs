@@ -48,7 +48,8 @@ namespace Neon.Temporal.Internal
         public static PropertyNameUtf8 ChildId { get; private set; }                                   = new PropertyNameUtf8("ChildId");
         public static PropertyNameUtf8 ClientId { get; private set; }                                  = new PropertyNameUtf8("ClientId");
         public static PropertyNameUtf8 ClientTimeout { get; private set; }                             = new PropertyNameUtf8("ClientTimeout");
-        public static PropertyNameUtf8 Configuration { get; private set; }                             = new PropertyNameUtf8("Configuration");
+        public static PropertyNameUtf8 Config { get; private set; }                                    = new PropertyNameUtf8("Config");
+        public static PropertyNameUtf8 Configuration { get; private set; }                             = new PropertyNameUtf8("Config");
         public static PropertyNameUtf8 ConfigurationEmitMetrics { get; private set; }                  = new PropertyNameUtf8("ConfigurationEmitMetrics");
         public static PropertyNameUtf8 ConfigurationRetentionDays { get; private set; }                = new PropertyNameUtf8("ConfigurationRetentionDays");
         public static PropertyNameUtf8 ContextId { get; private set; }                                 = new PropertyNameUtf8("ContextId");
@@ -98,11 +99,9 @@ namespace Neon.Temporal.Internal
         public static PropertyNameUtf8 Name { get; private set; }                                      = new PropertyNameUtf8("Name");
         public static PropertyNameUtf8 Namespace { get; private set; }                                 = new PropertyNameUtf8("Namespace");
         public static PropertyNameUtf8 Namespaces { get; private set; }                                = new PropertyNameUtf8("Namespaces");
+        public static PropertyNameUtf8 NamespaceConfig { get; private set; }                           = new PropertyNameUtf8("NamespaceConfig");
         public static PropertyNameUtf8 NamespaceInfo { get; private set; }                             = new PropertyNameUtf8("NamespaceInfo");
-        public static PropertyNameUtf8 NamespaceInfoName { get; private set; }                         = new PropertyNameUtf8("NamespaceInfoName");
-        public static PropertyNameUtf8 NamespaceInfoOwnerEmail { get; private set; }                   = new PropertyNameUtf8("NamespaceInfoOwnerEmail");
-        public static PropertyNameUtf8 NamespaceInfoStatus { get; private set; }                       = new PropertyNameUtf8("NamespaceInfoStatus");
-        public static PropertyNameUtf8 NamespaceInfoDescription { get; private set; }                  = new PropertyNameUtf8("NamespaceInfoDescription");
+        public static PropertyNameUtf8 NamespaceReplicationConfig { get; private set; }                = new PropertyNameUtf8("NamespaceReplicationConfig");
         public static PropertyNameUtf8 NoBlock { get; private set; }                                   = new PropertyNameUtf8("NoBlock");
         public static PropertyNameUtf8 Options { get; private set; }                                   = new PropertyNameUtf8("Options");
         public static PropertyNameUtf8 OwnerEmail { get; private set; }                                = new PropertyNameUtf8("OwnerEmail");
@@ -118,6 +117,7 @@ namespace Neon.Temporal.Internal
         public static PropertyNameUtf8 RetryAttempts { get; private set; }                             = new PropertyNameUtf8("RetryAttempts");
         public static PropertyNameUtf8 RetryDelay { get; private set; }                                = new PropertyNameUtf8("RetryDelay");
         public static PropertyNameUtf8 ReplayStatus { get; private set; }                              = new PropertyNameUtf8("ReplayStatus");
+        public static PropertyNameUtf8 ReplicationConfig { get; private set; }                         = new PropertyNameUtf8("ReplicationConfig");
         public static PropertyNameUtf8 RunId { get; private set; }                                     = new PropertyNameUtf8("RunId");
         public static PropertyNameUtf8 SecurityToken { get; private set; }                             = new PropertyNameUtf8("SecurityToken");
         public static PropertyNameUtf8 ScheduleToStartTimeout { get; private set; }                    = new PropertyNameUtf8("ScheduleToStartTimeout");

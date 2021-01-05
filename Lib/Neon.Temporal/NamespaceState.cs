@@ -29,13 +29,19 @@ namespace Neon.Temporal
     /// <summary>
     /// Indicates a Temporal namespace status.
     /// </summary>
-    public enum NamespaceStatus
+    public enum NamespaceState
     {
+        /// <summary>
+        /// The namespace state is unspecified.
+        /// </summary>
+        [EnumMember(Value = "Unspecified")]
+        Unspecified = 0,
+
         /// <summary>
         /// The namespace is registered and active.
         /// </summary>
-        [EnumMember(Value = "REGISTERED")]
-        Registered = 0,
+        [EnumMember(Value = "Registered")]
+        Registered,
 
         /// <summary>
         /// The namespace is closed for new workflows but will remain
@@ -43,13 +49,13 @@ namespace Neon.Temporal
         /// history retention period for the last executed workflow
         /// has been satisified.
         /// </summary>
-        [EnumMember(Value = "DEPRECATED")]
+        [EnumMember(Value = "Deprecated")]
         Deprecated,
 
         /// <summary>
         /// The namespace is deleted.
         /// </summary>
-        [EnumMember(Value = "DELETED")]
+        [EnumMember(Value = "Deleted")]
         Deleted
     }
 }

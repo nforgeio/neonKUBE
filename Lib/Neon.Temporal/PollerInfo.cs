@@ -22,6 +22,7 @@ using System.Diagnostics.Contracts;
 
 using Neon.Common;
 using Neon.Temporal;
+using Newtonsoft.Json;
 
 namespace Neon.Temporal
 {
@@ -33,16 +34,19 @@ namespace Neon.Temporal
         /// <summary>
         /// The last time the poller accessed Temporal.
         /// </summary>
+        [JsonProperty(PropertyName = "last_access_time")]
         public DateTime? LastAccessTime { get; set; }
 
         /// <summary>
         /// Identifies the poller.
         /// </summary>
+        [JsonProperty(PropertyName = "identity")]
         public string Identity { get; set; }
 
         /// <summary>
         /// Operations per second from the poller.
         /// </summary>
+        [JsonProperty(PropertyName = "rate_per_second")]
         public double RatePerSecond { get; set; }
     }
 }

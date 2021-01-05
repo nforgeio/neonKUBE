@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    UpdateNamespaceRequest.cs
-// CONTRIBUTOR: Jeff Lill
+// FILE:	    TaskIdBlock.cs
+// CONTRIBUTOR: John C. Burns
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,32 +17,27 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
+using System.Text;
 
-using Neon.Common;
-using Neon.Temporal;
-using Neon.Temporal.Internal;
+using Newtonsoft.Json;
 
 namespace Neon.Temporal
 {
     /// <summary>
-    /// Holds the changes to be made to a Temporal namespace.
+    /// Defines a temporal task Id block
     /// </summary>
-    public class UpdateNamespaceRequest
+    public class TaskIdBlock
     {
         /// <summary>
-        /// The namespace name.
+        /// The long start id of the block.
         /// </summary>
-        public string Name { get; set; }
+        [JsonProperty(PropertyName = "start_id")]
+        public long StartId { get; set; }
 
         /// <summary>
-        /// The updated basic namespace properties.
+        /// The long end id of the block.
         /// </summary>
-        public UpdateNamespaceInfo NamespaceInfo { get; set; } = new UpdateNamespaceInfo();
-
-        /// <summary>
-        /// The updated namespace options.
-        /// </summary>
-        public NamespaceConfig Options { get; set; } = new NamespaceConfig();
+        [JsonProperty(PropertyName = "end_id")]
+        public long EndId { get; set; }
     }
 }

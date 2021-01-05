@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    UpdateNamespaceRequest.cs
-// CONTRIBUTOR: Jeff Lill
+// FILE:	    BadBinaryInfo.cs
+// CONTRIBUTOR: John Burns
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,34 +15,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-
-using Neon.Common;
-using Neon.Temporal;
-using Neon.Temporal.Internal;
+using System.Text;
 
 namespace Neon.Temporal
 {
     /// <summary>
-    /// Holds the changes to be made to a Temporal namespace.
+    /// Defines information about a bad binary.
     /// </summary>
-    public class UpdateNamespaceRequest
+    public class BadBinaryInfo
     {
         /// <summary>
-        /// The namespace name.
+        /// Reason for bad binary.
         /// </summary>
-        public string Name { get; set; }
+        public string Reason { get; set; }
 
         /// <summary>
-        /// The updated basic namespace properties.
+        /// The Operator of bad binary.
         /// </summary>
-        public UpdateNamespaceInfo NamespaceInfo { get; set; } = new UpdateNamespaceInfo();
+        public string Operator { get; set; }
 
         /// <summary>
-        /// The updated namespace options.
+        /// Creation time of bad binary.
         /// </summary>
-        public NamespaceConfig Options { get; set; } = new NamespaceConfig();
+        [JsonProperty(PropertyName = "create_time")]
+        public DateTime? CreateTime { get; set; }
     }
 }

@@ -416,34 +416,31 @@ namespace TestTemporal
                 Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
-                Assert.False(message.ConfigurationEmitMetrics);
-                Assert.Equal(0, message.ConfigurationRetentionDays);
-                Assert.Null(message.NamespaceInfoName);
-                Assert.Null(message.NamespaceInfoDescription);
-                Assert.Equal(NamespaceStatus.Registered, message.NamespaceInfoStatus);
-                Assert.Null(message.NamespaceInfoOwnerEmail);
+                Assert.False(message.IsGlobalNamespace);
+                Assert.Null(message.NamespaceInfo);
+                Assert.Null(message.NamespaceConfig);
+                Assert.Null(message.NamespaceReplicationConfig);
+                Assert.Equal((Int64)0, message.FailoverVersion);
 
                 // Round-trip
 
                 message.ClientId = 444;
                 message.RequestId = 555;
                 message.Error = new TemporalError("MyError");
-                message.ConfigurationEmitMetrics = true;
-                message.ConfigurationRetentionDays = 7;
-                message.NamespaceInfoName = "my-name";
-                message.NamespaceInfoDescription = "my-description";
-                message.NamespaceInfoStatus = NamespaceStatus.Deprecated;
-                message.NamespaceInfoOwnerEmail = "joe@bloe.com";
+                message.IsGlobalNamespace = true;
+                message.FailoverVersion = 1;
+                message.NamespaceInfo = GetTestNamespaceInfo();
+                message.NamespaceReplicationConfig = GetTestNamespaceReplicationConfig();
+                message.NamespaceConfig = GetTestNamespaceConfig();
 
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
-                Assert.True(message.ConfigurationEmitMetrics);
-                Assert.Equal(7, message.ConfigurationRetentionDays);
-                Assert.Equal("my-name", message.NamespaceInfoName);
-                Assert.Equal("my-description", message.NamespaceInfoDescription);
-                Assert.Equal(NamespaceStatus.Deprecated, message.NamespaceInfoStatus);
-                Assert.Equal("joe@bloe.com", message.NamespaceInfoOwnerEmail);
+                Assert.True(message.IsGlobalNamespace);
+                Assert.Equal((Int64)1, message.FailoverVersion);
+                ValidateTestNamespaceConfig(message.NamespaceConfig);
+                ValidateTestNamespaceReplicationConfig(message.NamespaceReplicationConfig);
+                ValidateTestNamespaceInfo(message.NamespaceInfo);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -454,12 +451,11 @@ namespace TestTemporal
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
-                Assert.True(message.ConfigurationEmitMetrics);
-                Assert.Equal(7, message.ConfigurationRetentionDays);
-                Assert.Equal("my-name", message.NamespaceInfoName);
-                Assert.Equal("my-description", message.NamespaceInfoDescription);
-                Assert.Equal(NamespaceStatus.Deprecated, message.NamespaceInfoStatus);
-                Assert.Equal("joe@bloe.com", message.NamespaceInfoOwnerEmail);
+                Assert.True(message.IsGlobalNamespace);
+                Assert.Equal((Int64)1, message.FailoverVersion);
+                ValidateTestNamespaceConfig(message.NamespaceConfig);
+                ValidateTestNamespaceReplicationConfig(message.NamespaceReplicationConfig);
+                ValidateTestNamespaceInfo(message.NamespaceInfo);
 
                 // Clone()
 
@@ -468,12 +464,11 @@ namespace TestTemporal
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
-                Assert.True(message.ConfigurationEmitMetrics);
-                Assert.Equal(7, message.ConfigurationRetentionDays);
-                Assert.Equal("my-name", message.NamespaceInfoName);
-                Assert.Equal("my-description", message.NamespaceInfoDescription);
-                Assert.Equal(NamespaceStatus.Deprecated, message.NamespaceInfoStatus);
-                Assert.Equal("joe@bloe.com", message.NamespaceInfoOwnerEmail);
+                Assert.True(message.IsGlobalNamespace);
+                Assert.Equal((Int64)1, message.FailoverVersion);
+                ValidateTestNamespaceConfig(message.NamespaceConfig);
+                ValidateTestNamespaceReplicationConfig(message.NamespaceReplicationConfig);
+                ValidateTestNamespaceInfo(message.NamespaceInfo);
 
                 // Echo the message via the associated [temporal-proxy] and verify.
 
@@ -482,12 +477,11 @@ namespace TestTemporal
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
-                Assert.True(message.ConfigurationEmitMetrics);
-                Assert.Equal(7, message.ConfigurationRetentionDays);
-                Assert.Equal("my-name", message.NamespaceInfoName);
-                Assert.Equal("my-description", message.NamespaceInfoDescription);
-                Assert.Equal(NamespaceStatus.Deprecated, message.NamespaceInfoStatus);
-                Assert.Equal("joe@bloe.com", message.NamespaceInfoOwnerEmail);
+                Assert.True(message.IsGlobalNamespace);
+                Assert.Equal((Int64)1, message.FailoverVersion);
+                ValidateTestNamespaceConfig(message.NamespaceConfig);
+                ValidateTestNamespaceReplicationConfig(message.NamespaceReplicationConfig);
+                ValidateTestNamespaceInfo(message.NamespaceInfo);
             }
         }
 
@@ -2175,15 +2169,14 @@ namespace TestTemporal
         {
             var data = new Dictionary<string, byte[]>();
 
-            data.Add("test", new byte[] { 0, 1, 2, 3, 4 });
-
             return new NamespaceInfo()
             {
                 Name        = "my-namespace",
-                Status      = NamespaceStatus.Deprecated,
+                State       = NamespaceState.Deprecated,
                 Description = "Test domain",
                 OwnerEmail  = "jeff@lilltek.com",
-                Uuid        = "1111-2222-3333-4444"
+                Id          = "1111-2222-3333-4444",
+                Data        = new Dictionary<string, string>() { { "test", "value" } }
             };
         }
 
@@ -2195,36 +2188,89 @@ namespace TestTemporal
         {
             Assert.NotNull(info);
             Assert.Equal("my-namespace", info.Name);
-            Assert.Equal(NamespaceStatus.Deprecated, info.Status);
+            Assert.Equal(NamespaceState.Deprecated, info.State);
             Assert.Equal("jeff@lilltek.com", info.OwnerEmail);
             Assert.Single(info.Data);
             Assert.Equal("test", info.Data.First().Key);
-            Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, info.Data.First().Value);
-            Assert.Equal("1111-2222-3333-4444", info.Uuid);
+            Assert.Equal("value", info.Data.First().Value);
+            Assert.Equal("1111-2222-3333-4444", info.Id);
         }
 
         /// <summary>
-        /// Returns a <see cref="NamespaceConfiguration"/> for testing purposes.
+        /// Returns a <see cref="NamespaceReplicationConfig"/> instance for testing purposes.
         /// </summary>
-        /// <returns></returns>
-        private NamespaceConfiguration GetTestDomainConfiguration()
+        /// <returns>The test replication configuration.</returns>
+        private NamespaceReplicationConfig GetTestNamespaceReplicationConfig()
         {
-            return new NamespaceConfiguration()
+            return new NamespaceReplicationConfig
             {
-                RetentionDays = 30,
-                EmitMetrics   = true,
+                ActiveClusterName = "active cluster",
+                Clusters          = new List<ClusterReplicationConfig>() 
+                {
+                    new ClusterReplicationConfig 
+                    {
+                        ClusterName = "cluster"
+                    }
+                }
             };
         }
 
         /// <summary>
-        /// Validates a test <see cref="NamespaceConfiguration"/>.
+        /// Validates a <see cref="NamespaceReplicationConfig"/> instance for testing purposes.
         /// </summary>
-        /// <param name="config">The domain config.</param>
-        private void ValidateTestNamespaceConfiguration(NamespaceConfiguration config)
+        /// <param name="config">The namespace replication config.</param>
+        private void ValidateTestNamespaceReplicationConfig(NamespaceReplicationConfig config)
         {
             Assert.NotNull(config);
-            Assert.Equal(30, config.RetentionDays);
-            Assert.True(config.EmitMetrics);
+            Assert.Equal("active cluster", config.ActiveClusterName);
+            Assert.Equal("cluster", config.Clusters.First().ClusterName);
+        }
+
+        /// <summary>
+        /// Returns a <see cref="NamespaceConfig"/> for testing purposes.
+        /// </summary>
+        /// <returns></returns>
+        private NamespaceConfig GetTestNamespaceConfig()
+        {
+            return new NamespaceConfig()
+            {
+                HistoryArchivalState          = ArchivalState.Enabled,
+                VisibilityArchivalState       = ArchivalState.Disabled,
+                VisibilityArchivalUri         = "uri",
+                HistoryArchivalUri            = "uri",
+                WorkflowExecutionRetentionTtl = TimeSpan.FromSeconds(5),
+                BadBinaries = new BadBinaries
+                {
+                    Binaries = new Dictionary<string, BadBinaryInfo>()
+                    {
+                        {
+                            "badbinary", new BadBinaryInfo
+                            {
+                                CreateTime = DateTime.Parse("08/18/2018 07:22:16"),
+                                Operator   = "operator",
+                                Reason     = "reason"
+                            }
+                        }
+                    }
+                }
+            };
+        }
+
+        /// <summary>
+        /// Validates a test <see cref="NamespaceConfig"/>.
+        /// </summary>
+        /// <param name="config">The domain config.</param>
+        private void ValidateTestNamespaceConfig(NamespaceConfig config)
+        {
+            Assert.NotNull(config);
+            Assert.Equal(ArchivalState.Enabled, config.HistoryArchivalState);
+            Assert.Equal(ArchivalState.Disabled, config.VisibilityArchivalState);
+            Assert.Equal("uri", config.HistoryArchivalUri);
+            Assert.Equal("uri", config.VisibilityArchivalUri);
+            Assert.Equal(TimeSpan.FromSeconds(5), config.WorkflowExecutionRetentionTtl);
+            Assert.Equal(DateTime.Parse("08/18/2018 07:22:16"), config.BadBinaries.Binaries["badbinary"].CreateTime);
+            Assert.Equal("operator", config.BadBinaries.Binaries["badbinary"].Operator);
+            Assert.Equal("reason", config.BadBinaries.Binaries["badbinary"].Reason);
         }
 
         /// <summary>
@@ -2238,23 +2284,37 @@ namespace TestTemporal
                 new NamespaceDescription()
                 {
                     IsGlobalNamespace = true,
-                    Configuration = new NamespaceConfiguration()
+                    FailoverVersion   = 1,
+                    Config     = new NamespaceConfig()
                     {
-                        EmitMetrics   = true,
-                        RetentionDays = 30
+                        HistoryArchivalState          = ArchivalState.Enabled,
+                        VisibilityArchivalUri         = "uri",
+                        VisibilityArchivalState       = ArchivalState.Unspecified,
+                        HistoryArchivalUri            = "uri",
+                        WorkflowExecutionRetentionTtl = TimeSpan.FromSeconds(5),
+                        BadBinaries                   = new BadBinaries
+                        {
+                            Binaries = new Dictionary<string, BadBinaryInfo>()
+                            {
+                                {
+                                    "badbinary", new BadBinaryInfo
+                                    {
+                                        CreateTime = DateTime.Parse("08/18/2018 07:22:16"),
+                                        Operator   = "operator",
+                                        Reason     = "reason"
+                                    }
+                                }
+                            }
+                        }
                     },
                     NamespaceInfo = new NamespaceInfo()
                     {
                         Name        = "my-namespace",
-                        Uuid        = "abc-def",
-                        Description = "This is my domain",
-                        Status      = NamespaceStatus.Deprecated,
+                        State       = NamespaceState.Deprecated,
+                        Description = "Test domain",
                         OwnerEmail  = "jeff@lilltek.com",
-
-                        // $todo(jefflill): Currently ignoring
-                        //
-                        //  Data
-                        //  Uuid
+                        Id          = "1111-2222-3333-4444",
+                        Data        = new Dictionary<string, string>() { { "test", "value" } }
                     }
                 });
 
@@ -2265,93 +2325,103 @@ namespace TestTemporal
         /// Verifies that a test namespace description list is valid.
         /// </summary>
         /// <param name="domains">The test domains.</param>
-        private void ValidateTestNamespaceDescriptions(List<NamespaceDescription> domains)
+        private void ValidateTestNamespaceDescriptions(List<NamespaceDescription> namespaces)
         {
-            Assert.NotNull(domains);
-            Assert.Single(domains);
+            Assert.NotNull(namespaces);
+            Assert.Single(namespaces);
 
-            var domain = domains.First();
+            var ns = namespaces.First();
 
-            Assert.True(domain.IsGlobalNamespace);
-            
-            Assert.NotNull(domain.Configuration);
-            Assert.True(domain.Configuration.EmitMetrics);
-            Assert.Equal(30, domain.Configuration.RetentionDays);
+            Assert.True(ns.IsGlobalNamespace);
+            Assert.Equal(1, ns.FailoverVersion);
 
-            Assert.NotNull(domain.NamespaceInfo);
-            Assert.Equal("my-namespace", domain.NamespaceInfo.Name);
-            Assert.Equal("abc-def", domain.NamespaceInfo.Uuid);
-            Assert.Equal("This is my domain", domain.NamespaceInfo.Description);
-            Assert.Equal(NamespaceStatus.Deprecated, domain.NamespaceInfo.Status);
-            Assert.Equal("jeff@lilltek.com", domain.NamespaceInfo.OwnerEmail);
+            Assert.NotNull(ns.Config);
+            Assert.Equal(ArchivalState.Enabled, ns.Config.HistoryArchivalState);
+            Assert.Equal(ArchivalState.Unspecified, ns.Config.VisibilityArchivalState);
+            Assert.Equal("uri", ns.Config.HistoryArchivalUri);
+            Assert.Equal("uri", ns.Config.VisibilityArchivalUri);
+            Assert.Equal(TimeSpan.FromSeconds(5), ns.Config.WorkflowExecutionRetentionTtl);
+            Assert.Equal(DateTime.Parse("08/18/2018 07:22:16"), ns.Config.BadBinaries.Binaries["badbinary"].CreateTime);
+            Assert.Equal("operator", ns.Config.BadBinaries.Binaries["badbinary"].Operator);
+            Assert.Equal("reason", ns.Config.BadBinaries.Binaries["badbinary"].Reason);
+
+            Assert.NotNull(ns.NamespaceInfo);
+            Assert.Equal("my-namespace", ns.NamespaceInfo.Name);
+            Assert.Equal(NamespaceState.Deprecated, ns.NamespaceInfo.State);
+            Assert.Equal("jeff@lilltek.com", ns.NamespaceInfo.OwnerEmail);
+            Assert.Single(ns.NamespaceInfo.Data);
+            Assert.Equal("test", ns.NamespaceInfo.Data.First().Key);
+            Assert.Equal("value", ns.NamespaceInfo.Data.First().Value);
+            Assert.Equal("1111-2222-3333-4444", ns.NamespaceInfo.Id);
         }
 
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
-        public void Test_NamespaceListReply()
-        {
-            NamespaceListReply message;
+        // TODO -- WE NO LONGER SUPPORT LISTING NAMESPACES.
+        //[Fact]
+        //[Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
+        //public void Test_NamespaceListReply()
+        //{
+        //    NamespaceListReply message;
 
-            using (var stream = new MemoryStream())
-            {
-                message = new NamespaceListReply();
+        //    using (var stream = new MemoryStream())
+        //    {
+        //        message = new NamespaceListReply();
 
-                // Empty message.
+        //        // Empty message.
 
-                stream.SetLength(0);
-                stream.Write(message.SerializeAsBytes());
-                stream.Seek(0, SeekOrigin.Begin);
+        //        stream.SetLength(0);
+        //        stream.Write(message.SerializeAsBytes());
+        //        stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<NamespaceListReply>(stream);
-                Assert.NotNull(message);
-                Assert.Equal(0, message.ClientId);
-                Assert.Equal(0, message.RequestId);
-                Assert.Null(message.Error);
-                Assert.Null(message.Namespaces);
-                Assert.Null(message.NextPageToken);
+        //        message = ProxyMessage.Deserialize<NamespaceListReply>(stream);
+        //        Assert.NotNull(message);
+        //        Assert.Equal(0, message.ClientId);
+        //        Assert.Equal(0, message.RequestId);
+        //        Assert.Null(message.Error);
+        //        Assert.Null(message.Namespaces);
+        //        Assert.Null(message.NextPageToken);
 
-                // Round-trip
+        //        // Round-trip
 
-                message.ClientId      = 444;
-                message.RequestId     = 555;
-                message.NextPageToken = new byte[] { 5, 6, 7, 8, 9 };
-                message.Namespaces       = GetTestNamespaceDescriptions();
+        //        message.ClientId      = 444;
+        //        message.RequestId     = 555;
+        //        message.NextPageToken = new byte[] { 5, 6, 7, 8, 9 };
+        //        message.Namespaces       = GetTestNamespaceDescriptions();
 
-                Assert.Equal(444, message.ClientId);
-                Assert.Equal(555, message.RequestId);
-                ValidateTestNamespaceDescriptions(message.Namespaces);
-                Assert.Equal(message.NextPageToken, new byte[] { 5, 6, 7, 8, 9 });
+        //        Assert.Equal(444, message.ClientId);
+        //        Assert.Equal(555, message.RequestId);
+        //        ValidateTestNamespaceDescriptions(message.Namespaces);
+        //        Assert.Equal(message.NextPageToken, new byte[] { 5, 6, 7, 8, 9 });
 
-                stream.SetLength(0);
-                stream.Write(message.SerializeAsBytes());
-                stream.Seek(0, SeekOrigin.Begin);
+        //        stream.SetLength(0);
+        //        stream.Write(message.SerializeAsBytes());
+        //        stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<NamespaceListReply>(stream);
-                Assert.NotNull(message);
-                Assert.Equal(444, message.ClientId);
-                Assert.Equal(555, message.RequestId);
-                ValidateTestNamespaceDescriptions(message.Namespaces);
-                Assert.Equal(message.NextPageToken, new byte[] { 5, 6, 7, 8, 9 });
+        //        message = ProxyMessage.Deserialize<NamespaceListReply>(stream);
+        //        Assert.NotNull(message);
+        //        Assert.Equal(444, message.ClientId);
+        //        Assert.Equal(555, message.RequestId);
+        //        ValidateTestNamespaceDescriptions(message.Namespaces);
+        //        Assert.Equal(message.NextPageToken, new byte[] { 5, 6, 7, 8, 9 });
 
-                // Clone()
+        //        // Clone()
 
-                message = (NamespaceListReply)message.Clone();
-                Assert.NotNull(message);
-                Assert.Equal(444, message.ClientId);
-                Assert.Equal(555, message.RequestId);
-                ValidateTestNamespaceDescriptions(message.Namespaces);
-                Assert.Equal(message.NextPageToken, new byte[] { 5, 6, 7, 8, 9 });
+        //        message = (NamespaceListReply)message.Clone();
+        //        Assert.NotNull(message);
+        //        Assert.Equal(444, message.ClientId);
+        //        Assert.Equal(555, message.RequestId);
+        //        ValidateTestNamespaceDescriptions(message.Namespaces);
+        //        Assert.Equal(message.NextPageToken, new byte[] { 5, 6, 7, 8, 9 });
 
-                // Echo the message via the associated [temporal-proxy] and verify.
+        //        // Echo the message via the associated [temporal-proxy] and verify.
 
-                message = EchoToProxy(message);
-                Assert.NotNull(message);
-                Assert.Equal(444, message.ClientId);
-                Assert.Equal(555, message.RequestId);
-                ValidateTestNamespaceDescriptions(message.Namespaces);
-                Assert.Equal(message.NextPageToken, new byte[] { 5, 6, 7, 8, 9 });
-            }
-        }
+        //        message = EchoToProxy(message);
+        //        Assert.NotNull(message);
+        //        Assert.Equal(444, message.ClientId);
+        //        Assert.Equal(555, message.RequestId);
+        //        ValidateTestNamespaceDescriptions(message.Namespaces);
+        //        Assert.Equal(message.NextPageToken, new byte[] { 5, 6, 7, 8, 9 });
+        //    }
+        //}
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]

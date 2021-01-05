@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    NamespaceConfiguration.cs
-// CONTRIBUTOR: Jeff Lill
+// FILE:	    NamespaceReplicationConfig.cs
+// CONTRIBUTOR: John Burns
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,39 +15,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-
-using Neon.Common;
-using Neon.Temporal;
-using Neon.Temporal.Internal;
+using System.Text;
 
 namespace Neon.Temporal
 {
     /// <summary>
-    /// Namespace configuration options.
+    /// Defines configuration for namespace replication.
     /// </summary>
-    public class NamespaceConfiguration
+    public class NamespaceReplicationConfig
     {
         /// <summary>
-        /// The workflow history retention period in days.
+        /// The string name of the active cluster.
         /// </summary>
-        public int RetentionDays { get; set; }
+        [JsonProperty(PropertyName = "active_cluster_name")]
+        public string ActiveClusterName { get; set; }
 
         /// <summary>
-        /// Enables metrics for workflows and activities running in the namespace.
+        /// List of configurations for replication clusters.
         /// </summary>
-        public bool EmitMetrics { get; set; }
-
-        // $todo(jefflill):
-        //
-        // We need to add support for these additional Temporal GOLANG properties:
-        //
-        //      BadBinaries
-        //      HistoryArchivalStatus
-        //      HistoryArchivalUri
-        //      VisibilityArchivalStatus
-        //      VisibilityArchivalUri
+        public List<ClusterReplicationConfig> Clusters { get; set; }
     }
 }
