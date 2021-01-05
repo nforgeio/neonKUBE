@@ -23,7 +23,7 @@ initContainers:
     {{- if .Values.initChownData.image.sha }}
     image: "{{ .Values.initChownData.image.repository }}:{{ .Values.initChownData.image.tag }}@sha256:{{ .Values.initChownData.image.sha }}"
     {{- else }}
-    image: "{{ .Values.initChownData.image.repository }}:{{ .Values.initChownData.image.tag }}"
+    image: "{{ .Values.initChownData.image.organization }}/{{ .Values.initChownData.image.repository }}:{{ .Values.initChownData.image.tag }}"
     {{- end }}
     imagePullPolicy: {{ .Values.initChownData.image.pullPolicy }}
     securityContext:
@@ -43,7 +43,7 @@ initContainers:
     {{- if .Values.downloadDashboardsImage.sha }}
     image: "{{ .Values.downloadDashboardsImage.repository }}:{{ .Values.downloadDashboardsImage.tag }}@sha256:{{ .Values.downloadDashboardsImage.sha }}"
     {{- else }}
-    image: "{{ .Values.downloadDashboardsImage.repository }}:{{ .Values.downloadDashboardsImage.tag }}"
+    image: "{{ .Values.downloadDashboardsImage.organization }}/{{ .Values.downloadDashboardsImage.repository }}:{{ .Values.downloadDashboardsImage.tag }}"
     {{- end }}
     imagePullPolicy: {{ .Values.downloadDashboardsImage.pullPolicy }}
     command: ["/bin/sh"]
@@ -75,7 +75,7 @@ initContainers:
     {{- if .Values.sidecar.image.sha }}
     image: "{{ .Values.sidecar.image.repository }}:{{ .Values.sidecar.image.tag }}@sha256:{{ .Values.sidecar.image.sha }}"
     {{- else }}
-    image: "{{ .Values.sidecar.image.repository }}:{{ .Values.sidecar.image.tag }}"
+    image: "{{ .Values.sidecar.image.organization }}/{{ .Values.sidecar.image.repository }}:{{ .Values.sidecar.image.tag }}"
     {{- end }}
     imagePullPolicy: {{ .Values.sidecar.imagePullPolicy }}
     env:
@@ -110,7 +110,7 @@ initContainers:
     {{- if .Values.sidecar.image.sha }}
     image: "{{ .Values.sidecar.image.repository }}:{{ .Values.sidecar.image.tag }}@sha256:{{ .Values.sidecar.image.sha }}"
     {{- else }}
-    image: "{{ .Values.sidecar.image.repository }}:{{ .Values.sidecar.image.tag }}"
+    image: "{{ .Values.sidecar.image.organization }}/{{ .Values.sidecar.image.repository }}:{{ .Values.sidecar.image.tag }}"
     {{- end }}
     imagePullPolicy: {{ .Values.sidecar.imagePullPolicy }}
     env:
@@ -155,7 +155,7 @@ containers:
     {{- if .Values.sidecar.image.sha }}
     image: "{{ .Values.sidecar.image.repository }}:{{ .Values.sidecar.image.tag }}@sha256:{{ .Values.sidecar.image.sha }}"
     {{- else }}
-    image: "{{ .Values.sidecar.image.repository }}:{{ .Values.sidecar.image.tag }}"
+    image: "{{ .Values.sidecar.image.organization }}/{{ .Values.sidecar.image.repository }}:{{ .Values.sidecar.image.tag }}"
     {{- end }}
     imagePullPolicy: {{ .Values.sidecar.imagePullPolicy }}
     env:
@@ -189,7 +189,7 @@ containers:
     {{- if .Values.image.sha }}
     image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}@sha256:{{ .Values.image.sha }}"
     {{- else }}
-    image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+    image: "{{ .Values.image.organization }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
     {{- end }}
     imagePullPolicy: {{ .Values.image.pullPolicy }}
   {{- if .Values.command }}

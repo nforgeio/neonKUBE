@@ -22,7 +22,7 @@ spec:
       []
 {{- end }}
 {{- if .Values.prometheus.prometheusSpec.image }}
-  baseImage: {{ .Values.prometheus.prometheusSpec.image.repository }}
+  baseImage: {{ .Values.prometheus.prometheusSpec.image.organization }}/{{ .Values.prometheus.prometheusSpec.image.repository }}
   version: {{ .Values.prometheus.prometheusSpec.image.tag }}
 {{- end }}
 {{- if .Values.prometheus.prometheusSpec.externalLabels }}

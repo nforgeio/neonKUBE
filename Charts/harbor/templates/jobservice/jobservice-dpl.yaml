@@ -46,7 +46,7 @@ spec:
       {{- end }}
       containers:
       - name: jobservice
-        image: {{ .Values.jobservice.image.repository }}:{{ .Values.jobservice.image.tag }}
+        image: "{{ .Values.jobeservice.image.organization }}/{{ .Values.jobeservice.image.repository }}:{{ .Values.jobeservice.image.tag }}"
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         livenessProbe:
           httpGet:

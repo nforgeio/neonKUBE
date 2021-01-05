@@ -110,9 +110,9 @@ spec:
         - name: OPENEBS_IO_BASE_DIR
           value: "{{ .Values.varDirectoryPath.baseDir }}"
         - name: OPENEBS_IO_JIVA_CONTROLLER_IMAGE
-          value: "{{ .Values.image.repository }}{{ .Values.jiva.image }}:{{ .Values.jiva.imageTag }}"
+          value: "{{ .Values.jiva.image.organization }}/{{ .Values.jiva.image.repository }}:{{ .Values.jiva.image.tag }}"
         - name: OPENEBS_IO_JIVA_REPLICA_IMAGE
-          value: "{{ .Values.image.repository }}{{ .Values.jiva.image }}:{{ .Values.jiva.imageTag }}"
+          value: "{{ .Values.jiva.image.organization }}/{{ .Values.jiva.image.repository }}:{{ .Values.jiva.image.tag }}"
         - name: OPENEBS_IO_JIVA_REPLICA_COUNT
           value: "{{ .Values.jiva.replicas }}"
         - name: OPENEBS_IO_CSTOR_TARGET_IMAGE
@@ -122,7 +122,7 @@ spec:
         - name: OPENEBS_IO_CSTOR_POOL_MGMT_IMAGE
           value: "{{ .Values.cstor.poolMgmt.image.organization }}/{{ .Values.cstor.poolMgmt.image.repository }}:{{ .Values.cstor.poolMgmt.image.tag }}"
         - name: OPENEBS_IO_CSTOR_VOLUME_MGMT_IMAGE
-          value: "{{ .Values.image.repository }}{{ .Values.cstor.volumeMgmt.image }}:{{ .Values.cstor.volumeMgmt.imageTag }}"
+          value: "{{ .Values.cstor.volumeMgmt.image.organization }}/{{ .Values.cstor.volumeMgmt.image.repository }}:{{ .Values.cstor.volumeMgmt.image.tag }}"
         - name: OPENEBS_IO_VOLUME_MONITOR_IMAGE
           value: "{{ .Values.policies.monitoring.image.organization }}/{{ .Values.policies.monitoring.image.repository }}:{{ .Values.policies.monitoring.image.tag }}"
         - name: OPENEBS_IO_CSTOR_POOL_EXPORTER_IMAGE

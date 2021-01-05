@@ -256,7 +256,7 @@ spec:
       serviceAccount: openebs-cstor-csi-controller-sa
       containers:
         - name: csi-resizer
-          image: "{{ .Values.csiResizer.image.organization }}/{{ .Values.csiResizer.image.repository }}:{{ .Values.csiResizer.image.tag }}"
+          image: "{{ .Values.csi.resizer.image.organization }}/{{ .Values.csi.resizer.image.repository }}:{{ .Values.csi.resizer.image.tag }}"
           args:
             - "--v=5"
             - "--csi-address=$(ADDRESS)"
@@ -269,7 +269,7 @@ spec:
             - name: socket-dir
               mountPath: /var/lib/csi/sockets/pluginproxy/
         - name: csi-snapshotter
-          image: "{{ .Values.csiSnapshotter.image.organization }}/{{ .Values.csiSnapshotter.image.repository }}:{{ .Values.csiSnapshotter.image.tag }}"
+          image: "{{ .Values.csi.snapshotter.image.organization }}/{{ .Values.csi.snapshotter.image.repository }}:{{ .Values.csi.snapshotter.image.tag }}"
           args:
             - "--csi-address=$(ADDRESS)"
           env:
@@ -286,7 +286,7 @@ spec:
             - "--leader-election=false"
           imagePullPolicy: IfNotPresent
         - name: csi-provisioner
-          image: quay.io/k8scsi/csi-provisioner:v1.6.0
+          image: "{{ .Values.csi.provisioner.image.organization }}/{{ .Values.csi.provisioner.image.repository }}:{{ .Values.csi.provisioner.image.tag }}"
           imagePullPolicy: IfNotPresent
           args:
             - "--provisioner=cstor.csi.openebs.io"
@@ -305,7 +305,7 @@ spec:
             - name: socket-dir
               mountPath: /var/lib/csi/sockets/pluginproxy/
         - name: csi-attacher
-          image: quay.io/k8scsi/csi-attacher:v2.0.0
+          image: "{{ .Values.csi.attacher.image.organization }}/{{ .Values.csi.attacher.image.repository }}:{{ .Values.csi.attacher.image.tag }}"
           imagePullPolicy: IfNotPresent
           args:
             - "--v=5"
@@ -317,7 +317,7 @@ spec:
             - name: socket-dir
               mountPath: /var/lib/csi/sockets/pluginproxy/
         - name: csi-cluster-driver-registrar
-          image: quay.io/k8scsi/csi-cluster-driver-registrar:v1.0.1
+          image: "{{ .Values.csi.clusterDriverRegistrar.image.organization }}/{{ .Values.csi.clusterDriverRegistrar.image.repository }}:{{ .Values.csi.clusterDriverRegistrar.image.tag }}"
           imagePullPolicy: IfNotPresent
           args:
             - "--v=5"
@@ -330,7 +330,7 @@ spec:
             - name: socket-dir
               mountPath: /var/lib/csi/sockets/pluginproxy/
         - name: cstor-csi-plugin
-          image: openebs/cstor-csi-driver:2.1.0
+          image: "{{ .Values.csi.driver.image.organization }}/{{ .Values.csi.driver.image.repository }}:{{ .Values.csi.driver.image.tag }}"
           imagePullPolicy: IfNotPresent
           env:
             - name: OPENEBS_CONTROLLER_DRIVER
@@ -503,7 +503,7 @@ spec:
       hostNetwork: true
       containers:
         - name: csi-node-driver-registrar
-          image: quay.io/k8scsi/csi-node-driver-registrar:v1.0.1
+          image: "{{ .Values.csi.nodeDriverRegistrar.image.organization }}/{{ .Values.csi.nodeDriverRegistrar.image.repository }}:{{ .Values.csi.nodeDriverRegistrar.image.tag }}"
           imagePullPolicy: IfNotPresent
           args:
             - "--v=5"
@@ -535,7 +535,7 @@ spec:
             capabilities:
               add: ["CAP_MKNOD", "CAP_SYS_ADMIN", "SYS_ADMIN"]
             allowPrivilegeEscalation: true
-          image: openebs/cstor-csi-driver:2.1.0
+          image: "{{ .Values.csi.driver.image.organization }}/{{ .Values.csi.driver.image.repository }}:{{ .Values.csi.driver.image.tag }}"
           imagePullPolicy: IfNotPresent
           args:
             - "--nodeid=$(OPENEBS_NODE_ID)"
@@ -715,7 +715,7 @@ spec:
         - name: OPENEBS_IO_CSTOR_TARGET_IMAGE
           value: "{{ .Values.cstor.target.image.organization }}/{{ .Values.cstor.target.image.repository }}:{{ .Values.cstor.target.image.tag }}"
         - name:  OPENEBS_IO_CSTOR_VOLUME_MGMT_IMAGE
-          value: "openebs/cstor-volume-manager-amd64:2.1.0"
+          value: "{{ .Values.cstor.volumeManager.image.organization }}/{{ .Values.cstor.volumeManager.image.repository }}:{{ .Values.cstor.volumeManager.image.tag }}"
         - name:  OPENEBS_IO_VOLUME_MONITOR_IMAGE
           value: "{{ .Values.policies.monitoring.image.organization }}/{{ .Values.policies.monitoring.image.repository }}:{{ .Values.policies.monitoring.image.tag }}"
 ---
@@ -763,7 +763,7 @@ spec:
       serviceAccountName: openebs-maya-operator
       containers:
         - name: admission-webhook
-          image: openebs/cstor-webhook-amd64:2.1.0
+          image: "{{ .Values.cstor.webhook.image.organization }}/{{ .Values.cstor.webhook.image.repository }}:{{ .Values.cstor.webhook.image.tag }}"
           imagePullPolicy: IfNotPresent
           args:
             - -alsologtostderr

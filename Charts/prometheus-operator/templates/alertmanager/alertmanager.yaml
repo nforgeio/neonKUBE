@@ -8,7 +8,7 @@ metadata:
 {{ include "prometheus-operator.labels" . | indent 4 }}
 spec:
 {{- if .Values.alertmanager.alertmanagerSpec.image }}
-  baseImage: {{ .Values.alertmanager.alertmanagerSpec.image.repository }}
+  baseImage: {{ .Values.alertmanager.alertmanagerSpec.image.organization }}/{{ .Values.alertmanager.alertmanagerSpec.image.repository }}
   version: {{ .Values.alertmanager.alertmanagerSpec.image.tag }}
 {{- end }}
   replicas: {{ .Values.alertmanager.alertmanagerSpec.replicas }}

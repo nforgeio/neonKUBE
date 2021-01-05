@@ -83,7 +83,7 @@ spec:
       containers:
       {{- if .Values.prometheus.enabled }}
       - name: prometheus-metrics
-        image: "{{ .Values.prometheus.image }}:{{ .Values.prometheus.imageTag }}"
+        image: "{{ .Values.prometheus.image.organization }}/{{ .Values.prometheus.image.repository }}:{{ .Values.prometheus.image.tag }}"
         imagePullPolicy: "{{ .Values.imagePullPolicy }}"
         ports:
         - containerPort: {{ .Values.prometheus.port }}

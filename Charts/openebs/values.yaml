@@ -25,18 +25,43 @@ cspcOperator:
     repository: openebs-cspc-operator-amd64
     tag: latest
     
-csiResizer:
-  image:
-    organization: ghcr.io/neonrelease
-    repository: k8scsi-csi-resizer
-    tag: latest
-    
-csiSnapshotter:
-  image:
-    organization: ghcr.io/neonrelease
-    repository: k8scsi-csi-snapshotter
-    tag: latest
-    
+csi:
+  resizer:
+    image:
+      organization: ghcr.io/neonrelease
+      repository: k8scsi-csi-resizer
+      tag: latest
+  snapshotter:
+    image:
+      organization: ghcr.io/neonrelease
+      repository: k8scsi-csi-snapshotter
+      tag: latest
+  provisioner:
+    image:
+      organization: ghcr.io/neonrelease
+      repository: k8scsi-csi-provisioner
+      tag: latest
+  attacher:
+    image:
+      organization: ghcr.io/neonrelease
+      repository: k8scsi-csi-attacher
+      tag: latest
+  clusterDriverRegistrar:
+    image:
+      organization: ghcr.io/neonrelease
+      repository: k8scsi-csi-cluster-driver-registrar
+      tag: latest
+  driver:
+    image:
+      organization: ghcr.io/neonrelease
+      repository: openebs-cstor-csi-driver
+      tag: latest
+  nodeDriverRegistrar:
+    image:
+      organization: ghcr.io/neonrelease
+      repository: k8scsi-csi-node-driver-registrar
+      tag: latest
+
 snapshotController:
   image:
     organization: ghcr.io/neonrelease
@@ -82,8 +107,10 @@ varDirectoryPath:
 
 provisioner:
   enabled: true
-  image: "openebs/openebs-k8s-provisioner"
-  imageTag: "2.1.0"
+  image:
+    organization: ghcr.io/neonrelease
+    repository: openebs-k8s-provisioner
+    tag: latest
   replicas: 1
   enableLeaderElection: true
   nodeSelector: {}
@@ -145,8 +172,10 @@ snapshotOperator:
 
 ndm:
   enabled: true
-  image: "openebs/node-disk-manager"
-  imageTag: "0.8.1"
+  image:
+    organization: ghcr.io/neonrelease
+    repository: openebs-node-disk-manager
+    tag: latest
   sparse:
     path: "/var/openebs/sparse"
     size: "10737418240"
@@ -172,8 +201,10 @@ ndm:
 
 ndmOperator:
   enabled: true
-  image: "openebs/node-disk-operator"
-  imageTag: "0.8.1"
+  image:
+    organization: ghcr.io/neonrelease
+    repository: openebs-node-disk-operator
+    tag: latest
   replicas: 1
   upgradeStrategy: Recreate
   nodeSelector: {}
@@ -192,8 +223,10 @@ ndmOperator:
 
 webhook:
   enabled: true
-  image: "openebs/admission-server"
-  imageTag: "2.1.0"
+  image:
+    organization: ghcr.io/neonrelease
+    repository: openebs-admission-server
+    tag: latest
   failurePolicy: "Fail"
   replicas: 1
   healthCheck:
@@ -209,8 +242,10 @@ webhook:
   hostNetwork: false
 
 jiva:
-  image: "openebs/jiva"
-  imageTag: "2.1.0"
+  image:
+    organization: ghcr.io/neonrelease
+    repository: openebs-jiva
+    tag: latest
   replicas: 3
   defaultStoragePath: "/var/openebs"
 
@@ -231,8 +266,20 @@ cstor:
       repository: openebs-cstor-istgt
       tag: latest
   volumeMgmt:
-    image: "openebs/cstor-volume-mgmt"
-    imageTag: "2.1.0"
+    image:
+      organization: ghcr.io/neonrelease
+      repository: openebs-cstor-volume-mgmt
+      tag: latest
+  webhook:
+    image:
+      organization: ghcr.io/neonrelease
+      repository: openebs-cstor-webhook-amd64
+      tag: latest
+  volumeManager:
+    image:
+      organization: ghcr.io/neonrelease
+      repository: openebs-cstor-volume-manager-amd64
+      tag: latest
 
 helper:
   image:
