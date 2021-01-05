@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    VaultCommand.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -105,10 +105,7 @@ customize the editor by setting the EDITOR environment variable to the path
 to the editor executable file.
 ";
         /// <inheritdoc/>
-        public override string[] Words
-        {
-            get { return new string[] { "vault" }; }
-        }
+        public override string[] Words => new string[] { "vault" }; 
 
         /// <inheritdoc/>
         public override void Help()

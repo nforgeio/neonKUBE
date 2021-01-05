@@ -3,9 +3,9 @@
 on_minikube: false
 
 image:
-  fluent_bit:
-    repository: nkubedev/neon-log-host
-    tag: latest
+  organization: ghcr.io/neonrelease
+  repository: neon-log-host
+  tag: latest
   pullPolicy: Always
 
 testFramework:

@@ -1,7 +1,7 @@
 ﻿#------------------------------------------------------------------------------
 # FILE:         publish.ps1
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,15 +23,17 @@
 
 param 
 (
-    [switch]$all         = $false,        # Rebuild all images
-    [switch]$base        = $false,        # Rebuild base images
-    [switch]$dotnetBase  = $false,        # Rebuild base .NET images
-    [switch]$dotnet      = $false,        # Rebuild .NET based images
-    [switch]$other       = $false,        # Rebuild all other images (usually script based)
-    [switch]$services    = $false,        # Rebuild all service images
-    [switch]$nopush      = $false,        # Don't push to the registry
-    [switch]$noprune     = $false,        # Don't prune the local Docker state
-    [switch]$allVersions = $false         # Rebuild all image versions
+    [switch]$all         = $false,      # Rebuild all images
+    [switch]$base        = $false,      # Rebuild base images
+    [switch]$dotnet      = $false,      # Rebuild .NET based images
+    [switch]$other       = $false,      # Rebuild all other images (usually script based)
+    [switch]$services    = $false,      # Rebuild all service images
+    [switch]$nopush      = $false,      # Don't push to the registry
+    [switch]$noprune     = $false,      # Don't prune the local Docker cache
+    [switch]$allVersions = $false,      # Rebuild all image versions
+    [switch]$noprune     = $false,      # Don't prune the local Docker cache
+    [switch]$rel         = $false,      # Override current branch and publish to: ghcr.io/neonrelease
+    [switch]$dev         = $false       # Override current branch and publish to: ghcr.io/neonrelease-dev
 )
 
 #----------------------------------------------------------
@@ -81,11 +83,10 @@ function Publish
 
 if ($all)
 {
-    $base       = $true
-    $dotnetBase = $true
-    $dotnet     = $true
-    $other      = $true
-    $services   = $true
+    $base     = $true
+    $dotnet   = $true
+    $other    = $true
+    $services = $true
 }
 elseif ((-not $base) -and (-not $dotnet) -and (-not $other))
 {
@@ -113,21 +114,11 @@ if (-not $noprune)
 
 if ($base)
 {
-    $dotnetBase = $true
-
-    # Base OS images:
-
-    Publish "$image_root\\alpine"
-
     # Other base images:
 
     Publish "$image_root\\haproxy"
-}
-
-if ($dotnetBase)
-{
-    Publish "$image_root\\dotnet"
-    Publish "$image_root\\aspnet"
+    Publish "$image_root\\td-agent"
+    Publish "$image_root\\td-agent-bit"
 }
 
 if ($other)
@@ -136,8 +127,6 @@ if ($other)
     Publish "$image_root\\nats-streaming"
     Publish "$image_root\\cadence-dev"
     Publish "$image_root\\couchbase-dev"
-    Publish "$image_root\\test"
-    Publish "$image_root\\aws-cli"
     Publish "$image_root\\yugabyte"
 }
 

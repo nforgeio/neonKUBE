@@ -1,7 +1,7 @@
 ﻿#------------------------------------------------------------------------------
 # FILE:         build.ps1
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,22 +15,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Builds a [nkubeio/yugabyte] image.
+# Builds a [ghcr.io/neonrelease/yugabyte] image.
 #
 # Usage: powershell -file build.ps1 REGISTRY VERSION TAG
 
 param 
 (
 	[parameter(Mandatory=$true,Position=1)][string] $registry,
-	[parameter(Mandatory=$true,Position=2)][string] $version,
+	[parameter(Mandatory=$true,Position=2)][string] $yugabyteVersion,
 	[parameter(Mandatory=$true,Position=3)][string] $tag
 )
 
-"   "
-"======================================="
-"* YUGABYTE:" + $tag
-"======================================="
+Log-ImageBuild $registry $tag
 
 # Build the image.
 
-Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$version" . }
+Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$yugabyteVersion" . }

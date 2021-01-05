@@ -1,7 +1,7 @@
 #------------------------------------------------------------------------------
 # FILE:         neon-nuget-local.ps1
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -119,6 +119,15 @@ Publish Neon.Couchbase          $version
 Publish Neon.Cryptography       $version
 Publish Neon.Docker             $version
 Publish Neon.HyperV             $version
+Publish Neon.Kube               $version
+Publish Neon.Kube.Aws           $version
+Publish Neon.Kube.Azure         $version
+Publish Neon.Kube.BareMetal     $version
+Publish Neon.Kube.Google        $version
+Publish Neon.Kube.Hosting       $version
+Publish Neon.Kube.HyperV        $version
+Publish Neon.Kube.HyperVLocal   $version
+Publish Neon.Kube.XenServer     $version
 Publish Neon.Service            $version
 Publish Neon.ModelGen           $version
 Publish Neon.Nats               $version

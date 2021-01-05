@@ -1,7 +1,7 @@
 #------------------------------------------------------------------------------
 # FILE:         Dockerfile
-# CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
+# CONTRIBUTOR:  Marcus Bowyer
+# COPYRIGHT:    Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,20 +15,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Base Alpine image.
-#
-# ARGUMENTS:
-#
-#   VERSION         - The base ALPINE image tag (e.g. "3.4")
-
-ARG         VERSION
-FROM        alpine:${VERSION}
-MAINTAINER  jeff@lilltek.com
+ARG         ORGANIZATION
+ARG         CLUSTER_VERSION
+FROM        ${ORGANIZATION}/cluster-ubuntu:${CLUSTER_VERSION}
+MAINTAINER  marcus@euarctos.com
 STOPSIGNAL  SIGTERM
+ARG         VERSION
 
-# Install the [tini] INIT manager.
-
-RUN apk add --no-cache tini ca-certificates
-
-# Set timezone to UTC
-ENV TZ=UTC
+RUN apt install -y gnupg \
+    && wget -qO - https://packages.treasuredata.com/GPG-KEY-td-agent | apt-key add - \
+    && echo "deb http://packages.treasuredata.com/4/ubuntu/focal/ focal contrib" > /etc/apt/sources.list.d/treasure-data.list \
+    && apt update -y \
+    && apt install -y td-agent=${VERSION} gcc ruby-dev rubygems make g++ \
+    && apt-get clean

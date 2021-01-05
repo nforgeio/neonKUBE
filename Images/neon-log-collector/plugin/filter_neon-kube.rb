@@ -3,7 +3,7 @@
 # CONTRIBUTOR:  Jeff Lill, Marcus Bowyer
 # COPYRIGHT:    Copyright (c) 2016-2020 by neonFORGE LLC.  All rights reserved.
 #
-# This Fluentd filter plugin detects container log events forwarded by Kubernetes 
+# This td-agent filter plugin detects container log events forwarded by Kubernetes 
 # and then attempts to extract and parse standard Neon fields from the message.
 
 require 'fluent/filter'
@@ -37,7 +37,7 @@ module Fluent
             #
             # Note that I'm explicitly excluding tags like [systemd.**]
             # because there doesn't seem to be a way to specify an inverse
-            # filter in a Fluentd config.
+            # filter in a td-agent config.
 
             if !record.key?("kubernetes") || tag.start_with?("systemd")
                 return record;  # Not from Kubernetes

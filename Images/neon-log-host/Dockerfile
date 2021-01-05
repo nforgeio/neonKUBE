@@ -1,36 +1,39 @@
 #------------------------------------------------------------------------------
 # FILE:         Dockerfile
-# CONTRIBUTOR:  Jeff Lill, Marcus Bowyer
-# COPYRIGHT:    Copyright (c) 2016-2020 by neonFORGE LLC.  All rights reserved.
+# CONTRIBUTOR:  Marcus Bowyer
+# COPYRIGHT:    Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 #
-# Fluent Bit deployed on each neonKUBE node that forwards log events to the
-# cluster log aggregator.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-# ARGUMENTS:
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
-#   ORGANIZATION    - The Docker Hub organization
-#   BRANCH          - The current GitHub branch
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 ARG         ORGANIZATION
-ARG         BRANCH
-FROM        ${ORGANIZATION}/fluent-bit:${BRANCH}-latest
-MAINTAINER  jeff@lilltek.com
+ARG         BASE_TAG
+FROM        ${ORGANIZATION}/td-agent-bit:${BASE_TAG}
+MAINTAINER  marcus@euarctos.com
 STOPSIGNAL  SIGTERM
 
 # Configuration files
-COPY conf/fluent-bit.conf \
+COPY conf/td-agent-bit.conf \
      conf/parsers.conf \
      conf/plugins.conf \
      conf/functions.lua \
-     conf/fluent-bit-filter.conf \
-     conf/fluent-bit-input.conf \
-     conf/fluent-bit-output.conf \
-     conf/fluent-bit-service.conf \
-     /fluent-bit/etc/
+     conf/td-agent-bit-filter.conf \
+     conf/td-agent-bit-input.conf \
+     conf/td-agent-bit-output.conf \
+     conf/td-agent-bit-service.conf \
+     /etc/td-agent-bit/
 
 COPY docker-entrypoint.sh   /
-COPY _common/*.sh           /
 RUN chmod 700 /*.sh
 
 # Entry point
-ENTRYPOINT ["/tini", "-g", "--", "/docker-entrypoint.sh"]
+ENTRYPOINT ["tini", "-g", "--", "/docker-entrypoint.sh"]

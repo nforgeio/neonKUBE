@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    CouchbaseUpsertCommand.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -95,16 +95,10 @@ customize this in two ways:
       to be included in the key by using '%%' or '##'.
 ";
         /// <inheritdoc/>
-        public override string[] Words
-        {
-            get { return new string[] { "couchbase", "upsert" }; }
-        }
+        public override string[] Words => new string[] { "couchbase", "upsert" };
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions
-        {
-            get { return new string[] { "--key", "--first-key" }; }
-        }
+        public override string[] ExtendedOptions => new string[] { "--key", "--first-key" };
 
         /// <inheritdoc/>
         public override void Help()

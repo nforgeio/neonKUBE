@@ -1,7 +1,7 @@
 ﻿#------------------------------------------------------------------------------
 # FILE:         build.ps1
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 #
 # Builds the Neon [test-cadence] image.
 #
@@ -13,10 +13,7 @@ param
 	[parameter(Mandatory=$True,Position=2)][string] $tag
 )
 
-"   "
-"======================================="
-"* test-cadence:" + $tag
-"======================================="
+Log-ImageBuild $registry $tag
 
 $appname      = "test-cadence"
 $organization = DockerOrg

@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    CouchbaseFixture.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -99,7 +99,7 @@ namespace Neon.Xunit.Couchbase
         /// <param name="settings">Optional Couchbase settings.</param>
         /// <param name="image">
         /// Optionally specifies the Couchbase container image.  This defaults to 
-        /// <b>nkubeio/couchbase-dev:latest</b> or <b>nkubedev/couchbase-dev:latest</b>
+        /// <b>ghcr.io/neonrelease/couchbase-dev:latest</b> or <b>ghcr.io/neonrelease-dev/couchbase-dev:latest</b>
         /// depending on whether the assembly was built from a git release branch or not.
         /// </param>
         /// <param name="name">Optionally specifies the Couchbase container name (defaults to <c>cb-test</c>).</param>
@@ -195,7 +195,7 @@ namespace Neon.Xunit.Couchbase
         /// <param name="settings">Optional Couchbase settings.</param>
         /// <param name="image">
         /// Optionally specifies the Couchbase container image.  This defaults to 
-        /// <b>nkubeio/couchbase-dev:latest</b> or <b>nkubedev/couchbase-dev:latest</b>
+        /// <b>ghcr.io/neonrelease/couchbase-dev:latest</b> or <b>ghcr.io/neonrelease-dev/couchbase-dev:latest</b>
         /// depending on whether the assembly was built from a git release branch or not.
         /// </param>
         /// <param name="name">Optionally specifies the Couchbase container name (defaults to <c>cb-test</c>).</param>

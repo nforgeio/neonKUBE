@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    NeonHelper.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -249,12 +249,12 @@ namespace Neon.Common
         /// <summary>
         /// Identifies the production cluster public Docker registry.
         /// </summary>
-        public const string NeonProdRegistry = "nkubeio";
+        public const string NeonProdRegistry = "ghcr.io/neonrelease";
 
         /// <summary>
         /// Identifies the development cluster public Docker registry.
         /// </summary>
-        public const string NeonDevRegistry = "nkubedev";
+        public const string NeonDevRegistry = "ghcr.io/neonrelease-dev";
 
         /// <summary>
         /// Returns the appropriate public Docker registry to be used for the git branch the

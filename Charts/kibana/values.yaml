@@ -20,9 +20,11 @@ secretMounts: []
 #    secretName: elastic-certificates
 #    path: /usr/share/elasticsearch/config/certs
 
-image: "docker.elastic.co/kibana/kibana"
-imageTag: "7.9.1"
-imagePullPolicy: "IfNotPresent"
+image:
+  organization: ghcr.io/neonrelease
+  repository: blacktop-kibana
+  tag: latest
+  pullPolicy: Always
 
 resources: {}
 
@@ -41,16 +43,9 @@ kibanaConfig: {}
 
 # If Pod Security Policy in use it may be required to specify security context as well as service account
 
-podSecurityContext:
-  fsGroup: 1000
+podSecurityContext: {}
 
-securityContext:
-  capabilities:
-    drop:
-    - ALL
-  # readOnlyRootFilesystem: true
-  runAsNonRoot: true
-  runAsUser: 1000
+securityContext: {}
 
 serviceAccount: ""
 

@@ -1,7 +1,7 @@
 ﻿#------------------------------------------------------------------------------
 # FILE:         build.ps1
 # CONTRIBUTOR:  Marcus Bowyer
-# COPYRIGHT:    Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 #
 # Builds the Neon [neon-cluster-manager] image.
 #
@@ -13,21 +13,10 @@ param
 	[parameter(Mandatory=$True,Position=2)][string] $tag
 )
 
-"   "
-"======================================="
-"* neon-cluster-manager:" + $tag
-"======================================="
+Log-ImageBuild $registry $tag
 
 $appname      = "neon-cluster-manager"
 $organization = DockerOrg
-$branch       = GitBranch
-
-# Copy the common scripts.
-
-DeleteFolder _common
-
-mkdir _common
-copy ..\_common\*.* .\_common
 
 # Build and publish the app to a local [bin] folder.
 
@@ -43,9 +32,9 @@ Exec { core-layers $appname "$pwd\bin" }
 
 # Build the image.
 
-Exec { docker build -t "${registry}:$tag" --build-arg "ORGANIZATION=$organization" --build-arg "APPNAME=$appname" . }
+Exec { docker build -t "${registry}:$tag" --build-arg "ORGANIZATION=$organization" --build-arg "CLUSTER_VERSION=$neonKUBE_Version" --build-arg "APPNAME=$appname" . }
 
 # Clean up
 
 DeleteFolder bin
-DeleteFolder _common
+

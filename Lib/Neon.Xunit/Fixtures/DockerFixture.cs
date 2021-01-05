@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    DockerFixture.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -364,13 +364,13 @@ namespace Neon.Xunit
                 //      services:
                 //
                 //        service1:
-                //          image: nkubeio/test
+                //          image: ghcr.io/neonrelease/test
                 //          command: sleep 100000
                 //          deploy:
                 //            replicas: 1
                 //
                 //        service2:
-                //          image: nkubeio/test
+                //          image: ghcr.io/neonrelease/test
                 //          command: sleep 100000
                 //          deploy:
                 //            replicas: 2

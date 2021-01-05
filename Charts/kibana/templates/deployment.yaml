@@ -63,7 +63,8 @@ spec:
       - name: kibana
         securityContext:
 {{ toYaml .Values.securityContext | indent 10 }}
-        image: "{{ .Values.image }}:{{ .Values.imageTag }}"
+        image: "{{ .Values.image.organization }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: "{{ .Values.image.pullPolicy }}"
         env:
           {{- if .Values.elasticsearchURL }}
           - name: ELASTICSEARCH_URL
@@ -78,25 +79,10 @@ spec:
 {{ toYaml .Values.extraEnvs | indent 10 }}
 {{- end }}
         readinessProbe:
-{{ toYaml .Values.readinessProbe | indent 10 }}
-          exec:
-            command:
-              - sh
-              - -c
-              - |
-                #!/usr/bin/env bash -e
-                http () {
-                    local path="${1}"
-                    set -- -XGET -s --fail
-
-                    if [ -n "${ELASTIC_USERNAME}" ] && [ -n "${ELASTIC_PASSWORD}" ]; then
-                      set -- "$@" -u "${ELASTIC_USERNAME}:${ELASTIC_PASSWORD}"
-                    fi
-
-                    curl -k "$@" "{{ .Values.protocol }}://localhost:{{ .Values.httpPort }}${path}"
-                }
-
-                http "{{ .Values.healthCheckPath }}"
+          httpGet:
+            path: /app/kibana
+            port: http
+            scheme: HTTP
         ports:
         - containerPort: {{ .Values.httpPort }}
           name: http

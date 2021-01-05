@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    GenerateModelsCommand.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -100,16 +100,10 @@ style design conventions.  See this GitHub issue for more information:
 ";
 
         /// <inheritdoc/>
-        public override string[] Words
-        {
-            get { return new string[] { "generate", "models" }; }
-        }
+        public override string[] Words => new string[] { "generate", "models" }; 
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions
-        {
-            get { return new string[] { "--source-namespace", "--target-namespace", "--persisted", "--ux", "--no-services", "--targets", "--debug-allow-stepinto", "--v1compatible" }; }
-        }
+        public override string[] ExtendedOptions => new string[] { "--source-namespace", "--target-namespace", "--persisted", "--ux", "--no-services", "--targets", "--debug-allow-stepinto", "--v1compatible" }; 
 
         /// <inheritdoc/>
         public override void Help()

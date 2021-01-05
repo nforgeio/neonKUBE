@@ -1,7 +1,7 @@
 ﻿#------------------------------------------------------------------------------
 # FILE:         publish.ps1
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Builds the [nkubeio/yugabyte] images and pushes them to Docker Hub.
+# Builds the [ghcr.io/neonrelease/yugabyte] images and pushes them to Docker Hub.
 #
 # NOTE: You must be logged into Docker Hub.
 #
@@ -41,29 +41,19 @@ function Build
 		[switch]$latest = $false
 	)
 
-	$registry = GetRegistry "yugabyte"
-	$date     = UtcDate
-	$branch   = GitBranch
-	$tag      = $yugabyteVersion
+	$registry    = GetRegistry "yugabyte"
+	$tag         = $yugabyteVersion
+	$tagAsLatest = TagAsLatest
 
 	# Build and publish the images.
 
-	. ./build.ps1 -registry $registry -version $yugabyteVersion -tag $tag
+	. ./build.ps1 -registry $registry -yugabyteVersion $yugabyteVersion -tag $tag
     PushImage "${registry}:$tag"
 
-	if (IsRelease)
+	if ($latest -and $tagAsLatest)
 	{
-		Exec { docker tag "${registry}:$tag" "${registry}:$yugabyteVersion" }
-		PushImage "${registry}:$yugabyteVersion"
-	}
-
-	if ($latest)
-	{
-		if (TagAsLatest)
-		{
-			Exec { docker tag "${registry}:$tag" "${registry}:latest" }
-			PushImage "${registry}:latest"
-		}
+		Exec { docker tag "${registry}:$tag" "${registry}:latest" }
+		PushImage "${registry}:latest"
 	}
 }
 
@@ -73,4 +63,4 @@ if ($allVersions)
 {
 }
 
-Build 2.2.3.0-b35 -latest
+Build "2.5.1.0-b153" -latest

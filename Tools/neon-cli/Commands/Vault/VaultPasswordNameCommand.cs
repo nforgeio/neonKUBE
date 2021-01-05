@@ -2,7 +2,7 @@
 //-----------------------------------------------------------------------------
 // FILE:	    VaultPasswordNameCommand.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -63,16 +63,10 @@ returns 0 exit code and writes the password name to the output.
 The command returns a non-zero exit code for unencrypted files.
 ";
         /// <inheritdoc/>
-        public override string[] Words
-        {
-            get { return new string[] { "vault", "password-name" }; }
-        }
+        public override string[] Words => new string[] { "vault", "password-name" }; 
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions
-        {
-            get { return new string[] { "-n" }; }
-        }
+        public override string[] ExtendedOptions => new string[] { "-n" }; 
 
         /// <inheritdoc/>
         public override void Help()

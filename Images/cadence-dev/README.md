@@ -14,7 +14,7 @@ This image combines Uber Cadence and its backing Cassendra database and is inten
 
 You can start this container locally via:
 ```
-docker run -d --name cadence-dev -p 7933-7939:7933-7939 -p 8088:8088 nkubeio/cadence-dev:latest
+docker run -d --name cadence-dev -p 7933-7939:7933-7939 -p 8088:8088 ghcr.io/neonrelease/cadence-dev:latest
 ```
 
 ## Notes

@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    CouchbaseQueryCommand.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -73,10 +73,7 @@ command line, as a text file, or as text passed on STDIN.
 
 ";
         /// <inheritdoc/>
-        public override string[] Words
-        {
-            get { return new string[] { "couchbase", "query" }; }
-        }
+        public override string[] Words => new string[] { "couchbase", "query" }; 
 
         /// <inheritdoc/>
         public override void Help()

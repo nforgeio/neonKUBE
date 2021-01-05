@@ -34,7 +34,7 @@ spec:
       serviceAccountName: {{ template "openebs.serviceAccountName" . }}
       containers:
       - name: {{ template "openebs.name" . }}-apiserver
-        image: "{{ .Values.image.repository }}{{ .Values.apiserver.image }}:{{ .Values.apiserver.imageTag }}"
+        image: "{{ .Values.apiserver.image.organization }}/{{ .Values.apiserver.image.repository }}:{{ .Values.apiserver.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         ports:
         - containerPort: {{ .Values.apiserver.ports.internalPort }}
@@ -116,19 +116,19 @@ spec:
         - name: OPENEBS_IO_JIVA_REPLICA_COUNT
           value: "{{ .Values.jiva.replicas }}"
         - name: OPENEBS_IO_CSTOR_TARGET_IMAGE
-          value: "{{ .Values.image.repository }}{{ .Values.cstor.target.image }}:{{ .Values.cstor.target.imageTag }}"
+          value: "{{ .Values.cstor.target.image.organization }}/{{ .Values.cstor.target.image.repository }}:{{ .Values.cstor.target.image.tag }}"
         - name: OPENEBS_IO_CSTOR_POOL_IMAGE
-          value: "{{ .Values.image.repository }}{{ .Values.cstor.pool.image }}:{{ .Values.cstor.pool.imageTag }}"
+          value: "{{ .Values.cstor.pool.image.organization }}/{{ .Values.cstor.pool.image.repository }}:{{ .Values.cstor.pool.image.tag }}"
         - name: OPENEBS_IO_CSTOR_POOL_MGMT_IMAGE
-          value: "{{ .Values.image.repository }}{{ .Values.cstor.poolMgmt.image }}:{{ .Values.cstor.poolMgmt.imageTag }}"
+          value: "{{ .Values.cstor.poolMgmt.image.organization }}/{{ .Values.cstor.poolMgmt.image.repository }}:{{ .Values.cstor.poolMgmt.image.tag }}"
         - name: OPENEBS_IO_CSTOR_VOLUME_MGMT_IMAGE
           value: "{{ .Values.image.repository }}{{ .Values.cstor.volumeMgmt.image }}:{{ .Values.cstor.volumeMgmt.imageTag }}"
         - name: OPENEBS_IO_VOLUME_MONITOR_IMAGE
-          value: "{{ .Values.image.repository }}{{ .Values.policies.monitoring.image }}:{{ .Values.policies.monitoring.imageTag }}"
+          value: "{{ .Values.policies.monitoring.image.organization }}/{{ .Values.policies.monitoring.image.repository }}:{{ .Values.policies.monitoring.image.tag }}"
         - name: OPENEBS_IO_CSTOR_POOL_EXPORTER_IMAGE
-          value: "{{ .Values.image.repository }}{{ .Values.policies.monitoring.image }}:{{ .Values.policies.monitoring.imageTag }}"
+          value: "{{ .Values.policies.monitoring.image.organization }}/{{ .Values.policies.monitoring.image.repository }}:{{ .Values.policies.monitoring.image.tag }}"
         - name: OPENEBS_IO_HELPER_IMAGE
-          value: "{{ .Values.image.repository }}{{ .Values.helper.image }}:{{ .Values.helper.imageTag }}"
+          value: "{{ .Values.helper.image.organization }}/{{ .Values.helper.image.repository }}:{{ .Values.helper.image.tag }}"
         # OPENEBS_IO_ENABLE_ANALYTICS if set to true sends anonymous usage
         # events to Google Analytics
         - name: OPENEBS_IO_ENABLE_ANALYTICS

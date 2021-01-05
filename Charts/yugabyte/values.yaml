@@ -3,7 +3,7 @@
 # Declare variables to be passed into your templates.
 Component: "yugabytedb"
 Image:
-  repository: "nkubedev/yugabyte"
+  repository: "ghcr.io/neonrelease/yugabyte"
   tag: 2.2.0.0-b80
   pullPolicy: IfNotPresent
 

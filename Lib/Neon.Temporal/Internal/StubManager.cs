@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    StubManager.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -1056,14 +1056,9 @@ namespace Neon.Temporal.Internal
                     }
                     else
                     {
-                        sbSource.LogDebug("*** 1");
                         sbSource.AppendLine($"            var ___argBytes = {SerializeArgsExpression(details.Method.GetParameters())};");
                         sbSource.AppendLine();
-                        sbSource.LogDebug($"*** 2: client    = {{___StubHelper.IsNull(client)}}");
-                        sbSource.LogDebug($"*** 2: execution = {{___StubHelper.IsNull(execution)}}");
-                        sbSource.LogDebug($"*** 2: options   = {{___StubHelper.IsNull(options)}}");
                         sbSource.AppendLine($"            await ___StubHelper.SignalWorkflowAsync(this.client, this.execution, {StringLiteral(details.SignalMethodAttribute.Name)}, ___argBytes, this.options?.Namespace);");
-                        sbSource.LogDebug("*** 3");
                     }
                 }
 

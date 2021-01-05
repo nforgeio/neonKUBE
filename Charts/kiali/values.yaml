@@ -2,7 +2,8 @@ nameOverride: ""
 fullnameOverride: ""
 
 image:
-  repo: quay.io/kiali/kiali-operator
+  organization: quay.io/kiali
+  repository: kiali-operator
   tag: v1.27.0
   pullPolicy: Always
   pullSecrets: []
@@ -51,8 +52,11 @@ cr:
   namespace: ""
 
   spec:
+    version: default
     istio_namespace: istio-system
     deployment:
+      image_name: quay.io/kiali/kiali
+      image_version: v1.27.0
       accessible_namespaces:
       - '**'
     external_services:

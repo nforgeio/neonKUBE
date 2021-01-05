@@ -1,7 +1,7 @@
 ﻿#------------------------------------------------------------------------------
 # FILE:         publish.ps1
-# CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
+# CONTRIBUTOR:  Marcus Bowyer
+# COPYRIGHT:    Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Builds the Test images and pushes them to Docker Hub.
+# Builds the TD Agent base images and pushes them to Docker Hub.
 #
 # NOTE: You must be logged into Docker Hub.
 #
@@ -23,7 +23,7 @@
 
 param 
 (
-	[switch]$all = $false,
+	[switch]$allVersions = $false,
     [switch]$nopush = $false
 )
 
@@ -41,40 +41,26 @@ function Build
 		[switch]$latest = $false
 	)
 
-	$registry = GetRegistry "test"
-	$date     = UtcDate
-	$branch   = GitBranch
-	$tag      = "$branch-$version"
+	$registry    = GetRegistry "td-agent"
+	$tag         = $version
+	$tagAsLatest = TagAsLatest
 
 	# Build and publish the images.
 
 	. ./build.ps1 -registry $registry -version $version -tag $tag
     PushImage "${registry}:$tag"
 
-	if (IsRelease)
+	if ($latest -and $tagAsLatest)
 	{
-		Exec { docker tag "${registry}:$tag" "${registry}:$version" }
-		PushImage "${registry}:$version"
-	}
-
-	if ($latest)
-	{
-		if (TagAsLatest)
-		{
-			Exec { docker tag "${registry}:$tag" "${registry}:latest" }
-			PushImage "${registry}:latest"
-		}
-
-        Exec { docker tag "${registry}:$tag" "${registry}:${branch}-latest" }
-		PushImage "${registry}:${branch}-latest"
+		Exec { docker tag "${registry}:$tag" "${registry}:latest" }
+		PushImage "${registry}:latest"
 	}
 }
 
 $noImagePush = $nopush
 
-# The image is tiny so we're going to always build
-# all versions which will all be the same anyway.
+if ($allVersions)
+{
+}
 
-Build 0
-Build 1
-Build 2 -latest
+Build "4.0.1-1" -latest

@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    PrepareCommand.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -45,11 +45,11 @@ namespace NeonCli
     public class PrepareCommand : CommandBase
     {
         private const string usage = @"
-Performs basic cluster provisioning and management.
+Prepares the base Neon VM image for a hosting environment.
 
 USAGE:
 
-    neon prepare node-template OPTION ADDRESS
+    neon prepare [ OPTIONS ] ADDRESS
 
 ARGUMENTS:
 
@@ -104,10 +104,7 @@ node template.
 ";
 
         /// <inheritdoc/>
-        public override string[] Words
-        {
-            get { return new string[] { "prepare", "node-template" }; }
-        }
+        public override string[] Words => new string[] { "prepare", "node-template" }; 
 
         /// <inheritdoc/>
         public override string[] ExtendedOptions => new string[] { "--hyperv", "--xenserver", "--host-address", "--host-password", "--vm-name", "--update" };
@@ -333,7 +330,7 @@ cat <<EOF > {KubeNodeFolders.Bin}/neon-node-prep.sh
 #------------------------------------------------------------------------------
 # FILE:	        neon-node-prep.sh
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
+# COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the ""License"");
 # you may not use this file except in compliance with the License.
@@ -449,7 +446,7 @@ sfill -fllz /
                     Console.WriteLine("Clean:    VM");
                     node.SudoCommand(CommandBundle.FromScript(cleanScript), RunOptions.FaultOnError);
                  
-                    // Shut the the VM down so the user can compress and upload
+                    // Shut down the VM so the user can compress and upload
                     // the disk image.
 
                     Console.WriteLine("Shutdown: VM");

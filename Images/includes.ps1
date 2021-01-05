@@ -1,7 +1,7 @@
 ﻿#------------------------------------------------------------------------------
 # FILE:         includes.ps1
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -33,7 +33,11 @@ $src_tools_path    = "$src_path\\Tools"
 
 # TINI init manager binary download URL (obtained from: https://github.com/krallin/tini/releases)
 
-$tini_url = "https://neonkube.s3-us-west-2.amazonaws.com/misc/tini-0.18.0"
+$tini_url = "https://neonkube.s3-us-west-2.amazonaws.com/misc/tini-0.19.0"
+
+# neonKUBE cluster release Version.
+
+$neonKUBE_Version = Get-Content "$env:NF_ROOT\neonKUBE-version.txt" -First 1
 
 #------------------------------------------------------------------------------
 # Executes a command, throwing an exception for non-zero error codes.
@@ -147,7 +151,7 @@ function PushImage
 		# there.  Perhaps this is something we could do after implementing [neon-cli]
 		# registry commands.
 
-		& docker push "$Image" | Tee-Object -Variable pushOutput
+		docker push "$Image" | Tee-Object -Variable pushOutput
 
 		$exitCode = $LastExitCode
 
@@ -221,37 +225,58 @@ function IsRelease
 {
     $branch = GitBranch
 
-	return $branch -like "release-*"
+	return $rel -or ($branch -like "release-*")
 }
 
 #------------------------------------------------------------------------------
-# Returns $true if images build from the current Git branch should be tagged
+# Returns $true if images built from the current Git branch should be tagged
 # with [:latest] when pushed to Docker Hub.  This will return $true for any
 # release branch starting with "release-" as well as the MASTER branch.
 #
-# This has the effect of tagging release builds with [:latest] in [nkubeio]
-# for release branches and MASTER branch builds with [:lasest] in [nkubedev].
+# This has the effect of tagging release builds with [:latest] in [ghcr.io/neonrelease]
+# for release branches and MASTER branch builds with [:lasest] in [ghcr.io/neonrelease-dev].
 
 function TagAsLatest
 {
 	$branch = GitBranch
 
-	return ($branch -like "release-*") -or ($branch -eq "master")
+	return $rel -or ($branch -like "release-*") -or ($branch -eq "master")
 }
 
 #------------------------------------------------------------------------------
 # Prefixes the image name passed with the target Docker Hub organization 
-# for the current Git branch.
+# for the current Git branch by default such that when the current branch
+# name starts with "release-" the image will be pushed to "ghcr.io/neonrelease/"
+# otherwise it will be pushed to "ghcr.io/neonrelease-dev/".
+#
+# This default behavior can be overridden by setting the [$rel] or [$dev] Variable
+# to $true.  These are generally passed as arguments to the root publish script.
 
 function GetRegistry($image)
 {
+	if ($dev -and $rel)
+	{
+		'ERROR: $dev and $rel cannot both be $true.'
+		exit 1
+	}
+
+	if ($dev)
+	{
+		return "ghcr.io/neonrelease-dev/" + $image
+	}
+	
+	if ($rel)
+	{
+		return "ghcr.io/neonrelease/" + $image
+	}
+
 	if (IsRelease)
 	{
-		return "nkubeio/" + $image
+		return "ghcr.io/neonrelease/" + $image
 	}
 	else
 	{
-		return "nkubedev/" + $image
+		return "ghcr.io/neonrelease-dev/" + $image
 	}
 }
 
@@ -262,11 +287,11 @@ function DockerOrg
 {
 	if (IsRelease)
 	{
-		return "nkubeio"
+		return "ghcr.io/neonrelease"
 	}
 	else
 	{
-		return "nkubedev"
+		return "ghcr.io/neonrelease-dev"
 	}
 }
 
@@ -293,6 +318,24 @@ function IsDirty
 	{
 		return $false
 	}
+}
+
+#------------------------------------------------------------------------------
+# Writes text to STDOUT that marks the beginning on a Docker image build. 
+
+function Log-ImageBuild
+{
+    [CmdletBinding()]
+    param 
+	(
+        [Parameter(Position=0, Mandatory=1)] [string] $registry,
+        [Parameter(Position=1, Mandatory=1)] [string] $tag
+    )
+
+	"   "
+	"==========================================================="
+	"* " + $registry + ":" + $tag
+	"==========================================================="
 }
 
 #------------------------------------------------------------------------------

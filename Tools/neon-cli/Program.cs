@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    Program.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -121,7 +121,7 @@ OPTIONS:
 
 REMARKS:
 
-By default, any tempory files generated will be written to your 
+By default, any temporary files generated will be written to your 
 [$HOME/.neonkube/temp] folder which is encrypted at rest for
 Windows 10 PRO and Windows Server workstations.  This encryption
 may cause some problems (e.g. a [neon run ...] command that 
@@ -154,9 +154,9 @@ You can disable the use of this encrypted folder by specifying
 
                 foreach (var cmdLine in new CommandLine[] { CommandLine, LeftCommandLine })
                 {
-                    cmdLine.DefineOption("--machine-password");
                     cmdLine.DefineOption("-os").Default = "Ubuntu-20.04";
                     cmdLine.DefineOption("-q", "--quiet");
+                    cmdLine.DefineOption("--machine-password");
                     cmdLine.DefineOption("-m", "--max-parallel").Default = "6";
                     cmdLine.DefineOption("-w", "--wait").Default = "60";
                     cmdLine.DefineOption("--log-folder").Default = string.Empty;
@@ -301,7 +301,7 @@ You can disable the use of this encrypted folder by specifying
                 //-------------------------------------------------------------
                 // Process the standard command line options.
 
-                // Load the user name and password from the command line options, if present.
+                // Load the password from the command line options, if present.
 
                 MachinePassword = LeftCommandLine.GetOption("--machine-password", KubeConst.VmTemplatePassword);
 
@@ -330,10 +330,10 @@ You can disable the use of this encrypted folder by specifying
 
                 Debug = LeftCommandLine.HasOption("--debug");
 
+                // Ensure that there are no unexpected command line options.
+
                 if (command.CheckOptions)
                 {
-                    // Ensure that there are no unexpected command line options.
-
                     foreach (var optionName in command.ExtendedOptions)
                     {
                         validOptions.Add(optionName);
@@ -854,8 +854,8 @@ You can disable the use of this encrypted folder by specifying
         }
 
         /// <summary>
-        /// Optionally set to the registry to be used to override any explicit or implicit <b>nkubeio</b>
-        /// or <b>nkubedev</b> organizations specified when deploying or updating a neonKUBE.
+        /// Optionally set to the registry to be used to override any explicit or implicit <b>ghcr.io/neonrelease</b>
+        /// or <b>ghcr.io/neonrelease-dev</b> organizations specified when deploying or updating a neonKUBE.
         /// </summary>
         /// <remarks>
         /// <para>

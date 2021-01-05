@@ -1,7 +1,7 @@
 ﻿#------------------------------------------------------------------------------
 # FILE:         build.ps1
-# CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
+# CONTRIBUTOR:  Marcus Bowyer
+# COPYRIGHT:    Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,15 +15,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Builds the [nkubedev/aws] image.
+# Builds the TD Agent Bit base image.
 #
-# Usage: powershell -file build.ps1
+# Usage: powershell -file build.ps1 REGISTRY IMAGE-DIGEST TAG
 
-"   "
-"======================================="
-"* AWS-CLI"
-"======================================="
+param 
+(
+	[parameter(Mandatory=$true,Position=1)][string] $registry,
+	[parameter(Mandatory=$true,Position=2)][string] $version,
+	[parameter(Mandatory=$true,Position=3)][string] $tag
+)
+
+Log-ImageBuild $registry $tag
+
+$organization = DockerOrg
 
 # Build the image.
 
-Exec { docker build -t "nkubedev/aws-cli:latest" . }
+Exec { docker build -t "${registry}:$tag" --build-arg "ORGANIZATION=$organization" --build-arg "VERSION=$version" --build-arg "CLUSTER_VERSION=$neonKUBE_Version" . }

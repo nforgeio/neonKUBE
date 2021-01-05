@@ -1,9 +1,13 @@
 ## General
 fullnameOverride: ""
 imagePullSecrets: ""
-image: citusdata/citus
-imageTag: 9.4.0
-imagePullPolicy: IfNotPresent
+
+image:
+  organization: ghcr.io/neonrelease
+  repository: citusdata-citus
+  tag: latest
+  pullPolicy: Always
+
 readiness:
   enabled: true
 maxConnections: 100
@@ -58,8 +62,11 @@ service:
 ## ref PostgreSQL sslmodes https://www.postgresql.org/docs/current/libpq-ssl.html
 manager:
   replicas: 3
-  image: bakdata/citus-k8s-membership-manager
-  imageTag: v0.3
+  image:
+    organization: ghcr.io/neonrelease
+    repository: bakdata-citus-membership-manager
+    tag: latest
+    pullPolicy: Always
   resources:
     requests:
       cpu: 100m

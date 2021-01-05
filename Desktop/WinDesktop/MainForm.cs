@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    MainForm.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -112,9 +112,10 @@ namespace WinDesktop
 
             // Initialize the client state.
 
-            proxies = new List<ReverseProxy>();
+            proxies      = new List<ReverseProxy>();
             portForwards = new List<PortForward>();
-            Headend = new HeadendClient();
+            Headend      = new HeadendClient();
+
             KubeHelper.LoadClientConfig();
         }
 
@@ -167,7 +168,7 @@ namespace WinDesktop
             notifyIcon.Icon             = disconnectedIcon;
             notifyIcon.ContextMenuStrip = contextMenuStrip = new ContextMenuStrip();
             notifyIcon.Visible          = true;
-            contextMenuStrip.Opening    += ContextMenuOpening;
+            contextMenuStrip.Opening   += ContextMenuOpening;
 
             // Setup a timer to periodically keep the UI in sync with any changes.
 

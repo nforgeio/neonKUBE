@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    KubeTestHelper.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -39,17 +39,17 @@ namespace Neon.Xunit.Kube
     public static class KubeTestHelper
     {
         /// <summary>
-        /// <b>nkubeio/test</b> image test user name.
+        /// <b>ghcr.io/neonrelease/test</b> image test user name.
         /// </summary>
         public const string TestUsername = "test";
 
         /// <summary>
-        /// <b>nkubeio/test</b> image test user ID.
+        /// <b>ghcr.io/neonrelease/test</b> image test user ID.
         /// </summary>
         public const string TestUID = "5555";
 
         /// <summary>
-        /// <b>nkubeio/test</b> image test group ID.
+        /// <b>ghcr.io/neonrelease/test</b> image test group ID.
         /// </summary>
         public const string TestGID = "6666";
 

@@ -33,8 +33,8 @@ spec:
       {{- end }}
       containers:
       - name: citus-manager
-        image: "{{ .Values.manager.image }}:{{ .Values.manager.imageTag }}"
-        imagePullPolicy: "{{ .Values.imagePullPolicy }}"
+        image: "{{ .Values.manager.image.organization }}/{{ .Values.manager.image.repository }}:{{ .Values.manager.image.tag }}"
+        imagePullPolicy: "{{ .Values.manager.image.pullPolicy }}"
         volumeMounts:
         - name: citus-config-mount
           mountPath: "/etc/citus-config/"

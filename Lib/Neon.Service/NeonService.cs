@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    NeonService.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -654,8 +654,8 @@ namespace Neon.Service
 
         /// <summary>
         /// Returns <c>true</c> when the service is running in development
-        /// or test mode, when the <b>DEV_WORKSTATION</b> environment variable is
-        /// <b>defined</b>.
+        /// or test mode, when the <b>DEV_WORKSTATION</b> environment variable 
+        /// is <b>defined</b>.
         /// </summary>
         public bool InDevelopment => !InProduction;
 
@@ -778,11 +778,11 @@ namespace Neon.Service
 
                 if (status == NeonServiceStatus.Unhealthy)
                 {
-                    Log.LogWarn($"[{Name}] status transitioned to: {status}");
+                    Log.LogWarn($"[{Name}] status is now: {status}");
                 }
                 else
                 {
-                    Log.LogInfo($"[{Name}] status transitioned to: {status}");
+                    Log.LogInfo($"[{Name}] status is now: {status}");
                 }
 
                 if (statusFilePath != null)

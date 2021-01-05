@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    KubeVersions.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ namespace Neon.Kube
         /// <summary>
         /// The version of Kubernetes to be installed.
         /// </summary>
-        public const string KubernetesVersion = "1.19.2";
+        public const string KubernetesVersion = "1.19.5";
 
         /// <summary>
         /// The version of the Kubernetes dashboard to be installed.
@@ -45,17 +45,17 @@ namespace Neon.Kube
         /// <summary>
         /// The package version for Kubernetes admin service.
         /// </summary>
-        public const string KubeAdminPackageVersion = "1.19.2-00";
+        public const string KubeAdminPackageVersion = "1.19.5-00";
 
         /// <summary>
         /// The package version for the Kubernetes cli.
         /// </summary>
-        public const string KubeCtlPackageVersion = "1.19.2-00";
+        public const string KubeCtlPackageVersion = "1.19.5-00";
 
         /// <summary>
         /// The package version for the Kubelet service.
         /// </summary>
-        public const string KubeletPackageVersion = "1.19.2-00";
+        public const string KubeletPackageVersion = "1.19.5-00";
 
         /// <summary>
         /// The version of Docker to be installed.
@@ -70,7 +70,7 @@ namespace Neon.Kube
         /// <summary>
         /// The version of Istio to install.
         /// </summary>
-        public const string IstioVersion = "1.7.1";
+        public const string IstioVersion = "1.7.6";
 
         /// <summary>
         /// The version of Helm to be installed.

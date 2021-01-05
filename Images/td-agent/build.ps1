@@ -1,7 +1,7 @@
 ﻿#------------------------------------------------------------------------------
 # FILE:         build.ps1
-# CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
+# CONTRIBUTOR:  Marcus Bowyer
+# COPYRIGHT:    Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,9 +15,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Builds a [nkubeio/dotnet-aspnet] image.
+# Builds the TD Agent base image.
 #
-# Usage: powershell -file build.ps1 REGISTRY VERSION TAG
+# Usage: powershell -file build.ps1 REGISTRY IMAGE-DIGEST TAG
 
 param 
 (
@@ -26,22 +26,9 @@ param
 	[parameter(Mandatory=$true,Position=3)][string] $tag
 )
 
-"   "
-"======================================="
-"* ASPNET:" + $tag
-"======================================="
+Log-ImageBuild $registry $tag
 
-# Copy the common scripts.
-
-DeleteFolder _common
-
-mkdir _common
-copy ..\_common\*.* .\_common
+$organization = DockerOrg
 
 # Build the image.
-
-Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$version" . }
-
-# Clean up
-
-DeleteFolder _common
+Exec { docker build -t "${registry}:$tag" --build-arg "ORGANIZATION=$organization" --build-arg "VERSION=$version" --build-arg "CLUSTER_VERSION=$neonKUBE_Version" . }

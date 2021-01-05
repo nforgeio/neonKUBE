@@ -115,7 +115,7 @@ spec:
         securityContext:
           runAsUser: 0
           privileged: true
-        image: "{{ .Values.image }}:{{ .Values.imageTag }}"
+        image: "{{ .Values.image.organization }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         command: ["sysctl", "-w", "vm.max_map_count={{ .Values.sysctlVmMaxMapCount}}"]
         resources:
 {{ toYaml .Values.initResources | indent 10 }}
@@ -124,8 +124,8 @@ spec:
       {{- end }}
       containers:
       - name: "{{ template "name" . }}"
-        image: "{{ .Values.image }}:{{ .Values.imageTag }}"
-        imagePullPolicy: "{{ .Values.imagePullPolicy }}"
+        image: "{{ .Values.image.organization }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: "{{ .Values.image.pullPolicy }}"
         readinessProbe:
 {{ toYaml .Values.readinessProbe | indent 10 }}
           exec:
@@ -145,7 +145,7 @@ spec:
                     else
                       BASIC_AUTH=''
                     fi
-                    curl -XGET -s -k --fail ${BASIC_AUTH} {{ .Values.protocol }}://127.0.0.1:{{ .Values.httpPort }}${path}
+                    wget -O /dev/null ${BASIC_AUTH} http://127.0.0.1:9200${path} >/dev/null 2>&1;
                 }
 
                 if [ -f "${START_FILE}" ]; then

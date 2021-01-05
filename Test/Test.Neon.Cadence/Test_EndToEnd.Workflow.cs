@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:        Test_EndToEnd.Workflow.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -4446,7 +4446,7 @@ namespace TestCadence
 
             await SyncContext.ClearAsync;
 
-            // Start the [nkubeio/test-cadence:latest] Docker image locally, having it
+            // Start the [ghcr.io/neonrelease/test-cadence:latest] Docker image locally, having it
             // connect to the local Cadence cluster and then start a bunch of workflows that
             // will be executed by the container and verify that they completed.
 
@@ -4473,7 +4473,7 @@ namespace TestCadence
             // It might be useful to uncomment/modify this line while
             // debugging changes to the [test-cadence] Docker image.
 
-            // testCadenceImage = "nkubedev/test-cadence:cadence-latest";
+            // testCadenceImage = "ghcr.io/neonrelease/test-cadence:cadence-latest";
 
             NeonHelper.Execute(NeonHelper.DockerCli,
                 new object[]

@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    ClusterSetupCommand.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -134,16 +134,10 @@ OPTIONS:
         private string                  branch;
 
         /// <inheritdoc/>
-        public override string[] Words
-        {
-            get { return new string[] { "cluster", "setup" }; }
-        }
+        public override string[] Words => new string[] { "cluster", "setup" };
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions
-        {
-            get { return new string[] { "--unredacted", "--force" }; }
-        }
+        public override string[] ExtendedOptions => new string[] { "--unredacted", "--force" };
 
         /// <inheritdoc/>
         public override void Help()
@@ -359,7 +353,7 @@ OPTIONS:
 
                     if (!controller.Run())
                     {
-                        // Write the operation end/failed to all cluster node logs.
+                        // Write the operation end/failed marker to all cluster node logs.
 
                         cluster.LogLine(logFailedMarker);
 
@@ -376,7 +370,6 @@ OPTIONS:
                     // Write the operation end marker to all cluster node logs.
 
                     cluster.LogLine(logEndMarker);
-
                 }
                 catch
                 {
@@ -818,7 +811,7 @@ $@"
                             "-v=/etc/neonkube/neon-etc-proxy.cfg:/etc/haproxy/haproxy.cfg",
                             "--network=host",
                             "--log-driver=json-file",
-                            $"{NeonHelper.NeonBranchRegistry}/haproxy"
+                            $"{NeonHelper.NeonBranchRegistry}/haproxy:{KubeConst.LatestClusterVersion}"
                         );
                     });
             }
@@ -913,7 +906,7 @@ rm -rf linux-amd64
                         () =>
                         {
                             firstMaster.Status = "pull: kubernetes images...";
-                            firstMaster.SudoCommand("kubeadm config images pull");
+                            firstMaster.SudoCommand($"kubeadm config images pull --image-repository {NeonHelper.NeonBranchRegistry} --kubernetes-version v{KubeVersions.KubernetesVersion}");
                         });
 
                     firstMaster.InvokeIdempotentAction("setup/cluster-init",
@@ -953,6 +946,7 @@ apiVersion: kubeadm.k8s.io/v1beta2
 kind: ClusterConfiguration
 clusterName: {cluster.Name}
 kubernetesVersion: ""v{KubeVersions.KubernetesVersion}""
+imageRepository: ""{NeonHelper.NeonBranchRegistry}""
 apiServer:
   extraArgs:
     logging-format: json
@@ -1739,10 +1733,10 @@ spec:
                     await InstallOpenEBSAsync(firstMaster);
                 });
 
-            firstMaster.InvokeIdempotentAction("setup/cluster-neon-system-namespace",
-                () =>
+            await firstMaster.InvokeIdempotentActionAsync("setup/cluster-neon-system-namespace",
+                async () =>
                 {
-                    k8sClient.CreateNamespace(new V1Namespace()
+                    await k8sClient.CreateNamespaceAsync(new V1Namespace()
                     {
                         Metadata = new V1ObjectMeta()
                         {
@@ -1881,8 +1875,8 @@ metadata:
   namespace: istio-system
   name: istiocontrolplane
 spec:
-  hub: docker.io/istio
-  tag: {KubeVersions.IstioVersion}
+  hub: {NeonHelper.NeonBranchRegistry}
+  tag: {KubeConst.LatestClusterVersion}
   meshConfig:
     rootNamespace: istio-system
   components:
@@ -2081,7 +2075,7 @@ istioctl install -f istio-cni.yaml
                     {
                         case nameof(String):
 
-                            valueOverrides += $"--set-string {value.Key}={value.Value} \\\n";
+                            valueOverrides += $"--set-string {value.Key}=\"{value.Value}\" \\\n";
                             break;
 
                         case nameof(Int32):
@@ -2186,6 +2180,35 @@ rm -rf {chartName}*
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
+                    values.Add(new KeyValuePair<string, object>("apiserver.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("apiserver.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("csiResizer.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("csiResizer.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("csiSnapshotter.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("csiSnapshotter.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("cspcOperator.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("cspcOperator.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("cstor.pool.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("cstor.pool.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("cstor.poolMgmt.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("cstor.poolMgmt.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("cstor.target.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("cstor.target.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("cvcOperator.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("cvcOperator.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("helper.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("helper.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("localprovisioner.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("localprovisioner.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("policies.monitoring.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("policies.monitoring.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("snapshotController.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("snapshotController.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("snapshotOperator.controller.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("snapshotOperator.controller.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("snapshotOperator.provisioner.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("snapshotOperator.provisioner.image.tag", KubeConst.LatestClusterVersion));
+
 
                     if (cluster.Definition.Workers.Count() >= 3)
                     {
@@ -2626,6 +2649,8 @@ rm -rf {chartName}*
                         i++;
                     }
 
+                    cortexValues.Add(new KeyValuePair<string, object>("image.organization", NeonHelper.NeonBranchRegistry));
+                    cortexValues.Add(new KeyValuePair<string, object>("image.tag", KubeConst.LatestClusterVersion));
 
                     await InstallHelmChartAsync(master, "cortex", releaseName: "neon-metrics-cortex", @namespace: "monitoring", values: cortexValues);
                 });
@@ -2775,6 +2800,8 @@ rm -rf {chartName}*
                     var monitorOptions = cluster.Definition.Monitor;
                     var values         = new List<KeyValuePair<string, object>>();
 
+                    values.Add(new KeyValuePair<string, object>("image.organization", NeonHelper.NeonBranchRegistry));
+
                     var replicas = Math.Max(1, cluster.Nodes.Count() / 5);
                     if (replicas > cluster.Nodes.Where(n => n.Metadata.Labels.LogsInternal).Count())
                     {
@@ -2853,8 +2880,11 @@ rm -rf {chartName}*
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
-                    var i = 0;
 
+                    values.Add(new KeyValuePair<string, object>($"image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>($"image.tag", KubeConst.LatestClusterVersion));
+
+                    var i = 0;
                     foreach (var taint in (await k8sClient.ListNodeAsync()).Items.Where(i => i.Spec.Taints != null).SelectMany(i => i.Spec.Taints))
                     {
                         values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", taint.Key));
@@ -2899,6 +2929,10 @@ rm -rf {chartName}*
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
+
+                    values.Add(new KeyValuePair<string, object>($"image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>($"image.tag", KubeConst.LatestClusterVersion));
+
                     values.Add(new KeyValuePair<string, object>($"autoscaling.minReplicas", (Math.Max(1, cluster.Definition.Workers.Count() / 6))));
                     values.Add(new KeyValuePair<string, object>($"autoscaling.maxReplicas", (Math.Max(1, cluster.Definition.Workers.Count() / 4))));
 
@@ -2947,6 +2981,8 @@ rm -rf {chartName}*
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
+
+                    values.Add(new KeyValuePair<string, object>("image.organization", NeonHelper.NeonBranchRegistry));
 
                     int i = 0;
                     foreach (var t in await GetTaintsAsync(NodeLabels.LabelLogs, "true"))
@@ -3131,7 +3167,7 @@ rm -rf {chartName}*
                         {
                             if (i > 0)
                             {
-                                redisConnStr += ",";
+                                redisConnStr += "\\,";
                             }
 
                             redisConnStr += $"neon-system-registry-redis-announce-{i}:26379";
@@ -3172,9 +3208,23 @@ rm -rf {chartName}*
                     //    timeout: TimeSpan.FromMinutes(20),
                     //    pollInterval: clusterOpRetryInterval);
 
+                    var start = DateTime.UtcNow;
                     await NeonHelper.WaitForAsync(
                            async () =>
                            {
+                               // Restart pods if they aren't happy after 3 minutes.
+                               if (DateTime.UtcNow > start.AddMinutes(3))
+                               {
+                                   var pods = await k8sClient.ListNamespacedPodAsync("neon-system", labelSelector: "release=neon-system-registry-harbor");
+                                   foreach (var p in pods.Items.Where(i => i.Status.Phase != "Running"))
+                                   {
+                                       if (p.Status.ContainerStatuses.Any(c => c.RestartCount > 0))
+                                       {
+                                           start = DateTime.UtcNow;
+                                           await k8sClient.DeleteNamespacedPodAsync(p.Name(), "neon-system");
+                                       }
+                                   }
+                               }
                                var deployments = await k8sClient.ListNamespacedDeploymentAsync("neon-system", labelSelector: "release=neon-system-registry-harbor");
                                if (deployments == null || deployments.Items.Count < 8)
                                {
@@ -3183,7 +3233,7 @@ rm -rf {chartName}*
 
                                return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
                            },
-                           timeout: TimeSpan.FromMinutes(20),
+                           timeout: TimeSpan.FromMinutes(30),
                            pollInterval: clusterOpRetryInterval);
                 });
 
@@ -3201,7 +3251,12 @@ rm -rf {chartName}*
             await master.InvokeIdempotentActionAsync("deploy/neon-cluster-manager",
                 async () =>
                 {
-                    await InstallHelmChartAsync(master, "neon-cluster-manager", releaseName: "neon-cluster-manager", @namespace: "neon-system");
+                    var values = new List<KeyValuePair<string, object>>();
+
+                    values.Add(new KeyValuePair<string, object>("image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("image.tag", KubeConst.LatestClusterVersion));
+
+                    await InstallHelmChartAsync(master, "neon-cluster-manager", releaseName: "neon-cluster-manager", @namespace: "neon-system", values: values);
                 });
 
             await master.InvokeIdempotentActionAsync("deploy/neon-cluster-manager-ready",
@@ -3237,6 +3292,12 @@ rm -rf {chartName}*
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
+
+                    values.Add(new KeyValuePair<string, object>($"image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>($"image.tag", KubeConst.LatestClusterVersion));
+
+                    values.Add(new KeyValuePair<string, object>($"manager.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>($"manager.image.tag", KubeConst.LatestClusterVersion));
 
                     var replicas = Math.Max(1, cluster.Definition.Masters.Count() / 5);
 

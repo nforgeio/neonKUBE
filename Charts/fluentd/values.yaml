@@ -1,13 +1,13 @@
 # Default values for fluentd.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
+
+
 image:
-  repository: nkubedev/neon-log-collector
+  organization: ghcr.io/neonrelease
+  repository: neon-log-collector
   tag: latest
   pullPolicy: Always
-  # pullSecrets:
-  #   - secret1
-  #   - secret2
 
 logLevel: info
 

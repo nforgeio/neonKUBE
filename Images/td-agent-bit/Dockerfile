@@ -1,7 +1,7 @@
 #------------------------------------------------------------------------------
 # FILE:         Dockerfile
-# CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
+# CONTRIBUTOR:  Marcus Bowyer
+# COPYRIGHT:    Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,25 +15,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This base image deploys a simple container/or service used
-# for cluster unit tests.
-#
-# ARGUMENTS:
-#
-#   ORGANIZATION    - The Docker Hub organization
-#   BRANCH          - The current GitHub branch
-
 ARG         ORGANIZATION
-ARG         BRANCH
-FROM        ${ORGANIZATION}/alpine:${BRANCH}-latest
-MAINTAINER  jeff@lilltek.com
+ARG         CLUSTER_VERSION
+FROM        ${ORGANIZATION}/cluster-ubuntu:${CLUSTER_VERSION}
+MAINTAINER  marcus@euarctos.com
 STOPSIGNAL  SIGTERM
+ARG         VERSION
 
-# Set timezone to UTC
-ENV TZ=UTC
 
-COPY docker-entrypoint.sh   /
-
-RUN chmod 777 /docker-entrypoint.sh
-
-ENTRYPOINT ["/sbin/tini", "-g", "--", "/docker-entrypoint.sh"]
+RUN apt install -y gnupg \
+    && wget -qO - https://packages.fluentbit.io/fluentbit.key | apt-key add - \
+    && echo "deb https://packages.fluentbit.io/ubuntu/focal focal main" >> /etc/apt/sources.list \
+    && apt update -y \
+    && apt install -y td-agent-bit=${VERSION} \
+    && apt-get clean

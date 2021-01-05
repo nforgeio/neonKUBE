@@ -27,4 +27,4 @@ if [ -z ${LOG_LEVEL+x} ]; then export LOG_LEVEL=info; fi
 # Launch Fluent-bit.
 
 . /log-info.sh "Starting: [neon-log-host]"
-/fluent-bit/bin/fluent-bit -c /fluent-bit/etc/fluent-bit.conf
+/opt/td-agent-bit/bin/td-agent-bit -c /etc/td-agent-bit/td-agent-bit.conf

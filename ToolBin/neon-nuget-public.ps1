@@ -1,7 +1,7 @@
 #------------------------------------------------------------------------------
 # FILE:         neon-nuget-public.ps1
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -69,7 +69,7 @@ function Publish
 
 # Copy the version from [$/product-version] into [$/Lib/Neon/Common/Build.cs]
 
-& neon-build build-version
+neon-build build-version
 
 # Update the project versions.
 
@@ -80,6 +80,15 @@ SetVersion Neon.Couchbase
 SetVersion Neon.Cryptography
 SetVersion Neon.Docker
 SetVersion Neon.HyperV
+SetVersion Neon.Kube
+SetVersion Neon.Kube.Aws
+SetVersion Neon.Kube.Azure
+SetVersion Neon.Kube.BareMetal
+SetVersion Neon.Kube.Google
+SetVersion Neon.Kube.Hosting
+SetVersion Neon.Kube.HyperV
+SetVersion Neon.Kube.HyperVLocal
+SetVersion Neon.Kube.XenServer
 SetVersion Neon.Service
 SetVersion Neon.ModelGen
 SetVersion Neon.Nats
@@ -106,6 +115,15 @@ Publish Neon.Couchbase
 Publish Neon.Cryptography
 Publish Neon.Docker
 Publish Neon.HyperV
+Publish Neon.Kube
+Publish Neon.Kube.Aws
+Publish Neon.Kube.Azure
+Publish Neon.Kube.BareMetal
+Publish Neon.Kube.Google
+Publish Neon.Kube.Hosting
+Publish Neon.Kube.HyperV
+Publish Neon.Kube.HyperVLocal
+Publish Neon.Kube.XenServer
 Publish Neon.Service
 Publish Neon.ModelGen
 Publish Neon.Nats

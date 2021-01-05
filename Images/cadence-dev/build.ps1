@@ -1,7 +1,7 @@
 ﻿#------------------------------------------------------------------------------
 # FILE:         build.ps1
 # CONTRIBUTOR:  John C Burns
-# COPYRIGHT:    Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -29,22 +29,13 @@ param
 )
 
 "   "
-"======================================="
+"==========================================================="
 "* CADENCE-DEV:" + $tag
 "* GO_VERSION:" + $goVersion
 "* CADENCE_VERSION:" + $version
 "* CADENCE_UI_VERSION:" + $uiVersion
-"======================================="
-
-# Copy the common scripts.
-DeleteFolder _common
-
-mkdir _common
-copy ..\_common\*.* .\_common
+"==========================================================="
 
 # Build the image.
 
 Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$version" --build-arg "GO_VERSION=$goVersion" --build-arg "UI_VERSION=$uiVersion" . }
-
-# Clean up
-DeleteFolder _common
