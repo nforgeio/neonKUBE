@@ -39,7 +39,7 @@ csi:
   provisioner:
     image:
       organization: ghcr.io/neonrelease
-      repository: k8scsi-k8scsi-csi-provisioner
+      repository: k8scsi-csi-provisioner
       tag: latest
   attacher:
     image:
