@@ -28,7 +28,7 @@ spec:
       {{- end }}
       containers:
         - name: patch
-          image: {{ .Values.prometheusOperator.admissionWebhooks.patch.image.repository }}:{{ .Values.prometheusOperator.admissionWebhooks.patch.image.tag }}
+          image: {{ .Values.prometheusOperator.admissionWebhooks.patch.image.organization }}/{{ .Values.prometheusOperator.admissionWebhooks.patch.image.repository }}:{{ .Values.prometheusOperator.admissionWebhooks.patch.image.tag }}
           imagePullPolicy: {{ .Values.prometheusOperator.admissionWebhooks.patch.pullPolicy }}
           args:
             - patch

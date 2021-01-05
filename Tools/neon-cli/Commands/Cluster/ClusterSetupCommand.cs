@@ -2537,6 +2537,19 @@ rm -rf {chartName}*
 
                     var values = new List<KeyValuePair<string, object>>();
 
+                    values.Add(new KeyValuePair<string, object>($"prometheusOperator.tlsProxy.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>($"prometheusOperator.tlsProxy.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>($"prometheusOperator.admissionWebhooks.patch.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>($"prometheusOperator.admissionWebhooks.patch.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>($"prometheusOperator.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>($"prometheusOperator.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>($"prometheusOperator.configmapReloadImage.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>($"prometheusOperator.configmapReloadImage.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>($"prometheusOperator.prometheusConfigReloaderImage.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>($"prometheusOperator.prometheusConfigReloaderImage.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>($"prometheusOperator.prometheusSpec.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>($"prometheusOperator.prometheusSpec.image.tag", KubeConst.LatestClusterVersion));
+
                     int i = 0;
                     foreach (var t in await GetTaintsAsync(NodeLabels.LabelMetrics, "true"))
                     {

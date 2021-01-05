@@ -30,7 +30,7 @@ spec:
     {{- end }}
       containers:
         - name: {{ template "prometheus-operator.name" . }}
-          image: "{{ .Values.prometheusOperator.image.repository }}:{{ .Values.prometheusOperator.image.tag }}"
+          image: "{{ .Values.prometheusOperator.image.organization }}/{{ .Values.prometheusOperator.image.repository }}:{{ .Values.prometheusOperator.image.tag }}"
           imagePullPolicy: "{{ .Values.prometheusOperator.image.pullPolicy }}"
           args:
           {{- if .Values.prometheusOperator.kubeletService.enabled }}
@@ -45,8 +45,8 @@ spec:
             - --logtostderr=true
             - --crd-apigroup={{ .Values.prometheusOperator.crdApiGroup | default "monitoring.coreos.com" }}
             - --localhost=127.0.0.1
-            - --prometheus-config-reloader={{ .Values.prometheusOperator.prometheusConfigReloaderImage.repository }}:{{ .Values.prometheusOperator.prometheusConfigReloaderImage.tag }}
-            - --config-reloader-image={{ .Values.prometheusOperator.configmapReloadImage.repository }}:{{ .Values.prometheusOperator.configmapReloadImage.tag }}
+            - --prometheus-config-reloader={{ .Values.prometheusOperator.prometheusConfigReloaderImage.organization }}/{{ .Values.prometheusOperator.prometheusConfigReloaderImage.repository }}:{{ .Values.prometheusOperator.prometheusConfigReloaderImage.tag }}
+            - --config-reloader-image={{ .Values.prometheusOperator.configmapReloadImage.organization }}/{{ .Values.prometheusOperator.configmapReloadImage.repository }}:{{ .Values.prometheusOperator.configmapReloadImage.tag }}
           {{- if .Values.prometheusOperator.configReloaderCpu }}
             - --config-reloader-cpu={{ .Values.prometheusOperator.configReloaderCpu }}
           {{- end }}
@@ -63,7 +63,7 @@ spec:
             readOnlyRootFilesystem: true
         {{- if .Values.prometheusOperator.tlsProxy.enabled }}
         - name: tls-proxy
-          image: {{ .Values.prometheusOperator.tlsProxy.image.repository }}:{{ .Values.prometheusOperator.tlsProxy.image.tag }}
+          image: {{ .Values.prometheusOperator.tlsProxy.image.organization }}/{{ .Values.prometheusOperator.tlsProxy.image.repository }}:{{ .Values.prometheusOperator.tlsProxy.image.tag }}
           imagePullPolicy: {{ .Values.prometheusOperator.tlsProxy.image.pullPolicy }}
           args:
             - server
