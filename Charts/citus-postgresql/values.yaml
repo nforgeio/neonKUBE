@@ -99,8 +99,10 @@ nodeSelector:
 ## ref: https://prometheus.io/docs/instrumenting/exporters/
 prometheus:
   enabled: true
-  image: wrouesnel/postgres_exporter
-  imageTag: v0.5.1
+  image: 
+    organization: ghcr.io/neonrelease
+    repository: wrouesnel-postgres-exporter
+    tag: latest
   port: 9187
   resources: {}
   disableDefaultMetrics: false
