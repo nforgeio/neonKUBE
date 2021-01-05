@@ -3178,6 +3178,9 @@ rm -rf {chartName}*
                 {
                     var values = new List<KeyValuePair<string, object>>();
 
+                    values.Add(new KeyValuePair<string, object>("image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("image.tag", KubeConst.LatestClusterVersion));
+
                     var replicas = Math.Min(3, cluster.Definition.Masters.Count());
                     values.Add(new KeyValuePair<string, object>($"replicas", $"{replicas}"));
 
