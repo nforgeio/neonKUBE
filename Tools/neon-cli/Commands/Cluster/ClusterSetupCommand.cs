@@ -1602,7 +1602,7 @@ spec:
     spec:
       containers:
         - name: kubernetes-dashboard
-          image: kubernetesui/dashboard:v2.0.4
+          image: {NeonHelper.NeonBranchRegistry}/kubernetesui-dashboard:{KubeConst.LatestClusterVersion}
           imagePullPolicy: Always
           ports:
             - containerPort: 8443
@@ -1679,7 +1679,7 @@ spec:
     spec:
       containers:
         - name: dashboard-metrics-scraper
-          image: kubernetesui/metrics-scraper:v1.0.1
+          image: {NeonHelper.NeonBranchRegistry}/kubernetesui-metrics-scraper:{KubeConst.LatestClusterVersion}
           ports:
             - containerPort: 8000
               protocol: TCP
