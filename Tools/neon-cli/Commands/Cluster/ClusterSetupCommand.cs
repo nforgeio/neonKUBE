@@ -1804,6 +1804,10 @@ $@"#!/bin/bash
 
 curl {Program.CurlOptions} {kubeSetupInfo.CalicoSetupYamlUri} > /tmp/calico.yaml
 sed -i 's;192.168.0.0/16;{cluster.Definition.Network.PodSubnet};' /tmp/calico.yaml
+sed -i 's;calico/cni:v{KubeVersions.CalicoVersion};{NeonHelper.NeonBranchRegistry}/calico-cni:{KubeConst.LatestClusterVersion};' /tmp/calico.yaml
+sed -i 's;calico/kube-controllers:v{KubeVersions.CalicoVersion};{NeonHelper.NeonBranchRegistry}/calico-kube-controllers:{KubeConst.LatestClusterVersion};' /tmp/calico.yaml
+sed -i 's;calico/node:v{KubeVersions.CalicoVersion};{NeonHelper.NeonBranchRegistry}/calico-node:{KubeConst.LatestClusterVersion};' /tmp/calico.yaml
+sed -i 's;calico/pod2daemon-flexvol:v{KubeVersions.CalicoVersion};{NeonHelper.NeonBranchRegistry}/calico-pod2daemon-flexvol:{KubeConst.LatestClusterVersion};' /tmp/calico.yaml
 kubectl apply -f /tmp/calico.yaml
 rm /tmp/calico.yaml
 ";
