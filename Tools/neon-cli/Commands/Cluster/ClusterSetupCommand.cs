@@ -1868,7 +1868,7 @@ rm -r ""${{tmp}}""
 
 export PATH=$PATH:$HOME/.istioctl/bin
 
-istioctl operator init
+istioctl operator init --set hub={NeonHelper.NeonBranchRegistry}
 
 kubectl create ns istio-system
 
@@ -1954,7 +1954,7 @@ spec:
       enabled: false
     istiocoredns:
       enabled: true
-      coreDNSImage: coredns/coredns
+      coreDNSImage: {NeonHelper.NeonBranchRegistry}/coredns-coredns:{KubeConst.LatestClusterVersion}
     cni:
       excludeNamespaces:
        - istio-system
