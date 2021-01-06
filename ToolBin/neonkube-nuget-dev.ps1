@@ -117,53 +117,58 @@ if (-not (Test-Path "$env:NUGET_LOCAL_FEED")) {
     New-Item -Path "$env:NUGET_LOCAL_FEED" -ItemType Directory
 }
 
-# We're going to call the neonCLOUD nuget versioner service to attomicaly increment the 
-# dev package version counter for this solution and then generate the full version for
-# the packages we'll be publishing.
+# We're going to call the neonCLOUD nuget versioner service to atomically increment the 
+# dev package version counters for the solution and then generate the full version for
+# the packages we'll be publishing.  We'll use separate counters for the neonLIBRARY
+# and neonKUBE packages.
 
 # Get the nuget versioner API key from the environment and convert it into a base-64 string.
 
 $versionerKeyBase64 = [Convert]::ToBase64String(([System.Text.Encoding]::UTF8.GetBytes($env:NC_NUGET_VERSIONER_APIKEY)))
 
-# Submit a PUT request to the versioner service, specifying the counter name.  The service will
-# atomically increment the counter and return the next value.
+# Submit PUTs request to the versioner service, specifying the counter name.  The service will
+# atomically increment the counters and return the next value.
 
-$reply   = Invoke-WebRequest -Uri "$env:NC_NUGET_VERSIONER/counter/neonKUBE-dev" -Method 'PUT' -Headers @{ 'Authorization' = "Bearer $versionerKeyBase64" } 
-$version = "10000.0.$reply-dev"
+$reply          = Invoke-WebRequest -Uri "$env:NC_NUGET_VERSIONER/counter/neonLIBRARY-dev" -Method 'PUT' -Headers @{ 'Authorization' = "Bearer $versionerKeyBase64" } 
+$libraryVersion = "10000.0.$reply-dev"
+
+$reply          = Invoke-WebRequest -Uri "$env:NC_NUGET_VERSIONER/counter/neonKUBE-dev" -Method 'PUT' -Headers @{ 'Authorization' = "Bearer $versionerKeyBase64" } 
+$kubeVersion    = "10000.0.$reply-dev"
 
 # Build and publish the projects.
 
-Publish Neon.Cadence            $version
-Publish Neon.Cassandra          $version
-Publish Neon.Common             $version
-Publish Neon.Couchbase          $version
-Publish Neon.Cryptography       $version
-Publish Neon.Docker             $version
-Publish Neon.HyperV             $version
-Publish Neon.Kube               $version
-Publish Neon.Kube.Aws           $version
-Publish Neon.Kube.Azure         $version
-Publish Neon.Kube.BareMetal     $version
-Publish Neon.Kube.Google        $version
-Publish Neon.Kube.Hosting       $version
-Publish Neon.Kube.HyperV        $version
-Publish Neon.Kube.HyperVLocal   $version
-Publish Neon.Kube.XenServer     $version
-Publish Neon.Kube.Xunit         $version
-Publish Neon.Service            $version
-Publish Neon.ModelGen           $version
-Publish Neon.Nats               $version
-Publish Neon.Postgres           $version
-Publish Neon.SSH                $version
-Publish Neon.SSH.NET            $version
-Publish Neon.Temporal           $version
-Publish Neon.Web                $version
-Publish Neon.XenServer          $version
-Publish Neon.Xunit              $version
-Publish Neon.Xunit.Cadence      $version
-Publish Neon.Xunit.Couchbase    $version
-Publish Neon.Xunit.Temporal     $version
-Publish Neon.Xunit.YugaByte     $version
-Publish Neon.YugaByte           $version
+Publish Neon.Cadence            $libraryVersion
+Publish Neon.Cassandra          $libraryVersion
+Publish Neon.Common             $libraryVersion
+Publish Neon.Couchbase          $libraryVersion
+Publish Neon.Cryptography       $libraryVersion
+Publish Neon.Docker             $libraryVersion
+Publish Neon.HyperV             $libraryVersion
+Publish Neon.Service            $libraryVersion
+Publish Neon.ModelGen           $libraryVersion
+Publish Neon.Nats               $libraryVersion
+Publish Neon.Postgres           $libraryVersion
+Publish Neon.SSH                $libraryVersion
+Publish Neon.SSH.NET            $libraryVersion
+Publish Neon.Temporal           $libraryVersion
+Publish Neon.Web                $libraryVersion
+Publish Neon.XenServer          $libraryVersion
+Publish Neon.Xunit              $libraryVersion
+Publish Neon.Xunit.Cadence      $libraryVersion
+Publish Neon.Xunit.Couchbase    $libraryVersion
+Publish Neon.Xunit.Temporal     $libraryVersion
+Publish Neon.Xunit.YugaByte     $libraryVersion
+Publish Neon.YugaByte           $libraryVersion
+
+Publish Neon.Kube               $kubeVersion
+Publish Neon.Kube.Aws           $kubeVersion
+Publish Neon.Kube.Azure         $kubeVersion
+Publish Neon.Kube.BareMetal     $kubeVersion
+Publish Neon.Kube.Google        $kubeVersion
+Publish Neon.Kube.Hosting       $kubeVersion
+Publish Neon.Kube.HyperV        $kubeVersion
+Publish Neon.Kube.HyperVLocal   $kubeVersion
+Publish Neon.Kube.XenServer     $kubeVersion
+Publish Neon.Kube.Xunit         $kubeVersion
 
 pause
