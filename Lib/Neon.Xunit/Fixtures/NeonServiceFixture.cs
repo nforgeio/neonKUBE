@@ -170,6 +170,10 @@ namespace Neon.Xunit
             Service = serviceCreator();
             Covenant.Assert(Service != null);
 
+            // Indicate that the service is not running in production.
+
+            Service.InProduction = false;
+
             // Configure the service is a service map was passed and there's a service description
             // for the service.
 

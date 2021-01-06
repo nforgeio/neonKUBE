@@ -2,9 +2,9 @@ nameOverride: ""
 fullnameOverride: ""
 
 image:
-  organization: quay.io/kiali
-  repository: kiali-operator
-  tag: v1.27.0
+  organization: ghcr.io/neonrelease
+  repository: kiali-kiali-operator
+  tag: latest
   pullPolicy: Always
   pullSecrets: []
 
@@ -55,8 +55,8 @@ cr:
     version: default
     istio_namespace: istio-system
     deployment:
-      image_name: quay.io/kiali/kiali
-      image_version: v1.27.0
+      image_name: ghcr.io/neonrelease/kiali-kiali
+      image_version: latest
       accessible_namespaces:
       - '**'
     external_services:

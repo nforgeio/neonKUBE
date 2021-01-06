@@ -45,7 +45,7 @@ spec:
       - name: {{ template "jaeger.query.name" . }}
         securityContext:
           {{- toYaml .Values.query.securityContext | nindent 10 }}
-        image: {{ .Values.query.image }}:{{ .Values.tag }}
+        image: "{{ .Values.query.image.organization }}/{{ .Values.query.image.repository }}:{{ .Values.query.image.tag }}"
         imagePullPolicy: {{ .Values.query.pullPolicy }}
         args:
           {{- range $key, $value := .Values.query.cmdlineParams }}

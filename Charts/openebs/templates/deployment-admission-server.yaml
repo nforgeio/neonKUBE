@@ -46,7 +46,7 @@ spec:
       serviceAccountName: {{ template "openebs.serviceAccountName" . }}
       containers:
         - name: admission-webhook
-          image: "{{ .Values.image.repository }}{{ .Values.webhook.image }}:{{ .Values.webhook.imageTag }}"
+          image: "{{ .Values.webhook.image.organization }}/{{ .Values.webhook.image.repository }}:{{ .Values.webhook.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:
             - -alsologtostderr

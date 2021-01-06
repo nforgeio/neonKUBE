@@ -52,7 +52,7 @@ namespace Neon.Service
     /// make them easier to test via integration with the <b>ServiceFixture</b> from
     /// the <b>Neon.Xunit</b> library by providing some useful abstractions over 
     /// service configuration, startup and shutdown including a <see cref="ProcessTerminator"/>
-    /// to handle termination signals from Kubernetes.
+    /// to handle termination signals from Linux or Kubernetes.
     /// </para>
     /// <para>
     /// This class is pretty easy to use.  Simply derive your service class from <see cref="NeonService"/>
@@ -73,7 +73,7 @@ namespace Neon.Service
     /// </para>
     /// <note>
     /// All services should properly handle <see cref="Terminator"/> stop signals so services deployed as
-    /// containers will stop promptly and cleanly (this also applies to services running in unit tests.  
+    /// containers will stop promptly and cleanly (this also applies to services running in unit tests).  
     /// Your terminate handler method must return within a set period of time (30 seconds by default) 
     /// to avoid killed by by Docker or Kubernetes.  This is probably the trickiest thing you'll need to implement.
     /// For asynchronous service implementations, you consider passing the <see cref="ProcessTerminator.CancellationToken"/>
@@ -103,9 +103,8 @@ namespace Neon.Service
     /// </para>
     /// <para>
     /// This class provides some abstractions for managing environment variables and 
-    /// configuration files so that services running in production and services running
-    /// in a local unit test can configure themselves using the same code for both
-    /// environments. 
+    /// configuration files so that services running in production or as a unit test
+    /// can configure themselves using the same code for both environments. 
     /// </para>
     /// <para>
     /// Services should use the <see cref="GetEnvironmentVariable(string, string)"/> method to 
@@ -118,7 +117,7 @@ namespace Neon.Service
     /// </para>
     /// <para>
     /// You may also use the <see cref="LoadEnvironmentVariables(string, Func{string, string})"/>
-    /// method to load environment variables from a text file (potentially encrypted via
+    /// methods to load environment variables from a text file (potentially encrypted via
     /// <see cref="NeonVault"/>).  This will typically be done only for unit tests.
     /// </para>
     /// <para>
@@ -648,9 +647,10 @@ namespace Neon.Service
         /// <summary>
         /// Returns <c>true</c> when the service is running in production,
         /// when the <b>DEV_WORKSTATION</b> environment variable is
-        /// <b>not defined</b>.
+        /// <b>not defined</b>.  The <c>NeonServiceFixure</c> will set this
+        /// to <c>true</c> explicitly as well.
         /// </summary>
-        public bool InProduction { get; private set; }
+        public bool InProduction { get; internal set; }
 
         /// <summary>
         /// Returns <c>true</c> when the service is running in development
@@ -819,7 +819,8 @@ namespace Neon.Service
         /// Initializes <see cref="Arguments"/> with the command line arguments passed.
         /// </summary>
         /// <param name="args">The arguments.</param>
-        public void SetArguments(IEnumerable<string> args)
+        /// <returns>The service instance so developers can chain fluent style calls.</returns>
+        public NeonService SetArguments(IEnumerable<string> args)
         {
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
@@ -829,6 +830,8 @@ namespace Neon.Service
             {
                 Arguments.Add(arg);
             }
+
+            return this;
         }
 
         /// <summary>
@@ -1350,6 +1353,7 @@ namespace Neon.Service
         /// </summary>
         /// <param name="name">The variable name (case sensitive).</param>
         /// <param name="value">The variable value or <c>null</c> to remove the variable.</param>
+        /// <returns>The service instance so developers can chain fluent style calls.</returns>
         /// <remarks>
         /// <note>
         /// Environment variable names are to be considered to be case sensitive since
@@ -1357,7 +1361,7 @@ namespace Neon.Service
         /// to Linux.
         /// </note>
         /// </remarks>
-        public void SetEnvironmentVariable(string name, string value)
+        public NeonService SetEnvironmentVariable(string name, string value)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
@@ -1375,6 +1379,8 @@ namespace Neon.Service
                     environmentVariables[name] = value;
                 }
             }
+
+            return this;
         }
 
         /// <summary>
@@ -1419,6 +1425,7 @@ namespace Neon.Service
         /// use a default password provider <paramref name="passwordProvider"/> is <c>null</c>.
         /// See the remarks below.
         /// </param>
+        /// <returns>The service instance so developers can chain fluent style calls.</returns>
         /// <exception cref="FileNotFoundException">Thrown if there's no file at <paramref name="physicalPath"/>.</exception>
         /// <remarks>
         /// <para>
@@ -1431,7 +1438,7 @@ namespace Neon.Service
         /// Implement a custom password provider function if you need something different.
         /// </para>
         /// </remarks>
-        public void SetConfigFilePath(string logicalPath, string physicalPath, Func<string, string> passwordProvider = null)
+        public NeonService SetConfigFilePath(string logicalPath, string physicalPath, Func<string, string> passwordProvider = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(logicalPath), nameof(logicalPath));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(physicalPath), nameof(physicalPath));
@@ -1447,6 +1454,8 @@ namespace Neon.Service
             var bytes = vault.Decrypt(physicalPath);
 
             SetConfigFile(logicalPath, bytes);
+
+            return this;
         }
 
         /// <summary>
@@ -1460,7 +1469,8 @@ namespace Neon.Service
         /// Optionally convert any Windows style line endings (CRLF) into Linux 
         /// style endings (LF).  This defaults to <c>false</c>.
         /// </param>
-        public void SetConfigFile(string logicalPath, string contents, bool linuxLineEndings = false)
+        /// <returns>The service instance so developers can chain fluent style calls.</returns>
+        public NeonService SetConfigFile(string logicalPath, string contents, bool linuxLineEndings = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(logicalPath), nameof(logicalPath));
             Covenant.Requires<ArgumentNullException>(contents != null, nameof(contents));
@@ -1487,6 +1497,8 @@ namespace Neon.Service
                     TempFile     = tempFile
                 };
             }
+
+            return this;
         }
 
         /// <summary>
@@ -1496,7 +1508,8 @@ namespace Neon.Service
         /// </summary>
         /// <param name="logicalPath">The logical file path (typically expressed as a Linux path).</param>
         /// <param name="contents">The content bytes.</param>
-        public void SetConfigFile(string logicalPath, byte[] contents)
+        /// <returns>The service instance so developers can chain fluent style calls.</returns>
+        public NeonService SetConfigFile(string logicalPath, byte[] contents)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(logicalPath), nameof(logicalPath));
             Covenant.Requires<ArgumentNullException>(contents != null, nameof(contents));
@@ -1518,6 +1531,8 @@ namespace Neon.Service
                     TempFile     = tempFile
                 };
             }
+
+            return this;
         }
 
         /// <summary>

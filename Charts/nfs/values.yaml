@@ -7,8 +7,9 @@ replicaCount: 1
 # imagePullSecrets:
 
 image:
-  repository: quay.io/kubernetes_incubator/nfs-provisioner
-  tag: v2.3.0
+  organization: ghcr.io/neonrelease
+  repository: kubernetes_incubator-nfs-provisioner
+  tag: latest
   pullPolicy: IfNotPresent
 
 # For a list of available arguments

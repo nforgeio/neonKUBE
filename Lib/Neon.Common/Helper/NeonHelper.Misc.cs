@@ -1366,6 +1366,42 @@ namespace Neon.Common
         }
 
         /// <summary>
+        /// Converts the string passed into base64 string.
+        /// </summary>
+        /// <param name="value">The plaintext string to be encoded (cannot be <c>null</c>).</param>
+        /// <param name="encoding">
+        /// Optionally specifies the encoding to use to convert the input to bytes 
+        /// before base64 encoding it.  This defaults to <see cref="Encoding.UTF8"/>.
+        /// </param>
+        /// <returns></returns>
+        public static string ToBase64(string value, Encoding encoding = null)
+        {
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
+
+            encoding ??= Encoding.UTF8;
+
+            return Convert.ToBase64String(encoding.GetBytes(value));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="encodedValue">The base64 encoded input.</param>
+        /// <param name="encoding">
+        /// Optionally specifies the encoding to use to convert the decoded bytes 
+        /// to the result.  This defaults to <see cref="Encoding.UTF8"/>.
+        /// </param>
+        /// <returns></returns>
+        public static string FromBase64(string encodedValue, Encoding encoding = null)
+        {
+            Covenant.Requires<ArgumentNullException>(encodedValue != null, nameof(encodedValue));
+            
+            encoding ??= Encoding.UTF8;
+
+            return encoding.GetString(Convert.FromBase64String(encodedValue));
+        }
+
+        /// <summary>
         /// Returns the fully qualified path to the folder holding the
         /// assembly passed (includes the terminating "\").
         /// </summary>

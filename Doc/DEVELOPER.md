@@ -189,7 +189,7 @@ Follow the steps below to configure a development or test workstation:
 29. *Optional*: Developers who will be publishing releases will need to:
 
     * **Download:** the latest recommended (at least **v5.8.0**) **nuget.exe** from [here](https://www.nuget.org/downloads) and put this somewhere in your `PATH`
-    * Obtain a nuget API key from a senior developer and install the key on their workstation via:
+    * Obtain a nuget API key from a maintainer and install the key on your workstation via:
       ```
       nuget SetApiKey APIKEY
       ```
@@ -205,7 +205,6 @@ Follow the steps below to configure a development or test workstation:
 	  * Click **Install Schemas**
       * Click **Next** until you get to the last page.
       * Click **Close** to close the SHFB installer.
-
 
 30. *Optional*: Developers who will be publishing releases will need to configure your Personal Access Token (PAT) and GitHub username for GitHub registery access:
 

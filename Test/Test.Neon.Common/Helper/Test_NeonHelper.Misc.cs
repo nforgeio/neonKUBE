@@ -316,5 +316,18 @@ namespace TestCommon
             Assert.False(NeonHelper.IsWithin(expected, value + TimeSpan.FromMilliseconds(1.5), TimeSpan.FromMilliseconds(1)));
             Assert.False(NeonHelper.IsWithin(expected, value - TimeSpan.FromMilliseconds(1.5), TimeSpan.FromMilliseconds(1)));
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void Base64Encoding()
+        {
+            var encoded = Convert.ToBase64String(Encoding.UTF8.GetBytes("Hello World!"));
+
+            Assert.Equal("Hello World!", NeonHelper.FromBase64(encoded));
+
+            encoded = NeonHelper.ToBase64("Hello World!");
+
+            Assert.Equal("Hello World!", NeonHelper.FromBase64(encoded));
+        }
     }
 }

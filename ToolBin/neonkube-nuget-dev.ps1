@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# FILE:         neon-nuget-local.ps1
+# FILE:         neonkube-nuget-dev.ps1
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 #
@@ -15,8 +15,47 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Publishes DEBUG builds of the NeonForge Nuget packages to the local
-# file system at: %NF_BUILD%\nuget.
+# Publishes DEBUG builds of the NeonForge Nuget packages to the repo
+# at http://nuget-dev.neoncloud.io so intermediate builds can be shared 
+# by maintainers.
+#
+# NOTE: This is script works only for maintainers with proper credentials.
+
+# Verify that the user has the required environment variables.  These will
+# be available only for maintainers and are intialized by the neonCLOUD
+# [buildenv.cmd] script.
+
+if (!(Test-Path env:NC_NUGET_DEVFEED))
+{
+    "ERROR: This script is intended for maintainers only"
+    ""
+    "NC_NUGET_DEVFEED environment variable is not defined."
+    "Maintainers should re-run the neonCLOUD [buildenv.cmd] script."
+
+    return 1
+}
+
+if (!(Test-Path env:NC_NUGET_VERSIONER))
+{
+    "ERROR: This script is intended for maintainers only"
+    ""
+    "NC_NUGET_VERSIONER environment variable is not defined."
+    "Maintainers should re-run the neonCLOUD [buildenv.cmd] script."
+
+    return 1
+}
+
+if (!(Test-Path env:NC_NUGET_VERSIONER_APIKEY))
+{
+    "ERROR: This script is intended for maintainers only"
+    ""
+    "NC_NUGET_VERSIONER_APIKEY environment variable is not defined."
+    "Maintainers should re-run the neonCLOUD [buildenv.cmd] script."
+
+    return 1
+}
+
+# This needs to run with elevated privileges.
 
 if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))
 {
@@ -32,34 +71,29 @@ function Publish
         [Parameter(Position=0, Mandatory=1)]
         [string]$project,
         [Parameter(Position=1, Mandatory=1)]
-        [int]$version
+        [string]$version
     )
 
-    # The package will be published to [%NUGET_LOCAL_FEED%\NAME\VERSION\NAME.VERSION.nupkg] where
-    # NAME is the package name and VERSION is the version.  We need to ensure that the directories
-    # exist first and then build and copy the package there.  We'll need to inspect the project
-    # file passed to discover the package name and version.
+""
+"==============================================================================="
+"* Publishing: ${project}:${version}"
+"==============================================================================="
 
-    $newVersion     = "10000.0.$version-local"
-    $publishPath    = [io.path]::combine($env:NUGET_LOCAL_FEED, "$project.$newVersion")
     $projectPath    = [io.path]::combine($env:NF_ROOT, "Lib", "$project", "$project" + ".csproj")
     $orgProjectFile = Get-Content "$projectPath" -Encoding utf8
     $regex          = [regex]'<Version>(.*)</Version>'
     $match          = $regex.Match($orgProjectFile)
     $orgVersion     = $match.Groups[1].Value
-    $tmpProjectFile = $orgProjectFile.Replace("<Version>$orgVersion</Version>", "<Version>$newVersion</Version>")
+    $tmpProjectFile = $orgProjectFile.Replace("<Version>$orgVersion</Version>", "<Version>$version</Version>")
 
     Copy-Item "$projectPath" "$projectPath.org"
     
     $tmpProjectFile | Out-File -FilePath "$projectPath" -Encoding utf8
 
-    if (-not (Test-Path "$publishPath")) {
-        New-Item -Path "$publishPath" -ItemType Directory
-    }
-
-    dotnet pack "$env:NF_ROOT\Lib\$project\$project.csproj" -c Release -o "$publishPath"
+    dotnet pack "$env:NF_ROOT\Lib\$project\$project.csproj" -c Debug -o "$env:NF_BUILD\nuget"
+    nuget push -Source $env:NC_NUGET_DEVFEED "$env:NF_BUILD\nuget\$project.$version.nupkg"
    
-    # NOTE: We're not using this because including source and symbols above because
+    # NOTE: We're not doing this because including source and symbols above because
     # doesn't seem to to work.
     #
 	# dotnet pack "$env:NF_ROOT\Lib\$project\$project.csproj" -c Debug --include-symbols --include-source -o "$env:NUGET_LOCAL_FEED"
@@ -83,32 +117,19 @@ if (-not (Test-Path "$env:NUGET_LOCAL_FEED")) {
     New-Item -Path "$env:NUGET_LOCAL_FEED" -ItemType Directory
 }
 
-# We're going to track the local minor version number at:
-#
-#       %NUGET_LOCAL_FEED%\next-version.txt
-#
-# This will include the integer value for the next preview tag and
-# will be initialized to 0 when the file is not present.  We'll
-# read this value and pass it to the publish function which will
-# temporarily change the project's package version to:
-#
-#       10000.0.#-local
-#
-# where # is the next minor version number.  The function will
-# publish the package and then restore the nuget version to its
-# original value.  Using a preview tag will help ensure that 
-# other projects won't reference any of these packages by accident.
-#
-# After publishing all of the packages, we'll increment the
-# value in the version file.
+# We're going to call the neonCLOUD nuget versioner service to attomicaly increment the 
+# dev package version counter for this solution and then generate the full version for
+# the packages we'll be publishing.
 
-$versionPath = [io.path]::combine($env:NUGET_LOCAL_FEED, "next-version.txt")
+# Get the nuget versioner API key from the environment and convert it into a base-64 string.
 
-if (-not (Test-Path "$versionPath")) {
-    "0" | Out-File -FilePath $versionPath -Encoding ASCII
-}
+$versionerKeyBase64 = [Convert]::ToBase64String(([System.Text.Encoding]::UTF8.GetBytes($env:NC_NUGET_VERSIONER_APIKEY)))
 
-$version = [int]::Parse($(Get-Content -Path "$versionPath" -First 1))
+# Submit a PUT request to the versioner service, specifying the counter name.  The service will
+# attomically increment the counter and return the next value.
+
+$reply   = Invoke-WebRequest -Uri "$env:NC_NUGET_VERSIONER/counter/neonKUBE-dev" -Method 'PUT' -Headers @{ 'Authorization' = "Bearer $versionerKeyBase64" } 
+$version = "10000.0.$reply-dev"
 
 # Build and publish the projects.
 
@@ -144,9 +165,5 @@ Publish Neon.Xunit.Kube         $version
 Publish Neon.Xunit.Temporal     $version
 Publish Neon.Xunit.YugaByte     $version
 Publish Neon.YugaByte           $version
-
-# Increment the minor version.
-
-($version + 1).ToString() | Out-File -FilePath $versionPath -Encoding ASCII
 
 pause

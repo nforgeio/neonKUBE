@@ -228,8 +228,9 @@ alertmanager:
     ## Image of Alertmanager
     ##
     image:
-      repository: quay.io/prometheus/alertmanager
-      tag: v0.19.0
+      organization: ghcr.io/neonrelease
+      repository: prometheus-alertmanager
+      tag: latest
 
     ## If true then the user will be responsible to provide a secret with alertmanager configuration
     ## So when true the config part will be ignored (including templateFiles) and the one in the secret will be used
@@ -468,6 +469,18 @@ grafana:
     #   target_label: nodename
     #   replacement: $1
     #   action: replace
+
+kubeStateMetrics:
+  image:
+    organization: ghcr.io/neonrelease
+    repository: coreos-kube-state-metrics
+    tag: latest
+
+nodeExporter:
+  image:
+    organization: ghcr.io/neonrelease
+    repository: coreos-node-exporter
+    tag: latest
 
 ## Component scraping the kube api server
 ##
@@ -930,8 +943,9 @@ prometheusOperator:
   tlsProxy:
     enabled: true
     image:
-      repository: squareup/ghostunnel
-      tag: v1.4.1
+      organization: ghcr.io/neonrelease
+      repository: squareup-ghostunnel
+      tag: latest
       pullPolicy: IfNotPresent
     resources: {}
 
@@ -947,8 +961,9 @@ prometheusOperator:
     patch:
       enabled: true
       image:
-        repository: jettech/kube-webhook-certgen
-        tag: v1.0.0
+        organization: ghcr.io/neonrelease
+        repository: jettech-kube-webhook-certgen
+        tag: latest
         pullPolicy: IfNotPresent
       ## Provide a priority class name to the webhook patching job
       ##
@@ -1112,21 +1127,24 @@ prometheusOperator:
   ## Prometheus-operator image
   ##
   image:
-    repository: quay.io/coreos/prometheus-operator
-    tag: v0.32.0
+    organization: ghcr.io/neonrelease
+    repository: coreos-prometheus-operator
+    tag: latest
     pullPolicy: IfNotPresent
 
   ## Configmap-reload image to use for reloading configmaps
   ##
   configmapReloadImage:
-    repository: quay.io/coreos/configmap-reload
-    tag: v0.0.1
+    organization: ghcr.io/neonrelease
+    repository: coreos-configmap-reload
+    tag: latest
 
   ## Prometheus-config-reloader image to use for config and rule reloading
   ##
   prometheusConfigReloaderImage:
-    repository: quay.io/coreos/prometheus-config-reloader
-    tag: v0.32.0
+    organization: ghcr.io/neonrelease
+    repository: coreos-prometheus-config-reloader
+    tag: latest
 
   ## Set the prometheus config reloader side-car CPU limit. If unset, uses the prometheus-operator project default
   ##
@@ -1276,8 +1294,9 @@ prometheus:
     ## Image of Prometheus.
     ##
     image:
-      repository: quay.io/prometheus/prometheus
-      tag: v2.12.0
+      organization: ghcr.io/neonrelease
+      repository: prometheus-prometheus
+      tag: latest
 
     ## Tolerations for use with node taints
     ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
