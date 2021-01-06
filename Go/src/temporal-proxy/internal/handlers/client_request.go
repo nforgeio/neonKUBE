@@ -23,7 +23,6 @@ import (
 	"os"
 	"time"
 
-	"go.temporal.io/api/namespace/v1"
 	"go.temporal.io/api/workflowservice/v1"
 	"go.temporal.io/sdk/client"
 	"go.uber.org/zap"
@@ -448,18 +447,12 @@ func handleNamespaceUpdateRequest(requestCtx context.Context, request *messages.
 		return reply
 	}
 
-	//Config
-	configuration := request.GetNamespaceConfig()
-	updateInfo := namespace.UpdateNamespaceInfo{
-		Description: *request.GetUpdatedInfoDescription(),
-		OwnerEmail:  *request.GetUpdatedInfoOwnerEmail(),
-	}
-
 	// NamespaceUpdateRequest
 	namespaceUpdateRequest := workflowservice.UpdateNamespaceRequest{
-		Name:       nspace,
-		Config:     configuration,
-		UpdateInfo: &updateInfo,
+		Name:              nspace,
+		Config:            request.GetNamespaceConfig(),
+		UpdateInfo:        request.GetUpdateNamespaceInfo(),
+		ReplicationConfig: request.GetNamespaceReplicationConfig(),
 	}
 
 	// create context with timeout

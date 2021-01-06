@@ -654,28 +654,31 @@ namespace TestTemporal
                 Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Name);
-                Assert.Null(message.UpdatedInfoDescription);
-                Assert.Null(message.UpdatedInfoOwnerEmail);
-                Assert.False(message.ConfigurationEmitMetrics);
-                Assert.Equal(0, message.ConfigurationRetentionDays);
+                Assert.Null(message.UpdateNamespaceInfo);
+                Assert.Null(message.NamespaceConfig);
+                Assert.Null(message.NamespaceReplicationConfig);
+                Assert.Null(message.SecurityToken);
+                Assert.Null(message.DeleteBadBinary);
 
                 // Round-trip
 
                 message.ClientId = 444;
                 message.RequestId = 555;
-                message.Name = "my-name";
-                message.UpdatedInfoDescription = "my-description";
-                message.UpdatedInfoOwnerEmail = "joe@bloe.com";
-                message.ConfigurationEmitMetrics = true;
-                message.ConfigurationRetentionDays = 7;
+                message.Name = "my-namespace";
+                message.UpdateNamespaceInfo = GetTestUpdateNamespaceInfo();
+                message.NamespaceReplicationConfig = GetTestNamespaceReplicationConfig();
+                message.NamespaceConfig = GetTestNamespaceConfig();
+                message.SecurityToken = "my-token";
+                message.DeleteBadBinary = "bad-binary";
 
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-name", message.Name);
-                Assert.Equal("my-description", message.UpdatedInfoDescription);
-                Assert.Equal("joe@bloe.com", message.UpdatedInfoOwnerEmail);
-                Assert.True(message.ConfigurationEmitMetrics);
-                Assert.Equal(7, message.ConfigurationRetentionDays);
+                Assert.Equal("my-namespace", message.Name);
+                Assert.Equal("my-token", message.SecurityToken);
+                Assert.Equal("bad-binary", message.DeleteBadBinary);
+                ValidateTestNamespaceConfig(message.NamespaceConfig);
+                ValidateTestNamespaceReplicationConfig(message.NamespaceReplicationConfig);
+                ValidateTestUpdateNamespaceInfo(message.UpdateNamespaceInfo);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -685,11 +688,12 @@ namespace TestTemporal
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-name", message.Name);
-                Assert.Equal("my-description", message.UpdatedInfoDescription);
-                Assert.Equal("joe@bloe.com", message.UpdatedInfoOwnerEmail);
-                Assert.True(message.ConfigurationEmitMetrics);
-                Assert.Equal(7, message.ConfigurationRetentionDays);
+                Assert.Equal("my-namespace", message.Name);
+                Assert.Equal("my-token", message.SecurityToken);
+                Assert.Equal("bad-binary", message.DeleteBadBinary);
+                ValidateTestNamespaceConfig(message.NamespaceConfig);
+                ValidateTestNamespaceReplicationConfig(message.NamespaceReplicationConfig);
+                ValidateTestUpdateNamespaceInfo(message.UpdateNamespaceInfo);
 
                 // Clone()
 
@@ -697,11 +701,12 @@ namespace TestTemporal
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-name", message.Name);
-                Assert.Equal("my-description", message.UpdatedInfoDescription);
-                Assert.Equal("joe@bloe.com", message.UpdatedInfoOwnerEmail);
-                Assert.True(message.ConfigurationEmitMetrics);
-                Assert.Equal(7, message.ConfigurationRetentionDays);
+                Assert.Equal("my-namespace", message.Name);
+                Assert.Equal("my-token", message.SecurityToken);
+                Assert.Equal("bad-binary", message.DeleteBadBinary);
+                ValidateTestNamespaceConfig(message.NamespaceConfig);
+                ValidateTestNamespaceReplicationConfig(message.NamespaceReplicationConfig);
+                ValidateTestUpdateNamespaceInfo(message.UpdateNamespaceInfo);
 
                 // Echo the message via the associated [temporal-proxy] and verify.
 
@@ -709,11 +714,12 @@ namespace TestTemporal
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-name", message.Name);
-                Assert.Equal("my-description", message.UpdatedInfoDescription);
-                Assert.Equal("joe@bloe.com", message.UpdatedInfoOwnerEmail);
-                Assert.True(message.ConfigurationEmitMetrics);
-                Assert.Equal(7, message.ConfigurationRetentionDays);
+                Assert.Equal("my-namespace", message.Name);
+                Assert.Equal("my-token", message.SecurityToken);
+                Assert.Equal("bad-binary", message.DeleteBadBinary);
+                ValidateTestNamespaceConfig(message.NamespaceConfig);
+                ValidateTestNamespaceReplicationConfig(message.NamespaceReplicationConfig);
+                ValidateTestUpdateNamespaceInfo(message.UpdateNamespaceInfo);
             }
         }
 
@@ -2162,13 +2168,38 @@ namespace TestTemporal
         }
 
         /// <summary>
+        /// Returns a <see cref="UpdateNamespaceInfo"/> instance for testing purposes.
+        /// </summary>
+        /// <returns>The test info.</returns>
+        private UpdateNamespaceInfo GetTestUpdateNamespaceInfo()
+        {
+            return new UpdateNamespaceInfo()
+            {
+                Description = "Test domain",
+                OwnerEmail = "jeff@lilltek.com",
+                Data = new Dictionary<string, string>() { { "test", "value" } }
+            };
+        }
+
+        /// <summary>
+        /// Validates a <see cref="UpdateNamespaceInfo"/> instance for testing purposes.
+        /// </summary>
+        /// <param name="info">The domain info.</param>
+        private void ValidateTestUpdateNamespaceInfo(UpdateNamespaceInfo info)
+        {
+            Assert.NotNull(info);
+            Assert.Equal("jeff@lilltek.com", info.OwnerEmail);
+            Assert.Single(info.Data);
+            Assert.Equal("test", info.Data.First().Key);
+            Assert.Equal("value", info.Data.First().Value);
+        }
+
+        /// <summary>
         /// Returns a <see cref="NamespaceInfo"/> instance for testing purposes.
         /// </summary>
         /// <returns>The test info.</returns>
         private NamespaceInfo GetTestNamespaceInfo()
         {
-            var data = new Dictionary<string, byte[]>();
-
             return new NamespaceInfo()
             {
                 Name        = "my-namespace",
@@ -2354,74 +2385,6 @@ namespace TestTemporal
             Assert.Equal("value", ns.NamespaceInfo.Data.First().Value);
             Assert.Equal("1111-2222-3333-4444", ns.NamespaceInfo.Id);
         }
-
-        // TODO -- WE NO LONGER SUPPORT LISTING NAMESPACES.
-        //[Fact]
-        //[Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
-        //public void Test_NamespaceListReply()
-        //{
-        //    NamespaceListReply message;
-
-        //    using (var stream = new MemoryStream())
-        //    {
-        //        message = new NamespaceListReply();
-
-        //        // Empty message.
-
-        //        stream.SetLength(0);
-        //        stream.Write(message.SerializeAsBytes());
-        //        stream.Seek(0, SeekOrigin.Begin);
-
-        //        message = ProxyMessage.Deserialize<NamespaceListReply>(stream);
-        //        Assert.NotNull(message);
-        //        Assert.Equal(0, message.ClientId);
-        //        Assert.Equal(0, message.RequestId);
-        //        Assert.Null(message.Error);
-        //        Assert.Null(message.Namespaces);
-        //        Assert.Null(message.NextPageToken);
-
-        //        // Round-trip
-
-        //        message.ClientId      = 444;
-        //        message.RequestId     = 555;
-        //        message.NextPageToken = new byte[] { 5, 6, 7, 8, 9 };
-        //        message.Namespaces       = GetTestNamespaceDescriptions();
-
-        //        Assert.Equal(444, message.ClientId);
-        //        Assert.Equal(555, message.RequestId);
-        //        ValidateTestNamespaceDescriptions(message.Namespaces);
-        //        Assert.Equal(message.NextPageToken, new byte[] { 5, 6, 7, 8, 9 });
-
-        //        stream.SetLength(0);
-        //        stream.Write(message.SerializeAsBytes());
-        //        stream.Seek(0, SeekOrigin.Begin);
-
-        //        message = ProxyMessage.Deserialize<NamespaceListReply>(stream);
-        //        Assert.NotNull(message);
-        //        Assert.Equal(444, message.ClientId);
-        //        Assert.Equal(555, message.RequestId);
-        //        ValidateTestNamespaceDescriptions(message.Namespaces);
-        //        Assert.Equal(message.NextPageToken, new byte[] { 5, 6, 7, 8, 9 });
-
-        //        // Clone()
-
-        //        message = (NamespaceListReply)message.Clone();
-        //        Assert.NotNull(message);
-        //        Assert.Equal(444, message.ClientId);
-        //        Assert.Equal(555, message.RequestId);
-        //        ValidateTestNamespaceDescriptions(message.Namespaces);
-        //        Assert.Equal(message.NextPageToken, new byte[] { 5, 6, 7, 8, 9 });
-
-        //        // Echo the message via the associated [temporal-proxy] and verify.
-
-        //        message = EchoToProxy(message);
-        //        Assert.NotNull(message);
-        //        Assert.Equal(444, message.ClientId);
-        //        Assert.Equal(555, message.RequestId);
-        //        ValidateTestNamespaceDescriptions(message.Namespaces);
-        //        Assert.Equal(message.NextPageToken, new byte[] { 5, 6, 7, 8, 9 });
-        //    }
-        //}
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]

@@ -22,6 +22,7 @@ using System.ComponentModel;
 using Neon.Common;
 using Neon.Temporal;
 using Neon.Temporal.Internal;
+using Newtonsoft.Json;
 
 namespace Neon.Temporal
 {
@@ -38,11 +39,30 @@ namespace Neon.Temporal
         /// <summary>
         /// The updated basic namespace properties.
         /// </summary>
-        public UpdateNamespaceInfo NamespaceInfo { get; set; } = new UpdateNamespaceInfo();
+        [JsonProperty(PropertyName = "update_info")]
+        public UpdateNamespaceInfo UpdateInfo { get; set; } = new UpdateNamespaceInfo();
 
         /// <summary>
-        /// The updated namespace options.
+        /// The updated namespace configuration.
         /// </summary>
-        public NamespaceConfig Options { get; set; } = new NamespaceConfig();
+        public NamespaceConfig Config { get; set; } = new NamespaceConfig();
+
+        /// <summary>
+        /// The updated namespace replication configuration.
+        /// </summary>
+        [JsonProperty(PropertyName = "replication_config")]
+        public NamespaceReplicationConfig ReplicationConfig { get; set; }
+
+        /// <summary>
+        /// The updated namespace security token.
+        /// </summary>
+        [JsonProperty(PropertyName = "security_token")]
+        public string SecurityToken { get; set; }
+
+        /// <summary>
+        /// The updated namespace bad binary.
+        /// </summary>
+        [JsonProperty(PropertyName = "delete_bad_binary")]
+        public string DeleteBadBinary { get; set; }
     }
 }

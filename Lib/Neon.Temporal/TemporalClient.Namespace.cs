@@ -156,17 +156,19 @@ namespace Neon.Temporal
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
             Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
-            Covenant.Requires<ArgumentNullException>(request.Options != null, nameof(request));
-            Covenant.Requires<ArgumentNullException>(request.NamespaceInfo != null, nameof(request));
+            Covenant.Requires<ArgumentNullException>(request.Config != null, nameof(request));
+            Covenant.Requires<ArgumentNullException>(request.UpdateInfo != null, nameof(request));
             EnsureNotDisposed();
 
             var namespaceUpdateRequest =
                 new NamespaceUpdateRequest()
                 {
                     Name                       = name,
-                    UpdatedInfoDescription     = request.NamespaceInfo.Description,
-                    UpdatedInfoOwnerEmail      = request.NamespaceInfo.OwnerEmail,
-                    SecurityToken              = Settings.SecurityToken
+                    UpdateNamespaceInfo        = request.UpdateInfo,
+                    NamespaceReplicationConfig = request.ReplicationConfig,
+                    NamespaceConfig            = request.Config,
+                    SecurityToken              = Settings.SecurityToken,
+                    DeleteBadBinary            = request.DeleteBadBinary
                 };
 
             var reply = await CallProxyAsync(namespaceUpdateRequest);

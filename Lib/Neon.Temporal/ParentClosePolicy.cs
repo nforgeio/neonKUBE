@@ -33,21 +33,23 @@ namespace Neon.Temporal
     {
         // WARNING: These definitions must match those defined for [InternalParentClosePolicy].
 
+        Unspecified = 0,
+
         /// <summary>
         /// All open child workflows will be terminated when parent workflow is closed.
         /// </summary>
-        Terminate = 0,
+        Terminate = 1,
 
         /// <summary>
         /// Cancel requests will be sent to all open child workflows to all open child 
         /// workflows when parent workflow is closed.    This is the <b>default policy</b>.
         /// </summary>
-        RequestCancel = 1,
+        RequestCancel = 2,
 
         /// <summary>
         /// Child workflow execution will continue unaffected when parent workflow is closed,
         /// essentially becoming orphaned.
         /// </summary>
-        Abandon = 2
+        Abandon = 3
     }
 }

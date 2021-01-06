@@ -32,18 +32,23 @@ namespace Neon.Temporal
         // WARNING: These values must match those defined by [InternalPendingActivityState].
 
         /// <summary>
+        /// The activity state is unspecified.
+        /// </summary>
+        Unspecified = 0,
+
+        /// <summary>
         /// The activity is waiting to be started.
         /// </summary>
-        Scheduled = 0,
+        Scheduled = 1,
 
         /// <summary>
         /// The activity is running.
         /// </summary>
-        Started = 1,
+        Started = 2,
 
         /// <summary>
         /// The activity has a cancellation request pending.
         /// </summary>
-        CancelRequested = 2
+        CancelRequested = 3
     }
 }

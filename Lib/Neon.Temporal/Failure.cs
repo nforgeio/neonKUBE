@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    UpdateNamespaceInfo.cs
-// CONTRIBUTOR: Jeff Lill
+// FILE:	    Failure.cs
+// CONTRIBUTOR: John C. Burns
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,35 +17,39 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
+using System.Text;
 
 using Newtonsoft.Json;
-
-using Neon.Common;
-using Neon.Temporal;
-using Neon.Temporal.Internal;
 
 namespace Neon.Temporal
 {
     /// <summary>
-    /// Holds the changes to be made to a Temporal namespace's basic properties.
+    /// Defines a workflow execution failure.
     /// </summary>
-    public class UpdateNamespaceInfo
+    public class Failure
     {
         /// <summary>
-        /// The updated namespace description.
+        /// The failure message.
         /// </summary>
-        public string Description { get; set; }
+        [JsonProperty(PropertyName = "message")]
+        public string Message { get; set; }
 
         /// <summary>
-        /// The updated namespace owner email address.
+        /// The source of failure.
         /// </summary>
-        [JsonProperty(PropertyName = "owner_email")]
-        public string OwnerEmail { get; set; }
+        [JsonProperty(PropertyName = "source")]
+        public string Source { get; set; }
 
         /// <summary>
-        /// Key-value map for any customized purpose.
+        /// The failure stack trace.
         /// </summary>
-        public Dictionary<string, string> Data { get; set; }
+        [JsonProperty(PropertyName = "stack_trace")]
+        public string StackTrace { get; set; }
+
+        /// <summary>
+        /// The cause of failure.
+        /// </summary>
+        [JsonProperty(PropertyName = "cause")]
+        public Failure Cause { get; set; }
     }
 }

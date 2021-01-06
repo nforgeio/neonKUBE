@@ -21,6 +21,7 @@ import (
 	internal "temporal-proxy/internal"
 
 	"go.temporal.io/api/namespace/v1"
+	"go.temporal.io/api/replication/v1"
 )
 
 type (
@@ -52,8 +53,7 @@ func NewNamespaceUpdateRequest() *NamespaceUpdateRequest {
 // GetName gets a NamespaceUpdateRequest's Name value
 // from its properties map
 //
-// returns *string -> pointer to a string in memory holding the value
-// of a NamespaceUpdateRequest's Name
+// returns *string Name
 func (request *NamespaceUpdateRequest) GetName() *string {
 	return request.GetStringProperty("Name")
 }
@@ -61,56 +61,60 @@ func (request *NamespaceUpdateRequest) GetName() *string {
 // SetName sets a NamespaceUpdateRequest's Name value
 // in its properties map
 //
-// param value *string -> a pointer to a string in memory that holds the value
-// to be set in the properties map
+// param value *string
 func (request *NamespaceUpdateRequest) SetName(value *string) {
 	request.SetStringProperty("Name", value)
 }
 
-// GetUpdatedInfoDescription gets a NamespaceUpdateRequest's UpdatedInfoDescription
-// value from its properties map
+// GetUpdateNamespaceInfo gets a NamespaceUpdateRequest's UpdateNamespaceInfo field
+// from its properties map.
 //
-// returns *string -> pointer to a string in memory holding the value
-// of a NamespaceUpdateRequest's UpdatedInfoDescription
-func (request *NamespaceUpdateRequest) GetUpdatedInfoDescription() *string {
-	return request.GetStringProperty("UpdatedInfoDescription")
+// returns *namespace.UpdateNamespaceInfo
+func (request *NamespaceUpdateRequest) GetUpdateNamespaceInfo() *namespace.UpdateNamespaceInfo {
+	info := new(namespace.UpdateNamespaceInfo)
+	err := request.GetJSONProperty("UpdateNamespaceInfo", info)
+	if err != nil {
+		return nil
+	}
+	return info
 }
 
-// SetUpdatedInfoDescription sets a NamespaceUpdateRequest's UpdatedInfoDescription
-// value in its properties map
+// SetUpdateNamespaceInfo sets an NamespaceUpdateRequest's UpdateNamespaceInfo field
+// from its properties map.
 //
-// param value *string -> a pointer to a string in memory that holds the value
-// to be set in the properties map
-func (request *NamespaceUpdateRequest) SetUpdatedInfoDescription(value *string) {
-	request.SetStringProperty("UpdatedInfoDescription", value)
+// param value namespace.UpdateNamespaceInfo
+func (request *NamespaceUpdateRequest) SetUpdateNamespaceInfo(value *namespace.UpdateNamespaceInfo) {
+	request.SetJSONProperty("UpdateNamespaceInfo", value)
 }
 
-// GetUpdatedInfoOwnerEmail gets a NamespaceUpdateRequest's UpdatedInfoOwnerEmail
-// value from its properties map
+// GetNamespaceReplicationConfig gets a NamespaceUpdateRequest's ReplicationConfig field
+// from its properties map.
 //
-// returns *string -> pointer to a string in memory holding the value
-// of a NamespaceUpdateRequest's UpdatedInfoOwnerEmail
-func (request *NamespaceUpdateRequest) GetUpdatedInfoOwnerEmail() *string {
-	return request.GetStringProperty("UpdatedInfoOwnerEmail")
+// returns *replication.NamespaceReplicationConfig.
+func (request *NamespaceUpdateRequest) GetNamespaceReplicationConfig() *replication.NamespaceReplicationConfig {
+	config := new(replication.NamespaceReplicationConfig)
+	err := request.GetJSONProperty("NamespaceReplicationConfig", config)
+	if err != nil {
+		return nil
+	}
+	return config
 }
 
-// SetUpdatedInfoOwnerEmail sets a NamespaceUpdateRequest's UpdatedInfoOwnerEmail
-// value in its properties map
+// SetNamespaceReplicationConfig sets an NamespaceUpdateRequest's NamespaceReplicationConfig field
+// from its properties map.
 //
-// param value *string -> a pointer to a string in memory that holds the value
-// to be set in the properties map
-func (request *NamespaceUpdateRequest) SetUpdatedInfoOwnerEmail(value *string) {
-	request.SetStringProperty("UpdatedInfoOwnerEmail", value)
+// param value *replication.NamespaceReplicationConfig
+func (request *NamespaceUpdateRequest) SetNamespaceReplicationConfig(value *replication.NamespaceReplicationConfig) {
+	request.SetJSONProperty("NamespaceReplicationConfig", value)
 }
 
 // GetNamespaceConfig gets a NamespaceUpdateRequest's NamespaceConfig field
-// from its properties map. NamespaceConfig is the namespace.NamespaceConfig to set in the activity
-// complete call.
+// from its properties map.
 //
-// returns *namespace.NamespaceConfig -> namespace.NamespaceConfig to set in activity complete
+// returns *namespace.NamespaceConfig
 func (request *NamespaceUpdateRequest) GetNamespaceConfig() *namespace.NamespaceConfig {
 	config := new(namespace.NamespaceConfig)
-	err := request.GetJSONProperty("NamespaceConfig", &config)
+	err := request.GetJSONProperty("NamespaceConfig", config)
 	if err != nil {
 		return nil
 	}
@@ -118,10 +122,9 @@ func (request *NamespaceUpdateRequest) GetNamespaceConfig() *namespace.Namespace
 }
 
 // SetNamespaceConfig sets an NamespaceUpdateRequest's NamespaceConfig field
-// from its properties map.  NamespaceConfig is the namespace.NamespaceConfig to set in the activity
-// complete call.
+// from its properties map.
 //
-// param value namespace.NamespaceConfig -> namespace.NamespaceConfig value to set in activity complete
+// param value namespace.NamespaceConfig
 func (request *NamespaceUpdateRequest) SetNamespaceConfig(value *namespace.NamespaceConfig) {
 	request.SetJSONProperty("NamespaceConfig", value)
 }
@@ -129,8 +132,7 @@ func (request *NamespaceUpdateRequest) SetNamespaceConfig(value *namespace.Names
 // GetSecurityToken gets a NamespaceUpdateRequest's SecurityToken value
 // from its properties map
 //
-// returns *string -> pointer to a string in memory holding the value
-// of a NamespaceUpdateRequest's SecurityToken
+// returns *string SecurityToken
 func (request *NamespaceUpdateRequest) GetSecurityToken() *string {
 	return request.GetStringProperty("SecurityToken")
 }
@@ -138,10 +140,27 @@ func (request *NamespaceUpdateRequest) GetSecurityToken() *string {
 // SetSecurityToken sets a NamespaceUpdateRequest's SecurityToken value
 // in its properties map
 //
-// param value *string -> a pointer to a string in memory that holds the value
-// to be set in the properties map
+// param value *string
 func (request *NamespaceUpdateRequest) SetSecurityToken(value *string) {
 	request.SetStringProperty("SecurityToken", value)
+}
+
+// GetDeleteBadBinary gets a NamespaceUpdateRequest's DeleteBadBinary value
+// from its properties map
+//
+// returns *string -> pointer to a string in memory holding the value
+// of a NamespaceUpdateRequest's DeleteBadBinary
+func (request *NamespaceUpdateRequest) GetDeleteBadBinary() *string {
+	return request.GetStringProperty("DeleteBadBinary")
+}
+
+// SetDeleteBadBinary sets a NamespaceUpdateRequest's DeleteBadBinary value
+// in its properties map
+//
+// param value *string -> a pointer to a string in memory that holds the value
+// to be set in the properties map
+func (request *NamespaceUpdateRequest) SetDeleteBadBinary(value *string) {
+	request.SetStringProperty("DeleteBadBinary", value)
 }
 
 // -------------------------------------------------------------------------
@@ -161,9 +180,10 @@ func (request *NamespaceUpdateRequest) CopyTo(target IProxyMessage) {
 	request.ProxyRequest.CopyTo(target)
 	if v, ok := target.(*NamespaceUpdateRequest); ok {
 		v.SetName(request.GetName())
-		v.SetUpdatedInfoDescription(request.GetUpdatedInfoDescription())
-		v.SetUpdatedInfoOwnerEmail(request.GetUpdatedInfoOwnerEmail())
+		v.SetNamespaceReplicationConfig(request.GetNamespaceReplicationConfig())
+		v.SetUpdateNamespaceInfo(request.GetUpdateNamespaceInfo())
 		v.SetNamespaceConfig(request.GetNamespaceConfig())
 		v.SetSecurityToken(request.GetSecurityToken())
+		v.SetDeleteBadBinary(request.GetDeleteBadBinary())
 	}
 }

@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    UpdateNamespaceInfo.cs
-// CONTRIBUTOR: Jeff Lill
+// FILE:	    SearchAttributes.cs
+// CONTRIBUTOR: John C. Burns
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,35 +17,18 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-
-using Newtonsoft.Json;
-
-using Neon.Common;
-using Neon.Temporal;
-using Neon.Temporal.Internal;
+using System.Text;
 
 namespace Neon.Temporal
 {
     /// <summary>
-    /// Holds the changes to be made to a Temporal namespace's basic properties.
+    /// Describes workflow execution search attributes.
     /// </summary>
-    public class UpdateNamespaceInfo
+    public class SearchAttributes
     {
         /// <summary>
-        /// The updated namespace description.
+        /// Key-value mapping of string index field to data payload.
         /// </summary>
-        public string Description { get; set; }
-
-        /// <summary>
-        /// The updated namespace owner email address.
-        /// </summary>
-        [JsonProperty(PropertyName = "owner_email")]
-        public string OwnerEmail { get; set; }
-
-        /// <summary>
-        /// Key-value map for any customized purpose.
-        /// </summary>
-        public Dictionary<string, string> Data { get; set; }
+        public Dictionary<string, Payload> IndexedFields { get; set; }
     }
 }

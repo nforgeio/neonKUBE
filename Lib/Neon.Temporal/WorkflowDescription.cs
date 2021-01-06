@@ -19,6 +19,8 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 
+using Newtonsoft.Json;
+
 using Neon.Common;
 using Neon.Temporal;
 using Neon.Temporal.Internal;
@@ -33,21 +35,25 @@ namespace Neon.Temporal
         /// <summary>
         /// Describes the workflow's configuration.
         /// </summary>
+        [JsonProperty(PropertyName = "execution_config")]
         public WorkflowExecutionConfig ExecutionConfig { get; set; }
 
         /// <summary>
         /// Describes the workflow's execution details.
         /// </summary>
+        [JsonProperty(PropertyName = "workflow_execution_info")]
         public WorkflowExecutionInfo WorkflowExecutionInfo { get; set; }
 
         /// <summary>
         /// Describes the workflow's scheduled and executing activities.
         /// </summary>
+        [JsonProperty(PropertyName = "pending_activities")]
         public List<PendingActivityInfo> PendingActivities { get; set; }
 
         /// <summary>
         /// Describes the workflow's scheduled and executing child workflows.
         /// </summary>
+        [JsonProperty(PropertyName = "pending_children")]
         public List<PendingChildExecutionInfo> PendingChildren { get; set; }
     }
 }

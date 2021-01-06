@@ -19,6 +19,8 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 
+using Newtonsoft.Json;
+
 using Neon.Temporal;
 using Neon.Common;
 
@@ -39,26 +41,31 @@ namespace Neon.Temporal
         /// <summary>
         /// Returns the workflow ID.
         /// </summary>
+        [JsonProperty(PropertyName = "workflow_id")]
         public string WorkflowId { get; set; }
 
         /// <summary>
         /// Returns the workflow run ID.
         /// </summary>
+        [JsonProperty(PropertyName = "run_id")]
         public string RunId { get; set; }
 
         /// <summary>
         /// Returns the workflow type name.
         /// </summary>
+        [JsonProperty(PropertyName = "workflow_type_name")]
         public string WorkflowTypeName { get; set; }
 
         /// <summary>
         /// $todo(jefflill): What is this?
         /// </summary>
+        [JsonProperty(PropertyName = "initiated_id")]
         public long InitiatedId { get; set; }
 
         /// <summary>
         /// Returns policy used to close this child when its parent is closed.
         /// </summary>
+        [JsonProperty(PropertyName = "parent_close_policy")]
         public ParentClosePolicy ParentClosePolicy { get; set; }
     }
 }
