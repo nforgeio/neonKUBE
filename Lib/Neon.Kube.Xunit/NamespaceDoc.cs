@@ -23,7 +23,7 @@ using System.Reflection;
 
 using Neon.Common;
 
-namespace Neon.Xunit.Kube
+namespace Neon.Kube.Xunit
 {
     /// <summary>
     /// This namespace includes additional utilties for testing neonKUBE functionality.

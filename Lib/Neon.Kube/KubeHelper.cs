@@ -108,7 +108,7 @@ namespace Neon.Kube
             cachedRunFolder          = null;
             cachedLogFolder          = null;
             cachedTempFolder         = null;
-            cachedLoginsFolder     = null;
+            cachedLoginsFolder       = null;
             cachedPasswordsFolder    = null;
             cachedCacheFolder        = null;
             cachedDesktopFolder      = null;
@@ -1304,9 +1304,9 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(setupInfo != null, nameof(setupInfo));
 
-            var hostPlatform    = KubeHelper.HostPlatform;
-            var cachedHelmPath  = KubeHelper.GetCachedComponentPath(hostPlatform, "helm", KubeVersions.HelmVersion);
-            var targetPath      = Path.Combine(KubeHelper.ProgramFolder);
+            var hostPlatform   = KubeHelper.HostPlatform;
+            var cachedHelmPath = KubeHelper.GetCachedComponentPath(hostPlatform, "helm", KubeVersions.HelmVersion);
+            var targetPath     = Path.Combine(KubeHelper.ProgramFolder);
 
             switch (hostPlatform)
             {
@@ -1414,7 +1414,7 @@ namespace Neon.Kube
         /// <param name="namespace">The namespace where the pod is running.</param>
         /// <param name="command">The command to run.</param>
         /// <returns>The command result.</returns>
-        public async static Task<string> ExecInPod(IKubernetes client, V1Pod pod, string @namespace, string[] command)
+        public async static Task<string> ExecuteInPod(IKubernetes client, V1Pod pod, string @namespace, string[] command)
         {
             var webSocket = await client.WebSocketNamespacedPodExecAsync(pod.Metadata.Name, @namespace, command, pod.Spec.Containers[0].Name);
             var demux     = new StreamDemuxer(webSocket);

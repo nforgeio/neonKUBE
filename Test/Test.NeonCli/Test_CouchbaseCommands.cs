@@ -32,10 +32,10 @@ using Couchbase.N1QL;
 using Neon;
 using Neon.Common;
 using Neon.Kube;
+using Neon.Kube.Xunit;
 using Neon.IO;
 using Neon.Xunit;
 using Neon.Xunit.Couchbase;
-using Neon.Xunit.Kube;
 
 using Test.Neon.Models;
 

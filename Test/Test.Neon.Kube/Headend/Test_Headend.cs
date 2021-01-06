@@ -34,9 +34,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Neon.Common;
 using Neon.IO;
 using Neon.Kube;
+using Neon.Kube.Xunit;
 using Neon.Service;
 using Neon.Xunit;
-using Neon.Xunit.Kube;
 
 using Xunit;
 
@@ -52,6 +52,5 @@ namespace TestKube
             var zip = await headendClient.GetHelmChartZipAsync("elasticsearch");
             Assert.IsType<byte[]>(zip);
         }
-
     }
 }

@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
-    <RootNamespace>Neon.Xunit.Kube</RootNamespace>
-    <PackageId>Neon.Xunit.Kube</PackageId>
+    <RootNamespace>Neon.Kube.Xunit</RootNamespace>
+    <PackageId>Neon.Kube.Xunit</PackageId>
     <Version>2.10.0-internal</Version>
     <Authors>neonFORGE Team</Authors>
     <Product>neonLIBRARY</Product>
@@ -15,7 +15,7 @@
     <LangVersion>latest</LangVersion>
     <IsPackable>true</IsPackable>
     <PackageLicenseUrl></PackageLicenseUrl>
-    <PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Xunit.Kube/README.md</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Kube.Xunit/README.md</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>

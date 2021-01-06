@@ -51,7 +51,7 @@
     <ProjectReference Include="..\..\Lib\Neon.Web\Neon.Web.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Xunit.Cadence\Neon.Xunit.Cadence.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Xunit.Couchbase\Neon.Xunit.Couchbase.csproj" />
-    <ProjectReference Include="..\..\Lib\Neon.Xunit.Kube\Neon.Xunit.Kube.csproj" />
+    <ProjectReference Include="..\..\Lib\Neon.Kube.Xunit\Neon.Kube.Xunit.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Xunit\Neon.Xunit.csproj" />
     <ProjectReference Include="..\Test.Neon.Models\Test.Neon.Models.csproj" />
   </ItemGroup>

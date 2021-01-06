@@ -112,7 +112,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Web", "Lib\Neon.Web\Ne
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "uuid-gen", "Tools\uuid-gen\uuid-gen.csproj", "{12E8C084-88B8-47A9-82AD-038C206089AA}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Xunit.Kube", "Lib\Neon.Xunit.Kube\Neon.Xunit.Kube.csproj", "{167C080E-3F81-4EB7-93BD-1D8671B51835}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.Xunit", "Lib\Neon.Kube.Xunit\Neon.Kube.Xunit.csproj", "{167C080E-3F81-4EB7-93BD-1D8671B51835}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.Aws", "Lib\Neon.Kube.Aws\Neon.Kube.Aws.csproj", "{592FFCE1-0D8C-4797-9B3A-5F5F7E5E935B}"
 EndProject

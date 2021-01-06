@@ -110,7 +110,7 @@ SetVersion Neon.XenServer           $libraryVersion
 SetVersion Neon.Xunit               $libraryVersion
 SetVersion Neon.Xunit.Cadence       $libraryVersion
 SetVersion Neon.Xunit.Couchbase     $libraryVersion
-SetVersion Neon.Xunit.Kube          $libraryVersion
+SetVersion Neon.Kube.Xunit          $libraryVersion
 SetVersion Neon.Xunit.Temporal      $libraryVersion
 SetVersion Neon.Xunit.YugaByte      $libraryVersion
 SetVersion Neon.YugaByte            $libraryVersion
@@ -133,6 +133,7 @@ Publish Neon.HyperV                 $libraryVersion
 # Publish Neon.Kube.HyperV            $neonkubeVersion
 # Publish Neon.Kube.HyperVLocal       $neonkubeVersion
 # Publish Neon.Kube.XenServer         $neonkubeVersion
+# Publish Neon.Kube.Xunit             $neonkubeVersion
 Publish Neon.Service                $libraryVersion
 Publish Neon.ModelGen               $libraryVersion
 Publish Neon.Nats                   $libraryVersion
@@ -145,7 +146,6 @@ Publish Neon.XenServer              $libraryVersion
 Publish Neon.Xunit                  $libraryVersion
 Publish Neon.Xunit.Cadence          $libraryVersion
 Publish Neon.Xunit.Couchbase        $libraryVersion
-Publish Neon.Xunit.Kube             $libraryVersion
 Publish Neon.Xunit.Temporal         $libraryVersion
 Publish Neon.Xunit.YugaByte         $libraryVersion
 Publish Neon.YugaByte               $libraryVersion

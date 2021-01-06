@@ -149,6 +149,7 @@ Publish Neon.Kube.Hosting       $version
 Publish Neon.Kube.HyperV        $version
 Publish Neon.Kube.HyperVLocal   $version
 Publish Neon.Kube.XenServer     $version
+Publish Neon.Kube.Xunit         $version
 Publish Neon.Service            $version
 Publish Neon.ModelGen           $version
 Publish Neon.Nats               $version
@@ -161,7 +162,6 @@ Publish Neon.XenServer          $version
 Publish Neon.Xunit              $version
 Publish Neon.Xunit.Cadence      $version
 Publish Neon.Xunit.Couchbase    $version
-Publish Neon.Xunit.Kube         $version
 Publish Neon.Xunit.Temporal     $version
 Publish Neon.Xunit.YugaByte     $version
 Publish Neon.YugaByte           $version
