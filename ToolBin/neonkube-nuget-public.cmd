@@ -1,6 +1,6 @@
 @echo off
 REM ---------------------------------------------------------------------------
-REM FILE:         neon-nuget-dev.cmd
+REM FILE:         neonkube-nuget-public.cmd
 REM CONTRIBUTOR:  Jeff Lill
 REM COPYRIGHT:    Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 REM
@@ -16,10 +16,7 @@ REM WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 REM See the License for the specific language governing permissions and
 REM limitations under the License.
 
-REM Publishes DEBUG builds of the NeonForge Nuget packages to the repo
-REM at http://nuget-dev.neoncloud.io so intermediate builds can be shared 
-REM by maintainers.
-REM
-REM NOTE: This is script works only for maintainers with proper credentials.
+REM Publishes RELEASE builds of the NeonForge Nuget packages to the
+REM local file system and public Nuget.org repositories.
 
-powershell -file "%NF_ROOT%\ToolBin\neon-nuget-dev.ps1" %*
+powershell -file "%NF_ROOT%\ToolBin\neonkube-nuget-public.ps1" %*

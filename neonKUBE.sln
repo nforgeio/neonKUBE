@@ -95,13 +95,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ToolBin", "ToolBin", "{E9E3
 		ToolBin\neon-builder.ps1 = ToolBin\neon-builder.ps1
 		ToolBin\neon-cadence.cmd = ToolBin\neon-cadence.cmd
 		ToolBin\neon-cadence.ps1 = ToolBin\neon-cadence.ps1
-		ToolBin\neon-nuget-dev.cmd = ToolBin\neon-nuget-dev.cmd
-		ToolBin\neon-nuget-dev.ps1 = ToolBin\neon-nuget-dev.ps1
-		ToolBin\neon-nuget-public.cmd = ToolBin\neon-nuget-public.cmd
-		ToolBin\neon-nuget-public.ps1 = ToolBin\neon-nuget-public.ps1
 		ToolBin\neon-publish-images.cmd = ToolBin\neon-publish-images.cmd
 		ToolBin\neon-release.cmd = ToolBin\neon-release.cmd
 		ToolBin\neon-release.ps1 = ToolBin\neon-release.ps1
+		ToolBin\neonkube-nuget-dev.cmd = ToolBin\neonkube-nuget-dev.cmd
+		ToolBin\neonkube-nuget-dev.ps1 = ToolBin\neonkube-nuget-dev.ps1
+		ToolBin\neonkube-nuget-public.cmd = ToolBin\neonkube-nuget-public.cmd
+		ToolBin\neonkube-nuget-public.ps1 = ToolBin\neonkube-nuget-public.ps1
 		ToolBin\text.cmd = ToolBin\text.cmd
 		ToolBin\unix-text.cmd = ToolBin\unix-text.cmd
 	EndProjectSection
