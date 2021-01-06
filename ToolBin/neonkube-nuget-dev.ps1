@@ -126,7 +126,7 @@ if (-not (Test-Path "$env:NUGET_LOCAL_FEED")) {
 $versionerKeyBase64 = [Convert]::ToBase64String(([System.Text.Encoding]::UTF8.GetBytes($env:NC_NUGET_VERSIONER_APIKEY)))
 
 # Submit a PUT request to the versioner service, specifying the counter name.  The service will
-# attomically increment the counter and return the next value.
+# atomically increment the counter and return the next value.
 
 $reply   = Invoke-WebRequest -Uri "$env:NC_NUGET_VERSIONER/counter/neonKUBE-dev" -Method 'PUT' -Headers @{ 'Authorization' = "Bearer $versionerKeyBase64" } 
 $version = "10000.0.$reply-dev"
