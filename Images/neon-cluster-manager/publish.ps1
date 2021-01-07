@@ -42,7 +42,7 @@ function Build
 	)
 
 	$registry    = GetRegistry "neon-cluster-manager"
-	$tag         = $version
+	$tag         = "neonkube-$version"
 	$tagAsLatest = TagAsLatest
 
 	# Build and publish the images.

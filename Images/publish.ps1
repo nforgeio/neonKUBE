@@ -31,7 +31,6 @@ param
     [switch]$nopush      = $false,      # Don't push to the registry
     [switch]$noprune     = $false,      # Don't prune the local Docker cache
     [switch]$allVersions = $false,      # Rebuild all image versions
-    [switch]$noprune     = $false,      # Don't prune the local Docker cache
     [switch]$rel         = $false,      # Override current branch and publish to: ghcr.io/neonrelease
     [switch]$dev         = $false       # Override current branch and publish to: ghcr.io/neonrelease-dev
 )
@@ -125,7 +124,8 @@ if ($other)
 {
     Publish "$image_root\\nats"
     Publish "$image_root\\nats-streaming"
-    Publish "$image_root\\cadence-dev"
+    # See: https://github.com/nforgeio/neonKUBE/issues/1117
+    # Publish "$image_root\\cadence-dev"
     Publish "$image_root\\couchbase-dev"
     Publish "$image_root\\yugabyte"
 }

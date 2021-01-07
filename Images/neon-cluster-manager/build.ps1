@@ -32,7 +32,7 @@ Exec { core-layers $appname "$pwd\bin" }
 
 # Build the image.
 
-Exec { docker build -t "${registry}:$tag" --build-arg "ORGANIZATION=$organization" --build-arg "CLUSTER_VERSION=$neonKUBE_Version" --build-arg "APPNAME=$appname" . }
+Exec { docker build -t "${registry}:$tag" --build-arg "ORGANIZATION=$organization" --build-arg "CLUSTER_VERSION=neonkube-$neonKUBE_Version" --build-arg "APPNAME=$appname" . }
 
 # Clean up
 

@@ -32,4 +32,4 @@ $organization = DockerOrg
 
 # Build the image.
 
-Exec { docker build -t "${registry}:$tag" --build-arg "ORGANIZATION=$organization" --build-arg "VERSION=$version" --build-arg "CLUSTER_VERSION=$neonKUBE_Version" . }
+Exec { docker build -t "${registry}:$tag" --build-arg "ORGANIZATION=$organization" --build-arg "VERSION=$version" --build-arg "CLUSTER_VERSION=neonkube-$neonKUBE_Version" . }

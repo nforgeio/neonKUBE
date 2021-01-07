@@ -36,4 +36,4 @@ COPY docker-entrypoint.sh   /
 RUN chmod 700 /*.sh
 
 # Entry point
-ENTRYPOINT ["tini", "-g", "--", "/docker-entrypoint.sh"]
+ENTRYPOINT ["/docker-entrypoint.sh"]
