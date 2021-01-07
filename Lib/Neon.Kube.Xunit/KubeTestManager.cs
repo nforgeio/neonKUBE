@@ -24,14 +24,14 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Neon.Common;
-using Neon.Kube;
 using Neon.IO;
+using Neon.Kube;
+using Neon.Kube.Xunit;
 using Neon.Xunit;
-using Neon.Xunit.Kube;
 
 using Xunit;
 
-namespace Neon.Xunit.Kube
+namespace Neon.Kube.Xunit
 {
     /// <summary>
     /// Creates a temporary folder and puts <see cref="KubeHelper"/> into test mode

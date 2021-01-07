@@ -31,10 +31,6 @@ $src_tools_path    = "$src_path\\Tools"
 #------------------------------------------------------------------------------
 # Global constants.
 
-# TINI init manager binary download URL (obtained from: https://github.com/krallin/tini/releases)
-
-$tini_url = "https://neonkube.s3-us-west-2.amazonaws.com/misc/tini-0.19.0"
-
 # neonKUBE cluster release Version.
 
 $neonKUBE_Version = Get-Content "$env:NF_ROOT\neonKUBE-version.txt" -First 1
@@ -281,9 +277,9 @@ function GetRegistry($image)
 }
 
 #------------------------------------------------------------------------------
-# Returns the Docker Hub organization corresponding to the current Git nbranch.
+# Returns the registry organization corresponding to the current Git branch.
 
-function DockerOrg
+function RegistryOrg
 {
 	if (IsRelease)
 	{

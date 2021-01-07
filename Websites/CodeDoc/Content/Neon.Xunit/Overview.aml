@@ -44,7 +44,7 @@
             </entry>
           </row>
           <row>
-            <entry><para><legacyBold>Neon.Xunit.Kube</legacyBold></para></entry>
+            <entry><para><legacyBold>Neon.Kube.Xunit</legacyBold></para></entry>
             <entry>
               <para>
                 is currently used internally for neonKUBE related unit testing.
@@ -59,7 +59,7 @@
       <codeEntityReference qualifyHint="false">N:Neon.Xunit</codeEntityReference>
       <codeEntityReference qualifyHint="false">N:Neon.Xunit.Cadence</codeEntityReference>
       <codeEntityReference qualifyHint="false">N:Neon.Xunit.Couchbase</codeEntityReference>
-      <codeEntityReference qualifyHint="false">N:Neon.Xunit.Kube</codeEntityReference>
+      <codeEntityReference qualifyHint="false">N:Neon.Kube.Xunit</codeEntityReference>
     </relatedTopics>
   </developerConceptualDocument>
 </topic>

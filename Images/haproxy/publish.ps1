@@ -43,7 +43,7 @@ function Build
 	)
 
 	$registry = GetRegistry "haproxy"
-	$tag      = $version
+	$tag      = "neonkube-$version"
 
 	# Build and publish the images.
 

@@ -32,8 +32,8 @@ using Microsoft.Net.Http.Server;
 using Neon.Common;
 using Neon.IO;
 using Neon.Kube;
+using Neon.Kube.Xunit;
 using Neon.Xunit;
-using Neon.Xunit.Kube;
 
 using Xunit;
 

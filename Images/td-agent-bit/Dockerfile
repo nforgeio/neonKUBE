@@ -17,7 +17,7 @@
 
 ARG         ORGANIZATION
 ARG         CLUSTER_VERSION
-FROM        ${ORGANIZATION}/cluster-ubuntu:${CLUSTER_VERSION}
+FROM        ${ORGANIZATION}/ubuntu-layer:${CLUSTER_VERSION}
 MAINTAINER  marcus@euarctos.com
 STOPSIGNAL  SIGTERM
 ARG         VERSION

@@ -30,7 +30,9 @@ function SetVersion
     [CmdletBinding()]
     param (
         [Parameter(Position=0, Mandatory=1)]
-        [string]$project
+        [string]$project,
+        [Parameter(Position=0, Mandatory=2)]
+        [string]$version
     )
 
     "$project"
@@ -42,7 +44,9 @@ function Publish
     [CmdletBinding()]
     param (
         [Parameter(Position=0, Mandatory=1)]
-        [string]$project
+        [string]$project.
+        [Parameter(Position=0, Mandatory=2)]
+        [string]$version
     )
 
 	dotnet pack "$env:NF_ROOT\Lib\$project\$project.csproj" -c Release -o "$env:NF_BUILD\nuget"
@@ -67,78 +71,83 @@ function Publish
 	nuget push -Source nuget.org "$env:NF_BUILD\nuget\$project.$libraryVersion$prerelease.nupkg"
 }
 
+# Load the library and neonKUBE versions.
+
+$libraryVersion  = Get-Content "$env:NF_ROOT\neonLIBRARY-version.txt" -First 1
+$neonkubeVersion = Get-Content "$env:NF_ROOT\neonLKUBE-version.txt" -First 1
+
 # Copy the version from [$/product-version] into [$/Lib/Neon/Common/Build.cs]
 
 neon-build build-version
 
 # Update the project versions.
 
-SetVersion Neon.Cadence
-SetVersion Neon.Cassandra
-SetVersion Neon.Common
-SetVersion Neon.Couchbase
-SetVersion Neon.Cryptography
-SetVersion Neon.Docker
-SetVersion Neon.HyperV
-SetVersion Neon.Kube
-SetVersion Neon.Kube.Aws
-SetVersion Neon.Kube.Azure
-SetVersion Neon.Kube.BareMetal
-SetVersion Neon.Kube.Google
-SetVersion Neon.Kube.Hosting
-SetVersion Neon.Kube.HyperV
-SetVersion Neon.Kube.HyperVLocal
-SetVersion Neon.Kube.XenServer
-SetVersion Neon.Service
-SetVersion Neon.ModelGen
-SetVersion Neon.Nats
-SetVersion Neon.Postgres
-SetVersion Neon.SSH
-SetVersion Neon.SSH.NET
-SetVersion Neon.Temporal
-SetVersion Neon.Web
-SetVersion Neon.XenServer
-SetVersion Neon.Xunit
-SetVersion Neon.Xunit.Cadence
-SetVersion Neon.Xunit.Couchbase
-SetVersion Neon.Xunit.Kube
-SetVersion Neon.Xunit.Temporal
-SetVersion Neon.Xunit.YugaByte
-SetVersion Neon.YugaByte
+SetVersion Neon.Cadence             $libraryVersion
+SetVersion Neon.Cassandra           $libraryVersion
+SetVersion Neon.Common              $libraryVersion
+SetVersion Neon.Couchbase           $libraryVersion
+SetVersion Neon.Cryptography        $libraryVersion
+SetVersion Neon.Docker              $libraryVersion
+SetVersion Neon.HyperV              $libraryVersion
+# SetVersion Neon.Kube                $neonkubeVersion
+# SetVersion Neon.Kube.Aws            $neonkubeVersion
+# SetVersion Neon.Kube.Azure          $neonkubeVersion
+# SetVersion Neon.Kube.BareMetal      $neonkubeVersion
+# SetVersion Neon.Kube.Google         $neonkubeVersion
+# SetVersion Neon.Kube.Hosting        $neonkubeVersion
+# SetVersion Neon.Kube.HyperV         $neonkubeVersion
+# SetVersion Neon.Kube.HyperVLocal    $neonkubeVersion
+# SetVersion Neon.Kube.XenServer      $neonkubeVersion
+SetVersion Neon.Service             $libraryVersion
+SetVersion Neon.ModelGen            $libraryVersion
+SetVersion Neon.Nats                $libraryVersion
+SetVersion Neon.Postgres            $libraryVersion
+SetVersion Neon.SSH                 $libraryVersion
+SetVersion Neon.SSH.NET             $libraryVersion
+SetVersion Neon.Temporal            $libraryVersion
+SetVersion Neon.Web                 $libraryVersion
+SetVersion Neon.XenServer           $libraryVersion
+SetVersion Neon.Xunit               $libraryVersion
+SetVersion Neon.Xunit.Cadence       $libraryVersion
+SetVersion Neon.Xunit.Couchbase     $libraryVersion
+SetVersion Neon.Kube.Xunit          $libraryVersion
+SetVersion Neon.Xunit.Temporal      $libraryVersion
+SetVersion Neon.Xunit.YugaByte      $libraryVersion
+SetVersion Neon.YugaByte            $libraryVersion
 
 # Build and publish the projects.
 
-Publish Neon.Cadence
-Publish Neon.Cassandra
-Publish Neon.Common
-Publish Neon.Couchbase
-Publish Neon.Cryptography
-Publish Neon.Docker
-Publish Neon.HyperV
-Publish Neon.Kube
-Publish Neon.Kube.Aws
-Publish Neon.Kube.Azure
-Publish Neon.Kube.BareMetal
-Publish Neon.Kube.Google
-Publish Neon.Kube.Hosting
-Publish Neon.Kube.HyperV
-Publish Neon.Kube.HyperVLocal
-Publish Neon.Kube.XenServer
-Publish Neon.Service
-Publish Neon.ModelGen
-Publish Neon.Nats
-Publish Neon.Postgres
-Publish Neon.SSH
-Publish Neon.SSH.NET
-Publish Neon.Temporal
-Publish Neon.Web
-Publish Neon.XenServer
-Publish Neon.Xunit
-Publish Neon.Xunit.Cadence
-Publish Neon.Xunit.Couchbase
-Publish Neon.Xunit.Kube
-Publish Neon.Xunit.Temporal
-Publish Neon.Xunit.YugaByte
-Publish Neon.YugaByte
+Publish Neon.Cadence                $libraryVersion
+Publish Neon.Cassandra              $libraryVersion
+Publish Neon.Common                 $libraryVersion
+Publish Neon.Couchbase              $libraryVersion
+Publish Neon.Cryptography           $libraryVersion
+Publish Neon.Docker                 $libraryVersion
+Publish Neon.HyperV                 $libraryVersion
+# Publish Neon.Kube                   $neonkubeVersion
+# Publish Neon.Kube.Aws               $neonkubeVersion
+# Publish Neon.Kube.Azure             $neonkubeVersion
+# Publish Neon.Kube.BareMetal         $neonkubeVersion
+# Publish Neon.Kube.Google            $neonkubeVersion
+# Publish Neon.Kube.Hosting           $neonkubeVersion
+# Publish Neon.Kube.HyperV            $neonkubeVersion
+# Publish Neon.Kube.HyperVLocal       $neonkubeVersion
+# Publish Neon.Kube.XenServer         $neonkubeVersion
+# Publish Neon.Kube.Xunit             $neonkubeVersion
+Publish Neon.Service                $libraryVersion
+Publish Neon.ModelGen               $libraryVersion
+Publish Neon.Nats                   $libraryVersion
+Publish Neon.Postgres               $libraryVersion
+Publish Neon.SSH                    $libraryVersion
+Publish Neon.SSH.NET                $libraryVersion
+Publish Neon.Temporal               $libraryVersion
+Publish Neon.Web                    $libraryVersion
+Publish Neon.XenServer              $libraryVersion
+Publish Neon.Xunit                  $libraryVersion
+Publish Neon.Xunit.Cadence          $libraryVersion
+Publish Neon.Xunit.Couchbase        $libraryVersion
+Publish Neon.Xunit.Temporal         $libraryVersion
+Publish Neon.Xunit.YugaByte         $libraryVersion
+Publish Neon.YugaByte               $libraryVersion
 
 pause
