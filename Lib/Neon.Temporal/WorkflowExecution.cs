@@ -59,7 +59,7 @@ namespace Neon.Temporal
         /// than <see cref="RunId"/> when the workflow has been continued as new
         /// or potentially restarted.
         /// </summary>
-        [JsonProperty(PropertyName = "workflowId", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "workflow_id", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "id", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string WorkflowId { get; private set; }
@@ -67,7 +67,7 @@ namespace Neon.Temporal
         /// <summary>
         /// The original ID assigned to the workflow when it was started.
         /// </summary>
-        [JsonProperty(PropertyName = "runId", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "run_id", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "runId", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string RunId { get; private set; }

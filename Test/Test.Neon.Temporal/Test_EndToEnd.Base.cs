@@ -345,7 +345,7 @@ namespace TestTemporal
             Assert.True(description.WorkflowExecutionInfo.StartTime >= utcNow);
             Assert.True(description.WorkflowExecutionInfo.CloseTime >= utcNow);
             Assert.True(description.WorkflowExecutionInfo.CloseTime >= description.WorkflowExecutionInfo.StartTime);
-            Assert.True(description.WorkflowExecutionInfo.ExecutionTime <= description.WorkflowExecutionInfo.CloseTime - description.WorkflowExecutionInfo.StartTime);
+            Assert.True(description.WorkflowExecutionInfo.ExecutionTime.Value.Ticks <= (description.WorkflowExecutionInfo.CloseTime - description.WorkflowExecutionInfo.StartTime).Value.Ticks);
         }
 
         [Fact]

@@ -22,9 +22,7 @@ using System.Diagnostics;
 
 using Newtonsoft.Json;
 
-using Neon.Common;
-using Neon.Temporal;
-using Neon.Temporal.Internal;
+using Neon.Data;
 
 namespace Neon.Temporal
 {
@@ -64,6 +62,7 @@ namespace Neon.Temporal
         /// <summary>
         /// Workflow execution status describing the state of the workflow.
         /// </summary>
+        [JsonConverter(typeof(IntegerEnumConverter<WorkflowExecutionStatus>))]
         public WorkflowExecutionStatus Status { get; set; }
 
         /// <summary>
@@ -99,8 +98,7 @@ namespace Neon.Temporal
         /// The workflow execution time.
         /// </summary>
         [JsonProperty(PropertyName = "execution_time")]
-        [JsonConverter(typeof(GoTimeSpanJsonConverter))]
-        public TimeSpan ExecutionTime { get; set; }
+        public DateTime? ExecutionTime { get; set; }
 
         /// <summary>
         /// Optional workflow metadata.

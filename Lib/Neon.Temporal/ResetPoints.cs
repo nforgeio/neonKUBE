@@ -23,44 +23,13 @@ using System.Text;
 namespace Neon.Temporal
 {
     /// <summary>
-    /// Defines workflow execution reset points.
+    /// Defines a payload of reset points.
     /// </summary>
     public class ResetPoints
     {
         /// <summary>
-        /// The binary checksum of the reset point.
+        /// Set of info about a workflow's reset points.
         /// </summary>
-        [JsonProperty(PropertyName = "binary_checksum")]
-        public string BinaryChecksum { get; set; }
-
-        /// <summary>
-        /// The run id of the workflow exeuction.
-        /// </summary>
-        [JsonProperty(PropertyName = "run_id")]
-        public string RunId { get; set; }
-
-        /// <summary>
-        /// The id of the first completed workflow task.
-        /// </summary>
-        [JsonProperty(PropertyName = "first_workflow_task_completed_id")]
-        public long FirstWorkflowTaskCompletedId { get; set; }
-
-        /// <summary>
-        /// The create time of the workflow execution.
-        /// </summary>
-        [JsonProperty(PropertyName = "create_time")]
-        public DateTime? CreateTime { get; set; }
-
-        /// <summary>
-        /// The expire time of the workflow execution.
-        /// </summary>
-        [JsonProperty(PropertyName = "expire_time")]
-        public DateTime? ExpireTime { get; set; }
-
-        /// <summary>
-        /// Indicates if the workflow exeuction is resettable.
-        /// </summary>
-        [JsonProperty(PropertyName = "resettable")]
-        public bool Resettable { get; set; }
+        public List<ResetPointInfo> Points { get; set; }
     }
 }

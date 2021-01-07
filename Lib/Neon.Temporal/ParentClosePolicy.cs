@@ -33,6 +33,9 @@ namespace Neon.Temporal
     {
         // WARNING: These definitions must match those defined for [InternalParentClosePolicy].
 
+        /// <summary>
+        /// Unspecified parent close policy.
+        /// </summary>
         Unspecified = 0,
 
         /// <summary>

@@ -21,8 +21,7 @@ using System.ComponentModel;
 
 using Newtonsoft.Json;
 
-using Neon.Temporal;
-using Neon.Common;
+using Neon.Data;
 
 namespace Neon.Temporal
 {
@@ -66,6 +65,7 @@ namespace Neon.Temporal
         /// Returns policy used to close this child when its parent is closed.
         /// </summary>
         [JsonProperty(PropertyName = "parent_close_policy")]
+        [JsonConverter(typeof(IntegerEnumConverter<ParentClosePolicy>))]
         public ParentClosePolicy ParentClosePolicy { get; set; }
     }
 }

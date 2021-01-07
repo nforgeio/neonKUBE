@@ -1538,61 +1538,355 @@ namespace TestTemporal
         }
 
         /// <summary>
+        /// Returns a test <see cref="Payload"/>.
+        /// </summary>
+        private Payload GetPayload()
+        {
+            var payload = new Payload()
+            {
+                Data     = new byte[] { 0, 1, 2, 3, 4 },
+                Metadata = new Dictionary<string, byte[]>()
+                {
+                    { "metadata", new byte[] {5,6,7,8,9} }
+                }
+            };
+
+            return payload;
+        }
+
+        /// <summary>
+        /// Ensures that the <paramref name="payload"/> passed matches the instance
+        /// returned by <see cref="GetPayload"/>.
+        /// </summary>
+        /// <param name="description">The response to ve validated.</param>
+        private void VerifyPayload(Payload payload)
+        {
+            var expected = GetPayload();
+
+            Assert.NotNull(payload);
+
+            //---------------------------------------------
+
+            Assert.NotNull(payload.Data);
+            Assert.NotNull(payload.Metadata);
+
+            Assert.Equal(expected.Metadata.First().Key, payload.Metadata.First().Key);
+            Assert.Equal(expected.Metadata.First().Value, payload.Metadata.First().Value);
+            Assert.Equal(expected.Data, payload.Data);
+        }
+
+        /// <summary>
+        /// Returns a test <see cref="Memo"/>.
+        /// </summary>
+        private Memo GetMemo()
+        {
+            var memo = new Memo()
+            {
+                Fields = new Dictionary<string, Payload>(){ { "memo-1", GetPayload() } }
+            };
+
+            return memo;
+        }
+
+        /// <summary>
+        /// Ensures that the <paramref name="memo"/> passed matches the instance
+        /// returned by <see cref="GetMemo"/>.
+        /// </summary>
+        /// <param name="description">The response to ve validated.</param>
+        private void VerifyMemo(Memo memo)
+        {
+            var expected = GetMemo();
+
+            Assert.NotNull(memo);
+
+            //---------------------------------------------
+
+            Assert.NotNull(memo.Fields);
+            Assert.Single(memo.Fields);
+            Assert.Equal(expected.Fields.First().Key, memo.Fields.First().Key);
+            VerifyPayload(memo.Fields.First().Value);
+        }
+
+        /// <summary>
+        /// Returns a test <see cref="SearchAttributes"/>.
+        /// </summary>
+        private SearchAttributes GetSearchAttributes()
+        {
+            var attr = new SearchAttributes()
+            {
+                IndexedFields = new Dictionary<string, Payload>() { { "attr-1", GetPayload() } }
+            };
+
+            return attr;
+        }
+
+        /// <summary>
+        /// Ensures that the <paramref name="attr"/> passed matches the instance
+        /// returned by <see cref="GetSearchAttributes"/>.
+        /// </summary>
+        /// <param name="description">The response to ve validated.</param>
+        private void VerifySearchAttributes(SearchAttributes attr)
+        {
+            var expected = GetSearchAttributes();
+
+            Assert.NotNull(attr);
+
+            //---------------------------------------------
+
+            Assert.NotNull(attr.IndexedFields);
+            Assert.Single(attr.IndexedFields);
+            Assert.Equal(expected.IndexedFields.First().Key, attr.IndexedFields.First().Key);
+            VerifyPayload(attr.IndexedFields.First().Value);
+        }
+
+        /// <summary>
+        /// Returns a test <see cref="ResetPoints"/>.
+        /// </summary>
+        private ResetPoints GetResetPoints()
+        {
+            var pnts = new ResetPoints()
+            {
+                Points = new List<ResetPointInfo>
+                {
+                    new ResetPointInfo
+                    {
+                        BinaryChecksum               = "check-sum",
+                        RunId                        = "run-id",
+                        FirstWorkflowTaskCompletedId = 666,
+                        CreateTime                   = DateTime.Parse("08/18/2018"),
+                        ExpireTime                   = DateTime.Parse("08/18/2018"),
+                        Resettable                   = true
+                    }
+                }
+            };
+
+            return pnts;
+        }
+
+        /// <summary>
+        /// Ensures that the <paramref name="attr"/> passed matches the instance
+        /// returned by <see cref="GetResetPoints"/>.
+        /// </summary>
+        /// <param name="description">The response to ve validated.</param>
+        private void VerifyResetPoints(ResetPoints pnts)
+        {
+            var expected = GetResetPoints();
+
+            Assert.NotNull(pnts);
+            Assert.NotNull(pnts.Points);
+            Assert.Single(pnts.Points);
+
+            //---------------------------------------------
+
+            var expectedPoint = expected.Points.First();
+            var pntsPoint     = pnts.Points.First();
+
+            Assert.Equal(expectedPoint.BinaryChecksum, pntsPoint.BinaryChecksum);
+            Assert.Equal(expectedPoint.RunId, pntsPoint.RunId);
+            Assert.Equal(expectedPoint.FirstWorkflowTaskCompletedId, pntsPoint.FirstWorkflowTaskCompletedId);
+            Assert.Equal(expectedPoint.CreateTime, pntsPoint.CreateTime);
+            Assert.Equal(expectedPoint.ExpireTime, pntsPoint.ExpireTime);
+            Assert.Equal(expectedPoint.Resettable, pntsPoint.Resettable);
+        }
+
+        /// <summary>
+        /// Returns a test <see cref="WorkflowExecutionInfo"/>.
+        /// </summary>
+        private WorkflowExecutionInfo GetWorkflowExecutionInfo()
+        {
+            var info = new WorkflowExecutionInfo()
+            {
+                Execution         = new WorkflowExecution("workflow-id", "run-id"),
+                Type              = new WorkflowType { Name = "my-workflow" },
+                StartTime         = new DateTime(2020, 5, 23, 13, 21, 0),
+                CloseTime         = new DateTime(2020, 5, 23, 13, 22, 0),
+                Status            = WorkflowExecutionStatus.ContinuedAsNew,
+                HistoryLength     = 5000,
+                ParentNamespaceId = "parent-namespace",
+                ParentExecution   = new WorkflowExecution("parent-id", "parent-runid"),
+                ExecutionTime     = new DateTime(2020, 5, 23, 13, 23, 0),
+                Memo              = GetMemo(),
+                SearchAttributes  = GetSearchAttributes(),
+                AutoResetPoints   = GetResetPoints(),
+                TaskQueue         = "my-taskqueue"
+            };
+
+            return info;
+        }
+
+        /// <summary>
+        /// Ensures that the <paramref name="attr"/> passed matches the instance
+        /// returned by <see cref="GetWorkflowExecutionInfo"/>.
+        /// </summary>
+        /// <param name="description">The response to ve validated.</param>
+        private void VerifyWorkflowExecutionInfo(WorkflowExecutionInfo info)
+        {
+            var expected = GetWorkflowExecutionInfo();
+
+            Assert.NotNull(info);
+            Assert.NotNull(info.Execution);
+
+            //---------------------------------------------
+
+            Assert.Equal(expected.Execution.WorkflowId, info.Execution.WorkflowId);
+            Assert.Equal(expected.Execution.RunId, info.Execution.RunId);
+            Assert.NotNull(info.Type);
+            Assert.Equal(expected.Type.Name, info.Type.Name);
+            Assert.Equal(expected.StartTime, info.StartTime);
+            Assert.Equal(expected.CloseTime, info.CloseTime);
+            Assert.Equal(expected.Status, info.Status);
+            Assert.Equal(expected.HistoryLength, info.HistoryLength);
+            Assert.Equal(expected.ParentNamespaceId, info.ParentNamespaceId);
+            Assert.Equal(expected.TaskQueue, info.TaskQueue);
+
+            Assert.NotNull(info.ParentExecution);
+            Assert.Equal(expected.ParentExecution.WorkflowId, info.ParentExecution.WorkflowId);
+            Assert.Equal(expected.ParentExecution.RunId, info.ParentExecution.RunId);
+
+            Assert.Equal(expected.ExecutionTime, info.ExecutionTime);
+
+            VerifyMemo(info.Memo);
+            VerifySearchAttributes(info.SearchAttributes);
+            VerifyResetPoints(info.AutoResetPoints);
+        }
+
+        /// <summary>
+        /// Returns a test <see cref="WorkflowExecutionConfig"/>.
+        /// </summary>
+        private WorkflowExecutionConfig GetWorkflowExecutionConfig()
+        {
+            var config = new WorkflowExecutionConfig()
+            {
+                TaskQueue                  = new TaskQueue { Name = "my-taskqueue", Kind = TaskQueueKind.Normal },
+                WorkflowExecutionTimeout   = TimeSpan.FromSeconds(1),
+                DefaultWorkflowTaskTimeout = TimeSpan.FromSeconds(2),
+                WorkflowRunTimeout         = TimeSpan.FromSeconds(4)
+            };
+
+            return config;
+        }
+
+        /// <summary>
+        /// Ensures that the <paramref name="attr"/> passed matches the instance
+        /// returned by <see cref="GetWorkflowExecutionConfig"/>.
+        /// </summary>
+        /// <param name="description">The response to ve validated.</param>
+        private void VerifyWorkflowExecutionConfig(WorkflowExecutionConfig config)
+        {
+            var expected = GetWorkflowExecutionConfig();
+
+            Assert.NotNull(config);
+
+            //---------------------------------------------
+
+            Assert.NotNull(config.TaskQueue);
+            Assert.Equal(expected.TaskQueue.Name, config.TaskQueue.Name);
+            Assert.Equal(expected.TaskQueue.Kind, config.TaskQueue.Kind);
+            Assert.Equal(expected.WorkflowExecutionTimeout, config.WorkflowExecutionTimeout);
+            Assert.Equal(expected.DefaultWorkflowTaskTimeout, config.DefaultWorkflowTaskTimeout);
+            Assert.Equal(expected.WorkflowRunTimeout, config.WorkflowRunTimeout);
+        }
+
+        /// <summary>
+        /// Returns a test <see cref="PendingActivityInfo"/>.
+        /// </summary>
+        private PendingActivityInfo GetPendingActivityInfo()
+        {
+            var info = new PendingActivityInfo()
+            {
+                ActivityId         = "my-activity-id",
+                ActivityType       = new ActivityType { Name = "my-activity" },
+                State              = PendingActivityState.Started,
+                LastHeartbeatTime  = new DateTime(2020, 5, 24, 13, 32, 0),
+                LastStartedTime    = new DateTime(2020, 5, 24, 13, 33, 0),
+                HeartbeatDetails   = new Payloads { DataPayloads = new List<Payload> { GetPayload() } },
+                Attempt            = 2,
+                MaximumAttempts    = 3,
+                ScheduledTime      = new DateTime(2020, 5, 24, 13, 34, 0),
+                ExpirationTime     = new DateTime(2020, 5, 24, 13, 35, 0),
+                LastWorkerIdentity = "my-worker",
+                LastFailure        = new Failure
+                {
+                    Message    = "message",
+                    Source     = "source",
+                    StackTrace = "stack-trace",
+                    Cause      = new Failure
+                    {
+                        Message    = "cause-message",
+                        Source     = "cause-source",
+                        StackTrace = "cause-stack-trace"
+                    }
+                }
+            };
+
+            return info;
+        }
+
+        /// <summary>
+        /// Ensures that the <paramref name="info"/> passed matches the instance
+        /// returned by <see cref="GetPendingActivityInfo"/>.
+        /// </summary>
+        /// <param name="info">The response to ve validated.</param>
+        private void VerifyPendingActivityInfo(PendingActivityInfo info)
+        {
+            var expected = GetPendingActivityInfo();
+
+            Assert.NotNull(info);
+
+            //---------------------------------------------
+
+            Assert.Equal(expected.ActivityId, info.ActivityId);
+            Assert.Equal(expected.ActivityType.Name, info.ActivityType.Name);
+            Assert.Equal(PendingActivityState.Started, PendingActivityState.Started);
+            Assert.Equal(expected.Attempt, info.Attempt);
+            Assert.Equal(expected.MaximumAttempts, info.MaximumAttempts);
+            Assert.Equal(expected.ScheduledTime, info.ScheduledTime);
+            Assert.Equal(expected.ExpirationTime, info.ExpirationTime);
+            Assert.Equal(expected.LastHeartbeatTime, info.LastHeartbeatTime);
+            Assert.Equal(expected.LastStartedTime, info.LastStartedTime);
+            Assert.Equal(expected.LastWorkerIdentity, info.LastWorkerIdentity);
+
+            Assert.NotNull(info.HeartbeatDetails);
+            Assert.Single(info.HeartbeatDetails.DataPayloads);
+            VerifyPayload(info.HeartbeatDetails.DataPayloads.First());
+
+            var expectedFailure = expected.LastFailure;
+            var infoFailure     = info.LastFailure;
+
+            Assert.NotNull(infoFailure);
+            Assert.Equal(expectedFailure.Message, infoFailure.Message);
+            Assert.Equal(expectedFailure.Source, infoFailure.Source);
+            Assert.Equal(expectedFailure.StackTrace, infoFailure.StackTrace);
+
+            var expectedCause = expectedFailure.Cause;
+            var infoCause     = infoFailure.Cause;
+
+            Assert.NotNull(infoFailure.Cause);
+            Assert.Equal(expectedCause.Message, infoCause.Message);
+            Assert.Equal(expectedCause.Source, infoCause.Source);
+            Assert.Equal(expectedCause.StackTrace, infoCause.StackTrace);
+            Assert.Null(infoCause.Cause);
+        }
+
+        /// <summary>
         /// Returns a test <see cref="WorkflowDescription"/>.
         /// </summary>
         private WorkflowDescription GetWorkflowDescription()
         {
             var description = new WorkflowDescription()
             {
-                ExecutionConfig = new WorkflowExecutionConfig()
-                {
-                    TaskQueue                  = new TaskQueue { Name = "my-taskqueue", Kind = TaskQueueKind.Normal },
-                    WorkflowExecutionTimeout   = TimeSpan.FromSeconds(1),
-                    DefaultWorkflowTaskTimeout = TimeSpan.FromSeconds(2),
-                    WorkflowRunTimeout         = TimeSpan.FromSeconds(4)
-                },
-
-                WorkflowExecutionInfo = new WorkflowExecutionInfo()
-                {
-                    Execution               = new WorkflowExecution("workflow-id", "run-id"),
-                    Type                    = new WorkflowType { Name = "my-workflow" },
-                    StartTime               = new DateTime(2020, 5, 23, 13, 21, 0),
-                    CloseTime               = new DateTime(2020, 5, 23, 13, 22, 0),
-                    WorkflowExecutionStatus = WorkflowExecutionStatus.ContinuedAsNew,
-                    HistoryLength           = 5000,
-                    ParentNamespaceId       = "parent-namespace",
-                    ParentExecution         = new WorkflowExecution("parent-id", "parent-runid"),
-                    ExecutionTime           = TimeSpan.FromSeconds(6000),
-                    Memo                    = new Dictionary<string, byte[]>() { { "foo", new byte[] { 0, 1, 2, 3, 4 } } },
-                    TaskQueue               = "my-taskqueue"
-                },
-
-                PendingActivities = new List<PendingActivityInfo>()
-                {
-                    new PendingActivityInfo()
-                    {
-                        ActivityId         = "my-activity-id",
-                        ActivityTypeName   = "my-activity",
-                        State              = PendingActivityState.Started,
-                        HeartbeatDetails   = new byte[] { 0, 1, 2, 3, 4 },
-                        LastHeartbeatTime  = new DateTime(2020, 5, 24, 13, 32, 0),
-                        LastStartedTime    = new DateTime(2020, 5, 24, 13, 33, 0),
-                        Attempt            = 2,
-                        MaximumAttempts    = 3,
-                        ScheduledTime      = new DateTime(2020, 5, 24, 13, 34, 0),
-                        ExpirationTime     = new DateTime(2020, 5, 24, 13, 35, 0),
-                        LastWorkerIdentity = "my-worker"
-                    }
-                },
-
-                PendingChildren = new List<PendingChildExecutionInfo>()
+                ExecutionConfig       = GetWorkflowExecutionConfig(),
+                WorkflowExecutionInfo = GetWorkflowExecutionInfo(),
+                PendingActivities     = new List<PendingActivityInfo> { GetPendingActivityInfo() },
+                PendingChildren       = new List<PendingChildExecutionInfo>()
                 {
                     new PendingChildExecutionInfo()
                     {
-                        WorkflowId       = "my-workflow-id",
-                        RunId            = "my-run-id",
-                        WorkflowTypeName = "my-workflow",
-                        InitiatedId      = 16000
+                        WorkflowId        = "my-workflow-id",
+                        RunId             = "my-run-id",
+                        WorkflowTypeName  = "my-workflow",
+                        InitiatedId       = 16000,
+                        ParentClosePolicy = ParentClosePolicy.RequestCancel
                     }
                 }
             };
@@ -1614,37 +1908,12 @@ namespace TestTemporal
             //---------------------------------------------
 
             var config = description.ExecutionConfig;
-
-            Assert.NotNull(config);
-            Assert.NotNull(config.TaskQueue);
-            Assert.Equal(expected.ExecutionConfig.TaskQueue.Name, config.TaskQueue.Name);
-            Assert.Equal(expected.ExecutionConfig.TaskQueue.Kind, config.TaskQueue.Kind);
-            Assert.Equal(expected.ExecutionConfig.WorkflowExecutionTimeout, config.WorkflowExecutionTimeout);
-            Assert.Equal(expected.ExecutionConfig.DefaultWorkflowTaskTimeout, config.DefaultWorkflowTaskTimeout);
-            Assert.Equal(expected.ExecutionConfig.WorkflowRunTimeout, config.WorkflowRunTimeout);
+            VerifyWorkflowExecutionConfig(config);
 
             //---------------------------------------------
 
-            var status = description.WorkflowExecutionInfo;
-
-            Assert.NotNull(status);
-            Assert.NotNull(status.Execution);
-            Assert.Equal(expected.WorkflowExecutionInfo.Execution.WorkflowId, status.Execution.WorkflowId);
-            Assert.Equal(expected.WorkflowExecutionInfo.Execution.RunId, status.Execution.RunId);
-            Assert.NotNull(status.Type);
-            Assert.Equal(expected.WorkflowExecutionInfo.Type.Name, status.Type.Name);
-            Assert.Equal(expected.WorkflowExecutionInfo.StartTime, status.StartTime);
-            Assert.Equal(expected.WorkflowExecutionInfo.CloseTime, status.CloseTime);
-            Assert.Equal(expected.WorkflowExecutionInfo.WorkflowExecutionStatus, status.WorkflowExecutionStatus);
-            Assert.Equal(expected.WorkflowExecutionInfo.HistoryLength, status.HistoryLength);
-            Assert.Equal(expected.WorkflowExecutionInfo.ParentNamespaceId, status.ParentNamespaceId);
-            Assert.Equal(expected.WorkflowExecutionInfo.TaskQueue, status.TaskQueue);
-
-            Assert.NotNull(status.ParentExecution);
-            Assert.Equal(expected.WorkflowExecutionInfo.ParentExecution.WorkflowId, status.ParentExecution.WorkflowId);
-            Assert.Equal(expected.WorkflowExecutionInfo.ParentExecution.RunId, status.ParentExecution.RunId);
-
-            Assert.Equal(expected.WorkflowExecutionInfo.ExecutionTime, status.ExecutionTime);
+            var info = description.WorkflowExecutionInfo;
+            VerifyWorkflowExecutionInfo(info);
 
             //---------------------------------------------
 
@@ -1652,17 +1921,7 @@ namespace TestTemporal
             Assert.Single(description.PendingActivities);
 
             var pendingActivity = description.PendingActivities.First();
-
-            Assert.Equal("my-activity-id", pendingActivity.ActivityId);
-            Assert.Equal("my-activity", pendingActivity.ActivityTypeName);
-            Assert.Equal(PendingActivityState.Started, PendingActivityState.Started);
-            Assert.Equal(2, pendingActivity.Attempt);
-            Assert.Equal(3, pendingActivity.MaximumAttempts);
-            Assert.Equal(new DateTime(2020, 5, 24, 13, 34, 0), pendingActivity.ScheduledTime);
-            Assert.Equal(new DateTime(2020, 5, 24, 13, 35, 0), pendingActivity.ExpirationTime);
-            Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, pendingActivity.HeartbeatDetails);
-            Assert.Equal(new DateTime(2020, 5, 24, 13, 32, 0), pendingActivity.LastHeartbeatTime);
-            Assert.Equal(new DateTime(2020, 5, 24, 13, 33, 0), pendingActivity.LastStartedTime);
+            VerifyPendingActivityInfo(pendingActivity);
 
             //---------------------------------------------
 
@@ -1675,20 +1934,7 @@ namespace TestTemporal
             Assert.Equal("my-run-id", pendingChild.RunId);
             Assert.Equal("my-workflow", pendingChild.WorkflowTypeName);
             Assert.Equal(16000, pendingChild.InitiatedId);
-
-            //---------------------------------------------
-
-            Assert.NotNull(status.Memo);
-            Assert.Equal(expected.WorkflowExecutionInfo.Memo.Count, status.Memo.Count);
-
-            for (int i = 0; i < expected.WorkflowExecutionInfo.Memo.Count; i++)
-            {
-                var refField = expected.WorkflowExecutionInfo.Memo.ToArray()[i];
-                var field    = status.Memo.ToArray()[i];
-
-                Assert.Equal(refField.Key, field.Key);
-                Assert.Equal(refField.Value, field.Value);
-            }
+            Assert.Equal(ParentClosePolicy.RequestCancel, pendingChild.ParentClosePolicy);
         }
 
         [Fact]

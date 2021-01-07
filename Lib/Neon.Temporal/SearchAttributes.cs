@@ -15,6 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -29,6 +30,7 @@ namespace Neon.Temporal
         /// <summary>
         /// Key-value mapping of string index field to data payload.
         /// </summary>
+        [JsonProperty(PropertyName = "indexed_fields")]
         public Dictionary<string, Payload> IndexedFields { get; set; }
     }
 }

@@ -19,6 +19,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
+using Newtonsoft.Json;
+
 namespace Neon.Temporal
 {
     public class Payloads
@@ -26,6 +28,7 @@ namespace Neon.Temporal
         /// <summary>
         /// List of data payloads with metadata.
         /// </summary>
-        public List<Payload> Payloads { get; set; }
+        [JsonProperty(PropertyName = "payloads")]
+        public List<Payload> DataPayloads { get; set; }
     }
 }

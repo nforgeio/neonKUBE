@@ -19,9 +19,10 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
-using Neon.Temporal;
-using Neon.Common;
+
 using Newtonsoft.Json;
+
+using Neon.Data;
 
 namespace Neon.Temporal
 {
@@ -51,6 +52,7 @@ namespace Neon.Temporal
         /// The activity state.
         /// </summary>
         [JsonProperty(PropertyName = "state")]
+        [JsonConverter(typeof(IntegerEnumConverter<PendingActivityState>))]
         public PendingActivityState State { get; set; }
 
         /// <summary>

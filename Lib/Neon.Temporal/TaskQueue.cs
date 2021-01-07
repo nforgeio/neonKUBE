@@ -19,6 +19,10 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
+using Newtonsoft.Json;
+
+using Neon.Data;
+
 namespace Neon.Temporal
 {
     /// <summary>
@@ -35,6 +39,7 @@ namespace Neon.Temporal
         /// <summary>
         /// Identifies the kind of task queue (normal/sticky).
         /// </summary>
+        [JsonConverter(typeof(IntegerEnumConverter<TaskQueueKind>))]
         public TaskQueueKind Kind { get; set; }
     }
 }
