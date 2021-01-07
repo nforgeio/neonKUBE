@@ -277,9 +277,9 @@ function GetRegistry($image)
 }
 
 #------------------------------------------------------------------------------
-# Returns the Docker Hub organization corresponding to the current Git nbranch.
+# Returns the registry organization corresponding to the current Git branch.
 
-function DockerOrg
+function RegistryOrg
 {
 	if (IsRelease)
 	{

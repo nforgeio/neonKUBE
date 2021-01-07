@@ -28,7 +28,7 @@ param
 
 Log-ImageBuild $registry $tag
 
-$organization = DockerOrg
+$organization = RegistryOrg
 
 # Build the image.
 $maxmind_key = neon run -- cat "_...$src_images_path\neon-log-collector\maxmind"

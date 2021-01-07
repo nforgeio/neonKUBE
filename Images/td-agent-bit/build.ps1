@@ -28,7 +28,7 @@ param
 
 Log-ImageBuild $registry $tag
 
-$organization = DockerOrg
+$organization = RegistryOrg
 
 # Build the image.
 
