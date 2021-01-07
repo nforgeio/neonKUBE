@@ -124,8 +124,11 @@ if ($other)
 {
     Publish "$image_root\\nats"
     Publish "$image_root\\nats-streaming"
+
     # See: https://github.com/nforgeio/neonKUBE/issues/1117
+    #
     # Publish "$image_root\\cadence-dev"
+
     Publish "$image_root\\couchbase-dev"
     Publish "$image_root\\yugabyte"
 }
