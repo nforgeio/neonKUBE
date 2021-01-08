@@ -26,9 +26,9 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.Docker;
 using Neon.Kube;
+using Neon.Kube.Xunit;
 using Neon.IO;
 using Neon.Xunit;
-using Neon.Xunit.Kube;
 
 using Xunit;
 

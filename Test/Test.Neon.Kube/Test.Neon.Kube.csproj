@@ -56,7 +56,7 @@
     <ProjectReference Include="..\..\Lib\Neon.Service\Neon.Service.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Nats\Neon.Nats.csproj" />
-    <ProjectReference Include="..\..\Lib\Neon.Xunit.Kube\Neon.Xunit.Kube.csproj" />
+    <ProjectReference Include="..\..\Lib\Neon.Kube.Xunit\Neon.Kube.Xunit.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Xunit\Neon.Xunit.csproj" />
   </ItemGroup>
 

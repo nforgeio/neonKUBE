@@ -396,7 +396,7 @@
           </listItem>
           <listItem>
             <para>
-              <mediaLinkInline><image xlink:href="internal"/></mediaLinkInline><legacyBold> Neon.Xunit.Kube</legacyBold>
+              <mediaLinkInline><image xlink:href="internal"/></mediaLinkInline><legacyBold> Neon.Kube.Xunit</legacyBold>
             </para>
           </listItem>
         </list>

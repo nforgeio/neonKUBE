@@ -819,7 +819,8 @@ namespace Neon.Service
         /// Initializes <see cref="Arguments"/> with the command line arguments passed.
         /// </summary>
         /// <param name="args">The arguments.</param>
-        public void SetArguments(IEnumerable<string> args)
+        /// <returns>The service instance so developers can chain fluent style calls.</returns>
+        public NeonService SetArguments(IEnumerable<string> args)
         {
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
@@ -829,6 +830,8 @@ namespace Neon.Service
             {
                 Arguments.Add(arg);
             }
+
+            return this;
         }
 
         /// <summary>
@@ -1350,6 +1353,7 @@ namespace Neon.Service
         /// </summary>
         /// <param name="name">The variable name (case sensitive).</param>
         /// <param name="value">The variable value or <c>null</c> to remove the variable.</param>
+        /// <returns>The service instance so developers can chain fluent style calls.</returns>
         /// <remarks>
         /// <note>
         /// Environment variable names are to be considered to be case sensitive since
@@ -1357,7 +1361,7 @@ namespace Neon.Service
         /// to Linux.
         /// </note>
         /// </remarks>
-        public void SetEnvironmentVariable(string name, string value)
+        public NeonService SetEnvironmentVariable(string name, string value)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
@@ -1375,6 +1379,8 @@ namespace Neon.Service
                     environmentVariables[name] = value;
                 }
             }
+
+            return this;
         }
 
         /// <summary>
@@ -1419,6 +1425,7 @@ namespace Neon.Service
         /// use a default password provider <paramref name="passwordProvider"/> is <c>null</c>.
         /// See the remarks below.
         /// </param>
+        /// <returns>The service instance so developers can chain fluent style calls.</returns>
         /// <exception cref="FileNotFoundException">Thrown if there's no file at <paramref name="physicalPath"/>.</exception>
         /// <remarks>
         /// <para>
@@ -1431,7 +1438,7 @@ namespace Neon.Service
         /// Implement a custom password provider function if you need something different.
         /// </para>
         /// </remarks>
-        public void SetConfigFilePath(string logicalPath, string physicalPath, Func<string, string> passwordProvider = null)
+        public NeonService SetConfigFilePath(string logicalPath, string physicalPath, Func<string, string> passwordProvider = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(logicalPath), nameof(logicalPath));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(physicalPath), nameof(physicalPath));
@@ -1447,6 +1454,8 @@ namespace Neon.Service
             var bytes = vault.Decrypt(physicalPath);
 
             SetConfigFile(logicalPath, bytes);
+
+            return this;
         }
 
         /// <summary>
@@ -1460,7 +1469,8 @@ namespace Neon.Service
         /// Optionally convert any Windows style line endings (CRLF) into Linux 
         /// style endings (LF).  This defaults to <c>false</c>.
         /// </param>
-        public void SetConfigFile(string logicalPath, string contents, bool linuxLineEndings = false)
+        /// <returns>The service instance so developers can chain fluent style calls.</returns>
+        public NeonService SetConfigFile(string logicalPath, string contents, bool linuxLineEndings = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(logicalPath), nameof(logicalPath));
             Covenant.Requires<ArgumentNullException>(contents != null, nameof(contents));
@@ -1487,6 +1497,8 @@ namespace Neon.Service
                     TempFile     = tempFile
                 };
             }
+
+            return this;
         }
 
         /// <summary>
@@ -1496,7 +1508,8 @@ namespace Neon.Service
         /// </summary>
         /// <param name="logicalPath">The logical file path (typically expressed as a Linux path).</param>
         /// <param name="contents">The content bytes.</param>
-        public void SetConfigFile(string logicalPath, byte[] contents)
+        /// <returns>The service instance so developers can chain fluent style calls.</returns>
+        public NeonService SetConfigFile(string logicalPath, byte[] contents)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(logicalPath), nameof(logicalPath));
             Covenant.Requires<ArgumentNullException>(contents != null, nameof(contents));
@@ -1518,6 +1531,8 @@ namespace Neon.Service
                     TempFile     = tempFile
                 };
             }
+
+            return this;
         }
 
         /// <summary>

@@ -26,15 +26,10 @@ FROM        haproxy:${VERSION}-alpine
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 
-# Install the [tini] INIT manager.
-
-RUN apk add --no-cache tini ca-certificates
-
-# Configure the service.
-
 COPY docker-entrypoint.sh   /
 COPY _common/*.sh           /
 
-RUN chmod 700 /*.sh
+RUN apk add --no-cache ca-certificates \
+    && chmod 700 /*.sh
 
-ENTRYPOINT ["/sbin/tini", "-g", "--", "/docker-entrypoint.sh"]
+ENTRYPOINT ["/docker-entrypoint.sh"]

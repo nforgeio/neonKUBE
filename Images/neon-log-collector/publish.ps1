@@ -43,7 +43,7 @@ function Build
 	)
 
 	$registry    = GetRegistry "neon-log-collector"
-	$tag         = $version
+	$tag         = "neonkube-$version"
 	$tagAsLatest = TagAsLatest
 
 	# Build and publish the images.

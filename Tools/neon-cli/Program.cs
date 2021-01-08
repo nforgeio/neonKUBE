@@ -35,10 +35,10 @@ using Neon;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
+using Neon.Kube.Xunit;
 using Neon.IO;
 using Neon.SSH;
 using Neon.Windows;
-using Neon.Xunit.Kube;
 
 namespace NeonCli
 {

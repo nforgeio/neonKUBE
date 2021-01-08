@@ -22,7 +22,7 @@
 
 ARG         ORGANIZATION
 ARG         CLUSTER_VERSION
-FROM        ${ORGANIZATION}/cluster-aspnet:${CLUSTER_VERSION}
+FROM        ${ORGANIZATION}/aspnet-layer:${CLUSTER_VERSION}
 MAINTAINER  marcus@euarctos.com
 STOPSIGNAL  SIGTERM
 ARG         APPNAME
@@ -45,8 +45,7 @@ COPY bin/__app              /usr/bin/$APPNAME.dotnet/
 COPY docker-entrypoint.sh   /
 
 RUN chmod 700 /docker-entrypoint.sh \
-    && echo "#!/bin/sh" > /usr/bin/$APPNAME \ 
     && echo "exec dotnet /usr/bin/$APPNAME.dotnet/$APPNAME.dll \"\$@\"" >> /usr/bin/$APPNAME \
     && chmod 770 /usr/bin/$APPNAME
 
-ENTRYPOINT ["tini", "-g", "--", "/docker-entrypoint.sh"]
+ENTRYPOINT ["/docker-entrypoint.sh"]
