@@ -734,9 +734,9 @@ namespace TestCommon
 
             Assert.NotNull(netConfig);
             Assert.NotNull(netConfig.InterfaceName);
-            Assert.True(NetHelper.AddressEquals(routableAddress, netConfig.Address));
-            Assert.NotEmpty(netConfig.DnsServers);
-            Assert.NotNull(netConfig.Cidr);
+            Assert.Equal(routableAddress.ToString(), netConfig.Address);
+            Assert.NotEmpty(netConfig.NameServers);
+            Assert.NotNull(netConfig.Subnet);
             Assert.NotNull(netConfig.Gateway);
         }
     }

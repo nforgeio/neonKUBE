@@ -1064,10 +1064,10 @@ namespace Neon.Net
                             return new NetworkConfiguration()
                             {
                                 InterfaceName = @interface.Name,
-                                Address       = routableIpAddress,
-                                Cidr          = new NetworkCidr(routableIpAddress, unicastAddress.IPv4Mask),
-                                Gateway       = ipProperties.GatewayAddresses.FirstOrDefault(gatewayAddr => gatewayAddr.Address.AddressFamily == AddressFamily.InterNetwork).Address,
-                                DnsServers    = ipProperties.DnsAddresses.ToArray()
+                                Address       = routableIpAddress.ToString(),
+                                Subnet        = new NetworkCidr(routableIpAddress, unicastAddress.IPv4Mask).ToString(),
+                                Gateway       = ipProperties.GatewayAddresses.FirstOrDefault(gatewayAddr => gatewayAddr.Address.AddressFamily == AddressFamily.InterNetwork).Address.ToString(),
+                                NameServers   = ipProperties.DnsAddresses.Select(address => address.ToString()).ToArray()
                             };
                         }
                     }
