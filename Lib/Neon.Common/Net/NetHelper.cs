@@ -986,12 +986,12 @@ namespace Neon.Net
             var activeInterface = NetworkInterface.GetAllNetworkInterfaces()
                 .OrderByDescending(i => i.Speed)
                 .FirstOrDefault(
-                    netInterface =>
+                    @interface =>
                     {
                         // Make sure that the interface has IPv4 addresses assigned and also that
                         // the interface is assigned a default gateway.
 
-                        var ipProperties = netInterface.GetIPProperties();
+                        var ipProperties = @interface.GetIPProperties();
 
                         if (ipProperties == null || ipProperties.GatewayAddresses.IsEmpty())
                         {
@@ -1000,10 +1000,10 @@ namespace Neon.Net
 
                         // Filter out loopback interfaces, TAP interfaces and interfaces that aren't up.
 
-                        if (netInterface.NetworkInterfaceType == NetworkInterfaceType.Loopback || 
-                            netInterface.Description.StartsWith("TAP-") ||
-                            netInterface.Description == "Hyper-V Virtual Ethernet Adapter" ||
-                            netInterface.OperationalStatus != OperationalStatus.Up)
+                        if (@interface.NetworkInterfaceType == NetworkInterfaceType.Loopback || 
+                            @interface.Description.StartsWith("TAP-") ||
+                            @interface.Description == "Hyper-V Virtual Ethernet Adapter" ||
+                            @interface.OperationalStatus != OperationalStatus.Up)
                         {
                             return false;
                         }
@@ -1040,7 +1040,7 @@ namespace Neon.Net
         /// uses heuristics to try to identify a suitable connected network.  This may not work as expected for machines
         /// with multiple active connections to different networks.
         /// </remarks>
-        public static NetworkConfiguration GetConfiguration()
+        public static NetworkConfiguration GetNetworkConfiguration()
         {
             var routableIpAddress = GetRoutableIpAddress();
 
@@ -1053,19 +1053,23 @@ namespace Neon.Net
             {
                 var ipProperties = @interface.GetIPProperties();
 
-                foreach (var unicastAddress in ipProperties.UnicastAddresses)
+                if (ipProperties != null)
                 {
-                    if (unicastAddress.Address == routableIpAddress)
+                    foreach (var unicastAddress in ipProperties.UnicastAddresses)
                     {
-                        // This is the interface handling the routable address.
-
-                        return new NetworkConfiguration()
+                        if (NetHelper.AddressEquals(unicastAddress.Address, routableIpAddress))
                         {
-                            Address    = routableIpAddress,
-                            Cidr       = new NetworkCidr(routableIpAddress, unicastAddress.IPv4Mask),
-                            Gateway    = ipProperties.GatewayAddresses.First().Address,
-                            DnsServers = ipProperties.DhcpServerAddresses.ToArray()
-                        };
+                            // This is the interface handling the routable address.
+
+                            return new NetworkConfiguration()
+                            {
+                                InterfaceName = @interface.Name,
+                                Address       = routableIpAddress,
+                                Cidr          = new NetworkCidr(routableIpAddress, unicastAddress.IPv4Mask),
+                                Gateway       = ipProperties.GatewayAddresses.FirstOrDefault(gatewayAddr => gatewayAddr.Address.AddressFamily == AddressFamily.InterNetwork).Address,
+                                DnsServers    = ipProperties.DnsAddresses.ToArray()
+                            };
+                        }
                     }
                 }
             }

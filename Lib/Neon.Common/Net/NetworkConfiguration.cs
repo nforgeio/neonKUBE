@@ -35,12 +35,17 @@ using Neon.Retry;
 namespace Neon.Net
 {
     /// <summary>
-    /// Retured by <see cref="NetHelper.GetConfiguration()"/> with the current network
+    /// Retured by <see cref="NetHelper.GetNetworkConfiguration()"/> with the current network
     /// settings including: Routable IP address, network CIDR, network gateway and the
     /// DNS server IP addresses.
     /// </summary>
     public class NetworkConfiguration
     {
+        /// <summary>
+        /// Returns the network interface name.
+        /// </summary>
+        public string InterfaceName { get; set; }
+
         /// <summary>
         /// The routable IP address of the current machine.
         /// </summary>
