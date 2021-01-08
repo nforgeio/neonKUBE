@@ -975,6 +975,11 @@ namespace Neon.Net
         /// </remarks>
         public static IPAddress GetRoutableIpAddress()
         {
+            if (!NetworkInterface.GetIsNetworkAvailable())
+            {
+                return null;
+            }
+
             // Look for an active non-loopback interface with the best speed
             // that also has IPv4 addresses assigned.
 
@@ -1019,6 +1024,53 @@ namespace Neon.Net
             return activeInterface.GetIPProperties().UnicastAddresses
                 .First(address => address.Address.AddressFamily == AddressFamily.InterNetwork)
                 .Address;
+        }
+
+        /// <summary>
+        /// Returns basic information about the current network connection including the
+        /// machine's routable IP address, the network CIDR and gateway as well as the
+        /// DNS server addresses.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="NetworkConfiguration"/> with the information or <c>null</c> 
+        /// when the computer doesn't appear to be connected to a network.
+        /// </returns>
+        /// <remarks>
+        /// This implementation is somewhat fragile because it relies on <see cref="GetRoutableIpAddress()"/> which
+        /// uses heuristics to try to identify a suitable connected network.  This may not work as expected for machines
+        /// with multiple active connections to different networks.
+        /// </remarks>
+        public static NetworkConfiguration GetConfiguration()
+        {
+            var routableIpAddress = GetRoutableIpAddress();
+
+            if (routableIpAddress == null)
+            {
+                return null;
+            }
+
+            foreach (var @interface in NetworkInterface.GetAllNetworkInterfaces())
+            {
+                var ipProperties = @interface.GetIPProperties();
+
+                foreach (var unicastAddress in ipProperties.UnicastAddresses)
+                {
+                    if (unicastAddress.Address == routableIpAddress)
+                    {
+                        // This is the interface handling the routable address.
+
+                        return new NetworkConfiguration()
+                        {
+                            Address    = routableIpAddress,
+                            Cidr       = new NetworkCidr(routableIpAddress, unicastAddress.IPv4Mask),
+                            Gateway    = ipProperties.GatewayAddresses.First().Address,
+                            DnsServers = ipProperties.DhcpServerAddresses.ToArray()
+                        };
+                    }
+                }
+            }
+
+            return null;
         }
     }
 }

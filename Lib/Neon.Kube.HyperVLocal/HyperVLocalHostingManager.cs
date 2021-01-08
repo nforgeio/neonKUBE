@@ -73,7 +73,7 @@ namespace Neon.Kube
 
             /// <summary>
             /// The downloaded file length used as a quick verification that
-            /// the complete file was downloaded.
+            /// the entire file was downloaded.
             /// </summary>
             [JsonProperty(PropertyName = "Length", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
             [YamlMember(Alias = "length", ApplyNamingConventions = false)]
