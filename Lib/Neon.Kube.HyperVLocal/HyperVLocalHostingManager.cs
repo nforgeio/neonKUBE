@@ -645,9 +645,9 @@ namespace Neon.Kube
 
                 // Create the virtual machine.
 
-                var processors       = node.Metadata.Vm.GetProcessors(cluster.Definition);
-                var memoryBytes      = node.Metadata.Vm.GetMemory(cluster.Definition);
-                var osDiskBytes      = node.Metadata.Vm.GetOsDisk(cluster.Definition);
+                var processors  = node.Metadata.Vm.GetProcessors(cluster.Definition);
+                var memoryBytes = node.Metadata.Vm.GetMemory(cluster.Definition);
+                var osDiskBytes = node.Metadata.Vm.GetOsDisk(cluster.Definition);
 
                 node.Status = $"create: virtual machine";
                 hyperv.AddVm(
@@ -658,9 +658,9 @@ namespace Neon.Kube
                     drivePath:      osDrivePath,
                     switchName:     switchName);
 
-                // Create a temporary ISO with the [neon-node-prep.sh] script, mount it
+                // Create a temporary ISO with the [neon-init.sh] script, mount it
                 // to the VM and then boot the VM for the first time.  The script on the
-                // ISO will be executed automatically by the [neon-node-prep] service
+                // ISO will be executed automatically by the [neon-init] service
                 // preinstalled on the VM image and the script will configure the secure 
                 // SSH password and then the network.
                 //
@@ -674,8 +674,9 @@ namespace Neon.Kube
                     // Create a temporary ISO with the prep script and mount it
                     // to the node VM.
 
-                    node.Status = $"mount: neon-node-prep iso";
-                    tempIso     = KubeHelper.CreateNodePrepIso(node.Cluster.Definition, node.Metadata, secureSshPassword);
+                    node.Status = $"mount: neon-init iso";
+                    tempIso     = KubeHelper.CreateNeonInitIso(node.Cluster.Definition, node.Metadata, secureSshPassword);
+
                     hyperv.InsertVmDvd(vmName, tempIso.Path);
 
                     // Start the VM for the first time with the mounted ISO.  The network

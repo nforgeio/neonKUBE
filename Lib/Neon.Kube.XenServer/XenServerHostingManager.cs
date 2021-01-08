@@ -440,9 +440,9 @@ namespace Neon.Kube
                     snapshot:                   cluster.Definition.Hosting.XenServer.Snapshot,
                     primaryStorageRepository:   cluster.Definition.Hosting.XenServer.StorageRepository);;
 
-                // Create a temporary ISO with the [neon-node-prep.sh] script, mount it
+                // Create a temporary ISO with the [neon-init.sh] script, mount it
                 // to the VM and then boot the VM for the first time.  The script on the
-                // ISO will be executed automatically by the [neon-node-prep] service
+                // ISO will be executed automatically by the [neon-init] service
                 // preinstalled on the VM image and the script will configure the secure 
                 // SSH password and then the network.
                 //
@@ -457,9 +457,9 @@ namespace Neon.Kube
                     // Create a temporary ISO with the prep script and insert it
                     // into the node VM.
 
-                    node.Status = $"mount: neon-node-prep iso";
+                    node.Status = $"mount: neon-init iso";
 
-                    tempIso    = KubeHelper.CreateNodePrepIso(node.Cluster.Definition, node.Metadata, secureSshPassword);
+                    tempIso    = KubeHelper.CreateNeonInitIso(node.Cluster.Definition, node.Metadata, secureSshPassword);
                     xenTempIso = xenHost.CreateTempIso(tempIso.Path);
 
                     xenHost.Invoke($"vm-cd-eject", $"uuid={vm.Uuid}");

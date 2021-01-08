@@ -231,11 +231,11 @@ rm /etc/netplan/*
 
 cat <<EOF > /etc/netplan/no-dhcp.yaml
 # This file is used to disable the network when a new VM created from
-# a template is booted.  The [neon-node-prep] service handles network
+# a template is booted.  The [neon-init] service handles network
 # provisioning in conjunction with the cluster prepare step.
 #
 # Cluster prepare inserts a virtual DVD disc with a script that
-# handles the network configuration which [neon-node-prep] will
+# handles the network configuration which [neon-init] will
 # execute.
 
 network:
@@ -251,7 +251,7 @@ EOF
                 // We're going to disable [cloud-init] because we couldn't get it to work with
                 // the NoCloud datasource.  There were just too many moving parts and it was 
                 // really hard to figure out what [cloud-init] was doing or not doing.  Mounting
-                // a DVD with a script that [neon-node-prep] executes is just as flexible
+                // a DVD with a script that [neon-init] executes is just as flexible
                 // and is much easier to understand.
 
                 Console.WriteLine("Disable:  [cloud-init]");
@@ -282,23 +282,23 @@ fi
 ";
                 node.SudoCommand(CommandBundle.FromScript(disableSnapScript), RunOptions.FaultOnError);
 
-                // Install and configure the [neon-node-prep] service.  This is a simple script
+                // Install and configure the [neon-init] service.  This is a simple script
                 // that is configured to run as a oneshot systemd service before networking is
                 // started.  This is currently used to configure the node's static IP address
                 // configuration on first boot, so we don't need to rely on DHCP (which may not
                 // be available in some environments).
                 //
-                // [neon-node-prep] is intended to run the first time a node is booted after
+                // [neon-init] is intended to run the first time a node is booted after
                 // being created from a template.  It checks to see if a special ISO with a
-                // configuration script named [neon-node-prep.sh] is inserted into the VMs DVD
-                // drive and when present, the script will be executed and the [/etc/neon-node-prep]
+                // configuration script named [neon-init.sh] is inserted into the VMs DVD
+                // drive and when present, the script will be executed and the [/etc/neon-init]
                 // file will be created to indicate that the service no longer needs to do this for
                 // subsequent reboots.
                 //
-                // NOTE: The script won't create the [/etc/neon-node-prep] when the script
+                // NOTE: The script won't create the [/etc/neon-init] when the script
                 //       ISO doesn't exist for debugging purposes.
 
-                Console.WriteLine("Install:  [neon-node-prep] service");
+                Console.WriteLine("Install:  [neon-init] service");
 
                 var neonNodePrepScript =
 $@"# Ensure that the neon binary folder exists.
@@ -307,7 +307,7 @@ mkdir -p {KubeNodeFolders.Bin}
 
 # Create the systemd unit file.
 
-cat <<EOF > /etc/systemd/system/neon-node-prep.service
+cat <<EOF > /etc/systemd/system/neon-init.service
 
 [Unit]
 Description=neonKUBE one-time node preparation service 
@@ -315,7 +315,7 @@ After=systemd-networkd.service
 
 [Service]
 Type=oneshot
-ExecStart={KubeNodeFolders.Bin}/neon-node-prep.sh
+ExecStart={KubeNodeFolders.Bin}/neon-init.sh
 RemainAfterExit=false
 StandardOutput=journal+console
 
@@ -325,10 +325,10 @@ EOF
 
 # Create the service script.
 
-cat <<EOF > {KubeNodeFolders.Bin}/neon-node-prep.sh
+cat <<EOF > {KubeNodeFolders.Bin}/neon-init.sh
 #!/bin/bash
 #------------------------------------------------------------------------------
-# FILE:	        neon-node-prep.sh
+# FILE:	        neon-init.sh
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 #
@@ -351,20 +351,20 @@ cat <<EOF > {KubeNodeFolders.Bin}/neon-node-prep.sh
 #       1. neonKUBE cluster setup creates a node VM from a template.
 #
 #       2. Setup creates a temporary ISO (DVD) image with a script named 
-#          [neon-node-prep.sh] on it and uploads this to the Hyper-V
+#          [neon-init.sh] on it and uploads this to the Hyper-V
 #          or XenServer host machine.
 #
 #       3. Setup inserts the VFD into the VM's DVD drive and starts the VM.
 #
 #       4. The VM boots, eventually running this script (via the
-#          [neon-node-prep] service).
+#          [neon-init] service).
 #
 #       5. This script checks whether a DVD is present, mounts
-#          it and checks it for the [neon-node-prep.sh] script.
+#          it and checks it for the [neon-init.sh] script.
 #
 #       6. If the DVD and script file are present, this service will
 #          execute the script via Bash, peforming any required custom setup.
-#          Then this script creates the [/etc/neon-node-prep] file which 
+#          Then this script creates the [/etc/neon-init] file which 
 #          prevents the service from doing anything during subsequent node 
 #          reboots.
 #
@@ -374,57 +374,57 @@ cat <<EOF > {KubeNodeFolders.Bin}/neon-node-prep.sh
 
 # Run the prep script only once.
 
-if [ -f /etc/neon-node-prep ] ; then
+if [ -f /etc/neon-init ] ; then
     echo ""INFO: Machine is already prepared.""
     exit 0
 fi
 
 # Check for the DVD and prep script.
 
-mkdir -p /media/neon-node-prep
+mkdir -p /media/neon-init
 
 if [ ! $? ] ; then
     echo ""ERROR: Cannot create DVD mount point.""
-    rm -rf /media/neon-node-prep
+    rm -rf /media/neon-init
     exit 1
 fi
 
-mount /dev/dvd /media/neon-node-prep
+mount /dev/dvd /media/neon-init
 
 if [ ! $? ] ; then
     echo ""WARNING: No DVD is present.""
-    rm -rf /media/neon-node-prep
+    rm -rf /media/neon-init
     exit 0
 fi
 
-if [ ! -f /media/neon-node-prep/neon-node-prep.sh ] ; then
-    echo ""WARNING: No [neon-node-prep.sh] script is present on the DVD.""
-    rm -rf /media/neon-node-prep
+if [ ! -f /media/neon-init/neon-init.sh ] ; then
+    echo ""WARNING: No [neon-init.sh] script is present on the DVD.""
+    rm -rf /media/neon-init
     exit 0
 fi
 
 # The script file is present so execute it.  Note that we're
 # passing the path where the DVD is mounted as a parameter.
 
-echo ""INFO: Running [neon-node-prep.sh]""
-bash /media/neon-node-prep/neon-node-prep.sh /media/neon-node-prep
+echo ""INFO: Running [neon-init.sh]""
+bash /media/neon-init/neon-init.sh /media/neon-init
 
 # Unmount the DVD and cleanup.
 
 echo ""INFO: Cleanup""
-umount /media/neon-node-prep
-rm -rf /media/neon-node-prep
+umount /media/neon-init
+rm -rf /media/neon-init
 
 # Disable any future node prepping.
 
-touch /etc/neon-node-prep
+touch /etc/neon-init
 EOF
 
-chmod 744 {KubeNodeFolders.Bin}/neon-node-prep.sh
+chmod 744 {KubeNodeFolders.Bin}/neon-init.sh
 
-# Configure [neon-node-prep] to start at boot.
+# Configure [neon-init] to start at boot.
 
-systemctl enable neon-node-prep
+systemctl enable neon-init
 systemctl daemon-reload
 ";
                 node.SudoCommand(CommandBundle.FromScript(neonNodePrepScript), RunOptions.FaultOnError);

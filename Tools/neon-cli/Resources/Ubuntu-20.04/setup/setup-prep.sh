@@ -47,13 +47,13 @@ echo "**********************************************" 1>&2
 echo
 
 #------------------------------------------------------------------------------
-# Remove the [neon-node-prep] service.  This is no longer required after it
+# Remove the [neon-init] service.  This is no longer required after it
 # runs once (first boot) during node provisioning configures the network and 
 # and services.
 
-if [ -f /etc/systemd/system/neon-node-prep.service ]; then
-    echo "** Remove: neon-node-prep.service"
-    rm -f /etc/systemd/system/neon-node-prep.service
+if [ -f /etc/systemd/system/neon-init.service ]; then
+    echo "** Remove: neon-init.service"
+    rm -f /etc/systemd/system/neon-init.service
 fi
 
 #------------------------------------------------------------------------------

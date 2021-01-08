@@ -44,7 +44,7 @@ namespace NeonCli
     {
         private const string usage = @"
 Generates a floppy disk image file that can act as a template for the 
-[neon-node-prep.sh] script that will be executed on first boot when
+[neon-init.sh] script that will be executed on first boot when
 provisioning neonKUBE nodes on Hyper-V, XenServer, as well as other
 virtialization environments.
 
@@ -60,7 +60,7 @@ ARGUMENTS:
 REMARKS:
 
 This command is used rarely by neonKUBE maintainers for rebuilding
-the [neon-node-prep] floppy image file.  This image file is actually
+the [neon-init] floppy image file.  This image file is actually
 embedded directy into the [Neon.Kube.KubeHelper] class which handles
 the writing data to the image as required.
 
@@ -77,12 +77,12 @@ to pass the IP-ADDRESS for the VM.  This script connects with the standard
 neonKUBE VM credentials creates the disk image and then writes the GZIP/HEX
 output to VFD-PATH.
 
-Right now, this command simply creates a file named [neon-node-prep.sh]
+Right now, this command simply creates a file named [neon-init.sh]
 on the floppy and writes 100 512B blocks to the file, the first block 
 filled with 0x01, the second with 0x02,... and the last block with 0x64
 (100).  This allows the script file to hold 51,200 bytes.
 
-The idea is that cluster prepare will update the [neon-node-prep.sh] file
+The idea is that cluster prepare will update the [neon-init.sh] file
 by locating these blocks, filling them all with 0x0A (NEWLINE) bytes and
 then go back and writing the data to the blocks in order.  This is a bit
 of a hack that assumes a text file where NEWLINEs at the end don't matter.
@@ -140,7 +140,7 @@ of a hack that assumes a text file where NEWLINEs at the end don't matter.
                     }
                 }
 
-                server.UploadBytes("/media/floppy/neon-node-prep.sh", blocks);
+                server.UploadBytes("/media/floppy/neon-init.sh", blocks);
                 server.SudoCommand("umount /media/floppy");
 
                 // The [/tmp/floppy.img] file should hold the image now.  We'll

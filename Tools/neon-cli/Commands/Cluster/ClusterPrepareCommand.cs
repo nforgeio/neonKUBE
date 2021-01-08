@@ -312,7 +312,7 @@ Server Requirements:
                 //
                 // We're going to use the cloud API to configure this secure password
                 // when creating the VMs.  For on-premise hypervisor environments such
-                // as Hyper-V and XenServer, we're going use the [neon-node-prep]
+                // as Hyper-V and XenServer, we're going use the [neon-init]
                 // service to mount a virtual DVD that will change the password before
                 // configuring the network on first boot.
                 //
