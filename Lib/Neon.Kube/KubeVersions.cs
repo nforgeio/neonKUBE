@@ -76,5 +76,10 @@ namespace Neon.Kube
         /// The version of Helm to be installed.
         /// </summary>
         public const string HelmVersion = "3.3.1";
+
+        /// <summary>
+        /// The version of CoreDNS to be installed.
+        /// </summary>
+        public const string CoreDNSVersion = "1.6.2";
     }
 }
