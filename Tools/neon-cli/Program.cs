@@ -223,8 +223,6 @@ You can disable the use of this encrypted folder by specifying
                     new PasswordListCommand(),
                     new PasswordRemoveCommand(),
                     new PasswordSetCommand(),
-                    new PrepareCommand(),
-                    new PrepareNodeTemplateCommand(),
                     new RunCommand(),
                     new ScpCommand(),
                     new SshCommand(),
