@@ -2097,8 +2097,8 @@ exit 0
 
             // Wait for boot/connect.
 
-            WriteLog(logWriter, $"Login:    [{KubeConst.SysAdminUsername}]");
-            node.Status = $"login: [{KubeConst.SysAdminUsername}]";
+            WriteLog(logWriter, $"Login:    [{KubeConst.SysAdminUser}]");
+            node.Status = $"login: [{KubeConst.SysAdminUser}]";
 
             node.WaitForBoot();
 
@@ -2134,7 +2134,7 @@ exit 0
             node.Status = "disable: sudo password";
             node.DisableSudoPrompt(sshPassword);
 
-            WriteLog(logWriter, $"Login:    [{KubeConst.SysAdminUsername}]");
+            WriteLog(logWriter, $"Login:    [{KubeConst.SysAdminUser}]");
             node.Status = "reconnecting...";
             node.WaitForBoot();
 
@@ -2228,12 +2228,12 @@ $@"#!/bin/bash
 # user and group IDs:
 
 find / -group 1000 -exec chgrp -h {KubeConst.SysAdminGroup} {{}} \;
-find / -user 1000 -exec chown -h {KubeConst.SysAdminUsername} {{}} \;
+find / -user 1000 -exec chown -h {KubeConst.SysAdminUser} {{}} \;
 
 # Relocate the [sysadmin] UID and GID:
 
 groupmod --gid {KubeConst.SysAdminGID} {KubeConst.SysAdminGroup}
-usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups root,sysadmin,sudo {KubeConst.SysAdminUsername}
+usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups root,sysadmin,sudo {KubeConst.SysAdminUser}
 ";
             WriteLog(logWriter, "Relocate: [sysadmin] user/group IDs");
             node.Status = "relocate: [sysadmin] user/group IDs";
@@ -2247,10 +2247,10 @@ usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups roo
             // wrap things up.
 
             node.SudoCommand(CommandBundle.FromScript(tempUserScript), RunOptions.FaultOnError);
-            WriteLog(logWriter, $"Login:    [{KubeConst.SysAdminUsername}]");
-            node.Status = $"login: [{KubeConst.SysAdminUsername}]";
+            WriteLog(logWriter, $"Login:    [{KubeConst.SysAdminUser}]");
+            node.Status = $"login: [{KubeConst.SysAdminUser}]";
 
-            node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUsername, sshPassword));
+            node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, sshPassword));
             node.Connect();
 
             // Beginning with Ubuntu 20.04 we're seeing [systemd/(sd-pam)] processes 
@@ -2273,7 +2273,7 @@ usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups roo
 
             WriteLog(logWriter, "Set:      [sysadmin] home folder owner");
             node.Status = "set: [sysadmin] home folder owner";
-            node.SudoCommand($"chown -R {KubeConst.SysAdminUsername}:{KubeConst.SysAdminGroup} .*", RunOptions.FaultOnError);
+            node.SudoCommand($"chown -R {KubeConst.SysAdminUser}:{KubeConst.SysAdminGroup} .*", RunOptions.FaultOnError);
 
             // Create the [container] user with no home directory.  This
             // means that the [container] user will have no chance of

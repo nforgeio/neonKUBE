@@ -219,7 +219,7 @@ chmod 600 $HOME/.ssh/authorized_keys
 $@"
 # Install public SSH key for the [sysadmin] user.
 
-cp ssh_host_rsa_key.pub /home/{KubeConst.SysAdminUsername}/.ssh/authorized_keys
+cp ssh_host_rsa_key.pub /home/{KubeConst.SysAdminUser}/.ssh/authorized_keys
 
 # Disable all host keys except for RSA.
 
@@ -243,12 +243,12 @@ systemctl restart sshd
 
             node.Status = "ssh: verify private key auth";
             node.Disconnect();
-            node.UpdateCredentials(SshCredentials.FromPrivateKey(KubeConst.SysAdminUsername, clusterLogin.SshKey.PrivatePEM));
+            node.UpdateCredentials(SshCredentials.FromPrivateKey(KubeConst.SysAdminUser, clusterLogin.SshKey.PrivatePEM));
             node.WaitForBoot();
 
             node.Status = "ssh: verify password auth";
             node.Disconnect();
-            node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUsername, clusterLogin.SshPassword));
+            node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, clusterLogin.SshPassword));
             node.WaitForBoot();
         }
 

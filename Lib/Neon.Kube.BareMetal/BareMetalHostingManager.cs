@@ -212,7 +212,7 @@ namespace Neon.Kube
 
                             lock (checkErrors)
                             {
-                                checkErrors.Add(new Tuple<string, string>(node.Name, $"Authentication failed.  Verify the [{KubeConst.SysAdminUsername}] user credentials."));
+                                checkErrors.Add(new Tuple<string, string>(node.Name, $"Authentication failed.  Verify the [{KubeConst.SysAdminUser}] user credentials."));
                             }
 
                             throw;
@@ -351,7 +351,7 @@ namespace Neon.Kube
 
             try
             {
-                node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUsername, orgSshPassword));
+                node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, orgSshPassword));
                 node.Connect();
 
                 lock (nodeToPassword)
@@ -369,7 +369,7 @@ namespace Neon.Kube
                     throw;
                 }
 
-                node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUsername, secureSshPassword));
+                node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, secureSshPassword));
                 node.Connect();
 
                 lock (nodeToPassword)
@@ -406,7 +406,7 @@ namespace Neon.Kube
 
             var script =
 $@"
-echo '{KubeConst.SysAdminUsername}:{secureSshPassword}' | chpasswd
+echo '{KubeConst.SysAdminUser}:{secureSshPassword}' | chpasswd
 ";
             var response = node.SudoCommand(CommandBundle.FromScript(script));
 
@@ -417,7 +417,7 @@ echo '{KubeConst.SysAdminUsername}:{secureSshPassword}' | chpasswd
 
             // Update the node credentials and then reconnect. 
 
-            node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUsername, secureSshPassword));
+            node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, secureSshPassword));
             node.Connect();
         }
 

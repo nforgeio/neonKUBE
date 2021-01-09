@@ -244,7 +244,7 @@ OPTIONS:
 
                 // Update the cluster node SSH credentials to use the secure password.
 
-                var sshCredentials = SshCredentials.FromUserPassword(KubeConst.SysAdminUsername, clusterLogin.SshPassword);
+                var sshCredentials = SshCredentials.FromUserPassword(KubeConst.SysAdminUser, clusterLogin.SshPassword);
 
                 foreach (var node in cluster.Nodes)
                 {

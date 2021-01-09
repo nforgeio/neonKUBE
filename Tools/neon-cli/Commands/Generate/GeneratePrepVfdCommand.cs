@@ -108,7 +108,7 @@ of a hack that assumes a text file where NEWLINEs at the end don't matter.
 
             var ipAddress   = NetHelper.ParseIPv4Address(commandLine.Arguments.ElementAtOrDefault(0));
             var vfdPath     = commandLine.Arguments.ElementAtOrDefault(1);
-            var credentials = SshCredentials.FromUserPassword("sysadmin", "sysadmin0000");
+            var credentials = SshCredentials.FromUserPassword(KubeConst.SysAdminUser, KubeConst.SysAdminPassword);
 
             using (var server = new NodeSshProxy<string>("vm-fhd", ipAddress, credentials))
             {

@@ -142,7 +142,7 @@ namespace Neon.Kube
         /// <summary>
         /// The default host machine sysadmin username.
         /// </summary>
-        public const string SysAdminUsername = "sysadmin";
+        public const string SysAdminUser = "sysadmin";
 
         /// <summary>
         /// The default host machine sysadmin user ID.
@@ -161,10 +161,9 @@ namespace Neon.Kube
 
         /// <summary>
         /// The root account password baked into the Hyper-V and XenServer cluster
-        /// host node virtual machine templates.  Note that this will not be
-        /// used for hosts provisioned on public clouds for security reasons.
+        /// neonKUBE node images.
         /// </summary>
-        public const string VmTemplatePassword = "sysadmin0000";
+        public const string SysAdminPassword = "sysadmin0000";
 
         /// <summary>
         /// The default host machine container username.

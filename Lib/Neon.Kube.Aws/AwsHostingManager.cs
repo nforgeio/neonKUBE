@@ -1123,7 +1123,7 @@ namespace Neon.Kube
                 {
                     // Update the node SSH proxies to use the secure SSH password.
 
-                    node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUsername, secureSshPassword));
+                    node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, secureSshPassword));
                 },
                 quiet: true);
             controller.AddGlobalStep("load balancer", ConfigureLoadBalancerAsync);

@@ -904,7 +904,7 @@ namespace Neon.Kube
 
             // Update the node credentials.
 
-            this.nodeUsername = KubeConst.SysAdminUsername;
+            this.nodeUsername = KubeConst.SysAdminUser;
             this.nodePassword = secureSshPassword;
 
             // Initialize and run the [SetupController].
@@ -964,7 +964,7 @@ namespace Neon.Kube
                 {
                     // Update the node SSH proxies to use the secure SSH password.
 
-                    node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUsername, secureSshPassword));
+                    node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, secureSshPassword));
                 },
                 quiet: true);
             controller.AddNodeStep("virtual machines", CreateVm);

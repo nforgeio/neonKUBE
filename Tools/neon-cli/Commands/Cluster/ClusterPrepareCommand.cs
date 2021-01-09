@@ -290,7 +290,7 @@ Server Requirements:
                     clusterLogin = new ClusterLogin(clusterLoginPath)
                     {
                         ClusterDefinition = clusterDefinition,
-                        SshUsername       = KubeConst.SysAdminUsername,
+                        SshUsername       = KubeConst.SysAdminUser,
                         SetupDetails      = new KubeSetupDetails() { SetupPending = true }
                     };
 
@@ -341,7 +341,7 @@ Server Requirements:
                 {
                     // Generate a 2048 bit SSH key pair.
 
-                    clusterLogin.SshKey = KubeHelper.GenerateSshKey(cluster.Name, "sysadmin");
+                    clusterLogin.SshKey = KubeHelper.GenerateSshKey(cluster.Name, KubeConst.SysAdminUser);
 
                     // We're going to use WinSCP (if it's installed) to convert the OpenSSH PEM formatted key
                     // to the PPK format PuTTY/WinSCP requires.

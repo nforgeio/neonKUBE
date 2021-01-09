@@ -301,7 +301,7 @@ You can disable the use of this encrypted folder by specifying
 
                 // Load the password from the command line options, if present.
 
-                MachinePassword = LeftCommandLine.GetOption("--machine-password", KubeConst.VmTemplatePassword);
+                MachinePassword = LeftCommandLine.GetOption("--machine-password", KubeConst.SysAdminPassword);
 
                 // Handle the other options.
 
@@ -364,7 +364,7 @@ You can disable the use of this encrypted folder by specifying
                 if (command.NeedsSshCredentials(CommandLine) && string.IsNullOrEmpty(MachinePassword))
                 {
                     Console.WriteLine();
-                    Console.WriteLine($"    Enter cluster SSH password for [{KubeConst.SysAdminUsername}]:");
+                    Console.WriteLine($"    Enter cluster SSH password for [{KubeConst.SysAdminUser}]:");
                     Console.WriteLine($"    ------------------------------------------");
 
                     while (string.IsNullOrEmpty(MachinePassword))
@@ -558,7 +558,7 @@ You can disable the use of this encrypted folder by specifying
         /// The password used to secure the cluster nodes before they are setup.  This defaults
         /// to <b>sysadmin0000</b> which is used for the cluster machine templates.
         /// </summary>
-        public static string MachinePassword { get; set; } = KubeConst.VmTemplatePassword;
+        public static string MachinePassword { get; set; } = KubeConst.SysAdminPassword;
 
         /// <summary>
         /// Returns the log folder path or a <c>null</c> or empty string 
@@ -616,9 +616,9 @@ You can disable the use of this encrypted folder by specifying
 
             SshCredentials sshCredentials;
 
-            if (!string.IsNullOrEmpty(KubeConst.SysAdminUsername) && !string.IsNullOrEmpty(Program.MachinePassword))
+            if (!string.IsNullOrEmpty(KubeConst.SysAdminUser) && !string.IsNullOrEmpty(Program.MachinePassword))
             {
-                sshCredentials = SshCredentials.FromUserPassword(KubeConst.SysAdminUsername, Program.MachinePassword);
+                sshCredentials = SshCredentials.FromUserPassword(KubeConst.SysAdminUser, Program.MachinePassword);
             }
             else if (KubeHelper.CurrentContext != null)
             {
