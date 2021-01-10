@@ -112,7 +112,6 @@ namespace NeonCli
 
             // Add the global cluster related environment variables. 
 
-            sb.AppendLine($"NEON_CLUSTER_PROVISIONER={clusterDefinition.Provisioner}");
             sb.AppendLine($"NEON_CLUSTER={clusterDefinition.Name}");
             sb.AppendLine($"NEON_DATACENTER={clusterDefinition.Datacenter.ToLowerInvariant()}");
             sb.AppendLine($"NEON_ENVIRONMENT={clusterDefinition.Environment.ToString().ToLowerInvariant()}");
@@ -280,7 +279,7 @@ systemctl restart sshd
             {
                 // Restrict the [apt] package manager to using IPv4 to communicate
                 // with the package mirrors, since IPv6 often doesn't work.
-                
+
                 node.UploadText("/etc/apt/apt.conf.d/99-force-ipv4-transport", "Acquire::ForceIPv4 \"true\";");
                 node.SudoCommand("chmod 644 /etc/apt/apt.conf.d/99-force-ipv4-transport");
             }

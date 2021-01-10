@@ -281,14 +281,6 @@ namespace Neon.Kube
         public SecurityOptions Security { get; set; } = new SecurityOptions();
 
         /// <summary>
-        /// Identifies the tool/version used to provision the cluster.
-        /// </summary>
-        [JsonProperty(PropertyName = "Provisioner", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "provisioner", ApplyNamingConventions = false)]
-        [DefaultValue(defaultProvisioner)]
-        public string Provisioner { get; set; } = defaultProvisioner;
-
-        /// <summary>
         /// Returns the Kubernetes cluster options.,
         /// </summary>
         [JsonProperty(PropertyName = "Kubernetes", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -821,7 +813,6 @@ namespace Neon.Kube
             Debug       = Debug ?? new DebugOptions();
             OpenEbs     = OpenEbs ?? new OpenEbsOptions();
             Security    = Security ?? new SecurityOptions();
-            Provisioner = Provisioner ?? defaultProvisioner;
             Kubernetes  = Kubernetes ?? new KubernetesOptions();
             Docker      = Docker ?? new DockerOptions();
             Monitor     = Monitor ?? new MonitorOptions();

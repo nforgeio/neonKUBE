@@ -281,8 +281,6 @@ namespace NeonCli
             preprocessReader.Set("load-cluster-conf", KubeNodeFolders.Config + "/cluster.conf.sh --echo-summary");
             preprocessReader.Set("load-cluster-conf-quiet", KubeNodeFolders.Config + "/cluster.conf.sh");
 
-            SetBashVariable(preprocessReader, "cluster.provisioner", clusterDefinition.Provisioner);
-
             SetBashVariable(preprocessReader, "neon.folders.bin", KubeNodeFolders.Bin);
             SetBashVariable(preprocessReader, "neon.folders.config", KubeNodeFolders.Config);
             SetBashVariable(preprocessReader, "neon.folders.setup", KubeNodeFolders.Setup);

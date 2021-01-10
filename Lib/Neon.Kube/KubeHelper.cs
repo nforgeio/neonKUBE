@@ -1454,7 +1454,7 @@ namespace Neon.Kube
         /// </para>
         /// <note>
         /// This requires Powershell to be installed and this will favor using the version of
-        /// Powershell installed along with the neon-cli is present.
+        /// Powershell installed along with the neon-cli, if present.
         /// </note>
         /// </summary>
         /// <param name="inputFolder">Path to the input folder.</param>
@@ -1707,7 +1707,6 @@ public class ISOFile
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(gateway), nameof(gateway));
             Covenant.Requires<ArgumentNullException>(nameServers != null, nameof(nameServers));
             Covenant.Requires<ArgumentNullException>(nameServers.Count() > 0, nameof(nameServers));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(securePassword), nameof(securePassword));
 
             var sbNameservers = new StringBuilder();
 
@@ -1848,15 +1847,34 @@ exit 0
         }
 
         /// <summary>
-        /// Writes a message to a log writer action when it's not <c>null</c>.
+        /// Writes a status message to a log writer action when it's not <c>null</c>.
         /// </summary>
         /// <param name="logWriter">The log writer action ot <c>null</c>.</param>
-        /// <param name="message">The message or <c>null</c> to wtite a blank line.</param>
-        private static void WriteLog(Action<string> logWriter, string message = null)
+        /// <param name="label">The status label.</param>
+        /// <param name="message">Optional message.</param>
+        private static void LogStatus(Action<string> logWriter, string label, string message = null)
         {
             if (logWriter != null)
             {
-                logWriter(message ?? string.Empty);
+                const int labelWidth = 15;
+
+                if (string.IsNullOrEmpty(label))
+                {
+                    label = new string(' ', labelWidth + 1);
+                }
+                else
+                {
+                    if (label.Length < labelWidth)
+                    {
+                        label = label + ':' + new string(' ', labelWidth - label.Length);
+                    }
+                    else
+                    {
+                        label = label + ':';
+                    }
+                }
+
+                logWriter($"{label}{message ?? string.Empty}");
             }
         }
 
@@ -2097,7 +2115,7 @@ exit 0
 
             // Wait for boot/connect.
 
-            WriteLog(logWriter, $"Login:    [{KubeConst.SysAdminUser}]");
+            LogStatus(logWriter, "Login", $"[{KubeConst.SysAdminUser}]");
             node.Status = $"login: [{KubeConst.SysAdminUser}]";
 
             node.WaitForBoot();
@@ -2106,7 +2124,7 @@ exit 0
             // our package operations.  We're going to implement our own cluster
             // updating mechanism.
 
-            WriteLog(logWriter, $"Disable:  auto updates");
+            LogStatus(logWriter, "Disable", $"auto updates");
             node.Status = "disable: auto updates";
 
             node.SudoCommand("systemctl stop snapd.service", RunOptions.None);
@@ -2120,7 +2138,7 @@ exit 0
 
             // Wait for the apt-get lock to be released if somebody is holding it.
 
-            WriteLog(logWriter, $"Wait:     for pending updates");
+            LogStatus(logWriter, "Wait", "for pending updates");
             node.Status = "wait: for pending updates";
 
             while (node.SudoCommand("fuser /var/{lib/{dpkg,apt/lists},cache/apt/archives}/lock", RunOptions.None).ExitCode == 0)
@@ -2130,31 +2148,31 @@ exit 0
 
             // Disable sudo password prompts and reconnect.
 
-            WriteLog(logWriter, "Disable:  [sudo] password");
+            LogStatus(logWriter, "Disable", "[sudo] password");
             node.Status = "disable: sudo password";
             node.DisableSudoPrompt(sshPassword);
 
-            WriteLog(logWriter, $"Login:    [{KubeConst.SysAdminUser}]");
+            LogStatus(logWriter, "Login", $"[{KubeConst.SysAdminUser}]");
             node.Status = "reconnecting...";
             node.WaitForBoot();
 
             // Install required packages and ugrade the distribution if requested.
 
-            WriteLog(logWriter, "Install:  packages");
+            LogStatus(logWriter, "Install", "packages");
             node.Status = "install: packages";
             node.SudoCommand("apt-get update", RunOptions.FaultOnError);
             node.SudoCommand("apt-get install -yq --allow-downgrades zip secure-delete", RunOptions.FaultOnError);
 
             if (updateDistribution)
             {
-                WriteLog(logWriter, "Upgrade:  linux");
+                LogStatus(logWriter, "Upgrade", "linux");
                 node.Status = "upgrade linux";
                 node.SudoCommand("apt-get dist-upgrade -yq");
             }
 
             // Disable SWAP by editing [/etc/fstab] to remove the [/swap.img] line.
 
-            WriteLog(logWriter, "Disable:  swap");
+            LogStatus(logWriter, "Disable", "swap");
             node.Status = "disable: swap";
 
             var sbFsTab = new StringBuilder();
@@ -2177,7 +2195,7 @@ exit 0
             // need to create a temporary user with root permissions to
             // delete and then recreate the [sysadmin] account.
 
-            WriteLog(logWriter, "Create:   [temp] user");
+            LogStatus(logWriter, "Create", "[temp] user");
             node.Status = "create: [temp] user";
 
             var tempUserScript =
@@ -2204,7 +2222,7 @@ adduser temp lxd
             // Reconnect with the [temp] account so we can relocate the [sysadmin]
             // user and its group ID to ID=1234.
 
-            WriteLog(logWriter, $"Login:    [temp]");
+            LogStatus(logWriter, "Login", "[temp]");
             node.Status = "login: [temp]";
 
             node.UpdateCredentials(SshCredentials.FromUserPassword("temp", sshPassword));
@@ -2215,7 +2233,7 @@ adduser temp lxd
             // from deleting the [temp] user below.  We're going to handle this by
             // killing any [temp] user processes first.
 
-            WriteLog(logWriter, "Kill:     [sysadmin] user processes");
+            LogStatus(logWriter, "Kill", "[sysadmin] user processes");
             node.Status = "kill: [sysadmin] processes";
             node.SudoCommand("pkill -u sysadmin --signal 9");
 
@@ -2235,11 +2253,11 @@ find / -user 1000 -exec chown -h {KubeConst.SysAdminUser} {{}} \;
 groupmod --gid {KubeConst.SysAdminGID} {KubeConst.SysAdminGroup}
 usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups root,sysadmin,sudo {KubeConst.SysAdminUser}
 ";
-            WriteLog(logWriter, "Relocate: [sysadmin] user/group IDs");
+            LogStatus(logWriter, "Relocate", "[sysadmin] user/group IDs");
             node.Status = "relocate: [sysadmin] user/group IDs";
             node.SudoCommand(CommandBundle.FromScript(sysadminUserScript), RunOptions.FaultOnError);
 
-            WriteLog(logWriter, $"Logout");
+            LogStatus(logWriter, "Logout");
             node.Status = "logout";
 
             // We need to reconnect again with [sysadmin] so we can remove
@@ -2247,7 +2265,7 @@ usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups roo
             // wrap things up.
 
             node.SudoCommand(CommandBundle.FromScript(tempUserScript), RunOptions.FaultOnError);
-            WriteLog(logWriter, $"Login:    [{KubeConst.SysAdminUser}]");
+            LogStatus(logWriter, "Login", $"[{KubeConst.SysAdminUser}]");
             node.Status = $"login: [{KubeConst.SysAdminUser}]";
 
             node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, sshPassword));
@@ -2258,20 +2276,20 @@ usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups roo
             // from deleting the [temp] user below.  We're going to handle this by
             // killing any [temp] user processes first.
 
-            WriteLog(logWriter, "Kill:     [temp] user processes");
+            LogStatus(logWriter, "Kill", "[temp] user processes");
             node.Status = "kill: [temp] user processes";
             node.SudoCommand("pkill -u temp");
 
             // Remove the [temp] user.
 
-            WriteLog(logWriter, "Remove:   [temp] user");
+            LogStatus(logWriter, "Remove", "[temp] user");
             node.Status = "remove: [temp] user";
             node.SudoCommand($"rm -rf /home/temp", RunOptions.FaultOnError);
 
             // Ensure that the owner and group for files in the [sysadmin]
             // home folder are correct.
 
-            WriteLog(logWriter, "Set:      [sysadmin] home folder owner");
+            LogStatus(logWriter, "Set", "[sysadmin] home folder owner");
             node.Status = "set: [sysadmin] home folder owner";
             node.SudoCommand($"chown -R {KubeConst.SysAdminUser}:{KubeConst.SysAdminGroup} .*", RunOptions.FaultOnError);
 
@@ -2279,7 +2297,7 @@ usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups roo
             // means that the [container] user will have no chance of
             // logging into the machine.
 
-            WriteLog(logWriter, $"Create:   [{KubeConst.ContainerUsername}] user");
+            LogStatus(logWriter, $"Create", $"[{KubeConst.ContainerUsername}] user");
             node.Status = $"create: [{KubeConst.ContainerUsername}] user";
             node.SudoCommand($"useradd --uid {KubeConst.ContainerUID} --no-create-home {KubeConst.ContainerUsername}", RunOptions.FaultOnError);
         }

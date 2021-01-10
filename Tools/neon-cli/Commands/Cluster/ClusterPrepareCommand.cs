@@ -145,8 +145,6 @@ Server Requirements:
 
             var clusterDefinition = ClusterDefinition.FromFile(clusterDefPath, strict: true);
 
-            clusterDefinition.Provisioner = $"neon-cli:{Program.Version}";  // Identify this tool/version as the cluster provisioner
-
             // NOTE: Cluster prepare starts new log files.
 
             cluster = new ClusterProxy(clusterDefinition, Program.CreateNodeProxy<NodeDefinition>, appendToLog: false, defaultRunOptions: RunOptions.LogOutput | RunOptions.FaultOnError);

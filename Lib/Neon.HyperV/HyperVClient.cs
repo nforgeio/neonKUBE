@@ -186,7 +186,7 @@ namespace Neon.HyperV
         /// <param name="diskSize">
         /// A string specifying the primary disk size.  This can be a long byte count or a
         /// byte count or a number with units like <b>512MB</b>, <b>0.5GiB</b>, <b>2GiB</b>, 
-        /// or <b>1TiB</b>.  This defaults to <b>64GiB</b>.
+        /// or <b>1TiB</b>.  Pass <c>null</c> to leave the disk alone.  This defaults to <c>null</c>.
         /// </param>
         /// <param name="drivePath">
         /// Optionally specifies the path where the virtual hard drive will be located.  Pass 
@@ -217,7 +217,7 @@ namespace Neon.HyperV
             string                      machineName, 
             string                      memorySize        = "2GiB", 
             int                         processorCount    = 4,
-            string                      diskSize          = "64GiB",
+            string                      diskSize          = null,
             string                      drivePath         = null,
             bool                        checkpointDrives  = false,
             string                      templateDrivePath = null, 
@@ -226,6 +226,13 @@ namespace Neon.HyperV
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName), nameof(machineName));
             CheckDisposed();
+
+            memorySize = ByteUnits.Parse(memorySize).ToString();
+
+            if (diskSize != null)
+            {
+                diskSize = ByteUnits.Parse(diskSize).ToString();
+            }
 
             var driveFolder = DefaultDriveFolder;
 
@@ -250,9 +257,12 @@ namespace Neon.HyperV
                 File.Copy(templateDrivePath, drivePath);
             }
 
-            // Resize the VHDX.
+            // Resize the VHDX if requested.
 
-            powershell.Execute($"{hyperVNamespace}Resize-VHD -Path \"{drivePath}\" -SizeBytes {diskSize}");
+            if (diskSize != null)
+            {
+                powershell.Execute($"{hyperVNamespace}Resize-VHD -Path \"{drivePath}\" -SizeBytes {diskSize}");
+            }
 
             // Create the virtual machine.
 
