@@ -252,5 +252,19 @@ namespace TestCommon
             Assert.Equal("10.0.0.0/14", NetworkCidr.Normalize(NetworkCidr.Parse("10.0.0.0/14").ToString()));
             Assert.Equal("10.168.0.0/14", NetworkCidr.Normalize(NetworkCidr.Parse("10.170.0.0/14").ToString()));
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void SubnetMask()
+        {
+            Assert.Equal("1.2.3.4/32", new NetworkCidr(IPAddress.Parse("1.2.3.4"), IPAddress.Parse("255.255.255.255")));
+            Assert.Equal("1.2.3.0/24", new NetworkCidr(IPAddress.Parse("1.2.3.4"), IPAddress.Parse("255.255.255.0")));
+            Assert.Equal("1.2.0.0/16", new NetworkCidr(IPAddress.Parse("1.2.3.4"), IPAddress.Parse("255.255.0.0")));
+            Assert.Equal("1.0.0.0/8", new NetworkCidr(IPAddress.Parse("1.2.3.4"), IPAddress.Parse("255.0.0.0")));
+
+            // Verify that we check for holes in the subnet prefix.
+
+            Assert.Throws<ArgumentException>(() => new NetworkCidr(IPAddress.Parse("1.2.3.4"), IPAddress.Parse("255.0.255.0")));
+        }
     }
 }

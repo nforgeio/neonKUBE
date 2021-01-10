@@ -271,7 +271,13 @@ namespace Neon.Kube
             .AsReadOnly();
 
         /// <summary>
+        /// <para>
         /// The minimum supported cluster node disk size in GiB.
+        /// </para>
+        /// <note>
+        /// This size should match the size of the virtual disks created the base
+        /// Hyper-V and XenServer Ubuntu images.
+        /// </note>
         /// </summary>
         public const int MinNodeDiskSizeGiB = 64;
     }

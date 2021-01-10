@@ -216,7 +216,7 @@ namespace Neon.Net
         }
 
         /// <summary>
-        /// Creates a subnet from an IP address and prefix length.
+        /// Constructs a subnet from an IPv4 address and prefix length.
         /// </summary>
         /// <param name="address">The IP address.</param>
         /// <param name="prefixLength">The network prefix mask length in bits.</param>
@@ -230,6 +230,45 @@ namespace Neon.Net
         }
 
         /// <summary>
+        /// Constructs a subnet from an IPv4 address and subnet mask.
+        /// </summary>
+        /// <param name="address">The IP address.</param>
+        /// <param name="subnetMask">The subnet mask.</param>
+        public NetworkCidr(IPAddress address, IPAddress subnetMask)
+        {
+            Covenant.Requires<ArgumentNullException>(address != null, nameof(address));
+            Covenant.Requires<ArgumentException>(address.AddressFamily == AddressFamily.InterNetwork, nameof(address));
+            Covenant.Requires<ArgumentNullException>(subnetMask != null, nameof(subnetMask));
+            Covenant.Requires<ArgumentException>(subnetMask.AddressFamily == AddressFamily.InterNetwork, nameof(subnetMask));
+
+            // Count the number of zero bits from the least significant bit to
+            // the first non-zero bit.
+
+            var mask = NetHelper.AddressToUint(subnetMask);
+
+            for (var position = 0; position < 32; position++)
+            {
+                if ((mask & (1 << position)) != 0)
+                {
+                    // Ensure that the remaining mask bits are all ones.
+
+                    for (int i = position + 1; i < 32; i++)
+                    {
+                        if ((mask & (1 << i)) == 0)
+                        {
+                            throw new ArgumentException($"Subnet mask [{subnetMask}] is not valid because it has zero bits in the prefix.");
+                        }
+                    }
+
+                    Initialize(address, 32 - position);
+                    return;
+                }
+            }
+
+            Initialize(address, 0);
+        }
+
+        /// <summary>
         /// Initializes the instance.
         /// </summary>
         /// <param name="address">The IP address.</param>
@@ -238,7 +277,7 @@ namespace Neon.Net
         {
             PrefixLength = prefixLength;
 
-            var maskBits  = new Bits(32);
+            var maskBits = new Bits(32);
 
             for (int i = 0; i < prefixLength; i++)
             {

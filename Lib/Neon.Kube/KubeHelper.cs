@@ -2266,7 +2266,7 @@ exit 0
             // This method is going to be called for two different scenarios that will each
             // call for different logging mechanisms.
             //
-            //      1. For the [neon prepare node-termplate] command, we're simply going 
+            //      1. For the [neon prepare node-template] command, we're simply going 
             //         to write status to the console as lines via the [logWriter].
             //
             //      2. For node preparation for cloud and bare metal clusters, we're
