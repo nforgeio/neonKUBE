@@ -48,7 +48,7 @@ persistence:
   storageClass: "cstor-csi-stripe"
 
   accessMode: ReadWriteOnce
-  size: 32Gi
+  size: 16Gi
 
 ## For creating the StorageClass automatically:
 storageClass:
