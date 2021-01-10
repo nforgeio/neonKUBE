@@ -7,7 +7,7 @@ release:
 
 # If false, openebs NDM sub-chart will not be installed
 openebsNDM:
-  enabled: true
+  enabled: false
 
 rbac:
   # rbac.create: `true` if rbac resources should be created
