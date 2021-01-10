@@ -77,7 +77,7 @@ function SetVersion
         [string]$version
     )
 
-    "* Set Version: ${project}:${version}"
+    "* SetVersion: ${project}:${version}"
 
     $projectPath    = [io.path]::combine($env:NF_ROOT, "Lib", "$project", "$project" + ".csproj")
     $orgProjectFile = Get-Content "$projectPath" -Encoding utf8
