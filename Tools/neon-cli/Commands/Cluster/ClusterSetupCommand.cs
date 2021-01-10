@@ -2270,7 +2270,7 @@ rm -rf {chartName}*
                     values.Add(new KeyValuePair<string, object>("admissionServer.image.organization", NeonHelper.NeonBranchRegistry));
                     values.Add(new KeyValuePair<string, object>("admissionServer.image.tag", KubeConst.LatestClusterVersion));
 
-                    await InstallHelmChartAsync(master, "openebs-cstor", releaseName: "neon-storage-openebs-cstor", values: values, @namespace: "openebs");
+                    await InstallHelmChartAsync(master, "openebs-cstor-operator", releaseName: "neon-storage-openebs-cstor", values: values, @namespace: "openebs");
                 });
 
             await master.InvokeIdempotentActionAsync("setup/neon-storage-openebs-install-ready",
