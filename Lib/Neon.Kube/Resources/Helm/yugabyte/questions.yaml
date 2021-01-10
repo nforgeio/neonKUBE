@@ -1,0 +1,64 @@
+    questions:
+    - variable: persistence.enabled
+    default: "false"
+    description: "Enable persistent volume for YugabyteDB"
+    type: boolean
+    required: true
+    label: Yugabyte Persistent Volume Enabled
+    show_subquestion_if: true
+    group: "YugabyteDB Settings"
+    subquestions:
+    - variable: persistence.size
+        default: "40Gi"
+        description: "YugabyteDB Persistent Volume Size"
+        type: string
+        label: YugabyteDB Volume Size
+    - variable: persistence.storageClass
+        default: ""
+        description: "If undefined or null, uses the default StorageClass. Default to null"
+        type: storageclass
+        label: Default StorageClass for YugabyteDB
+    - variable: replicas.tserver
+    default: "3"
+    description: "Number of replicas for default replication"
+    type: string
+    required: true
+    label: Replication Factor
+    - variable: resource.tserver.requests.cpu
+    default: "8"
+    description: "Tserver vcpu allocation for YugabyteDB"
+    type: string
+    required: true
+    label: vcpu allocation for tserver
+    - variable: resource.tserver.requests.memory
+    default: "15Gi"
+    description: "Tserver RAM allocation for YugabyteDB"
+    type: string
+    required: true
+    label: RAM allocation for tserver
+    - variable: disable.ysql
+    default: "false"
+    description: "Disable YSQL API"
+    type: boolean
+    required: true
+    label: Disable YSQL API
+    - variable: serviceEndpoints.name
+    default: "ysql-service"
+    description: "Loadbalancer for YSQL API"
+    type: boolean
+    required: true
+    label: Create YSQL API Loadbalancer
+    - variable: gflags.tserver.use_cassandra_authentication
+    default: "true"
+    description: "Enable CQL API"
+    type: boolean
+    required: true
+    label: Enable CQL API
+    - variable: serviceEndpoints.name
+    default: "yql-service"
+    description: "Loadbalancer for CQL API"
+    type: boolean
+    required: true
+    label: Create CQL API Loadbalancer
+
+

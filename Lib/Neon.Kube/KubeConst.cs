@@ -279,5 +279,15 @@ namespace Neon.Kube
         /// </note>
         /// </summary>
         public const int MinNodeDiskSizeGiB = 64;
+
+        /// <summary>
+        /// Returns the URL to the neonKUBE GitHub repository.
+        /// </summary>
+        public const string KubeGitHubRepoUrl = "https://github.com/nforgeio/neonKUBE";
+
+        /// <summary>
+        /// Returns the URL to th neonKUBE help site.
+        /// </summary>
+        public const string KubeHelpUrl = "https://github.com/nforgeio/neonKUBE";
     }
 }

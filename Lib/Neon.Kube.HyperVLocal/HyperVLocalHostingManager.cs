@@ -107,7 +107,6 @@ namespace Neon.Kube
         private const string defaultSwitchName = "external";
 
         private ClusterProxy                    cluster;
-        private KubeSetupInfo                   setupInfo;
         private SetupController<NodeDefinition> setupController;
         private string                          driveTemplatePath;
         private string                          vmDriveFolder;
@@ -127,20 +126,17 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="cluster">The cluster being managed.
         /// </param>
-        /// <param name="setupInfo">Specifies the cluster setup information.</param>
         /// <param name="logFolder">
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
-        public HyperVLocalHostingManager(ClusterProxy cluster, KubeSetupInfo setupInfo, string logFolder = null)
+        public HyperVLocalHostingManager(ClusterProxy cluster, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
-            Covenant.Requires<ArgumentNullException>(setupInfo != null, nameof(setupInfo));
 
             cluster.HostingManager = this;
 
-            this.cluster   = cluster;
-            this.setupInfo = setupInfo;
+            this.cluster = cluster;
         }
 
         /// <inheritdoc/>
@@ -157,6 +153,9 @@ namespace Neon.Kube
         {
             get { return false; }
         }
+
+        /// <inheritdoc/>
+        public override HostingEnvironment HostingEnvironment => HostingEnvironment.HyperVLocal;
 
         /// <inheritdoc/>
         public override void Validate(ClusterDefinition clusterDefinition)
@@ -353,7 +352,7 @@ namespace Neon.Kube
             // drive template.  Production clusters should reference a specific
             // drive template.
 
-            var driveTemplateUri  = new Uri(setupInfo.LinuxTemplateUri);
+            var driveTemplateUri  = new Uri(KubeDownloads.GetNodeImageUri(this.HostingEnvironment));
             var driveTemplateName = driveTemplateUri.Segments.Last();
 
             driveTemplatePath = Path.Combine(KubeHelper.VmTemplatesFolder, driveTemplateName);
@@ -387,7 +386,9 @@ namespace Neon.Kube
 
             if (!driveTemplateIsCurrent)
             {
-                setupController.SetOperationStatus($"Download Template VHDX: [{setupInfo.LinuxTemplateUri}]");
+                var nodeImageUri = KubeDownloads.GetNodeImageUri(this.HostingEnvironment);
+
+                setupController.SetOperationStatus($"Download node image VHDX: [{nodeImageUri}]");
 
                 Task.Run(
                     async () =>
@@ -396,7 +397,7 @@ namespace Neon.Kube
                         {
                             // Download the file.
 
-                            var response = await client.GetAsync(setupInfo.LinuxTemplateUri, HttpCompletionOption.ResponseHeadersRead);
+                            var response = await client.GetAsync(nodeImageUri, HttpCompletionOption.ResponseHeadersRead);
 
                             response.EnsureSuccessStatusCode();
 
@@ -412,7 +413,7 @@ namespace Neon.Kube
                                 }
                                 else
                                 {
-                                    throw new KubeException($"[{setupInfo.LinuxTemplateUri}] has unsupported [Content-Encoding={contentEncoding}].");
+                                    throw new KubeException($"[{nodeImageUri}] has unsupported [Content-Encoding={contentEncoding}].");
                                 }
                             }
 
@@ -440,11 +441,11 @@ namespace Neon.Kube
                                             {
                                                 var percentComplete = (int)(((double)fileStream.Length / (double)contentLength) * 100.0);
 
-                                                setupController.SetOperationStatus($"Downloading VHDX: [{percentComplete}%] [{setupInfo.LinuxTemplateUri}]");
+                                                setupController.SetOperationStatus($"Downloading VHDX: [{percentComplete}%] [{nodeImageUri}]");
                                             }
                                             else
                                             {
-                                                setupController.SetOperationStatus($"Downloading VHDX: [{fileStream.Length} bytes] [{setupInfo.LinuxTemplateUri}]");
+                                                setupController.SetOperationStatus($"Downloading VHDX: [{fileStream.Length} bytes] [{nodeImageUri}]");
                                             }
                                         }
                                     }

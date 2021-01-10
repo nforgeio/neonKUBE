@@ -1,0 +1,38 @@
+apiVersion: operator.m3db.io/v1alpha1
+kind: M3DBCluster
+metadata:
+  name: m3db-prometheus
+spec:
+  image: quay.io/m3db/m3dbnode:latest
+  replicationFactor:  {{ .Values.replicationFactor }}
+  numberOfShards: 256
+  isolationGroups:
+{{- toYaml .Values.isolationGroups | nindent 4 }}
+  tolerations:
+  - key: neonkube.io/m3
+    effect: NoSchedule
+    operator: Exists
+  etcdEndpoints:
+  - http://m3db-etcd.monitoring:2379
+  podIdentityConfig:
+    sources: []
+  namespaces:
+    - name: default
+      preset: 10s:2d
+    - name: metrics-10s:2d
+      preset: 1m:40d
+  containerResources:
+{{ toYaml .Values.containerResources | indent 4 }}
+  dataDirVolumeClaimTemplate:
+    metadata:
+      name: m3db-data
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      storageClassName: "local-storage"
+      selector:
+        matchLabels:
+          m3db: default
+      resources:
+{{ toYaml .Values.volumeResources | indent 8 }}
+

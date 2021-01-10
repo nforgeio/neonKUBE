@@ -53,7 +53,7 @@ namespace Neon.Kube
         /// <summary>
         /// <para>
         /// Loads the known cluster hosting manager assemblies so they'll be available
-        /// to <see cref="HostingManagerFactory.GetManager(ClusterProxy, KubeSetupInfo, string)"/>, 
+        /// to <see cref="HostingManagerFactory.GetManager(ClusterProxy, string)"/>, 
         /// and <see cref="HostingManager.Validate(ClusterDefinition)"/> when
         /// they are called.
         /// </para>
@@ -160,10 +160,9 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public HostingManager GetManager(ClusterProxy cluster, KubeSetupInfo setupInfo, string logFolder = null)
+        public HostingManager GetManager(ClusterProxy cluster, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
-            Covenant.Requires<ArgumentNullException>(setupInfo != null, nameof(setupInfo));
             Covenant.Assert(environmentToHostingManager != null, $"[{nameof(HostingLoader)}] is not initialized.  You must call [{nameof(HostingLoader)}.{nameof(HostingLoader.Initialize)}()] first.");
 
             if (!environmentToHostingManager.TryGetValue(cluster.Definition.Hosting.Environment, out var managerType))
@@ -171,7 +170,7 @@ namespace Neon.Kube
                 return null;
             }
 
-            return (HostingManager)Activator.CreateInstance(managerType, cluster, setupInfo, logFolder);
+            return (HostingManager)Activator.CreateInstance(managerType, cluster, logFolder);
         }
     }
 }

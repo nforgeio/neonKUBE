@@ -63,7 +63,6 @@ namespace Neon.Kube
         private static DesktopClient        desktopClient;
         private static KubeConfig           cachedConfig;
         private static KubeConfigContext    cachedContext;
-        private static HeadendClient        cachedHeadendClient;
         private static string               cachedNeonKubeUserFolder;
         private static string               cachedKubeUserFolder;
         private static string               cachedRunFolder;
@@ -102,7 +101,6 @@ namespace Neon.Kube
         {
             cachedConfig             = null;
             cachedContext            = null;
-            cachedHeadendClient      = null;
             cachedNeonKubeUserFolder = null;
             cachedKubeUserFolder     = null;
             cachedRunFolder          = null;
@@ -437,22 +435,6 @@ namespace Neon.Kube
         public static bool IsOnPremiseEnvironment(HostingEnvironment hostingEnvironment)
         {
             return !IsCloudEnvironment(hostingEnvironment);
-        }
-
-        /// <summary>
-        /// Returns a <see cref="HeadendClient"/>.
-        /// </summary>
-        public static HeadendClient Headend
-        {
-            get
-            {
-                if (cachedHeadendClient != null)
-                {
-                    return cachedHeadendClient;
-                }
-
-                return cachedHeadendClient = new HeadendClient();
-            }
         }
 
         /// <summary>
@@ -1165,11 +1147,8 @@ namespace Neon.Kube
         /// of Kubernetes.
         /// </note>
         /// </summary>
-        /// <param name="setupInfo">The KUbernetes setup information.</param>
-        public static void InstallKubeCtl(KubeSetupInfo setupInfo)
+        public static void InstallKubeCtl()
         {
-            Covenant.Requires<ArgumentNullException>(setupInfo != null, nameof(setupInfo));
-
             var hostPlatform      = KubeHelper.HostPlatform;
             var cachedKubeCtlPath = KubeHelper.GetCachedComponentPath(hostPlatform, "kubectl", KubeVersions.KubernetesVersion);
             var targetPath        = Path.Combine(KubeHelper.ProgramFolder);
@@ -1299,11 +1278,8 @@ namespace Neon.Kube
         /// of Tiller.
         /// </note>
         /// </summary>
-        /// <param name="setupInfo">The KUbernetes setup information.</param>
-        public static void InstallHelm(KubeSetupInfo setupInfo)
+        public static void InstallHelm()
         {
-            Covenant.Requires<ArgumentNullException>(setupInfo != null, nameof(setupInfo));
-
             var hostPlatform   = KubeHelper.HostPlatform;
             var cachedHelmPath = KubeHelper.GetCachedComponentPath(hostPlatform, "helm", KubeVersions.HelmVersion);
             var targetPath     = Path.Combine(KubeHelper.ProgramFolder);

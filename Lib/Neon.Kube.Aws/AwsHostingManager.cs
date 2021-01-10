@@ -733,7 +733,6 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Instance members
 
-        private KubeSetupInfo                       setupInfo;
         private ClusterProxy                        cluster;
         private string                              clusterName;
         private string                              clusterEnvironment;
@@ -827,19 +826,16 @@ namespace Neon.Kube
         /// Creates an instance that is capable of provisioning a cluster on AWS.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
-        /// <param name="setupInfo">Specifies the cluster setup information.</param>
         /// <param name="logFolder">
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
-        public AwsHostingManager(ClusterProxy cluster, KubeSetupInfo setupInfo, string logFolder = null)
+        public AwsHostingManager(ClusterProxy cluster, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
-            Covenant.Requires<ArgumentNullException>(setupInfo != null, nameof(setupInfo));
 
             cluster.HostingManager  = this;
 
-            this.setupInfo          = setupInfo;
             this.cluster            = cluster;
             this.clusterName        = cluster.Name;
             this.clusterEnvironment = NeonHelper.EnumToString(cluster.Definition.Environment);
@@ -1055,6 +1051,9 @@ namespace Neon.Kube
                 }
             };
         }
+
+        /// <inheritdoc/>
+        public override HostingEnvironment HostingEnvironment => HostingEnvironment.Aws;
 
         /// <inheritdoc/>
         public override void Validate(ClusterDefinition clusterDefinition)

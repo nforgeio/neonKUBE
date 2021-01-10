@@ -82,7 +82,6 @@ Server Requirements:
         private const string    logFailedMarker = "# CLUSTER-END-PREPARE-FAILED #####################################################";
 
         private ClusterProxy    cluster;
-        private KubeSetupInfo   kubeSetupInfo;
         private HostingManager  hostingManager;
         private string          clusterDefPath;
         private string          packageCaches;
@@ -244,20 +243,11 @@ Server Requirements:
                 }
 
                 //-----------------------------------------------------------------
-                // Obtain setup configuration and other details from the neonKUBE
-                // headend service.
-
-                using (var client = new HeadendClient())
-                {
-                    kubeSetupInfo = client.GetSetupInfoAsync(cluster.Definition).Result;
-                }
-
-                //-----------------------------------------------------------------
                 // Perform basic environment provisioning.  This creates basic cluster components
                 // such as virtual machines, networks, load balancers, public IP addresses, security
                 // groups, etc. as required for the hosting environment.
 
-                hostingManager = new HostingManagerFactory(() => HostingLoader.Initialize()).GetManager(cluster, kubeSetupInfo, Program.LogPath);
+                hostingManager = new HostingManagerFactory(() => HostingLoader.Initialize()).GetManager(cluster, Program.LogPath);
 
                 if (hostingManager == null)
                 {
@@ -472,7 +462,7 @@ Server Requirements:
                     (node, stepDelay) =>
                     {
                         Thread.Sleep(stepDelay);
-                        CommonSteps.PrepareNode(node, cluster.Definition, kubeSetupInfo, hostingManager, shutdown: false);
+                        CommonSteps.PrepareNode(node, cluster.Definition, hostingManager, shutdown: false);
                     },
                     stepStaggerSeconds: cluster.Definition.Setup.StepStaggerSeconds);
             

@@ -141,13 +141,11 @@ namespace NeonCli
         /// </summary>
         /// <param name="preprocessReader">The reader.</param>
         /// <param name="clusterDefinition">The cluster definition.</param>
-        /// <param name="kubeSetupInfo">The Kubernetes setup details.</param>
         /// <param name="node">The target node.</param>
-        private static void SetClusterVariables(PreprocessReader preprocessReader, ClusterDefinition clusterDefinition, KubeSetupInfo kubeSetupInfo, NodeSshProxy<NodeDefinition> node)
+        private static void SetClusterVariables(PreprocessReader preprocessReader, ClusterDefinition clusterDefinition, NodeSshProxy<NodeDefinition> node)
         {
             Covenant.Requires<ArgumentNullException>(preprocessReader != null, nameof(preprocessReader));
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
-            Covenant.Requires<ArgumentNullException>(kubeSetupInfo != null, nameof(kubeSetupInfo));
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 
             var nodeDefinition = node.Metadata;
@@ -295,7 +293,7 @@ namespace NeonCli
             SetBashVariable(preprocessReader, "ntp.master.sources", masterTimeSources);
             NewMethod(preprocessReader, workerTimeSources);
 
-            SetBashVariable(preprocessReader, "docker.packageuri", kubeSetupInfo.DockerPackageUri);
+            SetBashVariable(preprocessReader, "docker.packageuri", KubeDownloads.DockerPackageUri);
 
             SetBashVariable(preprocessReader, "neon.kube.kubeadm.package_version", KubeVersions.KubeAdminPackageVersion);
             SetBashVariable(preprocessReader, "neon.kube.kubectl.package_version", KubeVersions.KubeCtlPackageVersion);
@@ -313,10 +311,9 @@ namespace NeonCli
         /// <typeparam name="TMetadata">The node metadata type.</typeparam>
         /// <param name="node">The remote node.</param>
         /// <param name="clusterDefinition">The cluster definition or <c>null</c>.</param>
-        /// <param name="kubeSetupInfo">The Kubernetes setup details.</param>
         /// <param name="file">The resource file.</param>
         /// <param name="targetPath">The target path on the remote server.</param>
-        private static void UploadFile<TMetadata>(this NodeSshProxy<TMetadata> node, ClusterDefinition clusterDefinition, KubeSetupInfo kubeSetupInfo, ResourceFiles.File file, string targetPath)
+        private static void UploadFile<TMetadata>(this NodeSshProxy<TMetadata> node, ClusterDefinition clusterDefinition, ResourceFiles.File file, string targetPath)
             where TMetadata : class
         {
             using (var input = file.ToStream())
@@ -342,7 +339,7 @@ namespace NeonCli
 
                             if (clusterDefinition != null)
                             {
-                                SetClusterVariables(preprocessReader, clusterDefinition, kubeSetupInfo, node as NodeSshProxy<NodeDefinition>);
+                                SetClusterVariables(preprocessReader, clusterDefinition, node as NodeSshProxy<NodeDefinition>);
                             }
 
                             foreach (var line in preprocessReader.Lines())
@@ -370,13 +367,11 @@ namespace NeonCli
         /// <typeparam name="Metadata">The node metadata type.</typeparam>
         /// <param name="node">The remote node.</param>
         /// <param name="clusterDefinition">The cluster definition.</param>
-        /// <param name="kubeSetupInfo">The Kubernetes setup details.</param>
-        public static void UploadConfigFiles<Metadata>(this NodeSshProxy<Metadata> node, ClusterDefinition clusterDefinition, KubeSetupInfo kubeSetupInfo)
+        public static void UploadConfigFiles<Metadata>(this NodeSshProxy<Metadata> node, ClusterDefinition clusterDefinition)
             where Metadata : class
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
-            Covenant.Requires<ArgumentNullException>(kubeSetupInfo != null, nameof(kubeSetupInfo));
 
             // Clear the contents of the configuration folder.
 
@@ -389,7 +384,7 @@ namespace NeonCli
 
             foreach (var file in Program.LinuxFolder.GetFolder("conf").Files())
             {
-                node.UploadFile(clusterDefinition, kubeSetupInfo, file, $"{KubeNodeFolders.Config}/{file.Name}");
+                node.UploadFile(clusterDefinition, file, $"{KubeNodeFolders.Config}/{file.Name}");
             }
 
             // Secure the files and make the scripts executable.
@@ -407,12 +402,11 @@ namespace NeonCli
         /// <param name="server">The remote server.</param>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <param name="kubeSetupInfo">The Kubernetes setup details.</param>
-        public static void UploadResources<TMetadata>(this NodeSshProxy<TMetadata> server, ClusterDefinition clusterDefinition, KubeSetupInfo kubeSetupInfo)
+        public static void UploadResources<TMetadata>(this NodeSshProxy<TMetadata> server, ClusterDefinition clusterDefinition)
             where TMetadata : class
         {
             Covenant.Requires<ArgumentNullException>(server != null, nameof(server));
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
-            Covenant.Requires<ArgumentNullException>(kubeSetupInfo != null, nameof(kubeSetupInfo));
 
             //-----------------------------------------------------------------
             // Upload resource files to the setup folder.
@@ -426,7 +420,7 @@ namespace NeonCli
 
             foreach (var file in Program.LinuxFolder.GetFolder("setup").Files())
             {
-                server.UploadFile(clusterDefinition, kubeSetupInfo, file, $"{KubeNodeFolders.Setup}/{file.Name}");
+                server.UploadFile(clusterDefinition, file, $"{KubeNodeFolders.Setup}/{file.Name}");
             }
 
             // Make the setup scripts executable.
@@ -445,7 +439,7 @@ namespace NeonCli
 
             foreach (var file in Program.LinuxFolder.GetFolder("tools").Files())
             {
-                server.UploadFile(clusterDefinition, kubeSetupInfo, file, $"{KubeNodeFolders.Bin}/{file.Name.Replace(".sh", string.Empty)}");
+                server.UploadFile(clusterDefinition, file, $"{KubeNodeFolders.Bin}/{file.Name.Replace(".sh", string.Empty)}");
             }
 
             // Make the scripts executable.

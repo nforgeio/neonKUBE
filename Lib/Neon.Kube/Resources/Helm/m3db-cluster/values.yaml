@@ -1,0 +1,15 @@
+# Default values for m3db-cluster.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+isolationGroups: []
+
+containerResources: {}
+
+volumeResources:
+  requests:
+    storage: 1Gi
+  limits:
+    storage: 1Gi
+
+replicationFactor: 1

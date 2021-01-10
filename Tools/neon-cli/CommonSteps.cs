@@ -257,13 +257,11 @@ systemctl restart sshd
         /// </summary>
         /// <param name="node">The target cluster node.</param>
         /// <param name="clusterDefinition">The cluster definition.</param>
-        /// <param name="kubeSetupInfo">Kubernetes setup details.</param>
         /// <param name="shutdown">Optionally shuts down the node.</param>
-        public static void PrepareNode(NodeSshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition, KubeSetupInfo kubeSetupInfo, HostingManager hostingManager, bool shutdown = false)
+        public static void PrepareNode(NodeSshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition, HostingManager hostingManager, bool shutdown = false)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
-            Covenant.Requires<ArgumentNullException>(kubeSetupInfo != null, nameof(kubeSetupInfo));
 
             if (node.FileExists($"{KubeNodeFolders.State}/setup/prepared"))
             {
@@ -353,8 +351,8 @@ systemctl restart rsyslog.service
 
             node.Status = "upload: prepare files";
 
-            node.UploadConfigFiles(clusterDefinition, kubeSetupInfo);
-            node.UploadResources(clusterDefinition, kubeSetupInfo);
+            node.UploadConfigFiles(clusterDefinition);
+            node.UploadResources(clusterDefinition);
 
             node.Status = "configure: environment vars";
 

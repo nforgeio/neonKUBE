@@ -69,7 +69,6 @@ namespace Neon.Kube
         // Instance members
 
         private ClusterProxy                    cluster;
-        private KubeSetupInfo                   setupInfo;
         private string                          orgSshPassword;
         private string                          secureSshPassword;
         private Dictionary<string, string>      nodeToPassword;
@@ -87,20 +86,17 @@ namespace Neon.Kube
         /// servers or virtual machines.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
-        /// <param name="setupInfo">Specifies the cluster setup information.</param>
         /// <param name="logFolder">
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
-        public BareMetalHostingManager(ClusterProxy cluster, KubeSetupInfo setupInfo, string logFolder = null)
+        public BareMetalHostingManager(ClusterProxy cluster, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
-            Covenant.Requires<ArgumentNullException>(setupInfo != null, nameof(setupInfo));
 
             cluster.HostingManager = this;
 
             this.cluster        = cluster;
-            this.setupInfo      = setupInfo;
             this.nodeToPassword = new Dictionary<string, string>();
         }
 
@@ -118,6 +114,9 @@ namespace Neon.Kube
         {
             get { return false; }
         }
+
+        /// <inheritdoc/>
+        public override HostingEnvironment HostingEnvironment => HostingEnvironment.BareMetal;
 
         /// <inheritdoc/>
         public override void Validate(ClusterDefinition clusterDefinition)

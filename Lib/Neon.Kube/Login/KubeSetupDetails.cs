@@ -53,14 +53,6 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Identifies the information used to setup the cluster.
-        /// </summary>
-        [JsonProperty(PropertyName = "SetupInfo", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "setupInfo", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public KubeSetupInfo SetupInfo { get; set; }
-
-        /// <summary>
         /// Indicates whether provisioning is complete but setup is still
         /// pending for this cluster
         /// </summary>

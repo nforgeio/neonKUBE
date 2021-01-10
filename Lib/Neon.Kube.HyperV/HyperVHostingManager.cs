@@ -68,7 +68,6 @@ namespace Neon.Kube
         // Instance members
 
         private ClusterProxy                    cluster;
-        private KubeSetupInfo                   setupInfo;
         private SetupController<NodeDefinition> controller;
         private string                          driveTemplatePath;
         private string                          vmDriveFolder;
@@ -86,20 +85,17 @@ namespace Neon.Kube
         /// Creates an instance that is capable of provisioning a cluster on Hyper-V servers.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
-        /// <param name="setupInfo">Specifies the cluster setup information.</param>
         /// <param name="logFolder">
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
-        public HyperVHostingManager(ClusterProxy cluster, KubeSetupInfo setupInfo, string logFolder = null)
+        public HyperVHostingManager(ClusterProxy cluster, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
-            Covenant.Requires<ArgumentNullException>(setupInfo != null, nameof(setupInfo));
 
             cluster.HostingManager = this;
 
-            this.cluster   = cluster;
-            this.setupInfo = setupInfo;
+            this.cluster = cluster;
         }
 
         /// <inheritdoc/>
@@ -110,6 +106,9 @@ namespace Neon.Kube
                 GC.SuppressFinalize(this);
             }
         }
+
+        /// <inheritdoc/>
+        public override HostingEnvironment HostingEnvironment => HostingEnvironment.HyperV;
 
         /// <inheritdoc/>
         public override void Validate(ClusterDefinition clusterDefinition)
