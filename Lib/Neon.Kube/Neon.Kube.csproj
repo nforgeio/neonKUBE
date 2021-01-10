@@ -56,6 +56,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="Resources\Conf\cluster.conf.sh" />
     <None Remove="Resources\Helm\citus-postgresql\.helmignore" />
     <None Remove="Resources\Helm\citus-postgresql\Chart.yaml" />
     <None Remove="Resources\Helm\citus-postgresql\OWNERS" />
@@ -468,9 +469,14 @@
     <None Remove="Resources\Helm\yugabyte\templates\_helpers.tpl" />
     <None Remove="Resources\Helm\yugabyte\values.yaml" />
     <None Remove="Resources\Helm\yugabyte\yugabyte-rbac.yaml" />
+    <None Remove="Resources\Setup\setup-utility.sh" />
+    <None Remove="Resources\Tools\safe-apt-get.sh" />
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Resources\Conf\cluster.conf.sh">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources\Helm\redis-ha\ci\haproxy-enabled-values.yaml" />
     <EmbeddedResource Include="Resources\Helm\redis-ha\templates\tests\test-redis-ha-configmap.yaml" />
     <EmbeddedResource Include="Resources\Helm\redis-ha\templates\tests\test-redis-ha-pod.yaml" />
@@ -886,6 +892,12 @@
     <EmbeddedResource Include="Resources\Helm\yugabyte\templates\_helpers.tpl" />
     <EmbeddedResource Include="Resources\Helm\yugabyte\values.yaml" />
     <EmbeddedResource Include="Resources\Helm\yugabyte\yugabyte-rbac.yaml" />
+    <EmbeddedResource Include="Resources\Setup\setup-utility.sh">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Tools\safe-apt-get.sh">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>
@@ -921,6 +933,33 @@
   <ItemGroup>
     <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
     <None Include="..\..\LICENSE" Pack="True" PackagePath="" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Resources\Setup\setup-disk.sh">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\Setup\setup-docker.sh">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\Setup\setup-environment.sh">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\Setup\setup-exists.sh">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\Setup\setup-node.sh">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\Setup\setup-ntp.sh">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\Setup\setup-package-proxy.sh">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\Setup\setup-prep.sh">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
