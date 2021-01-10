@@ -444,7 +444,7 @@ namespace NeonCli
         
             server.Status = "upload: binary files";
 
-            foreach (var file in Program.LinuxFolder.GetFolder("binary").Files())
+            foreach (var file in Program.LinuxFolder.GetFolder("tools").Files())
             {
                 server.UploadFile(clusterDefinition, kubeSetupInfo, file, $"{KubeNodeFolders.Bin}/{file.Name.Replace(".sh", string.Empty)}");
             }

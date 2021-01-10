@@ -42,7 +42,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Resources\Ubuntu-20.04\binary\safe-apt-get.sh">
+    <None Update="Resources\Ubuntu-20.04\tools\safe-apt-get.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Resources\Ubuntu-20.04\conf\cluster.conf.sh">
