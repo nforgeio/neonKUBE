@@ -71,8 +71,13 @@ namespace Neon.IO
         /// Returns the directories beneath the current directory, optionally matching directories by
         /// name as well as optionally searching for directories recursively.
         /// </summary>
-        /// <param name="searchPattern">Optionally specifies a directory name pattern using standard file system wild cards like <b>[*]</b> and <b>[?]</b></param>
-        /// <param name="options">Optionally requires a recursive search.</param>
+        /// <param name="searchPattern">
+        /// Optionally specifies a directory name pattern using standard file system wildcards
+        /// like <b>[*]</b> and <b>[?]</b>.  This defaults to including all directories.
+        /// </param>
+        /// <param name="options">Optionally require a recursive search.  This defaults to 
+        /// <see cref="SearchOption.TopDirectoryOnly"/>.
+        /// </param>
         /// <returns>The set of matching directories.</returns>
         public IEnumerable<IStaticDirectory> GetDirectories(string searchPattern = null, SearchOption options = SearchOption.TopDirectoryOnly);
 
@@ -80,8 +85,13 @@ namespace Neon.IO
         /// Returns the files beneath the current directory, optionally matching files by
         /// name as well as optionally searching recursively searching subdirectories..
         /// </summary>
-        /// <param name="searchPattern">Optionally specifies a directory name pattern using standard file system wild cards like <b>[*]</b> and <b>[?]</b></param>
-        /// <param name="options">Optionally requires a recursive search.</param>
+        /// <param name="searchPattern">
+        /// Optionally specifies a file name pattern using standard file system wildcards
+        /// like <b>[*]</b> and <b>[?]</b>.  This defaults to including all files.
+        /// </param>
+        /// <param name="options">Optionally requires a recursive search.  This defaults to 
+        /// <see cref="SearchOption.TopDirectoryOnly"/>.
+        /// </param>
         /// <returns>The set of matching files.</returns>
         public IEnumerable<IStaticFile> GetFiles(string searchPattern = null, SearchOption options = SearchOption.TopDirectoryOnly);
 

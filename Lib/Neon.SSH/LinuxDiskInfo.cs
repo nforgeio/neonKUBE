@@ -35,7 +35,6 @@ using Neon.Net;
 using Neon.Retry;
 using Neon.Time;
 
-using ICSharpCode.SharpZipLib.Zip;
 using Renci.SshNet;
 using Renci.SshNet.Common;
 
