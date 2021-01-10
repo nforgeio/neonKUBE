@@ -334,10 +334,10 @@ namespace NeonCli
                             var preprocessReader =
                                 new PreprocessReader(new StreamReader(input))
                                 {
-                                    DefaultVariable = string.Empty,
-                                    ExpandVariables = true,
+                                    DefaultVariable   = string.Empty,
+                                    ExpandVariables   = true,
                                     ProcessStatements = false,
-                                    StripComments   = false
+                                    StripComments     = false
                                 };
 
                             if (clusterDefinition != null)
@@ -437,12 +437,11 @@ namespace NeonCli
             // Upload files to the bin folder.
 
             server.Status = $"clear: {KubeNodeFolders.Bin}";
-            server.SudoCommand($"rm -rf {KubeNodeFolders.Bin}/*.*");
 
             // Upload the tool files.  Note that we're going to strip out the [.sh] 
             // file type to make these easier to run.
         
-            server.Status = "upload: binary files";
+            server.Status = "upload: tool files";
 
             foreach (var file in Program.LinuxFolder.GetFolder("tools").Files())
             {
