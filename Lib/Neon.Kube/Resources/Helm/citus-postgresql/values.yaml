@@ -95,6 +95,12 @@ ssl:
 nodeSelector: 
   neonkube.io/neon-system.db: "true"
 
+busybox:
+  image: 
+    organization: ghcr.io/neonrelease
+    repository: busybox
+    tag: latest
+  
 ## Monitoring: Prometheus Exporter Configuration
 ## ref: https://prometheus.io/docs/instrumenting/exporters/
 prometheus:

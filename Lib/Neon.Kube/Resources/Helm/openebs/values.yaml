@@ -13,66 +13,11 @@ serviceAccount:
 
 release:
   # "openebs.io/version" label for control plane components
-  version: "2.1.0"
+  version: "2.4.0"
 
 image:
   pullPolicy: IfNotPresent
   repository: ""
-
-cspcOperator:
-  image:
-    organization: ghcr.io/neonrelease
-    repository: openebs-cspc-operator-amd64
-    tag: latest
-    
-csi:
-  resizer:
-    image:
-      organization: ghcr.io/neonrelease
-      repository: k8scsi-csi-resizer
-      tag: latest
-  snapshotter:
-    image:
-      organization: ghcr.io/neonrelease
-      repository: k8scsi-csi-snapshotter
-      tag: latest
-  provisioner:
-    image:
-      organization: ghcr.io/neonrelease
-      repository: k8scsi-csi-provisioner
-      tag: latest
-  attacher:
-    image:
-      organization: ghcr.io/neonrelease
-      repository: k8scsi-csi-attacher
-      tag: latest
-  clusterDriverRegistrar:
-    image:
-      organization: ghcr.io/neonrelease
-      repository: k8scsi-csi-cluster-driver-registrar
-      tag: latest
-  driver:
-    image:
-      organization: ghcr.io/neonrelease
-      repository: openebs-cstor-csi-driver
-      tag: latest
-  nodeDriverRegistrar:
-    image:
-      organization: ghcr.io/neonrelease
-      repository: k8scsi-csi-node-driver-registrar
-      tag: latest
-
-snapshotController:
-  image:
-    organization: ghcr.io/neonrelease
-    repository: k8scsi-snapshot-controller
-    tag: latest
-
-cvcOperator:
-  image:
-    organization: ghcr.io/neonrelease
-    repository: openebs-cvc-operator-amd64
-    tag: latest
 
 apiserver:
   enabled: true
@@ -186,7 +131,7 @@ ndm:
     excludeVendors: "CLOUDBYT,OpenEBS"
     enablePathFilter: true
     includePaths: ""
-    excludePaths: "loop,fd0,sr0,/dev/ram,/dev/dm-,/dev/md,/dev/rbd"
+    excludePaths: "/dev/loop,/dev/fd0,/dev/sr0,/dev/ram,/dev/dm-,/dev/md,/dev/rbd,/dev/zd"
   probes:
     enableSeachest: false
   nodeSelector: {}
@@ -273,12 +218,12 @@ cstor:
   webhook:
     image:
       organization: ghcr.io/neonrelease
-      repository: openebs-cstor-webhook-amd64
+      repository: openebs-cstor-webhook
       tag: latest
   volumeManager:
     image:
       organization: ghcr.io/neonrelease
-      repository: openebs-cstor-volume-manager-amd64
+      repository: openebs-cstor-volume-manager
       tag: latest
 
 helper:

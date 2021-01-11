@@ -273,7 +273,7 @@ systemctl restart sshd
             if (!clusterDefinition.NodeOptions.AllowPackageManagerIPv6)
             {
                 // Restrict the [apt] package manager to using IPv4 to communicate
-                // with the package mirrors, since IPv6 often doesn't work.
+                // with the package mirrors, since IPv6 doesn't work sometimes.
 
                 node.UploadText("/etc/apt/apt.conf.d/99-force-ipv4-transport", "Acquire::ForceIPv4 \"true\";");
                 node.SudoCommand("chmod 644 /etc/apt/apt.conf.d/99-force-ipv4-transport");

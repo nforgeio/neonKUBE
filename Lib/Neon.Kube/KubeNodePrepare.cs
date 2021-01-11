@@ -55,8 +55,7 @@ namespace Neon.Kube
         /// Customizes the OpenSSH configuration on a node.
         /// </summary>
         /// <param name="node">The target node.</param>
-        /// <param name="stepDelayed">Ignored.</param>
-        public static void ConfigureOpenSsh(NodeSshProxy<NodeDefinition> node, TimeSpan stepDelayed)
+        public static void ConfigureOpenSsh(NodeSshProxy<NodeDefinition> node)
         {
             // Upload the OpenSSH server configuration and restart OpenSSH.
 

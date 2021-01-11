@@ -161,6 +161,25 @@
     <None Remove="Resources\Helm\fluentd\values.yaml" />
     <None Remove="Resources\Helm\grafana\.helmignore" />
     <None Remove="Resources\Helm\grafana\Chart.yaml" />
+    <None Remove="Resources\Helm\grafana\ci\default-values.yaml" />
+    <None Remove="Resources\Helm\grafana\ci\with-dashboard-json-values.yaml" />
+    <None Remove="Resources\Helm\grafana\ci\with-dashboard-values.yaml" />
+    <None Remove="Resources\Helm\grafana\dashboards\alertmanager_rev4.json" />
+    <None Remove="Resources\Helm\grafana\dashboards\cortex-performance_rev1.json" />
+    <None Remove="Resources\Helm\grafana\dashboards\custom-dashboard.json" />
+    <None Remove="Resources\Helm\grafana\dashboards\fluentd-dashboard-prometheus-exporter_rev3.json" />
+    <None Remove="Resources\Helm\grafana\dashboards\galley-dashboard.json" />
+    <None Remove="Resources\Helm\grafana\dashboards\istio-mesh-dashboard.json" />
+    <None Remove="Resources\Helm\grafana\dashboards\istio-performance-dashboard.json" />
+    <None Remove="Resources\Helm\grafana\dashboards\istio-service-dashboard.json" />
+    <None Remove="Resources\Helm\grafana\dashboards\istio-workload-dashboard.json" />
+    <None Remove="Resources\Helm\grafana\dashboards\k8s-cluster-summary_rev1.json" />
+    <None Remove="Resources\Helm\grafana\dashboards\logging-dashboard_rev1.json" />
+    <None Remove="Resources\Helm\grafana\dashboards\mixer-dashboard.json" />
+    <None Remove="Resources\Helm\grafana\dashboards\node-exporter-en_rev4.json" />
+    <None Remove="Resources\Helm\grafana\dashboards\node-exporter-full_rev21.json" />
+    <None Remove="Resources\Helm\grafana\dashboards\pilot-dashboard.json" />
+    <None Remove="Resources\Helm\grafana\dashboards\yugabytedb_rev2.json" />
     <None Remove="Resources\Helm\grafana\OWNERS" />
     <None Remove="Resources\Helm\grafana\README.md" />
     <None Remove="Resources\Helm\grafana\templates\clusterrole.yaml" />
@@ -194,6 +213,9 @@
     <None Remove="Resources\Helm\harbor\.gitignore" />
     <None Remove="Resources\Helm\harbor\.helmignore" />
     <None Remove="Resources\Helm\harbor\Chart.yaml" />
+    <None Remove="Resources\Helm\harbor\conf\clair.yaml" />
+    <None Remove="Resources\Helm\harbor\conf\notary-server.json" />
+    <None Remove="Resources\Helm\harbor\conf\notary-signer.json" />
     <None Remove="Resources\Helm\harbor\CONTRIBUTING.md" />
     <None Remove="Resources\Helm\harbor\LICENSE" />
     <None Remove="Resources\Helm\harbor\README.md" />
@@ -353,6 +375,39 @@
     <None Remove="Resources\Helm\nfs\templates\storageclass.yaml" />
     <None Remove="Resources\Helm\nfs\templates\_helpers.tpl" />
     <None Remove="Resources\Helm\nfs\values.yaml" />
+    <None Remove="Resources\Helm\openebs-cstor-operator\.helmignore" />
+    <None Remove="Resources\Helm\openebs-cstor-operator\Chart.yaml" />
+    <None Remove="Resources\Helm\openebs-cstor-operator\crds\cstorbackup.yaml" />
+    <None Remove="Resources\Helm\openebs-cstor-operator\crds\cstorcompletedbackup.yaml" />
+    <None Remove="Resources\Helm\openebs-cstor-operator\crds\cstorpoolcluster.yaml" />
+    <None Remove="Resources\Helm\openebs-cstor-operator\crds\cstorpoolinstance.yaml" />
+    <None Remove="Resources\Helm\openebs-cstor-operator\crds\cstorrestore.yaml" />
+    <None Remove="Resources\Helm\openebs-cstor-operator\crds\cstorvolume.yaml" />
+    <None Remove="Resources\Helm\openebs-cstor-operator\crds\cstorvolumeattachment.yaml" />
+    <None Remove="Resources\Helm\openebs-cstor-operator\crds\cstorvolumeconfig.yaml" />
+    <None Remove="Resources\Helm\openebs-cstor-operator\crds\cstorvolumepolicy.yaml" />
+    <None Remove="Resources\Helm\openebs-cstor-operator\crds\cstorvolumereplica.yaml" />
+    <None Remove="Resources\Helm\openebs-cstor-operator\crds\migrationtask.yaml" />
+    <None Remove="Resources\Helm\openebs-cstor-operator\crds\upgradetask.yaml" />
+    <None Remove="Resources\Helm\openebs-cstor-operator\crds\volumesnapshot.yaml" />
+    <None Remove="Resources\Helm\openebs-cstor-operator\crds\volumesnapshotclass.yaml" />
+    <None Remove="Resources\Helm\openebs-cstor-operator\crds\volumesnapshotcontent.yaml" />
+    <None Remove="Resources\Helm\openebs-cstor-operator\README.md" />
+    <None Remove="Resources\Helm\openebs-cstor-operator\templates\admission-server.yaml" />
+    <None Remove="Resources\Helm\openebs-cstor-operator\templates\csi-controller-rbac.yaml" />
+    <None Remove="Resources\Helm\openebs-cstor-operator\templates\csi-controller.yaml" />
+    <None Remove="Resources\Helm\openebs-cstor-operator\templates\csi-driver.yaml" />
+    <None Remove="Resources\Helm\openebs-cstor-operator\templates\csi-iscsiadm-config.yaml" />
+    <None Remove="Resources\Helm\openebs-cstor-operator\templates\csi-node-rbac.yaml" />
+    <None Remove="Resources\Helm\openebs-cstor-operator\templates\csi-node.yaml" />
+    <None Remove="Resources\Helm\openebs-cstor-operator\templates\cspc-operator.yaml" />
+    <None Remove="Resources\Helm\openebs-cstor-operator\templates\cvc-operator-service.yaml" />
+    <None Remove="Resources\Helm\openebs-cstor-operator\templates\cvc-operator.yaml" />
+    <None Remove="Resources\Helm\openebs-cstor-operator\templates\NOTES.txt" />
+    <None Remove="Resources\Helm\openebs-cstor-operator\templates\priority-class.yaml" />
+    <None Remove="Resources\Helm\openebs-cstor-operator\templates\rbac.yaml" />
+    <None Remove="Resources\Helm\openebs-cstor-operator\templates\_helpers.tpl" />
+    <None Remove="Resources\Helm\openebs-cstor-operator\values.yaml" />
     <None Remove="Resources\Helm\openebs\Chart.yaml" />
     <None Remove="Resources\Helm\openebs\crds\crds.yaml" />
     <None Remove="Resources\Helm\openebs\OWNERS" />
@@ -422,6 +477,127 @@
     <None Remove="Resources\Helm\prometheus-operator\README.md" />
     <None Remove="Resources\Helm\prometheus-operator\requirements.lock" />
     <None Remove="Resources\Helm\prometheus-operator\requirements.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\alertmanager\alertmanager.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\alertmanager\ingress.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\alertmanager\podDisruptionBudget.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\alertmanager\psp-clusterrole.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\alertmanager\psp-clusterrolebinding.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\alertmanager\psp.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\alertmanager\secret.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\alertmanager\service.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\alertmanager\serviceaccount.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\alertmanager\servicemonitor.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\exporters\core-dns\service.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\exporters\core-dns\servicemonitor.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\exporters\kube-api-server\servicemonitor.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\exporters\kube-controller-manager\endpoints.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\exporters\kube-controller-manager\service.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\exporters\kube-controller-manager\servicemonitor.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\exporters\kube-dns\service.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\exporters\kube-dns\servicemonitor.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\exporters\kube-etcd\endpoints.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\exporters\kube-etcd\service.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\exporters\kube-etcd\servicemonitor.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\exporters\kube-proxy\service.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\exporters\kube-proxy\servicemonitor.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\exporters\kube-scheduler\endpoints.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\exporters\kube-scheduler\service.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\exporters\kube-scheduler\servicemonitor.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\exporters\kube-state-metrics\serviceMonitor.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\exporters\kubelet\servicemonitor.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\exporters\node-exporter\servicemonitor.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\grafana\configmap-dashboards.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\grafana\configmaps-datasources.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\grafana\dashboards-1.14\apiserver.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\grafana\dashboards-1.14\controller-manager.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\grafana\dashboards-1.14\etcd.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\grafana\dashboards-1.14\k8s-coredns.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\grafana\dashboards-1.14\k8s-resources-cluster.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\grafana\dashboards-1.14\k8s-resources-namespace.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\grafana\dashboards-1.14\k8s-resources-pod.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\grafana\dashboards-1.14\k8s-resources-workload.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\grafana\dashboards-1.14\k8s-resources-workloads-namespace.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\grafana\dashboards-1.14\kubelet.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\grafana\dashboards-1.14\node-cluster-rsrc-use.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\grafana\dashboards-1.14\node-rsrc-use.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\grafana\dashboards-1.14\nodes.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\grafana\dashboards-1.14\persistentvolumesusage.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\grafana\dashboards-1.14\pods.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\grafana\dashboards-1.14\prometheus-remote-write.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\grafana\dashboards-1.14\prometheus.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\grafana\dashboards-1.14\proxy.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\grafana\dashboards-1.14\scheduler.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\grafana\dashboards-1.14\statefulset.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\grafana\dashboards\etcd.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\grafana\dashboards\k8s-cluster-rsrc-use.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\grafana\dashboards\k8s-coredns.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\grafana\dashboards\k8s-node-rsrc-use.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\grafana\dashboards\k8s-resources-cluster.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\grafana\dashboards\k8s-resources-namespace.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\grafana\dashboards\k8s-resources-pod.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\grafana\dashboards\k8s-resources-workload.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\grafana\dashboards\k8s-resources-workloads-namespace.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\grafana\dashboards\nodes.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\grafana\dashboards\persistentvolumesusage.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\grafana\dashboards\pods.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\grafana\dashboards\statefulset.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\grafana\servicemonitor.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\NOTES.txt" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus-operator\admission-webhooks\job-patch\clusterrole.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus-operator\admission-webhooks\job-patch\clusterrolebinding.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus-operator\admission-webhooks\job-patch\job-createSecret.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus-operator\admission-webhooks\job-patch\job-patchWebhook.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus-operator\admission-webhooks\job-patch\psp.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus-operator\admission-webhooks\job-patch\role.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus-operator\admission-webhooks\job-patch\rolebinding.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus-operator\admission-webhooks\job-patch\serviceaccount.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus-operator\admission-webhooks\mutatingWebhookConfiguration.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus-operator\admission-webhooks\validatingWebhookConfiguration.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus-operator\cleanup-crds.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus-operator\clusterrole.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus-operator\clusterrolebinding.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus-operator\deployment.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus-operator\psp-clusterrole.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus-operator\psp-clusterrolebinding.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus-operator\psp.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus-operator\service.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus-operator\serviceaccount.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus-operator\servicemonitor.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus\additionalAlertmanagerConfigs.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus\additionalAlertRelabelConfigs.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus\additionalPrometheusRules.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus\additionalScrapeConfigs.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus\clusterrole.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus\clusterrolebinding.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus\ingress.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus\podDisruptionBudget.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus\prometheus.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus\psp-clusterrole.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus\psp-clusterrolebinding.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus\psp.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus\rules\alertmanager.rules.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus\rules\etcd.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus\rules\general.rules.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus\rules\k8s.rules.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus\rules\kube-apiserver.rules.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus\rules\kube-prometheus-node-alerting.rules.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus\rules\kube-prometheus-node-recording.rules.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus\rules\kube-scheduler.rules.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus\rules\kubernetes-absent.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus\rules\kubernetes-apps.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus\rules\kubernetes-resources.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus\rules\kubernetes-storage.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus\rules\kubernetes-system.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus\rules\node-network.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus\rules\node-time.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus\rules\node.rules.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus\rules\prometheus-operator.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus\rules\prometheus.rules.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus\service.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus\serviceaccount.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus\servicemonitor.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\prometheus\servicemonitors.yaml" />
+    <None Remove="Resources\Helm\prometheus-operator\templates\_helpers.tpl" />
     <None Remove="Resources\Helm\prometheus-operator\values.yaml" />
     <None Remove="Resources\Helm\redis-ha\Chart.yaml" />
     <None Remove="Resources\Helm\redis-ha\ci\haproxy-enabled-values.yaml" />
@@ -469,6 +645,14 @@
     <None Remove="Resources\Helm\yugabyte\templates\_helpers.tpl" />
     <None Remove="Resources\Helm\yugabyte\values.yaml" />
     <None Remove="Resources\Helm\yugabyte\yugabyte-rbac.yaml" />
+    <None Remove="Resources\Setup\setup-disk.sh" />
+    <None Remove="Resources\Setup\setup-docker.sh" />
+    <None Remove="Resources\Setup\setup-environment.sh" />
+    <None Remove="Resources\Setup\setup-exists.sh" />
+    <None Remove="Resources\Setup\setup-node.sh" />
+    <None Remove="Resources\Setup\setup-ntp.sh" />
+    <None Remove="Resources\Setup\setup-package-proxy.sh" />
+    <None Remove="Resources\Setup\setup-prep.sh" />
     <None Remove="Resources\Setup\setup-utility.sh" />
     <None Remove="Resources\Tools\safe-apt-get.sh" />
   </ItemGroup>
@@ -477,6 +661,182 @@
     <EmbeddedResource Include="Resources\Conf\cluster.conf.sh">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Helm\grafana\ci\default-values.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\ci\with-dashboard-json-values.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\ci\with-dashboard-values.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\dashboards\alertmanager_rev4.json" />
+    <EmbeddedResource Include="Resources\Helm\grafana\dashboards\cortex-performance_rev1.json" />
+    <EmbeddedResource Include="Resources\Helm\grafana\dashboards\custom-dashboard.json" />
+    <EmbeddedResource Include="Resources\Helm\grafana\dashboards\fluentd-dashboard-prometheus-exporter_rev3.json" />
+    <EmbeddedResource Include="Resources\Helm\grafana\dashboards\galley-dashboard.json" />
+    <EmbeddedResource Include="Resources\Helm\grafana\dashboards\istio-mesh-dashboard.json" />
+    <EmbeddedResource Include="Resources\Helm\grafana\dashboards\istio-performance-dashboard.json" />
+    <EmbeddedResource Include="Resources\Helm\grafana\dashboards\istio-service-dashboard.json" />
+    <EmbeddedResource Include="Resources\Helm\grafana\dashboards\istio-workload-dashboard.json" />
+    <EmbeddedResource Include="Resources\Helm\grafana\dashboards\k8s-cluster-summary_rev1.json" />
+    <EmbeddedResource Include="Resources\Helm\grafana\dashboards\logging-dashboard_rev1.json" />
+    <EmbeddedResource Include="Resources\Helm\grafana\dashboards\mixer-dashboard.json" />
+    <EmbeddedResource Include="Resources\Helm\grafana\dashboards\node-exporter-en_rev4.json" />
+    <EmbeddedResource Include="Resources\Helm\grafana\dashboards\node-exporter-full_rev21.json" />
+    <EmbeddedResource Include="Resources\Helm\grafana\dashboards\pilot-dashboard.json" />
+    <EmbeddedResource Include="Resources\Helm\grafana\dashboards\yugabytedb_rev2.json" />
+    <EmbeddedResource Include="Resources\Helm\harbor\conf\clair.yaml" />
+    <EmbeddedResource Include="Resources\Helm\harbor\conf\notary-server.json" />
+    <EmbeddedResource Include="Resources\Helm\harbor\conf\notary-signer.json" />
+    <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\.helmignore" />
+    <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\Chart.yaml" />
+    <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\crds\cstorbackup.yaml" />
+    <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\crds\cstorcompletedbackup.yaml" />
+    <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\crds\cstorpoolcluster.yaml" />
+    <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\crds\cstorpoolinstance.yaml" />
+    <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\crds\cstorrestore.yaml" />
+    <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\crds\cstorvolume.yaml" />
+    <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\crds\cstorvolumeattachment.yaml" />
+    <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\crds\cstorvolumeconfig.yaml" />
+    <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\crds\cstorvolumepolicy.yaml" />
+    <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\crds\cstorvolumereplica.yaml" />
+    <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\crds\migrationtask.yaml" />
+    <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\crds\upgradetask.yaml" />
+    <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\crds\volumesnapshot.yaml" />
+    <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\crds\volumesnapshotclass.yaml" />
+    <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\crds\volumesnapshotcontent.yaml" />
+    <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\README.md" />
+    <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\templates\admission-server.yaml" />
+    <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\templates\csi-controller-rbac.yaml" />
+    <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\templates\csi-controller.yaml" />
+    <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\templates\csi-driver.yaml" />
+    <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\templates\csi-iscsiadm-config.yaml" />
+    <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\templates\csi-node-rbac.yaml" />
+    <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\templates\csi-node.yaml" />
+    <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\templates\cspc-operator.yaml" />
+    <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\templates\cvc-operator-service.yaml" />
+    <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\templates\cvc-operator.yaml" />
+    <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\templates\NOTES.txt" />
+    <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\templates\priority-class.yaml" />
+    <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\templates\rbac.yaml" />
+    <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\templates\_helpers.tpl" />
+    <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\values.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\alertmanager\alertmanager.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\alertmanager\ingress.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\alertmanager\podDisruptionBudget.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\alertmanager\psp-clusterrole.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\alertmanager\psp-clusterrolebinding.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\alertmanager\psp.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\alertmanager\secret.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\alertmanager\service.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\alertmanager\serviceaccount.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\alertmanager\servicemonitor.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\exporters\core-dns\service.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\exporters\core-dns\servicemonitor.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\exporters\kube-api-server\servicemonitor.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\exporters\kube-controller-manager\endpoints.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\exporters\kube-controller-manager\service.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\exporters\kube-controller-manager\servicemonitor.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\exporters\kube-dns\service.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\exporters\kube-dns\servicemonitor.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\exporters\kube-etcd\endpoints.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\exporters\kube-etcd\service.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\exporters\kube-etcd\servicemonitor.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\exporters\kube-proxy\service.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\exporters\kube-proxy\servicemonitor.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\exporters\kube-scheduler\endpoints.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\exporters\kube-scheduler\service.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\exporters\kube-scheduler\servicemonitor.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\exporters\kube-state-metrics\serviceMonitor.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\exporters\kubelet\servicemonitor.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\exporters\node-exporter\servicemonitor.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\grafana\configmap-dashboards.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\grafana\configmaps-datasources.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\grafana\dashboards-1.14\apiserver.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\grafana\dashboards-1.14\controller-manager.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\grafana\dashboards-1.14\etcd.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\grafana\dashboards-1.14\k8s-coredns.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\grafana\dashboards-1.14\k8s-resources-cluster.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\grafana\dashboards-1.14\k8s-resources-namespace.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\grafana\dashboards-1.14\k8s-resources-pod.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\grafana\dashboards-1.14\k8s-resources-workload.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\grafana\dashboards-1.14\k8s-resources-workloads-namespace.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\grafana\dashboards-1.14\kubelet.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\grafana\dashboards-1.14\node-cluster-rsrc-use.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\grafana\dashboards-1.14\node-rsrc-use.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\grafana\dashboards-1.14\nodes.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\grafana\dashboards-1.14\persistentvolumesusage.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\grafana\dashboards-1.14\pods.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\grafana\dashboards-1.14\prometheus-remote-write.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\grafana\dashboards-1.14\prometheus.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\grafana\dashboards-1.14\proxy.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\grafana\dashboards-1.14\scheduler.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\grafana\dashboards-1.14\statefulset.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\grafana\dashboards\etcd.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\grafana\dashboards\k8s-cluster-rsrc-use.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\grafana\dashboards\k8s-coredns.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\grafana\dashboards\k8s-node-rsrc-use.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\grafana\dashboards\k8s-resources-cluster.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\grafana\dashboards\k8s-resources-namespace.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\grafana\dashboards\k8s-resources-pod.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\grafana\dashboards\k8s-resources-workload.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\grafana\dashboards\k8s-resources-workloads-namespace.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\grafana\dashboards\nodes.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\grafana\dashboards\persistentvolumesusage.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\grafana\dashboards\pods.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\grafana\dashboards\statefulset.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\grafana\servicemonitor.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\NOTES.txt" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus-operator\admission-webhooks\job-patch\clusterrole.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus-operator\admission-webhooks\job-patch\clusterrolebinding.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus-operator\admission-webhooks\job-patch\job-createSecret.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus-operator\admission-webhooks\job-patch\job-patchWebhook.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus-operator\admission-webhooks\job-patch\psp.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus-operator\admission-webhooks\job-patch\role.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus-operator\admission-webhooks\job-patch\rolebinding.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus-operator\admission-webhooks\job-patch\serviceaccount.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus-operator\admission-webhooks\mutatingWebhookConfiguration.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus-operator\admission-webhooks\validatingWebhookConfiguration.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus-operator\cleanup-crds.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus-operator\clusterrole.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus-operator\clusterrolebinding.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus-operator\deployment.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus-operator\psp-clusterrole.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus-operator\psp-clusterrolebinding.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus-operator\psp.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus-operator\service.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus-operator\serviceaccount.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus-operator\servicemonitor.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus\additionalAlertmanagerConfigs.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus\additionalAlertRelabelConfigs.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus\additionalPrometheusRules.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus\additionalScrapeConfigs.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus\clusterrole.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus\clusterrolebinding.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus\ingress.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus\podDisruptionBudget.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus\prometheus.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus\psp-clusterrole.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus\psp-clusterrolebinding.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus\psp.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus\rules\alertmanager.rules.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus\rules\etcd.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus\rules\general.rules.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus\rules\k8s.rules.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus\rules\kube-apiserver.rules.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus\rules\kube-prometheus-node-alerting.rules.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus\rules\kube-prometheus-node-recording.rules.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus\rules\kube-scheduler.rules.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus\rules\kubernetes-absent.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus\rules\kubernetes-apps.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus\rules\kubernetes-resources.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus\rules\kubernetes-storage.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus\rules\kubernetes-system.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus\rules\node-network.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus\rules\node-time.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus\rules\node.rules.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus\rules\prometheus-operator.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus\rules\prometheus.rules.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus\service.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus\serviceaccount.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus\servicemonitor.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus\servicemonitors.yaml" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\_helpers.tpl" />
     <EmbeddedResource Include="Resources\Helm\redis-ha\ci\haproxy-enabled-values.yaml" />
     <EmbeddedResource Include="Resources\Helm\redis-ha\templates\tests\test-redis-ha-configmap.yaml" />
     <EmbeddedResource Include="Resources\Helm\redis-ha\templates\tests\test-redis-ha-pod.yaml" />
@@ -892,6 +1252,30 @@
     <EmbeddedResource Include="Resources\Helm\yugabyte\templates\_helpers.tpl" />
     <EmbeddedResource Include="Resources\Helm\yugabyte\values.yaml" />
     <EmbeddedResource Include="Resources\Helm\yugabyte\yugabyte-rbac.yaml" />
+    <EmbeddedResource Include="Resources\Setup\setup-disk.sh">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Setup\setup-docker.sh">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Setup\setup-environment.sh">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Setup\setup-exists.sh">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Setup\setup-node.sh">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Setup\setup-ntp.sh">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Setup\setup-package-proxy.sh">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Setup\setup-prep.sh">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources\Setup\setup-utility.sh">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
@@ -933,33 +1317,6 @@
   <ItemGroup>
     <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
     <None Include="..\..\LICENSE" Pack="True" PackagePath="" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="Resources\Setup\setup-disk.sh">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </None>
-    <None Update="Resources\Setup\setup-docker.sh">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </None>
-    <None Update="Resources\Setup\setup-environment.sh">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </None>
-    <None Update="Resources\Setup\setup-exists.sh">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </None>
-    <None Update="Resources\Setup\setup-node.sh">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </None>
-    <None Update="Resources\Setup\setup-ntp.sh">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </None>
-    <None Update="Resources\Setup\setup-package-proxy.sh">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </None>
-    <None Update="Resources\Setup\setup-prep.sh">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 
 </Project>

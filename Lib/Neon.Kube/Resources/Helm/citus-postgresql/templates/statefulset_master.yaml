@@ -39,7 +39,7 @@ spec:
       {{- end }}
       initContainers:
       - name: chmod-er
-        image: busybox:latest
+        image: "{{ .Values.busybox.image.organization }}/{{ .Values.busybox.image.repository }}:{{ .Values.busybox.image.tag }}"
         command:
         - /bin/sh
         - -c
