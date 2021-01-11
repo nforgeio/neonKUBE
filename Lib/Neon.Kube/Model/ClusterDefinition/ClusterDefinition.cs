@@ -54,7 +54,6 @@ namespace Neon.Kube
         private const string        defaultDatacenter         = "DATACENTER";
         private const string        defaultProvisioner        = "unknown";
         private readonly string[]   defaultTimeSources        = new string[] { "pool.ntp.org" };
-        private const int           defaultStepStaggerSeconds = 5;
         private const bool          defaultAllowUnitTesting   = false;
         private const string        defaultLinuxDistribution  = "ubuntu";
         private const string        defaultLinuxVersion       = "20.04.latest";
@@ -438,14 +437,6 @@ namespace Neon.Kube
         public string PackageProxy { get; set; } = null;
 
         /// <summary>
-        /// Optionally specifies setup process related options.
-        /// </summary>
-        [JsonProperty(PropertyName = "Setup", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "setup", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public SetupOptions Setup { get; set; } = null;
-
-        /// <summary>
         /// Describes the cluster's network configuration.
         /// </summary>
         [JsonProperty(PropertyName = "Network", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -816,7 +807,6 @@ namespace Neon.Kube
             Kubernetes  = Kubernetes ?? new KubernetesOptions();
             Docker      = Docker ?? new DockerOptions();
             Monitor     = Monitor ?? new MonitorOptions();
-            Setup       = Setup ?? new SetupOptions();
             Hosting     = Hosting ?? new HostingOptions();
             NodeOptions = NodeOptions ?? new NodeOptions();
             Network     = Network ?? new NetworkOptions();
@@ -827,7 +817,6 @@ namespace Neon.Kube
             Kubernetes.Validate(this);
             Docker.Validate(this);
             Monitor.Validate(this);
-            Setup.Validate(this);
             Network.Validate(this);
             Hosting.Validate(this);
             NodeOptions.Validate(this);

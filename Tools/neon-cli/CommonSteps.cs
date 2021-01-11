@@ -41,8 +41,7 @@ namespace NeonCli
         /// Verifies that the node has the correct operating system installed.
         /// </summary>
         /// <param name="node">The target cluster node.</param>
-        /// <param name="stepDelay">Ignored.</param>
-        public static void VerifyOS(NodeSshProxy<NodeDefinition> node, TimeSpan stepDelay)
+        public static void VerifyOS(NodeSshProxy<NodeDefinition> node)
         {
             KubeHelper.VerifyNodeOperatingSystem(node);
         }
@@ -51,11 +50,9 @@ namespace NeonCli
         /// Customizes the OpenSSH configuration on a node.
         /// </summary>
         /// <param name="node">The target node.</param>
-        /// <param name="stepDelayed">Ignored.</param>
-        public static void ConfigureOpenSsh(NodeSshProxy<NodeDefinition> node, TimeSpan stepDelayed)
+        public static void ConfigureOpenSsh(NodeSshProxy<NodeDefinition> node)
         {
-            // Upload the OpenSSH server configuration, restart OpenSSH and
-            // then disconnect and wait for the OpenSSH to restart.
+            // Upload the OpenSSH server configuration and restart OpenSSH.
 
             node.UploadText("/etc/ssh/sshd_config", KubeHelper.OpenSshConfig);
             node.SudoCommand("systemctl restart sshd");
@@ -347,7 +344,7 @@ systemctl restart rsyslog.service
 
             node.Status = "configure: openssh";
 
-            ConfigureOpenSsh(node, TimeSpan.Zero);
+            ConfigureOpenSsh(node);
 
             node.Status = "upload: prepare files";
 

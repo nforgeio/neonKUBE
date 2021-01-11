@@ -231,9 +231,9 @@ namespace Neon.Kube
              
             setupController.AddWaitUntilOnlineStep();
 
-            setupController.AddNodeStep("verify readiness", (node, stepDelay) => VerifyReady(node));
-            setupController.AddNodeStep("virtual machine template", (node, stepDelay) => CheckVmTemplate(node));
-            setupController.AddNodeStep("create virtual machines", (node, stepDelay) => ProvisionVM(node));
+            setupController.AddNodeStep("verify readiness", node => VerifyReady(node));
+            setupController.AddNodeStep("virtual machine template", node => CheckVmTemplate(node));
+            setupController.AddNodeStep("create virtual machines", node => ProvisionVM(node));
             setupController.AddGlobalStep(string.Empty, () => Finish(), quiet: true);
 
             if (!setupController.Run())
@@ -267,7 +267,7 @@ namespace Neon.Kube
             // operation acquire a lock on the XenClient for the node's host before proceeding.
 
             setupController.AddNodeStep("openebs",
-                (node, stepDelay) =>
+                node =>
                 {
                     var xenClient = xenHosts.Single(client => client.Name == node.Metadata.Vm.Host);
 

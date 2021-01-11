@@ -157,7 +157,7 @@ namespace Neon.Kube
                 };
 
                 checkController.AddNodeStep("machine online status",
-                    (node, stepDelay) =>
+                    node =>
                     {
                         const int maxAttempts = 5;
 
@@ -197,7 +197,7 @@ namespace Neon.Kube
                     });
 
                 checkController.AddNodeStep("connect machines",
-                    (node, stepDelay) =>
+                    node =>
                     {
                         node.Status = "connecting...";
 
@@ -242,7 +242,7 @@ namespace Neon.Kube
                 var openEbsNodeCount = 0;
 
                 checkController.AddNodeStep("OpenEBS block device scan",
-                    (node, stepDelay) =>
+                    node =>
                     {
                         // NOTE: Nodes should still be connected from the last step.
 
@@ -297,16 +297,16 @@ namespace Neon.Kube
                 MaxParallel = this.MaxParallel
             };
 
-            setupController.AddNodeStep("connect nodes", (node, stepDelay) => Connect(node));
-            setupController.AddNodeStep("verify operating system", (node, stepDelay) => KubeHelper.VerifyNodeOperatingSystem(node));
-            setupController.AddNodeStep("configure nodes", (node, stepDelay) => Congfigure(node));
+            setupController.AddNodeStep("connect nodes", node => Connect(node));
+            setupController.AddNodeStep("verify operating system", node => KubeHelper.VerifyNodeOperatingSystem(node));
+            setupController.AddNodeStep("configure nodes", node => Congfigure(node));
 
             if (secureSshPassword != orgSshPassword)
             {
-                setupController.AddNodeStep("secure node passwords", (node, stepDelay) => SetSecurePassword(node));
+                setupController.AddNodeStep("secure node passwords", node => SetSecurePassword(node));
             }
 
-            setupController.AddNodeStep("detect node labels", (node, stepDelay) => DetectLabels(node));
+            setupController.AddNodeStep("detect node labels", node => DetectLabels(node));
 
             if (!setupController.Run())
             {

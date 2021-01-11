@@ -959,7 +959,7 @@ namespace Neon.Kube
                 },
                 quiet: true);
             controller.AddNodeStep("credentials",
-                (node, stepDelay) =>
+                node =>
                 {
                     // Update the node SSH proxies to use the secure SSH password.
 
@@ -985,7 +985,7 @@ namespace Neon.Kube
             // Add a step to perform low-level node initialization.
 
             setupController.AddNodeStep("node basics",
-                (node, stepDelay) =>
+                node =>
                 {
                     KubeHelper.InitializeNode(node, secureSshPassword);
                 });
@@ -999,7 +999,7 @@ namespace Neon.Kube
             // the OpenEBS disk will be easy to identify as the only unpartitioned disks.
 
             setupController.AddNodeStep("openebs",
-                (node, stepDelay) =>
+                node =>
                 {
                     var azureNode          = nameToVm[node.Name];
                     var openEBSStorageType = ToAzureStorageType(azureNode.Metadata.Azure.OpenEBSStorageType);
@@ -1557,8 +1557,7 @@ namespace Neon.Kube
         /// Creates the NIC and VM for a cluster node.
         /// </summary>
         /// <param name="node">The target node.</param>
-        /// <param name="stepDelay">The step delay.</param>
-        private void CreateVm(NodeSshProxy<NodeDefinition> node, TimeSpan stepDelay)
+        private void CreateVm(NodeSshProxy<NodeDefinition> node)
         {
             var azureNode = nameToVm[node.Name];
 
@@ -1630,8 +1629,7 @@ namespace Neon.Kube
         /// Performs some basic node initialization.
         /// </summary>
         /// <param name="node">The target node.</param>
-        /// <param name="stepDelay">The step delay.</param>
-        private void ConfigureNode(NodeSshProxy<NodeDefinition> node, TimeSpan stepDelay)
+        private void ConfigureNode(NodeSshProxy<NodeDefinition> node)
         {
             node.WaitForBoot();
 

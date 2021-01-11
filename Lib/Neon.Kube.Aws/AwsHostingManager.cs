@@ -1118,7 +1118,7 @@ namespace Neon.Kube
             controller.AddGlobalStep("ssh keys", ImportKeyPairAsync);
             controller.AddNodeStep("node instances", CreateNodeInstanceAsync);
             controller.AddNodeStep("credentials",
-                (node, stepDelay) =>
+                node =>
                 {
                     // Update the node SSH proxies to use the secure SSH password.
 
@@ -1144,7 +1144,7 @@ namespace Neon.Kube
             // Add a step to perform low-level node initialization.
 
             setupController.AddNodeStep("node basics",
-                (node, stepDelay) =>
+                node =>
                 {
                     KubeHelper.InitializeNode(node, secureSshPassword);
                 });
@@ -1158,7 +1158,7 @@ namespace Neon.Kube
             // the OpenEBS disk will be easy to identify as the only unpartitioned disk.
 
             setupController.AddNodeStep("openebs",
-                async (node, stepDelay) =>
+                async node =>
                 {
                     node.Status = "openebs: checking";
 
@@ -2551,8 +2551,9 @@ namespace Neon.Kube
         /// <summary>
         /// Waits for the load balancer SSH target group for the node to become healthy.
         /// </summary>
+        /// <param name="node">The target node.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task WaitForSshTargetAsync(NodeSshProxy<NodeDefinition> node, TimeSpan stepDelay)
+        private async Task WaitForSshTargetAsync(NodeSshProxy<NodeDefinition> node)
         {
             node.Status = "waiting...";
 
@@ -2607,9 +2608,8 @@ namespace Neon.Kube
         /// Creates the AWS instance for a node.
         /// </summary>
         /// <param name="node">The target node.</param>
-        /// <param name="stepDelay">The step delay.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task CreateNodeInstanceAsync(NodeSshProxy<NodeDefinition> node, TimeSpan stepDelay)
+        private async Task CreateNodeInstanceAsync(NodeSshProxy<NodeDefinition> node)
         {
             //-----------------------------------------------------------------
             // Create the instance if it doesn't already exist.

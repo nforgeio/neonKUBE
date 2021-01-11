@@ -454,17 +454,15 @@ Server Requirements:
                 setupController.AddWaitUntilOnlineStep(timeout: TimeSpan.FromMinutes(15));
                 setupController.AddNodeStep("node OS verify", CommonSteps.VerifyOS);
                 setupController.AddNodeStep("node credentials", 
-                    (node, stepDelay) =>
+                    node =>
                     {
                         CommonSteps.ConfigureSshKey(node, clusterLogin);
                     });
                 setupController.AddNodeStep("node prepare", 
-                    (node, stepDelay) =>
+                    node =>
                     {
-                        Thread.Sleep(stepDelay);
                         CommonSteps.PrepareNode(node, cluster.Definition, hostingManager, shutdown: false);
-                    },
-                    stepStaggerSeconds: cluster.Definition.Setup.StepStaggerSeconds);
+                    });
             
                 // Some hosting manages may have to some additional work after the node has
                 // been otherwise prepared.

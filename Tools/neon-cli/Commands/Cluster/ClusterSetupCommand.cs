@@ -282,28 +282,26 @@ OPTIONS:
                     var configureFirstMasterStepLabel = cluster.Definition.Masters.Count() > 1 ? "setup first master" : "setup master";
 
                     controller.AddNodeStep(configureFirstMasterStepLabel,
-                        (node, stepDelay) =>
+                        node =>
                         {
-                            SetupCommon(hostingManager, node, stepDelay);
+                            SetupCommon(hostingManager, node);
                             node.InvokeIdempotentAction("setup/common-restart", () => RebootAndWait(node));
                             SetupNode(node);
                         },
-                        node => node == cluster.FirstMaster,
-                        stepStaggerSeconds: cluster.Definition.Setup.StepStaggerSeconds);
+                        node => node == cluster.FirstMaster);
 
                     // Perform common configuration for the remaining nodes (if any).
 
                     if (cluster.Definition.Nodes.Count() > 1)
                     {
                         controller.AddNodeStep("setup other nodes",
-                            (node, stepDelay) =>
+                            node =>
                             {
-                                SetupCommon(hostingManager, node, stepDelay);
+                                SetupCommon(hostingManager, node);
                                 node.InvokeIdempotentAction("setup/common-restart", () => RebootAndWait(node));
                                 SetupNode(node);
                             },
-                            node => node != cluster.FirstMaster,
-                            stepStaggerSeconds: cluster.Definition.Setup.StepStaggerSeconds);
+                            node => node != cluster.FirstMaster);
                     }
 
                     //-----------------------------------------------------------------
@@ -323,14 +321,14 @@ OPTIONS:
                     // Verify the cluster.
 
                     controller.AddNodeStep("check masters",
-                        (node, stepDelay) =>
+                        node =>
                         {
                             ClusterDiagnostics.CheckMaster(node, cluster.Definition);
                         },
                         node => node.Metadata.IsMaster);
 
                     controller.AddNodeStep("check workers",
-                        (node, stepDelay) =>
+                        node =>
                         {
                             ClusterDiagnostics.CheckWorker(node, cluster.Definition);
                         },
@@ -559,8 +557,7 @@ OPTIONS:
         /// </summary>
         /// <param name="hostingManager">The hosting manager.</param>
         /// <param name="node">The target node.</param>
-        /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
-        private void SetupCommon(HostingManager hostingManager, NodeSshProxy<NodeDefinition> node, TimeSpan stepDelay)
+        private void SetupCommon(HostingManager hostingManager, NodeSshProxy<NodeDefinition> node)
         {
             Covenant.Requires<ArgumentNullException>(hostingManager != null, nameof(hostingManager));
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
@@ -585,8 +582,6 @@ OPTIONS:
             node.InvokeIdempotentAction("setup/common",
                 () =>
                 {
-                    Thread.Sleep(stepDelay);
-
                     if (!Program.Debug)
                     {
                         ConfigureBasic(node);
@@ -808,14 +803,11 @@ $@"
         /// Installs the required Kubernetes related components on a node.
         /// </summary>
         /// <param name="node">The target node.</param>
-        /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
-        private void SetupKubernetes(NodeSshProxy<NodeDefinition> node, TimeSpan stepDelay)
+        private void SetupKubernetes(NodeSshProxy<NodeDefinition> node)
         {
             node.InvokeIdempotentAction("setup/setup-install-kubernetes",
                 () =>
                 {
-                    Thread.Sleep(stepDelay);
-
                     node.Status = "setup: kubernetes apt repository";
 
                     var bundle = CommandBundle.FromScript(
