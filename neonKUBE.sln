@@ -352,6 +352,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Developer", "Developer", "{
 		Doc\Images\Developer\DockerNetwork.png = Doc\Images\Developer\DockerNetwork.png
 		Doc\Images\Developer\DockerSysTray.png = Doc\Images\Developer\DockerSysTray.png
 		Doc\Images\Developer\hyper-v.png = Doc\Images\Developer\hyper-v.png
+		Doc\Images\Developer\PythonImports.png = Doc\Images\Developer\PythonImports.png
 		Doc\Images\Developer\SkypeConnections.png = Doc\Images\Developer\SkypeConnections.png
 		Doc\Images\Developer\virtualization.png = Doc\Images\Developer\virtualization.png
 		Doc\Images\Developer\VisualStudioClone.png = Doc\Images\Developer\VisualStudioClone.png
