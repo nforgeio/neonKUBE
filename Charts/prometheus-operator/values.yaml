@@ -469,7 +469,7 @@ global:
   nodeExporter:
     image:
       organization: ghcr.io/neonrelease
-      repository: coreos-node-exporter
+      repository: prometheus-node-exporter
       tag: latest
   rbac:
     create: true
