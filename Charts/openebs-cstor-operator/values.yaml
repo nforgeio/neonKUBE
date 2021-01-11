@@ -239,6 +239,6 @@ serviceAccount:
     name: openebs-cstor-csi-node-sa
 
 analytics:
-  enabled: true
+  enabled: false
   # Specify in hours the duration after which a ping event needs to be sent.
   pingInterval: "24h"
