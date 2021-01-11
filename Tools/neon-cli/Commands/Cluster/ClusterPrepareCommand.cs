@@ -456,7 +456,7 @@ Server Requirements:
                 setupController.AddNodeStep("node credentials", 
                     node =>
                     {
-                        KubeSetup.ConfigureSshKey(node, clusterLogin);
+                        KubeNode.ConfigureSshKey(node, clusterLogin);
                     });
                 setupController.AddNodeStep("node prepare", 
                     node =>
