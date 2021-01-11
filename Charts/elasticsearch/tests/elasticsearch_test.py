@@ -327,7 +327,7 @@ def test_adding_a_extra_init_container():
     config = '''
 extraInitContainers: |
   - name: do-something
-    image: busybox
+    image: ghcr.io/neonrelease/busybox:latest
     command: ['do', 'something']
 '''
     r = helm_template(config)

@@ -43,7 +43,7 @@ spec:
       {{- end }}
       initContainers:
       - name: chmod-er
-        image: busybox:latest
+        image: ghcr.io/neonrelease/busybox:latest
         command:
         - /bin/sh
         - -c
