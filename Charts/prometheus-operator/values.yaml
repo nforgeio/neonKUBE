@@ -55,17 +55,6 @@ additionalPrometheusRules: []
 #        - record: my_record
 #          expr: 100 * my_record
 
-##
-global:
-  rbac:
-    create: true
-    pspEnabled: true
-
-  ## Reference to one or more secrets to be used when pulling images
-  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
-  ##
-  imagePullSecrets: []
-  # - name: "image-pull-secret"
 
 ## Configuration for alertmanager
 ## ref: https://prometheus.io/docs/alerting/alertmanager/
@@ -470,17 +459,28 @@ grafana:
     #   replacement: $1
     #   action: replace
 
-kubeStateMetrics:
-  image:
-    organization: ghcr.io/neonrelease
-    repository: coreos-kube-state-metrics
-    tag: latest
+global:
+  kubeStateMetrics:
+    image:
+      organization: ghcr.io/neonrelease
+      repository: coreos-kube-state-metrics
+      tag: latest
 
-nodeExporter:
-  image:
-    organization: ghcr.io/neonrelease
-    repository: coreos-node-exporter
-    tag: latest
+  nodeExporter:
+    image:
+      organization: ghcr.io/neonrelease
+      repository: prometheus-node-exporter
+      tag: latest
+  rbac:
+    create: true
+    pspEnabled: true
+
+  ## Reference to one or more secrets to be used when pulling images
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+  ##
+  imagePullSecrets: []
+  # - name: "image-pull-secret"
+
 
 ## Component scraping the kube api server
 ##

@@ -50,7 +50,7 @@ livenessProbe:
 
 image:
   organization: ghcr.io/neonrelease
-  repository: grafana-grafana
+  repository: grafana
   tag: latest
   sha: ""
   pullPolicy: IfNotPresent
@@ -60,13 +60,6 @@ image:
   ##
   # pullSecrets:
   #   - myRegistrKeySecretName
-
-testFramework:
-  enabled: true
-  image: "bats/bats"
-  tag: "v1.1.0"
-  imagePullPolicy: IfNotPresent
-  securityContext: {}
 
 securityContext:
   runAsUser: 472

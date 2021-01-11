@@ -225,7 +225,7 @@ spec:
       {{ if contains .name "yb-tservers" }}
       initContainers:
       - name: chmod-er
-        image: busybox:latest
+        image: "{{ $root.Values.busybox.image.organization }}/{{ $root.Values.busybox.image.repository }}:{{ $root.Values.busybox.image.tag }}"
         command:
         - /bin/sh
         - -c
@@ -252,7 +252,7 @@ spec:
       {{ end }}
       containers:
       - name: "{{ .label }}"
-        image: "{{ $root.Values.Image.repository }}:{{ $root.Values.Image.tag }}"
+        image: "{{ $root.Values.Image.organization }}/{{ $root.Values.Image.repository }}:{{ $root.Values.Image.tag }}"
         imagePullPolicy: {{ $root.Values.Image.pullPolicy }}
         lifecycle:
           postStart:
@@ -396,7 +396,7 @@ spec:
 
       {{ if not $root.Values.storage.ephemeral }}
       - name: yb-cleanup
-        image: busybox:1.31
+        image: "{{ $root.Values.busybox.image.organization }}/{{ $root.Values.busybox.image.repository }}:{{ $root.Values.busybox.image.tag }}"
         env:
         - name: USER
           value: "yugabyte"

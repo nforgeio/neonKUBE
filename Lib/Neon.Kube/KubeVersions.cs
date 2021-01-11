@@ -81,5 +81,15 @@ namespace Neon.Kube
         /// The version of CoreDNS to be installed.
         /// </summary>
         public const string CoreDNSVersion = "1.6.2";
+
+        /// <summary>
+        /// The version of Prometheus to be installed.
+        /// </summary>
+        public const string PrometheusVersion = "v2.22.1";
+
+        /// <summary>
+        /// The version of AlertManager to be installed.
+        /// </summary>
+        public const string AlertManagerVersion = "v0.21.0";
     }
 }

@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <Folder Include="kubernetes\templates\tests\" />
+    <Folder Include="openebs-cstor-operator\" />
     <Folder Include="prometheus-operator\" />
   </ItemGroup>
 
