@@ -2821,6 +2821,11 @@ rm -rf {chartName}*
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
+
+                    values.Add(new KeyValuePair<string, object>($"Image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>($"busybox.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>($"busybox.image.tag", KubeConst.LatestClusterVersion));
+
                     values.Add(new KeyValuePair<string, object>($"replicas.master", cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count()));
                     values.Add(new KeyValuePair<string, object>($"replicas.tserver", cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count()));
 
@@ -3419,6 +3424,8 @@ rm -rf {chartName}*
 
                     values.Add(new KeyValuePair<string, object>($"image.organization", NeonHelper.NeonBranchRegistry));
                     values.Add(new KeyValuePair<string, object>($"image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>($"busybox.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>($"busybox.image.tag", KubeConst.LatestClusterVersion));
                     values.Add(new KeyValuePair<string, object>($"prometheus.image.organization", NeonHelper.NeonBranchRegistry));
                     values.Add(new KeyValuePair<string, object>($"prometheus.image.tag", KubeConst.LatestClusterVersion));
 
