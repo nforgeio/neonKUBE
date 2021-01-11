@@ -49,7 +49,6 @@ using Neon.Time;
 
 using k8s;
 using k8s.Models;
-using ICSharpCode.SharpZipLib.Tar;
 
 namespace NeonCli
 {
@@ -99,7 +98,7 @@ namespace NeonCli
         // Implementation
 
         private const string usage = @"
-Configures a neonKUBE as described in the cluster definition file.
+Configures a neonKUBE cluster as described in the cluster definition file.
 
 USAGE: 
 
@@ -269,7 +268,7 @@ OPTIONS:
 
                     controller.AddGlobalStep("download binaries", () => WorkstationBinaries());
                     controller.AddWaitUntilOnlineStep("connect");
-                    controller.AddNodeStep("verify OS", CommonSteps.VerifyOS);
+                    controller.AddNodeStep("verify OS", KubeHelper.VerifyNodeOS);
 
                     // Write the operation begin marker to all cluster node logs.
 
@@ -544,7 +543,7 @@ OPTIONS:
         {
             // Configure the node's environment variables.
 
-            CommonSteps.ConfigureEnvironmentVariables(node, cluster.Definition);
+            KubeSetup.ConfigureEnvironmentVariables(node, cluster.Definition);
 
             // Upload the setup and configuration files.
 
@@ -589,7 +588,7 @@ OPTIONS:
 
                     // Ensure that the node has been prepared for setup.
 
-                    CommonSteps.PrepareNode(node, cluster.Definition, hostingManager);
+                    KubeSetup.PrepareNode(node, cluster.Definition, hostingManager);
 
                     // Create the [/mnt-data] folder if it doesn't already exist.  This folder
                     // is where we're going to host the Docker containers and volumes that should

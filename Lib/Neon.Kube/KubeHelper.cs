@@ -25,6 +25,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
@@ -76,6 +77,7 @@ namespace Neon.Kube
         private static X509Certificate2     cachedClusterCertificate;
         private static string               cachedProgramFolder;
         private static string               cachedPwshPath;
+        private static IStaticDirectory     cachedResources;
 
         /// <summary>
         /// Static constructor.
@@ -114,6 +116,7 @@ namespace Neon.Kube
             cachedClusterCertificate = null;
             cachedProgramFolder      = null;
             cachedPwshPath           = null;
+            cachedResources          = null;
         }
 
         /// <summary>
@@ -191,6 +194,24 @@ namespace Neon.Kube
                 }
 
                 return desktopClient;
+            }
+        }
+
+        /// <summary>
+        /// Returns the <see cref="IStaticDirectory"/> for the assembly's resources.
+        /// </summary>
+        public static IStaticDirectory Resources
+        {
+            get
+            {
+                if (cachedResources != null)
+                {
+                    return cachedResources;
+                }
+
+                cachedResources = Assembly.GetExecutingAssembly().GetResourceFileSystem("Kube.Helper.Resources");
+
+                return cachedResources;
             }
         }
 
@@ -847,15 +868,15 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the path to the current user's cluster virtual machine templates
-        /// folder, creating the directory if it doesn't already exist.
+        /// Returns the path to the current user's cluster virtual machine node
+        /// image cache, creating the directory if it doesn't already exist.
         /// </summary>
         /// <returns>The path to the cluster setup folder.</returns>
-        public static string VmTemplatesFolder
+        public static string NodeImageCache
         {
             get
             {
-                var path = Path.Combine(GetNeonKubeUserFolder(), "vm-templates");
+                var path = Path.Combine(GetNeonKubeUserFolder(), "node-image-cache");
 
                 Directory.CreateDirectory(path);
 
@@ -2283,7 +2304,7 @@ usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups roo
         /// cluster.  This faults the nodeproxy on faliure.
         /// </summary>
         /// <param name="node">The target node.</param>
-        internal static void VerifyNodeOperatingSystem(NodeSshProxy<NodeDefinition> node)
+        internal static void VerifyNodeOS(NodeSshProxy<NodeDefinition> node)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 

@@ -116,7 +116,7 @@ Server Requirements:
             {
                 Console.WriteLine("Removing cached virtual machine templates.");
 
-                foreach (var fileName in Directory.GetFiles(KubeHelper.VmTemplatesFolder, "*.*", SearchOption.TopDirectoryOnly))
+                foreach (var fileName in Directory.GetFiles(KubeHelper.NodeImageCache, "*.*", SearchOption.TopDirectoryOnly))
                 {
                     File.Delete(fileName);
                 }
@@ -452,16 +452,16 @@ Server Requirements:
                 // Prepare the nodes.
 
                 setupController.AddWaitUntilOnlineStep(timeout: TimeSpan.FromMinutes(15));
-                setupController.AddNodeStep("node OS verify", CommonSteps.VerifyOS);
+                setupController.AddNodeStep("node OS verify", KubeHelper.VerifyNodeOS); ;
                 setupController.AddNodeStep("node credentials", 
                     node =>
                     {
-                        CommonSteps.ConfigureSshKey(node, clusterLogin);
+                        KubeSetup.ConfigureSshKey(node, clusterLogin);
                     });
                 setupController.AddNodeStep("node prepare", 
                     node =>
                     {
-                        CommonSteps.PrepareNode(node, cluster.Definition, hostingManager, shutdown: false);
+                        KubeSetup.PrepareNode(node, cluster.Definition, hostingManager, shutdown: false);
                     });
             
                 // Some hosting manages may have to some additional work after the node has

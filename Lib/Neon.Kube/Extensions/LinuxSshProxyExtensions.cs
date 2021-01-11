@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    SshProxyExtension.cs
+// FILE:	    LinuxSshProxyExtensions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -31,12 +31,12 @@ using Neon.IO;
 using Neon.Net;
 using System.Runtime.InteropServices;
 
-namespace NeonCli
+namespace Neon.Kube
 {
     /// <summary>
     /// <see cref="NodeSshProxy{T}"/> extension methods.
     /// </summary>
-    public static class SshProxyExtension
+    public static class LinuxSshProxyExtensions
     {
         /// <summary>
         /// Converts a string into a value suitable for use in a Bash script.
@@ -313,50 +313,43 @@ namespace NeonCli
         /// <param name="clusterDefinition">The cluster definition or <c>null</c>.</param>
         /// <param name="file">The resource file.</param>
         /// <param name="targetPath">The target path on the remote server.</param>
-        private static void UploadFile<TMetadata>(this NodeSshProxy<TMetadata> node, ClusterDefinition clusterDefinition, ResourceFiles.File file, string targetPath)
+        private static void UploadFile<TMetadata>(this NodeSshProxy<TMetadata> node, ClusterDefinition clusterDefinition, IStaticFile file, string targetPath)
             where TMetadata : class
         {
-            using (var input = file.ToStream())
+            using (var input = file.OpenStream())
             {
-                if (file.HasVariables)
-                {
-                    // We need to expand any variables.  Note that if we don't have a
-                    // cluster definition or for undefined variables, we're going to 
-                    // have the variables expand to the empty string.
+                // We need to expand any variables.  Note that if we don't have a
+                // cluster definition or for undefined variables, we're going to 
+                // have the variables expand to the empty string.
 
-                    using (var msExpanded = new MemoryStream())
+                using (var msExpanded = new MemoryStream())
+                {
+                    using (var writer = new StreamWriter(msExpanded))
                     {
-                        using (var writer = new StreamWriter(msExpanded))
+                        var preprocessReader =
+                            new PreprocessReader(new StreamReader(input))
+                            {
+                                DefaultVariable   = string.Empty,
+                                ExpandVariables   = true,
+                                ProcessStatements = false,
+                                StripComments     = false
+                            };
+
+                        if (clusterDefinition != null)
                         {
-                            var preprocessReader =
-                                new PreprocessReader(new StreamReader(input))
-                                {
-                                    DefaultVariable   = string.Empty,
-                                    ExpandVariables   = true,
-                                    ProcessStatements = false,
-                                    StripComments     = false
-                                };
-
-                            if (clusterDefinition != null)
-                            {
-                                SetClusterVariables(preprocessReader, clusterDefinition, node as NodeSshProxy<NodeDefinition>);
-                            }
-
-                            foreach (var line in preprocessReader.Lines())
-                            {
-                                writer.WriteLine(line);
-                            }
-
-                            writer.Flush();
-
-                            msExpanded.Position = 0;
-                            node.UploadText(targetPath, msExpanded, tabStop: 4, outputEncoding: Encoding.UTF8);
+                            SetClusterVariables(preprocessReader, clusterDefinition, node as NodeSshProxy<NodeDefinition>);
                         }
+
+                        foreach (var line in preprocessReader.Lines())
+                        {
+                            writer.WriteLine(line);
+                        }
+
+                        writer.Flush();
+
+                        msExpanded.Position = 0;
+                        node.UploadText(targetPath, msExpanded, tabStop: 4, outputEncoding: Encoding.UTF8);
                     }
-                }
-                else
-                {
-                    node.UploadText(targetPath, input, tabStop: 4, outputEncoding: Encoding.UTF8);
                 }
             }
         }
@@ -382,7 +375,7 @@ namespace NeonCli
 
             node.Status = "upload: config files";
 
-            foreach (var file in Program.LinuxFolder.GetFolder("conf").Files())
+            foreach (var file in KubeHelper.Resources.GetDirectory("Conf").GetFiles())
             {
                 node.UploadFile(clusterDefinition, file, $"{KubeNodeFolders.Config}/{file.Name}");
             }
@@ -401,7 +394,6 @@ namespace NeonCli
         /// <typeparam name="TMetadata">The server's metadata type.</typeparam>
         /// <param name="server">The remote server.</param>
         /// <param name="clusterDefinition">The cluster definition.</param>
-        /// <param name="kubeSetupInfo">The Kubernetes setup details.</param>
         public static void UploadResources<TMetadata>(this NodeSshProxy<TMetadata> server, ClusterDefinition clusterDefinition)
             where TMetadata : class
         {
@@ -418,7 +410,7 @@ namespace NeonCli
 
             server.Status = "upload: setup scripts";
 
-            foreach (var file in Program.LinuxFolder.GetFolder("setup").Files())
+            foreach (var file in KubeHelper.Resources.GetDirectory("Setup").GetFiles())
             {
                 server.UploadFile(clusterDefinition, file, $"{KubeNodeFolders.Setup}/{file.Name}");
             }
@@ -437,7 +429,7 @@ namespace NeonCli
         
             server.Status = "upload: tool files";
 
-            foreach (var file in Program.LinuxFolder.GetFolder("tools").Files())
+            foreach (var file in KubeHelper.Resources.GetDirectory("Tools").GetFiles())
             {
                 server.UploadFile(clusterDefinition, file, $"{KubeNodeFolders.Bin}/{file.Name.Replace(".sh", string.Empty)}");
             }

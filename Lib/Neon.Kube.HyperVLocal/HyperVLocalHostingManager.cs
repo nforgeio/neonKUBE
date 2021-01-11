@@ -353,9 +353,9 @@ namespace Neon.Kube
             var driveTemplateUri  = new Uri(KubeDownloads.GetNodeImageUri(this.HostingEnvironment));
             var driveTemplateName = driveTemplateUri.Segments.Last();
 
-            driveTemplatePath = Path.Combine(KubeHelper.VmTemplatesFolder, driveTemplateName);
+            driveTemplatePath = Path.Combine(KubeHelper.NodeImageCache, driveTemplateName);
 
-            var driveTemplateInfoPath  = Path.Combine(KubeHelper.VmTemplatesFolder, driveTemplateName + ".info");
+            var driveTemplateInfoPath  = Path.Combine(KubeHelper.NodeImageCache, driveTemplateName + ".info");
             var driveTemplateIsCurrent = true;
             var driveTemplateInfo      = (DriveTemplateInfo)null;
 
