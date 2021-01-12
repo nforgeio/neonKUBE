@@ -2934,6 +2934,7 @@ rm -rf {chartName}*
                     var values         = new List<KeyValuePair<string, object>>();
 
                     values.Add(new KeyValuePair<string, object>("image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("image.tag", $"neonkube-{KubeConst.LatestClusterVersion}"));
 
                     var replicas = Math.Max(1, cluster.Nodes.Count() / 5);
                     if (replicas > cluster.Nodes.Where(n => n.Metadata.Labels.LogsInternal).Count())
