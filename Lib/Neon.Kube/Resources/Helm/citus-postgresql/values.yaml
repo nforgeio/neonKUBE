@@ -3,9 +3,9 @@ fullnameOverride: ""
 imagePullSecrets: ""
 
 image:
-  organization: ghcr.io/neonrelease
+  organization: neon-system-registry
   repository: citusdata-citus
-  tag: latest
+  tag: 9.5.1
   pullPolicy: Always
 
 readiness:
@@ -63,9 +63,9 @@ service:
 manager:
   replicas: 3
   image:
-    organization: ghcr.io/neonrelease
+    organization: neon-system-registry
     repository: bakdata-citus-membership-manager
-    tag: latest
+    tag: v0.3
     pullPolicy: Always
   resources:
     requests:
@@ -97,18 +97,18 @@ nodeSelector:
 
 busybox:
   image: 
-    organization: ghcr.io/neonrelease
+    organization: neon-system-registry
     repository: busybox
-    tag: latest
+    tag: 1.32.0
   
 ## Monitoring: Prometheus Exporter Configuration
 ## ref: https://prometheus.io/docs/instrumenting/exporters/
 prometheus:
   enabled: true
   image: 
-    organization: ghcr.io/neonrelease
+    organization: neon-system-registry
     repository: wrouesnel-postgres-exporter
-    tag: latest
+    tag: v0.5.1
   port: 9187
   resources: {}
   disableDefaultMetrics: false

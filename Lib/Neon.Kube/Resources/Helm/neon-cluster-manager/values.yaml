@@ -5,9 +5,9 @@
 replicaCount: 1
 
 image:
-  organization: ghcr.io/neonrelease
+  organization: neon-system-registry
   repository: neon-cluster-manager
-  tag: latest
+  tag: neonkube-0.1.0-alpha
   pullPolicy: Always
 
 logging:

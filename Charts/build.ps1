@@ -1,1 +1,0 @@
-﻿(Get-ChildItem -Recurse -Attributes !Directory+!System).fullname.Replace("$pwd\","") | Select-String "\\" | Select-String -notMatch "^bin|^obj" | ForEach-Object {$_ -Replace "\\", "/"} > tree.txt

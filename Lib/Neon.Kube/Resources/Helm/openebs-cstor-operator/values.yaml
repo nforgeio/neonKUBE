@@ -22,27 +22,27 @@ cspcOperator:
   componentName: cspc-operator
   poolManager:
     image:
-      organization: ghcr.io/neonrelease
+      organization: neon-system-registry
       repository: openebs-cstor-pool-manager
-      tag: latest
+      tag: 2.4.0
   cstorPool:
     image:
-      organization: ghcr.io/neonrelease
+      organization: neon-system-registry
       repository: openebs-cstor-pool
-      tag: latest
+      tag: 2.4.0
   cstorPoolExporter:
     image:
-      organization: ghcr.io/neonrelease
+      organization: neon-system-registry
       repository: openebs-m-exporter
-      tag: latest
+      tag: 2.4.0
   image:
     # Make sure that registry name end with a '/'.
     # For example : quay.io/ is a correct value here and quay.io is incorrect
-    organization: ghcr.io/neonrelease
+    organization: neon-system-registry
     repository: openebs-cspc-operator
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
-    tag: latest
+    tag: 2.4.0
   annotations: {}
   resyncInterval: "30"
   podAnnotations: {}
@@ -56,27 +56,27 @@ cvcOperator:
   componentName: cvc-operator
   target:
     image:
-      organization: ghcr.io/neonrelease
+      organization: neon-system-registry
       repository: openebs-cstor-istgt
-      tag: latest
+      tag: 2.4.0
   volumeMgmt:
     image:
-      organization: ghcr.io/neonrelease
+      organization: neon-system-registry
       repository: openebs-cstor-volume-manager
-      tag: latest
+      tag: 2.4.0
   volumeExporter:
     image:
-      organization: ghcr.io/neonrelease
+      organization: neon-system-registry
       repository: openebs-m-exporter
-      tag: latest
+      tag: 2.4.0
   image:
     # Make sure that registry name end with a '/'.
     # For example : quay.io/ is a correct value here and quay.io is incorrect
-    organization: ghcr.io/neonrelease
+    organization: neon-system-registry
     repository: openebs-cvc-operator
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
-    tag: latest
+    tag: 2.4.0
   annotations: {}
   resyncInterval: "30"
   podAnnotations: {}
@@ -93,61 +93,61 @@ csiController:
     image:
       # Make sure that registry name end with a '/'.
       # For example : quay.io/ is a correct value here and quay.io is incorrect
-      organization: ghcr.io/neonrelease
+      organization: neon-system-registry
       repository: k8scsi-csi-resizer
       pullPolicy: IfNotPresent
       # Overrides the image tag whose default is the chart appVersion.
-      tag: latest
+      tag: v0.4.0
   snapshotter:
     name: "csi-snapshotter"
     image:
       # Make sure that registry name end with a '/'.
       # For example : quay.io/ is a correct value here and quay.io is incorrect
-      organization: ghcr.io/neonrelease
+      organization: neon-system-registry
       repository: k8scsi-csi-snapshotter
       pullPolicy: IfNotPresent
       # Overrides the image tag whose default is the chart appVersion.
-      tag: latest
+      tag: v2.0.1
   snapshotController:
     name: "snapshot-controller"
     image:
       # Make sure that registry name end with a '/'.
       # For example : quay.io/ is a correct value here and quay.io is incorrect
-      organization: ghcr.io/neonrelease
+      organization: neon-system-registry
       repository: k8scsi-snapshot-controller
       pullPolicy: IfNotPresent
       # Overrides the image tag whose default is the chart appVersion.
-      tag: latest
+      tag: v2.0.1
   attacher:
     name: "csi-attacher"
     image:
       # Make sure that registry name end with a '/'.
       # For example : quay.io/ is a correct value here and quay.io is incorrect
-      organization: ghcr.io/neonrelease
+      organization: neon-system-registry
       repository: k8scsi-csi-attacher
       pullPolicy: IfNotPresent
       # Overrides the image tag whose default is the chart appVersion.
-      tag: latest
+      tag: v2.0.0
   provisioner:
     name: "csi-provisioner"
     image:
       # Make sure that registry name end with a '/'.
       # For example : quay.io/ is a correct value here and quay.io is incorrect
-      organization: ghcr.io/neonrelease
+      organization: neon-system-registry
       repository: k8scsi-csi-provisioner
       pullPolicy: IfNotPresent
       # Overrides the image tag whose default is the chart appVersion.
-      tag: latest
+      tag: v1.6.0
   driverRegistrar:
     name: "csi-cluster-driver-registrar"
     image:
       # Make sure that registry name end with a '/'.
       # For example : quay.io/ is a correct value here and quay.io is incorrect
-      organization: ghcr.io/neonrelease
+      organization: neon-system-registry
       repository: k8scsi-csi-cluster-driver-registrar
       pullPolicy: IfNotPresent
       # Overrides the image tag whose default is the chart appVersion.
-      tag: latest
+      tag: v1.0.1
   annotations: {}
   podAnnotations: {}
   podLabels: {}
@@ -161,11 +161,11 @@ cstorCSIPlugin:
   image:
     # Make sure that registry name end with a '/'.
     # For example : quay.io/ is a correct value here and quay.io is incorrect
-    organization: ghcr.io/neonrelease
+    organization: neon-system-registry
     repository: openebs-cstor-csi-driver
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
-    tag: latest
+    tag: 2.4.0
   remount: "true"
 
 csiNode:
@@ -173,11 +173,11 @@ csiNode:
   driverRegistrar:
     name: "csi-node-driver-registrar"
     image:
-      organization: ghcr.io/neonrelease
+      organization: neon-system-registry
       repository: k8scsi-csi-node-driver-registrar
       pullPolicy: IfNotPresent
       # Overrides the image tag whose default is the chart appVersion.
-      tag: latest
+      tag: v1.0.1
   updateStrategy:
     type: RollingUpdate
   annotations: {}
@@ -209,11 +209,11 @@ admissionServer:
   image:
     # Make sure that registry name end with a '/'.
     # For example : quay.io/ is a correct value here and quay.io is incorrect
-    organization: ghcr.io/neonrelease
+    organization: neon-system-registry
     repository: openebs-cstor-webhook
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
-    tag: latest
+    tag: 2.4.0
   failurePolicy: "Fail"
   annotations: {}
   podAnnotations: {}

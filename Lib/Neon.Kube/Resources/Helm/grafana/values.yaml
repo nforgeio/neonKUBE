@@ -49,9 +49,9 @@ livenessProbe:
 # schedulerName: "default-scheduler"
 
 image:
-  organization: ghcr.io/neonrelease
+  organization: neon-system-registry
   repository: grafana
-  tag: latest
+  tag: 7.3.6
   sha: ""
   pullPolicy: IfNotPresent
   ## Optionally specify an array of imagePullSecrets.
@@ -84,9 +84,9 @@ extraEmptyDirMounts: []
 # priorityClassName:
 
 downloadDashboardsImage:
-  organization: ghcr.io/neonrelease
+  organization: neon-system-registry
   repository: curlimages-curl
-  tag: latest
+  tag: 7.70.0
   pullPolicy: IfNotPresent
 
 downloadDashboards:
@@ -216,9 +216,9 @@ initChownData:
   ## initChownData container image
   ##
   image:
-    organization: ghcr.io/neonrelease
+    organization: neon-system-registry
     repository: busybox
-    tag: latest
+    tag: 1.32.0
     pullPolicy: IfNotPresent
 
   ## initChownData resource requests and limits
@@ -517,9 +517,9 @@ smtp:
 ## Requires at least Grafana 5 to work and can't be used together with parameters dashboardProviders, datasources and dashboards
 sidecar:
   image:
-    organization: ghcr.io/neonrelease
+    organization: neon-system-registry
     repository: kiwigrid-sidecar
-    tag: latest
+    tag: 0.1.151
     sha: ""
   imagePullPolicy: IfNotPresent
   resources: {}

@@ -7,6 +7,7 @@ service:
   port: 9100
   targetPort: 9100
   nodePort:
+  listenOnAllInterfaces: true
   annotations:
     prometheus.io/scrape: "true"
 
@@ -16,7 +17,14 @@ prometheus:
     additionalLabels: {}
     namespace: ""
 
+    relabelings: []
     scrapeTimeout: 10s
+
+## Customize the updateStrategy if set
+updateStrategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 1
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
@@ -39,6 +47,8 @@ serviceAccount:
   imagePullSecrets: []
 
 securityContext:
+  fsGroup: 65534
+  runAsGroup: 65534
   runAsNonRoot: true
   runAsUser: 65534
 
@@ -69,6 +79,12 @@ affinity: {}
 #               values:
 #                 - target-host-name
 
+# Annotations to be added to node exporter pods
+podAnnotations: {}
+
+# Extra labels to be added to node exporter pods
+podLabels: {}
+
 ## Assign a nodeSelector if operating a hybrid cluster
 ##
 nodeSelector: {}
@@ -84,12 +100,13 @@ tolerations:
 
 ## Additional container arguments
 ##
-extraArgs: {}
+extraArgs: []
 #   - --collector.diskstats.ignored-devices=^(ram|loop|fd|(h|s|v)d[a-z]|nvme\\d+n\\d+p)\\d+$
+#   - --collector.textfile.directory=/run/prometheus
 
 ## Additional mounts from the host
 ##
-extraHostVolumeMounts: {}
+extraHostVolumeMounts: []
 #  - name: <mountName>
 #    hostPath: <hostPath>
 #    mountPath: <mountPath>
@@ -98,6 +115,23 @@ extraHostVolumeMounts: {}
 
 ## Additional configmaps to be mounted.
 ##
-configmaps: {}
+configmaps: []
 # - name: <configMapName>
 #   mountPath: <mountPath>
+
+## Override the deployment namespace
+##
+namespaceOverride: ""
+
+## Additional containers for export metrics to text file
+##
+sidecars: []
+##  - name: nvidia-dcgm-exporter
+##    image: nvidia/dcgm-exporter:1.4.3
+
+## Volume for sidecar containers
+##
+sidecarVolumeMount: []
+##  - name: collector-textfiles
+##    mountPath: /run/prometheus
+##    readOnly: false

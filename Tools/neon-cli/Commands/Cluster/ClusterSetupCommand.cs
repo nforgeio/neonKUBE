@@ -401,6 +401,7 @@ OPTIONS:
         /// </summary>
         private async void WorkstationBinaries()
         {
+#if REFACTOR
             var firstMaster       = cluster.FirstMaster;
             var hostPlatform      = KubeHelper.HostPlatform;
             var cachedKubeCtlPath = KubeHelper.GetCachedComponentPath(hostPlatform, "kubectl", KubeVersions.KubernetesVersion);
@@ -532,6 +533,7 @@ OPTIONS:
             KubeHelper.InstallHelm();
 
             firstMaster.Status = string.Empty;
+#endif
         }
 
         /// <summary>
@@ -844,6 +846,7 @@ $@"
         /// <param name="node">The target node.</param>
         private void SetupKubernetes(NodeSshProxy<NodeDefinition> node)
         {
+#if REFACTOR
             node.InvokeIdempotentAction("setup/setup-install-kubernetes",
                 () =>
                 {
@@ -900,6 +903,7 @@ rm -rf linux-amd64
                             node.SudoCommand(CommandBundle.FromScript(helmInstallScript));
                         });
                 });
+#endif
         }
 
         /// <summary>
@@ -920,12 +924,14 @@ rm -rf linux-amd64
 
                     // Pull the Kubernetes images:
 
+#if REFACTOR
                     firstMaster.InvokeIdempotentAction("setup/cluster-images",
                         () =>
                         {
                             firstMaster.Status = "pull: kubernetes images...";
                             firstMaster.SudoCommand($"kubeadm config images pull --image-repository {NeonHelper.NeonBranchRegistry} --kubernetes-version v{KubeVersions.KubernetesVersion}");
                         });
+#endif
 
                     firstMaster.InvokeIdempotentAction("setup/cluster-init",
                         () =>
@@ -958,6 +964,7 @@ rm -rf linux-amd64
                                 sbCertSANs.AppendLine($"  - \"{node.Address}\"");
                             }
 
+#if REFACTOR
                             var clusterConfig =
 $@"
 apiVersion: kubeadm.k8s.io/v1beta2
@@ -995,9 +1002,9 @@ nodeStatusReportFrequency: 4s
 volumePluginDir: /var/lib/kubelet/volume-plugins
 ";
                             firstMaster.UploadText("/tmp/cluster.yaml", clusterConfig);
+#endif
 
                             var response = firstMaster.SudoCommand($"kubeadm init --config /tmp/cluster.yaml");
-
                             firstMaster.SudoCommand("rm /tmp/cluster.yaml");
 
                             // Extract the cluster join command from the response.  We'll need this to join
@@ -1430,7 +1437,7 @@ $@"# Copyright 2017 The Kubernetes Authors.
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an """"AS IS"""" BASIS,
@@ -1530,17 +1537,17 @@ metadata:
   name: kubernetes-dashboard
   namespace: kubernetes-dashboard
 rules:
-  # Allow Dashboard to get, update and delete Dashboard exclusive secrets.
+# Allow Dashboard to get, update and delete Dashboard exclusive secrets.
   - apiGroups: [""""]
     resources: [""secrets""]
     resourceNames: [""kubernetes-dashboard-key-holder"", ""kubernetes-dashboard-certs"", ""kubernetes-dashboard-csrf""]
     verbs: [""get"", ""update"", ""delete""]
-    # Allow Dashboard to get and update 'kubernetes-dashboard-settings' config map.
+# Allow Dashboard to get and update 'kubernetes-dashboard-settings' config map.
   - apiGroups: [""""]
     resources: [""configmaps""]
     resourceNames: [""kubernetes-dashboard-settings""]
     verbs: [""get"", ""update""]
-    # Allow Dashboard to get metrics.
+# Allow Dashboard to get metrics.
   - apiGroups: [""""]
     resources: [""services""]
     resourceNames: [""heapster"", ""dashboard-metrics-scraper""]
@@ -1559,7 +1566,7 @@ metadata:
     k8s-app: kubernetes-dashboard
   name: kubernetes-dashboard
 rules:
-  # Allow Metrics Scraper to get metrics from the Metrics server
+# Allow Metrics Scraper to get metrics from the Metrics server
   - apiGroups: [""metrics.k8s.io""]
     resources: [""pods"", ""nodes""]
     verbs: [""get"", ""list"", ""watch""]
@@ -1637,7 +1644,7 @@ spec:
           volumeMounts:
             - name: kubernetes-dashboard-certs
               mountPath: /certs
-              # Create on-disk volume to store exec logs
+# Create on-disk volume to store exec logs
             - mountPath: /tmp
               name: tmp-volume
           livenessProbe:
@@ -1812,13 +1819,14 @@ spec:
             master.InvokeIdempotentAction("setup/cluster-deploy-cni",
                 () =>
                 {
+#if REFACTOR
                     // Deploy Calico
 
                     var script =
 $@"#!/bin/bash
 
-# We need to edit the setup manifest to specify the 
-# cluster subnet before applying it.
+//# We need to edit the setup manifest to specify the 
+//# cluster subnet before applying it.
 
 curl {Program.CurlOptions} {KubeDownloads.CalicoSetupYamlUri} > /tmp/calico.yaml
 sed -i 's;192.168.0.0/16;{cluster.Definition.Network.PodSubnet};' /tmp/calico.yaml
@@ -1830,6 +1838,7 @@ kubectl apply -f /tmp/calico.yaml
 rm /tmp/calico.yaml
 ";
                     master.SudoCommand(CommandBundle.FromScript(script));
+#endif
 
                     // Wait for Calico and CoreDNS pods to report that they're running.
                     // We're going to wait a maximum of 300 seconds.
@@ -1867,6 +1876,7 @@ rm /tmp/calico.yaml
         {
             master.Status = "deploy: istio";
 
+#if REFACTOR
             var istioScript0 =
 $@"#!/bin/bash
 
@@ -1877,7 +1887,7 @@ curl -fsLO {KubeDownloads.IstioLinuxUri}
 
 tar -xzf ""istioctl-{KubeVersions.IstioVersion}-linux-amd64.tar.gz""
 
-# setup istioctl
+//# setup istioctl
 cd ""$HOME"" || exit
 mkdir -p "".istioctl/bin""
 mv ""${{tmp}}/istioctl"" "".istioctl/bin/istioctl""
@@ -1989,6 +1999,7 @@ istioctl install -f istio-cni.yaml
 ";
 
             master.SudoCommand(CommandBundle.FromScript(istioScript0));
+#endif
         }
 
         /// <summary>
@@ -2608,10 +2619,11 @@ rm -rf {chartName}*
                     master.Status = "deploy: neon-metrics-prometheus";
 
                     var values = new List<KeyValuePair<string, object>>();
-
                     
                     values.Add(new KeyValuePair<string, object>($"alertmanager.alertmanagerSpec.image.organization", NeonHelper.NeonBranchRegistry));
+#if REFACTOR
                     values.Add(new KeyValuePair<string, object>($"alertmanager.alertmanagerSpec.image.tag", KubeVersions.AlertManagerVersion));
+#endif
                     values.Add(new KeyValuePair<string, object>($"prometheusOperator.tlsProxy.image.organization", NeonHelper.NeonBranchRegistry));
                     values.Add(new KeyValuePair<string, object>($"prometheusOperator.tlsProxy.image.tag", $"neonkube-{KubeConst.LatestClusterVersion}"));
                     values.Add(new KeyValuePair<string, object>($"prometheusOperator.admissionWebhooks.patch.image.organization", NeonHelper.NeonBranchRegistry));
@@ -2623,7 +2635,9 @@ rm -rf {chartName}*
                     values.Add(new KeyValuePair<string, object>($"prometheusOperator.prometheusConfigReloaderImage.organization", NeonHelper.NeonBranchRegistry));
                     values.Add(new KeyValuePair<string, object>($"prometheusOperator.prometheusConfigReloaderImage.tag", $"neonkube-{KubeConst.LatestClusterVersion}"));
                     values.Add(new KeyValuePair<string, object>($"prometheus.prometheusSpec.image.organization", NeonHelper.NeonBranchRegistry));
+#if REFACTOR
                     values.Add(new KeyValuePair<string, object>($"prometheus.prometheusSpec.image.tag", KubeVersions.PrometheusVersion));
+#endif
                     values.Add(new KeyValuePair<string, object>($"global.kubeStateMetrics.image.organization", NeonHelper.NeonBranchRegistry));
                     values.Add(new KeyValuePair<string, object>($"global.kubeStateMetrics.image.tag", $"neonkube-{KubeConst.LatestClusterVersion}"));
                     values.Add(new KeyValuePair<string, object>($"global.nodeExporter.image.organization", NeonHelper.NeonBranchRegistry));

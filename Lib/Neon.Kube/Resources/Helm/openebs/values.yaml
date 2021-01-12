@@ -22,9 +22,9 @@ image:
 apiserver:
   enabled: true
   image:
-    organization: ghcr.io/neonrelease
+    organization: neon-system-registry
     repository: openebs-m-apiserver
-    tag: latest
+    tag: 2.4.0
   replicas: 1
   ports:
     externalPort: 5656
@@ -53,9 +53,9 @@ varDirectoryPath:
 provisioner:
   enabled: true
   image:
-    organization: ghcr.io/neonrelease
+    organization: neon-system-registry
     repository: openebs-k8s-provisioner
-    tag: latest
+    tag: 2.4.1
   replicas: 1
   enableLeaderElection: true
   nodeSelector: {}
@@ -72,9 +72,9 @@ provisioner:
 localprovisioner:
   enabled: true
   image:
-    organization: ghcr.io/neonrelease
+    organization: neon-system-registry
     repository: openebs-provisioner-localpv
-    tag: latest
+    tag: 2.4.0
   replicas: 1
   enableLeaderElection: true
   basePath: "/var/openebs/local"
@@ -93,14 +93,14 @@ snapshotOperator:
   enabled: true
   controller:
     image:
-      organization: ghcr.io/neonrelease
+      organization: neon-system-registry
       repository: openebs-snapshot-controller
-      tag: latest
+      tag: 2.4.0
   provisioner:
     image:
-      organization: ghcr.io/neonrelease
+      organization: neon-system-registry
       repository: openebs-snapshot-provisioner
-      tag: latest
+      tag: 2.4.0
   replicas: 1
   enableLeaderElection: true
   upgradeStrategy: "Recreate"
@@ -118,9 +118,9 @@ snapshotOperator:
 ndm:
   enabled: true
   image:
-    organization: ghcr.io/neonrelease
+    organization: neon-system-registry
     repository: openebs-node-disk-manager
-    tag: latest
+    tag: 1.0.1
   sparse:
     path: "/var/openebs/sparse"
     size: "10737418240"
@@ -147,9 +147,9 @@ ndm:
 ndmOperator:
   enabled: true
   image:
-    organization: ghcr.io/neonrelease
+    organization: neon-system-registry
     repository: openebs-node-disk-operator
-    tag: latest
+    tag: 1.0.1
   replicas: 1
   upgradeStrategy: Recreate
   nodeSelector: {}
@@ -169,9 +169,9 @@ ndmOperator:
 webhook:
   enabled: true
   image:
-    organization: ghcr.io/neonrelease
+    organization: neon-system-registry
     repository: openebs-admission-server
-    tag: latest
+    tag: 2.4.0
   failurePolicy: "Fail"
   replicas: 1
   healthCheck:
@@ -188,49 +188,44 @@ webhook:
 
 jiva:
   image:
-    organization: ghcr.io/neonrelease
+    organization: neon-system-registry
     repository: openebs-jiva
-    tag: latest
+    tag: 2.4.0
   replicas: 3
   defaultStoragePath: "/var/openebs"
 
 cstor:
   pool:
     image:
-      organization: ghcr.io/neonrelease
+      organization: neon-system-registry
       repository: openebs-cstor-pool
-      tag: latest
+      tag: 2.4.0
   poolMgmt:
     image:
-      organization: ghcr.io/neonrelease
+      organization: neon-system-registry
       repository: openebs-cstor-pool-manager
-      tag: latest
+      tag: 2.4.0
   target:
     image:
-      organization: ghcr.io/neonrelease
+      organization: neon-system-registry
       repository: openebs-cstor-istgt
-      tag: latest
+      tag: 2.4.0
   volumeMgmt:
     image:
-      organization: ghcr.io/neonrelease
+      organization: neon-system-registry
       repository: openebs-cstor-volume-mgmt
-      tag: latest
+      tag: 2.4.0
   webhook:
     image:
-      organization: ghcr.io/neonrelease
+      organization: neon-system-registry
       repository: openebs-cstor-webhook
-      tag: latest
-  volumeManager:
-    image:
-      organization: ghcr.io/neonrelease
-      repository: openebs-cstor-volume-manager
-      tag: latest
+      tag: 2.4.0
 
 helper:
   image:
-    organization: ghcr.io/neonrelease
+    organization: neon-system-registry
     repository: openebs-linux-utils
-    tag: latest
+    tag: 2.4.0
 
 featureGates:
   enabled: true
@@ -248,9 +243,9 @@ policies:
   monitoring:
     enabled: true
     image:
-      organization: ghcr.io/neonrelease
+      organization: neon-system-registry
       repository: openebs-m-exporter
-      tag: latest
+      tag: 2.4.0
 
 analytics:
   enabled: false

@@ -374,9 +374,9 @@ proxy:
 # If expose the service via "ingress", the Nginx will not be used
 nginx:
   image:
-    organization: ghcr.io/neonrelease
+    organization: neon-system-registry
     repository: goharbor-nginx-photon
-    tag: latest
+    tag: v2.1.1
   # set the service account to be used, default if left empty
   serviceAccountName: ""
   replicas: 1
@@ -397,9 +397,9 @@ nginx:
 
 portal:
   image:
-    organization: ghcr.io/neonrelease
+    organization: neon-system-registry
     repository: goharbor-harbor-portal
-    tag: latest
+    tag: v2.1.1
   # set the service account to be used, default if left empty
   serviceAccountName: ""
   replicas: 1
@@ -420,9 +420,9 @@ portal:
 
 core:
   image:
-    organization: ghcr.io/neonrelease
+    organization: neon-system-registry
     repository: goharbor-harbor-core
-    tag: latest
+    tag: v2.1.1
   # set the service account to be used, default if left empty
   serviceAccountName: ""
   replicas: 1
@@ -459,9 +459,9 @@ core:
 
 jobservice:
   image:
-    organization: ghcr.io/neonrelease
+    organization: neon-system-registry
     repository: goharbor-harbor-jobservice
-    tag: latest
+    tag: v2.1.1
   replicas: 1
   # set the service account to be used, default if left empty
   serviceAccountName: ""
@@ -492,18 +492,18 @@ registry:
   serviceAccountName: ""
   registry:
     image:
-      organization: ghcr.io/neonrelease
+      organization: neon-system-registry
       repository: goharbor-registry-photon
-      tag: latest
+      tag: v2.1.1
     # resources:
     #  requests:
     #    memory: 256Mi
     #    cpu: 100m
   controller:
     image:
-      organization: ghcr.io/neonrelease
+      organization: neon-system-registry
       repository: goharbor-harbor-registryctl
-      tag: latest
+      tag: v2.1.1
 
     # resources:
     #  requests:
@@ -554,9 +554,9 @@ chartmuseum:
   # Harbor defaults ChartMuseum to returning relative urls, if you want using absolute url you should enable it by change the following value to 'true'
   absoluteUrl: false
   image:
-    organization: ghcr.io/neonrelease
+    organization: neon-system-registry
     repository: goharbor-chartmuseum-photon
-    tag: latest
+    tag: v2.1.1
   replicas: 1
   # resources:
   #  requests:
@@ -579,18 +579,18 @@ clair:
   serviceAccountName: ""
   clair:
     image:
-      organization: ghcr.io/neonrelease
+      organization: neon-system-registry
       repository: goharbor-clair-photon
-      tag: latest
+      tag: v2.1.1
     # resources:
     #  requests:
     #    memory: 256Mi
     #    cpu: 100m
   adapter:
     image:
-      organization: ghcr.io/neonrelease
+      organization: neon-system-registry
       repository: goharbor-clair-adapter-photon
-      tag: latest
+      tag: v2.1.1
     # resources:
     #  requests:
     #    memory: 256Mi
@@ -614,9 +614,9 @@ trivy:
   # enabled the flag to enable Trivy scanner
   enabled: false
   image:
-    organization: ghcr.io/neonrelease
+    organization: neon-system-registry
     repository: goharbor-trivy-adapter-photon
-    tag: latest
+    tag: v2.1.1
   # set the service account to be used, default if left empty
   serviceAccountName: ""
   # replicas the number of Pod replicas
@@ -677,9 +677,9 @@ notary:
     # set the service account to be used, default if left empty
     serviceAccountName: ""
     image:
-      organization: ghcr.io/neonrelease
+      organization: neon-system-registry
       repository: goharbor-notary-server-photon
-      tag: latest
+      tag: v2.1.1
     replicas: 1
     # resources:
     #  requests:
@@ -689,9 +689,9 @@ notary:
     # set the service account to be used, default if left empty
     serviceAccountName: ""
     image:
-      organization: ghcr.io/neonrelease
+      organization: neon-system-registry
       repository: goharbor-notary-signer-photon
-      tag: latest
+      tag: v2.1.1
     replicas: 1
     # resources:
     #  requests:

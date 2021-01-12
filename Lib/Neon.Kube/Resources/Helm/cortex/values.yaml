@@ -3,9 +3,9 @@
 # and development.
 
 image:
-  organization: ghcr.io/neonrelease
+  organization: neon-system-registry
   repository: cortexproject-cortex
-  tag: latest
+  tag: v1.6.0
   pullPolicy: IfNotPresent
 
 serviceAccount:

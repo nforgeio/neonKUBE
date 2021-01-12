@@ -191,9 +191,9 @@ agent:
   enabled: true
   annotations: {}
   image:
-    organization: ghcr.io/neonrelease
+    organization: neon-system-registry
     repository: jaegertracing-jaeger-agent
-    tag: latest
+    tag: 1.19.2
   imagePullSecrets: []
   pullPolicy: IfNotPresent
   cmdlineParams: {}
@@ -257,9 +257,9 @@ collector:
   enabled: true
   annotations: {}
   image:
-    organization: ghcr.io/neonrelease
+    organization: neon-system-registry
     repository: jaegertracing-jaeger-collector
-    tag: latest
+    tag: 1.19.2
   imagePullSecrets: []
   pullPolicy: IfNotPresent
   dnsPolicy: ClusterFirst
@@ -361,9 +361,9 @@ query:
     enabled: true
   annotations: {}
   image:
-    organization: ghcr.io/neonrelease
+    organization: neon-system-registry
     repository: jaegertracing-jaeger-query
-    tag: latest
+    tag: 1.19.2
   imagePullSecrets: []
   pullPolicy: IfNotPresent
   dnsPolicy: ClusterFirst
@@ -466,7 +466,7 @@ spark:
   podLabels: {}
 
 esIndexCleaner:
-  enabled: true
+  enabled: false
   securityContext:
     runAsUser: 1000
   podSecurityContext:

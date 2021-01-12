@@ -321,6 +321,7 @@ namespace Neon.Kube
         /// </summary>
         private void PrepareHyperV()
         {
+#if REFACTOR
             // Determine where we're going to place the VM hard drive files and
             // ensure that the directory exists.
 
@@ -548,6 +549,7 @@ namespace Neon.Kube
 
                 setupController.SetOperationStatus();
             }
+#endif
         }
 
         /// <summary>

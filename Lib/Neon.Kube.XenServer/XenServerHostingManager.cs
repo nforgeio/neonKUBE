@@ -377,6 +377,7 @@ namespace Neon.Kube
         /// <param name="xenSshProxy">The XenServer SSH proxy.</param>
         private void CheckVmTemplate(NodeSshProxy<XenClient> xenSshProxy)
         {
+#if REFACTOR
             var xenHost      = xenSshProxy.Metadata;
             var templateName = GetXenTemplateName();
             var nodeImageUri = KubeDownloads.GetNodeImageUri(this.HostingEnvironment);
@@ -388,6 +389,7 @@ namespace Neon.Kube
                 xenSshProxy.Status = "download: vm template (slow)";
                 xenHost.Template.Install(nodeImageUri, templateName, cluster.Definition.Hosting.XenServer.StorageRepository);
             }
+#endif
         }
 
         /// <summary>

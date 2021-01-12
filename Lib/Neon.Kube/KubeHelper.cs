@@ -1168,6 +1168,7 @@ namespace Neon.Kube
         /// </summary>
         public static void InstallKubeCtl()
         {
+#if REFACTOR
             var hostPlatform      = KubeHelper.HostPlatform;
             var cachedKubeCtlPath = KubeHelper.GetCachedComponentPath(hostPlatform, "kubectl", KubeVersions.KubernetesVersion);
             var targetPath        = Path.Combine(KubeHelper.ProgramFolder);
@@ -1280,6 +1281,7 @@ namespace Neon.Kube
 
                     throw new NotImplementedException($"[{hostPlatform}] support is not implemented.");
             }
+#endif
         }
 
         /// <summary>
@@ -1299,6 +1301,9 @@ namespace Neon.Kube
         /// </summary>
         public static void InstallHelm()
         {
+            // **REFACTOR * *
+
+#if TODO
             var hostPlatform   = KubeHelper.HostPlatform;
             var cachedHelmPath = KubeHelper.GetCachedComponentPath(hostPlatform, "helm", KubeVersions.HelmVersion);
             var targetPath     = Path.Combine(KubeHelper.ProgramFolder);
@@ -1346,18 +1351,6 @@ namespace Neon.Kube
                         {
                             throw new KubeException(error);
                         }
-
-                        if (Version.Parse(KubeVersions.HelmVersion) > currentVersion)
-                        {
-                            // We need to copy and overwrite with the latest version.
-
-                            if (File.Exists(targetPath))
-                            {
-                                File.Delete(targetPath);
-                            }
-
-                            File.Copy(cachedHelmPath, targetPath);
-                        }
                     }
                     break;
 
@@ -1367,6 +1360,7 @@ namespace Neon.Kube
 
                     throw new NotImplementedException($"[{hostPlatform}] support is not implemented.");
             }
+#endif
         }
 
         /// <summary>
@@ -1490,7 +1484,7 @@ namespace Neon.Kube
     NAME:  New-IsoFile  
     AUTHOR: Chris Wu 
     LASTEDIT: 03/23/2016 14:46:50  
- #>  
+#>  
   
   [CmdletBinding(DefaultParameterSetName='Source')]Param( 
     [parameter(Position=1,Mandatory=$true,ValueFromPipeline=$true, ParameterSetName='Source')]$Source,  
@@ -1738,7 +1732,7 @@ mountFolder=${{1}}
 #------------------------------------------------------------------------------
 # Sleep for a bit in an attempt to ensure that the system is actually ready.
 #
-#       https://github.com/nforgeio/neonKUBE/issues/980
+# https://github.com/nforgeio/neonKUBE/issues/980
 
 sleep 10
 
@@ -1747,16 +1741,16 @@ sleep 10
 # for two reasons:
 #
 #   1. These services interfere with with [apt-get] usage during
-#      cluster setup and is also likely to interfere with end-user
-#      configuration activities as well.
+# cluster setup and is also likely to interfere with end-user
+# configuration activities as well.
 #
 #   2. Automatic updates for production and even test clusters is
-#      just not a great idea.  You just don't want a random update
-#      applied in the middle of the night which might cause trouble.
+# just not a great idea.  You just don't want a random update
+# applied in the middle of the night which might cause trouble.
 #
-#      We're going to implement our own cluster updating machanism
-#      that will be smart enough to update the nodes such that the
-#      impact on cluster workloads will be limited.
+# We're going to implement our own cluster updating machanism
+# that will be smart enough to update the nodes such that the
+# impact on cluster workloads will be limited.
 
 systemctl stop apt-daily.timer
 systemctl mask apt-daily.timer
@@ -2179,7 +2173,7 @@ exit 0
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an ""AS IS"" BASIS,
@@ -2197,15 +2191,15 @@ Include /etc/ssh/sshd_config.d/*
 # What ports, IPs and protocols we listen for
 # Port 22
 # Use these options to restrict which interfaces/protocols sshd will bind to
-#ListenAddress ::
-#ListenAddress 0.0.0.0
+# ListenAddress ::
+# ListenAddress 0.0.0.0
 Protocol 2
 # HostKeys for protocol version 2
 HostKey /etc/ssh/ssh_host_rsa_key
-#HostKey /etc/ssh/ssh_host_dsa_key
-#HostKey /etc/ssh/ssh_host_ecdsa_key
-#HostKey /etc/ssh/ssh_host_ed25519_key
-#Privilege Separation is turned on for security
+# HostKey /etc/ssh/ssh_host_dsa_key
+# HostKey /etc/ssh/ssh_host_ecdsa_key
+# HostKey /etc/ssh/ssh_host_ed25519_key
+# Privilege Separation is turned on for security
 UsePrivilegeSeparation yes
 
 # Lifetime and size of ephemeral version 1 server key
@@ -2223,7 +2217,7 @@ StrictModes yes
 
 RSAAuthentication yes
 PubkeyAuthentication yes
-#AuthorizedKeysFile	%h/.ssh/authorized_keys
+# AuthorizedKeysFile	%h/.ssh/authorized_keys
 
 # Don't read the user's ~/.rhosts and ~/.shosts files
 IgnoreRhosts yes
@@ -2232,7 +2226,7 @@ RhostsRSAAuthentication no
 # similar for protocol version 2
 HostbasedAuthentication no
 # Uncomment if you don't trust ~/.ssh/known_hosts for RhostsRSAAuthentication
-#IgnoreUserKnownHosts yes
+# IgnoreUserKnownHosts yes
 
 # To enable empty passwords, change to yes (NOT RECOMMENDED)
 PermitEmptyPasswords no
@@ -2245,14 +2239,14 @@ ChallengeResponseAuthentication no
 PasswordAuthentication yes
 
 # Kerberos options
-#KerberosAuthentication no
-#KerberosGetAFSToken no
-#KerberosOrLocalPasswd yes
-#KerberosTicketCleanup yes
+# KerberosAuthentication no
+# KerberosGetAFSToken no
+# KerberosOrLocalPasswd yes
+# KerberosTicketCleanup yes
 
 # GSSAPI options
-#GSSAPIAuthentication no
-#GSSAPICleanupCredentials yes
+# GSSAPIAuthentication no
+# GSSAPICleanupCredentials yes
 
 AllowTcpForwarding no
 X11Forwarding no
@@ -2262,10 +2256,10 @@ PrintMotd no
 PrintLastLog yes
 TCPKeepAlive yes
 UsePrivilegeSeparation yes
-#UseLogin no
+# UseLogin no
 
-#MaxStartups 10:30:60
-#Banner /etc/issue.net
+# MaxStartups 10:30:60
+# Banner /etc/issue.net
 
 # Allow client to pass locale environment variables
 AcceptEnv LANG LC_*
