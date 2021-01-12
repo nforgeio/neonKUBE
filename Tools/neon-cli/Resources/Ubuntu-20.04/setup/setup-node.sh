@@ -331,6 +331,11 @@ net.ipv6.conf.all.hop_limit = 255
 # Kubernetes requires packet forwarding.
 net.ipv4.ip_forward = 1
 
+# CRI-O config.
+net.bridge.bridge-nf-call-iptables  = 1
+net.bridge.bridge-nf-call-ip6tables = 1
+
+
 ###################################################################
 # TWEAK: Setting overrides recommended for custom Google Cloud images
 #
@@ -358,7 +363,7 @@ net.ipv4.conf.all.secure_redirects = 1
 net.ipv4.conf.default.secure_redirects = 1
 
 # Don't allow traffic between networks or act as a router
-net.ipv4.ip_forward = 0
+#net.ipv4.ip_forward = 0
 
 # Don't allow traffic between networks or act as a router
 net.ipv4.conf.all.send_redirects = 0
