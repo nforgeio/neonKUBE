@@ -257,7 +257,7 @@ namespace Neon.Kube
         /// <summary>
         /// The latest neonKUBE cluster version supported.
         /// </summary>
-        public const string LatestClusterVersion = "neonkube-0.1.0-alpha";
+        public const string LatestClusterVersion = "0.1.0-alpha";
 
         /// <summary>
         /// Lists thje supported neonKUBE cluster versions.
@@ -265,8 +265,7 @@ namespace Neon.Kube
         public static IReadOnlyList<string> SupportedClusterVersions =
             new List<string>()
             {
-                "0.1.0-alpha",
-                "neonkube-0.1.0-alpha"
+                "0.1.0-alpha"
             }
             .AsReadOnly();
 

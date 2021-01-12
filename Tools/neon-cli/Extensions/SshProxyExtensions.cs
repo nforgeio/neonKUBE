@@ -302,6 +302,9 @@ namespace NeonCli
             SetBashVariable(preprocessReader, "neon.kube.kubeadm.package_version", KubeVersions.KubeAdminPackageVersion);
             SetBashVariable(preprocessReader, "neon.kube.kubectl.package_version", KubeVersions.KubeCtlPackageVersion);
             SetBashVariable(preprocessReader, "neon.kube.kubelet.package_version", KubeVersions.KubeletPackageVersion);
+
+            preprocessReader.Set("neon-branch-registry", NeonHelper.NeonBranchRegistry);
+            preprocessReader.Set("neon-cluster-version", KubeConst.LatestClusterVersion);
         }
 
         private static void NewMethod(PreprocessReader preprocessReader, string workerTimeSources)

@@ -51,6 +51,9 @@
     <None Update="Resources\Ubuntu-20.04\setup\setup-disk.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Resources\Ubuntu-20.04\setup\setup-cri-o.sh">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Resources\Ubuntu-20.04\setup\setup-docker.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
