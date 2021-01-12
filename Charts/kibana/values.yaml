@@ -21,9 +21,9 @@ secretMounts: []
 #    path: /usr/share/elasticsearch/config/certs
 
 image:
-  organization: ghcr.io/neonrelease
+  organization: neon-system-registry
   repository: blacktop-kibana
-  tag: latest
+  tag: "7.10"
   pullPolicy: Always
 
 resources: {}

@@ -6,7 +6,7 @@ from os import makedirs
 import requests
 import yaml
 from yaml.representer import SafeRepresenter
-
+import re
 
 # https://stackoverflow.com/a/20863889/961092
 class LiteralStr(str):
@@ -25,19 +25,17 @@ def change_style(style, representer):
 # Source files list
 charts = [
     {
-        'source': 'https://raw.githubusercontent.com/coreos/kube-prometheus/master/manifests/prometheus-rules.yaml',
+        'source': 'https://raw.githubusercontent.com/prometheus-operator/kube-prometheus/master/manifests/prometheus-rules.yaml',
         'destination': '../templates/prometheus/rules-1.14',
-        'min_kubernetes': '1.14.0-0',
-        'max_kubernetes': '1.16.0-0'
+        'min_kubernetes': '1.14.0-0'
     },
     {
         'source': 'https://raw.githubusercontent.com/etcd-io/etcd/master/Documentation/op-guide/etcd3_alert.rules.yml',
         'destination': '../templates/prometheus/rules-1.14',
-        'min_kubernetes': '1.14.0-0',
-        'max_kubernetes': '1.16.0-0'
+        'min_kubernetes': '1.14.0-0'
     },
     {
-        'source': 'https://raw.githubusercontent.com/coreos/kube-prometheus/release-0.1/manifests/prometheus-rules.yaml',
+        'source': 'https://raw.githubusercontent.com/prometheus-operator/kube-prometheus/release-0.1/manifests/prometheus-rules.yaml',
         'destination': '../templates/prometheus/rules',
         'min_kubernetes': '1.10.0-0',
         'max_kubernetes': '1.14.0-0'
@@ -56,21 +54,32 @@ condition_map = {
     'general.rules': ' .Values.defaultRules.rules.general',
     'k8s.rules': ' .Values.defaultRules.rules.k8s',
     'kube-apiserver.rules': ' .Values.kubeApiServer.enabled .Values.defaultRules.rules.kubeApiserver',
+    'kube-apiserver-availability.rules': ' .Values.kubeApiServer.enabled .Values.defaultRules.rules.kubeApiserverAvailability',
+    'kube-apiserver-error': ' .Values.kubeApiServer.enabled .Values.defaultRules.rules.kubeApiserverError',
+    'kube-apiserver-slos': ' .Values.kubeApiServer.enabled .Values.defaultRules.rules.kubeApiserverSlos',
+    'kube-prometheus-general.rules': ' .Values.defaultRules.rules.kubePrometheusGeneral',
     'kube-prometheus-node-alerting.rules': ' .Values.defaultRules.rules.kubePrometheusNodeAlerting',
     'kube-prometheus-node-recording.rules': ' .Values.defaultRules.rules.kubePrometheusNodeRecording',
     'kube-scheduler.rules': ' .Values.kubeScheduler.enabled .Values.defaultRules.rules.kubeScheduler',
+    'kube-state-metrics': ' .Values.defaultRules.rules.kubeStateMetrics',
+    'kubelet.rules': ' .Values.kubelet.enabled .Values.defaultRules.rules.kubelet',
     'kubernetes-absent': ' .Values.defaultRules.rules.kubernetesAbsent',
     'kubernetes-resources': ' .Values.defaultRules.rules.kubernetesResources',
     'kubernetes-storage': ' .Values.defaultRules.rules.kubernetesStorage',
     'kubernetes-system': ' .Values.defaultRules.rules.kubernetesSystem',
-    'node-exporter.rules': ' .Values.nodeExporter.enabled .Values.defaultRules.rules.node',
-    'node-exporter': ' .Values.nodeExporter.enabled .Values.defaultRules.rules.node',
-    'node.rules': ' .Values.nodeExporter.enabled .Values.defaultRules.rules.node',
+    'kubernetes-system-apiserver': ' .Values.defaultRules.rules.kubernetesSystem', # kubernetes-system was split into more groups in 1.14, one of them is kubernetes-system-apiserver
+    'kubernetes-system-kubelet': ' .Values.defaultRules.rules.kubernetesSystem', # kubernetes-system was split into more groups in 1.14, one of them is kubernetes-system-kubelet
+    'kubernetes-system-controller-manager': ' .Values.kubeControllerManager.enabled',
+    'kubernetes-system-scheduler': ' .Values.kubeScheduler.enabled .Values.defaultRules.rules.kubeScheduler',
+    'node-exporter.rules': ' .Values.defaultRules.rules.node',
+    'node-exporter': ' .Values.defaultRules.rules.node',
+    'node.rules': ' .Values.defaultRules.rules.node',
     'node-network': ' .Values.defaultRules.rules.network',
     'node-time': ' .Values.defaultRules.rules.time',
     'prometheus-operator': ' .Values.defaultRules.rules.prometheusOperator',
     'prometheus.rules': ' .Values.defaultRules.rules.prometheus',
-    'kubernetes-apps': ' .Values.kubeStateMetrics.enabled .Values.defaultRules.rules.kubernetesApps',
+    'prometheus': ' .Values.defaultRules.rules.prometheus', # kube-prometheus >= 1.14 uses prometheus as group instead of prometheus.rules
+    'kubernetes-apps': ' .Values.defaultRules.rules.kubernetesApps',
     'etcd': ' .Values.kubeEtcd.enabled .Values.defaultRules.rules.etcd',
 }
 
@@ -89,34 +98,48 @@ alert_condition_map = {
 replacement_map = {
     'job="prometheus-operator"': {
         'replacement': 'job="{{ $operatorJob }}"',
-        'init': '{{- $operatorJob := printf "%s-%s" (include "prometheus-operator.fullname" .) "operator" }}'},
+        'init': '{{- $operatorJob := printf "%s-%s" (include "kube-prometheus-stack.fullname" .) "operator" }}'},
     'job="prometheus-k8s"': {
         'replacement': 'job="{{ $prometheusJob }}"',
-        'init': '{{- $prometheusJob := printf "%s-%s" (include "prometheus-operator.fullname" .) "prometheus" }}'},
+        'init': '{{- $prometheusJob := printf "%s-%s" (include "kube-prometheus-stack.fullname" .) "prometheus" }}'},
     'job="alertmanager-main"': {
         'replacement': 'job="{{ $alertmanagerJob }}"',
-        'init': '{{- $alertmanagerJob := printf "%s-%s" (include "prometheus-operator.fullname" .) "alertmanager" }}'},
+        'init': '{{- $alertmanagerJob := printf "%s-%s" (include "kube-prometheus-stack.fullname" .) "alertmanager" }}'},
     'namespace="monitoring"': {
         'replacement': 'namespace="{{ $namespace }}"',
-        'init': '{{- $namespace := .Release.Namespace }}'},
+        'init': '{{- $namespace := printf "%s" (include "kube-prometheus-stack.namespace" .) }}'},
     'alertmanager-$1': {
         'replacement': '$1',
         'init': ''},
+    'https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#': {
+        'replacement': '{{ .Values.defaultRules.runbookUrl }}',
+        'init': ''},
+    'job="kube-state-metrics"': {
+        'replacement': 'job="kube-state-metrics", namespace=~"{{ $targetNamespace }}"',
+        'limitGroup': ['kubernetes-apps'],
+        'init': '{{- $targetNamespace := .Values.defaultRules.appNamespacesTarget }}'},
+    'job="kubelet"': {
+        'replacement': 'job="kubelet", namespace=~"{{ $targetNamespace }}"',
+        'limitGroup': ['kubernetes-storage'],
+        'init': '{{- $targetNamespace := .Values.defaultRules.appNamespacesTarget }}'},
 }
 
 # standard header
-header = '''# Generated from '%(name)s' group from %(url)s
-# Do not change in-place! In order to change this file first read following link:
-# https://github.com/helm/charts/tree/master/stable/prometheus-operator/hack
+header = '''{{- /*
+Generated from '%(name)s' group from %(url)s
+Do not change in-place! In order to change this file first read following link:
+https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack/hack
+*/ -}}
 {{- $kubeTargetVersion := default .Capabilities.KubeVersion.GitVersion .Values.kubeTargetVersionOverride }}
 {{- if and (semverCompare ">=%(min_kubernetes)s" $kubeTargetVersion) (semverCompare "<%(max_kubernetes)s" $kubeTargetVersion) .Values.defaultRules.create%(condition)s }}%(init_line)s
-apiVersion: {{ printf "%%s/v1" (.Values.prometheusOperator.crdApiGroup | default "monitoring.coreos.com") }}
+apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
-  name: {{ printf "%%s-%%s" (include "prometheus-operator.fullname" .) "%(name)s" | trunc 63 | trimSuffix "-" }}
+  name: {{ printf "%%s-%%s" (include "kube-prometheus-stack.fullname" .) "%(name)s" | trunc 63 | trimSuffix "-" }}
+  namespace: {{ template "kube-prometheus-stack.namespace" . }}
   labels:
-    app: {{ template "prometheus-operator.name" . }}
-{{ include "prometheus-operator.labels" . | indent 4 }}
+    app: {{ template "kube-prometheus-stack.name" . }}
+{{ include "kube-prometheus-stack.labels" . | indent 4 }}
 {{- if .Values.defaultRules.labels }}
 {{ toYaml .Values.defaultRules.labels | indent 4 }}
 {{- end }}
@@ -135,7 +158,7 @@ def init_yaml_styles():
 
 
 def escape(s):
-    return s.replace("{{", "{{`{{").replace("}}", "}}`}}")
+    return s.replace("{{", "{{`{{").replace("}}", "}}`}}").replace("{{`{{", "{{`{{`}}").replace("}}`}}", "{{`}}`}}")
 
 
 def fix_expr(rules):
@@ -194,19 +217,42 @@ def add_rules_conditions(rules, indent=4):
     return rules
 
 
+def add_custom_labels(rules, indent=4):
+    """Add if wrapper for additional rules labels"""
+    rule_condition = '{{- if .Values.defaultRules.additionalRuleLabels }}\n{{ toYaml .Values.defaultRules.additionalRuleLabels | indent 8 }}\n{{- end }}'
+    rule_condition_len = len(rule_condition) + 1
+
+    separator = " " * indent + "- alert:.*"
+    alerts_positions = re.finditer(separator,rules)
+    alert=-1
+    for alert_position in alerts_positions:
+        # add rule_condition at the end of the alert block
+        if alert >= 0 :
+            index = alert_position.start() + rule_condition_len * alert - 1
+            rules = rules[:index] + "\n" + rule_condition + rules[index:]
+        alert += 1
+
+    # add rule_condition at the end of the last alert
+    if alert >= 0:
+        index = len(rules) - 1
+        rules = rules[:index] + "\n" + rule_condition + rules[index:]
+    return rules
+
 def write_group_to_file(group, url, destination, min_kubernetes, max_kubernetes):
     fix_expr(group['rules'])
+    group_name = group['name']
 
     # prepare rules string representation
     rules = yaml_str_repr(group)
     # add replacements of custom variables and include their initialisation in case it's needed
     init_line = ''
     for line in replacement_map:
-        if line in rules:
+        if group_name in replacement_map[line].get('limitGroup', [group_name]) and line in rules:
             rules = rules.replace(line, replacement_map[line]['replacement'])
             if replacement_map[line]['init']:
                 init_line += '\n' + replacement_map[line]['init']
     # append per-alert rules
+    rules = add_custom_labels(rules)
     rules = add_rules_conditions(rules)
     # initialize header
     lines = header % {
@@ -247,7 +293,11 @@ def main():
             print('Skipping the file, response code %s not equals 200' % response.status_code)
             continue
         raw_text = response.text
-        yaml_text = yaml.load(raw_text)
+        yaml_text = yaml.full_load(raw_text)
+
+        if ('max_kubernetes' not in chart):
+            chart['max_kubernetes']="9.9.9-9"
+
         # etcd workaround, their file don't have spec level
         groups = yaml_text['spec']['groups'] if yaml_text.get('spec') else yaml_text['groups']
         for group in groups:

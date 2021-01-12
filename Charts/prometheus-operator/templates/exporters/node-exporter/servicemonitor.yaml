@@ -1,21 +1,25 @@
 {{- if .Values.nodeExporter.enabled }}
-apiVersion: {{ printf "%s/v1" (.Values.prometheusOperator.crdApiGroup | default "monitoring.coreos.com") }}
+apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: {{ template "prometheus-operator.fullname" . }}-node-exporter
+  name: {{ template "kube-prometheus-stack.fullname" . }}-node-exporter
+  namespace: {{ template "kube-prometheus-stack.namespace" . }}
   labels:
-    app: {{ template "prometheus-operator.name" . }}-node-exporter
-{{ include "prometheus-operator.labels" . | indent 4 }}
+    app: {{ template "kube-prometheus-stack.name" . }}-node-exporter
+{{ include "kube-prometheus-stack.labels" . | indent 4 }}
 spec:
   jobLabel: {{ .Values.nodeExporter.jobLabel }}
   selector:
     matchLabels:
       app: prometheus-node-exporter
-      release: {{ .Release.Name }}
+      release: {{ $.Release.Name }}
   endpoints:
   - port: metrics
     {{- if .Values.nodeExporter.serviceMonitor.interval }}
     interval: {{ .Values.nodeExporter.serviceMonitor.interval }}
+    {{- end }}
+    {{- if .Values.nodeExporter.serviceMonitor.scrapeTimeout }}
+    scrapeTimeout: {{ .Values.nodeExporter.serviceMonitor.scrapeTimeout }}
     {{- end }}
 {{- if .Values.nodeExporter.serviceMonitor.metricRelabelings }}
     metricRelabelings:

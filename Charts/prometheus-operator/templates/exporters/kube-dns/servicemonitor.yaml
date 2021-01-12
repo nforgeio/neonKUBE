@@ -1,17 +1,18 @@
 {{- if .Values.kubeDns.enabled }}
-apiVersion: {{ printf "%s/v1" (.Values.prometheusOperator.crdApiGroup | default "monitoring.coreos.com") }}
+apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: {{ template "prometheus-operator.fullname" . }}-kube-dns
+  name: {{ template "kube-prometheus-stack.fullname" . }}-kube-dns
+  namespace: {{ template "kube-prometheus-stack.namespace" . }}
   labels:
-    app: {{ template "prometheus-operator.name" . }}-kube-dns
-{{ include "prometheus-operator.labels" . | indent 4 }}
+    app: {{ template "kube-prometheus-stack.name" . }}-kube-dns
+{{ include "kube-prometheus-stack.labels" . | indent 4 }}
 spec:
   jobLabel: jobLabel
   selector:
     matchLabels:
-      app: {{ template "prometheus-operator.name" . }}-kube-dns
-      release: {{ .Release.Name | quote }}
+      app: {{ template "kube-prometheus-stack.name" . }}-kube-dns
+      release: {{ $.Release.Name | quote }}
   namespaceSelector:
     matchNames:
       - "kube-system"

@@ -3,9 +3,9 @@
 on_minikube: false
 
 image:
-  organization: ghcr.io/neonrelease
+  organization: neon-system-registry
   repository: neon-log-host
-  tag: latest
+  tag: 1.6.9
   pullPolicy: Always
 
 testFramework:
