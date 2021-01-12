@@ -76,6 +76,7 @@ export CURL_RETRY="--retry 10 --retry-delay 30"
 export NEON_BIN_FOLDER=$<neon.folders.bin>
 export NEON_CONFIG_FOLDER=$<neon.folders.config>
 export NEON_SETUP_FOLDER=$<neon.folders.setup>
+export NEON_HELM_FOLDER=$<neon.folders.helm>
 export NEON_STATE_FOLDER=$<neon.folders.state>
 export NEON_TMPFS_FOLDER=$<neon.folders.tmpfs>
 

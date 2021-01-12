@@ -268,7 +268,7 @@ OPTIONS:
 
                     controller.AddGlobalStep("download binaries", () => WorkstationBinaries());
                     controller.AddWaitUntilOnlineStep("connect");
-                    controller.AddNodeStep("verify OS", KubeHelper.VerifyNodeOS);
+                    controller.AddNodeStep("verify OS", KubeSetup.VerifyNodeOS);
 
                     // Write the operation begin marker to all cluster node logs.
 

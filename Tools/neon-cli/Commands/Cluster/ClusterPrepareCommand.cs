@@ -452,11 +452,11 @@ Server Requirements:
                 // Prepare the nodes.
 
                 setupController.AddWaitUntilOnlineStep(timeout: TimeSpan.FromMinutes(15));
-                setupController.AddNodeStep("node OS verify", KubeHelper.VerifyNodeOS); ;
+                setupController.AddNodeStep("node OS verify", KubeSetup.VerifyNodeOS); ;
                 setupController.AddNodeStep("node credentials", 
                     node =>
                     {
-                        KubeNode.ConfigureSshKey(node, clusterLogin);
+                        KubeSetup.ConfigureSshKey(node, clusterLogin);
                     });
                 setupController.AddNodeStep("node prepare", 
                     node =>
@@ -464,7 +464,7 @@ Server Requirements:
                         KubeSetup.PrepareNode(node, cluster.Definition, hostingManager, shutdown: false);
                     });
             
-                // Some hosting manages may have to some additional work after the node has
+                // Some hosting managers may have to some additional work after the node has
                 // been otherwise prepared.
 
                 hostingManager.AddPostPrepareSteps(setupController);

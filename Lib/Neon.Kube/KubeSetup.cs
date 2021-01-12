@@ -57,6 +57,22 @@ namespace Neon.Kube
     /// </summary>
     public static class KubeSetup
     {
+        /// <summary>
+        /// Ensures that the node operating system and version is supported for a neonKUBE
+        /// cluster.  This faults the nodeproxy on faliure.
+        /// </summary>
+        /// <param name="node">The target node.</param>
+        public static void VerifyNodeOS(NodeSshProxy<NodeDefinition> node)
+        {
+            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
+
+            node.Status = "check: OS";
+
+            if (!KubeNode.VerifyNodeOS(node))
+            {
+                node.Fault("Expected: Ubuntu 20.04+");
+            }
+        }
 
         /// <summary>
         /// Initializes a near virgin server with the basic capabilities required
@@ -104,26 +120,6 @@ fi
             node.SudoCommand(CommandBundle.FromScript(disableSnapScript), RunOptions.FaultOnError);
 
             //-----------------------------------------------------------------
-            // Create the standard neonKUBE host folders.
-
-            node.Status = "prepare: neonKUBE host folders";
-
-            node.SudoCommand($"mkdir -p {KubeNodeFolders.Bin}", RunOptions.LogOnErrorOnly);
-            node.SudoCommand($"chmod 750 {KubeNodeFolders.Bin}", RunOptions.LogOnErrorOnly);
-
-            node.SudoCommand($"mkdir -p {KubeNodeFolders.Config}", RunOptions.LogOnErrorOnly);
-            node.SudoCommand($"chmod 750 {KubeNodeFolders.Config}", RunOptions.LogOnErrorOnly);
-
-            node.SudoCommand($"mkdir -p {KubeNodeFolders.Setup}", RunOptions.LogOnErrorOnly);
-            node.SudoCommand($"chmod 750 {KubeNodeFolders.Setup}", RunOptions.LogOnErrorOnly);
-
-            node.SudoCommand($"mkdir -p {KubeNodeFolders.State}", RunOptions.LogOnErrorOnly);
-            node.SudoCommand($"chmod 750 {KubeNodeFolders.State}", RunOptions.LogOnErrorOnly);
-
-            node.SudoCommand($"mkdir -p {KubeNodeFolders.State}/setup", RunOptions.LogOnErrorOnly);
-            node.SudoCommand($"chmod 750 {KubeNodeFolders.State}/setup", RunOptions.LogOnErrorOnly);
-
-            //-----------------------------------------------------------------
             // Other configuration.
 
             node.Status = "configure: journald filters";
@@ -146,10 +142,11 @@ systemctl restart rsyslog.service
 
             KubeNode.ConfigureOpenSsh(node);
 
-            node.Status = "upload: prepare files";
+            node.Status = "upload: configuration";
 
-            node.UploadConfigFiles(clusterDefinition);
-            node.UploadResources(clusterDefinition);
+            // $todo(jefflill): Need to implement this!
+
+            // node.UploadConfigFiles(clusterDefinition);
 
             node.Status = "configure: environment vars";
 
@@ -294,6 +291,125 @@ systemctl restart rsyslog.service
             // Upload the new environment to the server.
 
             node.UploadText("/etc/environment", sb, tabStop: 4);
+        }
+
+
+        /// <summary>
+        /// Configures a node's host public SSH key during node provisioning.
+        /// </summary>
+        /// <param name="node">The target node.</param>
+        /// <param name="clusterLogin">The cluster login.</param>
+        public static void ConfigureSshKey(NodeSshProxy<NodeDefinition> node, ClusterLogin clusterLogin)
+        {
+            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
+            Covenant.Requires<ArgumentNullException>(clusterLogin != null, nameof(clusterLogin));
+
+            // Configure the SSH credentials on the node.
+
+            node.InvokeIdempotentAction("setup/ssh",
+                () =>
+                {
+                    CommandBundle bundle;
+
+                    // Here's some information explaining what how this works:
+                    //
+                    //      https://help.ubuntu.com/community/SSH/OpenSSH/Configuring
+                    //      https://help.ubuntu.com/community/SSH/OpenSSH/Keys
+
+                    node.Status = "setup: client SSH key";
+
+                    // Enable the public key by appending it to [$HOME/.ssh/authorized_keys],
+                    // creating the file if necessary.  Note that we're allowing only a single
+                    // authorized key.
+
+                    var addKeyScript =
+$@"
+chmod go-w ~/
+mkdir -p $HOME/.ssh
+chmod 700 $HOME/.ssh
+touch $HOME/.ssh/authorized_keys
+cat ssh-key.ssh2 > $HOME/.ssh/authorized_keys
+chmod 600 $HOME/.ssh/authorized_keys
+";
+                    bundle = new CommandBundle("./addkeys.sh");
+
+                    bundle.AddFile("addkeys.sh", addKeyScript, isExecutable: true);
+                    bundle.AddFile("ssh_host_rsa_key", clusterLogin.SshKey.PublicSSH2);
+
+                    // NOTE: I'm explicitly not running the bundle as [sudo] because the OpenSSH
+                    //       server is very picky about the permissions on the user's [$HOME]
+                    //       and [$HOME/.ssl] folder and contents.  This took me a couple 
+                    //       hours to figure out.
+
+                    node.RunCommand(bundle);
+
+                    // These steps are required for both password and public key authentication.
+
+                    // Upload the server key and edit the [sshd] config to disable all host keys 
+                    // except for RSA.
+
+                    var configScript =
+$@"
+# Install public SSH key for the [sysadmin] user.
+
+cp ssh_host_rsa_key.pub /home/{KubeConst.SysAdminUser}/.ssh/authorized_keys
+
+# Disable all host keys except for RSA.
+
+sed -i 's!^\HostKey /etc/ssh/ssh_host_dsa_key$!#HostKey /etc/ssh/ssh_host_dsa_key!g' /etc/ssh/sshd_config
+sed -i 's!^\HostKey /etc/ssh/ssh_host_ecdsa_key$!#HostKey /etc/ssh/ssh_host_ecdsa_key!g' /etc/ssh/sshd_config
+sed -i 's!^\HostKey /etc/ssh/ssh_host_ed25519_key$!#HostKey /etc/ssh/ssh_host_ed25519_key!g' /etc/ssh/sshd_config
+
+# Restart SSHD to pick up the changes.
+
+systemctl restart sshd
+";
+                    bundle = new CommandBundle("./config.sh");
+
+                    bundle.AddFile("config.sh", configScript, isExecutable: true);
+                    bundle.AddFile("ssh_host_rsa_key.pub", clusterLogin.SshKey.PublicPUB);
+                    node.SudoCommand(bundle);
+                });
+
+            // Verify that we can login with the new SSH private key and also verify that
+            // the password still works.
+
+            node.Status = "ssh: verify private key auth";
+            node.Disconnect();
+            node.UpdateCredentials(SshCredentials.FromPrivateKey(KubeConst.SysAdminUser, clusterLogin.SshKey.PrivatePEM));
+            node.WaitForBoot();
+
+            node.Status = "ssh: verify password auth";
+            node.Disconnect();
+            node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, clusterLogin.SshPassword));
+            node.WaitForBoot();
+        }
+
+        /// <summary>
+        /// Installs the cluster configuration files.
+        /// </summary>
+        /// <param name="node">The target node.</param>
+        public static void InstallConfigFiles(NodeSshProxy<NodeDefinition> node)
+        {
+            throw new NotImplementedException("$todo(jefflill)");
+        }
+
+        /// <summary>
+        /// Installs the setup scripts.
+        /// </summary>
+        /// <param name="node">The target node.</param>
+        public static void InstallSetupScripts(NodeSshProxy<NodeDefinition> node)
+        {
+            throw new NotImplementedException("$todo(jefflill)");
+        }
+
+        /// <summary>
+        /// Unzips the Helm chart ZIP archive to make the charts available for use.
+        /// </summary>
+        /// <param name="node">The target node.</param>
+        public static void UnzipHelmArchives(NodeSshProxy<NodeDefinition> node)
+        {
+            throw new NotImplementedException("$todo(jefflill)");
         }
     }
 }

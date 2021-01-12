@@ -987,7 +987,7 @@ namespace Neon.Kube
             setupController.AddNodeStep("node basics",
                 node =>
                 {
-                    KubeHelper.InitializeNode(node, secureSshPassword);
+                    KubeNode.Initialize(node, secureSshPassword);
                 });
 
             // We need to add any required OpenEBS cStor disks after the node has been otherwise

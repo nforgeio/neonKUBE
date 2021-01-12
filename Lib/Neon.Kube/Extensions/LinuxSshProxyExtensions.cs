@@ -282,6 +282,7 @@ namespace Neon.Kube
             SetBashVariable(preprocessReader, "neon.folders.bin", KubeNodeFolders.Bin);
             SetBashVariable(preprocessReader, "neon.folders.config", KubeNodeFolders.Config);
             SetBashVariable(preprocessReader, "neon.folders.setup", KubeNodeFolders.Setup);
+            SetBashVariable(preprocessReader, "neon.folders.helm", KubeNodeFolders.Helm);
             SetBashVariable(preprocessReader, "neon.folders.state", KubeNodeFolders.State);
             SetBashVariable(preprocessReader, "neon.folders.tmpfs", KubeNodeFolders.Tmpfs);
             SetBashVariable(preprocessReader, "neon.folders.tools", KubeNodeFolders.Bin);
@@ -313,7 +314,13 @@ namespace Neon.Kube
         /// <param name="clusterDefinition">The cluster definition or <c>null</c>.</param>
         /// <param name="file">The resource file.</param>
         /// <param name="targetPath">The target path on the remote server.</param>
-        private static void UploadFile<TMetadata>(this NodeSshProxy<TMetadata> node, ClusterDefinition clusterDefinition, IStaticFile file, string targetPath)
+        /// <param name="permissions">Optional Linux file permissions.</param>
+        private static void UploadFile<TMetadata>(
+            this NodeSshProxy<TMetadata>    node, 
+            ClusterDefinition               clusterDefinition,
+            IStaticFile                     file,
+            string                          targetPath, 
+            string                          permissions = null)
             where TMetadata : class
         {
             using (var input = file.OpenStream())
@@ -348,7 +355,7 @@ namespace Neon.Kube
                         writer.Flush();
 
                         msExpanded.Position = 0;
-                        node.UploadText(targetPath, msExpanded, tabStop: 4, outputEncoding: Encoding.UTF8);
+                        node.UploadText(targetPath, msExpanded, tabStop: 4, outputEncoding: Encoding.UTF8, permissions: permissions);
                     }
                 }
             }
@@ -375,7 +382,7 @@ namespace Neon.Kube
 
             node.Status = "upload: config files";
 
-            foreach (var file in KubeHelper.Resources.GetDirectory("Conf").GetFiles())
+            foreach (var file in KubeHelper.Resources.GetDirectory("/Conf").GetFiles())     // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1121
             {
                 node.UploadFile(clusterDefinition, file, $"{KubeNodeFolders.Config}/{file.Name}");
             }
@@ -410,33 +417,10 @@ namespace Neon.Kube
 
             server.Status = "upload: setup scripts";
 
-            foreach (var file in KubeHelper.Resources.GetDirectory("Setup").GetFiles())
+            foreach (var file in KubeHelper.Resources.GetDirectory("/Setup").GetFiles())    // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1121
             {
-                server.UploadFile(clusterDefinition, file, $"{KubeNodeFolders.Setup}/{file.Name}");
+                server.UploadFile(clusterDefinition, file, $"{KubeNodeFolders.Setup}/{file.Name}", permissions: "744");
             }
-
-            // Make the setup scripts executable.
-
-            server.SudoCommand($"chmod 744 {KubeNodeFolders.Setup}/*");
-
-            //-----------------------------------------------------------------
-            // Upload files to the bin folder.
-
-            server.Status = $"clear: {KubeNodeFolders.Bin}";
-
-            // Upload the tool files.  Note that we're going to strip out the [.sh] 
-            // file type to make these easier to run.
-        
-            server.Status = "upload: tool files";
-
-            foreach (var file in KubeHelper.Resources.GetDirectory("Tools").GetFiles())
-            {
-                server.UploadFile(clusterDefinition, file, $"{KubeNodeFolders.Bin}/{file.Name.Replace(".sh", string.Empty)}");
-            }
-
-            // Make the scripts executable.
-
-            server.SudoCommand($"chmod 744 {KubeNodeFolders.Bin}/*");
         }
     }
 }
