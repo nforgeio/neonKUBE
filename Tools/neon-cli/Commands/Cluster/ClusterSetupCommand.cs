@@ -49,7 +49,6 @@ using Neon.Time;
 
 using k8s;
 using k8s.Models;
-using ICSharpCode.SharpZipLib.Tar;
 
 namespace NeonCli
 {
@@ -99,7 +98,7 @@ namespace NeonCli
         // Implementation
 
         private const string usage = @"
-Configures a neonKUBE as described in the cluster definition file.
+Configures a neonKUBE cluster as described in the cluster definition file.
 
 USAGE: 
 
@@ -128,7 +127,6 @@ OPTIONS:
         private ClusterLogin            clusterLogin;
         private ClusterProxy            cluster;
         private HostingManager          hostingManager;
-        private KubeSetupInfo           kubeSetupInfo;
         private HttpClient              httpClient;
         private Kubernetes              k8sClient;
         private string                  branch;
@@ -217,24 +215,12 @@ OPTIONS:
 
                 kubeContext = new KubeConfigContext(contextName);
 
-                if (clusterLogin.SetupDetails?.SetupInfo != null)
-                {
-                    kubeSetupInfo = clusterLogin.SetupDetails.SetupInfo;
-                }
-                else
-                {
-                    using (var client = new HeadendClient())
-                    {
-                        kubeSetupInfo = client.GetSetupInfoAsync(clusterLogin.ClusterDefinition).Result;
-                    }
-                }
-
                 KubeHelper.InitContext(kubeContext);
 
                 // Initialize the cluster proxy and the hbosting manager.
 
                 cluster        = new ClusterProxy(kubeContext, Program.CreateNodeProxy<NodeDefinition>, appendToLog: true, defaultRunOptions: RunOptions.LogOutput | RunOptions.FaultOnError);
-                hostingManager = new HostingManagerFactory(() => HostingLoader.Initialize()).GetManager(cluster, kubeSetupInfo, Program.LogPath);
+                hostingManager = new HostingManagerFactory(() => HostingLoader.Initialize()).GetManager(cluster, Program.LogPath);
 
                 if (hostingManager == null)
                 {
@@ -244,7 +230,7 @@ OPTIONS:
 
                 // Update the cluster node SSH credentials to use the secure password.
 
-                var sshCredentials = SshCredentials.FromUserPassword(KubeConst.SysAdminUsername, clusterLogin.SshPassword);
+                var sshCredentials = SshCredentials.FromUserPassword(KubeConst.SysAdminUser, clusterLogin.SshPassword);
 
                 foreach (var node in cluster.Nodes)
                 {
@@ -282,7 +268,7 @@ OPTIONS:
 
                     controller.AddGlobalStep("download binaries", () => WorkstationBinaries());
                     controller.AddWaitUntilOnlineStep("connect");
-                    controller.AddNodeStep("verify OS", CommonSteps.VerifyOS);
+                    controller.AddNodeStep("verify OS", KubeSetup.VerifyNodeOS);
 
                     // Write the operation begin marker to all cluster node logs.
 
@@ -295,28 +281,26 @@ OPTIONS:
                     var configureFirstMasterStepLabel = cluster.Definition.Masters.Count() > 1 ? "setup first master" : "setup master";
 
                     controller.AddNodeStep(configureFirstMasterStepLabel,
-                        (node, stepDelay) =>
+                        node =>
                         {
-                            SetupCommon(hostingManager, node, stepDelay);
+                            SetupCommon(hostingManager, node);
                             node.InvokeIdempotentAction("setup/common-restart", () => RebootAndWait(node));
                             SetupNode(node);
                         },
-                        node => node == cluster.FirstMaster,
-                        stepStaggerSeconds: cluster.Definition.Setup.StepStaggerSeconds);
+                        node => node == cluster.FirstMaster);
 
                     // Perform common configuration for the remaining nodes (if any).
 
                     if (cluster.Definition.Nodes.Count() > 1)
                     {
                         controller.AddNodeStep("setup other nodes",
-                            (node, stepDelay) =>
+                            node =>
                             {
-                                SetupCommon(hostingManager, node, stepDelay);
+                                SetupCommon(hostingManager, node);
                                 node.InvokeIdempotentAction("setup/common-restart", () => RebootAndWait(node));
                                 SetupNode(node);
                             },
-                            node => node != cluster.FirstMaster,
-                            stepStaggerSeconds: cluster.Definition.Setup.StepStaggerSeconds);
+                            node => node != cluster.FirstMaster);
                     }
 
                     //-----------------------------------------------------------------
@@ -337,14 +321,14 @@ OPTIONS:
                     // Verify the cluster.
 
                     controller.AddNodeStep("check masters",
-                        (node, stepDelay) =>
+                        node =>
                         {
                             ClusterDiagnostics.CheckMaster(node, cluster.Definition);
                         },
                         node => node.Metadata.IsMaster);
 
                     controller.AddNodeStep("check workers",
-                        (node, stepDelay) =>
+                        node =>
                         {
                             ClusterDiagnostics.CheckWorker(node, cluster.Definition);
                         },
@@ -429,20 +413,20 @@ OPTIONS:
             {
                 case KubeClientPlatform.Linux:
 
-                    kubeCtlUri = kubeSetupInfo.KubeCtlLinuxUri;
-                    helmUri    = kubeSetupInfo.HelmLinuxUri;
+                    kubeCtlUri = KubeDownloads.KubeCtlLinuxUri;
+                    helmUri    = KubeDownloads.HelmLinuxUri;
                     break;
 
                 case KubeClientPlatform.Osx:
 
-                    kubeCtlUri = kubeSetupInfo.KubeCtlOsxUri;
-                    helmUri    = kubeSetupInfo.HelmOsxUri;
+                    kubeCtlUri = KubeDownloads.KubeCtlOsxUri;
+                    helmUri    = KubeDownloads.HelmOsxUri;
                     break;
 
                 case KubeClientPlatform.Windows:
 
-                    kubeCtlUri = kubeSetupInfo.KubeCtlWindowsUri;
-                    helmUri    = kubeSetupInfo.HelmWindowsUri;
+                    kubeCtlUri = KubeDownloads.KubeCtlWindowsUri;
+                    helmUri    = KubeDownloads.HelmWindowsUri;
                     break;
 
                 default:
@@ -544,8 +528,8 @@ OPTIONS:
             // with the requested tool version and overwrite the installed tool if
             // the new one is more current.
 
-            KubeHelper.InstallKubeCtl(kubeSetupInfo);
-            KubeHelper.InstallHelm(kubeSetupInfo);
+            KubeHelper.InstallKubeCtl();
+            KubeHelper.InstallHelm();
 
             firstMaster.Status = string.Empty;
         }
@@ -560,12 +544,12 @@ OPTIONS:
         {
             // Configure the node's environment variables.
 
-            CommonSteps.ConfigureEnvironmentVariables(node, cluster.Definition);
+            KubeSetup.ConfigureEnvironmentVariables(node, cluster.Definition);
 
             // Upload the setup and configuration files.
 
-            node.UploadConfigFiles(cluster.Definition, kubeSetupInfo);
-            node.UploadResources(cluster.Definition, kubeSetupInfo);
+            node.UploadConfigFiles(cluster.Definition);
+            node.UploadResources(cluster.Definition);
         }
 
         /// <summary>
@@ -573,8 +557,7 @@ OPTIONS:
         /// </summary>
         /// <param name="hostingManager">The hosting manager.</param>
         /// <param name="node">The target node.</param>
-        /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
-        private void SetupCommon(HostingManager hostingManager, NodeSshProxy<NodeDefinition> node, TimeSpan stepDelay)
+        private void SetupCommon(HostingManager hostingManager, NodeSshProxy<NodeDefinition> node)
         {
             Covenant.Requires<ArgumentNullException>(hostingManager != null, nameof(hostingManager));
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
@@ -599,8 +582,6 @@ OPTIONS:
             node.InvokeIdempotentAction("setup/common",
                 () =>
                 {
-                    Thread.Sleep(stepDelay);
-
                     if (!Program.Debug)
                     {
                         ConfigureBasic(node);
@@ -608,7 +589,7 @@ OPTIONS:
 
                     // Ensure that the node has been prepared for setup.
 
-                    CommonSteps.PrepareNode(node, cluster.Definition, kubeSetupInfo, hostingManager);
+                    KubeSetup.PrepareNode(node, cluster.Definition, hostingManager);
 
                     // Create the [/mnt-data] folder if it doesn't already exist.  This folder
                     // is where we're going to host the Docker containers and volumes that should
@@ -861,14 +842,11 @@ $@"
         /// Installs the required Kubernetes related components on a node.
         /// </summary>
         /// <param name="node">The target node.</param>
-        /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
-        private void SetupKubernetes(NodeSshProxy<NodeDefinition> node, TimeSpan stepDelay)
+        private void SetupKubernetes(NodeSshProxy<NodeDefinition> node)
         {
             node.InvokeIdempotentAction("setup/setup-install-kubernetes",
                 () =>
                 {
-                    Thread.Sleep(stepDelay);
-
                     node.Status = "setup: kubernetes apt repository";
 
                     var bundle = CommandBundle.FromScript(
@@ -912,7 +890,7 @@ service kubelet restart
                             var helmInstallScript =
 $@"#!/bin/bash
 cd /tmp
-curl {Program.CurlOptions} {kubeSetupInfo.HelmLinuxUri} > helm.tar.gz
+curl {Program.CurlOptions} {KubeDownloads.HelmLinuxUri} > helm.tar.gz
 tar xvf helm.tar.gz
 cp linux-amd64/helm /usr/local/bin
 chmod 770 /usr/local/bin/helm
@@ -1842,7 +1820,7 @@ $@"#!/bin/bash
 # We need to edit the setup manifest to specify the 
 # cluster subnet before applying it.
 
-curl {Program.CurlOptions} {kubeSetupInfo.CalicoSetupYamlUri} > /tmp/calico.yaml
+curl {Program.CurlOptions} {KubeDownloads.CalicoSetupYamlUri} > /tmp/calico.yaml
 sed -i 's;192.168.0.0/16;{cluster.Definition.Network.PodSubnet};' /tmp/calico.yaml
 sed -i 's;calico/cni:v{KubeVersions.CalicoVersion}.*;{NeonHelper.NeonBranchRegistry}/calico-cni:neonkube-{KubeConst.LatestClusterVersion};' /tmp/calico.yaml
 sed -i 's;calico/kube-controllers:v{KubeVersions.CalicoVersion}.*;{NeonHelper.NeonBranchRegistry}/calico-kube-controllers:neonkube-{KubeConst.LatestClusterVersion};' /tmp/calico.yaml
@@ -1895,7 +1873,7 @@ $@"#!/bin/bash
 tmp=$(mktemp -d /tmp/istioctl.XXXXXX)
 cd ""$tmp"" || exit
 
-curl -fsLO {kubeSetupInfo.IstioLinuxUri}
+curl -fsLO {KubeDownloads.IstioLinuxUri}
 
 tar -xzf ""istioctl-{KubeVersions.IstioVersion}-linux-amd64.tar.gz""
 
@@ -2104,32 +2082,36 @@ istioctl install -f istio-cni.yaml
                 releaseName = chartName;
             }
 
-            using (var client = new HeadendClient())
-            {
-                var zip = await client.GetHelmChartZipAsync(chartName, branch);
+            await Task.CompletedTask;
+            throw new NotImplementedException("$todo(jefflill)");
 
-                master.UploadBytes($"/tmp/charts/{chartName}.zip", zip);
-            }
+            //using (var client = new HeadendClient())
+            //{
+            //    var zip = await client.GetHelmChartZipAsync(chartName, branch);
 
-            var valueOverrides = "";
+            //    master.UploadBytes($"/tmp/charts/{chartName}.zip", zip);
+            //}
+
+            var valueOverrides = new StringBuilder();
 
             if (values != null)
             {
                 foreach (var value in values)
                 {
-                    switch (value.Value.GetType().Name)
+                    var valueType = value.Value.GetType();
+
+                    if (valueType == typeof(string))
                     {
-                        case nameof(String):
-
-                            valueOverrides += $"--set-string {value.Key}=\"{value.Value}\" \\\n";
-                            break;
-
-                        case nameof(Int32):
-
-                            valueOverrides += $"--set {value.Key}={value.Value} \\\n";
-                            break;
+                        valueOverrides.AppendWithSeparator($"--set-string {value.Key}=\"{value.Value}\"", @"\n");
                     }
-
+                    else if (valueType == typeof(int))
+                    {
+                        valueOverrides.AppendWithSeparator($"--set {value.Key}={value.Value}", @"\n");
+                    }
+                    else
+                    {
+                        throw new NotImplementedException();
+                    }
                 }
             }
 
@@ -2226,6 +2208,7 @@ rm -rf {chartName}*
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
+
                     values.Add(new KeyValuePair<string, object>("apiserver.image.organization", NeonHelper.NeonBranchRegistry));
                     values.Add(new KeyValuePair<string, object>("apiserver.image.tag", $"neonkube-{KubeConst.LatestClusterVersion}"));
                     values.Add(new KeyValuePair<string, object>("helper.image.organization", NeonHelper.NeonBranchRegistry));
@@ -2253,6 +2236,7 @@ rm -rf {chartName}*
                     if (cluster.Definition.Workers.Count() >= 3)
                     {
                         var replicas = Math.Max(1, cluster.Definition.Workers.Count() / 3);
+
                         values.Add(new KeyValuePair<string, object>($"apiserver.replicas", replicas));
                         values.Add(new KeyValuePair<string, object>($"provisioner.replicas", replicas));
                         values.Add(new KeyValuePair<string, object>($"localprovisioner.replicas", replicas));
@@ -2740,19 +2724,25 @@ rm -rf {chartName}*
                     switch (cluster.Definition.Monitor.Metrics.Storage)
                     {
                         case MetricsStorageOptions.Ephemeral:
+
                             cortexValues.Add(new KeyValuePair<string, object>($"cortexConfig.schema.configs[0].store", $"boltdb"));
                             cortexValues.Add(new KeyValuePair<string, object>($"cortexConfig.schema.configs[0].object_store", $"filesystem"));
                             cortexValues.Add(new KeyValuePair<string, object>($"cortexConfig.schema.configs[0].object_store", $"filesystem"));
                             break;
+
                         case MetricsStorageOptions.Filesystem:
+
                             cortexValues.Add(new KeyValuePair<string, object>($"replicas", Math.Min(3, (cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count()))));
                             // create folders
                             break;
+
                         case MetricsStorageOptions.Yugabyte:
+
                             await InstallMetricsYugabyteAsync(master);
                             cortexValues.Add(new KeyValuePair<string, object>($"replicas", Math.Min(3, (cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count()))));
                             cortexValues.Add(new KeyValuePair<string, object>($"cortexConfig.ingester.lifecycler.ring.replication_factor", 3));
                             break;
+
                         default:
                             break;
                     }

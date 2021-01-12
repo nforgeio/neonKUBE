@@ -49,21 +49,21 @@ namespace Neon.Net
         /// <summary>
         /// The routable IP address of the current machine.
         /// </summary>
-        public IPAddress Address { get; set; }
+        public string Address { get; set; }
 
         /// <summary>
-        /// The CIDR for the local network.
+        /// The subnet (CIDR) for the local network.
         /// </summary>
-        public NetworkCidr Cidr { get; set; }
+        public string Subnet { get; set; }
 
         /// <summary>
         /// The IP address of the local network gateway.
         /// </summary>
-        public IPAddress Gateway { get; set; }
+        public string Gateway { get; set; }
 
         /// <summary>
-        /// The IP address of the local network's DNS servers.
+        /// The IP address of the local network's DNS name servers.
         /// </summary>
-        public IPAddress[] DnsServers { get; set; }
+        public string[] NameServers { get; set; }
     }
 }

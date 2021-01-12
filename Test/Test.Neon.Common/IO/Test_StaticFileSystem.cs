@@ -23,7 +23,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-
+using ICSharpCode.SharpZipLib.Zip;
 using Neon.Common;
 using Neon.IO;
 using Neon.Xunit;
@@ -897,6 +897,153 @@ namespace TestCommon
             Assert.Throws<FileNotFoundException>(() => fs.GetDirectory("//NOT-FOUND.txt"));
         }
 
+        [Fact]
+        public void ZipToStream()
+        {
+            var fs = Assembly.GetExecutingAssembly().GetResourceFileSystem("TestCommon.IORes.Resources");
+
+            // Verify that we can zip all embedded resources to a stream.
+
+            using (var stream = new MemoryStream())
+            {
+                fs.Zip(stream, searchOptions: SearchOption.AllDirectories);
+
+                Assert.True(stream.Length > 0);
+
+                using (var tempFolder = new TempFolder())
+                {
+                    var fastZip     = new FastZip();
+                    var zipPath     = Path.Combine(tempFolder.Path, "test.zip");
+                    var unzipFolder = Path.Combine(tempFolder.Path, "unzipped");
+
+                    File.WriteAllBytes(zipPath, stream.ToArray());
+                    fastZip.ExtractZip(zipPath, unzipFolder, null);
+
+                    Assert.True(File.Exists(Path.Combine(unzipFolder, "TextFile1.txt")));
+                    Assert.True(File.Exists(Path.Combine(unzipFolder, "TextFile2.txt")));
+
+                    Assert.True(File.Exists(Path.Combine(unzipFolder, "Folder1", "TextFile3.txt")));
+                    Assert.True(File.Exists(Path.Combine(unzipFolder, "Folder1", "TextFile4.txt")));
+                    Assert.True(File.Exists(Path.Combine(unzipFolder, "Folder1", "Folder3", "TextFile5.txt")));
+
+                    Assert.True(File.Exists(Path.Combine(unzipFolder, "Folder2", "TextFile6.txt")));
+                    Assert.True(File.Exists(Path.Combine(unzipFolder, "Folder2", "TextFile7.txt")));
+                    Assert.True(File.Exists(Path.Combine(unzipFolder, "Folder2", "Folder4", "TextFile8.txt")));
+                }
+            }
+
+            // Verify that we can zip a single file from the root directory.
+
+            using (var stream = new MemoryStream())
+            {
+                fs.Zip(stream, "TextFile1.txt", searchOptions: SearchOption.TopDirectoryOnly);
+
+                Assert.True(stream.Length > 0);
+
+                using (var tempFolder = new TempFolder())
+                {
+                    var fastZip     = new FastZip();
+                    var zipPath     = Path.Combine(tempFolder.Path, "test.zip");
+                    var unzipFolder = Path.Combine(tempFolder.Path, "unzipped");
+
+                    File.WriteAllBytes(zipPath, stream.ToArray());
+                    fastZip.ExtractZip(zipPath, unzipFolder, null);
+
+                    Assert.True(File.Exists(Path.Combine(unzipFolder, "TextFile1.txt")));
+                    Assert.False(File.Exists(Path.Combine(unzipFolder, "TextFile2.txt")));
+
+                    Assert.False(File.Exists(Path.Combine(unzipFolder, "Folder1", "TextFile3.txt")));
+                    Assert.False(File.Exists(Path.Combine(unzipFolder, "Folder1", "TextFile4.txt")));
+                    Assert.False(File.Exists(Path.Combine(unzipFolder, "Folder1", "Folder3", "TextFile5.txt")));
+
+                    Assert.False(File.Exists(Path.Combine(unzipFolder, "Folder2", "TextFile6.txt")));
+                    Assert.False(File.Exists(Path.Combine(unzipFolder, "Folder2", "TextFile7.txt")));
+                    Assert.False(File.Exists(Path.Combine(unzipFolder, "Folder2", "Folder4", "TextFile8.txt")));
+                }
+            }
+        }
+
+        [Fact]
+        public void ZipToFile()
+        {
+            var fs = Assembly.GetExecutingAssembly().GetResourceFileSystem("TestCommon.IORes.Resources");
+
+            // Verify that we can zip all embedded resources to a file.
+
+            using (var tempFolder = new TempFolder())
+            {
+                var fastZip     = new FastZip();
+                var zipPath     = Path.Combine(tempFolder.Path, "test.zip");
+                var unzipFolder = Path.Combine(tempFolder.Path, "unzipped");
+
+                fs.Zip(zipPath, searchOptions: SearchOption.AllDirectories);
+                fastZip.ExtractZip(zipPath, unzipFolder, null);
+
+                Assert.True(File.Exists(Path.Combine(unzipFolder, "TextFile1.txt")));
+                Assert.True(File.Exists(Path.Combine(unzipFolder, "TextFile2.txt")));
+
+                Assert.True(File.Exists(Path.Combine(unzipFolder, "Folder1", "TextFile3.txt")));
+                Assert.True(File.Exists(Path.Combine(unzipFolder, "Folder1", "TextFile4.txt")));
+                Assert.True(File.Exists(Path.Combine(unzipFolder, "Folder1", "Folder3", "TextFile5.txt")));
+
+                Assert.True(File.Exists(Path.Combine(unzipFolder, "Folder2", "TextFile6.txt")));
+                Assert.True(File.Exists(Path.Combine(unzipFolder, "Folder2", "TextFile7.txt")));
+                Assert.True(File.Exists(Path.Combine(unzipFolder, "Folder2", "Folder4", "TextFile8.txt")));
+            }
+
+            // Verify that we can zip a single file from the root directory.
+
+            using (var tempFolder = new TempFolder())
+            {
+                var fastZip     = new FastZip();
+                var zipPath     = Path.Combine(tempFolder.Path, "test.zip");
+                var unzipFolder = Path.Combine(tempFolder.Path, "unzipped");
+
+                fs.Zip(zipPath, searchPattern: "TextFile1.txt", searchOptions: SearchOption.TopDirectoryOnly);
+                fastZip.ExtractZip(zipPath, unzipFolder, null);
+
+                Assert.True(File.Exists(Path.Combine(unzipFolder, "TextFile1.txt")));
+                Assert.False(File.Exists(Path.Combine(unzipFolder, "TextFile2.txt")));
+
+                Assert.False(File.Exists(Path.Combine(unzipFolder, "Folder1", "TextFile3.txt")));
+                Assert.False(File.Exists(Path.Combine(unzipFolder, "Folder1", "TextFile4.txt")));
+                Assert.False(File.Exists(Path.Combine(unzipFolder, "Folder1", "Folder3", "TextFile5.txt")));
+
+                Assert.False(File.Exists(Path.Combine(unzipFolder, "Folder2", "TextFile6.txt")));
+                Assert.False(File.Exists(Path.Combine(unzipFolder, "Folder2", "TextFile7.txt")));
+                Assert.False(File.Exists(Path.Combine(unzipFolder, "Folder2", "Folder4", "TextFile8.txt")));
+            }
+        }
+
+        [Fact]
+        public void ZipToFile_WithLinuxLineEndings()
+        {
+            var fs = Assembly.GetExecutingAssembly().GetResourceFileSystem("TestCommon.IORes.Resources");
+
+            // Verify that we can zip all text files, converting any Windows style CRLF
+            // line endings to Linux LF.
+
+            using (var tempFolder = new TempFolder())
+            {
+                var fastZip     = new FastZip();
+                var zipPath     = Path.Combine(tempFolder.Path, "test.zip");
+                var unzipFolder = Path.Combine(tempFolder.Path, "unzipped");
+
+                fs.Zip(zipPath, searchOptions: SearchOption.AllDirectories, zipOptions: StaticZipOptions.LinuxLineEndings);
+                fastZip.ExtractZip(zipPath, unzipFolder, null);
+
+                Assert.True(!File.ReadAllText(Path.Combine(unzipFolder, "TextFile1.txt")).Contains("\r\n"));
+                Assert.True(!File.ReadAllText(Path.Combine(unzipFolder, "TextFile2.txt")).Contains("\r\n"));
+
+                Assert.True(!File.ReadAllText(Path.Combine(unzipFolder, "Folder1", "TextFile3.txt")).Contains("\r\n"));
+                Assert.True(!File.ReadAllText(Path.Combine(unzipFolder, "Folder1", "TextFile4.txt")).Contains("\r\n"));
+                Assert.True(!File.ReadAllText(Path.Combine(unzipFolder, "Folder1", "Folder3", "TextFile5.txt")).Contains("\r\n"));
+
+                Assert.True(!File.ReadAllText(Path.Combine(unzipFolder, "Folder2", "TextFile6.txt")).Contains("\r\n"));
+                Assert.True(!File.ReadAllText(Path.Combine(unzipFolder, "Folder2", "TextFile7.txt")).Contains("\r\n"));
+                Assert.True(!File.ReadAllText(Path.Combine(unzipFolder, "Folder2", "Folder4", "TextFile8.txt")).Contains("\r\n"));
+            }
+        }
 
         //---------------------------------------------------------------------
         // Resource file read tests for non-filtered resources.

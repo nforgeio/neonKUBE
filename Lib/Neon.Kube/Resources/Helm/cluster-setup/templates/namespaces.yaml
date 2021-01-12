@@ -1,0 +1,15 @@
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: jobs
+  labels:
+    name: jobs
+    istio-injection: "disabled"
+---
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: monitoring
+  labels:
+    name: monitoring
+    istio-injection: "enabled"

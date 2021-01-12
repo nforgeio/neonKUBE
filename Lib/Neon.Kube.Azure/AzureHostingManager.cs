@@ -608,7 +608,6 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Instance members
 
-        private KubeSetupInfo                           setupInfo;
         private ClusterProxy                            cluster;
         private string                                  clusterName;
         private string                                  clusterEnvironment;
@@ -660,19 +659,16 @@ namespace Neon.Kube
         /// Creates an instance that is capable of provisioning a cluster on Azure.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
-        /// <param name="setupInfo">Specifies the cluster setup information.</param>
         /// <param name="logFolder">
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
-        public AzureHostingManager(ClusterProxy cluster, KubeSetupInfo setupInfo, string logFolder = null)
+        public AzureHostingManager(ClusterProxy cluster, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
-            Covenant.Requires<ArgumentNullException>(setupInfo != null, nameof(setupInfo));
 
             cluster.HostingManager = this;
 
-            this.setupInfo             = setupInfo;
             this.cluster               = cluster;
             this.clusterName           = cluster.Name;
             this.clusterEnvironment    = NeonHelper.EnumToString(cluster.Definition.Environment);
@@ -866,6 +862,9 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
+        public override HostingEnvironment HostingEnvironment => HostingEnvironment.Azure;
+
+        /// <inheritdoc/>
         public override void Validate(ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
@@ -904,7 +903,7 @@ namespace Neon.Kube
 
             // Update the node credentials.
 
-            this.nodeUsername = KubeConst.SysAdminUsername;
+            this.nodeUsername = KubeConst.SysAdminUser;
             this.nodePassword = secureSshPassword;
 
             // Initialize and run the [SetupController].
@@ -960,11 +959,11 @@ namespace Neon.Kube
                 },
                 quiet: true);
             controller.AddNodeStep("credentials",
-                (node, stepDelay) =>
+                node =>
                 {
                     // Update the node SSH proxies to use the secure SSH password.
 
-                    node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUsername, secureSshPassword));
+                    node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, secureSshPassword));
                 },
                 quiet: true);
             controller.AddNodeStep("virtual machines", CreateVm);
@@ -986,9 +985,9 @@ namespace Neon.Kube
             // Add a step to perform low-level node initialization.
 
             setupController.AddNodeStep("node basics",
-                (node, stepDelay) =>
+                node =>
                 {
-                    KubeHelper.InitializeNode(node, secureSshPassword);
+                    KubeNode.Initialize(node, secureSshPassword);
                 });
 
             // We need to add any required OpenEBS cStor disks after the node has been otherwise
@@ -1000,7 +999,7 @@ namespace Neon.Kube
             // the OpenEBS disk will be easy to identify as the only unpartitioned disks.
 
             setupController.AddNodeStep("openebs",
-                (node, stepDelay) =>
+                node =>
                 {
                     var azureNode          = nameToVm[node.Name];
                     var openEBSStorageType = ToAzureStorageType(azureNode.Metadata.Azure.OpenEBSStorageType);
@@ -1558,8 +1557,7 @@ namespace Neon.Kube
         /// Creates the NIC and VM for a cluster node.
         /// </summary>
         /// <param name="node">The target node.</param>
-        /// <param name="stepDelay">The step delay.</param>
-        private void CreateVm(NodeSshProxy<NodeDefinition> node, TimeSpan stepDelay)
+        private void CreateVm(NodeSshProxy<NodeDefinition> node)
         {
             var azureNode = nameToVm[node.Name];
 
@@ -1631,8 +1629,7 @@ namespace Neon.Kube
         /// Performs some basic node initialization.
         /// </summary>
         /// <param name="node">The target node.</param>
-        /// <param name="stepDelay">The step delay.</param>
-        private void ConfigureNode(NodeSshProxy<NodeDefinition> node, TimeSpan stepDelay)
+        private void ConfigureNode(NodeSshProxy<NodeDefinition> node)
         {
             node.WaitForBoot();
 

@@ -3523,6 +3523,37 @@ echo $? > {cmdFolder}/exit
             return KubectlApply(sbYaml.ToString());
         }
 
+        /// <summary>
+        /// Returns an indication of whether the <b>neon-init</b> service has been executed
+        /// on the remote machine.  This service is deployed to neonKUBE cluster nodes to
+        /// act as a <b>cloud-init</b> to configure the network and credentials by mounting
+        /// a virual ISO drive for non-cloud environments.
+        /// </summary>
+        /// <returns><c>true</c> if <b>neon-init</b> has been executed.</returns>
+        public bool GetNeonInitStatus()
+        {
+            return FileExists("/etc/neon-init");
+        }
+
+        /// <summary>
+        /// Manually sets the <b>neon-init</b> service execution status.
+        /// </summary>
+        /// <param name="initialized">
+        /// Pass <c>true</c> to indicate that the <b>neon-init</b> service has been executed, 
+        /// <c>false</c> to clear the status.
+        /// </param>
+        public void SetNeonInitStatus(bool initialized)
+        {
+            if (initialized)
+            {
+                SudoCommand("touch", "/etc/neon-init");
+            }
+            else
+            {
+                SudoCommand("rm", "--force", "/etc/neon-init");
+            }
+        }
+
         /// <inheritdoc/>
         public override string ToString()
         {

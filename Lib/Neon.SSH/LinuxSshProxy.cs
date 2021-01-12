@@ -35,8 +35,6 @@ using Neon.Net;
 using Neon.Retry;
 using Neon.Time;
 
-using ICSharpCode.SharpZipLib.Zip;
-
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 

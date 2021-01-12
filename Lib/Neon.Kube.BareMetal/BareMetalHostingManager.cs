@@ -69,7 +69,6 @@ namespace Neon.Kube
         // Instance members
 
         private ClusterProxy                    cluster;
-        private KubeSetupInfo                   setupInfo;
         private string                          orgSshPassword;
         private string                          secureSshPassword;
         private Dictionary<string, string>      nodeToPassword;
@@ -87,20 +86,17 @@ namespace Neon.Kube
         /// servers or virtual machines.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
-        /// <param name="setupInfo">Specifies the cluster setup information.</param>
         /// <param name="logFolder">
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
-        public BareMetalHostingManager(ClusterProxy cluster, KubeSetupInfo setupInfo, string logFolder = null)
+        public BareMetalHostingManager(ClusterProxy cluster, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
-            Covenant.Requires<ArgumentNullException>(setupInfo != null, nameof(setupInfo));
 
             cluster.HostingManager = this;
 
             this.cluster        = cluster;
-            this.setupInfo      = setupInfo;
             this.nodeToPassword = new Dictionary<string, string>();
         }
 
@@ -118,6 +114,9 @@ namespace Neon.Kube
         {
             get { return false; }
         }
+
+        /// <inheritdoc/>
+        public override HostingEnvironment HostingEnvironment => HostingEnvironment.BareMetal;
 
         /// <inheritdoc/>
         public override void Validate(ClusterDefinition clusterDefinition)
@@ -158,7 +157,7 @@ namespace Neon.Kube
                 };
 
                 checkController.AddNodeStep("machine online status",
-                    (node, stepDelay) =>
+                    node =>
                     {
                         const int maxAttempts = 5;
 
@@ -198,7 +197,7 @@ namespace Neon.Kube
                     });
 
                 checkController.AddNodeStep("connect machines",
-                    (node, stepDelay) =>
+                    node =>
                     {
                         node.Status = "connecting...";
 
@@ -212,7 +211,7 @@ namespace Neon.Kube
 
                             lock (checkErrors)
                             {
-                                checkErrors.Add(new Tuple<string, string>(node.Name, $"Authentication failed.  Verify the [{KubeConst.SysAdminUsername}] user credentials."));
+                                checkErrors.Add(new Tuple<string, string>(node.Name, $"Authentication failed.  Verify the [{KubeConst.SysAdminUser}] user credentials."));
                             }
 
                             throw;
@@ -243,7 +242,7 @@ namespace Neon.Kube
                 var openEbsNodeCount = 0;
 
                 checkController.AddNodeStep("OpenEBS block device scan",
-                    (node, stepDelay) =>
+                    node =>
                     {
                         // NOTE: Nodes should still be connected from the last step.
 
@@ -298,16 +297,16 @@ namespace Neon.Kube
                 MaxParallel = this.MaxParallel
             };
 
-            setupController.AddNodeStep("connect nodes", (node, stepDelay) => Connect(node));
-            setupController.AddNodeStep("verify operating system", (node, stepDelay) => KubeHelper.VerifyNodeOperatingSystem(node));
-            setupController.AddNodeStep("configure nodes", (node, stepDelay) => Congfigure(node));
+            setupController.AddNodeStep("connect nodes", node => Connect(node));
+            setupController.AddNodeStep("verify operating system", node => KubeSetup.VerifyNodeOS(node));
+            setupController.AddNodeStep("configure nodes", node => Congfigure(node));
 
             if (secureSshPassword != orgSshPassword)
             {
-                setupController.AddNodeStep("secure node passwords", (node, stepDelay) => SetSecurePassword(node));
+                setupController.AddNodeStep("secure node passwords", node => SetSecurePassword(node));
             }
 
-            setupController.AddNodeStep("detect node labels", (node, stepDelay) => DetectLabels(node));
+            setupController.AddNodeStep("detect node labels", node => DetectLabels(node));
 
             if (!setupController.Run())
             {
@@ -351,7 +350,7 @@ namespace Neon.Kube
 
             try
             {
-                node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUsername, orgSshPassword));
+                node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, orgSshPassword));
                 node.Connect();
 
                 lock (nodeToPassword)
@@ -369,7 +368,7 @@ namespace Neon.Kube
                     throw;
                 }
 
-                node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUsername, secureSshPassword));
+                node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, secureSshPassword));
                 node.Connect();
 
                 lock (nodeToPassword)
@@ -392,7 +391,7 @@ namespace Neon.Kube
                 nodeSshPassword = nodeToPassword[node.Metadata.Name];
             }
 
-            KubeHelper.InitializeNode(node, nodeSshPassword);
+            KubeNode.Initialize(node, nodeSshPassword);
         }
 
         /// <summary>
@@ -406,7 +405,7 @@ namespace Neon.Kube
 
             var script =
 $@"
-echo '{KubeConst.SysAdminUsername}:{secureSshPassword}' | chpasswd
+echo '{KubeConst.SysAdminUser}:{secureSshPassword}' | chpasswd
 ";
             var response = node.SudoCommand(CommandBundle.FromScript(script));
 
@@ -417,7 +416,7 @@ echo '{KubeConst.SysAdminUsername}:{secureSshPassword}' | chpasswd
 
             // Update the node credentials and then reconnect. 
 
-            node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUsername, secureSshPassword));
+            node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, secureSshPassword));
             node.Connect();
         }
 

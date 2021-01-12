@@ -85,7 +85,6 @@ namespace Neon.Kube
         // Instance members
 
         private ClusterProxy        cluster;
-        private KubeSetupInfo       setupInfo;
         private string              logFolder;
         private List<XenClient>     xenHosts;
         private int                 maxVmNameWidth;
@@ -103,19 +102,16 @@ namespace Neon.Kube
         /// Creates an instance that is capable of provisioning a cluster on XenServer/XCP-ng servers.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
-        /// <param name="setupInfo">Specifies the cluster setup information.</param>
         /// <param name="logFolder">
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
-        public XenServerHostingManager(ClusterProxy cluster, KubeSetupInfo setupInfo, string logFolder = null)
+        public XenServerHostingManager(ClusterProxy cluster, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
-            Covenant.Requires<ArgumentNullException>(setupInfo != null, nameof(setupInfo));
 
             this.cluster                = cluster;
             this.cluster.HostingManager = this;
-            this.setupInfo              = setupInfo;
             this.logFolder              = logFolder;
             this.maxVmNameWidth         = cluster.Definition.Nodes.Max(n => n.Name.Length) + cluster.Definition.Hosting.Vm.GetVmNamePrefix(cluster.Definition).Length;
         }
@@ -146,6 +142,9 @@ namespace Neon.Kube
         {
             get { return false; }
         }
+
+        /// <inheritdoc/>
+        public override HostingEnvironment HostingEnvironment => HostingEnvironment.XenServer;
 
         /// <inheritdoc/>
         public override void Validate(ClusterDefinition clusterDefinition)
@@ -232,9 +231,9 @@ namespace Neon.Kube
              
             setupController.AddWaitUntilOnlineStep();
 
-            setupController.AddNodeStep("verify readiness", (node, stepDelay) => VerifyReady(node));
-            setupController.AddNodeStep("virtual machine template", (node, stepDelay) => CheckVmTemplate(node));
-            setupController.AddNodeStep("create virtual machines", (node, stepDelay) => ProvisionVM(node));
+            setupController.AddNodeStep("verify readiness", node => VerifyReady(node));
+            setupController.AddNodeStep("virtual machine template", node => CheckVmTemplate(node));
+            setupController.AddNodeStep("create virtual machines", node => ProvisionVM(node));
             setupController.AddGlobalStep(string.Empty, () => Finish(), quiet: true);
 
             if (!setupController.Run())
@@ -268,7 +267,7 @@ namespace Neon.Kube
             // operation acquire a lock on the XenClient for the node's host before proceeding.
 
             setupController.AddNodeStep("openebs",
-                (node, stepDelay) =>
+                node =>
                 {
                     var xenClient = xenHosts.Single(client => client.Name == node.Metadata.Vm.Host);
 
@@ -380,13 +379,14 @@ namespace Neon.Kube
         {
             var xenHost      = xenSshProxy.Metadata;
             var templateName = GetXenTemplateName();
+            var nodeImageUri = KubeDownloads.GetNodeImageUri(this.HostingEnvironment);
 
             xenSshProxy.Status = "check: template";
 
             if (xenHost.Template.Find(templateName) == null)
             {
                 xenSshProxy.Status = "download: vm template (slow)";
-                xenHost.Template.Install(setupInfo.LinuxTemplateUri, templateName, cluster.Definition.Hosting.XenServer.StorageRepository);
+                xenHost.Template.Install(nodeImageUri, templateName, cluster.Definition.Hosting.XenServer.StorageRepository);
             }
         }
 
@@ -440,9 +440,9 @@ namespace Neon.Kube
                     snapshot:                   cluster.Definition.Hosting.XenServer.Snapshot,
                     primaryStorageRepository:   cluster.Definition.Hosting.XenServer.StorageRepository);;
 
-                // Create a temporary ISO with the [neon-node-prep.sh] script, mount it
+                // Create a temporary ISO with the [neon-init.sh] script, mount it
                 // to the VM and then boot the VM for the first time.  The script on the
-                // ISO will be executed automatically by the [neon-node-prep] service
+                // ISO will be executed automatically by the [neon-init] service
                 // preinstalled on the VM image and the script will configure the secure 
                 // SSH password and then the network.
                 //
@@ -457,9 +457,9 @@ namespace Neon.Kube
                     // Create a temporary ISO with the prep script and insert it
                     // into the node VM.
 
-                    node.Status = $"mount: neon-node-prep iso";
+                    node.Status = $"mount: neon-init iso";
 
-                    tempIso    = KubeHelper.CreateNodePrepIso(node.Cluster.Definition, node.Metadata, secureSshPassword);
+                    tempIso    = KubeHelper.CreateNeonInitIso(node.Cluster.Definition, node.Metadata, secureSshPassword);
                     xenTempIso = xenHost.CreateTempIso(tempIso.Path);
 
                     xenHost.Invoke($"vm-cd-eject", $"uuid={vm.Uuid}");
@@ -473,7 +473,7 @@ namespace Neon.Kube
 
                     // Update the node credentials to use the secure password and then wait for the node to boot.
 
-                    node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUsername, secureSshPassword));
+                    node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, secureSshPassword));
 
                     node.Status = $"connecting...";
                     node.WaitForBoot();

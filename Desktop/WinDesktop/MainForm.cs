@@ -114,7 +114,6 @@ namespace WinDesktop
 
             proxies      = new List<ReverseProxy>();
             portForwards = new List<PortForward>();
-            Headend      = new HeadendClient();
 
             KubeHelper.LoadClientConfig();
         }
@@ -123,11 +122,6 @@ namespace WinDesktop
         /// Indicates whether the application is connected to a cluster.
         /// </summary>
         public bool IsConnected => KubeHelper.CurrentContext != null;
-
-        /// <summary>
-        /// Returns the neonKUBE head client to be used to query the headend services.
-        /// </summary>
-        public HeadendClient Headend { get; private set; }
 
         /// <summary>
         /// Handles form initialization.
@@ -1059,9 +1053,7 @@ namespace WinDesktop
 
             try
             {
-                var clientInfo = await Headend.GetClientInfoAsync();
-
-                NeonHelper.OpenBrowser(clientInfo.GitHubUrl);
+                NeonHelper.OpenBrowser(KubeConst.KubeGitHubRepoUrl);
             }
             catch
             {
@@ -1072,6 +1064,8 @@ namespace WinDesktop
             {
                 StopOperation();
             }
+
+            await Task.CompletedTask;
         }
 
         /// <summary>
@@ -1085,9 +1079,7 @@ namespace WinDesktop
 
             try
             {
-                var clientInfo = await Headend.GetClientInfoAsync();
-
-                NeonHelper.OpenBrowser(clientInfo.HelpUrl);
+                NeonHelper.OpenBrowser(KubeConst.KubeHelpUrl);
             }
             catch
             {
@@ -1098,6 +1090,8 @@ namespace WinDesktop
             {
                 StopOperation();
             }
+
+            await Task.CompletedTask;
         }
 
         /// <summary>
@@ -1192,30 +1186,32 @@ namespace WinDesktop
         /// <param name="args">The arguments.</param>
         private async void OnCheckForUpdatesCommand(object sender, EventArgs args)
         {
-            StartOperation(workingAnimation);
+            //StartOperation(workingAnimation);
 
-            try
-            {
-                var clientInfo = await Headend.GetClientInfoAsync();
+            //try
+            //{
+            //    var clientInfo = await Headend.GetClientInfoAsync();
 
-                if (clientInfo.UpdateVersion == null)
-                {
-                    MessageBox.Show("The latest version of neonKUBE is installed.", Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-                else
-                {
-                    MessageBox.Show("$todo(jefflill): Not implemented yet.", Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                }
-            }
-            catch
-            {
-                StopFailedOperation("Update check failed");
-                return;
-            }
-            finally
-            {
-                StopOperation();
-            }
+            //    if (clientInfo.UpdateVersion == null)
+            //    {
+            //        MessageBox.Show("The latest version of neonKUBE is installed.", Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
+            //    }
+            //    else
+            //    {
+            //        MessageBox.Show("$todo(jefflill): Not implemented yet.", Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            //    }
+            //}
+            //catch
+            //{
+            //    StopFailedOperation("Update check failed");
+            //    return;
+            //}
+            //finally
+            //{
+            //    StopOperation();
+            //}
+
+            await Task.CompletedTask;
         }
 
         /// <summary>

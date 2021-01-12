@@ -1,0 +1,186 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ template "citus-postgresql.fullname" . }}-master
+  labels:
+    app: {{ template "citus-postgresql.name" . }}-master
+    chart: {{ template "citus-postgresql.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  serviceName: {{ template "citus-postgresql.fullname" . }}-master
+  replicas: {{ .Values.master.replicas }}
+  selector:
+    matchLabels:
+      app: {{ template "citus-postgresql.name" . }}-master
+  template:
+    metadata:
+      labels:
+        app: {{ template "citus-postgresql.name" . }}-master
+        release: {{ .Release.Name }}
+        citusType: {{ .Values.master.citusType }}
+      {{- if .Values.prometheus.enabled }}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: {{ .Values.prometheus.port | quote }}
+      {{- end }}
+    spec:
+      {{- if .Values.imagePullSecrets }}
+      imagePullSecrets:
+        - name: {{ .Values.imagePullSecrets }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+      {{ toYaml . | nindent 6 }}
+      {{- end }}
+      {{- if .Values.nodeSelector }}
+      nodeSelector:
+      {{ toYaml .Values.nodeSelector | nindent 8 }}
+      {{- end }}
+      initContainers:
+      - name: chmod-er
+        image: "{{ .Values.busybox.image.organization }}/{{ .Values.busybox.image.repository }}:{{ .Values.busybox.image.tag }}"
+        command:
+        - /bin/sh
+        - -c
+        - |
+          mkdir -p /home/postgres
+          cp -f /k8s/secrets/.pgpass /home/postgres
+          chmod 0600 /home/postgres/.pgpass
+          {{- if .Values.ssl.enabled }}
+          cp -f /k8s/ssl-config/002-configure-ssl.sh /docker-entrypoint-initdb.d
+          chmod 0755 /docker-entrypoint-initdb.d/002-configure-ssl.sh
+          mkdir -p /home/postgres/ssl
+          cp -f /k8s/ssl/* /home/postgres/ssl/
+          chmod 0600 /home/postgres/ssl/citus.key
+          chmod 0644 /home/postgres/ssl/citus.crt
+          {{- end }}
+          chown -R 999:999 /home/postgres
+          mkdir -p /var/lib/postgresql/data
+          chmod 777 /var/lib/postgresql/data
+          find /var/lib/postgresql/data -mindepth 1 -maxdepth 1 -not -name ".snapshot" -not -name "lost+found" | xargs chown -fR 999:999 || :
+          chmod -f 0600 /var/lib/postgresql/data/pgdata/server.crt || :
+          chmod -f 0600 /var/lib/postgresql/data/pgdata/server.key || :
+        securityContext:
+          runAsUser: 0
+        volumeMounts:
+        - name: pgdata
+          mountPath: /var/lib/postgresql/data
+        - name: pgpass
+          mountPath: /k8s/secrets
+        {{- if .Values.ssl.enabled }}
+        - name: ssl
+          mountPath: /k8s/ssl
+          readOnly: true
+        - name: ssl-config
+          mountPath: /k8s/ssl-config
+          readOnly: true
+        {{ end }}
+      containers:
+      {{- if .Values.prometheus.enabled }}
+      - name: prometheus-metrics
+        image: "{{ .Values.prometheus.image.organization }}/{{ .Values.prometheus.image.repository }}:{{ .Values.prometheus.image.tag }}"
+        imagePullPolicy: "{{ .Values.imagePullPolicy }}"
+        ports:
+        - containerPort: {{ .Values.prometheus.port }}
+        resources:
+{{ toYaml .Values.prometheus.resources | indent 12 }}
+        env:
+        - name: DATA_SOURCE_NAME
+          value: postgresql://postgres@127.0.0.1:{{ .Values.superuser.port }}?sslmode=disable
+        args:
+        {{- if .Values.prometheus.disableDefaultMetrics }}
+        - "--disable-default-metrics"
+        {{- end }}
+        - "--extend.query-path=/etc/queries.yaml"
+        - "--log.level={{ .Values.prometheus.logLevel }}"
+        volumeMounts:
+        - name: queries
+          mountPath: /etc/queries.yaml
+          subPath: queries.yaml
+      {{- end }}
+      - name: citus
+        image: "{{ .Values.image.organization }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: "{{ .Values.image.pullPolicy }}"
+        command: ["/bin/sh"]
+        args:
+        - "-xc"
+        - >-
+          docker-entrypoint.sh postgres {{ .Values.master.extraConfigs }}
+        ports:
+        - containerPort: {{ .Values.superuser.port }}
+        resources:
+{{ toYaml .Values.master.resources | indent 12 }}
+        securityContext:
+          runAsUser: 0
+        env:
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+        - name: PGPASSFILE
+          value: /home/postgres/.pgpass
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "citus-postgresql.fullname" . }}-secret
+              key: superuser-username
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "citus-postgresql.fullname" . }}-secret
+              key: superuser-password
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "citus-postgresql.fullname" . }}-secret
+              key: superuser-database
+        {{- if .Values.readiness.enabled }}
+        readinessProbe:
+          exec:
+            command:
+            - /pg_healthcheck
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+        {{- end }}
+        volumeMounts:
+        - name: pgdata
+          mountPath: /var/lib/postgresql/data
+        - name: pgpass
+          mountPath: /k8s/secrets
+        {{- if .Values.ssl.enabled }}
+        - name: ssl
+          mountPath: /k8s/ssl
+          readOnly: true
+        - name: ssl-config
+          mountPath: /k8s/ssl-config
+          readOnly: true
+        {{ end }}
+      volumes:
+        - name: pgpass
+          secret:
+            secretName: {{ template "citus-postgresql.fullname" . }}-pgpass
+            #mode:  256
+        {{- if .Values.ssl.enabled }}
+        - name: ssl
+          secret:
+            secretName: {{ template "citus-postgresql.fullname" . }}-ssl
+            #mode:  256
+        - name: ssl-config
+          configMap:
+            name: {{ template "citus-postgresql.fullname" . }}-ssl-settings
+        {{ end }}
+        {{- if .Values.prometheus.enabled }}
+        - name: queries
+          configMap:
+            name: {{ template "citus-postgresql.fullname" . }}-metric-exporter-queries
+          #mode:  420
+        {{ end }}
+  volumeClaimTemplates:
+  - metadata:
+      name: pgdata
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: {{ .Values.master.persistence.storageClassName }}
+      resources:
+        requests:
+          storage: {{ .Values.master.persistence.size }}

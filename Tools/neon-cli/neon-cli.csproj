@@ -10,6 +10,18 @@
     <Configurations>Debug;Release;CodeDoc</Configurations>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile>C:\src\neonKUBE\Tools\neon-cli\bin\Debug\neon.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DocumentationFile>C:\src\neonKUBE\Tools\neon-cli\bin\Release\neon.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CodeDoc|AnyCPU'">
+    <DocumentationFile>C:\src\neonKUBE\Tools\neon-cli\bin\CodeDoc\neon.xml</DocumentationFile>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="GitInfo" Version="2.1.2">
       <PrivateAssets>all</PrivateAssets>
@@ -42,7 +54,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Resources\Ubuntu-20.04\binary\safe-apt-get.sh">
+    <None Update="Resources\Ubuntu-20.04\tools\safe-apt-get.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Resources\Ubuntu-20.04\conf\cluster.conf.sh">

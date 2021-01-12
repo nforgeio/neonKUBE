@@ -265,7 +265,7 @@ namespace NeonCli
                     new Folder("Ubuntu-20.04",
                         folders: new List<Folder>()
                         {
-                            new Folder("binary",
+                            new Folder("tools",
                                 files: new List<File>()
                                 {
                                     new File("safe-apt-get.sh", hasVariables: true)

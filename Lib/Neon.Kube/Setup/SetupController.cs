@@ -51,18 +51,17 @@ namespace Neon.Kube
 
         private class Step
         {
-            public int                                              Number;
-            public string                                           Label;
-            public bool                                             Quiet;
-            public Action                                           SyncGlobalAction;
-            public Func<Task>                                       AsyncGlobalAction;
-            public Action<NodeSshProxy<NodeMetadata>, TimeSpan>     SyncNodeAction;
-            public Func<NodeSshProxy<NodeMetadata>, TimeSpan, Task> AsyncNodeAction;
-            public Func<NodeSshProxy<NodeMetadata>, bool>           Predicate;
-            public StepStatus                                       Status;
-            public int                                              ParallelLimit;
-            public TimeSpan                                         StepStagger;
-            public TimeSpan                                         ElapsedTime;
+            public int                                      Number;
+            public string                                   Label;
+            public bool                                     Quiet;
+            public Action                                   SyncGlobalAction;
+            public Func<Task>                               AsyncGlobalAction;
+            public Action<NodeSshProxy<NodeMetadata>>       SyncNodeAction;
+            public Func<NodeSshProxy<NodeMetadata>, Task>   AsyncNodeAction;
+            public Func<NodeSshProxy<NodeMetadata>, bool>   Predicate;
+            public StepStatus                               Status;
+            public int                                      ParallelLimit;
+            public TimeSpan                                 ElapsedTime;
         }
 
         //---------------------------------------------------------------------
@@ -70,15 +69,15 @@ namespace Neon.Kube
 
         private const int UnlimitedParallel = 500;  // Treat this as "unlimited"
 
-        private string                                              operationTitle;
-        private string                                              operationStatus;
-        private List<NodeSshProxy<NodeMetadata>>                    nodes;
-        private List<Step>                                          steps;
-        private Step                                                currentStep;
-        private bool                                                error;
-        private bool                                                hasNodeSteps;
-        private StringBuilder                                       sbDisplay;
-        private string                                              lastDisplay;
+        private string                                      operationTitle;
+        private string                                      operationStatus;
+        private List<NodeSshProxy<NodeMetadata>>            nodes;
+        private List<Step>                                  steps;
+        private Step                                        currentStep;
+        private bool                                        error;
+        private bool                                        hasNodeSteps;
+        private StringBuilder                               sbDisplay;
+        private string                                      lastDisplay;
 
         /// <summary>
         /// Constructor.
@@ -243,12 +242,12 @@ namespace Neon.Kube
         /// to be inserted into the step list.
         /// </param>
         public void AddWaitUntilOnlineStep(
-            string                              stepLabel     = "connect", 
-            string                              status        = null, 
+            string                                  stepLabel     = "connect", 
+            string                                  status        = null, 
             Func<NodeSshProxy<NodeMetadata>, bool>  nodePredicate = null, 
-            bool                                quiet         = false, 
-            TimeSpan?                           timeout       = null, 
-            int                                 position      = -1)
+            bool                                    quiet         = false, 
+            TimeSpan?                               timeout       = null, 
+            int                                     position      = -1)
         {
             if (timeout == null)
             {
@@ -260,7 +259,7 @@ namespace Neon.Kube
             }
 
             AddNodeStep(stepLabel,
-                (node, stepDelay) =>
+                node =>
                 {
                     node.Status = status ?? "connecting...";
                     node.WaitForBoot(timeout: timeout);
@@ -296,7 +295,7 @@ namespace Neon.Kube
             int                                     position      = -1)
         {
             AddNodeStep(stepLabel,
-                (node, stepDeley) =>
+                node =>
                 {
                     node.Status = status ?? $"delay: [{delay.TotalSeconds}] seconds";
                     Thread.Sleep(delay);
@@ -327,14 +326,6 @@ namespace Neon.Kube
         /// Optionally ignores the global <see cref="SetupController{T}.MaxParallel"/> 
         /// limit for the new step when greater.
         /// </param>
-        /// <param name="stepStaggerSeconds">
-        /// Optionally specifies the time delay used to stagger execution
-        /// of the nodes executing this step.  Setting a non-zero value of
-        /// perhaps 5 seconds will help mitigate problems with multiple
-        /// accessing nodes trying to download the same files from
-        /// the Internet at the same time, potentially causing the remote
-        /// endpoint to start throttling access.
-        /// </param>
         /// <param name="position">
         /// Optionally specifies the zero-based index of the position where the step is
         /// to be inserted into the step list.
@@ -345,16 +336,15 @@ namespace Neon.Kube
         /// </param>
         public void AddNodeStep(
             string stepLabel,
-            Action<NodeSshProxy<NodeMetadata>, TimeSpan>    nodeAction,
-            Func<NodeSshProxy<NodeMetadata>, bool>          nodePredicate      = null,
-            bool                                            quiet              = false,
-            bool                                            noParallelLimit    = false,
-            int                                             stepStaggerSeconds = 0,
-            int                                             position           = -1,
-            int                                             parallelLimit      = 0)
+            Action<NodeSshProxy<NodeMetadata>>      nodeAction,
+            Func<NodeSshProxy<NodeMetadata>, bool>  nodePredicate   = null,
+            bool                                    quiet           = false,
+            bool                                    noParallelLimit = false,
+            int                                     position        = -1,
+            int                                     parallelLimit   = 0)
         {
-            nodeAction    = nodeAction ?? new Action<NodeSshProxy<NodeMetadata>, TimeSpan>((n, d) => { });
-            nodePredicate = nodePredicate ?? new Func<NodeSshProxy<NodeMetadata>, bool>(n => true);
+            nodeAction    = nodeAction ?? new Action<NodeSshProxy<NodeMetadata>>(node => { });
+            nodePredicate = nodePredicate ?? new Func<NodeSshProxy<NodeMetadata>, bool>(node => true);
 
             if (position < 0)
             {
@@ -367,8 +357,7 @@ namespace Neon.Kube
                 Quiet          = quiet,
                 SyncNodeAction = nodeAction,
                 Predicate      = nodePredicate,
-                ParallelLimit  = noParallelLimit ? UnlimitedParallel : 0,
-                StepStagger    = TimeSpan.FromSeconds(stepStaggerSeconds)
+                ParallelLimit  = noParallelLimit ? UnlimitedParallel : 0
             };
 
             if (parallelLimit > 0)
@@ -398,14 +387,6 @@ namespace Neon.Kube
         /// Optionally ignores the global <see cref="SetupController{T}.MaxParallel"/> 
         /// limit for the new step when greater.
         /// </param>
-        /// <param name="stepStaggerSeconds">
-        /// Optionally specifies the time delay used to stagger execution
-        /// of the nodes executing this step.  Setting a non-zero value of
-        /// perhaps 5 seconds will help mitigate problems with multiple
-        /// accessing nodes trying to download the same files from
-        /// the Internet at the same time, potentially causing the remote
-        /// endpoint to start throttling access.
-        /// </param>
         /// <param name="position">
         /// Optionally specifies the zero-based index of the position where the step is
         /// to be inserted into the step list.
@@ -416,16 +397,15 @@ namespace Neon.Kube
         /// </param>
         public void AddNodeStep(
             string stepLabel,
-            Func<NodeSshProxy<NodeMetadata>, TimeSpan, Task>    nodeAction,
-            Func<NodeSshProxy<NodeMetadata>, bool>              nodePredicate      = null,
-            bool                                                quiet              = false,
-            bool                                                noParallelLimit    = false,
-            int                                                 stepStaggerSeconds = 0,
-            int                                                 position           = -1,
-            int                                                 parallelLimit      = 0)
+            Func<NodeSshProxy<NodeMetadata>, Task>  nodeAction,
+            Func<NodeSshProxy<NodeMetadata>, bool>  nodePredicate   = null,
+            bool                                    quiet           = false,
+            bool                                    noParallelLimit = false,
+            int                                     position        = -1,
+            int                                     parallelLimit   = 0)
         {
-            nodeAction    = nodeAction ?? new Func<NodeSshProxy<NodeMetadata>, TimeSpan, Task>((n, d) => { return Task.CompletedTask; });
-            nodePredicate = nodePredicate ?? new Func<NodeSshProxy<NodeMetadata>, bool>(n => true);
+            nodeAction    = nodeAction ?? new Func<NodeSshProxy<NodeMetadata>, Task>(node => { return Task.CompletedTask; });
+            nodePredicate = nodePredicate ?? new Func<NodeSshProxy<NodeMetadata>, bool>(node => true);
 
             if (position < 0)
             {
@@ -438,8 +418,7 @@ namespace Neon.Kube
                 Quiet           = quiet,
                 AsyncNodeAction = nodeAction,
                 Predicate       = nodePredicate,
-                ParallelLimit   = noParallelLimit ? UnlimitedParallel : 0,
-                StepStagger     = TimeSpan.FromSeconds(stepStaggerSeconds)
+                ParallelLimit   = noParallelLimit ? UnlimitedParallel : 0
             };
 
             if (parallelLimit > 0)
@@ -643,33 +622,6 @@ namespace Neon.Kube
                     {
                         if (step.SyncNodeAction != null)
                         {
-                            // Compute the amount of time to delay before executing
-                            // the step on each node.  We're going to spread the step
-                            // delay evenly across the nodes.
-                            //
-                            // Note that this only works when [NodeMetadata==NodeDefinition]
-
-                            if (typeof(NodeMetadata) == typeof(NodeDefinition))
-                            {
-                                if (step.StepStagger <= TimeSpan.Zero || stepNodes.Count() <= 1)
-                                {
-                                    foreach (var node in stepNodes)
-                                    {
-                                        (node.Metadata as NodeDefinition).StepDelay = TimeSpan.Zero;
-                                    }
-                                }
-                                else
-                                {
-                                    var delay = TimeSpan.Zero;
-
-                                    foreach (var node in stepNodes)
-                                    {
-                                        (node.Metadata as NodeDefinition).StepDelay = delay;
-                                        delay += step.StepStagger;
-                                    }
-                                }
-                            }
-
                             // Execute the step on the selected nodes.
 
                             Parallel.ForEach(stepNodes, parallelOptions,
@@ -677,15 +629,7 @@ namespace Neon.Kube
                                 {
                                     try
                                     {
-                                        var nodeDefinition = node.Metadata as NodeDefinition;
-                                        var stepDelay      = TimeSpan.Zero;
-
-                                        if (nodeDefinition != null && nodeDefinition.StepDelay > TimeSpan.Zero)
-                                        {
-                                            stepDelay = nodeDefinition.StepDelay;
-                                        }
-
-                                        step.SyncNodeAction(node, stepDelay);
+                                        step.SyncNodeAction(node);
 
                                         node.Status  = "[x] DONE";
                                         node.IsReady = true;
@@ -699,33 +643,6 @@ namespace Neon.Kube
                         }
                         else if (step.AsyncNodeAction != null)
                         {
-                            // Compute the amount of time to delay before executing
-                            // the step on each node.  We're going to spread the step
-                            // delay evenly across the nodes.
-                            //
-                            // Note that this only works when [NodeMetadata==NodeDefinition]
-
-                            if (typeof(NodeMetadata) == typeof(NodeDefinition))
-                            {
-                                if (step.StepStagger <= TimeSpan.Zero || stepNodes.Count() <= 1)
-                                {
-                                    foreach (var node in stepNodes)
-                                    {
-                                        (node.Metadata as NodeDefinition).StepDelay = TimeSpan.Zero;
-                                    }
-                                }
-                                else
-                                {
-                                    var delay = TimeSpan.Zero;
-
-                                    foreach (var node in stepNodes)
-                                    {
-                                        (node.Metadata as NodeDefinition).StepDelay = delay;
-                                        delay += step.StepStagger;
-                                    }
-                                }
-                            }
-
                             // Execute the step on the selected nodes.
 
                             Parallel.ForEach(stepNodes, parallelOptions,
@@ -734,17 +651,11 @@ namespace Neon.Kube
                                     try
                                     {
                                         var nodeDefinition = node.Metadata as NodeDefinition;
-                                        var stepDelay      = TimeSpan.Zero;
-
-                                        if (nodeDefinition != null && nodeDefinition.StepDelay > TimeSpan.Zero)
-                                        {
-                                            stepDelay = nodeDefinition.StepDelay;
-                                        }
 
                                         var runTask = Task.Run(
                                             async () =>
                                             {
-                                                await step.AsyncNodeAction(node, stepDelay);
+                                                await step.AsyncNodeAction(node);
                                             });
 
                                         runTask.Wait();

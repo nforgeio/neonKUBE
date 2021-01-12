@@ -64,6 +64,53 @@ if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
     exit
 }
 
+# Sets the package version in the specified project file and makes a backup
+# of the original project file named [$project.bak].
+
+function SetVersion
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=1)]
+        [string]$project,
+        [Parameter(Position=1, Mandatory=1)]
+        [string]$version
+    )
+
+    "* SetVersion: ${project}:${version}"
+
+    $projectPath    = [io.path]::combine($env:NF_ROOT, "Lib", "$project", "$project" + ".csproj")
+    $orgProjectFile = Get-Content "$projectPath" -Encoding utf8
+    $regex          = [regex]'<Version>(.*)</Version>'
+    $match          = $regex.Match($orgProjectFile)
+    $orgVersion     = $match.Groups[1].Value
+    $tmpProjectFile = $orgProjectFile.Replace("<Version>$orgVersion</Version>", "<Version>$version</Version>")
+
+    Copy-Item "$projectPath" "$projectPath.bak"
+    
+    $tmpProjectFile | Out-File -FilePath "$projectPath" -Encoding utf8
+}
+
+# Restores the original project version for a project.
+
+function RestoreVersion
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=1)]
+        [string]$project
+    )
+
+    "* Restore: ${project}:${version}"
+
+    $projectPath = [io.path]::combine($env:NF_ROOT, "Lib", "$project", "$project" + ".csproj")
+
+    Copy-Item "$projectPath.bak" "$projectPath"
+    Remove-Item "$projectPath.bak"
+}
+
+# Builds and publishes the project.
+
 function Publish
 {
     [CmdletBinding()]
@@ -74,34 +121,20 @@ function Publish
         [string]$version
     )
 
-""
-"==============================================================================="
-"* Publishing: ${project}:${version}"
-"==============================================================================="
+    ""
+    "==============================================================================="
+    "* Publishing: ${project}:${version}"
+    "==============================================================================="
 
-    $projectPath    = [io.path]::combine($env:NF_ROOT, "Lib", "$project", "$project" + ".csproj")
-    $orgProjectFile = Get-Content "$projectPath" -Encoding utf8
-    $regex          = [regex]'<Version>(.*)</Version>'
-    $match          = $regex.Match($orgProjectFile)
-    $orgVersion     = $match.Groups[1].Value
-    $tmpProjectFile = $orgProjectFile.Replace("<Version>$orgVersion</Version>", "<Version>$version</Version>")
+    $projectPath = [io.path]::combine($env:NF_ROOT, "Lib", "$project", "$project" + ".csproj")
 
-    Copy-Item "$projectPath" "$projectPath.org"
-    
-    $tmpProjectFile | Out-File -FilePath "$projectPath" -Encoding utf8
-
-    dotnet pack "$env:NF_ROOT\Lib\$project\$project.csproj" -c Debug -o "$env:NF_BUILD\nuget"
+    dotnet pack $projectPath -c Debug -o "$env:NF_BUILD\nuget"
     nuget push -Source $env:NC_NUGET_DEVFEED "$env:NF_BUILD\nuget\$project.$version.nupkg"
    
     # NOTE: We're not doing this because including source and symbols above because
     # doesn't seem to to work.
     #
 	# dotnet pack "$env:NF_ROOT\Lib\$project\$project.csproj" -c Debug --include-symbols --include-source -o "$env:NUGET_LOCAL_FEED"
-
-    # Restore the project file.
-
-    Copy-Item "$projectPath.org" "$projectPath"
-    Remove-Item "$projectPath.org"
 }
 
 # Verify that the [NUGET_LOCAL_FEED] environment variable exists and references an
@@ -135,40 +168,114 @@ $libraryVersion = "10000.0.$reply-dev"
 $reply          = Invoke-WebRequest -Uri "$env:NC_NUGET_VERSIONER/counter/neonKUBE-dev" -Method 'PUT' -Headers @{ 'Authorization' = "Bearer $versionerKeyBase64" } 
 $kubeVersion    = "10000.0.$reply-dev"
 
+# We need to set the version first in all of the project files so that
+# implicit package dependencies will work for external projects importing
+# these packages.
+
+SetVersion Neon.Cadence             $libraryVersion
+SetVersion Neon.Cassandra           $libraryVersion
+SetVersion Neon.Common              $libraryVersion
+SetVersion Neon.Couchbase           $libraryVersion
+SetVersion Neon.Cryptography        $libraryVersion
+SetVersion Neon.Docker              $libraryVersion
+SetVersion Neon.HyperV              $libraryVersion
+SetVersion Neon.Service             $libraryVersion
+SetVersion Neon.ModelGen            $libraryVersion
+SetVersion Neon.Nats                $libraryVersion
+SetVersion Neon.Postgres            $libraryVersion
+SetVersion Neon.SSH                 $libraryVersion
+SetVersion Neon.SSH.NET             $libraryVersion
+SetVersion Neon.Temporal            $libraryVersion
+SetVersion Neon.Web                 $libraryVersion
+SetVersion Neon.XenServer           $libraryVersion
+SetVersion Neon.Xunit               $libraryVersion
+SetVersion Neon.Xunit.Cadence       $libraryVersion
+SetVersion Neon.Xunit.Couchbase     $libraryVersion
+SetVersion Neon.Xunit.Temporal      $libraryVersion
+SetVersion Neon.Xunit.YugaByte      $libraryVersion
+SetVersion Neon.YugaByte            $libraryVersion
+
+SetVersion Neon.Kube                $kubeVersion
+SetVersion Neon.Kube.Aws            $kubeVersion
+SetVersion Neon.Kube.Azure          $kubeVersion
+SetVersion Neon.Kube.BareMetal      $kubeVersion
+SetVersion Neon.Kube.Google         $kubeVersion
+SetVersion Neon.Kube.Hosting        $kubeVersion
+SetVersion Neon.Kube.HyperV         $kubeVersion
+SetVersion Neon.Kube.HyperVLocal    $kubeVersion
+SetVersion Neon.Kube.XenServer      $kubeVersion
+SetVersion Neon.Kube.Xunit          $kubeVersion
+
 # Build and publish the projects.
 
-Publish Neon.Cadence            $libraryVersion
-Publish Neon.Cassandra          $libraryVersion
-Publish Neon.Common             $libraryVersion
-Publish Neon.Couchbase          $libraryVersion
-Publish Neon.Cryptography       $libraryVersion
-Publish Neon.Docker             $libraryVersion
-Publish Neon.HyperV             $libraryVersion
-Publish Neon.Service            $libraryVersion
-Publish Neon.ModelGen           $libraryVersion
-Publish Neon.Nats               $libraryVersion
-Publish Neon.Postgres           $libraryVersion
-Publish Neon.SSH                $libraryVersion
-Publish Neon.SSH.NET            $libraryVersion
-Publish Neon.Temporal           $libraryVersion
-Publish Neon.Web                $libraryVersion
-Publish Neon.XenServer          $libraryVersion
-Publish Neon.Xunit              $libraryVersion
-Publish Neon.Xunit.Cadence      $libraryVersion
-Publish Neon.Xunit.Couchbase    $libraryVersion
-Publish Neon.Xunit.Temporal     $libraryVersion
-Publish Neon.Xunit.YugaByte     $libraryVersion
-Publish Neon.YugaByte           $libraryVersion
+Publish Neon.Cadence                $libraryVersion
+Publish Neon.Cassandra              $libraryVersion
+Publish Neon.Common                 $libraryVersion
+Publish Neon.Couchbase              $libraryVersion
+Publish Neon.Cryptography           $libraryVersion
+Publish Neon.Docker                 $libraryVersion
+Publish Neon.HyperV                 $libraryVersion
+Publish Neon.Service                $libraryVersion
+Publish Neon.ModelGen               $libraryVersion
+Publish Neon.Nats                   $libraryVersion
+Publish Neon.Postgres               $libraryVersion
+Publish Neon.SSH                    $libraryVersion
+Publish Neon.SSH.NET                $libraryVersion
+Publish Neon.Temporal               $libraryVersion
+Publish Neon.Web                    $libraryVersion
+Publish Neon.XenServer              $libraryVersion
+Publish Neon.Xunit                  $libraryVersion
+Publish Neon.Xunit.Cadence          $libraryVersion
+Publish Neon.Xunit.Couchbase        $libraryVersion
+Publish Neon.Xunit.Temporal         $libraryVersion
+Publish Neon.Xunit.YugaByte         $libraryVersion
+Publish Neon.YugaByte               $libraryVersion
 
-Publish Neon.Kube               $kubeVersion
-Publish Neon.Kube.Aws           $kubeVersion
-Publish Neon.Kube.Azure         $kubeVersion
-Publish Neon.Kube.BareMetal     $kubeVersion
-Publish Neon.Kube.Google        $kubeVersion
-Publish Neon.Kube.Hosting       $kubeVersion
-Publish Neon.Kube.HyperV        $kubeVersion
-Publish Neon.Kube.HyperVLocal   $kubeVersion
-Publish Neon.Kube.XenServer     $kubeVersion
-Publish Neon.Kube.Xunit         $kubeVersion
+Publish Neon.Kube                   $kubeVersion
+Publish Neon.Kube.Aws               $kubeVersion
+Publish Neon.Kube.Azure             $kubeVersion
+Publish Neon.Kube.BareMetal         $kubeVersion
+Publish Neon.Kube.Google            $kubeVersion
+Publish Neon.Kube.Hosting           $kubeVersion
+Publish Neon.Kube.HyperV            $kubeVersion
+Publish Neon.Kube.HyperVLocal       $kubeVersion
+Publish Neon.Kube.XenServer         $kubeVersion
+Publish Neon.Kube.Xunit             $kubeVersion
+
+# Restore the project versions
+
+RestoreVersion Neon.Cadence             
+RestoreVersion Neon.Cassandra           
+RestoreVersion Neon.Common              
+RestoreVersion Neon.Couchbase           
+RestoreVersion Neon.Cryptography        
+RestoreVersion Neon.Docker              
+RestoreVersion Neon.HyperV              
+RestoreVersion Neon.Service             
+RestoreVersion Neon.ModelGen            
+RestoreVersion Neon.Nats                
+RestoreVersion Neon.Postgres            
+RestoreVersion Neon.SSH                 
+RestoreVersion Neon.SSH.NET             
+RestoreVersion Neon.Temporal            
+RestoreVersion Neon.Web                 
+RestoreVersion Neon.XenServer           
+RestoreVersion Neon.Xunit               
+RestoreVersion Neon.Xunit.Cadence       
+RestoreVersion Neon.Xunit.Couchbase     
+RestoreVersion Neon.Xunit.Temporal      
+RestoreVersion Neon.Xunit.YugaByte      
+RestoreVersion Neon.YugaByte            
+
+RestoreVersion Neon.Kube                
+RestoreVersion Neon.Kube.Aws            
+RestoreVersion Neon.Kube.Azure          
+RestoreVersion Neon.Kube.BareMetal      
+RestoreVersion Neon.Kube.Google         
+RestoreVersion Neon.Kube.Hosting        
+RestoreVersion Neon.Kube.HyperV         
+RestoreVersion Neon.Kube.HyperVLocal    
+RestoreVersion Neon.Kube.XenServer      
+RestoreVersion Neon.Kube.Xunit          
 
 pause

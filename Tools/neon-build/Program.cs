@@ -62,9 +62,7 @@ ARGUMENTS:
 
 OPTIONS:
 
-    --kubernetes-version    - optionally specifies the Kubernetes version
-                              to be installed.  This defaults to the version
-                              read from [$/kubernetes-version.txt].
+    --kubernetes-version    - Specifies the Kubernetes version.
 
 neon-build gzip SOURCE TARGET
 -----------------------------

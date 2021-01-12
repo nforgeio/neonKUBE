@@ -82,7 +82,6 @@ Server Requirements:
         private const string    logFailedMarker = "# CLUSTER-END-PREPARE-FAILED #####################################################";
 
         private ClusterProxy    cluster;
-        private KubeSetupInfo   kubeSetupInfo;
         private HostingManager  hostingManager;
         private string          clusterDefPath;
         private string          packageCaches;
@@ -117,7 +116,7 @@ Server Requirements:
             {
                 Console.WriteLine("Removing cached virtual machine templates.");
 
-                foreach (var fileName in Directory.GetFiles(KubeHelper.VmTemplatesFolder, "*.*", SearchOption.TopDirectoryOnly))
+                foreach (var fileName in Directory.GetFiles(KubeHelper.NodeImageCache, "*.*", SearchOption.TopDirectoryOnly))
                 {
                     File.Delete(fileName);
                 }
@@ -144,8 +143,6 @@ Server Requirements:
             ClusterDefinition.ValidateFile(clusterDefPath, strict: true);
 
             var clusterDefinition = ClusterDefinition.FromFile(clusterDefPath, strict: true);
-
-            clusterDefinition.Provisioner = $"neon-cli:{Program.Version}";  // Identify this tool/version as the cluster provisioner
 
             // NOTE: Cluster prepare starts new log files.
 
@@ -246,20 +243,11 @@ Server Requirements:
                 }
 
                 //-----------------------------------------------------------------
-                // Obtain setup configuration and other details from the neonKUBE
-                // headend service.
-
-                using (var client = new HeadendClient())
-                {
-                    kubeSetupInfo = client.GetSetupInfoAsync(cluster.Definition).Result;
-                }
-
-                //-----------------------------------------------------------------
                 // Perform basic environment provisioning.  This creates basic cluster components
                 // such as virtual machines, networks, load balancers, public IP addresses, security
                 // groups, etc. as required for the hosting environment.
 
-                hostingManager = new HostingManagerFactory(() => HostingLoader.Initialize()).GetManager(cluster, kubeSetupInfo, Program.LogPath);
+                hostingManager = new HostingManagerFactory(() => HostingLoader.Initialize()).GetManager(cluster, Program.LogPath);
 
                 if (hostingManager == null)
                 {
@@ -290,7 +278,7 @@ Server Requirements:
                     clusterLogin = new ClusterLogin(clusterLoginPath)
                     {
                         ClusterDefinition = clusterDefinition,
-                        SshUsername       = KubeConst.SysAdminUsername,
+                        SshUsername       = KubeConst.SysAdminUser,
                         SetupDetails      = new KubeSetupDetails() { SetupPending = true }
                     };
 
@@ -312,7 +300,7 @@ Server Requirements:
                 //
                 // We're going to use the cloud API to configure this secure password
                 // when creating the VMs.  For on-premise hypervisor environments such
-                // as Hyper-V and XenServer, we're going use the [neon-node-prep]
+                // as Hyper-V and XenServer, we're going use the [neon-init]
                 // service to mount a virtual DVD that will change the password before
                 // configuring the network on first boot.
                 //
@@ -341,7 +329,7 @@ Server Requirements:
                 {
                     // Generate a 2048 bit SSH key pair.
 
-                    clusterLogin.SshKey = KubeHelper.GenerateSshKey(cluster.Name, "sysadmin");
+                    clusterLogin.SshKey = KubeHelper.GenerateSshKey(cluster.Name, KubeConst.SysAdminUser);
 
                     // We're going to use WinSCP (if it's installed) to convert the OpenSSH PEM formatted key
                     // to the PPK format PuTTY/WinSCP requires.
@@ -464,21 +452,19 @@ Server Requirements:
                 // Prepare the nodes.
 
                 setupController.AddWaitUntilOnlineStep(timeout: TimeSpan.FromMinutes(15));
-                setupController.AddNodeStep("node OS verify", CommonSteps.VerifyOS);
+                setupController.AddNodeStep("node OS verify", KubeSetup.VerifyNodeOS); ;
                 setupController.AddNodeStep("node credentials", 
-                    (node, stepDelay) =>
+                    node =>
                     {
-                        CommonSteps.ConfigureSshKey(node, clusterLogin);
+                        KubeSetup.ConfigureSshKey(node, clusterLogin);
                     });
                 setupController.AddNodeStep("node prepare", 
-                    (node, stepDelay) =>
+                    node =>
                     {
-                        Thread.Sleep(stepDelay);
-                        CommonSteps.PrepareNode(node, cluster.Definition, kubeSetupInfo, hostingManager, shutdown: false);
-                    },
-                    stepStaggerSeconds: cluster.Definition.Setup.StepStaggerSeconds);
+                        KubeSetup.PrepareNode(node, cluster.Definition, hostingManager, shutdown: false);
+                    });
             
-                // Some hosting manages may have to some additional work after the node has
+                // Some hosting managers may have to some additional work after the node has
                 // been otherwise prepared.
 
                 hostingManager.AddPostPrepareSteps(setupController);

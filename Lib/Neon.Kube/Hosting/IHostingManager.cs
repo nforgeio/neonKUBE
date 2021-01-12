@@ -33,7 +33,6 @@ using Neon.Net;
 using Neon.Retry;
 using Neon.Time;
 
-using ICSharpCode.SharpZipLib.Zip;
 using Renci.SshNet;
 using Renci.SshNet.Common;
 
@@ -45,9 +44,9 @@ namespace Neon.Kube
     public interface IHostingManager : IDisposable
     {
         /// <summary>
-        /// Returns <c>true</c> if the provisioning operation actually does nothing.
+        /// Returns the hosting environment implemented by the manager.
         /// </summary>
-        bool IsProvisionNOP { get; }
+        HostingEnvironment HostingEnvironment { get; }
 
         /// <summary>
         /// Verifies that a cluster is valid for the hosting manager, customizing 
@@ -56,6 +55,11 @@ namespace Neon.Kube
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <exception cref="ClusterDefinitionException">Thrown if any problems were detected.</exception>
         void Validate(ClusterDefinition clusterDefinition);
+
+        /// <summary>
+        /// Returns <c>true</c> if the provisioning operation actually does nothing.
+        /// </summary>
+        bool IsProvisionNOP { get; }
 
         /// <summary>
         /// Returns <c>true</c> if provisoning requires that the user have

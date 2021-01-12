@@ -56,6 +56,17 @@ fi
 
 startsetup node
 
+#------------------------------------------------------------------------------
+# Remove the [neon-init] service.  This is no longer required after it
+# runs once (first boot) during node provisioning configures the network and 
+# and services.
+
+if [ -f /etc/systemd/system/neon-init.service ]; then
+    echo "** Remove: neon-init.service"
+    rm -f /etc/systemd/system/neon-init.service
+    rm -f ${NEON_BIN_FOLDER}/neon-init.sh
+fi
+
 # Ensure that the home directory for the [temp] user prepare created
 # to relocate the [sysadmin] user ID is deleted.  Older builds of the
 # [neon prepare node-template] command didn't delete this.
@@ -223,7 +234,6 @@ cat <<EOF > /etc/sysctl.conf
 
 ##############################################################3
 # Functions previously found in netbase
-#
 
 # Uncomment the next two lines to enable Spoof protection (reverse-path filter)
 # Turn on Source Address Verification in all interfaces to
@@ -527,7 +537,7 @@ EOF
 # $todo(jefflill):
 #
 # The neon-cleaner assumes that nobody is going to have LinuxSshProxy 
-# commands that run for more than one day (which is pretty likely).  A better approach
+# commands that run for more than one day (which is pretty unlikely).  A better approach
 # would be to look for temporary command folders THAT HAVE COMPLETED (e.g. HAVE
 # an [exit] code file) and are older than one day (or perhaps even older than an
 # hour or two) and then purge those.  Not a high priority.

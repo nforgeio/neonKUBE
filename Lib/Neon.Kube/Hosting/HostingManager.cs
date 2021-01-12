@@ -91,6 +91,9 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
+        public abstract HostingEnvironment HostingEnvironment { get; }
+
+        /// <inheritdoc/>
         public abstract void Validate(ClusterDefinition clusterDefinition);
 
         /// <inheritdoc/>
