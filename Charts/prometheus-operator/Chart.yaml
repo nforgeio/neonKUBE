@@ -43,7 +43,3 @@ dependencies:
   version: "1.12.*"
   repository: https://prometheus-community.github.io/helm-charts
   condition: nodeExporter.enabled
-- name: grafana
-  version: "5.8.*"
-  repository: https://grafana.github.io/helm-charts
-  condition: grafana.enabled
