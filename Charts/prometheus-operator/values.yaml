@@ -1427,7 +1427,7 @@ prometheusOperator:
   ##
   image:
     organization: neon-system-registry
-    repository: coreos-prometheus-operator
+    repository: prometheus-operator-prometheus-operator
     tag: v0.43.2
     sha: ""
     pullPolicy: IfNotPresent
@@ -1436,7 +1436,7 @@ prometheusOperator:
   ##
   configmapReloadImage:
     organization: neon-system-registry
-    repository: coreos-configmap-reload
+    repository: jimmidyson-configmap-reload
     tag: v0.4.0
     sha: ""
 
@@ -1444,8 +1444,8 @@ prometheusOperator:
   ##
   prometheusConfigReloaderImage:
     organization: neon-system-registry
-    repository: coreos-prometheus-config-reloader
-    tag: v0.43.2
+    repository: prometheus-operator-prometheus-config-reloader
+    tag: v0.44.0
     sha: ""
 
   ## Set the prometheus config reloader side-car CPU limit
