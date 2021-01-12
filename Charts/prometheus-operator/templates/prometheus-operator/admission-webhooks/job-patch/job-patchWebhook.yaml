@@ -18,8 +18,9 @@ spec:
   template:
     metadata:
       name:  {{ template "kube-prometheus-stack.fullname" . }}-admission-patch
-{{- with .Values.prometheusOperator.admissionWebhooks.patch.podAnnotations }}
       annotations:
+        "sidecar.istio.io/inject": "false"
+{{- with .Values.prometheusOperator.admissionWebhooks.patch.podAnnotations }}
 {{ toYaml .  | indent 8 }}
 {{- end }}
       labels:
