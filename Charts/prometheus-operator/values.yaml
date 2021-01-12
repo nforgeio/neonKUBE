@@ -1256,8 +1256,10 @@ prometheusOperator:
       ## Provide a priority class name to the webhook patching job
       ##
       priorityClassName: ""
-      podAnnotations: {}
-      nodeSelector: {}
+      podAnnotations:
+        sidecar.istio.io/inject: "false"
+      nodeSelector: 
+        neonkube.io/monitor.metrics: "true"
       affinity: {}
       tolerations: []
 
