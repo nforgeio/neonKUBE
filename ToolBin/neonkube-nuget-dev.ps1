@@ -278,4 +278,7 @@ RestoreVersion Neon.Kube.HyperVLocal
 RestoreVersion Neon.Kube.XenServer      
 RestoreVersion Neon.Kube.Xunit          
 
+""
+"** Package publication completed"
+""
 pause
