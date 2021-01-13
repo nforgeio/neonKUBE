@@ -753,6 +753,15 @@ chmod 750 {KubeNodeFolders.State}/setup
         }
 
         /// <summary>
+        /// Installs the <b>CRI-O</b> container runtime.
+        /// </summary>
+        /// <param name="node"></param>
+        /// <param name="logWriter"></param>
+        public static void InstallCriO(NodeSshProxy<NodeDefinition> node, Action<string> logWriter = null)
+        {
+        }
+
+        /// <summary>
         /// Installs the Helm charts as a single ZIP archive written to the 
         /// neonKUBE Helm folder.
         /// </summary>
