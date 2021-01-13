@@ -1168,7 +1168,6 @@ namespace Neon.Kube
         /// </summary>
         public static void InstallKubeCtl()
         {
-#if REFACTOR
             var hostPlatform      = KubeHelper.HostPlatform;
             var cachedKubeCtlPath = KubeHelper.GetCachedComponentPath(hostPlatform, "kubectl", KubeVersions.KubernetesVersion);
             var targetPath        = Path.Combine(KubeHelper.ProgramFolder);
@@ -1281,7 +1280,6 @@ namespace Neon.Kube
 
                     throw new NotImplementedException($"[{hostPlatform}] support is not implemented.");
             }
-#endif
         }
 
         /// <summary>

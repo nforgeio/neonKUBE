@@ -401,7 +401,6 @@ OPTIONS:
         /// </summary>
         private async void WorkstationBinaries()
         {
-#if REFACTOR
             var firstMaster       = cluster.FirstMaster;
             var hostPlatform      = KubeHelper.HostPlatform;
             var cachedKubeCtlPath = KubeHelper.GetCachedComponentPath(hostPlatform, "kubectl", KubeVersions.KubernetesVersion);
@@ -533,7 +532,6 @@ OPTIONS:
             KubeHelper.InstallHelm();
 
             firstMaster.Status = string.Empty;
-#endif
         }
 
         /// <summary>
@@ -846,7 +844,6 @@ $@"
         /// <param name="node">The target node.</param>
         private void SetupKubernetes(NodeSshProxy<NodeDefinition> node)
         {
-#if REFACTOR
             node.InvokeIdempotentAction("setup/setup-install-kubernetes",
                 () =>
                 {
@@ -903,7 +900,6 @@ rm -rf linux-amd64
                             node.SudoCommand(CommandBundle.FromScript(helmInstallScript));
                         });
                 });
-#endif
         }
 
         /// <summary>
@@ -924,14 +920,12 @@ rm -rf linux-amd64
 
                     // Pull the Kubernetes images:
 
-#if REFACTOR
                     firstMaster.InvokeIdempotentAction("setup/cluster-images",
                         () =>
                         {
                             firstMaster.Status = "pull: kubernetes images...";
                             firstMaster.SudoCommand($"kubeadm config images pull --image-repository {NeonHelper.NeonBranchRegistry} --kubernetes-version v{KubeVersions.KubernetesVersion}");
                         });
-#endif
 
                     firstMaster.InvokeIdempotentAction("setup/cluster-init",
                         () =>
@@ -964,7 +958,6 @@ rm -rf linux-amd64
                                 sbCertSANs.AppendLine($"  - \"{node.Address}\"");
                             }
 
-#if REFACTOR
                             var clusterConfig =
 $@"
 apiVersion: kubeadm.k8s.io/v1beta2
@@ -1002,7 +995,6 @@ nodeStatusReportFrequency: 4s
 volumePluginDir: /var/lib/kubelet/volume-plugins
 ";
                             firstMaster.UploadText("/tmp/cluster.yaml", clusterConfig);
-#endif
 
                             var response = firstMaster.SudoCommand($"kubeadm init --config /tmp/cluster.yaml");
                             firstMaster.SudoCommand("rm /tmp/cluster.yaml");
@@ -1819,7 +1811,6 @@ spec:
             master.InvokeIdempotentAction("setup/cluster-deploy-cni",
                 () =>
                 {
-#if REFACTOR
                     // Deploy Calico
 
                     var script =
@@ -1838,7 +1829,6 @@ kubectl apply -f /tmp/calico.yaml
 rm /tmp/calico.yaml
 ";
                     master.SudoCommand(CommandBundle.FromScript(script));
-#endif
 
                     // Wait for Calico and CoreDNS pods to report that they're running.
                     // We're going to wait a maximum of 300 seconds.
@@ -1876,7 +1866,6 @@ rm /tmp/calico.yaml
         {
             master.Status = "deploy: istio";
 
-#if REFACTOR
             var istioScript0 =
 $@"#!/bin/bash
 
@@ -1999,7 +1988,6 @@ istioctl install -f istio-cni.yaml
 ";
 
             master.SudoCommand(CommandBundle.FromScript(istioScript0));
-#endif
         }
 
         /// <summary>
@@ -2621,9 +2609,7 @@ rm -rf {chartName}*
                     var values = new List<KeyValuePair<string, object>>();
                     
                     values.Add(new KeyValuePair<string, object>($"alertmanager.alertmanagerSpec.image.organization", NeonHelper.NeonBranchRegistry));
-#if REFACTOR
                     values.Add(new KeyValuePair<string, object>($"alertmanager.alertmanagerSpec.image.tag", KubeVersions.AlertManagerVersion));
-#endif
                     values.Add(new KeyValuePair<string, object>($"prometheusOperator.tlsProxy.image.organization", NeonHelper.NeonBranchRegistry));
                     values.Add(new KeyValuePair<string, object>($"prometheusOperator.tlsProxy.image.tag", $"neonkube-{KubeConst.LatestClusterVersion}"));
                     values.Add(new KeyValuePair<string, object>($"prometheusOperator.admissionWebhooks.patch.image.organization", NeonHelper.NeonBranchRegistry));
@@ -2635,9 +2621,7 @@ rm -rf {chartName}*
                     values.Add(new KeyValuePair<string, object>($"prometheusOperator.prometheusConfigReloaderImage.organization", NeonHelper.NeonBranchRegistry));
                     values.Add(new KeyValuePair<string, object>($"prometheusOperator.prometheusConfigReloaderImage.tag", $"neonkube-{KubeConst.LatestClusterVersion}"));
                     values.Add(new KeyValuePair<string, object>($"prometheus.prometheusSpec.image.organization", NeonHelper.NeonBranchRegistry));
-#if REFACTOR
                     values.Add(new KeyValuePair<string, object>($"prometheus.prometheusSpec.image.tag", KubeVersions.PrometheusVersion));
-#endif
                     values.Add(new KeyValuePair<string, object>($"global.kubeStateMetrics.image.organization", NeonHelper.NeonBranchRegistry));
                     values.Add(new KeyValuePair<string, object>($"global.kubeStateMetrics.image.tag", $"neonkube-{KubeConst.LatestClusterVersion}"));
                     values.Add(new KeyValuePair<string, object>($"global.nodeExporter.image.organization", NeonHelper.NeonBranchRegistry));
