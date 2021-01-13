@@ -2743,17 +2743,9 @@
             Returns the Unix epoch time: 01-01-1970 (UTC).
             </summary>
         </member>
-        <member name="F:Neon.Common.NeonHelper.is64Bit">
+        <member name="F:Neon.Common.NeonHelper.NeonMetricsPrefix">
             <summary>
-            Indicates whether the current application was built as 32 or 64-bit or <c>null</c>
-            if this hasn't been determined yet.
-            </summary>
-        </member>
-        <member name="F:Neon.Common.NeonHelper.isDevWorkstation">
-            <summary>
-            Indicates whether the current application is running on a developer workstation
-            or <c>null</c> if this hasn't been determined yet.  This is determined by the
-            presence of the <b>DEV_WORKSTATION</b> environment variable.
+            Returns the prefix to be used for Neon related Prometheus names.
             </summary>
         </member>
         <member name="F:Neon.Common.NeonHelper.serviceContainer">
@@ -2767,11 +2759,6 @@
             Set to <c>true</c> when the special UTF-8 encoding provider with the misspelled
             name <b>utf8</b> (without the dash) has been initialized.  See 
             <see cref="M:Neon.Common.NeonHelper.RegisterMisspelledUtf8Provider"/> for more information.
-            </summary>
-        </member>
-        <member name="F:Neon.Common.NeonHelper.netFramework">
-            <summary>
-            Identifies the framework hosting the current process.
             </summary>
         </member>
         <member name="P:Neon.Common.NeonHelper.ServiceContainer">
@@ -2794,22 +2781,6 @@
             implementation should suffice for most purposes.
             </para>
             </remarks>
-        </member>
-        <member name="P:Neon.Common.NeonHelper.Is64Bit">
-            <summary>
-            Returns <c>true</c> if the application was built as 64-bit.
-            </summary>
-        </member>
-        <member name="P:Neon.Common.NeonHelper.IsDevWorkstation">
-            <summary>
-            Indicates whether the current application is running on a developer workstation.
-            This is determined by the presence of the <b>DEV_WORKSTATION</b> environment variable.
-            </summary>
-        </member>
-        <member name="P:Neon.Common.NeonHelper.Is32BitBuild">
-            <summary>
-            Returns <c>true</c> if the client was built as 32-bit.
-            </summary>
         </member>
         <member name="M:Neon.Common.NeonHelper.RegisterMisspelledUtf8Provider">
             <summary>
@@ -3034,6 +3005,14 @@
             result as bytes.
             </summary>
             <returns>The standard input.</returns>
+        </member>
+        <member name="M:Neon.Common.NeonHelper.FileWildcardRegex(System.String)">
+            <summary>
+            Generates a case insensitive <see cref="T:System.Text.RegularExpressions.Regex"/> equivalent to a standard file name wildcard
+            pattern using <b>[*]</b> and <b>[?]</b> characters.
+            </summary>
+            <param name="pattern">The file name wildcard pattern.</param>
+            <returns>The corresponding <see cref="T:System.Text.RegularExpressions.Regex"/>.</returns>
         </member>
         <member name="F:Neon.Common.NeonHelper.JsonRelaxedSerializerSettings">
             <summary>
@@ -3349,6 +3328,7 @@
             <param name="timeout">Optionally specifies the maximum time to wait.</param>
             <param name="pollInterval">Optionally specifies time to wait between each predicate call or <c>null</c> for a reasonable default.</param>
             <param name="timeoutMessage">Optionally overrides the <see cref="T:System.TimeoutException"/> message.</param>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
             <exception cref="T:System.TimeoutException">Thrown if the never returned <c>true</c> before the timeout.</exception>
             <remarks>
             This method periodically calls <paramref name="predicate"/> until it
@@ -3400,6 +3380,14 @@
             </summary>
             <param name="tasks">The tasks to wait on.</param>
             <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
+        <member name="M:Neon.Common.NeonHelper.WaitAll(System.Collections.Generic.IEnumerable{System.Threading.Thread})">
+            <summary>
+            Waits for all of the threads passed to complete.  This method does nothing
+            when <paramref name="threads"/> is <c>null</c> or empty.  Also and <c>null</c>
+            threads passed will be ignored.
+            </summary>
+            <param name="threads">The threads.</param>
         </member>
         <member name="M:Neon.Common.NeonHelper.WaitAllAsync(System.Collections.Generic.IEnumerable{System.Threading.Tasks.Task},System.Nullable{System.TimeSpan},System.Threading.CancellationToken)">
             <summary>
@@ -3562,6 +3550,28 @@
             </summary>
             <param name="encoded">The encoded string.</param>
             <returns>The decoded bytes.</returns>
+        </member>
+        <member name="M:Neon.Common.NeonHelper.ToBase64(System.String,System.Text.Encoding)">
+            <summary>
+            Converts the string passed into base64 string.
+            </summary>
+            <param name="value">The plaintext string to be encoded (cannot be <c>null</c>).</param>
+            <param name="encoding">
+            Optionally specifies the encoding to use to convert the input to bytes 
+            before base64 encoding it.  This defaults to <see cref="P:System.Text.Encoding.UTF8"/>.
+            </param>
+            <returns></returns>
+        </member>
+        <member name="M:Neon.Common.NeonHelper.FromBase64(System.String,System.Text.Encoding)">
+            <summary>
+            
+            </summary>
+            <param name="encodedValue">The base64 encoded input.</param>
+            <param name="encoding">
+            Optionally specifies the encoding to use to convert the decoded bytes 
+            to the result.  This defaults to <see cref="P:System.Text.Encoding.UTF8"/>.
+            </param>
+            <returns></returns>
         </member>
         <member name="M:Neon.Common.NeonHelper.GetAssemblyFolder(System.Reflection.Assembly)">
             <summary>
@@ -3813,6 +3823,28 @@
             be <b>docker-compose.exe</b> on Windows and just <b>docker-compose</b> on Linux and OS/x.
             </summary>
         </member>
+        <member name="M:Neon.Common.NeonHelper.IsWithin(System.DateTime,System.DateTime,System.TimeSpan)">
+            <summary>
+            Determines whether a <paramref name="value"/> is within <paramref name="expected"/> - <paramref name="maxDelta"/>
+            and <paramref name="value"/> + <paramref name="maxDelta"/> inclusive.  This is useful for unit tests 
+            where there might be an minor allowable variance due to clock skew, etc.
+            </summary>
+            <param name="expected">The expected value.</param>
+            <param name="value">The value being tested.</param>
+            <param name="maxDelta">The allowed variance.</param>
+            <returns><c>true</c> when the two datetime values are within <paramref name="maxDelta"/> of each other.</returns>
+        </member>
+        <member name="M:Neon.Common.NeonHelper.IsWithin(System.DateTimeOffset,System.DateTimeOffset,System.TimeSpan)">
+            <summary>
+            Determines whether a <paramref name="value"/> is within <paramref name="expected"/> - <paramref name="maxDelta"/>
+            and <paramref name="value"/> + <paramref name="maxDelta"/> inclusive.  This is useful for unit tests 
+            where there might be an minor allowable variance due to clock skew, etc.
+            </summary>
+            <param name="expected">The expected value.</param>
+            <param name="value">The value being tested.</param>
+            <param name="maxDelta">The allowed variance.</param>
+            <returns><c>true</c> when the two datetime values are within <paramref name="maxDelta"/> of each other.</returns>
+        </member>
         <member name="M:Neon.Common.NeonHelper.DetectOS">
             <summary>
             Detects the current operating system.
@@ -3828,21 +3860,42 @@
             Returns the .NET runtime description.
             </summary>
         </member>
+        <member name="P:Neon.Common.NeonHelper.Is64Bit">
+            <summary>
+            Returns <c>true</c> if the application was built as 64-bit.
+            </summary>
+        </member>
+        <member name="P:Neon.Common.NeonHelper.Is32BitBuild">
+            <summary>
+            Returns <c>true</c> if the client was built as 32-bit.
+            </summary>
+        </member>
+        <member name="P:Neon.Common.NeonHelper.IsDevWorkstation">
+            <summary>
+            Indicates whether the current application is running on a developer workstation.
+            This is determined by the presence of the <b>DEV_WORKSTATION</b> environment variable.
+            </summary>
+        </member>
         <member name="P:Neon.Common.NeonHelper.IsWindows">
             <summary>
-            Returns <c>true</c> if the application is running on a Windows variant
+            Returns <c>true</c> if the current process is running on a Windows variant
             operating system.
             </summary>
         </member>
         <member name="P:Neon.Common.NeonHelper.IsLinux">
             <summary>
-            Returns <c>true</c> if the application is running on a Linux variant
+            Returns <c>true</c> if the current process is running on a Linux variant
             operating system.
             </summary>
         </member>
         <member name="P:Neon.Common.NeonHelper.IsOSX">
             <summary>
-            Returns <c>true</c> if the application is running on Max OSX.
+            Returns <c>true</c> if the current process is running on Max OSX.
+            </summary>
+        </member>
+        <member name="P:Neon.Common.NeonHelper.IsKubernetes">
+            <summary>
+            Returns <c>true</c> if the current process is running as a container on Kubernetes.
             </summary>
         </member>
         <member name="M:Neon.Common.NeonHelper.GetProgramPath(System.String)">
@@ -4173,6 +4226,7 @@
             <summary>
             Returns an integer pseudo random number.
             </summary>
+            <returns>The random integer.</returns>
         </member>
         <member name="M:Neon.Common.NeonHelper.PseudoRandomDouble">
             <summary>
@@ -4361,7 +4415,7 @@
             .NET Core
             </summary>
         </member>
-        <member name="F:Neon.Common.NetFramework.Framework">
+        <member name="F:Neon.Common.NetFramework.NetFramework">
             <summary>
             .NET Framework
             </summary>
@@ -4369,6 +4423,11 @@
         <member name="F:Neon.Common.NetFramework.Native">
             <summary>
             .NET Native
+            </summary>
+        </member>
+        <member name="F:Neon.Common.NetFramework.Net">
+            <summary>
+            .NET 5.0 and later
             </summary>
         </member>
         <member name="T:Neon.Common.SpecialUtf8EncodingProvider">
@@ -4647,7 +4706,14 @@
         </member>
         <member name="T:Neon.Common.ProgramEntrypoint">
             <summary>
-            Program main entry point method signature.
+            Synchronous main entry point method signature.
+            </summary>
+            <param name="args">The command line arguments.</param>
+            <returns>The exit code.</returns>
+        </member>
+        <member name="T:Neon.Common.ProgramEntrypointAsync">
+            <summary>
+            Asynchronous main entry point method signature.
             </summary>
             <param name="args">The command line arguments.</param>
             <returns>The exit code.</returns>
@@ -4731,6 +4797,14 @@
             <param name="args">The arguments.</param>
             <returns>The <see cref="T:Neon.Common.ExecuteResponse"/> returned by the simulated program run.</returns>
         </member>
+        <member name="M:Neon.Common.ProgramRunner.ExecuteAsync(Neon.Common.ProgramEntrypointAsync,System.String[])">
+            <summary>
+            Executes a program entry point asynchronously, passing arguments and returning the result.
+            </summary>
+            <param name="mainAsync">The program entry point.</param>
+            <param name="args">The arguments.</param>
+            <returns>The <see cref="T:Neon.Common.ExecuteResponse"/> returned by the simulated program run.</returns>
+        </member>
         <member name="M:Neon.Common.ProgramRunner.OpenStandardInput">
             <summary>
             Opens the standard input stream.  This will return a stream with the
@@ -4756,6 +4830,26 @@
             passing arguments and returning the result.
             </summary>
             <param name="main">The program entry point.</param>
+            <param name="inputText">The text to be passed as standard input.</param>
+            <param name="args">The arguments.</param>
+            <returns>The <see cref="T:Neon.Common.ExecuteResponse"/> returned by the simulated program run.</returns>
+        </member>
+        <member name="M:Neon.Common.ProgramRunner.ExecuteWithInputAsync(Neon.Common.ProgramEntrypointAsync,System.Byte[],System.String[])">
+            <summary>
+            Executes a program entry point asynchronously, streaming some bytes as standard input,
+            passing arguments and returning the result.
+            </summary>
+            <param name="mainAsync">The program entry point.</param>
+            <param name="inputBytes">The bytes to be passed as standard input.</param>
+            <param name="args">The arguments.</param>
+            <returns>The <see cref="T:Neon.Common.ExecuteResponse"/> returned by the simulated program run.</returns>
+        </member>
+        <member name="M:Neon.Common.ProgramRunner.ExecuteWithInputAsync(Neon.Common.ProgramEntrypointAsync,System.String,System.String[])">
+            <summary>
+            Executes a program entry point asynchronously, streaming some text as standard input,
+            passing arguments and returning the result.
+            </summary>
+            <param name="mainAsync">The program entry point.</param>
             <param name="inputText">The text to be passed as standard input.</param>
             <param name="args">The arguments.</param>
             <returns>The <see cref="T:Neon.Common.ExecuteResponse"/> returned by the simulated program run.</returns>
@@ -5741,9 +5835,16 @@
             delegate.
             </summary>
         </member>
+        <member name="P:Neon.Diagnostics.ILogManager.Version">
+            <summary>
+            The version of the current program or <c>null</c> if not known.
+            This should be formatted as a valid <see cref="T:Neon.Common.SemanticVersion"/> when
+            not <c>null</c>.
+            </summary>
+        </member>
         <member name="P:Neon.Diagnostics.ILogManager.LogLevel">
             <summary>
-            Specifies the level of events to be actually recorded.
+            Specifies the level required for events to be actually recorded.
             </summary>
         </member>
         <member name="M:Neon.Diagnostics.ILogManager.SetLogLevel(System.String)">
@@ -6170,7 +6271,7 @@
             <param name="logLevel">The event log level.</param>
             <param name="message">Optionally specifies the event message.</param>
             <param name="activityId">Optionally specifies the event activity ID.</param>
-            <param name="e"></param>
+            <param name="e">Optionally specifies the exception being logged.</param>
         </member>
         <member name="P:Neon.Diagnostics.LogEvent.Module">
             <summary>
@@ -6386,6 +6487,11 @@
             <see cref="T:Neon.Diagnostics.ILogManager"/> for a description of how log managers work.
             </summary>
         </member>
+        <member name="P:Neon.Diagnostics.LogManager.VersionRegex">
+            <summary>
+            Returns the <see cref="T:System.Text.RegularExpressions.Regex"/> used for validating program version strings.
+            </summary>
+        </member>
         <member name="P:Neon.Diagnostics.LogManager.Default">
             <summary>
             <para>
@@ -6409,14 +6515,21 @@
             Static constructor.
             </summary>
         </member>
-        <member name="M:Neon.Diagnostics.LogManager.#ctor(System.Boolean,System.IO.TextWriter)">
+        <member name="M:Neon.Diagnostics.LogManager.#ctor(System.Boolean,System.String,System.IO.TextWriter)">
             <summary>
             Default constructor.
             </summary>
             <param name="parseLogLevel">Indicates that the <b>LOG-LEVEL</b> environment variable should be parsed (defaults to <c>true</c>).</param>
+            <param name="version">
+            Optionally specifies the semantic version of the current program.  This can be an somewhat string 
+            arbitrary string that matches this regex: <b>"[0-9a-zA-Z\.-_/]+"</b>.  This defaults to <c>null</c>.
+            </param>
             <param name="writer">Optionally specifies the output writer.  This defaults to <see cref="P:System.Console.Error"/>.</param>
         </member>
         <member name="M:Neon.Diagnostics.LogManager.Reset">
+            <inheritdoc/>
+        </member>
+        <member name="P:Neon.Diagnostics.LogManager.Version">
             <inheritdoc/>
         </member>
         <member name="P:Neon.Diagnostics.LogManager.LogLevel">
@@ -6974,6 +7087,76 @@
         <member name="M:Neon.Diagnostics.TextLogger.BeginScope``1(``0)">
             <inheritdoc/>
         </member>
+        <member name="T:Neon.IO.StaticZipOptions">
+            <summary>
+            Enumerates the ZIP options for <see cref="M:Neon.IO.IStaticDirectoryExtensions.Zip(Neon.IO.IStaticDirectory,System.IO.Stream,System.String,System.IO.SearchOption,Neon.IO.StaticZipOptions)"/> and
+            <see cref="M:Neon.IO.IStaticDirectoryExtensions.Zip(Neon.IO.IStaticDirectory,System.String,System.String,System.IO.SearchOption,Neon.IO.StaticZipOptions)"/>.  These may be bitwise ORed togther
+            in various combinations.
+            </summary>
+        </member>
+        <member name="F:Neon.IO.StaticZipOptions.None">
+            <summary>
+            No special options required.  This is the default.
+            </summary>
+        </member>
+        <member name="F:Neon.IO.StaticZipOptions.LinuxLineEndings">
+            <summary>
+            Convert any Windows CRLF line endings into Linux compatiable LF endings.
+            </summary>
+        </member>
+        <member name="T:Neon.IO.IStaticDirectoryExtensions">
+            <summary>
+            Extension methods for <see cref="T:Neon.IO.IStaticDirectory"/>.
+            </summary>
+        </member>
+        <member name="M:Neon.IO.IStaticDirectoryExtensions.Zip(Neon.IO.IStaticDirectory,System.String,System.String,System.IO.SearchOption,Neon.IO.StaticZipOptions)">
+            <summary>
+            Creates a ZIP file, including the selected files from the static directory.
+            </summary>
+            <param name="directory">The static directory instance.</param>
+            <param name="zipPath">Path to the output ZIP file.</param>
+            <param name="searchPattern">
+            Optionally specifies a file name pattern using standard file system wildcards
+            like <b>[*]</b> and <b>[?]</b>.  This defaults to including all files.
+            </param>
+            <param name="searchOptions">Optionally perform a recursive search.  This defaults to 
+            <see cref="F:System.IO.SearchOption.TopDirectoryOnly"/>.
+            </param>
+            <param name="zipOptions">
+            Additional options that control things like whether the files are zipped within
+            the parent directory or whether the files are assumed to contain UTF-8 text and
+            that Windows style CRLF line endings are to be converted to Linux compatible LF 
+            endings.  You can combine options by bitwise ORing them.  This defaults to
+            <see cref="F:Neon.IO.StaticZipOptions.None"/>.
+            </param>
+        </member>
+        <member name="M:Neon.IO.IStaticDirectoryExtensions.Zip(Neon.IO.IStaticDirectory,System.IO.Stream,System.String,System.IO.SearchOption,Neon.IO.StaticZipOptions)">
+            <summary>
+            Writes a ZIP file to a stream, including the selected files from the static directory.
+            </summary>
+            <param name="directory">The static directory instance.</param>
+            <param name="zipStream">The output stream.</param>
+            <param name="searchPattern">
+            Optionally specifies a file name pattern using standard file system wildcards
+            like <b>[*]</b> and <b>[?]</b>.  This defaults to including all files.
+            </param>
+            <param name="searchOptions">Optionally perform a recursive search.  This defaults to 
+            <see cref="F:System.IO.SearchOption.TopDirectoryOnly"/>.
+            </param>
+            <param name="zipOptions">
+            Additional options that control things like whether the files are zipped within
+            the parent directory or whether the files are assumed to contain UTF-8 text and
+            that Windows style CRLF line endings are to be converted to Linux compatible LF 
+            endings.  You can combine options by bitwise ORing them.  This defaults to
+            <see cref="F:Neon.IO.StaticZipOptions.None"/>.
+            </param>
+            <remarks>
+            <note>
+            The current implementation loads the files into memory so this isn't really suitable
+            for zipping very large files.
+            </note>
+            </remarks>
+        </member>
         <member name="T:Neon.IO.BlockStream">
             <summary>
             Implements an in-memory stream based on a collection of <see cref="T:Neon.Common.Block"/> 
@@ -7246,6 +7429,210 @@
             underlying stream.  The stream position will be advanced
             past the requested bytes.
             </remarks>
+        </member>
+        <member name="T:Neon.IO.IStaticDirectory">
+            <summary>
+            <para>
+            Describes a logical file in a static file system.  This is used to abstract access
+            to static files read from an assembly's embedded resources or potentially from other
+            sources using Linux style paths.
+            </para>
+            <para>
+            This is currently used to emulate a tree of <see cref="T:Neon.IO.IStaticDirectory"/> and 
+            <see cref="T:Neon.IO.IStaticFile"/> instances loaded from an assembly's embedded resources
+            via the <see cref="M:System.AssemblyExtensions.GetResourceFileSystem(System.Reflection.Assembly,System.String)"/> 
+            extension method.
+            </para>
+            <note>
+            <b>IMPORTANT: </b>Implementations need to be thread-safe.
+            </note>
+            <note>
+            In general, file and directory name lookup case sensitivity should probably be
+            case insensitive for most purposes but this is an implementation specific detail. 
+            </note>
+            </summary>
+            <threadsafety instance="true"/>
+        </member>
+        <member name="P:Neon.IO.IStaticDirectory.Name">
+            <summary>
+            Returns the directory name.
+            </summary>
+        </member>
+        <member name="P:Neon.IO.IStaticDirectory.Path">
+            <summary>
+            Returns the fully qualified Linux style path for the static directory relative to
+            the static root directory.
+            </summary>
+        </member>
+        <member name="P:Neon.IO.IStaticDirectory.Parent">
+            <summary>
+            Returns a reference to the parent directory or <c>null</c> if this is the root directory
+            for a static file system.
+            </summary>
+        </member>
+        <member name="M:Neon.IO.IStaticDirectory.GetDirectories(System.String,System.IO.SearchOption)">
+            <summary>
+            Returns the directories beneath the current directory, optionally matching directories by
+            name as well as optionally searching for directories recursively.
+            </summary>
+            <param name="searchPattern">
+            Optionally specifies a directory name pattern using standard file system wildcards
+            like <b>[*]</b> and <b>[?]</b>.  This defaults to including all directories.
+            </param>
+            <param name="options">Optionally require a recursive search.  This defaults to 
+            <see cref="F:System.IO.SearchOption.TopDirectoryOnly"/>.
+            </param>
+            <returns>The set of matching directories.</returns>
+        </member>
+        <member name="M:Neon.IO.IStaticDirectory.GetFiles(System.String,System.IO.SearchOption)">
+            <summary>
+            Returns the files beneath the current directory, optionally matching files by
+            name as well as optionally searching recursively searching subdirectories..
+            </summary>
+            <param name="searchPattern">
+            Optionally specifies a file name pattern using standard file system wildcards
+            like <b>[*]</b> and <b>[?]</b>.  This defaults to including all files.
+            </param>
+            <param name="options">Optionally requires a recursive search.  This defaults to 
+            <see cref="F:System.IO.SearchOption.TopDirectoryOnly"/>.
+            </param>
+            <returns>The set of matching files.</returns>
+        </member>
+        <member name="M:Neon.IO.IStaticDirectory.GetFile(System.String)">
+            <summary>
+            <para>
+            Gets a file via a Linux style path.  This path can be absolute relative to the 
+            root directory or it can be relative to the current directory.
+            </para>
+            <note>
+            Relative paths including <b>/../</b> notation to move up a directory or <b>./</b>
+            to specify the current directory are not supported.
+            </note>
+            </summary>
+            <param name="path">The file path (absolute or relative).</param>
+            <returns>The file.</returns>
+            <exception cref="T:System.IO.FileNotFoundException">Thrown if the file doesn't exist.</exception>
+        </member>
+        <member name="M:Neon.IO.IStaticDirectory.GetDirectory(System.String)">
+            <summary>
+            <para>
+            Gets a directory via a Linux style path.  This path can be absolute relative to the 
+            root directory or it can be relative to the current directory.
+            </para>
+            <note>
+            Relative paths including <b>/../</b> notation to move up a directory or <b>./</b>
+            to specify the current directory are not supported.
+            </note>
+            </summary>
+            <param name="path">The file path (absolute or relative).</param>
+            <returns>The directory.</returns>
+            <exception cref="T:System.IO.FileNotFoundException">Thrown if the directory doesn't exist.</exception>
+        </member>
+        <member name="T:Neon.IO.IStaticFile">
+            <summary>
+            <para>
+            Describes a logical file in a static file system.  This is used to abstract access
+            to static files read from an assembly's embedded resources or potentially from other
+            sources using Linux style paths.
+            </para>
+            <para>
+            This is currently used to emulate a tree of <see cref="T:Neon.IO.IStaticDirectory"/> and 
+            <see cref="T:Neon.IO.IStaticFile"/> instances loaded from an assembly's embedded resources
+            via the <see cref="M:System.AssemblyExtensions.GetResourceFileSystem(System.Reflection.Assembly,System.String)"/>
+            extension method.
+            </para>
+            <note>
+            <b>IMPORTANT: </b>Implementations need to be thread-safe.
+            </note>
+            <note>
+            In general, file and directory name lookup case sensitivity should probably be
+            case insensitive for most purposes but this is an implementation specific detail. 
+            </note>
+            </summary>
+            <threadsafety instance="true"/>
+        </member>
+        <member name="P:Neon.IO.IStaticFile.Name">
+            <summary>
+            Returns the file name.
+            </summary>
+        </member>
+        <member name="P:Neon.IO.IStaticFile.Path">
+            <summary>
+            Returns the fully qualified Linux style path for the static file relative to
+            the static root directory.
+            </summary>
+        </member>
+        <member name="M:Neon.IO.IStaticFile.ReadAllText(System.Text.Encoding)">
+            <summary>
+            Reads the file contents as a UTF-8 encoded string.
+            </summary>
+            <param name="encoding">Optionally specifies the text encoding.  This defaults to <b>UTF-8</b>,</param>
+            <returns>The file contents.</returns>
+        </member>
+        <member name="M:Neon.IO.IStaticFile.ReadAllTextAsync(System.Text.Encoding)">
+            <summary>
+            Asynchronously reads the file contents as a UTF-8 encoded string.
+            </summary>
+            <param name="encoding">Optionally specifies the text encoding.  This defaults to <b>UTF-8</b>,</param>
+            <returns>The file contents.</returns>
+        </member>
+        <member name="M:Neon.IO.IStaticFile.OpenReader(System.Text.Encoding)">
+            <summary>
+            <para>
+            Opens a text reader for the file contents.
+            </para>
+            <note>
+            You are responsible disposing the reader returned when you're done with it.
+            </note>
+            </summary>
+            <param name="encoding">Optionally specifies the text encoding.  This defaults to <b>UTF-8</b>,</param>
+            <returns></returns>
+        </member>
+        <member name="M:Neon.IO.IStaticFile.OpenReaderAsync(System.Text.Encoding)">
+            <summary>
+            <para>
+            Asychronously opens a text reader for the file contents.
+            </para>
+            <note>
+            You are responsible disposing the reader returned when you're done with it.
+            </note>
+            </summary>
+            <param name="encoding">Optionally specifies the text encoding.  This defaults to <b>UTF-8</b>,</param>
+            <returns></returns>
+        </member>
+        <member name="M:Neon.IO.IStaticFile.ReadAllBytes">
+            <summary>
+            Reads the file contents as bytes.
+            </summary>
+            <returns>The file contents.</returns>
+        </member>
+        <member name="M:Neon.IO.IStaticFile.ReadAllBytesAsync">
+            <summary>
+            Asynchronously reads the file contents as bytes.
+            </summary>
+            <returns>The file contents.</returns>
+        </member>
+        <member name="M:Neon.IO.IStaticFile.OpenStream">
+            <summary>
+            <para>
+            Opens a stream on the file contents.
+            </para>
+            <note>
+            You are responsible disposing the reader returned when you're done with it.
+            </note>
+            </summary>
+            <returns>The <see cref="T:System.IO.Stream"/>.</returns>
+        </member>
+        <member name="M:Neon.IO.IStaticFile.OpenStreamAsync">
+            <summary>
+            <para>
+            Asychronously opens a stream on the file contents.
+            </para>
+            <note>
+            You are responsible disposing the reader returned when you're done with it.
+            </note>
+            </summary>
+            <returns>The <see cref="T:System.IO.Stream"/>.</returns>
         </member>
         <member name="T:Neon.IO.LineEnding">
             <summary>
@@ -7919,6 +8306,215 @@
         <member name="M:Neon.IO.RelayStream.Write(System.Byte[],System.Int32,System.Int32)">
             <inheritdoc/>
         </member>
+        <member name="T:Neon.IO.StaticDirectoryBase">
+            <summary>
+            <para>
+            Helper class that can be used by <see cref="T:Neon.IO.IStaticDirectory"/> implementations.
+            </para>
+            <note>
+            Implementations derived from this class will use case insensitive file and
+            directory name mapping.
+            </note>
+            </summary>
+        </member>
+        <member name="M:Neon.IO.StaticDirectoryBase.#ctor(Neon.IO.StaticDirectoryBase,Neon.IO.StaticDirectoryBase,System.String)">
+            <summary>
+            Protected constructor.
+            </summary>
+            <param name="root">The root directory or <c>null</c> if this is the root.</param>
+            <param name="parent">The parent directory or <c>null</c> for the root directory.</param>
+            <param name="name">The directory name (this must be <c>null</c> for the root directory.</param>
+        </member>
+        <member name="P:Neon.IO.StaticDirectoryBase.Directories">
+            <summary>
+            Returns the subdirectories present in this directory.
+            </summary>
+        </member>
+        <member name="P:Neon.IO.StaticDirectoryBase.Files">
+            <summary>
+            Returns the list of files present in this directory.
+            </summary>
+        </member>
+        <member name="P:Neon.IO.StaticDirectoryBase.Parent">
+            <inheritdoc/>
+        </member>
+        <member name="P:Neon.IO.StaticDirectoryBase.Name">
+            <inheritdoc/>
+        </member>
+        <member name="P:Neon.IO.StaticDirectoryBase.Path">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.IO.StaticDirectoryBase.AddFile(Neon.IO.StaticFileBase)">
+            <summary>
+            Adds a file.
+            </summary>
+            <param name="file">The subdirectory.</param>
+        </member>
+        <member name="M:Neon.IO.StaticDirectoryBase.AddDirectory(Neon.IO.StaticDirectoryBase)">
+            <summary>
+            Adds a subdirectory if it doesn't already exist.
+            </summary>
+            <param name="directory">The child resource directory.</param>
+            <returns>The existing <see cref="T:Neon.IO.StaticResourceDirectory"/> or <paramref name="directory"/> if it was added</returns>
+        </member>
+        <member name="M:Neon.IO.StaticDirectoryBase.GetFile(System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.IO.StaticDirectoryBase.FindFile(System.String)">
+            <summary>
+            Implemented by the root directory in a file system to quickly search
+            for a file via a fully qualified path.
+            </summary>
+            <param name="path">The target file path.</param>
+            <returns>The <see cref="T:Neon.IO.StaticFileBase"/> for the file if present, otherwise <c>null</c>.</returns>
+            <exception cref="T:System.InvalidOperationException">Thrown if this is not the root node.</exception>
+        </member>
+        <member name="M:Neon.IO.StaticDirectoryBase.GetDirectory(System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.IO.StaticDirectoryBase.FindDirectory(System.String)">
+            <summary>
+            Implemented by the root directory in a file system to quickly search
+            for a directory via a fully qualified path.
+            </summary>
+            <param name="path">The target directory path.</param>
+            <returns>The <see cref="T:Neon.IO.StaticDirectoryBase"/> for the file if present, otherwise <c>null</c>.</returns>
+            <exception cref="T:System.InvalidOperationException">Thrown if this is not the root node.</exception>
+        </member>
+        <member name="M:Neon.IO.StaticDirectoryBase.GetPath">
+            <summary>
+            Returns the fully qualified path to the directory.
+            </summary>
+            <returns>The Linux style path.</returns>
+        </member>
+        <member name="M:Neon.IO.StaticDirectoryBase.GetFiles(System.String,System.IO.SearchOption)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.IO.StaticDirectoryBase.GetDirectories(System.String,System.IO.SearchOption)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.IO.StaticDirectoryBase.AddFiles(System.Collections.Generic.Dictionary{System.String,Neon.IO.StaticFileBase},System.Text.RegularExpressions.Regex,System.IO.SearchOption)">
+            <summary>
+            Adds files whose names match the search pattern to the list passed, recursively walking
+            subdirectories when requested.
+            </summary>
+            <param name="items">The output directory list.</param>
+            <param name="searchPattern">Specifies the search pattern.</param>
+            <param name="options">Specifies the recursion option.</param>
+        </member>
+        <member name="M:Neon.IO.StaticDirectoryBase.AddDirectories(System.Collections.Generic.Dictionary{System.String,Neon.IO.StaticDirectoryBase},System.Text.RegularExpressions.Regex,System.IO.SearchOption)">
+            <summary>
+            Adds directories whose names match the search pattern to the list passed, recursively walking
+            subdirectories when requested.
+            </summary>
+            <param name="items">The output directory list.</param>
+            <param name="searchPattern">Specifies the search pattern.</param>
+            <param name="options">Specifies the recursion option.</param>
+        </member>
+        <member name="M:Neon.IO.StaticDirectoryBase.ToString">
+            <inheritdoc/>
+        </member>
+        <member name="T:Neon.IO.StaticFileBase">
+            <summary>
+            <para>
+            Helper class that can be used by <see cref="T:Neon.IO.IStaticFile"/> implementations.
+            </para>
+            <note>
+            Implementations derived from this class will use case insensitive file and
+            directory name mapping.
+            </note>
+            </summary>
+        </member>
+        <member name="M:Neon.IO.StaticFileBase.#ctor(System.String)">
+            <summary>
+            Protected constructor.
+            </summary>
+            <param name="path">The logical path to this file.</param>
+        </member>
+        <member name="P:Neon.IO.StaticFileBase.Name">
+            <inheritdoc/>
+        </member>
+        <member name="P:Neon.IO.StaticFileBase.Path">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.IO.StaticFileBase.ReadAllBytes">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.IO.StaticFileBase.ReadAllBytesAsync">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.IO.StaticFileBase.ReadAllText(System.Text.Encoding)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.IO.StaticFileBase.ReadAllTextAsync(System.Text.Encoding)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.IO.StaticFileBase.OpenReader(System.Text.Encoding)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.IO.StaticFileBase.OpenReaderAsync(System.Text.Encoding)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.IO.StaticFileBase.OpenStream">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.IO.StaticFileBase.OpenStreamAsync">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.IO.StaticFileBase.ToString">
+            <inheritdoc/>
+        </member>
+        <member name="T:Neon.IO.StaticResourceDirectory">
+            <summary>
+            Implements the <see cref="T:Neon.IO.IStaticDirectory"/> abstraction over as virtual
+            directory of embedded <see cref="T:System.Reflection.Assembly"/> resources.
+            </summary>
+        </member>
+        <member name="M:Neon.IO.StaticResourceDirectory.#ctor(Neon.IO.StaticResourceDirectory,Neon.IO.StaticResourceDirectory,System.String)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="root">The root directory or <c>null</c> if this is the root.</param>
+            <param name="parent">The parent directory or <c>null</c> for the root directory.</param>
+            <param name="path">Specifies the logical Lunix-style path to directory.</param>
+        </member>
+        <member name="T:Neon.IO.StaticResourceFile">
+            <summary>
+            Implements the <see cref="T:Neon.IO.IStaticFile"/> abstractionreferencing an embedded <see cref="T:System.Reflection.Assembly"/> resource.
+            </summary>
+        </member>
+        <member name="M:Neon.IO.StaticResourceFile.#ctor(System.Reflection.Assembly,System.String,System.String)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="assembly">The source assembly.</param>
+            <param name="resourceName">The name of the resource in the assembly manifest.</param>
+            <param name="path">The logical path to this file.</param>
+        </member>
+        <member name="M:Neon.IO.StaticResourceFile.OpenReader(System.Text.Encoding)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.IO.StaticResourceFile.OpenReaderAsync(System.Text.Encoding)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.IO.StaticResourceFile.OpenStream">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.IO.StaticResourceFile.OpenStreamAsync">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.IO.StaticResourceFile.ReadAllBytes">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.IO.StaticResourceFile.ReadAllBytesAsync">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.IO.StaticResourceFile.ReadAllText(System.Text.Encoding)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.IO.StaticResourceFile.ReadAllTextAsync(System.Text.Encoding)">
+            <inheritdoc/>
+        </member>
         <member name="T:Neon.IO.TempFile">
             <summary>
             Generates a globally unique temporary file name and then 
@@ -8544,49 +9140,51 @@
             Describes an HTTP error.
             </summary>
         </member>
-        <member name="M:Neon.Net.HttpException.GetMessage(System.String,System.Exception)">
+        <member name="M:Neon.Net.HttpException.GetMessage(System.String,System.String,System.String,System.Net.HttpStatusCode)">
             <summary>
-            Constructs an exception message using an inner exception.
+            Constructs an exception message using an inner <see cref="T:Neon.Net.HttpException"/> if passed or 
             </summary>
-            <param name="message">The base message.</param>
-            <param name="innerException">The inner exception or <c>null</c>.</param>
-        </member>
-        <member name="M:Neon.Net.HttpException.#ctor(System.String,System.Exception,System.String)">
-            <summary>
-            Constructor.
-            </summary>
-            <param name="message">Exception message.</param>
-            <param name="innerException">Optional inner exception.</param>
-            <param name="requestUri">The optional request URL.</param>
-        </member>
-        <member name="M:Neon.Net.HttpException.#ctor(System.Exception,System.String)">
-            <summary>
-            Constructor.
-            </summary>
-            <param name="innerException">The inner exception.</param>
-            <param name="requestUri">The optional request URL.</param>
-        </member>
-        <member name="M:Neon.Net.HttpException.#ctor(System.Net.HttpStatusCode,System.String,System.String)">
-            <summary>
-            Constructor.
-            </summary>
-            <param name="statusCode">The HTTP response status code.</param>
             <param name="reasonPhrase">The HTTP response peason phrase (or <c>null</c>).</param>
-            <param name="requestUri">The optional request URL.</param>
+            <param name="requestUri">Optionally specifies the request URL.</param>
+            <param name="requestMethod">Optionally specifies the request method.</param>
+            <param name="statusCode">Optionally specifies the response status code.</param>
         </member>
-        <member name="P:Neon.Net.HttpException.StatusCode">
+        <member name="M:Neon.Net.HttpException.#ctor(System.String,System.String,System.String,System.Net.HttpStatusCode)">
             <summary>
-            Returns the HTTP response status code.
+            Constructs an exception from the request and response details passed.
             </summary>
+            <param name="reasonPhrase">The HTTP response reason phrase (or <c>null</c>).</param>
+            <param name="requestUri">Optionally specifies the request URL.</param>
+            <param name="requestMethod">Optionally specifies the request method.</param>
+            <param name="statusCode">Optionally specifies the response status code.</param>
         </member>
-        <member name="P:Neon.Net.HttpException.RequestUri">
+        <member name="M:Neon.Net.HttpException.#ctor(System.Net.Http.HttpRequestException,System.String,System.String)">
             <summary>
-            Returns the request URI.
+            Constructs an exception from a <see cref="T:System.Net.Http.HttpRequestException"/> and optional
+            request details.
             </summary>
+            <param name="requestException">The <see cref="T:System.Net.Http.HttpRequestException"/>.</param>
+            <param name="requestUri">Optionally specifies the request URL.</param>
+            <param name="requestMethod">Optionally specifies the request method.</param>
         </member>
         <member name="P:Neon.Net.HttpException.ReasonPhrase">
             <summary>
             Returns the HTTP response status message.
+            </summary>
+        </member>
+        <member name="P:Neon.Net.HttpException.RequestUri">
+            <summary>
+            Returns the request URI when known.
+            </summary>
+        </member>
+        <member name="P:Neon.Net.HttpException.RequestMethod">
+            <summary>
+            Returns the request requestMethod when known.
+            </summary>
+        </member>
+        <member name="P:Neon.Net.HttpException.StatusCode">
+            <summary>
+            Returns the HTTP response status code.
             </summary>
         </member>
         <member name="T:Neon.Net.JsonClient">
@@ -9299,17 +9897,23 @@
             server call.
             </summary>
         </member>
-        <member name="M:Neon.Net.JsonResponse.#ctor(System.String,System.Net.Http.HttpResponseMessage,System.String)">
+        <member name="M:Neon.Net.JsonResponse.#ctor(System.String,System.String,System.Net.Http.HttpResponseMessage,System.String)">
             <summary>
             Constructs a <see cref="T:Neon.Net.JsonResponse"/> from a lower level <see cref="T:System.Net.Http.HttpResponseMessage"/>.
             </summary>
             <param name="requestUri">The request URI.</param>
-            <param name="httpRespose">The low-level response.</param>
+            <param name="requestMethod">The request method.</param>
+            <param name="httpRespose">The low-level HTTP response.</param>
             <param name="responseText">The response text.</param>
         </member>
         <member name="P:Neon.Net.JsonResponse.RequestUri">
             <summary>
             Returns the request URI.
+            </summary>
+        </member>
+        <member name="P:Neon.Net.JsonResponse.RequestMethod">
+            <summary>
+            Returns the request method.
             </summary>
         </member>
         <member name="P:Neon.Net.JsonResponse.HttpResponse">
@@ -9610,9 +10214,16 @@
             <param name="lines">The host file lines.</param>
             <param name="retryCount">The retry count.</param>
         </member>
+        <member name="M:Neon.Net.NetHelper.GetHostAddresses(System.String)">
+            <summary>
+            Performs a synchronous DNS lookup.
+            </summary>
+            <param name="hostname">The target hostname.</param>
+            <returns>The array of IP addresses resolved or an empty array if the hostname lookup failed.</returns>
+        </member>
         <member name="M:Neon.Net.NetHelper.GetHostAddressesAsync(System.String)">
             <summary>
-            Performs a DNS lookup.
+            Performs an asynchronous DNS lookup.
             </summary>
             <param name="hostname">The target hostname.</param>
             <returns>The array of IP addresses resolved or an empty array if the hostname lookup failed.</returns>
@@ -9690,6 +10301,22 @@
             This may not work as expected for machines with multiple active connections
             to different networks.
             </para>
+            </remarks>
+        </member>
+        <member name="M:Neon.Net.NetHelper.GetNetworkConfiguration">
+            <summary>
+            Returns basic information about the current network connection including the
+            machine's routable IP address, the network CIDR and gateway as well as the
+            DNS server addresses.
+            </summary>
+            <returns>
+            A <see cref="T:Neon.Net.NetworkConfiguration"/> with the information or <c>null</c> 
+            when the computer doesn't appear to be connected to a network.
+            </returns>
+            <remarks>
+            This implementation is somewhat fragile because it relies on <see cref="M:Neon.Net.NetHelper.GetRoutableIpAddress"/> which
+            uses heuristics to try to identify a suitable connected network.  This may not work as expected for machines
+            with multiple active connections to different networks.
             </remarks>
         </member>
         <member name="T:Neon.Net.NetworkCidr">
@@ -9771,10 +10398,17 @@
         </member>
         <member name="M:Neon.Net.NetworkCidr.#ctor(System.Net.IPAddress,System.Int32)">
             <summary>
-            Creates a subnet from an IP address and prefix length.
+            Constructs a subnet from an IPv4 address and prefix length.
             </summary>
             <param name="address">The IP address.</param>
             <param name="prefixLength">The network prefix mask length in bits.</param>
+        </member>
+        <member name="M:Neon.Net.NetworkCidr.#ctor(System.Net.IPAddress,System.Net.IPAddress)">
+            <summary>
+            Constructs a subnet from an IPv4 address and subnet mask.
+            </summary>
+            <param name="address">The IP address.</param>
+            <param name="subnetMask">The subnet mask.</param>
         </member>
         <member name="M:Neon.Net.NetworkCidr.Initialize(System.Net.IPAddress,System.Int32)">
             <summary>
@@ -9854,6 +10488,38 @@
         </member>
         <member name="M:Neon.Net.NetworkCidr.Equals(System.Object)">
             <inheritdoc/>
+        </member>
+        <member name="T:Neon.Net.NetworkConfiguration">
+            <summary>
+            Retured by <see cref="M:Neon.Net.NetHelper.GetNetworkConfiguration"/> with the current network
+            settings including: Routable IP address, network CIDR, network gateway and the
+            DNS server IP addresses.
+            </summary>
+        </member>
+        <member name="P:Neon.Net.NetworkConfiguration.InterfaceName">
+            <summary>
+            Returns the network interface name.
+            </summary>
+        </member>
+        <member name="P:Neon.Net.NetworkConfiguration.Address">
+            <summary>
+            The routable IP address of the current machine.
+            </summary>
+        </member>
+        <member name="P:Neon.Net.NetworkConfiguration.Subnet">
+            <summary>
+            The subnet (CIDR) for the local network.
+            </summary>
+        </member>
+        <member name="P:Neon.Net.NetworkConfiguration.Gateway">
+            <summary>
+            The IP address of the local network gateway.
+            </summary>
+        </member>
+        <member name="P:Neon.Net.NetworkConfiguration.NameServers">
+            <summary>
+            The IP address of the local network's DNS name servers.
+            </summary>
         </member>
         <member name="T:Neon.Net.NetworkException">
             <summary>
@@ -10127,6 +10793,22 @@
             Kubernetes API port.
             </summary>
         </member>
+        <member name="F:Neon.Net.NetworkPorts.Cassandra">
+            <summary>
+            The Cassnadra database port.
+            </summary>
+        </member>
+        <member name="F:Neon.Net.NetworkPorts.Postgres">
+            <summary>
+            The Postgres database port.
+            </summary>
+        </member>
+        <member name="F:Neon.Net.NetworkPorts.NeonPrometheus">
+            <summary>
+            The standard Prometheus scraping port exposed by Neon related services,
+            including custom user services built on <b>Neon.Service</b>.
+            </summary>
+        </member>
         <member name="M:Neon.Net.NetworkPorts.TryParse(System.String,System.Int32@)">
             <summary>
             Attempts to parse an integer or well known port name from a string
@@ -10351,6 +11033,12 @@
         <member name="M:Neon.Retry.ExponentialRetryPolicy.InvokeAsync``1(System.Func{System.Threading.Tasks.Task{``0}})">
             <inheritdoc/>
         </member>
+        <member name="M:Neon.Retry.ExponentialRetryPolicy.Invoke(System.Action)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Retry.ExponentialRetryPolicy.Invoke``1(System.Func{``0})">
+            <inheritdoc/>
+        </member>
         <member name="T:Neon.Retry.IRetryPolicy">
             <summary>
             Describes the behavior of an operation retry policy.  These are used
@@ -10375,22 +11063,42 @@
         </member>
         <member name="M:Neon.Retry.IRetryPolicy.InvokeAsync(System.Func{System.Threading.Tasks.Task})">
             <summary>
-            Retries an action that returns no result when it throws exceptions due to 
+            Retries an asynchronous action that returns no result when it throws exceptions due to 
             transient errors.  The classification of what is a transient error, the interval
             between the retries as well as the number of times the operation are retried are
             determined by the policy implementation.
             </summary>
-            <param name="action">The action to be performed.</param>
+            <param name="action">The asynchronous action to be performed.</param>
         </member>
         <member name="M:Neon.Retry.IRetryPolicy.InvokeAsync``1(System.Func{System.Threading.Tasks.Task{``0}})">
             <summary>
-            Retries an action that returns <typeparamref name="TResult"/> when it throws exceptions
+            Retries an asynchronous action that returns <typeparamref name="TResult"/> when it throws exceptions
             due to transient errors.  he classification of what is a transient error, the interval 
             between the retries as well as the number of times the operation are retried are 
             determined by the policy implementation. 
             </summary>
             <typeparam name="TResult">The action result type.</typeparam>
-            <param name="action">The action to be performed.</param>
+            <param name="action">The asynchronous action to be performed.</param>
+            <returns>The action result.</returns>
+        </member>
+        <member name="M:Neon.Retry.IRetryPolicy.Invoke(System.Action)">
+            <summary>
+            Retries a synchronous action that returns no result when it throws exceptions due to 
+            transient errors.  The classification of what is a transient error, the interval
+            between the retries as well as the number of times the operation are retried are
+            determined by the policy implementation.
+            </summary>
+            <param name="action">The synchronous action to be performed.</param>
+        </member>
+        <member name="M:Neon.Retry.IRetryPolicy.Invoke``1(System.Func{``0})">
+            <summary>
+            Retries a synchronous action that returns a result when it throws exceptions due to 
+            transient errors.  The classification of what is a transient error, the interval
+            between the retries as well as the number of times the operation are retried are
+            determined by the policy implementation.
+            </summary>
+            <typeparam name="TResult">The action result type.</typeparam>
+            <param name="action">The synchronous action to be performed.</param>
             <returns>The action result.</returns>
         </member>
         <member name="T:Neon.Retry.LinearRetryPolicy">
@@ -10470,6 +11178,12 @@
         <member name="M:Neon.Retry.LinearRetryPolicy.InvokeAsync``1(System.Func{System.Threading.Tasks.Task{``0}})">
             <inheritdoc/>
         </member>
+        <member name="M:Neon.Retry.LinearRetryPolicy.Invoke(System.Action)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Retry.LinearRetryPolicy.Invoke``1(System.Func{``0})">
+            <inheritdoc/>
+        </member>
         <member name="T:Neon.Retry.NamespaceDoc">
             <summary>
             This namespace includes simple types that can be used to mitigate transient errors.
@@ -10502,6 +11216,12 @@
         <member name="M:Neon.Retry.NoRetryPolicy.InvokeAsync``1(System.Func{System.Threading.Tasks.Task{``0}})">
             <inheritdoc/>
         </member>
+        <member name="M:Neon.Retry.NoRetryPolicy.Invoke(System.Action)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Retry.NoRetryPolicy.Invoke``1(System.Func{``0})">
+            <inheritdoc/>
+        </member>
         <member name="T:Neon.Retry.RetryPolicy">
             <summary>
             Base class for used to help implement a <see cref="T:Neon.Retry.IRetryPolicy"/>.
@@ -10524,6 +11244,12 @@
             <inheritdoc/>
         </member>
         <member name="M:Neon.Retry.RetryPolicy.InvokeAsync``1(System.Func{System.Threading.Tasks.Task{``0}})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Retry.RetryPolicy.Invoke(System.Action)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Retry.RetryPolicy.Invoke``1(System.Func{``0})">
             <inheritdoc/>
         </member>
         <member name="M:Neon.Retry.RetryPolicy.LogTransient(System.Exception)">
@@ -10570,6 +11296,12 @@
             <inheritdoc/>
         </member>
         <member name="M:Neon.Retry.RetryPolicyBase.InvokeAsync``1(System.Func{System.Threading.Tasks.Task{``0}})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Retry.RetryPolicyBase.Invoke(System.Action)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Retry.RetryPolicyBase.Invoke``1(System.Func{``0})">
             <inheritdoc/>
         </member>
         <member name="P:Neon.Retry.RetryPolicyBase.SourceModule">
@@ -10797,14 +11529,25 @@
             Defines the Neon service names.  
             </summary>
         </member>
-        <member name="F:Neon.Service.NeonServices.NeonClusterManager">
+        <member name="F:Neon.Service.NeonServices.ClusterManager">
             <summary>
-            Cluster Manager Operator.
+            Cluster manager operator.
             </summary>
         </member>
         <member name="F:Neon.Service.NeonServices.Elasticsearch">
             <summary>
             Elasticsearch.
+            </summary>
+        </member>
+        <member name="F:Neon.Service.NeonServices.IdentityService">
+            <summary>
+            Neon identity service, AKA a Secure Token Service (STS).
+            </summary>
+        </member>
+        <member name="F:Neon.Service.NeonServices.IdentityOperator">
+            <summary>
+            Operator that manages the <see cref="F:Neon.Service.NeonServices.IdentityService"/> instances as well as
+            the related database.
             </summary>
         </member>
         <member name="F:Neon.Service.NeonServices.Kibana">
@@ -10969,6 +11712,29 @@
         <member name="P:Neon.Service.ServiceDescription.Endpoints">
             <summary>
             The service's network endpoints.
+            </summary>
+        </member>
+        <member name="P:Neon.Service.ServiceDescription.MetricsPort">
+            <summary>
+            The service's Prometheus metrics exporter port.
+            </summary>
+        </member>
+        <member name="P:Neon.Service.ServiceDescription.TestEnvironmentVariables">
+            <summary>
+            Used to hold environment variables that will be set when deploying the service in a test
+            via <c>NeonServiceFixture</c>.
+            </summary>
+        </member>
+        <member name="P:Neon.Service.ServiceDescription.TestTextConfigFiles">
+            <summary>
+            Used to hold text configuration files that will be set when deploying the service in a test
+            via <c>NeonServiceFixture</c>.
+            </summary>
+        </member>
+        <member name="P:Neon.Service.ServiceDescription.TestBinaryConfigFiles">
+            <summary>
+            Used to hold binary configuration files that will be set when deploying the service in a test
+            via <c>NeonServiceFixture</c>.
             </summary>
         </member>
         <member name="T:Neon.Service.ServiceEndpoint">
@@ -13101,6 +13867,225 @@
             <a href="https://github.com/nforgeio/neonKUBE/issues/531"/>
             </remarks>
         </member>
+        <member name="T:System.AssemblyExtensions">
+            <summary>
+            Implements custom <see cref="T:System.Reflection.Assembly"/> extension methods.
+            </summary>
+        </member>
+        <member name="T:System.AssemblyExtensions.StaticResourceDirectory">
+            <summary>
+            Used to emulate resource directories.
+            </summary>
+        </member>
+        <member name="M:System.AssemblyExtensions.StaticResourceDirectory.#ctor(System.AssemblyExtensions.StaticResourceDirectory,System.AssemblyExtensions.StaticResourceDirectory,System.String)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="root">The root directory or <c>null</c> if this is the root.</param>
+            <param name="parent">The parent directory or <c>null</c> for the root directory.</param>
+            <param name="name">The directory name (this must be <c>null</c> for the root directory.</param>
+        </member>
+        <member name="M:System.AssemblyExtensions.StaticResourceDirectory.AddDirectory(System.AssemblyExtensions.StaticResourceDirectory)">
+            <summary>
+            Adds a subdirectory if it doesn't already exist.
+            </summary>
+            <param name="directory">The child resource directory.</param>
+            <returns>The existing <see cref="T:System.AssemblyExtensions.StaticResourceDirectory"/> or <paramref name="directory"/> if it was added</returns>
+        </member>
+        <member name="M:System.AssemblyExtensions.StaticResourceDirectory.AddFile(System.AssemblyExtensions.StaticResourceFile)">
+            <summary>
+            Adds a file.
+            </summary>
+            <param name="file">The resource file.</param>
+        </member>
+        <member name="T:System.AssemblyExtensions.StaticResourceFile">
+            <summary>
+            Wraps an embedded resource so it can be included in a static file system.
+            </summary>
+        </member>
+        <member name="M:System.AssemblyExtensions.StaticResourceFile.#ctor(System.String,System.Reflection.Assembly,System.String)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="path">The virtual path of the file within the file system.</param>
+            <param name="assembly">The source assembly.</param>
+            <param name="resourceName">The full name of the resource within the assembly.</param>
+        </member>
+        <member name="M:System.AssemblyExtensions.StaticResourceFile.OpenReader(System.Text.Encoding)">
+            <inheritdoc/>
+        </member>
+        <member name="M:System.AssemblyExtensions.StaticResourceFile.OpenReaderAsync(System.Text.Encoding)">
+            <inheritdoc/>
+        </member>
+        <member name="M:System.AssemblyExtensions.StaticResourceFile.OpenStream">
+            <inheritdoc/>
+        </member>
+        <member name="M:System.AssemblyExtensions.StaticResourceFile.OpenStreamAsync">
+            <inheritdoc/>
+        </member>
+        <member name="M:System.AssemblyExtensions.StaticResourceFile.ReadAllBytes">
+            <inheritdoc/>
+        </member>
+        <member name="M:System.AssemblyExtensions.StaticResourceFile.ReadAllBytesAsync">
+            <inheritdoc/>
+        </member>
+        <member name="M:System.AssemblyExtensions.StaticResourceFile.ReadAllText(System.Text.Encoding)">
+            <inheritdoc/>
+        </member>
+        <member name="M:System.AssemblyExtensions.StaticResourceFile.ReadAllTextAsync(System.Text.Encoding)">
+            <inheritdoc/>
+        </member>
+        <member name="M:System.AssemblyExtensions.GetResourceFileSystem(System.Reflection.Assembly,System.String)">
+            <summary>
+            Returns an eumlated static file system that includes some or all of an assembly's
+            embedded resources.  This method returns the root <see cref="T:Neon.IO.IStaticDirectory"/>
+            for the file system.
+            </summary>
+            <param name="assembly">The target assembly.</param>
+            <param name="resourcePrefix">
+            <para>
+            Specifies the resource name prefix to be used to identify the embedded resources
+            to be included in the static file system.  See the remarks for more information.
+            </para>
+            </param>
+            <returns>The root <see cref="T:Neon.IO.IStaticDirectory"/>.</returns>
+            <remarks>
+            <para>
+            This method maps Linux style paths (using forward not back slashes) to embedded
+            resources in the assembly.  Resources in .NET projects are embedded and named
+            like:
+            </para>
+            <example>
+            ASSEMBLY-NAMESPACE [ "." DIR ] "." RESOURCE-FILENAME
+            </example>
+            <para>
+            where <b>ASSEMBLY-NAME</b> is the name of the source assembly, <b>DIR</b> optionally
+            specifies the directoriea to the resource and <b>RESOURCE-FILENAME</b> specifies the name
+            of the resource file.
+            </para>
+            <para>
+            When a .NET project is built, any source files with build actions set to <b>Embedded Resource</b>
+            will be included in the assembly using the naming convention described above.  The 
+            <b>ASSEMBLY-NAMESPACE</b> will be set to the source projects default namespace and the <b>DIR</b>s
+            will be set to the relative path from the project file to the source resource file.  For
+            example, if your project is structured like:
+            </para>
+            <code>
+            my-project/
+                my-project.csproj
+                
+                top-level.txt
+                resources/
+                    resource1.dat
+                    resource2.dat
+                    tests/
+                        test1.txt
+                        test2.txt
+                    samples/
+                        sample1.txt
+                        sample2.txt
+            </code>
+            <para>
+            and it's default namespace is <b>company.mproject</b>, then the following resources embedded 
+            in your project assembly:
+            </para>
+            <code>
+            company.my-project.top-level.txt
+            company.my-project.resources.resource1.dat
+            company.my-project.resources.resource2.dat
+            company.my-project.resources.tests.test1.txt
+            company.my-project.resources.tests.test2.txt
+            company.my-project.resources.samples.sample1.txt
+            company.my-project.resources.samples.sample2.txt
+            </code>
+            <para>
+            By default, calling <see cref="M:System.AssemblyExtensions.GetResourceFileSystem(System.Reflection.Assembly,System.String)"/> on your project assembly 
+            will return a <see cref="T:Neon.IO.IStaticDirectory"/> with a directory structure holding all of the resources.  
+            The paths are mapped from the resource names by converting any dots except for the last one into forward
+            slashes. 
+            </para>
+            <code>
+            /
+                company/
+                    my-project/
+                        top-level.txt
+                        resources/
+                            resource1.dat
+                            resource2.dat
+                            tests/
+                                test1.txt
+                                test2.txt
+                            samples/
+                                sample1.txt
+                                sample2.txt
+            </code>
+            <para>
+            You can also pass an optional resource name prefix so that only a subset of the resources
+            are included in the file system.  For example, by passing <b>company.my-project.resources</b>,
+            file system returned will look like:
+            </para>
+            <code>
+            /
+                resource1.dat
+                resource2.dat
+                tests/
+                    test1.txt
+                    test2.txt
+                samples/
+                    sample1.txt
+                    sample2.txt
+            </code>
+            <para><b>RESOURCE NAMING AMBIGUITIES</b></para>
+            <para>
+            When creating the file system from resource names, it's possible to encounter situations
+            where it's not possible to distingish between a a directory and a file name.  For example:
+            </para>
+            <code>
+            company.my-project.resources.resource1.dat
+            </code>
+            <para>
+            Here are some possibilities:
+            </para>
+            <list type="bullet">
+                <item>
+                path is <b>/company.my-project.resources.resource1</b> and the file name <b>dat</b>
+                </item>
+                <item>
+                path is <b>/company.my-project.resources</b> and the file name <b>resource1.dat</b>
+                </item>
+                <item>
+                path is <b>/company.my-project</b> and the file name <b>.resources.resource1.dat</b>
+                </item>
+            </list>
+            <para>
+            There is really no way for this method to know what the original resource source files
+            and directory paths were.  To resolve this, we're going to assume that resource file
+            names include a file extension with a single dot and that any additional dots will form
+            the file's parent directory path.  
+            </para>
+            <para>
+            What this means is that your resource file names must include a file extension.  So, file 
+            names like this are OK:
+            </para>
+            <code>
+            schema.sql
+            config.json
+            </code>
+            <para>
+            You should avoid file names like:
+            </para>
+            <code>
+            schema.1.sql
+            </code>
+            <para>
+            and use something like a dash instead so that <b>schema</b> won't be considered to
+            be part of the file's parent directory path:
+            </para>
+            <code>
+            schema-1.sql
+            </code>
+            </remarks>
+        </member>
         <member name="T:System.EnumExtensions">
             <summary>
             <see cref="T:System.Enum"/> extensions.
@@ -13881,6 +14866,89 @@
             <param name="predicate">Optional item selector.</param>
             <returns><c>true</c> if <paramref name="items"/> is empty.</returns>
         </member>
+        <member name="T:System.IO.IOExtensions">
+            <summary>
+            Implements I/O related class extensions.
+            </summary>
+        </member>
+        <member name="M:System.IO.IOExtensions.Write(System.IO.Stream,System.Byte[])">
+            <summary>
+            Writes a byte array to a stream.
+            </summary>
+            <param name="stream">The stream.</param>
+            <param name="bytes">The byte array.</param>
+        </member>
+        <member name="M:System.IO.IOExtensions.WriteAsync(System.IO.Stream,System.Byte[])">
+            <summary>
+            Asynchronously writes a byte array to a stream.
+            </summary>
+            <param name="stream">The stream.</param>
+            <param name="bytes">The byte array.</param>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
+        <member name="M:System.IO.IOExtensions.ReadBytes(System.IO.Stream,System.Int32)">
+            <summary>
+            Reads the byte array from the current position, advancing
+            the position past the value read.
+            </summary>
+            <param name="stream">The stream.</param>
+            <param name="cb">The number of bytes to read.</param>
+            <returns>
+            The byte array.  Note that the array returned may have a length
+            less than the size requested if the end of the file has been
+            reached.
+            </returns>
+        </member>
+        <member name="M:System.IO.IOExtensions.ReadToEnd(System.IO.Stream)">
+            <summary>
+            Reads all bytes from the current position to the end of the stream.
+            </summary>
+            <param name="stream">The source stream.</param>
+            <returns>The byte array.</returns>
+        </member>
+        <member name="M:System.IO.IOExtensions.ReadToEndAsync(System.IO.Stream)">
+            <summary>
+            Asynchronously reads all bytes from the current position to the end of the stream.
+            </summary>
+            <param name="stream">The source stream.</param>
+            <returns>The byte array.</returns>
+        </member>
+        <member name="M:System.IO.IOExtensions.DeflateTo(System.IO.Stream,System.IO.Stream)">
+            <summary>
+            Uses deflate to compress a source to a target stream.
+            </summary>
+            <param name="source">The source stream.</param>
+            <param name="target">The target stream.</param>
+        </member>
+        <member name="M:System.IO.IOExtensions.InflateTo(System.IO.Stream,System.IO.Stream)">
+            <summary>
+            Uses deflate to decompress a source to a target stream.
+            </summary>
+            <param name="source">The source stream.</param>
+            <param name="target">The target stream.</param>
+        </member>
+        <member name="M:System.IO.IOExtensions.GzipTo(System.IO.Stream,System.IO.Stream)">
+            <summary>
+            Uses GZIP to compress a source to a target stream.
+            </summary>
+            <param name="source">The source stream.</param>
+            <param name="target">The target stream.</param>
+        </member>
+        <member name="M:System.IO.IOExtensions.GunzipTo(System.IO.Stream,System.IO.Stream)">
+            <summary>
+            Uses GZIP to decompress a source to a target stream.
+            </summary>
+            <param name="source">The source stream.</param>
+            <param name="target">The target stream.</param>
+        </member>
+        <member name="M:System.IO.IOExtensions.Lines(System.IO.TextReader,System.Boolean)">
+            <summary>
+            Returns an enumerator that returns the lines of text from a <see cref="T:System.IO.TextReader"/>.
+            </summary>
+            <param name="reader">The reader.</param>
+            <param name="ignoreBlank">Optionally skip empty lines or lines with oly whitespace.</param>
+            <returns>The <see cref="T:System.Collections.Generic.IEnumerable`1"/>.</returns>
+        </member>
         <member name="T:System.RandomExtensions">
             <summary>
             <see cref="T:System.Random"/> class extension methods.
@@ -14132,89 +15200,6 @@
             </param>
             <param name="handler">The delegate to remove.</param>
         </member>
-        <member name="T:System.IO.IOExtensions">
-            <summary>
-            Implements I/O related class extensions.
-            </summary>
-        </member>
-        <member name="M:System.IO.IOExtensions.Write(System.IO.Stream,System.Byte[])">
-            <summary>
-            Writes a byte array to a stream.
-            </summary>
-            <param name="stream">The stream.</param>
-            <param name="bytes">The byte array.</param>
-        </member>
-        <member name="M:System.IO.IOExtensions.WriteAsync(System.IO.Stream,System.Byte[])">
-            <summary>
-            Asynchronously writes a byte array to a stream.
-            </summary>
-            <param name="stream">The stream.</param>
-            <param name="bytes">The byte array.</param>
-            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
-        </member>
-        <member name="M:System.IO.IOExtensions.ReadBytes(System.IO.Stream,System.Int32)">
-            <summary>
-            Reads the byte array from the current position, advancing
-            the position past the value read.
-            </summary>
-            <param name="stream">The stream.</param>
-            <param name="cb">The number of bytes to read.</param>
-            <returns>
-            The byte array.  Note that the array returned may have a length
-            less than the size requested if the end of the file has been
-            reached.
-            </returns>
-        </member>
-        <member name="M:System.IO.IOExtensions.ReadToEnd(System.IO.Stream)">
-            <summary>
-            Reads all bytes from the current position to the end of the stream.
-            </summary>
-            <param name="stream">The source stream.</param>
-            <returns>The byte array.</returns>
-        </member>
-        <member name="M:System.IO.IOExtensions.ReadToEndAsync(System.IO.Stream)">
-            <summary>
-            Asynchronously reads all bytes from the current position to the end of the stream.
-            </summary>
-            <param name="stream">The source stream.</param>
-            <returns>The byte array.</returns>
-        </member>
-        <member name="M:System.IO.IOExtensions.DeflateTo(System.IO.Stream,System.IO.Stream)">
-            <summary>
-            Uses deflate to compress a source to a target stream.
-            </summary>
-            <param name="source">The source stream.</param>
-            <param name="target">The target stream.</param>
-        </member>
-        <member name="M:System.IO.IOExtensions.InflateTo(System.IO.Stream,System.IO.Stream)">
-            <summary>
-            Uses deflate to decompress a source to a target stream.
-            </summary>
-            <param name="source">The source stream.</param>
-            <param name="target">The target stream.</param>
-        </member>
-        <member name="M:System.IO.IOExtensions.GzipTo(System.IO.Stream,System.IO.Stream)">
-            <summary>
-            Uses GZIP to compress a source to a target stream.
-            </summary>
-            <param name="source">The source stream.</param>
-            <param name="target">The target stream.</param>
-        </member>
-        <member name="M:System.IO.IOExtensions.GunzipTo(System.IO.Stream,System.IO.Stream)">
-            <summary>
-            Uses GZIP to decompress a source to a target stream.
-            </summary>
-            <param name="source">The source stream.</param>
-            <param name="target">The target stream.</param>
-        </member>
-        <member name="M:System.IO.IOExtensions.Lines(System.IO.TextReader,System.Boolean)">
-            <summary>
-            Returns an enumerator that returns the lines of text from a <see cref="T:System.IO.TextReader"/>.
-            </summary>
-            <param name="reader">The reader.</param>
-            <param name="ignoreBlank">Optionally skip empty lines or lines with oly whitespace.</param>
-            <returns>The <see cref="T:System.Collections.Generic.IEnumerable`1"/>.</returns>
-        </member>
         <member name="T:Newtonsoft.Json.Linq.JsonExtensions">
             <summary>
             Newtonsoft JSON Linq extensions.
@@ -14243,6 +15228,43 @@
             <param name="stream">The YAML stream.</param>
             <param name="text">The text to be loaded.</param>
         </member>
+        <member name="T:ICSharpCode.SharpZipLib.Zip.StaticBytesDataSource">
+            <summary>
+            Implements a <see cref="T:ICSharpCode.SharpZipLib.Zip.IStaticDataSource"/> that wraps an in-memory byte array
+            into a form suitable for adding to a <see cref="T:ICSharpCode.SharpZipLib.Zip.ZipFile"/>.
+            </summary>
+        </member>
+        <member name="M:ICSharpCode.SharpZipLib.Zip.StaticBytesDataSource.#ctor(System.Byte[])">
+            <summary>
+            Constructs a source from raw bytes.
+            </summary>
+            <param name="data">The data array or <c>null</c>.</param>
+        </member>
+        <member name="M:ICSharpCode.SharpZipLib.Zip.StaticBytesDataSource.#ctor(System.String)">
+            <summary>
+            Constructs a source from a UTG-8 encopded string.
+            </summary>
+            <param name="data">The data string</param>
+        </member>
+        <member name="M:ICSharpCode.SharpZipLib.Zip.StaticBytesDataSource.GetSource">
+            <inheritdoc/>
+        </member>
+        <member name="T:ICSharpCode.SharpZipLib.Zip.StaticStringDataSource">
+            <summary>
+            Implements a <see cref="T:ICSharpCode.SharpZipLib.Zip.IStaticDataSource"/> that wraps a string to be
+            returned as URF-8 encoded bytes into a form suitable for adding to a 
+            <see cref="T:ICSharpCode.SharpZipLib.Zip.ZipFile"/>.
+            </summary>
+        </member>
+        <member name="M:ICSharpCode.SharpZipLib.Zip.StaticStringDataSource.#ctor(System.String)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="text">The text or <c>null</c>.</param>
+        </member>
+        <member name="M:ICSharpCode.SharpZipLib.Zip.StaticStringDataSource.GetSource">
+            <inheritdoc/>
+        </member>
         <member name="T:ThisAssembly">
             <summary>Provides access to the current assembly information.</summary>
         </member>
@@ -14262,19 +15284,22 @@
             <summary>Branch: master</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commit">
-            <summary>Commit: 47f8573a1</summary>
+            <summary>Commit: 8473fc731</summary>
         </member>
         <member name="F:ThisAssembly.Git.Sha">
-            <summary>Sha: 47f8573a18946e1d2998f51332a6b742317cbc7b</summary>
+            <summary>Sha: 8473fc731bb58727667dbb8fb25a164280fd5c5b</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.CommitDate">
+            <summary>Commit date: 2021-01-12T16:05:32-08:00</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commits">
-            <summary>Commits on top of base version: 111</summary>
+            <summary>Commits on top of base version: 264</summary>
         </member>
         <member name="F:ThisAssembly.Git.Tag">
-            <summary>Tag: v2.3.2-111-g47f8573a1</summary>
+            <summary>Tag: neonLIBRARY-v2.10.0-264-g8473fc731</summary>
         </member>
         <member name="F:ThisAssembly.Git.BaseTag">
-            <summary>Base tag: v2.3.2</summary>
+            <summary>Base tag: neonLIBRARY-v2.10.0</summary>
         </member>
         <member name="T:ThisAssembly.Git.BaseVersion">
             <summary>Provides access to the base version information used to determine the <see cref="T:ThisAssembly.Git.SemVer" />.</summary>      
@@ -14283,7 +15308,7 @@
             <summary>Major: 2</summary>
         </member>
         <member name="F:ThisAssembly.Git.BaseVersion.Minor">
-            <summary>Minor: 3</summary>
+            <summary>Minor: 10</summary>
         </member>
         <member name="F:ThisAssembly.Git.BaseVersion.Patch">
             <summary>Patch: 0</summary>
@@ -14295,16 +15320,16 @@
             <summary>Major: 2</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Minor">
-            <summary>Minor: 3</summary>
+            <summary>Minor: 10</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Patch">
-            <summary>Patch: 111</summary>
+            <summary>Patch: 264</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Label">
-            <summary>Label: </summary>
+            <summary>Label: neonLIBRARY</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.DashLabel">
-            <summary>Label with dash prefix: </summary>
+            <summary>Label with dash prefix: -neonLIBRARY</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Source">
             <summary>Source: Tag</summary>

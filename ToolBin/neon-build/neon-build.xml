@@ -324,6 +324,14 @@
             </summary>
             <param name="exitCode">The exit code.</param>
         </member>
+        <member name="M:NeonBuild.Program.EmbedCheck(Neon.Common.CommandLine)">
+            <summary>
+            Ensures that all of the files within a specified directory are also 
+            explicitly referenced as <b>embedded resources</b> in a C# project
+            file.
+            </summary>
+            <param name="commandLine">The command line.</param>
+        </member>
         <member name="M:NeonBuild.Program.Gzip(Neon.Common.CommandLine)">
             <summary>
             GZIPs a file as required.

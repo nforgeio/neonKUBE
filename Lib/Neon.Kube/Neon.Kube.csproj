@@ -1452,4 +1452,8 @@
     <None Include="..\..\LICENSE" Pack="True" PackagePath="" />
   </ItemGroup>
 
+  <Target Name="ModelGen" BeforeTargets="BeforeCompile">
+    <Exec Command="neon-build embed-check &quot;$(ProjectPath)&quot; &quot;$(ProjectDir)\Resources&quot;" />
+  </Target>
+
 </Project>
