@@ -50,7 +50,7 @@ livenessProbe:
 
 image:
   organization: neon-system-registry
-  repository: grafana
+  repository: grafana-grafana
   tag: 7.3.6
   sha: ""
   pullPolicy: IfNotPresent
