@@ -225,7 +225,7 @@ namespace Neon.Kube
         /// <summary>
         /// The minimum supported XenServer/XCP-ng hypervisor host version.
         /// </summary>
-        public static readonly SemanticVersion MinXenServerVersion = SemanticVersion.Parse("7.5.0");
+        public static readonly SemanticVersion MinXenServerVersion = SemanticVersion.Parse("8.2.0");
 
         /// <summary>
         /// The number of IP addresses reserved by cloud deployments at the beginning of the 
