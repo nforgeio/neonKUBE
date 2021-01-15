@@ -712,7 +712,6 @@
     <None Remove="Resources\Helm\yugabyte\templates\_helpers.tpl" />
     <None Remove="Resources\Helm\yugabyte\values.yaml" />
     <None Remove="Resources\Helm\yugabyte\yugabyte-rbac.yaml" />
-    <None Remove="Resources\Setup\setup-cri-o.sh" />
     <None Remove="Resources\Setup\setup-disk.sh" />
     <None Remove="Resources\Setup\setup-docker.sh" />
     <None Remove="Resources\Setup\setup-environment.sh" />
@@ -1387,7 +1386,6 @@
     <EmbeddedResource Include="Resources\Helm\yugabyte\templates\_helpers.tpl" />
     <EmbeddedResource Include="Resources\Helm\yugabyte\values.yaml" />
     <EmbeddedResource Include="Resources\Helm\yugabyte\yugabyte-rbac.yaml" />
-    <EmbeddedResource Include="Resources\Setup\setup-cri-o.sh" />
     <EmbeddedResource Include="Resources\Setup\setup-disk.sh">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>

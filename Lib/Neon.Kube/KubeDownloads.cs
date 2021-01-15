@@ -57,11 +57,6 @@ namespace Neon.Kube
         public static readonly string KubeletLinuxUri = $"https://storage.googleapis.com/kubernetes-release/release/v{KubeVersions.KubernetesVersion}/linux/amd64/kubelet";
 
         /// <summary>
-        /// The Docker package for Ubuntu.
-        /// </summary>
-        public static readonly string DockerPackageUri = $"https://neonkube.s3-us-west-2.amazonaws.com/docker/{KubeVersions.DockerVersion}-ubuntu-focal-stable_amd64.deb";
-
-        /// <summary>
         /// The Helm binary URL for Linux.
         /// </summary>
         public static readonly string HelmLinuxUri = $"https://get.helm.sh/helm-v{KubeVersions.HelmVersion}-linux-amd64.tar.gz";

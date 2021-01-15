@@ -58,9 +58,9 @@ namespace Neon.Kube
         public const string KubeletPackageVersion = "1.19.5-00";
 
         /// <summary>
-        /// The version of Docker to be installed.
+        /// The version of CRI-O container runtime to be installed.
         /// </summary>
-        public const string DockerVersion = "docker.ce-19.03.12";
+        public const string CrioVersion = "1.18";
 
         /// <summary>
         /// The version of Calico to install.

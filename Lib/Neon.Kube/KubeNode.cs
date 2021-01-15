@@ -759,6 +759,90 @@ chmod 750 {KubeNodeFolders.State}/setup
         /// <param name="logWriter"></param>
         public static void InstallCriO(NodeSshProxy<NodeDefinition> node, Action<string> logWriter = null)
         {
+            var setupScript =
+$@"
+# Configure Bash strict mode so that the entire script will fail if 
+# any of the commands fail.
+#
+#       http://redsymbol.net/articles/unofficial-bash-strict-mode/
+
+set -euo pipefail
+
+# Create the .conf file to load the modules at bootup
+cat <<EOF | sudo tee /etc/modules-load.d/crio.conf
+overlay
+br_netfilter
+EOF
+
+sudo modprobe overlay
+sudo modprobe br_netfilter
+
+sysctl --system
+
+OS=xUbuntu_20.04
+VERSION={KubeVersions.CrioVersion}
+
+cat <<EOF | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
+deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/${{OS}}/ /
+EOF
+cat <<EOF | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable:cri-o:${{VERSION}}.list
+deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/${{VERSION}}/${{OS}}/ /
+EOF
+
+curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/${{OS}}/Release.key | apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers.gpg add -
+curl -L https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable:cri-o:${{VERSION}}/${{OS}}/Release.key | apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers-cri-o.gpg add -
+
+apt-get update -y
+apt-get install -y cri-o cri-o-runc
+
+cat <<EOF | sudo tee /etc/containers/registries.conf
+unqualified-search-registries = [ ""$<neon-branch-registry>"", ""docker.io"", ""quay.io"", ""registry.access.redhat.com"", ""registry.fedoraproject.org""]
+
+[[registry]]
+prefix = ""$<neon-branch-registry>""
+insecure = false
+blocked = false
+location = ""$<neon-branch-registry>""
+[[registry.mirror]]
+location = ""registry.neon-system""
+
+[[registry]]
+prefix = ""docker.io""
+insecure = false
+blocked = false
+location = ""docker.io""
+[[registry.mirror]]
+location = ""registry.neon-system""
+
+[[registry]]
+prefix = ""quay.io""
+insecure = false
+blocked = false
+location = ""quay.io""
+[[registry.mirror]]
+location = ""registry.neon-system""
+EOF
+
+cat <<EOF | sudo tee /etc/crio/crio.conf.d/01-cgroup-manager.conf
+[crio.runtime]
+cgroup_manager = ""systemd""
+EOF
+
+# We need to do a [daemon-reload] so systemd will be aware of the new unit drop-in.
+
+systemctl disable crio
+systemctl daemon-reload
+
+# Configure CRI-O to start on boot and then restart it to pick up the new options.
+
+systemctl enable crio
+systemctl restart crio
+
+# Prevent the package manager from automatically upgrading the container runtime.
+
+set +e      # Don't exit if the next command fails
+apt-mark hold crio cri-o-runc
+";
         }
 
         /// <summary>
