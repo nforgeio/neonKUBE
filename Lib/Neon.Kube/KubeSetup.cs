@@ -58,23 +58,6 @@ namespace Neon.Kube
     public static class KubeSetup
     {
         /// <summary>
-        /// Ensures that the node operating system and version is supported for a neonKUBE
-        /// cluster.  This faults the nodeproxy on faliure.
-        /// </summary>
-        /// <param name="node">The target node.</param>
-        public static void VerifyNodeOS(NodeSshProxy<NodeDefinition> node)
-        {
-            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
-
-            node.Status = "check: OS";
-
-            if (!KubeNode.VerifyNodeOS(node))
-            {
-                node.Fault("Expected: Ubuntu 20.04+");
-            }
-        }
-
-        /// <summary>
         /// Initializes a near virgin server with the basic capabilities required
         /// for a cluster node.
         /// </summary>
@@ -98,7 +81,7 @@ namespace Neon.Kube
 
             node.Status = "configure: [apt] package manager";
 
-            KubeNode.ConfigureApt(node, clusterDefinition.NodeOptions.PackageManagerRetries, clusterDefinition.NodeOptions.AllowPackageManagerIPv6);
+            node.ConfigureApt(clusterDefinition.NodeOptions.PackageManagerRetries, clusterDefinition.NodeOptions.AllowPackageManagerIPv6);
 
             //-----------------------------------------------------------------
             // We're going to stop and mask the [snapd.service] if it's running
@@ -140,7 +123,7 @@ systemctl restart rsyslog.service
 
             node.Status = "configure: openssh";
 
-            KubeNode.ConfigureOpenSsh(node);
+            node.ConfigureOpenSsh();
 
             node.Status = "upload: configuration";
 

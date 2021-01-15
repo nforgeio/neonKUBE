@@ -298,7 +298,7 @@ namespace Neon.Kube
             };
 
             setupController.AddNodeStep("connect nodes", node => Connect(node));
-            setupController.AddNodeStep("verify operating system", node => KubeSetup.VerifyNodeOS(node));
+            setupController.AddNodeStep("verify operating system", node => node.VerifyNodeOS());
             setupController.AddNodeStep("configure nodes", node => Congfigure(node));
 
             if (secureSshPassword != orgSshPassword)
@@ -391,7 +391,7 @@ namespace Neon.Kube
                 nodeSshPassword = nodeToPassword[node.Metadata.Name];
             }
 
-            KubeNode.Initialize(node, nodeSshPassword);
+            node.Initialize(nodeSshPassword);
         }
 
         /// <summary>

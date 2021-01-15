@@ -452,7 +452,7 @@ Server Requirements:
                 // Prepare the nodes.
 
                 setupController.AddWaitUntilOnlineStep(timeout: TimeSpan.FromMinutes(15));
-                setupController.AddNodeStep("node OS verify", KubeSetup.VerifyNodeOS); ;
+                setupController.AddNodeStep("node OS verify", node => node.VerifyNodeOS());
                 setupController.AddNodeStep("node credentials", 
                     node =>
                     {

@@ -268,7 +268,7 @@ OPTIONS:
 
                     controller.AddGlobalStep("download binaries", () => WorkstationBinaries());
                     controller.AddWaitUntilOnlineStep("connect");
-                    controller.AddNodeStep("verify OS", KubeSetup.VerifyNodeOS);
+                    controller.AddNodeStep("verify OS", node => node.VerifyNodeOS());
 
                     // Write the operation begin marker to all cluster node logs.
 
@@ -609,7 +609,7 @@ OPTIONS:
 
                     // Perform basic node setup including changing the hostname.
 
-                    UploadHostname(node);
+                    UpdateHostname(node);
 
                     node.Status = "configure: node basics";
                     node.SudoCommand("setup-node.sh");
@@ -665,20 +665,7 @@ OPTIONS:
                     node.Status = "configure: NTP";
                     node.SudoCommand("setup-ntp.sh");
 
-                    //node.Status = "install: docker";
-
-                    //var dockerRetry = new LinearRetryPolicy(typeof(TransientException), maxAttempts: 5, retryInterval: TimeSpan.FromSeconds(5));
-
-                    //dockerRetry.Invoke(
-                    //    () =>
-                    //    {
-                    //        var response = node.SudoCommand("setup-docker.sh", node.DefaultRunOptions & ~RunOptions.FaultOnError);
-
-                    //        if (response.ExitCode != 0)
-                    //        {
-                    //            throw new TransientException(response.ErrorText);
-                    //        }
-                    //    });
+                    // Setup CRI-O.
 
                     node.Status = "install: CRI-O";
 
@@ -717,7 +704,7 @@ OPTIONS:
         /// Updates the node hostname and related configuration.
         /// </summary>
         /// <param name="node">The target node.</param>
-        private void UploadHostname(NodeSshProxy<NodeDefinition> node)
+        private void UpdateHostname(NodeSshProxy<NodeDefinition> node)
         {
             // Update the hostname.
 
@@ -750,6 +737,9 @@ ff02::2         ip6-allrouters
             node.UploadText("/etc/hosts", sbHosts, 4, Encoding.UTF8);
         }
 
+        /// <summary>
+        /// Setup Podman.
+        /// </summary>
         private void SetupPodman()
         {
             foreach (var node in cluster.Nodes)
@@ -2062,7 +2052,8 @@ istioctl install -f istio-cni.yaml
         /// </summary>
         /// <param name="master">The master node that will install the Helm chart.</param>
         /// <param name="chartName">The name of the Helm chart.</param>
-        /// <param name="namespace">The Kubernetes namespace where the Helm chart should be installed. Defaults to "default"</param>
+        /// <param name="releaseName">Optional component release name.</param>
+        /// <param name="namespace">Optional namespacer where Kubernetes namespace where the Helm chart should be installed. Defaults to "default"</param>
         /// <param name="timeout">Optional timeout to in seconds. Defaults to 300 (5 mins)</param>
         /// <param name="wait">Whether to wait for all pods to be alive before exiting.</param>
         /// <param name="values">Optional values to override Helm chart values.</param>

@@ -65,6 +65,7 @@ EOF
 #------------------------------------------------------------------------------
 
 echo "DATA DISK: $DATA_DISK"
+echo "PARTITION: $PARTITION"
 
 if [ "$DATA_DISK" == "PRIMARY" ]; then
 
