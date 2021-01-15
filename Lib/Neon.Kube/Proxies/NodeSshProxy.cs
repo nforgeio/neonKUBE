@@ -196,7 +196,6 @@ namespace Neon.Kube
             SudoCommand($"mkdir -p {KubeNodeFolders.State} && touch {KubeNodeFolders.State}/{actionId}", RunOptions.FaultOnError);
         }
 
-
         /// <summary>
         /// Invokes a named action on the node if it has never been been performed
         /// on the node before.
@@ -353,8 +352,7 @@ namespace Neon.Kube
         /// <summary>
         /// Performs low-level initialization of a cluster   This is applied one time to
         /// Hyper-V and XenServer/XCP-ng node templates when they are created and at cluster
-        /// creation time for cloud and bare metal based clusters.  The node must already
-        /// be booted and running.
+        /// creation time for cloud and bare metal clusters.  The node must already be running.
         /// </summary>
         /// <param name="sshPassword">The current <b>sysadmin</b> password.</param>
         /// <param name="updateDistribution">Optionally upgrade the node's Linux distribution.  This defaults to <c>false</c>.</param>
@@ -388,153 +386,85 @@ namespace Neon.Kube
             Status = $"login: [{KubeConst.SysAdminUser}]";
 
             WaitForBoot();
-            DisableSnap();
-            ConfigureApt();
-
-            // Install required packages and ugrade the distribution if requested.
-
-            KubeHelper.LogStatus(logWriter, "Install", "packages");
-            Status = "install: packages";
-            SudoCommand("apt-get update", RunOptions.FaultOnError);
-            SudoCommand("apt-get install -yq --allow-downgrades zip secure-delete", RunOptions.FaultOnError);
+            DisableSnap(logWriter: logWriter);
+            ConfigureApt(logWriter: logWriter);
+            InstallAptPackages(logWriter: logWriter);
 
             if (updateDistribution)
             {
-                KubeHelper.LogStatus(logWriter, "Upgrade", "linux");
-                Status = "upgrade linux";
-                SudoCommand("apt-get dist-upgrade -yq");
+                UpdateLinux();
             }
+        }
 
-            // Disable SWAP by editing [/etc/fstab] to remove the [/swap.img] line.
+        /// <summary>
+        /// Installs the required Apt packages.
+        /// </summary>
+        /// <param name="logWriter">Optional log writer action.</param>
+        public void InstallAptPackages(Action<string> logWriter = null)
+        {
+            Status = "install: apt packages";
+            KubeHelper.LogStatus(logWriter, "Install", "Apt packages");
 
-            KubeHelper.LogStatus(logWriter, "Disable", "swap");
-            Status = "disable: swap";
-
-            var sbFsTab = new StringBuilder();
-
-            using (var reader = new StringReader(DownloadText("/etc/fstab")))
-            {
-                foreach (var line in reader.Lines())
+            InvokeIdempotent("node/apt-packages",
+                () =>
                 {
-                    if (!line.Contains("/swap.img"))
+                    var script =
+@"
+apt-get update
+apt-get install -yq --allow-downgrades zip secure-delete
+";
+                    SudoCommand(CommandBundle.FromScript(script), RunOptions.FaultOnError);
+                });
+        }
+
+        /// <summary>
+        /// Updates the Linux distribution.
+        /// </summary>
+        /// <param name="logWriter">Optional log writer action.</param>
+        public void UpdateLinux(Action<string> logWriter = null)
+        {
+            InvokeIdempotent("node/update-linux",
+                () =>
+                {
+                    Status = "update: linux";
+                    KubeHelper.LogStatus(logWriter, "Update", "Linux");
+
+                    SudoCommand("apt-get dist-upgrade -yq");
+                });
+        }
+
+        /// <summary>
+        /// Disables the Linux memory swap file.
+        /// </summary>
+        /// <param name="logWriter">Optional log writer action.</param>
+        public void DisableSwap(Action<string> logWriter = null)
+        {
+            InvokeIdempotent("node/swap-disable",
+                () =>
+                {
+                    Status = "disable: swap";
+                    KubeHelper.LogStatus(logWriter, "Disable", "swap");
+
+                    // Disable SWAP by editing [/etc/fstab] to remove the [/swap.img] line.
+
+                    KubeHelper.LogStatus(logWriter, "Disable", "swap");
+                    Status = "disable: swap";
+
+                    var sbFsTab = new StringBuilder();
+
+                    using (var reader = new StringReader(DownloadText("/etc/fstab")))
                     {
-                        sbFsTab.AppendLine(line);
+                        foreach (var line in reader.Lines())
+                        {
+                            if (!line.Contains("/swap.img"))
+                            {
+                                sbFsTab.AppendLine(line);
+                            }
+                        }
                     }
-                }
-            }
 
-            UploadText("/etc/fstab", sbFsTab, permissions: "644", owner: "root:root");
-
-            // We need to relocate the [sysadmin] UID/GID to 1234 so we
-            // can create the [container] user and group at 1000.  We'll
-            // need to create a temporary user with root permissions to
-            // delete and then recreate the [sysadmin] account.
-
-            KubeHelper.LogStatus(logWriter, "Create", "[temp] user");
-            Status = "create: [temp] user";
-
-            var tempUserScript =
-$@"#!/bin/bash
-
-# Create the [temp] user.
-
-useradd --uid 5000 --create-home --groups root temp
-echo 'temp:{sshPassword}' | chpasswd
-chown temp:temp /home/temp
-
-# Add [temp] to the same groups that [sysadmin] belongs to
-# other than the [sysadmin] group.
-
-adduser temp adm
-adduser temp cdrom
-adduser temp sudo
-adduser temp dip
-adduser temp plugdev
-adduser temp lxd
-";
-            SudoCommand(CommandBundle.FromScript(tempUserScript), RunOptions.FaultOnError);
-
-            // Reconnect with the [temp] account so we can relocate the [sysadmin]
-            // user and its group ID to ID=1234.
-
-            KubeHelper.LogStatus(logWriter, "Login", "[temp]");
-            Status = "login: [temp]";
-
-            UpdateCredentials(SshCredentials.FromUserPassword("temp", sshPassword));
-            Connect();
-
-            // Beginning with Ubuntu 20.04 we're seeing [systemd/(sd-pam)] processes 
-            // hanging around for a while for the [sysadmin] user which prevents us 
-            // from deleting the [temp] user below.  We're going to handle this by
-            // killing any [temp] user processes first.
-
-            KubeHelper.LogStatus(logWriter, "Kill", "[sysadmin] user processes");
-            Status = "kill: [sysadmin] processes";
-            SudoCommand("pkill -u sysadmin --signal 9");
-
-            // Relocate the [sysadmin] user to from [uid=1000:gid=1000} to [1234:1234]:
-
-            var sysadminUserScript =
-$@"#!/bin/bash
-
-# Update all file references from the old to new [sysadmin]
-# user and group IDs:
-
-find / -group 1000 -exec chgrp -h {KubeConst.SysAdminGroup} {{}} \;
-find / -user 1000 -exec chown -h {KubeConst.SysAdminUser} {{}} \;
-
-# Relocate the [sysadmin] UID and GID:
-
-groupmod --gid {KubeConst.SysAdminGID} {KubeConst.SysAdminGroup}
-usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups root,sysadmin,sudo {KubeConst.SysAdminUser}
-";
-            KubeHelper.LogStatus(logWriter, "Relocate", "[sysadmin] user/group IDs");
-            Status = "relocate: [sysadmin] user/group IDs";
-            SudoCommand(CommandBundle.FromScript(sysadminUserScript), RunOptions.FaultOnError);
-
-            KubeHelper.LogStatus(logWriter, "Logout");
-            Status = "logout";
-
-            // We need to reconnect again with [sysadmin] so we can remove
-            // the [temp] user, create the [container] user and then
-            // wrap things up.
-
-            SudoCommand(CommandBundle.FromScript(tempUserScript), RunOptions.FaultOnError);
-            KubeHelper.LogStatus(logWriter, "Login", $"[{KubeConst.SysAdminUser}]");
-            Status = $"login: [{KubeConst.SysAdminUser}]";
-
-            UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, sshPassword));
-            Connect();
-
-            // Beginning with Ubuntu 20.04 we're seeing [systemd/(sd-pam)] processes 
-            // hanging around for a while for the [temp] user which prevents us 
-            // from deleting the [temp] user below.  We're going to handle this by
-            // killing any [temp] user processes first.
-
-            KubeHelper.LogStatus(logWriter, "Kill", "[temp] user processes");
-            Status = "kill: [temp] user processes";
-            SudoCommand("pkill -u temp");
-
-            // Remove the [temp] user.
-
-            KubeHelper.LogStatus(logWriter, "Remove", "[temp] user");
-            Status = "remove: [temp] user";
-            SudoCommand($"rm -rf /home/temp", RunOptions.FaultOnError);
-
-            // Ensure that the owner and group for files in the [sysadmin]
-            // home folder are correct.
-
-            KubeHelper.LogStatus(logWriter, "Set", "[sysadmin] home folder owner");
-            Status = "set: [sysadmin] home folder owner";
-            SudoCommand($"chown -R {KubeConst.SysAdminUser}:{KubeConst.SysAdminGroup} .*", RunOptions.FaultOnError);
-
-            // Create the [container] user with no home directory.  This
-            // means that the [container] user will have no chance of
-            // logging into the machine.
-
-            KubeHelper.LogStatus(logWriter, $"Create", $"[{KubeConst.ContainerUsername}] user");
-            Status = $"create: [{KubeConst.ContainerUsername}] user";
-            SudoCommand($"useradd --uid {KubeConst.ContainerUID} --no-create-home {KubeConst.ContainerUsername}", RunOptions.FaultOnError);
+                    UploadText("/etc/fstab", sbFsTab, permissions: "644", owner: "root:root");
+                });
         }
 
         /// <summary>
@@ -561,7 +491,6 @@ EOF
 apt-get install -yq --allow-downgrades linux-virtual linux-cloud-tools-virtual linux-tools-virtual
 update-initramfs -u
 ";
-
                     SudoCommand(CommandBundle.FromScript(guestServicesScript), RunOptions.FaultOnError);
                 });
         }
@@ -738,16 +667,16 @@ apt-get autoremove -y
 # for two reasons:
 #
 #   1. These services interfere with with [apt-get] usage during
-#      cluster setup and is also likely to interfere with end-user
-#      configuration activities as well.
+# cluster setup and is also likely to interfere with end-user
+# configuration activities as well.
 #
 #   2. Automatic updates for production and even test clusters is
-#      just not a great idea.  You just don't want a random update
-#      applied in the middle of the night which might cause trouble.
+# just not a great idea.  You just don't want a random update
+# applied in the middle of the night which might cause trouble.
 #
-#      We're going to implement our own cluster updating machanism
-#      that will be smart enough to update the nodes such that the
-#      impact on cluster workloads will be limited.
+# We're going to implement our own cluster updating machanism
+# that will be smart enough to update the nodes such that the
+# impact on cluster workloads will be limited.
 
 systemctl stop apt-daily.timer
 systemctl mask apt-daily.timer
@@ -862,7 +791,7 @@ cat <<EOF > {KubeNodeFolders.Bin}/neon-init.sh
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an ""AS IS"" BASIS,
@@ -878,7 +807,7 @@ cat <<EOF > {KubeNodeFolders.Bin}/neon-init.sh
 #
 #       2. Setup creates a temporary ISO (DVD) image with a script named 
 #          [neon-init.sh] on it and uploads this to the Hyper-V
-#          or XenServer host machine.
+# or XenServer host machine.
 #
 #       3. Setup inserts the VFD into the VM's DVD drive and starts the VM.
 #
@@ -886,17 +815,17 @@ cat <<EOF > {KubeNodeFolders.Bin}/neon-init.sh
 #          [neon-init] service).
 #
 #       5. This script checks whether a DVD is present, mounts
-#          it and checks it for the [neon-init.sh] script.
+# it and checks it for the [neon-init.sh] script.
 #
 #       6. If the DVD and script file are present, this service will
-#          execute the script via Bash, peforming any required custom setup.
-#          Then this script creates the [/etc/neon-init] file which 
-#          prevents the service from doing anything during subsequent node 
-#          reboots.
+# execute the script via Bash, peforming any required custom setup.
+# Then this script creates the [/etc/neon-init] file which 
+# prevents the service from doing anything during subsequent node 
+# reboots.
 #
 #       7. The service just exits if the DVD and/or script file are 
-#          not present.  This shouldn't happen in production but is useful
-#          for script debugging.
+# not present.  This shouldn't happen in production but is useful
+# for script debugging.
 
 # Run the prep script only once.
 
@@ -1044,7 +973,7 @@ $@"
 # Configure Bash strict mode so that the entire script will fail if 
 # any of the commands fail.
 #
-#       http://redsymbol.net/articles/unofficial-bash-strict-mode/
+# http://redsymbol.net/articles/unofficial-bash-strict-mode/
 
 set -euo pipefail
 

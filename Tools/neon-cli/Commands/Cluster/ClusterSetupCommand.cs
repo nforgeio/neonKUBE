@@ -761,7 +761,6 @@ ln -s /usr/bin/podman /bin/docker
                         node.SudoCommand(bundle);
                     });
             }
-            
         }
 
         /// <summary>
@@ -1806,8 +1805,8 @@ spec:
                     var script =
 $@"#!/bin/bash
 
-//# We need to edit the setup manifest to specify the 
-//# cluster subnet before applying it.
+# We need to edit the setup manifest to specify the 
+# cluster subnet before applying it.
 
 curl {Program.CurlOptions} {KubeDownloads.CalicoSetupYamlUri} > /tmp/calico.yaml
 sed -i 's;192.168.0.0/16;{cluster.Definition.Network.PodSubnet};' /tmp/calico.yaml
@@ -1866,7 +1865,7 @@ curl -fsLO {KubeDownloads.IstioLinuxUri}
 
 tar -xzf ""istioctl-{KubeVersions.IstioVersion}-linux-amd64.tar.gz""
 
-//# setup istioctl
+# setup istioctl
 cd ""$HOME"" || exit
 mkdir -p "".istioctl/bin""
 mv ""${{tmp}}/istioctl"" "".istioctl/bin/istioctl""
