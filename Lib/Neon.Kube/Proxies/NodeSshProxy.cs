@@ -219,7 +219,7 @@ namespace Neon.Kube
         /// present.
         /// </para>
         /// </remarks>
-        public bool InvokeIdempotentAction(string actionId, Action action)
+        public bool InvokeIdempotent(string actionId, Action action)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(actionId), nameof(actionId));
             Covenant.Requires<ArgumentException>(idempotentRegex.IsMatch(actionId), nameof(actionId));
@@ -231,7 +231,7 @@ namespace Neon.Kube
                 // would be treated as fire-and-forget and is not what developers
                 // will expect.
 
-                throw new ArgumentException($"Possible async delegate passed to [{nameof(InvokeIdempotentAction)}()]", nameof(action));
+                throw new ArgumentException($"Possible async delegate passed to [{nameof(InvokeIdempotent)}()]", nameof(action));
             }
 
             var stateFolder = KubeNodeFolders.State;
@@ -289,7 +289,7 @@ namespace Neon.Kube
         /// present.
         /// </para>
         /// </remarks>
-        public async Task<bool> InvokeIdempotentActionAsync(string actionId, Func<Task> action)
+        public async Task<bool> InvokeIdempotentAsync(string actionId, Func<Task> action)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(actionId), nameof(actionId));
             Covenant.Requires<ArgumentException>(idempotentRegex.IsMatch(actionId), nameof(actionId));
@@ -543,7 +543,7 @@ usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups roo
         /// <param name="logWriter">Optional log writer action.</param>
         public void InstallGuestIntegrationServices(Action<string> logWriter = null)
         {
-            InvokeIdempotentAction("node/guest-integration",
+            InvokeIdempotent("node/guest-integration",
                 () =>
                 {
                     KubeHelper.LogStatus(logWriter, "Install", "Guest integration services");
@@ -572,7 +572,7 @@ update-initramfs -u
         /// <param name="logWriter">Optional log writer action.</param>
         public void DisableDhcp(Action<string> logWriter = null)
         {
-            InvokeIdempotentAction("node-dhcp",
+            InvokeIdempotent("node-dhcp",
                 () =>
                 {
                     KubeHelper.LogStatus(logWriter, "Disable", "DHCP");
@@ -609,7 +609,7 @@ EOF
         /// <param name="logWriter">Optional log writer action.</param>
         public void DisableCloudInit(Action<string> logWriter = null)
         {
-            InvokeIdempotentAction("node/cloud-init",
+            InvokeIdempotent("node/cloud-init",
                 () =>
                 {
                 KubeHelper.LogStatus(logWriter, "Disable", "cloud-init");
@@ -650,7 +650,7 @@ sfill -fllz /
         /// <param name="logWriter">Optional log writer action.</param>
         public void ConfigureOpenSsh(Action<string> logWriter = null)
         {
-            InvokeIdempotentAction("node/openssh",
+            InvokeIdempotent("node/openssh",
                 () =>
                 {
                     // Upload the OpenSSH server configuration and restart OpenSSH.
@@ -669,7 +669,7 @@ sfill -fllz /
         /// <param name="logWriter">Optional log writer action.</param>
         public void CleanPackages(Action<string> logWriter = null)
         {
-            InvokeIdempotentAction("node/clean-packages",
+            InvokeIdempotent("node/clean-packages",
                 () =>
                 {
                     KubeHelper.LogStatus(logWriter, "Remove", "Unnecessary packages");
@@ -710,7 +710,7 @@ apt-get autoremove -y
         /// <param name="logWriter">Optional log writer action.</param>
         public void ConfigureApt(int packageManagerRetries = 5, bool allowPackageManagerIPv6 = false, Action<string> logWriter = null)
         {
-            InvokeIdempotentAction("node/apt",
+            InvokeIdempotent("node/apt",
                 () =>
                 {
                     KubeHelper.LogStatus(logWriter, "Configure", "[apt] package manager");
@@ -771,7 +771,7 @@ done";
         /// <param name="logWriter">Optional log writer action.</param>
         public void DisableSnap(Action<string> logWriter = null)
         {
-            InvokeIdempotentAction("node/snap",
+            InvokeIdempotent("node/snap",
                 () =>
                 {
                     KubeHelper.LogStatus(logWriter, "Disable", "[snapd.service]");
@@ -820,7 +820,7 @@ fi
         /// </remarks>
         public void InstallNeonInit(Action<string> logWriter = null)
         {
-            InvokeIdempotentAction("node/neon-init",
+            InvokeIdempotent("node/neon-init",
                 () =>
                 {
                     KubeHelper.LogStatus(logWriter, "Install", "neon-init.service");
@@ -963,14 +963,14 @@ systemctl daemon-reload
         /// <param name="logWriter">Optional log writer action.</param>
         public void CreateKubeFolders(Action<string> logWriter = null)
         {
-            InvokeIdempotentAction("node/folders",
+            InvokeIdempotent("node/folders",
                 () =>
                 {
                     KubeHelper.LogStatus(logWriter, "Create", "Cluster folders");
                     Status = "create: cluster folders";
 
                     var folderScript =
-        $@"
+$@"
 mkdir -p {KubeNodeFolders.Bin}
 chmod 750 {KubeNodeFolders.Bin}
 
@@ -1004,7 +1004,7 @@ chmod 750 {KubeNodeFolders.State}/setup
         /// <param name="logWriter">Optional log writer action.</param>
         public void InstallToolScripts(Action<string> logWriter = null)
         {
-            InvokeIdempotentAction("node/tool-scripts",
+            InvokeIdempotent("node/tool-scripts",
                 () =>
                 {
                     KubeHelper.LogStatus(logWriter, "Install", "Tools");
@@ -1123,7 +1123,7 @@ systemctl restart crio
 set +e      # Don't exit if the next command fails
 apt-mark hold crio cri-o-runc
 ";
-            InvokeIdempotentAction("cri-o",
+            InvokeIdempotent("cri-o",
                 () =>
                 {
                     Status = "setup: cri-o";

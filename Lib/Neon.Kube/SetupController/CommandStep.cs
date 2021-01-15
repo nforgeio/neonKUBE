@@ -153,7 +153,7 @@ namespace Neon.Kube
             }
             else
             {
-                node.InvokeIdempotentAction(operationName, () => Execute(node));
+                node.InvokeIdempotent(operationName, () => Execute(node));
             }
         }
 

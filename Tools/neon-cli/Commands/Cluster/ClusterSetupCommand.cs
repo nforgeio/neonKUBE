@@ -284,7 +284,7 @@ OPTIONS:
                         node =>
                         {
                             SetupCommon(hostingManager, node);
-                            node.InvokeIdempotentAction("setup/common-restart", () => RebootAndWait(node));
+                            node.InvokeIdempotent("setup/common-restart", () => RebootAndWait(node));
                             SetupNode(node);
                         },
                         node => node == cluster.FirstMaster);
@@ -297,7 +297,7 @@ OPTIONS:
                             node =>
                             {
                                 SetupCommon(hostingManager, node);
-                                node.InvokeIdempotentAction("setup/common-restart", () => RebootAndWait(node));
+                                node.InvokeIdempotent("setup/common-restart", () => RebootAndWait(node));
                                 SetupNode(node);
                             },
                             node => node != cluster.FirstMaster);
@@ -579,7 +579,7 @@ OPTIONS:
             //-----------------------------------------------------------------
             // Ensure the following steps are executed only once.
 
-            node.InvokeIdempotentAction("setup/common",
+            node.InvokeIdempotent("setup/common",
                 () =>
                 {
                     if (!Program.Debug)
@@ -622,7 +622,7 @@ OPTIONS:
         /// <param name="node">The target node.</param>
         private void SetupNode(NodeSshProxy<NodeDefinition> node)
         {
-            node.InvokeIdempotentAction($"setup/{node.Metadata.Role}",
+            node.InvokeIdempotent($"setup/{node.Metadata.Role}",
                 () =>
                 {
                     // Configure the APT package proxy on the masters
@@ -744,7 +744,7 @@ ff02::2         ip6-allrouters
         {
             foreach (var node in cluster.Nodes)
             {
-                node.InvokeIdempotentAction("setup/setup-podman",
+                node.InvokeIdempotent("setup/setup-podman",
                     () =>
                     {
                         node.Status = "setup: podman";
@@ -808,7 +808,7 @@ $@"
 
             foreach (var node in cluster.Nodes)
             {
-                node.InvokeIdempotentAction("setup/setup-etcd-ha",
+                node.InvokeIdempotent("setup/setup-etcd-ha",
                     () =>
                     {
                         node.Status = "setup: etcd HA";
@@ -834,7 +834,7 @@ $@"
         /// <param name="node">The target node.</param>
         private void SetupKubernetes(NodeSshProxy<NodeDefinition> node)
         {
-            node.InvokeIdempotentAction("setup/setup-install-kubernetes",
+            node.InvokeIdempotent("setup/setup-install-kubernetes",
                 () =>
                 {
                     node.Status = "setup: kubernetes apt repository";
@@ -872,7 +872,7 @@ service kubelet restart
 
                     // Download and install the Helm client:
 
-                    node.InvokeIdempotentAction("setup/cluster-helm",
+                    node.InvokeIdempotent("setup/cluster-helm",
                         () =>
                         {
                             node.Status = "install: helm";
@@ -900,7 +900,7 @@ rm -rf linux-amd64
         {
             var firstMaster = cluster.FirstMaster;
 
-            firstMaster.InvokeIdempotentAction("setup/cluster",
+            firstMaster.InvokeIdempotent("setup/cluster",
                 () =>
                 {
                     //---------------------------------------------------------
@@ -910,14 +910,14 @@ rm -rf linux-amd64
 
                     // Pull the Kubernetes images:
 
-                    firstMaster.InvokeIdempotentAction("setup/cluster-images",
+                    firstMaster.InvokeIdempotent("setup/cluster-images",
                         () =>
                         {
                             firstMaster.Status = "pull: kubernetes images...";
                             firstMaster.SudoCommand($"kubeadm config images pull --image-repository {NeonHelper.NeonBranchRegistry} --kubernetes-version v{KubeVersions.KubernetesVersion}");
                         });
 
-                    firstMaster.InvokeIdempotentAction("setup/cluster-init",
+                    firstMaster.InvokeIdempotent("setup/cluster-init",
                         () =>
                         {
                             firstMaster.Status = "initialize: cluster";
@@ -1018,7 +1018,7 @@ volumePluginDir: /var/lib/kubelet/volume-plugins
 
                     // kubectl config:
 
-                    firstMaster.InvokeIdempotentAction("setup/cluster-kubectl",
+                    firstMaster.InvokeIdempotent("setup/cluster-kubectl",
                         () =>
                         {
                             // Edit the Kubernetes configuration file to rename the context:
@@ -1086,7 +1086,7 @@ volumePluginDir: /var/lib/kubelet/volume-plugins
                     {
                         try
                         {
-                            master.InvokeIdempotentAction("setup/cluster-kubectl",
+                            master.InvokeIdempotent("setup/cluster-kubectl",
                                 () =>
                                 {
                                     // It's possible that a previous cluster join operation
@@ -1105,7 +1105,7 @@ volumePluginDir: /var/lib/kubelet/volume-plugins
 
                                     // Join the cluster:
 
-                                    master.InvokeIdempotentAction("setup/cluster-join",
+                                    master.InvokeIdempotent("setup/cluster-join",
                                             () =>
                                             {
                                                 var joined = false;
@@ -1133,7 +1133,7 @@ volumePluginDir: /var/lib/kubelet/volume-plugins
 
                                     // Pull the Kubernetes images:
 
-                                    master.InvokeIdempotentAction("setup/cluster-images",
+                                    master.InvokeIdempotent("setup/cluster-images",
                                             () =>
                                             {
                                                 master.Status = "pull: kubernetes images";
@@ -1158,7 +1158,7 @@ volumePluginDir: /var/lib/kubelet/volume-plugins
                         {
                             master.Status = "configure: kube-apiserver";
 
-                            master.InvokeIdempotentAction("setup/cluster-kube-apiserver",
+                            master.InvokeIdempotent("setup/cluster-kube-apiserver",
                                 () =>
                                 {
                                     master.Status = "configure: kube-apiserver";
@@ -1191,7 +1191,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         {
                             try
                             {
-                                worker.InvokeIdempotentAction("setup/cluster-join",
+                                worker.InvokeIdempotent("setup/cluster-join",
                                     () =>
                                     {
                                         var joined = false;
@@ -1227,7 +1227,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         });
                 });
 
-            firstMaster.InvokeIdempotentAction("setup/workstation",
+            firstMaster.InvokeIdempotent("setup/workstation",
                 () =>
                 {
                     // Update the kubeconfig.
@@ -1295,7 +1295,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             //-----------------------------------------------------------------
             // Configure the cluster.
 
-            firstMaster.InvokeIdempotentAction("setup/cluster-configure",
+            firstMaster.InvokeIdempotent("setup/cluster-configure",
                 () =>
                 {
                     foreach (var node in cluster.Nodes)
@@ -1309,7 +1309,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                     // Allow pods to be scheduled on master nodes if enabled.
 
-                    firstMaster.InvokeIdempotentAction("setup/cluster-master-pods",
+                    firstMaster.InvokeIdempotent("setup/cluster-master-pods",
                         () =>
                         {
                             // The [kubectl taint] command looks like it can return a non-zero exit code.
@@ -1325,7 +1325,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                     // Label Nodes.
 
-                    firstMaster.InvokeIdempotentAction("setup/cluster-label-nodes",
+                    firstMaster.InvokeIdempotent("setup/cluster-label-nodes",
                         () =>
                         {
                             LabelNodes(firstMaster);
@@ -1333,7 +1333,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                     // Install Istio.
 
-                    firstMaster.InvokeIdempotentAction("setup/cluster-deploy-istio",
+                    firstMaster.InvokeIdempotent("setup/cluster-deploy-istio",
                         () =>
                         {
                            InstallIstio(firstMaster);
@@ -1342,7 +1342,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                     // Create the cluster's [root-user]:
 
-                    firstMaster.InvokeIdempotentAction("setup/cluster-root-user",
+                    firstMaster.InvokeIdempotent("setup/cluster-root-user",
                         () =>
                         {
                             var userYaml =
@@ -1371,7 +1371,7 @@ subjects:
 
                     // Install the Kubernetes dashboard:
 
-                    firstMaster.InvokeIdempotentAction("setup/cluster-deploy-kubernetes-dashboard",
+                    firstMaster.InvokeIdempotent("setup/cluster-deploy-kubernetes-dashboard",
                         () =>
                         {
                             if (clusterLogin.DashboardCertificate != null)
@@ -1734,13 +1734,13 @@ spec:
 
             // Setup openebs.
 
-            await firstMaster.InvokeIdempotentActionAsync("setup/cluster-deploy-openebs",
+            await firstMaster.InvokeIdempotentAsync("setup/cluster-deploy-openebs",
                 async () =>
                 {
                     await InstallOpenEBSAsync(firstMaster);
                 });
 
-            await firstMaster.InvokeIdempotentActionAsync("setup/cluster-neon-system-namespace",
+            await firstMaster.InvokeIdempotentAsync("setup/cluster-neon-system-namespace",
                 async () =>
                 {
                     await k8sClient.CreateNamespaceAsync(new V1Namespace()
@@ -1758,7 +1758,7 @@ spec:
 
             // Setup neon-system-db.
 
-            await firstMaster.InvokeIdempotentActionAsync("setup/cluster-deploy-neon-system-db",
+            await firstMaster.InvokeIdempotentAsync("setup/cluster-deploy-neon-system-db",
                 async () =>
                 {
                     await InstallSystemDbAsync(firstMaster);
@@ -1766,7 +1766,7 @@ spec:
 
             // Setup neon-cluster-manager.
 
-            await firstMaster.InvokeIdempotentActionAsync("setup/cluster-deploy-cluster-manager",
+            await firstMaster.InvokeIdempotentAsync("setup/cluster-deploy-cluster-manager",
                 async () =>
                 {
                     await InstallClusterManagerAsync(firstMaster);
@@ -1776,7 +1776,7 @@ spec:
 
             if (cluster.Definition.Nodes.Where(n => n.Labels.NeonSystemRegistry).Any())
             {
-                await firstMaster.InvokeIdempotentActionAsync("setup/cluster-deploy-neon-registry",
+                await firstMaster.InvokeIdempotentAsync("setup/cluster-deploy-neon-registry",
                     async () =>
                     {
                         await InstallNeonRegistryAsync(firstMaster);
@@ -1785,7 +1785,7 @@ spec:
 
             // Setup Kiali.
 
-            await firstMaster.InvokeIdempotentActionAsync("setup/cluster-deploy-kiali",
+            await firstMaster.InvokeIdempotentAsync("setup/cluster-deploy-kiali",
                 async () =>
                 {
                     await InstallKialiAsync(firstMaster);
@@ -1798,7 +1798,7 @@ spec:
         /// <param name="master">The master node.</param>
         private void DeployCalicoCni(NodeSshProxy<NodeDefinition> master)
         {
-            master.InvokeIdempotentAction("setup/cluster-deploy-cni",
+            master.InvokeIdempotent("setup/cluster-deploy-cni",
                 () =>
                 {
                     // Deploy Calico
@@ -1989,7 +1989,7 @@ istioctl install -f istio-cni.yaml
 
             // Setup Kubernetes.
 
-            await firstMaster.InvokeIdempotentActionAsync("setup/cluster-deploy-kubernetes-setup",
+            await firstMaster.InvokeIdempotentAsync("setup/cluster-deploy-kubernetes-setup",
                 async () =>
                 {
                     await KubeSetupAsync(firstMaster);
@@ -1997,7 +1997,7 @@ istioctl install -f istio-cni.yaml
 
             //// Install an Prometheus cluster to the monitoring namespace
 
-            await firstMaster.InvokeIdempotentActionAsync("setup/cluster-deploy-neon-metrics",
+            await firstMaster.InvokeIdempotentAsync("setup/cluster-deploy-neon-metrics",
                 async () =>
                 {
                     await InstallNeonMetricsAsync(firstMaster);
@@ -2007,7 +2007,7 @@ istioctl install -f istio-cni.yaml
 
             if (cluster.Definition.Monitor.Logs.Enabled)
             {
-                await firstMaster.InvokeIdempotentActionAsync("setup/cluster-deploy-elasticsearch",
+                await firstMaster.InvokeIdempotentAsync("setup/cluster-deploy-elasticsearch",
                     async () =>
                     {
                         await InstallElasticSearchAsync(firstMaster);
@@ -2015,7 +2015,7 @@ istioctl install -f istio-cni.yaml
 
                 // Setup Fluentd.
 
-                await firstMaster.InvokeIdempotentActionAsync("setup/cluster-deploy-fluentd",
+                await firstMaster.InvokeIdempotentAsync("setup/cluster-deploy-fluentd",
                     async () =>
                     {
                         await InstallFluentdAsync(firstMaster);
@@ -2023,7 +2023,7 @@ istioctl install -f istio-cni.yaml
 
                 // Setup Fluent-Bit.
 
-                await firstMaster.InvokeIdempotentActionAsync("setup/cluster-deploy-fluent-bit",
+                await firstMaster.InvokeIdempotentAsync("setup/cluster-deploy-fluent-bit",
                     async () =>
                     {
                         await InstallFluentBitAsync(firstMaster);
@@ -2031,7 +2031,7 @@ istioctl install -f istio-cni.yaml
 
                 // Setup Kibana.
 
-                await firstMaster.InvokeIdempotentActionAsync("setup/cluster-deploy-kibana",
+                await firstMaster.InvokeIdempotentAsync("setup/cluster-deploy-kibana",
                     async () =>
                     {
                         await InstallKibanaAsync(firstMaster);
@@ -2039,7 +2039,7 @@ istioctl install -f istio-cni.yaml
 
                 // Setup Jaeger.
 
-                await firstMaster.InvokeIdempotentActionAsync("setup/cluster-deploy-jaeger",
+                await firstMaster.InvokeIdempotentAsync("setup/cluster-deploy-jaeger",
                     async () =>
                     {
                         await InstallJaegerAsync(firstMaster);
@@ -2178,7 +2178,7 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: openebs";
 
-            master.InvokeIdempotentAction("setup/openebs-namespace",
+            master.InvokeIdempotent("setup/openebs-namespace",
                 () =>
                 {
                     k8sClient.CreateNamespace(new V1Namespace()
@@ -2194,7 +2194,7 @@ rm -rf {chartName}*
                     });
                 });
 
-            await master.InvokeIdempotentActionAsync("setup/neon-storage-openebs-install",
+            await master.InvokeIdempotentAsync("setup/neon-storage-openebs-install",
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
@@ -2240,7 +2240,7 @@ rm -rf {chartName}*
 
 
 
-            await master.InvokeIdempotentActionAsync("setup/neon-storage-openebs-cstor-install",
+            await master.InvokeIdempotentAsync("setup/neon-storage-openebs-cstor-install",
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
@@ -2287,7 +2287,7 @@ rm -rf {chartName}*
                     await InstallHelmChartAsync(master, "openebs-cstor-operator", releaseName: "neon-storage-openebs-cstor", values: values, @namespace: "openebs");
                 });
 
-            await master.InvokeIdempotentActionAsync("setup/neon-storage-openebs-install-ready",
+            await master.InvokeIdempotentAsync("setup/neon-storage-openebs-install-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(
@@ -2319,7 +2319,7 @@ rm -rf {chartName}*
                         pollInterval: clusterOpRetryInterval);
                    });
 
-            await master.InvokeIdempotentActionAsync("setup/neon-storage-openebs-cstor-poolcluster",
+            await master.InvokeIdempotentAsync("setup/neon-storage-openebs-cstor-poolcluster",
                 async () =>
                 {
                     var cStorPoolCluster = new V1CStorPoolCluster()
@@ -2381,7 +2381,7 @@ rm -rf {chartName}*
                     k8sClient.CreateNamespacedCustomObject(cStorPoolCluster, V1CStorPoolCluster.KubeGroup, V1CStorPoolCluster.KubeApiVersion, "openebs", "cstorpoolclusters");
                 });
 
-            await master.InvokeIdempotentActionAsync("setup/neon-storage-openebs-cstor-ready",
+            await master.InvokeIdempotentAsync("setup/neon-storage-openebs-cstor-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(
@@ -2399,7 +2399,7 @@ rm -rf {chartName}*
                         pollInterval: clusterOpRetryInterval);
                 });
 
-            master.InvokeIdempotentAction("setup/neon-storage-openebs-cstor-storageclass",
+            master.InvokeIdempotent("setup/neon-storage-openebs-cstor-storageclass",
                 () =>
                 {
                     var storageClass = new V1StorageClass()
@@ -2420,7 +2420,7 @@ rm -rf {chartName}*
                     k8sClient.CreateStorageClass(storageClass);
                 });
 
-            await master.InvokeIdempotentActionAsync("setup/neon-storage-openebs-nfs-install",
+            await master.InvokeIdempotentAsync("setup/neon-storage-openebs-nfs-install",
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
@@ -2433,7 +2433,7 @@ rm -rf {chartName}*
                     await InstallHelmChartAsync(master, "nfs", releaseName: "neon-storage-nfs", @namespace: "openebs", values: values);
                 });
 
-            await master.InvokeIdempotentActionAsync("setup/neon-storage-openebs-nfs-ready",
+            await master.InvokeIdempotentAsync("setup/neon-storage-openebs-nfs-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(
@@ -2473,7 +2473,7 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: kiali";
            
-            await master.InvokeIdempotentActionAsync("setup/kiali",
+            await master.InvokeIdempotentAsync("setup/kiali",
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
@@ -2497,7 +2497,7 @@ rm -rf {chartName}*
                     await InstallHelmChartAsync(master, "kiali", releaseName: "kiali-operator", @namespace: "istio-system", values: values, wait: false);
                 });
 
-            await master.InvokeIdempotentActionAsync("setup/kiali-ready",
+            await master.InvokeIdempotentAsync("setup/kiali-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(
@@ -2540,7 +2540,7 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: neon-metrics-etcd-cluster";
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-metrics-etcd-cluster",
+            await master.InvokeIdempotentAsync("deploy/neon-metrics-etcd-cluster",
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
@@ -2561,7 +2561,7 @@ rm -rf {chartName}*
                     await InstallHelmChartAsync(master, "etcd-cluster", releaseName: "neon-metrics-etcd", @namespace: "monitoring", values: values);
                 });
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-metrics-etcd-cluster-ready",
+            await master.InvokeIdempotentAsync("deploy/neon-metrics-etcd-cluster-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(
@@ -2592,7 +2592,7 @@ rm -rf {chartName}*
 
             var cortexValues = new List<KeyValuePair<string, object>>();
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-metrics-prometheus",
+            await master.InvokeIdempotentAsync("deploy/neon-metrics-prometheus",
                 async () =>
                 {
                     master.Status = "deploy: neon-metrics-prometheus";
@@ -2643,7 +2643,7 @@ rm -rf {chartName}*
                     await InstallHelmChartAsync(master, "prometheus-operator", releaseName: "neon-metrics-prometheus", @namespace: "monitoring", values: values, wait: false);
                 });
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-metrics-prometheus-ready",
+            await master.InvokeIdempotentAsync("deploy/neon-metrics-prometheus-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(
@@ -2698,7 +2698,7 @@ rm -rf {chartName}*
                 cortexValues.Add(new KeyValuePair<string, object>($"cortexConfig.ingester.lifecycler.ring.kvstore.store", "inmemory"));
             }
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-metrics-cortex",
+            await master.InvokeIdempotentAsync("deploy/neon-metrics-cortex",
                 async () =>
                 {
                     if (cluster.Definition.Nodes.Any(n => n.Vm.GetMemory(cluster.Definition) < 4294965097L))
@@ -2753,7 +2753,7 @@ rm -rf {chartName}*
                     await InstallHelmChartAsync(master, "cortex", releaseName: "neon-metrics-cortex", @namespace: "monitoring", values: cortexValues);
                 });
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-metrics-cortex-ready",
+            await master.InvokeIdempotentAsync("deploy/neon-metrics-cortex-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(
@@ -2771,7 +2771,7 @@ rm -rf {chartName}*
                         pollInterval: clusterOpRetryInterval);
                 });
 
-            await master.InvokeIdempotentActionAsync("deploy/istio-prometheus",
+            await master.InvokeIdempotentAsync("deploy/istio-prometheus",
                 async () =>
                 {
                     master.Status = "deploy: neon-metrics-istio";
@@ -2779,7 +2779,7 @@ rm -rf {chartName}*
                     await InstallHelmChartAsync(master, "istio-prometheus", @namespace: "monitoring");
                 });
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-metrics-grafana",
+            await master.InvokeIdempotentAsync("deploy/neon-metrics-grafana",
                 async () =>
                 {
                     master.Status = "deploy: neon-metrics-grafana";
@@ -2807,7 +2807,7 @@ rm -rf {chartName}*
                     await InstallHelmChartAsync(master, "grafana", releaseName: "neon-metrics-grafana", @namespace: "monitoring", values: values, wait: false);
                 });
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-metrics-grafana-ready",
+            await master.InvokeIdempotentAsync("deploy/neon-metrics-grafana-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(
@@ -2836,7 +2836,7 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: metrics storage (yugabyte)";
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-metrics-db",
+            await master.InvokeIdempotentAsync("deploy/neon-metrics-db",
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
@@ -2877,7 +2877,7 @@ rm -rf {chartName}*
                     await InstallHelmChartAsync(master, "yugabyte", releaseName: "neon-metrics-db", @namespace: "monitoring", values: values);
                 });
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-metrics-db-ready",
+            await master.InvokeIdempotentAsync("deploy/neon-metrics-db-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(
@@ -2906,7 +2906,7 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: elasticsearch";
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-logs-elasticsearch",
+            await master.InvokeIdempotentAsync("deploy/neon-logs-elasticsearch",
                 async () =>
                 {
                     var monitorOptions = cluster.Definition.Monitor;
@@ -2960,7 +2960,7 @@ rm -rf {chartName}*
                     await InstallHelmChartAsync(master, "elasticsearch", releaseName: "neon-logs-elasticsearch", @namespace: "monitoring", timeout: 1200, values: values, wait: false);
                 });
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-logs-elasticsearch-ready",
+            await master.InvokeIdempotentAsync("deploy/neon-logs-elasticsearch-ready",
                 async () =>
                 { 
                     await NeonHelper.WaitForAsync(
@@ -2989,7 +2989,7 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: fluent-bit";
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-log-host",
+            await master.InvokeIdempotentAsync("deploy/neon-log-host",
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
@@ -3009,7 +3009,7 @@ rm -rf {chartName}*
                     await InstallHelmChartAsync(master, "fluent-bit", releaseName: "neon-log-host", @namespace: "monitoring", values: values);
                 });
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-log-host-ready",
+            await master.InvokeIdempotentAsync("deploy/neon-log-host-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(
@@ -3038,7 +3038,7 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: fluentd";
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-log-collector",
+            await master.InvokeIdempotentAsync("deploy/neon-log-collector",
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
@@ -3061,7 +3061,7 @@ rm -rf {chartName}*
                     await InstallHelmChartAsync(master, "fluentd", releaseName: "neon-log-collector", @namespace: "monitoring", values: values);
                 });
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-log-collector-ready",
+            await master.InvokeIdempotentAsync("deploy/neon-log-collector-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(
@@ -3090,7 +3090,7 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: kibana";
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-logs-kibana",
+            await master.InvokeIdempotentAsync("deploy/neon-logs-kibana",
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
@@ -3110,7 +3110,7 @@ rm -rf {chartName}*
                     await InstallHelmChartAsync(master, "kibana", releaseName: "neon-logs-kibana", @namespace: "monitoring", values: values);
             });
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-logs-kibana-ready",
+            await master.InvokeIdempotentAsync("deploy/neon-logs-kibana-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(
@@ -3139,7 +3139,7 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: jaeger";
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-logs-jaeger",
+            await master.InvokeIdempotentAsync("deploy/neon-logs-jaeger",
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
@@ -3179,7 +3179,7 @@ rm -rf {chartName}*
                     await InstallHelmChartAsync(master, "jaeger", releaseName: "neon-logs-jaeger", @namespace: "monitoring", values: values);
                 });
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-logs-jaeger-ready",
+            await master.InvokeIdempotentAsync("deploy/neon-logs-jaeger-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(
@@ -3209,7 +3209,7 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: registry";
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-system-registry-secret",
+            await master.InvokeIdempotentAsync("deploy/neon-system-registry-secret",
                 async () =>
                 {
                     var cert = TlsCertificate.CreateSelfSigned("*");
@@ -3231,7 +3231,7 @@ rm -rf {chartName}*
                     await k8sClient.CreateNamespacedSecretAsync(harborCert, "neon-system");
                    });
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-system-registry-redis",
+            await master.InvokeIdempotentAsync("deploy/neon-system-registry-redis",
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
@@ -3260,7 +3260,7 @@ rm -rf {chartName}*
                     await InstallHelmChartAsync(master, "redis-ha", releaseName: "neon-system-registry-redis", @namespace: "neon-system", values: values);
                 });
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-system-registry-redis-ready",
+            await master.InvokeIdempotentAsync("deploy/neon-system-registry-redis-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(
@@ -3279,7 +3279,7 @@ rm -rf {chartName}*
                         pollInterval: clusterOpRetryInterval);
                 });
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-system-registry-harbor",
+            await master.InvokeIdempotentAsync("deploy/neon-system-registry-harbor",
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
@@ -3339,7 +3339,7 @@ rm -rf {chartName}*
                     await InstallHelmChartAsync(master, "harbor", releaseName: "neon-system-registry-harbor", @namespace: "neon-system", values: values);
                 });
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-system-registry-harbor-ready",
+            await master.InvokeIdempotentAsync("deploy/neon-system-registry-harbor-ready",
                 async () =>
                 {
                     // Trivy is currently disabled by default
@@ -3397,7 +3397,7 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: neon-cluster-manager";
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-cluster-manager",
+            await master.InvokeIdempotentAsync("deploy/neon-cluster-manager",
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
@@ -3408,7 +3408,7 @@ rm -rf {chartName}*
                     await InstallHelmChartAsync(master, "neon-cluster-manager", releaseName: "neon-cluster-manager", @namespace: "neon-system", values: values);
                 });
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-cluster-manager-ready",
+            await master.InvokeIdempotentAsync("deploy/neon-cluster-manager-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(
@@ -3437,7 +3437,7 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: neon-system-db";
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-system-db",
+            await master.InvokeIdempotentAsync("deploy/neon-system-db",
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
@@ -3475,7 +3475,7 @@ rm -rf {chartName}*
                     await InstallHelmChartAsync(master, "citus-postgresql", releaseName: "neon-system-db", @namespace: "neon-system", values: values);
                 });
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-system-db-ready",
+            await master.InvokeIdempotentAsync("deploy/neon-system-db-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(
@@ -3528,7 +3528,7 @@ rm -rf {chartName}*
         /// </summary>
         private void LabelNodes(NodeSshProxy<NodeDefinition> master)
         {
-            master.InvokeIdempotentAction("setup/cluster-label-nodes",
+            master.InvokeIdempotent("setup/cluster-label-nodes",
                 () =>
                 {
                     master.Status = "label: nodes";
@@ -3594,7 +3594,7 @@ rm -rf {chartName}*
         {
             var master = cluster.FirstMaster;
 
-            master.InvokeIdempotentAction("setup/cluster-taint-nodes",
+            master.InvokeIdempotent("setup/cluster-taint-nodes",
                 () =>
                 {
                     master.Status = "taint: nodes";

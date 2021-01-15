@@ -81,7 +81,7 @@ namespace Neon.Kube
 
             if (operationName != null)
             {
-                node.InvokeIdempotentAction(operationName, () => action(node));
+                node.InvokeIdempotent(operationName, () => action(node));
             }
             else
             {

@@ -140,7 +140,7 @@ systemctl restart rsyslog.service
 
             node.SudoCommand("safe-apt-get update");
 
-            node.InvokeIdempotentAction("setup/prep-node",
+            node.InvokeIdempotent("setup/prep-node",
                 () =>
                 {
                     node.Status = "prepare: node";
@@ -289,7 +289,7 @@ systemctl restart rsyslog.service
 
             // Configure the SSH credentials on the node.
 
-            node.InvokeIdempotentAction("setup/ssh",
+            node.InvokeIdempotent("setup/ssh",
                 () =>
                 {
                     CommandBundle bundle;
