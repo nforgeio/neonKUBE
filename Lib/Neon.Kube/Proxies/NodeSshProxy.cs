@@ -98,6 +98,8 @@ namespace Neon.Kube
     public class NodeSshProxy<TMetadata> : LinuxSshProxy<TMetadata>
         where TMetadata : class
     {
+        private static readonly Regex   idempotentRegex = new Regex(@"[a-z0-9\.-/]+", RegexOptions.IgnoreCase);
+
         /// <summary>
         /// Constructs a <see cref="LinuxSshProxy{TMetadata}"/>.
         /// </summary>
@@ -194,6 +196,138 @@ namespace Neon.Kube
             SudoCommand($"mkdir -p {KubeNodeFolders.State} && touch {KubeNodeFolders.State}/{actionId}", RunOptions.FaultOnError);
         }
 
+
+        /// <summary>
+        /// Invokes a named action on the node if it has never been been performed
+        /// on the node before.
+        /// </summary>
+        /// <param name="actionId">The node-unique action ID.</param>
+        /// <param name="action">The action to be performed.</param>
+        /// <returns><c>true</c> if the action was invoked.</returns>
+        /// <remarks>
+        /// <para>
+        /// <paramref name="actionId"/> must uniquely identify the action on the node.
+        /// This may include letters, digits, dashes and periods as well as one or
+        /// more forward slashes that can be used to organize idempotent status files
+        /// into folders.
+        /// </para>
+        /// <para>
+        /// This method tracks successful action completion by creating a file
+        /// on the node at <see cref="KubeNodeFolders.State"/><b>/ACTION-ID</b>.
+        /// To ensure idempotency, this method first checks for the existance of
+        /// this file and returns immediately without invoking the action if it is 
+        /// present.
+        /// </para>
+        /// </remarks>
+        public bool InvokeIdempotentAction(string actionId, Action action)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(actionId), nameof(actionId));
+            Covenant.Requires<ArgumentException>(idempotentRegex.IsMatch(actionId), nameof(actionId));
+            Covenant.Requires<ArgumentNullException>(action != null, nameof(action));
+
+            if (action.GetMethodInfo().ReturnType != typeof(void))
+            {
+                // Ensure that a "void" async method isn't being passed because that
+                // would be treated as fire-and-forget and is not what developers
+                // will expect.
+
+                throw new ArgumentException($"Possible async delegate passed to [{nameof(InvokeIdempotentAction)}()]", nameof(action));
+            }
+
+            var stateFolder = KubeNodeFolders.State;
+            var slashPos    = actionId.LastIndexOf('/');
+
+            if (slashPos != -1)
+            {
+                // Extract any folder path from the activity ID and add it to
+                // the state folder path.
+
+                stateFolder = LinuxPath.Combine(stateFolder, actionId.Substring(0, slashPos));
+                actionId    = actionId.Substring(slashPos + 1);
+
+                Covenant.Assert(actionId.Length > 0);
+            }
+
+            var statePath = LinuxPath.Combine(stateFolder, actionId);
+
+            SudoCommand($"mkdir -p {stateFolder}");
+
+            if (FileExists(statePath))
+            {
+                return false;
+            }
+
+            action();
+
+            if (!IsFaulted)
+            {
+                SudoCommand($"touch {statePath}");
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Invokes a named action asynchronously on the node if it has never been been performed
+        /// on the node before.
+        /// </summary>
+        /// <param name="actionId">The node-unique action ID.</param>
+        /// <param name="action">The asynchronous action to be performed.</param>
+        /// <returns><c>true</c> if the action was invoked.</returns>
+        /// <remarks>
+        /// <para>
+        /// <paramref name="actionId"/> must uniquely identify the action on the node.
+        /// This may include letters, digits, dashes and periods as well as one or
+        /// more forward slashes that can be used to organize idempotent status files
+        /// into folders.
+        /// </para>
+        /// <para>
+        /// This method tracks successful action completion by creating a file
+        /// on the node at <see cref="KubeNodeFolders.State"/><b>/ACTION-ID</b>.
+        /// To ensure idempotency, this method first checks for the existance of
+        /// this file and returns immediately without invoking the action if it is 
+        /// present.
+        /// </para>
+        /// </remarks>
+        public async Task<bool> InvokeIdempotentActionAsync(string actionId, Func<Task> action)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(actionId), nameof(actionId));
+            Covenant.Requires<ArgumentException>(idempotentRegex.IsMatch(actionId), nameof(actionId));
+            Covenant.Requires<ArgumentNullException>(action != null, nameof(action));
+
+            var stateFolder = KubeNodeFolders.State;
+            var slashPos    = actionId.LastIndexOf('/');
+
+            if (slashPos != -1)
+            {
+                // Extract any folder path from the activity ID and add it to
+                // the state folder path.
+
+                stateFolder = LinuxPath.Combine(stateFolder, actionId.Substring(0, slashPos));
+                actionId    = actionId.Substring(slashPos + 1);
+
+                Covenant.Assert(actionId.Length > 0);
+            }
+
+            var statePath = LinuxPath.Combine(stateFolder, actionId);
+
+            SudoCommand($"mkdir -p {stateFolder}");
+
+            if (FileExists(statePath))
+            {
+                return false;
+            }
+
+            await action();
+
+            if (!IsFaulted)
+            {
+                SudoCommand($"touch {statePath}");
+            }
+
+            return true;
+        }
+
         /// <summary>
         /// Ensures that the node operating system and version is supported for a neonKUBE
         /// cluster.  This faults the nodeproxy on faliure.
@@ -254,42 +388,8 @@ namespace Neon.Kube
             Status = $"login: [{KubeConst.SysAdminUser}]";
 
             WaitForBoot();
-
-            // Disable and mask the auto update services to avoid conflicts with
-            // our package operations.  We're going to implement our own cluster
-            // updating mechanism.
-
-            KubeHelper.LogStatus(logWriter, "Disable", $"auto updates");
-            Status = "disable: auto updates";
-
-            SudoCommand("systemctl stop snapd.service", RunOptions.None);
-            SudoCommand("systemctl mask snapd.service", RunOptions.None);
-
-            SudoCommand("systemctl stop apt-daily.timer", RunOptions.None);
-            SudoCommand("systemctl mask apt-daily.timer", RunOptions.None);
-
-            SudoCommand("systemctl stop apt-daily.service", RunOptions.None);
-            SudoCommand("systemctl mask apt-daily.service", RunOptions.None);
-
-            // Wait for the apt-get lock to be released if somebody is holding it.
-
-            KubeHelper.LogStatus(logWriter, "Wait", "for pending updates");
-            Status = "wait: for pending updates";
-
-            while (SudoCommand("fuser /var/{lib/{dpkg,apt/lists},cache/apt/archives}/lock", RunOptions.None).ExitCode == 0)
-            {
-                Thread.Sleep(TimeSpan.FromSeconds(1));
-            }
-
-            // Disable sudo password prompts and reconnect.
-
-            KubeHelper.LogStatus(logWriter, "Disable", "[sudo] password");
-            Status = "disable: sudo password";
-            DisableSudoPrompt(sshPassword);
-
-            KubeHelper.LogStatus(logWriter, "Login", $"[{KubeConst.SysAdminUser}]");
-            Status = "reconnecting...";
-            WaitForBoot();
+            DisableSnap();
+            ConfigureApt();
 
             // Install required packages and ugrade the distribution if requested.
 
@@ -443,10 +543,13 @@ usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups roo
         /// <param name="logWriter">Optional log writer action.</param>
         public void InstallGuestIntegrationServices(Action<string> logWriter = null)
         {
-            KubeHelper.LogStatus(logWriter, "Install", "Guest integration services");
-            Status = "install: guest integration services";
+            InvokeIdempotentAction("node/guest-integration",
+                () =>
+                {
+                    KubeHelper.LogStatus(logWriter, "Install", "Guest integration services");
+                    Status = "install: guest integration services";
 
-            var guestServicesScript =
+                    var guestServicesScript =
 @"#!/bin/bash
 cat <<EOF >> /etc/initramfs-tools/modules
 hv_vmbus
@@ -459,7 +562,8 @@ apt-get install -yq --allow-downgrades linux-virtual linux-cloud-tools-virtual l
 update-initramfs -u
 ";
 
-            SudoCommand(CommandBundle.FromScript(guestServicesScript), RunOptions.FaultOnError);
+                    SudoCommand(CommandBundle.FromScript(guestServicesScript), RunOptions.FaultOnError);
+                });
         }
 
         /// <summary>
@@ -468,10 +572,13 @@ update-initramfs -u
         /// <param name="logWriter">Optional log writer action.</param>
         public void DisableDhcp(Action<string> logWriter = null)
         {
-            KubeHelper.LogStatus(logWriter, "Disable", "DHCP");
-            Status = "disable: DHCP";
+            InvokeIdempotentAction("node-dhcp",
+                () =>
+                {
+                    KubeHelper.LogStatus(logWriter, "Disable", "DHCP");
+                    Status = "disable: DHCP";
 
-            var initNetPlanScript =
+                    var initNetPlanScript =
 $@"
 rm /etc/netplan/*
 
@@ -492,7 +599,8 @@ network:
       dhcp4: no
 EOF
 ";
-            SudoCommand(CommandBundle.FromScript(initNetPlanScript), RunOptions.FaultOnError);
+                    SudoCommand(CommandBundle.FromScript(initNetPlanScript), RunOptions.FaultOnError);
+                });
         }
 
         /// <summary>
@@ -501,14 +609,18 @@ EOF
         /// <param name="logWriter">Optional log writer action.</param>
         public void DisableCloudInit(Action<string> logWriter = null)
         {
-            KubeHelper.LogStatus(logWriter, "Disable", "cloud-init");
-            Status = "disable: cloud-init";
+            InvokeIdempotentAction("node/cloud-init",
+                () =>
+                {
+                KubeHelper.LogStatus(logWriter, "Disable", "cloud-init");
+                Status = "disable: cloud-init";
 
-            var disableCloudInitScript =
+                var disableCloudInitScript =
 $@"
 touch /etc/cloud/cloud-init.disabled
 ";
-            SudoCommand(CommandBundle.FromScript(disableCloudInitScript), RunOptions.FaultOnError);
+                SudoCommand(CommandBundle.FromScript(disableCloudInitScript), RunOptions.FaultOnError);
+            });
         }
 
         /// <summary>
@@ -538,13 +650,17 @@ sfill -fllz /
         /// <param name="logWriter">Optional log writer action.</param>
         public void ConfigureOpenSsh(Action<string> logWriter = null)
         {
-            // Upload the OpenSSH server configuration and restart OpenSSH.
+            InvokeIdempotentAction("node/openssh",
+                () =>
+                {
+                    // Upload the OpenSSH server configuration and restart OpenSSH.
 
-            KubeHelper.LogStatus(logWriter, "Configure", "OpenSSH");
-            Status = "configure: OpenSSH";
+                    KubeHelper.LogStatus(logWriter, "Configure", "OpenSSH");
+                    Status = "configure: OpenSSH";
 
-            UploadText("/etc/ssh/sshd_config", KubeHelper.OpenSshConfig);
-            SudoCommand("systemctl restart sshd");
+                    UploadText("/etc/ssh/sshd_config", KubeHelper.OpenSshConfig);
+                    SudoCommand("systemctl restart sshd");
+                });
         }
 
         /// <summary>
@@ -553,15 +669,18 @@ sfill -fllz /
         /// <param name="logWriter">Optional log writer action.</param>
         public void CleanPackages(Action<string> logWriter = null)
         {
-            KubeHelper.LogStatus(logWriter, "Remove", "Unnecessary packages");
-            Status = "Remove: Unnecessary packages";
+            InvokeIdempotentAction("node/clean-packages",
+                () =>
+                {
+                    KubeHelper.LogStatus(logWriter, "Remove", "Unnecessary packages");
+                    Status = "Remove: Unnecessary packages";
 
-            // $todo(jefflill): Implement this.
+                    // $todo(jefflill): Implement this.
 
 #if TODO
             // Remove unnecessary packages.
 
-            var removePackagesScript =
+var removePackagesScript =
 @"
 apt-get remove -y \
     locales \
@@ -580,6 +699,7 @@ apt-get autoremove -y
 ";
             SudoCommand(CommandBundle.FromScript(removePackagesScript);
 #endif
+                });
         }
 
         /// <summary>
@@ -590,26 +710,29 @@ apt-get autoremove -y
         /// <param name="logWriter">Optional log writer action.</param>
         public void ConfigureApt(int packageManagerRetries = 5, bool allowPackageManagerIPv6 = false, Action<string> logWriter = null)
         {
-            KubeHelper.LogStatus(logWriter, "Configure", "[apt] package manager");
-            Status = "configure: [apt] package manager";
+            InvokeIdempotentAction("node/apt",
+                () =>
+                {
+                    KubeHelper.LogStatus(logWriter, "Configure", "[apt] package manager");
+                    Status = "configure: [apt] package manager";
 
-            if (!allowPackageManagerIPv6)
-            {
-                // Restrict the [apt] package manager to using IPv4 to communicate
-                // with the package mirrors, since IPv6 doesn't work sometimes.
+                    if (!allowPackageManagerIPv6)
+                    {
+                        // Restrict the [apt] package manager to using IPv4 to communicate
+                        // with the package mirrors, since IPv6 doesn't work sometimes.
 
-                UploadText("/etc/apt/apt.conf.d/99-force-ipv4-transport", "Acquire::ForceIPv4 \"true\";");
-                SudoCommand("chmod 644 /etc/apt/apt.conf.d/99-force-ipv4-transport", RunOptions.FaultOnError);
-            }
+                        UploadText("/etc/apt/apt.conf.d/99-force-ipv4-transport", "Acquire::ForceIPv4 \"true\";");
+                        SudoCommand("chmod 644 /etc/apt/apt.conf.d/99-force-ipv4-transport", RunOptions.FaultOnError);
+                    }
 
-            // Configure [apt] to retry.
+                    // Configure [apt] to retry.
 
-            UploadText("/etc/apt/apt.conf.d/99-retries", $"APT::Acquire::Retries \"{packageManagerRetries}\";");
-            SudoCommand("chmod 644 /etc/apt/apt.conf.d/99-retries", RunOptions.FaultOnError);
+                    UploadText("/etc/apt/apt.conf.d/99-retries", $"APT::Acquire::Retries \"{packageManagerRetries}\";");
+                    SudoCommand("chmod 644 /etc/apt/apt.conf.d/99-retries", RunOptions.FaultOnError);
 
-            // We're going to disable apt updating services so we can control when this happens.
+                    // We're going to disable apt updating services so we can control when this happens.
 
-            var disableAptServices =
+                    var disableAptServices =
 @"#------------------------------------------------------------------------------
 # Disable the [apt-timer] and [apt-daily] services.  We're doing this 
 # for two reasons:
@@ -638,7 +761,8 @@ systemctl mask apt-daily.service
 while fuser /var/{{lib /{{dpkg,apt/lists}},cache/apt/archives}}/lock; do
     sleep 1
 done";
-            SudoCommand(CommandBundle.FromScript(disableAptServices), RunOptions.FaultOnError);
+                    SudoCommand(CommandBundle.FromScript(disableAptServices), RunOptions.FaultOnError);
+                });
         }
 
         /// <summary>
@@ -647,10 +771,13 @@ done";
         /// <param name="logWriter">Optional log writer action.</param>
         public void DisableSnap(Action<string> logWriter = null)
         {
-            KubeHelper.LogStatus(logWriter, "Disable", "[snapd.service]");
-            Status = "disable: [snapd.service]";
+            InvokeIdempotentAction("node/snap",
+                () =>
+                {
+                    KubeHelper.LogStatus(logWriter, "Disable", "[snapd.service]");
+                    Status = "disable: [snapd.service]";
 
-            var disableSnapScript =
+                    var disableSnapScript =
 @"# Stop and mask [snapd.service] if it's not already masked.
 
 systemctl status --no-pager snapd.service
@@ -660,7 +787,8 @@ if [ $? ]; then
     systemctl mask snapd.service
 fi
 ";
-            SudoCommand(CommandBundle.FromScript(disableSnapScript), RunOptions.FaultOnError);
+                    SudoCommand(CommandBundle.FromScript(disableSnapScript), RunOptions.FaultOnError);
+                });
         }
 
         /// <summary>
@@ -692,10 +820,13 @@ fi
         /// </remarks>
         public void InstallNeonInit(Action<string> logWriter = null)
         {
-            KubeHelper.LogStatus(logWriter, "Install", "neon-init.service");
-            Status = "install: neon-init.service";
+            InvokeIdempotentAction("node/neon-init",
+                () =>
+                {
+                    KubeHelper.LogStatus(logWriter, "Install", "neon-init.service");
+                    Status = "install: neon-init.service";
 
-            var neonNodePrepScript =
+                    var neonNodePrepScript =
 $@"# Ensure that the neon binary folder exists.
 
 mkdir -p {KubeNodeFolders.Bin}
@@ -822,7 +953,8 @@ chmod 744 {KubeNodeFolders.Bin}/neon-init.sh
 systemctl enable neon-init
 systemctl daemon-reload
 ";
-            SudoCommand(CommandBundle.FromScript(neonNodePrepScript), RunOptions.FaultOnError);
+                    SudoCommand(CommandBundle.FromScript(neonNodePrepScript), RunOptions.FaultOnError);
+                });
         }
 
         /// <summary>
@@ -831,11 +963,14 @@ systemctl daemon-reload
         /// <param name="logWriter">Optional log writer action.</param>
         public void CreateKubeFolders(Action<string> logWriter = null)
         {
-            KubeHelper.LogStatus(logWriter, "Create", "Cluster folders");
-            Status = "create: cluster folders";
+            InvokeIdempotentAction("node/folders",
+                () =>
+                {
+                    KubeHelper.LogStatus(logWriter, "Create", "Cluster folders");
+                    Status = "create: cluster folders";
 
-            var folderScript =
-$@"
+                    var folderScript =
+        $@"
 mkdir -p {KubeNodeFolders.Bin}
 chmod 750 {KubeNodeFolders.Bin}
 
@@ -854,7 +989,8 @@ chmod 750 {KubeNodeFolders.State}
 mkdir -p {KubeNodeFolders.State}/setup
 chmod 750 {KubeNodeFolders.State}/setup
 ";
-            SudoCommand(CommandBundle.FromScript(folderScript), RunOptions.LogOnErrorOnly);
+                    SudoCommand(CommandBundle.FromScript(folderScript), RunOptions.LogOnErrorOnly);
+                });
         }
 
         /// <summary>
@@ -868,29 +1004,33 @@ chmod 750 {KubeNodeFolders.State}/setup
         /// <param name="logWriter">Optional log writer action.</param>
         public void InstallToolScripts(Action<string> logWriter = null)
         {
-            KubeHelper.LogStatus(logWriter, "Install", "Tools");
-            Status = "install: Tools";
-
-            // Upload any tool scripts to the neonKUBE bin folder, stripping
-            // the [*.sh] file type (if present) and then setting execute
-            // permissions.
-
-            var toolsFolder = KubeHelper.Resources.GetDirectory("/Tools");      // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1121
-
-            foreach (var file in toolsFolder.GetFiles())
-            {
-                var targetName = file.Name;
-
-                if (Path.GetExtension(targetName) == ".sh")
+            InvokeIdempotentAction("node/tool-scripts",
+                () =>
                 {
-                    targetName = Path.GetFileNameWithoutExtension(targetName);
-                }
+                    KubeHelper.LogStatus(logWriter, "Install", "Tools");
+                    Status = "install: Tools";
 
-                using (var toolStream = file.OpenStream())
-                {
-                    UploadText(LinuxPath.Combine(KubeNodeFolders.Bin, targetName), toolStream, permissions: "744");
-                }
-            }
+                    // Upload any tool scripts to the neonKUBE bin folder, stripping
+                    // the [*.sh] file type (if present) and then setting execute
+                    // permissions.
+
+                    var toolsFolder = KubeHelper.Resources.GetDirectory("/Tools");      // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1121
+
+                    foreach (var file in toolsFolder.GetFiles())
+                    {
+                        var targetName = file.Name;
+
+                        if (Path.GetExtension(targetName) == ".sh")
+                        {
+                            targetName = Path.GetFileNameWithoutExtension(targetName);
+                        }
+
+                        using (var toolStream = file.OpenStream())
+                        {
+                            UploadText(LinuxPath.Combine(KubeNodeFolders.Bin, targetName), toolStream, permissions: "744");
+                        }
+                    }
+                });
         }
 
         /// <summary>
