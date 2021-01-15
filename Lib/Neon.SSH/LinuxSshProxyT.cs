@@ -90,8 +90,7 @@ namespace Neon.SSH
         //---------------------------------------------------------------------
         // Static members
 
-        private static Dictionary<string, object>   connectLocks    = new Dictionary<string, object>(StringComparer.InvariantCultureIgnoreCase);
-        private static Regex                        idempotentRegex = new Regex(@"[a-z0-9\.-/]+", RegexOptions.IgnoreCase);
+        private static Dictionary<string, object>   connectLocks = new Dictionary<string, object>(StringComparer.InvariantCultureIgnoreCase);
 
         /// <summary>
         /// Returns the object to be used to when establishing connections to
@@ -541,7 +540,7 @@ namespace Neon.SSH
         /// multiple directories as required.
         /// </note>
         /// </remarks>
-        public string RemotePath { get; set; } = $"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:{HostFolders.Bin}:{HostFolders.Setup}";
+        public string RemotePath { get; set; } = $"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin";
 
         /// <summary>
         /// Returns the username used to log into the remote node.
@@ -836,19 +835,19 @@ rm {HostFolders.Home(Username)}/askpass
             //
             // To ensure we avoid this, I'm going to do the following:
             //
-            //      1. Create a transient file at [/dev/shm/neonkube/rebooting]. 
+            //      1. Create a transient file at [/dev/shm/neonssh/rebooting]. 
             //         Since [/dev/shm] is a TMPFS, this file will no longer
             //         exist after a reboot.
             //
             //      2. Command the server to reboot.
             //
             //      3. Loop and attempt to reconnect.  After reconnecting,
-            //         verify that the [/dev/shm/neonkube/rebooting] file is no
+            //         verify that the [/dev/shm/neonssh/rebooting] file is no
             //         longer present.  Reboot is complete if it's gone,
             //         otherwise, we need to continue trying.
             //
             //         We're also going to submit a new reboot command every 
-            //         10 seconds when [/dev/shm/neonkube/rebooting] is still present
+            //         10 seconds when [/dev/shm/neonssh/rebooting] is still present
             //         in case the original reboot command was somehow missed
             //         because the reboot command is not retried automatically.
             //  
@@ -1082,7 +1081,7 @@ rm {HostFolders.Home(Username)}/askpass
 
                         PrepareHostAndUser();
 
-                        // We need to verify that the [/dev/shm/neonkube/rebooting] file is not present
+                        // We need to verify that the [/dev/shm/neonssh/rebooting] file is not present
                         // to ensure that the machine has actually restarted (see [Reboot()]
                         // for more information.
 
@@ -1090,7 +1089,7 @@ rm {HostFolders.Home(Username)}/askpass
 
                         if (response.ExitStatus != 0)
                         {
-                            // [/dev/shm/neonkube/rebooting] file is not present, so we're done.
+                            // [/dev/shm/neonssh/rebooting] file is not present, so we're done.
 
                             break;
                         }
@@ -1487,11 +1486,6 @@ rm {HostFolders.Home(Username)}/askpass
             // [~/.neon]
 
             var folderPath = HostFolders.NeonHome(Username);
-            sshClient.RunCommand($"mkdir -p {folderPath} && chmod 700 {folderPath}");
-
-            // [~/.neon/archive]
-
-            folderPath = HostFolders.Archive(Username);
             sshClient.RunCommand($"mkdir -p {folderPath} && chmod 700 {folderPath}");
 
             // [~/.neon/download]
@@ -3049,137 +3043,6 @@ echo $? > {cmdFolder}/exit
 
                 SudoCommand($"rm -rf {bundleFolder}", runOptions);
             }
-        }
-
-        /// <summary>
-        /// Invokes a named action on the node if it has never been been performed
-        /// on the node before.
-        /// </summary>
-        /// <param name="actionId">The node-unique action ID.</param>
-        /// <param name="action">The action to be performed.</param>
-        /// <returns><c>true</c> if the action was invoked.</returns>
-        /// <remarks>
-        /// <para>
-        /// <paramref name="actionId"/> must uniquely identify the action on the node.
-        /// This may include letters, digits, dashes and periods as well as one or
-        /// more forward slashes that can be used to organize idempotent status files
-        /// into folders.
-        /// </para>
-        /// <para>
-        /// This method tracks successful action completion by creating a file
-        /// on the node at <see cref="HostFolders.State"/><b>/ACTION-ID</b>.
-        /// To ensure idempotency, this method first checks for the existance of
-        /// this file and returns immediately without invoking the action if it is 
-        /// present.
-        /// </para>
-        /// </remarks>
-        public bool InvokeIdempotentAction(string actionId, Action action)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(actionId), nameof(actionId));
-            Covenant.Requires<ArgumentException>(idempotentRegex.IsMatch(actionId), nameof(actionId));
-            Covenant.Requires<ArgumentNullException>(action != null, nameof(action));
-
-            if (action.GetMethodInfo().ReturnType != typeof(void))
-            {
-                // Ensure that a "void" async method isn't being passed because that
-                // would be treated as fire-and-forget and is not what developers
-                // will expect.
-
-                throw new ArgumentException($"Possible async delegate passed to [{nameof(InvokeIdempotentAction)}()]", nameof(action));
-            }
-
-            var stateFolder = HostFolders.State;
-            var slashPos    = actionId.LastIndexOf('/');
-
-            if (slashPos != -1)
-            {
-                // Extract any folder path from the activity ID and add it to
-                // the state folder path.
-
-                stateFolder = LinuxPath.Combine(stateFolder, actionId.Substring(0, slashPos));
-                actionId    = actionId.Substring(slashPos + 1);
-
-                Covenant.Assert(actionId.Length > 0);
-            }
-
-            var statePath = LinuxPath.Combine(stateFolder, actionId);
-
-            SudoCommand($"mkdir -p {stateFolder}");
-
-            if (FileExists(statePath))
-            {
-                return false;
-            }
-
-            action();
-
-            if (!IsFaulted)
-            {
-                SudoCommand($"touch {statePath}");
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// Invokes a named action asynchronously on the node if it has never been been performed
-        /// on the node before.
-        /// </summary>
-        /// <param name="actionId">The node-unique action ID.</param>
-        /// <param name="action">The asynchronous action to be performed.</param>
-        /// <returns><c>true</c> if the action was invoked.</returns>
-        /// <remarks>
-        /// <para>
-        /// <paramref name="actionId"/> must uniquely identify the action on the node.
-        /// This may include letters, digits, dashes and periods as well as one or
-        /// more forward slashes that can be used to organize idempotent status files
-        /// into folders.
-        /// </para>
-        /// <para>
-        /// This method tracks successful action completion by creating a file
-        /// on the node at <see cref="HostFolders.State"/><b>/ACTION-ID</b>.
-        /// To ensure idempotency, this method first checks for the existance of
-        /// this file and returns immediately without invoking the action if it is 
-        /// present.
-        /// </para>
-        /// </remarks>
-        public async Task<bool> InvokeIdempotentActionAsync(string actionId, Func<Task> action)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(actionId), nameof(actionId));
-            Covenant.Requires<ArgumentException>(idempotentRegex.IsMatch(actionId), nameof(actionId));
-            Covenant.Requires<ArgumentNullException>(action != null, nameof(action));
-
-            var stateFolder = HostFolders.State;
-            var slashPos    = actionId.LastIndexOf('/');
-
-            if (slashPos != -1)
-            {
-                // Extract any folder path from the activity ID and add it to
-                // the state folder path.
-
-                stateFolder = LinuxPath.Combine(stateFolder, actionId.Substring(0, slashPos));
-                actionId    = actionId.Substring(slashPos + 1);
-
-                Covenant.Assert(actionId.Length > 0);
-            }
-
-            var statePath = LinuxPath.Combine(stateFolder, actionId);
-
-            SudoCommand($"mkdir -p {stateFolder}");
-
-            if (FileExists(statePath))
-            {
-                return false;
-            }
-
-            await action();
-
-            if (!IsFaulted)
-            {
-                SudoCommand($"touch {statePath}");
-            }
-
-            return true;
         }
 
         /// <summary>
