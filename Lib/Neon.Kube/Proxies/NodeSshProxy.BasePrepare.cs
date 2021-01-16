@@ -89,12 +89,12 @@ namespace Neon.Kube
 
             WaitForBoot();
             VerifyNodeOS(statusWriter);
-            BaseConfigureDnsIPv4Preference(statusWriter);
             BaseConfigureDebianFrontend(statusWriter);
+            BaseInstallPackages(statusWriter);
+            BaseConfigureApt(statusWriter: statusWriter);
             BaseConfigureBashEnvironment(statusWriter);
             BaseInstallToolScripts(statusWriter);
-            BaseConfigureApt(statusWriter: statusWriter);
-            BaseInstallPackages(statusWriter);
+            BaseConfigureDnsIPv4Preference(statusWriter);
             BaseDisableSnap(statusWriter);
             BaseCreateKubeFolders(statusWriter);
 
@@ -116,6 +116,11 @@ namespace Neon.Kube
                     KubeHelper.WriteStatus(statusWriter, "Configure", $"Terminal as non-interactive");
                     Status = $"login: terminal as non-interactive";
 
+                    // We need to append [DEBIAN_FRONTEND] to the [/etc/environment] file but
+                    // we haven't installed [zip/unzip] yet so we can't use a command bundle.
+                    // We'll just use [tee] in this case. 
+
+                    SudoCommand("echo DEBIAN_FRONTEND=noninteractive | tee -a /etc/environment", RunOptions.Defaults | RunOptions.FaultOnError);
                     SudoCommand("echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections", RunOptions.Defaults | RunOptions.FaultOnError);
                 });
         }
@@ -133,7 +138,37 @@ namespace Neon.Kube
                     KubeHelper.WriteStatus(statusWriter, "Configure", $"DNS IPv4 preference");
                     Status = $"configure: ipv4 preference";
 
-                    SudoCommand("sed -i 's!^#precedence ::ffff:0:0/96  10$!precedence ::ffff:0:0/96  100!g' /etc/gai.conf", RunOptions.Defaults | RunOptions.FaultOnError);
+                    var script =
+@"
+#------------------------------------------------------------------------------
+# We need to modify how [getaddressinfo] handles DNS lookups 
+# so that IPv4 lookups are preferred over IPv6.  Ubuntu prefers
+# IPv6 lookups by default.  This can cause performance problems 
+# because in most situations right now, the server would be doing
+# 2 DNS queries, one for AAAA (IPv6) which will nearly always 
+# fail (at least until IPv6 is more prevalent) and then querying
+# for the for A (IPv4) record.
+#
+# This can also cause issues when the server is behind a NAT.
+# I ran into a situation where [apt-get update] started failing
+# because one of the archives had an IPv6 address in addition to
+# an IPv4.  Here's a note about this issue:
+#
+#       http://ubuntuforums.org/showthread.php?t=2282646
+#
+# We're going to uncomment the line below in [gai.conf] and
+# change it to the following line to prefer IPv4.
+#
+#       #precedence ::ffff:0:0/96  10
+#       precedence ::ffff:0:0/96  100
+#
+# Note that this does not completely prevent the resolver from
+# returning IPv6 addresses.  You'll need to prevent this on an
+# application by application basis, like using the [curl -4] option.
+
+sed -i 's!^#precedence ::ffff:0:0/96  10$!precedence ::ffff:0:0/96  100!g' /etc/gai.conf
+";
+                    SudoCommand(CommandBundle.FromScript(script), RunOptions.Defaults | RunOptions.FaultOnError);
                 });
         }
 
@@ -169,8 +204,26 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
             InvokeIdempotent("base/base-packages",
                 () =>
                 {
-                    SudoCommand("safe-apt-get update", RunOptions.FaultOnError);
-                    SudoCommand("safe-apt-get install -yq --allow-downgrades ntp secure-delete zip", RunOptions.Defaults | RunOptions.FaultOnError);
+                    // The [safe-apt-get] tool hasn't been installed yet so we're going to 
+                    // wait for any automatic package updating to release the lock before
+                    // proceeding to use standard [apt-get].
+
+                    while (true)
+                    {
+                        var response = SudoCommand("fuser /var/lib/dpkg/lock", RunOptions.Defaults);
+
+                        if (response.ExitCode != 0)
+                        {
+                            break;
+                        }
+
+                        Thread.Sleep(TimeSpan.FromSeconds(1));
+                    }
+
+                    // Install the packages.
+
+                    SudoCommand("apt-get update", RunOptions.Defaults | RunOptions.FaultOnError);
+                    SudoCommand("apt-get install -yq --allow-downgrades apt-cacher-ng ntp secure-delete zip", RunOptions.Defaults | RunOptions.FaultOnError);
 
                     // I've seen some situations after a reboot where the machine complains about
                     // running out of entropy.  Apparently, modern CPUs have an instruction that
@@ -192,7 +245,7 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
                     // [haveged] works by timing running code at very high resolution and hoping to
                     // see execution time jitter and then use that as an entropy source.
 
-                    SudoCommand("safe-apt-get install -yq --allow-downgrades haveged", RunOptions.Defaults | RunOptions.FaultOnError);
+                    SudoCommand("apt-get install -yq --allow-downgrades haveged", RunOptions.Defaults | RunOptions.FaultOnError);
                 });
         }
 
