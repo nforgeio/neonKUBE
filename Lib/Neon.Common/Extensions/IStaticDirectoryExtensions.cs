@@ -127,6 +127,8 @@ namespace Neon.IO
             {
                 zip.BeginUpdate();
 
+                var test = directory.GetFiles(searchPattern, searchOptions);    // $debug(jefflill): DELETE THIS!
+
                 foreach (var file in directory.GetFiles(searchPattern, searchOptions))
                 {
                     var relativePath = file.Path.Substring(directory.Path.Length + 1);

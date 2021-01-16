@@ -1074,10 +1074,10 @@ apt-mark hold crio cri-o-runc
             {
                 var helmFolder = KubeHelper.Resources.GetDirectory("/Helm");    // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1121
 
-                helmFolder.Zip(ms, zipOptions: StaticZipOptions.LinuxLineEndings);
+                helmFolder.Zip(ms, searchOptions: SearchOption.AllDirectories, zipOptions: StaticZipOptions.LinuxLineEndings);
 
                 ms.Seek(0, SeekOrigin.Begin);
-                Upload(KubeNodeFolders.Helm, ms, permissions: "660");
+                Upload(LinuxPath.Combine(KubeNodeFolders.Helm, "charts.zip"), ms, permissions: "660");
             }
         }
     }

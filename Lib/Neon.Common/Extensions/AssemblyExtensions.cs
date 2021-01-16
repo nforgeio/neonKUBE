@@ -301,8 +301,14 @@ namespace System
         /// There is really no way for this method to know what the original resource source files
         /// and directory paths were.  To resolve this, we're going to assume that resource file
         /// names include a file extension with a single dot and that any additional dots will form
-        /// the file's parent directory path.  
+        /// the file's parent directory path.
         /// </para>
+        /// <note>
+        /// All resource file names must include an extension to be loaded properly.  If you need
+        /// a file to be loaded <b>without an extension</b>, save the file with the special <b>"._"</b>
+        /// extension like <b>test._</b>.  This method will remove that special extension when reading
+        /// files with it.
+        /// </note>
         /// <para>
         /// What this means is that your resource file names must include a file extension.  So, file 
         /// names like this are OK:
@@ -382,6 +388,14 @@ namespace System
                         path     = "/";
                         filename = trimmedName;
                     }
+                }
+
+                // Handle the special [._] extension by removing the extension from the
+                // file name.
+
+                if (Path.GetExtension(filename) == "._")
+                {
+                    filename = Path.GetFileNameWithoutExtension(filename);
                 }
 
                 if (!pathToDirectory.TryGetValue(path, out var directory))
