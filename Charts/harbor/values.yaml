@@ -233,7 +233,7 @@ persistence:
       size: 1Gi
     trivy:
       existingClaim: ""
-      storageClass: "cstor-csi-stripe"
+      storageClass: "openebs-cstor-replicated"
       subPath: ""
       accessMode: ReadWriteOnce
       size: 5Gi

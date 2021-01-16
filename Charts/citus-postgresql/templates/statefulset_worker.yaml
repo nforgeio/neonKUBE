@@ -180,7 +180,7 @@ spec:
       name: pgdata
     spec:
       accessModes: [ "ReadWriteOnce" ]
-      storageClassName: {{ .Values.worker.persistence.storageClassName }}
+      storageClassName: {{ .Values.persistence.storageClass | quote }}
       resources:
         requests:
           storage: {{ .Values.worker.persistence.size }}

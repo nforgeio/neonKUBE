@@ -72,7 +72,7 @@ apt-get update -y
 apt-get install -y cri-o cri-o-runc
 
 cat <<EOF | sudo tee /etc/containers/registries.conf
-unqualified-search-registries = [ "$<neon-branch-registry>", "docker.io", "quay.io", "registry.access.redhat.com", "registry.fedoraproject.org"]
+unqualified-search-registries = [ "docker.io", "quay.io", "registry.access.redhat.com", "registry.fedoraproject.org"]
 
 [[registry]]
 prefix = "$<neon-branch-registry>"

@@ -2038,7 +2038,7 @@ istioctl install -f istio-cni.yaml
 
             // Install Elasticsearch.
 
-            if (cluster.Definition.Monitor.Logs.Enabled)
+            if (false)
             {
                 await firstMaster.InvokeIdempotentActionAsync("setup/cluster-deploy-elasticsearch",
                     async () =>
@@ -2425,14 +2425,14 @@ rm -rf {chartName}*
                         pollInterval: clusterOpRetryInterval);
                 });
 
-            master.InvokeIdempotentAction("setup/neon-storage-openebs-cstor-storageclass",
+            master.InvokeIdempotentAction("setup/neon-storage-openebs-cstor-replicated-storageclass",
                 () =>
                 {
                     var storageClass = new V1StorageClass()
                     {
                         Metadata = new V1ObjectMeta()
                         {
-                            Name = "cstor-csi-stripe"
+                            Name = "openebs-cstor-replicated"
                         },
                         Provisioner = "cstor.csi.openebs.io",
                         AllowVolumeExpansion = true,
@@ -2441,6 +2441,28 @@ rm -rf {chartName}*
                             { "cas-type", "cstor" },
                             { "cstorPoolCluster", "cspc-stripe" },
                             { "replicaCount", "3" }
+                        }
+                    };
+                    k8sClient.CreateStorageClass(storageClass);
+                });
+
+
+            master.InvokeIdempotentAction("setup/neon-storage-openebs-cstor-storageclass",
+                () =>
+                {
+                    var storageClass = new V1StorageClass()
+                    {
+                        Metadata = new V1ObjectMeta()
+                        {
+                            Name = "openebs-cstor"
+                        },
+                        Provisioner = "cstor.csi.openebs.io",
+                        AllowVolumeExpansion = true,
+                        Parameters = new Dictionary<string, string>()
+                        {
+                            { "cas-type", "cstor" },
+                            { "cstorPoolCluster", "cspc-stripe" },
+                            { "replicaCount", "1" }
                         }
                     };
                     k8sClient.CreateStorageClass(storageClass);
