@@ -80,6 +80,11 @@ namespace Neon.Kube
         private static IStaticDirectory     cachedResources;
 
         /// <summary>
+        /// CURL command common options.
+        /// </summary>
+        public const string CurlOptions = "-4fsSL --retry 10 --retry-delay 30";
+
+        /// <summary>
         /// Static constructor.
         /// </summary>
         static KubeHelper()

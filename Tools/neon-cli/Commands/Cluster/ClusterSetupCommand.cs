@@ -837,7 +837,7 @@ $@"
 
                     var bundle = CommandBundle.FromScript(
 $@"#!/bin/bash
-curl {Program.CurlOptions} https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+curl {KubeHelper.CurlOptions} https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
 echo ""deb https://apt.kubernetes.io/ kubernetes-xenial main"" > /etc/apt/sources.list.d/kubernetes.list
 safe-apt-get update
 ");
@@ -876,7 +876,7 @@ service kubelet restart
                             var helmInstallScript =
 $@"#!/bin/bash
 cd /tmp
-curl {Program.CurlOptions} {KubeDownloads.HelmLinuxUri} > helm.tar.gz
+curl {KubeHelper.CurlOptions} {KubeDownloads.HelmLinuxUri} > helm.tar.gz
 tar xvf helm.tar.gz
 cp linux-amd64/helm /usr/local/bin
 chmod 770 /usr/local/bin/helm
@@ -1805,7 +1805,7 @@ $@"#!/bin/bash
 # We need to edit the setup manifest to specify the 
 # cluster subnet before applying it.
 
-curl {Program.CurlOptions} {KubeDownloads.CalicoSetupYamlUri} > /tmp/calico.yaml
+curl {KubeHelper.CurlOptions} {KubeDownloads.CalicoSetupYamlUri} > /tmp/calico.yaml
 sed -i 's;192.168.0.0/16;{cluster.Definition.Network.PodSubnet};' /tmp/calico.yaml
 sed -i 's;calico/cni:v{KubeVersions.CalicoVersion}.*;{NeonHelper.NeonBranchRegistry}/calico-cni:neonkube-{KubeConst.LatestClusterVersion};' /tmp/calico.yaml
 sed -i 's;calico/kube-controllers:v{KubeVersions.CalicoVersion}.*;{NeonHelper.NeonBranchRegistry}/calico-kube-controllers:neonkube-{KubeConst.LatestClusterVersion};' /tmp/calico.yaml
@@ -3225,7 +3225,7 @@ rm -rf {chartName}*
                     };
 
                     await k8sClient.CreateNamespacedSecretAsync(harborCert, "neon-system");
-                   });
+                });
 
             await master.InvokeIdempotentAsync("deploy/neon-system-registry-redis",
                 async () =>

@@ -390,6 +390,7 @@ namespace Neon.Kube
 
             WaitForBoot();
             VerifyNodeOS(statusWriter: statusWriter);
+            ConfigureDebianFrontend();
             InstallToolScripts();
             InstallBasePackages(statusWriter: statusWriter);
             ConfigureApt(statusWriter: statusWriter);
@@ -403,7 +404,23 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Installs the required <b>base image</b> Apt packages.
+        /// Configures the Debian frontend terminal to non-interactive.
+        /// </summary>
+        /// <param name="statusWriter">Optional log writer action.</param>
+        public void ConfigureDebianFrontend(Action<string> statusWriter = null)
+        {
+            InvokeIdempotent("node/debian-frontend",
+                () =>
+                {
+                    KubeHelper.WriteStatus(statusWriter, "Configure", $"Terminal as non-interactive");
+                    Status = $"login: terminal as non-interactive";
+
+                    SudoCommand("echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections", RunOptions.FaultOnError);
+                });
+        }
+
+        /// <summary>
+        /// Installs the required <b>base image</b> packages.
         /// </summary>
         /// <param name="statusWriter">Optional log writer action.</param>
         public void InstallBasePackages(Action<string> statusWriter = null)
@@ -971,7 +988,10 @@ chmod 750 {KubeNodeFolders.State}/setup
         /// <param name="statusWriter">Optional log writer action.</param>
         public void InstallCriO(Action<string> statusWriter = null)
         {
-            var setupScript =
+            InvokeIdempotent("node/cri-o",
+                () =>
+                {
+                    var setupScript =
 $@"
 # Configure Bash strict mode so that the entire script will fail if 
 # any of the commands fail.
@@ -980,41 +1000,56 @@ $@"
 
 set -euo pipefail
 
-# Create the .conf file to load the modules at bootup
-cat <<EOF | sudo tee /etc/modules-load.d/crio.conf
+# Create the .conf file to load required modules during boot.
+
+cat <<EOF > /etc/modules-load.d/crio.conf
 overlay
 br_netfilter
 EOF
 
-sudo modprobe overlay
-sudo modprobe br_netfilter
+# ...and load them explicitly now.
+
+modprobe overlay
+modprobe br_netfilter
 
 sysctl --system
+
+# Configure the CRI-O package respository.
+
+export DEBIAN_FRONTEND=noninteractive
 
 OS=xUbuntu_20.04
 VERSION={KubeVersions.CrioVersion}
 
-cat <<EOF | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
+cat <<EOF > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
 deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/${{OS}}/ /
 EOF
-cat <<EOF | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable:cri-o:${{VERSION}}.list
+
+cat <<EOF > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable:cri-o:${{VERSION}}.list
 deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/${{VERSION}}/${{OS}}/ /
 EOF
 
-curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/${{OS}}/Release.key | apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers.gpg add -
-curl -L https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable:cri-o:${{VERSION}}/${{OS}}/Release.key | apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers-cri-o.gpg add -
+curl {KubeHelper.CurlOptions} https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/${{OS}}/Release.key | apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers.gpg add -
+curl {KubeHelper.CurlOptions} https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable:cri-o:${{VERSION}}/${{OS}}/Release.key | apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers-cri-o.gpg add -
+
+# Install the CRI-O packages.
 
 apt-get update -y
 apt-get install -y cri-o cri-o-runc
 
-cat <<EOF | sudo tee /etc/containers/registries.conf
-unqualified-search-registries = [ ""$<neon-branch-registry>"", ""docker.io"", ""quay.io"", ""registry.access.redhat.com"", ""registry.fedoraproject.org""]
+# Generate the CRI-O configurations.
+
+NEON_REGISTRY={NeonHelper.NeonBranchRegistry}
+
+cat <<EOF > /etc/containers/registries.conf
+unqualified-search-registries = [ ""docker.io"", ""quay.io"", ""registry.access.redhat.com"", ""registry.fedoraproject.org"" ]
 
 [[registry]]
-prefix = ""$<neon-branch-registry>""
+prefix = ""${{NEON_REGISTRY}}""
 insecure = false
 blocked = false
-location = ""$<neon-branch-registry>""
+location = ""${{NEON_REGISTRY}}""
+
 [[registry.mirror]]
 location = ""registry.neon-system""
 
@@ -1023,6 +1058,7 @@ prefix = ""docker.io""
 insecure = false
 blocked = false
 location = ""docker.io""
+
 [[registry.mirror]]
 location = ""registry.neon-system""
 
@@ -1031,35 +1067,31 @@ prefix = ""quay.io""
 insecure = false
 blocked = false
 location = ""quay.io""
+
 [[registry.mirror]]
-location = ""registry.neon-system""
+location = ""{KubeConst.NodeDomain}""
 EOF
 
-cat <<EOF | sudo tee /etc/crio/crio.conf.d/01-cgroup-manager.conf
+cat <<EOF > /etc/crio/crio.conf.d/01-cgroup-manager.conf
 [crio.runtime]
 cgroup_manager = ""systemd""
 EOF
 
-# We need to do a [daemon-reload] so systemd will be aware of the new unit drop-in.
-
-systemctl disable crio
-systemctl daemon-reload
-
 # Configure CRI-O to start on boot and then restart it to pick up the new options.
 
+systemctl daemon-reload
 systemctl enable crio
 systemctl restart crio
 
 # Prevent the package manager from automatically upgrading the container runtime.
 
 set +e      # Don't exit if the next command fails
-apt-mark hold crio cri-o-runc
+apt-mark hold cri-o cri-o-runc
 ";
-            InvokeIdempotent("cri-o",
-                () =>
-                {
-                    Status = "setup: cri-o";
-                    SudoCommand(setupScript, RunOptions.FaultOnError);
+                    KubeHelper.WriteStatus(statusWriter, "Install", "CRI-O");
+                    Status = "install: cri-o";
+
+                    SudoCommand(CommandBundle.FromScript(setupScript), RunOptions.FaultOnError);
                 });
         }
 
@@ -1072,6 +1104,9 @@ apt-mark hold crio cri-o-runc
         {
             using (var ms = new MemoryStream())
             {
+                KubeHelper.WriteStatus(statusWriter, "Upload", "Helm Charts");
+                Status = "upload: helm charts";
+
                 var helmFolder = KubeHelper.Resources.GetDirectory("/Helm");    // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1121
 
                 helmFolder.Zip(ms, searchOptions: SearchOption.AllDirectories, zipOptions: StaticZipOptions.LinuxLineEndings);

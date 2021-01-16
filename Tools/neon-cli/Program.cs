@@ -53,11 +53,6 @@ namespace NeonCli
         public const string Version = Build.NeonDesktopVersion;
     
         /// <summary>
-        /// CURL command common options.
-        /// </summary>
-        public const string CurlOptions = "-4fsSLv --retry 10 --retry-delay 30"; 
-
-        /// <summary>
         /// Program entry point.
         /// </summary>
         /// <param name="args">The command line arguments.</param>
