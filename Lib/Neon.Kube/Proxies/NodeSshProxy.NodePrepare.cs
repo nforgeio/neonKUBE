@@ -644,7 +644,7 @@ systemctl restart iscsid
                     KubeHelper.WriteStatus(statusWriter, "Configure", "Node (Low-Level)");
                     Status = "configure: node (low-level)";
 
-                    SudoCommand(CommandBundle.FromScript(script), RunOptions.FaultOnError);
+                    SudoCommand(CommandBundle.FromScript(script), RunOptions.Defaults | RunOptions.FaultOnError);
                 });
         }
 
@@ -683,7 +683,7 @@ systemctl restart iscsid
                     KubeHelper.WriteStatus(statusWriter, "Disable", "[neon-init]");
                     Status = "disable: [node-init]";
 
-                    SudoCommand("systemctl disable neon-init.service", RunOptions.FaultOnError);
+                    SudoCommand("systemctl disable neon-init.service", RunOptions.Defaults | RunOptions.FaultOnError);
                 });
         }   
 
@@ -796,7 +796,7 @@ apt-mark hold cri-o cri-o-runc
                     KubeHelper.WriteStatus(statusWriter, "Install", "CRI-O");
                     Status = "install: cri-o";
 
-                    SudoCommand(CommandBundle.FromScript(setupScript), RunOptions.FaultOnError);
+                    SudoCommand(CommandBundle.FromScript(setupScript), RunOptions.Defaults | RunOptions.FaultOnError);
                 });
         }
     }

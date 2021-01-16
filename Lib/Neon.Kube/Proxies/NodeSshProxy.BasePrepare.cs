@@ -116,7 +116,7 @@ namespace Neon.Kube
                     KubeHelper.WriteStatus(statusWriter, "Configure", $"Terminal as non-interactive");
                     Status = $"login: terminal as non-interactive";
 
-                    SudoCommand("echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections", RunOptions.FaultOnError);
+                    SudoCommand("echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections", RunOptions.Defaults | RunOptions.FaultOnError);
                 });
         }
 
@@ -133,7 +133,7 @@ namespace Neon.Kube
                     KubeHelper.WriteStatus(statusWriter, "Configure", $"DNS IPv4 preference");
                     Status = $"configure: ipv4 preference";
 
-                    SudoCommand("sed -i 's!^#precedence ::ffff:0:0/96  10$!precedence ::ffff:0:0/96  100!g' /etc/gai.conf", RunOptions.FaultOnError);
+                    SudoCommand("sed -i 's!^#precedence ::ffff:0:0/96  10$!precedence ::ffff:0:0/96  100!g' /etc/gai.conf", RunOptions.Defaults | RunOptions.FaultOnError);
                 });
         }
 
@@ -153,7 +153,7 @@ namespace Neon.Kube
 @"
 echo '. /etc/environment' > /etc/profile.d/env.sh
 ";
-                    SudoCommand(CommandBundle.FromScript(script), RunOptions.FaultOnError);
+                    SudoCommand(CommandBundle.FromScript(script), RunOptions.Defaults | RunOptions.FaultOnError);
                 });
         }
 
@@ -170,7 +170,7 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
                 () =>
                 {
                     SudoCommand("safe-apt-get update", RunOptions.FaultOnError);
-                    SudoCommand("safe-apt-get install -yq --allow-downgrades ntp secure-delete zip", RunOptions.FaultOnError);
+                    SudoCommand("safe-apt-get install -yq --allow-downgrades ntp secure-delete zip", RunOptions.Defaults | RunOptions.FaultOnError);
 
                     // I've seen some situations after a reboot where the machine complains about
                     // running out of entropy.  Apparently, modern CPUs have an instruction that
@@ -192,7 +192,7 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
                     // [haveged] works by timing running code at very high resolution and hoping to
                     // see execution time jitter and then use that as an entropy source.
 
-                    SudoCommand("safe-apt-get install -yq --allow-downgrades haveged", RunOptions.FaultOnError);
+                    SudoCommand("safe-apt-get install -yq --allow-downgrades haveged", RunOptions.Defaults | RunOptions.FaultOnError);
                 });
         }
 
@@ -208,7 +208,7 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
                     Status = "update: linux";
                     KubeHelper.WriteStatus(statusWriter, "Update", "Linux");
 
-                    SudoCommand("apt-get dist-upgrade -yq");
+                    SudoCommand("apt-get dist-upgrade -yq", RunOptions.Defaults | RunOptions.FaultOnError);
                 });
         }
 
@@ -270,7 +270,7 @@ EOF
 apt-get install -yq --allow-downgrades linux-virtual linux-cloud-tools-virtual linux-tools-virtual
 update-initramfs -u
 ";
-                    SudoCommand(CommandBundle.FromScript(guestServicesScript), RunOptions.FaultOnError);
+                    SudoCommand(CommandBundle.FromScript(guestServicesScript), RunOptions.Defaults | RunOptions.FaultOnError);
                 });
         }
 
@@ -307,7 +307,7 @@ network:
       dhcp4: no
 EOF
 ";
-                    SudoCommand(CommandBundle.FromScript(initNetPlanScript), RunOptions.FaultOnError);
+                    SudoCommand(CommandBundle.FromScript(initNetPlanScript), RunOptions.Defaults | RunOptions.FaultOnError);
                 });
         }
 
@@ -327,7 +327,7 @@ EOF
 $@"
 touch /etc/cloud/cloud-init.disabled
 ";
-                SudoCommand(CommandBundle.FromScript(disableCloudInitScript), RunOptions.FaultOnError);
+                SudoCommand(CommandBundle.FromScript(disableCloudInitScript), RunOptions.Defaults | RunOptions.FaultOnError);
             });
         }
 
@@ -346,7 +346,7 @@ touch /etc/cloud/cloud-init.disabled
                     Status = "configure: OpenSSH";
 
                     UploadText("/etc/ssh/sshd_config", KubeHelper.OpenSshConfig);
-                    SudoCommand("systemctl restart sshd");
+                    SudoCommand("systemctl restart sshd", RunOptions.Defaults | RunOptions.FaultOnError);
                 });
         }
 
@@ -384,7 +384,7 @@ apt-get remove -y \
 
 apt-get autoremove -y
 ";
-            SudoCommand(CommandBundle.FromScript(removePackagesScript);
+            SudoCommand(CommandBundle.FromScript(removePackagesScript, RunOptions.Defaults | RunOptions.FaultOnError);
 #endif
                 });
         }
@@ -409,13 +409,13 @@ apt-get autoremove -y
                         // with the package mirrors, since IPv6 doesn't work sometimes.
 
                         UploadText("/etc/apt/apt.conf.d/99-force-ipv4-transport", "Acquire::ForceIPv4 \"true\";");
-                        SudoCommand("chmod 644 /etc/apt/apt.conf.d/99-force-ipv4-transport", RunOptions.FaultOnError);
+                        SudoCommand("chmod 644 /etc/apt/apt.conf.d/99-force-ipv4-transport", RunOptions.Defaults | RunOptions.FaultOnError);
                     }
 
                     // Configure [apt] to retry.
 
                     UploadText("/etc/apt/apt.conf.d/99-retries", $"APT::Acquire::Retries \"{packageManagerRetries}\";");
-                    SudoCommand("chmod 644 /etc/apt/apt.conf.d/99-retries", RunOptions.FaultOnError);
+                    SudoCommand("chmod 644 /etc/apt/apt.conf.d/99-retries", RunOptions.Defaults | RunOptions.FaultOnError);
 
                     // We're going to disable apt updating services so we can control when this happens.
 
@@ -449,7 +449,7 @@ while fuser /var/lib/dpkg/lock >/dev/null 2>&1; do
     sleep 1
 done
 ";
-                    SudoCommand(CommandBundle.FromScript(disableAptServices), RunOptions.FaultOnError);
+                    SudoCommand(CommandBundle.FromScript(disableAptServices), RunOptions.Defaults | RunOptions.FaultOnError);
                 });
         }
 
@@ -475,7 +475,7 @@ if [ $? ]; then
     systemctl mask snapd.service
 fi
 ";
-                    SudoCommand(CommandBundle.FromScript(disableSnapScript), RunOptions.FaultOnError);
+                    SudoCommand(CommandBundle.FromScript(disableSnapScript), RunOptions.Defaults | RunOptions.FaultOnError);
                 });
         }
 
@@ -641,7 +641,7 @@ chmod 744 {KubeNodeFolders.Bin}/neon-init.sh
 systemctl enable neon-init
 systemctl daemon-reload
 ";
-                    SudoCommand(CommandBundle.FromScript(neonNodePrepScript), RunOptions.FaultOnError);
+                    SudoCommand(CommandBundle.FromScript(neonNodePrepScript), RunOptions.Defaults | RunOptions.FaultOnError);
                 });
         }
 
@@ -677,7 +677,7 @@ chmod 750 {KubeNodeFolders.State}
 mkdir -p {KubeNodeFolders.State}/setup
 chmod 750 {KubeNodeFolders.State}/setup
 ";
-                    SudoCommand(CommandBundle.FromScript(folderScript), RunOptions.LogOnErrorOnly);
+                    SudoCommand(CommandBundle.FromScript(folderScript), RunOptions.Defaults | RunOptions.FaultOnError);
                 });
         }
 

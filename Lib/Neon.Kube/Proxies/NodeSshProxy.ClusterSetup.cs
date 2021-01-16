@@ -327,7 +327,7 @@ EOF
 
 service ntp restart
 ";
-                    SudoCommand(CommandBundle.FromScript(script), RunOptions.FaultOnError);
+                    SudoCommand(CommandBundle.FromScript(script), RunOptions.Defaults | RunOptions.FaultOnError);
                 });
         }    
     }
