@@ -2432,7 +2432,11 @@ rm -rf {chartName}*
                     {
                         Metadata = new V1ObjectMeta()
                         {
-                            Name = "openebs-cstor-replicated"
+                            Name = "openebs-cstor-replicated",
+                            Annotations = new Dictionary<string, string>()
+                            {
+                                { "storageclass.kubernetes.io/is-default-class", "true"}
+                            }
                         },
                         Provisioner = "cstor.csi.openebs.io",
                         AllowVolumeExpansion = true,
