@@ -537,7 +537,7 @@ EOF
         /// <summary>
         /// Disables <b>cloud-init</b>.
         /// </summary>
-        /// <param name="statusWriter\">Optional log writer action.</param>
+        /// <param name="statusWriter">Optional log writer action.</param>
         public void DisableCloudInit(Action<string> statusWriter = null)
         {
             InvokeIdempotent("node/cloud-init",

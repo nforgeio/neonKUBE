@@ -59,7 +59,7 @@
     <None Remove="Resources\Conf\cluster.conf" />
     <None Remove="Resources\Helm\citus-postgresql\.helmignore" />
     <None Remove="Resources\Helm\citus-postgresql\Chart.yaml" />
-    <None Remove="Resources\Helm\citus-postgresql\OWNERS" />
+    <None Remove="Resources\Helm\citus-postgresql\OWNERS._" />
     <None Remove="Resources\Helm\citus-postgresql\README.md" />
     <None Remove="Resources\Helm\citus-postgresql\templates\configmap-metric-exporter.yaml" />
     <None Remove="Resources\Helm\citus-postgresql\templates\configmap.yaml" />
@@ -96,7 +96,7 @@
     <None Remove="Resources\Helm\cortex\values.yaml" />
     <None Remove="Resources\Helm\elasticsearch\.helmignore" />
     <None Remove="Resources\Helm\elasticsearch\Chart.yaml" />
-    <None Remove="Resources\Helm\elasticsearch\Makefile" />
+    <None Remove="Resources\Helm\elasticsearch\Makefile._" />
     <None Remove="Resources\Helm\elasticsearch\README.md" />
     <None Remove="Resources\Helm\elasticsearch\templates\configmap.yaml" />
     <None Remove="Resources\Helm\elasticsearch\templates\ingress.yaml" />
@@ -124,7 +124,7 @@
     <None Remove="Resources\Helm\etcd-operator\templates\_helpers.tpl" />
     <None Remove="Resources\Helm\etcd-operator\values.yaml" />
     <None Remove="Resources\Helm\fluent-bit\Chart.yaml" />
-    <None Remove="Resources\Helm\fluent-bit\OWNERS" />
+    <None Remove="Resources\Helm\fluent-bit\OWNERS._" />
     <None Remove="Resources\Helm\fluent-bit\README.md" />
     <None Remove="Resources\Helm\fluent-bit\templates\cluster-role.yaml" />
     <None Remove="Resources\Helm\fluent-bit\templates\cluster-rolebinding.yaml" />
@@ -142,7 +142,7 @@
     <None Remove="Resources\Helm\fluent-bit\values.yaml" />
     <None Remove="Resources\Helm\fluentd\.helmignore" />
     <None Remove="Resources\Helm\fluentd\Chart.yaml" />
-    <None Remove="Resources\Helm\fluentd\OWNERS" />
+    <None Remove="Resources\Helm\fluentd\OWNERS._" />
     <None Remove="Resources\Helm\fluentd\README.md" />
     <None Remove="Resources\Helm\fluentd\templates\clusterrole.yaml" />
     <None Remove="Resources\Helm\fluentd\templates\clusterrolebinding.yaml" />
@@ -180,7 +180,7 @@
     <None Remove="Resources\Helm\grafana\dashboards\node-exporter-full_rev21.json" />
     <None Remove="Resources\Helm\grafana\dashboards\pilot-dashboard.json" />
     <None Remove="Resources\Helm\grafana\dashboards\yugabytedb_rev2.json" />
-    <None Remove="Resources\Helm\grafana\OWNERS" />
+    <None Remove="Resources\Helm\grafana\OWNERS._" />
     <None Remove="Resources\Helm\grafana\README.md" />
     <None Remove="Resources\Helm\grafana\templates\clusterrole.yaml" />
     <None Remove="Resources\Helm\grafana\templates\clusterrolebinding.yaml" />
@@ -217,7 +217,7 @@
     <None Remove="Resources\Helm\harbor\conf\notary-server.json" />
     <None Remove="Resources\Helm\harbor\conf\notary-signer.json" />
     <None Remove="Resources\Helm\harbor\CONTRIBUTING.md" />
-    <None Remove="Resources\Helm\harbor\LICENSE" />
+    <None Remove="Resources\Helm\harbor\LICENSE._" />
     <None Remove="Resources\Helm\harbor\README.md" />
     <None Remove="Resources\Helm\harbor\templates\chartmuseum\chartmuseum-cm.yaml" />
     <None Remove="Resources\Helm\harbor\templates\chartmuseum\chartmuseum-dpl.yaml" />
@@ -318,7 +318,7 @@
     <None Remove="Resources\Helm\kiali\values.yaml" />
     <None Remove="Resources\Helm\kibana\.helmignore" />
     <None Remove="Resources\Helm\kibana\Chart.yaml" />
-    <None Remove="Resources\Helm\kibana\Makefile" />
+    <None Remove="Resources\Helm\kibana\Makefile._" />
     <None Remove="Resources\Helm\kibana\README.md" />
     <None Remove="Resources\Helm\kibana\templates\configmap.yaml" />
     <None Remove="Resources\Helm\kibana\templates\deployment.yaml" />
@@ -342,7 +342,7 @@
     <None Remove="Resources\Helm\m3db-operator\values.yaml" />
     <None Remove="Resources\Helm\metricbeat\.helmignore" />
     <None Remove="Resources\Helm\metricbeat\Chart.yaml" />
-    <None Remove="Resources\Helm\metricbeat\OWNERS" />
+    <None Remove="Resources\Helm\metricbeat\OWNERS._" />
     <None Remove="Resources\Helm\metricbeat\README.md" />
     <None Remove="Resources\Helm\metricbeat\templates\clusterrole.yaml" />
     <None Remove="Resources\Helm\metricbeat\templates\clusterrolebinding.yaml" />
@@ -364,7 +364,7 @@
     <None Remove="Resources\Helm\neon-cluster-manager\values.yaml" />
     <None Remove="Resources\Helm\nfs\.helmignore" />
     <None Remove="Resources\Helm\nfs\Chart.yaml" />
-    <None Remove="Resources\Helm\nfs\OWNERS" />
+    <None Remove="Resources\Helm\nfs\OWNERS._" />
     <None Remove="Resources\Helm\nfs\README.md" />
     <None Remove="Resources\Helm\nfs\templates\clusterrole.yaml" />
     <None Remove="Resources\Helm\nfs\templates\NOTES.txt" />
@@ -410,7 +410,7 @@
     <None Remove="Resources\Helm\openebs-cstor-operator\values.yaml" />
     <None Remove="Resources\Helm\openebs\Chart.yaml" />
     <None Remove="Resources\Helm\openebs\crds\crds.yaml" />
-    <None Remove="Resources\Helm\openebs\OWNERS" />
+    <None Remove="Resources\Helm\openebs\OWNERS._" />
     <None Remove="Resources\Helm\openebs\README.md" />
     <None Remove="Resources\Helm\openebs\templates\clusterrole.yaml" />
     <None Remove="Resources\Helm\openebs\templates\clusterrolebinding.yaml" />
@@ -497,7 +497,7 @@
     <None Remove="Resources\Helm\prometheus-operator\hack\sync_grafana_dashboards.py" />
     <None Remove="Resources\Helm\prometheus-operator\hack\sync_prometheus_rules.py" />
     <None Remove="Resources\Helm\prometheus-operator\hack\update-ci.sh" />
-    <None Remove="Resources\Helm\prometheus-operator\OWNERS" />
+    <None Remove="Resources\Helm\prometheus-operator\OWNERS._" />
     <None Remove="Resources\Helm\prometheus-operator\README.md" />
     <None Remove="Resources\Helm\prometheus-operator\requirements.lock" />
     <None Remove="Resources\Helm\prometheus-operator\requirements.yaml" />
@@ -666,6 +666,7 @@
     <None Remove="Resources\Helm\prometheus-operator\templates\prometheus\serviceperreplica.yaml" />
     <None Remove="Resources\Helm\prometheus-operator\templates\_helpers.tpl" />
     <None Remove="Resources\Helm\prometheus-operator\values.yaml" />
+    <None Remove="Resources\Helm\README.md" />
     <None Remove="Resources\Helm\redis-ha\Chart.yaml" />
     <None Remove="Resources\Helm\redis-ha\ci\haproxy-enabled-values.yaml" />
     <None Remove="Resources\Helm\redis-ha\README.md" />
@@ -971,6 +972,7 @@
     <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus\servicemonitors.yaml" />
     <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\prometheus\serviceperreplica.yaml" />
     <EmbeddedResource Include="Resources\Helm\prometheus-operator\templates\_helpers.tpl" />
+    <EmbeddedResource Include="Resources\Helm\README.md" />
     <EmbeddedResource Include="Resources\Helm\redis-ha\ci\haproxy-enabled-values.yaml" />
     <EmbeddedResource Include="Resources\Helm\redis-ha\templates\tests\test-redis-ha-configmap.yaml" />
     <EmbeddedResource Include="Resources\Helm\redis-ha\templates\tests\test-redis-ha-pod.yaml" />
@@ -979,7 +981,7 @@
   <ItemGroup>
     <EmbeddedResource Include="Resources\Helm\citus-postgresql\.helmignore" />
     <EmbeddedResource Include="Resources\Helm\citus-postgresql\Chart.yaml" />
-    <EmbeddedResource Include="Resources\Helm\citus-postgresql\OWNERS" />
+    <EmbeddedResource Include="Resources\Helm\citus-postgresql\OWNERS._" />
     <EmbeddedResource Include="Resources\Helm\citus-postgresql\README.md" />
     <EmbeddedResource Include="Resources\Helm\citus-postgresql\templates\configmap-metric-exporter.yaml" />
     <EmbeddedResource Include="Resources\Helm\citus-postgresql\templates\configmap.yaml" />
@@ -1016,7 +1018,7 @@
     <EmbeddedResource Include="Resources\Helm\cortex\values.yaml" />
     <EmbeddedResource Include="Resources\Helm\elasticsearch\.helmignore" />
     <EmbeddedResource Include="Resources\Helm\elasticsearch\Chart.yaml" />
-    <EmbeddedResource Include="Resources\Helm\elasticsearch\Makefile" />
+    <EmbeddedResource Include="Resources\Helm\elasticsearch\Makefile._" />
     <EmbeddedResource Include="Resources\Helm\elasticsearch\README.md" />
     <EmbeddedResource Include="Resources\Helm\elasticsearch\templates\configmap.yaml" />
     <EmbeddedResource Include="Resources\Helm\elasticsearch\templates\ingress.yaml" />
@@ -1044,7 +1046,7 @@
     <EmbeddedResource Include="Resources\Helm\etcd-operator\templates\_helpers.tpl" />
     <EmbeddedResource Include="Resources\Helm\etcd-operator\values.yaml" />
     <EmbeddedResource Include="Resources\Helm\fluent-bit\Chart.yaml" />
-    <EmbeddedResource Include="Resources\Helm\fluent-bit\OWNERS" />
+    <EmbeddedResource Include="Resources\Helm\fluent-bit\OWNERS._" />
     <EmbeddedResource Include="Resources\Helm\fluent-bit\README.md" />
     <EmbeddedResource Include="Resources\Helm\fluent-bit\templates\cluster-role.yaml" />
     <EmbeddedResource Include="Resources\Helm\fluent-bit\templates\cluster-rolebinding.yaml" />
@@ -1062,7 +1064,7 @@
     <EmbeddedResource Include="Resources\Helm\fluent-bit\values.yaml" />
     <EmbeddedResource Include="Resources\Helm\fluentd\.helmignore" />
     <EmbeddedResource Include="Resources\Helm\fluentd\Chart.yaml" />
-    <EmbeddedResource Include="Resources\Helm\fluentd\OWNERS" />
+    <EmbeddedResource Include="Resources\Helm\fluentd\OWNERS._" />
     <EmbeddedResource Include="Resources\Helm\fluentd\README.md" />
     <EmbeddedResource Include="Resources\Helm\fluentd\templates\clusterrole.yaml" />
     <EmbeddedResource Include="Resources\Helm\fluentd\templates\clusterrolebinding.yaml" />
@@ -1081,7 +1083,7 @@
     <EmbeddedResource Include="Resources\Helm\fluentd\values.yaml" />
     <EmbeddedResource Include="Resources\Helm\grafana\.helmignore" />
     <EmbeddedResource Include="Resources\Helm\grafana\Chart.yaml" />
-    <EmbeddedResource Include="Resources\Helm\grafana\OWNERS" />
+    <EmbeddedResource Include="Resources\Helm\grafana\OWNERS._" />
     <EmbeddedResource Include="Resources\Helm\grafana\README.md" />
     <EmbeddedResource Include="Resources\Helm\grafana\templates\clusterrole.yaml" />
     <EmbeddedResource Include="Resources\Helm\grafana\templates\clusterrolebinding.yaml" />
@@ -1115,7 +1117,7 @@
     <EmbeddedResource Include="Resources\Helm\harbor\.helmignore" />
     <EmbeddedResource Include="Resources\Helm\harbor\Chart.yaml" />
     <EmbeddedResource Include="Resources\Helm\harbor\CONTRIBUTING.md" />
-    <EmbeddedResource Include="Resources\Helm\harbor\LICENSE" />
+    <EmbeddedResource Include="Resources\Helm\harbor\LICENSE._" />
     <EmbeddedResource Include="Resources\Helm\harbor\README.md" />
     <EmbeddedResource Include="Resources\Helm\harbor\templates\chartmuseum\chartmuseum-cm.yaml" />
     <EmbeddedResource Include="Resources\Helm\harbor\templates\chartmuseum\chartmuseum-dpl.yaml" />
@@ -1216,7 +1218,7 @@
     <EmbeddedResource Include="Resources\Helm\kiali\values.yaml" />
     <EmbeddedResource Include="Resources\Helm\kibana\.helmignore" />
     <EmbeddedResource Include="Resources\Helm\kibana\Chart.yaml" />
-    <EmbeddedResource Include="Resources\Helm\kibana\Makefile" />
+    <EmbeddedResource Include="Resources\Helm\kibana\Makefile._" />
     <EmbeddedResource Include="Resources\Helm\kibana\README.md" />
     <EmbeddedResource Include="Resources\Helm\kibana\templates\configmap.yaml" />
     <EmbeddedResource Include="Resources\Helm\kibana\templates\deployment.yaml" />
@@ -1240,7 +1242,7 @@
     <EmbeddedResource Include="Resources\Helm\m3db-operator\values.yaml" />
     <EmbeddedResource Include="Resources\Helm\metricbeat\.helmignore" />
     <EmbeddedResource Include="Resources\Helm\metricbeat\Chart.yaml" />
-    <EmbeddedResource Include="Resources\Helm\metricbeat\OWNERS" />
+    <EmbeddedResource Include="Resources\Helm\metricbeat\OWNERS._" />
     <EmbeddedResource Include="Resources\Helm\metricbeat\README.md" />
     <EmbeddedResource Include="Resources\Helm\metricbeat\templates\clusterrole.yaml" />
     <EmbeddedResource Include="Resources\Helm\metricbeat\templates\clusterrolebinding.yaml" />
@@ -1262,7 +1264,7 @@
     <EmbeddedResource Include="Resources\Helm\neon-cluster-manager\values.yaml" />
     <EmbeddedResource Include="Resources\Helm\nfs\.helmignore" />
     <EmbeddedResource Include="Resources\Helm\nfs\Chart.yaml" />
-    <EmbeddedResource Include="Resources\Helm\nfs\OWNERS" />
+    <EmbeddedResource Include="Resources\Helm\nfs\OWNERS._" />
     <EmbeddedResource Include="Resources\Helm\nfs\README.md" />
     <EmbeddedResource Include="Resources\Helm\nfs\templates\clusterrole.yaml" />
     <EmbeddedResource Include="Resources\Helm\nfs\templates\NOTES.txt" />
@@ -1275,7 +1277,7 @@
     <EmbeddedResource Include="Resources\Helm\nfs\values.yaml" />
     <EmbeddedResource Include="Resources\Helm\openebs\Chart.yaml" />
     <EmbeddedResource Include="Resources\Helm\openebs\crds\crds.yaml" />
-    <EmbeddedResource Include="Resources\Helm\openebs\OWNERS" />
+    <EmbeddedResource Include="Resources\Helm\openebs\OWNERS._" />
     <EmbeddedResource Include="Resources\Helm\openebs\README.md" />
     <EmbeddedResource Include="Resources\Helm\openebs\templates\clusterrole.yaml" />
     <EmbeddedResource Include="Resources\Helm\openebs\templates\clusterrolebinding.yaml" />
@@ -1338,7 +1340,7 @@
     <EmbeddedResource Include="Resources\Helm\prometheus-operator\hack\sync_grafana_dashboards.py" />
     <EmbeddedResource Include="Resources\Helm\prometheus-operator\hack\sync_prometheus_rules.py" />
     <EmbeddedResource Include="Resources\Helm\prometheus-operator\hack\update-ci.sh" />
-    <EmbeddedResource Include="Resources\Helm\prometheus-operator\OWNERS" />
+    <EmbeddedResource Include="Resources\Helm\prometheus-operator\OWNERS._" />
     <EmbeddedResource Include="Resources\Helm\prometheus-operator\README.md" />
     <EmbeddedResource Include="Resources\Helm\prometheus-operator\requirements.lock" />
     <EmbeddedResource Include="Resources\Helm\prometheus-operator\requirements.yaml" />
