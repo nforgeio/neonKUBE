@@ -391,7 +391,7 @@ namespace Neon.Kube
                 nodeSshPassword = nodeToPassword[node.Metadata.Name];
             }
 
-            node.Initialize(nodeSshPassword);
+            node.BaseInitialize(nodeSshPassword);
         }
 
         /// <summary>

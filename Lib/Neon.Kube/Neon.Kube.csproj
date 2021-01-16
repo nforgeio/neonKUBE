@@ -715,12 +715,9 @@
     <None Remove="Resources\Helm\yugabyte\yugabyte-rbac.yaml" />
     <None Remove="Resources\Setup\setup-disk.sh" />
     <None Remove="Resources\Setup\setup-docker.sh" />
-    <None Remove="Resources\Setup\setup-environment.sh" />
     <None Remove="Resources\Setup\setup-exists.sh" />
-    <None Remove="Resources\Setup\setup-node.sh" />
     <None Remove="Resources\Setup\setup-ntp.sh" />
     <None Remove="Resources\Setup\setup-package-proxy.sh" />
-    <None Remove="Resources\Setup\setup-prep.sh" />
     <None Remove="Resources\Setup\setup-utility.sh" />
     <None Remove="Resources\Tools\safe-apt-get.sh" />
   </ItemGroup>
@@ -1391,22 +1388,13 @@
     <EmbeddedResource Include="Resources\Setup\setup-disk.sh">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\Setup\setup-environment.sh">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
     <EmbeddedResource Include="Resources\Setup\setup-exists.sh">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\Setup\setup-node.sh">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\Setup\setup-ntp.sh">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\Setup\setup-package-proxy.sh">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\Setup\setup-prep.sh">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\Setup\setup-utility.sh">

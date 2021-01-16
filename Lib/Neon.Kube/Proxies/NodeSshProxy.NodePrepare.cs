@@ -1,94 +1,75 @@
-#!/bin/bash
-#------------------------------------------------------------------------------
-# FILE:         setup-node.sh
-# CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+﻿//-----------------------------------------------------------------------------
+// FILE:	    NodeSshProxy.NodePrepare.cs
+// CONTRIBUTOR: Jeff Lill
+// COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-# NOTE: This script must be run under [sudo].
-#
-# NOTE: Variables formatted like $<name> will be expanded by [neon-cli]
-#       using a [PreprocessReader].
-#
-# This script continues the configuration of a node VM by assigning its
-# hostname and adding it to a Docker cluster.
-#
-# Note: This should be called after the node has been initialized via
-#       a direct call to [setup-prep.sh] or after it has been
-#       cloned from another initialized node.
+// This file includes node configuration methods executed while setting
+// up a neonKUBE cluster.
 
-# Configure Bash strict mode so that the entire script will fail if 
-# any of the commands fail.
-#
-#       http://redsymbol.net/articles/unofficial-bash-strict-mode/
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.Contracts;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Reflection;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 
-set -euo pipefail
+using Neon.Common;
+using Neon.Cryptography;
+using Neon.Diagnostics;
+using Neon.IO;
+using Neon.Net;
+using Neon.Retry;
+using Neon.SSH;
+using Neon.Time;
 
-echo
-echo "**********************************************" 1>&2
-echo "** SETUP-NODE                               **" 1>&2
-echo "**********************************************" 1>&2
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
-# Load the cluster configuration and setup utilities.
+using Renci.SshNet;
+using Renci.SshNet.Common;
 
-. $<load-cluster-conf>
-. setup-utility.sh
+namespace Neon.Kube
+{
+    public partial class NodeSshProxy<TMetadata> : LinuxSshProxy<TMetadata>
+        where TMetadata : class
+    {
+        /// <summary>
+        /// Performs low-level node initialization during cluster setup.
+        /// </summary>
+        /// <param name="statusWriter">Optional log writer action.</param>
+        public void NodeInitialize(Action<string> statusWriter = null)
+        {
+            // Additional initialization: This is from the old [node-setup.sh] script.
 
-# Verify that the node has been prepared.
-
-if [ ! -f ${NEON_STATE_FOLDER}/setup/prepared ] ; then
-    echo "*** ERROR: This node has not been prepared." 1>&2
-    exit 1
-fi
-
-# Ensure that setup is idempotent.
-
-startsetup node
-
+            var script =
+$@"
 #------------------------------------------------------------------------------
 # Remove the [neon-init] service.  This is no longer required after it
 # runs once (first boot) during node provisioning configures the network and 
 # and services.
 
 if [ -f /etc/systemd/system/neon-init.service ]; then
-    echo "** Remove: neon-init.service"
+    echo ""** Remove: neon-init.service""
     rm -f /etc/systemd/system/neon-init.service
-    rm -f ${NEON_BIN_FOLDER}/neon-init.sh
+    rm -f {KubeNodeFolders.Bin}/neon-init.sh
 fi
-
-# Ensure that the home directory for the [temp] user prepare created
-# to relocate the [sysadmin] user ID is deleted.  Older builds of the
-# [neon prepare node-template] command didn't delete this.
-
-rm -rf /home/temp
-
-# Install some common packages:
-#
-#   nano                Text editor
-#   sysstat             Linux monitoring tools
-#   dstat               Linux performance monitoring
-#   iotop               Linux I/O monitoring
-#   apache2-utils       Apache utilities
-#   daemon              daemon wrapper
-#	jq			        JSON parser (useful for shell scripts)
-#	aptitude	        Apt related utilities
-#	gdebi-core	        Installs .deb package files AND their dependencies
-#   mmv                 Easy multiple file renaming
-#   ca-certificates     Latest certificate authority certs
-
-safe-apt-get update
-safe-apt-get install -yq --allow-downgrades nano sysstat dstat iotop iptraf apache2-utils daemon jq aptitude gdebi-core mmv ca-certificates nfs-common
 
 # All Neon servers will be configured for UTC time.
 
@@ -98,12 +79,12 @@ timedatectl set-timezone UTC
 # node failures:
 
 rmmod floppy
-echo "blacklist floppy" | tee /etc/modprobe.d/blacklist-floppy.conf
+echo ""blacklist floppy"" | tee /etc/modprobe.d/blacklist-floppy.conf
 dpkg-reconfigure initramfs-tools
 
 # Enable system statistics collection (e.g. Page Faults,...)
 
-sed -i '/^ENABLED="false"/c\ENABLED="true"' /etc/default/sysstat
+sed -i '/^ENABLED=""false""/c\ENABLED=""true""' /etc/default/sysstat
 
 #------------------------------------------------------------------------------
 # We need to increase the number of file descriptors and also how much memory
@@ -144,8 +125,8 @@ cat <<EOF > /etc/security/limits.conf
 #          the literal username root.
 #
 #<type> can have the two values:
-#        - "soft" for enforcing the soft limits
-#        - "hard" for enforcing hard limits
+#        - ""soft"" for enforcing the soft limits
+#        - ""hard"" for enforcing hard limits
 #
 #<item> can be one of the following:
 #        - core - limits the core file size (KB)
@@ -188,7 +169,7 @@ root    hard    nproc   unlimited
 EOF
 
 #------------------------------------------------------------------------------
-# [systemd] has its own configuration limits configuration files and ignores
+# [systemd] has its own configuration limits files and ignores
 # [/etc/security/limits.conf] so we need to update the [systemd] settings 
 # as well.
 
@@ -217,8 +198,8 @@ EOF
 chmod 664 /etc/systemd/user.conf.d/50-neonkube.conf
 
 #------------------------------------------------------------------------------
-# Tweak some kernel settings.  I extracted this file from a clean Ubuntu 18.04
-# installed and then made the changes marked by the "# TWEAK" comment.
+# Tweak some kernel settings.  I extracted this file from a clean Ubuntu install
+# and then made the changes marked by the ""# TWEAK"" comment.
 
 cat <<EOF > /etc/sysctl.conf
 #
@@ -451,7 +432,7 @@ Description=Disable transparent home pages (THP)
 
 [Service]
 Type=simple
-ExecStart=/bin/sh -c "echo 'never' > /sys/kernel/mm/transparent_hugepage/enabled && echo 'never' > /sys/kernel/mm/transparent_hugepage/defrag"
+ExecStart=/bin/sh -c ""echo 'never' > /sys/kernel/mm/transparent_hugepage/enabled && echo 'never' > /sys/kernel/mm/transparent_hugepage/defrag""
 
 [Install]
 WantedBy=multi-user.target
@@ -477,14 +458,14 @@ cat <<EOF >> /etc/systemd/journald.conf
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
+# Licensed under the Apache License, Version 2.0 (the ""License"");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
+# distributed under the License is distributed on an ""AS IS"" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
@@ -541,21 +522,21 @@ EOF
 # an [exit] code file) and are older than one day (or perhaps even older than an
 # hour or two) and then purge those.  Not a high priority.
 
-cat <<EOF > ${NEON_BIN_FOLDER}/neon-cleaner
+cat <<EOF > {KubeNodeFolders.Bin}/neon-cleaner
 #!/bin/bash
 #------------------------------------------------------------------------------
 # FILE:         neon-cleaner
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
+# Licensed under the Apache License, Version 2.0 (the ""License"");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
+# distributed under the License is distributed on an ""AS IS"" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
@@ -575,58 +556,58 @@ cat <<EOF > ${NEON_BIN_FOLDER}/neon-cleaner
 #
 $   3. Clean the temporary file LinuxSshProxy upload and execute folders.
 
-history_path1=${HOME}/.bash_history
+history_path1=${{HOME}}/.bash_history
 history_path2=/root/.bash_history
 sleep_seconds=3600
 
-echo "[INFO] Starting: [sleep_time=\${sleep_seconds} seconds]"
+echo ""[INFO] Starting: [sleep_time=\${{sleep_seconds}} seconds]""
 
 while true
 do
     # Clean [.bash-history]
 
-    if [ -f \${history_path1} ] ; then
-        echo "[INFO] Shredding [\${history_path1}]"
-        result=\$(shred -uz \${history_path1})
-        if [ "\$?" != "0" ] ; then
-            echo "[WARN] \${result}"
+    if [ -f \${{history_path1}} ] ; then
+        echo ""[INFO] Shredding [\${{history_path1}}]""
+        result=\$(shred -uz \${{history_path1}})
+        if [ ""\$?"" != ""0"" ] ; then
+            echo ""[WARN] \${{result}}""
         fi
     fi
 
-    if [ -f \${history_path2} ] ; then
-        echo "[INFO] Shredding [\${history_path2}]"
-        result=\$(shred -uz \${history_path2})
-        if [ "\$?" != "0" ] ; then
-            echo "[WARN] \${result}"
+    if [ -f \${{history_path2}} ] ; then
+        echo ""[INFO] Shredding [\${{history_path2}}]""
+        result=\$(shred -uz \${{history_path2}})
+        if [ ""\$?"" != ""0"" ] ; then
+            echo ""[WARN] \${{result}}""
         fi
     fi
 
     # Clean the [LinuxSshProxy] temporary download files.
 
-    if [ -d "$/home/sysadmin/.neon/download" ] ; then
-        echo "[INFO] Cleaning: /home/sysadmin/.neon/download"
-        find "/home/sysadmin/.neon/download/*" -type d -ctime +1 | xargs rm -rf
+    if [ -d ""$/home/sysadmin/.neon/download"" ] ; then
+        echo ""[INFO] Cleaning: /home/sysadmin/.neon/download""
+        find ""/home/sysadmin/.neon/download/*"" -type d -ctime +1 | xargs rm -rf
     fi
 
     # Clean the [LinuxSshProxy] temporary exec files.
 
-    if [ -d "/home/sysadmin/.neon/exec" ] ; then
-        echo "[INFO] Cleaning: "/home/sysadmin/.neon/exec""
-        find "/home/sysadmin/.neonklube/exec/*" -type d -ctime +1 | xargs rm -rf
+    if [ -d ""/home/sysadmin/.neon/exec"" ] ; then
+        echo ""[INFO] Cleaning: ""/home/sysadmin/.neon/exec""""
+        find ""/home/sysadmin/.neonklube/exec/*"" -type d -ctime +1 | xargs rm -rf
     fi
 
-    if [ -d "/home/sysadmin/.neon/upload" ] ; then
-        echo "[INFO] Cleaning: /home/sysadmin/.neon/upload"
-        find "/home/sysadmin/.neon/upload/*" -type d -ctime +1 | xargs rm -rf
+    if [ -d ""/home/sysadmin/.neon/upload"" ] ; then
+        echo ""[INFO] Cleaning: /home/sysadmin/.neon/upload""
+        find ""/home/sysadmin/.neon/upload/*"" -type d -ctime +1 | xargs rm -rf
     fi
 
     # Sleep for a while before trying again.
 
-    sleep \${sleep_seconds}
+    sleep \${{sleep_seconds}}
 done
 EOF
 
-chmod 700 ${NEON_BIN_FOLDER}/neon-cleaner
+chmod 700 {KubeNodeFolders.Bin}/neon-cleaner
 
 # Generate the [neon-cleaner] systemd unit.
 
@@ -641,7 +622,7 @@ After=local-fs.target
 Requires=local-fs.target
 
 [Service]
-ExecStart=${NEON_BIN_FOLDER}/neon-cleaner
+ExecStart={KubeNodeFolders.Bin}/neon-cleaner
 ExecReload=/bin/kill -s HUP \$MAINPID
 Restart=always
 
@@ -656,7 +637,167 @@ systemctl restart neon-cleaner
 systemctl enable iscsid
 systemctl daemon-reload
 systemctl restart iscsid
+";
+            InvokeIdempotent("node/initialize",
+                () =>
+                {
+                    KubeHelper.WriteStatus(statusWriter, "Configure", "Node (Low-Level)");
+                    Status = "configure: node (low-level)";
 
-# Indicate that the script has completed.
+                    SudoCommand(CommandBundle.FromScript(script), RunOptions.FaultOnError);
+                });
+        }
 
-endsetup node
+        /// <summary>
+        /// Installs the Helm charts as a single ZIP archive written to the 
+        /// neonKUBE Helm folder.
+        /// </summary>
+        /// <param name="statusWriter">Optional log writer action.</param>
+        public void NodeInstallHelmArchive(Action<string> statusWriter = null)
+        {
+            using (var ms = new MemoryStream())
+            {
+                KubeHelper.WriteStatus(statusWriter, "Install", "Helm Charts (archive)");
+                Status = "install: helm charts (archive)";
+
+                var helmFolder = KubeHelper.Resources.GetDirectory("/Helm");    // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1121
+
+                helmFolder.Zip(ms, searchOptions: SearchOption.AllDirectories, zipOptions: StaticZipOptions.LinuxLineEndings);
+
+                ms.Seek(0, SeekOrigin.Begin);
+                Upload(LinuxPath.Combine(KubeNodeFolders.Helm, "charts.zip"), ms, permissions: "660");
+            }
+        }
+
+        /// <summary>
+        /// Disables the <b>neon-init</b> service during cluster setup because it is no
+        /// longer necessary after the node first boots and its credentials and network
+        /// settings have been configured.
+        /// </summary>
+        /// <param name="statusWriter">Optional log writer action.</param>
+        public void NodeDisableNeonInit(Action<string> statusWriter = null)
+        {
+            InvokeIdempotent("node/disable-neon-init",
+                () =>
+                {
+                    KubeHelper.WriteStatus(statusWriter, "Disable", "[neon-init]");
+                    Status = "disable: [node-init]";
+
+                    SudoCommand("systemctl disable neon-init.service", RunOptions.FaultOnError);
+                });
+        }   
+
+        /// <summary>
+        /// Installs the <b>CRI-O</b> container runtime.
+        /// </summary>
+        /// <param name="statusWriter">Optional log writer action.</param>
+        public void NodeInstallCriO(Action<string> statusWriter = null)
+        {
+            InvokeIdempotent("node/cri-o",
+                () =>
+                {
+                    var setupScript =
+$@"
+# Configure Bash strict mode so that the entire script will fail if 
+# any of the commands fail.
+#
+# http://redsymbol.net/articles/unofficial-bash-strict-mode/
+
+set -euo pipefail
+
+# Create the .conf file to load required modules during boot.
+
+cat <<EOF > /etc/modules-load.d/crio.conf
+overlay
+br_netfilter
+EOF
+
+# ...and load them explicitly now.
+
+modprobe overlay
+modprobe br_netfilter
+
+sysctl --system
+
+# Configure the CRI-O package respository.
+
+export DEBIAN_FRONTEND=noninteractive
+
+OS=xUbuntu_20.04
+VERSION={KubeVersions.CrioVersion}
+
+cat <<EOF > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
+deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/${{OS}}/ /
+EOF
+
+cat <<EOF > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable:cri-o:${{VERSION}}.list
+deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/${{VERSION}}/${{OS}}/ /
+EOF
+
+curl {KubeHelper.CurlOptions} https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/${{OS}}/Release.key | apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers.gpg add -
+curl {KubeHelper.CurlOptions} https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable:cri-o:${{VERSION}}/${{OS}}/Release.key | apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers-cri-o.gpg add -
+
+# Install the CRI-O packages.
+
+apt-get update -y
+apt-get install -y cri-o cri-o-runc
+
+# Generate the CRI-O configurations.
+
+NEON_REGISTRY={NeonHelper.NeonBranchRegistry}
+
+cat <<EOF > /etc/containers/registries.conf
+unqualified-search-registries = [ ""docker.io"", ""quay.io"", ""registry.access.redhat.com"", ""registry.fedoraproject.org"" ]
+
+[[registry]]
+prefix = ""${{NEON_REGISTRY}}""
+insecure = false
+blocked = false
+location = ""${{NEON_REGISTRY}}""
+
+[[registry.mirror]]
+location = ""registry.neon-system""
+
+[[registry]]
+prefix = ""docker.io""
+insecure = false
+blocked = false
+location = ""docker.io""
+
+[[registry.mirror]]
+location = ""registry.neon-system""
+
+[[registry]]
+prefix = ""quay.io""
+insecure = false
+blocked = false
+location = ""quay.io""
+
+[[registry.mirror]]
+location = ""{KubeConst.NodeDomain}""
+EOF
+
+cat <<EOF > /etc/crio/crio.conf.d/01-cgroup-manager.conf
+[crio.runtime]
+cgroup_manager = ""systemd""
+EOF
+
+# Configure CRI-O to start on boot and then restart it to pick up the new options.
+
+systemctl daemon-reload
+systemctl enable crio
+systemctl restart crio
+
+# Prevent the package manager from automatically upgrading the container runtime.
+
+set +e      # Don't exit if the next command fails
+apt-mark hold cri-o cri-o-runc
+";
+                    KubeHelper.WriteStatus(statusWriter, "Install", "CRI-O");
+                    Status = "install: cri-o";
+
+                    SudoCommand(CommandBundle.FromScript(setupScript), RunOptions.FaultOnError);
+                });
+        }
+    }
+}

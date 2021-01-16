@@ -81,7 +81,7 @@ namespace Neon.Kube
 
             node.Status = "configure: [apt] package manager";
 
-            node.ConfigureApt(clusterDefinition.NodeOptions.PackageManagerRetries, clusterDefinition.NodeOptions.AllowPackageManagerIPv6);
+            node.BaseConfigureApt(clusterDefinition.NodeOptions.PackageManagerRetries, clusterDefinition.NodeOptions.AllowPackageManagerIPv6);
 
             //-----------------------------------------------------------------
             // We're going to stop and mask the [snapd.service] if it's running
@@ -123,7 +123,7 @@ systemctl restart rsyslog.service
 
             node.Status = "configure: openssh";
 
-            node.ConfigureOpenSsh();
+            node.BaseConfigureOpenSsh();
 
             node.Status = "upload: configuration";
 

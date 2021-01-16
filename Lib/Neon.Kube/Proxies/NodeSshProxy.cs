@@ -15,6 +15,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// This class spans of four source files.
+//
+//      NeonSshProxy.cs (this file)     - Common code
+//      NodeSshProxy.BasePrepare.cs     - Configure base images
+//      NodeSshProxy.ClusterSetup.cs    - Configure nodes string cluster setup
+//      NodeSshProxy.NodePrepare.cs     - Configure node images
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
@@ -95,10 +102,12 @@ namespace Neon.Kube
     /// </note>
     /// </remarks>
     /// <threadsafety instance="false"/>
-    public class NodeSshProxy<TMetadata> : LinuxSshProxy<TMetadata>
+    public partial class NodeSshProxy<TMetadata> : LinuxSshProxy<TMetadata>
         where TMetadata : class
     {
-        private static readonly Regex   idempotentRegex = new Regex(@"[a-z0-9\.-/]+", RegexOptions.IgnoreCase);
+        private static readonly Regex idempotentRegex = new Regex(@"[a-z0-9\.-/]+", RegexOptions.IgnoreCase);
+
+        private ClusterProxy    cluster;
 
         /// <summary>
         /// Constructs a <see cref="LinuxSshProxy{TMetadata}"/>.
@@ -120,9 +129,129 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// The associated <see cref="ClusterProxy"/> or <c>null</c>.
+        /// Returns the associated <see cref="ClusterProxy"/> when there is one.
         /// </summary>
-        public ClusterProxy Cluster { get; internal set; }
+        /// <exception cref="InvalidOperationException">Thrown when there is no associated cluster proxy.</exception>
+        public ClusterProxy Cluster
+        {
+            get
+            {
+                if (this.cluster == null)
+                {
+                    throw new InvalidOperationException($"[{nameof(NodeSshProxy<TMetadata>)}] instance is not associated with a cluster proxy.");
+                }
+
+                return this.cluster;
+            }
+
+            set { this.cluster = value; }
+        }
+
+        /// <summary>
+        /// Returns the associated <see cref="NodeDefinition"/> metadata when present.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown when there is no associated node definition.</exception>
+        public NodeDefinition NodeDefinition
+        {
+            get
+            {
+                var nodeDefinition = Metadata as NodeDefinition;
+
+                if (nodeDefinition == null)
+                {
+                    throw new InvalidOperationException($"[{nameof(NodeSshProxy<TMetadata>)}] instance does not include a node definition.");
+                }
+
+                return nodeDefinition;
+            }
+        }
+
+        /// <summary>
+        /// Returns the NTP time sources to be used by the node.
+        /// </summary>
+        /// <returns>The quoted and space separated list of IP address or DNS hostnames for the node's NTP time sources in priority order.</returns>
+        /// <remarks>
+        /// <para>
+        /// The cluster will be configured such that the first master node (by sorted name) will be the primary timesource
+        /// for the cluster.  All other master and worker nodes will be configured to use the first master by default.
+        /// Secondary masters will be configured to use the external timesource next so any master can automatically
+        /// assume these duities.
+        /// </para>
+        /// <para>
+        /// Worker nodes will be configured to use master node in sorted order but will not be configured to use the 
+        /// external time sources to avoid having large clusters spam the sources.
+        /// </para>
+        /// <para>
+        /// The nice thing about this is that the cluster will almost always be closly synchronized with the first master
+        /// with gracefull fallback on node failures.
+        /// </para>
+        /// </remarks>
+        /// <exception cref="InvalidOperationException">Thrown when there is no associated cluster proxy.</exception>
+        public string GetNtpSources()
+        {
+            var clusterDefinition = Cluster.Definition;
+            var nodeDefinition    = NodeDefinition;
+            var sortedMasters     = clusterDefinition.SortedMasterNodes.ToArray();
+            var firstMaster       = sortedMasters.First();
+            var sbExternalSources = new StringBuilder();
+            var sbNodeSources     = new StringBuilder();
+
+            // Normalize the external time sources.
+
+            foreach (var source in clusterDefinition.TimeSources)
+            {
+                sbExternalSources.AppendWithSeparator($"\"{source}\"");
+            }
+
+            if (sbExternalSources.Length == 0)
+            {
+                // Fallback to [pool.ntp.org] when no external source is specified.
+
+                sbExternalSources.AppendWithSeparator("\"pool.ntp.org\"");
+            }
+
+            switch (nodeDefinition.Role)
+            {
+                case NodeRole.Master:
+
+                    if (nodeDefinition.Name.Equals(firstMaster.Name, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        // The first master is configured to use the external time sources only.
+
+                        sbNodeSources.AppendWithSeparator(sbExternalSources.ToString());
+                    }
+                    else
+                    {
+                        // The remaining masters are configured to prioritize the first master and
+                        // then fallback to the external sources.
+
+                        sbNodeSources.AppendWithSeparator($"\"{firstMaster.Address}\"");
+                        sbNodeSources.AppendWithSeparator(sbExternalSources.ToString());
+                    }
+                    break;
+
+                case NodeRole.Worker:
+
+                    // Workers are configured to priortize the first master and then fall
+                    // back to the remaining masters.  Workers will not be configured to
+                    // use the external time sources to avoid having large clusters spam
+                    // the sources.
+
+                    foreach (var master in sortedMasters)
+                    {
+                        sbNodeSources.AppendWithSeparator($"\"{master.Address}\"");
+                    }
+
+                    sbNodeSources.AppendWithSeparator(sbExternalSources.ToString());
+                    break;
+
+                default:
+
+                    throw new NotImplementedException();
+            }
+
+            return sbNodeSources.ToString();
+        }
 
         /// <summary>
         /// Returns the connection information for SSH.NET.
@@ -131,14 +260,14 @@ namespace Neon.Kube
         private ConnectionInfo GetConnectionInfo()
         {
             var address = string.Empty;
-            var port    = SshPort;
+            var port = SshPort;
 
             if (Cluster?.HostingManager != null)
             {
                 var ep = Cluster.HostingManager.GetSshEndpoint(this.Name);
 
                 address = ep.Address;
-                port    = ep.Port;
+                port = ep.Port;
             }
             else
             {
@@ -237,7 +366,7 @@ namespace Neon.Kube
             }
 
             var stateFolder = KubeNodeFolders.State;
-            var slashPos    = actionId.LastIndexOf('/');
+            var slashPos = actionId.LastIndexOf('/');
 
             if (slashPos != -1)
             {
@@ -245,7 +374,7 @@ namespace Neon.Kube
                 // the state folder path.
 
                 stateFolder = LinuxPath.Combine(stateFolder, actionId.Substring(0, slashPos));
-                actionId    = actionId.Substring(slashPos + 1);
+                actionId = actionId.Substring(slashPos + 1);
 
                 Covenant.Assert(actionId.Length > 0);
             }
@@ -298,7 +427,7 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(action != null, nameof(action));
 
             var stateFolder = KubeNodeFolders.State;
-            var slashPos    = actionId.LastIndexOf('/');
+            var slashPos = actionId.LastIndexOf('/');
 
             if (slashPos != -1)
             {
@@ -306,7 +435,7 @@ namespace Neon.Kube
                 // the state folder path.
 
                 stateFolder = LinuxPath.Combine(stateFolder, actionId.Substring(0, slashPos));
-                actionId    = actionId.Substring(slashPos + 1);
+                actionId = actionId.Substring(slashPos + 1);
 
                 Covenant.Assert(actionId.Length > 0);
             }
@@ -353,225 +482,6 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Performs low-level initialization of a cluster   This is applied one time to
-        /// Hyper-V and XenServer/XCP-ng node templates when they are created and at cluster
-        /// creation time for cloud and bare metal clusters.  The node must already be running.
-        /// </summary>
-        /// <param name="sshPassword">The current <b>sysadmin</b> password.</param>
-        /// <param name="updateDistribution">Optionally upgrade the node's Linux distribution.  This defaults to <c>false</c>.</param>
-        /// <param name="statusWriter">Optional log writer action.</param>
-        public void Initialize(string sshPassword, bool updateDistribution = false, Action<string> statusWriter = null)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(sshPassword), nameof(sshPassword));
-
-            // $hack(jefflill):
-            //
-            // This method is going to be called for two different scenarios that will each
-            // call for different logging mechanisms.
-            //
-            //      1. For the [neon prepare node-template] command, we're simply going 
-            //         to write status to the console as lines via the [statusWriter].
-            //
-            //      2. For node preparation for cloud and bare metal clusters, we're
-            //         going to set the node status and use the standard setup progress
-            //         mechanism to display the status.
-            //
-            // [statusWriter] will be NULL for the second scenario so we'll call the log helper
-            // method above which won't do anything.
-            //
-            // For scenario #1, there is no setup display mechanism, so updating node status
-            // won't actually display anything, so we'll just set the status as well without
-            // harming anything.
-
-            // Wait for boot/connect.
-
-            KubeHelper.WriteStatus(statusWriter, "Login", $"[{KubeConst.SysAdminUser}]");
-            Status = $"login: [{KubeConst.SysAdminUser}]";
-
-            WaitForBoot();
-            VerifyNodeOS(statusWriter: statusWriter);
-            ConfigureDebianFrontend();
-            InstallToolScripts();
-            InstallBasePackages(statusWriter: statusWriter);
-            ConfigureApt(statusWriter: statusWriter);
-            DisableSnap(statusWriter: statusWriter);
-            CreateKubeFolders(message => Console.WriteLine(message));
-
-            if (updateDistribution)
-            {
-                UpdateLinux();
-            }
-        }
-
-        /// <summary>
-        /// Configures the Debian frontend terminal to non-interactive.
-        /// </summary>
-        /// <param name="statusWriter">Optional log writer action.</param>
-        public void ConfigureDebianFrontend(Action<string> statusWriter = null)
-        {
-            InvokeIdempotent("node/debian-frontend",
-                () =>
-                {
-                    KubeHelper.WriteStatus(statusWriter, "Configure", $"Terminal as non-interactive");
-                    Status = $"login: terminal as non-interactive";
-
-                    SudoCommand("echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections", RunOptions.FaultOnError);
-                });
-        }
-
-        /// <summary>
-        /// Installs the required <b>base image</b> packages.
-        /// </summary>
-        /// <param name="statusWriter">Optional log writer action.</param>
-        public void InstallBasePackages(Action<string> statusWriter = null)
-        {
-            Status = "install: base packages";
-            KubeHelper.WriteStatus(statusWriter, "Install", "Base packages");
-
-            InvokeIdempotent("node/base-packages",
-                () =>
-                {
-                    SudoCommand("safe-apt-get update", RunOptions.FaultOnError);
-                    SudoCommand("safe-apt-get install -yq --allow-downgrades zip secure-delete", RunOptions.FaultOnError);
-                });
-        }
-
-        /// <summary>
-        /// Updates the Linux distribution.
-        /// </summary>
-        /// <param name="statusWriter">Optional log writer action.</param>
-        public void UpdateLinux(Action<string> statusWriter = null)
-        {
-            InvokeIdempotent("node/update-linux",
-                () =>
-                {
-                    Status = "update: linux";
-                    KubeHelper.WriteStatus(statusWriter, "Update", "Linux");
-
-                    SudoCommand("apt-get dist-upgrade -yq");
-                });
-        }
-
-        /// <summary>
-        /// Disables the Linux memory swap file.
-        /// </summary>
-        /// <param name="statusWriter">Optional log writer action.</param>
-        public void DisableSwap(Action<string> statusWriter = null)
-        {
-            InvokeIdempotent("node/swap-disable",
-                () =>
-                {
-                    Status = "disable: swap";
-                    KubeHelper.WriteStatus(statusWriter, "Disable", "swap");
-
-                    // Disable SWAP by editing [/etc/fstab] to remove the [/swap.img] line.
-
-                    KubeHelper.WriteStatus(statusWriter, "Disable", "swap");
-                    Status = "disable: swap";
-
-                    var sbFsTab = new StringBuilder();
-
-                    using (var reader = new StringReader(DownloadText("/etc/fstab")))
-                    {
-                        foreach (var line in reader.Lines())
-                        {
-                            if (!line.Contains("/swap.img"))
-                            {
-                                sbFsTab.AppendLine(line);
-                            }
-                        }
-                    }
-
-                    UploadText("/etc/fstab", sbFsTab, permissions: "644", owner: "root:root");
-                });
-        }
-
-        /// <summary>
-        /// Installs hypervisor guest integration services.
-        /// </summary>
-        /// <param name="statusWriter">Optional log writer action.</param>
-        public void InstallGuestIntegrationServices(Action<string> statusWriter = null)
-        {
-            InvokeIdempotent("node/guest-integration",
-                () =>
-                {
-                    KubeHelper.WriteStatus(statusWriter, "Install", "Guest integration services");
-                    Status = "install: guest integration services";
-
-                    var guestServicesScript =
-@"#!/bin/bash
-cat <<EOF >> /etc/initramfs-tools/modules
-hv_vmbus
-hv_storvsc
-hv_blkvsc
-hv_netvsc
-EOF
-
-apt-get install -yq --allow-downgrades linux-virtual linux-cloud-tools-virtual linux-tools-virtual
-update-initramfs -u
-";
-                    SudoCommand(CommandBundle.FromScript(guestServicesScript), RunOptions.FaultOnError);
-                });
-        }
-
-        /// <summary>
-        /// Disables DHCP.
-        /// </summary>
-        /// <param name="statusWriter">Optional log writer action.</param>
-        public void DisableDhcp(Action<string> statusWriter = null)
-        {
-            InvokeIdempotent("node-dhcp",
-                () =>
-                {
-                    KubeHelper.WriteStatus(statusWriter, "Disable", "DHCP");
-                    Status = "disable: DHCP";
-
-                    var initNetPlanScript =
-$@"
-rm /etc/netplan/*
-
-cat <<EOF > /etc/netplan/no-dhcp.yaml
-# This file is used to disable the network when a new VM created from
-# a template is booted.  The [neon-init] service handles network
-# provisioning in conjunction with the cluster prepare step.
-#
-# Cluster prepare inserts a virtual DVD disc with a script that
-# handles the network configuration which [neon-init] will
-# execute.
-
-network:
-  version: 2
-  renderer: networkd
-  ethernets:
-    eth0:
-      dhcp4: no
-EOF
-";
-                    SudoCommand(CommandBundle.FromScript(initNetPlanScript), RunOptions.FaultOnError);
-                });
-        }
-
-        /// <summary>
-        /// Disables <b>cloud-init</b>.
-        /// </summary>
-        /// <param name="statusWriter">Optional log writer action.</param>
-        public void DisableCloudInit(Action<string> statusWriter = null)
-        {
-            InvokeIdempotent("node/cloud-init",
-                () =>
-                {
-                KubeHelper.WriteStatus(statusWriter, "Disable", "cloud-init");
-                Status = "disable: cloud-init";
-
-                var disableCloudInitScript =
-$@"
-touch /etc/cloud/cloud-init.disabled
-";
-                SudoCommand(CommandBundle.FromScript(disableCloudInitScript), RunOptions.FaultOnError);
-            });
-        }
-
-        /// <summary>
         /// Cleans a node by removing unnecessary package manager metadata, cached DHCP information, etc.
         /// and then fills unreferenced file system blocks and nodes with zeros so the disk image will
         /// compress better.
@@ -590,530 +500,6 @@ rm -rf /var/lib/dhcp/*
 sfill -fllz /
 ";
             SudoCommand(CommandBundle.FromScript(cleanScript), RunOptions.FaultOnError);
-        }
-
-        /// <summary>
-        /// Customizes the OpenSSH configuration on a 
-        /// </summary>
-        /// <param name="statusWriter">Optional log writer action.</param>
-        public void ConfigureOpenSsh(Action<string> statusWriter = null)
-        {
-            InvokeIdempotent("node/openssh",
-                () =>
-                {
-                    // Upload the OpenSSH server configuration and restart OpenSSH.
-
-                    KubeHelper.WriteStatus(statusWriter, "Configure", "OpenSSH");
-                    Status = "configure: OpenSSH";
-
-                    UploadText("/etc/ssh/sshd_config", KubeHelper.OpenSshConfig);
-                    SudoCommand("systemctl restart sshd");
-                });
-        }
-
-        /// <summary>
-        /// Removes unnecessary packages.
-        /// </summary>
-        /// <param name="statusWriter">Optional log writer action.</param>
-        public void RemovePackages(Action<string> statusWriter = null)
-        {
-            InvokeIdempotent("node/clean-packages",
-                () =>
-                {
-                    KubeHelper.WriteStatus(statusWriter, "Remove", "Unnecessary packages");
-                    Status = "Remove: Unnecessary packages";
-
-                    // $todo(jefflill): Implement this.
-
-#if TODO
-            // Remove unnecessary packages.
-
-var removePackagesScript =
-@"
-apt-get remove -y \
-    locales \
-    snapd \
-    iso-codes \
-    git \
-    vim-runtime vim-tiny \
-    manpages man-db \
-    cloud-init \
-    python3-twisted \
-    perl perl-base perl-modules-5.30 libperl5.30 \
-    linux-modules-extra-5.4.0.60-generic \
-    unused hypervisor integration services?
-
-apt-get autoremove -y
-";
-            SudoCommand(CommandBundle.FromScript(removePackagesScript);
-#endif
-                });
-        }
-
-        /// <summary>
-        /// Configures the APY package manager.
-        /// </summary>
-        /// <param name="packageManagerRetries">Optionally specifies the packager manager retries (defaults to <b>5</b>).</param>
-        /// <param name="allowPackageManagerIPv6">Optionally prevent the package manager from using IPv6 (defaults to <c>false</c>.</param>
-        /// <param name="statusWriter">Optional log writer action.</param>
-        public void ConfigureApt(int packageManagerRetries = 5, bool allowPackageManagerIPv6 = false, Action<string> statusWriter = null)
-        {
-            InvokeIdempotent("node/apt",
-                () =>
-                {
-                    KubeHelper.WriteStatus(statusWriter, "Configure", "[apt] package manager");
-                    Status = "configure: [apt] package manager";
-
-                    if (!allowPackageManagerIPv6)
-                    {
-                        // Restrict the [apt] package manager to using IPv4 to communicate
-                        // with the package mirrors, since IPv6 doesn't work sometimes.
-
-                        UploadText("/etc/apt/apt.conf.d/99-force-ipv4-transport", "Acquire::ForceIPv4 \"true\";");
-                        SudoCommand("chmod 644 /etc/apt/apt.conf.d/99-force-ipv4-transport", RunOptions.FaultOnError);
-                    }
-
-                    // Configure [apt] to retry.
-
-                    UploadText("/etc/apt/apt.conf.d/99-retries", $"APT::Acquire::Retries \"{packageManagerRetries}\";");
-                    SudoCommand("chmod 644 /etc/apt/apt.conf.d/99-retries", RunOptions.FaultOnError);
-
-                    // We're going to disable apt updating services so we can control when this happens.
-
-                    var disableAptServices =
-@"#------------------------------------------------------------------------------
-# Disable the [apt-timer] and [apt-daily] services.  We're doing this 
-# for two reasons:
-#
-#   1. These services interfere with with [apt-get] usage during
-# cluster setup and is also likely to interfere with end-user
-# configuration activities as well.
-#
-#   2. Automatic updates for production and even test clusters is
-# just not a great idea.  You just don't want a random update
-# applied in the middle of the night which might cause trouble.
-#
-# We're going to implement our own cluster updating machanism
-# that will be smart enough to update the nodes such that the
-# impact on cluster workloads will be limited.
-
-systemctl stop apt-daily.timer
-systemctl mask apt-daily.timer
-
-systemctl stop apt-daily.service
-systemctl mask apt-daily.service
-
-# It may be possible for the auto updater to already be running so we'll
-# wait here for it to release any lock files it holds.
-
-while fuser /var/lib/dpkg/lock >/dev/null 2>&1; do
-    sleep 1
-done
-";
-                    SudoCommand(CommandBundle.FromScript(disableAptServices), RunOptions.FaultOnError);
-                });
-        }
-
-        /// <summary>
-        /// Disables the SNAP package manasger.
-        /// </summary>
-        /// <param name="statusWriter">Optional log writer action.</param>
-        public void DisableSnap(Action<string> statusWriter = null)
-        {
-            InvokeIdempotent("node/snap",
-                () =>
-                {
-                    KubeHelper.WriteStatus(statusWriter, "Disable", "[snapd.service]");
-                    Status = "disable: [snapd.service]";
-
-                    var disableSnapScript =
-@"# Stop and mask [snapd.service] if it's not already masked.
-
-systemctl status --no-pager snapd.service
-
-if [ $? ]; then
-    systemctl stop snapd.service
-    systemctl mask snapd.service
-fi
-";
-                    SudoCommand(CommandBundle.FromScript(disableSnapScript), RunOptions.FaultOnError);
-                });
-        }
-
-        /// <summary>
-        /// Installs the <b>neon-init</b> service which is a cloud-init like service we
-        /// use to configure the network and credentials for VMs hosted in non-cloud
-        /// hypervisors.
-        /// </summary>
-        /// <param name="statusWriter">Optional log writer action.</param>
-        /// <remarks>
-        /// <para>
-        /// Install and configure the [neon-init] service.  This is a simple script
-        /// that is configured to run as a oneshot systemd service before networking is
-        /// started.  This is currently used to configure the node's static IP address
-        /// configuration on first boot, so we don't need to rely on DHCP (which may not
-        /// be available in some environments).
-        /// </para>
-        /// <para>
-        /// [neon-init] is intended to run the first time a node is booted after
-        /// being created from a template.  It checks to see if a special ISO with a
-        /// configuration script named [neon-init.sh] is inserted into the VMs DVD
-        /// drive and when present, the script will be executed and the [/etc/neon-init]
-        /// file will be created to indicate that the service no longer needs to do this for
-        /// subsequent reboots.
-        /// </para>
-        /// <note>
-        /// The script won't create the [/etc/neon-init] when the script ISO doesn't exist 
-        /// for debugging purposes.
-        /// </note>
-        /// </remarks>
-        public void InstallNeonInit(Action<string> statusWriter = null)
-        {
-            InvokeIdempotent("node/neon-init",
-                () =>
-                {
-                    KubeHelper.WriteStatus(statusWriter, "Install", "neon-init.service");
-                    Status = "install: neon-init.service";
-
-                    var neonNodePrepScript =
-$@"# Ensure that the neon binary folder exists.
-
-mkdir -p {KubeNodeFolders.Bin}
-
-# Create the systemd unit file.
-
-cat <<EOF > /etc/systemd/system/neon-init.service
-
-[Unit]
-Description=neonKUBE one-time node preparation service 
-After=systemd-networkd.service
-
-[Service]
-Type=oneshot
-ExecStart={KubeNodeFolders.Bin}/neon-init.sh
-RemainAfterExit=false
-StandardOutput=journal+console
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-# Create the service script.
-
-cat <<EOF > {KubeNodeFolders.Bin}/neon-init.sh
-#!/bin/bash
-#------------------------------------------------------------------------------
-# FILE:	        neon-init.sh
-# CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the ""License"");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an ""AS IS"" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
-# This script is run early during node boot before the netork is configured
-# as a poor man's way for neonKUBE cluster setup to configure the network
-# without requiring DHCP.  Here's how this works:
-#
-#       1. neonKUBE cluster setup creates a node VM from a template.
-#
-#       2. Setup creates a temporary ISO (DVD) image with a script named 
-#          [neon-init.sh] on it and uploads this to the Hyper-V
-# or XenServer host machine.
-#
-#       3. Setup inserts the VFD into the VM's DVD drive and starts the VM.
-#
-#       4. The VM boots, eventually running this script (via the
-#          [neon-init] service).
-#
-#       5. This script checks whether a DVD is present, mounts
-# it and checks it for the [neon-init.sh] script.
-#
-#       6. If the DVD and script file are present, this service will
-# execute the script via Bash, peforming any required custom setup.
-# Then this script creates the [/etc/neon-init] file which 
-# prevents the service from doing anything during subsequent node 
-# reboots.
-#
-#       7. The service just exits if the DVD and/or script file are 
-# not present.  This shouldn't happen in production but is useful
-# for script debugging.
-
-# Run the prep script only once.
-
-if [ -f /etc/neon-init ] ; then
-    echo ""INFO: Machine is already prepared.""
-    exit 0
-fi
-
-# Check for the DVD and prep script.
-
-mkdir -p /media/neon-init
-
-if [ ! $? ] ; then
-    echo ""ERROR: Cannot create DVD mount point.""
-    rm -rf /media/neon-init
-    exit 1
-fi
-
-mount /dev/dvd /media/neon-init
-
-if [ ! $? ] ; then
-    echo ""WARNING: No DVD is present.""
-    rm -rf /media/neon-init
-    exit 0
-fi
-
-if [ ! -f /media/neon-init/neon-init.sh ] ; then
-    echo ""WARNING: No [neon-init.sh] script is present on the DVD.""
-    rm -rf /media/neon-init
-    exit 0
-fi
-
-# The script file is present so execute it.  Note that we're
-# passing the path where the DVD is mounted as a parameter.
-
-echo ""INFO: Running [neon-init.sh]""
-bash /media/neon-init/neon-init.sh /media/neon-init
-
-# Unmount the DVD and cleanup.
-
-echo ""INFO: Cleanup""
-umount /media/neon-init
-rm -rf /media/neon-init
-
-# Disable [neon-init] the next time it is started.
-
-touch /etc/neon-init
-EOF
-
-chmod 744 {KubeNodeFolders.Bin}/neon-init.sh
-
-# Configure [neon-init] to start at boot.
-
-systemctl enable neon-init
-systemctl daemon-reload
-";
-                    SudoCommand(CommandBundle.FromScript(neonNodePrepScript), RunOptions.FaultOnError);
-                });
-        }
-
-        /// <summary>
-        /// Create the node folders required by neoneKUBE.
-        /// </summary>
-        /// <param name="statusWriter">Optional log writer action.</param>
-        public void CreateKubeFolders(Action<string> statusWriter = null)
-        {
-            InvokeIdempotent("node/folders",
-                () =>
-                {
-                    KubeHelper.WriteStatus(statusWriter, "Create", "Cluster folders");
-                    Status = "create: cluster folders";
-
-                    var folderScript =
-$@"
-mkdir -p {KubeNodeFolders.Bin}
-chmod 750 {KubeNodeFolders.Bin}
-
-mkdir -p {KubeNodeFolders.Config}
-chmod 750 {KubeNodeFolders.Config}
-
-mkdir -p {KubeNodeFolders.Setup}
-chmod 750 {KubeNodeFolders.Setup}
-
-mkdir -p {KubeNodeFolders.Helm}
-chmod 750 {KubeNodeFolders.Helm}
-
-mkdir -p {KubeNodeFolders.State}
-chmod 750 {KubeNodeFolders.State}
-
-mkdir -p {KubeNodeFolders.State}/setup
-chmod 750 {KubeNodeFolders.State}/setup
-";
-                    SudoCommand(CommandBundle.FromScript(folderScript), RunOptions.LogOnErrorOnly);
-                });
-        }
-
-        /// <summary>
-        /// <para>
-        /// Installs the tool scripts, making them executable.
-        /// </para>
-        /// <note>
-        /// Any <b>".sh"</b> file extensions will be removed for ease-of-use.
-        /// </note>
-        /// </summary>
-        /// <param name="statusWriter">Optional log writer action.</param>
-        public void InstallToolScripts(Action<string> statusWriter = null)
-        {
-            InvokeIdempotent("node/tool-scripts",
-                () =>
-                {
-                    KubeHelper.WriteStatus(statusWriter, "Install", "Tools");
-                    Status = "install: Tools";
-
-                    // Upload any tool scripts to the neonKUBE bin folder, stripping
-                    // the [*.sh] file type (if present) and then setting execute
-                    // permissions.
-
-                    var toolsFolder = KubeHelper.Resources.GetDirectory("/Tools");      // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1121
-
-                    foreach (var file in toolsFolder.GetFiles())
-                    {
-                        var targetName = file.Name;
-
-                        if (Path.GetExtension(targetName) == ".sh")
-                        {
-                            targetName = Path.GetFileNameWithoutExtension(targetName);
-                        }
-
-                        using (var toolStream = file.OpenStream())
-                        {
-                            UploadText(LinuxPath.Combine(KubeNodeFolders.Bin, targetName), toolStream, permissions: "744");
-                        }
-                    }
-                });
-        }
-
-        /// <summary>
-        /// Installs the <b>CRI-O</b> container runtime.
-        /// </summary>
-        /// <param name="statusWriter">Optional log writer action.</param>
-        public void InstallCriO(Action<string> statusWriter = null)
-        {
-            InvokeIdempotent("node/cri-o",
-                () =>
-                {
-                    var setupScript =
-$@"
-# Configure Bash strict mode so that the entire script will fail if 
-# any of the commands fail.
-#
-# http://redsymbol.net/articles/unofficial-bash-strict-mode/
-
-set -euo pipefail
-
-# Create the .conf file to load required modules during boot.
-
-cat <<EOF > /etc/modules-load.d/crio.conf
-overlay
-br_netfilter
-EOF
-
-# ...and load them explicitly now.
-
-modprobe overlay
-modprobe br_netfilter
-
-sysctl --system
-
-# Configure the CRI-O package respository.
-
-export DEBIAN_FRONTEND=noninteractive
-
-OS=xUbuntu_20.04
-VERSION={KubeVersions.CrioVersion}
-
-cat <<EOF > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
-deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/${{OS}}/ /
-EOF
-
-cat <<EOF > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable:cri-o:${{VERSION}}.list
-deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/${{VERSION}}/${{OS}}/ /
-EOF
-
-curl {KubeHelper.CurlOptions} https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/${{OS}}/Release.key | apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers.gpg add -
-curl {KubeHelper.CurlOptions} https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable:cri-o:${{VERSION}}/${{OS}}/Release.key | apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers-cri-o.gpg add -
-
-# Install the CRI-O packages.
-
-apt-get update -y
-apt-get install -y cri-o cri-o-runc
-
-# Generate the CRI-O configurations.
-
-NEON_REGISTRY={NeonHelper.NeonBranchRegistry}
-
-cat <<EOF > /etc/containers/registries.conf
-unqualified-search-registries = [ ""docker.io"", ""quay.io"", ""registry.access.redhat.com"", ""registry.fedoraproject.org"" ]
-
-[[registry]]
-prefix = ""${{NEON_REGISTRY}}""
-insecure = false
-blocked = false
-location = ""${{NEON_REGISTRY}}""
-
-[[registry.mirror]]
-location = ""registry.neon-system""
-
-[[registry]]
-prefix = ""docker.io""
-insecure = false
-blocked = false
-location = ""docker.io""
-
-[[registry.mirror]]
-location = ""registry.neon-system""
-
-[[registry]]
-prefix = ""quay.io""
-insecure = false
-blocked = false
-location = ""quay.io""
-
-[[registry.mirror]]
-location = ""{KubeConst.NodeDomain}""
-EOF
-
-cat <<EOF > /etc/crio/crio.conf.d/01-cgroup-manager.conf
-[crio.runtime]
-cgroup_manager = ""systemd""
-EOF
-
-# Configure CRI-O to start on boot and then restart it to pick up the new options.
-
-systemctl daemon-reload
-systemctl enable crio
-systemctl restart crio
-
-# Prevent the package manager from automatically upgrading the container runtime.
-
-set +e      # Don't exit if the next command fails
-apt-mark hold cri-o cri-o-runc
-";
-                    KubeHelper.WriteStatus(statusWriter, "Install", "CRI-O");
-                    Status = "install: cri-o";
-
-                    SudoCommand(CommandBundle.FromScript(setupScript), RunOptions.FaultOnError);
-                });
-        }
-
-        /// <summary>
-        /// Installs the Helm charts as a single ZIP archive written to the 
-        /// neonKUBE Helm folder.
-        /// </summary>
-        /// <param name="statusWriter">Optional log writer action.</param>
-        public void InstallHelmArchive(Action<string> statusWriter = null)
-        {
-            using (var ms = new MemoryStream())
-            {
-                KubeHelper.WriteStatus(statusWriter, "Upload", "Helm Charts");
-                Status = "upload: helm charts";
-
-                var helmFolder = KubeHelper.Resources.GetDirectory("/Helm");    // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1121
-
-                helmFolder.Zip(ms, searchOptions: SearchOption.AllDirectories, zipOptions: StaticZipOptions.LinuxLineEndings);
-
-                ms.Seek(0, SeekOrigin.Begin);
-                Upload(LinuxPath.Combine(KubeNodeFolders.Helm, "charts.zip"), ms, permissions: "660");
-            }
         }
     }
 }
