@@ -514,10 +514,7 @@ OPTIONS:
                     }
                     finally
                     {
-                        if (File.Exists(cachedTempHelmPath))
-                        {
-                            File.Delete(cachedTempHelmPath);
-                        }
+                        NeonHelper.DeleteFile(cachedTempHelmPath);
                     }
                 }
             }

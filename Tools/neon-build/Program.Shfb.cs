@@ -510,11 +510,7 @@ namespace NeonBuild
                 {
                     var targetPath = Path.Combine(outputFolder, "styles", Path.GetFileName(stylePath));
 
-                    if (File.Exists(targetPath))
-                    {
-                        File.Delete(targetPath);
-                    }
-
+                    NeonHelper.DeleteFile(targetPath);
                     File.Copy(stylePath, targetPath);
                 }
             }

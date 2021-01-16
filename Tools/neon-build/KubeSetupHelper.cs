@@ -692,11 +692,7 @@ namespace NeonBuild
                 {
                     // Delete a partially downloaded file.
 
-                    if (File.Exists(path))
-                    {
-                        File.Delete(path);
-                    }
-
+                    NeonHelper.DeleteFile(path);
                     throw;
                 }
             }

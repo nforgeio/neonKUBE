@@ -532,7 +532,7 @@ namespace Neon.SSH
         /// <summary>
         /// The PATH to use on the remote server when executing commands in the
         /// session or <c>null</c>/empty to run commands without a path.  This
-        /// defaults to the standard Linux path and <see cref="HostFolders.Bin"/>.
+        /// defaults to the standard Linux path.
         /// </summary>
         /// <remarks>
         /// <note>

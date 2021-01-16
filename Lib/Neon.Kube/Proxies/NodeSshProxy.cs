@@ -114,6 +114,9 @@ namespace Neon.Kube
         public NodeSshProxy(string name, IPAddress address, SshCredentials credentials, int port = NetworkPorts.SSH, TextWriter logWriter = null)
             : base(name, address, credentials, port, logWriter)
         {
+            // Append the neonKUBE cluster binary folder to the remote path.
+
+            RemotePath += $":{KubeNodeFolders.Bin}";
         }
 
         /// <summary>
@@ -331,12 +334,12 @@ namespace Neon.Kube
         /// Ensures that the node operating system and version is supported for a neonKUBE
         /// cluster.  This faults the nodeproxy on faliure.
         /// </summary>
-        /// <param name="logWriter">Optional log writer action.</param>
+        /// <param name="statusWriter">Optional log writer action.</param>
         /// <returns><c>true</c> if the operation system is supported.</returns>
-        public bool VerifyNodeOS(Action<string> logWriter = null)
+        public bool VerifyNodeOS(Action<string> statusWriter = null)
         {
-            KubeHelper.LogStatus(logWriter, "Check", "OS");
-            Status = "check: OS";
+            KubeHelper.WriteStatus(statusWriter, "Check", "Operating system");
+            Status = "check: operating system";
 
             // $todo(jefflill): We're currently hardcoded to Ubuntu 20.04.x
 
@@ -356,8 +359,8 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="sshPassword">The current <b>sysadmin</b> password.</param>
         /// <param name="updateDistribution">Optionally upgrade the node's Linux distribution.  This defaults to <c>false</c>.</param>
-        /// <param name="logWriter">Optional log writer action.</param>
-        public void Initialize(string sshPassword, bool updateDistribution = false, Action<string> logWriter = null)
+        /// <param name="statusWriter">Optional log writer action.</param>
+        public void Initialize(string sshPassword, bool updateDistribution = false, Action<string> statusWriter = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(sshPassword), nameof(sshPassword));
 
@@ -367,13 +370,13 @@ namespace Neon.Kube
             // call for different logging mechanisms.
             //
             //      1. For the [neon prepare node-template] command, we're simply going 
-            //         to write status to the console as lines via the [logWriter].
+            //         to write status to the console as lines via the [statusWriter].
             //
             //      2. For node preparation for cloud and bare metal clusters, we're
             //         going to set the node status and use the standard setup progress
             //         mechanism to display the status.
             //
-            // [logWriter] will be NULL for the second scenario so we'll call the log helper
+            // [statusWriter] will be NULL for the second scenario so we'll call the log helper
             // method above which won't do anything.
             //
             // For scenario #1, there is no setup display mechanism, so updating node status
@@ -382,13 +385,16 @@ namespace Neon.Kube
 
             // Wait for boot/connect.
 
-            KubeHelper.LogStatus(logWriter, "Login", $"[{KubeConst.SysAdminUser}]");
+            KubeHelper.WriteStatus(statusWriter, "Login", $"[{KubeConst.SysAdminUser}]");
             Status = $"login: [{KubeConst.SysAdminUser}]";
 
             WaitForBoot();
-            DisableSnap(logWriter: logWriter);
-            ConfigureApt(logWriter: logWriter);
-            InstallAptPackages(logWriter: logWriter);
+            VerifyNodeOS(statusWriter: statusWriter);
+            InstallToolScripts();
+            InstallBasePackages(statusWriter: statusWriter);
+            ConfigureApt(statusWriter: statusWriter);
+            DisableSnap(statusWriter: statusWriter);
+            CreateKubeFolders(message => Console.WriteLine(message));
 
             if (updateDistribution)
             {
@@ -397,37 +403,33 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Installs the required Apt packages.
+        /// Installs the required <b>base image</b> Apt packages.
         /// </summary>
-        /// <param name="logWriter">Optional log writer action.</param>
-        public void InstallAptPackages(Action<string> logWriter = null)
+        /// <param name="statusWriter">Optional log writer action.</param>
+        public void InstallBasePackages(Action<string> statusWriter = null)
         {
-            Status = "install: apt packages";
-            KubeHelper.LogStatus(logWriter, "Install", "Apt packages");
+            Status = "install: base packages";
+            KubeHelper.WriteStatus(statusWriter, "Install", "Base packages");
 
-            InvokeIdempotent("node/apt-packages",
+            InvokeIdempotent("node/base-packages",
                 () =>
                 {
-                    var script =
-@"
-apt-get update
-apt-get install -yq --allow-downgrades zip secure-delete
-";
-                    SudoCommand(CommandBundle.FromScript(script), RunOptions.FaultOnError);
+                    SudoCommand("safe-apt-get update", RunOptions.FaultOnError);
+                    SudoCommand("safe-apt-get install -yq --allow-downgrades zip secure-delete", RunOptions.FaultOnError);
                 });
         }
 
         /// <summary>
         /// Updates the Linux distribution.
         /// </summary>
-        /// <param name="logWriter">Optional log writer action.</param>
-        public void UpdateLinux(Action<string> logWriter = null)
+        /// <param name="statusWriter">Optional log writer action.</param>
+        public void UpdateLinux(Action<string> statusWriter = null)
         {
             InvokeIdempotent("node/update-linux",
                 () =>
                 {
                     Status = "update: linux";
-                    KubeHelper.LogStatus(logWriter, "Update", "Linux");
+                    KubeHelper.WriteStatus(statusWriter, "Update", "Linux");
 
                     SudoCommand("apt-get dist-upgrade -yq");
                 });
@@ -436,18 +438,18 @@ apt-get install -yq --allow-downgrades zip secure-delete
         /// <summary>
         /// Disables the Linux memory swap file.
         /// </summary>
-        /// <param name="logWriter">Optional log writer action.</param>
-        public void DisableSwap(Action<string> logWriter = null)
+        /// <param name="statusWriter">Optional log writer action.</param>
+        public void DisableSwap(Action<string> statusWriter = null)
         {
             InvokeIdempotent("node/swap-disable",
                 () =>
                 {
                     Status = "disable: swap";
-                    KubeHelper.LogStatus(logWriter, "Disable", "swap");
+                    KubeHelper.WriteStatus(statusWriter, "Disable", "swap");
 
                     // Disable SWAP by editing [/etc/fstab] to remove the [/swap.img] line.
 
-                    KubeHelper.LogStatus(logWriter, "Disable", "swap");
+                    KubeHelper.WriteStatus(statusWriter, "Disable", "swap");
                     Status = "disable: swap";
 
                     var sbFsTab = new StringBuilder();
@@ -470,13 +472,13 @@ apt-get install -yq --allow-downgrades zip secure-delete
         /// <summary>
         /// Installs hypervisor guest integration services.
         /// </summary>
-        /// <param name="logWriter">Optional log writer action.</param>
-        public void InstallGuestIntegrationServices(Action<string> logWriter = null)
+        /// <param name="statusWriter">Optional log writer action.</param>
+        public void InstallGuestIntegrationServices(Action<string> statusWriter = null)
         {
             InvokeIdempotent("node/guest-integration",
                 () =>
                 {
-                    KubeHelper.LogStatus(logWriter, "Install", "Guest integration services");
+                    KubeHelper.WriteStatus(statusWriter, "Install", "Guest integration services");
                     Status = "install: guest integration services";
 
                     var guestServicesScript =
@@ -498,13 +500,13 @@ update-initramfs -u
         /// <summary>
         /// Disables DHCP.
         /// </summary>
-        /// <param name="logWriter">Optional log writer action.</param>
-        public void DisableDhcp(Action<string> logWriter = null)
+        /// <param name="statusWriter">Optional log writer action.</param>
+        public void DisableDhcp(Action<string> statusWriter = null)
         {
             InvokeIdempotent("node-dhcp",
                 () =>
                 {
-                    KubeHelper.LogStatus(logWriter, "Disable", "DHCP");
+                    KubeHelper.WriteStatus(statusWriter, "Disable", "DHCP");
                     Status = "disable: DHCP";
 
                     var initNetPlanScript =
@@ -535,13 +537,13 @@ EOF
         /// <summary>
         /// Disables <b>cloud-init</b>.
         /// </summary>
-        /// <param name="logWriter">Optional log writer action.</param>
-        public void DisableCloudInit(Action<string> logWriter = null)
+        /// <param name="statusWriter\">Optional log writer action.</param>
+        public void DisableCloudInit(Action<string> statusWriter = null)
         {
             InvokeIdempotent("node/cloud-init",
                 () =>
                 {
-                KubeHelper.LogStatus(logWriter, "Disable", "cloud-init");
+                KubeHelper.WriteStatus(statusWriter, "Disable", "cloud-init");
                 Status = "disable: cloud-init";
 
                 var disableCloudInitScript =
@@ -557,10 +559,10 @@ touch /etc/cloud/cloud-init.disabled
         /// and then fills unreferenced file system blocks and nodes with zeros so the disk image will
         /// compress better.
         /// </summary>
-        /// <param name="logWriter">Optional log writer action.</param>
-        public void Clean(Action<string> logWriter = null)
+        /// <param name="statusWriter">Optional log writer action.</param>
+        public void Clean(Action<string> statusWriter = null)
         {
-            KubeHelper.LogStatus(logWriter, "Clean", "VM");
+            KubeHelper.WriteStatus(statusWriter, "Clean", "VM");
             Status = "clean: VM";
 
             var cleanScript =
@@ -576,15 +578,15 @@ sfill -fllz /
         /// <summary>
         /// Customizes the OpenSSH configuration on a 
         /// </summary>
-        /// <param name="logWriter">Optional log writer action.</param>
-        public void ConfigureOpenSsh(Action<string> logWriter = null)
+        /// <param name="statusWriter">Optional log writer action.</param>
+        public void ConfigureOpenSsh(Action<string> statusWriter = null)
         {
             InvokeIdempotent("node/openssh",
                 () =>
                 {
                     // Upload the OpenSSH server configuration and restart OpenSSH.
 
-                    KubeHelper.LogStatus(logWriter, "Configure", "OpenSSH");
+                    KubeHelper.WriteStatus(statusWriter, "Configure", "OpenSSH");
                     Status = "configure: OpenSSH";
 
                     UploadText("/etc/ssh/sshd_config", KubeHelper.OpenSshConfig);
@@ -595,13 +597,13 @@ sfill -fllz /
         /// <summary>
         /// Removes unnecessary packages.
         /// </summary>
-        /// <param name="logWriter">Optional log writer action.</param>
-        public void CleanPackages(Action<string> logWriter = null)
+        /// <param name="statusWriter">Optional log writer action.</param>
+        public void RemovePackages(Action<string> statusWriter = null)
         {
             InvokeIdempotent("node/clean-packages",
                 () =>
                 {
-                    KubeHelper.LogStatus(logWriter, "Remove", "Unnecessary packages");
+                    KubeHelper.WriteStatus(statusWriter, "Remove", "Unnecessary packages");
                     Status = "Remove: Unnecessary packages";
 
                     // $todo(jefflill): Implement this.
@@ -636,13 +638,13 @@ apt-get autoremove -y
         /// </summary>
         /// <param name="packageManagerRetries">Optionally specifies the packager manager retries (defaults to <b>5</b>).</param>
         /// <param name="allowPackageManagerIPv6">Optionally prevent the package manager from using IPv6 (defaults to <c>false</c>.</param>
-        /// <param name="logWriter">Optional log writer action.</param>
-        public void ConfigureApt(int packageManagerRetries = 5, bool allowPackageManagerIPv6 = false, Action<string> logWriter = null)
+        /// <param name="statusWriter">Optional log writer action.</param>
+        public void ConfigureApt(int packageManagerRetries = 5, bool allowPackageManagerIPv6 = false, Action<string> statusWriter = null)
         {
             InvokeIdempotent("node/apt",
                 () =>
                 {
-                    KubeHelper.LogStatus(logWriter, "Configure", "[apt] package manager");
+                    KubeHelper.WriteStatus(statusWriter, "Configure", "[apt] package manager");
                     Status = "configure: [apt] package manager";
 
                     if (!allowPackageManagerIPv6)
@@ -687,9 +689,10 @@ systemctl mask apt-daily.service
 # It may be possible for the auto updater to already be running so we'll
 # wait here for it to release any lock files it holds.
 
-while fuser /var/{{lib /{{dpkg,apt/lists}},cache/apt/archives}}/lock; do
+while fuser /var/lib/dpkg/lock >/dev/null 2>&1; do
     sleep 1
-done";
+done
+";
                     SudoCommand(CommandBundle.FromScript(disableAptServices), RunOptions.FaultOnError);
                 });
         }
@@ -697,13 +700,13 @@ done";
         /// <summary>
         /// Disables the SNAP package manasger.
         /// </summary>
-        /// <param name="logWriter">Optional log writer action.</param>
-        public void DisableSnap(Action<string> logWriter = null)
+        /// <param name="statusWriter">Optional log writer action.</param>
+        public void DisableSnap(Action<string> statusWriter = null)
         {
             InvokeIdempotent("node/snap",
                 () =>
                 {
-                    KubeHelper.LogStatus(logWriter, "Disable", "[snapd.service]");
+                    KubeHelper.WriteStatus(statusWriter, "Disable", "[snapd.service]");
                     Status = "disable: [snapd.service]";
 
                     var disableSnapScript =
@@ -725,7 +728,7 @@ fi
         /// use to configure the network and credentials for VMs hosted in non-cloud
         /// hypervisors.
         /// </summary>
-        /// <param name="logWriter">Optional log writer action.</param>
+        /// <param name="statusWriter">Optional log writer action.</param>
         /// <remarks>
         /// <para>
         /// Install and configure the [neon-init] service.  This is a simple script
@@ -747,12 +750,12 @@ fi
         /// for debugging purposes.
         /// </note>
         /// </remarks>
-        public void InstallNeonInit(Action<string> logWriter = null)
+        public void InstallNeonInit(Action<string> statusWriter = null)
         {
             InvokeIdempotent("node/neon-init",
                 () =>
                 {
-                    KubeHelper.LogStatus(logWriter, "Install", "neon-init.service");
+                    KubeHelper.WriteStatus(statusWriter, "Install", "neon-init.service");
                     Status = "install: neon-init.service";
 
                     var neonNodePrepScript =
@@ -889,13 +892,13 @@ systemctl daemon-reload
         /// <summary>
         /// Create the node folders required by neoneKUBE.
         /// </summary>
-        /// <param name="logWriter">Optional log writer action.</param>
-        public void CreateKubeFolders(Action<string> logWriter = null)
+        /// <param name="statusWriter">Optional log writer action.</param>
+        public void CreateKubeFolders(Action<string> statusWriter = null)
         {
             InvokeIdempotent("node/folders",
                 () =>
                 {
-                    KubeHelper.LogStatus(logWriter, "Create", "Cluster folders");
+                    KubeHelper.WriteStatus(statusWriter, "Create", "Cluster folders");
                     Status = "create: cluster folders";
 
                     var folderScript =
@@ -930,13 +933,13 @@ chmod 750 {KubeNodeFolders.State}/setup
         /// Any <b>".sh"</b> file extensions will be removed for ease-of-use.
         /// </note>
         /// </summary>
-        /// <param name="logWriter">Optional log writer action.</param>
-        public void InstallToolScripts(Action<string> logWriter = null)
+        /// <param name="statusWriter">Optional log writer action.</param>
+        public void InstallToolScripts(Action<string> statusWriter = null)
         {
             InvokeIdempotent("node/tool-scripts",
                 () =>
                 {
-                    KubeHelper.LogStatus(logWriter, "Install", "Tools");
+                    KubeHelper.WriteStatus(statusWriter, "Install", "Tools");
                     Status = "install: Tools";
 
                     // Upload any tool scripts to the neonKUBE bin folder, stripping
@@ -965,8 +968,8 @@ chmod 750 {KubeNodeFolders.State}/setup
         /// <summary>
         /// Installs the <b>CRI-O</b> container runtime.
         /// </summary>
-        /// <param name="logWriter">Optional log writer action.</param>
-        public void InstallCriO(Action<string> logWriter = null)
+        /// <param name="statusWriter">Optional log writer action.</param>
+        public void InstallCriO(Action<string> statusWriter = null)
         {
             var setupScript =
 $@"
@@ -1064,8 +1067,8 @@ apt-mark hold crio cri-o-runc
         /// Installs the Helm charts as a single ZIP archive written to the 
         /// neonKUBE Helm folder.
         /// </summary>
-        /// <param name="logWriter">Optional log writer action.</param>
-        public void InstallHelmArchive(Action<string> logWriter = null)
+        /// <param name="statusWriter">Optional log writer action.</param>
+        public void InstallHelmArchive(Action<string> statusWriter = null)
         {
             using (var ms = new MemoryStream())
             {

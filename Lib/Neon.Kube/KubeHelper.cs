@@ -1264,11 +1264,7 @@ namespace Neon.Kube
                         {
                             // We need to copy the latest version.
 
-                            if (File.Exists(targetPath))
-                            {
-                                File.Delete(targetPath);
-                            }
-
+                            NeonHelper.DeleteFile(targetPath);
                             File.Copy(cachedKubeCtlPath, targetPath);
                         }
                     }
@@ -1834,14 +1830,14 @@ exit 0
         }
 
         /// <summary>
-        /// Writes a status message to a log writer action when it's not <c>null</c>.
+        /// Writes a status message to a status writer action when it's not <c>null</c>.
         /// </summary>
-        /// <param name="logWriter">The log writer action ot <c>null</c>.</param>
+        /// <param name="statusWriter">The log writer action ot <c>null</c>.</param>
         /// <param name="label">The status label.</param>
         /// <param name="message">Optional message.</param>
-        internal static void LogStatus(Action<string> logWriter, string label, string message = null)
+        internal static void WriteStatus(Action<string> statusWriter, string label, string message = null)
         {
-            if (logWriter != null)
+            if (statusWriter != null)
             {
                 const int labelWidth = 15;
 
@@ -1861,7 +1857,7 @@ exit 0
                     }
                 }
 
-                logWriter($"{label}{message ?? string.Empty}");
+                statusWriter($"{label}{message ?? string.Empty}");
             }
         }
 

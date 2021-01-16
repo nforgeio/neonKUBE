@@ -316,10 +316,7 @@ namespace Neon.HyperV
                         throw new ArgumentException("Virtual drive size must be greater than 0.", nameof(drive));
                     }
 
-                    if (File.Exists(drive.Path))
-                    {
-                        File.Delete(drive.Path);
-                    }
+                    NeonHelper.DeleteFile(drive.Path);
 
                     var fixedOrDynamic = drive.IsDynamic ? "-Dynamic" : "-Fixed";
 
@@ -527,10 +524,7 @@ namespace Neon.HyperV
 
             // Delete the drive file if it already exists.
 
-            if (File.Exists(drive.Path))
-            {
-                File.Delete(drive.Path);
-            }
+            NeonHelper.DeleteFile(drive.Path);
 
             var fixedOrDynamic = drive.IsDynamic ? "-Dynamic" : "-Fixed";
 

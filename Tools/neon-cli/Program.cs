@@ -735,15 +735,8 @@ You can disable the use of this encrypted folder by specifying
             }
             finally
             {
-                if (File.Exists(pemKeyPath))
-                {
-                    File.Delete(pemKeyPath);
-                }
-
-                if (File.Exists(ppkKeyPath))
-                {
-                    File.Delete(ppkKeyPath);
-                }
+                NeonHelper.DeleteFile(pemKeyPath);
+                NeonHelper.DeleteFile(ppkKeyPath);
             }
         }
 

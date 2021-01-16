@@ -369,15 +369,8 @@ Server Requirements:
                         }
                         finally
                         {
-                            if (File.Exists(pemKeyPath))
-                            {
-                                File.Delete(pemKeyPath);
-                            }
-
-                            if (File.Exists(ppkKeyPath))
-                            {
-                                File.Delete(ppkKeyPath);
-                            }
+                            NeonHelper.DeleteFile(pemKeyPath);
+                            NeonHelper.DeleteFile(ppkKeyPath);
                         }
                     }
                 }
