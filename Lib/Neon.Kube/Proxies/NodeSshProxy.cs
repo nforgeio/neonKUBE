@@ -497,7 +497,7 @@ namespace Neon.Kube
 cloud-init clean
 apt-get clean
 rm -rf /var/lib/dhcp/*
-sfill -fllz /
+fstrim /
 ";
             SudoCommand(CommandBundle.FromScript(cleanScript), RunOptions.FaultOnError);
         }

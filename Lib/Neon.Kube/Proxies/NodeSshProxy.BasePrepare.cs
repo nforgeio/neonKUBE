@@ -223,7 +223,7 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
                     // Install the packages.
 
                     SudoCommand("apt-get update", RunOptions.Defaults | RunOptions.FaultOnError);
-                    SudoCommand("apt-get install -yq --allow-downgrades apt-cacher-ng ntp secure-delete zip", RunOptions.Defaults | RunOptions.FaultOnError);
+                    SudoCommand("apt-get install -yq --allow-downgrades apt-cacher-ng ntp zip", RunOptions.Defaults | RunOptions.FaultOnError);
 
                     // I've seen some situations after a reboot where the machine complains about
                     // running out of entropy.  Apparently, modern CPUs have an instruction that
