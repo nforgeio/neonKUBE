@@ -351,10 +351,11 @@ namespace Neon.HyperV
         }
 
         /// <summary>
-        /// Removes a named virtual machine.
+        /// Removes a named virtual machine all of its drives.
         /// </summary>
         /// <param name="machineName">The machine name.</param>
-        public void RemoveVm(string machineName)
+        /// <param name="keepDrives">Optionally retains the VM drive files.</param>
+        public void RemoveVm(string machineName, bool keepDrives = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName), nameof(machineName));
             CheckDisposed();
@@ -373,9 +374,12 @@ namespace Neon.HyperV
                 throw new HyperVException(e.Message, e);
             }
 
-            foreach (var drivePath in drives)
+            if (!keepDrives)
             {
-                File.Delete(drivePath);
+                foreach (var drivePath in drives)
+                {
+                    File.Delete(drivePath);
+                }
             }
         }
 
@@ -813,6 +817,24 @@ namespace Neon.HyperV
             {
                 throw new HyperVException(e.Message, e);
             }
+        }
+
+        /// <summary>
+        /// <para>
+        /// Compacts a dynamic VHD or VHDX virtual disk file.
+        /// </para>
+        /// <note>
+        /// The disk may be mounted to a VM but the VM cannot be running.
+        /// </note>
+        /// </summary>
+        /// <param name="drivePath">Path to the virtual drive file.</param>
+        public void CompactDrive(string drivePath)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(drivePath));
+
+            powershell.Execute($"Mount-VHD \"{drivePath}\" -ReadOnly");
+            powershell.Execute($"Optimize-VHD \"{drivePath}\" -Mode Full");
+            powershell.Execute($"Dismount-VHD \"{drivePath}\"");
         }
     }
 }
