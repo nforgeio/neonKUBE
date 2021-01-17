@@ -51,9 +51,17 @@ namespace Neon.Kube
         where TMetadata : class
     {
         /// <summary>
+        /// <para>
         /// Installs one of the Helm charts that was pre-positioned on the node
-        /// VM image.  These can be dound in the <see cref="KubeNodeFolders.Helm"/>
+        /// VM image.  These can be fond in the <see cref="KubeNodeFolders.Helm"/>
         /// with a folder for each chart. 
+        /// </para>
+        /// <note>
+        /// This command <b>DOES NOT WAIT</b> for the Helm chart to be completely 
+        /// installed and any target services or assets to be running because that
+        /// does not appear to be reliable.  You'll need to explicitly verify that
+        /// deployment has completed when necessary.
+        /// </note>
         /// </summary>
         /// <param name="chartName">The Helm chart folder name.</param>
         /// <param name="releaseName">Optional component release name.  This defaults to <paramref name="chartName"/>.</param>
@@ -111,7 +119,7 @@ namespace Neon.Kube
             var chartFolderPath = LinuxPath.Combine(KubeNodeFolders.Helm, chartName);
             var chartValuesPath = LinuxPath.Combine(chartFolderPath, "values.yaml");
 
-            SudoCommand($"helm install {releaseName} {chartFolderPath} --namespace {@namespace} -f {chartValuesPath} {valueArgs} {timeoutArg} --wait", RunOptions.Defaults | RunOptions.FaultOnError);
+            SudoCommand($"helm install {releaseName} {chartFolderPath} --namespace {@namespace} -f {chartValuesPath} {valueArgs} {timeoutArg}", RunOptions.Defaults | RunOptions.FaultOnError);
         }
     }
 }
