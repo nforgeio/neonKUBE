@@ -109,15 +109,9 @@ namespace Neon.Kube
             }
 
             var chartFolderPath = LinuxPath.Combine(KubeNodeFolders.Helm, chartName);
-            var chartValuesPath = LinuxPath.Combine(chartName, "values.yaml");
-            var chartValuesArg  = string.Empty;
+            var chartValuesPath = LinuxPath.Combine(chartFolderPath, "values.yaml");
 
-            if (FileExists(chartValuesArg))
-            {
-                chartValuesArg = $"-f {chartValuesPath}";
-            }
-
-            SudoCommand($"helm install {releaseName} {chartFolderPath} --namespace {@namespace} {chartValuesArg} {valueArgs} {timeoutArg} --wait", RunOptions.Defaults | RunOptions.FaultOnError);
+            SudoCommand($"helm install {releaseName} {chartFolderPath} --namespace {@namespace} -f {chartValuesPath} {valueArgs} {timeoutArg} --wait", RunOptions.Defaults | RunOptions.FaultOnError);
         }
     }
 }
