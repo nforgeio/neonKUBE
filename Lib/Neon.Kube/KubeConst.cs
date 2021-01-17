@@ -290,10 +290,16 @@ namespace Neon.Kube
         public const string KubeHelpUrl = "https://github.com/nforgeio/neonKUBE";
 
         /// <summary>
-        /// Returns the top-level domain used to configure cluster DNS name that
-        /// can be resolved on the cluster nodes to access internal Kubernetes
+        /// Returns the domain used to configure cluster DNS name that can
+        /// be resolved on the cluster nodes to access internal Kubernetes
         /// services like the Harbor registry etc.
         /// </summary>
-        public const string NodeDomain = "cluster.node";
+        public const string NeonNodeDomain = "cluster.node";
+
+        /// <summary>
+        /// Returns a DNS name for the cluster registry that is reachable from
+        /// CRI-O running on the host nodes.
+        /// </summary>
+        public const string NeonRegistryName = "neon-registry." + NeonNodeDomain;
     }
 }

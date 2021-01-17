@@ -1840,7 +1840,7 @@ exit 0
         /// <param name="statusWriter">The log writer action ot <c>null</c>.</param>
         /// <param name="label">The status label.</param>
         /// <param name="message">Optional message.</param>
-        internal static void WriteStatus(Action<string> statusWriter, string label, string message = null)
+        public static void WriteStatus(Action<string> statusWriter, string label, string message = null)
         {
             if (statusWriter != null)
             {

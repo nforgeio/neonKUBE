@@ -721,8 +721,6 @@ sysctl --system
 
 # Configure the CRI-O package respository.
 
-export DEBIAN_FRONTEND=noninteractive
-
 OS=xUbuntu_20.04
 VERSION={KubeVersions.CrioVersion}
 
@@ -756,7 +754,7 @@ blocked = false
 location = ""${{NEON_REGISTRY}}""
 
 [[registry.mirror]]
-location = ""registry.neon-system""
+location = ""{KubeConst.NeonRegistryName}""
 
 [[registry]]
 prefix = ""docker.io""
@@ -765,7 +763,7 @@ blocked = false
 location = ""docker.io""
 
 [[registry.mirror]]
-location = ""registry.neon-system""
+location = ""{KubeConst.NeonRegistryName}""
 
 [[registry]]
 prefix = ""quay.io""
@@ -774,7 +772,7 @@ blocked = false
 location = ""quay.io""
 
 [[registry.mirror]]
-location = ""{KubeConst.NodeDomain}""
+location = ""{KubeConst.NeonRegistryName}""
 EOF
 
 cat <<EOF > /etc/crio/crio.conf.d/01-cgroup-manager.conf
@@ -788,7 +786,7 @@ systemctl daemon-reload
 systemctl enable crio
 systemctl restart crio
 
-# Prevent the package manager from automatically upgrading the container runtime.
+# Prevent the package manager from automatically upgrading these components.
 
 set +e      # Don't exit if the next command fails
 apt-mark hold cri-o cri-o-runc
@@ -797,6 +795,80 @@ apt-mark hold cri-o cri-o-runc
                     Status = "install: cri-o";
 
                     SudoCommand(CommandBundle.FromScript(setupScript), RunOptions.Defaults | RunOptions.FaultOnError);
+                });
+        }
+
+        /// <summary>
+        /// Installs the <b>podman</b> CLI for managing <b>CRI-O</b>.
+        /// </summary>
+        /// <param name="statusWriter">Optional log writer action.</param>
+        public void NodeInstallPodman(Action<string> statusWriter = null)
+        {
+            InvokeIdempotent("node/podman",
+                () =>
+                {
+                    var setupScript =
+@"
+source /etc/os-release
+echo ""deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/ /"" > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
+wget -nv https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/xUbuntu_${VERSION_ID}/Release.key -O- | apt-key add -
+safe-apt-get update -qq
+safe-apt-get install -yq podman-rootless
+ln -s /usr/bin/podman /bin/docker
+
+# Prevent the package manager from automatically upgrading these components.
+
+set +e      # Don't exit if the next command fails
+apt-mark hold podman
+";
+                    KubeHelper.WriteStatus(statusWriter, "Install", "Podman");
+                    Status = "install: podman";
+
+                    SudoCommand(CommandBundle.FromScript(setupScript), RunOptions.Defaults | RunOptions.FaultOnError);
+                });
+        }
+
+        /// <summary>
+        /// Installs tke Kubernetes components: <b>kubeadm</b>, <b>kubectl</b>, and <b>kublet</b>.
+        /// </summary>
+        /// <param name="statusWriter">Optional log writer action.</param>
+        public void NodeInstallKubernetes(Action<string> statusWriter = null)
+        {
+            InvokeIdempotent("node/kubernetes",
+                () =>
+                {
+                    var script =
+$@"
+curl {KubeHelper.CurlOptions} https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+echo ""deb https://apt.kubernetes.io/ kubernetes-xenial main"" > /etc/apt/sources.list.d/kubernetes.list
+safe-apt-get update
+
+safe-apt-get install -yq --allow-downgrades kubeadm={KubeVersions.KubeAdminPackageVersion}
+safe-apt-get install -yq --allow-downgrades kubectl={KubeVersions.KubeCtlPackageVersion}
+safe-apt-get install -yq --allow-downgrades kubelet={KubeVersions.KubeletPackageVersion}
+
+# Prevent the package manager from automatically these components.
+
+set +e      # Don't exit if the next command fails
+apt-mark hold kubeadm kubectl kubelet
+
+# Configure kublet:
+
+mkdir -p /opt/cni/bin
+mkdir -p /etc/cni/net.d
+
+echo KUBELET_EXTRA_ARGS=--network-plugin=cni --cni-bin-dir=/opt/cni/bin --cni-conf-dir=/etc/cni/net.d --feature-gates=\""AllAlpha=false,RunAsGroup=true\"" --container-runtime=remote --cgroup-driver=systemd --container-runtime-endpoint='unix:///var/run/crio/crio.sock' --runtime-request-timeout=5m > /etc/default/kubelet
+
+# Stop and disable [kubelet] for now.  We'll enable this during cluster setup.
+
+systemctl daemon-reload
+systemctl stop kubelet
+systemctl disable kubelet
+";
+                    KubeHelper.WriteStatus(statusWriter, "Install", "Kubernetes");
+                    Status = "install: kubernetes";
+
+                    SudoCommand(CommandBundle.FromScript(script), RunOptions.Defaults | RunOptions.FaultOnError);
                 });
         }
     }

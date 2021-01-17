@@ -33,6 +33,11 @@ namespace Neon.Kube
     public static class KubeVersions
     {
         /// <summary>
+        /// The current neonKUBE version.
+        /// </summary>
+        public const string NeonKubeVersion = "0.1.0-alpha";
+
+        /// <summary>
         /// The version of Kubernetes to be installed.
         /// </summary>
         public const string KubernetesVersion = "1.19.5";
