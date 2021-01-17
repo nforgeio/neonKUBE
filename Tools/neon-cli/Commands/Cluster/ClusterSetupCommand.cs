@@ -526,7 +526,7 @@ OPTIONS:
             // the new one is more current.
 
             KubeHelper.InstallKubeCtl();
-            KubeHelper.InstallHelm();
+            KubeHelper.InstallWorkstationHelm();
 
             firstMaster.Status = string.Empty;
         }

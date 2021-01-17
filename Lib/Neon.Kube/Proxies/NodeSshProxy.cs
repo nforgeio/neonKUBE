@@ -52,7 +52,7 @@ using Renci.SshNet.Common;
 // $todo(jefflill):
 //
 // The download methods don't seem to be working for paths like [/proc/meminfo].
-// They return an empty stream.
+// They just return an empty stream.
 
 // $todo(jefflill):
 //

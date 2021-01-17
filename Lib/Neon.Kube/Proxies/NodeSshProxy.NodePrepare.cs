@@ -829,7 +829,33 @@ apt-mark hold podman
         }
 
         /// <summary>
-        /// Installs tke Kubernetes components: <b>kubeadm</b>, <b>kubectl</b>, and <b>kublet</b>.
+        /// Installs the Helm client.
+        /// </summary>
+        /// <param name="statusWriter">Optional log writer action.</param>
+        public void NodeInstallHelm(Action<string> statusWriter = null)
+        {
+            InvokeIdempotent("node/helm-client",
+                () =>
+                {
+                    var script =
+$@"
+cd /tmp
+curl {KubeHelper.CurlOptions} {KubeDownloads.HelmLinuxUri} > helm.tar.gz
+tar xvf helm.tar.gz
+cp linux-amd64/helm /usr/local/bin
+chmod 770 /usr/local/bin/helm
+rm -f helm.tar.gz
+rm -rf linux-amd64
+";
+                    KubeHelper.WriteStatus(statusWriter, "Install", "Helm client");
+                    Status = "install: helm client";
+
+                    SudoCommand(CommandBundle.FromScript(script), RunOptions.Defaults | RunOptions.FaultOnError);
+                });
+        }
+
+        /// <summary>
+        /// Installs the Kubernetes components: <b>kubeadm</b>, <b>kubectl</b>, and <b>kublet</b>.
         /// </summary>
         /// <param name="statusWriter">Optional log writer action.</param>
         public void NodeInstallKubernetes(Action<string> statusWriter = null)

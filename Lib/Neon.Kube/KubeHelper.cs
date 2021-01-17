@@ -1285,9 +1285,9 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Ensures that <b>helm</b> tool whose version is at least as great as the requested
-        /// cluster version is installed to the <b>neonKUBE</b> programs folder by copying the
-        /// tool from the cache if necessary.
+        /// Ensures that <b>helm</b> client installed on the workstation version is at least as
+        /// great as the requested cluster version is installed to the <b>neonKUBE</b> programs 
+        /// folder by copying the tool from the cache if necessary.
         /// </para>
         /// <note>
         /// This will probably require elevated privileges.
@@ -1298,11 +1298,8 @@ namespace Neon.Kube
         /// of Tiller.
         /// </note>
         /// </summary>
-        public static void InstallHelm()
+        public static void InstallWorkstationHelm()
         {
-            // **REFACTOR * *
-
-#if TODO
             var hostPlatform   = KubeHelper.HostPlatform;
             var cachedHelmPath = KubeHelper.GetCachedComponentPath(hostPlatform, "helm", KubeVersions.HelmVersion);
             var targetPath     = Path.Combine(KubeHelper.ProgramFolder);
@@ -1359,7 +1356,6 @@ namespace Neon.Kube
 
                     throw new NotImplementedException($"[{hostPlatform}] support is not implemented.");
             }
-#endif
         }
 
         /// <summary>
