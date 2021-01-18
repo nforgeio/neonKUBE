@@ -26,6 +26,6 @@ ARG         VERSION
 RUN apt update -y -qq && apt install -y -qq gnupg \
     && wget -qO - https://packages.fluentbit.io/fluentbit.key | apt-key add - \
     && echo "deb https://packages.fluentbit.io/ubuntu/focal focal main" >> /etc/apt/sources.list \
-    && apt update -y -qq \
-    && apt install -y -qq td-agent-bit=${VERSION} \
+    && apt-get update -y -qq \
+    && apt-get install -y -qq td-agent-bit=${VERSION} \
     && apt-get clean
