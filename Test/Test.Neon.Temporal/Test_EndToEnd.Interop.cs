@@ -139,9 +139,6 @@ namespace TestTemporal
 
                 var result = workerTask.Result;
 
-                 //$debug(jefflill): DELETE THIS!
-                 File.WriteAllText(@"C:\Temp\test.log", result.AllText);
-
                 workerTask = null;
 
                 File.Delete(readyFile);
