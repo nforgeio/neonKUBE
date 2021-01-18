@@ -95,7 +95,8 @@ namespace Neon.Kube
             BaseConfigureBashEnvironment(statusWriter);
             BaseInstallToolScripts(statusWriter);
             BaseConfigureDnsIPv4Preference(statusWriter);
-            BaseDisableSnap(statusWriter);
+            BaseRemoveSnaps();
+            BaseRemovePackages();
             BaseCreateKubeFolders(statusWriter);
 
             if (updateDistribution)
@@ -404,6 +405,28 @@ touch /etc/cloud/cloud-init.disabled
         }
 
         /// <summary>
+        /// Removes any installed snaps.
+        /// </summary>
+        /// <param name="statusWriter">Optional log writer action.</param>
+        public void BaseRemoveSnaps(Action<string> statusWriter = null)
+        {
+            InvokeIdempotent("base/clean-packages",
+                () =>
+                {
+                    KubeHelper.WriteStatus(statusWriter, "Remove", "Snaps");
+                    Status = "remove: snaps";
+
+                    var script =
+@"
+snap remove --purge lxd
+snap remove --purge core18
+snap remove --purge snapd
+";
+                    SudoCommand(CommandBundle.FromScript(script), RunOptions.Defaults | RunOptions.FaultOnError);
+                });
+        }
+
+        /// <summary>
         /// Removes unnecessary packages.
         /// </summary>
         /// <param name="statusWriter">Optional log writer action.</param>
@@ -415,30 +438,25 @@ touch /etc/cloud/cloud-init.disabled
                     KubeHelper.WriteStatus(statusWriter, "Remove", "Unnecessary packages");
                     Status = "Remove: Unnecessary packages";
 
-                    // $todo(jefflill): Implement this.
-
-#if TODO
-            // Remove unnecessary packages.
+                    // Purge unnecessary packages.
 
 var removePackagesScript =
 @"
-apt-get remove -y \
-    locales \
-    snapd \
-    iso-codes \
-    git \
-    vim-runtime vim-tiny \
-    manpages man-db \
+apt-get purge -y \
+    apt \
+    aptitude \
     cloud-init \
+    git git-man \
+    iso-codes \
+    locales \
+    manpages man-db \
     python3-twisted \
-    perl perl-base perl-modules-5.30 libperl5.30 \
-    linux-modules-extra-5.4.0.60-generic \
-    unused hypervisor integration services?
+    snapd \
+    vim vim-runtime vim-tiny
 
 apt-get autoremove -y
 ";
-            SudoCommand(CommandBundle.FromScript(removePackagesScript, RunOptions.Defaults | RunOptions.FaultOnError);
-#endif
+                    SudoCommand(CommandBundle.FromScript(removePackagesScript), RunOptions.Defaults | RunOptions.FaultOnError);
                 });
         }
 
@@ -503,32 +521,6 @@ while fuser /var/lib/dpkg/lock >/dev/null 2>&1; do
 done
 ";
                     SudoCommand(CommandBundle.FromScript(disableAptServices), RunOptions.Defaults | RunOptions.FaultOnError);
-                });
-        }
-
-        /// <summary>
-        /// Disables the SNAP package manasger.
-        /// </summary>
-        /// <param name="statusWriter">Optional log writer action.</param>
-        public void BaseDisableSnap(Action<string> statusWriter = null)
-        {
-            InvokeIdempotent("base/snap",
-                () =>
-                {
-                    KubeHelper.WriteStatus(statusWriter, "Disable", "[snapd.service]");
-                    Status = "disable: [snapd.service]";
-
-                    var disableSnapScript =
-@"# Stop and mask [snapd.service] if it's not already masked.
-
-systemctl status --no-pager snapd.service
-
-if [ $? ]; then
-    systemctl stop snapd.service
-    systemctl mask snapd.service
-fi
-";
-                    SudoCommand(CommandBundle.FromScript(disableSnapScript), RunOptions.Defaults | RunOptions.FaultOnError);
                 });
         }
 

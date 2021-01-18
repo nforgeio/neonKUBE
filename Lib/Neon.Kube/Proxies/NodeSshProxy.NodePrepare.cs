@@ -641,7 +641,7 @@ systemctl restart iscsid
             InvokeIdempotent("node/initialize",
                 () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Configure", "Node (Low-Level)");
+                    KubeHelper.WriteStatus(statusWriter, "Configure", "Node (low-level)");
                     Status = "configure: node (low-level)";
 
                     SudoCommand(CommandBundle.FromScript(script), RunOptions.Defaults | RunOptions.FaultOnError);
