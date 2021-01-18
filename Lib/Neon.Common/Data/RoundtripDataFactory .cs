@@ -113,7 +113,8 @@ namespace Neon.Data
             Covenant.Requires<ArgumentNullException>(resultType != null, nameof(resultType));
             Covenant.Requires<ArgumentNullException>(bytes != null, nameof(bytes));
 
-            var jToken = JToken.Parse(Encoding.UTF8.GetString(bytes));
+            var json   = Encoding.UTF8.GetString(bytes);
+            var jToken = JToken.Parse(json);
 
             switch (jToken.Type)
             {
