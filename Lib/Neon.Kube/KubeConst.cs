@@ -294,12 +294,12 @@ namespace Neon.Kube
         /// be resolved on the cluster nodes to access internal Kubernetes
         /// services like the Harbor registry etc.
         /// </summary>
-        public const string NeonNodeDomain = "cluster.node";
+        public const string ClusterNodeDomain = "cluster.node";
 
         /// <summary>
         /// Returns a DNS name for the cluster registry that is reachable from
         /// CRI-O running on the host nodes.
         /// </summary>
-        public const string NeonRegistryName = "neon-registry." + NeonNodeDomain;
+        public const string ClusterRegistryName = "neon-registry." + ClusterNodeDomain;
     }
 }

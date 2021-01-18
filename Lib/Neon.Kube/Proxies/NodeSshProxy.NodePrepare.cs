@@ -754,7 +754,7 @@ blocked = false
 location = ""${{NEON_REGISTRY}}""
 
 [[registry.mirror]]
-location = ""{KubeConst.NeonRegistryName}""
+location = ""{KubeConst.ClusterRegistryName}""
 
 [[registry]]
 prefix = ""docker.io""
@@ -763,7 +763,7 @@ blocked = false
 location = ""docker.io""
 
 [[registry.mirror]]
-location = ""{KubeConst.NeonRegistryName}""
+location = ""{KubeConst.ClusterRegistryName}""
 
 [[registry]]
 prefix = ""quay.io""
@@ -772,7 +772,7 @@ blocked = false
 location = ""quay.io""
 
 [[registry.mirror]]
-location = ""{KubeConst.NeonRegistryName}""
+location = ""{KubeConst.ClusterRegistryName}""
 EOF
 
 cat <<EOF > /etc/crio/crio.conf.d/01-cgroup-manager.conf
