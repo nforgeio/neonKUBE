@@ -1,0 +1,253 @@
+# Default values for openebs.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+rbac:
+  # Specifies whether RBAC resources should be created
+  create: true
+  pspEnabled: false
+
+serviceAccount:
+  create: true
+  name: openebs-maya-operator
+
+release:
+  # "openebs.io/version" label for control plane components
+  version: "2.4.0"
+
+image:
+  pullPolicy: IfNotPresent
+  repository: ""
+
+apiserver:
+  enabled: true
+  image:
+    organization: neon-system-registry
+    repository: openebs-m-apiserver
+    tag: 2.4.0
+  replicas: 1
+  ports:
+    externalPort: 5656
+    internalPort: 5656
+  sparse:
+    enabled: "false"
+  nodeSelector: {}
+  tolerations: 
+  - operator: "Exists"
+    effect: "NoSchedule"
+  - operator: "Exists"
+    effect: "NoExecute"
+  affinity: {}
+  healthCheck:
+    initialDelaySeconds: 30
+    periodSeconds: 60
+
+defaultStorageConfig:
+  enabled: "true"
+
+# Directory used by the OpenEBS to store debug information and so forth
+# that are generated in the course of running OpenEBS containers.
+varDirectoryPath:
+  baseDir: "/var/openebs"
+
+provisioner:
+  enabled: true
+  image:
+    organization: neon-system-registry
+    repository: openebs-k8s-provisioner
+    tag: 2.4.1
+  replicas: 1
+  enableLeaderElection: true
+  nodeSelector: {}
+  tolerations: 
+  - operator: "Exists"
+    effect: "NoSchedule"
+  - operator: "Exists"
+    effect: "NoExecute"
+  affinity: {}
+  healthCheck:
+    initialDelaySeconds: 30
+    periodSeconds: 60
+
+localprovisioner:
+  enabled: true
+  image:
+    organization: neon-system-registry
+    repository: openebs-provisioner-localpv
+    tag: 2.4.0
+  replicas: 1
+  enableLeaderElection: true
+  basePath: "/var/openebs/local"
+  nodeSelector: {}
+  tolerations: 
+  - operator: "Exists"
+    effect: "NoSchedule"
+  - operator: "Exists"
+    effect: "NoExecute"
+  affinity: {}
+  healthCheck:
+    initialDelaySeconds: 30
+    periodSeconds: 60
+
+snapshotOperator:
+  enabled: true
+  controller:
+    image:
+      organization: neon-system-registry
+      repository: openebs-snapshot-controller
+      tag: 2.4.0
+  provisioner:
+    image:
+      organization: neon-system-registry
+      repository: openebs-snapshot-provisioner
+      tag: 2.4.0
+  replicas: 1
+  enableLeaderElection: true
+  upgradeStrategy: "Recreate"
+  nodeSelector: {}
+  tolerations: 
+  - operator: "Exists"
+    effect: "NoSchedule"
+  - operator: "Exists"
+    effect: "NoExecute"
+  affinity: {}
+  healthCheck:
+    initialDelaySeconds: 30
+    periodSeconds: 60
+
+ndm:
+  enabled: true
+  image:
+    organization: neon-system-registry
+    repository: openebs-node-disk-manager
+    tag: 1.0.1
+  sparse:
+    path: "/var/openebs/sparse"
+    size: "10737418240"
+    count: "0"
+  filters:
+    enableOsDiskExcludeFilter: true
+    enableVendorFilter: true
+    excludeVendors: "CLOUDBYT,OpenEBS"
+    enablePathFilter: true
+    includePaths: ""
+    excludePaths: "/dev/loop,/dev/fd0,/dev/sr0,/dev/ram,/dev/dm-,/dev/md,/dev/rbd,/dev/zd"
+  probes:
+    enableSeachest: false
+  nodeSelector: {}
+  tolerations: 
+  - operator: "Exists"
+    effect: "NoSchedule"
+  - operator: "Exists"
+    effect: "NoExecute"
+  healthCheck:
+    initialDelaySeconds: 30
+    periodSeconds: 60
+
+ndmOperator:
+  enabled: true
+  image:
+    organization: neon-system-registry
+    repository: openebs-node-disk-operator
+    tag: 1.0.1
+  replicas: 1
+  upgradeStrategy: Recreate
+  nodeSelector: {}
+  tolerations:
+  - operator: "Exists"
+    effect: "NoSchedule"
+  - operator: "Exists"
+    effect: "NoExecute"
+  healthCheck:
+    initialDelaySeconds: 30
+    periodSeconds: 60
+  readinessCheck:
+    initialDelaySeconds: 4
+    periodSeconds: 10
+    failureThreshold: 1
+
+webhook:
+  enabled: true
+  image:
+    organization: neon-system-registry
+    repository: openebs-admission-server
+    tag: 2.4.0
+  failurePolicy: "Fail"
+  replicas: 1
+  healthCheck:
+    initialDelaySeconds: 30
+    periodSeconds: 60
+  nodeSelector: {}
+  tolerations: 
+  - operator: "Exists"
+    effect: "NoSchedule"
+  - operator: "Exists"
+    effect: "NoExecute"
+  affinity: {}
+  hostNetwork: false
+
+jiva:
+  image:
+    organization: neon-system-registry
+    repository: openebs-jiva
+    tag: 2.4.0
+  replicas: 3
+  defaultStoragePath: "/var/openebs"
+
+cstor:
+  pool:
+    image:
+      organization: neon-system-registry
+      repository: openebs-cstor-pool
+      tag: 2.4.0
+  poolMgmt:
+    image:
+      organization: neon-system-registry
+      repository: openebs-cstor-pool-manager
+      tag: 2.4.0
+  target:
+    image:
+      organization: neon-system-registry
+      repository: openebs-cstor-istgt
+      tag: 2.4.0
+  volumeMgmt:
+    image:
+      organization: neon-system-registry
+      repository: openebs-cstor-volume-mgmt
+      tag: 2.4.0
+  webhook:
+    image:
+      organization: neon-system-registry
+      repository: openebs-cstor-webhook
+      tag: 2.4.0
+
+helper:
+  image:
+    organization: neon-system-registry
+    repository: openebs-linux-utils
+    tag: 2.4.0
+
+featureGates:
+  enabled: true
+  GPTBasedUUID:
+    enabled: true
+    featureGateFlag: "GPTBasedUUID"
+  APIService:
+    enabled: false
+    featureGateFlag: "APIService"
+
+crd:
+  enableInstall: true
+
+policies:
+  monitoring:
+    enabled: true
+    image:
+      organization: neon-system-registry
+      repository: openebs-m-exporter
+      tag: 2.4.0
+
+analytics:
+  enabled: false
+  # Specify in hours the duration after which a ping event needs to be sent.
+  pingInterval: "24h"

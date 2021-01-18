@@ -186,7 +186,7 @@ namespace Neon.HyperV
         /// <param name="diskSize">
         /// A string specifying the primary disk size.  This can be a long byte count or a
         /// byte count or a number with units like <b>512MB</b>, <b>0.5GiB</b>, <b>2GiB</b>, 
-        /// or <b>1TiB</b>.  This defaults to <b>64GiB</b>.
+        /// or <b>1TiB</b>.  Pass <c>null</c> to leave the disk alone.  This defaults to <c>null</c>.
         /// </param>
         /// <param name="drivePath">
         /// Optionally specifies the path where the virtual hard drive will be located.  Pass 
@@ -217,7 +217,7 @@ namespace Neon.HyperV
             string                      machineName, 
             string                      memorySize        = "2GiB", 
             int                         processorCount    = 4,
-            string                      diskSize          = "64GiB",
+            string                      diskSize          = null,
             string                      drivePath         = null,
             bool                        checkpointDrives  = false,
             string                      templateDrivePath = null, 
@@ -226,6 +226,13 @@ namespace Neon.HyperV
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName), nameof(machineName));
             CheckDisposed();
+
+            memorySize = ByteUnits.Parse(memorySize).ToString();
+
+            if (diskSize != null)
+            {
+                diskSize = ByteUnits.Parse(diskSize).ToString();
+            }
 
             var driveFolder = DefaultDriveFolder;
 
@@ -250,9 +257,12 @@ namespace Neon.HyperV
                 File.Copy(templateDrivePath, drivePath);
             }
 
-            // Resize the VHDX.
+            // Resize the VHDX if requested.
 
-            powershell.Execute($"{hyperVNamespace}Resize-VHD -Path \"{drivePath}\" -SizeBytes {diskSize}");
+            if (diskSize != null)
+            {
+                powershell.Execute($"{hyperVNamespace}Resize-VHD -Path \"{drivePath}\" -SizeBytes {diskSize}");
+            }
 
             // Create the virtual machine.
 
@@ -306,10 +316,7 @@ namespace Neon.HyperV
                         throw new ArgumentException("Virtual drive size must be greater than 0.", nameof(drive));
                     }
 
-                    if (File.Exists(drive.Path))
-                    {
-                        File.Delete(drive.Path);
-                    }
+                    NeonHelper.DeleteFile(drive.Path);
 
                     var fixedOrDynamic = drive.IsDynamic ? "-Dynamic" : "-Fixed";
 
@@ -344,10 +351,11 @@ namespace Neon.HyperV
         }
 
         /// <summary>
-        /// Removes a named virtual machine.
+        /// Removes a named virtual machine all of its drives.
         /// </summary>
         /// <param name="machineName">The machine name.</param>
-        public void RemoveVm(string machineName)
+        /// <param name="keepDrives">Optionally retains the VM drive files.</param>
+        public void RemoveVm(string machineName, bool keepDrives = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName), nameof(machineName));
             CheckDisposed();
@@ -366,9 +374,12 @@ namespace Neon.HyperV
                 throw new HyperVException(e.Message, e);
             }
 
-            foreach (var drivePath in drives)
+            if (!keepDrives)
             {
-                File.Delete(drivePath);
+                foreach (var drivePath in drives)
+                {
+                    File.Delete(drivePath);
+                }
             }
         }
 
@@ -517,10 +528,7 @@ namespace Neon.HyperV
 
             // Delete the drive file if it already exists.
 
-            if (File.Exists(drive.Path))
-            {
-                File.Delete(drive.Path);
-            }
+            NeonHelper.DeleteFile(drive.Path);
 
             var fixedOrDynamic = drive.IsDynamic ? "-Dynamic" : "-Fixed";
 
@@ -809,6 +817,24 @@ namespace Neon.HyperV
             {
                 throw new HyperVException(e.Message, e);
             }
+        }
+
+        /// <summary>
+        /// <para>
+        /// Compacts a dynamic VHD or VHDX virtual disk file.
+        /// </para>
+        /// <note>
+        /// The disk may be mounted to a VM but the VM cannot be running.
+        /// </note>
+        /// </summary>
+        /// <param name="drivePath">Path to the virtual drive file.</param>
+        public void CompactDrive(string drivePath)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(drivePath));
+
+            powershell.Execute($"Mount-VHD \"{drivePath}\" -ReadOnly");
+            powershell.Execute($"Optimize-VHD \"{drivePath}\" -Mode Full");
+            powershell.Execute($"Dismount-VHD \"{drivePath}\"");
         }
     }
 }

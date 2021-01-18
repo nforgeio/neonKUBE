@@ -142,7 +142,7 @@ namespace Neon.Kube
         /// <summary>
         /// The default host machine sysadmin username.
         /// </summary>
-        public const string SysAdminUsername = "sysadmin";
+        public const string SysAdminUser = "sysadmin";
 
         /// <summary>
         /// The default host machine sysadmin user ID.
@@ -161,10 +161,9 @@ namespace Neon.Kube
 
         /// <summary>
         /// The root account password baked into the Hyper-V and XenServer cluster
-        /// host node virtual machine templates.  Note that this will not be
-        /// used for hosts provisioned on public clouds for security reasons.
+        /// neonKUBE node images.
         /// </summary>
-        public const string VmTemplatePassword = "sysadmin0000";
+        public const string SysAdminPassword = "sysadmin0000";
 
         /// <summary>
         /// The default host machine container username.
@@ -226,7 +225,7 @@ namespace Neon.Kube
         /// <summary>
         /// The minimum supported XenServer/XCP-ng hypervisor host version.
         /// </summary>
-        public static readonly SemanticVersion MinXenServerVersion = SemanticVersion.Parse("7.5.0");
+        public static readonly SemanticVersion MinXenServerVersion = SemanticVersion.Parse("8.2.0");
 
         /// <summary>
         /// The number of IP addresses reserved by cloud deployments at the beginning of the 
@@ -255,9 +254,9 @@ namespace Neon.Kube
         public const string DefaultServiceSubnet = "10.253.0.0/16";
 
         /// <summary>
-        /// The latest neonKUBE cluster version supported.
+        /// The current neonKUBE cluster version supported.
         /// </summary>
-        public const string LatestClusterVersion = "0.1.0-alpha";
+        public const string NeonKubeVersion = "0.1.0-alpha";
 
         /// <summary>
         /// Lists thje supported neonKUBE cluster versions.
@@ -270,8 +269,37 @@ namespace Neon.Kube
             .AsReadOnly();
 
         /// <summary>
+        /// <para>
         /// The minimum supported cluster node disk size in GiB.
+        /// </para>
+        /// <note>
+        /// This size should match the size of the virtual disks created the base
+        /// Hyper-V and XenServer Ubuntu images.
+        /// </note>
         /// </summary>
         public const int MinNodeDiskSizeGiB = 64;
+
+        /// <summary>
+        /// Returns the URL to the neonKUBE GitHub repository.
+        /// </summary>
+        public const string KubeGitHubRepoUrl = "https://github.com/nforgeio/neonKUBE";
+
+        /// <summary>
+        /// Returns the URL to th neonKUBE help site.
+        /// </summary>
+        public const string KubeHelpUrl = "https://github.com/nforgeio/neonKUBE";
+
+        /// <summary>
+        /// Returns the domain used to configure cluster DNS name that can
+        /// be resolved on the cluster nodes to access internal Kubernetes
+        /// services like the Harbor registry etc.
+        /// </summary>
+        public const string ClusterNodeDomain = "node.local";
+
+        /// <summary>
+        /// Returns a DNS name for the cluster registry that is reachable from
+        /// CRI-O running on the host nodes.
+        /// </summary>
+        public const string ClusterRegistryName = "neon-registry." + ClusterNodeDomain;
     }
 }

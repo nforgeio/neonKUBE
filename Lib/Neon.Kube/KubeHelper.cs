@@ -25,6 +25,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
@@ -63,7 +64,6 @@ namespace Neon.Kube
         private static DesktopClient        desktopClient;
         private static KubeConfig           cachedConfig;
         private static KubeConfigContext    cachedContext;
-        private static HeadendClient        cachedHeadendClient;
         private static string               cachedNeonKubeUserFolder;
         private static string               cachedKubeUserFolder;
         private static string               cachedRunFolder;
@@ -77,6 +77,12 @@ namespace Neon.Kube
         private static X509Certificate2     cachedClusterCertificate;
         private static string               cachedProgramFolder;
         private static string               cachedPwshPath;
+        private static IStaticDirectory     cachedResources;
+
+        /// <summary>
+        /// CURL command common options.
+        /// </summary>
+        public const string CurlOptions = "-4fsSL --retry 10 --retry-delay 30";
 
         /// <summary>
         /// Static constructor.
@@ -102,7 +108,6 @@ namespace Neon.Kube
         {
             cachedConfig             = null;
             cachedContext            = null;
-            cachedHeadendClient      = null;
             cachedNeonKubeUserFolder = null;
             cachedKubeUserFolder     = null;
             cachedRunFolder          = null;
@@ -116,6 +121,7 @@ namespace Neon.Kube
             cachedClusterCertificate = null;
             cachedProgramFolder      = null;
             cachedPwshPath           = null;
+            cachedResources          = null;
         }
 
         /// <summary>
@@ -193,6 +199,22 @@ namespace Neon.Kube
                 }
 
                 return desktopClient;
+            }
+        }
+
+        /// <summary>
+        /// Returns the <see cref="IStaticDirectory"/> for the assembly's resources.
+        /// </summary>
+        public static IStaticDirectory Resources
+        {
+            get
+            {
+                if (cachedResources != null)
+                {
+                    return cachedResources;
+                }
+
+                return cachedResources = Assembly.GetExecutingAssembly().GetResourceFileSystem("Neon.Kube.Resources");
             }
         }
 
@@ -437,22 +459,6 @@ namespace Neon.Kube
         public static bool IsOnPremiseEnvironment(HostingEnvironment hostingEnvironment)
         {
             return !IsCloudEnvironment(hostingEnvironment);
-        }
-
-        /// <summary>
-        /// Returns a <see cref="HeadendClient"/>.
-        /// </summary>
-        public static HeadendClient Headend
-        {
-            get
-            {
-                if (cachedHeadendClient != null)
-                {
-                    return cachedHeadendClient;
-                }
-
-                return cachedHeadendClient = new HeadendClient();
-            }
         }
 
         /// <summary>
@@ -865,15 +871,15 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the path to the current user's cluster virtual machine templates
-        /// folder, creating the directory if it doesn't already exist.
+        /// Returns the path to the current user's cluster virtual machine node
+        /// image cache, creating the directory if it doesn't already exist.
         /// </summary>
         /// <returns>The path to the cluster setup folder.</returns>
-        public static string VmTemplatesFolder
+        public static string NodeImageCache
         {
             get
             {
-                var path = Path.Combine(GetNeonKubeUserFolder(), "vm-templates");
+                var path = Path.Combine(GetNeonKubeUserFolder(), "node-image-cache");
 
                 Directory.CreateDirectory(path);
 
@@ -1165,11 +1171,8 @@ namespace Neon.Kube
         /// of Kubernetes.
         /// </note>
         /// </summary>
-        /// <param name="setupInfo">The KUbernetes setup information.</param>
-        public static void InstallKubeCtl(KubeSetupInfo setupInfo)
+        public static void InstallKubeCtl()
         {
-            Covenant.Requires<ArgumentNullException>(setupInfo != null, nameof(setupInfo));
-
             var hostPlatform      = KubeHelper.HostPlatform;
             var cachedKubeCtlPath = KubeHelper.GetCachedComponentPath(hostPlatform, "kubectl", KubeVersions.KubernetesVersion);
             var targetPath        = Path.Combine(KubeHelper.ProgramFolder);
@@ -1266,11 +1269,7 @@ namespace Neon.Kube
                         {
                             // We need to copy the latest version.
 
-                            if (File.Exists(targetPath))
-                            {
-                                File.Delete(targetPath);
-                            }
-
+                            NeonHelper.DeleteFile(targetPath);
                             File.Copy(cachedKubeCtlPath, targetPath);
                         }
                     }
@@ -1286,9 +1285,9 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Ensures that <b>helm</b> tool whose version is at least as great as the requested
-        /// cluster version is installed to the <b>neonKUBE</b> programs folder by copying the
-        /// tool from the cache if necessary.
+        /// Ensures that <b>helm</b> client installed on the workstation version is at least as
+        /// great as the requested cluster version is installed to the <b>neonKUBE</b> programs 
+        /// folder by copying the tool from the cache if necessary.
         /// </para>
         /// <note>
         /// This will probably require elevated privileges.
@@ -1299,11 +1298,8 @@ namespace Neon.Kube
         /// of Tiller.
         /// </note>
         /// </summary>
-        /// <param name="setupInfo">The KUbernetes setup information.</param>
-        public static void InstallHelm(KubeSetupInfo setupInfo)
+        public static void InstallWorkstationHelm()
         {
-            Covenant.Requires<ArgumentNullException>(setupInfo != null, nameof(setupInfo));
-
             var hostPlatform   = KubeHelper.HostPlatform;
             var cachedHelmPath = KubeHelper.GetCachedComponentPath(hostPlatform, "helm", KubeVersions.HelmVersion);
             var targetPath     = Path.Combine(KubeHelper.ProgramFolder);
@@ -1350,18 +1346,6 @@ namespace Neon.Kube
                         if (!Version.TryParse(currentVersionString, out var currentVersion))
                         {
                             throw new KubeException(error);
-                        }
-
-                        if (Version.Parse(KubeVersions.HelmVersion) > currentVersion)
-                        {
-                            // We need to copy and overwrite with the latest version.
-
-                            if (File.Exists(targetPath))
-                            {
-                                File.Delete(targetPath);
-                            }
-
-                            File.Copy(cachedHelmPath, targetPath);
                         }
                     }
                     break;
@@ -1454,7 +1438,7 @@ namespace Neon.Kube
         /// </para>
         /// <note>
         /// This requires Powershell to be installed and this will favor using the version of
-        /// Powershell installed along with the neon-cli is present.
+        /// Powershell installed along with the neon-cli, if present.
         /// </note>
         /// </summary>
         /// <param name="inputFolder">Path to the input folder.</param>
@@ -1495,7 +1479,7 @@ namespace Neon.Kube
     NAME:  New-IsoFile  
     AUTHOR: Chris Wu 
     LASTEDIT: 03/23/2016 14:46:50  
- #>  
+#>  
   
   [CmdletBinding(DefaultParameterSetName='Source')]Param( 
     [parameter(Position=1,Mandatory=$true,ValueFromPipeline=$true, ParameterSetName='Source')]$Source,  
@@ -1615,20 +1599,27 @@ public class ISOFile
         }
 
         /// <summary>
-        /// Creates an ISO file containing the <b>neon-node-prep.sh</b> script that 
+        /// <para>
+        /// Creates an ISO file containing the <b>neon-init.sh</b> script that 
         /// will be used for confguring the node on first boot.  This includes disabling
-        /// the APT package update services, setting a secure password for the [sysadmin]
-        /// account, and configuring the network interface with the configured static IP.
+        /// the APT package update services, optionally setting a secure password for the
+        /// <b>sysadmin</b> account, and configuring the network interface with a
+        /// static IP address.
+        /// </para>
+        /// <para>
+        /// This override has obtains network settings from a <see cref="ClusterDefinition"/>
+        /// and <see cref="NodeDefinition"/>.
+        /// </para>
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="clusterDefinition"></param>
         /// <param name="nodeDefinition">The node definition.</param>
-        /// <param name="securePassword">The new secure SSH password.</param>
+        /// <param name="securePassword">Optionally specifies a secure SSH password.</param>
         /// <returns>A <see cref="TempFile"/> that references the generated ISO file.</returns>
         /// <remarks>
         /// <para>
         /// The hosting manager will call this for each node being prepared and then
         /// insert the ISO into the node VM's DVD/CD drive before booting the node
-        /// for the first time.  The <b>neon-node-prep</b> service configured on
+        /// for the first time.  The <b>neon-init</b> service configured on
         /// the corresponding node templates will look for this DVD and script and
         /// execute it early during the node boot process.
         /// </para>
@@ -1638,30 +1629,94 @@ public class ISOFile
         /// with the file to ensure that it is deleted.
         /// </para>
         /// </remarks>
-        public static TempFile CreateNodePrepIso(
+        public static TempFile CreateNeonInitIso(
             ClusterDefinition       clusterDefinition,
             NodeDefinition          nodeDefinition,
-            string                  securePassword)
+            string                  securePassword = null)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
             Covenant.Requires<ArgumentNullException>(nodeDefinition != null, nameof(nodeDefinition));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(securePassword), nameof(securePassword));
 
-            var address       = nodeDefinition.Address;
-            var gateway       = clusterDefinition.Network.Gateway;
-            var premiseSubnet = NetworkCidr.Parse(clusterDefinition.Network.PremiseSubnet);
-            var nameservers   = clusterDefinition.Network.Nameservers;
+            var clusterNetwork = clusterDefinition.Network;
+
+            return CreateNeonInitIso(
+                address:        nodeDefinition.Address,
+                subnet:         clusterNetwork.PremiseSubnet,
+                gateway:        clusterNetwork.Gateway,
+                nameServers:    clusterNetwork.Nameservers,
+                securePassword: securePassword);
+        }
+
+        /// <summary>
+        /// <para>
+        /// Creates an ISO file containing the <b>neon-init.sh</b> script that 
+        /// will be used for confguring the node on first boot.  This includes disabling
+        /// the APT package update services, optionally setting a secure password for the
+        /// <b>sysadmin</b> account, and configuring the network interface with a
+        /// static IP address.
+        /// </para>
+        /// <para>
+        /// This override has explict parameters for configuring the network.
+        /// </para>
+        /// </summary>
+        /// <param name="address">The IP address to be assigned the the VM.</param>
+        /// <param name="subnet">The network subnet to be configured.</param>
+        /// <param name="gateway">The network gateway to be configured.</param>
+        /// <param name="nameServers">The nameserver addresses to be configured.</param>
+        /// <param name="securePassword">Optionally specifies a secure SSH password.</param>
+        /// <returns>A <see cref="TempFile"/> that references the generated ISO file.</returns>
+        /// <remarks>
+        /// <para>
+        /// The hosting manager will call this for each node being prepared and then
+        /// insert the ISO into the node VM's DVD/CD drive before booting the node
+        /// for the first time.  The <b>neon-init</b> service configured on
+        /// the corresponding node templates will look for this DVD and script and
+        /// execute it early during the node boot process.
+        /// </para>
+        /// <para>
+        /// The ISO file reference is returned as a <see cref="TempFile"/>.  The
+        /// caller should call <see cref="TempFile.Dispose()"/> when it's done
+        /// with the file to ensure that it is deleted.
+        /// </para>
+        /// </remarks>
+        public static TempFile CreateNeonInitIso(
+            string                  address,
+            string                  subnet,
+            string                  gateway,
+            IEnumerable<string>     nameServers,
+            string                  securePassword = null)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(address), nameof(address));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(subnet), nameof(subnet));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(gateway), nameof(gateway));
+            Covenant.Requires<ArgumentNullException>(nameServers != null, nameof(nameServers));
+            Covenant.Requires<ArgumentNullException>(nameServers.Count() > 0, nameof(nameServers));
+
             var sbNameservers = new StringBuilder();
 
-            // Generate the [neon-node-prep.sh] script.
+            // Generate the [neon-init.sh] script.
 
-            foreach (var nameserver in nameservers)
+            foreach (var nameserver in nameServers)
             {
                 sbNameservers.AppendWithSeparator(nameserver.ToString(), ",");
             }
 
+            var changePasswordScript =
+@"#------------------------------------------------------------------------------
+# Change the [sysadmin] user password from the hardcoded [sysadmin0000] password
+# to something secure.  Doing this here before the network is configured means 
+# that there's no time when bad guys can SSH into the node using the insecure
+# password.
+
+echo 'sysadmin:{securePassword}' | chpasswd
+";
+            if (String.IsNullOrWhiteSpace(securePassword))
+            {
+                changePasswordScript = string.Empty;
+            }
+
             var nodePrepScript =
-$@"# This script is called by the [neon-node-prep] service when the prep
+$@"# This script is called by the [neon-init] service when the prep
 # DVD is inserted on first boot.  This script handles configuring the
 # network.
 #
@@ -1672,7 +1727,7 @@ mountFolder=${{1}}
 #------------------------------------------------------------------------------
 # Sleep for a bit in an attempt to ensure that the system is actually ready.
 #
-#       https://github.com/nforgeio/neonKUBE/issues/980
+# https://github.com/nforgeio/neonKUBE/issues/980
 
 sleep 10
 
@@ -1681,16 +1736,16 @@ sleep 10
 # for two reasons:
 #
 #   1. These services interfere with with [apt-get] usage during
-#      cluster setup and is also likely to interfere with end-user
-#      configuration activities as well.
+# cluster setup and is also likely to interfere with end-user
+# configuration activities as well.
 #
 #   2. Automatic updates for production and even test clusters is
-#      just not a great idea.  You just don't want a random update
-#      applied in the middle of the night which might cause trouble.
+# just not a great idea.  You just don't want a random update
+# applied in the middle of the night which might cause trouble.
 #
-#      We're going to implement our own cluster updating machanism
-#      that will be smart enough to update the nodes such that the
-#      impact on cluster workloads will be limited.
+# We're going to implement our own cluster updating machanism
+# that will be smart enough to update the nodes such that the
+# impact on cluster workloads will be limited.
 
 systemctl stop apt-daily.timer
 systemctl mask apt-daily.timer
@@ -1704,15 +1759,7 @@ systemctl mask apt-daily.service
 while fuser /var/{{lib /{{dpkg,apt/lists}},cache/apt/archives}}/lock; do
     sleep 1
 done
-
-#------------------------------------------------------------------------------
-# Change the [sysadmin] user password from the hardcoded [sysadmin0000] password
-# to something secure.  Doing this here before the network is configured means 
-# that there's no time when bad guys can SSH into the node using the insecure
-# password.
-
-echo 'sysadmin:{securePassword}' | chpasswd
-
+{changePasswordScript}
 #------------------------------------------------------------------------------
 # Configure the network.
 
@@ -1722,7 +1769,7 @@ rm /etc/netplan/*
 
 cat <<EOF > /etc/netplan/static.yaml
 # Static network configuration initialized during first boot by the 
-# [neon-node-prep] service from a virtual ISO inserted during
+# [neon-init] service from a virtual ISO inserted during
 # cluster prepare.
 
 network:
@@ -1731,7 +1778,7 @@ network:
   ethernets:
     eth0:
      dhcp4: no
-     addresses: [{address}/{premiseSubnet.PrefixLength}]
+     addresses: [{address}/{NetworkCidr.Parse(subnet).PrefixLength}]
      gateway4: {gateway}
      nameservers:
        addresses: [{sbNameservers}]
@@ -1770,7 +1817,7 @@ exit 0
 
             using (var tempFolder = new TempFolder(folder: orgTempPath))
             {
-                File.WriteAllText(Path.Combine(tempFolder.Path, "neon-node-prep.sh"), nodePrepScript);
+                File.WriteAllText(Path.Combine(tempFolder.Path, "neon-init.sh"), nodePrepScript);
 
                 // Note that the ISO needs to be created in an unencrypted folder
                 // (not /USER/neonkube/...) so that Hyper-V can mount it to a VM.
@@ -1783,265 +1830,35 @@ exit 0
             }
         }
 
-#if NO_BUILD
-        // $note(jefflill):
-        //
-        // I'm commenting this out because we went with DVDs rather than floppy discs
-        // for first boot node node configuration on hypervisors but I want to keep
-        // this around in case we want to do something like this again in the future.
-
         /// <summary>
-        /// Creates an floppy VFD file containing the <b>neon-node-prep.sh</b> script that 
-        /// will provide the information to <b>cloud-init</b> when cluster nodes
-        /// are prepared on non-cloud virtualization hosts like Hyper-V and XenServer.
+        /// Writes a status message to a status writer action when it's not <c>null</c>.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
-        /// <param name="nodeDefinition">The node definition.</param>
-        /// <param name="nodePrepScript">The node preparation script.</param>
-        /// <returns>A <see cref="TempFile"/> that references the generated VFD file.</returns>
-        /// <remarks>
-        /// <para>
-        /// The hosting manager will call this for each node being prepared and then
-        /// insert the ISO into the node VM's floppy drive before booting the node
-        /// for the first time.  The <b>neon-node-prep</b> service configured on
-        /// the corresponding node templates will look for this DVD and script and
-        /// execute it early during the node boot process, before <b>cloud-init</b>
-        /// runs.  When <b>cloud-init</b> runs, it will complete the basic node
-        /// preparation.
-        /// </para>
-        /// <para>
-        /// The VFD file reference is returned as a <see cref="TempFile"/>.  The
-        /// caller should call <see cref="TempFile.Dispose()"/> when it's done
-        /// with the file to ensure that it is deleted.
-        /// </para>
-        /// <note>
-        /// This method uses a special purpose floppy drive image generated via the
-        /// <b>neon generate init-floppy</b> command.
-        /// </note>
-        /// </remarks>
-        public static TempFile CreateNodePrepVfd(
-            ClusterDefinition       clusterDefinition,
-            NodeDefinition          nodeDefinition,
-            string                  nodePrepScript)
+        /// <param name="statusWriter">The log writer action ot <c>null</c>.</param>
+        /// <param name="label">The status label.</param>
+        /// <param name="message">Optional message.</param>
+        public static void WriteStatus(Action<string> statusWriter, string label, string message = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodePrepScript), nameof(nodePrepScript));
-
-            // This is the special purpose VFD file contents compressed via GZIP.
-
-            var vfdGzip = new byte[]
+            if (statusWriter != null)
             {
-                0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0a, 0xed, 0xdc, 0x4d, 0x6f, 0xd4, 0x45, 0x18, 0x00, 0xf0, 0xd9, 0xb7, 0x42, 0x5b, 0x4b, 0x79, 0x11, 0x10, 0x11, 0xf9, 0x03,
-                0x22, 0x56, 0xec, 0x42, 0x8b, 0x88, 0x08, 0xc8, 0x02, 0xf2, 0x26, 0x52, 0x8a, 0x50, 0x10, 0x11, 0xd8, 0x2d, 0x5d, 0xa4, 0x01, 0xb7, 0x4d, 0x77, 0x2f, 0x24, 0xc6, 0xf4, 0x13, 0x18,
-                0x13, 0xbf, 0x40, 0xcf, 0xc6, 0xa3, 0x17, 0x43, 0x62, 0xf6, 0xe8, 0x85, 0x3b, 0xc7, 0x3d, 0x70, 0x23, 0x31, 0x7c, 0x02, 0xeb, 0x56, 0x0e, 0xd6, 0xa3, 0x89, 0xd1, 0x84, 0xe7, 0xf7,
-                0xcb, 0x64, 0xe6, 0xc9, 0x3c, 0x99, 0xc9, 0x4c, 0xe6, 0x36, 0x99, 0xcc, 0xd3, 0xc3, 0xdf, 0x7d, 0x75, 0xef, 0x4e, 0xb3, 0x7c, 0xa7, 0xd6, 0x4a, 0xf9, 0x5c, 0x2e, 0xe5, 0x3b, 0xa9,
-                0xd2, 0xff, 0xac, 0x37, 0xad, 0x4d, 0xf9, 0xf4, 0x97, 0xa1, 0xdf, 0xbe, 0x7f, 0x32, 0x7a, 0x7b, 0x7a, 0xaa, 0xd6, 0xaa, 0x65, 0x4b, 0x4e, 0x1d, 0xbb, 0x3c, 0x32, 0xda, 0x6d, 0x57,
-                0x6d, 0xfd, 0xe5, 0xfa, 0xd7, 0x3f, 0x6e, 0x6f, 0xb7, 0xfa, 0xaf, 0xfc, 0xb4, 0xea, 0xe1, 0x8a, 0xf4, 0x68, 0xf5, 0xcd, 0xa7, 0xcf, 0x46, 0x9f, 0x3c, 0xda, 0xf0, 0x68, 0xd3, 0xd3,
-                0xdf, 0x2f, 0xdf, 0x9d, 0x6e, 0x66, 0xdd, 0xd2, 0x98, 0x69, 0x65, 0xb5, 0x6c, 0x72, 0x66, 0xa6, 0x55, 0x9b, 0xbc, 0x5f, 0xcf, 0xa6, 0xa6, 0x9b, 0xf7, 0xca, 0x59, 0x36, 0x7e, 0xbf,
-                0x5e, 0x6b, 0xd6, 0xb3, 0xe9, 0x46, 0xb3, 0x3e, 0xf7, 0xb7, 0xfc, 0x9d, 0xfb, 0x33, 0xb3, 0xb3, 0x0f, 0xb2, 0x5a, 0x63, 0x6a, 0xa0, 0x6f, 0x76, 0xae, 0xde, 0x6c, 0x76, 0xc3, 0x07,
-                0xd9, 0xbd, 0xfa, 0x83, 0xac, 0x35, 0x93, 0xb5, 0xe6, 0xba, 0x99, 0x2f, 0x6b, 0xd3, 0x8d, 0xac, 0x5c, 0x2e, 0x67, 0x03, 0x7d, 0xcb, 0xd6, 0xc8, 0x3f, 0x37, 0xf1, 0xc3, 0xb3, 0xc5,
-                0xc5, 0x54, 0x49, 0xa5, 0x6a, 0x5a, 0x31, 0x9f, 0x7a, 0x17, 0x52, 0x7f, 0x3b, 0x0d, 0x74, 0xd2, 0x60, 0xca, 0xad, 0xc9, 0x72, 0xeb, 0x2a, 0xb9, 0xf5, 0xd5, 0xdc, 0xc6, 0xf9, 0xdc,
-                0xa6, 0x85, 0xdc, 0xe6, 0x76, 0x6e, 0x4b, 0x27, 0xb7, 0x35, 0xe5, 0xb7, 0x65, 0xf9, 0x1d, 0x95, 0xfc, 0xce, 0x6a, 0x7e, 0xd7, 0x7c, 0x7e, 0x68, 0x21, 0xbf, 0xbb, 0x9d, 0x1f, 0xee,
-                0xe4, 0xf7, 0xa4, 0xc2, 0x48, 0x56, 0xd8, 0x57, 0x29, 0xec, 0xaf, 0x16, 0x0e, 0xcc, 0x17, 0x0e, 0x2e, 0x14, 0x0e, 0xb5, 0x0b, 0x47, 0x3a, 0x85, 0xa3, 0xa9, 0x78, 0x2c, 0x2b, 0x9e,
-                0xa8, 0x14, 0x4f, 0x56, 0x8b, 0xa7, 0xe7, 0x8b, 0x67, 0x17, 0x8a, 0xe7, 0xda, 0xc5, 0xf3, 0x9d, 0xe2, 0x85, 0x54, 0xba, 0x98, 0x95, 0x2e, 0x55, 0x4a, 0x13, 0xd5, 0xd2, 0xd5, 0xf9,
-                0xd2, 0xb5, 0x85, 0xd2, 0xf5, 0x76, 0xe9, 0x46, 0xa7, 0x74, 0x2b, 0xf5, 0xd4, 0xb2, 0x9e, 0xdb, 0x95, 0x9e, 0x7a, 0xb5, 0x67, 0x71, 0xd0, 0x81, 0x02, 0x00, 0x00, 0x00, 0xfc, 0x0b,
-                0xdc, 0xff, 0x00, 0x00, 0x00, 0x00, 0xbc, 0xd8, 0x96, 0x3d, 0xea, 0x5a, 0x99, 0xd2, 0xcf, 0xdf, 0x3e, 0x1e, 0x7f, 0x3c, 0xfe, 0xbc, 0x7d, 0x9e, 0x3f, 0x3e, 0x9b, 0xca, 0xa9, 0x99,
-                0xee, 0x76, 0xc3, 0xc1, 0xd4, 0x58, 0x5c, 0x26, 0xa5, 0xa5, 0x3a, 0xd7, 0x48, 0xf5, 0x34, 0x93, 0x1a, 0x69, 0x78, 0x29, 0xdf, 0xe8, 0x86, 0x53, 0xdd, 0x8e, 0xe1, 0x34, 0xdb, 0x1d,
-                0x30, 0xd7, 0x8d, 0xc6, 0x4e, 0x5e, 0x18, 0x1b, 0x1e, 0xfb, 0x66, 0xe4, 0xd2, 0x99, 0x2c, 0x4b, 0x7b, 0x97, 0xcf, 0x5f, 0x48, 0xe9, 0xd7, 0xff, 0x73, 0xe7, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x2f, 0x96, 0x1c, 0xa1, 0xe5, 0x09, 0xad, 0x40, 0x68, 0x45, 0x42, 0x2b, 0x11, 0x5a, 0x0f, 0xa1, 0xad, 0x20, 0xb4, 0x95, 0x84, 0xd6, 0x4b, 0x68, 0x7d, 0x84, 0xd6,
-                0x4f, 0x68, 0x2f, 0x11, 0xda, 0x00, 0xa1, 0xad, 0x22, 0xb4, 0x41, 0x42, 0x5b, 0x4d, 0x68, 0x6b, 0x08, 0x6d, 0x2d, 0xa1, 0xad, 0x23, 0xb4, 0x97, 0x09, 0x6d, 0x3d, 0xa1, 0x6d, 0x20,
-                0xb4, 0x8d, 0x84, 0xf6, 0x0a, 0xa1, 0x6d, 0x22, 0xb4, 0x57, 0x09, 0x6d, 0x33, 0xa1, 0xbd, 0x46, 0x68, 0x5b, 0x08, 0xed, 0x75, 0x42, 0xdb, 0x4a, 0x68, 0x7f, 0xfe, 0xfc, 0x4d, 0x58,
-                0xdb, 0x08, 0x6d, 0x3b, 0xa1, 0xed, 0x20, 0xb4, 0x37, 0x08, 0x6d, 0x27, 0xa1, 0xbd, 0x49, 0x68, 0xbb, 0x08, 0xed, 0x2d, 0x42, 0x1b, 0x22, 0xb4, 0xb7, 0x09, 0x6d, 0x37, 0xa1, 0xbd,
-                0x43, 0x68, 0xc3, 0x84, 0x56, 0x26, 0xb4, 0x3d, 0x84, 0xb6, 0x97, 0xd0, 0x46, 0x08, 0x6d, 0x94, 0xd0, 0xf6, 0x11, 0xda, 0xbb, 0x84, 0xb6, 0x9f, 0xd0, 0xde, 0x23, 0xb4, 0x03, 0x84,
-                0xf6, 0x3e, 0xa1, 0x1d, 0x24, 0xb4, 0x0f, 0x08, 0xed, 0x10, 0xa1, 0x1d, 0x26, 0xb4, 0x23, 0x84, 0xf6, 0x21, 0xa1, 0x1d, 0x25, 0xb4, 0x0a, 0xa1, 0x1d, 0x23, 0xb4, 0xe3, 0x84, 0x76,
-                0x82, 0xd0, 0x3e, 0x22, 0xb4, 0x93, 0x84, 0x76, 0x8a, 0xd0, 0x4e, 0x13, 0xda, 0x19, 0x42, 0x3b, 0x4b, 0x68, 0x1f, 0x13, 0xda, 0x39, 0x42, 0xfb, 0x84, 0xd0, 0xce, 0x13, 0xda, 0x18,
-                0xa1, 0x5d, 0x20, 0xb4, 0x71, 0x42, 0xbb, 0x48, 0x68, 0x9f, 0x12, 0xda, 0x25, 0x42, 0xbb, 0x4c, 0x68, 0x13, 0x84, 0x76, 0x85, 0xd0, 0xae, 0x12, 0xda, 0x67, 0x84, 0x76, 0x8d, 0xd0,
-                0x3e, 0x27, 0xb4, 0xeb, 0x84, 0xf6, 0x05, 0xa1, 0xdd, 0x20, 0xb4, 0x9b, 0x84, 0x76, 0x8b, 0xd0, 0xaa, 0x84, 0x56, 0x23, 0xb4, 0x49, 0x42, 0xbb, 0x4d, 0x68, 0x53, 0x84, 0x96, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xf8, 0x4f, 0xfd, 0x01, 0xed, 0xb1, 0x6b, 0xfc, 0x00, 0x80, 0x16, 0x00,
-            };
+                const int labelWidth = 15;
 
-            var vfdBytes      = NeonHelper.GunzipBytes(vfdGzip);
-            var address       = nodeDefinition.PrivateAddress;
-            var gateway       = clusterDefinition.Network.Gateway;
-            var premiseSubnet = NetworkCidr.Parse(clusterDefinition.Network.PremiseSubnet);
-            var nameservers   = clusterDefinition.Network.Nameservers;
-            var sbNameservers = new StringBuilder();
-
-            // Generate the [neon-node-prep.sh] script.
-
-            foreach (var nameserver in nameservers)
-            {
-                sbNameservers.AppendWithSeparator(nameserver.ToString(), ",");
-            }
-
-            nodePrepScript = nodePrepScript.Replace("\r\n", "\n");  // Linux line endings
-
-            // This is the tricky part.  The floppy image contains only the [neon-node-prep.sh]
-            // file consisting of 100 512B blocks of data.  The first file block is filled with
-            // 0x01, the second with 0x01, and so on with the last block filled with 0x64 (100).
-            //
-            // We're going to scan the VFD image for identify these blocks and then:
-            //
-            //      1. Fill all blocks with 0x0a (LINEFEED) characters and then
-            //      2. Go back and write the script bytes (UTF-8) to the blocks
-            //
-            // Note that device blocks always start at 512 intervals so this will be a simple scan.
-
-            const int vfdBlocks     = 2880;     // # of 512B blocks on a floppy
-            const int blockCount    = 100;      // [neon-node-prep.sh] block count
-            const int blockSize     = 512;      // floppy block size
-            const int maxScriptSize = blockCount * blockSize;
-
-            var scriptBytes = Encoding.UTF8.GetBytes(nodePrepScript);
-            var blockPos    = new int[blockCount];
-
-            Covenant.Assert(scriptBytes.Length < maxScriptSize, $"[neon-node-prep.sh] script cannot exceed [{maxScriptSize}] bytes.");
-
-            for (int i = 0; i < blockPos.Length; i++)
-            {
-                blockPos[i] = -1;
-            }
-
-            // Scan for the file block positions.
-
-            for (int block = 0; block < vfdBlocks; block++)
-            {
-                var firstBlockByte = vfdBytes[block * blockSize];
-
-                if (firstBlockByte == 0 || firstBlockByte > 100)
+                if (string.IsNullOrEmpty(label))
                 {
-                    // This cannot be a [neon-node-prep.sh] block.
-
-                    continue;
+                    label = new string(' ', labelWidth + 1);
                 }
-
-                var blockIndex    = (int)vfdBytes[block * blockSize];
-                var isScriptBlock = true;
-
-                for (int i = block * blockSize; i < (block + 1) * blockSize; i++)
+                else
                 {
-                    if (vfdBytes[i] != blockIndex)
+                    if (label.Length < labelWidth)
                     {
-                        // Script blocks need to be filled with the file's block index byte pattern.
-
-                        isScriptBlock = false;
-                        break;
+                        label = label + ':' + new string(' ', labelWidth - label.Length);
+                    }
+                    else
+                    {
+                        label = label + ':';
                     }
                 }
 
-                if (isScriptBlock)
-                {
-                    blockPos[blockIndex - 1] = block;
-                }
-            }
-
-            // Ensure that we found all of the blocks.
-
-            Covenant.Assert(!blockPos.Any(pos => pos == -1), "Invalid VFD image: [neon-node-prep.sh] is missing one or more blocks.");
-
-            // Overwrite all of the [neon-node-prep.sh] file blocks with LINEFEEDs.
-
-            foreach (var block in blockPos)
-            {
-                for (int i = block * blockSize; i < (block + 1) * blockSize; i++)
-                {
-                    vfdBytes[i] = 0x0A;
-                }
-            }
-
-            // Write the script bytes to the VFD image's [neon-node-prep.sh] file blocks.
-
-            for (int scriptBlock = 0; scriptBlock < blockPos.Length; scriptBlock++)
-            {
-                var vfdPos    = blockPos[scriptBlock] * blockSize;
-                var scriptPos = scriptBlock * blockSize;
-
-                for (int i = scriptPos; i < Math.Min(scriptPos + blockSize, scriptBytes.Length); i++)
-                {
-                    vfdBytes[vfdPos + i - scriptPos] = scriptBytes[i]; 
-                }
-
-                if (scriptPos + blockSize >= scriptBytes.Length)
-                {
-                    // Finished writing the script bytes.
-
-                    break;
-                }
-            }
-
-            // Create a VFD file that includes the script and return its TempFile.
-            //
-            // NOTE:
-            //
-            // that the VFD needs to be created in an unencrypted folder so that Hyper-V 
-            // can mount it to a VM.  By default, [neon-cli] will redirect the [TempFolder] 
-            // and [TempFile] classes locate their folder and files here:
-            //
-            //      /USER/.neonkube/...     - which is encrypted on Windows
-
-            var orgTempPath = Path.GetTempPath();
-            var vfdFile     = new TempFile(folder: orgTempPath, suffix: ".vfd");
-
-            File.WriteAllBytes(vfdFile.Path, vfdBytes);
-
-            return vfdFile;
-        }
-#endif // NO_BUILD
-
-        /// <summary>
-        /// Writes a message to a log writer action when it's not <c>null</c>.
-        /// </summary>
-        /// <param name="logWriter">The log writer action ot <c>null</c>.</param>
-        /// <param name="message">The message or <c>null</c> to wtite a blank line.</param>
-        private static void WriteLog(Action<string> logWriter, string message = null)
-        {
-            if (logWriter != null)
-            {
-                logWriter(message ?? string.Empty);
+                statusWriter($"{label}{message ?? string.Empty}");
             }
         }
 
@@ -2248,247 +2065,6 @@ exit 0
         }
 
         /// <summary>
-        /// Performs low-level initialization of a cluster node.  This is applied one time to
-        /// Hyper-V and XenServer/XCP-ng node templates when they are created and at cluster
-        /// creation time for cloud and bare metal based clusters.  The node must already
-        /// be booted and running.
-        /// </summary>
-        /// <param name="node">The node's SSH proxy.</param>
-        /// <param name="sshPassword">The current <b>sysadmin</b> password.</param>
-        /// <param name="updateDistribution">Optionally upgrade the node's Linux distribution.  This defaults to <c>false</c>.</param>
-        /// <param name="logWriter">Action that writes a line of text to the operation output log or console (or <c>null</c>).</param>
-        public static void InitializeNode(NodeSshProxy<NodeDefinition> node, string sshPassword, bool updateDistribution = false, Action<string> logWriter = null)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(sshPassword), nameof(sshPassword));
-
-            // $hack(jefflill):
-            //
-            // This method is going to be called for two different scenarios that will each
-            // call for different logging mechanisms.
-            //
-            //      1. For the [neon prepare node-termplate] command, we're simply going 
-            //         to write status to the console as lines via the [logWriter].
-            //
-            //      2. For node preparation for cloud and bare metal clusters, we're
-            //         going to set the node status and use the standard setup progress
-            //         mechanism to display the status.
-            //
-            // [logWriter] will be NULL for the second scenario so we'll call the log helper
-            // method above which won't do anything.
-            //
-            // For scenario #1, there is no setup display mechanism, so updating node status
-            // won't actually display anything, so we'll just set the status as well without
-            // harming anything.
-
-            // Wait for boot/connect.
-
-            WriteLog(logWriter, $"Login:    [{KubeConst.SysAdminUsername}]");
-            node.Status = $"login: [{KubeConst.SysAdminUsername}]";
-
-            node.WaitForBoot();
-
-            // Disable and mask the auto update services to avoid conflicts with
-            // our package operations.  We're going to implement our own cluster
-            // updating mechanism.
-
-            WriteLog(logWriter, $"Disable:  auto updates");
-            node.Status = "disable: auto updates";
-
-            node.SudoCommand("systemctl stop snapd.service", RunOptions.None);
-            node.SudoCommand("systemctl mask snapd.service", RunOptions.None);
-
-            node.SudoCommand("systemctl stop apt-daily.timer", RunOptions.None);
-            node.SudoCommand("systemctl mask apt-daily.timer", RunOptions.None);
-
-            node.SudoCommand("systemctl stop apt-daily.service", RunOptions.None);
-            node.SudoCommand("systemctl mask apt-daily.service", RunOptions.None);
-
-            // Wait for the apt-get lock to be released if somebody is holding it.
-
-            WriteLog(logWriter, $"Wait:     for pending updates");
-            node.Status = "wait: for pending updates";
-
-            while (node.SudoCommand("fuser /var/{lib/{dpkg,apt/lists},cache/apt/archives}/lock", RunOptions.None).ExitCode == 0)
-            {
-                Thread.Sleep(TimeSpan.FromSeconds(1));
-            }
-
-            // Disable sudo password prompts and reconnect.
-
-            WriteLog(logWriter, "Disable:  [sudo] password");
-            node.Status = "disable: sudo password";
-            node.DisableSudoPrompt(sshPassword);
-
-            WriteLog(logWriter, $"Login:    [{KubeConst.SysAdminUsername}]");
-            node.Status = "reconnecting...";
-            node.WaitForBoot();
-
-            // Install required packages and ugrade the distribution if requested.
-
-            WriteLog(logWriter, "Install:  packages");
-            node.Status = "install: packages";
-            node.SudoCommand("apt-get update", RunOptions.FaultOnError);
-            node.SudoCommand("apt-get install -yq --allow-downgrades zip secure-delete", RunOptions.FaultOnError);
-
-            if (updateDistribution)
-            {
-                WriteLog(logWriter, "Upgrade:  linux");
-                node.Status = "upgrade linux";
-                node.SudoCommand("apt-get dist-upgrade -yq");
-            }
-
-            // Disable SWAP by editing [/etc/fstab] to remove the [/swap.img] line.
-
-            WriteLog(logWriter, "Disable:  swap");
-            node.Status = "disable: swap";
-
-            var sbFsTab = new StringBuilder();
-
-            using (var reader = new StringReader(node.DownloadText("/etc/fstab")))
-            {
-                foreach (var line in reader.Lines())
-                {
-                    if (!line.Contains("/swap.img"))
-                    {
-                        sbFsTab.AppendLine(line);
-                    }
-                }
-            }
-
-            node.UploadText("/etc/fstab", sbFsTab, permissions: "644", owner: "root:root");
-
-            // We need to relocate the [sysadmin] UID/GID to 1234 so we
-            // can create the [container] user and group at 1000.  We'll
-            // need to create a temporary user with root permissions to
-            // delete and then recreate the [sysadmin] account.
-
-            WriteLog(logWriter, "Create:   [temp] user");
-            node.Status = "create: [temp] user";
-
-            var tempUserScript =
-$@"#!/bin/bash
-
-# Create the [temp] user.
-
-useradd --uid 5000 --create-home --groups root temp
-echo 'temp:{sshPassword}' | chpasswd
-chown temp:temp /home/temp
-
-# Add [temp] to the same groups that [sysadmin] belongs to
-# other than the [sysadmin] group.
-
-adduser temp adm
-adduser temp cdrom
-adduser temp sudo
-adduser temp dip
-adduser temp plugdev
-adduser temp lxd
-";
-            node.SudoCommand(CommandBundle.FromScript(tempUserScript), RunOptions.FaultOnError);
-
-            // Reconnect with the [temp] account so we can relocate the [sysadmin]
-            // user and its group ID to ID=1234.
-
-            WriteLog(logWriter, $"Login:    [temp]");
-            node.Status = "login: [temp]";
-
-            node.UpdateCredentials(SshCredentials.FromUserPassword("temp", sshPassword));
-            node.Connect();
-
-            // Beginning with Ubuntu 20.04 we're seeing [systemd/(sd-pam)] processes 
-            // hanging around for a while for the [sysadmin] user which prevents us 
-            // from deleting the [temp] user below.  We're going to handle this by
-            // killing any [temp] user processes first.
-
-            WriteLog(logWriter, "Kill:     [sysadmin] user processes");
-            node.Status = "kill: [sysadmin] processes";
-            node.SudoCommand("pkill -u sysadmin --signal 9");
-
-            // Relocate the [sysadmin] user to from [uid=1000:gid=1000} to [1234:1234]:
-
-            var sysadminUserScript =
-$@"#!/bin/bash
-
-# Update all file references from the old to new [sysadmin]
-# user and group IDs:
-
-find / -group 1000 -exec chgrp -h {KubeConst.SysAdminGroup} {{}} \;
-find / -user 1000 -exec chown -h {KubeConst.SysAdminUsername} {{}} \;
-
-# Relocate the [sysadmin] UID and GID:
-
-groupmod --gid {KubeConst.SysAdminGID} {KubeConst.SysAdminGroup}
-usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups root,sysadmin,sudo {KubeConst.SysAdminUsername}
-";
-            WriteLog(logWriter, "Relocate: [sysadmin] user/group IDs");
-            node.Status = "relocate: [sysadmin] user/group IDs";
-            node.SudoCommand(CommandBundle.FromScript(sysadminUserScript), RunOptions.FaultOnError);
-
-            WriteLog(logWriter, $"Logout");
-            node.Status = "logout";
-
-            // We need to reconnect again with [sysadmin] so we can remove
-            // the [temp] user, create the [container] user and then
-            // wrap things up.
-
-            node.SudoCommand(CommandBundle.FromScript(tempUserScript), RunOptions.FaultOnError);
-            WriteLog(logWriter, $"Login:    [{KubeConst.SysAdminUsername}]");
-            node.Status = $"login: [{KubeConst.SysAdminUsername}]";
-
-            node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUsername, sshPassword));
-            node.Connect();
-
-            // Beginning with Ubuntu 20.04 we're seeing [systemd/(sd-pam)] processes 
-            // hanging around for a while for the [temp] user which prevents us 
-            // from deleting the [temp] user below.  We're going to handle this by
-            // killing any [temp] user processes first.
-
-            WriteLog(logWriter, "Kill:     [temp] user processes");
-            node.Status = "kill: [temp] user processes";
-            node.SudoCommand("pkill -u temp");
-
-            // Remove the [temp] user.
-
-            WriteLog(logWriter, "Remove:   [temp] user");
-            node.Status = "remove: [temp] user";
-            node.SudoCommand($"rm -rf /home/temp", RunOptions.FaultOnError);
-
-            // Ensure that the owner and group for files in the [sysadmin]
-            // home folder are correct.
-
-            WriteLog(logWriter, "Set:      [sysadmin] home folder owner");
-            node.Status = "set: [sysadmin] home folder owner";
-            node.SudoCommand($"chown -R {KubeConst.SysAdminUsername}:{KubeConst.SysAdminGroup} .*", RunOptions.FaultOnError);
-
-            // Create the [container] user with no home directory.  This
-            // means that the [container] user will have no chance of
-            // logging into the machine.
-
-            WriteLog(logWriter, $"Create:   [{KubeConst.ContainerUsername}] user");
-            node.Status = $"create: [{KubeConst.ContainerUsername}] user";
-            node.SudoCommand($"useradd --uid {KubeConst.ContainerUID} --no-create-home {KubeConst.ContainerUsername}", RunOptions.FaultOnError);
-        }
-
-        /// <summary>
-        /// Ensures that the node operating system and version is supported for a neonKUBE
-        /// cluster.  This faults the nodeproxy on faliure.
-        /// </summary>
-        /// <param name="node">The target node.</param>
-        internal static void VerifyNodeOperatingSystem(NodeSshProxy<NodeDefinition> node)
-        {
-            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
-
-            node.Status = "check: OS";
-
-            // $todo(jefflill): We're currently hardcoded to Ubuntu 20.04.x
-
-            if (!node.OsName.Equals("Ubuntu", StringComparison.InvariantCultureIgnoreCase) || node.OsVersion < Version.Parse("20.04"))
-            {
-                node.Fault("Expected: Ubuntu 20.04+");
-            }
-        }
-
-        /// <summary>
         /// <para>
         /// Ensures that at least one cluster node is enabled for cluster ingress
         /// network traffic.
@@ -2592,7 +2168,7 @@ usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups roo
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an ""AS IS"" BASIS,
@@ -2610,15 +2186,15 @@ Include /etc/ssh/sshd_config.d/*
 # What ports, IPs and protocols we listen for
 # Port 22
 # Use these options to restrict which interfaces/protocols sshd will bind to
-#ListenAddress ::
-#ListenAddress 0.0.0.0
+# ListenAddress ::
+# ListenAddress 0.0.0.0
 Protocol 2
 # HostKeys for protocol version 2
 HostKey /etc/ssh/ssh_host_rsa_key
-#HostKey /etc/ssh/ssh_host_dsa_key
-#HostKey /etc/ssh/ssh_host_ecdsa_key
-#HostKey /etc/ssh/ssh_host_ed25519_key
-#Privilege Separation is turned on for security
+# HostKey /etc/ssh/ssh_host_dsa_key
+# HostKey /etc/ssh/ssh_host_ecdsa_key
+# HostKey /etc/ssh/ssh_host_ed25519_key
+# Privilege Separation is turned on for security
 UsePrivilegeSeparation yes
 
 # Lifetime and size of ephemeral version 1 server key
@@ -2636,7 +2212,7 @@ StrictModes yes
 
 RSAAuthentication yes
 PubkeyAuthentication yes
-#AuthorizedKeysFile	%h/.ssh/authorized_keys
+# AuthorizedKeysFile	%h/.ssh/authorized_keys
 
 # Don't read the user's ~/.rhosts and ~/.shosts files
 IgnoreRhosts yes
@@ -2645,7 +2221,7 @@ RhostsRSAAuthentication no
 # similar for protocol version 2
 HostbasedAuthentication no
 # Uncomment if you don't trust ~/.ssh/known_hosts for RhostsRSAAuthentication
-#IgnoreUserKnownHosts yes
+# IgnoreUserKnownHosts yes
 
 # To enable empty passwords, change to yes (NOT RECOMMENDED)
 PermitEmptyPasswords no
@@ -2658,14 +2234,14 @@ ChallengeResponseAuthentication no
 PasswordAuthentication yes
 
 # Kerberos options
-#KerberosAuthentication no
-#KerberosGetAFSToken no
-#KerberosOrLocalPasswd yes
-#KerberosTicketCleanup yes
+# KerberosAuthentication no
+# KerberosGetAFSToken no
+# KerberosOrLocalPasswd yes
+# KerberosTicketCleanup yes
 
 # GSSAPI options
-#GSSAPIAuthentication no
-#GSSAPICleanupCredentials yes
+# GSSAPIAuthentication no
+# GSSAPICleanupCredentials yes
 
 AllowTcpForwarding no
 X11Forwarding no
@@ -2675,10 +2251,10 @@ PrintMotd no
 PrintLastLog yes
 TCPKeepAlive yes
 UsePrivilegeSeparation yes
-#UseLogin no
+# UseLogin no
 
-#MaxStartups 10:30:60
-#Banner /etc/issue.net
+# MaxStartups 10:30:60
+# Banner /etc/issue.net
 
 # Allow client to pass locale environment variables
 AcceptEnv LANG LC_*

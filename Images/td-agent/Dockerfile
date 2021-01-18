@@ -22,9 +22,9 @@ MAINTAINER  marcus@euarctos.com
 STOPSIGNAL  SIGTERM
 ARG         VERSION
 
-RUN apt install -y gnupg \
+RUN apt update -y -qq && apt install -y -qq gnupg \
     && wget -qO - https://packages.treasuredata.com/GPG-KEY-td-agent | apt-key add - \
     && echo "deb http://packages.treasuredata.com/4/ubuntu/focal/ focal contrib" > /etc/apt/sources.list.d/treasure-data.list \
-    && apt update -y \
-    && apt install -y td-agent=${VERSION} gcc ruby-dev rubygems make g++ \
+    && apt-get update -y -qq \
+    && apt-get install -y -qq td-agent=${VERSION} gcc ruby-dev rubygems make g++ \
     && apt-get clean

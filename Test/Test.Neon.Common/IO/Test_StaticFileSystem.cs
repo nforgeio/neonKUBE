@@ -24,6 +24,8 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
+using ICSharpCode.SharpZipLib.Zip;
+
 using Neon.Common;
 using Neon.IO;
 using Neon.Xunit;
@@ -60,9 +62,12 @@ namespace TestCommon
     //              Folder4/
     //                  TextFile8.txt
     //
+    //          Folder8/
+    //              Test._      <--- special "blank" extension
+    //
     // The text files will each have 10 lines of UTF-8 text like:
     //
-    //      TextFile#.txt:
+    //      FILENAME:
     //      Line 1
     //      Line 2
     //      Line 3
@@ -137,9 +142,10 @@ namespace TestCommon
                 .Where(directory => directory.Name == "Resources")
                 .Single();
 
-            Assert.Equal(2, directory.GetDirectories().Count());
+            Assert.Equal(3, directory.GetDirectories().Count());
             Assert.Contains("Folder1", directory.GetDirectories().Select(directory => directory.Name));
             Assert.Contains("Folder2", directory.GetDirectories().Select(directory => directory.Name));
+            Assert.Contains("Folder8", directory.GetDirectories().Select(directory => directory.Name));
 
             Assert.Equal(2, directory.GetFiles().Count());
             Assert.Contains("TextFile1.txt", directory.GetFiles().Select(file => file.Name));
@@ -248,6 +254,29 @@ namespace TestCommon
 
             Assert.Single(directory.GetFiles());
             Assert.Contains("TextFile8.txt", directory.GetFiles().Select(file => file.Name));
+
+            // Directory: /TestCommon/IORes/Resources/Folder8/
+
+            directory = fs.GetDirectories()
+                .Where(directory => directory.Name == "TestCommon")
+                .Single();
+
+            directory = directory.GetDirectories()
+                .Where(directory => directory.Name == "IORes")
+                .Single();
+
+            directory = directory.GetDirectories()
+                .Where(directory => directory.Name == "Resources")
+                .Single();
+
+            directory = directory.GetDirectories()
+                .Where(directory => directory.Name == "Folder8")
+                .Single();
+
+            Assert.Empty(directory.GetDirectories());
+
+            Assert.Single(directory.GetFiles());
+            Assert.Contains("Test", directory.GetFiles().Select(file => file.Name));
         }
 
         [Fact]
@@ -310,7 +339,7 @@ namespace TestCommon
 
             var files = fs.GetFiles(options: SearchOption.AllDirectories);
 
-            Assert.Equal(8, files.Count());
+            Assert.Equal(9, files.Count());
             Assert.Contains("/TestCommon/IORes/Resources/TextFile1.txt", files.Select(file => file.Path));
             Assert.Contains("/TestCommon/IORes/Resources/TextFile2.txt", files.Select(file => file.Path));
             Assert.Contains("/TestCommon/IORes/Resources/Folder1/TextFile3.txt", files.Select(file => file.Path));
@@ -319,6 +348,7 @@ namespace TestCommon
             Assert.Contains("/TestCommon/IORes/Resources/Folder2/TextFile6.txt", files.Select(file => file.Path));
             Assert.Contains("/TestCommon/IORes/Resources/Folder2/TextFile7.txt", files.Select(file => file.Path));
             Assert.Contains("/TestCommon/IORes/Resources/Folder2/Folder4/TextFile8.txt", files.Select(file => file.Path));
+            Assert.Contains("/TestCommon/IORes/Resources/Folder8/Test", files.Select(file => file.Path));
 
             // Pattern match
 
@@ -350,7 +380,7 @@ namespace TestCommon
             Assert.Contains("/TestCommon/IORes/Resources/Folder1/TextFile4.txt", files.Select(file => file.Path));
             Assert.Contains("/TestCommon/IORes/Resources/Folder1/Folder3/TextFile5.txt", files.Select(file => file.Path));
 
-            // Extra test to ensure that an extra trailing "/" in a directory path is ignored.
+            // Ensure that a trailing "/" in a directory path is ignored.
 
             directory = fs.GetDirectory("/TestCommon/IORes/Resources/Folder1/");
             
@@ -425,7 +455,7 @@ namespace TestCommon
             var fs          = Assembly.GetExecutingAssembly().GetResourceFileSystem();
             var directories = fs.GetDirectories(searchPattern: null, options: SearchOption.AllDirectories);
 
-            Assert.Equal(7, directories.Count());
+            Assert.Equal(8, directories.Count());
             Assert.Single(directories.Where(directory => directory.Path == "/TestCommon"));
             Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes"));
             Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes/Resources"));
@@ -433,6 +463,7 @@ namespace TestCommon
             Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes/Resources/Folder1/Folder3"));
             Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes/Resources/Folder2"));
             Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes/Resources/Folder2/Folder4"));
+            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes/Resources/Folder8"));
         }
 
         [Fact]
@@ -443,7 +474,7 @@ namespace TestCommon
             var fs          = Assembly.GetExecutingAssembly().GetResourceFileSystem();
             var directories = fs.GetDirectories("*", SearchOption.AllDirectories);
 
-            Assert.Equal(7, directories.Count());
+            Assert.Equal(8, directories.Count());
             Assert.Single(directories.Where(directory => directory.Path == "/TestCommon"));
             Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes"));
             Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes/Resources"));
@@ -451,12 +482,13 @@ namespace TestCommon
             Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes/Resources/Folder1/Folder3"));
             Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes/Resources/Folder2"));
             Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes/Resources/Folder2/Folder4"));
+            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes/Resources/Folder8"));
 
             // Filter by: *.*
-            
+
             directories = fs.GetDirectories("*.*", SearchOption.AllDirectories);
 
-            Assert.Equal(7, directories.Count());
+            Assert.Equal(8, directories.Count());
             Assert.Single(directories.Where(directory => directory.Path == "/TestCommon"));
             Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes"));
             Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes/Resources"));
@@ -464,26 +496,29 @@ namespace TestCommon
             Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes/Resources/Folder1/Folder3"));
             Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes/Resources/Folder2"));
             Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes/Resources/Folder2/Folder4"));
+            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes/Resources/Folder8"));
 
             // Filter by: F*
 
             directories = fs.GetDirectories("F*", SearchOption.AllDirectories);
 
-            Assert.Equal(4, directories.Count());
+            Assert.Equal(5, directories.Count());
             Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes/Resources/Folder1"));
             Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes/Resources/Folder1/Folder3"));
             Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes/Resources/Folder2"));
             Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes/Resources/Folder2/Folder4"));
+            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes/Resources/Folder8"));
 
             // Filter by: Folder?
 
             directories = fs.GetDirectories("Folder?", SearchOption.AllDirectories);
 
-            Assert.Equal(4, directories.Count());
+            Assert.Equal(5, directories.Count());
             Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes/Resources/Folder1"));
             Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes/Resources/Folder1/Folder3"));
             Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes/Resources/Folder2"));
             Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes/Resources/Folder2/Folder4"));
+            Assert.Single(directories.Where(directory => directory.Path == "/TestCommon/IORes/Resources/Folder8"));
         }
 
         [Fact]
@@ -583,9 +618,10 @@ namespace TestCommon
 
             // Directory: /
 
-            Assert.Equal(2, fs.GetDirectories().Count());
+            Assert.Equal(3, fs.GetDirectories().Count());
             Assert.Contains("Folder1", directory.GetDirectories().Select(directory => directory.Name));
             Assert.Contains("Folder2", directory.GetDirectories().Select(directory => directory.Name));
+            Assert.Contains("Folder8", directory.GetDirectories().Select(directory => directory.Name));
 
             Assert.Equal(2, directory.GetFiles().Count());
             Assert.Contains("TextFile1.txt", directory.GetFiles().Select(file => file.Name));
@@ -684,7 +720,7 @@ namespace TestCommon
 
             var files = fs.GetFiles(options: SearchOption.AllDirectories);
 
-            Assert.Equal(8, files.Count());
+            Assert.Equal(9, files.Count());
             Assert.Contains("/TextFile1.txt", files.Select(file => file.Path));
             Assert.Contains("/TextFile2.txt", files.Select(file => file.Path));
             Assert.Contains("/Folder1/TextFile3.txt", files.Select(file => file.Path));
@@ -693,6 +729,7 @@ namespace TestCommon
             Assert.Contains("/Folder2/TextFile6.txt", files.Select(file => file.Path));
             Assert.Contains("/Folder2/TextFile7.txt", files.Select(file => file.Path));
             Assert.Contains("/Folder2/Folder4/TextFile8.txt", files.Select(file => file.Path));
+            Assert.Contains("/Folder8/Test", files.Select(file => file.Path));
 
             // Pattern match
 
@@ -766,7 +803,7 @@ namespace TestCommon
 
             var files = fs.GetFiles(options: SearchOption.AllDirectories);
 
-            Assert.Equal(8, files.Count());
+            Assert.Equal(9, files.Count());
             Assert.Contains("/TextFile1.txt", files.Select(file => file.Path));
             Assert.Contains("/TextFile2.txt", files.Select(file => file.Path));
             Assert.Contains("/Folder1/TextFile3.txt", files.Select(file => file.Path));
@@ -775,6 +812,7 @@ namespace TestCommon
             Assert.Contains("/Folder2/TextFile6.txt", files.Select(file => file.Path));
             Assert.Contains("/Folder2/TextFile7.txt", files.Select(file => file.Path));
             Assert.Contains("/Folder2/Folder4/TextFile8.txt", files.Select(file => file.Path));
+            Assert.Contains("/Folder8/Test", files.Select(file => file.Path));
 
             // Pattern match
 
@@ -897,6 +935,161 @@ namespace TestCommon
             Assert.Throws<FileNotFoundException>(() => fs.GetDirectory("//NOT-FOUND.txt"));
         }
 
+        [Fact]
+        public void ZipToStream()
+        {
+            var fs = Assembly.GetExecutingAssembly().GetResourceFileSystem("TestCommon.IORes.Resources");
+
+            // Verify that we can zip all embedded resources to a stream.
+
+            using (var stream = new MemoryStream())
+            {
+                fs.Zip(stream, searchOptions: SearchOption.AllDirectories);
+
+                Assert.True(stream.Length > 0);
+
+                using (var tempFolder = new TempFolder())
+                {
+                    var fastZip     = new FastZip();
+                    var zipPath     = Path.Combine(tempFolder.Path, "test.zip");
+                    var unzipFolder = Path.Combine(tempFolder.Path, "unzipped");
+
+                    File.WriteAllBytes(zipPath, stream.ToArray());
+                    fastZip.ExtractZip(zipPath, unzipFolder, null);
+
+                    Assert.True(File.Exists(Path.Combine(unzipFolder, "TextFile1.txt")));
+                    Assert.True(File.Exists(Path.Combine(unzipFolder, "TextFile2.txt")));
+
+                    Assert.True(File.Exists(Path.Combine(unzipFolder, "Folder1", "TextFile3.txt")));
+                    Assert.True(File.Exists(Path.Combine(unzipFolder, "Folder1", "TextFile4.txt")));
+                    Assert.True(File.Exists(Path.Combine(unzipFolder, "Folder1", "Folder3", "TextFile5.txt")));
+
+                    Assert.True(File.Exists(Path.Combine(unzipFolder, "Folder2", "TextFile6.txt")));
+                    Assert.True(File.Exists(Path.Combine(unzipFolder, "Folder2", "TextFile7.txt")));
+                    Assert.True(File.Exists(Path.Combine(unzipFolder, "Folder2", "Folder4", "TextFile8.txt")));
+
+                    Assert.True(File.Exists(Path.Combine(unzipFolder, "Folder8", "Test")));
+                }
+            }
+
+            // Verify that we can zip a single file from the root directory.
+
+            using (var stream = new MemoryStream())
+            {
+                fs.Zip(stream, "TextFile1.txt", searchOptions: SearchOption.TopDirectoryOnly);
+
+                Assert.True(stream.Length > 0);
+
+                using (var tempFolder = new TempFolder())
+                {
+                    var fastZip     = new FastZip();
+                    var zipPath     = Path.Combine(tempFolder.Path, "test.zip");
+                    var unzipFolder = Path.Combine(tempFolder.Path, "unzipped");
+
+                    File.WriteAllBytes(zipPath, stream.ToArray());
+                    fastZip.ExtractZip(zipPath, unzipFolder, null);
+
+                    Assert.True(File.Exists(Path.Combine(unzipFolder, "TextFile1.txt")));
+                    Assert.False(File.Exists(Path.Combine(unzipFolder, "TextFile2.txt")));
+
+                    Assert.False(File.Exists(Path.Combine(unzipFolder, "Folder1", "TextFile3.txt")));
+                    Assert.False(File.Exists(Path.Combine(unzipFolder, "Folder1", "TextFile4.txt")));
+                    Assert.False(File.Exists(Path.Combine(unzipFolder, "Folder1", "Folder3", "TextFile5.txt")));
+
+                    Assert.False(File.Exists(Path.Combine(unzipFolder, "Folder2", "TextFile6.txt")));
+                    Assert.False(File.Exists(Path.Combine(unzipFolder, "Folder2", "TextFile7.txt")));
+                    Assert.False(File.Exists(Path.Combine(unzipFolder, "Folder2", "Folder4", "TextFile8.txt")));
+                }
+            }
+        }
+
+        [Fact]
+        public void ZipToFile()
+        {
+            var fs = Assembly.GetExecutingAssembly().GetResourceFileSystem("TestCommon.IORes.Resources");
+
+            // Verify that we can zip all embedded resources to a file.
+
+            using (var tempFolder = new TempFolder())
+            {
+                var fastZip     = new FastZip();
+                var zipPath     = Path.Combine(tempFolder.Path, "test.zip");
+                var unzipFolder = Path.Combine(tempFolder.Path, "unzipped");
+
+                fs.Zip(zipPath, searchOptions: SearchOption.AllDirectories);
+                fastZip.ExtractZip(zipPath, unzipFolder, null);
+
+                Assert.True(File.Exists(Path.Combine(unzipFolder, "TextFile1.txt")));
+                Assert.True(File.Exists(Path.Combine(unzipFolder, "TextFile2.txt")));
+
+                Assert.True(File.Exists(Path.Combine(unzipFolder, "Folder1", "TextFile3.txt")));
+                Assert.True(File.Exists(Path.Combine(unzipFolder, "Folder1", "TextFile4.txt")));
+                Assert.True(File.Exists(Path.Combine(unzipFolder, "Folder1", "Folder3", "TextFile5.txt")));
+
+                Assert.True(File.Exists(Path.Combine(unzipFolder, "Folder2", "TextFile6.txt")));
+                Assert.True(File.Exists(Path.Combine(unzipFolder, "Folder2", "TextFile7.txt")));
+                Assert.True(File.Exists(Path.Combine(unzipFolder, "Folder2", "Folder4", "TextFile8.txt")));
+
+                Assert.True(File.Exists(Path.Combine(unzipFolder, "Folder8", "Test")));
+            }
+
+            // Verify that we can zip a single file from the root directory.
+
+            using (var tempFolder = new TempFolder())
+            {
+                var fastZip     = new FastZip();
+                var zipPath     = Path.Combine(tempFolder.Path, "test.zip");
+                var unzipFolder = Path.Combine(tempFolder.Path, "unzipped");
+
+                fs.Zip(zipPath, searchPattern: "TextFile1.txt", searchOptions: SearchOption.TopDirectoryOnly);
+                fastZip.ExtractZip(zipPath, unzipFolder, null);
+
+                Assert.True(File.Exists(Path.Combine(unzipFolder, "TextFile1.txt")));
+                Assert.False(File.Exists(Path.Combine(unzipFolder, "TextFile2.txt")));
+
+                Assert.False(File.Exists(Path.Combine(unzipFolder, "Folder1", "TextFile3.txt")));
+                Assert.False(File.Exists(Path.Combine(unzipFolder, "Folder1", "TextFile4.txt")));
+                Assert.False(File.Exists(Path.Combine(unzipFolder, "Folder1", "Folder3", "TextFile5.txt")));
+
+                Assert.False(File.Exists(Path.Combine(unzipFolder, "Folder2", "TextFile6.txt")));
+                Assert.False(File.Exists(Path.Combine(unzipFolder, "Folder2", "TextFile7.txt")));
+                Assert.False(File.Exists(Path.Combine(unzipFolder, "Folder2", "Folder4", "TextFile8.txt")));
+
+                Assert.False(File.Exists(Path.Combine(unzipFolder, "Folder8", "Test")));
+            }
+        }
+
+        [Fact]
+        public void ZipToFile_WithLinuxLineEndings()
+        {
+            var fs = Assembly.GetExecutingAssembly().GetResourceFileSystem("TestCommon.IORes.Resources");
+
+            // Verify that we can zip all text files, converting any Windows style CRLF
+            // line endings to Linux LF.
+
+            using (var tempFolder = new TempFolder())
+            {
+                var fastZip     = new FastZip();
+                var zipPath     = Path.Combine(tempFolder.Path, "test.zip");
+                var unzipFolder = Path.Combine(tempFolder.Path, "unzipped");
+
+                fs.Zip(zipPath, searchOptions: SearchOption.AllDirectories, zipOptions: StaticZipOptions.LinuxLineEndings);
+                fastZip.ExtractZip(zipPath, unzipFolder, null);
+
+                Assert.True(!File.ReadAllText(Path.Combine(unzipFolder, "TextFile1.txt")).Contains("\r\n"));
+                Assert.True(!File.ReadAllText(Path.Combine(unzipFolder, "TextFile2.txt")).Contains("\r\n"));
+
+                Assert.True(!File.ReadAllText(Path.Combine(unzipFolder, "Folder1", "TextFile3.txt")).Contains("\r\n"));
+                Assert.True(!File.ReadAllText(Path.Combine(unzipFolder, "Folder1", "TextFile4.txt")).Contains("\r\n"));
+                Assert.True(!File.ReadAllText(Path.Combine(unzipFolder, "Folder1", "Folder3", "TextFile5.txt")).Contains("\r\n"));
+
+                Assert.True(!File.ReadAllText(Path.Combine(unzipFolder, "Folder2", "TextFile6.txt")).Contains("\r\n"));
+                Assert.True(!File.ReadAllText(Path.Combine(unzipFolder, "Folder2", "TextFile7.txt")).Contains("\r\n"));
+                Assert.True(!File.ReadAllText(Path.Combine(unzipFolder, "Folder2", "Folder4", "TextFile8.txt")).Contains("\r\n"));
+
+                Assert.True(!File.ReadAllText(Path.Combine(unzipFolder, "Folder8", "Test")).Contains("\r\n"));
+            }
+        }
 
         //---------------------------------------------------------------------
         // Resource file read tests for non-filtered resources.

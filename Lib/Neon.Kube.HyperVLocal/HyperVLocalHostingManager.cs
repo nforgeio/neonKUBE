@@ -31,8 +31,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using ICSharpCode.SharpZipLib.Zip;
-
 using Newtonsoft;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -73,7 +71,7 @@ namespace Neon.Kube
 
             /// <summary>
             /// The downloaded file length used as a quick verification that
-            /// the complete file was downloaded.
+            /// the entire file was downloaded.
             /// </summary>
             [JsonProperty(PropertyName = "Length", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
             [YamlMember(Alias = "length", ApplyNamingConventions = false)]
@@ -107,7 +105,6 @@ namespace Neon.Kube
         private const string defaultSwitchName = "external";
 
         private ClusterProxy                    cluster;
-        private KubeSetupInfo                   setupInfo;
         private SetupController<NodeDefinition> setupController;
         private string                          driveTemplatePath;
         private string                          vmDriveFolder;
@@ -127,20 +124,17 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="cluster">The cluster being managed.
         /// </param>
-        /// <param name="setupInfo">Specifies the cluster setup information.</param>
         /// <param name="logFolder">
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
-        public HyperVLocalHostingManager(ClusterProxy cluster, KubeSetupInfo setupInfo, string logFolder = null)
+        public HyperVLocalHostingManager(ClusterProxy cluster, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
-            Covenant.Requires<ArgumentNullException>(setupInfo != null, nameof(setupInfo));
 
             cluster.HostingManager = this;
 
-            this.cluster   = cluster;
-            this.setupInfo = setupInfo;
+            this.cluster = cluster;
         }
 
         /// <inheritdoc/>
@@ -157,6 +151,9 @@ namespace Neon.Kube
         {
             get { return false; }
         }
+
+        /// <inheritdoc/>
+        public override HostingEnvironment HostingEnvironment => HostingEnvironment.HyperVLocal;
 
         /// <inheritdoc/>
         public override void Validate(ClusterDefinition clusterDefinition)
@@ -211,7 +208,7 @@ namespace Neon.Kube
             };
 
             setupController.AddGlobalStep("prepare hyper-v", () => PrepareHyperV());
-            setupController.AddNodeStep("create virtual machines", (node, stepDelay) => ProvisionVM(node));
+            setupController.AddNodeStep("create virtual machines", node => ProvisionVM(node));
             setupController.AddGlobalStep(string.Empty, () => Finish(), quiet: true);
 
             if (!setupController.Run())
@@ -235,7 +232,7 @@ namespace Neon.Kube
             // the OpenEBS disk will be easy to identify as the only unpartitioned disk.
 
             setupController.AddNodeStep("openebs",
-                (node, stepDelay) =>
+                node =>
                 {
                     using (var hyperv = new HyperVClient())
                     {
@@ -353,12 +350,12 @@ namespace Neon.Kube
             // drive template.  Production clusters should reference a specific
             // drive template.
 
-            var driveTemplateUri  = new Uri(setupInfo.LinuxTemplateUri);
+            var driveTemplateUri  = new Uri(KubeDownloads.GetNodeImageUri(this.HostingEnvironment));
             var driveTemplateName = driveTemplateUri.Segments.Last();
 
-            driveTemplatePath = Path.Combine(KubeHelper.VmTemplatesFolder, driveTemplateName);
+            driveTemplatePath = Path.Combine(KubeHelper.NodeImageCache, driveTemplateName);
 
-            var driveTemplateInfoPath  = Path.Combine(KubeHelper.VmTemplatesFolder, driveTemplateName + ".info");
+            var driveTemplateInfoPath  = Path.Combine(KubeHelper.NodeImageCache, driveTemplateName + ".info");
             var driveTemplateIsCurrent = true;
             var driveTemplateInfo      = (DriveTemplateInfo)null;
 
@@ -387,7 +384,9 @@ namespace Neon.Kube
 
             if (!driveTemplateIsCurrent)
             {
-                setupController.SetOperationStatus($"Download Template VHDX: [{setupInfo.LinuxTemplateUri}]");
+                var nodeImageUri = KubeDownloads.GetNodeImageUri(this.HostingEnvironment);
+
+                setupController.SetOperationStatus($"Download node image VHDX: [{nodeImageUri}]");
 
                 Task.Run(
                     async () =>
@@ -396,7 +395,7 @@ namespace Neon.Kube
                         {
                             // Download the file.
 
-                            var response = await client.GetAsync(setupInfo.LinuxTemplateUri, HttpCompletionOption.ResponseHeadersRead);
+                            var response = await client.GetAsync(nodeImageUri, HttpCompletionOption.ResponseHeadersRead);
 
                             response.EnsureSuccessStatusCode();
 
@@ -412,7 +411,7 @@ namespace Neon.Kube
                                 }
                                 else
                                 {
-                                    throw new KubeException($"[{setupInfo.LinuxTemplateUri}] has unsupported [Content-Encoding={contentEncoding}].");
+                                    throw new KubeException($"[{nodeImageUri}] has unsupported [Content-Encoding={contentEncoding}].");
                                 }
                             }
 
@@ -440,11 +439,11 @@ namespace Neon.Kube
                                             {
                                                 var percentComplete = (int)(((double)fileStream.Length / (double)contentLength) * 100.0);
 
-                                                setupController.SetOperationStatus($"Downloading VHDX: [{percentComplete}%] [{setupInfo.LinuxTemplateUri}]");
+                                                setupController.SetOperationStatus($"Downloading VHDX: [{percentComplete}%] [{nodeImageUri}]");
                                             }
                                             else
                                             {
-                                                setupController.SetOperationStatus($"Downloading VHDX: [{fileStream.Length} bytes] [{setupInfo.LinuxTemplateUri}]");
+                                                setupController.SetOperationStatus($"Downloading VHDX: [{fileStream.Length} bytes] [{nodeImageUri}]");
                                             }
                                         }
                                     }
@@ -645,9 +644,9 @@ namespace Neon.Kube
 
                 // Create the virtual machine.
 
-                var processors       = node.Metadata.Vm.GetProcessors(cluster.Definition);
-                var memoryBytes      = node.Metadata.Vm.GetMemory(cluster.Definition);
-                var osDiskBytes      = node.Metadata.Vm.GetOsDisk(cluster.Definition);
+                var processors  = node.Metadata.Vm.GetProcessors(cluster.Definition);
+                var memoryBytes = node.Metadata.Vm.GetMemory(cluster.Definition);
+                var osDiskBytes = node.Metadata.Vm.GetOsDisk(cluster.Definition);
 
                 node.Status = $"create: virtual machine";
                 hyperv.AddVm(
@@ -658,9 +657,9 @@ namespace Neon.Kube
                     drivePath:      osDrivePath,
                     switchName:     switchName);
 
-                // Create a temporary ISO with the [neon-node-prep.sh] script, mount it
+                // Create a temporary ISO with the [neon-init.sh] script, mount it
                 // to the VM and then boot the VM for the first time.  The script on the
-                // ISO will be executed automatically by the [neon-node-prep] service
+                // ISO will be executed automatically by the [neon-init] service
                 // preinstalled on the VM image and the script will configure the secure 
                 // SSH password and then the network.
                 //
@@ -674,8 +673,9 @@ namespace Neon.Kube
                     // Create a temporary ISO with the prep script and mount it
                     // to the node VM.
 
-                    node.Status = $"mount: neon-node-prep iso";
-                    tempIso     = KubeHelper.CreateNodePrepIso(node.Cluster.Definition, node.Metadata, secureSshPassword);
+                    node.Status = $"mount: neon-init iso";
+                    tempIso     = KubeHelper.CreateNeonInitIso(node.Cluster.Definition, node.Metadata, secureSshPassword);
+
                     hyperv.InsertVmDvd(vmName, tempIso.Path);
 
                     // Start the VM for the first time with the mounted ISO.  The network
@@ -686,7 +686,7 @@ namespace Neon.Kube
 
                     // Update the node credentials to use the secure password and then wait for the node to boot.
 
-                    node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUsername, secureSshPassword));
+                    node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, secureSshPassword));
 
                     node.Status = $"connecting...";
                     node.WaitForBoot();

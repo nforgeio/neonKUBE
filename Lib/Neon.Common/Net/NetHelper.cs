@@ -975,18 +975,23 @@ namespace Neon.Net
         /// </remarks>
         public static IPAddress GetRoutableIpAddress()
         {
+            if (!NetworkInterface.GetIsNetworkAvailable())
+            {
+                return null;
+            }
+
             // Look for an active non-loopback interface with the best speed
             // that also has IPv4 addresses assigned.
 
             var activeInterface = NetworkInterface.GetAllNetworkInterfaces()
                 .OrderByDescending(i => i.Speed)
                 .FirstOrDefault(
-                    netInterface =>
+                    @interface =>
                     {
                         // Make sure that the interface has IPv4 addresses assigned and also that
                         // the interface is assigned a default gateway.
 
-                        var ipProperties = netInterface.GetIPProperties();
+                        var ipProperties = @interface.GetIPProperties();
 
                         if (ipProperties == null || ipProperties.GatewayAddresses.IsEmpty())
                         {
@@ -995,10 +1000,10 @@ namespace Neon.Net
 
                         // Filter out loopback interfaces, TAP interfaces and interfaces that aren't up.
 
-                        if (netInterface.NetworkInterfaceType == NetworkInterfaceType.Loopback || 
-                            netInterface.Description.StartsWith("TAP-") ||
-                            netInterface.Description == "Hyper-V Virtual Ethernet Adapter" ||
-                            netInterface.OperationalStatus != OperationalStatus.Up)
+                        if (@interface.NetworkInterfaceType == NetworkInterfaceType.Loopback || 
+                            @interface.Description.StartsWith("TAP-") ||
+                            @interface.Description == "Hyper-V Virtual Ethernet Adapter" ||
+                            @interface.OperationalStatus != OperationalStatus.Up)
                         {
                             return false;
                         }
@@ -1019,6 +1024,57 @@ namespace Neon.Net
             return activeInterface.GetIPProperties().UnicastAddresses
                 .First(address => address.Address.AddressFamily == AddressFamily.InterNetwork)
                 .Address;
+        }
+
+        /// <summary>
+        /// Returns basic information about the current network connection including the
+        /// machine's routable IP address, the network CIDR and gateway as well as the
+        /// DNS server addresses.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="NetworkConfiguration"/> with the information or <c>null</c> 
+        /// when the computer doesn't appear to be connected to a network.
+        /// </returns>
+        /// <remarks>
+        /// This implementation is somewhat fragile because it relies on <see cref="GetRoutableIpAddress()"/> which
+        /// uses heuristics to try to identify a suitable connected network.  This may not work as expected for machines
+        /// with multiple active connections to different networks.
+        /// </remarks>
+        public static NetworkConfiguration GetNetworkConfiguration()
+        {
+            var routableIpAddress = GetRoutableIpAddress();
+
+            if (routableIpAddress == null)
+            {
+                return null;
+            }
+
+            foreach (var @interface in NetworkInterface.GetAllNetworkInterfaces())
+            {
+                var ipProperties = @interface.GetIPProperties();
+
+                if (ipProperties != null)
+                {
+                    foreach (var unicastAddress in ipProperties.UnicastAddresses)
+                    {
+                        if (NetHelper.AddressEquals(unicastAddress.Address, routableIpAddress))
+                        {
+                            // This is the interface handling the routable address.
+
+                            return new NetworkConfiguration()
+                            {
+                                InterfaceName = @interface.Name,
+                                Address       = routableIpAddress.ToString(),
+                                Subnet        = new NetworkCidr(routableIpAddress, unicastAddress.IPv4Mask).ToString(),
+                                Gateway       = ipProperties.GatewayAddresses.FirstOrDefault(gatewayAddr => gatewayAddr.Address.AddressFamily == AddressFamily.InterNetwork).Address.ToString(),
+                                NameServers   = ipProperties.DnsAddresses.Select(address => address.ToString()).ToArray()
+                            };
+                        }
+                    }
+                }
+            }
+
+            return null;
         }
     }
 }

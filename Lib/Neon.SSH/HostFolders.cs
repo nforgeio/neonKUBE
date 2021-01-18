@@ -56,23 +56,6 @@ namespace Neon.SSH
         public static string NeonHome(string username) => $"/home/{username}/.neon";
 
         /// <summary>
-        /// Path to a user archive directory.
-        /// </summary>
-        /// <param name="username">The username.</param>
-        /// <returns>The directory path.</returns>
-        public static string Archive(string username) => $"{NeonHome(username)}/archive";
-
-        /// <summary>
-        /// Path to the cluster executable files directory.
-        /// </summary>
-        public const string Bin = "/lib/neonkube/bin";
-
-        /// <summary>
-        /// Path to the cluster configuration directory.
-        /// </summary>
-        public const string Config = "/etc/neonkube";
-
-        /// <summary>
         /// Path to the user download directory.
         /// </summary>
         /// <param name="username">The username.</param>
@@ -96,25 +79,10 @@ namespace Neon.SSH
         public static string Home(string username) => $"/home/{username}";
 
         /// <summary>
-        /// Path to the cluster management scripts directory.
-        /// </summary>
-        public const string Scripts = "/lib/neonkube/scripts";
-
-        /// <summary>
-        /// Path to the cluster setup scripts directory.
-        /// </summary>
-        public const string Setup = "/lib/neonkube/setup";
-
-        /// <summary>
-        /// Path to the cluster setup state directory.
-        /// </summary>
-        public const string State = "/var/local/neonkube";
-
-        /// <summary>
         /// Root folder on the local tmpfs (shared memory) folder where 
         /// cluster will persist misc temporary files.
         /// </summary>
-        public const string Tmpfs = "/dev/shm/neonkube";
+        public const string Tmpfs = "/dev/shm/neonssh";
 
         /// <summary>
         /// Path to a user upload directory.

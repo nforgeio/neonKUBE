@@ -265,7 +265,7 @@ namespace NeonCli
                     new Folder("Ubuntu-20.04",
                         folders: new List<Folder>()
                         {
-                            new Folder("binary",
+                            new Folder("tools",
                                 files: new List<File>()
                                 {
                                     new File("safe-apt-get.sh", hasVariables: true)
@@ -278,6 +278,7 @@ namespace NeonCli
                             new Folder("setup",
                                 files: new List<File>()
                                 {
+                                    new File("setup-cri-o.sh", hasVariables: true),
                                     new File("setup-disk.sh", hasVariables: true),
                                     new File("setup-docker.sh", hasVariables: true),
                                     new File("setup-environment.sh", hasVariables: true),

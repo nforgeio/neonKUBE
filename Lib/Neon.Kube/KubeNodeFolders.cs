@@ -56,13 +56,6 @@ namespace Neon.Kube
         public static string NeonHome(string username) => $"/home/{username}/.neon";
 
         /// <summary>
-        /// Path to a user archive directory.
-        /// </summary>
-        /// <param name="username">The username.</param>
-        /// <returns>The directory path.</returns>
-        public static string Archive(string username) => $"{NeonHome(username)}/archive";
-
-        /// <summary>
         /// Path to the cluster executable files directory.
         /// </summary>
         public const string Bin = "/lib/neonkube/bin";
@@ -87,6 +80,11 @@ namespace Neon.Kube
         /// <param name="username">The username.</param>
         /// <returns>The directory path.</returns>
         public static string Exec(string username) => $"{NeonHome(username)}/exec";
+
+        /// <summary>
+        /// Path to the cluster setup Helm charts folder.
+        /// </summary>
+        public const string Helm = "/lib/neonkube/helm";
 
         /// <summary>
         /// Path to a user archive directory.

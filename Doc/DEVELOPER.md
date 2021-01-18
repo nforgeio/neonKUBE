@@ -66,21 +66,25 @@ Follow the steps below to configure a development or test workstation:
   * Click **Individual components**, type *Git* in the search box and select **Git for Windows** and **GitHub extension for Visual Studio**
   * Click **Install** (and take a coffee break)
   * Apply any pending **Visual Studio updates**
-  * **Close** Visual Studio and install any updates
-  
-8. Create a **shortcut** for Visual Studio and configure it to run as **administrator**.  To build and run neonKUBE applications and services, **Visual Studio must be running with elevated privileges**.
+  * **Close** Visual Studio to install any updates
 
-9. Install some SDKs:
+8. Disable **Python Import Warnings** via **Tools/Options: by unchecking this**
+
+   ![System Tray](Images/Developer/PythonImports.png?raw=true)
+  
+9. Create a **shortcut** for Visual Studio and configure it to run as **administrator**.  To build and run neonKUBE applications and services, **Visual Studio must be running with elevated privileges**.
+
+10. Install some SDKs:
    * Install .NET Core SDK v3.1.403 from [here](https://dotnet.microsoft.com/download/dotnet-core/3.1)
    * Install **.NET Framework 4.8 Developer Pack** from [here](https://dotnet.microsoft.com/download/thank-you/net48-developer-pack)
 
-10. Install **Visual Studio Code** from [here](https://code.visualstudio.com/download)
+11. Install **Visual Studio Code** from [here](https://code.visualstudio.com/download)
 
-11. Configure the GOLANG development environment:
+12. Configure the GOLANG development environment:
 
     * Install **go1.13.windows-amd64.msi** or later for Windows from: [here](https://golang.org/dl/)
 
-12. Install **Docker for Windows (Stable)** from [here](http://hub.docker.com)
+13. Install **Docker for Windows (Stable)** from [here](http://hub.docker.com)
 
     * You'll need to create a DockerHub account if you don't already have one.
     * **Right-click** the Docker icon in the system tray and select **Settings...**
@@ -95,7 +99,7 @@ Follow the steps below to configure a development or test workstation:
     * Click **Apply**
     * **IMPORTANT:** **Do not enable WSL2** support if available.  WSL2 doesn't support IPv4 loopback addresses which will result in failed unit tests.
 
-13. **Clone** the [https://github.com/nforgeio/neonKUBE](https://github.com/nforgeio/neonKUBE) repository to your workstation:
+14. **Clone** the [https://github.com/nforgeio/neonKUBE](https://github.com/nforgeio/neonKUBE) repository to your workstation:
 
     * **IMPORTANT:** All neonFORGE related repositories must be cloned within the same parent directory and their folder names cannot be changed.
     * Create an individual GitHub account [here](https://github.com/join?source=header-home) if you don't already have one
@@ -106,14 +110,14 @@ Follow the steps below to configure a development or test workstation:
     * Choose or enter the directory where the repository will be cloned.  This defaults to a user specific folder.  I typically change this to a global folder to keep the file paths short.
     * Click **Clone**
 
-14. Configure the build **environment variables**:
+15. Configure the build **environment variables**:
 
     * Open **File Explorer**
     * Navigate to the directory holding the cloned repository
     * **Right-click** on **buildenv.cmd** and then **Run as adminstrator**
     * Press ENTER to close the CMD window when the script is finished
   
-15. **Clone** the other neonFORGE repos to the same directory as **neonKUBE** without changing their folder names:
+16. **Clone** the other neonFORGE repos to the same directory as **neonKUBE** without changing their folder names:
 
     * [https://github.com/nforgeio/temporal-samples](https://github.com/nforgeio/temporal-samples)
     * [https://github.com/nforgeio/cadence-samples](https://github.com/nforgeio/cadence-samples)
@@ -135,15 +139,15 @@ Follow the steps below to configure a development or test workstation:
     git clone https://github.com/nforgeio/temporal-samples.git
     ```
 
-16. **Close** any running instances of **Visual Studio**
+17. **Close** any running instances of **Visual Studio**
 
-17. Install the latest release of **neonKUBE** from [here](https://github.com/nforgeio/neonKUBE/releases)
+18. Install the latest release of **neonKUBE** from [here](https://github.com/nforgeio/neonKUBE/releases)
 
-18. Install **7-Zip (32-bit)** (using the Windows *.msi* installer) from [here](http://www.7-zip.org/download.html)
+19. Install **7-Zip (32-bit)** (using the Windows *.msi* installer) from [here](http://www.7-zip.org/download.html)
 
-19. Install **Cygwin - setup-x86-64.exe** (all packages and default path) from: [here](https://www.cygwin.com/setup-x86_64.exe)
+20. Install **Cygwin - setup-x86-64.exe** (all packages and default path) from: [here](https://www.cygwin.com/setup-x86_64.exe)
 
-20. Many server components are deployed to Linux, so you’ll need terminal and file management programs.  We’re currently standardizing on **PuTTY** for the terminal and **WinSCP** for file transfer. install both programs to their default directories:
+21. Many server components are deployed to Linux, so you’ll need terminal and file management programs.  We’re currently standardizing on **PuTTY** for the terminal and **WinSCP** for file transfer. install both programs to their default directories:
 
     * Install **WinSCP** from [here](http://winscp.net/eng/download.php) (I typically use the "Explorer" interface)
     * Install **PuTTY** from [here](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html)
@@ -152,17 +156,17 @@ Follow the steps below to configure a development or test workstation:
     
       ![WinSCP Hidden Files](Images/Developer/WinSCPHiddenFiles.png?raw=true)
 
-21. Restart Visual Studio (to pick up the environment changes).
+22. Restart Visual Studio (to pick up the environment changes).
 
-22. Confirm that the solution builds:
+23. Confirm that the solution builds:
 
     * Run **Visual Studio** as **administrator**
     * Open **$/neonKUBE.sln** (where **$** is the repo root directory)
     * Select **Build/Rebuild** Solution
 
-23. Install **InnoSetup** from the **$/External** directory using default settings.  This is required to build the Windows neonKUBE installer.
+24. Install **InnoSetup** from the **$/External** directory using default settings.  This is required to build the Windows neonKUBE installer.
 
-24. *Optional*: Install **OpenVPN**
+25. *Optional*: Install **OpenVPN**
 
     * Download the Windows Installer from [here](https://openvpn.net/index.php/open-source/downloads.html)
     * Run this command as administrator in a CMD window to install a second TAP interface:
@@ -171,11 +175,11 @@ Follow the steps below to configure a development or test workstation:
       ```
     * Obtain your WowRacks VPN credentials from another developer who has ADMIN access.
 
-25. *Optional*: Install **Notepad++** from [here](https://notepad-plus-plus.org/download)
+26. *Optional*: Install **Notepad++** from [here](https://notepad-plus-plus.org/download)
 
-26. *Optional*: Install **Postman** REST API tool from [here](https://www.getpostman.com/postman)
+27. *Optional*: Install **Postman** REST API tool from [here](https://www.getpostman.com/postman)
 
-27. *Optional*: Install **Cmdr/Mini** command shell:
+28. *Optional*: Install **Cmdr/Mini** command shell:
 
   * **IMPORTANT: Don't install the Full version** to avoid installing Linux command line tools that might conflict with the Cygwin tools installed earlier.
   * Download the ZIP archive from: [here](http://cmder.net/)
@@ -184,9 +188,9 @@ Follow the steps below to configure a development or test workstation:
   * Run Cmdr and configure settings as desired.
   * Consider removing the alias definitions in `$\config\user-aliases.cmd` file so that commands like `ls` will work properly.  I deleted all lines beneath the first `@echo off`.
 
-28. *Optional*: Install the latest version of **XCP-ng Center** from [here](https://github.com/xcp-ng/xenadmin/releases) if you'll need to manage Virtual Machines hosted on XCP-ng.
+29. *Optional*: Install the latest version of **XCP-ng Center** from [here](https://github.com/xcp-ng/xenadmin/releases) if you'll need to manage Virtual Machines hosted on XCP-ng.
 
-29. *Optional*: Developers who will be publishing releases will need to:
+30. *Optional*: Developers who will be publishing releases will need to:
 
     * **Download:** the latest recommended (at least **v5.8.0**) **nuget.exe** from [here](https://www.nuget.org/downloads) and put this somewhere in your `PATH`
     * Obtain a nuget API key from a maintainer and install the key on your workstation via:
@@ -206,7 +210,7 @@ Follow the steps below to configure a development or test workstation:
       * Click **Next** until you get to the last page.
       * Click **Close** to close the SHFB installer.
 
-30. *Optional*: Developers who will be publishing releases will need to configure your Personal Access Token (PAT) and GitHub username for GitHub registery access:
+31. *Optional*: Developers who will be publishing releases will need to configure your Personal Access Token (PAT) and GitHub username for GitHub registery access:
 
     * Go to: https://github.com (and login if necessary)
     * Click your **Profile Picture** at the top-right and click **Settings**
@@ -243,8 +247,8 @@ Follow the steps below to configure a development or test workstation:
     ```
     * Close and reopen any Visual Studio or command windows to pick up the change.
 
-31. *Optional*: Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
+32. *Optional*: Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
 
-32: *Optional:* Install the **AWS client version 2** from: [here](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-windows.html)
+33: *Optional:* Install the **AWS client version 2** from: [here](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-windows.html)
 
-33: *Optional:* Developers authorized to perform releases will need to following the README.md instructions in the neonCLOUD repo to configure credentials for the GitHub Releases and the Container Registry.
+34: *Optional:* Maintainers authorized to perform releases will need to following the README.md instructions in the neonCLOUD repo to configure credentials for the GitHub Releases and the Container Registry.

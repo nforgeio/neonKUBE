@@ -712,5 +712,32 @@ namespace TestCommon
             Assert.True(NetHelper.IsValidHost(longestHost));
             Assert.False(NetHelper.IsValidHost(longestHost + "f"));
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void GetNetworkConfiguration()
+        {
+            var routableAddress = NetHelper.GetRoutableIpAddress();
+            var netConfig       = NetHelper.GetNetworkConfiguration();
+
+            if (routableAddress == null)
+            {
+                // The workstation looks like it's not connected to a network.
+
+                Assert.Null(netConfig);
+                return;
+            }
+
+            // There isn't an easy way to verify the configuration values without
+            // parsing platform specific tools output so we're just going to basic
+            // checks here.
+
+            Assert.NotNull(netConfig);
+            Assert.NotNull(netConfig.InterfaceName);
+            Assert.Equal(routableAddress.ToString(), netConfig.Address);
+            Assert.NotEmpty(netConfig.NameServers);
+            Assert.NotNull(netConfig.Subnet);
+            Assert.NotNull(netConfig.Gateway);
+        }
     }
 }

@@ -150,4 +150,7 @@ Publish Neon.Xunit.Temporal         $libraryVersion
 Publish Neon.Xunit.YugaByte         $libraryVersion
 Publish Neon.YugaByte               $libraryVersion
 
+""
+"** Package publication completed"
+""
 pause

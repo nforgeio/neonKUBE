@@ -53,11 +53,6 @@ namespace NeonCli
         public const string Version = Build.NeonDesktopVersion;
     
         /// <summary>
-        /// CURL command common options.
-        /// </summary>
-        public const string CurlOptions = "-4fsSLv --retry 10 --retry-delay 30"; 
-
-        /// <summary>
         /// Program entry point.
         /// </summary>
         /// <param name="args">The command line arguments.</param>
@@ -79,7 +74,6 @@ COMMAND SUMMARY:
     neon cluster setup      [CLUSTER-DEF]
     neon couchbase          COMMNAND
     neon generate iso       SOURCE-FOLDER ISO-PATH
-    neon generate prep-fvd  IP-ADDRESS VFD-PATH
     neon generate models    [OPTIONS] ASSEMBLY-PATH [OUTPUT-PATH]
     neon login              COMMAND
     neon logout
@@ -206,7 +200,6 @@ You can disable the use of this encrypted folder by specifying
                     new CouchbaseQueryCommand(),
                     new CouchbaseUpsertCommand(),
                     new GenerateCommand(),
-                    new GeneratePrepVfdCommand(),
                     new GenerateIsoCommand(),
                     new GenerateModelsCommand(),
                     new LoginCommand(),
@@ -223,8 +216,6 @@ You can disable the use of this encrypted folder by specifying
                     new PasswordListCommand(),
                     new PasswordRemoveCommand(),
                     new PasswordSetCommand(),
-                    new PrepareCommand(),
-                    new PrepareNodeTemplateCommand(),
                     new RunCommand(),
                     new ScpCommand(),
                     new SshCommand(),
@@ -303,7 +294,7 @@ You can disable the use of this encrypted folder by specifying
 
                 // Load the password from the command line options, if present.
 
-                MachinePassword = LeftCommandLine.GetOption("--machine-password", KubeConst.VmTemplatePassword);
+                MachinePassword = LeftCommandLine.GetOption("--machine-password", KubeConst.SysAdminPassword);
 
                 // Handle the other options.
 
@@ -366,7 +357,7 @@ You can disable the use of this encrypted folder by specifying
                 if (command.NeedsSshCredentials(CommandLine) && string.IsNullOrEmpty(MachinePassword))
                 {
                     Console.WriteLine();
-                    Console.WriteLine($"    Enter cluster SSH password for [{KubeConst.SysAdminUsername}]:");
+                    Console.WriteLine($"    Enter cluster SSH password for [{KubeConst.SysAdminUser}]:");
                     Console.WriteLine($"    ------------------------------------------");
 
                     while (string.IsNullOrEmpty(MachinePassword))
@@ -560,7 +551,7 @@ You can disable the use of this encrypted folder by specifying
         /// The password used to secure the cluster nodes before they are setup.  This defaults
         /// to <b>sysadmin0000</b> which is used for the cluster machine templates.
         /// </summary>
-        public static string MachinePassword { get; set; } = KubeConst.VmTemplatePassword;
+        public static string MachinePassword { get; set; } = KubeConst.SysAdminPassword;
 
         /// <summary>
         /// Returns the log folder path or a <c>null</c> or empty string 
@@ -618,9 +609,9 @@ You can disable the use of this encrypted folder by specifying
 
             SshCredentials sshCredentials;
 
-            if (!string.IsNullOrEmpty(KubeConst.SysAdminUsername) && !string.IsNullOrEmpty(Program.MachinePassword))
+            if (!string.IsNullOrEmpty(KubeConst.SysAdminUser) && !string.IsNullOrEmpty(Program.MachinePassword))
             {
-                sshCredentials = SshCredentials.FromUserPassword(KubeConst.SysAdminUsername, Program.MachinePassword);
+                sshCredentials = SshCredentials.FromUserPassword(KubeConst.SysAdminUser, Program.MachinePassword);
             }
             else if (KubeHelper.CurrentContext != null)
             {
@@ -739,15 +730,8 @@ You can disable the use of this encrypted folder by specifying
             }
             finally
             {
-                if (File.Exists(pemKeyPath))
-                {
-                    File.Delete(pemKeyPath);
-                }
-
-                if (File.Exists(ppkKeyPath))
-                {
-                    File.Delete(ppkKeyPath);
-                }
+                NeonHelper.DeleteFile(pemKeyPath);
+                NeonHelper.DeleteFile(ppkKeyPath);
             }
         }
 
@@ -850,138 +834,6 @@ You can disable the use of this encrypted folder by specifying
                 {
                     // $todo(jefflill): Implement this?
                 }
-            }
-        }
-
-        /// <summary>
-        /// Optionally set to the registry to be used to override any explicit or implicit <b>ghcr.io/neonrelease</b>
-        /// or <b>ghcr.io/neonrelease-dev</b> organizations specified when deploying or updating a neonKUBE.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// This property is <c>null</c> by default but may be specified using the <b>--image-reg=REGISTRY</b>
-        /// command line option.  The main purpose of this is support development and testing scenarios.
-        /// </para>
-        /// </remarks>
-        public static string DockerImageReg { get; private set; } = null;
-
-        /// <summary>
-        /// Optionally set to the tag to be used to override any explicit or implicit <b>:latest</b>
-        /// image tags specified when deploying or updating a neonKUBE.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// This property is <c>null</c> by default but may be specified using the <b>--image-tag=TAG</b>
-        /// command line option.  The main purpose of this is support development and testing by specifying
-        /// something like <b>--image-tag=BRANCH-latest</b>, where <b>BRANCH</b> is the current development
-        /// branch.
-        /// </para>
-        /// <para>
-        /// This will direct <b>neon-cli</b> to use images built from the branch rather than the default
-        /// production images without needing to modify cluster configuration files.  All the developer
-        /// needs to do is ensure that all of the required images were built from that branch first and
-        /// then published to Docker Hub.
-        /// </para>
-        /// </remarks>
-        public static string DockerImageTag { get; private set; } = null;
-
-        /// <summary>
-        /// Resolves a Docker Image name/tag into the image specification to be actually deployed, taking
-        /// the <see cref="DockerImageReg"/> and <see cref="DockerImageTag"/> properties into account.
-        /// </summary>
-        /// <param name="image">The input image specification.</param>
-        /// <returns>The output specification.</returns>
-        /// <remarks>
-        /// <para>
-        /// If <see cref="DockerImageReg"/> is empty and <paramref name="image"/> specifies the 
-        /// <see cref="KubeConst.NeonProdRegistry"/> and the Git branch used to build <b>neon-cli</b>
-        /// is not <b>PROD</b>, then the image registry will be set to <see cref="KubeConst.NeonDevRegistry"/>.
-        /// This ensures that non-production <b>neon-cli </b> builds will use the development Docker
-        /// images by default.
-        /// </para>
-        /// <para>
-        /// If <see cref="DockerImageReg"/> is not empty  and <paramref name="image"/> specifies the 
-        /// <see cref="KubeConst.NeonProdRegistry"/> then <see cref="DockerImageReg"/> will
-        /// replace the registry in the image.
-        /// </para>
-        /// <para>
-        /// If <see cref="DockerImageTag"/> is empty, then this method simply returns the <paramref name="image"/>
-        /// argument as passed.  Otherwise, if the image argument implicitly or explicitly specifies the 
-        /// <b>:latest</b> tag, then the image returned will be tagged with <see cref="DockerImageTag"/>
-        /// when that's not empty or <b>:latest</b> for the <b>PROD</b> branch or <b>:BRANCH-latest</b> 
-        /// for non-<b>PROD</b> branches.
-        /// </para>
-        /// <para>
-        /// In all cases where <paramref name="image"/> specifies a non-latest tag, then the argument
-        /// will be returned unchanged.
-        /// </para>
-        /// </remarks>
-        public static string ResolveDockerImage(string image)
-        {
-            if (string.IsNullOrEmpty(image))
-            {
-                return image;
-            }
-
-            // Extract the registry from the image.  Note that this will
-            // be empty for official images on Docker Hub.
-
-            var registry = (string)null;
-            var p        = image.IndexOf('/');
-
-            if (p != -1)
-            {
-                registry = image.Substring(0, p);
-            }
-
-            if (!string.IsNullOrEmpty(registry) && registry == NeonHelper.NeonProdRegistry)
-            {
-                var imageWithoutRegistry = image.Substring(registry.Length);
-
-                if (!string.IsNullOrEmpty(DockerImageReg))
-                {
-                    image = DockerImageReg + imageWithoutRegistry;
-                }
-                else if (!IsRelease)
-                {
-                    image = NeonHelper.NeonDevRegistry + imageWithoutRegistry;
-                }
-            }
-
-            if (string.IsNullOrEmpty(image))
-            {
-                return image;
-            }
-
-            var normalized = image;
-
-            if (normalized.IndexOf(':') == -1)
-            {
-                // The image implicitly specifies [:latest].
-
-                normalized += ":latest";
-            }
-
-            if (normalized.EndsWith(":latest"))
-            {
-                if (!string.IsNullOrEmpty(DockerImageTag))
-                {
-                    return normalized.Replace(":latest", $":{DockerImageTag}");
-                }
-                else if (IsRelease)
-                {
-                    return normalized;
-                }
-                else
-                {
-#pragma warning disable 0436
-                    return normalized.Replace(":latest", $":{ThisAssembly.Git.Branch.ToLowerInvariant()}-latest");
-#pragma warning restore 0436
-                }
-            }
-            else
-            {
-                return image;
             }
         }
 

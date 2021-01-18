@@ -41,4 +41,4 @@ COPY conf/*         /etc/td-agent/config.d/
 RUN chmod 700 /*.sh
 
 # Entry point
-ENTRYPOINT [/docker-entrypoint.sh"]
+ENTRYPOINT ["/docker-entrypoint.sh"]

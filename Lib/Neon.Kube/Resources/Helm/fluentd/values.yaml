@@ -1,0 +1,151 @@
+# Default values for fluentd.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+
+image:
+  organization: neon-system-registry
+  repository: neon-log-collector
+  tag: 4.0.1-1
+  pullPolicy: Always
+
+logLevel: info
+
+output:
+  host: neon-logs-elasticsearch-master.monitoring
+  port: 9200
+  scheme: http
+  sslVersion: TLSv1
+  buffer_chunk_limit: 64MB
+  buffer_queue_limit: 32
+
+env: {}
+
+# Extra Environment Values - allows yaml definitions
+extraEnvVars:
+#  - name: VALUE_FROM_SECRET
+#    valueFrom:
+#      secretKeyRef:
+#        name: secret_name
+#        key: secret_key
+
+service:
+  type: ClusterIP
+  # type: NodePort
+  # nodePort:
+  # Used to create Service records
+  ports:
+    - name: "monitor-agent"
+      protocol: TCP
+      containerPort: 24220
+    - name: "monitor-agent-1"
+      protocol: TCP
+      containerPort: 24224
+    - name: "monitor-agent-2"
+      protocol: TCP
+      containerPort: 24284
+
+metrics:
+  enabled: true
+  service:
+    port: 24231
+  serviceMonitor:
+    enabled: true
+    additionalLabels: {}
+    namespace: monitoring
+    interval: 60s
+    scrapeTimeout: 10s
+
+annotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "24231"
+  traffic.sidecar.istio.io/excludeInboundPorts: '24231'
+  traffic.sidecar.istio.io/excludeOutboundPorts: '24231'
+
+ingress:
+  enabled: false
+  annotations:
+    kubernetes.io/ingress.class: nginx
+#    kubernetes.io/tls-acme: "true"
+#    # Depending on which version of ingress controller you may need to configure properly - https://kubernetes.github.io/ingress-nginx/examples/rewrite/#rewrite-target
+#    nginx.ingress.kubernetes.io/rewrite-target: /
+  labels: []
+  # If doing TCP or UDP ingress rule don't forget to update your Ingress Controller to accept TCP connections - https://kubernetes.github.io/ingress-nginx/user-guide/exposing-tcp-udp-services/
+  hosts:
+#     - name: "http-input.local"
+#       protocol: TCP
+#       servicePort: 9880
+#       path: /
+  tls: {}
+  # Secrets must be manually created in the namespace.
+#    - secretName: http-input-tls
+#      hosts:
+#        - http-input.local
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #  cpu: 500m
+  #  memory: 200Mi
+  # requests:
+  #  cpu: 500m
+  #  memory: 200Mi
+
+## Persist data to a persistent volume
+persistence:
+  enabled: false
+
+  ## If defined, storageClassName: <storageClass>
+  ## If set to "-", storageClassName: "", which disables dynamic provisioning
+  ## If undefined (the default) or set to null, no storageClassName spec is
+  ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+  ##   GKE, AWS & OpenStack)
+  ##
+  # storageClass: "-"
+  # annotations: {}
+  accessMode: ReadWriteOnce
+  size: 10Gi
+
+rbac:
+  # Specifies whether RBAC resources should be created
+  create: true
+
+serviceAccount:
+  # Specifies whether a ServiceAccount should be created
+  create: true
+  # The name of the ServiceAccount to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name:
+
+# Enable autoscaling using HorizontalPodAutoscaler
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 60
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 60
+          
+# Consider to set higher value when using in conjuction with autoscaling
+# Full description about this field: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#pod-v1-core
+terminationGracePeriodSeconds: 90
+
+nodeSelector: 
+  neonkube.io/monitor.logs-internal: "true"
+
+tolerations: []
+
+affinity: {}

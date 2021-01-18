@@ -33,6 +33,11 @@ namespace Neon.Kube
     public static class KubeVersions
     {
         /// <summary>
+        /// The current neonKUBE version.
+        /// </summary>
+        public const string NeonKubeVersion = "0.1.0-alpha";
+
+        /// <summary>
         /// The version of Kubernetes to be installed.
         /// </summary>
         public const string KubernetesVersion = "1.19.5";
@@ -58,9 +63,9 @@ namespace Neon.Kube
         public const string KubeletPackageVersion = "1.19.5-00";
 
         /// <summary>
-        /// The version of Docker to be installed.
+        /// The version of CRI-O container runtime to be installed.
         /// </summary>
-        public const string DockerVersion = "docker.ce-19.03.12";
+        public const string CrioVersion = "1.18";
 
         /// <summary>
         /// The version of Calico to install.
@@ -76,5 +81,20 @@ namespace Neon.Kube
         /// The version of Helm to be installed.
         /// </summary>
         public const string HelmVersion = "3.3.1";
+
+        /// <summary>
+        /// The version of CoreDNS to be installed.
+        /// </summary>
+        public const string CoreDNSVersion = "1.6.2";
+
+        /// <summary>
+        /// The version of Prometheus to be installed.
+        /// </summary>
+        public const string PrometheusVersion = "v2.22.1";
+
+        /// <summary>
+        /// The version of AlertManager to be installed.
+        /// </summary>
+        public const string AlertManagerVersion = "v0.21.0";
     }
 }

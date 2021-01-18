@@ -49,7 +49,6 @@ using Neon.Time;
 
 using k8s;
 using k8s.Models;
-using ICSharpCode.SharpZipLib.Tar;
 
 namespace NeonCli
 {
@@ -99,7 +98,7 @@ namespace NeonCli
         // Implementation
 
         private const string usage = @"
-Configures a neonKUBE as described in the cluster definition file.
+Configures a neonKUBE cluster as described in the cluster definition file.
 
 USAGE: 
 
@@ -128,7 +127,6 @@ OPTIONS:
         private ClusterLogin            clusterLogin;
         private ClusterProxy            cluster;
         private HostingManager          hostingManager;
-        private KubeSetupInfo           kubeSetupInfo;
         private HttpClient              httpClient;
         private Kubernetes              k8sClient;
         private string                  branch;
@@ -217,24 +215,12 @@ OPTIONS:
 
                 kubeContext = new KubeConfigContext(contextName);
 
-                if (clusterLogin.SetupDetails?.SetupInfo != null)
-                {
-                    kubeSetupInfo = clusterLogin.SetupDetails.SetupInfo;
-                }
-                else
-                {
-                    using (var client = new HeadendClient())
-                    {
-                        kubeSetupInfo = client.GetSetupInfoAsync(clusterLogin.ClusterDefinition).Result;
-                    }
-                }
-
                 KubeHelper.InitContext(kubeContext);
 
                 // Initialize the cluster proxy and the hbosting manager.
 
                 cluster        = new ClusterProxy(kubeContext, Program.CreateNodeProxy<NodeDefinition>, appendToLog: true, defaultRunOptions: RunOptions.LogOutput | RunOptions.FaultOnError);
-                hostingManager = new HostingManagerFactory(() => HostingLoader.Initialize()).GetManager(cluster, kubeSetupInfo, Program.LogPath);
+                hostingManager = new HostingManagerFactory(() => HostingLoader.Initialize()).GetManager(cluster, Program.LogPath);
 
                 if (hostingManager == null)
                 {
@@ -244,7 +230,7 @@ OPTIONS:
 
                 // Update the cluster node SSH credentials to use the secure password.
 
-                var sshCredentials = SshCredentials.FromUserPassword(KubeConst.SysAdminUsername, clusterLogin.SshPassword);
+                var sshCredentials = SshCredentials.FromUserPassword(KubeConst.SysAdminUser, clusterLogin.SshPassword);
 
                 foreach (var node in cluster.Nodes)
                 {
@@ -282,7 +268,7 @@ OPTIONS:
 
                     controller.AddGlobalStep("download binaries", () => WorkstationBinaries());
                     controller.AddWaitUntilOnlineStep("connect");
-                    controller.AddNodeStep("verify OS", CommonSteps.VerifyOS);
+                    controller.AddNodeStep("verify OS", node => node.VerifyNodeOS());
 
                     // Write the operation begin marker to all cluster node logs.
 
@@ -295,34 +281,33 @@ OPTIONS:
                     var configureFirstMasterStepLabel = cluster.Definition.Masters.Count() > 1 ? "setup first master" : "setup master";
 
                     controller.AddNodeStep(configureFirstMasterStepLabel,
-                        (node, stepDelay) =>
+                        node =>
                         {
-                            SetupCommon(hostingManager, node, stepDelay);
-                            node.InvokeIdempotentAction("setup/common-restart", () => RebootAndWait(node));
+                            SetupCommon(hostingManager, node);
+                            node.InvokeIdempotent("setup/common-restart", () => RebootAndWait(node));
                             SetupNode(node);
                         },
-                        node => node == cluster.FirstMaster,
-                        stepStaggerSeconds: cluster.Definition.Setup.StepStaggerSeconds);
+                        node => node == cluster.FirstMaster);
 
                     // Perform common configuration for the remaining nodes (if any).
 
                     if (cluster.Definition.Nodes.Count() > 1)
                     {
                         controller.AddNodeStep("setup other nodes",
-                            (node, stepDelay) =>
+                            node =>
                             {
-                                SetupCommon(hostingManager, node, stepDelay);
-                                node.InvokeIdempotentAction("setup/common-restart", () => RebootAndWait(node));
+                                SetupCommon(hostingManager, node);
+                                node.InvokeIdempotent("setup/common-restart", () => RebootAndWait(node));
                                 SetupNode(node);
                             },
-                            node => node != cluster.FirstMaster,
-                            stepStaggerSeconds: cluster.Definition.Setup.StepStaggerSeconds);
+                            node => node != cluster.FirstMaster);
                     }
 
                     //-----------------------------------------------------------------
                     // Kubernetes configuration.
 
-                    controller.AddGlobalStep("etc HA", SetupEtcHaProxy);
+                    controller.AddGlobalStep("install podman", SetupPodman);
+                    controller.AddGlobalStep("etc HA", SetupEtcdHaProxy);
                     controller.AddNodeStep("setup kubernetes", SetupKubernetes);
                     controller.AddGlobalStep("setup cluster", SetupClusterAsync);
 
@@ -336,14 +321,14 @@ OPTIONS:
                     // Verify the cluster.
 
                     controller.AddNodeStep("check masters",
-                        (node, stepDelay) =>
+                        node =>
                         {
                             ClusterDiagnostics.CheckMaster(node, cluster.Definition);
                         },
                         node => node.Metadata.IsMaster);
 
                     controller.AddNodeStep("check workers",
-                        (node, stepDelay) =>
+                        node =>
                         {
                             ClusterDiagnostics.CheckWorker(node, cluster.Definition);
                         },
@@ -428,20 +413,20 @@ OPTIONS:
             {
                 case KubeClientPlatform.Linux:
 
-                    kubeCtlUri = kubeSetupInfo.KubeCtlLinuxUri;
-                    helmUri    = kubeSetupInfo.HelmLinuxUri;
+                    kubeCtlUri = KubeDownloads.KubeCtlLinuxUri;
+                    helmUri    = KubeDownloads.HelmLinuxUri;
                     break;
 
                 case KubeClientPlatform.Osx:
 
-                    kubeCtlUri = kubeSetupInfo.KubeCtlOsxUri;
-                    helmUri    = kubeSetupInfo.HelmOsxUri;
+                    kubeCtlUri = KubeDownloads.KubeCtlOsxUri;
+                    helmUri    = KubeDownloads.HelmOsxUri;
                     break;
 
                 case KubeClientPlatform.Windows:
 
-                    kubeCtlUri = kubeSetupInfo.KubeCtlWindowsUri;
-                    helmUri    = kubeSetupInfo.HelmWindowsUri;
+                    kubeCtlUri = KubeDownloads.KubeCtlWindowsUri;
+                    helmUri    = KubeDownloads.HelmWindowsUri;
                     break;
 
                 default:
@@ -529,10 +514,7 @@ OPTIONS:
                     }
                     finally
                     {
-                        if (File.Exists(cachedTempHelmPath))
-                        {
-                            File.Delete(cachedTempHelmPath);
-                        }
+                        NeonHelper.DeleteFile(cachedTempHelmPath);
                     }
                 }
             }
@@ -543,8 +525,8 @@ OPTIONS:
             // with the requested tool version and overwrite the installed tool if
             // the new one is more current.
 
-            KubeHelper.InstallKubeCtl(kubeSetupInfo);
-            KubeHelper.InstallHelm(kubeSetupInfo);
+            KubeHelper.InstallKubeCtl();
+            KubeHelper.InstallWorkstationHelm();
 
             firstMaster.Status = string.Empty;
         }
@@ -559,12 +541,12 @@ OPTIONS:
         {
             // Configure the node's environment variables.
 
-            CommonSteps.ConfigureEnvironmentVariables(node, cluster.Definition);
+            KubeSetup.ConfigureEnvironmentVariables(node, cluster.Definition);
 
             // Upload the setup and configuration files.
 
-            node.UploadConfigFiles(cluster.Definition, kubeSetupInfo);
-            node.UploadResources(cluster.Definition, kubeSetupInfo);
+            node.UploadConfigFiles(cluster.Definition);
+            node.UploadResources(cluster.Definition);
         }
 
         /// <summary>
@@ -572,8 +554,7 @@ OPTIONS:
         /// </summary>
         /// <param name="hostingManager">The hosting manager.</param>
         /// <param name="node">The target node.</param>
-        /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
-        private void SetupCommon(HostingManager hostingManager, NodeSshProxy<NodeDefinition> node, TimeSpan stepDelay)
+        private void SetupCommon(HostingManager hostingManager, NodeSshProxy<NodeDefinition> node)
         {
             Covenant.Requires<ArgumentNullException>(hostingManager != null, nameof(hostingManager));
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
@@ -595,11 +576,9 @@ OPTIONS:
             //-----------------------------------------------------------------
             // Ensure the following steps are executed only once.
 
-            node.InvokeIdempotentAction("setup/common",
+            node.InvokeIdempotent("setup/common",
                 () =>
                 {
-                    Thread.Sleep(stepDelay);
-
                     if (!Program.Debug)
                     {
                         ConfigureBasic(node);
@@ -607,7 +586,7 @@ OPTIONS:
 
                     // Ensure that the node has been prepared for setup.
 
-                    CommonSteps.PrepareNode(node, cluster.Definition, kubeSetupInfo, hostingManager);
+                    KubeSetup.PrepareNode(node, cluster.Definition, hostingManager);
 
                     // Create the [/mnt-data] folder if it doesn't already exist.  This folder
                     // is where we're going to host the Docker containers and volumes that should
@@ -627,7 +606,7 @@ OPTIONS:
 
                     // Perform basic node setup including changing the hostname.
 
-                    UploadHostname(node);
+                    UpdateHostname(node);
 
                     node.Status = "configure: node basics";
                     node.SudoCommand("setup-node.sh");
@@ -640,7 +619,7 @@ OPTIONS:
         /// <param name="node">The target node.</param>
         private void SetupNode(NodeSshProxy<NodeDefinition> node)
         {
-            node.InvokeIdempotentAction($"setup/{node.Metadata.Role}",
+            node.InvokeIdempotent($"setup/{node.Metadata.Role}",
                 () =>
                 {
                     // Configure the APT package proxy on the masters
@@ -683,14 +662,16 @@ OPTIONS:
                     node.Status = "configure: NTP";
                     node.SudoCommand("setup-ntp.sh");
 
-                    node.Status = "install: docker";
+                    // Setup CRI-O.
+
+                    node.Status = "install: CRI-O";
 
                     var dockerRetry = new LinearRetryPolicy(typeof(TransientException), maxAttempts: 5, retryInterval: TimeSpan.FromSeconds(5));
 
                     dockerRetry.Invoke(
                         () =>
                         {
-                            var response = node.SudoCommand("setup-docker.sh", node.DefaultRunOptions & ~RunOptions.FaultOnError);
+                            var response = node.SudoCommand("setup-cri-o.sh", node.DefaultRunOptions & ~RunOptions.FaultOnError);
 
                             if (response.ExitCode != 0)
                             {
@@ -720,7 +701,7 @@ OPTIONS:
         /// Updates the node hostname and related configuration.
         /// </summary>
         /// <param name="node">The target node.</param>
-        private void UploadHostname(NodeSshProxy<NodeDefinition> node)
+        private void UpdateHostname(NodeSshProxy<NodeDefinition> node)
         {
             // Update the hostname.
 
@@ -754,10 +735,36 @@ ff02::2         ip6-allrouters
         }
 
         /// <summary>
+        /// Setup Podman.
+        /// </summary>
+        private void SetupPodman()
+        {
+            foreach (var node in cluster.Nodes)
+            {
+                node.InvokeIdempotent("setup/setup-podman",
+                    () =>
+                    {
+                        node.Status = "setup: podman";
+
+                        var bundle = CommandBundle.FromScript(
+$@"#!/bin/bash
+source /etc/os-release
+echo ""deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${{VERSION_ID}}/ /"" > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
+wget -nv https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/xUbuntu_${{VERSION_ID}}/Release.key -O- | apt-key add -
+safe-apt-get update -qq
+safe-apt-get -qq --yes install podman-rootless
+ln -s /usr/bin/podman /bin/docker
+");
+                        node.SudoCommand(bundle);
+                    });
+            }
+        }
+
+        /// <summary>
         /// Configures a local HAProxy container that makes the Kubernetes Etc
         /// cluster highly available.
         /// </summary>
-        private void SetupEtcHaProxy()
+        private void SetupEtcdHaProxy()
         {
             var sbHaProxy = new StringBuilder();
 
@@ -797,21 +804,21 @@ $@"
 
             foreach (var node in cluster.Nodes)
             {
-                node.InvokeIdempotentAction("setup/setup-etc-ha",
+                node.InvokeIdempotent("setup/setup-etcd-ha",
                     () =>
                     {
-                        node.Status = "setup: etc HA";
+                        node.Status = "setup: etcd HA";
 
-                        node.UploadText("/etc/neonkube/neon-etc-proxy.cfg", sbHaProxy);
+                        node.UploadText("/etc/neonkube/neon-etcd-proxy.cfg", sbHaProxy);
 
                         node.SudoCommand("docker run",
-                            "--name=neon-etc-proxy",
+                            "--name=neon-etcd-proxy",
                             "--detach",
                             "--restart=always",
-                            "-v=/etc/neonkube/neon-etc-proxy.cfg:/etc/haproxy/haproxy.cfg",
+                            "-v=/etc/neonkube/neon-etcd-proxy.cfg:/etc/haproxy/haproxy.cfg",
                             "--network=host",
-                            "--log-driver=json-file",
-                            $"{NeonHelper.NeonBranchRegistry}/haproxy:{KubeConst.LatestClusterVersion}"
+                            "--log-driver=k8s-file",
+                            $"{NeonHelper.NeonBranchRegistry}/haproxy:neonkube-{KubeConst.NeonKubeVersion}"
                         );
                     });
             }
@@ -821,19 +828,16 @@ $@"
         /// Installs the required Kubernetes related components on a node.
         /// </summary>
         /// <param name="node">The target node.</param>
-        /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
-        private void SetupKubernetes(NodeSshProxy<NodeDefinition> node, TimeSpan stepDelay)
+        private void SetupKubernetes(NodeSshProxy<NodeDefinition> node)
         {
-            node.InvokeIdempotentAction("setup/setup-install-kubernetes",
+            node.InvokeIdempotent("setup/setup-install-kubernetes",
                 () =>
                 {
-                    Thread.Sleep(stepDelay);
-
                     node.Status = "setup: kubernetes apt repository";
 
                     var bundle = CommandBundle.FromScript(
 $@"#!/bin/bash
-curl {Program.CurlOptions} https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+curl {KubeHelper.CurlOptions} https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
 echo ""deb https://apt.kubernetes.io/ kubernetes-xenial main"" > /etc/apt/sources.list.d/kubernetes.list
 safe-apt-get update
 ");
@@ -857,14 +861,14 @@ safe-apt-get update
                     node.SudoCommand(CommandBundle.FromScript(
 @"#!/bin/bash
 
-echo KUBELET_EXTRA_ARGS=--network-plugin=cni --cni-bin-dir=/opt/cni/bin --cni-conf-dir=/etc/cni/net.d > /etc/default/kubelet
+echo KUBELET_EXTRA_ARGS=--network-plugin=cni --cni-bin-dir=/opt/cni/bin --cni-conf-dir=/etc/cni/net.d --feature-gates=\""AllAlpha=false,RunAsGroup=true\"" --container-runtime=remote --cgroup-driver=systemd --container-runtime-endpoint='unix:///var/run/crio/crio.sock' --runtime-request-timeout=5m> /etc/default/kubelet
 systemctl daemon-reload
 service kubelet restart
 "));
 
                     // Download and install the Helm client:
 
-                    node.InvokeIdempotentAction("setup/cluster-helm",
+                    node.InvokeIdempotent("setup/cluster-helm",
                         () =>
                         {
                             node.Status = "install: helm";
@@ -872,7 +876,7 @@ service kubelet restart
                             var helmInstallScript =
 $@"#!/bin/bash
 cd /tmp
-curl {Program.CurlOptions} {kubeSetupInfo.HelmLinuxUri} > helm.tar.gz
+curl {KubeHelper.CurlOptions} {KubeDownloads.HelmLinuxUri} > helm.tar.gz
 tar xvf helm.tar.gz
 cp linux-amd64/helm /usr/local/bin
 chmod 770 /usr/local/bin/helm
@@ -892,7 +896,7 @@ rm -rf linux-amd64
         {
             var firstMaster = cluster.FirstMaster;
 
-            firstMaster.InvokeIdempotentAction("setup/cluster",
+            firstMaster.InvokeIdempotent("setup/cluster",
                 () =>
                 {
                     //---------------------------------------------------------
@@ -902,14 +906,14 @@ rm -rf linux-amd64
 
                     // Pull the Kubernetes images:
 
-                    firstMaster.InvokeIdempotentAction("setup/cluster-images",
+                    firstMaster.InvokeIdempotent("setup/cluster-images",
                         () =>
                         {
                             firstMaster.Status = "pull: kubernetes images...";
                             firstMaster.SudoCommand($"kubeadm config images pull --image-repository {NeonHelper.NeonBranchRegistry} --kubernetes-version v{KubeVersions.KubernetesVersion}");
                         });
 
-                    firstMaster.InvokeIdempotentAction("setup/cluster-init",
+                    firstMaster.InvokeIdempotent("setup/cluster-init",
                         () =>
                         {
                             firstMaster.Status = "initialize: cluster";
@@ -979,7 +983,6 @@ volumePluginDir: /var/lib/kubelet/volume-plugins
                             firstMaster.UploadText("/tmp/cluster.yaml", clusterConfig);
 
                             var response = firstMaster.SudoCommand($"kubeadm init --config /tmp/cluster.yaml");
-
                             firstMaster.SudoCommand("rm /tmp/cluster.yaml");
 
                             // Extract the cluster join command from the response.  We'll need this to join
@@ -1011,7 +1014,7 @@ volumePluginDir: /var/lib/kubelet/volume-plugins
 
                     // kubectl config:
 
-                    firstMaster.InvokeIdempotentAction("setup/cluster-kubectl",
+                    firstMaster.InvokeIdempotent("setup/cluster-kubectl",
                         () =>
                         {
                             // Edit the Kubernetes configuration file to rename the context:
@@ -1079,7 +1082,7 @@ volumePluginDir: /var/lib/kubelet/volume-plugins
                     {
                         try
                         {
-                            master.InvokeIdempotentAction("setup/cluster-kubectl",
+                            master.InvokeIdempotent("setup/cluster-kubectl",
                                 () =>
                                 {
                                     // It's possible that a previous cluster join operation
@@ -1098,7 +1101,7 @@ volumePluginDir: /var/lib/kubelet/volume-plugins
 
                                     // Join the cluster:
 
-                                    master.InvokeIdempotentAction("setup/cluster-join",
+                                    master.InvokeIdempotent("setup/cluster-join",
                                             () =>
                                             {
                                                 var joined = false;
@@ -1126,7 +1129,7 @@ volumePluginDir: /var/lib/kubelet/volume-plugins
 
                                     // Pull the Kubernetes images:
 
-                                    master.InvokeIdempotentAction("setup/cluster-images",
+                                    master.InvokeIdempotent("setup/cluster-images",
                                             () =>
                                             {
                                                 master.Status = "pull: kubernetes images";
@@ -1151,7 +1154,7 @@ volumePluginDir: /var/lib/kubelet/volume-plugins
                         {
                             master.Status = "configure: kube-apiserver";
 
-                            master.InvokeIdempotentAction("setup/cluster-kube-apiserver",
+                            master.InvokeIdempotent("setup/cluster-kube-apiserver",
                                 () =>
                                 {
                                     master.Status = "configure: kube-apiserver";
@@ -1184,7 +1187,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         {
                             try
                             {
-                                worker.InvokeIdempotentAction("setup/cluster-join",
+                                worker.InvokeIdempotent("setup/cluster-join",
                                     () =>
                                     {
                                         var joined = false;
@@ -1220,7 +1223,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         });
                 });
 
-            firstMaster.InvokeIdempotentAction("setup/workstation",
+            firstMaster.InvokeIdempotent("setup/workstation",
                 () =>
                 {
                     // Update the kubeconfig.
@@ -1288,7 +1291,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             //-----------------------------------------------------------------
             // Configure the cluster.
 
-            firstMaster.InvokeIdempotentAction("setup/cluster-configure",
+            firstMaster.InvokeIdempotent("setup/cluster-configure",
                 () =>
                 {
                     foreach (var node in cluster.Nodes)
@@ -1302,7 +1305,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                     // Allow pods to be scheduled on master nodes if enabled.
 
-                    firstMaster.InvokeIdempotentAction("setup/cluster-master-pods",
+                    firstMaster.InvokeIdempotent("setup/cluster-master-pods",
                         () =>
                         {
                             // The [kubectl taint] command looks like it can return a non-zero exit code.
@@ -1318,7 +1321,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                     // Label Nodes.
 
-                    firstMaster.InvokeIdempotentAction("setup/cluster-label-nodes",
+                    firstMaster.InvokeIdempotent("setup/cluster-label-nodes",
                         () =>
                         {
                             LabelNodes(firstMaster);
@@ -1326,7 +1329,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                     // Install Istio.
 
-                    firstMaster.InvokeIdempotentAction("setup/cluster-deploy-istio",
+                    firstMaster.InvokeIdempotent("setup/cluster-deploy-istio",
                         () =>
                         {
                            InstallIstio(firstMaster);
@@ -1335,7 +1338,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                     // Create the cluster's [root-user]:
 
-                    firstMaster.InvokeIdempotentAction("setup/cluster-root-user",
+                    firstMaster.InvokeIdempotent("setup/cluster-root-user",
                         () =>
                         {
                             var userYaml =
@@ -1364,7 +1367,7 @@ subjects:
 
                     // Install the Kubernetes dashboard:
 
-                    firstMaster.InvokeIdempotentAction("setup/cluster-deploy-kubernetes-dashboard",
+                    firstMaster.InvokeIdempotent("setup/cluster-deploy-kubernetes-dashboard",
                         () =>
                         {
                             if (clusterLogin.DashboardCertificate != null)
@@ -1412,7 +1415,7 @@ $@"# Copyright 2017 The Kubernetes Authors.
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an """"AS IS"""" BASIS,
@@ -1512,17 +1515,17 @@ metadata:
   name: kubernetes-dashboard
   namespace: kubernetes-dashboard
 rules:
-  # Allow Dashboard to get, update and delete Dashboard exclusive secrets.
+# Allow Dashboard to get, update and delete Dashboard exclusive secrets.
   - apiGroups: [""""]
     resources: [""secrets""]
     resourceNames: [""kubernetes-dashboard-key-holder"", ""kubernetes-dashboard-certs"", ""kubernetes-dashboard-csrf""]
     verbs: [""get"", ""update"", ""delete""]
-    # Allow Dashboard to get and update 'kubernetes-dashboard-settings' config map.
+# Allow Dashboard to get and update 'kubernetes-dashboard-settings' config map.
   - apiGroups: [""""]
     resources: [""configmaps""]
     resourceNames: [""kubernetes-dashboard-settings""]
     verbs: [""get"", ""update""]
-    # Allow Dashboard to get metrics.
+# Allow Dashboard to get metrics.
   - apiGroups: [""""]
     resources: [""services""]
     resourceNames: [""heapster"", ""dashboard-metrics-scraper""]
@@ -1541,7 +1544,7 @@ metadata:
     k8s-app: kubernetes-dashboard
   name: kubernetes-dashboard
 rules:
-  # Allow Metrics Scraper to get metrics from the Metrics server
+# Allow Metrics Scraper to get metrics from the Metrics server
   - apiGroups: [""metrics.k8s.io""]
     resources: [""pods"", ""nodes""]
     verbs: [""get"", ""list"", ""watch""]
@@ -1602,7 +1605,7 @@ spec:
     spec:
       containers:
         - name: kubernetes-dashboard
-          image: {NeonHelper.NeonBranchRegistry}/kubernetesui-dashboard:{KubeConst.LatestClusterVersion}
+          image: {NeonHelper.NeonBranchRegistry}/kubernetesui-dashboard:neonkube-{KubeConst.NeonKubeVersion}
           imagePullPolicy: Always
           ports:
             - containerPort: 8443
@@ -1619,7 +1622,7 @@ spec:
           volumeMounts:
             - name: kubernetes-dashboard-certs
               mountPath: /certs
-              # Create on-disk volume to store exec logs
+# Create on-disk volume to store exec logs
             - mountPath: /tmp
               name: tmp-volume
           livenessProbe:
@@ -1679,7 +1682,7 @@ spec:
     spec:
       containers:
         - name: dashboard-metrics-scraper
-          image: {NeonHelper.NeonBranchRegistry}/kubernetesui-metrics-scraper:{KubeConst.LatestClusterVersion}
+          image: {NeonHelper.NeonBranchRegistry}/kubernetesui-metrics-scraper:neonkube-{KubeConst.NeonKubeVersion}
           ports:
             - containerPort: 8000
               protocol: TCP
@@ -1727,13 +1730,13 @@ spec:
 
             // Setup openebs.
 
-            await firstMaster.InvokeIdempotentActionAsync("setup/cluster-deploy-openebs",
+            await firstMaster.InvokeIdempotentAsync("setup/cluster-deploy-openebs",
                 async () =>
                 {
                     await InstallOpenEBSAsync(firstMaster);
                 });
 
-            await firstMaster.InvokeIdempotentActionAsync("setup/cluster-neon-system-namespace",
+            await firstMaster.InvokeIdempotentAsync("setup/cluster-neon-system-namespace",
                 async () =>
                 {
                     await k8sClient.CreateNamespaceAsync(new V1Namespace()
@@ -1751,7 +1754,7 @@ spec:
 
             // Setup neon-system-db.
 
-            await firstMaster.InvokeIdempotentActionAsync("setup/cluster-deploy-neon-system-db",
+            await firstMaster.InvokeIdempotentAsync("setup/cluster-deploy-neon-system-db",
                 async () =>
                 {
                     await InstallSystemDbAsync(firstMaster);
@@ -1759,7 +1762,7 @@ spec:
 
             // Setup neon-cluster-manager.
 
-            await firstMaster.InvokeIdempotentActionAsync("setup/cluster-deploy-cluster-manager",
+            await firstMaster.InvokeIdempotentAsync("setup/cluster-deploy-cluster-manager",
                 async () =>
                 {
                     await InstallClusterManagerAsync(firstMaster);
@@ -1769,7 +1772,7 @@ spec:
 
             if (cluster.Definition.Nodes.Where(n => n.Labels.NeonSystemRegistry).Any())
             {
-                await firstMaster.InvokeIdempotentActionAsync("setup/cluster-deploy-neon-registry",
+                await firstMaster.InvokeIdempotentAsync("setup/cluster-deploy-neon-registry",
                     async () =>
                     {
                         await InstallNeonRegistryAsync(firstMaster);
@@ -1778,7 +1781,7 @@ spec:
 
             // Setup Kiali.
 
-            await firstMaster.InvokeIdempotentActionAsync("setup/cluster-deploy-kiali",
+            await firstMaster.InvokeIdempotentAsync("setup/cluster-deploy-kiali",
                 async () =>
                 {
                     await InstallKialiAsync(firstMaster);
@@ -1791,7 +1794,7 @@ spec:
         /// <param name="master">The master node.</param>
         private void DeployCalicoCni(NodeSshProxy<NodeDefinition> master)
         {
-            master.InvokeIdempotentAction("setup/cluster-deploy-cni",
+            master.InvokeIdempotent("setup/cluster-deploy-cni",
                 () =>
                 {
                     // Deploy Calico
@@ -1802,12 +1805,12 @@ $@"#!/bin/bash
 # We need to edit the setup manifest to specify the 
 # cluster subnet before applying it.
 
-curl {Program.CurlOptions} {kubeSetupInfo.CalicoSetupYamlUri} > /tmp/calico.yaml
+curl {KubeHelper.CurlOptions} {KubeDownloads.CalicoSetupYamlUri} > /tmp/calico.yaml
 sed -i 's;192.168.0.0/16;{cluster.Definition.Network.PodSubnet};' /tmp/calico.yaml
-sed -i 's;calico/cni:v{KubeVersions.CalicoVersion};{NeonHelper.NeonBranchRegistry}/calico-cni:{KubeConst.LatestClusterVersion};' /tmp/calico.yaml
-sed -i 's;calico/kube-controllers:v{KubeVersions.CalicoVersion};{NeonHelper.NeonBranchRegistry}/calico-kube-controllers:{KubeConst.LatestClusterVersion};' /tmp/calico.yaml
-sed -i 's;calico/node:v{KubeVersions.CalicoVersion};{NeonHelper.NeonBranchRegistry}/calico-node:{KubeConst.LatestClusterVersion};' /tmp/calico.yaml
-sed -i 's;calico/pod2daemon-flexvol:v{KubeVersions.CalicoVersion};{NeonHelper.NeonBranchRegistry}/calico-pod2daemon-flexvol:{KubeConst.LatestClusterVersion};' /tmp/calico.yaml
+sed -i 's;calico/cni:v{KubeVersions.CalicoVersion}.*;{NeonHelper.NeonBranchRegistry}/calico-cni:neonkube-{KubeConst.NeonKubeVersion};' /tmp/calico.yaml
+sed -i 's;calico/kube-controllers:v{KubeVersions.CalicoVersion}.*;{NeonHelper.NeonBranchRegistry}/calico-kube-controllers:neonkube-{KubeConst.NeonKubeVersion};' /tmp/calico.yaml
+sed -i 's;calico/node:v{KubeVersions.CalicoVersion}.*;{NeonHelper.NeonBranchRegistry}/calico-node:neonkube-{KubeConst.NeonKubeVersion};' /tmp/calico.yaml
+sed -i 's;calico/pod2daemon-flexvol:v{KubeVersions.CalicoVersion}.*;{NeonHelper.NeonBranchRegistry}/calico-pod2daemon-flexvol:neonkube-{KubeConst.NeonKubeVersion};' /tmp/calico.yaml
 kubectl apply -f /tmp/calico.yaml
 rm /tmp/calico.yaml
 ";
@@ -1855,7 +1858,7 @@ $@"#!/bin/bash
 tmp=$(mktemp -d /tmp/istioctl.XXXXXX)
 cd ""$tmp"" || exit
 
-curl -fsLO {kubeSetupInfo.IstioLinuxUri}
+curl -fsLO {KubeDownloads.IstioLinuxUri}
 
 tar -xzf ""istioctl-{KubeVersions.IstioVersion}-linux-amd64.tar.gz""
 
@@ -1880,7 +1883,7 @@ metadata:
   name: istiocontrolplane
 spec:
   hub: {NeonHelper.NeonBranchRegistry}
-  tag: {KubeConst.LatestClusterVersion}
+  tag: neonkube-{KubeConst.NeonKubeVersion}
   meshConfig:
     rootNamespace: istio-system
   components:
@@ -1954,7 +1957,9 @@ spec:
       enabled: false
     istiocoredns:
       enabled: true
-      coreDNSImage: {NeonHelper.NeonBranchRegistry}/coredns-coredns:{KubeConst.LatestClusterVersion}
+      coreDNSImage: {NeonHelper.NeonBranchRegistry}/coredns-coredns
+      coreDNSTag: {KubeVersions.CoreDNSVersion}
+      coreDNSPluginImage: {NeonHelper.NeonBranchRegistry}/coredns-plugin:neonkube-{KubeConst.NeonKubeVersion}
     cni:
       excludeNamespaces:
        - istio-system
@@ -1980,7 +1985,7 @@ istioctl install -f istio-cni.yaml
 
             // Setup Kubernetes.
 
-            await firstMaster.InvokeIdempotentActionAsync("setup/cluster-deploy-kubernetes-setup",
+            await firstMaster.InvokeIdempotentAsync("setup/cluster-deploy-kubernetes-setup",
                 async () =>
                 {
                     await KubeSetupAsync(firstMaster);
@@ -1988,7 +1993,7 @@ istioctl install -f istio-cni.yaml
 
             //// Install an Prometheus cluster to the monitoring namespace
 
-            await firstMaster.InvokeIdempotentActionAsync("setup/cluster-deploy-neon-metrics",
+            await firstMaster.InvokeIdempotentAsync("setup/cluster-deploy-neon-metrics",
                 async () =>
                 {
                     await InstallNeonMetricsAsync(firstMaster);
@@ -1998,7 +2003,7 @@ istioctl install -f istio-cni.yaml
 
             if (cluster.Definition.Monitor.Logs.Enabled)
             {
-                await firstMaster.InvokeIdempotentActionAsync("setup/cluster-deploy-elasticsearch",
+                await firstMaster.InvokeIdempotentAsync("setup/cluster-deploy-elasticsearch",
                     async () =>
                     {
                         await InstallElasticSearchAsync(firstMaster);
@@ -2006,7 +2011,7 @@ istioctl install -f istio-cni.yaml
 
                 // Setup Fluentd.
 
-                await firstMaster.InvokeIdempotentActionAsync("setup/cluster-deploy-fluentd",
+                await firstMaster.InvokeIdempotentAsync("setup/cluster-deploy-fluentd",
                     async () =>
                     {
                         await InstallFluentdAsync(firstMaster);
@@ -2014,7 +2019,7 @@ istioctl install -f istio-cni.yaml
 
                 // Setup Fluent-Bit.
 
-                await firstMaster.InvokeIdempotentActionAsync("setup/cluster-deploy-fluent-bit",
+                await firstMaster.InvokeIdempotentAsync("setup/cluster-deploy-fluent-bit",
                     async () =>
                     {
                         await InstallFluentBitAsync(firstMaster);
@@ -2022,7 +2027,7 @@ istioctl install -f istio-cni.yaml
 
                 // Setup Kibana.
 
-                await firstMaster.InvokeIdempotentActionAsync("setup/cluster-deploy-kibana",
+                await firstMaster.InvokeIdempotentAsync("setup/cluster-deploy-kibana",
                     async () =>
                     {
                         await InstallKibanaAsync(firstMaster);
@@ -2030,7 +2035,7 @@ istioctl install -f istio-cni.yaml
 
                 // Setup Jaeger.
 
-                await firstMaster.InvokeIdempotentActionAsync("setup/cluster-deploy-jaeger",
+                await firstMaster.InvokeIdempotentAsync("setup/cluster-deploy-jaeger",
                     async () =>
                     {
                         await InstallJaegerAsync(firstMaster);
@@ -2043,7 +2048,8 @@ istioctl install -f istio-cni.yaml
         /// </summary>
         /// <param name="master">The master node that will install the Helm chart.</param>
         /// <param name="chartName">The name of the Helm chart.</param>
-        /// <param name="namespace">The Kubernetes namespace where the Helm chart should be installed. Defaults to "default"</param>
+        /// <param name="releaseName">Optional component release name.</param>
+        /// <param name="namespace">Optional namespacer where Kubernetes namespace where the Helm chart should be installed. Defaults to "default"</param>
         /// <param name="timeout">Optional timeout to in seconds. Defaults to 300 (5 mins)</param>
         /// <param name="wait">Whether to wait for all pods to be alive before exiting.</param>
         /// <param name="values">Optional values to override Helm chart values.</param>
@@ -2062,32 +2068,36 @@ istioctl install -f istio-cni.yaml
                 releaseName = chartName;
             }
 
-            using (var client = new HeadendClient())
-            {
-                var zip = await client.GetHelmChartZipAsync(chartName, branch);
+            await Task.CompletedTask;
+            throw new NotImplementedException("$todo(jefflill)");
 
-                master.UploadBytes($"/tmp/charts/{chartName}.zip", zip);
-            }
+            //using (var client = new HeadendClient())
+            //{
+            //    var zip = await client.GetHelmChartZipAsync(chartName, branch);
 
-            var valueOverrides = "";
+            //    master.UploadBytes($"/tmp/charts/{chartName}.zip", zip);
+            //}
+
+            var valueOverrides = new StringBuilder();
 
             if (values != null)
             {
                 foreach (var value in values)
                 {
-                    switch (value.Value.GetType().Name)
+                    var valueType = value.Value.GetType();
+
+                    if (valueType == typeof(string))
                     {
-                        case nameof(String):
-
-                            valueOverrides += $"--set-string {value.Key}=\"{value.Value}\" \\\n";
-                            break;
-
-                        case nameof(Int32):
-
-                            valueOverrides += $"--set {value.Key}={value.Value} \\\n";
-                            break;
+                        valueOverrides.AppendWithSeparator($"--set-string {value.Key}=\"{value.Value}\"", @"\n");
                     }
-
+                    else if (valueType == typeof(int))
+                    {
+                        valueOverrides.AppendWithSeparator($"--set {value.Key}={value.Value}", @"\n");
+                    }
+                    else
+                    {
+                        throw new NotImplementedException();
+                    }
                 }
             }
 
@@ -2164,7 +2174,7 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: openebs";
 
-            master.InvokeIdempotentAction("setup/openebs-namespace",
+            master.InvokeIdempotent("setup/openebs-namespace",
                 () =>
                 {
                     k8sClient.CreateNamespace(new V1Namespace()
@@ -2180,67 +2190,39 @@ rm -rf {chartName}*
                     });
                 });
 
-            await master.InvokeIdempotentActionAsync("setup/neon-storage-openebs-install",
+            await master.InvokeIdempotentAsync("setup/neon-storage-openebs-install",
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
+
                     values.Add(new KeyValuePair<string, object>("apiserver.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("apiserver.image.tag", KubeConst.LatestClusterVersion));
-                    values.Add(new KeyValuePair<string, object>("csi.resizer.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("csi.resizer.image.tag", KubeConst.LatestClusterVersion));
-                    values.Add(new KeyValuePair<string, object>("csi.snapshotter.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("csi.snapshotter.image.tag", KubeConst.LatestClusterVersion));
-                    values.Add(new KeyValuePair<string, object>("csi.provisioner.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("csi.provisioner.image.tag", KubeConst.LatestClusterVersion));
-                    values.Add(new KeyValuePair<string, object>("csi.attacher.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("csi.attacher.image.tag", KubeConst.LatestClusterVersion));
-                    values.Add(new KeyValuePair<string, object>("csi.clusterDriverRegistrar.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("csi.clusterDriverRegistrar.image.tag", KubeConst.LatestClusterVersion));
-                    values.Add(new KeyValuePair<string, object>("csi.driver.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("csi.driver.image.tag", KubeConst.LatestClusterVersion));
-                    values.Add(new KeyValuePair<string, object>("csi.nodeDriverRegistrar.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("csi.nodeDriverRegistrar.image.tag", KubeConst.LatestClusterVersion));
-                    values.Add(new KeyValuePair<string, object>("cspcOperator.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("cspcOperator.image.tag", KubeConst.LatestClusterVersion));
-                    values.Add(new KeyValuePair<string, object>("cstor.pool.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("cstor.pool.image.tag", KubeConst.LatestClusterVersion));
-                    values.Add(new KeyValuePair<string, object>("cstor.poolMgmt.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("cstor.poolMgmt.image.tag", KubeConst.LatestClusterVersion));
-                    values.Add(new KeyValuePair<string, object>("cstor.target.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("cstor.target.image.tag", KubeConst.LatestClusterVersion));
-                    values.Add(new KeyValuePair<string, object>("cstor.volumeMgmt.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("cstor.volumeMgmt.image.tag", KubeConst.LatestClusterVersion));
-                    values.Add(new KeyValuePair<string, object>("cstor.webhook.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("cstor.webhook.image.tag", KubeConst.LatestClusterVersion));
-                    values.Add(new KeyValuePair<string, object>("cvcOperator.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("cvcOperator.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("apiserver.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
                     values.Add(new KeyValuePair<string, object>("helper.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("helper.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("helper.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
                     values.Add(new KeyValuePair<string, object>("localprovisioner.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("localprovisioner.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("localprovisioner.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
                     values.Add(new KeyValuePair<string, object>("policies.monitoring.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("policies.monitoring.image.tag", KubeConst.LatestClusterVersion));
-                    values.Add(new KeyValuePair<string, object>("snapshotController.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("snapshotController.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("policies.monitoring.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
                     values.Add(new KeyValuePair<string, object>("snapshotOperator.controller.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("snapshotOperator.controller.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("snapshotOperator.controller.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
                     values.Add(new KeyValuePair<string, object>("snapshotOperator.provisioner.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("snapshotOperator.provisioner.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("snapshotOperator.provisioner.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
                     values.Add(new KeyValuePair<string, object>("provisioner.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("provisioner.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("provisioner.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
                     values.Add(new KeyValuePair<string, object>("ndm.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("ndm.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("ndm.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
                     values.Add(new KeyValuePair<string, object>("ndmOperator.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("ndmOperator.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("ndmOperator.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
                     values.Add(new KeyValuePair<string, object>("webhook.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("webhook.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("webhook.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
                     values.Add(new KeyValuePair<string, object>("jiva.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("jiva.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("jiva.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
 
 
                     if (cluster.Definition.Workers.Count() >= 3)
                     {
                         var replicas = Math.Max(1, cluster.Definition.Workers.Count() / 3);
+
                         values.Add(new KeyValuePair<string, object>($"apiserver.replicas", replicas));
                         values.Add(new KeyValuePair<string, object>($"provisioner.replicas", replicas));
                         values.Add(new KeyValuePair<string, object>($"localprovisioner.replicas", replicas));
@@ -2249,10 +2231,59 @@ rm -rf {chartName}*
                         values.Add(new KeyValuePair<string, object>($"webhook.replicas", replicas));
                     }
 
-                    await InstallHelmChartAsync(master, "openebs", releaseName: "neon-storage", values: values, @namespace: "openebs");
+                    await InstallHelmChartAsync(master, "openebs", releaseName: "neon-storage-openebs", values: values, @namespace: "openebs");
                 });
 
-            await master.InvokeIdempotentActionAsync("setup/neon-storage-openebs-install-ready",
+
+
+            await master.InvokeIdempotentAsync("setup/neon-storage-openebs-cstor-install",
+                async () =>
+                {
+                    var values = new List<KeyValuePair<string, object>>();
+                    values.Add(new KeyValuePair<string, object>("cspcOperator.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("cspcOperator.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
+                    values.Add(new KeyValuePair<string, object>("cspcOperator.poolManager.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("cspcOperator.poolManager.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
+                    values.Add(new KeyValuePair<string, object>("cspcOperator.cstorPool.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("cspcOperator.cstorPool.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
+                    values.Add(new KeyValuePair<string, object>("cspcOperator.cstorPoolExporter.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("cspcOperator.cstorPoolExporter.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
+
+                    values.Add(new KeyValuePair<string, object>("cvcOperator.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("cvcOperator.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
+                    values.Add(new KeyValuePair<string, object>("cvcOperator.target.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("cvcOperator.target.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
+                    values.Add(new KeyValuePair<string, object>("cvcOperator.volumeMgmt.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("cvcOperator.volumeMgmt.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
+                    values.Add(new KeyValuePair<string, object>("cvcOperator.volumeExporter.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("cvcOperator.volumeExporter.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
+
+                    values.Add(new KeyValuePair<string, object>("csiController.resizer.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("csiController.resizer.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
+                    values.Add(new KeyValuePair<string, object>("csiController.snapshotter.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("csiController.snapshotter.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
+                    values.Add(new KeyValuePair<string, object>("csiController.snapshotController.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("csiController.snapshotController.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
+                    values.Add(new KeyValuePair<string, object>("csiController.attacher.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("csiController.attacher.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
+                    values.Add(new KeyValuePair<string, object>("csiController.provisioner.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("csiController.provisioner.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
+                    values.Add(new KeyValuePair<string, object>("csiController.driverRegistrar.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("csiController.driverRegistrar.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
+
+                    values.Add(new KeyValuePair<string, object>("cstorCSIPlugin.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("cstorCSIPlugin.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
+
+                    values.Add(new KeyValuePair<string, object>("csiNode.driverRegistrar.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("csiNode.driverRegistrar.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
+
+                    values.Add(new KeyValuePair<string, object>("admissionServer.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("admissionServer.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
+
+                    await InstallHelmChartAsync(master, "openebs-cstor-operator", releaseName: "neon-storage-openebs-cstor", values: values, @namespace: "openebs");
+                });
+
+            await master.InvokeIdempotentAsync("setup/neon-storage-openebs-install-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(
@@ -2284,7 +2315,7 @@ rm -rf {chartName}*
                         pollInterval: clusterOpRetryInterval);
                    });
 
-            await master.InvokeIdempotentActionAsync("setup/neon-storage-openebs-cstor-poolcluster",
+            await master.InvokeIdempotentAsync("setup/neon-storage-openebs-cstor-poolcluster",
                 async () =>
                 {
                     var cStorPoolCluster = new V1CStorPoolCluster()
@@ -2346,7 +2377,7 @@ rm -rf {chartName}*
                     k8sClient.CreateNamespacedCustomObject(cStorPoolCluster, V1CStorPoolCluster.KubeGroup, V1CStorPoolCluster.KubeApiVersion, "openebs", "cstorpoolclusters");
                 });
 
-            await master.InvokeIdempotentActionAsync("setup/neon-storage-openebs-cstor-ready",
+            await master.InvokeIdempotentAsync("setup/neon-storage-openebs-cstor-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(
@@ -2364,7 +2395,7 @@ rm -rf {chartName}*
                         pollInterval: clusterOpRetryInterval);
                 });
 
-            master.InvokeIdempotentAction("setup/neon-storage-openebs-cstor-storageclass",
+            master.InvokeIdempotent("setup/neon-storage-openebs-cstor-storageclass",
                 () =>
                 {
                     var storageClass = new V1StorageClass()
@@ -2385,20 +2416,20 @@ rm -rf {chartName}*
                     k8sClient.CreateStorageClass(storageClass);
                 });
 
-            await master.InvokeIdempotentActionAsync("setup/neon-storage-openebs-nfs-install",
+            await master.InvokeIdempotentAsync("setup/neon-storage-openebs-nfs-install",
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
 
                     values.Add(new KeyValuePair<string, object>("image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
 
                     values.Add(new KeyValuePair<string, object>($"persistence.size", ByteUnits.Parse(cluster.Definition.OpenEbs.NfsSize)));
                       
                     await InstallHelmChartAsync(master, "nfs", releaseName: "neon-storage-nfs", @namespace: "openebs", values: values);
                 });
 
-            await master.InvokeIdempotentActionAsync("setup/neon-storage-openebs-nfs-ready",
+            await master.InvokeIdempotentAsync("setup/neon-storage-openebs-nfs-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(
@@ -2438,17 +2469,17 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: kiali";
            
-            await master.InvokeIdempotentActionAsync("setup/kiali",
+            await master.InvokeIdempotentAsync("setup/kiali",
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
 
 
                     values.Add(new KeyValuePair<string, object>("image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
 
                     values.Add(new KeyValuePair<string, object>("cr.spec.deployment.image_name", $"{NeonHelper.NeonBranchRegistry}/kiali-kiali"));
-                    values.Add(new KeyValuePair<string, object>("cr.spec.deployment.image_version", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("cr.spec.deployment.image_version", $"neonkube-{KubeConst.NeonKubeVersion}"));
 
                     int i = 0;
                     foreach (var t in await GetTaintsAsync(NodeLabels.LabelIstio, "true"))
@@ -2462,7 +2493,7 @@ rm -rf {chartName}*
                     await InstallHelmChartAsync(master, "kiali", releaseName: "kiali-operator", @namespace: "istio-system", values: values, wait: false);
                 });
 
-            await master.InvokeIdempotentActionAsync("setup/kiali-ready",
+            await master.InvokeIdempotentAsync("setup/kiali-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(
@@ -2505,7 +2536,7 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: neon-metrics-etcd-cluster";
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-metrics-etcd-cluster",
+            await master.InvokeIdempotentAsync("deploy/neon-metrics-etcd-cluster",
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
@@ -2526,7 +2557,7 @@ rm -rf {chartName}*
                     await InstallHelmChartAsync(master, "etcd-cluster", releaseName: "neon-metrics-etcd", @namespace: "monitoring", values: values);
                 });
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-metrics-etcd-cluster-ready",
+            await master.InvokeIdempotentAsync("deploy/neon-metrics-etcd-cluster-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(
@@ -2557,29 +2588,31 @@ rm -rf {chartName}*
 
             var cortexValues = new List<KeyValuePair<string, object>>();
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-metrics-prometheus",
+            await master.InvokeIdempotentAsync("deploy/neon-metrics-prometheus",
                 async () =>
                 {
                     master.Status = "deploy: neon-metrics-prometheus";
 
                     var values = new List<KeyValuePair<string, object>>();
-
+                    
+                    values.Add(new KeyValuePair<string, object>($"alertmanager.alertmanagerSpec.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>($"alertmanager.alertmanagerSpec.image.tag", KubeVersions.AlertManagerVersion));
                     values.Add(new KeyValuePair<string, object>($"prometheusOperator.tlsProxy.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>($"prometheusOperator.tlsProxy.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>($"prometheusOperator.tlsProxy.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
                     values.Add(new KeyValuePair<string, object>($"prometheusOperator.admissionWebhooks.patch.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>($"prometheusOperator.admissionWebhooks.patch.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>($"prometheusOperator.admissionWebhooks.patch.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
                     values.Add(new KeyValuePair<string, object>($"prometheusOperator.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>($"prometheusOperator.image.tag", KubeConst.LatestClusterVersion));
+                    //values.Add(new KeyValuePair<string, object>($"prometheusOperator.image.tag", KubeVersions.PrometheusVersion));
                     values.Add(new KeyValuePair<string, object>($"prometheusOperator.configmapReloadImage.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>($"prometheusOperator.configmapReloadImage.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>($"prometheusOperator.configmapReloadImage.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
                     values.Add(new KeyValuePair<string, object>($"prometheusOperator.prometheusConfigReloaderImage.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>($"prometheusOperator.prometheusConfigReloaderImage.tag", KubeConst.LatestClusterVersion));
-                    values.Add(new KeyValuePair<string, object>($"prometheusOperator.prometheusSpec.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>($"prometheusOperator.prometheusSpec.image.tag", KubeConst.LatestClusterVersion));
-                    values.Add(new KeyValuePair<string, object>($"kubeStateMetrics.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>($"kubeStateMetrics.image.tag", KubeConst.LatestClusterVersion));
-                    values.Add(new KeyValuePair<string, object>($"nodeExporter.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>($"nodeExporter.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>($"prometheusOperator.prometheusConfigReloaderImage.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
+                    values.Add(new KeyValuePair<string, object>($"prometheus.prometheusSpec.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>($"prometheus.prometheusSpec.image.tag", KubeVersions.PrometheusVersion));
+                    values.Add(new KeyValuePair<string, object>($"global.kubeStateMetrics.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>($"global.kubeStateMetrics.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
+                    values.Add(new KeyValuePair<string, object>($"global.nodeExporter.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>($"global.nodeExporter.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
 
                     int i = 0;
                     foreach (var t in await GetTaintsAsync(NodeLabels.LabelMetrics, "true"))
@@ -2606,7 +2639,7 @@ rm -rf {chartName}*
                     await InstallHelmChartAsync(master, "prometheus-operator", releaseName: "neon-metrics-prometheus", @namespace: "monitoring", values: values, wait: false);
                 });
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-metrics-prometheus-ready",
+            await master.InvokeIdempotentAsync("deploy/neon-metrics-prometheus-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(
@@ -2661,7 +2694,7 @@ rm -rf {chartName}*
                 cortexValues.Add(new KeyValuePair<string, object>($"cortexConfig.ingester.lifecycler.ring.kvstore.store", "inmemory"));
             }
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-metrics-cortex",
+            await master.InvokeIdempotentAsync("deploy/neon-metrics-cortex",
                 async () =>
                 {
                     if (cluster.Definition.Nodes.Any(n => n.Vm.GetMemory(cluster.Definition) < 4294965097L))
@@ -2676,19 +2709,25 @@ rm -rf {chartName}*
                     switch (cluster.Definition.Monitor.Metrics.Storage)
                     {
                         case MetricsStorageOptions.Ephemeral:
+
                             cortexValues.Add(new KeyValuePair<string, object>($"cortexConfig.schema.configs[0].store", $"boltdb"));
                             cortexValues.Add(new KeyValuePair<string, object>($"cortexConfig.schema.configs[0].object_store", $"filesystem"));
                             cortexValues.Add(new KeyValuePair<string, object>($"cortexConfig.schema.configs[0].object_store", $"filesystem"));
                             break;
+
                         case MetricsStorageOptions.Filesystem:
+
                             cortexValues.Add(new KeyValuePair<string, object>($"replicas", Math.Min(3, (cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count()))));
                             // create folders
                             break;
+
                         case MetricsStorageOptions.Yugabyte:
+
                             await InstallMetricsYugabyteAsync(master);
                             cortexValues.Add(new KeyValuePair<string, object>($"replicas", Math.Min(3, (cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count()))));
                             cortexValues.Add(new KeyValuePair<string, object>($"cortexConfig.ingester.lifecycler.ring.replication_factor", 3));
                             break;
+
                         default:
                             break;
                     }
@@ -2705,12 +2744,12 @@ rm -rf {chartName}*
                     }
 
                     cortexValues.Add(new KeyValuePair<string, object>("image.organization", NeonHelper.NeonBranchRegistry));
-                    cortexValues.Add(new KeyValuePair<string, object>("image.tag", KubeConst.LatestClusterVersion));
+                    cortexValues.Add(new KeyValuePair<string, object>("image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
 
                     await InstallHelmChartAsync(master, "cortex", releaseName: "neon-metrics-cortex", @namespace: "monitoring", values: cortexValues);
                 });
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-metrics-cortex-ready",
+            await master.InvokeIdempotentAsync("deploy/neon-metrics-cortex-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(
@@ -2728,7 +2767,7 @@ rm -rf {chartName}*
                         pollInterval: clusterOpRetryInterval);
                 });
 
-            await master.InvokeIdempotentActionAsync("deploy/istio-prometheus",
+            await master.InvokeIdempotentAsync("deploy/istio-prometheus",
                 async () =>
                 {
                     master.Status = "deploy: neon-metrics-istio";
@@ -2736,7 +2775,7 @@ rm -rf {chartName}*
                     await InstallHelmChartAsync(master, "istio-prometheus", @namespace: "monitoring");
                 });
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-metrics-grafana",
+            await master.InvokeIdempotentAsync("deploy/neon-metrics-grafana",
                 async () =>
                 {
                     master.Status = "deploy: neon-metrics-grafana";
@@ -2744,7 +2783,13 @@ rm -rf {chartName}*
                     var values = new List<KeyValuePair<string, object>>();
 
                     values.Add(new KeyValuePair<string, object>("image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
+
+                    values.Add(new KeyValuePair<string, object>("downloadDashboardsImage.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("downloadDashboardsImage.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
+
+                    values.Add(new KeyValuePair<string, object>("sidecar.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("sidecar.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
 
                     int i = 0;
                     foreach (var t in await GetTaintsAsync(NodeLabels.LabelMetrics, "true"))
@@ -2758,7 +2803,7 @@ rm -rf {chartName}*
                     await InstallHelmChartAsync(master, "grafana", releaseName: "neon-metrics-grafana", @namespace: "monitoring", values: values, wait: false);
                 });
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-metrics-grafana-ready",
+            await master.InvokeIdempotentAsync("deploy/neon-metrics-grafana-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(
@@ -2787,10 +2832,15 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: metrics storage (yugabyte)";
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-metrics-db",
+            await master.InvokeIdempotentAsync("deploy/neon-metrics-db",
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
+
+                    values.Add(new KeyValuePair<string, object>($"Image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>($"busybox.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>($"busybox.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
+
                     values.Add(new KeyValuePair<string, object>($"replicas.master", cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count()));
                     values.Add(new KeyValuePair<string, object>($"replicas.tserver", cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count()));
 
@@ -2823,7 +2873,7 @@ rm -rf {chartName}*
                     await InstallHelmChartAsync(master, "yugabyte", releaseName: "neon-metrics-db", @namespace: "monitoring", values: values);
                 });
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-metrics-db-ready",
+            await master.InvokeIdempotentAsync("deploy/neon-metrics-db-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(
@@ -2852,13 +2902,14 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: elasticsearch";
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-logs-elasticsearch",
+            await master.InvokeIdempotentAsync("deploy/neon-logs-elasticsearch",
                 async () =>
                 {
                     var monitorOptions = cluster.Definition.Monitor;
                     var values         = new List<KeyValuePair<string, object>>();
 
                     values.Add(new KeyValuePair<string, object>("image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>("image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
 
                     var replicas = Math.Max(1, cluster.Nodes.Count() / 5);
                     if (replicas > cluster.Nodes.Where(n => n.Metadata.Labels.LogsInternal).Count())
@@ -2905,7 +2956,7 @@ rm -rf {chartName}*
                     await InstallHelmChartAsync(master, "elasticsearch", releaseName: "neon-logs-elasticsearch", @namespace: "monitoring", timeout: 1200, values: values, wait: false);
                 });
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-logs-elasticsearch-ready",
+            await master.InvokeIdempotentAsync("deploy/neon-logs-elasticsearch-ready",
                 async () =>
                 { 
                     await NeonHelper.WaitForAsync(
@@ -2934,13 +2985,13 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: fluent-bit";
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-log-host",
+            await master.InvokeIdempotentAsync("deploy/neon-log-host",
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
 
                     values.Add(new KeyValuePair<string, object>($"image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>($"image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>($"image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
 
                     var i = 0;
                     foreach (var taint in (await k8sClient.ListNodeAsync()).Items.Where(i => i.Spec.Taints != null).SelectMany(i => i.Spec.Taints))
@@ -2954,7 +3005,7 @@ rm -rf {chartName}*
                     await InstallHelmChartAsync(master, "fluent-bit", releaseName: "neon-log-host", @namespace: "monitoring", values: values);
                 });
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-log-host-ready",
+            await master.InvokeIdempotentAsync("deploy/neon-log-host-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(
@@ -2983,13 +3034,13 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: fluentd";
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-log-collector",
+            await master.InvokeIdempotentAsync("deploy/neon-log-collector",
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
 
                     values.Add(new KeyValuePair<string, object>($"image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>($"image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>($"image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
 
                     values.Add(new KeyValuePair<string, object>($"autoscaling.minReplicas", (Math.Max(1, cluster.Definition.Workers.Count() / 6))));
                     values.Add(new KeyValuePair<string, object>($"autoscaling.maxReplicas", (Math.Max(1, cluster.Definition.Workers.Count() / 4))));
@@ -3006,7 +3057,7 @@ rm -rf {chartName}*
                     await InstallHelmChartAsync(master, "fluentd", releaseName: "neon-log-collector", @namespace: "monitoring", values: values);
                 });
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-log-collector-ready",
+            await master.InvokeIdempotentAsync("deploy/neon-log-collector-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(
@@ -3035,13 +3086,13 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: kibana";
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-logs-kibana",
+            await master.InvokeIdempotentAsync("deploy/neon-logs-kibana",
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
 
                     values.Add(new KeyValuePair<string, object>("image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
 
                     int i = 0;
                     foreach (var t in await GetTaintsAsync(NodeLabels.LabelLogs, "true"))
@@ -3055,7 +3106,7 @@ rm -rf {chartName}*
                     await InstallHelmChartAsync(master, "kibana", releaseName: "neon-logs-kibana", @namespace: "monitoring", values: values);
             });
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-logs-kibana-ready",
+            await master.InvokeIdempotentAsync("deploy/neon-logs-kibana-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(
@@ -3084,17 +3135,17 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: jaeger";
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-logs-jaeger",
+            await master.InvokeIdempotentAsync("deploy/neon-logs-jaeger",
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
 
                     values.Add(new KeyValuePair<string, object>("agent.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("agent.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("agent.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
                     values.Add(new KeyValuePair<string, object>("collector.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("collector.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("collector.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
                     values.Add(new KeyValuePair<string, object>("query.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("query.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("query.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
 
                     int i = 0;
                     foreach (var t in await GetTaintsAsync(NodeLabels.LabelLogs, "true"))
@@ -3124,7 +3175,7 @@ rm -rf {chartName}*
                     await InstallHelmChartAsync(master, "jaeger", releaseName: "neon-logs-jaeger", @namespace: "monitoring", values: values);
                 });
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-logs-jaeger-ready",
+            await master.InvokeIdempotentAsync("deploy/neon-logs-jaeger-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(
@@ -3154,7 +3205,7 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: registry";
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-system-registry-secret",
+            await master.InvokeIdempotentAsync("deploy/neon-system-registry-secret",
                 async () =>
                 {
                     var cert = TlsCertificate.CreateSelfSigned("*");
@@ -3174,15 +3225,15 @@ rm -rf {chartName}*
                     };
 
                     await k8sClient.CreateNamespacedSecretAsync(harborCert, "neon-system");
-                   });
+                });
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-system-registry-redis",
+            await master.InvokeIdempotentAsync("deploy/neon-system-registry-redis",
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
 
                     values.Add(new KeyValuePair<string, object>("image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
 
                     var replicas = Math.Min(3, cluster.Definition.Masters.Count());
                     values.Add(new KeyValuePair<string, object>($"replicas", $"{replicas}"));
@@ -3205,7 +3256,7 @@ rm -rf {chartName}*
                     await InstallHelmChartAsync(master, "redis-ha", releaseName: "neon-system-registry-redis", @namespace: "neon-system", values: values);
                 });
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-system-registry-redis-ready",
+            await master.InvokeIdempotentAsync("deploy/neon-system-registry-redis-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(
@@ -3224,35 +3275,35 @@ rm -rf {chartName}*
                         pollInterval: clusterOpRetryInterval);
                 });
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-system-registry-harbor",
+            await master.InvokeIdempotentAsync("deploy/neon-system-registry-harbor",
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
 
                     values.Add(new KeyValuePair<string, object>("nginx.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("nginx.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("nginx.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
                     values.Add(new KeyValuePair<string, object>("portal.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("portal.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("portal.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
                     values.Add(new KeyValuePair<string, object>("core.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("core.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("core.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
                     values.Add(new KeyValuePair<string, object>("jobservice.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("jobservice.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("jobservice.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
                     values.Add(new KeyValuePair<string, object>("registry.registry.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("registry.registry.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("registry.registry.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
                     values.Add(new KeyValuePair<string, object>("registry.controller.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("registry.controller.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("registry.controller.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
                     values.Add(new KeyValuePair<string, object>("chartmuseum.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("chartmuseum.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("chartmuseum.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
                     values.Add(new KeyValuePair<string, object>("clair.clair.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("clair.clair.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("clair.clair.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
                     values.Add(new KeyValuePair<string, object>("clair.adapter.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("clair.adapter.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("clair.adapter.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
                     values.Add(new KeyValuePair<string, object>("trivy.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("trivy.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("trivy.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
                     values.Add(new KeyValuePair<string, object>("notary.server.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("notary.server.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("notary.server.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
                     values.Add(new KeyValuePair<string, object>("notary.signer.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("notary.signer.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("notary.signer.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
                     
                     if (cluster.Definition.Masters.Count() > 1)
                     {
@@ -3284,7 +3335,7 @@ rm -rf {chartName}*
                     await InstallHelmChartAsync(master, "harbor", releaseName: "neon-system-registry-harbor", @namespace: "neon-system", values: values);
                 });
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-system-registry-harbor-ready",
+            await master.InvokeIdempotentAsync("deploy/neon-system-registry-harbor-ready",
                 async () =>
                 {
                     // Trivy is currently disabled by default
@@ -3342,18 +3393,18 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: neon-cluster-manager";
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-cluster-manager",
+            await master.InvokeIdempotentAsync("deploy/neon-cluster-manager",
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
 
                     values.Add(new KeyValuePair<string, object>("image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>("image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
 
                     await InstallHelmChartAsync(master, "neon-cluster-manager", releaseName: "neon-cluster-manager", @namespace: "neon-system", values: values);
                 });
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-cluster-manager-ready",
+            await master.InvokeIdempotentAsync("deploy/neon-cluster-manager-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(
@@ -3382,18 +3433,20 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: neon-system-db";
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-system-db",
+            await master.InvokeIdempotentAsync("deploy/neon-system-db",
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
 
                     values.Add(new KeyValuePair<string, object>($"image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>($"image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>($"image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
+                    values.Add(new KeyValuePair<string, object>($"busybox.image.organization", NeonHelper.NeonBranchRegistry));
+                    values.Add(new KeyValuePair<string, object>($"busybox.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
                     values.Add(new KeyValuePair<string, object>($"prometheus.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>($"prometheus.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>($"prometheus.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
 
                     values.Add(new KeyValuePair<string, object>($"manager.image.organization", NeonHelper.NeonBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>($"manager.image.tag", KubeConst.LatestClusterVersion));
+                    values.Add(new KeyValuePair<string, object>($"manager.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
 
                     var replicas = Math.Max(1, cluster.Definition.Masters.Count() / 5);
 
@@ -3418,7 +3471,7 @@ rm -rf {chartName}*
                     await InstallHelmChartAsync(master, "citus-postgresql", releaseName: "neon-system-db", @namespace: "neon-system", values: values);
                 });
 
-            await master.InvokeIdempotentActionAsync("deploy/neon-system-db-ready",
+            await master.InvokeIdempotentAsync("deploy/neon-system-db-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(
@@ -3471,7 +3524,7 @@ rm -rf {chartName}*
         /// </summary>
         private void LabelNodes(NodeSshProxy<NodeDefinition> master)
         {
-            master.InvokeIdempotentAction("setup/cluster-label-nodes",
+            master.InvokeIdempotent("setup/cluster-label-nodes",
                 () =>
                 {
                     master.Status = "label: nodes";
@@ -3537,7 +3590,7 @@ rm -rf {chartName}*
         {
             var master = cluster.FirstMaster;
 
-            master.InvokeIdempotentAction("setup/cluster-taint-nodes",
+            master.InvokeIdempotent("setup/cluster-taint-nodes",
                 () =>
                 {
                     master.Status = "taint: nodes";

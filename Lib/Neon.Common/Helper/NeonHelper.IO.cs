@@ -77,6 +77,18 @@ namespace Neon.Common
         }
 
         /// <summary>
+        /// Deletes a file if it exists.
+        /// </summary>
+        /// <param name="path">The target file.</param>
+        public static void DeleteFile(string path)
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+        }
+
+        /// <summary>
         /// Recursively deletes a file system folder, ignoring any errors.
         /// </summary>
         /// <param name="folder">The folder path.</param>

@@ -305,10 +305,10 @@ namespace Neon.XenServer
         /// </para>
         /// <para>
         /// Instead of <b>cloud-init</b>, we provisioned our XenServer and Hyper-V node templates
-        /// with a <b>neon-node-init</b> service that runs before the network service to determine
-        /// whether a DVD (ISO) is inserted into the VM and runs the <b>neon-node-init.sh</b> script
-        /// one time, if it exists.  This script will initialize the node's IP address and could also
-        /// be used for other configuration.
+        /// with a <b>neon-init</b> service that runs before the network service to determine
+        /// whether a DVD (ISO) is inserted into the VM and runs the <b>neon-init.sh</b> script
+        /// there one time, if it exists.  This script will initialize the node's IP address and 
+        /// could also be used for other configuration as well.
         /// </para>
         /// <note>
         /// In theory, we could have used the same technique for mounting a <b>cloud-init</b> data source

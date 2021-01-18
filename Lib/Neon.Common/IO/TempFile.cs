@@ -101,10 +101,7 @@ namespace Neon.IO
 
             try
             {
-                if (File.Exists(Path))
-                {
-                    File.Delete(Path);
-                }
+                NeonHelper.DeleteFile(Path);
             }
             catch
             {

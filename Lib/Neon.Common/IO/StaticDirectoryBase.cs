@@ -58,6 +58,11 @@ namespace Neon.IO
             Covenant.Requires<ArgumentException>(name.IndexOf('/') == -1, nameof(name));
             Covenant.Requires<ArgumentException>(name.IndexOf('\\') == -1, nameof(name));
 
+            if (name.StartsWith("/"))
+            {
+                name = name.Substring(1);
+            }
+
             if (root == null)
             {
                 if (parent != null)
