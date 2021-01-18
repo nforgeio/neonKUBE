@@ -294,7 +294,7 @@ namespace Neon.Kube
         /// be resolved on the cluster nodes to access internal Kubernetes
         /// services like the Harbor registry etc.
         /// </summary>
-        public const string ClusterNodeDomain = "cluster.node";
+        public const string ClusterNodeDomain = "node.local";
 
         /// <summary>
         /// Returns a DNS name for the cluster registry that is reachable from
