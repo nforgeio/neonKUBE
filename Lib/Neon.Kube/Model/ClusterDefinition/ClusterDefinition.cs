@@ -839,22 +839,7 @@ namespace Neon.Kube
                 node.Validate(this);
             }
 
-            if (!string.IsNullOrEmpty(ClusterVersion))
-            {
-                //if (!SemanticVersion.TryParse(ClusterVersion, out var clusterVer))
-                //{
-                //    throw new ClusterDefinitionException($"The [{nameof(ClusterDefinition)}.{nameof(ClusterVersion)}={ClusterVersion}] is not a valid semantic version.");
-                //}
-
-                //if (!KubeConst.SupportedClusterVersions.Any(v => v.Equals(ClusterVersion, StringComparison.InvariantCultureIgnoreCase)))
-                //{
-                //    throw new ClusterDefinitionException($"The [{nameof(ClusterDefinition)}.{nameof(ClusterVersion)}={ClusterVersion}] is not a supported cluster version.");
-                //}
-            }
-            else
-            {
-                ClusterVersion = KubeConst.LatestClusterVersion;
-            }
+            ClusterVersion = KubeConst.NeonKubeVersion;
 
             if (Name == null)
             {

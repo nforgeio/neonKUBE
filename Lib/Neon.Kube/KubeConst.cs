@@ -254,9 +254,9 @@ namespace Neon.Kube
         public const string DefaultServiceSubnet = "10.253.0.0/16";
 
         /// <summary>
-        /// The latest neonKUBE cluster version supported.
+        /// The current neonKUBE cluster version supported.
         /// </summary>
-        public const string LatestClusterVersion = "0.1.0-alpha";
+        public const string NeonKubeVersion = "0.1.0-alpha";
 
         /// <summary>
         /// Lists thje supported neonKUBE cluster versions.

@@ -295,7 +295,7 @@ namespace Neon.Kube
             NewMethod(preprocessReader, workerTimeSources);
 
             preprocessReader.Set("neon-branch-registry", NeonHelper.NeonBranchRegistry);
-            preprocessReader.Set("neon-cluster-version", KubeConst.LatestClusterVersion);
+            preprocessReader.Set("neon-cluster-version", KubeConst.NeonKubeVersion);
         }
 
         private static void NewMethod(PreprocessReader preprocessReader, string workerTimeSources)
