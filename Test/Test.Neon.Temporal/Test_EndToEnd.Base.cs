@@ -317,7 +317,7 @@ namespace TestTemporal
             const string workflowId = "my-base-workflow";
 
             var stub = client.NewWorkflowStub<IBaseWorkflow>(
-                new WorkflowOptions() 
+                new StartWorkflowOptions() 
                 {
                     Id = workflowId
                 });

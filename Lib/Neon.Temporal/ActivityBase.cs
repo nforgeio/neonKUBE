@@ -111,7 +111,7 @@ namespace Neon.Temporal
         /// <summary>
         /// Returns additional information about the activity and the workflow that executed it.
         /// </summary>
-        internal ActivityTask ActivityTask { get; private set; }
+        internal ActivityInfo ActivityTask { get; private set; }
 
         /// <summary>
         /// Indicates that the activity will be completed externally.

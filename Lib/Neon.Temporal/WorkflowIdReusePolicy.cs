@@ -50,7 +50,7 @@ namespace Neon.Temporal
         RejectDuplicate = 2,
 
         /// <summary>
-        /// Indicates that the reuse policy specified by <see cref="WorkflowOptions.WorkflowIdReusePolicy"/>
+        /// Indicates that the reuse policy specified by <see cref="StartWorkflowOptions.WorkflowIdReusePolicy"/>
         /// or <see cref="TemporalSettings.WorkflowIdReusePolicy"/> should be used.
         /// </summary>
         UseDefault = -1,

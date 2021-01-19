@@ -50,7 +50,7 @@ namespace HelloWorld_WorkflowOptions
                 // Invoke a workflow with options:
 
                 var stub = client.NewWorkflowStub<IHelloWorkflow>(
-                    new WorkflowOptions()
+                    new StartWorkflowOptions()
                     {
                          Id                     = "my-ultimate-workflow",
                          ScheduleToStartTimeout = TimeSpan.FromMinutes(5) 

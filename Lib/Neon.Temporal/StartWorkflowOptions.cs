@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowOptions.cs
+// FILE:	    StartWorkflowOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -33,7 +33,7 @@ namespace Neon.Temporal
     /// <summary>
     /// Specifies the options to use when starting a workflow.
     /// </summary>
-    public class WorkflowOptions
+    public class StartWorkflowOptions
     {
         //---------------------------------------------------------------------
         // Static members
@@ -48,7 +48,7 @@ namespace Neon.Temporal
         /// /// <param name="method">Optionally specifies the target workflow method.</param>
         /// <returns>The normalized options.</returns>
         /// <exception cref="ArgumentNullException">Thrown if a valid task queue is not specified.</exception>
-        internal static WorkflowOptions Normalize(TemporalClient client, WorkflowOptions options, Type workflowInterface = null, MethodInfo method = null)
+        internal static StartWorkflowOptions Normalize(TemporalClient client, StartWorkflowOptions options, Type workflowInterface = null, MethodInfo method = null)
         {
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
 
@@ -57,7 +57,7 @@ namespace Neon.Temporal
 
             if (options == null)
             {
-                options = new WorkflowOptions();
+                options = new StartWorkflowOptions();
             }
             else
             {
@@ -118,46 +118,46 @@ namespace Neon.Temporal
 
                 if (string.IsNullOrEmpty(options.TaskQueue))
                 {
-                    throw new ArgumentNullException(nameof(options), "You must specify a valid task queue explicitly via [WorkflowOptions] or using an [WorkflowInterface] or [WorkflowMethod] attribute on the target workflow interface or method.");
+                    throw new ArgumentNullException(nameof(options), "You must specify a valid task queue explicitly via [StartWorkflowOptions] or using an [WorkflowInterface] or [WorkflowMethod] attribute on the target workflow interface or method.");
                 }
             }
 
-            if (options.StartToCloseTimeout <= TimeSpan.Zero)
+            if (options.WorkflowExecutionTimeout <= TimeSpan.Zero)
             {
-                if (methodAttribute != null && methodAttribute.StartToCloseTimeoutSeconds > 0)
+                if (methodAttribute != null && methodAttribute.WorkflowExecutionTimeoutSeconds > 0)
                 {
-                    options.StartToCloseTimeout = TimeSpan.FromSeconds(methodAttribute.StartToCloseTimeoutSeconds);
+                    options.WorkflowExecutionTimeout = TimeSpan.FromSeconds(methodAttribute.WorkflowExecutionTimeoutSeconds);
                 }
 
-                if (options.StartToCloseTimeout <= TimeSpan.Zero)
+                if (options.WorkflowExecutionTimeout <= TimeSpan.Zero)
                 {
-                    options.StartToCloseTimeout = client.Settings.WorkflowStartToCloseTimeout;
+                    options.WorkflowExecutionTimeout = client.Settings.WorkflowExecutionTimeout;
                 }
             }
 
-            if (options.ScheduleToStartTimeout <= TimeSpan.Zero)
+            if (options.WorkflowRunTimeout <= TimeSpan.Zero)
             {
-                if (methodAttribute != null && methodAttribute.ScheduleToStartTimeoutSeconds > 0)
+                if (methodAttribute != null && methodAttribute.WorkflowRunTimeoutSeconds > 0)
                 {
-                    options.ScheduleToStartTimeout = TimeSpan.FromSeconds(methodAttribute.ScheduleToStartTimeoutSeconds);
+                    options.WorkflowRunTimeout = TimeSpan.FromSeconds(methodAttribute.WorkflowRunTimeoutSeconds);
                 }
 
-                if (options.ScheduleToStartTimeout <= TimeSpan.Zero)
+                if (options.WorkflowRunTimeout <= TimeSpan.Zero)
                 {
-                    options.ScheduleToStartTimeout = client.Settings.WorkflowScheduleToStartTimeout;
+                    options.WorkflowRunTimeout = client.Settings.WorkflowWorkflowRunTimeout;
                 }
             }
 
-            if (options.DecisionTaskTimeout <= TimeSpan.Zero)
+            if (options.WorkflowTaskTimeout <= TimeSpan.Zero)
             {
-                if (methodAttribute != null && methodAttribute.DecisionTaskTimeoutSeconds > 0)
+                if (methodAttribute != null && methodAttribute.WorkflowTaskTimeoutSeconds > 0)
                 {
-                    options.DecisionTaskTimeout = TimeSpan.FromSeconds(methodAttribute.DecisionTaskTimeoutSeconds);
+                    options.WorkflowTaskTimeout = TimeSpan.FromSeconds(methodAttribute.WorkflowTaskTimeoutSeconds);
                 }
 
-                if (options.DecisionTaskTimeout <= TimeSpan.Zero)
+                if (options.WorkflowTaskTimeout <= TimeSpan.Zero)
                 {
-                    options.DecisionTaskTimeout = client.Settings.WorkflowDecisionTaskTimeout;
+                    options.WorkflowTaskTimeout = client.Settings.WorkflowTaskTimeout;
                 }
             }
 
@@ -188,7 +188,7 @@ namespace Neon.Temporal
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowOptions()
+        public StartWorkflowOptions()
         {
         }
 
@@ -217,11 +217,11 @@ namespace Neon.Temporal
         public string TaskQueue { get; set; } = null;
 
         /// <summary>
-        /// Optionally specifies the default maximum time a workflow can wait between being scheduled
-        /// and actually begin executing.  This defaults to <c>24 hours</c>.
+        /// Optionally specifies The timeout for duration of a single workflow run.
+        /// The resolution is seconds.  This defaults to <see cref="WorkflowExecutionTimeout"/>
         /// </summary>
         [JsonConverter(typeof(GoTimeSpanJsonConverter))]
-        public TimeSpan ScheduleToStartTimeout { get; set; }
+        public TimeSpan WorkflowRunTimeout { get; set; }
 
         /// <summary>
         /// <para>
@@ -235,7 +235,7 @@ namespace Neon.Temporal
         /// </note>
         /// </summary>
         [JsonConverter(typeof(GoTimeSpanJsonConverter))]
-        public TimeSpan StartToCloseTimeout { get; set; }
+        public TimeSpan WorkflowExecutionTimeout { get; set; }
 
         /// <summary>
         /// Optionally specifies the timeout for processing decision task from the time the worker
@@ -244,7 +244,7 @@ namespace Neon.Temporal
         /// The maximum timeout is <b>60 seconds</b>.
         /// </summary>
         [JsonConverter(typeof(GoTimeSpanJsonConverter))]
-        public TimeSpan DecisionTaskTimeout { get; set; } = TimeSpan.FromSeconds(10);
+        public TimeSpan WorkflowTaskTimeout { get; set; } = TimeSpan.FromSeconds(10);
 
         /// <summary>
         /// Optionally determines how Temporal handles workflows that attempt to reuse workflow IDs.
@@ -336,21 +336,21 @@ namespace Neon.Temporal
         /// <summary>
         /// Returns a shallow clone of the current instance.
         /// </summary>
-        /// <returns>The cloned <see cref="WorkflowOptions"/>.</returns>
-        public WorkflowOptions Clone()
+        /// <returns>The cloned <see cref="StartWorkflowOptions"/>.</returns>
+        public StartWorkflowOptions Clone()
         {
-            return new WorkflowOptions()
+            return new StartWorkflowOptions()
             {
-                Namespace              = this.Namespace,
-                TaskQueue              = this.TaskQueue,
-                CronSchedule           = this.CronSchedule,
-                ScheduleToStartTimeout = this.ScheduleToStartTimeout,
-                StartToCloseTimeout    = this.StartToCloseTimeout,
-                Memo                   = this.Memo,
-                RetryPolicy            = this.RetryPolicy,
-                DecisionTaskTimeout    = this.DecisionTaskTimeout,
-                Id                     = this.Id,
-                WorkflowIdReusePolicy  = this.WorkflowIdReusePolicy
+                Namespace                = this.Namespace,
+                TaskQueue                = this.TaskQueue,
+                CronSchedule             = this.CronSchedule,
+                WorkflowRunTimeout       = this.WorkflowRunTimeout,
+                WorkflowExecutionTimeout = this.WorkflowExecutionTimeout,
+                Memo                     = this.Memo,
+                RetryPolicy              = this.RetryPolicy,
+                WorkflowTaskTimeout      = this.WorkflowTaskTimeout,
+                Id                       = this.Id,
+                WorkflowIdReusePolicy    = this.WorkflowIdReusePolicy
             };
         }
     }

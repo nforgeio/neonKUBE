@@ -111,7 +111,7 @@ namespace TestTemporal
 
                 // Do the first run; this should succeed.
 
-                var options = new WorkflowOptions()
+                var options = new StartWorkflowOptions()
                 {
                     Id = $"Workflow_ExternalIdNoReuse-{Guid.NewGuid().ToString("d")}"
                 };
@@ -154,7 +154,7 @@ namespace TestTemporal
 
                 // Do the first run.
 
-                var options = new WorkflowOptions()
+                var options = new StartWorkflowOptions()
                 {
                     Id = $"Workflow_ExternalIdReuseViaOptions-{Guid.NewGuid().ToString("d")}"
                 };

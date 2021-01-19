@@ -212,7 +212,7 @@ namespace TestTemporal
                 message.Namespace = "my-namespace";
                 message.Workflow = "Foo";
                 message.Args = new byte[] { 0, 1, 2, 3, 4 };
-                message.Options = new WorkflowOptions() { TaskQueue = "my-list", StartToCloseTimeout = TimeSpan.FromSeconds(100) };
+                message.Options = new StartWorkflowOptions() { TaskQueue = "my-list", StartToCloseTimeout = TimeSpan.FromSeconds(100) };
 
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
@@ -1034,7 +1034,7 @@ namespace TestTemporal
                 message.Namespace = "my-namespace";
                 message.SignalName = "my-signal";
                 message.SignalArgs = new byte[] { 0, 1, 2, 3, 4 };
-                message.Options = new WorkflowOptions() { TaskQueue = "my-taskqueue", WorkflowIdReusePolicy = WorkflowIdReusePolicy.AllowDuplicate };
+                message.Options = new StartWorkflowOptions() { TaskQueue = "my-taskqueue", WorkflowIdReusePolicy = WorkflowIdReusePolicy.AllowDuplicate };
                 message.WorkflowArgs = new byte[] { 5, 6, 7, 8, 9 };
 
                 Assert.Equal(444, message.ClientId);

@@ -71,7 +71,7 @@ namespace Neon.Temporal.Internal
             // Fetch the stub type and reflect the required constructors and methods.
 
             this.stubType                   = assembly.GetType(className);
-            this.externalStartConstructor   = NeonHelper.GetConstructor(stubType, typeof(TemporalClient), typeof(IDataConverter), typeof(string), typeof(WorkflowOptions), typeof(System.Type));
+            this.externalStartConstructor   = NeonHelper.GetConstructor(stubType, typeof(TemporalClient), typeof(IDataConverter), typeof(string), typeof(StartWorkflowOptions), typeof(System.Type));
             this.externalConstructor        = NeonHelper.GetConstructor(stubType, typeof(TemporalClient), typeof(IDataConverter), typeof(string), typeof(string), typeof(string));
             this.childConstructor           = NeonHelper.GetConstructor(stubType, typeof(TemporalClient), typeof(IDataConverter), typeof(Workflow), typeof(string), typeof(ChildWorkflowOptions), typeof(System.Type));
             this.childExecutedConstructor   = NeonHelper.GetConstructor(stubType, typeof(TemporalClient), typeof(IDataConverter), typeof(Workflow), typeof(string), typeof(ChildExecution));
@@ -87,17 +87,17 @@ namespace Neon.Temporal.Internal
         /// <param name="client">The associated <see cref="TemporalClient"/>.</param>
         /// <param name="dataConverter">The data converter.</param>
         /// <param name="workflowTypeName">Specifies the workflow type name.</param>
-        /// <param name="options">Specifies the <see cref="WorkflowOptions"/> or <c>null</c>.</param>
+        /// <param name="options">Specifies the <see cref="StartWorkflowOptions"/> or <c>null</c>.</param>
         /// <param name="workflowInterface">Specifies the workflow interface definition.</param>
         /// <returns>The workflow stub as an <see cref="object"/>.</returns>
-        public object Create(TemporalClient client, IDataConverter dataConverter, string workflowTypeName, WorkflowOptions options, System.Type workflowInterface)
+        public object Create(TemporalClient client, IDataConverter dataConverter, string workflowTypeName, StartWorkflowOptions options, System.Type workflowInterface)
         {
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
             Covenant.Requires<ArgumentNullException>(dataConverter != null, nameof(dataConverter));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
             Covenant.Requires<ArgumentNullException>(workflowInterface != null, nameof(workflowInterface));
 
-            options = options ?? new WorkflowOptions();
+            options = options ?? new StartWorkflowOptions();
 
             return externalStartConstructor.Invoke(new object[] { client, dataConverter, workflowTypeName, options, workflowInterface });
         }

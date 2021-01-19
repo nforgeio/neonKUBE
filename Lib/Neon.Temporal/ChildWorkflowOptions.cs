@@ -308,7 +308,7 @@ namespace Neon.Temporal
         /// <summary>
         /// Returns a shallow clone of the current instance.
         /// </summary>
-        /// <returns>The cloned <see cref="WorkflowOptions"/>.</returns>
+        /// <returns>The cloned <see cref="StartWorkflowOptions"/>.</returns>
         public ChildWorkflowOptions Clone()
         {
             return new ChildWorkflowOptions()
@@ -329,12 +329,12 @@ namespace Neon.Temporal
 
         /// <summary>
         /// Used internally within generated workflow stubs to convert a <see cref="ChildWorkflowOptions"/>
-        /// instance into an equivalent <see cref="WorkflowOptions"/> as a bit of a hack.
+        /// instance into an equivalent <see cref="StartWorkflowOptions"/> as a bit of a hack.
         /// </summary>
-        /// <returns>The converted <see cref="WorkflowOptions"/>.</returns>
-        internal WorkflowOptions ToWorkflowOptions()
+        /// <returns>The converted <see cref="StartWorkflowOptions"/>.</returns>
+        internal StartWorkflowOptions ToWorkflowOptions()
         {
-            return new WorkflowOptions()
+            return new StartWorkflowOptions()
             {
                 Namespace              = this.Namespace,
                 Memo                   = null,

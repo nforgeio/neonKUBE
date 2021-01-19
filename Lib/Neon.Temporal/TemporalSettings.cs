@@ -542,7 +542,7 @@ namespace Neon.Temporal
         /// <summary>
         /// Specifies what happens when Temporal workflows attempt to reuse workflow IDs.
         /// This defaults to <see cref="WorkflowIdReusePolicy.AllowDuplicate"/>.
-        /// Workflows can customize this via <see cref="WorkflowOptions"/> or <see cref="ChildWorkflowOptions"/>
+        /// Workflows can customize this via <see cref="StartWorkflowOptions"/> or <see cref="ChildWorkflowOptions"/>
         /// or by setting this in the <see cref="WorkflowMethodAttribute"/> tagging the 
         /// workflow entry point method
         /// </summary>
@@ -1076,7 +1076,7 @@ namespace Neon.Temporal
                 DebugIgnoreHeartbeats                 = this.DebugIgnoreHeartbeats,
                 DebugIgnoreTimeouts                   = this.DebugIgnoreTimeouts,
                 DebugPrelaunched                      = this.DebugPrelaunched,
-                TaskQueue                      = this.TaskQueue,
+                TaskQueue                             = this.TaskQueue,
                 Namespace                             = this.Namespace,
                 HeartbeatIntervalSeconds              = this.HeartbeatIntervalSeconds,
                 HeartbeatTimeoutSeconds               = this.HeartbeatTimeoutSeconds,

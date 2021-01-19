@@ -232,7 +232,7 @@ namespace Neon.Temporal.Internal
             private static MethodInfo       localActivityOptionsNormalize;          // from: LocalActivityOptions
             private static MethodInfo       childWorkflowOptionsNormalize;          // from: ChildWorkflowOptions
             private static MethodInfo       childWorkflowOptionsToWorkflowOptions;  // from: ChildWorkflowOptions
-            private static MethodInfo       workflowOptionsNormalize;               // from: WorkflowOptions
+            private static MethodInfo       workflowOptionsNormalize;               // from: StartWorkflowOptions
             private static ConstructorInfo  workflowStubConstructor;                // from: WorkflowStub
 
             static ___StubHelper()
@@ -240,7 +240,7 @@ namespace Neon.Temporal.Internal
                 var clientType   = typeof(TemporalClient);
                 var workflowType = typeof(Workflow);
 
-                startWorkflowAsync                    = NeonHelper.GetMethod(clientType, ""StartWorkflowAsync"", typeof(string), typeof(byte[]), typeof(WorkflowOptions));
+                startWorkflowAsync                    = NeonHelper.GetMethod(clientType, ""StartWorkflowAsync"", typeof(string), typeof(byte[]), typeof(StartWorkflowOptions));
                 getWorkflowResultAsync                = NeonHelper.GetMethod(clientType, ""GetWorkflowResultAsync"", typeof(WorkflowExecution), typeof(string));
                 startChildWorkflowAsync               = NeonHelper.GetMethod(clientType, ""StartChildWorkflowAsync"", typeof(Workflow), typeof(string), typeof(byte[]), typeof(ChildWorkflowOptions));
                 getChildWorkflowResultAsync           = NeonHelper.GetMethod(clientType, ""GetChildWorkflowResultAsync"", typeof(Workflow), typeof(ChildExecution));
@@ -248,25 +248,25 @@ namespace Neon.Temporal.Internal
                 cancelWorkflowAsync                   = NeonHelper.GetMethod(clientType, ""CancelWorkflowAsync"", typeof(WorkflowExecution), typeof(string));
                 terminateWorkflowAsync                = NeonHelper.GetMethod(clientType, ""TerminateWorkflowAsync"", typeof(WorkflowExecution), typeof(string), typeof(byte[]), typeof(string));
                 signalWorkflowAsync                   = NeonHelper.GetMethod(clientType, ""SignalWorkflowAsync"", typeof(WorkflowExecution), typeof(string), typeof(byte[]), typeof(string));
-                signalWorkflowWithStartAsync          = NeonHelper.GetMethod(clientType, ""SignalWorkflowWithStartAsync"", typeof(string), typeof(string), typeof(byte[]), typeof(byte[]), typeof(WorkflowOptions));
+                signalWorkflowWithStartAsync          = NeonHelper.GetMethod(clientType, ""SignalWorkflowWithStartAsync"", typeof(string), typeof(string), typeof(byte[]), typeof(byte[]), typeof(StartWorkflowOptions));
                 signalChildWorkflowAsync              = NeonHelper.GetMethod(clientType, ""SignalChildWorkflowAsync"", typeof(Workflow), typeof(ChildExecution), typeof(string), typeof(byte[]));
                 syncSignalWorkflowAsync               = NeonHelper.GetMethod(clientType, ""SyncSignalWorkflowAsync"", typeof(WorkflowExecution), typeof(string), typeof(string), typeof(byte[]), typeof(string));
                 syncSignalChildWorkflowAsync          = NeonHelper.GetMethod(clientType, ""SyncSignalChildWorkflowAsync"", typeof(Workflow), typeof(ChildExecution), typeof(string), typeof(string), typeof(byte[]));
                 queryWorkflowAsync                    = NeonHelper.GetMethod(clientType, ""QueryWorkflowAsync"", typeof(WorkflowExecution), typeof(string), typeof(byte[]), typeof(string));
                 resolveNamespace                      = NeonHelper.GetMethod(clientType, ""ResolveNamespace"", typeof(string));
-                newWorkflowStub                       = NeonHelper.GetMethod(clientType, ""NewWorkflowStub"", typeof(string), typeof(WorkflowOptions));
+                newWorkflowStub                       = NeonHelper.GetMethod(clientType, ""NewWorkflowStub"", typeof(string), typeof(StartWorkflowOptions));
                 executeActivityAsync                  = NeonHelper.GetMethod(workflowType, ""ExecuteActivityAsync"", typeof(string), typeof(byte[]), typeof(ActivityOptions));
                 executeLocalActivityAsync             = NeonHelper.GetMethod(workflowType, ""ExecuteLocalActivityAsync"", typeof(Type), typeof(ConstructorInfo), typeof(MethodInfo), typeof(byte[]), typeof(LocalActivityOptions));
                 activityOptionsNormalize              = NeonHelper.GetMethod(typeof(ActivityOptions), ""Normalize"", typeof(TemporalClient), typeof(ActivityOptions), typeof(System.Type), typeof(MethodInfo));
                 localActivityOptionsNormalize         = NeonHelper.GetMethod(typeof(LocalActivityOptions), ""Normalize"", typeof(TemporalClient), typeof(LocalActivityOptions));
                 childWorkflowOptionsNormalize         = NeonHelper.GetMethod(typeof(ChildWorkflowOptions), ""Normalize"", typeof(TemporalClient), typeof(ChildWorkflowOptions), typeof(System.Type), typeof(MethodInfo));
                 childWorkflowOptionsToWorkflowOptions = NeonHelper.GetMethod(typeof(ChildWorkflowOptions), ""ToWorkflowOptions"");
-                workflowOptionsNormalize              = NeonHelper.GetMethod(typeof(WorkflowOptions), ""Normalize"", typeof(TemporalClient), typeof(WorkflowOptions), typeof(System.Type), typeof(MethodInfo));
-                workflowStubConstructor               = NeonHelper.GetConstructor(typeof(WorkflowStub), new Type[] { typeof(TemporalClient), typeof(string), typeof(WorkflowExecution), typeof(WorkflowOptions) });
+                workflowOptionsNormalize              = NeonHelper.GetMethod(typeof(StartWorkflowOptions), ""Normalize"", typeof(TemporalClient), typeof(StartWorkflowOptions), typeof(System.Type), typeof(MethodInfo));
+                workflowStubConstructor               = NeonHelper.GetConstructor(typeof(WorkflowStub), new Type[] { typeof(TemporalClient), typeof(string), typeof(WorkflowExecution), typeof(StartWorkflowOptions) });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
-            public static async Task<WorkflowExecution> StartWorkflowAsync(TemporalClient client, string workflowTypeName, byte[] args, WorkflowOptions options)
+            public static async Task<WorkflowExecution> StartWorkflowAsync(TemporalClient client, string workflowTypeName, byte[] args, StartWorkflowOptions options)
             {
                 return await (Task<WorkflowExecution>)startWorkflowAsync.Invoke(client, new object[] { workflowTypeName, args, options });
             }
@@ -314,7 +314,7 @@ namespace Neon.Temporal.Internal
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
-            public static async Task SignalWorkflowWithStartAsync(TemporalClient client, string workflowTypeName, string signalName, byte[] signalArgs, byte[] workflowArgs, WorkflowOptions options)
+            public static async Task SignalWorkflowWithStartAsync(TemporalClient client, string workflowTypeName, string signalName, byte[] signalArgs, byte[] workflowArgs, StartWorkflowOptions options)
             {
                 await (Task)signalWorkflowWithStartAsync.Invoke(client, new object[] { workflowTypeName, signalName, signalArgs, workflowArgs, options });
             }
@@ -344,7 +344,7 @@ namespace Neon.Temporal.Internal
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
-            public static WorkflowStub NewWorkflowStub(TemporalClient client, string workflowTypeName, WorkflowOptions options)
+            public static WorkflowStub NewWorkflowStub(TemporalClient client, string workflowTypeName, StartWorkflowOptions options)
             {
                 return (WorkflowStub)newWorkflowStub.Invoke(client, new object[] { workflowTypeName, options });
             }
@@ -386,19 +386,19 @@ namespace Neon.Temporal.Internal
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
-            public static WorkflowOptions ToWorkflowOptions(ChildWorkflowOptions options)
+            public static StartWorkflowOptions ToWorkflowOptions(ChildWorkflowOptions options)
             {
-                return (WorkflowOptions)childWorkflowOptionsToWorkflowOptions.Invoke(options, Array.Empty<object>());
+                return (StartWorkflowOptions)childWorkflowOptionsToWorkflowOptions.Invoke(options, Array.Empty<object>());
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
-            public static WorkflowOptions NormalizeOptions(TemporalClient client, WorkflowOptions options, System.Type interfaceType, MethodInfo method)
+            public static StartWorkflowOptions NormalizeOptions(TemporalClient client, StartWorkflowOptions options, System.Type interfaceType, MethodInfo method)
             {
-                return (WorkflowOptions)workflowOptionsNormalize.Invoke(null, new object[] { client, options, interfaceType, method });
+                return (StartWorkflowOptions)workflowOptionsNormalize.Invoke(null, new object[] { client, options, interfaceType, method });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
-            public static WorkflowStub NewWorkflowStub(TemporalClient client, string workflowTypeName, WorkflowExecution execution, WorkflowOptions options)
+            public static WorkflowStub NewWorkflowStub(TemporalClient client, string workflowTypeName, WorkflowExecution execution, StartWorkflowOptions options)
             {
                 return (WorkflowStub)workflowStubConstructor.Invoke(new object[] { client, workflowTypeName, execution, options });
             }
@@ -642,7 +642,7 @@ namespace Neon.Temporal.Internal
             sbSource.AppendLine($"        private string                workflowTypeName;");
             sbSource.AppendLine($"        private System.Type           workflowInterface;");
             sbSource.AppendLine($"        private bool                  isChild;");
-            sbSource.AppendLine($"        private WorkflowOptions       options;");
+            sbSource.AppendLine($"        private StartWorkflowOptions       options;");
             sbSource.AppendLine($"        private ChildWorkflowOptions  childOptions;");
             sbSource.AppendLine($"        private bool                  hasStarted;");
             sbSource.AppendLine($"        private WorkflowExecution     execution;");
@@ -655,7 +655,7 @@ namespace Neon.Temporal.Internal
             // Generate the constructor used for normal external workflow start stubs.
 
             sbSource.AppendLine();
-            sbSource.AppendLine($"        public {stubClassName}(TemporalClient client, IDataConverter dataConverter, string workflowTypeName, WorkflowOptions options, System.Type workflowInterface = null)");
+            sbSource.AppendLine($"        public {stubClassName}(TemporalClient client, IDataConverter dataConverter, string workflowTypeName, StartWorkflowOptions options, System.Type workflowInterface = null)");
             sbSource.AppendLine($"        {{");
 #if DEBUG
             sbSource.LogDebug($"{stubClassName}: CREATE A");
@@ -797,7 +797,7 @@ namespace Neon.Temporal.Internal
             sbSource.AppendLine($"            if (isChild)");
             sbSource.AppendLine($"            {{");
 
-            // Note that we're converting the [ChildWorkflowOptions] into a [WorkflowOptions] 
+            // Note that we're converting the [ChildWorkflowOptions] into a [StartWorkflowOptions] 
             // as a bit of a hack to make the [WorkflowStub] constructor happy.
 
             sbSource.AppendLine($"                return (WorkflowStub)___StubHelper.NewWorkflowStub(client, workflowTypeName, childExecution.Execution, ___StubHelper.ToWorkflowOptions(childOptions));");
@@ -1238,7 +1238,7 @@ namespace Neon.Temporal.Internal
         /// <param name="workflowTypeName">Optionally specifies the workflow type name.</param>
         /// <returns>The stub instance.</returns>
         /// <exception cref="WorkflowTypeException">Thrown when there are problems with the <typeparamref name="TWorkflowInterface"/>.</exception>
-        public static TWorkflowInterface NewWorkflowStub<TWorkflowInterface>(TemporalClient client, WorkflowOptions options = null, string workflowTypeName = null)
+        public static TWorkflowInterface NewWorkflowStub<TWorkflowInterface>(TemporalClient client, StartWorkflowOptions options = null, string workflowTypeName = null)
             where TWorkflowInterface : class
         {
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));

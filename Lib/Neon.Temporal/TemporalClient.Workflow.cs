@@ -41,7 +41,7 @@ namespace Neon.Temporal
         /// Raised when an external workflow is executed.  This is used internally
         /// for unit tests that verify that workflow options are configured correctly. 
         /// </summary>
-        internal event EventHandler<WorkflowOptions> WorkflowExecuteEvent;
+        internal event EventHandler<StartWorkflowOptions> WorkflowExecuteEvent;
 
         /// <summary>
         /// Raised when a child workflow is executed.  This is used internally
@@ -53,7 +53,7 @@ namespace Neon.Temporal
         /// Raises the <see cref="WorkflowExecuteEvent"/>.
         /// </summary>
         /// <param name="options">The workflow options.</param>
-        internal void RaiseWorkflowExecuteEvent(WorkflowOptions options)
+        internal void RaiseWorkflowExecuteEvent(StartWorkflowOptions options)
         {
             WorkflowExecuteEvent?.Invoke(this, options);
         }
@@ -115,7 +115,7 @@ namespace Neon.Temporal
         /// Creates an untyped stub that can be used to start a single workflow execution.
         /// </summary>
         /// <param name="workflowTypeName">Specifies the workflow type name.</param>
-        /// <param name="options">Specifies the workflow options (including the <see cref="WorkflowOptions.TaskQueue"/>).</param>
+        /// <param name="options">Specifies the workflow options (including the <see cref="StartWorkflowOptions.TaskQueue"/>).</param>
         /// <returns>The <see cref="WorkflowStub"/>.</returns>
         /// <remarks>
         /// <para>
@@ -145,22 +145,22 @@ namespace Neon.Temporal
         /// </para>
         /// </note>
         /// </remarks>
-        public WorkflowStub NewUntypedWorkflowStub(string workflowTypeName, WorkflowOptions options)
+        public WorkflowStub NewUntypedWorkflowStub(string workflowTypeName, StartWorkflowOptions options)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
             Covenant.Requires<ArgumentNullException>(options != null, nameof(options));
             EnsureNotDisposed();
 
-            options = WorkflowOptions.Normalize(this, options);
+            options = StartWorkflowOptions.Normalize(this, options);
 
             if (string.IsNullOrEmpty(options.TaskQueue))
             {
-                throw new ArgumentNullException($"The workflow [{nameof(WorkflowOptions)}.{nameof(WorkflowOptions.TaskQueue)}] must be specified when the client doesn't set [{nameof(TemporalSettings)}.{nameof(TemporalSettings.TaskQueue)}].");
+                throw new ArgumentNullException($"The workflow [{nameof(StartWorkflowOptions)}.{nameof(StartWorkflowOptions.TaskQueue)}] must be specified when the client doesn't set [{nameof(TemporalSettings)}.{nameof(TemporalSettings.TaskQueue)}].");
             }
 
             if (string.IsNullOrEmpty(options.Namespace))
             {
-                throw new ArgumentNullException($"The workflow [{nameof(WorkflowOptions)}.{nameof(WorkflowOptions.Namespace)}] must be specified when the client doesn't set [{nameof(TemporalSettings)}.{nameof(TemporalSettings.Namespace)}].");
+                throw new ArgumentNullException($"The workflow [{nameof(StartWorkflowOptions)}.{nameof(StartWorkflowOptions.Namespace)}] must be specified when the client doesn't set [{nameof(TemporalSettings)}.{nameof(TemporalSettings.Namespace)}].");
             }
 
             return new WorkflowStub(this)
@@ -202,7 +202,7 @@ namespace Neon.Temporal
             return new WorkflowStub(this)
             {
                 Execution = new WorkflowExecution(workflowId, runId),
-                Options   = new WorkflowOptions() { Namespace = @namespace }
+                Options   = new StartWorkflowOptions() { Namespace = @namespace }
             };
         }
 
@@ -234,7 +234,7 @@ namespace Neon.Temporal
                 throw new ArgumentException($"The [{nameof(@namespace)} parameter must be specified when the client doesn't set [{nameof(TemporalSettings)}.{nameof(TemporalSettings.Namespace)}].");
             }
 
-            var options = new WorkflowOptions()
+            var options = new StartWorkflowOptions()
             {
                 Namespace = @namespace
             };
@@ -256,15 +256,15 @@ namespace Neon.Temporal
         /// <c>[WorkflowMethod]</c> attribute for the workflow method or <c>null</c>/empty for
         /// the default workflow method.
         /// </param>
-        /// <param name="options">Optionally specifies custom <see cref="WorkflowOptions"/>.</param>
+        /// <param name="options">Optionally specifies custom <see cref="StartWorkflowOptions"/>.</param>
         /// <returns>A <see cref="ChildWorkflowStub{TWorkflowInterface}"/> instance.</returns>
-        public WorkflowFutureStub<TWorkflowInterface> NewWorkflowFutureStub<TWorkflowInterface>(string methodName = null, WorkflowOptions options = null)
+        public WorkflowFutureStub<TWorkflowInterface> NewWorkflowFutureStub<TWorkflowInterface>(string methodName = null, StartWorkflowOptions options = null)
             where TWorkflowInterface : class
         {
             TemporalHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
             EnsureNotDisposed();
 
-            options = WorkflowOptions.Normalize(this, options, typeof(TWorkflowInterface));
+            options = StartWorkflowOptions.Normalize(this, options, typeof(TWorkflowInterface));
 
             return new WorkflowFutureStub<TWorkflowInterface>(this, methodName, options);
         }
@@ -378,21 +378,21 @@ namespace Neon.Temporal
         /// </para>
         /// </note>
         /// </remarks>
-        public WorkflowStub NewWorkflowStub(string workflowTypeName, WorkflowOptions options = null)
+        public WorkflowStub NewWorkflowStub(string workflowTypeName, StartWorkflowOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
             EnsureNotDisposed();
 
-            options = WorkflowOptions.Normalize(this, options);
+            options = StartWorkflowOptions.Normalize(this, options);
 
             if (string.IsNullOrEmpty(options.TaskQueue))
             {
-                throw new ArgumentNullException($"The workflow [{nameof(WorkflowOptions)}.{nameof(WorkflowOptions.TaskQueue)}] must be specified when the client doesn't set [{nameof(TemporalSettings)}.{nameof(TemporalSettings.TaskQueue)}].");
+                throw new ArgumentNullException($"The workflow [{nameof(StartWorkflowOptions)}.{nameof(StartWorkflowOptions.TaskQueue)}] must be specified when the client doesn't set [{nameof(TemporalSettings)}.{nameof(TemporalSettings.TaskQueue)}].");
             }
 
             if (string.IsNullOrEmpty(options.Namespace))
             {
-                throw new ArgumentNullException($"The workflow [{nameof(WorkflowOptions)}.{nameof(WorkflowOptions.Namespace)}] must be specified when the client doesn't set [{nameof(TemporalSettings)}.{nameof(TemporalSettings.Namespace)}].");
+                throw new ArgumentNullException($"The workflow [{nameof(StartWorkflowOptions)}.{nameof(StartWorkflowOptions.Namespace)}] must be specified when the client doesn't set [{nameof(TemporalSettings)}.{nameof(TemporalSettings.Namespace)}].");
             }
 
             return new WorkflowStub(this)
@@ -442,7 +442,7 @@ namespace Neon.Temporal
         /// </para>
         /// </note>
         /// </remarks>
-        public TWorkflowInterface NewWorkflowStub<TWorkflowInterface>(WorkflowOptions options = null, string workflowTypeName = null)
+        public TWorkflowInterface NewWorkflowStub<TWorkflowInterface>(StartWorkflowOptions options = null, string workflowTypeName = null)
             where TWorkflowInterface : class
         {
             TemporalHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
@@ -594,12 +594,12 @@ namespace Neon.Temporal
         /// queued the operation but the method <b>does not</b> wait for the workflow to
         /// complete.
         /// </remarks>
-        internal async Task<WorkflowExecution> StartWorkflowAsync(string workflowTypeName, byte[] args, WorkflowOptions options)
+        internal async Task<WorkflowExecution> StartWorkflowAsync(string workflowTypeName, byte[] args, StartWorkflowOptions options)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
             EnsureNotDisposed();
 
-            options = WorkflowOptions.Normalize(this, options);
+            options = StartWorkflowOptions.Normalize(this, options);
 
             RaiseWorkflowExecuteEvent(options);
 
@@ -830,13 +830,13 @@ namespace Neon.Temporal
         /// <exception cref="EntityNotExistsException">Thrown if the namespace does not exist.</exception>
         /// <exception cref="BadRequestException">Thrown if the request is invalid.</exception>
         /// <exception cref="InternalServiceException">Thrown for internal Temporal problems.</exception>
-        internal async Task<WorkflowExecution> SignalWorkflowWithStartAsync(string workflowTypeName, string signalName, byte[] signalArgs, byte[] startArgs, WorkflowOptions options)
+        internal async Task<WorkflowExecution> SignalWorkflowWithStartAsync(string workflowTypeName, string signalName, byte[] signalArgs, byte[] startArgs, StartWorkflowOptions options)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName), nameof(signalName));
             EnsureNotDisposed();
 
-            options = WorkflowOptions.Normalize(this, options);
+            options = StartWorkflowOptions.Normalize(this, options);
 
             var reply = (WorkflowSignalWithStartReply)await CallProxyAsync(
                 new WorkflowSignalWithStartRequest()

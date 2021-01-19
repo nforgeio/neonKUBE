@@ -70,7 +70,7 @@ namespace TestTemporal
         // Option Precedence (highest to lowest)
         // -------------------------------------
         //
-        //  1. WorkflowOptions, ChildWorkflowOptions, ActivityOptions, LocalActivityOptions
+        //  1. StartWorkflowOptions, ChildWorkflowOptions, ActivityOptions, LocalActivityOptions
         //
         //      Any options specified explicitly in options passed to an execute method
         //      will take precedence over all other settings.  This allows developers to
@@ -440,7 +440,7 @@ namespace TestTemporal
         /// Temporarily hooks the <see cref="TemporalClient.WorkflowExecuteEvent"/> of the
         /// client passed and then executes the <see cref="IWorkflowWithNoAttributes.RunAsync()"/> 
         /// workflow.  The <paramref name="optionsChecker"/> function will be called with
-        /// the <see cref="WorkflowOptions"/> received from the hook giving the function a
+        /// the <see cref="StartWorkflowOptions"/> received from the hook giving the function a
         /// chance to verify that the options are correct by returning <c>true</c>.
         /// </summary>
         /// <param name="client">The Temporal client.</param>
@@ -449,10 +449,10 @@ namespace TestTemporal
         /// to verify option correctness.
         /// </param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task ExecuteWorkflowWithNoAttributesAsync(TemporalClient client, Action<WorkflowOptions> optionsChecker)
+        private async Task ExecuteWorkflowWithNoAttributesAsync(TemporalClient client, Action<StartWorkflowOptions> optionsChecker)
         {
-            EventHandler<WorkflowOptions> hook =
-                (object sender, WorkflowOptions options) =>
+            EventHandler<StartWorkflowOptions> hook =
+                (object sender, StartWorkflowOptions options) =>
                 {
                     optionsChecker(options);
                 };
@@ -475,7 +475,7 @@ namespace TestTemporal
         /// Temporarily hooks the <see cref="TemporalClient.WorkflowExecuteEvent"/> of the
         /// client passed and then executes the <see cref="IWorkflowWithInterfaceAttributes.RunAsync()"/> 
         /// workflow.  The <paramref name="optionsChecker"/> function will be called with
-        /// the <see cref="WorkflowOptions"/> received from the hook giving the function a
+        /// the <see cref="StartWorkflowOptions"/> received from the hook giving the function a
         /// chance to verify that the options are correct by returning <c>true</c>.
         /// </summary>
         /// <param name="client">The Temporal client.</param>
@@ -484,10 +484,10 @@ namespace TestTemporal
         /// to verify option correctness.
         /// </param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task ExecuteWorkflowWithInterfaceAttributesAsync(TemporalClient client, Action<WorkflowOptions> optionsChecker)
+        private async Task ExecuteWorkflowWithInterfaceAttributesAsync(TemporalClient client, Action<StartWorkflowOptions> optionsChecker)
         {
-            EventHandler<WorkflowOptions> hook =
-                (object sender, WorkflowOptions options) =>
+            EventHandler<StartWorkflowOptions> hook =
+                (object sender, StartWorkflowOptions options) =>
                 {
                     optionsChecker(options);
                 };
@@ -510,7 +510,7 @@ namespace TestTemporal
         /// Temporarily hooks the <see cref="TemporalClient.WorkflowExecuteEvent"/> of the
         /// client passed and then executes the <see cref="IWorkflowWithMethodAttributes.RunAsync()"/> 
         /// workflow.  The <paramref name="optionsChecker"/> function will be called with
-        /// the <see cref="WorkflowOptions"/> received from the hook giving the function a
+        /// the <see cref="StartWorkflowOptions"/> received from the hook giving the function a
         /// chance to verify that the options are correct by returning <c>true</c>.
         /// </summary>
         /// <param name="client">The Temporal client.</param>
@@ -520,10 +520,10 @@ namespace TestTemporal
         /// </param>
         /// <param name="options">Optional workflow options that should override any other settings.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task ExecuteWorkflowWithMethodAttributesAsync(TemporalClient client, Action<WorkflowOptions> optionsChecker, WorkflowOptions options = null)
+        private async Task ExecuteWorkflowWithMethodAttributesAsync(TemporalClient client, Action<StartWorkflowOptions> optionsChecker, StartWorkflowOptions options = null)
         {
-            EventHandler<WorkflowOptions> hook =
-                (object sender, WorkflowOptions options) =>
+            EventHandler<StartWorkflowOptions> hook =
+                (object sender, StartWorkflowOptions options) =>
                 {
                     optionsChecker(options);
                 };
@@ -569,7 +569,7 @@ namespace TestTemporal
 
             try
             {
-                var options = new WorkflowOptions()
+                var options = new StartWorkflowOptions()
                 {
                     Namespace = parentNamespace,
                     TaskQueue = parentTaskQueue
@@ -634,7 +634,7 @@ namespace TestTemporal
         /// </param>
         /// <param name="options">Optional workflow options that should override any other settings.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task ExecuteChildWorkflowWithMethodAttributesAsync(TemporalClient client, Action<ChildWorkflowOptions> optionsChecker, WorkflowOptions options = null)
+        private async Task ExecuteChildWorkflowWithMethodAttributesAsync(TemporalClient client, Action<ChildWorkflowOptions> optionsChecker, StartWorkflowOptions options = null)
         {
             EventHandler<ChildWorkflowOptions> hook =
                 (object sender, ChildWorkflowOptions options) =>
@@ -683,7 +683,7 @@ namespace TestTemporal
 
             try
             {
-                var options = new WorkflowOptions()
+                var options = new StartWorkflowOptions()
                 {
                     Namespace = parentNamespace,
                     TaskQueue = parentTaskQueue
@@ -843,7 +843,7 @@ namespace TestTemporal
         {
             // Verify that workflow options are honored.
 
-            var workflowOptions = new WorkflowOptions()
+            var workflowOptions = new StartWorkflowOptions()
             {
                 Namespace              = "test1-namespace",
                 TaskQueue              = "test1-taskqueue",
@@ -972,7 +972,7 @@ namespace TestTemporal
         {
             // Verify that workflow options are honored for child workflows.
 
-            var workflowOptions = new WorkflowOptions()
+            var workflowOptions = new StartWorkflowOptions()
             {
                 Namespace              = "test1-namespace",
                 TaskQueue              = "test1-taskqueue",
@@ -1157,7 +1157,7 @@ namespace TestTemporal
             // Verify that a workflow can wait on an external workflow
             // running in a different namespace by execution.
 
-            var options = new WorkflowOptions() { TaskQueue = "test1-taskqueue", Namespace = "test1-namespace" };
+            var options = new StartWorkflowOptions() { TaskQueue = "test1-taskqueue", Namespace = "test1-namespace" };
             var helloStub = test3Client.NewWorkflowFutureStub<IWorkflowExternalWait>("HelloAsync", options);
             var helloFuture = await helloStub.StartAsync<string>("JEFF");
 
@@ -1176,7 +1176,7 @@ namespace TestTemporal
             // Verify that a workflow can wait on an external workflow
             // running in a different namespace by both workflow IDs.
 
-            var options = new WorkflowOptions() { TaskQueue = "test1-taskqueue", Namespace = "test1-namespace" };
+            var options = new StartWorkflowOptions() { TaskQueue = "test1-taskqueue", Namespace = "test1-namespace" };
             var helloStub = test3Client.NewWorkflowFutureStub<IWorkflowExternalWait>("HelloAsync", options);
             var helloFuture = await helloStub.StartAsync<string>("JEFF");
 
@@ -1195,7 +1195,7 @@ namespace TestTemporal
             // Verify that a workflow can wait on an external workflow
             // running in a different namespace by both workflow ID only.
 
-            var options = new WorkflowOptions() { TaskQueue = "test1-taskqueue", Namespace = "test1-namespace" };
+            var options = new StartWorkflowOptions() { TaskQueue = "test1-taskqueue", Namespace = "test1-namespace" };
             var helloStub = test3Client.NewWorkflowFutureStub<IWorkflowExternalWait>("HelloAsync", options);
             var helloFuture = await helloStub.StartAsync<string>("JEFF");
 

@@ -194,7 +194,7 @@ namespace TestTemporal
                 //-----------------------------------------
                 // Zero args:
 
-                var options = new WorkflowOptions()
+                var options = new StartWorkflowOptions()
                 {
                     Id          = "NoArgs-" + Guid.NewGuid().ToString("d"),
                     TaskQueue   = TemporalTestHelper.TaskQueue_TwfArgs
@@ -208,7 +208,7 @@ namespace TestTemporal
                 //-----------------------------------------
                 // One arg:
 
-                options = new WorkflowOptions()
+                options = new StartWorkflowOptions()
                 {
                     Id          = "OneArg-" + Guid.NewGuid().ToString("d"),
                     TaskQueue   = TemporalTestHelper.TaskQueue_TwfArgs
@@ -222,7 +222,7 @@ namespace TestTemporal
                 //-----------------------------------------
                 // Two Args:
 
-                options = new WorkflowOptions()
+                options = new StartWorkflowOptions()
                 {
                     Id          = "TwoArgs-" + Guid.NewGuid().ToString("d"),
                     TaskQueue   = TemporalTestHelper.TaskQueue_TwfArgs
@@ -236,7 +236,7 @@ namespace TestTemporal
                 //-----------------------------------------
                 // One Array Arg:
 
-                options = new WorkflowOptions()
+                options = new StartWorkflowOptions()
                 {
                     Id          = "OneArrayArg-" + Guid.NewGuid().ToString("d"),
                     TaskQueue   = TemporalTestHelper.TaskQueue_TwfArgs
@@ -252,7 +252,7 @@ namespace TestTemporal
                 //-----------------------------------------
                 // One Array and a String Arg 
 
-                options = new WorkflowOptions()
+                options = new StartWorkflowOptions()
                 {
                     Id          = "OneArrayArgs-" + Guid.NewGuid().ToString("d"),
                     TaskQueue   = TemporalTestHelper.TaskQueue_TwfArgs
@@ -270,7 +270,7 @@ namespace TestTemporal
 
                 // Verify that things work when the workflow DOESN'T return an error.
 
-                options = new WorkflowOptions()
+                options = new StartWorkflowOptions()
                 {
                     Id          = "ErrorWorkflow-NOERROR-" + Guid.NewGuid().ToString("d"),
                     TaskQueue   = TemporalTestHelper.TaskQueue_TwfArgs
@@ -283,7 +283,7 @@ namespace TestTemporal
 
                 // Verify that things work when the workflow DOES return an error.
 
-                options = new WorkflowOptions()
+                options = new StartWorkflowOptions()
                 {
                     Id          = "ErrorWorkflow-ERROR-" + Guid.NewGuid().ToString("d"),
                     TaskQueue   = TemporalTestHelper.TaskQueue_TwfArgs
@@ -310,7 +310,7 @@ namespace TestTemporal
 
                 // Verify that things work when the workflow DOESN'T return an error.
 
-                options = new WorkflowOptions()
+                options = new StartWorkflowOptions()
                 {
                     Id          = "StringErrorWorkflow-NOERROR-" + Guid.NewGuid().ToString("d"),
                     TaskQueue   = TemporalTestHelper.TaskQueue_TwfArgs
@@ -323,7 +323,7 @@ namespace TestTemporal
 
                 // Verify that things work when the workflow DOES return an error.
 
-                options = new WorkflowOptions()
+                options = new StartWorkflowOptions()
                 {
                     Id          = "StringErrorWorkflow-ERROR-" + Guid.NewGuid().ToString("d"),
                     TaskQueue   = TemporalTestHelper.TaskQueue_TwfArgs
