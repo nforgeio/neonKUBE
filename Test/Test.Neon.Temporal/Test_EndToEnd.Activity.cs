@@ -970,7 +970,7 @@ namespace TestTemporal
 
             var options = new StartWorkflowOptions()
             {
-                DecisionTaskTimeout = TimeSpan.FromSeconds(60)
+                WorkflowTaskTimeout = TimeSpan.FromSeconds(60)
             };
 
             var stub  = client.NewWorkflowStub<IWorkflowActivityFail>(options);

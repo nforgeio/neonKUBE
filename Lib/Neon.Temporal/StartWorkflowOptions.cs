@@ -144,7 +144,7 @@ namespace Neon.Temporal
 
                 if (options.WorkflowRunTimeout <= TimeSpan.Zero)
                 {
-                    options.WorkflowRunTimeout = client.Settings.WorkflowWorkflowRunTimeout;
+                    options.WorkflowRunTimeout = client.Settings.WorkflowRunTimeout;
                 }
             }
 

@@ -2414,7 +2414,7 @@ namespace TestTemporal
 
             var options = new StartWorkflowOptions()
             {
-                DecisionTaskTimeout = TimeSpan.FromSeconds(5)
+                WorkflowTaskTimeout = TimeSpan.FromSeconds(5)
             };
 
             var stub = client.NewWorkflowStub<IWorkflowWithError>(options);
@@ -2456,7 +2456,7 @@ namespace TestTemporal
 
             var options = new StartWorkflowOptions()
             {
-                DecisionTaskTimeout = TimeSpan.FromSeconds(5)
+                WorkflowTaskTimeout = TimeSpan.FromSeconds(5)
             };
 
             var stub = client.NewWorkflowStub<IWorkflowUnregistered>(options);
@@ -4459,7 +4459,7 @@ namespace TestTemporal
             var stub = client.NewWorkflowStub<IWorkflowTimeout>(
                 new StartWorkflowOptions()
                 {
-                    StartToCloseTimeout = timeout
+                    WorkflowExecutionTimeout = timeout
                 });
 
             await Assert.ThrowsAsync<StartToCloseTimeoutException>(async () => await stub.SleepAsync(sleepTime));

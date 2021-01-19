@@ -42,7 +42,7 @@ var (
 	// temporal-client be hardcoded to listen on 127.0.0.2:5001 and
 	// the temporal-proxy will be assumed to be listening on 127.0.0.2:5000.
 	// This defaults to false.
-	debugPrelaunched = true
+	debugPrelaunched = false
 )
 
 func main() {

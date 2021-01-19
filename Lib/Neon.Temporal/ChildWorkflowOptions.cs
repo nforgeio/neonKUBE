@@ -107,42 +107,42 @@ namespace Neon.Temporal
                 }
             }
 
-            if (options.StartToCloseTimeout <= TimeSpan.Zero)
+            if (options.WorkflowExecutionTimeout <= TimeSpan.Zero)
             {
-                if (methodAttribute != null && methodAttribute.StartToCloseTimeoutSeconds > 0)
+                if (methodAttribute != null && methodAttribute.WorkflowExecutionTimeoutSeconds > 0)
                 {
-                    options.StartToCloseTimeout = TimeSpan.FromSeconds(methodAttribute.StartToCloseTimeoutSeconds);
+                    options.WorkflowExecutionTimeout = TimeSpan.FromSeconds(methodAttribute.WorkflowExecutionTimeoutSeconds);
                 }
 
-                if (options.StartToCloseTimeout <= TimeSpan.Zero)
+                if (options.WorkflowExecutionTimeout <= TimeSpan.Zero)
                 {
-                    options.StartToCloseTimeout = client.Settings.WorkflowStartToCloseTimeout;
+                    options.WorkflowExecutionTimeout = client.Settings.WorkflowExecutionTimeout;
                 }
             }
 
-            if (options.ScheduleToStartTimeout <= TimeSpan.Zero)
+            if (options.WorkflowRunTimeout <= TimeSpan.Zero)
             {
-                if (methodAttribute != null && methodAttribute.ScheduleToStartTimeoutSeconds > 0)
+                if (methodAttribute != null && methodAttribute.WorkflowRunTimeoutSeconds > 0)
                 {
-                    options.ScheduleToStartTimeout = TimeSpan.FromSeconds(methodAttribute.ScheduleToStartTimeoutSeconds);
+                    options.WorkflowRunTimeout = TimeSpan.FromSeconds(methodAttribute.WorkflowRunTimeoutSeconds);
                 }
 
-                if (options.ScheduleToStartTimeout <= TimeSpan.Zero)
+                if (options.WorkflowRunTimeout <= TimeSpan.Zero)
                 {
-                    options.ScheduleToStartTimeout = client.Settings.WorkflowScheduleToStartTimeout;
+                    options.WorkflowRunTimeout = client.Settings.WorkflowRunTimeout;
                 }
             }
 
-            if (options.DecisionTaskTimeout <= TimeSpan.Zero)
+            if (options.WorkflowTaskTimeout <= TimeSpan.Zero)
             {
-                if (methodAttribute != null && methodAttribute.DecisionTaskTimeoutSeconds > 0)
+                if (methodAttribute != null && methodAttribute.WorkflowTaskTimeoutSeconds > 0)
                 {
-                    options.DecisionTaskTimeout = TimeSpan.FromSeconds(methodAttribute.DecisionTaskTimeoutSeconds);
+                    options.WorkflowTaskTimeout = TimeSpan.FromSeconds(methodAttribute.WorkflowTaskTimeoutSeconds);
                 }
 
-                if (options.DecisionTaskTimeout <= TimeSpan.Zero)
+                if (options.WorkflowTaskTimeout <= TimeSpan.Zero)
                 {
-                    options.DecisionTaskTimeout = client.Settings.WorkflowDecisionTaskTimeout;
+                    options.WorkflowTaskTimeout = client.Settings.WorkflowTaskTimeout;
                 }
             }
 
@@ -197,24 +197,26 @@ namespace Neon.Temporal
 
         /// <summary>
         /// Specifies the maximum time the child workflow may execute from start
-        /// to finish.  This defaults to <see cref="TemporalSettings.WorkflowStartToCloseTimeoutSeconds"/>.
+        /// to finish.  This defaults to <see cref="TemporalSettings.WorkflowExecutionTimeoutSeconds"/>.
         /// </summary>
         [JsonConverter(typeof(GoTimeSpanJsonConverter))]
-        public TimeSpan StartToCloseTimeout { get; set; } = TimeSpan.Zero;
+        public TimeSpan WorkflowExecutionTimeout { get; set; } = TimeSpan.Zero;
 
         /// <summary>
-        /// Optionally specifies the default maximum time a workflow can wait between being scheduled
-        /// and actually begin executing.  This defaults to <c>24 hours</c>.
+        /// Optionally specifies the timeout for a single run of the child workflow execution. Each retry or
+        /// continue as new should obey this timeout. Use WorkflowExecutionTimeout to specify how long the parent
+        /// is willing to wait for the child completion.
+        /// Defaults to WorkflowExecutionTimeout
         /// </summary>
         [JsonConverter(typeof(GoTimeSpanJsonConverter))]
-        public TimeSpan ScheduleToStartTimeout { get; set; }
+        public TimeSpan WorkflowRunTimeout { get; set; }
 
         /// <summary>
         /// Optionally specifies the decision task timeout for the child workflow.
-        /// This defaults to <see cref="TemporalSettings.WorkflowDecisionTaskTimeout"/>.
+        /// This defaults to <see cref="TemporalSettings.WorkflowTaskTimeout"/>.
         /// </summary>
         [JsonConverter(typeof(GoTimeSpanJsonConverter))]
-        public TimeSpan DecisionTaskTimeout { get; set; } = TimeSpan.FromSeconds(10);
+        public TimeSpan WorkflowTaskTimeout { get; set; } = TimeSpan.FromSeconds(10);
 
         /// <summary>
         /// Optionally specifies what happens to the child workflow when the parent is terminated.
@@ -224,10 +226,11 @@ namespace Neon.Temporal
         public ParentClosePolicy ChildPolicy { get; set; } = ParentClosePolicy.RequestCancel;
 
         /// <summary>
-        /// Optionally specifies whether to wait for the child workflow to finish for any
-        /// reason including being: completed, failed, timedout, terminated, or canceled.
+        /// Optionally specifies whether to wait for canceled child workflow to be ended (child workflow can be ended
+        /// as: completed/failed/timedout/terminated/canceled).
+        /// Defaults to false.
         /// </summary>
-        public bool WaitUntilFinished { get; set; } = false;
+        public bool WaitForCancellation { get; set; } = false;
 
         /// <summary>
         /// Optionally determines how Temporal handles workflows that attempt to reuse workflow IDs.
@@ -316,12 +319,12 @@ namespace Neon.Temporal
                 Namespace              = this.Namespace,
                 CronSchedule           = this.CronSchedule,
                 ChildPolicy            = this.ChildPolicy,
-                StartToCloseTimeout    = this.StartToCloseTimeout,
+                WorkflowExecutionTimeout    = this.WorkflowExecutionTimeout,
                 RetryPolicy            = this.RetryPolicy,
-                ScheduleToStartTimeout = this.ScheduleToStartTimeout,
+                WorkflowRunTimeout = this.WorkflowRunTimeout,
                 TaskQueue              = this.TaskQueue,
-                DecisionTaskTimeout    = this.DecisionTaskTimeout,
-                WaitUntilFinished      = this.WaitUntilFinished,
+                WorkflowTaskTimeout    = this.WorkflowTaskTimeout,
+                WaitForCancellation    = this.WaitForCancellation,
                 WorkflowId             = this.WorkflowId,
                 WorkflowIdReusePolicy  = this.WorkflowIdReusePolicy
             };
@@ -336,15 +339,15 @@ namespace Neon.Temporal
         {
             return new StartWorkflowOptions()
             {
-                Namespace              = this.Namespace,
-                Memo                   = null,
-                RetryPolicy            = this.RetryPolicy,
-                StartToCloseTimeout    = this.StartToCloseTimeout,
-                ScheduleToStartTimeout = this.ScheduleToStartTimeout,
-                TaskQueue              = this.TaskQueue,
-                DecisionTaskTimeout    = this.DecisionTaskTimeout,
-                Id                     = this.WorkflowId,
-                WorkflowIdReusePolicy  = this.WorkflowIdReusePolicy
+                Namespace                = this.Namespace,
+                Memo                     = null,
+                RetryPolicy              = this.RetryPolicy,
+                WorkflowExecutionTimeout = this.WorkflowExecutionTimeout,
+                WorkflowRunTimeout       = this.WorkflowRunTimeout,
+                TaskQueue                = this.TaskQueue,
+                WorkflowTaskTimeout      = this.WorkflowTaskTimeout,
+                Id                       = this.WorkflowId,
+                WorkflowIdReusePolicy    = this.WorkflowIdReusePolicy
             };
         }
     }

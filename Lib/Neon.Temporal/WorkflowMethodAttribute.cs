@@ -34,9 +34,9 @@ namespace Neon.Temporal
     public class WorkflowMethodAttribute : Attribute
     {
         private string      name;
-        private int  	    startToCloseTimeoutSeconds;
-        private int         decisionTaskTimeoutSeconds;
-        private int         scheduleToStartTimeoutSeconds;
+        private int  	    workflowExecutionTimeoutSeconds;
+        private int         workflowTaskTimeoutSeconds;
+        private int         workflowRunTimeoutSeconds;
         private string      taskQueue;
         private string      @namespace;
         private string      workflowId;
@@ -115,25 +115,25 @@ namespace Neon.Temporal
         /// <summary>
         /// Optionally specifies the maximum workflow execution time.
         /// </summary>
-        public int StartToCloseTimeoutSeconds
+        public int WorkflowExecutionTimeoutSeconds
         {
-            get => startToCloseTimeoutSeconds;
-            set => startToCloseTimeoutSeconds = Math.Max(value, 0);
+            get => workflowExecutionTimeoutSeconds;
+            set => workflowExecutionTimeoutSeconds = Math.Max(value, 0);
         }
 
         /// <summary>
         /// Optionally specifies the maximum execution time for an individual workflow decision
         /// task.  The maximum possible duration is <b>60 seconds</b>.
         /// </summary>
-        public int DecisionTaskTimeoutSeconds
+        public int WorkflowTaskTimeoutSeconds
         {
-            get => decisionTaskTimeoutSeconds;
+            get => workflowTaskTimeoutSeconds;
 
             set
             {
-                Covenant.Requires<ArgumentException>(value <= 60, nameof(value), $"[DecisionTaskTimeoutSeconds={value}] cannot exceed 60 seconds.");
+                Covenant.Requires<ArgumentException>(value <= 60, nameof(value), $"[WorkflowTaskTimeoutSeconds={value}] cannot exceed 60 seconds.");
 
-                decisionTaskTimeoutSeconds = Math.Max(value, 0);
+                workflowTaskTimeoutSeconds = Math.Max(value, 0);
             }
         }
 
@@ -142,10 +142,10 @@ namespace Neon.Temporal
         /// between being scheduled and being actually executed on a
         /// worker.
         /// </summary>
-        public int ScheduleToStartTimeoutSeconds
+        public int WorkflowRunTimeoutSeconds
         {
-            get => scheduleToStartTimeoutSeconds;
-            set => scheduleToStartTimeoutSeconds = Math.Max(value, 0);
+            get => workflowRunTimeoutSeconds;
+            set => workflowRunTimeoutSeconds = Math.Max(value, 0);
         }
 
         /// <summary>

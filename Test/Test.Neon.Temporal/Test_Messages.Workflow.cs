@@ -212,7 +212,7 @@ namespace TestTemporal
                 message.Namespace = "my-namespace";
                 message.Workflow = "Foo";
                 message.Args = new byte[] { 0, 1, 2, 3, 4 };
-                message.Options = new StartWorkflowOptions() { TaskQueue = "my-list", StartToCloseTimeout = TimeSpan.FromSeconds(100) };
+                message.Options = new StartWorkflowOptions() { TaskQueue = "my-list", WorkflowExecutionTimeout = TimeSpan.FromSeconds(100) };
 
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
@@ -221,7 +221,7 @@ namespace TestTemporal
                 Assert.Equal("Foo", message.Workflow);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.Equal("my-list", message.Options.TaskQueue);
-                Assert.Equal(TimeSpan.FromSeconds(100), message.Options.StartToCloseTimeout);
+                Assert.Equal(TimeSpan.FromSeconds(100), message.Options.WorkflowExecutionTimeout);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -236,7 +236,7 @@ namespace TestTemporal
                 Assert.Equal("Foo", message.Workflow);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.Equal("my-list", message.Options.TaskQueue);
-                Assert.Equal(TimeSpan.FromSeconds(100), message.Options.StartToCloseTimeout);
+                Assert.Equal(TimeSpan.FromSeconds(100), message.Options.WorkflowExecutionTimeout);
 
                 // Clone()
 
@@ -249,7 +249,7 @@ namespace TestTemporal
                 Assert.Equal("Foo", message.Workflow);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.Equal("my-list", message.Options.TaskQueue);
-                Assert.Equal(TimeSpan.FromSeconds(100), message.Options.StartToCloseTimeout);
+                Assert.Equal(TimeSpan.FromSeconds(100), message.Options.WorkflowExecutionTimeout);
 
                 // Echo the message via the associated [temporal-proxy] and verify.
 
@@ -262,7 +262,7 @@ namespace TestTemporal
                 Assert.Equal("Foo", message.Workflow);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.Equal("my-list", message.Options.TaskQueue);
-                Assert.Equal(TimeSpan.FromSeconds(100), message.Options.StartToCloseTimeout);
+                Assert.Equal(TimeSpan.FromSeconds(100), message.Options.WorkflowExecutionTimeout);
             }
         }
 
@@ -3015,10 +3015,10 @@ namespace TestTemporal
             Assert.Equal(expected.ChildPolicy, actual.ChildPolicy);
             Assert.Equal(expected.CronSchedule, actual.CronSchedule);
             Assert.Equal(expected.WorkflowId, actual.WorkflowId);
-            Assert.Equal(expected.WaitUntilFinished, actual.WaitUntilFinished);
-            Assert.Equal(expected.ScheduleToStartTimeout, actual.ScheduleToStartTimeout);
-            Assert.Equal(expected.StartToCloseTimeout, actual.StartToCloseTimeout);
-            Assert.Equal(expected.DecisionTaskTimeout, actual.DecisionTaskTimeout);
+            Assert.Equal(expected.WaitForCancellation, actual.WaitForCancellation);
+            Assert.Equal(expected.WorkflowRunTimeout, actual.WorkflowRunTimeout);
+            Assert.Equal(expected.WorkflowExecutionTimeout, actual.WorkflowExecutionTimeout);
+            Assert.Equal(expected.WorkflowTaskTimeout, actual.WorkflowTaskTimeout);
             Assert.Equal(expected.WorkflowIdReusePolicy, actual.WorkflowIdReusePolicy);
             Assert.Equal(expected.RetryPolicy.MaximumAttempts, actual.RetryPolicy.MaximumAttempts);
         }
@@ -3053,17 +3053,17 @@ namespace TestTemporal
 
                 var options = new ChildWorkflowOptions()
                 {
-                    TaskQueue              = "my-taskqueue",
-                    Namespace              = "my-namespace",
-                    ChildPolicy            = ParentClosePolicy.RequestCancel,
-                    CronSchedule           = "* 12 * * *",
-                    WorkflowId             = "my-workflow",
-                    WaitUntilFinished      = true,
-                    ScheduleToStartTimeout = TimeSpan.FromSeconds(1),
-                    StartToCloseTimeout    = TimeSpan.FromSeconds(2),
-                    DecisionTaskTimeout    = TimeSpan.FromSeconds(3),
-                    WorkflowIdReusePolicy  = WorkflowIdReusePolicy.RejectDuplicate,
-                    RetryPolicy            = new RetryPolicy()
+                    TaskQueue                = "my-taskqueue",
+                    Namespace                = "my-namespace",
+                    ChildPolicy              = ParentClosePolicy.RequestCancel,
+                    CronSchedule             = "* 12 * * *",
+                    WorkflowId               = "my-workflow",
+                    WaitForCancellation        = true,
+                    WorkflowRunTimeout       = TimeSpan.FromSeconds(1),
+                    WorkflowExecutionTimeout = TimeSpan.FromSeconds(2),
+                    WorkflowTaskTimeout      = TimeSpan.FromSeconds(3),
+                    WorkflowIdReusePolicy    = WorkflowIdReusePolicy.RejectDuplicate,
+                    RetryPolicy              = new RetryPolicy()
                     {
                         MaximumAttempts = 100
                     }

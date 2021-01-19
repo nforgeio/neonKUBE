@@ -68,13 +68,13 @@ namespace TestTemporal
         /// <summary>
         /// Specifies the <b>temporal-proxy</b> log level to use for Temporal related unit tests.
         /// </summary>
-        public static readonly LogLevel ProxyLogLevel = LogLevel.Debug;
+        public static readonly LogLevel ProxyLogLevel = LogLevel.Info;
 
         /// <summary>
         /// Specifies whether Temporal unit tests will connect to Temporal in DEBUG mode
         /// which launches <b>temporal-proxy</b> in a CMD shell on Windows.
         /// </summary>
-        public const bool Debug = true;
+        public const bool Debug = false;
 
         /// <summary>
         /// <para>
@@ -85,7 +85,7 @@ namespace TestTemporal
         /// that unit tests will work properly.
         /// </note>
         /// </summary>
-        public const bool DebugPrelaunched = true;
+        public const bool DebugPrelaunched = false;
 
         /// <summary>
         /// <para>
@@ -96,7 +96,7 @@ namespace TestTemporal
         /// that unit tests will work properly.
         /// </note>
         /// </summary>
-        public const bool DebugDisableHeartbeats = true;
+        public const bool DebugDisableHeartbeats = false;
 
         /// <summary>
         /// The Temporal task queue to be used for test workers.

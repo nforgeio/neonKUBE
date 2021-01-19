@@ -124,10 +124,10 @@ namespace TestTemporal
                 ActivityScheduleToCloseTimeoutSeconds = 30,
                 ActivityScheduleToStartTimeoutSeconds = 40,
                 ActivityStartToCloseTimeoutSeconds    = 50,
-                WorkflowDecisionTaskTimeoutSeconds    = 10,
+                WorkflowTaskTimeoutSeconds    = 10,
                 WorkflowIdReusePolicy                 = WorkflowIdReusePolicy.UseDefault,
-                WorkflowStartToCloseTimeoutSeconds    = 70,
-                WorkflowScheduleToStartTimeoutSeconds = 80,
+                WorkflowExecutionTimeoutSeconds    = 70,
+                WorkflowRunTimeoutSeconds = 80,
             };
 
             test2Settings = new TemporalSettings()
@@ -147,10 +147,10 @@ namespace TestTemporal
                 ActivityScheduleToCloseTimeoutSeconds = 31,
                 ActivityScheduleToStartTimeoutSeconds = 41,
                 ActivityStartToCloseTimeoutSeconds    = 51,
-                WorkflowDecisionTaskTimeoutSeconds    = 11,
+                WorkflowTaskTimeoutSeconds    = 11,
                 WorkflowIdReusePolicy                 = WorkflowIdReusePolicy.AllowDuplicate,
-                WorkflowStartToCloseTimeoutSeconds    = 71,
-                WorkflowScheduleToStartTimeoutSeconds = 81,
+                WorkflowExecutionTimeoutSeconds    = 71,
+                WorkflowRunTimeoutSeconds = 81,
             };
 
             test3Settings = new TemporalSettings()
@@ -169,10 +169,10 @@ namespace TestTemporal
                 ActivityScheduleToCloseTimeoutSeconds = 32,
                 ActivityScheduleToStartTimeoutSeconds = 42,
                 ActivityStartToCloseTimeoutSeconds    = 52,
-                WorkflowDecisionTaskTimeoutSeconds    = 12,
+                WorkflowTaskTimeoutSeconds    = 12,
                 WorkflowIdReusePolicy                 = WorkflowIdReusePolicy.RejectDuplicate,
-                WorkflowStartToCloseTimeoutSeconds    = 72,
-                WorkflowScheduleToStartTimeoutSeconds = 82,
+                WorkflowExecutionTimeoutSeconds    = 72,
+                WorkflowRunTimeoutSeconds = 82,
             };
 
             if (fixture.Start(fixtureSettings, composeFile: TemporalTestHelper.TemporalStackDefinition, reconnect: true, keepRunning: TemporalTestHelper.KeepTemporalServerOpen) == TestFixtureStatus.Started)
@@ -276,12 +276,12 @@ namespace TestTemporal
         public interface IWorkflowWithMethodAttributes : IWorkflow
         {
             [WorkflowMethod(
-                Namespace                     = "test1-namespace", 
-                TaskQueue                     = "test1-taskqueue",
-                DecisionTaskTimeoutSeconds    = 55,
-                ScheduleToStartTimeoutSeconds = 56,
-                StartToCloseTimeoutSeconds    = 57,
-                WorkflowIdReusePolicy         = WorkflowIdReusePolicy.RejectDuplicate)]
+                Namespace                       = "test1-namespace", 
+                TaskQueue                       = "test1-taskqueue",
+                WorkflowTaskTimeoutSeconds      = 55,
+                WorkflowRunTimeoutSeconds       = 56,
+                WorkflowExecutionTimeoutSeconds = 57,
+                WorkflowIdReusePolicy           = WorkflowIdReusePolicy.RejectDuplicate)]
             Task RunAsync();
         }
 
@@ -785,9 +785,9 @@ namespace TestTemporal
                 {
                     Assert.Equal(test1Settings.Namespace, options.Namespace);
                     Assert.Equal(test1Settings.TaskQueue, options.TaskQueue);
-                    Assert.Equal(test1Settings.WorkflowDecisionTaskTimeout, options.DecisionTaskTimeout);
-                    Assert.Equal(test1Settings.WorkflowStartToCloseTimeout, options.StartToCloseTimeout);
-                    Assert.Equal(test1Settings.WorkflowScheduleToStartTimeout, options.ScheduleToStartTimeout);
+                    Assert.Equal(test1Settings.WorkflowTaskTimeout, options.WorkflowTaskTimeout);
+                    Assert.Equal(test1Settings.WorkflowExecutionTimeout, options.WorkflowExecutionTimeout);
+                    Assert.Equal(test1Settings.WorkflowRunTimeout, options.WorkflowRunTimeout);
                     Assert.Equal(test1Settings.WorkflowIdReusePolicy, options.WorkflowIdReusePolicy);
                 });
 
@@ -798,9 +798,9 @@ namespace TestTemporal
                 {
                     Assert.Equal(test2Settings.Namespace, options.Namespace);
                     Assert.Equal(test2Settings.TaskQueue, options.TaskQueue);
-                    Assert.Equal(test2Settings.WorkflowDecisionTaskTimeout, options.DecisionTaskTimeout);
-                    Assert.Equal(test2Settings.WorkflowStartToCloseTimeout, options.StartToCloseTimeout);
-                    Assert.Equal(test2Settings.WorkflowScheduleToStartTimeout, options.ScheduleToStartTimeout);
+                    Assert.Equal(test2Settings.WorkflowTaskTimeout, options.WorkflowTaskTimeout);
+                    Assert.Equal(test2Settings.WorkflowExecutionTimeout, options.WorkflowExecutionTimeout);
+                    Assert.Equal(test2Settings.WorkflowRunTimeout, options.WorkflowExecutionTimeout);
                     Assert.Equal(test2Settings.WorkflowIdReusePolicy, options.WorkflowIdReusePolicy);
                 });
         }
@@ -830,9 +830,9 @@ namespace TestTemporal
                 {
                     Assert.Equal("test1-namespace", options.Namespace);
                     Assert.Equal("test1-taskqueue", options.TaskQueue);
-                    Assert.Equal(55, options.DecisionTaskTimeout.TotalSeconds);
-                    Assert.Equal(56, options.ScheduleToStartTimeout.TotalSeconds);
-                    Assert.Equal(57, options.StartToCloseTimeout.TotalSeconds);
+                    Assert.Equal(55, options.WorkflowTaskTimeout.TotalSeconds);
+                    Assert.Equal(56, options.WorkflowRunTimeout.TotalSeconds);
+                    Assert.Equal(57, options.WorkflowExecutionTimeout.TotalSeconds);
                     Assert.Equal(WorkflowIdReusePolicy.RejectDuplicate, options.WorkflowIdReusePolicy);
                 });
         }
@@ -847,9 +847,9 @@ namespace TestTemporal
             {
                 Namespace              = "test1-namespace",
                 TaskQueue              = "test1-taskqueue",
-                DecisionTaskTimeout    = TimeSpan.FromSeconds(40),
-                ScheduleToStartTimeout = TimeSpan.FromSeconds(41),
-                StartToCloseTimeout    = TimeSpan.FromSeconds(42),
+                WorkflowTaskTimeout    = TimeSpan.FromSeconds(40),
+                WorkflowRunTimeout = TimeSpan.FromSeconds(41),
+                WorkflowExecutionTimeout    = TimeSpan.FromSeconds(42),
                 WorkflowIdReusePolicy  = WorkflowIdReusePolicy.AllowDuplicate
             };
 
@@ -858,9 +858,9 @@ namespace TestTemporal
                 {
                     Assert.Equal("test1-namespace", options.Namespace);
                     Assert.Equal("test1-taskqueue", options.TaskQueue);
-                    Assert.Equal(40, options.DecisionTaskTimeout.TotalSeconds);
-                    Assert.Equal(41, options.ScheduleToStartTimeout.TotalSeconds);
-                    Assert.Equal(42, options.StartToCloseTimeout.TotalSeconds);
+                    Assert.Equal(40, options.WorkflowTaskTimeout.TotalSeconds);
+                    Assert.Equal(41, options.WorkflowRunTimeout.TotalSeconds);
+                    Assert.Equal(42, options.WorkflowExecutionTimeout.TotalSeconds);
                     Assert.Equal(WorkflowIdReusePolicy.AllowDuplicate, options.WorkflowIdReusePolicy);
                 },
                 options: workflowOptions);
@@ -897,9 +897,9 @@ namespace TestTemporal
                 {
                     Assert.Equal(test1Settings.Namespace, options.Namespace);
                     Assert.Equal(test1Settings.TaskQueue, options.TaskQueue);
-                    Assert.Equal(test1Settings.WorkflowDecisionTaskTimeout, options.DecisionTaskTimeout);
-                    Assert.Equal(test1Settings.WorkflowStartToCloseTimeout, options.StartToCloseTimeout);
-                    Assert.Equal(test1Settings.WorkflowScheduleToStartTimeout, options.ScheduleToStartTimeout);
+                    Assert.Equal(test1Settings.WorkflowTaskTimeout, options.WorkflowTaskTimeout);
+                    Assert.Equal(test1Settings.WorkflowExecutionTimeout, options.WorkflowExecutionTimeout);
+                    Assert.Equal(test1Settings.WorkflowRunTimeout, options.WorkflowRunTimeout);
                     Assert.Equal(test1Settings.WorkflowIdReusePolicy, options.WorkflowIdReusePolicy);
                 });
 
@@ -910,9 +910,9 @@ namespace TestTemporal
                 {
                     Assert.Equal(test2Settings.Namespace, options.Namespace);
                     Assert.Equal(test2Settings.TaskQueue, options.TaskQueue);
-                    Assert.Equal(test2Settings.WorkflowDecisionTaskTimeout, options.DecisionTaskTimeout);
-                    Assert.Equal(test2Settings.WorkflowStartToCloseTimeout, options.StartToCloseTimeout);
-                    Assert.Equal(test2Settings.WorkflowScheduleToStartTimeout, options.ScheduleToStartTimeout);
+                    Assert.Equal(test2Settings.WorkflowTaskTimeout, options.WorkflowTaskTimeout);
+                    Assert.Equal(test2Settings.WorkflowExecutionTimeout, options.WorkflowExecutionTimeout);
+                    Assert.Equal(test2Settings.WorkflowRunTimeout, options.WorkflowRunTimeout);
                     Assert.Equal(test2Settings.WorkflowIdReusePolicy, options.WorkflowIdReusePolicy);
                 });
         }
@@ -959,9 +959,9 @@ namespace TestTemporal
                 {
                     Assert.Equal("test1-namespace", options.Namespace);
                     Assert.Equal("test1-taskqueue", options.TaskQueue);
-                    Assert.Equal(55, options.DecisionTaskTimeout.TotalSeconds);
-                    Assert.Equal(56, options.ScheduleToStartTimeout.TotalSeconds);
-                    Assert.Equal(57, options.StartToCloseTimeout.TotalSeconds);
+                    Assert.Equal(55, options.WorkflowTaskTimeout.TotalSeconds);
+                    Assert.Equal(56, options.WorkflowRunTimeout.TotalSeconds);
+                    Assert.Equal(57, options.WorkflowExecutionTimeout.TotalSeconds);
                     Assert.Equal(WorkflowIdReusePolicy.RejectDuplicate, options.WorkflowIdReusePolicy);
                 });
         }
@@ -974,12 +974,12 @@ namespace TestTemporal
 
             var workflowOptions = new StartWorkflowOptions()
             {
-                Namespace              = "test1-namespace",
-                TaskQueue              = "test1-taskqueue",
-                DecisionTaskTimeout    = TimeSpan.FromSeconds(40),
-                ScheduleToStartTimeout = TimeSpan.FromSeconds(41),
-                StartToCloseTimeout    = TimeSpan.FromSeconds(42),
-                WorkflowIdReusePolicy  = WorkflowIdReusePolicy.AllowDuplicate
+                Namespace                = "test1-namespace",
+                TaskQueue                = "test1-taskqueue",
+                WorkflowTaskTimeout      = TimeSpan.FromSeconds(40),
+                WorkflowRunTimeout       = TimeSpan.FromSeconds(41),
+                WorkflowExecutionTimeout = TimeSpan.FromSeconds(42),
+                WorkflowIdReusePolicy    = WorkflowIdReusePolicy.AllowDuplicate
             };
 
             await ExecuteChildWorkflowWithMethodAttributesAsync(test3Client,
@@ -987,9 +987,9 @@ namespace TestTemporal
                 {
                     Assert.Equal("test1-namespace", options.Namespace);
                     Assert.Equal("test1-taskqueue", options.TaskQueue);
-                    Assert.Equal(40, options.DecisionTaskTimeout.TotalSeconds);
-                    Assert.Equal(41, options.ScheduleToStartTimeout.TotalSeconds);
-                    Assert.Equal(42, options.StartToCloseTimeout.TotalSeconds);
+                    Assert.Equal(40, options.WorkflowTaskTimeout.TotalSeconds);
+                    Assert.Equal(41, options.WorkflowRunTimeout.TotalSeconds);
+                    Assert.Equal(42, options.WorkflowExecutionTimeout.TotalSeconds);
                     Assert.Equal(WorkflowIdReusePolicy.AllowDuplicate, options.WorkflowIdReusePolicy);
                 },
                 options: workflowOptions);
