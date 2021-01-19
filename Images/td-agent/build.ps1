@@ -28,7 +28,7 @@ param
 
 Log-ImageBuild $registry $tag
 
-$organization = RegistryOrg
+$organization = KubeBaseRegistryOrg
 
 # Build the image.
 Exec { docker build -t "${registry}:$tag" --build-arg "ORGANIZATION=$organization" --build-arg "VERSION=$version" --build-arg "CLUSTER_VERSION=neonkube-$neonKUBE_Version" . }

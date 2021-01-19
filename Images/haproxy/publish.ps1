@@ -42,7 +42,7 @@ function Build
 		[switch]$latest = $false
 	)
 
-	$registry = GetRegistry "haproxy"
+	$registry = GetKubeMainRegistry "haproxy"
 	$tag      = "neonkube-$version"
 
 	# Build and publish the images.

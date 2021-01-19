@@ -294,7 +294,7 @@ namespace Neon.Kube
             SetBashVariable(preprocessReader, "ntp.master.sources", masterTimeSources);
             NewMethod(preprocessReader, workerTimeSources);
 
-            preprocessReader.Set("neon-branch-registry", NeonHelper.NeonBranchRegistry);
+            preprocessReader.Set("neon-branch-registry", NeonHelper.NeonLibraryBranchRegistry);
             preprocessReader.Set("neon-cluster-version", KubeConst.NeonKubeVersion);
         }
 

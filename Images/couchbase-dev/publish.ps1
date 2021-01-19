@@ -41,7 +41,7 @@ function Build
 		[switch]$latest = $false
 	)
 
-	$registry    = GetRegistry "couchbase-dev"
+	$registry    = GetLibraryRegistry "couchbase-dev"
 	$tag         = $version
 	$tagAsLatest = TagAsLatest
 

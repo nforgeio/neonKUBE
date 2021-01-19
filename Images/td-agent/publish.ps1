@@ -41,7 +41,7 @@ function Build
 		[switch]$latest = $false
 	)
 
-	$registry    = GetRegistry "td-agent"
+	$registry    = GetLibraryRegistry "td-agent"
 	$tag         = $version
 	$tagAsLatest = TagAsLatest
 

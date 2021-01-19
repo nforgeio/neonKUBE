@@ -41,7 +41,7 @@ function Build
 		[switch]$latest = $false
 	)
 
-	$registry    = GetRegistry "test-temporal"
+	$registry    = GetLibraryRegistry "test-temporal"
 	$tag         = $version
 	$tagAsLatest = TagAsLatest
 

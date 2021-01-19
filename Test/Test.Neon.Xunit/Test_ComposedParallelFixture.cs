@@ -164,7 +164,7 @@ namespace TestXunit
                     composedFixture.AddFixture("container", new ContainerFixture(),
                         containerFixture =>
                         {
-                            containerFixture.StartAsComposed("my-container", $"{NeonHelper.NeonBranchRegistry}/test:latest");
+                            containerFixture.StartAsComposed("my-container", $"{NeonHelper.NeonLibraryBranchRegistry}/test:latest");
                         },
                         group: 2);
 

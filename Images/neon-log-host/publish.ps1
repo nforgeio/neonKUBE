@@ -42,7 +42,7 @@ function Build
 		[switch]$latest = $false
 	)
 
-	$registry    = GetRegistry "neon-log-host"
+	$registry    = GetKubeMainRegistry "neon-log-host"
 	$tag         = "neonkube-$version"
 	$tagAsLatest = TagAsLatest
 

@@ -247,21 +247,23 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Identifies the production cluster public Docker registry.
+        /// Identifies the production neonLIBRARY container image registry.  This is a public
+        /// registry that holds non-cluster setup related images.
         /// </summary>
-        public const string NeonProdRegistry = "ghcr.io/neonrelease";
+        public const string NeonLibraryProdRegistry = "ghcr.io/neonrelease";
 
         /// <summary>
-        /// Identifies the development cluster public Docker registry.
+        /// Identifies the development neonLIBRARY container image registry.  This is a public
+        /// registry that holds non-cluster setup related images during development between
+        /// releases.
         /// </summary>
-        public const string NeonDevRegistry = "ghcr.io/neonrelease-dev";
+        public const string NeonLibraryDevRegistry = "ghcr.io/neonrelease-dev";
 
         /// <summary>
-        /// Returns the appropriate public Docker registry to be used for the git branch the
-        /// assembly was built from.  This returns <see cref="NeonProdRegistry"/> for release
-        /// branches and <see cref="NeonDevRegistry"/> for all other branches.
+        /// Returns the appropriate public container neonLIBRARY registry to be used for the git 
+        /// branch the assembly was built from.  This returns <see cref="NeonLibraryProdRegistry"/> for
+        /// release branches and <see cref="NeonLibraryDevRegistry"/> for all other branches.
         /// </summary>
-        public static string NeonBranchRegistry => ThisAssembly.Git.Branch.StartsWith("release-", StringComparison.InvariantCultureIgnoreCase) ? NeonProdRegistry : NeonDevRegistry;
+        public static string NeonLibraryBranchRegistry => ThisAssembly.Git.Branch.StartsWith("release-", StringComparison.InvariantCultureIgnoreCase) ? NeonLibraryProdRegistry : NeonLibraryDevRegistry;
     }
 }
-

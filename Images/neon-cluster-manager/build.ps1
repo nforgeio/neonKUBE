@@ -16,7 +16,7 @@ param
 Log-ImageBuild $registry $tag
 
 $appname      = "neon-cluster-manager"
-$organization = RegistryOrg
+$organization = LibraryRegistryOrg
 
 # Build and publish the app to a local [bin] folder.
 

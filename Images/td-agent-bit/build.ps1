@@ -28,7 +28,7 @@ param
 
 Log-ImageBuild $registry $tag
 
-$organization = RegistryOrg
+$organization = KubeBaseRegistryOrg
 
 # Build the image.
 

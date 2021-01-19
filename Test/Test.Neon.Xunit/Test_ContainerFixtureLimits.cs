@@ -50,7 +50,7 @@ namespace TestXunit
                 OomKillDisable    = true
             };
 
-            fixture.Start("neon-unit-test-containerr", $"{NeonHelper.NeonBranchRegistry}/test:latest", limits: limits);
+            fixture.Start("neon-unit-test-containerr", $"{NeonHelper.NeonLibraryBranchRegistry}/test:latest", limits: limits);
         }
 
         [Fact]

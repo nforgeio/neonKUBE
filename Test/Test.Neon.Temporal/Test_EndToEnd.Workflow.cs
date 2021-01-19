@@ -4538,7 +4538,7 @@ namespace TestTemporal
             // and register its workflows and activities.  We'll remove any existing container
             // first and then remove the container after we're done.
 
-            var testTemporalImage = $"{NeonHelper.NeonBranchRegistry}/test-temporal:latest";
+            var testTemporalImage = $"{NeonHelper.NeonLibraryBranchRegistry}/test-temporal:latest";
 
             // $debug(jefflill): 
             //
