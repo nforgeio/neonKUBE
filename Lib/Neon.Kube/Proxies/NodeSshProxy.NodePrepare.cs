@@ -737,8 +737,8 @@ curl {KubeHelper.CurlOptions} https://download.opensuse.org/repositories/devel:k
 
 # Install the CRI-O packages.
 
-apt-get update -y
-apt-get install -y cri-o cri-o-runc
+safe-apt-get update -y
+safe-apt-get install -y cri-o cri-o-runc
 
 # Generate the CRI-O configurations.
 
