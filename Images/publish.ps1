@@ -115,7 +115,6 @@ if ($base)
 {
     # Other base images:
 
-    Publish "$image_root\\haproxy"
     Publish "$image_root\\td-agent"
     Publish "$image_root\\td-agent-bit"
 }

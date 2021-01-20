@@ -333,21 +333,21 @@ function GetKubeMainRegistry($image)
 
 	if ($dev)
 	{
-		return "ghcr.io/neonrelease-dev/" + $image
+		return "ghcr.io/neonkube-dev/" + $image
 	}
 	
 	if ($rel)
 	{
-		return "ghcr.io/neonrelease/" + $image
+		return "ghcr.io/neonkube/" + $image
 	}
 
 	if (IsRelease)
 	{
-		return "ghcr.io/neonrelease/" + $image
+		return "ghcr.io/neonkube/" + $image
 	}
 	else
 	{
-		return "ghcr.io/neonrelease-dev/" + $image
+		return "ghcr.io/neonkube-dev/" + $image
 	}
 }
 
@@ -411,11 +411,11 @@ function KubeMainRegistryOrg
 {
 	if (IsRelease)
 	{
-		return "ghcr.io/neonrelease"
+		return "ghcr.io/neonkube"
 	}
 	else
 	{
-		return "ghcr.io/neonrelease-dev"
+		return "ghcr.io/neonkube-dev"
 	}
 }
 
