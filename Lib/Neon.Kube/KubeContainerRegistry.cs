@@ -70,14 +70,14 @@ namespace Neon.Kube
         /// Identifies the production neonFORGE container image registry.  This is a public
         /// registry that holds non-cluster setup related images.
         /// </summary>
-        public const string MainProdRegistry = "ghcr.io/neonrelease";
+        public const string MainProdRegistry = "ghcr.io/neonkube";
 
         /// <summary>
         /// Identifies the development neonFORGE container image registry.  This is a public
         /// registry that holds non-cluster setup related images during development between
         /// releases.
         /// </summary>
-        public const string MainDevRegistry = "ghcr.io/neonrelease-dev";
+        public const string MainDevRegistry = "ghcr.io/neonkube-dev";
 
         /// <summary>
         /// Returns the appropriate public container neonFORGE registry to be used for the git 
@@ -90,14 +90,14 @@ namespace Neon.Kube
         /// Identifies the production neonFORGE container image registry.  This is a public
         /// registry that holds non-cluster setup related images.
         /// </summary>
-        public const string BaseProdRegistry = "ghcr.io/neonrelease";
+        public const string BaseProdRegistry = "ghcr.io/neonkube-base";
 
         /// <summary>
         /// Identifies the development neonFORGE container image registry.  This is a public
         /// registry that holds non-cluster setup related images during development between
         /// releases.
         /// </summary>
-        public const string BaseDevRegistry = "ghcr.io/neonrelease-dev";
+        public const string BaseDevRegistry = "ghcr.io/neonkube-base-dev";
 
         /// <summary>
         /// Returns the appropriate public container neonFORGE registry to be used for the git 
