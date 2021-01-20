@@ -115,9 +115,7 @@ if ($base)
 {
     # Other base images:
 
-    Publish "$image_root\\haproxy"
-    Publish "$image_root\\td-agent"
-    Publish "$image_root\\td-agent-bit"
+    # Its lonely here!
 }
 
 if ($other)
@@ -138,6 +136,4 @@ if ($services)
     Publish "$image_root\\test-cadence"
     Publish "$image_root\\test-temporal"
     Publish "$image_root\\neon-cluster-manager"
-    Publish "$image_root\\neon-log-collector"
-    Publish "$image_root\\neon-log-host"
 }

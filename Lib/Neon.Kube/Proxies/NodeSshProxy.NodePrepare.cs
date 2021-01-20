@@ -737,12 +737,12 @@ curl {KubeHelper.CurlOptions} https://download.opensuse.org/repositories/devel:k
 
 # Install the CRI-O packages.
 
-apt-get update -y
-apt-get install -y cri-o cri-o-runc
+safe-apt-get update -y
+safe-apt-get install -y cri-o cri-o-runc
 
 # Generate the CRI-O configurations.
 
-NEON_REGISTRY={NeonHelper.NeonBranchRegistry}
+NEON_REGISTRY={NeonHelper.NeonLibraryBranchRegistry}
 
 cat <<EOF > /etc/containers/registries.conf
 unqualified-search-registries = [ ""docker.io"", ""quay.io"", ""registry.access.redhat.com"", ""registry.fedoraproject.org"" ]

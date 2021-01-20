@@ -41,7 +41,7 @@ function Build
 		[switch]$latest = $false
 	)
 
-	$registry    = GetRegistry "nats-streaming"
+	$registry    = GetLibraryRegistry "nats-streaming"
 	$tag         = $version
 	$tagAsLatest = TagAsLatest
 

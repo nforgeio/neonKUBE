@@ -240,15 +240,15 @@ function TagAsLatest
 }
 
 #------------------------------------------------------------------------------
-# Prefixes the image name passed with the target Docker Hub organization 
-# for the current Git branch by default such that when the current branch
+# Prefixes the image name passed with the target neonLIBRARY GitHub container 
+# registry for the current git branch by default such that when the current branch
 # name starts with "release-" the image will be pushed to "ghcr.io/neonrelease/"
 # otherwise it will be pushed to "ghcr.io/neonrelease-dev/".
 #
 # This default behavior can be overridden by setting the [$rel] or [$dev] Variable
 # to $true.  These are generally passed as arguments to the root publish script.
 
-function GetRegistry($image)
+function GetLibraryRegistry($image)
 {
 	if ($dev -and $rel)
 	{
@@ -277,9 +277,122 @@ function GetRegistry($image)
 }
 
 #------------------------------------------------------------------------------
-# Returns the registry organization corresponding to the current Git branch.
+# Prefixes the image name passed with the target neonCLOUD GitHub container 
+# registry for the current git branch by default such that when the current branch
+# name starts with "release-" the image will be pushed to "ghcr.io/neonrelease/"
+# otherwise it will be pushed to "ghcr.io/neonrelease-dev/".
+#
+# This default behavior can be overridden by setting the [$rel] or [$dev] Variable
+# to $true.  These are generally passed as arguments to the root publish script.
 
-function RegistryOrg
+function GetNeonCloudRegistry($image)
+{
+	if ($dev -and $rel)
+	{
+		'ERROR: $dev and $rel cannot both be $true.'
+		exit 1
+	}
+
+	if ($dev)
+	{
+		return "ghcr.io/neonrelease-dev/" + $image
+	}
+	
+	if ($rel)
+	{
+		return "ghcr.io/neonrelease/" + $image
+	}
+
+	if (IsRelease)
+	{
+		return "ghcr.io/neonrelease/" + $image
+	}
+	else
+	{
+		return "ghcr.io/neonrelease-dev/" + $image
+	}
+}
+
+#------------------------------------------------------------------------------
+# Prefixes the image name passed with the target neonKUBE MAIN GitHub container 
+# registry for the current git branch by default such that when the current branch
+# name starts with "release-" the image will be pushed to "ghcr.io/neonrelease/"
+# otherwise it will be pushed to "ghcr.io/neonrelease-dev/".  The MAIN registry
+# holds the neonKUBE images tagged by cluster version.
+#
+# This default behavior can be overridden by setting the [$rel] or [$dev] Variable
+# to $true.  These are generally passed as arguments to the root publish script.
+
+function GetKubeMainRegistry($image)
+{
+	if ($dev -and $rel)
+	{
+		'ERROR: $dev and $rel cannot both be $true.'
+		exit 1
+	}
+
+	if ($dev)
+	{
+		return "ghcr.io/neonkube-dev/" + $image
+	}
+	
+	if ($rel)
+	{
+		return "ghcr.io/neonkube/" + $image
+	}
+
+	if (IsRelease)
+	{
+		return "ghcr.io/neonkube/" + $image
+	}
+	else
+	{
+		return "ghcr.io/neonkube-dev/" + $image
+	}
+}
+
+#------------------------------------------------------------------------------
+# Prefixes the image name passed with the target neonKUBE BASE GitHub container 
+# registry for the current git branch by default such that when the current branch
+# name starts with "release-" the image will be pushed to "ghcr.io/neonrelease/"
+# otherwise it will be pushed to "ghcr.io/neonrelease-dev/".  The BASE registry
+# holds the neonKUBE base images tagged with the component version.
+#
+# This default behavior can be overridden by setting the [$rel] or [$dev] Variable
+# to $true.  These are generally passed as arguments to the root publish script.
+
+function GetKubeBaseRegistry($image)
+{
+	if ($dev -and $rel)
+	{
+		'ERROR: $dev and $rel cannot both be $true.'
+		exit 1
+	}
+
+	if ($dev)
+	{
+		return "ghcr.io/neonkube-base-dev/" + $image
+	}
+	
+	if ($rel)
+	{
+		return "ghcr.io/neonkube-base/" + $image
+	}
+
+	if (IsRelease)
+	{
+		return "ghcr.io/neonkube-base/" + $image
+	}
+	else
+	{
+		return "ghcr.io/neonkube-base-dev/" + $image
+	}
+}
+
+#------------------------------------------------------------------------------
+# Returns the neonLIBRARY registry organization corresponding to the current git branch.
+
+function LibraryRegistryOrg
 {
 	if (IsRelease)
 	{
@@ -288,6 +401,36 @@ function RegistryOrg
 	else
 	{
 		return "ghcr.io/neonrelease-dev"
+	}
+}
+
+#------------------------------------------------------------------------------
+# Returns the neonKUBE MAIN registry organization corresponding to the current git branch.
+
+function KubeMainRegistryOrg
+{
+	if (IsRelease)
+	{
+		return "ghcr.io/neonkube"
+	}
+	else
+	{
+		return "ghcr.io/neonkube-dev"
+	}
+}
+
+#------------------------------------------------------------------------------
+# Returns the neonKUBE BASE registry organization corresponding to the current git branch.
+
+function KubeBaseRegistryOrg
+{
+	if (IsRelease)
+	{
+		return "ghcr.io/neonkube-base"
+	}
+	else
+	{
+		return "ghcr.io/neonkube-base-dev"
 	}
 }
 

@@ -16,15 +16,16 @@
 // limitations under the License.
 
 using System;
+using System.IO;
 using System.Text;
 
 using Newtonsoft.Json;
 
 using Neon.Common;
+using Neon.IO;
 using Neon.Xunit;
 
 using Xunit;
-using System.IO;
 
 namespace TestCommon
 {
@@ -127,6 +128,38 @@ namespace TestCommon
                     msCompressed.GunzipTo(msUncompressed);
                     Assert.Equal(uncompressedBytes, msUncompressed.ToArray());
                 }
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void Compression_GZip_File()
+        {
+            using (var tempFolder = new TempFolder())
+            {
+                const string testText = "Hello World! xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+
+                var uncompressedPath = Path.Combine(tempFolder.Path, "uncompressed.dat");
+                var compressedPath   = Path.Combine(tempFolder.Path, "compressed.dat");
+
+                File.WriteAllText(uncompressedPath, testText);
+                NeonHelper.GzipFile(uncompressedPath, compressedPath);
+
+                // Verify that the compressed file is actually smaller.
+
+                using (var compressed = new FileStream(compressedPath, FileMode.Open, FileAccess.ReadWrite))
+                {
+                    using (var uncompressed = new FileStream(uncompressedPath, FileMode.Open, FileAccess.ReadWrite))
+                    {
+                        Assert.True(compressed.Length < uncompressed.Length);
+                    }
+                }
+
+                // Verify that uncompress works
+
+                File.Delete(uncompressedPath);
+                NeonHelper.GunzipFile(compressedPath, uncompressedPath);
+                Assert.Equal(testText, File.ReadAllText(uncompressedPath));
             }
         }
     }

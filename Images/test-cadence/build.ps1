@@ -16,7 +16,7 @@ param
 Log-ImageBuild $registry $tag
 
 $appname      = "test-cadence"
-$organization = RegistryOrg
+$organization = LibraryRegistryOrg
 $branch       = GitBranch
 
 # Copy the common scripts.

@@ -132,7 +132,7 @@ namespace Neon.Xunit
         {
             this.containerName = name;
 
-            image = image ?? $"{NeonHelper.NeonBranchRegistry}/nats-streaming:latest";
+            image = image ?? $"{NeonHelper.NeonLibraryBranchRegistry}/nats-streaming:latest";
 
             base.CheckWithinAction();
 

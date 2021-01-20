@@ -286,5 +286,37 @@ namespace Neon.Common
                 }
             }
         }
+
+        /// <summary>
+        /// Use GZIP to compress one file into another.
+        /// </summary>
+        /// <param name="sourcePath">Path to the (uncompressed) source file.</param>
+        /// <param name="targetPath">Path to the (compressed) target file.</param>
+        public static void GzipFile(string sourcePath, string targetPath)
+        {
+            using (var sourceStream = new FileStream(sourcePath, FileMode.Open, FileAccess.Read))
+            {
+                using (var targetStream = new FileStream(targetPath, FileMode.Create, FileAccess.Write))
+                {
+                    sourceStream.GzipTo(targetStream);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Use GZIP to uncompress one file into another.
+        /// </summary>
+        /// <param name="sourcePath">Path to the (compressed) source file.</param>
+        /// <param name="targetPath">Path to the (uncompressed) target file.</param>
+        public static void GunzipFile(string sourcePath, string targetPath)
+        {
+            using (var sourceStream = new FileStream(sourcePath, FileMode.Open, FileAccess.Read))
+            {
+                using (var targetStream = new FileStream(targetPath, FileMode.Create, FileAccess.Write))
+                {
+                    sourceStream.GunzipTo(targetStream);
+                }
+            }
+        }
     }
 }

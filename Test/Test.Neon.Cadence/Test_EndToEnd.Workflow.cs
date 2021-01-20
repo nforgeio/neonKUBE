@@ -4466,7 +4466,7 @@ namespace TestCadence
             // and register its workflows and activities.  We'll remove any existing container
             // first and then remove the container after we're done.
 
-            var testCadenceImage = $"{NeonHelper.NeonBranchRegistry}/test-cadence:latest";
+            var testCadenceImage = $"{NeonHelper.NeonLibraryBranchRegistry}/test-cadence:latest";
 
             // $debug(jefflill): 
             //

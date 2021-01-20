@@ -135,7 +135,7 @@ namespace Neon.Xunit
             string[] args          = null,
             string   hostInterface = null)
         {
-            image              = image ?? $"{NeonHelper.NeonBranchRegistry}/nats:latest";
+            image              = image ?? $"{NeonHelper.NeonLibraryBranchRegistry}/nats:latest";
             this.hostInterface = hostInterface;
 
             base.CheckWithinAction();

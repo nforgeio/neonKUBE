@@ -321,7 +321,7 @@ hv_blkvsc
 hv_netvsc
 EOF
 
-apt-get install -yq --allow-downgrades linux-virtual linux-cloud-tools-virtual linux-tools-virtual
+safe-apt-get install -yq --allow-downgrades linux-virtual linux-cloud-tools-virtual linux-tools-virtual
 update-initramfs -u
 ";
                     SudoCommand(CommandBundle.FromScript(guestServicesScript), RunOptions.Defaults | RunOptions.FaultOnError);
@@ -442,7 +442,7 @@ snap remove --purge snapd
 
 var removePackagesScript =
 @"
-apt-get purge -y \
+safe-apt-get purge -y \
     apt \
     aptitude \
     cloud-init \
@@ -454,7 +454,7 @@ apt-get purge -y \
     snapd \
     vim vim-runtime vim-tiny
 
-apt-get autoremove -y
+safe-apt-get autoremove -y
 ";
                     SudoCommand(CommandBundle.FromScript(removePackagesScript), RunOptions.Defaults | RunOptions.FaultOnError);
                 });
@@ -496,12 +496,12 @@ apt-get autoremove -y
 # for two reasons:
 #
 #   1. These services interfere with with [apt-get] usage during
-# cluster setup and is also likely to interfere with end-user
-# configuration activities as well.
+#      cluster setup and is also likely to interfere with end-user
+#      configuration activities as well.
 #
 #   2. Automatic updates for production and even test clusters is
-# just not a great idea.  You just don't want a random update
-# applied in the middle of the night which might cause trouble.
+#      just not a great idea.  You just don't want a random update
+#      applied in the middle of the night which might cause trouble.
 #
 # We're going to implement our own cluster updating machanism
 # that will be smart enough to update the nodes such that the

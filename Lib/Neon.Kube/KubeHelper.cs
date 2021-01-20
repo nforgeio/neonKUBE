@@ -1736,12 +1736,12 @@ sleep 10
 # for two reasons:
 #
 #   1. These services interfere with with [apt-get] usage during
-# cluster setup and is also likely to interfere with end-user
-# configuration activities as well.
+#      cluster setup and is also likely to interfere with end-user
+#      configuration activities as well.
 #
 #   2. Automatic updates for production and even test clusters is
-# just not a great idea.  You just don't want a random update
-# applied in the middle of the night which might cause trouble.
+#      just not a great idea.  You just don't want a random update
+#      applied in the middle of the night which might cause trouble.
 #
 # We're going to implement our own cluster updating machanism
 # that will be smart enough to update the nodes such that the
