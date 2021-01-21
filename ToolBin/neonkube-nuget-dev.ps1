@@ -25,16 +25,6 @@
 # be available only for maintainers and are intialized by the neonCLOUD
 # [buildenv.cmd] script.
 
-if (!(Test-Path env:NC_NUGET_DEVFEED))
-{
-    "ERROR: This script is intended for maintainers only"
-    ""
-    "NC_NUGET_DEVFEED environment variable is not defined."
-    "Maintainers should re-run the neonCLOUD [buildenv.cmd] script."
-
-    return 1
-}
-
 if (!(Test-Path env:NC_NUGET_VERSIONER))
 {
     "ERROR: This script is intended for maintainers only"
