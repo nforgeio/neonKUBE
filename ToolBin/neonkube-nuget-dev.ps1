@@ -25,16 +25,6 @@
 # be available only for maintainers and are intialized by the neonCLOUD
 # [buildenv.cmd] script.
 
-if (!(Test-Path env:NC_NUGET_DEVFEED))
-{
-    "ERROR: This script is intended for maintainers only"
-    ""
-    "NC_NUGET_DEVFEED environment variable is not defined."
-    "Maintainers should re-run the neonCLOUD [buildenv.cmd] script."
-
-    return 1
-}
-
 if (!(Test-Path env:NC_NUGET_VERSIONER))
 {
     "ERROR: This script is intended for maintainers only"
@@ -102,19 +92,6 @@ function Publish
 
     Copy-Item "$projectPath.org" "$projectPath"
     Remove-Item "$projectPath.org"
-}
-
-# Verify that the [NUGET_LOCAL_FEED] environment variable exists and references an
-# existing folder that will act as our local nuget feed.
-
-if ("$env:NUGET_LOCAL_FEED" -eq "") {
-    echo "ERROR: [NUGET_LOCAL_FEED] environment variable does not exist."
-    pause
-    exit 1
-}
-
-if (-not (Test-Path "$env:NUGET_LOCAL_FEED")) {
-    New-Item -Path "$env:NUGET_LOCAL_FEED" -ItemType Directory
 }
 
 # We're going to call the neonCLOUD nuget versioner service to atomically increment the 

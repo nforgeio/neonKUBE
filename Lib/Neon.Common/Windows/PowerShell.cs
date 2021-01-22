@@ -244,6 +244,8 @@ catch [Exception] {{
 ");
                 var result = NeonHelper.ExecuteCapture(GetPwshPath(), $"-file \"{file.Path}\"", outputAction: outputAction, errorAction: errorAction);
 
+                Console.WriteLine(result.AllText);
+
                 // $hack(jefflill):
                 //
                 // Powershell is returning [exitcode=0] even if there was an error and

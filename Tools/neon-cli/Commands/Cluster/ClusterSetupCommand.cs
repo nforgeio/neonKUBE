@@ -323,7 +323,6 @@ OPTIONS:
                     // Kubernetes configuration.
 
                     controller.AddGlobalStep("install podman", SetupPodman);
-                    controller.AddGlobalStep("etc HA", SetupEtcdHaProxy);
                     controller.AddNodeStep("setup kubernetes", SetupKubernetes);
                     controller.AddGlobalStep("setup cluster", SetupClusterAsync);
 
@@ -797,7 +796,7 @@ ln -s /usr/bin/podman /bin/docker
         /// Configures a local HAProxy container that makes the Kubernetes Etc
         /// cluster highly available.
         /// </summary>
-        private void SetupEtcdHaProxy()
+        private void SetupEtcdHaProxy(NodeSshProxy<NodeDefinition> node)
         {
             var sbHaProxy = new StringBuilder();
 
@@ -835,26 +834,44 @@ $@"
     server {master.Name}         {master.Address}:6443");
             }
 
-            foreach (var node in cluster.Nodes)
-            {
-                node.InvokeIdempotentAction("setup/setup-etcd-ha",
-                    () =>
-                    {
-                        node.Status = "setup: etcd HA";
+            
 
-                        node.UploadText("/etc/neonkube/neon-etcd-proxy.cfg", sbHaProxy);
+            node.Status = "setup: etcd HA";
 
-                        node.SudoCommand("docker run",
-                            "--name=neon-etcd-proxy",
-                            "--detach",
-                            "--restart=always",
-                            "-v=/etc/neonkube/neon-etcd-proxy.cfg:/etc/haproxy/haproxy.cfg",
-                            "--network=host",
-                            "--log-driver=k8s-file",
-                            $"{NeonHelper.NeonBranchRegistry}/haproxy:neonkube-{KubeConst.LatestClusterVersion}"
-                        );
-                    });
-            }
+            node.UploadText("/etc/neonkube/neon-etcd-proxy.cfg", sbHaProxy);
+
+            var bundle = CommandBundle.FromScript(
+$@"#!/bin/bash
+cat <<EOF >/etc/kubernetes/manifests/neon-etcd-proxy.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: neon-etcd-proxy
+  namespace: kube-system
+  labels:
+    app: neon-etcd-proxy
+    role: neon-etcd-proxy
+    release: neon-etcd-proxy
+spec:
+  volumes:
+   - name: neon-etcd-proxy-config
+     hostPath:
+       path: /etc/neonkube/neon-etcd-proxy.cfg
+       type: File
+  hostNetwork: true
+  containers:
+    - name: web
+      image: {NeonHelper.NeonBranchRegistry}/haproxy:neonkube-{KubeConst.LatestClusterVersion}
+      volumeMounts:
+        - name: neon-etcd-proxy-config
+          mountPath: /etc/haproxy/haproxy.cfg
+      ports:
+        - name: k8s-masters
+          containerPort: 6442
+          protocol: TCP
+EOF
+");
+            node.SudoCommand(bundle);
         }
 
         /// <summary>
@@ -952,12 +969,14 @@ rm -rf linux-amd64
                     firstMaster.InvokeIdempotentAction("setup/cluster-init",
                         () =>
                         {
-                            firstMaster.Status = "initialize: cluster";
-
                             // It's possible that a previous cluster initialization operation
                             // was interrupted.  This command resets the state.
 
                             firstMaster.SudoCommand("kubeadm reset --force");
+
+                            SetupEtcdHaProxy(firstMaster);
+
+                            firstMaster.Status = "initialize: cluster";
 
                             // Configure the control plane's API server endpoint and initialize
                             // the certificate SAN names to include each master IP address as well
@@ -1127,6 +1146,8 @@ volumePluginDir: /var/lib/kubelet/volume-plugins
 
                                     master.SudoCommand("kubeadm reset --force");
 
+                                    SetupEtcdHaProxy(master);
+
                                     // The other (non-boot) masters need files downloaded from the boot master.
 
                                     master.Status = "upload: master files";
@@ -1210,54 +1231,70 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                         master.Status = string.Empty;
                     }
+                });
 
-                    //---------------------------------------------------------
-                    // Join the remaining workers to the cluster:
+            //---------------------------------------------------------
+            // Join the remaining workers to the cluster:
 
-                    var parallelOptions = new ParallelOptions()
+            var parallelOptions = new ParallelOptions()
+            {
+                MaxDegreeOfParallelism = Program.MaxParallel
+            };
+
+            Parallel.ForEach(cluster.Workers, parallelOptions,
+                worker =>
+                {
+                    try
                     {
-                        MaxDegreeOfParallelism = Program.MaxParallel
-                    };
-
-                    Parallel.ForEach(cluster.Workers, parallelOptions,
-                        worker =>
-                        {
-                            try
+                        worker.InvokeIdempotentAction("setup/cluster-join",
+                            () =>
                             {
-                                worker.InvokeIdempotentAction("setup/cluster-join",
-                                    () =>
+                                SetupEtcdHaProxy(worker);
+                                
+                                var joined = false;
+
+                                worker.Status = "join: as worker";
+
+                                worker.SudoCommand("docker run",
+                                    "--name=neon-etcd-proxy",
+                                    "--detach",
+                                    "--restart=always",
+                                    "-v=/etc/neonkube/neon-etcd-proxy.cfg:/etc/haproxy/haproxy.cfg",
+                                    "--network=host",
+                                    "--log-driver=k8s-file",
+                                    $"{NeonHelper.NeonBranchRegistry}/haproxy:neonkube-{KubeConst.LatestClusterVersion}"
+                                );
+
+                                for (int attempt = 0; attempt < maxJoinAttempts; attempt++)
+                                {
+                                    var response = worker.SudoCommand(clusterLogin.SetupDetails.ClusterJoinCommand + " --ignore-preflight-errors=DirAvailable--etc-kubernetes-manifests", RunOptions.Defaults & ~RunOptions.FaultOnError);
+
+                                    if (response.Success)
                                     {
-                                        var joined = false;
+                                        joined = true;
+                                        break;
+                                    }
 
-                                        worker.Status = "join: as worker";
+                                    Thread.Sleep(joinRetryDelay);
+                                }
 
-                                        for (int attempt = 0; attempt < maxJoinAttempts; attempt++)
-                                        {
-                                            var response = worker.SudoCommand(clusterLogin.SetupDetails.ClusterJoinCommand, RunOptions.Defaults & ~RunOptions.FaultOnError);
+                                if (!joined)
+                                {
+                                    throw new Exception($"Unable to join node [{worker.Name}] to the cluster after [{maxJoinAttempts}] attempts.");
+                                }
 
-                                            if (response.Success)
-                                            {
-                                                joined = true;
-                                                break;
-                                            }
+                                worker.SudoCommand("docker kill neon-etcd-proxy");
+                                worker.SudoCommand("docker rm neon-etcd-proxy");
 
-                                            Thread.Sleep(joinRetryDelay);
-                                        }
+                            });
+                    }
+                    catch (Exception e)
+                    {
+                        worker.Fault(NeonHelper.ExceptionError(e));
+                        worker.LogException(e);
+                    }
 
-                                        if (!joined)
-                                        {
-                                            throw new Exception($"Unable to join node [{worker.Name}] to the cluster after [{maxJoinAttempts}] attempts.");
-                                        }
-                                    });
-                            }
-                            catch (Exception e)
-                            {
-                                worker.Fault(NeonHelper.ExceptionError(e));
-                                worker.LogException(e);
-                            }
-
-                            worker.Status = "joined";
-                        });
+                    worker.Status = "joined";
                 });
 
             firstMaster.InvokeIdempotentAction("setup/workstation",

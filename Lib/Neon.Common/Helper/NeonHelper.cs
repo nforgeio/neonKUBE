@@ -254,7 +254,7 @@ namespace Neon.Common
         /// <summary>
         /// Identifies the development cluster public Docker registry.
         /// </summary>
-        public const string NeonDevRegistry = "ghcr.io/neonrelease-dev";
+        public const string NeonDevRegistry = "ghcr.io/neonkube-dev";
 
         /// <summary>
         /// Returns the appropriate public Docker registry to be used for the git branch the
