@@ -19,8 +19,6 @@ $ErrorActionPreference = "Stop"
 
 # Common definitions and functions
 
-$global:GitBranch = $null
-
 #------------------------------------------------------------------------------
 # Returns the current branch for a git repostory.
 
@@ -35,21 +33,9 @@ function GitBranch
     Push-Location
     Set-Location $gitRepoPath
 
-    $branches = git.exe branch | Out-String
-
-    if ($branches -match '\n\*\s(?<branch>.+)\r\n')
-    {
-        $global:GitBranch = $Matches.branch
-    }
-    else
-    {
-        $global:GitBranch = $null
-    }
+    $branch = git rev-parse --abbrev-ref HEAD
 
     Pop-Location
 
-    if ($global:GitBranch -eq $null)
-    {
-        throw "[$gitRepoPath] does not have a current branch!"
-    }
+    return $branch
 }

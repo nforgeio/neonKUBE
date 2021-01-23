@@ -152,7 +152,7 @@ function Publish
 # would this would be easier to manage by having all recent packages published from all
 # branches have versions near each other.
 
-GitBranch $env:NF_ROOT
+$branch = GitBranch $env:NF_ROOT
 
 # Get the nuget versioner API key from the environment and convert it into a base-64 string.
 
@@ -162,10 +162,10 @@ $versionerKeyBase64 = [Convert]::ToBase64String(([System.Text.Encoding]::UTF8.Ge
 # atomically increment the counters and return the next value.
 
 $reply          = Invoke-WebRequest -Uri "$env:NC_NUGET_VERSIONER/counter/neonLIBRARY-dev" -Method 'PUT' -Headers @{ 'Authorization' = "Bearer $versionerKeyBase64" } 
-$libraryVersion = "10000.0.$reply-dev-$global:GitBranch"
+$libraryVersion = "10000.0.$reply-dev-$branch"
 
 $reply          = Invoke-WebRequest -Uri "$env:NC_NUGET_VERSIONER/counter/neonKUBE-dev" -Method 'PUT' -Headers @{ 'Authorization' = "Bearer $versionerKeyBase64" } 
-$kubeVersion    = "10000.0.$reply-dev-$global:GitBranch"
+$kubeVersion    = "10000.0.$reply-dev-$branch"
 
 # We need to set the version first in all of the project files so that
 # implicit package dependencies will work for external projects importing
