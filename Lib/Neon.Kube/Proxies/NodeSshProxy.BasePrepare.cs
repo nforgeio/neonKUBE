@@ -224,7 +224,7 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
                     // Install the packages.
 
                     SudoCommand("apt-get update", RunOptions.Defaults | RunOptions.FaultOnError);
-                    SudoCommand("apt-get install -yq --allow-downgrades apt-cacher-ng ntp zip", RunOptions.Defaults | RunOptions.FaultOnError);
+                    SudoCommand("apt-get install -yq apt-cacher-ng ntp zip", RunOptions.Defaults | RunOptions.FaultOnError);
 
                     // I've seen some situations after a reboot where the machine complains about
                     // running out of entropy.  Apparently, modern CPUs have an instruction that
@@ -246,7 +246,7 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
                     // [haveged] works by timing running code at very high resolution and hoping to
                     // see execution time jitter and then use that as an entropy source.
 
-                    SudoCommand("apt-get install -yq --allow-downgrades haveged", RunOptions.Defaults | RunOptions.FaultOnError);
+                    SudoCommand("apt-get install -yq haveged", RunOptions.Defaults | RunOptions.FaultOnError);
                 });
         }
 
@@ -321,7 +321,7 @@ hv_blkvsc
 hv_netvsc
 EOF
 
-safe-apt-get install -yq --allow-downgrades linux-virtual linux-cloud-tools-virtual linux-tools-virtual
+safe-apt-get install -yq linux-virtual linux-cloud-tools-virtual linux-tools-virtual
 update-initramfs -u
 ";
                     SudoCommand(CommandBundle.FromScript(guestServicesScript), RunOptions.Defaults | RunOptions.FaultOnError);

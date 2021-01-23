@@ -138,7 +138,7 @@ chmod a+x /usr/local/bin/sbash
 # Install some required packages.
 
 safe-apt-get update -yq
-safe-apt-get install -yq --allow-downgrades unzip
+safe-apt-get install -yq unzip
 
 #------------------------------------------------------------------------------
 # I've seen some situations after a reboot where the machine complains about
@@ -161,7 +161,7 @@ safe-apt-get install -yq --allow-downgrades unzip
 # [haveged] works by timing running code at very high resolution and hoping for
 # execution time jitter.  This looks like it'll be better than nothing.
 
-safe-apt-get install -yq --allow-downgrades haveged
+safe-apt-get install -yq haveged
 
 #------------------------------------------------------------------------------
 # Clean some things up.

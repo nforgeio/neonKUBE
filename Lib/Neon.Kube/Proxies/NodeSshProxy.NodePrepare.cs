@@ -869,9 +869,9 @@ curl {KubeHelper.CurlOptions} https://packages.cloud.google.com/apt/doc/apt-key.
 echo ""deb https://apt.kubernetes.io/ kubernetes-xenial main"" > /etc/apt/sources.list.d/kubernetes.list
 safe-apt-get update
 
-safe-apt-get install -yq --allow-downgrades kubeadm={KubeVersions.KubeAdminPackageVersion}
-safe-apt-get install -yq --allow-downgrades kubectl={KubeVersions.KubeCtlPackageVersion}
-safe-apt-get install -yq --allow-downgrades kubelet={KubeVersions.KubeletPackageVersion}
+safe-apt-get install -yq kubeadm={KubeVersions.KubeAdminPackageVersion}
+safe-apt-get install -yq kubectl={KubeVersions.KubeCtlPackageVersion}
+safe-apt-get install -yq kubelet={KubeVersions.KubeletPackageVersion}
 
 # Prevent the package manager from automatically these components.
 

@@ -844,13 +844,13 @@ safe-apt-get update
                     node.SudoCommand(bundle);
 
                     node.Status = "install: kubeadm";
-                    node.SudoCommand($"safe-apt-get install -yq --allow-downgrades kubeadm={KubeVersions.KubeAdminPackageVersion}");
+                    node.SudoCommand($"safe-apt-get install -yq kubeadm={KubeVersions.KubeAdminPackageVersion}");
 
                     node.Status = "install: kubectl";
-                    node.SudoCommand($"safe-apt-get install -yq --allow-downgrades kubectl={KubeVersions.KubeCtlPackageVersion}");
+                    node.SudoCommand($"safe-apt-get install -yq kubectl={KubeVersions.KubeCtlPackageVersion}");
 
                     node.Status = "install: kubelet";
-                    node.SudoCommand($"safe-apt-get install -yq --allow-downgrades kubelet={KubeVersions.KubeletPackageVersion}");
+                    node.SudoCommand($"safe-apt-get install -yq kubelet={KubeVersions.KubeletPackageVersion}");
 
                     node.Status = "hold: kubernetes packages";
                     node.SudoCommand("apt-mark hold kubeadm kubectl kubelet");
