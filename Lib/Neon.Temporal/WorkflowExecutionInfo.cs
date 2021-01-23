@@ -35,7 +35,7 @@ namespace Neon.Temporal
         /// Describes the workflow execution.
         /// </summary>
         [JsonIgnore]
-        public WorkflowExecution Execution 
+        public WorkflowExecution Execution
         { 
             get
             {

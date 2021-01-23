@@ -93,7 +93,9 @@ namespace Neon.Temporal
             var reply = (NewWorkerReply)(await CallProxyAsync(
                 new NewWorkerRequest()
                 {
-                    Options = options
+                    Namespace = Settings.Namespace,
+                    TaskQueue = Settings.TaskQueue,
+                    Options   = options
                 }));
 
             reply.ThrowOnError();

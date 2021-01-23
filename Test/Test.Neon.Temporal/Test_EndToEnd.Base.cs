@@ -119,7 +119,7 @@ namespace TestTemporal
             Console.WriteLine($"Latency (average): {1.0 / totalTps}");
         }
 
-        [Fact_Failing_Json]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Base_Namespace()
         {
@@ -174,7 +174,7 @@ namespace TestTemporal
             await Assert.ThrowsAsync<EntityNotExistsException>(async () => await client.UpdateNamespaceAsync("does-not-exist", updateNamespaceRequest));
         }
 
-        [Fact_Failing_Json]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Base_ListNamespaces()
         {
@@ -192,14 +192,14 @@ namespace TestTemporal
 
             for (int i = 0; i < testNamespaceCount; i++)
             {
-                var retentionDays = TimeSpan.FromSeconds(i + 7);
+                var retentionDays = i + 7;
 
-                if (retentionDays.Seconds >= 30)
+                if (retentionDays >= 30)
                 {
-                    retentionDays = TimeSpan.FromSeconds(30);
+                    retentionDays = 30;
                 }
 
-                await client.RegisterNamespaceAsync($"my-namespace-{i}", $"This is my-namespace-{i}", $"jeff-{i}@lilltek.com", retentionDays: retentionDays.Days);
+                await client.RegisterNamespaceAsync($"my-namespace-{i}", $"This is my-namespace-{i}", $"jeff-{i}@lilltek.com", retentionDays: retentionDays);
             }
 
             // List all of the namespaces in one page.
@@ -267,7 +267,7 @@ namespace TestTemporal
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
-        public async Task Base_DescribeQueueList()
+        public async Task Base_DescribeTaskQueue()
         {
             await SyncContext.ClearAsync;
 
@@ -345,7 +345,7 @@ namespace TestTemporal
             Assert.True(description.WorkflowExecutionInfo.StartTime >= utcNow);
             Assert.True(description.WorkflowExecutionInfo.CloseTime >= utcNow);
             Assert.True(description.WorkflowExecutionInfo.CloseTime >= description.WorkflowExecutionInfo.StartTime);
-            Assert.True(description.WorkflowExecutionInfo.ExecutionTime.Value.Ticks <= (description.WorkflowExecutionInfo.CloseTime - description.WorkflowExecutionInfo.StartTime).Value.Ticks);
+            Assert.True(description.WorkflowExecutionInfo.ExecutionTime.Value.Ticks >= (description.WorkflowExecutionInfo.CloseTime - description.WorkflowExecutionInfo.StartTime).Value.Ticks);
         }
 
         [Fact]

@@ -48,12 +48,12 @@ namespace Neon.Temporal
         /// Describes the workflow's scheduled and executing activities.
         /// </summary>
         [JsonProperty(PropertyName = "pending_activities")]
-        public List<PendingActivityInfo> PendingActivities { get; set; }
+        public List<PendingActivityInfo> PendingActivities { get; set; } = new List<PendingActivityInfo>();
 
         /// <summary>
         /// Describes the workflow's scheduled and executing child workflows.
         /// </summary>
         [JsonProperty(PropertyName = "pending_children")]
-        public List<PendingChildExecutionInfo> PendingChildren { get; set; }
+        public List<PendingChildExecutionInfo> PendingChildren { get; set; } = new List<PendingChildExecutionInfo>();
     }
 }
