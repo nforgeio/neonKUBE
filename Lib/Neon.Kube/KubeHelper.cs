@@ -78,6 +78,7 @@ namespace Neon.Kube
         private static string               cachedProgramFolder;
         private static string               cachedPwshPath;
         private static IStaticDirectory     cachedResources;
+        private static string               cachedNodeImageFolder;
 
         /// <summary>
         /// CURL command common options.
@@ -122,6 +123,7 @@ namespace Neon.Kube
             cachedProgramFolder      = null;
             cachedPwshPath           = null;
             cachedResources          = null;
+            cachedNodeImageFolder         = null;
         }
 
         /// <summary>
@@ -875,15 +877,20 @@ namespace Neon.Kube
         /// image cache, creating the directory if it doesn't already exist.
         /// </summary>
         /// <returns>The path to the cluster setup folder.</returns>
-        public static string NodeImageCache
+        public static string NodeImageFolder
         {
             get
             {
-                var path = Path.Combine(GetNeonKubeUserFolder(), "node-image-cache");
+                if (cachedNodeImageFolder != null)
+                {
+                    return cachedNodeImageFolder;
+                }
+
+                var path = Path.Combine(GetNeonKubeUserFolder(), "node-images");
 
                 Directory.CreateDirectory(path);
 
-                return path;
+                return cachedNodeImageFolder = path;
             }
         }
 

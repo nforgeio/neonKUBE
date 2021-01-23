@@ -337,52 +337,14 @@ namespace Neon.Kube
 
             // Download the GZIPed VHDX template if it's not already present or has 
             // changed.  Note that we're going to name the file the same as the file 
-            // name from the URI and we're also going to persist the ETAG and file
-            // length in file with the same name with a [.info] extension.
-            //
-            // Note that I'm not actually going check for ETAG changes to update
-            // the download file.  The reason for this is that I want to avoid the
-            // situation where the user has provisioned some nodes with one version
-            // of the template and then goes on later to provision new nodes with
-            // an updated template.
-            //
-            // This should only be an issue for people using the default "latest"
-            // drive template.  Production clusters should reference a specific
-            // drive template.
+            // name from the URI.
 
             var driveTemplateUri  = new Uri(KubeDownloads.GetNodeImageUri(this.HostingEnvironment));
             var driveTemplateName = driveTemplateUri.Segments.Last();
 
-            driveTemplatePath = Path.Combine(KubeHelper.NodeImageCache, driveTemplateName);
+            driveTemplatePath = Path.Combine(KubeHelper.NodeImageFolder, driveTemplateName);
 
-            var driveTemplateInfoPath  = Path.Combine(KubeHelper.NodeImageCache, driveTemplateName + ".info");
-            var driveTemplateIsCurrent = true;
-            var driveTemplateInfo      = (DriveTemplateInfo)null;
-
-            if (!File.Exists(driveTemplatePath) || !File.Exists(driveTemplateInfoPath))
-            {
-                driveTemplateIsCurrent = false;
-            }
-            else
-            {
-                try
-                {
-                    driveTemplateInfo = NeonHelper.JsonDeserialize<DriveTemplateInfo>(File.ReadAllText(driveTemplateInfoPath));
-
-                    if (new FileInfo(driveTemplatePath).Length != driveTemplateInfo.Length)
-                    {
-                        driveTemplateIsCurrent = false;
-                    }
-                }
-                catch
-                {
-                    // The [*.info] file must be corrupt.
-
-                    driveTemplateIsCurrent = false;
-                }
-            }
-
-            if (!driveTemplateIsCurrent)
+            if (!File.Exists(driveTemplatePath))
             {
                 var nodeImageUri = KubeDownloads.GetNodeImageUri(this.HostingEnvironment);
 
@@ -451,38 +413,16 @@ namespace Neon.Kube
                             }
                             catch
                             {
-                                // Ensure that the template and info files are deleted if there were any
-                                // errors, to help avoid using a corrupted template.
+                                // Ensure that the template file is are deleted if there were any
+                                // errors to help avoid using a corrupted template.
 
                                 if (File.Exists(driveTemplatePath))
                                 {
                                     File.Decrypt(driveTemplatePath);
                                 }
 
-                                if (File.Exists(driveTemplateInfoPath))
-                                {
-                                    File.Decrypt(driveTemplateInfoPath);
-                                }
-
                                 throw;
                             }
-
-                            // Generate the [*.info] file.
-
-                            var templateInfo = new DriveTemplateInfo();
-
-                            templateInfo.Length     = new FileInfo(driveTemplatePath).Length;
-                            templateInfo.Compressed = compressed;
-
-                            if (response.Headers.TryGetValues("ETag", out var etags))
-                            {
-                                // Note that ETags look like they're surrounded by double
-                                // quotes.  We're going to strip these out if present.
-
-                                templateInfo.ETag = etags.SingleOrDefault().Replace("\"", string.Empty);
-                            }
-
-                            File.WriteAllText(driveTemplateInfoPath, NeonHelper.JsonSerialize(templateInfo, Formatting.Indented));
                         }
 
                     }).Wait();
