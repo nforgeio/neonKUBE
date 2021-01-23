@@ -20,6 +20,11 @@
 $ErrorActionPreference = "Stop"
 
 #------------------------------------------------------------------------------
+# Import the global project include file.
+
+. $env:NF_ROOT/Powershell/includes.ps1
+
+#------------------------------------------------------------------------------
 # Important source code paths.
 
 $src_path          = $env:NF_ROOT
