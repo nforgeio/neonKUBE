@@ -34,7 +34,21 @@ namespace Neon.Temporal
         /// <summary>
         /// Describes the workflow execution.
         /// </summary>
-        public WorkflowExecution Execution { get; set; }
+        [JsonIgnore]
+        public WorkflowExecution Execution 
+        { 
+            get
+            {
+                return InternalWorkflowExecution.ToWorkflowExecution();
+            }
+            set
+            {
+                InternalWorkflowExecution = new Internal.InternalWorkflowExecution(value);
+            }
+        }
+
+        [JsonProperty(PropertyName = "execution")]
+        private Internal.InternalWorkflowExecution InternalWorkflowExecution;
 
         /// <summary>
         /// Identifies the workflow implementation.
@@ -91,8 +105,21 @@ namespace Neon.Temporal
         /// <summary>
         /// Identfies the parent workflow (or <c>null</c>).
         /// </summary>
+        [JsonIgnore]
+        public WorkflowExecution ParentExecution
+        {
+            get
+            {
+                return InternalParentWorkflowExecution.ToWorkflowExecution();
+            }
+            set
+            {
+                InternalParentWorkflowExecution = new Internal.InternalWorkflowExecution(value);
+            }
+        }
+
         [JsonProperty(PropertyName = "parent_execution")]
-        public WorkflowExecution ParentExecution { get; set; }
+        private Internal.InternalWorkflowExecution InternalParentWorkflowExecution;
 
         /// <summary>
         /// The workflow execution time.
