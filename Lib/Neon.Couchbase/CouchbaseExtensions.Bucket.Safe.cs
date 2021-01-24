@@ -461,7 +461,7 @@ namespace Couchbase
         }
 
         /// <summary>
-        /// Checks for the existance of a key, throwing an exception on failures.
+        /// Checks for the existence of a key, throwing an exception on failures.
         /// </summary>
         /// <param name="bucket">The bucket.</param>
         /// <param name="key">The key.</param>
