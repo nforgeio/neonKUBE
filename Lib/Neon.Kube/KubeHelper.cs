@@ -1699,8 +1699,6 @@ public class ISOFile
             Covenant.Requires<ArgumentNullException>(nameServers != null, nameof(nameServers));
             Covenant.Requires<ArgumentNullException>(nameServers.Count() > 0, nameof(nameServers));
 
-            securePassword = null;  // $debug(jefflill): DELETE THIS!
-
             var sbNameservers = new StringBuilder();
 
             // Generate the [neon-init.sh] script.
@@ -1711,7 +1709,7 @@ public class ISOFile
             }
 
             var changePasswordScript =
-@"#------------------------------------------------------------------------------
+$@"#------------------------------------------------------------------------------
 # Change the [sysadmin] user password from the hardcoded [sysadmin0000] password
 # to something secure.  Doing this here before the network is configured means 
 # that there's no time when bad guys can SSH into the node using the insecure
