@@ -138,13 +138,13 @@ systemctl restart rsyslog.service
                 ConfigureEnvironmentVariables(node, clusterDefinition);
             }
 
-            node.SudoCommand("safe-apt-get update");
+            node.SudoCommand("safe-apt-get update", RunOptions.FaultOnError);
 
             node.InvokeIdempotent("setup/prep-node",
                 () =>
                 {
                     node.Status = "prepare: node";
-                    node.SudoCommand("setup-prep.sh");
+                    node.SudoCommand("setup-prep.sh", RunOptions.FaultOnError);
                     node.Reboot(wait: true);
                 });
 
@@ -156,17 +156,17 @@ systemctl restart rsyslog.service
             var diskName  = hostingManager.GetDataDisk(node);
             var partition = char.IsDigit(diskName.Last()) ? $"{diskName}p1" : $"{diskName}1";
 
-            node.SudoCommand("setup-disk.sh", diskName, partition);
+            node.SudoCommand("setup-disk.sh", diskName, partition, RunOptions.FaultOnError);
 
             // Clear any DHCP leases to be super sure that cloned node
             // VMs will obtain fresh IP addresses.
 
             node.Status = "clear: DHCP leases";
-            node.SudoCommand("rm -f /var/lib/dhcp/*");
+            node.SudoCommand("rm -f /var/lib/dhcp/*", RunOptions.FaultOnError);
 
             // Indicate that the node has been fully prepared.
 
-            node.SudoCommand($"touch {KubeNodeFolders.State}/setup/prepared");
+            node.SudoCommand($"touch {KubeNodeFolders.State}/setup/prepared", RunOptions.FaultOnError);
 
             // Shutdown the node if requested.
 
@@ -351,7 +351,7 @@ systemctl restart sshd
 
                     bundle.AddFile("config.sh", configScript, isExecutable: true);
                     bundle.AddFile("ssh_host_rsa_key.pub", clusterLogin.SshKey.PublicPUB);
-                    node.SudoCommand(bundle);
+                    node.SudoCommand(bundle, RunOptions.FaultOnError);
                 });
 
             // Verify that we can login with the new SSH private key and also verify that

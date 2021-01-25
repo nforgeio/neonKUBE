@@ -78,6 +78,7 @@ namespace Neon.Kube
         private static string               cachedProgramFolder;
         private static string               cachedPwshPath;
         private static IStaticDirectory     cachedResources;
+        private static string               cachedNodeImageFolder;
 
         /// <summary>
         /// CURL command common options.
@@ -122,6 +123,7 @@ namespace Neon.Kube
             cachedProgramFolder      = null;
             cachedPwshPath           = null;
             cachedResources          = null;
+            cachedNodeImageFolder         = null;
         }
 
         /// <summary>
@@ -875,15 +877,20 @@ namespace Neon.Kube
         /// image cache, creating the directory if it doesn't already exist.
         /// </summary>
         /// <returns>The path to the cluster setup folder.</returns>
-        public static string NodeImageCache
+        public static string NodeImageFolder
         {
             get
             {
-                var path = Path.Combine(GetNeonKubeUserFolder(), "node-image-cache");
+                if (cachedNodeImageFolder != null)
+                {
+                    return cachedNodeImageFolder;
+                }
+
+                var path = Path.Combine(GetNeonKubeUserFolder(), "node-images");
 
                 Directory.CreateDirectory(path);
 
-                return path;
+                return cachedNodeImageFolder = path;
             }
         }
 
@@ -1702,7 +1709,7 @@ public class ISOFile
             }
 
             var changePasswordScript =
-@"#------------------------------------------------------------------------------
+$@"#------------------------------------------------------------------------------
 # Change the [sysadmin] user password from the hardcoded [sysadmin0000] password
 # to something secure.  Doing this here before the network is configured means 
 # that there's no time when bad guys can SSH into the node using the insecure
@@ -1716,9 +1723,8 @@ echo 'sysadmin:{securePassword}' | chpasswd
             }
 
             var nodePrepScript =
-$@"# This script is called by the [neon-init] service when the prep
-# DVD is inserted on first boot.  This script handles configuring the
-# network.
+$@"# This script is called by the [neon-init] service when the prep DVD
+# is inserted on boot.  This script handles configuring the network.
 #
 # The first parameter will be passed as the path where the DVD is mounted.
 
@@ -1764,6 +1770,14 @@ done
 # Configure the network.
 
 echo ""Configure network: {address}""
+
+# Make a backup copy of any original netplan files to the [/etc/neon-init/netplan-backup]
+# folder so it will be possible to restore these if we need to reset the [neon-init] state.
+
+mkdir -p /etc/neon-init/netplan-backup
+cp -r /etc/netplan/* /etc/neon-init/netplan-backup
+
+# Remove any existing netplan files so we can update the configuration.
 
 rm /etc/netplan/*
 

@@ -31,6 +31,16 @@ $ErrorActionPreference = "Stop"
 # be available only for maintainers and are intialized by the neonCLOUD
 # [buildenv.cmd] script.
 
+if (!(Test-Path env:NC_NUGET_DEVFEED))
+{
+    "ERROR: This script is intended for maintainers only"
+    ""
+    "NC_NUGET_DEVFEED environment variable is not defined."
+    "Maintainers should re-run the neonCLOUD [buildenv.cmd] script."
+
+    return 1
+}
+
 if (!(Test-Path env:NC_NUGET_VERSIONER))
 {
     "ERROR: This script is intended for maintainers only"
@@ -124,7 +134,7 @@ function Publish
 
     $projectPath = [io.path]::combine($env:NF_ROOT, "Lib", "$project", "$project" + ".csproj")
 
-    dotnet pack $projectPath -c Debug -o "$env:NF_BUILD\nuget"
+    dotnet pack $projectPath  -c Debug --include-symbols --include-source -o "$env:NF_BUILD\nuget"
     nuget push -Source $env:NC_NUGET_DEVFEED "$env:NF_BUILD\nuget\$project.$version.nupkg"
    
     # NOTE: We're not doing this because including source and symbols above because
@@ -159,7 +169,7 @@ $branch = GitBranch $env:NF_ROOT
 $versionerKeyBase64 = [Convert]::ToBase64String(([System.Text.Encoding]::UTF8.GetBytes($env:NC_NUGET_VERSIONER_APIKEY)))
 
 # Submit PUTs request to the versioner service, specifying the counter name.  The service will
-# atomically increment the counters and return the next value.
+# atomically increment the counter and return the next value.
 
 $reply          = Invoke-WebRequest -Uri "$env:NC_NUGET_VERSIONER/counter/neonLIBRARY-dev" -Method 'PUT' -Headers @{ 'Authorization' = "Bearer $versionerKeyBase64" } 
 $libraryVersion = "10000.0.$reply-dev-$branch"

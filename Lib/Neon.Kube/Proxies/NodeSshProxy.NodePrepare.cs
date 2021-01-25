@@ -61,17 +61,7 @@ namespace Neon.Kube
             var script =
 $@"
 #------------------------------------------------------------------------------
-# Remove the [neon-init] service.  This is no longer required after it
-# runs once (first boot) during node provisioning configures the network and 
-# and services.
-
-if [ -f /etc/systemd/system/neon-init.service ]; then
-    echo ""** Remove: neon-init.service""
-    rm -f /etc/systemd/system/neon-init.service
-    rm -f {KubeNodeFolders.Bin}/neon-init.sh
-fi
-
-# All Neon servers will be configured for UTC time.
+# Basic initialization
 
 timedatectl set-timezone UTC
 
