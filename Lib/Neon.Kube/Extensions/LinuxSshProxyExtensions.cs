@@ -22,6 +22,7 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Net;
+using Neon.SSH;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -29,7 +30,6 @@ using Neon.Common;
 using Neon.Kube;
 using Neon.IO;
 using Neon.Net;
-using System.Runtime.InteropServices;
 
 namespace Neon.Kube
 {
@@ -373,7 +373,7 @@ namespace Neon.Kube
             // Clear the contents of the configuration folder.
 
             node.Status = $"clear: {KubeNodeFolders.Config}";
-            node.SudoCommand($"rm -rf {KubeNodeFolders.Config}/*.*");
+            node.SudoCommand($"rm -rf {KubeNodeFolders.Config}/*.*", RunOptions.FaultOnError);
 
             // Upload the files.
 
@@ -386,8 +386,8 @@ namespace Neon.Kube
 
             // Secure the files and make the scripts executable.
 
-            node.SudoCommand($"chmod 644 {KubeNodeFolders.Config}/*.*");
-            node.SudoCommand($"chmod 744 {KubeNodeFolders.Config}/*.sh");
+            node.SudoCommand($"chmod 644 {KubeNodeFolders.Config}/*.*", RunOptions.FaultOnError);
+            node.SudoCommand($"chmod 744 {KubeNodeFolders.Config}/*.sh", RunOptions.FaultOnError);
 
             node.Status = "copied";
         }
@@ -408,7 +408,7 @@ namespace Neon.Kube
             // Upload resource files to the setup folder.
 
             server.Status = $"clear: {KubeNodeFolders.Setup}";
-            server.SudoCommand($"rm -rf {KubeNodeFolders.Setup}/*.*");
+            server.SudoCommand($"rm -rf {KubeNodeFolders.Setup}/*.*", RunOptions.FaultOnError);
 
             // Upload the setup files.
 

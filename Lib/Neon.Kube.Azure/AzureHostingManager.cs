@@ -1634,7 +1634,7 @@ namespace Neon.Kube
             node.WaitForBoot();
 
             node.Status = "install: packages";
-            node.SudoCommand("apt-get install -yq unzip");
+            node.SudoCommand("apt-get install -yq unzip", RunOptions.FaultOnError);
         }
 
         /// <summary>

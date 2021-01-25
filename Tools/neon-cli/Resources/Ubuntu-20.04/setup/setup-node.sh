@@ -56,17 +56,6 @@ fi
 
 startsetup node
 
-#------------------------------------------------------------------------------
-# Remove the [neon-init] service.  This is no longer required after it
-# runs once (first boot) during node provisioning configures the network and 
-# and services.
-
-if [ -f /etc/systemd/system/neon-init.service ]; then
-    echo "** Remove: neon-init.service"
-    rm -f /etc/systemd/system/neon-init.service
-    rm -f ${NEON_BIN_FOLDER}/neon-init.sh
-fi
-
 # Ensure that the home directory for the [temp] user prepare created
 # to relocate the [sysadmin] user ID is deleted.  Older builds of the
 # [neon prepare node-template] command didn't delete this.

@@ -432,7 +432,7 @@ echo '{KubeConst.SysAdminUser}:{secureSshPassword}' | chpasswd
 
             // Download [/proc/meminfo] and extract the [MemTotal] value (in kB).
 
-            result = node.SudoCommand("cat /proc/meminfo");
+            result = node.SudoCommand("cat /proc/meminfo", RunOptions.FaultOnError);
 
             if (result.ExitCode == 0)
             {
@@ -451,7 +451,7 @@ echo '{KubeConst.SysAdminUser}:{secureSshPassword}' | chpasswd
 
             // Download [/proc/cpuinfo] and count the number of processors.
 
-            result = node.SudoCommand("cat /proc/cpuinfo");
+            result = node.SudoCommand("cat /proc/cpuinfo", RunOptions.FaultOnError);
 
             if (result.ExitCode == 0)
             {
@@ -488,7 +488,7 @@ echo '{KubeConst.SysAdminUser}:{secureSshPassword}' | chpasswd
 
             foreach (var blockDevice in blockDevices)
             {
-                result = node.SudoCommand($"lsblk -b --output SIZE -n -d {blockDevice}", RunOptions.LogOutput);
+                result = node.SudoCommand($"lsblk -b --output SIZE -n -d {blockDevice}", RunOptions.LogOutput | RunOptions.FaultOnError);
 
                 if (result.ExitCode == 0)
                 {

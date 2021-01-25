@@ -1699,6 +1699,8 @@ public class ISOFile
             Covenant.Requires<ArgumentNullException>(nameServers != null, nameof(nameServers));
             Covenant.Requires<ArgumentNullException>(nameServers.Count() > 0, nameof(nameServers));
 
+            securePassword = null;  // $debug(jefflill): DELETE THIS!
+
             var sbNameservers = new StringBuilder();
 
             // Generate the [neon-init.sh] script.
@@ -1723,9 +1725,8 @@ echo 'sysadmin:{securePassword}' | chpasswd
             }
 
             var nodePrepScript =
-$@"# This script is called by the [neon-init] service when the prep
-# DVD is inserted on first boot.  This script handles configuring the
-# network.
+$@"# This script is called by the [neon-init] service when the prep DVD
+# is inserted on boot.  This script handles configuring the network.
 #
 # The first parameter will be passed as the path where the DVD is mounted.
 
@@ -1771,6 +1772,14 @@ done
 # Configure the network.
 
 echo ""Configure network: {address}""
+
+# Make a backup copy of any original netplan files to the [/etc/neon-init/netplan-backup]
+# folder so it will be possible to restore these if we need to reset the [neon-init] state.
+
+mkdir -p /etc/neon-init/netplan-backup
+cp -r /etc/netplan/* /etc/neon-init/netplan-backup
+
+# Remove any existing netplan files so we can update the configuration.
 
 rm /etc/netplan/*
 

@@ -3395,7 +3395,7 @@ echo $? > {cmdFolder}/exit
         /// <returns><c>true</c> if <b>neon-init</b> has been executed.</returns>
         public bool GetNeonInitStatus()
         {
-            return FileExists("/etc/neon-init");
+            return FileExists("/etc/neon-init/ready");
         }
 
         /// <summary>
@@ -3418,14 +3418,13 @@ touch /etc/neon-init/ready
             }
             else
             {
-                // We need to delete the [/etc/neon-init] file and re-enable
+                // We need to delete the [/etc/neon-init/ready] file and re-enable
                 // network DHCP by restoring the original network configuration
                 // (if present).
 
                 var resetScript =
 @"
 mkdir -p /etc/neon-init
-rm -f /etc/neon-init/ready
 
 if [ -d /etc/neon-init/netplan-backup ] ; then
 
@@ -3433,6 +3432,8 @@ if [ -d /etc/neon-init/netplan-backup ] ; then
     cp -r /etc/neon-init/netplan-backup/* /etc/netplan
     rm -r /etc/neon-init/netplan-backup
 fi
+
+rm -rf /etc/neon-init/*
 ";
                 SudoCommand(CommandBundle.FromScript(resetScript));
             }

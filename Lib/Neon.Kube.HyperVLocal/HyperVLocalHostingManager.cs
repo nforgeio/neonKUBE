@@ -54,40 +54,6 @@ namespace Neon.Kube
     public class HyperVLocalHostingManager : HostingManager
     {
         //---------------------------------------------------------------------
-        // Private types
-
-        /// <summary>
-        /// Used to persist information about downloaded VHDX template files.
-        /// </summary>
-        public class DriveTemplateInfo
-        {
-            /// <summary>
-            /// The downloaded file ETAG.
-            /// </summary>
-            [JsonProperty(PropertyName = "ETag", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-            [YamlMember(Alias = "etag", ApplyNamingConventions = false)]
-            [DefaultValue(null)]
-            public string ETag { get; set; }
-
-            /// <summary>
-            /// The downloaded file length used as a quick verification that
-            /// the entire file was downloaded.
-            /// </summary>
-            [JsonProperty(PropertyName = "Length", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-            [YamlMember(Alias = "length", ApplyNamingConventions = false)]
-            [DefaultValue(-1)]
-            public long Length { get; set; }
-
-            /// <summary>
-            /// Indicates whether the file is GZIP compressed.
-            /// </summary>
-            [JsonProperty(PropertyName = "Compressed", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-            [YamlMember(Alias = "compressed", ApplyNamingConventions = false)]
-            [DefaultValue(false)]
-            public bool Compressed { get; set; }
-        }
-
-        //---------------------------------------------------------------------
         // Static members
 
         /// <summary>
@@ -363,18 +329,10 @@ namespace Neon.Kube
 
                             var contentLength   = response.Content.Headers.ContentLength;
                             var contentEncoding = response.Content.Headers.ContentEncoding.SingleOrDefault();
-                            var compressed      = false;
 
-                            if (!string.IsNullOrEmpty(contentEncoding))
+                            if (string.IsNullOrEmpty(contentEncoding) || !contentEncoding.Equals("gzip", StringComparison.InvariantCultureIgnoreCase))
                             {
-                                if (contentEncoding.Equals("gzip", StringComparison.InvariantCultureIgnoreCase))
-                                {
-                                    compressed = true;
-                                }
-                                else
-                                {
-                                    throw new KubeException($"[{nodeImageUri}] has unsupported [Content-Encoding={contentEncoding}].");
-                                }
+                                throw new KubeException($"[{nodeImageUri}] has unsupported [Content-Encoding={contentEncoding}].  Expecting [gzip].");
                             }
 
                             try
@@ -511,57 +469,23 @@ namespace Neon.Kube
                 // virtual hard drive file.
 
                 var driveTemplateInfoPath = driveTemplatePath + ".info";
-                var driveTemplateInfo     = NeonHelper.JsonDeserialize<DriveTemplateInfo>(File.ReadAllText(driveTemplateInfoPath));
                 var osDrivePath           = Path.Combine(vmDriveFolder, $"{vmName}.vhdx");
 
                 node.Status = $"create: disk";
 
                 using (var input = new FileStream(driveTemplatePath, FileMode.Open, FileAccess.Read))
                 {
-                    if (driveTemplateInfo.Compressed)
+                    using (var output = new FileStream(osDrivePath, FileMode.Create, FileAccess.ReadWrite))
                     {
-                        using (var output = new FileStream(osDrivePath, FileMode.Create, FileAccess.ReadWrite))
+                        using (var decompressor = new GZipStream(input, CompressionMode.Decompress))
                         {
-                            using (var decompressor = new GZipStream(input, CompressionMode.Decompress))
-                            {
-                                var     buffer = new byte[64 * 1024];
-                                long    cbRead = 0;
-                                int     cb;
-
-                                while (true)
-                                {
-                                    cb = decompressor.Read(buffer, 0, buffer.Length);
-
-                                    if (cb == 0)
-                                    {
-                                        break;
-                                    }
-
-                                    output.Write(buffer, 0, cb);
-
-                                    cbRead += cb;
-
-                                    var percentComplete = (int)(((double)output.Length / (double)cbRead) * 100.0);
-
-                                    if (stopwatch.Elapsed >= updateInterval || percentComplete >= 100.0)
-                                    {
-                                        node.Status = $"create: disk [{percentComplete}%]";
-                                        stopwatch.Restart();
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    else
-                    {
-                        using (var output = new FileStream(osDrivePath, FileMode.Create, FileAccess.ReadWrite))
-                        {
-                            var buffer = new byte[64 * 1024];
-                            int cb;
+                            var     buffer = new byte[64 * 1024];
+                            long    cbRead = 0;
+                            int     cb;
 
                             while (true)
                             {
-                                cb = input.Read(buffer, 0, buffer.Length);
+                                cb = decompressor.Read(buffer, 0, buffer.Length);
 
                                 if (cb == 0)
                                 {
@@ -570,7 +494,9 @@ namespace Neon.Kube
 
                                 output.Write(buffer, 0, cb);
 
-                                var percentComplete = (int)(((double)output.Length / (double)input.Length) * 100.0);
+                                cbRead += cb;
+
+                                var percentComplete = (int)(((double)output.Length / (double)cbRead) * 100.0);
 
                                 if (stopwatch.Elapsed >= updateInterval || percentComplete >= 100.0)
                                 {
@@ -646,8 +572,8 @@ namespace Neon.Kube
                     if (osDiskBytes > KubeConst.NodeTemplateDiskSize)
                     {
                         node.Status = $"resize: OS disk";
-                        node.SudoCommand($"growpart {osDisk} 2");
-                        node.SudoCommand($"resize2fs {osDisk}2");
+                        node.SudoCommand($"growpart {osDisk} 2", RunOptions.FaultOnError);
+                        node.SudoCommand($"resize2fs {osDisk}2", RunOptions.FaultOnError);
                     }
                 }
                 finally

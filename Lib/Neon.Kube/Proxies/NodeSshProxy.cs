@@ -345,7 +345,7 @@ namespace Neon.Kube
         /// <para>
         /// This method tracks successful action completion by creating a file
         /// on the node at <see cref="KubeNodeFolders.State"/><b>/ACTION-ID</b>.
-        /// To ensure idempotency, this method first checks for the existance of
+        /// To ensure idempotency, this method first checks for the existence of
         /// this file and returns immediately without invoking the action if it is 
         /// present.
         /// </para>
@@ -381,7 +381,7 @@ namespace Neon.Kube
 
             var statePath = LinuxPath.Combine(stateFolder, actionId);
 
-            SudoCommand($"mkdir -p {stateFolder}");
+            SudoCommand($"mkdir -p {stateFolder}", RunOptions.FaultOnError);
 
             if (FileExists(statePath))
             {
@@ -392,7 +392,7 @@ namespace Neon.Kube
 
             if (!IsFaulted)
             {
-                SudoCommand($"touch {statePath}");
+                SudoCommand($"touch {statePath}", RunOptions.FaultOnError);
             }
 
             return true;
@@ -415,7 +415,7 @@ namespace Neon.Kube
         /// <para>
         /// This method tracks successful action completion by creating a file
         /// on the node at <see cref="KubeNodeFolders.State"/><b>/ACTION-ID</b>.
-        /// To ensure idempotency, this method first checks for the existance of
+        /// To ensure idempotency, this method first checks for the existence of
         /// this file and returns immediately without invoking the action if it is 
         /// present.
         /// </para>
@@ -442,7 +442,7 @@ namespace Neon.Kube
 
             var statePath = LinuxPath.Combine(stateFolder, actionId);
 
-            SudoCommand($"mkdir -p {stateFolder}");
+            SudoCommand($"mkdir -p {stateFolder}", RunOptions.FaultOnError);
 
             if (FileExists(statePath))
             {
@@ -453,7 +453,7 @@ namespace Neon.Kube
 
             if (!IsFaulted)
             {
-                SudoCommand($"touch {statePath}");
+                SudoCommand($"touch {statePath}", RunOptions.FaultOnError);
             }
 
             return true;
