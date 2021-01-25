@@ -100,7 +100,7 @@ namespace TestCadence
                 var goTestDir     = Path.Combine(Environment.GetEnvironmentVariable("NF_BUILD"), "go-test", "cadence");
                 var workerExePath = Path.Combine(goTestDir, "cwf-args.exe");
 
-                // The worker app polls for the existance of a temporary stop file and
+                // The worker app polls for the existence of a temporary stop file and
                 // exits when one is created.
 
                 var fileId   = Guid.NewGuid().ToString("d");

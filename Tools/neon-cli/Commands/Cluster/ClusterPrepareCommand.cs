@@ -116,7 +116,7 @@ Server Requirements:
             {
                 Console.WriteLine("Removing cached virtual machine templates.");
 
-                foreach (var fileName in Directory.GetFiles(KubeHelper.NodeImageCache, "*.*", SearchOption.TopDirectoryOnly))
+                foreach (var fileName in Directory.GetFiles(KubeHelper.NodeImageFolder, "*.*", SearchOption.TopDirectoryOnly))
                 {
                     File.Delete(fileName);
                 }

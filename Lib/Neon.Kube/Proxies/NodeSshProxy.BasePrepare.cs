@@ -89,11 +89,11 @@ namespace Neon.Kube
 
             WaitForBoot();
             VerifyNodeOS(statusWriter);
+            BaseInstallToolScripts(statusWriter);
             BaseConfigureDebianFrontend(statusWriter);
             BaseInstallPackages(statusWriter);
             BaseConfigureApt(statusWriter: statusWriter);
             BaseConfigureBashEnvironment(statusWriter);
-            BaseInstallToolScripts(statusWriter);
             BaseConfigureDnsIPv4Preference(statusWriter);
             BaseRemoveSnaps();
             BaseRemovePackages();
@@ -205,26 +205,13 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
             InvokeIdempotent("base/base-packages",
                 () =>
                 {
-                    // The [safe-apt-get] tool hasn't been installed yet so we're going to 
-                    // wait for any automatic package updating to release the lock before
-                    // proceeding to use standard [apt-get].
+                    // Install the packages.  Note that we haven't added our tool folder to the PATH 
+                    // yet, so we'll use the folly qualified path to [safe-apt-get].
 
-                    while (true)
-                    {
-                        var response = SudoCommand("fuser /var/lib/dpkg/lock", RunOptions.Defaults);
+                    var safeAptGetPath = LinuxPath.Combine(KubeNodeFolders.Bin, "safe-apt-get");
 
-                        if (response.ExitCode != 0)
-                        {
-                            break;
-                        }
-
-                        Thread.Sleep(TimeSpan.FromSeconds(1));
-                    }
-
-                    // Install the packages.
-
-                    SudoCommand("apt-get update", RunOptions.Defaults | RunOptions.FaultOnError);
-                    SudoCommand("apt-get install -yq apt-cacher-ng ntp zip", RunOptions.Defaults | RunOptions.FaultOnError);
+                    SudoCommand($"{safeAptGetPath} update", RunOptions.Defaults | RunOptions.FaultOnError);
+                    SudoCommand($"{safeAptGetPath} install -yq apt-cacher-ng ntp zip", RunOptions.Defaults | RunOptions.FaultOnError);
 
                     // I've seen some situations after a reboot where the machine complains about
                     // running out of entropy.  Apparently, modern CPUs have an instruction that
@@ -246,7 +233,7 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
                     // [haveged] works by timing running code at very high resolution and hoping to
                     // see execution time jitter and then use that as an entropy source.
 
-                    SudoCommand("apt-get install -yq haveged", RunOptions.Defaults | RunOptions.FaultOnError);
+                    SudoCommand($"{safeAptGetPath} install -yq haveged", RunOptions.Defaults | RunOptions.FaultOnError);
                 });
         }
 
@@ -345,8 +332,8 @@ $@"
 rm /etc/netplan/*
 
 cat <<EOF > /etc/netplan/no-dhcp.yaml
-# This file is used to disable the network when a new VM created from
-# a template is booted.  The [neon-init] service handles network
+# This file is used to disable the network when a new VM is created 
+# from a template is booted.  The [neon-init] service handles network
 # provisioning in conjunction with the cluster prepare step.
 #
 # Cluster prepare inserts a virtual DVD disc with a script that
@@ -461,7 +448,7 @@ safe-apt-get autoremove -y
         }
 
         /// <summary>
-        /// Configures the APY package manager.
+        /// Configures the APT package manager.
         /// </summary>
         /// <param name="packageManagerRetries">Optionally specifies the packager manager retries (defaults to <b>5</b>).</param>
         /// <param name="allowPackageManagerIPv6">Optionally prevent the package manager from using IPv6 (defaults to <c>false</c>.</param>
@@ -542,7 +529,7 @@ done
         /// [neon-init] is intended to run the first time a node is booted after
         /// being created from a template.  It checks to see if a special ISO with a
         /// configuration script named [neon-init.sh] is inserted into the VMs DVD
-        /// drive and when present, the script will be executed and the [/etc/neon-init]
+        /// drive and when present, the script will be executed and the [/etc/neon-init/ready]
         /// file will be created to indicate that the service no longer needs to do this for
         /// subsequent reboots.
         /// </para>
@@ -574,7 +561,7 @@ After=systemd-networkd.service
 
 [Service]
 Type=oneshot
-ExecStart={KubeNodeFolders.Bin}/neon-init.sh
+ExecStart={KubeNodeFolders.Bin}/neon-init
 RemainAfterExit=false
 StandardOutput=journal+console
 
@@ -584,10 +571,10 @@ EOF
 
 # Create the service script.
 
-cat <<EOF > {KubeNodeFolders.Bin}/neon-init.sh
+cat <<EOF > {KubeNodeFolders.Bin}/neon-init
 #!/bin/bash
 #------------------------------------------------------------------------------
-# FILE:	        neon-init.sh
+# FILE:	        neon-init
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 #
@@ -611,7 +598,7 @@ cat <<EOF > {KubeNodeFolders.Bin}/neon-init.sh
 #
 #       2. Setup creates a temporary ISO (DVD) image with a script named 
 #          [neon-init.sh] on it and uploads this to the Hyper-V
-# or XenServer host machine.
+#          or XenServer host machine.
 #
 #       3. Setup inserts the VFD into the VM's DVD drive and starts the VM.
 #
@@ -619,22 +606,22 @@ cat <<EOF > {KubeNodeFolders.Bin}/neon-init.sh
 #          [neon-init] service).
 #
 #       5. This script checks whether a DVD is present, mounts
-# it and checks it for the [neon-init.sh] script.
+#          it and checks it for the [neon-init.sh] script.
 #
 #       6. If the DVD and script file are present, this service will
-# execute the script via Bash, peforming any required custom setup.
-# Then this script creates the [/etc/neon-init] file which 
-# prevents the service from doing anything during subsequent node 
-# reboots.
+#          execute the script via Bash, peforming any required custom setup.
+#          Then this script creates the [/etc/neon-init] file which 
+#          prevents the service from doing anything during subsequent node 
+#          reboots.
 #
 #       7. The service just exits if the DVD and/or script file are 
-# not present.  This shouldn't happen in production but is useful
-# for script debugging.
+#          not present.  This shouldn't happen in production but is useful
+#          for script debugging.
 
 # Run the prep script only once.
 
-if [ -f /etc/neon-init ] ; then
-    echo ""INFO: Machine is already prepared.""
+if [ -f /etc/neon-init/ready ] ; then
+    echo ""INFO: Machine is already ready.""
     exit 0
 fi
 
@@ -674,12 +661,13 @@ echo ""INFO: Cleanup""
 umount /media/neon-init
 rm -rf /media/neon-init
 
-# Disable [neon-init] the next time it is started.
+# Disable [neon-init] the next time it starts.
 
-touch /etc/neon-init
+mkdir -p /etc/neon-init
+touch /etc/neon-init/ready
 EOF
 
-chmod 744 {KubeNodeFolders.Bin}/neon-init.sh
+chmod 744 {KubeNodeFolders.Bin}/neon-init
 
 # Configure [neon-init] to start at boot.
 

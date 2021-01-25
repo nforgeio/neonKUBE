@@ -678,7 +678,7 @@ namespace Neon.SSH
         /// <param name="password">The current user's password.</param>
         /// <remarks>
         /// <para>
-        /// This method uses the existance of a <b>/etc/neon-sshproxy-init</b> file to
+        /// This method uses the existence of a <b>/etc/neon-sshproxy-init</b> file to
         /// ensure that it only executes once per machine.  This file will be
         /// created the first time this method is called on the machine.
         /// </para>
@@ -3389,13 +3389,13 @@ echo $? > {cmdFolder}/exit
         /// <summary>
         /// Returns an indication of whether the <b>neon-init</b> service has been executed
         /// on the remote machine.  This service is deployed to neonKUBE cluster nodes to
-        /// act as a <b>cloud-init</b> to configure the network and credentials by mounting
-        /// a virual ISO drive for non-cloud environments.
+        /// act as a poor-man's <b>cloud-init</b> to configure the network and credentials 
+        /// by mounting a virual ISO drive with a configuration script for non-cloud environments.
         /// </summary>
         /// <returns><c>true</c> if <b>neon-init</b> has been executed.</returns>
         public bool GetNeonInitStatus()
         {
-            return FileExists("/etc/neon-init");
+            return FileExists("/etc/neon-init/ready");
         }
 
         /// <summary>
@@ -3409,11 +3409,33 @@ echo $? > {cmdFolder}/exit
         {
             if (initialized)
             {
-                SudoCommand("touch", "/etc/neon-init");
+                var setScript =
+@"
+mkdir -p /etc/neon-init
+touch /etc/neon-init/ready
+";
+                SudoCommand(CommandBundle.FromScript(setScript));
             }
             else
             {
-                SudoCommand("rm", "--force", "/etc/neon-init");
+                // We need to delete the [/etc/neon-init/ready] file and re-enable
+                // network DHCP by restoring the original network configuration
+                // (if present).
+
+                var resetScript =
+@"
+mkdir -p /etc/neon-init
+
+if [ -d /etc/neon-init/netplan-backup ] ; then
+
+    rm -r /etc/netplan/*
+    cp -r /etc/neon-init/netplan-backup/* /etc/netplan
+    rm -r /etc/neon-init/netplan-backup
+fi
+
+rm -rf /etc/neon-init/*
+";
+                SudoCommand(CommandBundle.FromScript(resetScript));
             }
         }
 
