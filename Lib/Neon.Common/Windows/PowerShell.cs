@@ -23,6 +23,7 @@ using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 using Neon.Common;
@@ -266,6 +267,10 @@ catch [Exception] {{
                 {
                     json = "[]";
                 }
+
+                var regex = new Regex(@"[[\{](.|\s)*[]\}]");
+
+                json = regex.Match(json).Value;
 
                 return NeonHelper.JsonDeserialize<List<dynamic>>(json);
             }
