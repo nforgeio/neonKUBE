@@ -164,7 +164,7 @@ namespace Neon.Kube
         public TimeSpan ElapsedTime { get; private set; }
 
         /// <summary>
-        /// Sets the <see cref="LinuxSshProxy{TMetadata}.DefaultRunOptions"/> property for
+        /// Sets the <see cref="LinuxSshProxy.DefaultRunOptions"/> property for
         /// all nodes managed by the controller.
         /// </summary>
         /// <param name="options">The options to be set.</param>
@@ -562,18 +562,18 @@ namespace Neon.Kube
         /// <returns><c>true</c> if the step succeeded.</returns>
         /// <remarks>
         /// <para>
-        /// This method begins by setting the <see cref="LinuxSshProxy{TMetadata}.IsReady"/>
+        /// This method begins by setting the <see cref="LinuxSshProxy.IsReady"/>
         /// state of each selected nodes to <c>false</c> and then it starts a new thread for
         /// each node and performs the action on these threads.
         /// </para>
         /// <para>
         /// In parallel, the method spins on the current thread, displaying status while
-        /// waiting for each of the nodes to transition to the <see cref="LinuxSshProxy{TMetadata}.IsReady"/>=<c>true</c>
+        /// waiting for each of the nodes to transition to the <see cref="LinuxSshProxy.IsReady"/>=<c>true</c>
         /// state.
         /// </para>
         /// <para>
         /// The method returns <c>true</c> after all of the node actions have completed
-        /// and none of the nodes have <see cref="LinuxSshProxy{TMetadata}.IsFaulted"/>=<c>true</c>.
+        /// and none of the nodes have <see cref="LinuxSshProxy.IsFaulted"/>=<c>true</c>.
         /// </para>
         /// <note>
         /// This method does nothing if a previous step failed.

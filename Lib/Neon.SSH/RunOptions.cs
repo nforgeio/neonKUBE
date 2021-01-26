@@ -44,7 +44,7 @@ namespace Neon.SSH
         None = 0x00000000,
 
         /// <summary>
-        /// Bitwise ORs any specific option flags with those specified by <see cref="LinuxSshProxy{TMetadata}.DefaultRunOptions"/>.
+        /// Bitwise ORs any specific option flags with those specified by <see cref="LinuxSshProxy.DefaultRunOptions"/>.
         /// This is handy for setting or resetting flags like <see cref="FaultOnError"/> on a global 
         /// basis for a node proxy instance.
         /// </summary>
@@ -62,7 +62,7 @@ namespace Neon.SSH
         RunWhenFaulted = 0x00000004,
 
         /// <summary>
-        /// Ignore the <see cref="LinuxSshProxy{TMetadata}.RemotePath"/> property.
+        /// Ignore the <see cref="LinuxSshProxy.RemotePath"/> property.
         /// </summary>
         IgnoreRemotePath = 0x00000008,
 

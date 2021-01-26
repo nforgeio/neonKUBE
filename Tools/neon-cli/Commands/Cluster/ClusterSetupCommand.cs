@@ -259,7 +259,7 @@ OPTIONS:
 
                     // Perform the setup operations.
 
-                    var controller =
+                    var setupController =
                         new SetupController<NodeDefinition>(new string[] { "cluster", "setup", $"[{cluster.Name}]" }, cluster.Nodes)
                         {
                             ShowStatus  = !Program.Quiet,
@@ -267,9 +267,9 @@ OPTIONS:
                             ShowElapsed = true
                         };
 
-                    controller.AddGlobalStep("download binaries", state => WorkstationBinaries());
-                    controller.AddWaitUntilOnlineStep("connect");
-                    controller.AddNodeStep("verify OS", (state, node) => node.VerifyNodeOS());
+                    setupController.AddGlobalStep("download binaries", state => WorkstationBinaries());
+                    setupController.AddWaitUntilOnlineStep("connect");
+                    setupController.AddNodeStep("verify OS", (state, node) => node.VerifyNodeOS(state));
 
                     // Write the operation begin marker to all cluster node logs.
 
@@ -281,10 +281,10 @@ OPTIONS:
 
                     var configureFirstMasterStepLabel = cluster.Definition.Masters.Count() > 1 ? "setup first master" : "setup master";
 
-                    controller.AddNodeStep(configureFirstMasterStepLabel,
+                    setupController.AddNodeStep(configureFirstMasterStepLabel,
                         (state, node) =>
                         {
-                            SetupCommon(hostingManager, node);
+                            SetupCommon(setupController, hostingManager, node);
                             node.InvokeIdempotent("setup/common-restart", () => RebootAndWait(node));
                             SetupNode(node);
                         },
@@ -294,10 +294,10 @@ OPTIONS:
 
                     if (cluster.Definition.Nodes.Count() > 1)
                     {
-                        controller.AddNodeStep("setup other nodes",
+                        setupController.AddNodeStep("setup other nodes",
                             (state, node) =>
                             {
-                                SetupCommon(hostingManager, node);
+                                SetupCommon(setupController, hostingManager, node);
                                 node.InvokeIdempotent("setup/common-restart", () => RebootAndWait(node));
                                 SetupNode(node);
                             },
@@ -307,28 +307,28 @@ OPTIONS:
                     //-----------------------------------------------------------------
                     // Kubernetes configuration.
 
-                    controller.AddGlobalStep("install podman", SetupPodman);
-                    controller.AddGlobalStep("etc HA", SetupEtcdHaProxy);
-                    controller.AddNodeStep("setup kubernetes", SetupKubernetes);
-                    controller.AddGlobalStep("setup cluster", SetupClusterAsync);
+                    setupController.AddGlobalStep("install podman", SetupPodman);
+                    setupController.AddGlobalStep("etc HA", SetupEtcdHaProxy);
+                    setupController.AddNodeStep("setup kubernetes", SetupKubernetes);
+                    setupController.AddGlobalStep("setup cluster", SetupClusterAsync);
 
-                    controller.AddGlobalStep("taint nodes", TaintNodes);
+                    setupController.AddGlobalStep("taint nodes", TaintNodes);
                     if (cluster.Definition.Monitor.Enabled)
                     {
-                        controller.AddGlobalStep("setup monitoring", SetupMonitoringAsync);
+                        setupController.AddGlobalStep("setup monitoring", SetupMonitoringAsync);
                     }
 
                     //-----------------------------------------------------------------
                     // Verify the cluster.
 
-                    controller.AddNodeStep("check masters",
+                    setupController.AddNodeStep("check masters",
                         (state, node) =>
                         {
                             ClusterDiagnostics.CheckMaster(node, cluster.Definition);
                         },
                         (state, node) => node.Metadata.IsMaster);
 
-                    controller.AddNodeStep("check workers",
+                    setupController.AddNodeStep("check workers",
                         (state, node) =>
                         {
                             ClusterDiagnostics.CheckWorker(node, cluster.Definition);
@@ -337,7 +337,7 @@ OPTIONS:
 
                     // Start setup.
 
-                    if (!controller.Run())
+                    if (!setupController.Run())
                     {
                         // Write the operation end/failed marker to all cluster node logs.
 
@@ -537,12 +537,15 @@ OPTIONS:
         /// mode is ENABLED or else will be invoked idempotently (if that's 
         /// a word).
         /// </summary>
+        /// <param name="setupState">The setup controller state.</param>
         /// <param name="node">The target node.</param>
-        private void ConfigureBasic(NodeSshProxy<NodeDefinition> node)
+        private void ConfigureBasic(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> node)
         {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+
             // Configure the node's environment variables.
 
-            KubeSetup.ConfigureEnvironmentVariables(node, cluster.Definition);
+            KubeSetup.ConfigureEnvironmentVariables(setupState, node);
 
             // Upload the setup and configuration files.
 
@@ -553,10 +556,12 @@ OPTIONS:
         /// <summary>
         /// Performs common node configuration.
         /// </summary>
+        /// <param name="setupState">The setup controller state.</param>
         /// <param name="hostingManager">The hosting manager.</param>
         /// <param name="node">The target node.</param>
-        private void SetupCommon(HostingManager hostingManager, NodeSshProxy<NodeDefinition> node)
+        private void SetupCommon(ObjectDictionary setupState, HostingManager hostingManager, NodeSshProxy<NodeDefinition> node)
         {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
             Covenant.Requires<ArgumentNullException>(hostingManager != null, nameof(hostingManager));
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 
@@ -571,7 +576,7 @@ OPTIONS:
 
             if (Program.Debug)
             {
-                ConfigureBasic(node);
+                ConfigureBasic(setupState, node);
             }
 
             //-----------------------------------------------------------------
@@ -582,12 +587,12 @@ OPTIONS:
                 {
                     if (!Program.Debug)
                     {
-                        ConfigureBasic(node);
+                        ConfigureBasic(setupState, node);
                     }
 
                     // Ensure that the node has been prepared for setup.
 
-                    KubeSetup.PrepareNode(node, cluster.Definition, hostingManager);
+                    node.PrepareNode(setupState);
 
                     // Create the [/mnt-data] folder if it doesn't already exist.  This folder
                     // is where we're going to host the Docker containers and volumes that should
@@ -738,8 +743,8 @@ ff02::2         ip6-allrouters
         /// <summary>
         /// Setup Podman.
         /// </summary>
-        /// <param name="state">The setup controller state.</param>
-        private void SetupPodman(ObjectDictionary state)
+        /// <param name="setupState">The setup controller state.</param>
+        private void SetupPodman(ObjectDictionary setupState)
         {
             foreach (var node in cluster.Nodes)
             {
@@ -766,8 +771,8 @@ ln -s /usr/bin/podman /bin/docker
         /// Configures a local HAProxy container that makes the Kubernetes Etc
         /// cluster highly available.
         /// </summary>
-        /// <param name="state">The setup controller state.</param>
-        private void SetupEtcdHaProxy(ObjectDictionary state)
+        /// <param name="setupState">The setup controller state.</param>
+        private void SetupEtcdHaProxy(ObjectDictionary setupState)
         {
             var sbHaProxy = new StringBuilder();
 
@@ -830,9 +835,9 @@ $@"
         /// <summary>
         /// Installs the required Kubernetes related components on a node.
         /// </summary>
-        /// <param name="state">The setup controller state.</param>
+        /// <param name="setupState">The setup controller state.</param>
         /// <param name="node">The target node.</param>
-        private void SetupKubernetes(ObjectDictionary state, NodeSshProxy<NodeDefinition> node)
+        private void SetupKubernetes(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> node)
         {
             node.InvokeIdempotent("setup/setup-install-kubernetes",
                 () =>
@@ -896,8 +901,8 @@ rm -rf linux-amd64
         /// Initializes the cluster on the first manager, then joins the remaining
         /// masters and workers to the cluster.
         /// </summary>
-        /// <param name="state">The setup controller state.</param>
-        private async Task SetupClusterAsync(ObjectDictionary state)
+        /// <param name="setupState">The setup controller state.</param>
+        private async Task SetupClusterAsync(ObjectDictionary setupState)
         {
             var firstMaster = cluster.FirstMaster;
 
@@ -1984,8 +1989,8 @@ istioctl install -f istio-cni.yaml
         /// <summary>
         /// Initializes the EFK stack and other monitoring services.
         /// </summary>
-        /// <param name="state">The setup controller state.</param>
-        private async Task SetupMonitoringAsync(ObjectDictionary state)
+        /// <param name="setupState">The setup controller state.</param>
+        private async Task SetupMonitoringAsync(ObjectDictionary setupState)
         {
             var firstMaster = cluster.FirstMaster;
 
@@ -3592,8 +3597,8 @@ rm -rf {chartName}*
         /// <summary>
         /// Adds the node taints.
         /// </summary>
-        /// <param name="state">The setup controller state.</param>
-        private void TaintNodes(ObjectDictionary state)
+        /// <param name="setupState">The setup controller state.</param>
+        private void TaintNodes(ObjectDictionary setupState)
         {
             var master = cluster.FirstMaster;
 

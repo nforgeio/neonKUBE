@@ -442,19 +442,21 @@ Server Requirements:
                         ShowElapsed = true
                     };
 
+                setupController.Add(KubeSetup.HostingManagerProperty, hostingManager);
+
                 // Prepare the nodes.
 
                 setupController.AddWaitUntilOnlineStep(timeout: TimeSpan.FromMinutes(15));
-                setupController.AddNodeStep("node OS verify", (state, node) => node.VerifyNodeOS());
+                setupController.AddNodeStep("node OS verify", (state, node) => node.VerifyNodeOS(setupController));
                 setupController.AddNodeStep("node credentials",
                     (state, node) =>
                     {
-                        KubeSetup.ConfigureSshKey(node, clusterLogin);
+                        node.ConfigureSshKey(setupController, clusterLogin);
                     });
                 setupController.AddNodeStep("node prepare",
                     (state, node) =>
                     {
-                        KubeSetup.PrepareNode(node, cluster.Definition, hostingManager, shutdown: false);
+                        node.PrepareNode(setupController, shutdown: false);
                     });
             
                 // Some hosting managers may have to some additional work after the node has

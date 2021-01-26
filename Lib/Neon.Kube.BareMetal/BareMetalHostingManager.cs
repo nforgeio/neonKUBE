@@ -38,6 +38,7 @@ using Newtonsoft.Json.Linq;
 
 using Renci.SshNet.Common;
 
+using Neon.Collections;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
@@ -298,8 +299,8 @@ namespace Neon.Kube
             };
 
             setupController.AddNodeStep("connect nodes", (state, node) => Connect(node));
-            setupController.AddNodeStep("verify operating system", (state, node) => node.VerifyNodeOS());
-            setupController.AddNodeStep("configure nodes", (state, node) => Congfigure(node));
+            setupController.AddNodeStep("verify operating system", (state, node) => node.VerifyNodeOS(setupController));
+            setupController.AddNodeStep("configure nodes", (state, node) => Configure(state, node));
 
             if (secureSshPassword != orgSshPassword)
             {
@@ -381,9 +382,12 @@ namespace Neon.Kube
         /// <summary>
         /// Performs low-level node initialization.
         /// </summary>
+        /// <param name="setupState">The setup controller state.</param>
         /// <param name="node">The target node.</param>
-        private void Congfigure(NodeSshProxy<NodeDefinition> node)
+        private void Configure(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> node)
         {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+
             string nodeSshPassword;
 
             lock (nodeToPassword)
@@ -391,7 +395,7 @@ namespace Neon.Kube
                 nodeSshPassword = nodeToPassword[node.Metadata.Name];
             }
 
-            node.BaseInitialize(nodeSshPassword);
+            node.BaseInitialize(setupState, nodeSshPassword);
         }
 
         /// <summary>
@@ -502,7 +506,7 @@ echo '{KubeConst.SysAdminUser}:{secureSshPassword}' | chpasswd
         }
 
         /// <inheritdoc/>
-        public override string GetDataDisk(NodeSshProxy<NodeDefinition> node)
+        public override string GetDataDisk(LinuxSshProxy node)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 

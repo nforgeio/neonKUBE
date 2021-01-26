@@ -34,6 +34,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Neon.Collections;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Diagnostics;
@@ -93,7 +94,7 @@ namespace Neon.Kube
     /// This class includes methods to invoke Linux commands on the node,
     /// </para>
     /// <para>
-    /// Call <see cref="LinuxSshProxy{TMetadata}.Dispose()"/> or <see cref="LinuxSshProxy{TMetadata}.Disconnect()"/>
+    /// Call <see cref="LinuxSshProxy.Dispose()"/> or <see cref="LinuxSshProxy.Disconnect()"/>
     /// to close the connection.
     /// </para>
     /// <note>
@@ -303,7 +304,7 @@ namespace Neon.Kube
         {
             var clone = new NodeSshProxy<TMetadata>(Name, Address, credentials, SshPort, logWriter);
 
-            LinuxSshProxy<TMetadata>.CloneTo(this, clone);
+            CloneTo(clone);
 
             return clone;
         }
@@ -463,10 +464,13 @@ namespace Neon.Kube
         /// Ensures that the node operating system and version is supported for a neonKUBE
         /// cluster.  This faults the nodeproxy on faliure.
         /// </summary>
+        /// <param name="setupState">The setup controller state.</param>
         /// <param name="statusWriter">Optional log writer action.</param>
         /// <returns><c>true</c> if the operation system is supported.</returns>
-        public bool VerifyNodeOS(Action<string> statusWriter = null)
+        public bool VerifyNodeOS(ObjectDictionary setupState, Action<string> statusWriter = null)
         {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+
             KubeHelper.WriteStatus(statusWriter, "Check", "Operating system");
             Status = "check: operating system";
 

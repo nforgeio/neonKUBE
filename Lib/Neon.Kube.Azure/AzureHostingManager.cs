@@ -909,24 +909,24 @@ namespace Neon.Kube
 
             // Initialize and run the [SetupController].
 
-            var operation = $"Provisioning [{cluster.Definition.Name}] on Azure [{region}/{resourceGroupName}]";
-            var controller = new SetupController<NodeDefinition>(operation, cluster.Nodes)
+            var operation       = $"Provisioning [{cluster.Definition.Name}] on Azure [{region}/{resourceGroupName}]";
+            var setupController = new SetupController<NodeDefinition>(operation, cluster.Nodes)
             {
                 ShowStatus     = this.ShowStatus,
                 ShowNodeStatus = true,
                 MaxParallel    = int.MaxValue       // There's no reason to constrain this
             };
 
-            controller.AddGlobalStep("Azure connect", state => ConnectAzure());
-            controller.AddGlobalStep("region check", state => VerifyRegionAndVmSizes());
-            controller.AddGlobalStep("resource group", state => CreateResourceGroup());
-            controller.AddGlobalStep("availability sets", state => CreateAvailabilitySets());
-            controller.AddGlobalStep("network security groups", state => CreateNetworkSecurityGroups());
-            controller.AddGlobalStep("virtual network", state => CreateVirtualNetwork());
-            controller.AddGlobalStep("public address", state => CreatePublicAddress());
-            controller.AddGlobalStep("external ssh ports", AssignExternalSshPorts, quiet: true);
-            controller.AddGlobalStep("load balancer", state => CreateLoadBalancer());
-            controller.AddGlobalStep("listing virtual machines",
+            setupController.AddGlobalStep("Azure connect", state => ConnectAzure());
+            setupController.AddGlobalStep("region check", state => VerifyRegionAndVmSizes());
+            setupController.AddGlobalStep("resource group", state => CreateResourceGroup());
+            setupController.AddGlobalStep("availability sets", state => CreateAvailabilitySets());
+            setupController.AddGlobalStep("network security groups", state => CreateNetworkSecurityGroups());
+            setupController.AddGlobalStep("virtual network", state => CreateVirtualNetwork());
+            setupController.AddGlobalStep("public address", state => CreatePublicAddress());
+            setupController.AddGlobalStep("external ssh ports", AssignExternalSshPorts, quiet: true);
+            setupController.AddGlobalStep("load balancer", state => CreateLoadBalancer());
+            setupController.AddGlobalStep("listing virtual machines",
                 state =>
                 {
                     // Update [azureNodes] with any existing Azure nodes and their NICs.
@@ -959,7 +959,7 @@ namespace Neon.Kube
                     }
                 },
                 quiet: true);
-            controller.AddNodeStep("credentials",
+            setupController.AddNodeStep("credentials",
                 (state, node) =>
                 {
                     // Update the node SSH proxies to use the secure SSH password.
@@ -967,11 +967,11 @@ namespace Neon.Kube
                     node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, secureSshPassword));
                 },
                 quiet: true);
-            controller.AddNodeStep("virtual machines", CreateVm);
-            controller.AddGlobalStep("internet routing", state => UpdateNetwork(NetworkOperations.InternetRouting | NetworkOperations.EnableSsh));
-            controller.AddNodeStep("configure nodes", ConfigureNode);
+            setupController.AddNodeStep("virtual machines", CreateVm);
+            setupController.AddGlobalStep("internet routing", state => UpdateNetwork(NetworkOperations.InternetRouting | NetworkOperations.EnableSsh));
+            setupController.AddNodeStep("configure nodes", ConfigureNode);
 
-            if (!controller.Run(leaveNodesConnected: false))
+            if (!setupController.Run(leaveNodesConnected: false))
             {
                 Console.WriteLine("*** One or more Azure provisioning steps failed.");
                 return await Task.FromResult(false);
@@ -988,7 +988,7 @@ namespace Neon.Kube
             setupController.AddNodeStep("node basics",
                 (state, node) =>
                 {
-                    node.BaseInitialize(secureSshPassword);
+                    node.BaseInitialize(state, secureSshPassword);
                 });
 
             // We need to add any required OpenEBS cStor disks after the node has been otherwise
@@ -1078,7 +1078,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override string GetDataDisk(NodeSshProxy<NodeDefinition> node)
+        public override string GetDataDisk(LinuxSshProxy node)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 
@@ -1499,9 +1499,11 @@ namespace Neon.Kube
         /// that we're not actually going to write the VM tags here; we'll do that when we
         /// actually create any new VMs.
         /// </summary>
-        /// <param name="state">The setup controller state.</param>
-        private void AssignExternalSshPorts(ObjectDictionary state)
+        /// <param name="setupState">The setup controller state.</param>
+        private void AssignExternalSshPorts(ObjectDictionary setupState)
         {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+
             // $todo(jefflill):
             //
             // This simply does static port assignments.  We don't currently handle clusters
@@ -1558,10 +1560,12 @@ namespace Neon.Kube
         /// <summary>
         /// Creates the NIC and VM for a cluster node.
         /// </summary>
-        /// <param name="state">The setup controller state.</param>
+        /// <param name="setupState">The setup controller state.</param>
         /// <param name="node">The target node.</param>
-        private void CreateVm(ObjectDictionary state,NodeSshProxy<NodeDefinition> node)
+        private void CreateVm(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> node)
         {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+
             var azureNode = nameToVm[node.Name];
 
             if (azureNode.Vm != null)
@@ -1631,10 +1635,12 @@ namespace Neon.Kube
         /// <summary>
         /// Performs some basic node initialization.
         /// </summary>
-        /// <param name="state">The setup controller state.</param>
+        /// <param name="setupState">The setup controller state.</param>
         /// <param name="node">The target node.</param>
-        private void ConfigureNode(ObjectDictionary state, NodeSshProxy<NodeDefinition> node)
+        private void ConfigureNode(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> node)
         {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+
             node.WaitForBoot();
 
             node.Status = "install: packages";
