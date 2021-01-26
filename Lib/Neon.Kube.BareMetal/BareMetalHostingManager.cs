@@ -157,7 +157,7 @@ namespace Neon.Kube
                 };
 
                 checkController.AddNodeStep("machine online status",
-                    node =>
+                    (state, node) =>
                     {
                         const int maxAttempts = 5;
 
@@ -197,7 +197,7 @@ namespace Neon.Kube
                     });
 
                 checkController.AddNodeStep("connect machines",
-                    node =>
+                    (state, node) =>
                     {
                         node.Status = "connecting...";
 
@@ -242,7 +242,7 @@ namespace Neon.Kube
                 var openEbsNodeCount = 0;
 
                 checkController.AddNodeStep("OpenEBS block device scan",
-                    node =>
+                    (state, node) =>
                     {
                         // NOTE: Nodes should still be connected from the last step.
 
@@ -297,16 +297,16 @@ namespace Neon.Kube
                 MaxParallel = this.MaxParallel
             };
 
-            setupController.AddNodeStep("connect nodes", node => Connect(node));
-            setupController.AddNodeStep("verify operating system", node => node.VerifyNodeOS());
-            setupController.AddNodeStep("configure nodes", node => Congfigure(node));
+            setupController.AddNodeStep("connect nodes", (state, node) => Connect(node));
+            setupController.AddNodeStep("verify operating system", (state, node) => node.VerifyNodeOS());
+            setupController.AddNodeStep("configure nodes", (state, node) => Congfigure(node));
 
             if (secureSshPassword != orgSshPassword)
             {
-                setupController.AddNodeStep("secure node passwords", node => SetSecurePassword(node));
+                setupController.AddNodeStep("secure node passwords", (state, node) => SetSecurePassword(node));
             }
 
-            setupController.AddNodeStep("detect node labels", node => DetectLabels(node));
+            setupController.AddNodeStep("detect node labels", (state, node) => DetectLabels(node));
 
             if (!setupController.Run())
             {

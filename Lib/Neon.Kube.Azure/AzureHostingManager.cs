@@ -46,6 +46,7 @@ using Newtonsoft;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
+using Neon.Collections;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
@@ -916,17 +917,17 @@ namespace Neon.Kube
                 MaxParallel    = int.MaxValue       // There's no reason to constrain this
             };
 
-            controller.AddGlobalStep("Azure connect", () => ConnectAzure());
-            controller.AddGlobalStep("region check", () => VerifyRegionAndVmSizes());
-            controller.AddGlobalStep("resource group", () => CreateResourceGroup());
-            controller.AddGlobalStep("availability sets", () => CreateAvailabilitySets());
-            controller.AddGlobalStep("network security groups", () => CreateNetworkSecurityGroups());
-            controller.AddGlobalStep("virtual network", () => CreateVirtualNetwork());
-            controller.AddGlobalStep("public address", () => CreatePublicAddress());
+            controller.AddGlobalStep("Azure connect", state => ConnectAzure());
+            controller.AddGlobalStep("region check", state => VerifyRegionAndVmSizes());
+            controller.AddGlobalStep("resource group", state => CreateResourceGroup());
+            controller.AddGlobalStep("availability sets", state => CreateAvailabilitySets());
+            controller.AddGlobalStep("network security groups", state => CreateNetworkSecurityGroups());
+            controller.AddGlobalStep("virtual network", state => CreateVirtualNetwork());
+            controller.AddGlobalStep("public address", state => CreatePublicAddress());
             controller.AddGlobalStep("external ssh ports", AssignExternalSshPorts, quiet: true);
-            controller.AddGlobalStep("load balancer", () => CreateLoadBalancer());
+            controller.AddGlobalStep("load balancer", state => CreateLoadBalancer());
             controller.AddGlobalStep("listing virtual machines",
-                () =>
+                state =>
                 {
                     // Update [azureNodes] with any existing Azure nodes and their NICs.
                     // Note that it's possible for VMs that are unrelated to the cluster
@@ -959,7 +960,7 @@ namespace Neon.Kube
                 },
                 quiet: true);
             controller.AddNodeStep("credentials",
-                node =>
+                (state, node) =>
                 {
                     // Update the node SSH proxies to use the secure SSH password.
 
@@ -967,7 +968,7 @@ namespace Neon.Kube
                 },
                 quiet: true);
             controller.AddNodeStep("virtual machines", CreateVm);
-            controller.AddGlobalStep("internet routing", () => UpdateNetwork(NetworkOperations.InternetRouting | NetworkOperations.EnableSsh));
+            controller.AddGlobalStep("internet routing", state => UpdateNetwork(NetworkOperations.InternetRouting | NetworkOperations.EnableSsh));
             controller.AddNodeStep("configure nodes", ConfigureNode);
 
             if (!controller.Run(leaveNodesConnected: false))
@@ -985,7 +986,7 @@ namespace Neon.Kube
             // Add a step to perform low-level node initialization.
 
             setupController.AddNodeStep("node basics",
-                node =>
+                (state, node) =>
                 {
                     node.BaseInitialize(secureSshPassword);
                 });
@@ -999,7 +1000,7 @@ namespace Neon.Kube
             // the OpenEBS disk will be easy to identify as the only unpartitioned disks.
 
             setupController.AddNodeStep("openebs",
-                node =>
+                (state, node) =>
                 {
                     var azureNode          = nameToVm[node.Name];
                     var openEBSStorageType = ToAzureStorageType(azureNode.Metadata.Azure.OpenEBSStorageType);
@@ -1017,7 +1018,7 @@ namespace Neon.Kube
                             .Apply();
                     }
                 },
-                node => node.Metadata.OpenEBS);
+                (state, node) => node.Metadata.OpenEBS);
         }
 
         /// <inheritdoc/>
@@ -1498,7 +1499,8 @@ namespace Neon.Kube
         /// that we're not actually going to write the VM tags here; we'll do that when we
         /// actually create any new VMs.
         /// </summary>
-        private void AssignExternalSshPorts()
+        /// <param name="state">The setup controller state.</param>
+        private void AssignExternalSshPorts(ObjectDictionary state)
         {
             // $todo(jefflill):
             //
@@ -1556,8 +1558,9 @@ namespace Neon.Kube
         /// <summary>
         /// Creates the NIC and VM for a cluster node.
         /// </summary>
+        /// <param name="state">The setup controller state.</param>
         /// <param name="node">The target node.</param>
-        private void CreateVm(NodeSshProxy<NodeDefinition> node)
+        private void CreateVm(ObjectDictionary state,NodeSshProxy<NodeDefinition> node)
         {
             var azureNode = nameToVm[node.Name];
 
@@ -1628,8 +1631,9 @@ namespace Neon.Kube
         /// <summary>
         /// Performs some basic node initialization.
         /// </summary>
+        /// <param name="state">The setup controller state.</param>
         /// <param name="node">The target node.</param>
-        private void ConfigureNode(NodeSshProxy<NodeDefinition> node)
+        private void ConfigureNode(ObjectDictionary state, NodeSshProxy<NodeDefinition> node)
         {
             node.WaitForBoot();
 

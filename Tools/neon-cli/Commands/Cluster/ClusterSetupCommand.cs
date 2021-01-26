@@ -49,6 +49,7 @@ using Neon.Time;
 
 using k8s;
 using k8s.Models;
+using Neon.Collections;
 
 namespace NeonCli
 {
@@ -266,9 +267,9 @@ OPTIONS:
                             ShowElapsed = true
                         };
 
-                    controller.AddGlobalStep("download binaries", () => WorkstationBinaries());
+                    controller.AddGlobalStep("download binaries", state => WorkstationBinaries());
                     controller.AddWaitUntilOnlineStep("connect");
-                    controller.AddNodeStep("verify OS", node => node.VerifyNodeOS());
+                    controller.AddNodeStep("verify OS", (state, node) => node.VerifyNodeOS());
 
                     // Write the operation begin marker to all cluster node logs.
 
@@ -281,26 +282,26 @@ OPTIONS:
                     var configureFirstMasterStepLabel = cluster.Definition.Masters.Count() > 1 ? "setup first master" : "setup master";
 
                     controller.AddNodeStep(configureFirstMasterStepLabel,
-                        node =>
+                        (state, node) =>
                         {
                             SetupCommon(hostingManager, node);
                             node.InvokeIdempotent("setup/common-restart", () => RebootAndWait(node));
                             SetupNode(node);
                         },
-                        node => node == cluster.FirstMaster);
+                        (state, node) => node == cluster.FirstMaster);
 
                     // Perform common configuration for the remaining nodes (if any).
 
                     if (cluster.Definition.Nodes.Count() > 1)
                     {
                         controller.AddNodeStep("setup other nodes",
-                            node =>
+                            (state, node) =>
                             {
                                 SetupCommon(hostingManager, node);
                                 node.InvokeIdempotent("setup/common-restart", () => RebootAndWait(node));
                                 SetupNode(node);
                             },
-                            node => node != cluster.FirstMaster);
+                            (state, node) => node != cluster.FirstMaster);
                     }
 
                     //-----------------------------------------------------------------
@@ -321,18 +322,18 @@ OPTIONS:
                     // Verify the cluster.
 
                     controller.AddNodeStep("check masters",
-                        node =>
+                        (state, node) =>
                         {
                             ClusterDiagnostics.CheckMaster(node, cluster.Definition);
                         },
-                        node => node.Metadata.IsMaster);
+                        (state, node) => node.Metadata.IsMaster);
 
                     controller.AddNodeStep("check workers",
-                        node =>
+                        (state, node) =>
                         {
                             ClusterDiagnostics.CheckWorker(node, cluster.Definition);
                         },
-                        node => node.Metadata.IsWorker);
+                        (state, node) => node.Metadata.IsWorker);
 
                     // Start setup.
 
@@ -737,7 +738,8 @@ ff02::2         ip6-allrouters
         /// <summary>
         /// Setup Podman.
         /// </summary>
-        private void SetupPodman()
+        /// <param name="state">The setup controller state.</param>
+        private void SetupPodman(ObjectDictionary state)
         {
             foreach (var node in cluster.Nodes)
             {
@@ -764,7 +766,8 @@ ln -s /usr/bin/podman /bin/docker
         /// Configures a local HAProxy container that makes the Kubernetes Etc
         /// cluster highly available.
         /// </summary>
-        private void SetupEtcdHaProxy()
+        /// <param name="state">The setup controller state.</param>
+        private void SetupEtcdHaProxy(ObjectDictionary state)
         {
             var sbHaProxy = new StringBuilder();
 
@@ -827,8 +830,9 @@ $@"
         /// <summary>
         /// Installs the required Kubernetes related components on a node.
         /// </summary>
+        /// <param name="state">The setup controller state.</param>
         /// <param name="node">The target node.</param>
-        private void SetupKubernetes(NodeSshProxy<NodeDefinition> node)
+        private void SetupKubernetes(ObjectDictionary state, NodeSshProxy<NodeDefinition> node)
         {
             node.InvokeIdempotent("setup/setup-install-kubernetes",
                 () =>
@@ -892,7 +896,8 @@ rm -rf linux-amd64
         /// Initializes the cluster on the first manager, then joins the remaining
         /// masters and workers to the cluster.
         /// </summary>
-        private async Task SetupClusterAsync()
+        /// <param name="state">The setup controller state.</param>
+        private async Task SetupClusterAsync(ObjectDictionary state)
         {
             var firstMaster = cluster.FirstMaster;
 
@@ -1979,7 +1984,8 @@ istioctl install -f istio-cni.yaml
         /// <summary>
         /// Initializes the EFK stack and other monitoring services.
         /// </summary>
-        private async Task SetupMonitoringAsync()
+        /// <param name="state">The setup controller state.</param>
+        private async Task SetupMonitoringAsync(ObjectDictionary state)
         {
             var firstMaster = cluster.FirstMaster;
 
@@ -3586,7 +3592,8 @@ rm -rf {chartName}*
         /// <summary>
         /// Adds the node taints.
         /// </summary>
-        private void TaintNodes()
+        /// <param name="state">The setup controller state.</param>
+        private void TaintNodes(ObjectDictionary state)
         {
             var master = cluster.FirstMaster;
 

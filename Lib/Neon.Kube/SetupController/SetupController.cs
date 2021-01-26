@@ -25,17 +25,23 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Neon.Collections;
 using Neon.Common;
 using Neon.SSH;
 
 namespace Neon.Kube
 {
     /// <summary>
-    /// Manages a cluster setup operation consisting of a series of  setup operations
-    /// steps, while displaying status to the <see cref="Console"/>.
+    /// Manages a cluster setup operation consisting of a series of setup steps
+    /// while displaying status to the <see cref="Console"/>.
     /// </summary>
     /// <typeparam name="NodeMetadata">Specifies the node metadata type.</typeparam>
-    public class SetupController<NodeMetadata>
+    /// <remarks>
+    /// This class inherits from <see cref="ObjectDictionary"/> which can be used to maintain
+    /// state that can be accessed by the setup step actions.  This dictionary is keyed by
+    /// case-sensitive strings and can store and retrieve objects with differing types.
+    /// </remarks>
+    public class SetupController<NodeMetadata> : ObjectDictionary
         where NodeMetadata : class
     {
         //---------------------------------------------------------------------
@@ -51,17 +57,17 @@ namespace Neon.Kube
 
         private class Step
         {
-            public int                                      Number;
-            public string                                   Label;
-            public bool                                     Quiet;
-            public Action                                   SyncGlobalAction;
-            public Func<Task>                               AsyncGlobalAction;
-            public Action<NodeSshProxy<NodeMetadata>>       SyncNodeAction;
-            public Func<NodeSshProxy<NodeMetadata>, Task>   AsyncNodeAction;
-            public Func<NodeSshProxy<NodeMetadata>, bool>   Predicate;
-            public StepStatus                               Status;
-            public int                                      ParallelLimit;
-            public TimeSpan                                 ElapsedTime;
+            public int                                                          Number;
+            public string                                                       Label;
+            public bool                                                         Quiet;
+            public Action<ObjectDictionary>                                     SyncGlobalAction;
+            public Func<ObjectDictionary, Task>                                 AsyncGlobalAction;
+            public Action<ObjectDictionary, NodeSshProxy<NodeMetadata>>         SyncNodeAction;
+            public Func<ObjectDictionary, NodeSshProxy<NodeMetadata>, Task>     AsyncNodeAction;
+            public Func<ObjectDictionary, NodeSshProxy<NodeMetadata>, bool>     Predicate;
+            public StepStatus                                                   Status;
+            public int                                                          ParallelLimit;
+            public TimeSpan                                                     ElapsedTime;
         }
 
         //---------------------------------------------------------------------
@@ -69,15 +75,15 @@ namespace Neon.Kube
 
         private const int UnlimitedParallel = 500;  // Treat this as "unlimited"
 
-        private string                                      operationTitle;
-        private string                                      operationStatus;
-        private List<NodeSshProxy<NodeMetadata>>            nodes;
-        private List<Step>                                  steps;
-        private Step                                        currentStep;
-        private bool                                        error;
-        private bool                                        hasNodeSteps;
-        private StringBuilder                               sbDisplay;
-        private string                                      lastDisplay;
+        private string                              operationTitle;
+        private string                              operationStatus;
+        private List<NodeSshProxy<NodeMetadata>>    nodes;
+        private List<Step>                          steps;
+        private Step                                currentStep;
+        private bool                                error;
+        private bool                                hasNodeSteps;
+        private StringBuilder                       sbDisplay;
+        private string                              lastDisplay;
 
         /// <summary>
         /// Constructor.
@@ -180,7 +186,7 @@ namespace Neon.Kube
         /// The optional zero-based index of the position where the step is
         /// to be inserted into the step list.
         /// </param>
-        public void AddGlobalStep(string stepLabel, Action action, bool quiet = false, int position = -1)
+        public void AddGlobalStep(string stepLabel, Action<ObjectDictionary> action, bool quiet = false, int position = -1)
         {
             if (position < 0)
             {
@@ -191,10 +197,10 @@ namespace Neon.Kube
                 position,
                 new Step()
                 {
-                    Label        = stepLabel,
-                    Quiet        = quiet,
+                    Label            = stepLabel,
+                    Quiet            = quiet,
                     SyncGlobalAction = action,
-                    Predicate    = n => true,
+                    Predicate        = (state, node) => true
                 });
         }
 
@@ -208,7 +214,7 @@ namespace Neon.Kube
         /// The optional zero-based index of the position where the step is
         /// to be inserted into the step list.
         /// </param>
-        public void AddGlobalStep(string stepLabel, Func<Task> action, bool quiet = false, int position = -1)
+        public void AddGlobalStep(string stepLabel, Func<ObjectDictionary, Task> action, bool quiet = false, int position = -1)
         {
             if (position < 0)
             {
@@ -222,7 +228,7 @@ namespace Neon.Kube
                     Label             = stepLabel,
                     Quiet             = quiet,
                     AsyncGlobalAction = action,
-                    Predicate         = n => true,
+                    Predicate         = (state, node) => true,
                 });
         }
 
@@ -242,12 +248,12 @@ namespace Neon.Kube
         /// to be inserted into the step list.
         /// </param>
         public void AddWaitUntilOnlineStep(
-            string                                  stepLabel     = "connect", 
-            string                                  status        = null, 
-            Func<NodeSshProxy<NodeMetadata>, bool>  nodePredicate = null, 
-            bool                                    quiet         = false, 
-            TimeSpan?                               timeout       = null, 
-            int                                     position      = -1)
+            string                                                      stepLabel     = "connect", 
+            string                                                      status        = null, 
+            Func<ObjectDictionary, NodeSshProxy<NodeMetadata>, bool>    nodePredicate = null, 
+            bool                                                        quiet         = false, 
+            TimeSpan?                                                   timeout       = null, 
+            int                                                         position      = -1)
         {
             if (timeout == null)
             {
@@ -259,7 +265,7 @@ namespace Neon.Kube
             }
 
             AddNodeStep(stepLabel,
-                node =>
+                (state, node) =>
                 {
                     node.Status = status ?? "connecting...";
                     node.WaitForBoot(timeout: timeout);
@@ -287,15 +293,15 @@ namespace Neon.Kube
         /// to be inserted into the step list.
         /// </param>
         public void AddDelayStep(
-            string                                  stepLabel, 
-            TimeSpan                                delay, 
-            string                                  status        = null,
-            Func<NodeSshProxy<NodeMetadata>, bool>  nodePredicate = null, 
-            bool                                    quiet         = false, 
-            int                                     position      = -1)
+            string                                                      stepLabel, 
+            TimeSpan                                                    delay, 
+            string                                                      status        = null,
+            Func<ObjectDictionary, NodeSshProxy<NodeMetadata>, bool>    nodePredicate = null, 
+            bool                                                        quiet         = false, 
+            int                                                         position      = -1)
         {
             AddNodeStep(stepLabel,
-                node =>
+                (state, node) =>
                 {
                     node.Status = status ?? $"delay: [{delay.TotalSeconds}] seconds";
                     Thread.Sleep(delay);
@@ -336,15 +342,15 @@ namespace Neon.Kube
         /// </param>
         public void AddNodeStep(
             string stepLabel,
-            Action<NodeSshProxy<NodeMetadata>>      nodeAction,
-            Func<NodeSshProxy<NodeMetadata>, bool>  nodePredicate   = null,
-            bool                                    quiet           = false,
-            bool                                    noParallelLimit = false,
-            int                                     position        = -1,
-            int                                     parallelLimit   = 0)
+            Action<ObjectDictionary, NodeSshProxy<NodeMetadata>>        nodeAction,
+            Func<ObjectDictionary, NodeSshProxy<NodeMetadata>, bool>    nodePredicate   = null,
+            bool                                                        quiet           = false,
+            bool                                                        noParallelLimit = false,
+            int                                                         position        = -1,
+            int                                                         parallelLimit   = 0)
         {
-            nodeAction    = nodeAction ?? new Action<NodeSshProxy<NodeMetadata>>(node => { });
-            nodePredicate = nodePredicate ?? new Func<NodeSshProxy<NodeMetadata>, bool>(node => true);
+            nodeAction    = nodeAction ?? new Action<ObjectDictionary, NodeSshProxy<NodeMetadata>>((state, node) => { });
+            nodePredicate = nodePredicate ?? new Func<ObjectDictionary, NodeSshProxy<NodeMetadata>, bool>((state, node) => true);
 
             if (position < 0)
             {
@@ -397,15 +403,15 @@ namespace Neon.Kube
         /// </param>
         public void AddNodeStep(
             string stepLabel,
-            Func<NodeSshProxy<NodeMetadata>, Task>  nodeAction,
-            Func<NodeSshProxy<NodeMetadata>, bool>  nodePredicate   = null,
-            bool                                    quiet           = false,
-            bool                                    noParallelLimit = false,
-            int                                     position        = -1,
-            int                                     parallelLimit   = 0)
+            Func<ObjectDictionary, NodeSshProxy<NodeMetadata>, Task>    nodeAction,
+            Func<ObjectDictionary, NodeSshProxy<NodeMetadata>, bool>    nodePredicate   = null,
+            bool                                                        quiet           = false,
+            bool                                                        noParallelLimit = false,
+            int                                                         position        = -1,
+            int                                                         parallelLimit   = 0)
         {
-            nodeAction    = nodeAction ?? new Func<NodeSshProxy<NodeMetadata>, Task>(node => { return Task.CompletedTask; });
-            nodePredicate = nodePredicate ?? new Func<NodeSshProxy<NodeMetadata>, bool>(node => true);
+            nodeAction    = nodeAction ?? new Func<ObjectDictionary, NodeSshProxy<NodeMetadata>, Task>((state, node) => { return Task.CompletedTask; });
+            nodePredicate = nodePredicate ?? new Func<ObjectDictionary, NodeSshProxy<NodeMetadata>, bool>((state, node) => true);
 
             if (position < 0)
             {
@@ -588,7 +594,7 @@ namespace Neon.Kube
 
                 step.Status = StepStatus.Running;
 
-                var stepNodes        = nodes.Where(step.Predicate);
+                var stepNodes        = nodes.Where(node => step.Predicate(this, node));
                 var stepNodeNamesSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
                 foreach (var node in stepNodes)
@@ -629,7 +635,7 @@ namespace Neon.Kube
                                 {
                                     try
                                     {
-                                        step.SyncNodeAction(node);
+                                        step.SyncNodeAction(this, node);
 
                                         node.Status  = "[x] DONE";
                                         node.IsReady = true;
@@ -655,7 +661,7 @@ namespace Neon.Kube
                                         var runTask = Task.Run(
                                             async () =>
                                             {
-                                                await step.AsyncNodeAction(node);
+                                                await step.AsyncNodeAction(this, node);
                                             });
 
                                         runTask.Wait();
@@ -681,7 +687,7 @@ namespace Neon.Kube
                         {
                             try
                             {
-                                step.SyncGlobalAction();
+                                step.SyncGlobalAction(this);
                             }
                             catch (Exception e)
                             {
@@ -720,7 +726,7 @@ namespace Neon.Kube
                                 var runTask = Task.Run(
                                     async () =>
                                     {
-                                        await step.AsyncGlobalAction();
+                                        await step.AsyncGlobalAction(this);
                                     });
 
                                 runTask.Wait();

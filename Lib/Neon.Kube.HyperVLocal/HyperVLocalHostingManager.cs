@@ -173,9 +173,9 @@ namespace Neon.Kube
                 MaxParallel = 1     // We're only going to provision one VM at a time on a local Hyper-V instance.
             };
 
-            setupController.AddGlobalStep("prepare hyper-v", () => PrepareHyperV());
-            setupController.AddNodeStep("create virtual machines", node => ProvisionVM(node));
-            setupController.AddGlobalStep(string.Empty, () => Finish(), quiet: true);
+            setupController.AddGlobalStep("prepare hyper-v", state => PrepareHyperV());
+            setupController.AddNodeStep("create virtual machines", (state, node) => ProvisionVM(node));
+            setupController.AddGlobalStep(string.Empty, state => Finish(), quiet: true);
 
             if (!setupController.Run())
             {
@@ -198,7 +198,7 @@ namespace Neon.Kube
             // the OpenEBS disk will be easy to identify as the only unpartitioned disk.
 
             setupController.AddNodeStep("openebs",
-                node =>
+                (state, node) =>
                 {
                     using (var hyperv = new HyperVClient())
                     {
@@ -228,7 +228,7 @@ namespace Neon.Kube
                         }
                     }
                 },
-                node => node.Metadata.OpenEBS);
+                (state, node) => node.Metadata.OpenEBS);
         }
 
         /// <inheritdoc/>
