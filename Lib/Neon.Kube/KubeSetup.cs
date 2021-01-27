@@ -136,6 +136,29 @@ namespace Neon.Kube
         // Implementation
 
         /// <summary>
+        /// Returns the <see cref="Kubernetes"/> client persisted in the dictionary passed.
+        /// </summary>
+        /// <param name="setupState">The setup state.</param>
+        /// <returns>The <see cref="Kubernetes"/> client.</returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when there is no persisted client, indicating that <see cref="ConnectCluster(ObjectDictionary)"/>
+        /// has not been called yet.
+        /// </exception>
+        public static Kubernetes GetK8sClient(ObjectDictionary setupState)
+        {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+
+            try
+            {
+                return setupState.Get<Kubernetes>(K8sClientProperty);
+            }
+            catch (Exception e)
+            {
+                throw new InvalidOperationException($"Cannot retrieve the Kubernetes client because the cluster hasn't been connected via [{nameof(ConnectCluster)}()].", e);
+            }
+        }
+
+        /// <summary>
         /// Renders a Kubernetes label value in a format suitable for labeling a node.
         /// </summary>
         private static string GetLabelValue(object value)
@@ -1357,7 +1380,7 @@ spec:
             await firstMaster.InvokeIdempotentAsync("setup/cluster-neon-system-namespace",
                 async () =>
                 {
-                    await setupState.Get<Kubernetes>(K8sClientProperty).CreateNamespaceAsync(new V1Namespace()
+                    await GetK8sClient(setupState).CreateNamespaceAsync(new V1Namespace()
                     {
                         Metadata = new V1ObjectMeta()
                         {
@@ -1512,7 +1535,7 @@ rm /tmp/calico.yaml
                     NeonHelper.WaitFor(
                         () =>
                         {
-                            var pods = setupState.Get<Kubernetes>(K8sClientProperty).ListPodForAllNamespaces();
+                            var pods = GetK8sClient(setupState).ListPodForAllNamespaces();
 
                             foreach (var pod in pods.Items)
                             {
@@ -1778,7 +1801,7 @@ istioctl install -f istio-cni.yaml
 
             var taints = new List<V1Taint>();
 
-            foreach (var n in (await setupState.Get<Kubernetes>(K8sClientProperty).ListNodeAsync()).Items.Where(n => n.Metadata.Labels.Any(l => l.Key == labelKey && l.Value == labelValue)))
+            foreach (var n in (await GetK8sClient(setupState).ListNodeAsync()).Items.Where(n => n.Metadata.Labels.Any(l => l.Key == labelKey && l.Value == labelValue)))
             {
                 if (n.Spec.Taints?.Count() > 0)
                 {
@@ -1836,7 +1859,7 @@ istioctl install -f istio-cni.yaml
                     await NeonHelper.WaitForAsync(
                         async () =>
                         {
-                            var deployments = await setupState.Get<Kubernetes>(K8sClientProperty).ListNamespacedDeploymentAsync("istio-system", labelSelector: "app=kiali-operator");
+                            var deployments = await GetK8sClient(setupState).ListNamespacedDeploymentAsync("istio-system", labelSelector: "app=kiali-operator");
                             if (deployments == null || deployments.Items.Count == 0)
                             {
                                 return false;
@@ -1850,7 +1873,7 @@ istioctl install -f istio-cni.yaml
                     await NeonHelper.WaitForAsync(
                         async () =>
                         {
-                            var deployments = await setupState.Get<Kubernetes>(K8sClientProperty).ListNamespacedDeploymentAsync("istio-system", labelSelector: "app=kiali");
+                            var deployments = await GetK8sClient(setupState).ListNamespacedDeploymentAsync("istio-system", labelSelector: "app=kiali");
                             if (deployments == null || deployments.Items.Count == 0)
                             {
                                 return false;
@@ -1899,7 +1922,7 @@ istioctl install -f istio-cni.yaml
             master.InvokeIdempotent("setup/openebs-namespace",
                 () =>
                 {
-                    setupState.Get<Kubernetes>(K8sClientProperty).CreateNamespace(new V1Namespace()
+                    GetK8sClient(setupState).CreateNamespace(new V1Namespace()
                     {
                         Metadata = new V1ObjectMeta()
                         {
@@ -2008,7 +2031,7 @@ istioctl install -f istio-cni.yaml
                     await NeonHelper.WaitForAsync(
                         async () =>
                         {
-                            var deployments = await setupState.Get<Kubernetes>(K8sClientProperty).ListNamespacedDeploymentAsync("openebs");
+                            var deployments = await GetK8sClient(setupState).ListNamespacedDeploymentAsync("openebs");
                             if (deployments == null || deployments.Items.Count == 0)
                             {
                                 return false;
@@ -2022,7 +2045,7 @@ istioctl install -f istio-cni.yaml
                     await NeonHelper.WaitForAsync(
                         async () =>
                         {
-                            var daemonsets = await setupState.Get<Kubernetes>(K8sClientProperty).ListNamespacedDaemonSetAsync("openebs");
+                            var daemonsets = await GetK8sClient(setupState).ListNamespacedDaemonSetAsync("openebs");
                             if (daemonsets == null || daemonsets.Items.Count == 0)
                             {
                                 return false;
@@ -2050,7 +2073,7 @@ istioctl install -f istio-cni.yaml
                         }
                     };
 
-                    var blockDevices = ((JObject)await setupState.Get<Kubernetes>(K8sClientProperty).ListNamespacedCustomObjectAsync("openebs.io", "v1alpha1", "openebs", "blockdevices")).ToObject<V1CStorBlockDeviceList>();
+                    var blockDevices = ((JObject)await GetK8sClient(setupState).ListNamespacedCustomObjectAsync("openebs.io", "v1alpha1", "openebs", "blockdevices")).ToObject<V1CStorBlockDeviceList>();
 
                     foreach (var n in cluster.Definition.Nodes)
                     {
@@ -2093,7 +2116,7 @@ istioctl install -f istio-cni.yaml
                         }
                     }
 
-                    setupState.Get<Kubernetes>(K8sClientProperty).CreateNamespacedCustomObject(cStorPoolCluster, V1CStorPoolCluster.KubeGroup, V1CStorPoolCluster.KubeApiVersion, "openebs", "cstorpoolclusters");
+                    GetK8sClient(setupState).CreateNamespacedCustomObject(cStorPoolCluster, V1CStorPoolCluster.KubeGroup, V1CStorPoolCluster.KubeApiVersion, "openebs", "cstorpoolclusters");
                 });
 
             await master.InvokeIdempotentAsync("setup/neon-storage-openebs-cstor-ready",
@@ -2102,7 +2125,7 @@ istioctl install -f istio-cni.yaml
                     await NeonHelper.WaitForAsync(
                         async () =>
                         {
-                            var deployments = await setupState.Get<Kubernetes>(K8sClientProperty).ListNamespacedDeploymentAsync("openebs", labelSelector: "app=cstor-pool");
+                            var deployments = await GetK8sClient(setupState).ListNamespacedDeploymentAsync("openebs", labelSelector: "app=cstor-pool");
                             if (deployments == null || deployments.Items.Count == 0)
                             {
                                 return false;
@@ -2132,7 +2155,7 @@ istioctl install -f istio-cni.yaml
                             { "replicaCount", "3" }
                         }
                     };
-                    setupState.Get<Kubernetes>(K8sClientProperty).CreateStorageClass(storageClass);
+                    GetK8sClient(setupState).CreateStorageClass(storageClass);
                 });
 
             await master.InvokeIdempotentAsync("setup/neon-storage-openebs-nfs-install",
@@ -2154,7 +2177,7 @@ istioctl install -f istio-cni.yaml
                     await NeonHelper.WaitForAsync(
                         async () =>
                         {
-                            var statefulsets = await setupState.Get<Kubernetes>(K8sClientProperty).ListNamespacedStatefulSetAsync("openebs", labelSelector: "release=neon-storage-nfs");
+                            var statefulsets = await GetK8sClient(setupState).ListNamespacedStatefulSetAsync("openebs", labelSelector: "release=neon-storage-nfs");
                             if (statefulsets == null || statefulsets.Items.Count == 0)
                             {
                                 return false;
@@ -2227,7 +2250,7 @@ istioctl install -f istio-cni.yaml
                     await NeonHelper.WaitForAsync(
                         async () =>
                         {
-                            var statefulsets = await setupState.Get<Kubernetes>(K8sClientProperty).ListNamespacedStatefulSetAsync("monitoring", labelSelector: "release=neon-metrics-etcd");
+                            var statefulsets = await GetK8sClient(setupState).ListNamespacedStatefulSetAsync("monitoring", labelSelector: "release=neon-metrics-etcd");
                             if (statefulsets == null || statefulsets.Items.Count == 0)
                             {
                                 return false;
@@ -2315,7 +2338,7 @@ istioctl install -f istio-cni.yaml
                     await NeonHelper.WaitForAsync(
                         async () =>
                         {
-                            var deployments = await setupState.Get<Kubernetes>(K8sClientProperty).ListNamespacedDeploymentAsync("monitoring", labelSelector: "release=neon-metrics-prometheus");
+                            var deployments = await GetK8sClient(setupState).ListNamespacedDeploymentAsync("monitoring", labelSelector: "release=neon-metrics-prometheus");
                             if (deployments == null || deployments.Items.Count == 0)
                             {
                                 return false;
@@ -2329,7 +2352,7 @@ istioctl install -f istio-cni.yaml
                     await NeonHelper.WaitForAsync(
                         async () =>
                         {
-                            var daemonsets = await setupState.Get<Kubernetes>(K8sClientProperty).ListNamespacedDaemonSetAsync("monitoring", labelSelector: "release=neon-metrics-prometheus");
+                            var daemonsets = await GetK8sClient(setupState).ListNamespacedDaemonSetAsync("monitoring", labelSelector: "release=neon-metrics-prometheus");
                             if (daemonsets == null || daemonsets.Items.Count == 0)
                             {
                                 return false;
@@ -2343,7 +2366,7 @@ istioctl install -f istio-cni.yaml
                     await NeonHelper.WaitForAsync(
                         async () =>
                         {
-                            var statefulsets = await setupState.Get<Kubernetes>(K8sClientProperty).ListNamespacedStatefulSetAsync("monitoring", labelSelector: "release=neon-metrics-prometheus");
+                            var statefulsets = await GetK8sClient(setupState).ListNamespacedStatefulSetAsync("monitoring", labelSelector: "release=neon-metrics-prometheus");
                             if (statefulsets == null || statefulsets.Items.Count < 2)
                             {
                                 return false;
@@ -2412,7 +2435,7 @@ istioctl install -f istio-cni.yaml
                     await NeonHelper.WaitForAsync(
                         async () =>
                         {
-                            var deployments = await setupState.Get<Kubernetes>(K8sClientProperty).ListNamespacedDeploymentAsync("monitoring", labelSelector: "release=neon-metrics-cortex");
+                            var deployments = await GetK8sClient(setupState).ListNamespacedDeploymentAsync("monitoring", labelSelector: "release=neon-metrics-cortex");
                             if (deployments == null || deployments.Items.Count == 0)
                             {
                                 return false;
@@ -2466,7 +2489,7 @@ istioctl install -f istio-cni.yaml
                     await NeonHelper.WaitForAsync(
                         async () =>
                         {
-                            var deployments = await setupState.Get<Kubernetes>(K8sClientProperty).ListNamespacedDeploymentAsync("monitoring", labelSelector: "release=neon-metrics-grafana");
+                            var deployments = await GetK8sClient(setupState).ListNamespacedDeploymentAsync("monitoring", labelSelector: "release=neon-metrics-grafana");
                             if (deployments == null || deployments.Items.Count == 0)
                             {
                                 return false;
@@ -2540,7 +2563,7 @@ istioctl install -f istio-cni.yaml
                     await NeonHelper.WaitForAsync(
                         async () =>
                         {
-                            var deployments = await setupState.Get<Kubernetes>(K8sClientProperty).ListNamespacedDeploymentAsync("monitoring", labelSelector: "release=neon-logs-jaeger");
+                            var deployments = await GetK8sClient(setupState).ListNamespacedDeploymentAsync("monitoring", labelSelector: "release=neon-logs-jaeger");
                             if (deployments == null || deployments.Items.Count < 2)
                             {
                                 return false;
@@ -2589,7 +2612,7 @@ istioctl install -f istio-cni.yaml
                         }
                     };
 
-                    await setupState.Get<Kubernetes>(K8sClientProperty).CreateNamespacedSecretAsync(harborCert, "neon-system");
+                    await GetK8sClient(setupState).CreateNamespacedSecretAsync(harborCert, "neon-system");
                 });
 
             await master.InvokeIdempotentAsync("deploy/neon-system-registry-redis",
@@ -2627,7 +2650,7 @@ istioctl install -f istio-cni.yaml
                     await NeonHelper.WaitForAsync(
                         async () =>
                         {
-                            var statefulsets = await setupState.Get<Kubernetes>(K8sClientProperty).ListNamespacedStatefulSetAsync("neon-system", labelSelector: "release=neon-system-registry-redis");
+                            var statefulsets = await GetK8sClient(setupState).ListNamespacedStatefulSetAsync("neon-system", labelSelector: "release=neon-system-registry-redis");
 
                             if (statefulsets == null || statefulsets.Items.Count == 0)
                             {
@@ -2711,17 +2734,17 @@ istioctl install -f istio-cni.yaml
                                // Restart pods if they aren't happy after 3 minutes.
                                if (DateTime.UtcNow > startUtc.AddMinutes(3))
                                {
-                                   var pods = await setupState.Get<Kubernetes>(K8sClientProperty).ListNamespacedPodAsync("neon-system", labelSelector: "release=neon-system-registry-harbor");
+                                   var pods = await GetK8sClient(setupState).ListNamespacedPodAsync("neon-system", labelSelector: "release=neon-system-registry-harbor");
                                    foreach (var p in pods.Items.Where(i => i.Status.Phase != "Running"))
                                    {
                                        if (p.Status.ContainerStatuses.Any(c => c.RestartCount > 0))
                                        {
                                            startUtc = DateTime.UtcNow;
-                                           await setupState.Get<Kubernetes>(K8sClientProperty).DeleteNamespacedPodAsync(p.Name(), "neon-system");
+                                           await GetK8sClient(setupState).DeleteNamespacedPodAsync(p.Name(), "neon-system");
                                        }
                                    }
                                }
-                               var deployments = await setupState.Get<Kubernetes>(K8sClientProperty).ListNamespacedDeploymentAsync("neon-system", labelSelector: "release=neon-system-registry-harbor");
+                               var deployments = await GetK8sClient(setupState).ListNamespacedDeploymentAsync("neon-system", labelSelector: "release=neon-system-registry-harbor");
                                if (deployments == null || deployments.Items.Count < 8)
                                {
                                    return false;
@@ -2766,7 +2789,7 @@ istioctl install -f istio-cni.yaml
                     await NeonHelper.WaitForAsync(
                         async () =>
                         {
-                            var deployments = await setupState.Get<Kubernetes>(K8sClientProperty).ListNamespacedDeploymentAsync("neon-system", labelSelector: "release=neon-cluster-manager");
+                            var deployments = await GetK8sClient(setupState).ListNamespacedDeploymentAsync("neon-system", labelSelector: "release=neon-cluster-manager");
                             if (deployments == null || deployments.Items.Count == 0)
                             {
                                 return false;
@@ -2840,7 +2863,7 @@ istioctl install -f istio-cni.yaml
                     await NeonHelper.WaitForAsync(
                         async () =>
                         {
-                            var statefulsets = await setupState.Get<Kubernetes>(K8sClientProperty).ListNamespacedStatefulSetAsync("neon-system", labelSelector: "release=neon-system-db");
+                            var statefulsets = await GetK8sClient(setupState).ListNamespacedStatefulSetAsync("neon-system", labelSelector: "release=neon-system-db");
                             if (statefulsets == null || statefulsets.Items.Count < 2)
                             {
                                 return false;
@@ -2854,7 +2877,7 @@ istioctl install -f istio-cni.yaml
                     await NeonHelper.WaitForAsync(
                         async () =>
                         {
-                            var deployments = await setupState.Get<Kubernetes>(K8sClientProperty).ListNamespacedDeploymentAsync("neon-system", labelSelector: "release=neon-system-db");
+                            var deployments = await GetK8sClient(setupState).ListNamespacedDeploymentAsync("neon-system", labelSelector: "release=neon-system-db");
                             if (deployments == null || deployments.Items.Count == 0)
                             {
                                 return false;
