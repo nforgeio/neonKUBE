@@ -12,7 +12,7 @@ namespace Service_Metrics
 {
     public static class Program
     {
-        public async static Task Main(string[] args)
+        public static async Task Main(string[] args)
         {
             // You can enable Prometheus metrics with just one line of code!
             //

@@ -39,20 +39,10 @@ using Neon.IO;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Specifies the options for configuring the cluster integrated
-    /// Elasticsearch/Fluentd/Kibana (EFK) logging stack.
+    /// Specifies the options for configuring the cluster integrated logging stack.
     /// </summary>
     public class MonitorOptions
     {
-        /// <summary>
-        /// Indicates whether the EFK stack is to be enabled for the cluster.  
-        /// This defaults to <c>true</c>.
-        /// </summary>
-        [JsonProperty(PropertyName = "Enabled", Required = Required.Default)]
-        [YamlMember(Alias = "enabled", ApplyNamingConventions = false)]
-        [DefaultValue(true)]
-        public bool Enabled { get; set; } = true;
-
         /// <summary>
         /// Elasticsearch options.
         /// </summary>
@@ -77,11 +67,6 @@ namespace Neon.Kube
         /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         public void Validate(ClusterDefinition clusterDefinition)
         {
-            if (!Enabled)
-            {
-                return;
-            }
-
             Logs    = Logs ?? new LogOptions();
             Metrics = Metrics ?? new MetricsOptions();
 

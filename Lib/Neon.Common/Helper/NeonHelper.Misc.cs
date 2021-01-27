@@ -1914,7 +1914,7 @@ namespace Neon.Common
         /// </summary>
         /// <param name="task">The <see cref="Task{T}"/>.</param>
         /// <returns>The task result.</returns>
-        public async static Task<object> GetTaskResultAsObjectAsync(Task task)
+        public static async Task<object> GetTaskResultAsObjectAsync(Task task)
         {
             Covenant.Requires<ArgumentNullException>(task != null, nameof(task));
 
@@ -2062,6 +2062,18 @@ namespace Neon.Common
             }
 
             return delta <= maxDelta;
+        }
+
+        /// <summary>
+        /// Attempts to cast an object into a specific type.
+        /// </summary>
+        /// <typeparam name="TResult">The desired result type.</typeparam>
+        /// <param name="value">The value to be cast.</param>
+        /// <returns>The casted result.</returns>
+        /// <exception cref="InvalidCastException">Thrown if the value could not be cast into the type.</exception>
+        public static TResult CastTo<TResult>(object value)
+        {
+            return (TResult)value;
         }
     }
 }

@@ -63,7 +63,7 @@ namespace Neon.Postgres
         /// <param name="connection">The existing connection.</param>
         /// <param name="database">The target database for the new connection.</param>
         /// <returns>The new <see cref="NpgsqlConnection"/>.</returns>
-        public async static Task<NpgsqlConnection> OpenDatabaseAsync(this NpgsqlConnection connection, string database)
+        public static async Task<NpgsqlConnection> OpenDatabaseAsync(this NpgsqlConnection connection, string database)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(database), nameof(database));
 
@@ -124,7 +124,7 @@ namespace Neon.Postgres
         /// for better performance.
         /// </note>
         /// </remarks>
-        public async static Task<int> ExecuteNonQueryAsync(
+        public static async Task<int> ExecuteNonQueryAsync(
             this NpgsqlConnection   connection,
             string                  cmdText, 
             CancellationToken       cancellationToken = default,
@@ -198,7 +198,7 @@ namespace Neon.Postgres
         /// for better performance.
         /// </note>
         /// </remarks>
-        public async static Task<object> ExecuteScalarAsync(
+        public static async Task<object> ExecuteScalarAsync(
             this NpgsqlConnection   connection,
             string                  cmdText, 
             CancellationToken       cancellationToken = default,
@@ -275,7 +275,7 @@ namespace Neon.Postgres
         /// for better performance.
         /// </note>
         /// </remarks>
-        public async static Task<NpgsqlDataReader> ExecuteReaderAsync(
+        public static async Task<NpgsqlDataReader> ExecuteReaderAsync(
             this NpgsqlConnection   connection,
             string                  cmdText, 
             CommandBehavior         behavior          = CommandBehavior.Default,
@@ -455,7 +455,7 @@ namespace Neon.Postgres
         /// line will be ignored.
         /// </note>
         /// </remarks>
-        public async static Task ExecuteBatchAsync(
+        public static async Task ExecuteBatchAsync(
             this NpgsqlConnection   connection,
             string                  batchText, 
             CancellationToken       cancellationToken = default,

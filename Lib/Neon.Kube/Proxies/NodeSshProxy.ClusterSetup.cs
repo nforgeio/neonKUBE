@@ -330,5 +330,429 @@ service ntp restart
                     SudoCommand(CommandBundle.FromScript(script), RunOptions.Defaults | RunOptions.FaultOnError);
                 });
         }
+
+        /// <summary>
+        /// Configures the global environment variables that describe the configuration 
+        /// of the server within the cluster.
+        /// </summary>
+        /// <param name="setupState">The setup controller state.</param>
+        public void ConfigureEnvironmentVariables(ObjectDictionary setupState)
+        {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+
+            var clusterDefinition = Cluster.Definition;
+            var nodeDefinition    = NeonHelper.CastTo<NodeDefinition>(Metadata);
+
+            Status = "environment variables";
+
+            // We're going to append the new variables to the existing Linux [/etc/environment] file.
+
+            var sb = new StringBuilder();
+
+            // Append all of the existing environment variables except for those
+            // whose names start with "NEON_" to make the operation idempotent.
+            //
+            // Note that we're going to special case PATH to add any Neon
+            // related directories.
+
+            using (var currentEnvironmentStream = new MemoryStream())
+            {
+                Download("/etc/environment", currentEnvironmentStream);
+
+                currentEnvironmentStream.Position = 0;
+
+                using (var reader = new StreamReader(currentEnvironmentStream))
+                {
+                    foreach (var line in reader.Lines())
+                    {
+                        if (line.StartsWith("PATH="))
+                        {
+                            if (!line.Contains(KubeNodeFolders.Bin))
+                            {
+                                sb.AppendLine(line + $":/snap/bin:{KubeNodeFolders.Bin}");
+                            }
+                            else
+                            {
+                                sb.AppendLine(line);
+                            }
+                        }
+                        else if (!line.StartsWith("NEON_"))
+                        {
+                            sb.AppendLine(line);
+                        }
+                    }
+                }
+            }
+
+            // Add the global cluster related environment variables. 
+
+            sb.AppendLine($"NEON_CLUSTER={clusterDefinition.Name}");
+            sb.AppendLine($"NEON_DATACENTER={clusterDefinition.Datacenter.ToLowerInvariant()}");
+            sb.AppendLine($"NEON_ENVIRONMENT={clusterDefinition.Environment.ToString().ToLowerInvariant()}");
+
+            var sbPackageProxies = new StringBuilder();
+
+            if (clusterDefinition.PackageProxy != null)
+            {
+                foreach (var proxyEndpoint in clusterDefinition.PackageProxy.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                {
+                    sbPackageProxies.AppendWithSeparator(proxyEndpoint);
+                }
+            }
+            
+            sb.AppendLine($"NEON_PACKAGE_PROXY={sbPackageProxies}");
+
+            if (clusterDefinition.Hosting != null)
+            {
+                sb.AppendLine($"NEON_HOSTING={clusterDefinition.Hosting.Environment.ToMemberString().ToLowerInvariant()}");
+            }
+
+            sb.AppendLine($"NEON_NODE_NAME={Name}");
+
+            if (nodeDefinition != null)
+            {
+                sb.AppendLine($"NEON_NODE_ROLE={nodeDefinition.Role}");
+                sb.AppendLine($"NEON_NODE_IP={nodeDefinition.Address}");
+                sb.AppendLine($"NEON_NODE_HDD={nodeDefinition.Labels.StorageHDD.ToString().ToLowerInvariant()}");
+            }
+
+            sb.AppendLine($"NEON_BIN_FOLDER={KubeNodeFolders.Bin}");
+            sb.AppendLine($"NEON_CONFIG_FOLDER={KubeNodeFolders.Config}");
+            sb.AppendLine($"NEON_SETUP_FOLDER={KubeNodeFolders.Setup}");
+            sb.AppendLine($"NEON_STATE_FOLDER={KubeNodeFolders.State}");
+            sb.AppendLine($"NEON_TMPFS_FOLDER={KubeNodeFolders.Tmpfs}");
+
+            // Kubernetes related variables for masters.
+
+            if (nodeDefinition.IsMaster)
+            {
+                sb.AppendLine($"KUBECONFIG=/etc/kubernetes/admin.conf");
+            }
+
+            // Upload the new environment to the server.
+
+            UploadText("/etc/environment", sb, tabStop: 4);
+        }
+
+        /// <summary>
+        /// Updates the node hostname and related configuration.
+        /// </summary>
+        private void UpdateHostname()
+        {
+            // Update the hostname.
+
+            SudoCommand($"hostnamectl set-hostname {Name}");
+
+            // We need to edit [/etc/cloud/cloud.cfg] to preserve the hostname change.
+
+            var cloudCfg = DownloadText("/etc/cloud/cloud.cfg");
+
+            cloudCfg = cloudCfg.Replace("preserve_hostname: false", "preserve_hostname: true");
+
+            UploadText("/etc/cloud/cloud.cfg", cloudCfg);
+
+            // Update the [/etc/hosts] file to resolve the new hostname.
+
+            var sbHosts = new StringBuilder();
+
+            var nodeAddress = Address.ToString();
+            var separator = new string(' ', Math.Max(16 - nodeAddress.Length, 1));
+
+            sbHosts.Append(
+$@"
+127.0.0.1	    localhost
+127.0.0.1       kubernetes-masters
+{nodeAddress}{separator}{Name}
+::1             localhost ip6-localhost ip6-loopback
+ff02::1         ip6-allnodes
+ff02::2         ip6-allrouters
+");
+            UploadText("/etc/hosts", sbHosts, 4, Encoding.UTF8);
+        }
+
+        /// <summary>
+        /// Performs common node configuration.
+        /// </summary>
+        /// <param name="setupState">The setup controller state.</param>
+        public void SetupCommon(ObjectDictionary setupState)
+        {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+
+            var nodeDefinition = NeonHelper.CastTo<NodeDefinition>(Metadata);
+            var hostingManager = setupState.Get<IHostingManager>(KubeSetup.HostingManagerProperty);
+
+            ConfigureEnvironmentVariables(setupState);
+
+            //-----------------------------------------------------------------
+            // Ensure the following steps are executed only once.
+
+            InvokeIdempotent("setup/common",
+                () =>
+                {
+                    // Ensure that the node has been prepared for setup.
+
+                    PrepareNode(setupState);
+
+                    // Create the [/mnt-data] folder if it doesn't already exist.  This folder
+                    // is where we're going to host the Docker containers and volumes that should
+                    // have been initialized to link to any data drives attached to the machine
+                    // or simply be located on the OS drive.  This may not be initialized for
+                    // some prepared nodes, so we'll create this on the OS drive if necessary.
+
+                    if (!DirectoryExists("/mnt-data"))
+                    {
+                        SudoCommand("mkdir -p /mnt-data");
+                    }
+
+                    // Configure the APT proxy server settings early.
+
+                    Status = "configure: package proxy";
+                    SudoCommand("setup-package-proxy.sh");
+
+                    // Perform basic node setup including changing the hostname.
+
+                    UpdateHostname();
+
+                    Status = "configure: node basics";
+                    SudoCommand("setup-node.sh");
+                });
+        }
+
+        /// <summary>
+        /// Installs a prepositioned Helm chart from a master node.
+        /// </summary>
+        /// <param name="chartName">The name of the Helm chart.</param>
+        /// <param name="releaseName">Optionally specifies the component release name.</param>
+        /// <param name="namespace">Optionally specifies the namespace where Kubernetes namespace where the Helm chart should be installed. This defaults to <b>default</b></param>
+        /// <param name="values">Optionally specifies Helm chart values.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <remarks>
+        /// neonKUBE images prepositions the Helm chart files embedded as resources in the <b>Resources/Helm</b>
+        /// project folder to cluster node images as the <b>/lib/neonkube/helm/charts.zip</b> archive.  This
+        /// method unzips that file to the same folder (if it hasn't been unzipped already) and then installs
+        /// the helm chart (if it hasn't already been installed).
+        /// </remarks>
+        public async Task InstallHelmChartAsync(
+            string                              chartName,
+            string                              releaseName = null,
+            string                              @namespace  = "default",
+            List<KeyValuePair<string, object>>  values      = null)
+        {
+            if (string.IsNullOrEmpty(releaseName))
+            {
+                releaseName = chartName;
+            }
+
+            // Unzip the Helm chart archive if we haven't done so already.
+
+            InvokeIdempotent("setup/helm-unzip",
+                () =>
+                {
+                    var zipPath = LinuxPath.Combine(KubeNodeFolders.Helm, "charts.zip");
+
+                    SudoCommand($"unzip {zipPath} -d {KubeNodeFolders.Helm}");
+                    SudoCommand($"rm -f {zipPath}");
+                });
+
+            // Install the chart when we haven't already done so.
+
+            InvokeIdempotent($"setup/helm-install-{releaseName}",
+                () =>
+                {
+                    var valueOverrides = new StringBuilder();
+
+                    if (values != null)
+                    {
+                        foreach (var value in values)
+                        {
+                            var valueType = value.Value.GetType();
+
+                            if (valueType == typeof(string))
+                            {
+                                valueOverrides.AppendWithSeparator($"--set-string {value.Key}=\"{value.Value}\"", @"\n");
+                            }
+                            else if (valueType == typeof(int))
+                            {
+                                valueOverrides.AppendWithSeparator($"--set {value.Key}={value.Value}", @"\n");
+                            }
+                            else
+                            {
+                                throw new NotImplementedException();
+                            }
+                        }
+                    }
+
+                    var helmChartScript =
+$@"#!/bin/bash
+cd /tmp/charts
+
+until [ -f {chartName}.zip ]
+do
+  sleep 1
+done
+
+rm -rf {chartName}
+
+unzip {chartName}.zip -d {chartName}
+helm install {releaseName} {chartName} --namespace {@namespace} -f {chartName}/values.yaml {valueOverrides}
+
+START=`date +%s`
+DEPLOY_END=$((START+15))
+
+until [ `helm status {releaseName} --namespace {@namespace} | grep ""STATUS: deployed"" | wc -l` -eq 1  ];
+do
+  if [ $((`date +%s`)) -gt $DEPLOY_END ]; then
+    helm delete {releaseName} || true
+    exit 1
+  fi
+   sleep 1
+done
+
+rm -rf {chartName}*
+";
+                    SudoCommand(CommandBundle.FromScript(helmChartScript), RunOptions.None).EnsureSuccess();
+                });
+
+            await Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Performs basic node configuration.
+        /// </summary>
+        public void SetupNode()
+        {
+            var nodeDefinition = NeonHelper.CastTo<NodeDefinition>(Metadata);
+
+            InvokeIdempotent($"setup/{nodeDefinition.Role}",
+                () =>
+                {
+                    // Configure the APT package proxy on the masters
+                    // and configure the proxy selector for all nodes.
+
+                    Status = "configure: package proxy";
+                    SudoCommand("setup-package-proxy.sh");
+
+                    // Upgrade Linux packages if requested.  We're doing this after
+                    // deploying the APT package proxy so it'll be faster.
+
+                    switch (cluster.Definition.NodeOptions.Upgrade)
+                    {
+                        case OsUpgrade.Partial:
+
+                            Status = "upgrade: partial";
+
+                            SudoCommand("safe-apt-get upgrade -yq");
+                            break;
+
+                        case OsUpgrade.Full:
+
+                            Status = "upgrade: full";
+
+                            SudoCommand("safe-apt-get dist-upgrade -yq");
+                            break;
+                    }
+
+                    // Check to see whether the upgrade requires a reboot and
+                    // do that now if necessary.
+
+                    if (FileExists("/var/run/reboot-required"))
+                    {
+                        Status = "restarting...";
+                        Reboot();
+                    }
+
+                    // Setup NTP.
+
+                    Status = "configure: NTP";
+                    SudoCommand("setup-ntp.sh");
+
+                    // Setup CRI-O.
+
+                    Status = "install: CRI-O";
+
+                    var dockerRetry = new LinearRetryPolicy(typeof(TransientException), maxAttempts: 5, retryInterval: TimeSpan.FromSeconds(5));
+
+                    dockerRetry.Invoke(
+                        () =>
+                        {
+                            var response = SudoCommand("setup-cri-o.sh", DefaultRunOptions & ~RunOptions.FaultOnError);
+
+                            if (response.ExitCode != 0)
+                            {
+                                throw new TransientException(response.ErrorText);
+                            }
+                        });
+
+                    // Clean up any cached APT files.
+
+                    Status = "clean up";
+                    SudoCommand("safe-apt-get clean -yq");
+                    SudoCommand("rm -rf /var/lib/apt/lists");
+                });
+        }
+
+        /// <summary>
+        /// Installs the required Kubernetes related components on a node.
+        /// </summary>
+        /// <param name="setupState">The setup controller state.</param>
+        public void SetupKubernetes(ObjectDictionary setupState)
+        {
+            InvokeIdempotent("setup/setup-install-kubernetes",
+                () =>
+                {
+                    Status = "setup: kubernetes apt repository";
+
+                    var bundle = CommandBundle.FromScript(
+$@"#!/bin/bash
+curl {KubeHelper.CurlOptions} https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+echo ""deb https://apt.kubernetes.io/ kubernetes-xenial main"" > /etc/apt/sources.list.d/kubernetes.list
+safe-apt-get update
+");
+                    SudoCommand(bundle);
+
+                    Status = "install: kubeadm";
+                    SudoCommand($"safe-apt-get install -yq kubeadm={KubeVersions.KubeAdminPackageVersion}");
+
+                    Status = "install: kubectl";
+                    SudoCommand($"safe-apt-get install -yq kubectl={KubeVersions.KubeCtlPackageVersion}");
+
+                    Status = "install: kubelet";
+                    SudoCommand($"safe-apt-get install -yq kubelet={KubeVersions.KubeletPackageVersion}");
+
+                    Status = "hold: kubernetes packages";
+                    SudoCommand("apt-mark hold kubeadm kubectl kubelet");
+
+                    Status = "configure: kubelet";
+                    SudoCommand("mkdir -p /opt/cni/bin");
+                    SudoCommand("mkdir -p /etc/cni/net.d");
+                    SudoCommand(CommandBundle.FromScript(
+@"#!/bin/bash
+
+echo KUBELET_EXTRA_ARGS=--network-plugin=cni --cni-bin-dir=/opt/cni/bin --cni-conf-dir=/etc/cni/net.d --feature-gates=\""AllAlpha=false,RunAsGroup=true\"" --container-runtime=remote --cgroup-driver=systemd --container-runtime-endpoint='unix:///var/run/crio/crio.sock' --runtime-request-timeout=5m> /etc/default/kubelet
+systemctl daemon-reload
+service kubelet restart
+"));
+
+                    // Download and install the Helm client:
+
+                    InvokeIdempotent("setup/cluster-helm",
+                        () =>
+                        {
+                            Status = "install: helm";
+
+                            var helmInstallScript =
+$@"#!/bin/bash
+cd /tmp
+curl {KubeHelper.CurlOptions} {KubeDownloads.HelmLinuxUri} > helm.tar.gz
+tar xvf helm.tar.gz
+cp linux-amd64/helm /usr/local/bin
+chmod 770 /usr/local/bin/helm
+rm -f helm.tar.gz
+rm -rf linux-amd64
+";
+                            SudoCommand(CommandBundle.FromScript(helmInstallScript));
+                        });
+                });
+        }
     }
 }

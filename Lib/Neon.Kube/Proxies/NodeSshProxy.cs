@@ -461,6 +461,18 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Reboots the cluster nodes.
+        /// </summary>
+        /// <param name="setupState">The setup controller state.</param>
+        public void RebootAndWait(ObjectDictionary setupState)
+        {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+
+            Status = "restarting...";
+            Reboot(wait: true);
+        }
+
+        /// <summary>
         /// Ensures that the node operating system and version is supported for a neonKUBE
         /// cluster.  This faults the nodeproxy on faliure.
         /// </summary>

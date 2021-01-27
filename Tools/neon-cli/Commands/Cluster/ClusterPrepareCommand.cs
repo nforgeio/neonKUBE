@@ -442,9 +442,12 @@ Server Requirements:
                         ShowElapsed = true
                     };
 
+                // Configure the setup controller state.
+
+                setupController.Add(KubeSetup.ClusterProxyProperty, cluster);
                 setupController.Add(KubeSetup.HostingManagerProperty, hostingManager);
 
-                // Prepare the nodes.
+                // Configure the setup steps.
 
                 setupController.AddWaitUntilOnlineStep(timeout: TimeSpan.FromMinutes(15));
                 setupController.AddNodeStep("node OS verify", (state, node) => node.VerifyNodeOS(setupController));

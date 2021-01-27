@@ -83,7 +83,7 @@ namespace NeonIdentityService
         /// </summary>
         /// <param name="connectionOpenerAsync">Asynchronous function that returns a new database connection for operations.</param>
         /// <returns></returns>
-        public async static Task<ClientStore> CreateAsync(Func<Task<NpgsqlConnection>> connectionOpenerAsync)
+        public static async Task<ClientStore> CreateAsync(Func<Task<NpgsqlConnection>> connectionOpenerAsync)
         {
             Covenant.Requires<ArgumentNullException>(connectionOpenerAsync != null, nameof(connectionOpenerAsync));
 
@@ -121,7 +121,7 @@ namespace NeonIdentityService
         /// command preparation.
         /// </param>
         /// <returns>The find command.</returns>
-        private async static Task<NpgsqlCommand> CreateFindCommand(NpgsqlConnection connection, string clientId, bool forPrepareOnly = false)
+        private static async Task<NpgsqlCommand> CreateFindCommand(NpgsqlConnection connection, string clientId, bool forPrepareOnly = false)
         {
             Covenant.Requires<ArgumentNullException>(connection != null, nameof(connection));
 

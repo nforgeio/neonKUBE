@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterDiagnostics.cs
+// FILE:	    KubeDiagnostics.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -17,34 +17,50 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
+using System.Dynamic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Runtime.InteropServices;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Newtonsoft;
+using Microsoft.Win32;
+
+using Couchbase;
+using ICSharpCode.SharpZipLib.Zip;
 using Newtonsoft.Json;
 
+using k8s;
+using k8s.Models;
+
+using Neon.Collections;
 using Neon.Common;
-using Neon.Kube;
+using Neon.Data;
+using Neon.Diagnostics;
+using Neon.IO;
 using Neon.Net;
+using Neon.Retry;
 using Neon.SSH;
+using Neon.Windows;
+using Neon.Cryptography;
 
-// $todo(jefflill): Verify that there are no unexpected nodes in the cluster.
-
-namespace NeonCli
+namespace Neon.Kube
 {
     /// <summary>
-    /// Methods to verify that cluster nodes are configured and functioning properly.
+    /// neonKUBE cluster diagnostics.
     /// </summary>
-    public static class ClusterDiagnostics
+    public static class KubeDiagnostics
     {
+
         /// <summary>
         /// Verifies that a cluster master node is healthy.
         /// </summary>

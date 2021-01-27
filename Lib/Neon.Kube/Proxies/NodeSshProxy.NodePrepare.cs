@@ -219,7 +219,7 @@ systemctl restart rsyslog.service
 
             if (clusterDefinition != null)
             {
-                KubeSetup.ConfigureEnvironmentVariables(setupState, (NodeSshProxy<NodeDefinition>)(object)this);
+                ConfigureEnvironmentVariables(setupState);
             }
 
             SudoCommand("safe-apt-get update", RunOptions.FaultOnError);
