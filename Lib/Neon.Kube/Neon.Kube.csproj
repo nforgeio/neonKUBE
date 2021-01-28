@@ -56,7 +56,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="Resources\Conf\cluster.conf" />
     <None Remove="Resources\Helm\citus-postgresql\.helmignore" />
     <None Remove="Resources\Helm\citus-postgresql\Chart.yaml" />
     <None Remove="Resources\Helm\citus-postgresql\OWNERS._" />
@@ -717,9 +716,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Resources\Conf\cluster.conf">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
     <EmbeddedResource Include="Resources\Helm\grafana\ci\default-values.yaml" />
     <EmbeddedResource Include="Resources\Helm\grafana\ci\with-dashboard-json-values.yaml" />
     <EmbeddedResource Include="Resources\Helm\grafana\ci\with-dashboard-values.yaml" />

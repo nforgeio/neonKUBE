@@ -143,36 +143,20 @@ systemctl restart sshd
         }
 
         /// <summary>
-        /// Initializes a near virgin server with the basic capabilities required
-        /// for a cluster node.
+        /// Disables the <b>snapd</b> service.
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
-        public void PrepareNode(ObjectDictionary setupState)
+        public void DisableSnap()
         {
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            InvokeIdempotent("prepare/disable-snap",
+                () =>
+                {
+                    //-----------------------------------------------------------------
+                    // We're going to stop and mask the [snapd.service] if it's running
+                    // because we don't want it to randomlly update apps on cluster nodes.
 
-            var hostingManager    = setupState.Get<IHostingManager>(KubeSetup.HostingManagerProperty);
-            var clusterDefinition = cluster.Definition;
+                    Status = "disable: [snapd.service]";
 
-            if (FileExists($"{KubeNodeFolders.State}/setup/prepared"))
-            {
-                return;     // Already prepared
-            }
-
-            //-----------------------------------------------------------------
-            // Package manager configuration.
-
-            Status = "configure: [apt] package manager";
-
-            BaseConfigureApt(setupState, clusterDefinition.NodeOptions.PackageManagerRetries, clusterDefinition.NodeOptions.AllowPackageManagerIPv6);
-
-            //-----------------------------------------------------------------
-            // We're going to stop and mask the [snapd.service] if it's running
-            // because we don't want it to randomlly update apps on cluster nodes.
-
-            Status = "disable: [snapd.service]";
-
-            var disableSnapScript =
+                    var disableSnapScript =
 @"
 # Stop and mask [snapd.service] when it's not already masked.
 
@@ -183,14 +167,24 @@ if [ $? ]; then
     systemctl mask snapd.service
 fi
 ";
-            SudoCommand(CommandBundle.FromScript(disableSnapScript), RunOptions.FaultOnError);
+                    SudoCommand(CommandBundle.FromScript(disableSnapScript), RunOptions.FaultOnError);
+                });
+        }
 
-            //-----------------------------------------------------------------
-            // Other configuration.
+        /// <summary>
+        /// Configures <b>journald</b>.
+        /// </summary>
+        /// <param name="setupState">The setup controller state.</param>
+        public void ConfigureJournald(ObjectDictionary setupState)
+        {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
 
-            Status = "configure: journald filters";
+            InvokeIdempotent("",
+                () =>
+                {
+                    Status = "configure: journald filters";
 
-            var filterScript =
+                    var filterScript =
 @"
 # neonKUBE: 
 #
@@ -202,162 +196,30 @@ EOF
 
 systemctl restart rsyslog.service
 ";
-            SudoCommand(CommandBundle.FromScript(filterScript), RunOptions.FaultOnError);
+                    SudoCommand(CommandBundle.FromScript(filterScript), RunOptions.FaultOnError);
+                });
+        }
 
-            Status = "configure: openssh";
+        /// <summary>
+        /// Initializes a near virgin server with the basic capabilities required
+        /// for a cluster node.
+        /// </summary>
+        /// <param name="setupState">The setup controller state.</param>
+        public void PrepareNode(ObjectDictionary setupState)
+        {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
 
-            BaseConfigureOpenSsh();
+            var hostingManager    = setupState.Get<IHostingManager>(KubeSetup.HostingManagerProperty);
+            var clusterDefinition = cluster.Definition;
 
-            Status = "upload: configuration";
-
-            // $todo(jefflill): Need to implement this!
-
-            // node.UploadConfigFiles(clusterDefinition);
-
-            Status = "configure: environment vars";
-
-            if (clusterDefinition != null)
-            {
-                ConfigureEnvironmentVariables(setupState);
-            }
-
-            SudoCommand("safe-apt-get update", RunOptions.FaultOnError);
-
-            InvokeIdempotent("setup/prep-node",
+            InvokeIdempotent("prepare/complete",
                 () =>
                 {
-                    Status = "prepare: node";
-                    SudoCommand("setup-prep.sh", RunOptions.FaultOnError);
-                    Reboot(wait: true);
+                    BaseConfigureApt(setupState, clusterDefinition.NodeOptions.PackageManagerRetries, clusterDefinition.NodeOptions.AllowPackageManagerIPv6);
+                    BaseConfigureOpenSsh();
+                    DisableSnap();
+                    ConfigureJournald(setupState);
                 });
-
-            // We need to upload the cluster configuration and initialize drives attached 
-            // to the node.  We're going to assume that these are not already initialized.
-
-            Status = "setup: disk";
-
-            var diskName  = hostingManager.GetDataDisk(this);
-            var partition = char.IsDigit(diskName.Last()) ? $"{diskName}p1" : $"{diskName}1";
-            var diskScript =
-$@"
-#------------------------------------------------------------------------------
-# Configure and mount the node disk drives.
-#
-# ARGUMENTS (we're going to initialize these in place):
-#
-#       DATA_DISK       - This will be passed as ""PRIMARY"" when there's no
-#                         data disk and node will use the OS disk or the
-#                         name of the uninitialized data disk devicce,
-#                         like ""/dev/sda"".
-#
-#       PARTITION       - This will be passed as the name of the partition
-#                         that will be created for the disk.
-
-DATA_DISK=$1
-PARTITION=$2
-
-# Configure Bash strict mode so that the entire script will fail if 
-# any of the commands fail.
-#
-#       http://redsymbol.net/articles/unofficial-bash-strict-mode/
-
-set -euo pipefail
-
-echo
-echo ""**********************************************"" 1>&2
-echo ""** SETUP-DISK                               **"" 1>&2
-echo ""**********************************************"" 1>&2
-
-#------------------------------------------------------------------------------
-# Creates a disk partition, filling the specified drive.
-
-function partitionDisk {{
-
-    fdisk --wipe-partitions always $1 << EOF
-n
-p
-1
-
-
-w
-EOF
-
-    # Sleep a bit to allow the change to persist.  I believe something
-    # fancy is happening on AWS that requires this.
-
-    sleep 10
-}}
-
-#------------------------------------------------------------------------------
-
-echo ""DATA DISK: $DATA_DISK""
-echo ""PARTITION: $PARTITION""
-
-if [ ""$DATA_DISK"" == ""PRIMARY"" ]; then
-
-	# We have no mounted drives so we're simply going to create a [/mnt-data]
-	# folder on the OS drive.
-
-	mkdir -p /mnt-data
-
-else
-
-    # We only support a single data disk so we'll simply create a partition,
-    # initialize an EXT4 file system and mount it.
-
-    # Create the disk partition.
-
-    partitionDisk $DATA_DISK
-
-    # Create an EXT4 file system on the new partition.
-
-    mkfs -t ext4 $PARTITION
-
-    # Mount the file system at [/mnt-data]
-
-    mkdir -p /mnt-data
-    mount $PARTITION /mnt-data
-
-    # Remember the data device so we can add it to [/etc/fstab] below.
-
-    DATA_DEVICE=$PARTITION
-fi
-
-if [ ""$DATA_DISK"" != ""PRIMARY"" ]; then
-
-    # The new file system won't be mounted automatically after a reboot
-    # until we add an entry for it in [/etc/fstab].  This is a two
-    # step process.  First, we need to get the UUID assigned to the 
-    # new file system and then we need to update [/etc/fstab].
-    #
-    # We're going to do this by listing the device UUIDs and GREPing
-    # out the line for the new device.  Then we'll use Bash REGEX to 
-    # extract the UUID.  Note the device listing lines look like:
-    #
-    #	/dev/sdc1: UUID=""3d70d51a-fd8a-4761-b36d-dba5ca889b72"" TYPE=""ext4""
-
-    BLOCKID=$(sudo -i blkid | grep $DATA_DEVICE)
-    [[ ""$BLOCKID"" =~ UUID=\""(.*)\""\ TYPE= ]] && UUID=${{BASH_REMATCH[1]}}
-
-    # Update [/etc/fstab] to ensure that the new drive is mounted after a reboot.
-
-    echo UUID=$UUID /mnt-data ext4 defaults,noatime,barrier=0 0 2 | tee -a /etc/fstab
-fi
-";
-            diskScript = diskScript.Replace("$1", diskName);
-            diskScript = diskScript.Replace("$2", partition);
-
-            SudoCommand(CommandBundle.FromScript(diskScript), RunOptions.FaultOnError);
-
-            // Clear any DHCP leases to be super sure that cloned node
-            // VMs will be assigned fresh IP addresses.
-
-            Status = "clear: DHCP leases";
-            SudoCommand("rm -f /var/lib/dhcp/*", RunOptions.FaultOnError);
-
-            // Indicate that the node has been fully prepared.
-
-            SudoCommand($"touch {KubeNodeFolders.State}/setup/prepared", RunOptions.FaultOnError);
         }
 
         /// <summary>
