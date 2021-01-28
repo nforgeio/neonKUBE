@@ -56,8 +56,9 @@ ARGUMENTS:
 
 OPTIONS:
 
-    --package-cache=CACHE-URI   - Optionally specifies an APT Package cache
-                                  server to improve setup performance.
+    --package-caches=HOST:PORT  - Optionally specifies one or more APT Package cache
+                                  servers by hostname/IO and port.  Specify multiple
+                                  servers by separating the endpoints with spaces.
 
     --unredacted                - Runs commands with potential secrets without 
                                   redacting logs.  This is useful for debugging 
@@ -90,7 +91,7 @@ Server Requirements:
         public override string[] Words => new string[] { "cluster", "prepare" };
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions => new string[] { "--package-cache", "--unredacted", "--remove-templates" };
+        public override string[] ExtendedOptions => new string[] { "--package-caches", "--unredacted", "--remove-templates" };
 
         /// <inheritdoc/>
         public override bool NeedsSshCredentials(CommandLine commandLine) => !commandLine.HasOption("--remove-templates");
@@ -404,9 +405,9 @@ Server Requirements:
                 }
 
                 // We're going to use the masters to be package caches unless the user
-                // specifies something else.
+                // has specified something else.
 
-                packageCaches = commandLine.GetOption("--package-cache");     // This overrides the cluster definition, if specified.
+                packageCaches = commandLine.GetOption("--package-caches");    // This overrides the cluster definition, when specified.
 
                 if (!string.IsNullOrEmpty(packageCaches))
                 {
