@@ -708,8 +708,7 @@ namespace Neon.SSH
                         scpClient.Connect();
 
                         var sudoDisableScript =
-$@"#!/bin/bash
-
+$@"
 cat <<EOF > {HostFolders.Home(Username)}/sudo-disable-prompt
 #!/bin/bash
 echo ""%sudo    ALL=NOPASSWD: ALL"" > /etc/sudoers.d/nopasswd

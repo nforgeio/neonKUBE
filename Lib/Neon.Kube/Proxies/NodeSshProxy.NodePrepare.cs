@@ -179,7 +179,7 @@ fi
         {
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
 
-            InvokeIdempotent("",
+            InvokeIdempotent("prepare/journald",
                 () =>
                 {
                     Status = "configure: journald filters";
@@ -1023,7 +1023,7 @@ rm -rf linux-amd64
         /// <param name="statusWriter">Optional log writer action.</param>
         public void NodeInstallKubernetes(Action<string> statusWriter = null)
         {
-            InvokeIdempotent("node/kubernetes",
+            InvokeIdempotent("node/install-kubernetes",
                 () =>
                 {
                     var script =
@@ -1032,9 +1032,9 @@ curl {KubeHelper.CurlOptions} https://packages.cloud.google.com/apt/doc/apt-key.
 echo ""deb https://apt.kubernetes.io/ kubernetes-xenial main"" > /etc/apt/sources.list.d/kubernetes.list
 safe-apt-get update
 
+safe-apt-get install -yq kubelet={KubeVersions.KubeletPackageVersion}
 safe-apt-get install -yq kubeadm={KubeVersions.KubeAdminPackageVersion}
 safe-apt-get install -yq kubectl={KubeVersions.KubeCtlPackageVersion}
-safe-apt-get install -yq kubelet={KubeVersions.KubeletPackageVersion}
 
 # Prevent the package manager from automatically these components.
 

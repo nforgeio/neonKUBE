@@ -254,7 +254,8 @@ namespace Neon.SSH
         /// Optionally controls whether the text is made Linux compatible by removing carriage returns
         /// and expanding TABs into spaces.  This defaults to <c>true</c>.
         /// </param>
-        public void AddFile(string path, string text, bool isExecutable = false, bool linuxCompatible = true)
+        /// <remarks>The <see cref="CommandBundle"/> for fluent style programming.</remarks>
+        public CommandBundle AddFile(string path, string text, bool isExecutable = false, bool linuxCompatible = true)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path), nameof(path));
 
@@ -282,6 +283,8 @@ namespace Neon.SSH
                 Text         = text,
                 IsExecutable = isExecutable
             });
+
+            return this;
         }
 
         /// <summary>
@@ -290,7 +293,8 @@ namespace Neon.SSH
         /// <param name="path">The file path relative to the directory where the command will be executed.</param>
         /// <param name="data">The file data.</param>
         /// <param name="isExecutable">Optionally specifies that the file is to be marked as executable.</param>
-        public void AddFile(string path, byte[] data, bool isExecutable = false)
+        /// <remarks>The<see cref="CommandBundle"/> for fluent style programming.</remarks>
+        public CommandBundle AddFile(string path, byte[] data, bool isExecutable = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path), nameof(path));
 
@@ -300,6 +304,8 @@ namespace Neon.SSH
                 Data         = data ?? Array.Empty<byte>(),
                 IsExecutable = isExecutable
             });
+
+            return this;
         }
 
         /// <summary>
@@ -308,7 +314,8 @@ namespace Neon.SSH
         /// </summary>
         /// <param name="path">The file path relative to the directory where the command will be executed.</param>
         /// <param name="sourceFolder">Path to the local source folder containing the files to be zipped.</param>
-        public void AddZip(string path, string sourceFolder)
+        /// <remarks>The <see cref="CommandBundle"/> for fluent style programming.</remarks>
+        public CommandBundle AddZip(string path, string sourceFolder)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path), nameof(path));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(sourceFolder), nameof(sourceFolder));
@@ -332,6 +339,8 @@ namespace Neon.SSH
 
                 AddFile(path, ms.ToArray());
             }
+
+            return this;
         }
 
         /// <summary>

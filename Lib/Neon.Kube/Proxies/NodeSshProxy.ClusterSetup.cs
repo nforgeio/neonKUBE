@@ -583,7 +583,7 @@ cat <<EOF > /etc/apt/apt.conf
 Acquire::http::Proxy-Auto-Detect ""/usr/local/bin/get-package-proxy"";
 EOF
 ";
-                    SudoCommand(proxySelectorScript, RunOptions.FaultOnError);
+                    SudoCommand(CommandBundle.FromScript(proxySelectorScript), RunOptions.FaultOnError);
                 });
         }
 
@@ -605,10 +605,29 @@ EOF
                     PrepareNode(setupState);
                     ConfigureEnvironmentVariables(setupState);
                     SetupPackageProxy(setupState);
-
-                    // Set the hostname.
-
                     UpdateHostname();
+                    SetupKublet(setupState);
+                });
+        }
+
+        /// <summary>
+        /// Configures the the <b>kublet</b> service.
+        /// </summary>
+        /// <param name="setupState">The setup controller state.</param>
+        public void SetupKublet(ObjectDictionary setupState)
+        {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+
+            InvokeIdempotent("setup/kublet",
+                () =>
+                {
+                    var script =
+@"
+echo KUBELET_EXTRA_ARGS=--network-plugin=cni --cni-bin-dir=/opt/cni/bin --cni-conf-dir=/etc/cni/net.d --feature-gates=\""AllAlpha=false,RunAsGroup=true\"" --container-runtime=remote --cgroup-driver=systemd --container-runtime-endpoint='unix:///var/run/crio/crio.sock' --runtime-request-timeout=5m > /etc/default/kubelet
+systemctl daemon-reload
+service kubelet restart
+";
+                    SudoCommand(CommandBundle.FromScript(script), RunOptions.FaultOnError);
                 });
         }
 
@@ -677,7 +696,7 @@ EOF
                     }
 
                     var helmChartScript =
-$@"#!/bin/bash
+$@"
 cd /tmp/charts
 
 until [ -f {chartName}.zip ]
@@ -708,70 +727,6 @@ rm -rf {chartName}*
                 });
 
             await Task.CompletedTask;
-        }
-
-        /// <summary>
-        /// Installs the required Kubernetes related components on a node.
-        /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
-        public void SetupKubernetes(ObjectDictionary setupState)
-        {
-            InvokeIdempotent("setup/setup-install-kubernetes",
-                () =>
-                {
-                    Status = "setup: kubernetes apt repository";
-
-                    var bundle = CommandBundle.FromScript(
-$@"#!/bin/bash
-curl {KubeHelper.CurlOptions} https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
-echo ""deb https://apt.kubernetes.io/ kubernetes-xenial main"" > /etc/apt/sources.list.d/kubernetes.list
-safe-apt-get update
-");
-                    SudoCommand(bundle);
-
-                    Status = "install: kubeadm";
-                    SudoCommand($"safe-apt-get install -yq kubeadm={KubeVersions.KubeAdminPackageVersion}");
-
-                    Status = "install: kubectl";
-                    SudoCommand($"safe-apt-get install -yq kubectl={KubeVersions.KubeCtlPackageVersion}");
-
-                    Status = "install: kubelet";
-                    SudoCommand($"safe-apt-get install -yq kubelet={KubeVersions.KubeletPackageVersion}");
-
-                    Status = "hold: kubernetes packages";
-                    SudoCommand("apt-mark hold kubeadm kubectl kubelet");
-
-                    Status = "configure: kubelet";
-                    SudoCommand("mkdir -p /opt/cni/bin");
-                    SudoCommand("mkdir -p /etc/cni/net.d");
-                    SudoCommand(CommandBundle.FromScript(
-@"#!/bin/bash
-
-echo KUBELET_EXTRA_ARGS=--network-plugin=cni --cni-bin-dir=/opt/cni/bin --cni-conf-dir=/etc/cni/net.d --feature-gates=\""AllAlpha=false,RunAsGroup=true\"" --container-runtime=remote --cgroup-driver=systemd --container-runtime-endpoint='unix:///var/run/crio/crio.sock' --runtime-request-timeout=5m> /etc/default/kubelet
-systemctl daemon-reload
-service kubelet restart
-"));
-
-                    // Download and install the Helm client:
-
-                    InvokeIdempotent("setup/cluster-helm",
-                        () =>
-                        {
-                            Status = "install: helm";
-
-                            var helmInstallScript =
-$@"#!/bin/bash
-cd /tmp
-curl {KubeHelper.CurlOptions} {KubeDownloads.HelmLinuxUri} > helm.tar.gz
-tar xvf helm.tar.gz
-cp linux-amd64/helm /usr/local/bin
-chmod 770 /usr/local/bin/helm
-rm -f helm.tar.gz
-rm -rf linux-amd64
-";
-                            SudoCommand(CommandBundle.FromScript(helmInstallScript));
-                        });
-                });
         }
     }
 }

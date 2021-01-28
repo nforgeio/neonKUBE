@@ -90,6 +90,7 @@ namespace Neon.Kube
 
             WaitForBoot();
             VerifyNodeOS(statusWriter);
+            BaseDisableSwap(statusWriter);
             BaseInstallToolScripts(statusWriter);
             BaseConfigureDebianFrontend(statusWriter);
             BaseInstallPackages(statusWriter);
@@ -263,10 +264,7 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
             InvokeIdempotent("base/swap-disable",
                 () =>
                 {
-                    Status = "disable: swap";
-                    KubeHelper.WriteStatus(statusWriter, "Disable", "swap");
-
-                    // Disable SWAP by editing [/etc/fstab] to remove the [/swap.img] line.
+                    // Disable SWAP by editing [/etc/fstab] to remove the [/swap.img...] line.
 
                     KubeHelper.WriteStatus(statusWriter, "Disable", "swap");
                     Status = "disable: swap";

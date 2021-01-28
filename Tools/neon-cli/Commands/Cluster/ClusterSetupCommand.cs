@@ -208,15 +208,15 @@ OPTIONS:
                         ShowElapsed = true
                     };
 
-                // Connect to existing cluster if it exists.
-
-                KubeSetup.ConnectCluster(setupController);
-
                 // Configure the setup controller state.
 
                 setupController.Add(KubeSetup.ClusterProxyProperty, cluster);
                 setupController.Add(KubeSetup.ClusterLoginProperty, clusterLogin);
                 setupController.Add(KubeSetup.HostingManagerProperty, hostingManager);
+
+                // Connect to existing cluster if it exists.
+
+                KubeSetup.ConnectCluster(setupController);
 
                 // Configure the setup steps.
 
@@ -258,8 +258,8 @@ OPTIONS:
                 //-----------------------------------------------------------------
                 // Kubernetes configuration.
 
-                setupController.AddGlobalStep("etc HA", KubeSetup.SetupEtcdHaProxy);
-                setupController.AddNodeStep("setup kubernetes", KubeSetup.SetupKubernetes);
+                setupController.AddGlobalStep("setup etc HA", KubeSetup.SetupEtcdHaProxy);
+                setupController.AddNodeStep("install kubernetes", (setupState, node) => node.NodeInstallKubernetes());
                 setupController.AddGlobalStep("setup cluster", setupState => KubeSetup.SetupClusterAsync(setupState));
                 setupController.AddGlobalStep("taint nodes", KubeSetup.TaintNodes);
                 setupController.AddGlobalStep("setup monitoring", KubeSetup.SetupMonitoringAsync);

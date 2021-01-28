@@ -2774,8 +2774,7 @@ namespace Neon.Kube
                 //      3. Set the secure password for [sysadmin]
 
                 var bootScript =
-$@"#!/bin/bash
-
+$@"
 # To enable debugging for this AWS user-script, add the ""-ex"" options to the
 # comment at the top of the file and uncomment the command below.  These cause
 # each command and its output to be logged and can be viewable in the AWS portal.

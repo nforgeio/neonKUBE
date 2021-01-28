@@ -366,7 +366,7 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
 
-            if (setupState.ContainsKey(ClusterProxyProperty))
+            if (setupState.ContainsKey(K8sClientProperty))
             {
                 return;     // Already connected
             }
@@ -376,16 +376,9 @@ namespace Neon.Kube
 
             if (!string.IsNullOrEmpty(configFile) && File.Exists(configFile))
             {
-                try
-                {
-                    var k8sClient = new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigFile(configFile, currentContext: cluster.KubeContext.Name));
+                var k8sClient = new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigFile(configFile, currentContext: cluster.KubeContext.Name));
 
-                    setupState.Add(K8sClientProperty, k8sClient);
-                }
-                catch
-                {
-                    // k8s is not initialized: this is okay.
-                }
+                setupState.Add(K8sClientProperty, k8sClient);
             }
         }
 
@@ -459,7 +452,7 @@ $@"
         /// Adds the Kubernetes node labels.
         /// </summary>
         /// <param name="setupState">The setup controller state.</param>
-        /// <param name="master">The master node where the operation will be performed</param>
+        /// <param name="master">The first master node where the operation will be performed.</param>
         public static void LabelNodes(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master)
         {
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
@@ -541,13 +534,11 @@ $@"
             var clusterLogin = setupState.Get<ClusterLogin>(ClusterLoginProperty);
             var firstMaster  = cluster.FirstMaster;
 
-            ConfigureWorkstation(setupState, firstMaster);
-
-            //-----------------------------------------------------------------
-            // Configure all of the neonKUBE good stuff.
-
             cluster.ClearStatus();
 
+            ConfigureKubernetes(setupState, cluster.FirstMaster);
+            ConfigureWorkstation(setupState, firstMaster);
+            KubeSetup.ConnectCluster(setupState);
             InstallCalicoCni(setupState, firstMaster);
             LabelNodes(setupState, firstMaster);
             InstallIstio(setupState, firstMaster);
@@ -558,107 +549,42 @@ $@"
             await CreateNeonNamespaceAsync(setupState, firstMaster);
             await InstallSystemDbAsync(setupState, firstMaster);
             await InstallClusterManagerAsync(setupState, firstMaster);
-            await InstallNeonRegistryAsync(setupState, firstMaster);
+            await InstallContainerRegistryAsync(setupState, firstMaster);
             await InstallKialiAsync(setupState, firstMaster);
         }
 
         /// <summary>
-        /// Installs the required Kubernetes related components on a node.
+        /// Basic Kubernetes cluster initialization.
         /// </summary>
         /// <param name="setupState">The setup controller state.</param>
-        /// <param name="node">The target node.</param>
-        public static void SetupKubernetes(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> node)
-        {
-            node.InvokeIdempotent("setup/setup-install-kubernetes",
-                () =>
-                {
-                    node.Status = "setup: kubernetes apt repository";
-
-                    var bundle = CommandBundle.FromScript(
-$@"#!/bin/bash
-curl {KubeHelper.CurlOptions} https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
-echo ""deb https://apt.kubernetes.io/ kubernetes-xenial main"" > /etc/apt/sources.list.d/kubernetes.list
-safe-apt-get update
-");
-                    node.SudoCommand(bundle);
-
-                    node.Status = "install: kubeadm";
-                    node.SudoCommand($"safe-apt-get install -yq kubeadm={KubeVersions.KubeAdminPackageVersion}");
-
-                    node.Status = "install: kubectl";
-                    node.SudoCommand($"safe-apt-get install -yq kubectl={KubeVersions.KubeCtlPackageVersion}");
-
-                    node.Status = "install: kubelet";
-                    node.SudoCommand($"safe-apt-get install -yq kubelet={KubeVersions.KubeletPackageVersion}");
-
-                    node.Status = "hold: kubernetes packages";
-                    node.SudoCommand("apt-mark hold kubeadm kubectl kubelet");
-
-                    node.Status = "configure: kubelet";
-                    node.SudoCommand("mkdir -p /opt/cni/bin");
-                    node.SudoCommand("mkdir -p /etc/cni/net.d");
-                    node.SudoCommand(CommandBundle.FromScript(
-@"#!/bin/bash
-
-echo KUBELET_EXTRA_ARGS=--network-plugin=cni --cni-bin-dir=/opt/cni/bin --cni-conf-dir=/etc/cni/net.d --feature-gates=\""AllAlpha=false,RunAsGroup=true\"" --container-runtime=remote --cgroup-driver=systemd --container-runtime-endpoint='unix:///var/run/crio/crio.sock' --runtime-request-timeout=5m> /etc/default/kubelet
-systemctl daemon-reload
-service kubelet restart
-"));
-
-                    // Download and install the Helm client:
-
-                    node.InvokeIdempotent("setup/cluster-helm",
-                        () =>
-                        {
-                            node.Status = "install: helm";
-
-                            var helmInstallScript =
-$@"#!/bin/bash
-cd /tmp
-curl {KubeHelper.CurlOptions} {KubeDownloads.HelmLinuxUri} > helm.tar.gz
-tar xvf helm.tar.gz
-cp linux-amd64/helm /usr/local/bin
-chmod 770 /usr/local/bin/helm
-rm -f helm.tar.gz
-rm -rf linux-amd64
-";
-                            node.SudoCommand(CommandBundle.FromScript(helmInstallScript));
-                        });
-                });
-        }
-
-        /// <summary>
-        /// Basic Kubernetes initialization.
-        /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
-        /// <param name="master">The master node where the operation will be performed.</param>
-        public static void InitializeKubernetes(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master)
+        /// <param name="firstMaster">The first master node.</param>
+        public static void ConfigureKubernetes(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> firstMaster)
         {
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
-            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
+            Covenant.Requires<ArgumentNullException>(firstMaster != null, nameof(firstMaster));
 
             var cluster      = setupState.Get<ClusterProxy>(ClusterProxyProperty);
             var clusterLogin = setupState.Get<ClusterLogin>(ClusterLoginProperty);
 
-            master.InvokeIdempotent("setup/cluster-init",
+            firstMaster.InvokeIdempotent("setup/cluster-init",
                 () =>
                 {
                     //---------------------------------------------------------
                     // Initialize the cluster on the first master:
 
-                    master.Status = "create: cluster";
+                    firstMaster.Status = "create: cluster";
 
                     // Initialize Kubernetes:
 
-                    master.InvokeIdempotent("setup/kubernetes-init",
+                    firstMaster.InvokeIdempotent("setup/kubernetes-init",
                         () =>
                         {
-                            master.Status = "initialize: cluster";
+                            firstMaster.Status = "initialize: cluster";
 
                             // It's possible that a previous cluster initialization operation
                             // was interrupted.  This command resets the state.
 
-                            master.SudoCommand("kubeadm reset --force");
+                            firstMaster.SudoCommand("kubeadm reset --force");
 
                             // Configure the control plane's API server endpoint and initialize
                             // the certificate SAN names to include each master IP address as well
@@ -717,11 +643,12 @@ logging:
 nodeStatusReportFrequency: 4s
 volumePluginDir: /var/lib/kubelet/volume-plugins
 ";
-                            master.UploadText("/tmp/cluster.yaml", clusterConfig);
-
-                            var response = master.SudoCommand($"kubeadm init --config /tmp/cluster.yaml");
-
-                            master.SudoCommand("rm /tmp/cluster.yaml");
+                            var kubeInitScript =
+@"
+systemctl enable kubelet.service
+kubeadm init --config cluster.yaml
+";
+                            var response = firstMaster.SudoCommand(CommandBundle.FromScript(kubeInitScript).AddFile("cluster.yaml", clusterConfig));
 
                             // Extract the cluster join command from the response.  We'll need this to join
                             // other nodes to the cluster.
@@ -748,11 +675,11 @@ volumePluginDir: /var/lib/kubelet/volume-plugins
                             clusterLogin.Save();
                         });
 
-                    master.Status = "created";
+                    firstMaster.Status = "created";
 
                     // kubectl config:
 
-                    master.InvokeIdempotent("setup/kubectl",
+                    firstMaster.InvokeIdempotent("setup/kubectl",
                         () =>
                         {
                             // Edit the Kubernetes configuration file to rename the context:
@@ -763,12 +690,12 @@ volumePluginDir: /var/lib/kubelet/volume-plugins
                             //
                             //      CLUSTERNAME-admin --> CLUSTERNAME-root 
 
-                            var adminConfig = master.DownloadText("/etc/kubernetes/admin.conf");
+                            var adminConfig = firstMaster.DownloadText("/etc/kubernetes/admin.conf");
 
                             adminConfig = adminConfig.Replace($"kubernetes-admin@{cluster.Definition.Name}", $"root@{cluster.Definition.Name}");
                             adminConfig = adminConfig.Replace("kubernetes-admin", $"root@{cluster.Definition.Name}");
 
-                            master.UploadText("/etc/kubernetes/admin.conf", adminConfig, permissions: "600", owner: "root:root");
+                            firstMaster.UploadText("/etc/kubernetes/admin.conf", adminConfig, permissions: "600", owner: "root:root");
                         });
 
                     // Download the boot master files that will need to be provisioned on
@@ -801,7 +728,7 @@ volumePluginDir: /var/lib/kubelet/volume-plugins
 
                         foreach (var file in files)
                         {
-                            var text = master.DownloadText(file.Path);
+                            var text = firstMaster.DownloadText(file.Path);
 
                             clusterLogin.SetupDetails.MasterFiles[file.Path] = new KubeFileDetails(text, permissions: file.Permissions, owner: file.Owner);
                         }
@@ -811,12 +738,12 @@ volumePluginDir: /var/lib/kubelet/volume-plugins
 
                     clusterLogin.Save();
 
-                    master.Status = "joined";
+                    firstMaster.Status = "joined";
 
                     //---------------------------------------------------------
                     // Join the remaining masters to the cluster:
 
-                    foreach (var master in cluster.Masters.Where(m => m != master))
+                    foreach (var master in cluster.Masters.Where(m => m != firstMaster))
                     {
                         try
                         {
@@ -984,7 +911,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                     if (!File.Exists(kubeConfigPath))
                     {
-                        File.WriteAllText(kubeConfigPath, configText);
+                        File.WriteAllText(kubeConfigPath, configText);  
                     }
                     else
                     {
@@ -1028,8 +955,6 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                         KubeHelper.SetConfig(existingConfig);
                     }
-
-                    ConnectCluster(setupState);
                 });
         }
 
@@ -1051,8 +976,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     // Deploy Calico
 
                     var script =
-$@"#!/bin/bash
-
+$@"
 # We need to edit the setup manifest to specify the 
 # cluster subnet before applying it.
 
@@ -1138,8 +1062,7 @@ rm /tmp/calico.yaml
                 () =>
                 {
                     var istioScript0 =
-$@"#!/bin/bash
-
+$@"
 tmp=$(mktemp -d /tmp/istioctl.XXXXXX)
 cd ""$tmp"" || exit
 
@@ -2541,12 +2464,12 @@ spec:
         }
 
         /// <summary>
-        /// Installs a harbor registry and required components.
+        /// Installs a harbor container registry and required components.
         /// </summary>
         /// <param name="setupState">The setup controller state.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InstallNeonRegistryAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master)
+        public static async Task InstallContainerRegistryAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master)
         {
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
