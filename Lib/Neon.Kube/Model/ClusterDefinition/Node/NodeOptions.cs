@@ -43,19 +43,8 @@ namespace Neon.Kube
     /// </summary>
     public class NodeOptions
     {
-        private const OsUpgrade     defaultUpgrade                 = OsUpgrade.Full;
-        private const bool          defaultAllowPackageManagerIPv6 = false;
-        private const int           defaultPackageManagerRetries   = 5;
-
-        /// <summary>
-        /// Specifies whether the cluster node operating system should be upgraded
-        /// during cluster preparation.  This defaults to <see cref="OsUpgrade.Full"/>
-        /// to pick up most criticial updates.
-        /// </summary>
-        [JsonProperty(PropertyName = "Upgrade", Required = Required.Default)]
-        [YamlMember(Alias = "upgrade", ApplyNamingConventions = false)]
-        [DefaultValue(defaultUpgrade)]
-        public OsUpgrade Upgrade { get; set; } = defaultUpgrade;
+        private const bool  defaultAllowPackageManagerIPv6 = false;
+        private const int   defaultPackageManagerRetries   = 5;
 
         /// <summary>
         /// Allow the Linux package manager to use IPv6 when communicating with

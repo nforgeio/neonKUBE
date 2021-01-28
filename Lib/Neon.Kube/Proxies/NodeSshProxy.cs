@@ -428,7 +428,7 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(action != null, nameof(action));
 
             var stateFolder = KubeNodeFolders.State;
-            var slashPos = actionId.LastIndexOf('/');
+            var slashPos    = actionId.LastIndexOf('/');
 
             if (slashPos != -1)
             {
@@ -512,10 +512,55 @@ namespace Neon.Kube
 @"#!/bin/bash
 cloud-init clean
 apt-get clean
+rm -rf /var/lib/apt/lists
 rm -rf /var/lib/dhcp/*
 fstrim /
 ";
             SudoCommand(CommandBundle.FromScript(cleanScript), RunOptions.FaultOnError);
+        }
+
+        /// <summary>
+        /// Upgrades the base Linux distribtion, rebooting the node when required.
+        /// </summary>
+        /// <param name="fullUpgrade">
+        /// Pass <c>true</c> to perform a full distribution upgrade or <c>false</c> to just 
+        /// upgrade packages.
+        /// </param>
+        public void UpgradeNode(bool fullUpgrade)
+        {
+            var nodeDefinition = NeonHelper.CastTo<NodeDefinition>(Metadata);
+
+            InvokeIdempotent($"setup/upgrade-linux",
+                () =>
+                {
+                    // Upgrade Linux packages if requested.
+
+                    if (fullUpgrade)
+                    {
+                        Status = "upgrade: full";
+                        SudoCommand("safe-apt-get dist-upgrade -yq");
+                    }
+                    else
+                    {
+                        Status = "upgrade: partial";
+                        SudoCommand("safe-apt-get upgrade -yq");
+                    }
+
+                    // Check to see whether the upgrade requires a reboot and
+                    // do that now if necessary.
+
+                    if (FileExists("/var/run/reboot-required"))
+                    {
+                        Status = "restarting...";
+                        Reboot();
+                    }
+
+                    // Clean up any cached APT files.
+
+                    Status = "clean up";
+                    SudoCommand("safe-apt-get clean -yq");
+                    SudoCommand("rm -rf /var/lib/apt/lists");
+                });
         }
     }
 }

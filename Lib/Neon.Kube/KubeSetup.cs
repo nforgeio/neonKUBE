@@ -106,7 +106,7 @@ namespace Neon.Kube
         private const int                   defaultMaxParallelNodes = 10;
         private const int                   maxJoinAttempts         = 5;
         private static readonly TimeSpan    joinRetryDelay          = TimeSpan.FromSeconds(5);
-        private static readonly TimeSpan    clusterOpTimeout        = TimeSpan.FromMinutes(20);
+        private static readonly TimeSpan    clusterOpTimeout        = TimeSpan.FromMinutes(10);
         private static readonly TimeSpan    clusterOpRetryInterval  = TimeSpan.FromSeconds(10);
 
         //---------------------------------------------------------------------
@@ -172,30 +172,33 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Installs the cluster configuration files.
+        /// Gets a list of taints that are currently applied to all nodes matching the given node label/value pair.
         /// </summary>
-        /// <param name="node">The target node.</param>
-        public static void InstallConfigFiles(NodeSshProxy<NodeDefinition> node)
+        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="labelKey">The target nodes label key.</param>
+        /// <param name="labelValue">The target nodes label value.</param>
+        /// <returns>The taint list.</returns>
+        public static async Task<List<V1Taint>> GetTaintsAsync(ObjectDictionary setupState, string labelKey, string labelValue)
         {
-            throw new NotImplementedException("$todo(jefflill)");
-        }
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
 
-        /// <summary>
-        /// Installs the setup scripts.
-        /// </summary>
-        /// <param name="node">The target node.</param>
-        public static void InstallSetupScripts(NodeSshProxy<NodeDefinition> node)
-        {
-            throw new NotImplementedException("$todo(jefflill)");
-        }
+            var taints = new List<V1Taint>();
 
-        /// <summary>
-        /// Unzips the Helm chart ZIP archive to make the charts available for use.
-        /// </summary>
-        /// <param name="node">The target node.</param>
-        public static void UnzipHelmArchives(NodeSshProxy<NodeDefinition> node)
-        {
-            throw new NotImplementedException("$todo(jefflill)");
+            foreach (var n in (await GetK8sClient(setupState).ListNodeAsync()).Items.Where(n => n.Metadata.Labels.Any(l => l.Key == labelKey && l.Value == labelValue)))
+            {
+                if (n.Spec.Taints?.Count() > 0)
+                {
+                    foreach (var t in n.Spec.Taints)
+                    {
+                        if (!taints.Any(x => x.Key == t.Key && x.Effect == t.Effect && x.Value == t.Value))
+                        {
+                            taints.Add(t);
+                        }
+                    }
+                }
+            }
+
+            return taints;
         }
 
         /// <summary>
@@ -432,7 +435,7 @@ $@"
 
             foreach (var node in cluster.Nodes)
             {
-                node.InvokeIdempotent("setup/setup-etcd-ha",
+                node.InvokeIdempotent("setup/etcd-ha",
                     () =>
                     {
                         node.Status = "setup: etcd HA";
@@ -464,7 +467,7 @@ $@"
 
             var cluster = setupState.Get<ClusterProxy>(ClusterProxyProperty);
 
-            master.InvokeIdempotent("setup/cluster-label-nodes",
+            master.InvokeIdempotent("setup/label-nodes",
                 () =>
                 {
                     master.Status = "label: nodes";
@@ -538,32 +541,124 @@ $@"
             var clusterLogin = setupState.Get<ClusterLogin>(ClusterLoginProperty);
             var firstMaster  = cluster.FirstMaster;
 
-            firstMaster.InvokeIdempotent("setup/cluster",
+            ConfigureWorkstation(setupState, firstMaster);
+
+            //-----------------------------------------------------------------
+            // Configure all of the neonKUBE good stuff.
+
+            cluster.ClearStatus();
+
+            InstallCalicoCni(setupState, firstMaster);
+            LabelNodes(setupState, firstMaster);
+            InstallIstio(setupState, firstMaster);
+            CreateRootUser(setupState, firstMaster);
+            InstallKubeDashboard(setupState, firstMaster);
+            ConfigureMasterTaints(setupState, firstMaster);
+            await InstallOpenEBSAsync(setupState, firstMaster);
+            await CreateNeonNamespaceAsync(setupState, firstMaster);
+            await InstallSystemDbAsync(setupState, firstMaster);
+            await InstallClusterManagerAsync(setupState, firstMaster);
+            await InstallNeonRegistryAsync(setupState, firstMaster);
+            await InstallKialiAsync(setupState, firstMaster);
+        }
+
+        /// <summary>
+        /// Installs the required Kubernetes related components on a node.
+        /// </summary>
+        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="node">The target node.</param>
+        public static void SetupKubernetes(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> node)
+        {
+            node.InvokeIdempotent("setup/setup-install-kubernetes",
+                () =>
+                {
+                    node.Status = "setup: kubernetes apt repository";
+
+                    var bundle = CommandBundle.FromScript(
+$@"#!/bin/bash
+curl {KubeHelper.CurlOptions} https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+echo ""deb https://apt.kubernetes.io/ kubernetes-xenial main"" > /etc/apt/sources.list.d/kubernetes.list
+safe-apt-get update
+");
+                    node.SudoCommand(bundle);
+
+                    node.Status = "install: kubeadm";
+                    node.SudoCommand($"safe-apt-get install -yq kubeadm={KubeVersions.KubeAdminPackageVersion}");
+
+                    node.Status = "install: kubectl";
+                    node.SudoCommand($"safe-apt-get install -yq kubectl={KubeVersions.KubeCtlPackageVersion}");
+
+                    node.Status = "install: kubelet";
+                    node.SudoCommand($"safe-apt-get install -yq kubelet={KubeVersions.KubeletPackageVersion}");
+
+                    node.Status = "hold: kubernetes packages";
+                    node.SudoCommand("apt-mark hold kubeadm kubectl kubelet");
+
+                    node.Status = "configure: kubelet";
+                    node.SudoCommand("mkdir -p /opt/cni/bin");
+                    node.SudoCommand("mkdir -p /etc/cni/net.d");
+                    node.SudoCommand(CommandBundle.FromScript(
+@"#!/bin/bash
+
+echo KUBELET_EXTRA_ARGS=--network-plugin=cni --cni-bin-dir=/opt/cni/bin --cni-conf-dir=/etc/cni/net.d --feature-gates=\""AllAlpha=false,RunAsGroup=true\"" --container-runtime=remote --cgroup-driver=systemd --container-runtime-endpoint='unix:///var/run/crio/crio.sock' --runtime-request-timeout=5m> /etc/default/kubelet
+systemctl daemon-reload
+service kubelet restart
+"));
+
+                    // Download and install the Helm client:
+
+                    node.InvokeIdempotent("setup/cluster-helm",
+                        () =>
+                        {
+                            node.Status = "install: helm";
+
+                            var helmInstallScript =
+$@"#!/bin/bash
+cd /tmp
+curl {KubeHelper.CurlOptions} {KubeDownloads.HelmLinuxUri} > helm.tar.gz
+tar xvf helm.tar.gz
+cp linux-amd64/helm /usr/local/bin
+chmod 770 /usr/local/bin/helm
+rm -f helm.tar.gz
+rm -rf linux-amd64
+";
+                            node.SudoCommand(CommandBundle.FromScript(helmInstallScript));
+                        });
+                });
+        }
+
+        /// <summary>
+        /// Basic Kubernetes initialization.
+        /// </summary>
+        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="master">The master node where the operation will be performed.</param>
+        public static void InitializeKubernetes(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master)
+        {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
+
+            var cluster      = setupState.Get<ClusterProxy>(ClusterProxyProperty);
+            var clusterLogin = setupState.Get<ClusterLogin>(ClusterLoginProperty);
+
+            master.InvokeIdempotent("setup/cluster-init",
                 () =>
                 {
                     //---------------------------------------------------------
                     // Initialize the cluster on the first master:
 
-                    firstMaster.Status = "create: cluster";
+                    master.Status = "create: cluster";
 
-                    // Pull the Kubernetes images:
+                    // Initialize Kubernetes:
 
-                    firstMaster.InvokeIdempotent("setup/cluster-images",
+                    master.InvokeIdempotent("setup/kubernetes-init",
                         () =>
                         {
-                            firstMaster.Status = "pull: kubernetes images...";
-                            firstMaster.SudoCommand($"kubeadm config images pull --image-repository {NeonHelper.NeonLibraryBranchRegistry} --kubernetes-version v{KubeVersions.KubernetesVersion}");
-                        });
-
-                    firstMaster.InvokeIdempotent("setup/cluster-init",
-                        () =>
-                        {
-                            firstMaster.Status = "initialize: cluster";
+                            master.Status = "initialize: cluster";
 
                             // It's possible that a previous cluster initialization operation
                             // was interrupted.  This command resets the state.
 
-                            firstMaster.SudoCommand("kubeadm reset --force");
+                            master.SudoCommand("kubeadm reset --force");
 
                             // Configure the control plane's API server endpoint and initialize
                             // the certificate SAN names to include each master IP address as well
@@ -622,10 +717,11 @@ logging:
 nodeStatusReportFrequency: 4s
 volumePluginDir: /var/lib/kubelet/volume-plugins
 ";
-                            firstMaster.UploadText("/tmp/cluster.yaml", clusterConfig);
+                            master.UploadText("/tmp/cluster.yaml", clusterConfig);
 
-                            var response = firstMaster.SudoCommand($"kubeadm init --config /tmp/cluster.yaml");
-                            firstMaster.SudoCommand("rm /tmp/cluster.yaml");
+                            var response = master.SudoCommand($"kubeadm init --config /tmp/cluster.yaml");
+
+                            master.SudoCommand("rm /tmp/cluster.yaml");
 
                             // Extract the cluster join command from the response.  We'll need this to join
                             // other nodes to the cluster.
@@ -652,11 +748,11 @@ volumePluginDir: /var/lib/kubelet/volume-plugins
                             clusterLogin.Save();
                         });
 
-                    firstMaster.Status = "done";
+                    master.Status = "created";
 
                     // kubectl config:
 
-                    firstMaster.InvokeIdempotent("setup/cluster-kubectl",
+                    master.InvokeIdempotent("setup/kubectl",
                         () =>
                         {
                             // Edit the Kubernetes configuration file to rename the context:
@@ -667,12 +763,12 @@ volumePluginDir: /var/lib/kubelet/volume-plugins
                             //
                             //      CLUSTERNAME-admin --> CLUSTERNAME-root 
 
-                            var adminConfig = firstMaster.DownloadText("/etc/kubernetes/admin.conf");
+                            var adminConfig = master.DownloadText("/etc/kubernetes/admin.conf");
 
                             adminConfig = adminConfig.Replace($"kubernetes-admin@{cluster.Definition.Name}", $"root@{cluster.Definition.Name}");
                             adminConfig = adminConfig.Replace("kubernetes-admin", $"root@{cluster.Definition.Name}");
 
-                            firstMaster.UploadText("/etc/kubernetes/admin.conf", adminConfig, permissions: "600", owner: "root:root");
+                            master.UploadText("/etc/kubernetes/admin.conf", adminConfig, permissions: "600", owner: "root:root");
                         });
 
                     // Download the boot master files that will need to be provisioned on
@@ -687,8 +783,8 @@ volumePluginDir: /var/lib/kubelet/volume-plugins
                     if (clusterLogin.SetupDetails.MasterFiles.Count == 0)
                     {
                         // I'm hardcoding the permissions and owner here.  It would be nice to
-                        // scrape this from the source files in the future but this was not
-                        // worth the bother at this point.
+                        // scrape this from the source files in the future but it's not worth
+                        // the bother at this point.
 
                         var files = new RemoteFile[]
                         {
@@ -705,7 +801,7 @@ volumePluginDir: /var/lib/kubelet/volume-plugins
 
                         foreach (var file in files)
                         {
-                            var text = firstMaster.DownloadText(file.Path);
+                            var text = master.DownloadText(file.Path);
 
                             clusterLogin.SetupDetails.MasterFiles[file.Path] = new KubeFileDetails(text, permissions: file.Permissions, owner: file.Owner);
                         }
@@ -715,16 +811,16 @@ volumePluginDir: /var/lib/kubelet/volume-plugins
 
                     clusterLogin.Save();
 
-                    firstMaster.Status = "joined";
+                    master.Status = "joined";
 
                     //---------------------------------------------------------
                     // Join the remaining masters to the cluster:
 
-                    foreach (var master in cluster.Masters.Where(m => m != firstMaster))
+                    foreach (var master in cluster.Masters.Where(m => m != master))
                     {
                         try
                         {
-                            master.InvokeIdempotent("setup/cluster-kubectl",
+                            master.InvokeIdempotent("setup/kubectl",
                                 () =>
                                 {
                                     // It's possible that a previous cluster join operation
@@ -743,40 +839,31 @@ volumePluginDir: /var/lib/kubelet/volume-plugins
 
                                     // Join the cluster:
 
-                                    master.InvokeIdempotent("setup/cluster-join",
-                                            () =>
+                                    master.InvokeIdempotent("setup/master-join",
+                                        () =>
+                                        {
+                                            var joined = false;
+
+                                            master.Status = "join: as master";
+
+                                            for (int attempt = 0; attempt < maxJoinAttempts; attempt++)
                                             {
-                                                var joined = false;
+                                                var response = master.SudoCommand(clusterLogin.SetupDetails.ClusterJoinCommand + " --control-plane", RunOptions.Defaults & ~RunOptions.FaultOnError);
 
-                                                master.Status = "join: as master";
-
-                                                for (int attempt = 0; attempt < maxJoinAttempts; attempt++)
+                                                if (response.Success)
                                                 {
-                                                    var response = master.SudoCommand(clusterLogin.SetupDetails.ClusterJoinCommand + " --control-plane", RunOptions.Defaults & ~RunOptions.FaultOnError);
-
-                                                    if (response.Success)
-                                                    {
-                                                        joined = true;
-                                                        break;
-                                                    }
-
-                                                    Thread.Sleep(joinRetryDelay);
+                                                    joined = true;
+                                                    break;
                                                 }
 
-                                                if (!joined)
-                                                {
-                                                    throw new Exception($"Unable to join node [{master.Name}] to the after [{maxJoinAttempts}] attempts.");
-                                                }
-                                            });
+                                                Thread.Sleep(joinRetryDelay);
+                                            }
 
-                                    // Pull the Kubernetes images:
-
-                                    master.InvokeIdempotent("setup/cluster-images",
-                                            () =>
+                                            if (!joined)
                                             {
-                                                master.Status = "pull: kubernetes images";
-                                                master.SudoCommand("kubeadm config images pull");
-                                            });
+                                                throw new Exception($"Unable to join node [{master.Name}] to the after [{maxJoinAttempts}] attempts.");
+                                            }
+                                        });
                                 });
                         }
                         catch (Exception e)
@@ -794,9 +881,9 @@ volumePluginDir: /var/lib/kubelet/volume-plugins
                     {
                         try
                         {
-                            master.Status = "configure: kube-apiserver";
+                            master.Status = "configure: kubernetes apiserver";
 
-                            master.InvokeIdempotent("setup/cluster-kube-apiserver",
+                            master.InvokeIdempotent("setup/kubernetes-apiserver",
                                 () =>
                                 {
                                     master.Status = "configure: kube-apiserver";
@@ -821,7 +908,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                     var parallelOptions = new ParallelOptions()
                     {
-                        MaxDegreeOfParallelism = maxParallel
+                        MaxDegreeOfParallelism = defaultMaxParallelNodes
                     };
 
                     Parallel.ForEach(cluster.Workers, parallelOptions,
@@ -829,7 +916,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         {
                             try
                             {
-                                worker.InvokeIdempotent("setup/cluster-join",
+                                worker.InvokeIdempotent("setup/worker-join",
                                     () =>
                                     {
                                         var joined = false;
@@ -864,19 +951,35 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             worker.Status = "joined";
                         });
                 });
+        }
 
-            firstMaster.InvokeIdempotent("setup/workstation",
+        /// <summary>
+        /// Configures the local workstation.
+        /// </summary>
+        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="master">The master node where the operation will be performed.</param>
+        public static void ConfigureWorkstation(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master)
+        {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
+
+            master.InvokeIdempotent("setup/workstation",
                 () =>
                 {
-                    // Update the kubeconfig.
-
+                    var cluster        = setupState.Get<ClusterProxy>(ClusterProxyProperty);
+                    var clusterLogin   = setupState.Get<ClusterLogin>(ClusterLoginProperty);
                     var kubeConfigPath = KubeHelper.KubeConfigPath;
 
-                    // $todo(marcus.bowyer):
-                    // This is hard coding the kubeconfig to point to the first master.
-                    // Issue https://github.com/nforgeio/neonKUBE/issues/888 will fix this by adding a proxy to neon-desktop
-                    // and load balancing requests across the k8s api servers.
+                    // Update kubeconfig.
+
+                    // $todo(marcusbooyah):
+                    //
+                    // This is hardcoding the kubeconfig to point to the first master.  Issue 
+                    // https://github.com/nforgeio/neonKUBE/issues/888 will fix this by adding a proxy
+                    // to neonDESKTOP and load balancing requests across the k8s api servers.
+
                     var configText = clusterLogin.SetupDetails.MasterFiles["/etc/kubernetes/admin.conf"].Text;
+
                     configText = configText.Replace("kubernetes-masters", $"{cluster.Definition.Masters.FirstOrDefault().Address}");
 
                     if (!File.Exists(kubeConfigPath))
@@ -888,7 +991,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         // The user already has an existing kubeconfig, so we need
                         // to merge in the new config.
 
-                        var newConfig = NeonHelper.YamlDeserialize<KubeConfig>(configText);
+                        var newConfig      = NeonHelper.YamlDeserialize<KubeConfig>(configText);
                         var existingConfig = KubeHelper.Config;
 
                         // Remove any existing user, context, and cluster with the same names.
@@ -928,61 +1031,252 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                     ConnectCluster(setupState);
                 });
+        }
 
-            //-----------------------------------------------------------------
-            // Configure the cluster.
+        /// <summary>
+        /// Installs the Calico CNI.
+        /// </summary>
+        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="master">The master node where the operation will be performed.</param>
+        public static void InstallCalicoCni(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master)
+        {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            firstMaster.InvokeIdempotent("setup/cluster-configure",
+            var cluster = master.Cluster;
+
+            master.InvokeIdempotent("setup/cluster-deploy-cni",
                 () =>
                 {
-                    foreach (var node in cluster.Nodes)
-                    {
-                        node.Status = string.Empty;
-                    }
+                    // Deploy Calico
 
-                    // Install the network CNI.
+                    var script =
+$@"#!/bin/bash
 
-                    DeployCalicoCni(setupState, firstMaster);
+# We need to edit the setup manifest to specify the 
+# cluster subnet before applying it.
 
-                    // Allow pods to be scheduled on master nodes if enabled.
+curl {KubeHelper.CurlOptions} {KubeDownloads.CalicoSetupYamlUri} > /tmp/calico.yaml
+sed -i 's;192.168.0.0/16;{cluster.Definition.Network.PodSubnet};' /tmp/calico.yaml
+sed -i 's;calico/cni:v{KubeVersions.CalicoVersion}.*;{NeonHelper.NeonLibraryBranchRegistry}/calico-cni:neonkube-{KubeConst.NeonKubeVersion};' /tmp/calico.yaml
+sed -i 's;calico/kube-controllers:v{KubeVersions.CalicoVersion}.*;{NeonHelper.NeonLibraryBranchRegistry}/calico-kube-controllers:neonkube-{KubeConst.NeonKubeVersion};' /tmp/calico.yaml
+sed -i 's;calico/node:v{KubeVersions.CalicoVersion}.*;{NeonHelper.NeonLibraryBranchRegistry}/calico-node:neonkube-{KubeConst.NeonKubeVersion};' /tmp/calico.yaml
+sed -i 's;calico/pod2daemon-flexvol:v{KubeVersions.CalicoVersion}.*;{NeonHelper.NeonLibraryBranchRegistry}/calico-pod2daemon-flexvol:neonkube-{KubeConst.NeonKubeVersion};' /tmp/calico.yaml
+kubectl apply -f /tmp/calico.yaml
+rm /tmp/calico.yaml
+";
+                    master.SudoCommand(CommandBundle.FromScript(script));
 
-                    firstMaster.InvokeIdempotent("setup/cluster-master-pods",
+                    // Wait for Calico and CoreDNS pods to report that they're running.
+                    // We're going to wait a maximum of 300 seconds.
+
+                    NeonHelper.WaitFor(
                         () =>
                         {
-                            // The [kubectl taint] command looks like it can return a non-zero exit code.
-                            // We'll ignore this.
+                            var pods = GetK8sClient(setupState).ListPodForAllNamespaces();
 
-                            if (cluster.Definition.Kubernetes.AllowPodsOnMasters.GetValueOrDefault())
+                            foreach (var pod in pods.Items)
                             {
-                                firstMaster.SudoCommand(@"until [ `kubectl get nodes | grep ""NotReady"" | wc -l ` == ""0"" ]; do     sleep 1; done", firstMaster.DefaultRunOptions & ~RunOptions.FaultOnError);
-                                firstMaster.SudoCommand("kubectl taint nodes --all node-role.kubernetes.io/master-", firstMaster.DefaultRunOptions & ~RunOptions.FaultOnError);
-                                firstMaster.SudoCommand(@"until [ `kubectl get nodes -o json | jq .items[].spec | grep ""NoSchedule"" | wc -l ` == ""0"" ]; do     sleep 1; done", firstMaster.DefaultRunOptions & ~RunOptions.FaultOnError);
+                                if (pod.Status.Phase != "Running")
+                                {
+                                    if (pod.Metadata.Name.Contains("coredns") && pod.Status.Phase == "Pending")
+                                    {
+                                        master.SudoCommand("kubectl rollout restart --namespace kube-system deployment/coredns", RunOptions.LogOnErrorOnly);
+                                    }
+
+                                    return false;
+                                }
                             }
-                        });
 
-                    // Label Nodes.
+                            return true;
+                        },
+                        timeout:      clusterOpTimeout,
+                        pollInterval: clusterOpRetryInterval);
+                });
+        }
 
-                    firstMaster.InvokeIdempotent("setup/cluster-label-nodes",
-                        () =>
-                        {
-                            LabelNodes(setupState, firstMaster);
-                        });
+        /// <summary>
+        /// Configures pods to be schedule on masters when enabled.
+        /// </summary>
+        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="master">The master node where the operation will be performed.</param>
+        public static void ConfigureMasterTaints(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master)
+        {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-                    // Install Istio.
+            var cluster = master.Cluster;
 
-                    firstMaster.InvokeIdempotent("setup/cluster-deploy-istio",
-                        () =>
-                        {
-                           InstallIstio(setupState, firstMaster);
-                        });
+            master.InvokeIdempotent("setup/kubernetes-master-pods",
+                () =>
+                {
+                    // The [kubectl taint] command looks like it can return a non-zero exit code.
+                    // We'll ignore this.
 
+                    if (cluster.Definition.Kubernetes.AllowPodsOnMasters.GetValueOrDefault())
+                    {
+                        master.SudoCommand(@"until [ `kubectl get nodes | grep ""NotReady"" | wc -l ` == ""0"" ]; do sleep 1; done", master.DefaultRunOptions & ~RunOptions.FaultOnError);
+                        master.SudoCommand("kubectl taint nodes --all node-role.kubernetes.io/master-", master.DefaultRunOptions & ~RunOptions.FaultOnError);
+                        master.SudoCommand(@"until [ `kubectl get nodes -o json | jq .items[].spec | grep ""NoSchedule"" | wc -l ` == ""0"" ]; do sleep 1; done", master.DefaultRunOptions & ~RunOptions.FaultOnError);
+                    }
+                });
+        }
 
-                    // Create the cluster's [root-user]:
+        /// <summary>
+        /// Installs Istio.
+        /// </summary>
+        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="master">The master node where the operation will be performed.</param>
+        public static void InstallIstio(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master)
+        {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-                    firstMaster.InvokeIdempotent("setup/cluster-root-user",
-                        () =>
-                        {
-                            var userYaml =
+            master.Status = "deploy: istio";
+
+            master.InvokeIdempotent("setup/istio",
+                () =>
+                {
+                    var istioScript0 =
+$@"#!/bin/bash
+
+tmp=$(mktemp -d /tmp/istioctl.XXXXXX)
+cd ""$tmp"" || exit
+
+curl -fsLO {KubeDownloads.IstioLinuxUri}
+
+tar -xzf ""istioctl-{KubeVersions.IstioVersion}-linux-amd64.tar.gz""
+
+# setup istioctl
+cd ""$HOME"" || exit
+mkdir -p "".istioctl/bin""
+mv ""${{tmp}}/istioctl"" "".istioctl/bin/istioctl""
+chmod +x "".istioctl/bin/istioctl""
+rm -r ""${{tmp}}""
+
+export PATH=$PATH:$HOME/.istioctl/bin
+
+istioctl operator init --set hub={NeonHelper.NeonLibraryBranchRegistry}
+
+kubectl create ns istio-system
+
+cat <<EOF > istio-cni.yaml
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+metadata:
+  namespace: istio-system
+  name: istiocontrolplane
+spec:
+  hub: {NeonHelper.NeonLibraryBranchRegistry}
+  tag: neonkube-{KubeConst.NeonKubeVersion}
+  meshConfig:
+    rootNamespace: istio-system
+  components:
+    ingressGateways:
+    - name: istio-ingressgateway
+      enabled: true
+      k8s:
+        overlays:
+          - apiVersion: apps/v1
+            kind: Deployment
+            name: istio-ingressgateway
+            patches:
+              - path: kind
+                value: DaemonSet
+        service:
+          ports:
+          - name: http2
+            protocol: TCP
+            port: 80
+            targetPort: 8080
+            nodePort: 30080
+          - name: https
+            protocol: TCP
+            port: 443
+            targetPort: 8443
+            nodePort: 30443
+          - name: tls
+            protocol: TCP
+            port: 15443
+            targetPort: 15443
+            nodePort: 31922
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 2000m
+            memory: 1024Mi
+        strategy:
+          rollingUpdate:
+            maxSurge: ""100%""
+            maxUnavailable: ""25%""
+    cni:
+      enabled: true
+      namespace: kube-system
+  values:
+    global:
+      logging:
+        level: ""default:info""
+      logAsJson: true
+      defaultNodeSelector: 
+        neonkube.io/istio: true
+      tracer:
+        zipkin:
+          address: neon-logging-jaeger-collector.monitoring.svc.cluster.local:9411
+    pilot:
+      traceSampling: 100
+    meshConfig:
+      accessLogFile: """"
+      accessLogFormat: '{{   ""authority"": ""%REQ(:AUTHORITY)%"",   ""mode"": ""%PROTOCOL%"",   ""upstream_service_time"": ""%RESP(X-ENVOY-UPSTREAM-SERVICE-TIME)%"",   ""upstream_local_address"": ""%UPSTREAM_LOCAL_ADDRESS%"",   ""duration"": ""%DURATION%"",   ""request_duration"": ""%REQUEST_DURATION%"",   ""response_duration"": ""%RESPONSE_DURATION%"",   ""response_tx_duration"": ""%RESPONSE_TX_DURATION%"",   ""downstream_local_address"": ""%DOWNSTREAM_LOCAL_ADDRESS%"",   ""upstream_transport_failure_reason"": ""%UPSTREAM_TRANSPORT_FAILURE_REASON%"",   ""route_name"": ""%ROUTE_NAME%"",   ""response_code"": ""%RESPONSE_CODE%"",   ""response_code_details"": ""%RESPONSE_CODE_DETAILS%"",   ""user_agent"": ""%REQ(USER-AGENT)%"",   ""response_flags"": ""%RESPONSE_FLAGS%"",   ""start_time"": ""%START_TIME(%s.%6f)%"",   ""method"": ""%REQ(:METHOD)%"",   ""host"": ""%REQ(:Host)%"",   ""referer"": ""%REQ(:Referer)%"",   ""request_id"": ""%REQ(X-REQUEST-ID)%"",   ""forwarded_host"": ""%REQ(X-FORWARDED-HOST)%"",   ""forwarded_proto"": ""%REQ(X-FORWARDED-PROTO)%"",   ""upstream_host"": ""%UPSTREAM_HOST%"",   ""downstream_local_uri_san"": ""%DOWNSTREAM_LOCAL_URI_SAN%"",   ""downstream_peer_uri_san"": ""%DOWNSTREAM_PEER_URI_SAN%"",   ""downstream_local_subject"": ""%DOWNSTREAM_LOCAL_SUBJECT%"",   ""downstream_peer_subject"": ""%DOWNSTREAM_PEER_SUBJECT%"",   ""downstream_peer_issuer"": ""%DOWNSTREAM_PEER_ISSUER%"",   ""downstream_tls_session_id"": ""%DOWNSTREAM_TLS_SESSION_ID%"",   ""downstream_tls_cipher"": ""%DOWNSTREAM_TLS_CIPHER%"",   ""downstream_tls_version"": ""%DOWNSTREAM_TLS_VERSION%"",   ""downstream_peer_serial"": ""%DOWNSTREAM_PEER_SERIAL%"",   ""downstream_peer_cert"": ""%DOWNSTREAM_PEER_CERT%"",   ""client_ip"": ""%REQ(X-FORWARDED-FOR)%"",   ""requested_server_name"": ""%REQUESTED_SERVER_NAME%"",   ""bytes_received"": ""%BYTES_RECEIVED%"",   ""bytes_sent"": ""%BYTES_SENT%"",   ""upstream_cluster"": ""%UPSTREAM_CLUSTER%"",   ""downstream_remote_address"": ""%DOWNSTREAM_REMOTE_ADDRESS%"",   ""path"": ""%REQ(X-ENVOY-ORIGINAL-PATH?:PATH)%"" }}'
+      accessLogEncoding: ""JSON""
+    gateways:
+      istio-ingressgateway:
+        type: NodePort
+        externalTrafficPolicy: Local
+        sds:
+          enabled: true
+    prometheus:
+      enabled: false
+    grafana:
+      enabled: false
+    istiocoredns:
+      enabled: true
+      coreDNSImage: {NeonHelper.NeonLibraryBranchRegistry}/coredns-coredns
+      coreDNSTag: {KubeVersions.CoreDNSVersion}
+      coreDNSPluginImage: {NeonHelper.NeonLibraryBranchRegistry}/coredns-plugin:neonkube-{KubeConst.NeonKubeVersion}
+    cni:
+      excludeNamespaces:
+       - istio-system
+       - kube-system
+       - kube-node-lease
+       - kube-public
+       - jobs
+      logLevel: info
+EOF
+
+istioctl install -f istio-cni.yaml
+";
+                master.SudoCommand(CommandBundle.FromScript(istioScript0));
+            });
+        }
+
+        /// <summary>
+        /// Configures the root Kubernetes user.
+        /// </summary>
+        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="master">The master node where the operation will be performed.</param>
+        public static void CreateRootUser(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master)
+        {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
+
+            master.Status = "create: kubernetes root user";
+
+            master.InvokeIdempotent("setup/root-user",
+                () =>
+                {
+                    var userYaml =
 $@"
 apiVersion: v1
 kind: ServiceAccount
@@ -1003,53 +1297,67 @@ subjects:
   name: {KubeConst.RootUser}-user
   namespace: kube-system
 ";
-                            firstMaster.KubectlApply(userYaml);
-                        });
+                    master.KubectlApply(userYaml);
+                });
+        }
 
-                    // Install the Kubernetes dashboard:
+        /// <summary>
+        /// Configures the root Kubernetes user.
+        /// </summary>
+        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="master">The master node where the operation will be performed.</param>
+        public static void InstallKubeDashboard(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master)
+        {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-                    firstMaster.InvokeIdempotent("setup/cluster-deploy-kubernetes-dashboard",
-                        () =>
+            var cluster      = setupState.Get<ClusterProxy>(ClusterProxyProperty);
+            var clusterLogin = setupState.Get<ClusterLogin>(ClusterLoginProperty);
+
+            master.Status = "install: kubernetes dashboard";
+
+            master.InvokeIdempotent("setup/kube-dashboard",
+                () =>
+                {
+                    if (clusterLogin.DashboardCertificate != null)
+                    {
+                        master.Status = "generate: dashboard certificate";
+
+                        // We're going to tie the custom certificate to the IP addresses
+                        // of the master nodes only.  This means that only these nodes
+                        // can accept the traffic and also that we'd need to regenerate
+                        // the certificate if we add/remove a master node.
+                        //
+                        // Here's the tracking task:
+                        //
+                        //      https://github.com/nforgeio/neonKUBE/issues/441
+
+                        var masterAddresses = new List<string>();
+
+                        foreach (var master in cluster.Masters)
                         {
-                            if (clusterLogin.DashboardCertificate != null)
-                            {
-                                firstMaster.Status = "generate: dashboard certificate";
+                            masterAddresses.Add(master.Address.ToString());
+                        }
 
-                                // We're going to tie the custom certificate to the IP addresses
-                                // of the master nodes only.  This means that only these nodes
-                                // can accept the traffic and also that we'd need to regenerate
-                                // the certificate if we add/remove a master node.
-                                //
-                                // Here's the tracking task:
-                                //
-                                //      https://github.com/nforgeio/neonKUBE/issues/441
+                        var utcNow = DateTime.UtcNow;
+                        var utc10Years = utcNow.AddYears(10);
 
-                                var masterAddresses = new List<string>();
+                        var certificate = TlsCertificate.CreateSelfSigned(
+                            hostnames: masterAddresses,
+                            validDays: (int)(utc10Years - utcNow).TotalDays,
+                            issuedBy: "kubernetes-dashboard");
 
-                                foreach (var master in cluster.Masters)
-                                {
-                                    masterAddresses.Add(master.Address.ToString());
-                                }
+                        clusterLogin.DashboardCertificate = certificate.CombinedPem;
+                        clusterLogin.Save();
+                    }
 
-                                var utcNow     = DateTime.UtcNow;
-                                var utc10Years = utcNow.AddYears(10);
+                    // Deploy the dashboard.  Note that we need to insert the base-64
+                    // encoded certificate and key PEM into the dashboard configuration
+                    // YAML first.
 
-                                var certificate = TlsCertificate.CreateSelfSigned(
-                                    hostnames: masterAddresses,
-                                    validDays: (int)(utc10Years - utcNow).TotalDays,
-                                    issuedBy:  "kubernetes-dashboard");
+                    master.Status = "deploy: kubernetes dashboard";
 
-                                clusterLogin.DashboardCertificate = certificate.CombinedPem;
-                                clusterLogin.Save();
-                            }
-
-                            // Deploy the dashboard.  Note that we need to insert the base-64
-                            // encoded certificate and key PEM into the dashboard configuration
-                            // YAML first.
-
-                            firstMaster.Status = "deploy: kubernetes dashboard";
-
-                            var dashboardYaml =
+                    var dashboardYaml =
 $@"# Copyright 2017 The Kubernetes Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the """"License"""");
@@ -1347,349 +1655,25 @@ spec:
           emptyDir: {{}}
 ";
 
-                            var dashboardCert = TlsCertificate.Parse(clusterLogin.DashboardCertificate);
-                            var variables     = new Dictionary<string, string>();
+                    var dashboardCert = TlsCertificate.Parse(clusterLogin.DashboardCertificate);
+                    var variables = new Dictionary<string, string>();
 
-                            variables.Add("CERTIFICATE", Convert.ToBase64String(Encoding.UTF8.GetBytes(dashboardCert.CertPemNormalized)));
-                            variables.Add("PRIVATEKEY", Convert.ToBase64String(Encoding.UTF8.GetBytes(dashboardCert.KeyPemNormalized)));
+                    variables.Add("CERTIFICATE", Convert.ToBase64String(Encoding.UTF8.GetBytes(dashboardCert.CertPemNormalized)));
+                    variables.Add("PRIVATEKEY", Convert.ToBase64String(Encoding.UTF8.GetBytes(dashboardCert.KeyPemNormalized)));
 
-                            using (var preprocessReader = 
-                                new PreprocessReader(dashboardYaml, variables)
-                                {
-                                    StripComments     = false,
-                                    ProcessStatements = false
-                                }
-                            )
-                            {
-                                dashboardYaml = preprocessReader.ReadToEnd();
-                            }
-
-                            firstMaster.KubectlApply(dashboardYaml);
-                        });
-
-                });
-
-            // Setup openebs.
-
-            await firstMaster.InvokeIdempotentAsync("setup/cluster-deploy-openebs",
-                async () =>
-                {
-                    await InstallOpenEBSAsync(setupState, firstMaster);
-                });
-
-            await firstMaster.InvokeIdempotentAsync("setup/cluster-neon-system-namespace",
-                async () =>
-                {
-                    await GetK8sClient(setupState).CreateNamespaceAsync(new V1Namespace()
-                    {
-                        Metadata = new V1ObjectMeta()
+                    using (var preprocessReader =
+                        new PreprocessReader(dashboardYaml, variables)
                         {
-                            Name = "neon-system",
-                            Labels = new Dictionary<string, string>()
-                            {
-                                { "istio-injection", "enabled" }
-                            }
+                            StripComments = false,
+                            ProcessStatements = false
                         }
-                    });
-                });
-
-            // Setup neon-system-db.
-
-            await firstMaster.InvokeIdempotentAsync("setup/cluster-deploy-neon-system-db",
-                async () =>
-                {
-                    await InstallSystemDbAsync(setupState, firstMaster);
-                });
-
-            // Setup neon-cluster-manager.
-
-            await firstMaster.InvokeIdempotentAsync("setup/cluster-deploy-cluster-manager",
-                async () =>
-                {
-                    await InstallClusterManagerAsync(setupState, firstMaster);
-                });
-
-            // Setup neon-registry.
-
-            if (cluster.Definition.Nodes.Where(n => n.Labels.NeonSystemRegistry).Any())
-            {
-                await firstMaster.InvokeIdempotentAsync("setup/cluster-deploy-neon-registry",
-                    async () =>
+                    )
                     {
-                        await InstallNeonRegistryAsync(setupState, firstMaster);
-                    });
-            }
+                        dashboardYaml = preprocessReader.ReadToEnd();
+                    }
 
-            // Setup Kiali.
-
-            await firstMaster.InvokeIdempotentAsync("setup/cluster-deploy-kiali",
-                async () =>
-                {
-                    await InstallKialiAsync(setupState, firstMaster);
+                    master.KubectlApply(dashboardYaml);
                 });
-        }
-
-
-        /// <summary>
-        /// Installs the required Kubernetes related components on a node.
-        /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
-        /// <param name="node">The target node.</param>
-        public static void SetupKubernetes(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> node)
-        {
-            node.InvokeIdempotent("setup/setup-install-kubernetes",
-                () =>
-                {
-                    node.Status = "setup: kubernetes apt repository";
-
-                    var bundle = CommandBundle.FromScript(
-$@"#!/bin/bash
-curl {KubeHelper.CurlOptions} https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
-echo ""deb https://apt.kubernetes.io/ kubernetes-xenial main"" > /etc/apt/sources.list.d/kubernetes.list
-safe-apt-get update
-");
-                    node.SudoCommand(bundle);
-
-                    node.Status = "install: kubeadm";
-                    node.SudoCommand($"safe-apt-get install -yq kubeadm={KubeVersions.KubeAdminPackageVersion}");
-
-                    node.Status = "install: kubectl";
-                    node.SudoCommand($"safe-apt-get install -yq kubectl={KubeVersions.KubeCtlPackageVersion}");
-
-                    node.Status = "install: kubelet";
-                    node.SudoCommand($"safe-apt-get install -yq kubelet={KubeVersions.KubeletPackageVersion}");
-
-                    node.Status = "hold: kubernetes packages";
-                    node.SudoCommand("apt-mark hold kubeadm kubectl kubelet");
-
-                    node.Status = "configure: kubelet";
-                    node.SudoCommand("mkdir -p /opt/cni/bin");
-                    node.SudoCommand("mkdir -p /etc/cni/net.d");
-                    node.SudoCommand(CommandBundle.FromScript(
-@"#!/bin/bash
-
-echo KUBELET_EXTRA_ARGS=--network-plugin=cni --cni-bin-dir=/opt/cni/bin --cni-conf-dir=/etc/cni/net.d --feature-gates=\""AllAlpha=false,RunAsGroup=true\"" --container-runtime=remote --cgroup-driver=systemd --container-runtime-endpoint='unix:///var/run/crio/crio.sock' --runtime-request-timeout=5m> /etc/default/kubelet
-systemctl daemon-reload
-service kubelet restart
-"));
-
-                    // Download and install the Helm client:
-
-                    node.InvokeIdempotent("setup/cluster-helm",
-                        () =>
-                        {
-                            node.Status = "install: helm";
-
-                            var helmInstallScript =
-$@"#!/bin/bash
-cd /tmp
-curl {KubeHelper.CurlOptions} {KubeDownloads.HelmLinuxUri} > helm.tar.gz
-tar xvf helm.tar.gz
-cp linux-amd64/helm /usr/local/bin
-chmod 770 /usr/local/bin/helm
-rm -f helm.tar.gz
-rm -rf linux-amd64
-";
-                            node.SudoCommand(CommandBundle.FromScript(helmInstallScript));
-                        });
-                });
-        }
-
-        /// <summary>
-        /// Installs the Calico CNI.
-        /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
-        /// <param name="master">The master node where the operation will be performed.</param>
-        public static void DeployCalicoCni(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master)
-        {
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
-            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
-
-            var cluster = master.Cluster;
-
-            master.InvokeIdempotent("setup/cluster-deploy-cni",
-                () =>
-                {
-                    // Deploy Calico
-
-                    var script =
-$@"#!/bin/bash
-
-# We need to edit the setup manifest to specify the 
-# cluster subnet before applying it.
-
-curl {KubeHelper.CurlOptions} {KubeDownloads.CalicoSetupYamlUri} > /tmp/calico.yaml
-sed -i 's;192.168.0.0/16;{cluster.Definition.Network.PodSubnet};' /tmp/calico.yaml
-sed -i 's;calico/cni:v{KubeVersions.CalicoVersion}.*;{NeonHelper.NeonLibraryBranchRegistry}/calico-cni:neonkube-{KubeConst.NeonKubeVersion};' /tmp/calico.yaml
-sed -i 's;calico/kube-controllers:v{KubeVersions.CalicoVersion}.*;{NeonHelper.NeonLibraryBranchRegistry}/calico-kube-controllers:neonkube-{KubeConst.NeonKubeVersion};' /tmp/calico.yaml
-sed -i 's;calico/node:v{KubeVersions.CalicoVersion}.*;{NeonHelper.NeonLibraryBranchRegistry}/calico-node:neonkube-{KubeConst.NeonKubeVersion};' /tmp/calico.yaml
-sed -i 's;calico/pod2daemon-flexvol:v{KubeVersions.CalicoVersion}.*;{NeonHelper.NeonLibraryBranchRegistry}/calico-pod2daemon-flexvol:neonkube-{KubeConst.NeonKubeVersion};' /tmp/calico.yaml
-kubectl apply -f /tmp/calico.yaml
-rm /tmp/calico.yaml
-";
-                    master.SudoCommand(CommandBundle.FromScript(script));
-
-                    // Wait for Calico and CoreDNS pods to report that they're running.
-                    // We're going to wait a maximum of 300 seconds.
-
-                    NeonHelper.WaitFor(
-                        () =>
-                        {
-                            var pods = GetK8sClient(setupState).ListPodForAllNamespaces();
-
-                            foreach (var pod in pods.Items)
-                            {
-                                if (pod.Status.Phase != "Running")
-                                {
-                                    if (pod.Metadata.Name.Contains("coredns") && pod.Status.Phase == "Pending")
-                                    {
-                                        master.SudoCommand("kubectl rollout restart --namespace kube-system deployment/coredns", RunOptions.LogOnErrorOnly);
-                                    }
-
-                                    return false;
-                                }
-                            }
-
-                            return true;
-                        },
-                        timeout:      TimeSpan.FromMinutes(10),
-                        pollInterval: TimeSpan.FromSeconds(10));
-                });
-        }
-
-        /// <summary>
-        /// Installs Istio.
-        /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
-        /// <param name="master">The master node where the operation will be performed.</param>
-        public static void InstallIstio(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master)
-        {
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
-            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
-
-            master.Status = "deploy: istio";
-
-            var istioScript0 =
-$@"#!/bin/bash
-
-tmp=$(mktemp -d /tmp/istioctl.XXXXXX)
-cd ""$tmp"" || exit
-
-curl -fsLO {KubeDownloads.IstioLinuxUri}
-
-tar -xzf ""istioctl-{KubeVersions.IstioVersion}-linux-amd64.tar.gz""
-
-# setup istioctl
-cd ""$HOME"" || exit
-mkdir -p "".istioctl/bin""
-mv ""${{tmp}}/istioctl"" "".istioctl/bin/istioctl""
-chmod +x "".istioctl/bin/istioctl""
-rm -r ""${{tmp}}""
-
-export PATH=$PATH:$HOME/.istioctl/bin
-
-istioctl operator init --set hub={NeonHelper.NeonLibraryBranchRegistry}
-
-kubectl create ns istio-system
-
-cat <<EOF > istio-cni.yaml
-apiVersion: install.istio.io/v1alpha1
-kind: IstioOperator
-metadata:
-  namespace: istio-system
-  name: istiocontrolplane
-spec:
-  hub: {NeonHelper.NeonLibraryBranchRegistry}
-  tag: neonkube-{KubeConst.NeonKubeVersion}
-  meshConfig:
-    rootNamespace: istio-system
-  components:
-    ingressGateways:
-    - name: istio-ingressgateway
-      enabled: true
-      k8s:
-        overlays:
-          - apiVersion: apps/v1
-            kind: Deployment
-            name: istio-ingressgateway
-            patches:
-              - path: kind
-                value: DaemonSet
-        service:
-          ports:
-          - name: http2
-            protocol: TCP
-            port: 80
-            targetPort: 8080
-            nodePort: 30080
-          - name: https
-            protocol: TCP
-            port: 443
-            targetPort: 8443
-            nodePort: 30443
-          - name: tls
-            protocol: TCP
-            port: 15443
-            targetPort: 15443
-            nodePort: 31922
-        resources:
-          requests:
-            cpu: 100m
-            memory: 128Mi
-          limits:
-            cpu: 2000m
-            memory: 1024Mi
-        strategy:
-          rollingUpdate:
-            maxSurge: ""100%""
-            maxUnavailable: ""25%""
-    cni:
-      enabled: true
-      namespace: kube-system
-  values:
-    global:
-      logging:
-        level: ""default:info""
-      logAsJson: true
-      defaultNodeSelector: 
-        neonkube.io/istio: true
-      tracer:
-        zipkin:
-          address: neon-logging-jaeger-collector.monitoring.svc.cluster.local:9411
-    pilot:
-      traceSampling: 100
-    meshConfig:
-      accessLogFile: """"
-      accessLogFormat: '{{   ""authority"": ""%REQ(:AUTHORITY)%"",   ""mode"": ""%PROTOCOL%"",   ""upstream_service_time"": ""%RESP(X-ENVOY-UPSTREAM-SERVICE-TIME)%"",   ""upstream_local_address"": ""%UPSTREAM_LOCAL_ADDRESS%"",   ""duration"": ""%DURATION%"",   ""request_duration"": ""%REQUEST_DURATION%"",   ""response_duration"": ""%RESPONSE_DURATION%"",   ""response_tx_duration"": ""%RESPONSE_TX_DURATION%"",   ""downstream_local_address"": ""%DOWNSTREAM_LOCAL_ADDRESS%"",   ""upstream_transport_failure_reason"": ""%UPSTREAM_TRANSPORT_FAILURE_REASON%"",   ""route_name"": ""%ROUTE_NAME%"",   ""response_code"": ""%RESPONSE_CODE%"",   ""response_code_details"": ""%RESPONSE_CODE_DETAILS%"",   ""user_agent"": ""%REQ(USER-AGENT)%"",   ""response_flags"": ""%RESPONSE_FLAGS%"",   ""start_time"": ""%START_TIME(%s.%6f)%"",   ""method"": ""%REQ(:METHOD)%"",   ""host"": ""%REQ(:Host)%"",   ""referer"": ""%REQ(:Referer)%"",   ""request_id"": ""%REQ(X-REQUEST-ID)%"",   ""forwarded_host"": ""%REQ(X-FORWARDED-HOST)%"",   ""forwarded_proto"": ""%REQ(X-FORWARDED-PROTO)%"",   ""upstream_host"": ""%UPSTREAM_HOST%"",   ""downstream_local_uri_san"": ""%DOWNSTREAM_LOCAL_URI_SAN%"",   ""downstream_peer_uri_san"": ""%DOWNSTREAM_PEER_URI_SAN%"",   ""downstream_local_subject"": ""%DOWNSTREAM_LOCAL_SUBJECT%"",   ""downstream_peer_subject"": ""%DOWNSTREAM_PEER_SUBJECT%"",   ""downstream_peer_issuer"": ""%DOWNSTREAM_PEER_ISSUER%"",   ""downstream_tls_session_id"": ""%DOWNSTREAM_TLS_SESSION_ID%"",   ""downstream_tls_cipher"": ""%DOWNSTREAM_TLS_CIPHER%"",   ""downstream_tls_version"": ""%DOWNSTREAM_TLS_VERSION%"",   ""downstream_peer_serial"": ""%DOWNSTREAM_PEER_SERIAL%"",   ""downstream_peer_cert"": ""%DOWNSTREAM_PEER_CERT%"",   ""client_ip"": ""%REQ(X-FORWARDED-FOR)%"",   ""requested_server_name"": ""%REQUESTED_SERVER_NAME%"",   ""bytes_received"": ""%BYTES_RECEIVED%"",   ""bytes_sent"": ""%BYTES_SENT%"",   ""upstream_cluster"": ""%UPSTREAM_CLUSTER%"",   ""downstream_remote_address"": ""%DOWNSTREAM_REMOTE_ADDRESS%"",   ""path"": ""%REQ(X-ENVOY-ORIGINAL-PATH?:PATH)%"" }}'
-      accessLogEncoding: ""JSON""
-    gateways:
-      istio-ingressgateway:
-        type: NodePort
-        externalTrafficPolicy: Local
-        sds:
-          enabled: true
-    prometheus:
-      enabled: false
-    grafana:
-      enabled: false
-    istiocoredns:
-      enabled: true
-      coreDNSImage: {NeonHelper.NeonLibraryBranchRegistry}/coredns-coredns
-      coreDNSTag: {KubeVersions.CoreDNSVersion}
-      coreDNSPluginImage: {NeonHelper.NeonLibraryBranchRegistry}/coredns-plugin:neonkube-{KubeConst.NeonKubeVersion}
-    cni:
-      excludeNamespaces:
-       - istio-system
-       - kube-system
-       - kube-node-lease
-       - kube-public
-       - jobs
-      logLevel: info
-EOF
-
-istioctl install -f istio-cni.yaml
-";
-            master.SudoCommand(CommandBundle.FromScript(istioScript0));
         }
 
         /// <summary>
@@ -1704,29 +1688,9 @@ istioctl install -f istio-cni.yaml
             var cluster     = setupState.Get<ClusterProxy>(ClusterProxyProperty);
             var firstMaster = cluster.FirstMaster;
 
-            // Setup Kubernetes.
-
-            await firstMaster.InvokeIdempotentAsync("setup/cluster-deploy-kubernetes-setup",
-                async () =>
-                {
-                    await KubeSetupAsync(setupState, firstMaster);
-                });
-
-            //// Install an Prometheus cluster to the monitoring namespace
-
-            await firstMaster.InvokeIdempotentAsync("setup/cluster-deploy-neon-metrics",
-                async () =>
-                {
-                    await InstallNeonMetricsAsync(setupState, firstMaster);
-                });
-
-            // Setup Jaeger.
-
-            await firstMaster.InvokeIdempotentAsync("setup/cluster-deploy-jaeger",
-                async () =>
-                {
-                    await InstallJaegerAsync(setupState, firstMaster);
-                });
+            await KubeSetupAsync(setupState, firstMaster);
+            await InstallNeonMetricsAsync(setupState, firstMaster);
+            await InstallJaegerAsync(setupState, firstMaster);
         }
 
         /// <summary>
@@ -1789,36 +1753,6 @@ istioctl install -f istio-cni.yaml
         }
 
         /// <summary>
-        /// Gets a list of taints that are currently applied to all nodes matching the given node label/value pair.
-        /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
-        /// <param name="labelKey">The target nodes label key.</param>
-        /// <param name="labelValue">The target nodes label value.</param>
-        /// <returns>The taint list.</returns>
-        public static async Task<List<V1Taint>> GetTaintsAsync(ObjectDictionary setupState, string labelKey, string labelValue)
-        {
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
-
-            var taints = new List<V1Taint>();
-
-            foreach (var n in (await GetK8sClient(setupState).ListNodeAsync()).Items.Where(n => n.Metadata.Labels.Any(l => l.Key == labelKey && l.Value == labelValue)))
-            {
-                if (n.Spec.Taints?.Count() > 0)
-                {
-                    foreach (var t in n.Spec.Taints)
-                    {
-                        if (!taints.Any(x => x.Key == t.Key && x.Effect == t.Effect && x.Value == t.Value))
-                        {
-                            taints.Add(t);
-                        }
-                    }
-                }
-            }
-
-            return taints;
-        }
-
-        /// <summary>
         /// Deploy Kiali.
         /// </summary>
         /// <param name="setupState">The setup controller state.</param>
@@ -1867,7 +1801,7 @@ istioctl install -f istio-cni.yaml
 
                             return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
                         },
-                        timeout: clusterOpTimeout,
+                        timeout:      clusterOpTimeout,
                         pollInterval: clusterOpRetryInterval);
 
                     await NeonHelper.WaitForAsync(
@@ -1881,7 +1815,7 @@ istioctl install -f istio-cni.yaml
 
                             return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
                         },
-                        timeout: clusterOpTimeout,
+                        timeout:      clusterOpTimeout,
                         pollInterval: clusterOpRetryInterval);
                    });
 
@@ -1889,7 +1823,7 @@ istioctl install -f istio-cni.yaml
         }
 
         /// <summary>
-        /// Some initial kubernetes config.
+        /// Some initial kubernetes configuration.
         /// </summary>
         /// <param name="setupState">The setup controller state.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
@@ -1901,11 +1835,11 @@ istioctl install -f istio-cni.yaml
 
             master.Status = "deploy: cluster-setup";
 
-            await master.InstallHelmChartAsync("cluster-setup");
+            await master.InvokeIdempotentAsync("", async () => await master.InstallHelmChartAsync("cluster-setup"));
         }
 
         /// <summary>
-        /// Installs OpenEBS
+        /// Installs OpenEBS.
         /// </summary>
         /// <param name="setupState">The setup controller state.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
@@ -2039,7 +1973,7 @@ istioctl install -f istio-cni.yaml
 
                             return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
                         }, 
-                        timeout: clusterOpTimeout,
+                        timeout:      clusterOpTimeout,
                         pollInterval: clusterOpRetryInterval);
 
                     await NeonHelper.WaitForAsync(
@@ -2053,7 +1987,7 @@ istioctl install -f istio-cni.yaml
 
                             return daemonsets.Items.All(p => p.Status.NumberAvailable == p.Status.DesiredNumberScheduled);
                         },
-                        timeout: clusterOpTimeout,
+                        timeout:      clusterOpTimeout,
                         pollInterval: clusterOpRetryInterval);
                    });
 
@@ -2133,7 +2067,7 @@ istioctl install -f istio-cni.yaml
 
                             return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
                         },
-                        timeout: clusterOpTimeout,
+                        timeout:      clusterOpTimeout,
                         pollInterval: clusterOpRetryInterval);
                 });
 
@@ -2185,11 +2119,39 @@ istioctl install -f istio-cni.yaml
 
                             return statefulsets.Items.All(p => p.Status.ReadyReplicas == p.Spec.Replicas);
                         },
-                        timeout: clusterOpTimeout,
+                        timeout:      clusterOpTimeout,
                         pollInterval: clusterOpRetryInterval);
                 });
 
             await Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Installs OpenEBS
+        /// </summary>
+        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="master">The master node where the operation will be performed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task CreateNeonNamespaceAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master)
+        {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
+
+            await master.InvokeIdempotentAsync("setup/cluster-neon-system-namespace",
+                async () =>
+                {
+                    await GetK8sClient(setupState).CreateNamespaceAsync(new V1Namespace()
+                    {
+                        Metadata = new V1ObjectMeta()
+                        {
+                            Name = "neon-system",
+                            Labels = new Dictionary<string, string>()
+                            {
+                                { "istio-injection", "enabled" }
+                            }
+                        }
+                    });
+                });
         }
 
         /// <summary>
@@ -2258,7 +2220,7 @@ istioctl install -f istio-cni.yaml
 
                             return statefulsets.Items.All(p => p.Status.ReadyReplicas == p.Spec.Replicas);
                         },
-                        timeout: clusterOpTimeout,
+                        timeout:      clusterOpTimeout,
                         pollInterval: clusterOpRetryInterval);
                 });
 
@@ -2346,7 +2308,7 @@ istioctl install -f istio-cni.yaml
 
                             return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
                         },
-                        timeout: TimeSpan.FromMinutes(20),
+                        timeout:      clusterOpTimeout,
                         pollInterval: clusterOpRetryInterval);
 
                     await NeonHelper.WaitForAsync(
@@ -2360,7 +2322,7 @@ istioctl install -f istio-cni.yaml
 
                             return daemonsets.Items.All(p => p.Status.NumberAvailable == p.Status.DesiredNumberScheduled);
                         },
-                        timeout: TimeSpan.FromMinutes(20),
+                        timeout:      clusterOpTimeout,
                         pollInterval: clusterOpRetryInterval);
 
                     await NeonHelper.WaitForAsync(
@@ -2374,7 +2336,7 @@ istioctl install -f istio-cni.yaml
 
                             return statefulsets.Items.All(p => p.Status.ReadyReplicas == p.Spec.Replicas);
                         },
-                        timeout: TimeSpan.FromMinutes(20),
+                        timeout:      clusterOpTimeout,
                         pollInterval: clusterOpRetryInterval);
                 });
 
@@ -2443,7 +2405,7 @@ istioctl install -f istio-cni.yaml
 
                             return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
                         },
-                        timeout: TimeSpan.FromMinutes(20),
+                        timeout:      clusterOpTimeout,
                         pollInterval: clusterOpRetryInterval);
                 });
 
@@ -2497,7 +2459,7 @@ istioctl install -f istio-cni.yaml
 
                             return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
                         },
-                        timeout: clusterOpTimeout,
+                        timeout:      clusterOpTimeout,
                         pollInterval: clusterOpRetryInterval);
                 });
 
@@ -2571,7 +2533,7 @@ istioctl install -f istio-cni.yaml
 
                             return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
                         },
-                        timeout: TimeSpan.FromMinutes(20),
+                        timeout:      clusterOpTimeout,
                         pollInterval: clusterOpRetryInterval);
                 });
 
@@ -2659,7 +2621,7 @@ istioctl install -f istio-cni.yaml
 
                             return statefulsets.Items.All(p => p.Status.ReadyReplicas == p.Spec.Replicas);
                         },
-                        timeout: clusterOpTimeout,
+                        timeout:      clusterOpTimeout,
                         pollInterval: clusterOpRetryInterval);
                 });
 
@@ -2752,7 +2714,7 @@ istioctl install -f istio-cni.yaml
 
                                return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
                            },
-                           timeout: TimeSpan.FromMinutes(30),
+                           timeout:      clusterOpTimeout,
                            pollInterval: clusterOpRetryInterval);
                 });
 
@@ -2797,7 +2759,7 @@ istioctl install -f istio-cni.yaml
 
                             return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
                         },
-                        timeout: clusterOpTimeout,
+                        timeout:      clusterOpTimeout,
                         pollInterval: clusterOpRetryInterval);
                 });
 
@@ -2871,7 +2833,7 @@ istioctl install -f istio-cni.yaml
 
                             return statefulsets.Items.All(p => p.Status.ReadyReplicas == p.Spec.Replicas);
                         },
-                        timeout: clusterOpTimeout,
+                        timeout:      clusterOpTimeout,
                         pollInterval: clusterOpRetryInterval);
 
                     await NeonHelper.WaitForAsync(
@@ -2885,7 +2847,7 @@ istioctl install -f istio-cni.yaml
 
                             return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
                         },
-                        timeout: clusterOpTimeout,
+                        timeout:      clusterOpTimeout,
                         pollInterval: clusterOpRetryInterval);
                 });
 

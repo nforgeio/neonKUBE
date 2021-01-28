@@ -474,7 +474,7 @@ ff02::2         ip6-allrouters
         /// Performs common node configuration.
         /// </summary>
         /// <param name="setupState">The setup controller state.</param>
-        public void SetupCommon(ObjectDictionary setupState)
+        public void SetupNode(ObjectDictionary setupState)
         {
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
 
@@ -504,17 +504,9 @@ ff02::2         ip6-allrouters
                         SudoCommand("mkdir -p /mnt-data");
                     }
 
-                    // Configure the APT proxy server settings early.
-
-                    Status = "configure: package proxy";
-                    SudoCommand("setup-package-proxy.sh");
-
-                    // Perform basic node setup including changing the hostname.
+                    // Set the hostname.
 
                     UpdateHostname();
-
-                    Status = "configure: node basics";
-                    SudoCommand("setup-node.sh");
                 });
         }
 
@@ -614,81 +606,6 @@ rm -rf {chartName}*
                 });
 
             await Task.CompletedTask;
-        }
-
-        /// <summary>
-        /// Performs basic node configuration.
-        /// </summary>
-        public void SetupNode()
-        {
-            var nodeDefinition = NeonHelper.CastTo<NodeDefinition>(Metadata);
-
-            InvokeIdempotent($"setup/{nodeDefinition.Role}",
-                () =>
-                {
-                    // Configure the APT package proxy on the masters
-                    // and configure the proxy selector for all nodes.
-
-                    Status = "configure: package proxy";
-                    SudoCommand("setup-package-proxy.sh");
-
-                    // Upgrade Linux packages if requested.  We're doing this after
-                    // deploying the APT package proxy so it'll be faster.
-
-                    switch (cluster.Definition.NodeOptions.Upgrade)
-                    {
-                        case OsUpgrade.Partial:
-
-                            Status = "upgrade: partial";
-
-                            SudoCommand("safe-apt-get upgrade -yq");
-                            break;
-
-                        case OsUpgrade.Full:
-
-                            Status = "upgrade: full";
-
-                            SudoCommand("safe-apt-get dist-upgrade -yq");
-                            break;
-                    }
-
-                    // Check to see whether the upgrade requires a reboot and
-                    // do that now if necessary.
-
-                    if (FileExists("/var/run/reboot-required"))
-                    {
-                        Status = "restarting...";
-                        Reboot();
-                    }
-
-                    // Setup NTP.
-
-                    Status = "configure: NTP";
-                    SudoCommand("setup-ntp.sh");
-
-                    // Setup CRI-O.
-
-                    Status = "install: CRI-O";
-
-                    var dockerRetry = new LinearRetryPolicy(typeof(TransientException), maxAttempts: 5, retryInterval: TimeSpan.FromSeconds(5));
-
-                    dockerRetry.Invoke(
-                        () =>
-                        {
-                            var response = SudoCommand("setup-cri-o.sh", DefaultRunOptions & ~RunOptions.FaultOnError);
-
-                            if (response.ExitCode != 0)
-                            {
-                                throw new TransientException(response.ErrorText);
-                            }
-                        });
-
-                    // Clean up any cached APT files.
-
-                    Status = "clean up";
-                    SudoCommand("safe-apt-get clean -yq");
-                    SudoCommand("rm -rf /var/lib/apt/lists");
-                });
         }
 
         /// <summary>

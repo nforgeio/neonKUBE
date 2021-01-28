@@ -650,11 +650,6 @@ You can disable the use of this encrypted folder by specifying
         }
 
         /// <summary>
-        /// Returns the folder holding the Linux resource files for the target operating system.
-        /// </summary>
-        public static ResourceFiles.Folder LinuxFolder => ResourceFiles.Root.GetFolder("Ubuntu-20.04");
-
-        /// <summary>
         /// Presents the user with a yes/no question and waits for a response.
         /// </summary>
         /// <param name="prompt">The question prompt.</param>

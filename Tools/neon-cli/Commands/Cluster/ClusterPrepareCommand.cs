@@ -170,8 +170,8 @@ Server Requirements:
                 //-----------------------------------------------------------------
                 // Try to ensure that no servers are already deployed on the IP addresses defined
                 // for cluster nodes because provisoning over an existing cluster will likely
-                // corrupt the existing cluster and also probably prevent the new cluster from
-                // provisioning correctly.
+                // corrupt the existing cluster and also prevent the new cluster from provisioning 
+                // correctly.
                 //
                 // Note that we're not going to perform this check for the [BareMetal] hosting 
                 // environment because we're expecting the bare machines to be already running 
@@ -459,7 +459,7 @@ Server Requirements:
                 setupController.AddNodeStep("node prepare",
                     (state, node) =>
                     {
-                        node.PrepareNode(setupController, shutdown: false);
+                        node.PrepareNode(setupController);
                     });
             
                 // Some hosting managers may have to some additional work after the node has

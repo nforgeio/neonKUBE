@@ -147,8 +147,7 @@ systemctl restart sshd
         /// for a cluster node.
         /// </summary>
         /// <param name="setupState">The setup controller state.</param>
-        /// <param name="shutdown">Optionally shuts down the node.</param>
-        public void PrepareNode(ObjectDictionary setupState, bool shutdown = false)
+        public void PrepareNode(ObjectDictionary setupState)
         {
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
 
@@ -239,11 +238,119 @@ systemctl restart rsyslog.service
 
             var diskName  = hostingManager.GetDataDisk(this);
             var partition = char.IsDigit(diskName.Last()) ? $"{diskName}p1" : $"{diskName}1";
+            var diskScript =
+$@"
+#------------------------------------------------------------------------------
+# Configure and mount the node disk drives.
+#
+# ARGUMENTS (we're going to initialize these in place):
+#
+#       DATA_DISK       - This will be passed as ""PRIMARY"" when there's no
+#                         data disk and node will use the OS disk or the
+#                         name of the uninitialized data disk devicce,
+#                         like ""/dev/sda"".
+#
+#       PARTITION       - This will be passed as the name of the partition
+#                         that will be created for the disk.
 
-            SudoCommand("setup-disk.sh", diskName, partition, RunOptions.FaultOnError);
+DATA_DISK=$1
+PARTITION=$2
+
+# Configure Bash strict mode so that the entire script will fail if 
+# any of the commands fail.
+#
+#       http://redsymbol.net/articles/unofficial-bash-strict-mode/
+
+set -euo pipefail
+
+echo
+echo ""**********************************************"" 1>&2
+echo ""** SETUP-DISK                               **"" 1>&2
+echo ""**********************************************"" 1>&2
+
+#------------------------------------------------------------------------------
+# Creates a disk partition, filling the specified drive.
+
+function partitionDisk {{
+
+    fdisk --wipe-partitions always $1 << EOF
+n
+p
+1
+
+
+w
+EOF
+
+    # Sleep a bit to allow the change to persist.  I believe something
+    # fancy is happening on AWS that requires this.
+
+    sleep 10
+}}
+
+#------------------------------------------------------------------------------
+
+echo ""DATA DISK: $DATA_DISK""
+echo ""PARTITION: $PARTITION""
+
+if [ ""$DATA_DISK"" == ""PRIMARY"" ]; then
+
+	# We have no mounted drives so we're simply going to create a [/mnt-data]
+	# folder on the OS drive.
+
+	mkdir -p /mnt-data
+
+else
+
+    # We only support a single data disk so we'll simply create a partition,
+    # initialize an EXT4 file system and mount it.
+
+    # Create the disk partition.
+
+    partitionDisk $DATA_DISK
+
+    # Create an EXT4 file system on the new partition.
+
+    mkfs -t ext4 $PARTITION
+
+    # Mount the file system at [/mnt-data]
+
+    mkdir -p /mnt-data
+    mount $PARTITION /mnt-data
+
+    # Remember the data device so we can add it to [/etc/fstab] below.
+
+    DATA_DEVICE=$PARTITION
+fi
+
+if [ ""$DATA_DISK"" != ""PRIMARY"" ]; then
+
+    # The new file system won't be mounted automatically after a reboot
+    # until we add an entry for it in [/etc/fstab].  This is a two
+    # step process.  First, we need to get the UUID assigned to the 
+    # new file system and then we need to update [/etc/fstab].
+    #
+    # We're going to do this by listing the device UUIDs and GREPing
+    # out the line for the new device.  Then we'll use Bash REGEX to 
+    # extract the UUID.  Note the device listing lines look like:
+    #
+    #	/dev/sdc1: UUID=""3d70d51a-fd8a-4761-b36d-dba5ca889b72"" TYPE=""ext4""
+
+    BLOCKID=$(sudo -i blkid | grep $DATA_DEVICE)
+    [[ ""$BLOCKID"" =~ UUID=\""(.*)\""\ TYPE= ]] && UUID=${{BASH_REMATCH[1]}}
+
+    # Update [/etc/fstab] to ensure that the new drive is mounted after a reboot.
+
+    echo UUID=$UUID /mnt-data ext4 defaults,noatime,barrier=0 0 2 | tee -a /etc/fstab
+fi
+";
+            diskScript = diskScript.Replace("$1", diskName);
+            diskScript = diskScript.Replace("$2", partition);
+
+            SudoCommand(CommandBundle.FromScript(diskScript), RunOptions.FaultOnError);
 
             // Clear any DHCP leases to be super sure that cloned node
-            // VMs will obtain fresh IP addresses.
+            // VMs will be assigned fresh IP addresses.
 
             Status = "clear: DHCP leases";
             SudoCommand("rm -f /var/lib/dhcp/*", RunOptions.FaultOnError);
@@ -251,14 +358,6 @@ systemctl restart rsyslog.service
             // Indicate that the node has been fully prepared.
 
             SudoCommand($"touch {KubeNodeFolders.State}/setup/prepared", RunOptions.FaultOnError);
-
-            // Shutdown the node if requested.
-
-            if (shutdown)
-            {
-                Status = "shutdown";
-                SudoCommand("shutdown 0", RunOptions.Defaults | RunOptions.Shutdown);
-            }
         }
 
         /// <summary>
@@ -313,12 +412,13 @@ sed -i '/^ENABLED=""false""/c\ENABLED=""true""' /etc/default/sysstat
 cat <<EOF > /etc/security/limits.conf
 # /etc/security/limits.conf
 #
-#Each line describes a limit for a user in the form:
+# Each line describes a limit for a user in the form:
 #
-#<domain>        <type>  <item>  <value>
+#   <domain>        <type>  <item>  <value>
 #
-#Where:
-#<domain> can be:
+# Where:
+#
+#   <domain> can be:
 #        - a user name
 #        - a group name, with @group syntax
 #        - the wildcard *, for default entry
@@ -328,11 +428,11 @@ cat <<EOF > /etc/security/limits.conf
 #          To apply a limit to the root user, <domain> must be
 #          the literal username root.
 #
-#<type> can have the two values:
+#   <type> can have the two values:
 #        - ""soft"" for enforcing the soft limits
 #        - ""hard"" for enforcing hard limits
 #
-#<item> can be one of the following:
+#   <item> can be one of the following:
 #        - core - limits the core file size (KB)
 #        - data - max data size (KB)
 #        - fsize - maximum filesize (KB)

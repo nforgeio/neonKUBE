@@ -237,9 +237,8 @@ OPTIONS:
                 setupController.AddNodeStep(configureFirstMasterStepLabel,
                     (state, node) =>
                     {
-                        node.SetupCommon(setupController);
+                        node.SetupNode(setupController);
                         node.InvokeIdempotent("setup/common-restart", () => node.RebootAndWait(state));
-                        node.SetupNode();
                     },
                     (state, node) => node == cluster.FirstMaster);
 
@@ -250,9 +249,8 @@ OPTIONS:
                     setupController.AddNodeStep("setup other nodes",
                         (state, node) =>
                         {
-                            node.SetupCommon(setupController);
+                            node.SetupNode(setupController);
                             node.InvokeIdempotent("setup/common-restart", () => node.RebootAndWait(setupController));
-                            node.SetupNode();
                         },
                         (state, node) => node != cluster.FirstMaster);
                 }
@@ -323,118 +321,6 @@ OPTIONS:
             }
 
             Console.WriteLine();
-        }
-
-        /// <summary>
-        /// Installs a Helm chart from the neonKUBE github repository.
-        /// </summary>
-        /// <param name="master">The master node that will install the Helm chart.</param>
-        /// <param name="chartName">The name of the Helm chart.</param>
-        /// <param name="releaseName">Optional component release name.</param>
-        /// <param name="namespace">Optional namespace where Kubernetes namespace where the Helm chart should be installed. Defaults to "default"</param>
-        /// <param name="timeout">Optional timeout to in seconds. Defaults to 300 (5 mins)</param>
-        /// <param name="wait">Whether to wait for all pods to be alive before exiting.</param>
-        /// <param name="values">Optional values to override Helm chart values.</param>
-        /// <returns></returns>
-        private async Task InstallHelmChartAsync(
-            NodeSshProxy<NodeDefinition>        master,
-            string                              chartName,
-            string                              releaseName = null,
-            string                              @namespace  = "default",
-            int                                 timeout     = 300,
-            bool                                wait        = false,
-            List<KeyValuePair<string, object>>  values      = null)
-        {
-            if (string.IsNullOrEmpty(releaseName))
-            {
-                releaseName = chartName;
-            }
-
-            await Task.CompletedTask;
-            throw new NotImplementedException("$todo(jefflill)");
-
-            //using (var client = new HeadendClient())
-            //{
-            //    var zip = await client.GetHelmChartZipAsync(chartName, branch);
-
-            //    master.UploadBytes($"/tmp/charts/{chartName}.zip", zip);
-            //}
-
-            var valueOverrides = new StringBuilder();
-
-            if (values != null)
-            {
-                foreach (var value in values)
-                {
-                    var valueType = value.Value.GetType();
-
-                    if (valueType == typeof(string))
-                    {
-                        valueOverrides.AppendWithSeparator($"--set-string {value.Key}=\"{value.Value}\"", @"\n");
-                    }
-                    else if (valueType == typeof(int))
-                    {
-                        valueOverrides.AppendWithSeparator($"--set {value.Key}={value.Value}", @"\n");
-                    }
-                    else
-                    {
-                        throw new NotImplementedException();
-                    }
-                }
-            }
-
-            var helmChartScript =
-$@"#!/bin/bash
-cd /tmp/charts
-
-until [ -f {chartName}.zip ]
-do
-  sleep 1
-done
-
-rm -rf {chartName}
-
-unzip {chartName}.zip -d {chartName}
-helm install {releaseName} {chartName} --namespace {@namespace} -f {chartName}/values.yaml {valueOverrides} --timeout {timeout}s {(wait ? "--wait" : "")}
-
-START=`date +%s`
-DEPLOY_END=$((START+15))
-
-until [ `helm status {releaseName} --namespace {@namespace} | grep ""STATUS: deployed"" | wc -l` -eq 1  ];
-do
-  if [ $((`date +%s`)) -gt $DEPLOY_END ]; then
-    helm delete {releaseName} || true
-    exit 1
-  fi
-   sleep 1
-done
-
-rm -rf {chartName}*
-";
-
-            var tries     = 0;
-            var success   = false;
-            var exception = (Exception)null;
-
-            while (tries < 3 && !success)
-            {
-                try
-                {
-                    var response = master.SudoCommand(CommandBundle.FromScript(helmChartScript), RunOptions.None);
-                    response.EnsureSuccess();
-                    success = true;
-                }
-                catch (Exception e)
-                {
-                    tries++;
-                    exception = e;
-                }
-            }
-
-            if (!success && exception != null)
-            {
-                throw exception;
-            }
         }
     }
 }

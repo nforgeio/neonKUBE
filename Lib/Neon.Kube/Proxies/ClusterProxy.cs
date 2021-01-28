@@ -281,6 +281,17 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Clears the status for the all of the cluster nodes.
+        /// </summary>
+        public void ClearStatus()
+        {
+            foreach (var node in Nodes)
+            {
+                node.Status = string.Empty;
+            }
+        }
+
+        /// <summary>
         /// Returns a master node that is reachable via the network because it answers a ping.
         /// </summary>
         /// <param name="failureMode">Specifies what should happen when there are no reachable masters.</param>
