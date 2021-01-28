@@ -451,7 +451,7 @@ Server Requirements:
                 // Configure the setup steps.
 
                 setupController.AddWaitUntilOnlineStep(timeout: TimeSpan.FromMinutes(15));
-                setupController.AddNodeStep("node OS verify", (state, node) => node.VerifyNodeOS(setupController));
+                setupController.AddNodeStep("node OS verify", (state, node) => node.VerifyNodeOS());
                 setupController.AddNodeStep("node credentials",
                     (state, node) =>
                     {

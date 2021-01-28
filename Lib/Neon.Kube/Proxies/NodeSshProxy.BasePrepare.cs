@@ -57,13 +57,11 @@ namespace Neon.Kube
         /// Hyper-V and XenServer/XCP-ng node templates when they are created and at cluster
         /// creation time for cloud and bare metal clusters.
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
         /// <param name="sshPassword">The current <b>sysadmin</b> password.</param>
         /// <param name="updateDistribution">Optionally upgrade the node's Linux distribution.  This defaults to <c>false</c>.</param>
         /// <param name="statusWriter">Optional log writer action.</param>
-        public void BaseInitialize(ObjectDictionary setupState, string sshPassword, bool updateDistribution = false, Action<string> statusWriter = null)
+        public void BaseInitialize(string sshPassword, bool updateDistribution = false, Action<string> statusWriter = null)
         {
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(sshPassword), nameof(sshPassword));
 
             // $hack(jefflill):
@@ -91,16 +89,16 @@ namespace Neon.Kube
             Status = $"login: [{KubeConst.SysAdminUser}]";
 
             WaitForBoot();
-            VerifyNodeOS(setupState, statusWriter);
-            BaseInstallToolScripts(setupState, statusWriter);
-            BaseConfigureDebianFrontend(setupState, statusWriter);
-            BaseInstallPackages(setupState, statusWriter);
-            BaseConfigureApt(setupState, statusWriter: statusWriter);
-            BaseConfigureBashEnvironment(setupState, statusWriter);
-            BaseConfigureDnsIPv4Preference(setupState, statusWriter);
-            BaseRemoveSnaps(setupState);
-            BaseRemovePackages(setupState);
-            BaseCreateKubeFolders(setupState, statusWriter);
+            VerifyNodeOS(statusWriter);
+            BaseInstallToolScripts(statusWriter);
+            BaseConfigureDebianFrontend(statusWriter);
+            BaseInstallPackages(statusWriter);
+            BaseConfigureApt(statusWriter: statusWriter);
+            BaseConfigureBashEnvironment(statusWriter);
+            BaseConfigureDnsIPv4Preference(statusWriter);
+            BaseRemoveSnaps();
+            BaseRemovePackages();
+            BaseCreateKubeFolders(statusWriter);
 
             if (updateDistribution)
             {
@@ -111,12 +109,9 @@ namespace Neon.Kube
         /// <summary>
         /// Configures the Debian frontend terminal to non-interactive.
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
         /// <param name="statusWriter">Optional log writer action.</param>
-        public void BaseConfigureDebianFrontend(ObjectDictionary setupState, Action<string> statusWriter = null)
+        public void BaseConfigureDebianFrontend(Action<string> statusWriter = null)
         {
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
-
             InvokeIdempotent("base/debian-frontend",
                 () =>
                 {
@@ -136,12 +131,9 @@ namespace Neon.Kube
         /// Ubuntu defaults DNS to prefer IPv6 lookups over IPv4 which can cause
         /// performance problems.  This method reconfigures DNS to favor IPv4.
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
         /// <param name="statusWriter">Optional log writer action.</param>
-        public void BaseConfigureDnsIPv4Preference(ObjectDictionary setupState, Action<string> statusWriter = null)
+        public void BaseConfigureDnsIPv4Preference(Action<string> statusWriter = null)
         {
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
-
             InvokeIdempotent("base/dns-ipv4",
                 () =>
                 {
@@ -185,12 +177,9 @@ sed -i 's!^#precedence ::ffff:0:0/96  10$!precedence ::ffff:0:0/96  100!g' /etc/
         /// <summary>
         /// Configures the Debian frontend terminal to non-interactive.
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
         /// <param name="statusWriter">Optional log writer action.</param>
-        public void BaseConfigureBashEnvironment(ObjectDictionary setupState, Action<string> statusWriter = null)
+        public void BaseConfigureBashEnvironment(Action<string> statusWriter = null)
         {
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
-
             InvokeIdempotent("base/bash-environment",
                 () =>
                 {
@@ -208,12 +197,9 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
         /// <summary>
         /// Installs the required <b>base image</b> packages.
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
         /// <param name="statusWriter">Optional log writer action.</param>
-        public void BaseInstallPackages(ObjectDictionary setupState, Action<string> statusWriter = null)
+        public void BaseInstallPackages(Action<string> statusWriter = null)
         {
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
-
             Status = "install: base packages";
             KubeHelper.WriteStatus(statusWriter, "Install", "Base packages");
 
@@ -409,12 +395,9 @@ touch /etc/cloud/cloud-init.disabled
         /// <summary>
         /// Removes any installed snaps.
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
         /// <param name="statusWriter">Optional log writer action.</param>
-        public void BaseRemoveSnaps(ObjectDictionary setupState, Action<string> statusWriter = null)
+        public void BaseRemoveSnaps(Action<string> statusWriter = null)
         {
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
-
             InvokeIdempotent("base/clean-packages",
                 () =>
                 {
@@ -434,12 +417,9 @@ snap remove --purge snapd
         /// <summary>
         /// Removes unnecessary packages.
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
         /// <param name="statusWriter">Optional log writer action.</param>
-        public void BaseRemovePackages(ObjectDictionary setupState, Action<string> statusWriter = null)
+        public void BaseRemovePackages(Action<string> statusWriter = null)
         {
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
-
             InvokeIdempotent("base/clean-packages",
                 () =>
                 {
@@ -471,14 +451,11 @@ safe-apt-get autoremove -y
         /// <summary>
         /// Configures the APT package manager.
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
         /// <param name="packageManagerRetries">Optionally specifies the packager manager retries (defaults to <b>5</b>).</param>
         /// <param name="allowPackageManagerIPv6">Optionally prevent the package manager from using IPv6 (defaults to <c>false</c>.</param>
         /// <param name="statusWriter">Optional log writer action.</param>
-        public void BaseConfigureApt(ObjectDictionary setupState, int packageManagerRetries = 5, bool allowPackageManagerIPv6 = false, Action<string> statusWriter = null)
+        public void BaseConfigureApt(int packageManagerRetries = 5, bool allowPackageManagerIPv6 = false, Action<string> statusWriter = null)
         {
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
-
             InvokeIdempotent("base/apt",
                 () =>
                 {
@@ -705,12 +682,9 @@ systemctl daemon-reload
         /// <summary>
         /// Create the node folders required by neoneKUBE.
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
         /// <param name="statusWriter">Optional log writer action.</param>
-        public void BaseCreateKubeFolders(ObjectDictionary setupState, Action<string> statusWriter = null)
+        public void BaseCreateKubeFolders(Action<string> statusWriter = null)
         {
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
-
             InvokeIdempotent("base/folders",
                 () =>
                 {
@@ -749,12 +723,9 @@ chmod 750 {KubeNodeFolders.State}/setup
         /// Any <b>".sh"</b> file extensions will be removed for ease-of-use.
         /// </note>
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
         /// <param name="statusWriter">Optional log writer action.</param>
-        public void BaseInstallToolScripts(ObjectDictionary setupState, Action<string> statusWriter = null)
+        public void BaseInstallToolScripts(Action<string> statusWriter = null)
         {
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
-
             InvokeIdempotent("base/tool-scripts",
                 () =>
                 {

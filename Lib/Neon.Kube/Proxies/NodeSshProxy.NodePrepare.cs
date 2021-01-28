@@ -215,7 +215,7 @@ systemctl restart rsyslog.service
             InvokeIdempotent("prepare/complete",
                 () =>
                 {
-                    BaseConfigureApt(setupState, clusterDefinition.NodeOptions.PackageManagerRetries, clusterDefinition.NodeOptions.AllowPackageManagerIPv6);
+                    BaseConfigureApt(clusterDefinition.NodeOptions.PackageManagerRetries, clusterDefinition.NodeOptions.AllowPackageManagerIPv6);
                     BaseConfigureOpenSsh();
                     DisableSnap();
                     ConfigureJournald(setupState);
@@ -225,12 +225,9 @@ systemctl restart rsyslog.service
         /// <summary>
         /// Performs low-level node initialization during cluster setup.
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
         /// <param name="statusWriter">Optional log writer action.</param>
-        public void NodeInitialize(ObjectDictionary setupState, Action<string> statusWriter = null)
+        public void NodeInitialize(Action<string> statusWriter = null)
         {
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
-
             // Additional initialization: This is from the old [node-setup.sh] script.
 
             var script =
