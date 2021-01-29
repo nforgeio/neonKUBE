@@ -436,6 +436,7 @@ namespace Neon.Kube
                 case HostingEnvironment.HyperV:
                 case HostingEnvironment.HyperVLocal:
                 case HostingEnvironment.XenServer:
+                case HostingEnvironment.Wsl2:
 
                     return false;
 

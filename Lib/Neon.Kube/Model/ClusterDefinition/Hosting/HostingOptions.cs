@@ -182,6 +182,7 @@ namespace Neon.Kube
                     case HostingEnvironment.BareMetal:
                     case HostingEnvironment.Google:
                     case HostingEnvironment.HyperVLocal:
+                    case HostingEnvironment.Wsl2:
 
                         return false;
 
@@ -281,6 +282,12 @@ namespace Neon.Kube
 
                     Vm = Vm ?? new VmHostingOptions();
                     Vm.Validate(clusterDefinition);
+                    break;
+
+                case HostingEnvironment.Wsl2:
+
+                    // Nothing to check here.
+
                     break;
 
                 default:

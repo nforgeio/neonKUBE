@@ -212,6 +212,7 @@ SetVersion Neon.Kube.Google         $kubeVersion
 SetVersion Neon.Kube.Hosting        $kubeVersion
 SetVersion Neon.Kube.HyperV         $kubeVersion
 SetVersion Neon.Kube.HyperVLocal    $kubeVersion
+SetVersion Neon.Kube.Wsl2           $kubeVersion
 SetVersion Neon.Kube.XenServer      $kubeVersion
 SetVersion Neon.Kube.Xunit          $kubeVersion
 
@@ -248,6 +249,7 @@ Publish Neon.Kube.Google            $kubeVersion
 Publish Neon.Kube.Hosting           $kubeVersion
 Publish Neon.Kube.HyperV            $kubeVersion
 Publish Neon.Kube.HyperVLocal       $kubeVersion
+Publish Neon.Kube.Wsl2              $kubeVersion
 Publish Neon.Kube.XenServer         $kubeVersion
 Publish Neon.Kube.Xunit             $kubeVersion
 
@@ -284,6 +286,7 @@ RestoreVersion Neon.Kube.Google
 RestoreVersion Neon.Kube.Hosting        
 RestoreVersion Neon.Kube.HyperV         
 RestoreVersion Neon.Kube.HyperVLocal    
+RestoreVersion Neon.Kube.Wsl2      
 RestoreVersion Neon.Kube.XenServer      
 RestoreVersion Neon.Kube.Xunit          
 
