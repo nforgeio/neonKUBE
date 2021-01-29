@@ -30,7 +30,7 @@ using Newtonsoft.Json;
 namespace Neon.Kube
 {
     /// <summary>
-    /// 
+    /// OpenEBS cStor pool cluster.
     /// </summary>
     [KubernetesEntity(Group = "cstor.openebs.io", Kind = "CStorPoolCluster", ApiVersion = "v1", PluralName = "cstorpoolclusters")]
     public partial class V1CStorPoolCluster : IKubernetesObject<V1ObjectMeta>, ISpec<V1CStorPoolClusterSpec>, IValidate

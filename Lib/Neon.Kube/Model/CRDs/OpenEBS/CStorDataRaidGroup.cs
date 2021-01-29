@@ -31,7 +31,7 @@ using Newtonsoft.Json;
 namespace Neon.Kube
 {
     /// <summary>
-    /// 
+    /// OpenEBS RAID group.
     /// </summary>
     public partial class V1CStorDataRaidGroup
     {

@@ -31,7 +31,7 @@ using Newtonsoft.Json;
 namespace Neon.Kube
 {
     /// <summary>
-    /// 
+    /// OpenEBS block device links.
     /// </summary>
     public partial class BlockDeviceDevLink
     {

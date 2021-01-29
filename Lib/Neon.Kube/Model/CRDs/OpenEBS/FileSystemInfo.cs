@@ -30,7 +30,7 @@ using Newtonsoft.Json;
 namespace Neon.Kube
 {
     /// <summary>
-    /// 
+    /// File system information.
     /// </summary>
     public partial class FileSystemInfo
     {

@@ -30,7 +30,7 @@ using Newtonsoft.Json;
 namespace Neon.Kube
 {
     /// <summary>
-    /// 
+    /// OpenEBS cStor block devices.
     /// </summary>
     [KubernetesEntity(Group = "openebs.io", Kind = "BlockDeviceList", ApiVersion = "v1alpha1", PluralName = "blockdevices")]
     public partial class V1CStorBlockDeviceList : IKubernetesObject<V1ListMeta>, IItems<V1CStorBlockDevice>, IValidate
@@ -41,10 +41,6 @@ namespace Neon.Kube
         public V1CStorBlockDeviceList()
         {
         }
-
-        public const string KubeApiVersion = "v1alpha1";
-        public const string KubeKind = "BlockDeviceList";
-        public const string KubeGroup = "openebs.io";
 
         /// <summary>
         /// Gets or sets APIVersion defines the versioned schema of this

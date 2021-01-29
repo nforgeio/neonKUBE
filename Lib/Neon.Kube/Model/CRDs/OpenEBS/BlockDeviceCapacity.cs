@@ -32,7 +32,7 @@ using Newtonsoft.Json;
 namespace Neon.Kube
 {
     /// <summary>
-    /// 
+    /// Describes an OpenEBS block device capacity.
     /// </summary>
     public partial class BlockDeviceCapacity
     {

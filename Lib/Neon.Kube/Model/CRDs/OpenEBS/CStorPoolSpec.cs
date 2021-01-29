@@ -30,7 +30,7 @@ using Newtonsoft.Json;
 namespace Neon.Kube
 {
     /// <summary>
-    /// 
+    /// OpenEBS cStore pool specification.
     /// </summary>
     public partial class V1CStorPoolSpec
     {

@@ -31,7 +31,7 @@ using Newtonsoft.Json;
 namespace Neon.Kube
 {
     /// <summary>
-    /// 
+    /// OpenEBS block device reference.
     /// </summary>
     public partial class V1CStorBlockDeviceRef
     {

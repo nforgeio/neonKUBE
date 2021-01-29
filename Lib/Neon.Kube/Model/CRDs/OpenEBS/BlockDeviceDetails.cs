@@ -31,7 +31,7 @@ using Newtonsoft.Json;
 namespace Neon.Kube
 {
     /// <summary>
-    /// 
+    /// OpenEBS block device details.
     /// </summary>
     public partial class BlockDeviceDetails
     {
