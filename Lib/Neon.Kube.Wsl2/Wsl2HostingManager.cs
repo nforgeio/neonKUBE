@@ -127,6 +127,7 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(orgSshPassword), nameof(orgSshPassword));
             Covenant.Assert(cluster != null, $"[{nameof(Wsl2HostingManager)}] was created with the wrong constructor.");
 
+            await Task.CompletedTask;
             throw new NotImplementedException();
         }
 
