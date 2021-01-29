@@ -39,13 +39,9 @@ namespace Neon.Kube
         /// </summary>
         public V1CStorPoolCluster()
         {
-            ApiVersion = $"{KubeGroup}/{KubeApiVersion}";
-            Kind       = KubeKind;
+            ApiVersion = "cstor.openebs.io/v1";
+            Kind       = "CStorPoolCluster";
         }
-
-        public const string KubeApiVersion = "v1";
-        public const string KubeKind = "CStorPoolCluster";
-        public const string KubeGroup = "cstor.openebs.io";
 
         /// <summary>
         /// Gets or sets APIVersion defines the versioned schema of this

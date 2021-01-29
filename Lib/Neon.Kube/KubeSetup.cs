@@ -1971,7 +1971,7 @@ spec:
                         }
                     }
 
-                    GetK8sClient(setupState).CreateNamespacedCustomObject(cStorPoolCluster, V1CStorPoolCluster.KubeGroup, V1CStorPoolCluster.KubeApiVersion, "openebs", "cstorpoolclusters");
+                    GetK8sClient(setupState).CreateNamespacedCustomObject(cStorPoolCluster, "cstor.openebs.io", "v1", "openebs", "cstorpoolclusters");
                 });
 
             await master.InvokeIdempotentAsync("setup/neon-storage-openebs-cstor-ready",

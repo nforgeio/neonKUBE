@@ -41,10 +41,6 @@ namespace Neon.Kube
         {
         }
 
-        public const string KubeApiVersion = "v1alpha1";
-        public const string KubeKind       = "PoolClusterList";
-        public const string KubeGroup      = "openebs.io";
-
         /// <summary>
         /// Gets or sets APIVersion defines the versioned schema of this
         /// representation of an object. Servers should convert recognized
