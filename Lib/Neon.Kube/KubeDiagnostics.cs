@@ -35,7 +35,6 @@ using System.Threading.Tasks;
 
 using Microsoft.Win32;
 
-using Couchbase;
 using ICSharpCode.SharpZipLib.Zip;
 using Newtonsoft.Json;
 
@@ -44,6 +43,7 @@ using k8s.Models;
 
 using Neon.Collections;
 using Neon.Common;
+using Neon.Cryptography;
 using Neon.Data;
 using Neon.Diagnostics;
 using Neon.IO;
@@ -51,7 +51,6 @@ using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
 using Neon.Windows;
-using Neon.Cryptography;
 
 namespace Neon.Kube
 {

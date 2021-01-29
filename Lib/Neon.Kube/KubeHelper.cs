@@ -34,8 +34,6 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.Win32;
-
-using Couchbase;
 using Newtonsoft.Json;
 
 using k8s;

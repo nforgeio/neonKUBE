@@ -34,12 +34,10 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Microsoft.Win32;
-
-using Couchbase;
 using ICSharpCode.SharpZipLib.Zip;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Microsoft.Win32;
 
 using k8s;
 using k8s.Models;
