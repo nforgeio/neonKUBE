@@ -38,7 +38,6 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Cryptography;
-using Neon.HyperV;
 using Neon.IO;
 using Neon.Net;
 using Neon.SSH;
@@ -68,14 +67,7 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Instance members.
 
-        private const string defaultSwitchName = "external";
-
-        private ClusterProxy                    cluster;
-        private SetupController<NodeDefinition> setupController;
-        private string                          driveTemplatePath;
-        private string                          vmDriveFolder;
-        private string                          switchName;
-        private string                          secureSshPassword;
+        private ClusterProxy    cluster;
 
         /// <summary>
         /// Creates an instance that is only capable of validating the hosting
@@ -119,7 +111,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override HostingEnvironment HostingEnvironment => HostingEnvironment.HyperVLocal;
+        public override HostingEnvironment HostingEnvironment => HostingEnvironment.Wsl2;
 
         /// <inheritdoc/>
         public override void Validate(ClusterDefinition clusterDefinition)
@@ -135,106 +127,20 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(orgSshPassword), nameof(orgSshPassword));
             Covenant.Assert(cluster != null, $"[{nameof(Wsl2HostingManager)}] was created with the wrong constructor.");
 
-            this.secureSshPassword = secureSshPassword;
-
-            if (IsProvisionNOP)
-            {
-                // There's nothing to do here.
-
-                return true;
-            }
-
-            // We'll call this to be consistent with the cloud hosting managers even though
-            // the upstream on-premise router currently needs to be configured manually.
-
-            KubeHelper.EnsureIngressNodes(cluster.Definition);
-
-            // We need to ensure that at least one node will host the OpenEBS
-            // cStor block device.
-
-            KubeHelper.EnsureOpenEbsNodes(cluster.Definition);
-
-            // Update the node labels with the actual capabilities of the 
-            // virtual machines being provisioned.
-
-            foreach (var node in cluster.Definition.Nodes)
-            {
-                node.Labels.PhysicalMachine = Environment.MachineName;
-                node.Labels.ComputeCores    = cluster.Definition.Hosting.Vm.Processors;
-                node.Labels.ComputeRam      = (int)(ClusterDefinition.ValidateSize(cluster.Definition.Hosting.Vm.Memory, typeof(HostingOptions), nameof(HostingOptions.Vm.Memory))/ ByteUnits.MebiBytes);
-                node.Labels.StorageSize     = ByteUnits.ToGiB(node.Vm.GetMemory(cluster.Definition));
-            }
-
-            // Perform the provisioning operations.
-
-            setupController = new SetupController<NodeDefinition>($"Provisioning [{cluster.Definition.Name}] cluster", cluster.Nodes)
-            {
-                ShowStatus  = this.ShowStatus,
-                MaxParallel = 1     // We're only going to provision one VM at a time on a local Hyper-V instance.
-            };
-
-            setupController.AddGlobalStep("prepare hyper-v", state => PrepareHyperV());
-            setupController.AddNodeStep("create virtual machines", (state, node) => ProvisionVM(node));
-            setupController.AddGlobalStep(string.Empty, state => Finish(), quiet: true);
-
-            if (!setupController.Run())
-            {
-                Console.Error.WriteLine("*** ERROR: One or more configuration steps failed.");
-                return await Task.FromResult(false);
-            }
-
-            return await Task.FromResult(true);
+            throw new NotImplementedException();
         }
 
         /// <inheritdoc/>
         public override void AddPostPrepareSteps(SetupController<NodeDefinition> setupController)
         {
-            // We need to add any required OpenEBS cStor disks after the node has been otherwise
-            // prepared.  We need to do this here because if we created the data and OpenEBS disks
-            // when the VM is initially created, the disk setup scripts executed during prepare
-            // won't be able to distinguish between the two disks.
-            //
-            // At this point, the data disk should be partitioned, formatted, and mounted so
-            // the OpenEBS disk will be easy to identify as the only unpartitioned disk.
-
-            setupController.AddNodeStep("openebs",
-                (state, node) =>
-                {
-                    using (var hyperv = new HyperVClient())
-                    {
-                        var vmName   = GetVmName(node.Metadata);
-                        var diskSize = node.Metadata.Vm.GetOpenEbsDisk(cluster.Definition);
-                        var diskPath = Path.Combine(vmDriveFolder, $"{vmName}-openebs.vhdx");
-
-                        node.Status = "openebs: checking";
-
-                        if (hyperv.GetVmDrives(vmName).Count < 2)
-                        {
-                            // The disk doesn't already exist.
-
-                            node.Status = "openebs: stop VM";
-                            hyperv.StopVm(vmName);
-
-                            node.Status = "openebs: add cStor disk";
-                            hyperv.AddVmDrive(vmName,
-                                new VirtualDrive()
-                                {
-                                    Path = diskPath,
-                                    Size = diskSize
-                                });
-
-                            node.Status = "openebs: restart VM";
-                            hyperv.StartVm(vmName);
-                        }
-                    }
-                },
-                (state, node) => node.Metadata.OpenEBS);
+            throw new NotImplementedException();
         }
 
         /// <inheritdoc/>
         public override (string Address, int Port) GetSshEndpoint(string nodeName)
         {
-            return (Address: cluster.GetNode(nodeName).Address.ToString(), Port: NetworkPorts.SSH);
+            throw new NotImplementedException();
+            // return (Address: cluster.GetNode(nodeName).Address.ToString(), Port: NetworkPorts.SSH);
         }
 
         /// <inheritdoc/>
@@ -248,348 +154,6 @@ namespace Neon.Kube
             // This hosting manager doesn't currently provision a separate data disk.
 
             return "PRIMARY";
-        }
-
-        /// <summary>
-        /// Returns the name to use for naming the virtual machine hosting the node.
-        /// </summary>
-        /// <param name="node">The target node.</param>
-        /// <returns>The virtual machine name.</returns>
-        private string GetVmName(NodeDefinition node)
-        {
-            return $"{cluster.Definition.Hosting.Vm.GetVmNamePrefix(cluster.Definition)}{node.Name}";
-        }
-
-        /// <summary>
-        /// Attempts to extract the cluster node name from a virtual machine name.
-        /// </summary>
-        /// <param name="machineName">The virtual machine name.</param>
-        /// <returns>
-        /// The extracted node name if the virtual machine belongs to this 
-        /// cluster or else the empty string.
-        /// </returns>
-        private string ExtractNodeName(string machineName)
-        {
-            var clusterPrefix = cluster.Definition.Hosting.Vm.GetVmNamePrefix(cluster.Definition);
-
-            if (machineName.StartsWith(clusterPrefix))
-            {
-                return machineName.Substring(clusterPrefix.Length);
-            }
-            else
-            {
-                return string.Empty;
-            }
-        }
-
-        /// <summary>
-        /// Performs any required Hyper-V initialization before cluster nodes can be provisioned.
-        /// </summary>
-        private void PrepareHyperV()
-        {
-            // Determine where we're going to place the VM hard drive files and
-            // ensure that the directory exists.
-
-            if (!string.IsNullOrEmpty(cluster.Definition.Hosting.Vm.DiskLocation))
-            {
-                vmDriveFolder = cluster.Definition.Hosting.Vm.DiskLocation;
-            }
-            else
-            {
-                vmDriveFolder = HyperVClient.DefaultDriveFolder;
-            }
-
-            Directory.CreateDirectory(vmDriveFolder);
-
-            // Download the GZIPed VHDX template if it's not already present or has 
-            // changed.  Note that we're going to name the file the same as the file 
-            // name from the URI.
-
-            var driveTemplateUri  = new Uri(KubeDownloads.GetNodeImageUri(this.HostingEnvironment));
-            var driveTemplateName = driveTemplateUri.Segments.Last();
-
-            driveTemplatePath = Path.Combine(KubeHelper.NodeImageFolder, driveTemplateName);
-
-            if (!File.Exists(driveTemplatePath))
-            {
-                var nodeImageUri = KubeDownloads.GetNodeImageUri(this.HostingEnvironment);
-
-                setupController.SetOperationStatus($"Download node image VHDX: [{nodeImageUri}]");
-
-                Task.Run(
-                    async () =>
-                    {
-                        using (var client = new HttpClient())
-                        {
-                            // Download the file.
-
-                            var response = await client.GetAsync(nodeImageUri, HttpCompletionOption.ResponseHeadersRead);
-
-                            response.EnsureSuccessStatusCode();
-
-                            var contentLength   = response.Content.Headers.ContentLength;
-                            var contentEncoding = response.Content.Headers.ContentEncoding.SingleOrDefault();
-
-                            if (string.IsNullOrEmpty(contentEncoding) || !contentEncoding.Equals("gzip", StringComparison.InvariantCultureIgnoreCase))
-                            {
-                                throw new KubeException($"[{nodeImageUri}] has unsupported [Content-Encoding={contentEncoding}].  Expecting [gzip].");
-                            }
-
-                            try
-                            {
-                                using (var fileStream = new FileStream(driveTemplatePath, FileMode.Create, FileAccess.ReadWrite))
-                                {
-                                    using (var downloadStream = await response.Content.ReadAsStreamAsync())
-                                    {
-                                        var buffer = new byte[64 * 1024];
-                                        int cb;
-
-                                        while (true)
-                                        {
-                                            cb = await downloadStream.ReadAsync(buffer, 0, buffer.Length);
-
-                                            if (cb == 0)
-                                            {
-                                                break;
-                                            }
-
-                                            await fileStream.WriteAsync(buffer, 0, cb);
-
-                                            if (contentLength.HasValue)
-                                            {
-                                                var percentComplete = (int)(((double)fileStream.Length / (double)contentLength) * 100.0);
-
-                                                setupController.SetOperationStatus($"Downloading VHDX: [{percentComplete}%] [{nodeImageUri}]");
-                                            }
-                                            else
-                                            {
-                                                setupController.SetOperationStatus($"Downloading VHDX: [{fileStream.Length} bytes] [{nodeImageUri}]");
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            catch
-                            {
-                                // Ensure that the template file is are deleted if there were any
-                                // errors to help avoid using a corrupted template.
-
-                                if (File.Exists(driveTemplatePath))
-                                {
-                                    File.Decrypt(driveTemplatePath);
-                                }
-
-                                throw;
-                            }
-                        }
-
-                    }).Wait();
-
-                setupController.SetOperationStatus();
-            }
-
-            // Handle any necessary Hyper-V initialization.
-
-            using (var hyperv = new HyperVClient())
-            {
-                // We're going to create an external Hyper-V switch if there
-                // isn't already an external switch.
-
-                setupController.SetOperationStatus("Scanning network adapters");
-
-                var switches       = hyperv.ListVmSwitches();
-                var externalSwitch = switches.FirstOrDefault(s => s.Type == VirtualSwitchType.External);
-
-                if (externalSwitch == null)
-                {
-                    hyperv.NewVmExternalSwitch(switchName = defaultSwitchName, NetHelper.ParseIPv4Address(cluster.Definition.Network.Gateway));
-                }
-                else
-                {
-                    switchName = externalSwitch.Name;
-                }
-
-                // Ensure that the cluster virtual machines exist and are stopped,
-                // taking care to issue a warning if any machines already exist 
-                // and we're not doing [force] mode.
-
-                setupController.SetOperationStatus("Scanning virtual machines");
-
-                var existingMachines = hyperv.ListVms();
-                var conflicts        = string.Empty;
-
-                setupController.SetOperationStatus("Stopping virtual machines");
-
-                foreach (var machine in existingMachines)
-                {
-                    var nodeName    = ExtractNodeName(machine.Name);
-                    var drivePath   = Path.Combine(vmDriveFolder, $"{machine.Name}.vhdx");
-                    var isClusterVM = cluster.FindNode(nodeName) != null;
-
-                    if (isClusterVM)
-                    {
-                        // We're going to report errors when one or more machines already exist.
-
-                        if (conflicts.Length > 0)
-                        {
-                            conflicts += ", ";
-                        }
-
-                        conflicts += nodeName;
-                    }
-                }
-
-                if (!string.IsNullOrEmpty(conflicts))
-                {
-                    throw new HyperVException($"[{conflicts}] virtual machine(s) already exist.");
-                }
-
-                setupController.SetOperationStatus();
-            }
-        }
-
-        /// <summary>
-        /// Creates a Hyper-V virtual machine for a cluster node.
-        /// </summary>
-        /// <param name="node">The target node.</param>
-        private void ProvisionVM(NodeSshProxy<NodeDefinition> node)
-        {
-            using (var hyperv = new HyperVClient())
-            {
-                var vmName = GetVmName(node.Metadata);
-
-                // $hack(jefflill): Update console at 2 sec intervals to mitigate annoying flicker
-
-                var updateInterval = TimeSpan.FromSeconds(2);
-                var stopwatch      = new Stopwatch();
-
-                stopwatch.Start();
-
-                // Copy the VHDX template file to the virtual machine's
-                // virtual hard drive file.
-
-                var driveTemplateInfoPath = driveTemplatePath + ".info";
-                var osDrivePath           = Path.Combine(vmDriveFolder, $"{vmName}.vhdx");
-
-                node.Status = $"create: disk";
-
-                using (var input = new FileStream(driveTemplatePath, FileMode.Open, FileAccess.Read))
-                {
-                    using (var output = new FileStream(osDrivePath, FileMode.Create, FileAccess.ReadWrite))
-                    {
-                        using (var decompressor = new GZipStream(input, CompressionMode.Decompress))
-                        {
-                            var     buffer = new byte[64 * 1024];
-                            long    cbRead = 0;
-                            int     cb;
-
-                            while (true)
-                            {
-                                cb = decompressor.Read(buffer, 0, buffer.Length);
-
-                                if (cb == 0)
-                                {
-                                    break;
-                                }
-
-                                output.Write(buffer, 0, cb);
-
-                                cbRead += cb;
-
-                                var percentComplete = (int)(((double)output.Length / (double)cbRead) * 100.0);
-
-                                if (stopwatch.Elapsed >= updateInterval || percentComplete >= 100.0)
-                                {
-                                    node.Status = $"create: disk [{percentComplete}%]";
-                                    stopwatch.Restart();
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // Create the virtual machine.
-
-                var processors  = node.Metadata.Vm.GetProcessors(cluster.Definition);
-                var memoryBytes = node.Metadata.Vm.GetMemory(cluster.Definition);
-                var osDiskBytes = node.Metadata.Vm.GetOsDisk(cluster.Definition);
-
-                node.Status = $"create: virtual machine";
-                hyperv.AddVm(
-                    vmName,
-                    processorCount: processors,
-                    diskSize:       osDiskBytes.ToString(),
-                    memorySize:     memoryBytes.ToString(),
-                    drivePath:      osDrivePath,
-                    switchName:     switchName);
-
-                // Create a temporary ISO with the [neon-init.sh] script, mount it
-                // to the VM and then boot the VM for the first time.  The script on the
-                // ISO will be executed automatically by the [neon-init] service
-                // preinstalled on the VM image and the script will configure the secure 
-                // SSH password and then the network.
-                //
-                // This ensures that SSH is not exposed to the network before the secure
-                // password has been set.
-
-                var tempIso = (TempFile)null;
-
-                try
-                {
-                    // Create a temporary ISO with the prep script and mount it
-                    // to the node VM.
-
-                    node.Status = $"mount: neon-init iso";
-                    tempIso     = KubeHelper.CreateNeonInitIso(node.Cluster.Definition, node.Metadata, secureSshPassword);
-
-                    hyperv.InsertVmDvd(vmName, tempIso.Path);
-
-                    // Start the VM for the first time with the mounted ISO.  The network
-                    // configuration will happen automatically by the time we can connect.
-
-                    node.Status = $"start: virtual machine (first boot)";
-                    hyperv.StartVm(vmName);
-
-                    // Update the node credentials to use the secure password and then wait for the node to boot.
-
-                    node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, secureSshPassword));
-
-                    node.Status = $"connecting...";
-                    node.WaitForBoot();
-
-                    // Extend the primary partition and file system to fill 
-                    // the virtual drive.  Note that we're not going to do
-                    // this if the specified drive size is less than or equal
-                    // to the node template's drive size (because that
-                    // would fail).
-                    //
-                    // Note that there should only be one partitioned disk at
-                    // this point: the OS disk.
-
-                    var partitionedDisks = node.ListPartitionedDisks();
-                    var osDisk           = partitionedDisks.Single();
-
-                    if (osDiskBytes > KubeConst.NodeTemplateDiskSize)
-                    {
-                        node.Status = $"resize: OS disk";
-                        node.SudoCommand($"growpart {osDisk} 2", RunOptions.None);
-                        node.SudoCommand($"resize2fs {osDisk}2", RunOptions.None);
-                    }
-                }
-                finally
-                {
-                    // Be sure to delete the ISO file so these don't accumulate.
-
-                    tempIso?.Dispose();
-                }
-            }
-        }
-
-        /// <summary>
-        /// Perform any necessary global post Hyper-V provisioning steps.
-        /// </summary>
-        private void Finish()
-        {
         }
     }
 }
