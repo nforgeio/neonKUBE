@@ -23,9 +23,8 @@ using System.Text;
 using k8s;
 using k8s.Models;
 
-using Microsoft.Rest;
-
 using Newtonsoft.Json;
+using Microsoft.Rest;
 
 namespace Neon.Kube
 {
@@ -33,7 +32,7 @@ namespace Neon.Kube
     /// OpenEBS cStor pool cluster.
     /// </summary>
     [KubernetesEntity(Group = "cstor.openebs.io", Kind = "CStorPoolCluster", ApiVersion = "v1", PluralName = "cstorpoolclusters")]
-    public partial class V1CStorPoolCluster : IKubernetesObject<V1ObjectMeta>, ISpec<V1CStorPoolClusterSpec>, IValidate
+    public class V1CStorPoolCluster : IKubernetesObject<V1ObjectMeta>, ISpec<V1CStorPoolClusterSpec>, IValidate
     {
         /// <summary>
         /// Initializes a new instance of the V1CStorPoolCluster class.

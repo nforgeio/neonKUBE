@@ -56,7 +56,7 @@ namespace Neon.Kube
     /// <summary>
     /// cluster related utilties.
     /// </summary>
-    public static partial class KubeHelper
+    public static class KubeHelper
     {
         private static INeonLogger          log = LogManager.Default.GetLogger(typeof(KubeHelper));
         private static string               orgKUBECONFIG;

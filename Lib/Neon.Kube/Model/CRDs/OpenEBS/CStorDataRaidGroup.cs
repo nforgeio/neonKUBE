@@ -20,20 +20,19 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
-using Couchbase.Configuration.Client;
+
 using k8s;
 using k8s.Models;
 
-using Microsoft.Rest;
-
 using Newtonsoft.Json;
+using Microsoft.Rest;
 
 namespace Neon.Kube
 {
     /// <summary>
     /// OpenEBS RAID group.
     /// </summary>
-    public partial class V1CStorDataRaidGroup
+    public class V1CStorDataRaidGroup
     {
         /// <summary>
         /// Initializes a new instance of the V1CStorDataRaidGroup class.

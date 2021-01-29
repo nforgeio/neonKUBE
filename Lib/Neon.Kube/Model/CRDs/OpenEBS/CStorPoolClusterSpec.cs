@@ -23,16 +23,15 @@ using System.Text;
 using k8s;
 using k8s.Models;
 
-using Microsoft.Rest;
-
 using Newtonsoft.Json;
+using Microsoft.Rest;
 
 namespace Neon.Kube
 {
     /// <summary>
     /// The kubernetes spec for the pool cluster.
     /// </summary>
-    public partial class V1CStorPoolClusterSpec
+    public class V1CStorPoolClusterSpec
     {
         /// <summary>
         /// Constructor.

@@ -24,16 +24,15 @@ using Couchbase.Configuration.Client;
 using k8s;
 using k8s.Models;
 
-using Microsoft.Rest;
-
 using Newtonsoft.Json;
+using Microsoft.Rest;
 
 namespace Neon.Kube
 {
     /// <summary>
     /// OpenEBS cStor pool configuration.
     /// </summary>
-    public partial class V1CStorPoolConfig
+    public class V1CStorPoolConfig
     {
         /// <summary>
         /// Initializes a new instance of the V1CStorPoolConfig class.

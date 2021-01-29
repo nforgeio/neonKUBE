@@ -23,9 +23,8 @@ using System.Text;
 using k8s;
 using k8s.Models;
 
-using Microsoft.Rest;
-
 using Newtonsoft.Json;
+using Microsoft.Rest;
 
 namespace Neon.Kube
 {
@@ -33,7 +32,7 @@ namespace Neon.Kube
     /// OpenEBS cStor block devices.
     /// </summary>
     [KubernetesEntity(Group = "openebs.io", Kind = "BlockDeviceList", ApiVersion = "v1alpha1", PluralName = "blockdevices")]
-    public partial class V1CStorBlockDeviceList : IKubernetesObject<V1ListMeta>, IItems<V1CStorBlockDevice>, IValidate
+    public class V1CStorBlockDeviceList : IKubernetesObject<V1ListMeta>, IItems<V1CStorBlockDevice>, IValidate
     {
         /// <summary>
         /// Initializes a new instance of the V1CStorBlockDeviceList class.

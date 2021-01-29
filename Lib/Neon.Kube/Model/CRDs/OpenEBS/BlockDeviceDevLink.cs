@@ -24,16 +24,15 @@ using System.Text;
 using k8s;
 using k8s.Models;
 
-using Microsoft.Rest;
-
 using Newtonsoft.Json;
+using Microsoft.Rest;
 
 namespace Neon.Kube
 {
     /// <summary>
     /// OpenEBS block device links.
     /// </summary>
-    public partial class BlockDeviceDevLink
+    public class BlockDeviceDevLink
     {
         /// <summary>
         /// Initializes a new instance of the BlockDeviceDevLink class.
