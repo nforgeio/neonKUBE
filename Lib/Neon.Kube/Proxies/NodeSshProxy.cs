@@ -15,13 +15,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// This class spans of four source files.
-//
-//      NeonSshProxy.cs (this file)     - Common code
-//      NodeSshProxy.BasePrepare.cs     - Configure base images
-//      NodeSshProxy.ClusterSetup.cs    - Configure nodes string cluster setup
-//      NodeSshProxy.NodePrepare.cs     - Configure node images
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;

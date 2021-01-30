@@ -71,6 +71,7 @@ namespace Neon.Kube
         private static string               cachedPasswordsFolder;
         private static string               cachedCacheFolder;
         private static string               cachedDesktopFolder;
+        private static string               cachedDesktopWsl2Folder;
         private static KubeClientConfig     cachedClientConfig;
         private static X509Certificate2     cachedClusterCertificate;
         private static string               cachedProgramFolder;
@@ -116,12 +117,13 @@ namespace Neon.Kube
             cachedPasswordsFolder    = null;
             cachedCacheFolder        = null;
             cachedDesktopFolder      = null;
+            cachedDesktopWsl2Folder  = null;
             cachedClientConfig       = null;
             cachedClusterCertificate = null;
             cachedProgramFolder      = null;
             cachedPwshPath           = null;
             cachedResources          = null;
-            cachedNodeImageFolder         = null;
+            cachedNodeImageFolder    = null;
         }
 
         /// <summary>
@@ -741,6 +743,27 @@ namespace Neon.Kube
                 Directory.CreateDirectory(path);
 
                 return cachedDesktopFolder = path;
+            }
+        }
+
+        /// <summary>
+        /// Returns path to the neonDESKTOP WSL2 state folder.
+        /// </summary>
+        /// <returns>The folder path.</returns>
+        public static string DesktopWsl2Folder
+        {
+            get
+            {
+                if (cachedDesktopWsl2Folder != null)
+                {
+                    return cachedDesktopFolder;
+                }
+
+                var path = Path.Combine(GetNeonKubeUserFolder(), "desktop", "wsl2");
+
+                Directory.CreateDirectory(path);
+
+                return cachedDesktopWsl2Folder = path;
             }
         }
 
