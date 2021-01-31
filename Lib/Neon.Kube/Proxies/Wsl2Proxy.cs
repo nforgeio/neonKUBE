@@ -407,6 +407,14 @@ touch {preparedStatePath}
         }
 
         /// <summary>
+        /// Terminates the distribution if it's running.
+        /// </summary>
+        public void Terminate()
+        {
+            Wsl2Proxy.Terminate(Name);
+        }
+
+        /// <summary>
         /// Executes a program within the distribution.
         /// </summary>
         /// <param name="path">The program path.</param>
@@ -506,6 +514,33 @@ touch {preparedStatePath}
             Covenant.Requires<ArgumentNullException>(windowsPath.Length >= 3 && char.IsLetter(windowsPath[0]) && windowsPath[1] == ':' && windowsPath[2] == '\\', nameof(windowsPath));
 
             return $"/mnt/{char.ToLowerInvariant(windowsPath[0])}{windowsPath.Substring(2).Replace('\\', '/')}";
+        }
+
+        /// <summary>
+        /// Creates a text file at the specifid path within the distribution.
+        /// </summary>
+        /// <param name="path">The target path.</param>
+        /// <param name="text">The text to be written.</param>
+        /// <param name="permissions">Optionally specifies the linux file permissions.</param>
+        /// <param name="noLinuxLineEndings">Optionally disables conversion of Windows (CRLF) line endings to the Linux standard (LF).</param>
+        public void WriteFile(string path, string text, string permissions = null, bool noLinuxLineEndings = false)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path), nameof(path));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(text), nameof(text));
+
+            var windowsPath = ToWindowsPath(path);
+
+            if (!noLinuxLineEndings)
+            {
+                text = NeonHelper.ToLinuxLineEndings(text);
+            }
+
+            File.WriteAllText(windowsPath, text);
+
+            if (!string.IsNullOrEmpty(permissions))
+            {
+                SudoExecute("chmod", permissions, path);
+            }
         }
     }
 }

@@ -296,5 +296,56 @@ namespace TestKube
                 }
             }
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonKube)]
+        public async Task WriteFile()
+        {
+            // Verify that we can write a text file to the distribution
+            // and set its permissions.
+
+            var imagePath = await GetTestImageAsync();
+
+            using (var tempFolder = new TempFolder())
+            {
+                try
+                {
+                    Wsl2Proxy.Import(TestDistro, imagePath, tempFolder.Path);
+
+                    var distro = new Wsl2Proxy(TestDistro);
+                    var text   =
+@"Line 1
+Line 2
+Line 3
+Line 4
+";
+                    // Write a file using the defaults to convert CRLF-->LF with 
+                    // no special permissions.
+
+                    distro.WriteFile("/home/sysadmin/test1.txt", text);
+                    Assert.Equal("Line 1\nLine 2\nLine 3\nLine 4\n", File.ReadAllText(distro.ToWindowsPath("/home/sysadmin/test1.txt")));
+
+                    var response = distro.SudoExecute("ls", "-l", "/home/sysadmin/test1.txt");
+
+                    response.EnsureSuccess();
+                    Assert.StartsWith("-rw-r--r--", response.OutputText);
+
+                    // Write another file using the leaving the line endings as CRLF
+                    // and some permissions.
+
+                    distro.WriteFile("/home/sysadmin/test2.txt", text, permissions: "666", noLinuxLineEndings: true);
+                    Assert.Equal("Line 1\r\nLine 2\r\nLine 3\r\nLine 4\r\n", File.ReadAllText(distro.ToWindowsPath("/home/sysadmin/test2.txt")));
+
+                    response = distro.SudoExecute("ls", "-l", "/home/sysadmin/test2.txt");
+
+                    response.EnsureSuccess();
+                    Assert.StartsWith("-rw-rw-rw-", response.OutputText);
+                }
+                finally
+                {
+                    RemoveTestDistro();
+                }
+            }
+        }
     }
 }
