@@ -463,9 +463,8 @@ namespace Neon.Kube
 
         /// <summary>
         /// <b>io.neonkube.monitor.logs</b> [<c>bool</c>]: Indicates the user has 
-        /// specified that Elasticsearch should be deployed to this node 
-        /// if <see cref="LogOptions.Enabled"/> is <c>true</c>.  
-        /// This defaults to <c>false</c>.
+        /// specified that Loki logging should be deployed to the labeled node.  This 
+        /// defaults to <c>false</c>.
         /// </summary>
         [JsonProperty(PropertyName = "Logs", Required = Required.Default)]
         [YamlMember(Alias = "logs", ApplyNamingConventions = false)]
@@ -473,9 +472,8 @@ namespace Neon.Kube
         public bool Logs { get; set; } = false;
 
         /// <summary>
-        /// <b>io.neonkube.monitor.logs-internal</b> [<c>bool</c>]: Indicates that Elasticsearch 
-        /// will be deployed to this node if <see cref="LogOptions.Enabled"/> is <c>true</c>.  
-        /// This defaults to <c>false</c>.
+        /// <b>io.neonkube.monitor.logs-internal</b> [<c>bool</c>]: Indicates that Liko
+        /// logging will be deployed to the labeled node.  This defaults to <c>false</c>.
         /// </summary>
         [JsonProperty(PropertyName = "LogsInternal", Required = Required.Default)]
         [YamlMember(Alias = "logsInternal", ApplyNamingConventions = false)]
@@ -484,9 +482,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// <b>io.neonkube.monitor.metrics</b> [<c>bool</c>]: Indicates the user has specified
-        /// that Metrics should be deployed to this node if 
-        /// <see cref="MetricsOptions.Enabled"/> is <c>true</c>.  
-        /// This defaults to <c>false</c>.
+        /// that Cortex metrics should be deployed to the labeled node.  This defaults to <c>false</c>.
         /// </summary>
         [JsonProperty(PropertyName = "Metrics", Required = Required.Default)]
         [YamlMember(Alias = "metrics", ApplyNamingConventions = false)]
@@ -494,9 +490,8 @@ namespace Neon.Kube
         public bool Metrics { get; set; } = false;
 
         /// <summary>
-        /// <b>io.neonkube.monitor.metrics-internal</b> [<c>bool</c>]: Indicates that Metrics 
-        /// will be deployed to this node if <see cref="MetricsOptions.Enabled"/> is <c>true</c>.  
-        /// This defaults to <c>false</c>.
+        /// <b>io.neonkube.monitor.metrics-internal</b> [<c>bool</c>]: Indicates that Cortex
+        /// metrics will be deployed to the labeled node.  This defaults to <c>false</c>.
         /// </summary>
         [JsonProperty(PropertyName = "MetricsInternal", Required = Required.Default)]
         [YamlMember(Alias = "metricsInternal", ApplyNamingConventions = false)]

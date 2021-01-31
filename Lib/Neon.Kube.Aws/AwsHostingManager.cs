@@ -34,6 +34,7 @@ using Newtonsoft;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
+using Neon.Collections;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Diagnostics;
@@ -1099,37 +1100,37 @@ namespace Neon.Kube
 
             Covenant.Assert(sshKey != null);
 
-            var operation  = $"Provisioning [{cluster.Definition.Name}] on AWS [{availabilityZone}/{resourceGroupName}]";
-            var controller = new SetupController<NodeDefinition>(operation, cluster.Nodes)
+            var operation       = $"Provisioning [{cluster.Definition.Name}] on AWS [{availabilityZone}/{resourceGroupName}]";
+            var setupController = new SetupController<NodeDefinition>(operation, cluster.Nodes)
             {
                 ShowStatus     = this.ShowStatus,
                 ShowNodeStatus = true,
                 MaxParallel    = int.MaxValue       // There's no reason to constrain this
             };
 
-            controller.AddGlobalStep("AWS connect", ConnectAwsAsync);
-            controller.AddGlobalStep("region check", VerifyRegionAndInstanceTypesAsync);
-            controller.AddGlobalStep("locate ami", LocateAmiAsync);
-            controller.AddGlobalStep("resource group", CreateResourceGroupAsync);
-            controller.AddGlobalStep("elastic ip", CreateAddressesAsync);
-            controller.AddGlobalStep("placement groups", ConfigurePlacementGroupAsync);
-            controller.AddGlobalStep("external ssh ports", AssignExternalSshPorts, quiet: true);
-            controller.AddGlobalStep("network", ConfigureNetworkAsync);
-            controller.AddGlobalStep("ssh keys", ImportKeyPairAsync);
-            controller.AddNodeStep("node instances", CreateNodeInstanceAsync);
-            controller.AddNodeStep("credentials",
-                node =>
+            setupController.AddGlobalStep("AWS connect", ConnectAwsAsync);
+            setupController.AddGlobalStep("region check", VerifyRegionAndInstanceTypesAsync);
+            setupController.AddGlobalStep("locate ami", LocateAmiAsync);
+            setupController.AddGlobalStep("resource group", CreateResourceGroupAsync);
+            setupController.AddGlobalStep("elastic ip", CreateAddressesAsync);
+            setupController.AddGlobalStep("placement groups", ConfigurePlacementGroupAsync);
+            setupController.AddGlobalStep("external ssh ports", AssignExternalSshPorts, quiet: true);
+            setupController.AddGlobalStep("network", ConfigureNetworkAsync);
+            setupController.AddGlobalStep("ssh keys", ImportKeyPairAsync);
+            setupController.AddNodeStep("node instances", CreateNodeInstanceAsync);
+            setupController.AddNodeStep("credentials",
+                (state, node) =>
                 {
                     // Update the node SSH proxies to use the secure SSH password.
 
                     node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, secureSshPassword));
                 },
                 quiet: true);
-            controller.AddGlobalStep("load balancer", ConfigureLoadBalancerAsync);
-            controller.AddNodeStep("load balancer targets", WaitForSshTargetAsync);
-            controller.AddGlobalStep("internet routing", async () => await UpdateNetworkAsync(NetworkOperations.InternetRouting | NetworkOperations.EnableSsh));
+            setupController.AddGlobalStep("load balancer", ConfigureLoadBalancerAsync);
+            setupController.AddNodeStep("load balancer targets", WaitForSshTargetAsync);
+            setupController.AddGlobalStep("internet routing", async state => await UpdateNetworkAsync(NetworkOperations.InternetRouting | NetworkOperations.EnableSsh));
 
-            if (!controller.Run(leaveNodesConnected: false))
+            if (!setupController.Run(leaveNodesConnected: false))
             {
                 Console.WriteLine("*** One or more AWS provisioning steps failed.");
                 return await Task.FromResult(false);
@@ -1144,7 +1145,7 @@ namespace Neon.Kube
             // Add a step to perform low-level node initialization.
 
             setupController.AddNodeStep("node basics",
-                node =>
+                (state, node) =>
                 {
                     node.BaseInitialize(secureSshPassword);
                 });
@@ -1158,7 +1159,7 @@ namespace Neon.Kube
             // the OpenEBS disk will be easy to identify as the only unpartitioned disk.
 
             setupController.AddNodeStep("openebs",
-                async node =>
+                async (state, node) =>
                 {
                     node.Status = "openebs: checking";
 
@@ -1259,7 +1260,7 @@ namespace Neon.Kube
                             }
                         });
                 },
-                node => node.Metadata.OpenEBS);
+                (state, node) => node.Metadata.OpenEBS);
         }
 
         /// <inheritdoc/>
@@ -1311,7 +1312,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override (string Address, int Port) GetSshEndpoint(string nodeName)
         {
-            ConnectAwsAsync().Wait();
+            ConnectAwsAsync(null).Wait();
 
             if (!nodeNameToAwsInstance.TryGetValue(nodeName, out var awsInstance))
             {
@@ -1324,7 +1325,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override string GetDataDisk(NodeSshProxy<NodeDefinition> node)
+        public override string GetDataDisk(LinuxSshProxy node)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 
@@ -1350,9 +1351,12 @@ namespace Neon.Kube
         /// even if an connection has already been established.
         /// </note>
         /// </summary>
+        /// <param name="setupState">The setup controller state.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task ConnectAwsAsync()
+        private async Task ConnectAwsAsync(ObjectDictionary setupState)
         {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+
             if (isConnected)
             {
                 await GetResourcesAsync();
@@ -1765,9 +1769,12 @@ namespace Neon.Kube
         /// This also updates the node labels to match the capabilities of their VMs.
         /// </para>
         /// </summary>
+        /// <param name="setupState">The setup controller state.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task VerifyRegionAndInstanceTypesAsync()
+        private async Task VerifyRegionAndInstanceTypesAsync(ObjectDictionary setupState)
         {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+
             var regionName = awsOptions.Region;
             var zoneName   = awsOptions.AvailabilityZone;
 
@@ -1853,9 +1860,12 @@ namespace Neon.Kube
         /// <summary>
         /// Locates tha AMI to use for provisioning the nodes in the target region.
         /// </summary>
+        /// <param name="setupState">The setup controller state.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task LocateAmiAsync()
+        private async Task LocateAmiAsync(ObjectDictionary setupState)
         {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+
             // $hack(jefflill):
             //
             // We're going to do this by querying the region for AMIs published by Canonical
@@ -1949,9 +1959,12 @@ namespace Neon.Kube
         /// cluster being deployed.
         /// </para>
         /// </summary>
+        /// <param name="setupState">The setup controller state.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task CreateResourceGroupAsync()
+        private async Task CreateResourceGroupAsync(ObjectDictionary setupState)
         {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+
             Group group;
 
             try
@@ -2014,9 +2027,12 @@ namespace Neon.Kube
         /// <summary>
         /// Creates the the master and worker placement groups used to provision the cluster node instances.
         /// </summary>
+        /// <param name="setupState">The setup controller state.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task ConfigurePlacementGroupAsync()
+        private async Task ConfigurePlacementGroupAsync(ObjectDictionary setupState)
         {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+
             if (masterPlacementGroup == null)
             {
                 var partitionGroupResponse = await ec2Client.CreatePlacementGroupAsync(
@@ -2068,9 +2084,12 @@ namespace Neon.Kube
         /// <summary>
         /// Creates the ingress and egress elastic IP addresses for the cluster if they don't already exist.
         /// </summary>
+        /// <param name="setupState">The setup controller state.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task CreateAddressesAsync()
+        private async Task CreateAddressesAsync(ObjectDictionary setupState)
         {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+
             if (ingressAddress == null)
             {
                 var allocateResponse = await ec2Client.AllocateAddressAsync(
@@ -2180,8 +2199,11 @@ namespace Neon.Kube
         /// that we're not actually going to write the instance tags here; we'll do that when we
         /// actually create any new instances.
         /// </summary>
-        private void AssignExternalSshPorts()
+        /// <param name="setupState">The setup controller state.</param>
+        private void AssignExternalSshPorts(ObjectDictionary setupState)
         {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+
             // Create a table with the currently allocated external SSH ports.
 
             var allocatedPorts = new HashSet<int>();
@@ -2217,9 +2239,12 @@ namespace Neon.Kube
         /// Configures the cluster networking components including the VPC, subnet, internet gateway
         /// security group and network ACLs.
         /// </summary>
+        /// <param name="setupState">The setup controller state.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task ConfigureNetworkAsync()
+        private async Task ConfigureNetworkAsync(ObjectDictionary setupState)
         {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+
             // Create the VPC.
 
             if (vpc == null)
@@ -2497,9 +2522,12 @@ namespace Neon.Kube
         /// <summary>
         /// Configures the load balancer.
         /// </summary>
+        /// <param name="setupState">The setup controller state.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task ConfigureLoadBalancerAsync()
+        private async Task ConfigureLoadBalancerAsync(ObjectDictionary setupState)
         {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+
             // Create the load balancer in the subnet.
 
             if (loadBalancer == null)
@@ -2529,9 +2557,12 @@ namespace Neon.Kube
         /// <summary>
         /// Imports the SSH key pair we'll use for the node security.
         /// </summary>
+        /// <param name="setupState">The setup controller state.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task ImportKeyPairAsync()
+        private async Task ImportKeyPairAsync(ObjectDictionary setupState)
         {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+
             if (keyPairId == null)
             {
                 Covenant.Assert(!string.IsNullOrEmpty(sshKey.PublicSSH2));
@@ -2551,10 +2582,13 @@ namespace Neon.Kube
         /// <summary>
         /// Waits for the load balancer SSH target group for the node to become healthy.
         /// </summary>
+        /// <param name="setupState">The setup controller state.</param>
         /// <param name="node">The target node.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task WaitForSshTargetAsync(NodeSshProxy<NodeDefinition> node)
+        private async Task WaitForSshTargetAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> node)
         {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+
             node.Status = "waiting...";
 
             // Locate the SSH load balancer target for this node.
@@ -2607,10 +2641,13 @@ namespace Neon.Kube
         /// <summary>
         /// Creates the AWS instance for a node.
         /// </summary>
+        /// <param name="setupState">The setup controller state.</param>
         /// <param name="node">The target node.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task CreateNodeInstanceAsync(NodeSshProxy<NodeDefinition> node)
+        private async Task CreateNodeInstanceAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> node)
         {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+
             //-----------------------------------------------------------------
             // Create the instance if it doesn't already exist.
 
@@ -2737,8 +2774,7 @@ namespace Neon.Kube
                 //      3. Set the secure password for [sysadmin]
 
                 var bootScript =
-$@"#!/bin/bash
-
+$@"
 # To enable debugging for this AWS user-script, add the ""-ex"" options to the
 # comment at the top of the file and uncomment the command below.  These cause
 # each command and its output to be logged and can be viewable in the AWS portal.
@@ -3436,8 +3472,8 @@ groupmod -n sysadmin ubuntu
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task AddSshListenersAsync()
         {
-            await ConnectAwsAsync();
-            AssignExternalSshPorts();
+            await ConnectAwsAsync(null);
+            AssignExternalSshPorts(null);
 
             foreach (var awsInstance in nodeNameToAwsInstance.Values)
             {
@@ -3468,8 +3504,8 @@ groupmod -n sysadmin ubuntu
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task RemoveSshListenersAsync()
         {
-            await ConnectAwsAsync();
-            AssignExternalSshPorts();
+            await ConnectAwsAsync(null);
+            AssignExternalSshPorts(null);
 
             var listenerPagenator = elbClient.Paginators.DescribeListeners(
                 new DescribeListenersRequest()

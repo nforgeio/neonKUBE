@@ -47,29 +47,12 @@ namespace Neon.Kube
     public class MetricsOptions
     {
         /// <summary>
-        /// Indicates whether Prometheus metrics are to be enabled for the cluster.  
-        /// This defaults to <c>true</c>.
-        /// </summary>
-        [JsonProperty(PropertyName = "Enabled", Required = Required.Default)]
-        [YamlMember(Alias = "enabled", ApplyNamingConventions = false)]
-        [DefaultValue(true)]
-        public bool Enabled { get; set; } = true;
-
-        /// <summary>
-        /// Indicates where Prometheus metrics should be stored.
+        /// Indicates where Prometheus metrics should be stored.  This defaults to <see cref="MetricsStorageOptions.Ephemeral"/>.
         /// </summary>
         [JsonProperty(PropertyName = "Storage", Required = Required.Default)]
         [YamlMember(Alias = "storage", ApplyNamingConventions = false)]
         [DefaultValue(MetricsStorageOptions.Ephemeral)]
         public MetricsStorageOptions Storage { get; set; } = MetricsStorageOptions.Ephemeral;
-
-        /// <summary>
-        /// Specifies the amount of disk space to allocate to metrics storage.
-        /// </summary>
-        [JsonProperty(PropertyName = "DiskSize", Required = Required.Default)]
-        [YamlMember(Alias = "diskSize", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public string DiskSize { get; set; } = null;
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
@@ -79,16 +62,6 @@ namespace Neon.Kube
         /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         public void Validate(ClusterDefinition clusterDefinition)
         {
-            if (!Enabled)
-            {
-                return;
-            }
-
-            if (Storage != MetricsStorageOptions.Ephemeral && DiskSize == null)
-            {
-                throw new ClusterDefinitionException($"[{nameof(MetricsOptions)}.{nameof(DiskSize)}={DiskSize}] is not set. You must specify a disk size, or use the Ephemeral storage option.");
-            }
-
             if (!clusterDefinition.Nodes.Any(n => n.Labels.Metrics))
             {
                 if (clusterDefinition.Kubernetes.AllowPodsOnMasters.GetValueOrDefault() == true)

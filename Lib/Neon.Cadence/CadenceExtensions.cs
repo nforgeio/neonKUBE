@@ -44,7 +44,7 @@ namespace Neon.Cadence
         /// <param name="client">The HTTP client.</param>
         /// <param name="request">The message to be sent.</param>
         /// <returns>The <see cref="HttpResponse"/>.</returns>
-        public async static Task<HttpResponseMessage> SendRequestAsync<TRequest>(this HttpClient client, TRequest request)
+        public static async Task<HttpResponseMessage> SendRequestAsync<TRequest>(this HttpClient client, TRequest request)
             where TRequest : ProxyRequest
         {
             Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
@@ -92,7 +92,7 @@ namespace Neon.Cadence
         /// <param name="request">The request being responsed to.</param>
         /// <param name="reply">The reply message.</param>
         /// <returns>The <see cref="HttpResponse"/>.</returns>
-        public async static Task<HttpResponseMessage> SendReplyAsync<TRequest, TReply>(this HttpClient client, TRequest request, TReply reply)
+        public static async Task<HttpResponseMessage> SendReplyAsync<TRequest, TReply>(this HttpClient client, TRequest request, TReply reply)
             where TRequest : ProxyRequest
             where TReply : ProxyReply
         {

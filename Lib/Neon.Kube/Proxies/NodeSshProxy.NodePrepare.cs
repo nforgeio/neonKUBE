@@ -30,6 +30,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Neon.Collections;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Diagnostics;
@@ -50,6 +51,177 @@ namespace Neon.Kube
     public partial class NodeSshProxy<TMetadata> : LinuxSshProxy<TMetadata>
         where TMetadata : class
     {
+        /// <summary>
+        /// Configures a node's host public SSH key during node provisioning.
+        /// </summary>
+        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="clusterLogin">The cluster login.</param>
+        public void ConfigureSshKey(ObjectDictionary setupState, ClusterLogin clusterLogin)
+        {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(clusterLogin != null, nameof(clusterLogin));
+
+            // Configure the SSH credentials on the node.
+
+            InvokeIdempotent("setup/ssh",
+                () =>
+                {
+                    CommandBundle bundle;
+
+                    // Here's some information explaining what how this works:
+                    //
+                    //      https://help.ubuntu.com/community/SSH/OpenSSH/Configuring
+                    //      https://help.ubuntu.com/community/SSH/OpenSSH/Keys
+
+                    Status = "setup: client SSH key";
+
+                    // Enable the public key by appending it to [$HOME/.ssh/authorized_keys],
+                    // creating the file if necessary.  Note that we're allowing only a single
+                    // authorized key.
+
+                    var addKeyScript =
+$@"
+chmod go-w ~/
+mkdir -p $HOME/.ssh
+chmod 700 $HOME/.ssh
+touch $HOME/.ssh/authorized_keys
+cat ssh-key.ssh2 > $HOME/.ssh/authorized_keys
+chmod 600 $HOME/.ssh/authorized_keys
+";
+                    bundle = new CommandBundle("./addkeys.sh");
+
+                    bundle.AddFile("addkeys.sh", addKeyScript, isExecutable: true);
+                    bundle.AddFile("ssh_host_rsa_key", clusterLogin.SshKey.PublicSSH2);
+
+                    // NOTE: I'm explicitly not running the bundle as [sudo] because the OpenSSH
+                    //       server is very picky about the permissions on the user's [$HOME]
+                    //       and [$HOME/.ssl] folder and contents.  This took me a couple 
+                    //       hours to figure out.
+
+                    RunCommand(bundle);
+
+                    // These steps are required for both password and public key authentication.
+
+                    // Upload the server key and edit the [sshd] config to disable all host keys 
+                    // except for RSA.
+
+                    var configScript =
+$@"
+# Install public SSH key for the [sysadmin] user.
+
+cp ssh_host_rsa_key.pub /home/{KubeConst.SysAdminUser}/.ssh/authorized_keys
+
+# Disable all host keys except for RSA.
+
+sed -i 's!^\HostKey /etc/ssh/ssh_host_dsa_key$!#HostKey /etc/ssh/ssh_host_dsa_key!g' /etc/ssh/sshd_config
+sed -i 's!^\HostKey /etc/ssh/ssh_host_ecdsa_key$!#HostKey /etc/ssh/ssh_host_ecdsa_key!g' /etc/ssh/sshd_config
+sed -i 's!^\HostKey /etc/ssh/ssh_host_ed25519_key$!#HostKey /etc/ssh/ssh_host_ed25519_key!g' /etc/ssh/sshd_config
+
+# Restart SSHD to pick up the changes.
+
+systemctl restart sshd
+";
+                    bundle = new CommandBundle("./config.sh");
+
+                    bundle.AddFile("config.sh", configScript, isExecutable: true);
+                    bundle.AddFile("ssh_host_rsa_key.pub", clusterLogin.SshKey.PublicPUB);
+                    SudoCommand(bundle, RunOptions.FaultOnError);
+                });
+
+            // Verify that we can login with the new SSH private key and also verify that
+            // the password still works.
+
+            Status = "ssh: verify private key auth";
+            Disconnect();
+            UpdateCredentials(SshCredentials.FromPrivateKey(KubeConst.SysAdminUser, clusterLogin.SshKey.PrivatePEM));
+            WaitForBoot();
+
+            Status = "ssh: verify password auth";
+            Disconnect();
+            UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, clusterLogin.SshPassword));
+            WaitForBoot();
+        }
+
+        /// <summary>
+        /// Disables the <b>snapd</b> service.
+        /// </summary>
+        public void DisableSnap()
+        {
+            InvokeIdempotent("prepare/disable-snap",
+                () =>
+                {
+                    //-----------------------------------------------------------------
+                    // We're going to stop and mask the [snapd.service] if it's running
+                    // because we don't want it to randomlly update apps on cluster nodes.
+
+                    Status = "disable: [snapd.service]";
+
+                    var disableSnapScript =
+@"
+# Stop and mask [snapd.service] when it's not already masked.
+
+systemctl status --no-pager snapd.service
+
+if [ $? ]; then
+    systemctl stop snapd.service
+    systemctl mask snapd.service
+fi
+";
+                    SudoCommand(CommandBundle.FromScript(disableSnapScript), RunOptions.FaultOnError);
+                });
+        }
+
+        /// <summary>
+        /// Configures <b>journald</b>.
+        /// </summary>
+        /// <param name="setupState">The setup controller state.</param>
+        public void ConfigureJournald(ObjectDictionary setupState)
+        {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+
+            InvokeIdempotent("prepare/journald",
+                () =>
+                {
+                    Status = "configure: journald filters";
+
+                    var filterScript =
+@"
+# neonKUBE: 
+#
+# Filter [rsyslog.service] log events we don't care about.
+
+cat <<EOF > /etc/rsyslog.d/60-filter.conf
+if $programname == ""systemd"" and ($msg startswith ""Created slice "" or $msg startswith ""Removed slice "") then stop
+EOF
+
+systemctl restart rsyslog.service
+";
+                    SudoCommand(CommandBundle.FromScript(filterScript), RunOptions.FaultOnError);
+                });
+        }
+
+        /// <summary>
+        /// Initializes a near virgin server with the basic capabilities required
+        /// for a cluster node.
+        /// </summary>
+        /// <param name="setupState">The setup controller state.</param>
+        public void PrepareNode(ObjectDictionary setupState)
+        {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+
+            var hostingManager    = setupState.Get<IHostingManager>(KubeSetup.HostingManagerProperty);
+            var clusterDefinition = cluster.Definition;
+
+            InvokeIdempotent("prepare/complete",
+                () =>
+                {
+                    BaseConfigureApt(clusterDefinition.NodeOptions.PackageManagerRetries, clusterDefinition.NodeOptions.AllowPackageManagerIPv6);
+                    BaseConfigureOpenSsh();
+                    DisableSnap();
+                    ConfigureJournald(setupState);
+                });
+        }
+
         /// <summary>
         /// Performs low-level node initialization during cluster setup.
         /// </summary>
@@ -99,12 +271,13 @@ sed -i '/^ENABLED=""false""/c\ENABLED=""true""' /etc/default/sysstat
 cat <<EOF > /etc/security/limits.conf
 # /etc/security/limits.conf
 #
-#Each line describes a limit for a user in the form:
+# Each line describes a limit for a user in the form:
 #
-#<domain>        <type>  <item>  <value>
+#   <domain>        <type>  <item>  <value>
 #
-#Where:
-#<domain> can be:
+# Where:
+#
+#   <domain> can be:
 #        - a user name
 #        - a group name, with @group syntax
 #        - the wildcard *, for default entry
@@ -114,11 +287,11 @@ cat <<EOF > /etc/security/limits.conf
 #          To apply a limit to the root user, <domain> must be
 #          the literal username root.
 #
-#<type> can have the two values:
+#   <type> can have the two values:
 #        - ""soft"" for enforcing the soft limits
 #        - ""hard"" for enforcing hard limits
 #
-#<item> can be one of the following:
+#   <item> can be one of the following:
 #        - core - limits the core file size (KB)
 #        - data - max data size (KB)
 #        - fsize - maximum filesize (KB)
@@ -850,7 +1023,7 @@ rm -rf linux-amd64
         /// <param name="statusWriter">Optional log writer action.</param>
         public void NodeInstallKubernetes(Action<string> statusWriter = null)
         {
-            InvokeIdempotent("node/kubernetes",
+            InvokeIdempotent("node/install-kubernetes",
                 () =>
                 {
                     var script =
@@ -859,9 +1032,9 @@ curl {KubeHelper.CurlOptions} https://packages.cloud.google.com/apt/doc/apt-key.
 echo ""deb https://apt.kubernetes.io/ kubernetes-xenial main"" > /etc/apt/sources.list.d/kubernetes.list
 safe-apt-get update
 
+safe-apt-get install -yq kubelet={KubeVersions.KubeletPackageVersion}
 safe-apt-get install -yq kubeadm={KubeVersions.KubeAdminPackageVersion}
 safe-apt-get install -yq kubectl={KubeVersions.KubeCtlPackageVersion}
-safe-apt-get install -yq kubelet={KubeVersions.KubeletPackageVersion}
 
 # Prevent the package manager from automatically these components.
 

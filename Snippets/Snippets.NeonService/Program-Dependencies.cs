@@ -9,7 +9,7 @@ namespace Service_Dependencies
 {
     public static class Program
     {
-        public async static Task Main(string[] args)
+        public static async Task Main(string[] args)
         {
             // Construct the service and configure it to wait for another
             // become available before calling the services [OnRunAsync()]

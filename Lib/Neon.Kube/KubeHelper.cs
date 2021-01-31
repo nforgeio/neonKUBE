@@ -1405,7 +1405,7 @@ namespace Neon.Kube
         /// <param name="namespace">The namespace where the pod is running.</param>
         /// <param name="command">The command to run.</param>
         /// <returns>The command result.</returns>
-        public async static Task<string> ExecuteInPod(IKubernetes client, V1Pod pod, string @namespace, string[] command)
+        public static async Task<string> ExecuteInPod(IKubernetes client, V1Pod pod, string @namespace, string[] command)
         {
             var webSocket = await client.WebSocketNamespacedPodExecAsync(pod.Metadata.Name, @namespace, command, pod.Spec.Containers[0].Name);
             var demux     = new StreamDemuxer(webSocket);
@@ -1699,8 +1699,6 @@ public class ISOFile
             Covenant.Requires<ArgumentNullException>(nameServers != null, nameof(nameServers));
             Covenant.Requires<ArgumentNullException>(nameServers.Count() > 0, nameof(nameServers));
 
-            securePassword = null;  // $debug(jefflill): DELETE THIS!
-
             var sbNameservers = new StringBuilder();
 
             // Generate the [neon-init.sh] script.
@@ -1711,7 +1709,7 @@ public class ISOFile
             }
 
             var changePasswordScript =
-@"#------------------------------------------------------------------------------
+$@"#------------------------------------------------------------------------------
 # Change the [sysadmin] user password from the hardcoded [sysadmin0000] password
 # to something secure.  Doing this here before the network is configured means 
 # that there's no time when bad guys can SSH into the node using the insecure

@@ -224,7 +224,7 @@ namespace Neon.Cassandra
         /// line will be ignored.
         /// </note>
         /// </remarks>
-        public async static Task ExecuteBatchAsync(
+        public static async Task ExecuteBatchAsync(
             this ISession       session,
             string              batchText)
         {
@@ -242,7 +242,7 @@ namespace Neon.Cassandra
         /// <param name="session">The database session.</param>
         /// <param name="cqlText">The command or query text.</param>
         /// <returns>The resulting <see cref="RowSet"/>.</returns>
-        public async static Task<RowSet> ExecuteAsync(
+        public static async Task<RowSet> ExecuteAsync(
             this ISession       session,
             string              cqlText)
         {

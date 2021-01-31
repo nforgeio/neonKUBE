@@ -189,7 +189,7 @@ namespace Neon.Cadence
         /// <param name="domain">Specifies the target domain.</param>
         /// <returns><c>true</c> if the activity was already registered.</returns>
         /// <exception cref="InvalidOperationException">Thrown if a different activity class has already been registered for <paramref name="activityTypeName"/>.</exception>
-        internal async static Task RegisterAsync(CadenceClient client, Type activityType, string activityTypeName, string domain)
+        internal static async Task RegisterAsync(CadenceClient client, Type activityType, string activityTypeName, string domain)
         {
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain), nameof(domain));
