@@ -59,7 +59,7 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="sshPassword">The current <b>sysadmin</b> password.</param>
         /// <param name="updateDistribution">Optionally upgrade the node's Linux distribution.  This defaults to <c>false</c>.</param>
-        /// <param name="statusWriter">Optional log writer action.</param>
+        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         public void BaseInitialize(string sshPassword, bool updateDistribution = false, Action<string> statusWriter = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(sshPassword), nameof(sshPassword));
@@ -110,7 +110,7 @@ namespace Neon.Kube
         /// <summary>
         /// Configures the Debian frontend terminal to non-interactive.
         /// </summary>
-        /// <param name="statusWriter">Optional log writer action.</param>
+        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         public void BaseConfigureDebianFrontend(Action<string> statusWriter = null)
         {
             InvokeIdempotent("base/debian-frontend",
@@ -132,7 +132,7 @@ namespace Neon.Kube
         /// Ubuntu defaults DNS to prefer IPv6 lookups over IPv4 which can cause
         /// performance problems.  This method reconfigures DNS to favor IPv4.
         /// </summary>
-        /// <param name="statusWriter">Optional log writer action.</param>
+        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         public void BaseConfigureDnsIPv4Preference(Action<string> statusWriter = null)
         {
             InvokeIdempotent("base/dns-ipv4",
@@ -178,7 +178,7 @@ sed -i 's!^#precedence ::ffff:0:0/96  10$!precedence ::ffff:0:0/96  100!g' /etc/
         /// <summary>
         /// Configures the Debian frontend terminal to non-interactive.
         /// </summary>
-        /// <param name="statusWriter">Optional log writer action.</param>
+        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         public void BaseConfigureBashEnvironment(Action<string> statusWriter = null)
         {
             InvokeIdempotent("base/bash-environment",
@@ -198,7 +198,7 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
         /// <summary>
         /// Installs the required <b>base image</b> packages.
         /// </summary>
-        /// <param name="statusWriter">Optional log writer action.</param>
+        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         public void BaseInstallPackages(Action<string> statusWriter = null)
         {
             Status = "install: base packages";
@@ -208,12 +208,10 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
                 () =>
                 {
                     // Install the packages.  Note that we haven't added our tool folder to the PATH 
-                    // yet, so we'll use the folly qualified path to [safe-apt-get].
+                    // yet, so we'll use the fully qualified path to [safe-apt-get].
 
-                    var safeAptGetPath = LinuxPath.Combine(KubeNodeFolders.Bin, "safe-apt-get");
-
-                    SudoCommand($"{safeAptGetPath} update", RunOptions.Defaults | RunOptions.FaultOnError);
-                    SudoCommand($"{safeAptGetPath} install -yq apt-cacher-ng ntp zip", RunOptions.Defaults | RunOptions.FaultOnError);
+                    SudoCommand($"{KubeNodeFolders.Bin}/safe-apt-get update", RunOptions.Defaults | RunOptions.FaultOnError);
+                    SudoCommand($"{KubeNodeFolders.Bin}/safe-apt-get install -yq apt-cacher-ng ntp zip", RunOptions.Defaults | RunOptions.FaultOnError);
 
                     // I've seen some situations after a reboot where the machine complains about
                     // running out of entropy.  Apparently, modern CPUs have an instruction that
@@ -235,14 +233,14 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
                     // [haveged] works by timing running code at very high resolution and hoping to
                     // see execution time jitter and then use that as an entropy source.
 
-                    SudoCommand($"{safeAptGetPath} install -yq haveged", RunOptions.Defaults | RunOptions.FaultOnError);
+                    SudoCommand($"{KubeNodeFolders.Bin}/safe-apt-get install -yq haveged", RunOptions.Defaults | RunOptions.FaultOnError);
                 });
         }
 
         /// <summary>
         /// Updates the Linux distribution.
         /// </summary>
-        /// <param name="statusWriter">Optional log writer action.</param>
+        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         public void BaseUpdateLinux(Action<string> statusWriter = null)
         {
             InvokeIdempotent("base/update-linux",
@@ -258,7 +256,7 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
         /// <summary>
         /// Disables the Linux memory swap file.
         /// </summary>
-        /// <param name="statusWriter">Optional log writer action.</param>
+        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         public void BaseDisableSwap(Action<string> statusWriter = null)
         {
             InvokeIdempotent("base/swap-disable",
@@ -289,7 +287,7 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
         /// <summary>
         /// Installs hypervisor guest integration services.
         /// </summary>
-        /// <param name="statusWriter">Optional log writer action.</param>
+        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         public void BaseInstallGuestIntegrationServices(Action<string> statusWriter = null)
         {
             InvokeIdempotent("base/guest-integration",
@@ -299,7 +297,7 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
                     Status = "install: guest integration services";
 
                     var guestServicesScript =
-@"#!/bin/bash
+$@"#!/bin/bash
 cat <<EOF >> /etc/initramfs-tools/modules
 hv_vmbus
 hv_storvsc
@@ -307,7 +305,7 @@ hv_blkvsc
 hv_netvsc
 EOF
 
-safe-apt-get install -yq linux-virtual linux-cloud-tools-virtual linux-tools-virtual
+{KubeNodeFolders.Bin}/safe-apt-get install -yq linux-virtual linux-cloud-tools-virtual linux-tools-virtual
 update-initramfs -u
 ";
                     SudoCommand(CommandBundle.FromScript(guestServicesScript), RunOptions.Defaults | RunOptions.FaultOnError);
@@ -317,7 +315,7 @@ update-initramfs -u
         /// <summary>
         /// Disables DHCP.
         /// </summary>
-        /// <param name="statusWriter">Optional log writer action.</param>
+        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         public void BaseDisableDhcp(Action<string> statusWriter = null)
         {
             InvokeIdempotent("base/dhcp",
@@ -354,7 +352,7 @@ EOF
         /// <summary>
         /// Disables <b>cloud-init</b>.
         /// </summary>
-        /// <param name="statusWriter">Optional log writer action.</param>
+        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         public void BaseDisableCloudInit(Action<string> statusWriter = null)
         {
             InvokeIdempotent("base/cloud-init",
@@ -374,9 +372,12 @@ touch /etc/cloud/cloud-init.disabled
         /// <summary>
         /// Customizes the OpenSSH configuration on a 
         /// </summary>
-        /// <param name="statusWriter">Optional log writer action.</param>
-        public void BaseConfigureOpenSsh(Action<string> statusWriter = null)
+        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        public void BaseConfigureOpenSsh(ObjectDictionary setupState, Action<string> statusWriter = null)
         {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+
             InvokeIdempotent("base/openssh",
                 () =>
                 {
@@ -393,7 +394,7 @@ touch /etc/cloud/cloud-init.disabled
         /// <summary>
         /// Removes any installed snaps.
         /// </summary>
-        /// <param name="statusWriter">Optional log writer action.</param>
+        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         public void BaseRemoveSnaps(Action<string> statusWriter = null)
         {
             InvokeIdempotent("base/clean-packages",
@@ -415,7 +416,7 @@ snap remove --purge snapd
         /// <summary>
         /// Removes unnecessary packages.
         /// </summary>
-        /// <param name="statusWriter">Optional log writer action.</param>
+        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         public void BaseRemovePackages(Action<string> statusWriter = null)
         {
             InvokeIdempotent("base/clean-packages",
@@ -427,8 +428,8 @@ snap remove --purge snapd
                     // Purge unnecessary packages.
 
 var removePackagesScript =
-@"
-safe-apt-get purge -y \
+$@"
+{KubeNodeFolders.Bin}/safe-apt-get purge -y \
     apt \
     aptitude \
     cloud-init \
@@ -440,7 +441,7 @@ safe-apt-get purge -y \
     snapd \
     vim vim-runtime vim-tiny
 
-safe-apt-get autoremove -y
+{KubeNodeFolders.Bin}/safe-apt-get autoremove -y
 ";
                     SudoCommand(CommandBundle.FromScript(removePackagesScript), RunOptions.Defaults | RunOptions.FaultOnError);
                 });
@@ -451,7 +452,7 @@ safe-apt-get autoremove -y
         /// </summary>
         /// <param name="packageManagerRetries">Optionally specifies the packager manager retries (defaults to <b>5</b>).</param>
         /// <param name="allowPackageManagerIPv6">Optionally prevent the package manager from using IPv6 (defaults to <c>false</c>.</param>
-        /// <param name="statusWriter">Optional log writer action.</param>
+        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         public void BaseConfigureApt(int packageManagerRetries = 5, bool allowPackageManagerIPv6 = false, Action<string> statusWriter = null)
         {
             InvokeIdempotent("base/apt",
@@ -515,7 +516,7 @@ done
         /// use to configure the network and credentials for VMs hosted in non-cloud
         /// hypervisors.
         /// </summary>
-        /// <param name="statusWriter">Optional log writer action.</param>
+        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         /// <remarks>
         /// <para>
         /// Install and configure the [neon-init] service.  This is a simple script
@@ -680,7 +681,7 @@ systemctl daemon-reload
         /// <summary>
         /// Create the node folders required by neoneKUBE.
         /// </summary>
-        /// <param name="statusWriter">Optional log writer action.</param>
+        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         public void BaseCreateKubeFolders(Action<string> statusWriter = null)
         {
             InvokeIdempotent("base/folders",
@@ -721,7 +722,7 @@ chmod 750 {KubeNodeFolders.State}/setup
         /// Any <b>".sh"</b> file extensions will be removed for ease-of-use.
         /// </note>
         /// </summary>
-        /// <param name="statusWriter">Optional log writer action.</param>
+        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         public void BaseInstallToolScripts(Action<string> statusWriter = null)
         {
             InvokeIdempotent("base/tool-scripts",

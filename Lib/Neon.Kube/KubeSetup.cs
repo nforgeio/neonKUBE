@@ -111,6 +111,11 @@ namespace Neon.Kube
         // These string constants are used to persist state in [SetupControllers].
 
         /// <summary>
+        /// Property name for determining the current hosting environment: <see cref="HostingEnvironment"/>,
+        /// </summary>
+        public const string HostingEnvironmentProperty = "hosting-environment";
+
+        /// <summary>
         /// Property name for accessing the <see cref="SetupController{NodeMetadata}"/>'s <see cref="ClusterProxy"/> property.
         /// </summary>
         public const string ClusterProxyProperty = "cluster-proxy";

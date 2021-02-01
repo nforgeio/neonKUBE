@@ -259,7 +259,7 @@ OPTIONS:
                 // Kubernetes configuration.
 
                 setupController.AddGlobalStep("setup etc HA", KubeSetup.SetupEtcdHaProxy);
-                setupController.AddNodeStep("install kubernetes", (setupState, node) => node.NodeInstallKubernetes());
+                setupController.AddNodeStep("install kubernetes", (setupState, node) => node.NodeInstallKubernetes(setupState));
                 setupController.AddGlobalStep("setup cluster", setupState => KubeSetup.SetupClusterAsync(setupState));
                 setupController.AddGlobalStep("taint nodes", KubeSetup.TaintNodes);
                 setupController.AddGlobalStep("setup monitoring", KubeSetup.SetupMonitoringAsync);
