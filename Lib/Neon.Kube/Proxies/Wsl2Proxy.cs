@@ -203,10 +203,17 @@ namespace Neon.Kube
         /// distribution by default of it's npot already running.
         /// </summary>
         /// <param name="name">Identifies the target WSL2 distribution.</param>
+        /// <param name="user">Optionally connect as a non-root user.</param>
         /// <param name="noStart">Optionally leaves the distribution as not running if it's not already running.</param>
-        public Wsl2Proxy(string name, bool noStart = false)
+        /// <remarks>
+        /// The <paramref name="user"/> passed will become the default user for subsequent
+        /// proxy operations.  This may be overridden by for specific operations by specifying 
+        /// a different user in the call.
+        /// </remarks>
+        public Wsl2Proxy(string name, string user = "root", bool noStart = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(user), nameof(user));
 
             if (!Exists(name))
             {
@@ -214,6 +221,7 @@ namespace Neon.Kube
             }
 
             this.Name = name;
+            this.User = user;
 
             if (!noStart)
             {
@@ -225,6 +233,13 @@ namespace Neon.Kube
         /// Returns the distribution's name.
         /// </summary>
         public string Name { get; private set; }
+
+        /// <summary>
+        /// Sppecifies the distribution user account to use for operations.  This will be
+        /// initialized to the user passed to the constructor but may be changed afterwards
+        /// to perform operations under other accounts.
+        /// </summary>
+        public string User { get; set; }
 
         /// <summary>
         /// <para>
@@ -259,7 +274,9 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Starts the distribution if it's not already running.
+        /// Connects to a distribution, starting it if it's not already running.
+        /// This also performs some initialization if required, including disabling
+        /// SUDO password prompts. 
         /// </para>
         /// <note>
         /// You need to call this for <see cref="Address"/> to be initialized if
@@ -288,12 +305,20 @@ namespace Neon.Kube
             // a temporary script file on the Windows host side and and then executing
             // it in the distribution as root.
 
-            if (!IsPrepared)
+            // We need to do this as [root].
+
+            var orgUser = User;
+
+            User = "root";
+
+            try
             {
-                using (var tempFile = new TempFile())
+                if (!IsPrepared)
                 {
-                    var homeFolder = HostFolders.Home(KubeConst.SysAdminUser);
-                    var script     =
+                    using (var tempFile = new TempFile())
+                    {
+                        var homeFolder = HostFolders.Home(KubeConst.SysAdminUser);
+                        var script     =
 $@"
 cat <<EOF > {homeFolder}/sudo-disable-prompt
 #!/bin/bash
@@ -319,90 +344,95 @@ sudo -A {homeFolder}/sudo-disable-prompt
 rm {homeFolder}/sudo-disable-prompt
 rm {homeFolder}/askpass
 ";
-                    ExecuteScript(script).EnsureSuccess();
-                }
+                        ExecuteScript(script).EnsureSuccess();
+                    }
 
-                // Touch the prepared state file to indicate that the distribution has been prepared
-                // by disabling SUDO password prompts, etc.
+                    // Touch the prepared state file to indicate that the distribution has been prepared
+                    // by disabling SUDO password prompts, etc.
 
-                var setPreparedScript =
+                    var setPreparedScript =
 $@"
 mkdir -p {KubeNodeFolders.State}
 chmod 750 {KubeNodeFolders.State}
 mkdir -p {LinuxPath.GetDirectoryName(preparedStatePath)}
 touch {preparedStatePath}
 ";
-                SudoExecuteScript(setPreparedScript).EnsureSuccess();
+                    SudoExecuteScript(setPreparedScript).EnsureSuccess();
+                }
+
+                // Execute [ip addr] in the distribution and parse the output to extract
+                // the distribution's IP address.  The output looks like somthing this:
+                //
+                //  1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+                //      link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+                //      inet 127.0.0.1/8 scope host lo
+                //         valid_lft forever preferred_lft forever
+                //      inet6 ::1/128 scope host
+                //         valid_lft forever preferred_lft forever
+                //  2: bond0: <BROADCAST,MULTICAST,MASTER> mtu 1500 qdisc noop state DOWN group default qlen 1000
+                //      link/ether 9e:3b:88:2a:08:55 brd ff:ff:ff:ff:ff:ff
+                //  3: dummy0: <BROADCAST,NOARP> mtu 1500 qdisc noop state DOWN group default qlen 1000
+                //      link/ether 46:cb:71:39:ad:4a brd ff:ff:ff:ff:ff:ff
+                //  4: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP group default qlen 1000
+                //      link/ether 00:15:5d:c8:ee:64 brd ff:ff:ff:ff:ff:ff
+                //      inet 172.25.250.51/20 brd 172.25.255.255 scope global eth0
+                //         valid_lft forever preferred_lft forever
+                //      inet6 fe80::215:5dff:fec8:ee64/64 scope link
+                //         valid_lft forever preferred_lft forever
+                //  5: sit0@NONE: <NOARP> mtu 1480 qdisc noop state DOWN group default qlen 1000
+                //      link/sit 0.0.0.0 brd 0.0.0.0
+                //
+                // We're going to parse the address from the [inet...] line for the [eth0] interface.
+
+                var response = Execute("ip", "address");
+
+                response.EnsureSuccess();
+
+                using (var reader = new StringReader(response.OutputText))
+                {
+                    // Skip lines until we get to the [eth0] line.
+
+                    while (true)
+                    {
+                        var line = reader.ReadLine();
+
+                        if (line == null)
+                        {
+                            throw new KubeException("Cannot determine the WSL2 distribution address because the [eth0] interface is missing.");
+                        }
+
+                        if (line.Contains(" eth0: "))
+                        {
+                            break;
+                        }
+                    }
+
+                    // Scan for the [inet] line and extract the IP address.
+
+                    while (true)
+                    {
+                        var line = reader.ReadLine();
+
+                        if (line == null || !line.StartsWith(" "))
+                        {
+                            throw new KubeException("Cannot determine the WSL2 distribution address because the [eth0] interface does not specify an [inet] address.");
+                        }
+
+                        line = line.Trim();
+
+                        if (line.StartsWith("inet "))
+                        {
+                            var fields = line.Split(new char[] { ' ', '/' }, StringSplitOptions.RemoveEmptyEntries);
+
+                            Address = fields[1];
+                            break;
+                        }
+                    }
+                }
             }
-
-            // Execute [ip addr] in the distribution and parse the output to extract
-            // the distribution's IP address.  The output looks like somthing this:
-            //
-            //  1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
-            //      link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
-            //      inet 127.0.0.1/8 scope host lo
-            //         valid_lft forever preferred_lft forever
-            //      inet6 ::1/128 scope host
-            //         valid_lft forever preferred_lft forever
-            //  2: bond0: <BROADCAST,MULTICAST,MASTER> mtu 1500 qdisc noop state DOWN group default qlen 1000
-            //      link/ether 9e:3b:88:2a:08:55 brd ff:ff:ff:ff:ff:ff
-            //  3: dummy0: <BROADCAST,NOARP> mtu 1500 qdisc noop state DOWN group default qlen 1000
-            //      link/ether 46:cb:71:39:ad:4a brd ff:ff:ff:ff:ff:ff
-            //  4: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP group default qlen 1000
-            //      link/ether 00:15:5d:c8:ee:64 brd ff:ff:ff:ff:ff:ff
-            //      inet 172.25.250.51/20 brd 172.25.255.255 scope global eth0
-            //         valid_lft forever preferred_lft forever
-            //      inet6 fe80::215:5dff:fec8:ee64/64 scope link
-            //         valid_lft forever preferred_lft forever
-            //  5: sit0@NONE: <NOARP> mtu 1480 qdisc noop state DOWN group default qlen 1000
-            //      link/sit 0.0.0.0 brd 0.0.0.0
-            //
-            // We're going to parse the address from the [inet...] line for the [eth0] interface.
-
-            var response = Execute("ip", "address");
-
-            response.EnsureSuccess();
-
-            using (var reader = new StringReader(response.OutputText))
+            finally
             {
-                // Skip lines until we get to the [eth0] line.
-
-                while (true)
-                {
-                    var line = reader.ReadLine();
-
-                    if (line == null)
-                    {
-                        throw new KubeException("Cannot determine the WSL2 distribution address because the [eth0] interface is missing.");
-                    }
-
-                    if (line.Contains(" eth0: "))
-                    {
-                        break;
-                    }
-                }
-
-                // Scan for the [inet] line and extract the IP address.
-
-                while (true)
-                {
-                    var line = reader.ReadLine();
-
-                    if (line == null || !line.StartsWith(" "))
-                    {
-                        throw new KubeException("Cannot determine the WSL2 distribution address because the [eth0] interface does not specify an [inet] address.");
-                    }
-
-                    line = line.Trim();
-
-                    if (line.StartsWith("inet "))
-                    {
-                        var fields = line.Split(new char[] { ' ', '/' }, StringSplitOptions.RemoveEmptyEntries);
-
-                        Address = fields[1];
-                        break;
-                    }
-                }
+                User = orgUser;
             }
         }
 
@@ -426,6 +456,7 @@ touch {preparedStatePath}
                 new object[]
                 {
                     "--distribution", Name,
+                    "--user", User,
                     "--",
                     path,
                     args
@@ -444,6 +475,7 @@ touch {preparedStatePath}
                 new object[]
                 {
                     "--distribution", Name,
+                    "--user", User,
                     "--",
                     "sudo", path,
                     args
@@ -517,13 +549,16 @@ touch {preparedStatePath}
         }
 
         /// <summary>
-        /// Creates a text file at the specifid path within the distribution.
+        /// Creates a text file at the specifid path within the distribution.  The file will
+        /// be created with the current <see cref="User"/> as the owner by default by this
+        /// can be overridden.
         /// </summary>
         /// <param name="path">The target path.</param>
         /// <param name="text">The text to be written.</param>
+        /// <param name="owner">Optionally overrides the current user when setting the file owner.</param>
         /// <param name="permissions">Optionally specifies the linux file permissions.</param>
         /// <param name="noLinuxLineEndings">Optionally disables conversion of Windows (CRLF) line endings to the Linux standard (LF).</param>
-        public void WriteFile(string path, string text, string permissions = null, bool noLinuxLineEndings = false)
+        public void UploadFile(string path, string text, string owner = null, string permissions = null, bool noLinuxLineEndings = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path), nameof(path));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(text), nameof(text));
@@ -539,7 +574,9 @@ touch {preparedStatePath}
 
             if (!string.IsNullOrEmpty(permissions))
             {
-                SudoExecute("chmod", permissions, path);
+                SudoExecute("chown", owner ?? User, path).EnsureSuccess();
+                SudoExecute("chgrp", owner ?? User, path).EnsureSuccess();  // We're assuming the user's group is the same as the user name
+                SudoExecute("chmod", permissions, path).EnsureSuccess();
             }
         }
     }
