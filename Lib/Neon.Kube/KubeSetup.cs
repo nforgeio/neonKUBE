@@ -566,8 +566,9 @@ $@"
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
             Covenant.Requires<ArgumentNullException>(firstMaster != null, nameof(firstMaster));
 
-            var cluster      = setupState.Get<ClusterProxy>(ClusterProxyProperty);
-            var clusterLogin = setupState.Get<ClusterLogin>(ClusterLoginProperty);
+            var hostingEnvironment = setupState.Get<HostingEnvironment>(KubeSetup.HostingEnvironmentProperty);
+            var cluster            = setupState.Get<ClusterProxy>(ClusterProxyProperty);
+            var clusterLogin       = setupState.Get<ClusterLogin>(ClusterLoginProperty);
 
             firstMaster.InvokeIdempotent("setup/cluster-init",
                 () =>
@@ -596,6 +597,13 @@ $@"
                             var controlPlaneEndpoint = $"kubernetes-masters:6442";
                             var sbCertSANs           = new StringBuilder();
 
+                            if (hostingEnvironment == HostingEnvironment.Wsl2)
+                            {
+                                // Tweak the API server endpoint for WSL2.
+
+                                controlPlaneEndpoint = "localhost:6443";
+                            }
+
                             if (!string.IsNullOrEmpty(cluster.Definition.Kubernetes.ApiLoadBalancer))
                             {
                                 controlPlaneEndpoint = cluster.Definition.Kubernetes.ApiLoadBalancer;
@@ -608,6 +616,19 @@ $@"
                             foreach (var node in cluster.Masters)
                             {
                                 sbCertSANs.AppendLine($"  - \"{node.Address}\"");
+                            }
+
+                            var kubeletFailSwapOnLine           = string.Empty;
+                            var kubeInitgnoreSwapOnPreflightArg = string.Empty;
+
+                            if (hostingEnvironment == HostingEnvironment.Wsl2)
+                            {
+                                // SWAP will be enabled by the default Microsoft WSL2 kernel which
+                                // will cause Kubernetes to complain because this isn't a supported
+                                // configuration.  We need to disable these error checks.
+
+                                kubeletFailSwapOnLine           = "failSwapOn: false";
+                                kubeInitgnoreSwapOnPreflightArg = "--ignore-preflight-errors=Swap";
                             }
 
                             var clusterConfig =
@@ -645,11 +666,12 @@ logging:
   format: json
 nodeStatusReportFrequency: 4s
 volumePluginDir: /var/lib/kubelet/volume-plugins
+{kubeletFailSwapOnLine}
 ";
                             var kubeInitScript =
-@"
+$@"
 systemctl enable kubelet.service
-kubeadm init --config cluster.yaml
+kubeadm init {kubeInitgnoreSwapOnPreflightArg} --config cluster.yaml
 ";
                             var response = firstMaster.SudoCommand(CommandBundle.FromScript(kubeInitScript).AddFile("cluster.yaml", clusterConfig));
 

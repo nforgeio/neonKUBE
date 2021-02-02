@@ -456,7 +456,7 @@ Server Requirements:
                 setupController.AddNodeStep("node credentials",
                     (state, node) =>
                     {
-                        node.ConfigureSshKey(setupController, clusterLogin);
+                        node.ConfigureSshKey(setupController);
                     });
                 setupController.AddNodeStep("node prepare",
                     (state, node) =>

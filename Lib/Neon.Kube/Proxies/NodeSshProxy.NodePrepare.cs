@@ -71,8 +71,9 @@ namespace Neon.Kube
                         // Upload each tool script, removing the extension.
 
                         var targetName = LinuxPath.GetFileNameWithoutExtension(file.Path);
+                        var targetPath = LinuxPath.Combine(KubeNodeFolders.Bin, targetName);
 
-                        UploadText(targetName, file.ReadAllText(), permissions: "644", owner: KubeConst.SysAdminUser);
+                        UploadText(targetPath, file.ReadAllText(), permissions: "774", owner: KubeConst.SysAdminUser);
                     }
                 });
         }
@@ -1104,7 +1105,38 @@ rm -rf linux-amd64
             InvokeIdempotent("node/install-kubernetes",
                 () =>
                 {
-                    var script =
+                    var hostingEnvironment = setupState.Get<HostingEnvironment>(KubeSetup.HostingEnvironmentProperty);
+
+                    // We need some custom configuration on WSL2 inspired by the 
+                    // Kubernetes-IN-Docker (KIND) project:
+                    //
+                    //      https://d2iq.com/blog/running-kind-inside-a-kubernetes-cluster-for-continuous-integration
+
+                    if (hostingEnvironment == HostingEnvironment.Wsl2)
+                    {
+                        // We need to disable IPv6 on WSL2.  We're going to accomplish this by
+                        // writing a config file to be included last by [/etc/sysctl.conf].
+
+                        var confScript =
+@"
+cat <<EOF > /etc/sysctl.d/990-wsl2-no-ipv6
+# neonKUBE needs to disable IPv6 when hosted on WSL2.
+
+net.ipv6.conf.all.disable_ipv6=1
+net.ipv6.conf.default.disable_ipv6=1
+net.ipv6.conf.lo.disable_ipv6=1
+EOF
+
+chmod 744 /etc/sysctl.d/990-wsl-no-ipv6 
+
+sysctl --system
+";
+                        SudoCommand(CommandBundle.FromScript(confScript), RunOptions.FaultOnError);
+                    }
+
+                    // Perform the install.
+
+                    var mainScript =
 $@"
 curl {KubeHelper.CurlOptions} https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
 echo ""deb https://apt.kubernetes.io/ kubernetes-xenial main"" > /etc/apt/sources.list.d/kubernetes.list
@@ -1135,7 +1167,16 @@ systemctl disable kubelet
                     KubeHelper.WriteStatus(statusWriter, "Install", "Kubernetes");
                     Status = "install: kubernetes";
 
-                    SudoCommand(CommandBundle.FromScript(script), RunOptions.Defaults | RunOptions.FaultOnError);
+                    SudoCommand(CommandBundle.FromScript(mainScript), RunOptions.Defaults | RunOptions.FaultOnError);
+
+                    // Additional special configuration for WSL2.
+
+                    if (hostingEnvironment == HostingEnvironment.Wsl2)
+                    {
+                        var script = KubeHelper.Resources.GetFile("/Scripts/wsl2-cgroup-setup.sh").ReadAllText();
+
+                        SudoCommand(CommandBundle.FromScript(script));
+                    }
                 });
         }
     }
