@@ -120,10 +120,10 @@ namespace Neon.Temporal
     /// <see cref="DescribeNamespaceAsync(string)"/>, and <see cref="UpdateNamespaceAsync(string, UpdateNamespaceRequest)"/>.
     /// </para>
     /// <para>
-    /// Workflows and activities are implemented by creating a <see cref="Worker"/> via <see cref="NewWorkerAsync(WorkerOptions)"/>,
-    /// registering your workflow and activity implementations with the worker and then starting
-    /// the worker via <see cref="Worker.StartAsync"/>.  Temporal will begin scheduling pending
-    /// workflows and activities on workers after they've been started.
+    /// Workflows and activities are implemented by creating a <see cref="Worker"/> via 
+    /// <see cref="NewWorkerAsync(string, string, WorkerOptions)"/>, registering your workflow and 
+    /// activity implementations with the worker and then starting the worker via <see cref="Worker.StartAsync"/>.  
+    /// Temporal will begin scheduling pending workflows and activities on workers after they've been started.
     /// </para>
     /// <para>
     /// The <see cref="Worker"/> class provides methods for registering individual workflow and

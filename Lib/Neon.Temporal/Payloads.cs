@@ -23,6 +23,9 @@ using Newtonsoft.Json;
 
 namespace Neon.Temporal
 {
+    /// <summary>
+    /// Data payloads.
+    /// </summary>
     public class Payloads
     {
         /// <summary>

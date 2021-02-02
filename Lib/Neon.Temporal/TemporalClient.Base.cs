@@ -156,7 +156,7 @@ namespace Neon.Temporal
 
         /// <summary>
         /// Signals Temporal to start a <see cref="Worker"/> (returned by a previous call to
-        /// <see cref="NewWorkerAsync(WorkerOptions)"/>).
+        /// <see cref="NewWorkerAsync(string, string, WorkerOptions)"/>).
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <remarks>
@@ -190,7 +190,7 @@ namespace Neon.Temporal
         /// <summary>
         /// Signals Temporal that it should stop invoking activities and workflows 
         /// for the specified <see cref="Worker"/> (returned by a previous call to
-        /// <see cref="NewWorkerAsync(WorkerOptions)"/>).
+        /// <see cref="NewWorkerAsync(string, string, WorkerOptions)"/>).
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <remarks>

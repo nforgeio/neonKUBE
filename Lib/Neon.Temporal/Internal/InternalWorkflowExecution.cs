@@ -66,6 +66,10 @@ namespace Neon.Temporal.Internal
         [DefaultValue(null)]
         public string RunId { get; private set; }
 
+        /// <summary>
+        /// Converts the instance to the equivalant <see cref="WorkflowExecution"/>.
+        /// </summary>
+        /// <returns>The <see cref="WorkflowExecution"/>.</returns>
         public WorkflowExecution ToWorkflowExecution()
         {
             return new WorkflowExecution(WorkflowId, RunId);
