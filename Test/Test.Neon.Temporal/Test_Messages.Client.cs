@@ -510,8 +510,7 @@ namespace TestTemporal
                 Assert.Null(message.Name);
                 Assert.Null(message.Description);
                 Assert.Null(message.OwnerEmail);
-                Assert.False(message.EmitMetrics);
-                Assert.Equal(0, message.RetentionDays);
+                Assert.Equal(TimeSpan.Zero, message.WorkflowExecutionRetentionPeriod);
 
                 // Round-trip
 
@@ -520,16 +519,14 @@ namespace TestTemporal
                 message.Name = "my-namespace";
                 message.Description = "my-description";
                 message.OwnerEmail = "my-email";
-                message.EmitMetrics = true;
-                message.RetentionDays = 14;
+                message.WorkflowExecutionRetentionPeriod = TimeSpan.FromDays(14);
 
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-namespace", message.Name);
                 Assert.Equal("my-description", message.Description);
                 Assert.Equal("my-email", message.OwnerEmail);
-                Assert.True(message.EmitMetrics);
-                Assert.Equal(14, message.RetentionDays);
+                Assert.Equal(TimeSpan.FromDays(14), message.WorkflowExecutionRetentionPeriod);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -542,8 +539,7 @@ namespace TestTemporal
                 Assert.Equal("my-namespace", message.Name);
                 Assert.Equal("my-description", message.Description);
                 Assert.Equal("my-email", message.OwnerEmail);
-                Assert.True(message.EmitMetrics);
-                Assert.Equal(14, message.RetentionDays);
+                Assert.Equal(TimeSpan.FromDays(14), message.WorkflowExecutionRetentionPeriod);
 
                 // Clone()
 
@@ -554,8 +550,7 @@ namespace TestTemporal
                 Assert.Equal("my-namespace", message.Name);
                 Assert.Equal("my-description", message.Description);
                 Assert.Equal("my-email", message.OwnerEmail);
-                Assert.True(message.EmitMetrics);
-                Assert.Equal(14, message.RetentionDays);
+                Assert.Equal(TimeSpan.FromDays(14), message.WorkflowExecutionRetentionPeriod);
 
                 // Echo the message via the associated [temporal-proxy] and verify.
 
@@ -566,8 +561,7 @@ namespace TestTemporal
                 Assert.Equal("my-namespace", message.Name);
                 Assert.Equal("my-description", message.Description);
                 Assert.Equal("my-email", message.OwnerEmail);
-                Assert.True(message.EmitMetrics);
-                Assert.Equal(14, message.RetentionDays);
+                Assert.Equal(TimeSpan.FromDays(14), message.WorkflowExecutionRetentionPeriod);
             }
         }
 

@@ -19,6 +19,7 @@ package messages
 
 import (
 	internal "temporal-proxy/internal"
+	"time"
 )
 
 type (
@@ -101,37 +102,21 @@ func (request *NamespaceRegisterRequest) SetOwnerEmail(value *string) {
 	request.SetStringProperty("OwnerEmail", value)
 }
 
-// GetEmitMetrics gets a NamespaceRegisterRequest's EmitMetrics value
+// GetWorkflowExecutionRetentionPeriod gets a NamespaceRegisterRequest's WorkflowExecutionRetentionPeriod value
 // from its properties map
 //
-// returns bool -> bool indicating whether or not to enable metrics
-func (request *NamespaceRegisterRequest) GetEmitMetrics() bool {
-	return request.GetBoolProperty("EmitMetrics")
+// returns time.Duration -> time.Duration indicating the complete workflow history retention
+// period
+func (request *NamespaceRegisterRequest) GetWorkflowExecutionRetentionPeriod() time.Duration {
+	return request.GetTimeSpanProperty("WorkflowExecutionRetentionPeriod")
 }
 
-// SetEmitMetrics sets a NamespaceRegisterRequest's EmitMetrics value
+// SetWorkflowExecutionRetentionPeriod sets a NamespaceRegisterRequest's EmitMetrics value
 // in its properties map
 //
-// param value bool -> bool value to be set in the properties map
-func (request *NamespaceRegisterRequest) SetEmitMetrics(value bool) {
-	request.SetBoolProperty("EmitMetrics", value)
-}
-
-// GetRetentionDays gets a NamespaceRegisterRequest's RetentionDays value
-// from its properties map
-//
-// returns int32 -> int32 indicating the complete workflow history retention
-// period in days
-func (request *NamespaceRegisterRequest) GetRetentionDays() int32 {
-	return request.GetIntProperty("RetentionDays")
-}
-
-// SetRetentionDays sets a NamespaceRegisterRequest's EmitMetrics value
-// in its properties map
-//
-// param value int32 -> int32 value to be set in the properties map
-func (request *NamespaceRegisterRequest) SetRetentionDays(value int32) {
-	request.SetIntProperty("RetentionDays", value)
+// param value time.Duration -> time.Duration value to be set in the properties map
+func (request *NamespaceRegisterRequest) SetWorkflowExecutionRetentionPeriod(value time.Duration) {
+	request.SetTimeSpanProperty("WorkflowExecutionRetentionPeriod", value)
 }
 
 // GetSecurityToken gets a NamespaceRegisterRequest's SecurityToken value
@@ -171,8 +156,7 @@ func (request *NamespaceRegisterRequest) CopyTo(target IProxyMessage) {
 		v.SetName(request.GetName())
 		v.SetDescription(request.GetDescription())
 		v.SetOwnerEmail(request.GetOwnerEmail())
-		v.SetEmitMetrics(request.GetEmitMetrics())
-		v.SetRetentionDays(request.GetRetentionDays())
+		v.SetWorkflowExecutionRetentionPeriod(request.GetWorkflowExecutionRetentionPeriod())
 		v.SetSecurityToken(request.GetSecurityToken())
 	}
 }

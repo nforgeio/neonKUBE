@@ -142,6 +142,7 @@ namespace Neon.Temporal.Internal
         public static PropertyNameUtf8 WorkerId { get; private set; }                                  = new PropertyNameUtf8("WorkerId");
         public static PropertyNameUtf8 Workflow { get; private set; }                                  = new PropertyNameUtf8("Workflow");
         public static PropertyNameUtf8 WorkflowArgs { get; private set; }                              = new PropertyNameUtf8("WorkflowArgs");
+        public static PropertyNameUtf8 WorkflowExecutionRetentionPeriod { get; private set; }          = new PropertyNameUtf8("WorkflowExecutionRetentionPeriod");
         public static PropertyNameUtf8 WorkflowId { get; private set; }                                = new PropertyNameUtf8("WorkflowId");
         public static PropertyNameUtf8 WorkflowType { get; private set; }                              = new PropertyNameUtf8("WorkflowType");
 

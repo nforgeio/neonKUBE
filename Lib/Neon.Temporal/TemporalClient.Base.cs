@@ -55,6 +55,10 @@ namespace Neon.Temporal
         /// use this to register your workflow and/or activity implementations with Temporal and
         /// the start the worker to signal Temporal that the worker is ready for business.
         /// </summary>
+        /// <param name="namespace">Optionally specifies namespace for worker.  Defaults
+        /// to namespace set in <see cref="Settings"/>.</param>
+        /// <param name="taskQueue">Optionally specifies task queue for worker.  Defaults
+        /// to task queue set in <see cref="Settings"/>.</param>
         /// <param name="options">Optionally specifies additional worker options.</param>
         /// <returns>A <see cref="Worker"/> identifying the worker instance.</returns>
         /// <remarks>
@@ -83,18 +87,23 @@ namespace Neon.Temporal
         /// related workers.
         /// </para>
         /// </remarks>
-        public async Task<Worker> NewWorkerAsync(WorkerOptions options = null)
+        public async Task<Worker> NewWorkerAsync(
+            string        @namespace = null, 
+            string        taskQueue  = null, 
+            WorkerOptions options    = null)
         {
             await SyncContext.ClearAsync;
             EnsureNotDisposed();
 
-            options = options ?? new WorkerOptions();
+            @namespace = @namespace ?? Settings.Namespace;
+            taskQueue  = taskQueue ?? Settings.TaskQueue;
+            options    = options ?? new WorkerOptions();
 
             var reply = (NewWorkerReply)(await CallProxyAsync(
                 new NewWorkerRequest()
                 {
-                    Namespace = Settings.Namespace,
-                    TaskQueue = Settings.TaskQueue,
+                    Namespace = @namespace,
+                    TaskQueue = taskQueue,
                     Options   = options
                 }));
 

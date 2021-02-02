@@ -49,11 +49,11 @@ namespace Neon.Temporal
             var namespaceRegisterRequest =
                 new NamespaceRegisterRequest()
                 {
-                    Name          = request.Name,
-                    Description   = request.Description,
-                    OwnerEmail    = request.OwnerEmail,
-                    RetentionDays = request.RetentionDays,
-                    SecurityToken = request.SecurityToken
+                    Name                             = request.Name,
+                    Description                      = request.Description,
+                    OwnerEmail                       = request.OwnerEmail,
+                    WorkflowExecutionRetentionPeriod = request.WorkflowExecutionRetentionPeriod,
+                    SecurityToken                    = request.SecurityToken
                 };
 
             var reply = await CallProxyAsync(namespaceRegisterRequest);
@@ -94,11 +94,11 @@ namespace Neon.Temporal
                 await RegisterNamespaceAsync(
                     new InternalRegisterNamespaceRequest()
                     {
-                        Name          = name,
-                        Description   = description,
-                        OwnerEmail    = ownerEmail,
-                        RetentionDays = retentionDays,
-                        SecurityToken = Settings.SecurityToken
+                        Name                             = name,
+                        Description                      = description,
+                        OwnerEmail                       = ownerEmail,
+                        WorkflowExecutionRetentionPeriod = TimeSpan.FromDays(retentionDays),
+                        SecurityToken                    = Settings.SecurityToken
                     });
             }
             catch (NamespaceAlreadyExistsException)

@@ -402,10 +402,12 @@ func handleNamespaceRegisterRequest(requestCtx context.Context, request *message
 
 	// create a new temporal namespace RegisterNamespaceRequest for
 	// registering a new namespace
+	retention := request.GetWorkflowExecutionRetentionPeriod()
 	registerNamespaceRequest := workflowservice.RegisterNamespaceRequest{
-		Name:        namespaceName,
-		Description: *request.GetDescription(),
-		OwnerEmail:  *request.GetOwnerEmail(),
+		Name:                             namespaceName,
+		Description:                      *request.GetDescription(),
+		OwnerEmail:                       *request.GetOwnerEmail(),
+		WorkflowExecutionRetentionPeriod: &retention,
 	}
 
 	// create context with timeout

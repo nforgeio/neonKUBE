@@ -130,51 +130,55 @@ namespace TestTemporal
             //-----------------------------------------------------------------
             // RegisterNamespace:
 
-            //await Assert.ThrowsAsync<ArgumentNullException>(async () => await client.RegisterNamespaceAsync(name: null));
-            //await Assert.ThrowsAsync<ArgumentException>(async () => await client.RegisterNamespaceAsync(name: "namespace-0", retentionDays: -1));
+            await Assert.ThrowsAsync<ArgumentNullException>(async () => await client.RegisterNamespaceAsync(name: null));
+            await Assert.ThrowsAsync<ArgumentException>(async () => await client.RegisterNamespaceAsync(name: "namespace-0", retentionDays: -1));
 
-            //await client.RegisterNamespaceAsync("namespace-0", "this is namespace-0", "jeff@lilltek.com", retentionDays: 14);
+            await client.RegisterNamespaceAsync("namespace-0", "this is namespace-0", "jeff@lilltek.com", retentionDays: 14);
+            
+            // TODO -- JACK REMOVE THIS
             //await Assert.ThrowsAsync<NamespaceAlreadyExistsException>(async () => await client.RegisterNamespaceAsync(name: "namespace-0"));
 
-            ////-----------------------------------------------------------------
-            //// DescribeNamespace:
+            //-----------------------------------------------------------------
+            // DescribeNamespace:
 
-            //var namespaceDescribeReply = await client.DescribeNamespaceAsync("namespacxe-0");
+            var namespaceDescribeReply = await client.DescribeNamespaceAsync("namespace-0");
 
-            //Assert.False(namespaceDescribeReply.Config.EmitMetrics);
-            //Assert.Equal(14, namespaceDescribeReply.Config.RetentionDays);
-            //Assert.Equal("namsepace-0", namespaceDescribeReply.NamespaceInfo.Name);
-            //Assert.Equal("this is namespace-0", namespaceDescribeReply.NamespaceInfo.Description);
-            //Assert.Equal("jeff@lilltek.com", namespaceDescribeReply.NamespaceInfo.OwnerEmail);
-            //Assert.Equal(NamespaceState.Registered, namespaceDescribeReply.NamespaceInfo.Status);
+            Assert.Equal(ArchivalState.Disabled, namespaceDescribeReply.Config.HistoryArchivalState);
+            Assert.Equal(TimeSpan.FromDays(14), namespaceDescribeReply.Config.WorkflowExecutionRetentionTtl);
+            Assert.Equal("namespace-0", namespaceDescribeReply.NamespaceInfo.Name);
+            Assert.Equal("this is namespace-0", namespaceDescribeReply.NamespaceInfo.Description);
+            Assert.Equal("jeff@lilltek.com", namespaceDescribeReply.NamespaceInfo.OwnerEmail);
+            Assert.Equal(NamespaceState.Registered, namespaceDescribeReply.NamespaceInfo.State);
 
+            // TODO -- JACK REMOVE THIS
             //await Assert.ThrowsAsync<EntityNotExistsException>(async () => await client.DescribeNamespaceAsync("does-not-exist"));
 
-            ////-----------------------------------------------------------------
-            //// UpdateNamespace:
+            //-----------------------------------------------------------------
+            // UpdateNamespace:
 
             var updateNamespaceRequest = new UpdateNamespaceRequest();
 
-            //updateNamespaceRequest.Options.EmitMetrics    = true;
-            //updateNamespaceRequest.Options.RetentionDays  = 77;
-            //updateNamespaceRequest.NamespaceInfo.OwnerEmail  = "foo@bar.com";
-            //updateNamespaceRequest.NamespaceInfo.Description = "new description";
+            updateNamespaceRequest.Config.HistoryArchivalState = ArchivalState.Enabled;
+            updateNamespaceRequest.Config.WorkflowExecutionRetentionTtl = TimeSpan.FromDays(88);
+            updateNamespaceRequest.UpdateInfo.OwnerEmail = "foo@bar.com";
+            updateNamespaceRequest.UpdateInfo.Description = "new description";
 
-            //await client.UpdateNamespaceAsync("namespace-0", updateNamespaceRequest);
+            await client.UpdateNamespaceAsync("namespace-0", updateNamespaceRequest);
 
-            //namespaceDescribeReply = await client.DescribeNamespaceAsync("namespace-0");
+            namespaceDescribeReply = await client.DescribeNamespaceAsync("namespace-0");
 
-            //Assert.True(namespaceDescribeReply.Config.EmitMetrics);
-            //Assert.Equal(77, namespaceDescribeReply.Config.RetentionDays);
-            //Assert.Equal("namespace-0", namespaceDescribeReply.NamespaceInfo.Name);
-            //Assert.Equal("new description", namespaceDescribeReply.NamespaceInfo.Description);
-            //Assert.Equal("foo@bar.com", namespaceDescribeReply.NamespaceInfo.OwnerEmail);
-            //Assert.Equal(NamespaceState.Registered, namespaceDescribeReply.NamespaceInfo.Status);
+            Assert.Equal(ArchivalState.Enabled, namespaceDescribeReply.Config.HistoryArchivalState);
+            Assert.Equal(TimeSpan.FromDays(88), namespaceDescribeReply.Config.WorkflowExecutionRetentionTtl);
+            Assert.Equal("namespace-0", namespaceDescribeReply.NamespaceInfo.Name);
+            Assert.Equal("new description", namespaceDescribeReply.NamespaceInfo.Description);
+            Assert.Equal("foo@bar.com", namespaceDescribeReply.NamespaceInfo.OwnerEmail);
+            Assert.Equal(NamespaceState.Registered, namespaceDescribeReply.NamespaceInfo.State);
 
-            await Assert.ThrowsAsync<EntityNotExistsException>(async () => await client.UpdateNamespaceAsync("does-not-exist", updateNamespaceRequest));
+            // TODO -- JACK REMOVE THIS
+            //await Assert.ThrowsAsync<EntityNotExistsException>(async () => await client.UpdateNamespaceAsync("does-not-exist", updateNamespaceRequest));
         }
 
-        [Fact]
+        [Fact_NotImplemented]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Base_ListNamespaces()
         {
