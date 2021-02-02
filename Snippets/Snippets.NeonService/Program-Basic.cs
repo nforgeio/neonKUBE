@@ -9,7 +9,7 @@ namespace Service_Basic
 {
     public static class Program
     {
-        public async static Task Main(string[] args)
+        public static async Task Main(string[] args)
         {
             // Launch the service.
 

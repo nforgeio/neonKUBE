@@ -128,7 +128,7 @@ Converts a text file into a Unix/Linux compatible form by:
 
             var searchOptions = commandLine.GetOption("--recursive") == null ? SearchOption.TopDirectoryOnly : SearchOption.AllDirectories;
 
-            Console.WriteLine(string.Empty);
+            Console.WriteLine();
 
             try
             {
@@ -164,7 +164,7 @@ Converts a text file into a Unix/Linux compatible form by:
             catch (Exception e)
             {
                 Console.Error.WriteLine($"{NeonHelper.ExceptionError(e)}");
-                Console.Error.WriteLine(string.Empty);
+                Console.Error.WriteLine();
 
                 Program.Exit(1);
             }

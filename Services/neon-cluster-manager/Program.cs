@@ -25,7 +25,7 @@ namespace NeonClusterManager
         /// </summary>
         /// <param name="args">The command line arguments.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async static Task Main(string[] args)
+        public static async Task Main(string[] args)
         {
             await new Service(NeonServices.ClusterManager, serviceMap: NeonServiceMap.Production).RunAsync();
         }

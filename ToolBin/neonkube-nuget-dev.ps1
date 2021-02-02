@@ -21,9 +21,25 @@
 #
 # NOTE: This is script works only for maintainers with proper credentials.
 
+$ErrorActionPreference = "Stop"
+
+# Import the global project include file.
+
+. $env:NF_ROOT/Powershell/includes.ps1
+
 # Verify that the user has the required environment variables.  These will
 # be available only for maintainers and are intialized by the neonCLOUD
 # [buildenv.cmd] script.
+
+if (!(Test-Path env:NC_NUGET_DEVFEED))
+{
+    "ERROR: This script is intended for maintainers only"
+    ""
+    "NC_NUGET_DEVFEED environment variable is not defined."
+    "Maintainers should re-run the neonCLOUD [buildenv.cmd] script."
+
+    return 1
+}
 
 if (!(Test-Path env:NC_NUGET_VERSIONER))
 {
@@ -118,7 +134,7 @@ function Publish
 
     $projectPath = [io.path]::combine($env:NF_ROOT, "Lib", "$project", "$project" + ".csproj")
 
-    dotnet pack $projectPath -c Debug -o "$env:NF_BUILD\nuget"
+    dotnet pack $projectPath  -c Debug --include-symbols --include-source -o "$env:NF_BUILD\nuget"
     nuget push -Source $env:NC_NUGET_DEVFEED "$env:NF_BUILD\nuget\$project.$version.nupkg"
    
     # NOTE: We're not doing this because including source and symbols above because
@@ -127,36 +143,39 @@ function Publish
 	# dotnet pack "$env:NF_ROOT\Lib\$project\$project.csproj" -c Debug --include-symbols --include-source -o "$env:NUGET_LOCAL_FEED"
 }
 
-# Verify that the [NUGET_LOCAL_FEED] environment variable exists and references an
-# existing folder that will act as our local nuget feed.
-
-if ("$env:NUGET_LOCAL_FEED" -eq "") {
-    echo "ERROR: [NUGET_LOCAL_FEED] environment variable does not exist."
-    pause
-    exit 1
-}
-
-if (-not (Test-Path "$env:NUGET_LOCAL_FEED")) {
-    New-Item -Path "$env:NUGET_LOCAL_FEED" -ItemType Directory
-}
-
 # We're going to call the neonCLOUD nuget versioner service to atomically increment the 
 # dev package version counters for the solution and then generate the full version for
 # the packages we'll be publishing.  We'll use separate counters for the neonLIBRARY
 # and neonKUBE packages.
+#
+# The package versions will also include the current branch appended to the preview tag
+# so a typical package version will look like:
+#
+#       10000.0.VERSION-dev-master
+#
+# where we use major version 10000 as a value that will never be exceeded by a real
+# release, VERSION is automatically incremented for every package published, [master]
+# in this case is the current branch at the time of publishing and [-dev] indicates
+# that this is a non-production release.
+#
+# NOTE: We could have used a separate counter for each published branch but we felt it
+# would this would be easier to manage by having all recent packages published from all
+# branches have versions near each other.
+
+$branch = GitBranch $env:NF_ROOT
 
 # Get the nuget versioner API key from the environment and convert it into a base-64 string.
 
 $versionerKeyBase64 = [Convert]::ToBase64String(([System.Text.Encoding]::UTF8.GetBytes($env:NC_NUGET_VERSIONER_APIKEY)))
 
 # Submit PUTs request to the versioner service, specifying the counter name.  The service will
-# atomically increment the counters and return the next value.
+# atomically increment the counter and return the next value.
 
 $reply          = Invoke-WebRequest -Uri "$env:NC_NUGET_VERSIONER/counter/neonLIBRARY-dev" -Method 'PUT' -Headers @{ 'Authorization' = "Bearer $versionerKeyBase64" } 
-$libraryVersion = "10000.0.$reply-dev"
+$libraryVersion = "10000.0.$reply-dev-$branch"
 
 $reply          = Invoke-WebRequest -Uri "$env:NC_NUGET_VERSIONER/counter/neonKUBE-dev" -Method 'PUT' -Headers @{ 'Authorization' = "Bearer $versionerKeyBase64" } 
-$kubeVersion    = "10000.0.$reply-dev"
+$kubeVersion    = "10000.0.$reply-dev-$branch"
 
 # We need to set the version first in all of the project files so that
 # implicit package dependencies will work for external projects importing

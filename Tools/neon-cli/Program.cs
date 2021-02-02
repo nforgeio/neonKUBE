@@ -57,7 +57,7 @@ namespace NeonCli
         /// </summary>
         /// <param name="args">The command line arguments.</param>
         /// <returns>The exit code.</returns>
-        public async static Task<int> Main(params string[] args)
+        public static async Task<int> Main(params string[] args)
         {
             string usage = $@"
 neonKUBE Management Tool: neon [v{Program.Version}]
@@ -648,11 +648,6 @@ You can disable the use of this encrypted folder by specifying
 
             return new ClusterProxy(KubeHelper.CurrentContext, Program.CreateNodeProxy<NodeDefinition>);
         }
-
-        /// <summary>
-        /// Returns the folder holding the Linux resource files for the target operating system.
-        /// </summary>
-        public static ResourceFiles.Folder LinuxFolder => ResourceFiles.Root.GetFolder("Ubuntu-20.04");
 
         /// <summary>
         /// Presents the user with a yes/no question and waits for a response.

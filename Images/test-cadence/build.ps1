@@ -17,7 +17,7 @@ Log-ImageBuild $registry $tag
 
 $appname      = "test-cadence"
 $organization = LibraryRegistryOrg
-$branch       = GitBranch
+$branch       = GitBranch $env:NF_ROOT
 
 # Copy the common scripts.
 

@@ -52,11 +52,5 @@ namespace Neon.Kube
         /// </summary>
         [EnumMember(Value = "filesystem")]
         Filesystem,
-
-        /// <summary>
-        /// Yugabyte.
-        /// </summary>
-        [EnumMember(Value = "yugabyte")]
-        Yugabyte
     }
 }

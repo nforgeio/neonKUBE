@@ -409,7 +409,7 @@ namespace Neon.Xunit
         /// <typeparam name="TException">The required exception type.</typeparam>
         /// <param name="action">The test action.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async static Task AssertThrowsAsync<TException>(Func<Task> action)
+        public static async Task AssertThrowsAsync<TException>(Func<Task> action)
             where TException : Exception
         {
             Covenant.Requires<ArgumentNullException>(action != null, nameof(action));

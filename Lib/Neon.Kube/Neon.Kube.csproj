@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
@@ -23,6 +23,7 @@
     <Configurations>Debug;Release;CodeDoc</Configurations>
     <PackageIcon>nuget-icon.png</PackageIcon>
     <PackageTags>kubernetes</PackageTags>
+    <NoDefaultExcludes>true</NoDefaultExcludes>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -56,7 +57,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="Resources\Conf\cluster.conf" />
     <None Remove="Resources\Helm\citus-postgresql\.helmignore" />
     <None Remove="Resources\Helm\citus-postgresql\Chart.yaml" />
     <None Remove="Resources\Helm\citus-postgresql\OWNERS._" />
@@ -713,18 +713,10 @@
     <None Remove="Resources\Helm\yugabyte\templates\_helpers.tpl" />
     <None Remove="Resources\Helm\yugabyte\values.yaml" />
     <None Remove="Resources\Helm\yugabyte\yugabyte-rbac.yaml" />
-    <None Remove="Resources\Setup\setup-disk.sh" />
-    <None Remove="Resources\Setup\setup-docker.sh" />
-    <None Remove="Resources\Setup\setup-exists.sh" />
-    <None Remove="Resources\Setup\setup-package-proxy.sh" />
-    <None Remove="Resources\Setup\setup-utility.sh" />
     <None Remove="Resources\Tools\safe-apt-get.sh" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Resources\Conf\cluster.conf">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
     <EmbeddedResource Include="Resources\Helm\grafana\ci\default-values.yaml" />
     <EmbeddedResource Include="Resources\Helm\grafana\ci\with-dashboard-json-values.yaml" />
     <EmbeddedResource Include="Resources\Helm\grafana\ci\with-dashboard-values.yaml" />
@@ -1384,15 +1376,6 @@
     <EmbeddedResource Include="Resources\Helm\yugabyte\templates\_helpers.tpl" />
     <EmbeddedResource Include="Resources\Helm\yugabyte\values.yaml" />
     <EmbeddedResource Include="Resources\Helm\yugabyte\yugabyte-rbac.yaml" />
-    <EmbeddedResource Include="Resources\Setup\setup-disk.sh">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\Setup\setup-package-proxy.sh">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\Setup\setup-utility.sh">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
     <EmbeddedResource Include="Resources\Tools\safe-apt-get.sh">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
@@ -1431,6 +1414,10 @@
   <ItemGroup>
     <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
     <None Include="..\..\LICENSE" Pack="True" PackagePath="" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Extensions\" />
   </ItemGroup>
 
   <Target Name="ModelGen" BeforeTargets="BeforeCompile">

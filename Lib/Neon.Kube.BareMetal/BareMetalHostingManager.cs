@@ -38,6 +38,7 @@ using Newtonsoft.Json.Linq;
 
 using Renci.SshNet.Common;
 
+using Neon.Collections;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
@@ -157,7 +158,7 @@ namespace Neon.Kube
                 };
 
                 checkController.AddNodeStep("machine online status",
-                    node =>
+                    (state, node) =>
                     {
                         const int maxAttempts = 5;
 
@@ -197,7 +198,7 @@ namespace Neon.Kube
                     });
 
                 checkController.AddNodeStep("connect machines",
-                    node =>
+                    (state, node) =>
                     {
                         node.Status = "connecting...";
 
@@ -242,7 +243,7 @@ namespace Neon.Kube
                 var openEbsNodeCount = 0;
 
                 checkController.AddNodeStep("OpenEBS block device scan",
-                    node =>
+                    (state, node) =>
                     {
                         // NOTE: Nodes should still be connected from the last step.
 
@@ -297,16 +298,16 @@ namespace Neon.Kube
                 MaxParallel = this.MaxParallel
             };
 
-            setupController.AddNodeStep("connect nodes", node => Connect(node));
-            setupController.AddNodeStep("verify operating system", node => node.VerifyNodeOS());
-            setupController.AddNodeStep("configure nodes", node => Congfigure(node));
+            setupController.AddNodeStep("connect nodes", (state, node) => Connect(node));
+            setupController.AddNodeStep("verify operating system", (state, node) => node.VerifyNodeOS());
+            setupController.AddNodeStep("configure nodes", (state, node) => Configure(state, node));
 
             if (secureSshPassword != orgSshPassword)
             {
-                setupController.AddNodeStep("secure node passwords", node => SetSecurePassword(node));
+                setupController.AddNodeStep("secure node passwords", (state, node) => SetSecurePassword(node));
             }
 
-            setupController.AddNodeStep("detect node labels", node => DetectLabels(node));
+            setupController.AddNodeStep("detect node labels", (state, node) => DetectLabels(node));
 
             if (!setupController.Run())
             {
@@ -381,9 +382,12 @@ namespace Neon.Kube
         /// <summary>
         /// Performs low-level node initialization.
         /// </summary>
+        /// <param name="setupState">The setup controller state.</param>
         /// <param name="node">The target node.</param>
-        private void Congfigure(NodeSshProxy<NodeDefinition> node)
+        private void Configure(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> node)
         {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+
             string nodeSshPassword;
 
             lock (nodeToPassword)
@@ -432,7 +436,7 @@ echo '{KubeConst.SysAdminUser}:{secureSshPassword}' | chpasswd
 
             // Download [/proc/meminfo] and extract the [MemTotal] value (in kB).
 
-            result = node.SudoCommand("cat /proc/meminfo");
+            result = node.SudoCommand("cat /proc/meminfo", RunOptions.FaultOnError);
 
             if (result.ExitCode == 0)
             {
@@ -451,7 +455,7 @@ echo '{KubeConst.SysAdminUser}:{secureSshPassword}' | chpasswd
 
             // Download [/proc/cpuinfo] and count the number of processors.
 
-            result = node.SudoCommand("cat /proc/cpuinfo");
+            result = node.SudoCommand("cat /proc/cpuinfo", RunOptions.FaultOnError);
 
             if (result.ExitCode == 0)
             {
@@ -488,7 +492,7 @@ echo '{KubeConst.SysAdminUser}:{secureSshPassword}' | chpasswd
 
             foreach (var blockDevice in blockDevices)
             {
-                result = node.SudoCommand($"lsblk -b --output SIZE -n -d {blockDevice}", RunOptions.LogOutput);
+                result = node.SudoCommand($"lsblk -b --output SIZE -n -d {blockDevice}", RunOptions.LogOutput | RunOptions.FaultOnError);
 
                 if (result.ExitCode == 0)
                 {
@@ -502,7 +506,7 @@ echo '{KubeConst.SysAdminUser}:{secureSshPassword}' | chpasswd
         }
 
         /// <inheritdoc/>
-        public override string GetDataDisk(NodeSshProxy<NodeDefinition> node)
+        public override string GetDataDisk(LinuxSshProxy node)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 

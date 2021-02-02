@@ -44,14 +44,12 @@ function Publish
     [CmdletBinding()]
     param (
         [Parameter(Position=0, Mandatory=1)]
-        [string]$project.
+        [string]$project,
         [Parameter(Position=0, Mandatory=2)]
         [string]$version
     )
 
 	dotnet pack "$env:NF_ROOT\Lib\$project\$project.csproj" -c Release -o "$env:NF_BUILD\nuget"
-
-	$libraryVersion = Get-Content "$env:NF_ROOT\neonLIBRARY-version.txt" -First 1
 
     if (Test-Path "$env:NF_ROOT\Lib\$project\prerelease.txt")
     {

@@ -35,6 +35,7 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
 using Neon.Net;
+using Neon.SSH;
 using Neon.Time;
 
 namespace Neon.Kube
@@ -135,7 +136,7 @@ namespace Neon.Kube
         public abstract (string Address, int Port) GetSshEndpoint(string nodeName);
 
         /// <inheritdoc/>
-        public abstract string GetDataDisk(NodeSshProxy<NodeDefinition> node);
+        public abstract string GetDataDisk(LinuxSshProxy node);
 
         /// <summary>
         /// Used by cloud and potentially other hosting manager implementations to verify the

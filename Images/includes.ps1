@@ -20,6 +20,11 @@
 $ErrorActionPreference = "Stop"
 
 #------------------------------------------------------------------------------
+# Import the global project include file.
+
+. $env:NF_ROOT/Powershell/includes.ps1
+
+#------------------------------------------------------------------------------
 # Important source code paths.
 
 $src_path          = $env:NF_ROOT
@@ -179,22 +184,12 @@ function UtcDate
 }
 
 #------------------------------------------------------------------------------
-# Returns the current Git branch.
-
-function GitBranch
-{
-	$branch = git rev-parse --abbrev-ref HEAD
-
-	return $branch
-}
-
-#------------------------------------------------------------------------------
 # Returns the current Git branch, date, and commit formatted as a Docker image tag
 # along with an optional dirty branch indicator.
 
 function ImageTag
 {
-	$branch = GitBranch
+	$branch = GitBranch $env:NF_ROOT
 	$date   = UtcDate
 	$commit = git log -1 --pretty=%h
 	$tag    = "$branch-$date-$commit"
@@ -219,7 +214,7 @@ function ImageTag
 
 function IsRelease
 {
-    $branch = GitBranch
+    $branch = GitBranch $env:NF_ROOT
 
 	return $rel -or ($branch -like "release-*")
 }
@@ -234,7 +229,7 @@ function IsRelease
 
 function TagAsLatest
 {
-	$branch = GitBranch
+	$branch = GitBranch $env:NF_ROOT
 
 	return $rel -or ($branch -like "release-*") -or ($branch -eq "master")
 }

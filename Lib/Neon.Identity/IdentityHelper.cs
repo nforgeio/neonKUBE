@@ -62,7 +62,7 @@ namespace Neon.Identity
         /// <param name="password">The user password.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="SchemaManagerException">Thrown if the database initialization failed.</exception>
-        public async static Task InitializeDatabaseAsync(string connectionString, string databaseName, string userName, string password)
+        public static async Task InitializeDatabaseAsync(string connectionString, string databaseName, string userName, string password)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(connectionString), nameof(connectionString));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(databaseName), nameof(databaseName));

@@ -41,36 +41,11 @@ using k8s.Models;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Specifies the options for configuring the cluster integrated Elasticsearch 
-    /// metrics stack: <a href="https://Elastic.co/">https://Elastic.co/</a>
+    /// Specifies the options for configuring the cluster integrated logging and
+    /// metrics.
     /// </summary>
     public class LogOptions
     {
-        /// <summary>
-        /// Indicates whether Elasticsearch metrics are to be enabled for the cluster.  
-        /// This defaults to <c>true</c>.
-        /// </summary>
-        [JsonProperty(PropertyName = "Enabled", Required = Required.Default)]
-        [YamlMember(Alias = "enabled", ApplyNamingConventions = false)]
-        [DefaultValue(true)]
-        public bool Enabled { get; set; } = true;
-
-        /// <summary>
-        /// Specifies the amount of disk space to allocate to Elasticsearch.
-        /// </summary>
-        [JsonProperty(PropertyName = "DiskSize", Required = Required.Default)]
-        [YamlMember(Alias = "diskSize", ApplyNamingConventions = false)]
-        [DefaultValue("1 GiB")]
-        public string DiskSize { get; set; } = "1 GiB";
-
-        /// <summary>
-        /// Compute Resources required by Elasticsearch.
-        /// </summary>
-        [JsonProperty(PropertyName = "Resources", Required = Required.Default)]
-        [YamlMember(Alias = "resources", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public V1ResourceRequirements Resources { get; set; } = null;
-
         /// <summary>
         /// Log retention period. Logs beyond this number of days will be purged by the ClusterManager
         /// </summary>
@@ -87,11 +62,6 @@ namespace Neon.Kube
         /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         public void Validate(ClusterDefinition clusterDefinition)
         {
-            if (!Enabled)
-            {
-                return;
-            }
-
             if (LogRetentionDays < 1)
             {
                 throw new ClusterDefinitionException($"[{nameof(LogOptions)}.{nameof(LogRetentionDays)}={LogRetentionDays}] is valid.  This must be at least one day.");

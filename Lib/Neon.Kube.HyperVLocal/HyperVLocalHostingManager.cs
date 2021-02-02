@@ -54,40 +54,6 @@ namespace Neon.Kube
     public class HyperVLocalHostingManager : HostingManager
     {
         //---------------------------------------------------------------------
-        // Private types
-
-        /// <summary>
-        /// Used to persist information about downloaded VHDX template files.
-        /// </summary>
-        public class DriveTemplateInfo
-        {
-            /// <summary>
-            /// The downloaded file ETAG.
-            /// </summary>
-            [JsonProperty(PropertyName = "ETag", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-            [YamlMember(Alias = "etag", ApplyNamingConventions = false)]
-            [DefaultValue(null)]
-            public string ETag { get; set; }
-
-            /// <summary>
-            /// The downloaded file length used as a quick verification that
-            /// the entire file was downloaded.
-            /// </summary>
-            [JsonProperty(PropertyName = "Length", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-            [YamlMember(Alias = "length", ApplyNamingConventions = false)]
-            [DefaultValue(-1)]
-            public long Length { get; set; }
-
-            /// <summary>
-            /// Indicates whether the file is GZIP compressed.
-            /// </summary>
-            [JsonProperty(PropertyName = "Compressed", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-            [YamlMember(Alias = "compressed", ApplyNamingConventions = false)]
-            [DefaultValue(false)]
-            public bool Compressed { get; set; }
-        }
-
-        //---------------------------------------------------------------------
         // Static members
 
         /// <summary>
@@ -207,9 +173,9 @@ namespace Neon.Kube
                 MaxParallel = 1     // We're only going to provision one VM at a time on a local Hyper-V instance.
             };
 
-            setupController.AddGlobalStep("prepare hyper-v", () => PrepareHyperV());
-            setupController.AddNodeStep("create virtual machines", node => ProvisionVM(node));
-            setupController.AddGlobalStep(string.Empty, () => Finish(), quiet: true);
+            setupController.AddGlobalStep("prepare hyper-v", state => PrepareHyperV());
+            setupController.AddNodeStep("create virtual machines", (state, node) => ProvisionVM(node));
+            setupController.AddGlobalStep(string.Empty, state => Finish(), quiet: true);
 
             if (!setupController.Run())
             {
@@ -232,7 +198,7 @@ namespace Neon.Kube
             // the OpenEBS disk will be easy to identify as the only unpartitioned disk.
 
             setupController.AddNodeStep("openebs",
-                node =>
+                (state, node) =>
                 {
                     using (var hyperv = new HyperVClient())
                     {
@@ -262,7 +228,7 @@ namespace Neon.Kube
                         }
                     }
                 },
-                node => node.Metadata.OpenEBS);
+                (state, node) => node.Metadata.OpenEBS);
         }
 
         /// <inheritdoc/>
@@ -275,7 +241,7 @@ namespace Neon.Kube
         public override bool RequiresAdminPrivileges => true;
 
         /// <inheritdoc/>
-        public override string GetDataDisk(NodeSshProxy<NodeDefinition> node)
+        public override string GetDataDisk(LinuxSshProxy node)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 
@@ -337,52 +303,14 @@ namespace Neon.Kube
 
             // Download the GZIPed VHDX template if it's not already present or has 
             // changed.  Note that we're going to name the file the same as the file 
-            // name from the URI and we're also going to persist the ETAG and file
-            // length in file with the same name with a [.info] extension.
-            //
-            // Note that I'm not actually going check for ETAG changes to update
-            // the download file.  The reason for this is that I want to avoid the
-            // situation where the user has provisioned some nodes with one version
-            // of the template and then goes on later to provision new nodes with
-            // an updated template.
-            //
-            // This should only be an issue for people using the default "latest"
-            // drive template.  Production clusters should reference a specific
-            // drive template.
+            // name from the URI.
 
             var driveTemplateUri  = new Uri(KubeDownloads.GetNodeImageUri(this.HostingEnvironment));
             var driveTemplateName = driveTemplateUri.Segments.Last();
 
-            driveTemplatePath = Path.Combine(KubeHelper.NodeImageCache, driveTemplateName);
+            driveTemplatePath = Path.Combine(KubeHelper.NodeImageFolder, driveTemplateName);
 
-            var driveTemplateInfoPath  = Path.Combine(KubeHelper.NodeImageCache, driveTemplateName + ".info");
-            var driveTemplateIsCurrent = true;
-            var driveTemplateInfo      = (DriveTemplateInfo)null;
-
-            if (!File.Exists(driveTemplatePath) || !File.Exists(driveTemplateInfoPath))
-            {
-                driveTemplateIsCurrent = false;
-            }
-            else
-            {
-                try
-                {
-                    driveTemplateInfo = NeonHelper.JsonDeserialize<DriveTemplateInfo>(File.ReadAllText(driveTemplateInfoPath));
-
-                    if (new FileInfo(driveTemplatePath).Length != driveTemplateInfo.Length)
-                    {
-                        driveTemplateIsCurrent = false;
-                    }
-                }
-                catch
-                {
-                    // The [*.info] file must be corrupt.
-
-                    driveTemplateIsCurrent = false;
-                }
-            }
-
-            if (!driveTemplateIsCurrent)
+            if (!File.Exists(driveTemplatePath))
             {
                 var nodeImageUri = KubeDownloads.GetNodeImageUri(this.HostingEnvironment);
 
@@ -401,18 +329,10 @@ namespace Neon.Kube
 
                             var contentLength   = response.Content.Headers.ContentLength;
                             var contentEncoding = response.Content.Headers.ContentEncoding.SingleOrDefault();
-                            var compressed      = false;
 
-                            if (!string.IsNullOrEmpty(contentEncoding))
+                            if (string.IsNullOrEmpty(contentEncoding) || !contentEncoding.Equals("gzip", StringComparison.InvariantCultureIgnoreCase))
                             {
-                                if (contentEncoding.Equals("gzip", StringComparison.InvariantCultureIgnoreCase))
-                                {
-                                    compressed = true;
-                                }
-                                else
-                                {
-                                    throw new KubeException($"[{nodeImageUri}] has unsupported [Content-Encoding={contentEncoding}].");
-                                }
+                                throw new KubeException($"[{nodeImageUri}] has unsupported [Content-Encoding={contentEncoding}].  Expecting [gzip].");
                             }
 
                             try
@@ -451,38 +371,16 @@ namespace Neon.Kube
                             }
                             catch
                             {
-                                // Ensure that the template and info files are deleted if there were any
-                                // errors, to help avoid using a corrupted template.
+                                // Ensure that the template file is are deleted if there were any
+                                // errors to help avoid using a corrupted template.
 
                                 if (File.Exists(driveTemplatePath))
                                 {
                                     File.Decrypt(driveTemplatePath);
                                 }
 
-                                if (File.Exists(driveTemplateInfoPath))
-                                {
-                                    File.Decrypt(driveTemplateInfoPath);
-                                }
-
                                 throw;
                             }
-
-                            // Generate the [*.info] file.
-
-                            var templateInfo = new DriveTemplateInfo();
-
-                            templateInfo.Length     = new FileInfo(driveTemplatePath).Length;
-                            templateInfo.Compressed = compressed;
-
-                            if (response.Headers.TryGetValues("ETag", out var etags))
-                            {
-                                // Note that ETags look like they're surrounded by double
-                                // quotes.  We're going to strip these out if present.
-
-                                templateInfo.ETag = etags.SingleOrDefault().Replace("\"", string.Empty);
-                            }
-
-                            File.WriteAllText(driveTemplateInfoPath, NeonHelper.JsonSerialize(templateInfo, Formatting.Indented));
                         }
 
                     }).Wait();
@@ -571,57 +469,23 @@ namespace Neon.Kube
                 // virtual hard drive file.
 
                 var driveTemplateInfoPath = driveTemplatePath + ".info";
-                var driveTemplateInfo     = NeonHelper.JsonDeserialize<DriveTemplateInfo>(File.ReadAllText(driveTemplateInfoPath));
                 var osDrivePath           = Path.Combine(vmDriveFolder, $"{vmName}.vhdx");
 
                 node.Status = $"create: disk";
 
                 using (var input = new FileStream(driveTemplatePath, FileMode.Open, FileAccess.Read))
                 {
-                    if (driveTemplateInfo.Compressed)
+                    using (var output = new FileStream(osDrivePath, FileMode.Create, FileAccess.ReadWrite))
                     {
-                        using (var output = new FileStream(osDrivePath, FileMode.Create, FileAccess.ReadWrite))
+                        using (var decompressor = new GZipStream(input, CompressionMode.Decompress))
                         {
-                            using (var decompressor = new GZipStream(input, CompressionMode.Decompress))
-                            {
-                                var     buffer = new byte[64 * 1024];
-                                long    cbRead = 0;
-                                int     cb;
-
-                                while (true)
-                                {
-                                    cb = decompressor.Read(buffer, 0, buffer.Length);
-
-                                    if (cb == 0)
-                                    {
-                                        break;
-                                    }
-
-                                    output.Write(buffer, 0, cb);
-
-                                    cbRead += cb;
-
-                                    var percentComplete = (int)(((double)output.Length / (double)cbRead) * 100.0);
-
-                                    if (stopwatch.Elapsed >= updateInterval || percentComplete >= 100.0)
-                                    {
-                                        node.Status = $"create: disk [{percentComplete}%]";
-                                        stopwatch.Restart();
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    else
-                    {
-                        using (var output = new FileStream(osDrivePath, FileMode.Create, FileAccess.ReadWrite))
-                        {
-                            var buffer = new byte[64 * 1024];
-                            int cb;
+                            var     buffer = new byte[64 * 1024];
+                            long    cbRead = 0;
+                            int     cb;
 
                             while (true)
                             {
-                                cb = input.Read(buffer, 0, buffer.Length);
+                                cb = decompressor.Read(buffer, 0, buffer.Length);
 
                                 if (cb == 0)
                                 {
@@ -630,7 +494,9 @@ namespace Neon.Kube
 
                                 output.Write(buffer, 0, cb);
 
-                                var percentComplete = (int)(((double)output.Length / (double)input.Length) * 100.0);
+                                cbRead += cb;
+
+                                var percentComplete = (int)(((double)output.Length / (double)cbRead) * 100.0);
 
                                 if (stopwatch.Elapsed >= updateInterval || percentComplete >= 100.0)
                                 {
@@ -706,8 +572,8 @@ namespace Neon.Kube
                     if (osDiskBytes > KubeConst.NodeTemplateDiskSize)
                     {
                         node.Status = $"resize: OS disk";
-                        node.SudoCommand($"growpart {osDisk} 2");
-                        node.SudoCommand($"resize2fs {osDisk}2");
+                        node.SudoCommand($"growpart {osDisk} 2", RunOptions.None);
+                        node.SudoCommand($"resize2fs {osDisk}2", RunOptions.None);
                     }
                 }
                 finally

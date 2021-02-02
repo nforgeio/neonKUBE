@@ -74,7 +74,7 @@ namespace Neon.Kube
         /// <param name="appendToLog">Optionally have logs appended to an existing log file rather than creating a new one.</param>
         /// <param name="defaultRunOptions">
         /// Optionally specifies the <see cref="RunOptions"/> to be assigned to the 
-        /// <see cref="LinuxSshProxy{TMetadata}.DefaultRunOptions"/> property for the
+        /// <see cref="LinuxSshProxy.DefaultRunOptions"/> property for the
         /// nodes managed by the cluster proxy.  This defaults to <see cref="RunOptions.None"/>.
         /// </param>
         /// <remarks>
@@ -109,8 +109,8 @@ namespace Neon.Kube
         /// <param name="appendToLog">Optionally have logs appended to an existing log file rather than creating a new one.</param>
         /// <param name="defaultRunOptions">
         /// Optionally specifies the <see cref="RunOptions"/> to be assigned to the 
-        /// <see cref="LinuxSshProxy{TMetadata}.DefaultRunOptions"/> property for the
-        /// nodes managed by the cluster proxy.  This defaults to <see cref="RunOptions.None"/>.
+        /// <see cref="LinuxSshProxy.DefaultRunOptions"/> property for the nodes managed
+        /// by the cluster proxy.  This defaults to <see cref="RunOptions.None"/>.
         /// </param>
         /// <remarks>
         /// The <paramref name="nodeProxyCreator"/> function will be called for each node in
@@ -278,6 +278,17 @@ namespace Neon.Kube
         public NodeSshProxy<NodeDefinition> FindNode(string nodeName)
         {
             return Nodes.SingleOrDefault(n => string.Compare(n.Name, nodeName, StringComparison.OrdinalIgnoreCase) == 0);
+        }
+
+        /// <summary>
+        /// Clears the status for the all of the cluster nodes.
+        /// </summary>
+        public void ClearStatus()
+        {
+            foreach (var node in Nodes)
+            {
+                node.Status = string.Empty;
+            }
         }
 
         /// <summary>

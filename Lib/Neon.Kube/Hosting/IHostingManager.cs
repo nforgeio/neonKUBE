@@ -31,6 +31,7 @@ using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Net;
 using Neon.Retry;
+using Neon.SSH;
 using Neon.Time;
 
 using Renci.SshNet;
@@ -190,6 +191,6 @@ namespace Neon.Kube
         /// This will not work after the node's data disk has been initialized.
         /// </note>
         /// </remarks>
-        string GetDataDisk(NodeSshProxy<NodeDefinition> node);
+        string GetDataDisk(LinuxSshProxy node);
     }
 }
