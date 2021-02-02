@@ -19,8 +19,10 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
-using Neon.Temporal;
-using Neon.Common;
+
+using Newtonsoft.Json;
+
+using Neon.Data;
 
 namespace Neon.Temporal
 {
@@ -37,58 +39,74 @@ namespace Neon.Temporal
         /// <summary>
         /// The activity ID.
         /// </summary>
+        [JsonProperty(PropertyName = "activity_id")]
         public string ActivityId { get; set; }
 
         /// <summary>
         /// The activiy type name.
         /// </summary>
-        public string ActivityTypeName { get; set; }
+        [JsonProperty(PropertyName = "activity_type")]
+        public ActivityType ActivityType { get; set; }
 
         /// <summary>
         /// The activity state.
         /// </summary>
+        [JsonProperty(PropertyName = "state")]
+        [JsonConverter(typeof(IntegerEnumConverter<PendingActivityState>))]
         public PendingActivityState State { get; set; }
 
         /// <summary>
         /// Details from the last activity heartbeart.
         /// </summary>
-        public byte[] HeartbeatDetails { get; set; }
+        [JsonProperty(PropertyName = "heartbeat_details")]
+        public Payloads HeartbeatDetails { get; set; }
 
         /// <summary>
         /// Time when the last activity heartbeat was received.
         /// </summary>
-        public DateTime LastHeartbeatTime { get; set; }
+        [JsonProperty(PropertyName = "last_heartbeat_time")]
+        public DateTime? LastHeartbeatTime { get; set; }
 
         /// <summary>
         /// Time when the activity was most recently started.
         /// </summary>
-        public DateTime LastStartedTime { get; set; }
+        [JsonProperty(PropertyName = "last_started_time")]
+        public DateTime? LastStartedTime { get; set; }
 
         /// <summary>
         /// The number of times the activity has been started/restarted.
         /// </summary>
+        [JsonProperty(PropertyName = "attempt")]
         public int Attempt { get; set; }
 
         /// <summary>
         /// The maximum times the activity may be started.
         /// </summary>
+        [JsonProperty(PropertyName = "maximum_attempts")]
         public int MaximumAttempts { get; set; }
 
         /// <summary>
         /// Time when the activity is scheduled to run.
         /// </summary>
-        public DateTime ScheduledTime { get; set; }
+        [JsonProperty(PropertyName = "scheduled_time")]
+        public DateTime? ScheduledTime { get; set; }
 
         /// <summary>
         /// Time when the activity must complete.
         /// </summary>
-        public DateTime ExpirationTime { get; set; }
+        [JsonProperty(PropertyName = "expiration_time")]
+        public DateTime? ExpirationTime { get; set; }
 
-        // $todo(jefflill): We need to implement [LastFailure]
+        /// <summary>
+        /// The last failure.
+        /// </summary>
+        [JsonProperty(PropertyName = "last_failure")]
+        public Failure LastFailure { get; set; }
 
         /// <summary>
         /// The identity of the last worker that processed this activity.
         /// </summary>
+        [JsonProperty(PropertyName = "last_worker_identity")]
         public string LastWorkerIdentity { get; set; }
     }
 }

@@ -32,7 +32,7 @@ namespace Snippets.Temporal.CRON
             {
                 var stub = client.NewWorkflowFutureStub<ICronWorkflow>(
                     "backup",
-                    new WorkflowOptions()
+                    new StartWorkflowOptions()
                     {
                         // Run the workflow every day at 1:00am UTC:
                         CronSchedule = "0 1 * * *"

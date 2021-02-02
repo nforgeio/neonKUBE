@@ -175,7 +175,7 @@ namespace Neon.Temporal
         /// <param name="workflowTypeName">The workflow type name.</param>
         /// <param name="execution">The workflow execution.</param>
         /// <param name="options">The workflow options.</param>
-        internal WorkflowStub(TemporalClient client, string workflowTypeName, WorkflowExecution execution, WorkflowOptions options)
+        internal WorkflowStub(TemporalClient client, string workflowTypeName, WorkflowExecution execution, StartWorkflowOptions options)
         {
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
@@ -239,7 +239,7 @@ namespace Neon.Temporal
         /// <summary>
         /// Returns the workflow options.
         /// </summary>
-        public WorkflowOptions Options { get; internal set; }
+        public StartWorkflowOptions Options { get; internal set; }
 
         /// <summary>
         /// Ensures that the workflow has been started.

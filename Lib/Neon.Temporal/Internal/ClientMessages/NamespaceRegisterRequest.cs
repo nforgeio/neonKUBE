@@ -74,21 +74,12 @@ namespace Neon.Temporal.Internal
         }
 
         /// <summary>
-        /// Enable metrics.
-        /// </summary>
-        public bool EmitMetrics
-        {
-            get => GetBoolProperty(PropertyNames.EmitMetrics);
-            set => SetBoolProperty(PropertyNames.EmitMetrics, value);
-        }
-
-        /// <summary>
         /// The complete workflow history retention period in days.
         /// </summary>
-        public int RetentionDays
+        public TimeSpan WorkflowExecutionRetentionPeriod
         {
-            get => GetIntProperty(PropertyNames.RetentionDays);
-            set => SetIntProperty(PropertyNames.RetentionDays, value);
+            get => GetTimeSpanProperty(PropertyNames.WorkflowExecutionRetentionPeriod);
+            set => SetTimeSpanProperty(PropertyNames.WorkflowExecutionRetentionPeriod, value);
         }
 
         /// <summary>
@@ -117,12 +108,11 @@ namespace Neon.Temporal.Internal
 
             var typedTarget = (NamespaceRegisterRequest)target;
 
-            typedTarget.Name          = this.Name;
-            typedTarget.Description   = this.Description;
-            typedTarget.OwnerEmail    = this.OwnerEmail;
-            typedTarget.EmitMetrics   = this.EmitMetrics;
-            typedTarget.RetentionDays = this.RetentionDays;
-            typedTarget.SecurityToken = this.SecurityToken;
+            typedTarget.Name                             = this.Name;
+            typedTarget.Description                      = this.Description;
+            typedTarget.OwnerEmail                       = this.OwnerEmail;
+            typedTarget.WorkflowExecutionRetentionPeriod = this.WorkflowExecutionRetentionPeriod;
+            typedTarget.SecurityToken                    = this.SecurityToken;
         }
     }
 }

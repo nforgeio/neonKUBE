@@ -449,12 +449,12 @@ namespace Neon.Temporal
         /// <summary>
         /// Specifies the default maximum workflow execution time.  This defaults to <b>24 hours</b>.
         /// </summary>
-        [JsonProperty(PropertyName = "WorkflowStartToCloseTimeoutSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "workflowStartToCloseTimeoutSeconds", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "WorkflowExecutionTimeoutSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "WorkflowExecutionTimeoutSeconds", ApplyNamingConventions = false)]
         [DefaultValue(defaultTimeoutSeconds)]
-        public double WorkflowStartToCloseTimeoutSeconds
+        public double WorkflowExecutionTimeoutSeconds
         {
-            get => workflowStartToCloseTimeoutSeconds;
+            get => workflowExecutionTimeoutSeconds;
 
             set
             {
@@ -462,30 +462,30 @@ namespace Neon.Temporal
 
                 if (value <= 0.0)
                 {
-                    throw new ArgumentException($"[{value}] must be greater than zero.", nameof(WorkflowStartToCloseTimeoutSeconds));
+                    throw new ArgumentException($"[{value}] must be greater than zero.", nameof(WorkflowExecutionTimeoutSeconds));
                 }
 
-                workflowStartToCloseTimeoutSeconds = value;
+                workflowExecutionTimeoutSeconds = value;
             }
         }
 
-        private double workflowStartToCloseTimeoutSeconds = defaultTimeoutSeconds;
+        private double workflowExecutionTimeoutSeconds = defaultTimeoutSeconds;
 
         /// <summary>
-        /// Returns <see cref="WorkflowStartToCloseTimeoutSeconds"/> as a <see cref="TimeSpan"/>.
+        /// Returns <see cref="WorkflowExecutionTimeoutSeconds"/> as a <see cref="TimeSpan"/>.
         /// </summary>
-        internal TimeSpan WorkflowStartToCloseTimeout => TimeSpan.FromSeconds(Math.Max(WorkflowStartToCloseTimeoutSeconds, 0));
+        internal TimeSpan WorkflowExecutionTimeout => TimeSpan.FromSeconds(Math.Max(WorkflowExecutionTimeoutSeconds, 0));
 
         /// <summary>
-        /// Specifies the default maximum time a workflow can wait between being scheduled
-        /// and actually begin executing.  This defaults to <c>24 hours</c>.
+        /// The timeout for duration of a single workflow run.
+        /// The resolution is seconds.
         /// </summary>
-        [JsonProperty(PropertyName = "WorkflowScheduleToStartTimeoutSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "workflowScheduleToStartTimeoutSeconds", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "WorkflowRunTimeoutSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "workflowRunTimeoutSeconds", ApplyNamingConventions = false)]
         [DefaultValue(defaultTimeoutSeconds)]
-        public double WorkflowScheduleToStartTimeoutSeconds
+        public double WorkflowRunTimeoutSeconds
         {
-            get => workflowScheduleToStartTimeoutSeconds;
+            get => workflowRunTimeoutSeconds;
 
             set
             {
@@ -493,31 +493,31 @@ namespace Neon.Temporal
 
                 if (value <= 0.0)
                 {
-                    throw new ArgumentException($"[{value}] must be greater than zero.", nameof(WorkflowScheduleToStartTimeoutSeconds));
+                    throw new ArgumentException($"[{value}] must be greater than zero.", nameof(WorkflowRunTimeoutSeconds));
                 }
 
-                workflowScheduleToStartTimeoutSeconds = value;
+                workflowRunTimeoutSeconds = value;
             }
         }
 
-        private double workflowScheduleToStartTimeoutSeconds = defaultTimeoutSeconds;
+        private double workflowRunTimeoutSeconds = defaultTimeoutSeconds;
 
         /// <summary>
-        /// Returns <see cref="WorkflowScheduleToStartTimeoutSeconds"/> as a <see cref="TimeSpan"/>.
+        /// Returns <see cref="WorkflowRunTimeoutSeconds"/> as a <see cref="TimeSpan"/>.
         /// </summary>
-        internal TimeSpan WorkflowScheduleToStartTimeout => TimeSpan.FromSeconds(Math.Max(WorkflowScheduleToStartTimeoutSeconds, 0));
+        internal TimeSpan WorkflowRunTimeout => TimeSpan.FromSeconds(Math.Max(WorkflowRunTimeoutSeconds, 0));
 
         /// <summary>
-        /// Specifies the default maximum time a workflow decision task may execute.
+        /// Specifies the default maximum time a workflow task may execute.
         /// This must be with the range of <b>1 &lt; value &lt;= 60</b> seconds.
         /// This defaults to <b>10 seconds</b>.
         /// </summary>
-        [JsonProperty(PropertyName = "WorkflowDecisionTaskTimeoutSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "workflowDecisionTaskTimeoutSeconds", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "WorkflowTaskTimeoutSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "workflowTaskTimeoutSeconds", ApplyNamingConventions = false)]
         [DefaultValue(10.0)]
-        public double WorkflowDecisionTaskTimeoutSeconds
+        public double WorkflowTaskTimeoutSeconds
         {
-            get => workflowDecisionTaskTimeoutSeconds;
+            get => workflowTaskTimeoutSeconds;
 
             set
             {
@@ -525,24 +525,24 @@ namespace Neon.Temporal
 
                 if (value < 1.0)
                 {
-                    throw new ArgumentException($"[{value}] must be greater than or equal to 1 second.", nameof(WorkflowDecisionTaskTimeoutSeconds));
+                    throw new ArgumentException($"[{value}] must be greater than or equal to 1 second.", nameof(WorkflowTaskTimeoutSeconds));
                 }
 
-                workflowDecisionTaskTimeoutSeconds = value;
+                workflowTaskTimeoutSeconds = value;
             }
         }
 
-        private double workflowDecisionTaskTimeoutSeconds = 10.0; 
+        private double workflowTaskTimeoutSeconds = 10.0; 
 
         /// <summary>
-        /// Returns <see cref="WorkflowDecisionTaskTimeoutSeconds"/> as a <see cref="TimeSpan"/>.
+        /// Returns <see cref="WorkflowTaskTimeoutSeconds"/> as a <see cref="TimeSpan"/>.
         /// </summary>
-        internal TimeSpan WorkflowDecisionTaskTimeout => TimeSpan.FromSeconds(Math.Min(Math.Max(WorkflowDecisionTaskTimeoutSeconds, 1), 60));
+        internal TimeSpan WorkflowTaskTimeout => TimeSpan.FromSeconds(Math.Min(Math.Max(WorkflowTaskTimeoutSeconds, 1), 60));
 
         /// <summary>
         /// Specifies what happens when Temporal workflows attempt to reuse workflow IDs.
         /// This defaults to <see cref="WorkflowIdReusePolicy.AllowDuplicate"/>.
-        /// Workflows can customize this via <see cref="WorkflowOptions"/> or <see cref="ChildWorkflowOptions"/>
+        /// Workflows can customize this via <see cref="StartWorkflowOptions"/> or <see cref="ChildWorkflowOptions"/>
         /// or by setting this in the <see cref="WorkflowMethodAttribute"/> tagging the 
         /// workflow entry point method
         /// </summary>
@@ -1076,7 +1076,7 @@ namespace Neon.Temporal
                 DebugIgnoreHeartbeats                 = this.DebugIgnoreHeartbeats,
                 DebugIgnoreTimeouts                   = this.DebugIgnoreTimeouts,
                 DebugPrelaunched                      = this.DebugPrelaunched,
-                TaskQueue                      = this.TaskQueue,
+                TaskQueue                             = this.TaskQueue,
                 Namespace                             = this.Namespace,
                 HeartbeatIntervalSeconds              = this.HeartbeatIntervalSeconds,
                 HeartbeatTimeoutSeconds               = this.HeartbeatTimeoutSeconds,
@@ -1089,9 +1089,9 @@ namespace Neon.Temporal
                 ProxyTimeoutSeconds                   = this.ProxyTimeoutSeconds,
                 SecurityToken                         = this.SecurityToken,
                 WorkflowIdReusePolicy                 = this.WorkflowIdReusePolicy,
-                WorkflowStartToCloseTimeoutSeconds    = this.WorkflowStartToCloseTimeoutSeconds,
-                WorkflowScheduleToStartTimeoutSeconds = this.WorkflowScheduleToStartTimeoutSeconds,
-                WorkflowDecisionTaskTimeoutSeconds    = this.WorkflowDecisionTaskTimeoutSeconds
+                WorkflowExecutionTimeoutSeconds       = this.WorkflowExecutionTimeoutSeconds,
+                WorkflowRunTimeoutSeconds             = this.WorkflowRunTimeoutSeconds,
+                WorkflowTaskTimeoutSeconds            = this.WorkflowTaskTimeoutSeconds
             };
         }
     }

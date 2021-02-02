@@ -38,7 +38,17 @@ namespace Neon.Temporal
         /// <summary>
         /// The namespace configuration.
         /// </summary>
-        public NamespaceConfiguration Configuration { get; set; }
+        public NamespaceConfig Config { get; set; }
+
+        /// <summary>
+        /// The namespace replication configuration.
+        /// </summary>
+        public NamespaceReplicationConfig ReplicationConfig { get; set; }
+
+        /// <summary>
+        /// The namespace failover version.
+        /// </summary>
+        public long FailoverVersion { get; set; }
 
         /// <summary>
         /// Indicates whether the namespace is global.

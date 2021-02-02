@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    NamespaceInfo.cs
+// FILE:	    ArchivalStatus.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -18,52 +18,35 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-
-using Newtonsoft.Json;
+using System.Runtime.Serialization;
 
 using Neon.Common;
-using Neon.Data;
 using Neon.Temporal;
 using Neon.Temporal.Internal;
 
 namespace Neon.Temporal
 {
     /// <summary>
-    /// Information about a Temporal namespace.
+    /// Controls archival.
     /// </summary>
-    public class NamespaceInfo
+    public enum ArchivalState
     {
         /// <summary>
-        /// The namespace name.
+        /// Archival unspecified.
         /// </summary>
-        public string Name { get; set; }
+        [EnumMember(Value = "Unspecified")]
+        Unspecified = 0,
+        
+        /// <summary>
+        /// Disables archival.
+        /// </summary>
+        [EnumMember(Value = "Disabled")]
+        Disabled,
 
         /// <summary>
-        /// The namespace UUID.
+        /// Enables archival.
         /// </summary>
-        public string Id { get; set; }
-
-        /// <summary>
-        /// The namespace status.
-        /// </summary>
-        [JsonConverter(typeof(IntegerEnumConverter<NamespaceState>))]
-        public NamespaceState State { get; set; }
-
-        /// <summary>
-        /// Ths namespace description.
-        /// </summary>
-        public string Description { get; set; }
-
-        /// <summary>
-        /// The namespace owner's email address.
-        /// </summary>
-        [JsonProperty(PropertyName = "owner_email")]
-        public string OwnerEmail { get; set; }
-
-        /// <summary>
-        /// A dictionary of named string data that can be attached to namespace
-        /// and that can be used for any purpose.
-        /// </summary>
-        public Dictionary<string, string> Data { get; set; }
+        [EnumMember(Value = "Enabled")]
+        Enabled
     }
 }

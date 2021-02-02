@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    UpdateNamespaceInfo.cs
-// CONTRIBUTOR: Jeff Lill
+// FILE:	    TaskQueueStatus.cs
+// CONTRIBUTOR: John C. Burns
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,35 +17,27 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
+using System.Text;
 
 using Newtonsoft.Json;
 
-using Neon.Common;
-using Neon.Temporal;
-using Neon.Temporal.Internal;
-
 namespace Neon.Temporal
 {
-    /// <summary>
-    /// Holds the changes to be made to a Temporal namespace's basic properties.
-    /// </summary>
-    public class UpdateNamespaceInfo
+    public class TaskQueueStatus
     {
-        /// <summary>
-        /// The updated namespace description.
-        /// </summary>
-        public string Description { get; set; }
+        [JsonProperty(PropertyName = "backlog_count_hint")]
+        public long BackLogCountHint { get; set; }
 
-        /// <summary>
-        /// The updated namespace owner email address.
-        /// </summary>
-        [JsonProperty(PropertyName = "owner_email")]
-        public string OwnerEmail { get; set; }
+        [JsonProperty(PropertyName = "read_level")]
+        public long ReadLevel { get; set; }
 
-        /// <summary>
-        /// Key-value map for any customized purpose.
-        /// </summary>
-        public Dictionary<string, string> Data { get; set; }
+        [JsonProperty(PropertyName = "ack_level")]
+        public long AckLevel { get; set; }
+
+        [JsonProperty(PropertyName = "rate_per_second")]
+        public double RatePerSecond { get; set; }
+
+        [JsonProperty(PropertyName = "task_id_block")]
+        public TaskIdBlock TaskIdBlock { get; set; }
     }
 }

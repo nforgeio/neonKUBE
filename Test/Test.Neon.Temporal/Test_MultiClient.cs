@@ -151,12 +151,12 @@ namespace TestTemporal
                     await worker2.RegisterWorkflowAsync<WorkflowWithResult1>();
                     await worker2.StartAsync();
 
-                    var options1 = new WorkflowOptions()
+                    var options1 = new StartWorkflowOptions()
                     {
                         TaskQueue = "taskqueue-1"
                     };
 
-                    var options2 = new WorkflowOptions()
+                    var options2 = new StartWorkflowOptions()
                     {
                         TaskQueue = "taskqueue-2"
                     };

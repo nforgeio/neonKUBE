@@ -49,11 +49,11 @@ namespace Neon.Temporal
             var namespaceRegisterRequest =
                 new NamespaceRegisterRequest()
                 {
-                    Name          = request.Name,
-                    Description   = request.Description,
-                    OwnerEmail    = request.OwnerEmail,
-                    RetentionDays = request.RetentionDays,
-                    SecurityToken = request.SecurityToken
+                    Name                             = request.Name,
+                    Description                      = request.Description,
+                    OwnerEmail                       = request.OwnerEmail,
+                    WorkflowExecutionRetentionPeriod = request.WorkflowExecutionRetentionPeriod,
+                    SecurityToken                    = request.SecurityToken
                 };
 
             var reply = await CallProxyAsync(namespaceRegisterRequest);
@@ -94,11 +94,11 @@ namespace Neon.Temporal
                 await RegisterNamespaceAsync(
                     new InternalRegisterNamespaceRequest()
                     {
-                        Name          = name,
-                        Description   = description,
-                        OwnerEmail    = ownerEmail,
-                        RetentionDays = retentionDays,
-                        SecurityToken = Settings.SecurityToken
+                        Name                             = name,
+                        Description                      = description,
+                        OwnerEmail                       = ownerEmail,
+                        WorkflowExecutionRetentionPeriod = TimeSpan.FromDays(retentionDays),
+                        SecurityToken                    = Settings.SecurityToken
                     });
             }
             catch (NamespaceAlreadyExistsException)
@@ -137,58 +137,11 @@ namespace Neon.Temporal
 
             return new NamespaceDescription()
             {
-                NamespaceInfo = new NamespaceInfo()
-                {
-                    Description = reply.NamespaceInfoDescription,
-                    Name        = reply.NamespaceInfoName,
-                    OwnerEmail  = reply.NamespaceInfoOwnerEmail,
-                    Status      = reply.NamespaceInfoStatus
-                },
-
-                Configuration = new NamespaceConfiguration()
-                {
-                    EmitMetrics   = reply.ConfigurationEmitMetrics,
-                    RetentionDays = reply.ConfigurationRetentionDays
-                },
-            };
-        }
-
-        /// <summary>
-        /// Describes a Temporal namespace by UUID.
-        /// </summary>
-        /// <param name="uuid">The namespace ID.</param>
-        /// <returns>The <see cref="NamespaceDescription"/>.</returns>
-        public async Task<NamespaceDescription> DescribeNamespaceByIdAsync(string uuid)
-        {
-            await SyncContext.ClearAsync;
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uuid), nameof(uuid));
-            EnsureNotDisposed();
-
-            var namespaceDescribeRequest =
-                new NamespaceDescribeRequest()
-                {
-                    Uuid = uuid,
-                };
-
-            var reply = (NamespaceDescribeReply)await CallProxyAsync(namespaceDescribeRequest);
-
-            reply.ThrowOnError();
-
-            return new NamespaceDescription()
-            {
-                NamespaceInfo = new NamespaceInfo()
-                {
-                    Description = reply.NamespaceInfoDescription,
-                    Name        = reply.NamespaceInfoName,
-                    OwnerEmail  = reply.NamespaceInfoOwnerEmail,
-                    Status      = reply.NamespaceInfoStatus
-                },
-
-                Configuration = new NamespaceConfiguration()
-                {
-                    EmitMetrics   = reply.ConfigurationEmitMetrics,
-                    RetentionDays = reply.ConfigurationRetentionDays
-                },
+                NamespaceInfo     = reply.NamespaceInfo,
+                Config            = reply.NamespaceConfig,
+                IsGlobalNamespace = reply.IsGlobalNamespace,
+                FailoverVersion   = reply.FailoverVersion,
+                ReplicationConfig = reply.NamespaceReplicationConfig
             };
         }
 
@@ -203,19 +156,19 @@ namespace Neon.Temporal
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
             Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
-            Covenant.Requires<ArgumentNullException>(request.Options != null, nameof(request));
-            Covenant.Requires<ArgumentNullException>(request.NamespaceInfo != null, nameof(request));
+            Covenant.Requires<ArgumentNullException>(request.Config != null, nameof(request));
+            Covenant.Requires<ArgumentNullException>(request.UpdateInfo != null, nameof(request));
             EnsureNotDisposed();
 
             var namespaceUpdateRequest =
                 new NamespaceUpdateRequest()
                 {
                     Name                       = name,
-                    UpdatedInfoDescription     = request.NamespaceInfo.Description,
-                    UpdatedInfoOwnerEmail      = request.NamespaceInfo.OwnerEmail,
-                    ConfigurationEmitMetrics   = request.Options.EmitMetrics,
-                    ConfigurationRetentionDays = request.Options.RetentionDays,
-                    SecurityToken              = Settings.SecurityToken
+                    UpdateNamespaceInfo        = request.UpdateInfo,
+                    NamespaceReplicationConfig = request.ReplicationConfig,
+                    NamespaceConfig            = request.Config,
+                    SecurityToken              = Settings.SecurityToken,
+                    DeleteBadBinary            = request.DeleteBadBinary
                 };
 
             var reply = await CallProxyAsync(namespaceUpdateRequest);

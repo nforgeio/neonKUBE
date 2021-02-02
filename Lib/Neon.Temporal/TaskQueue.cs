@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    UpdateNamespaceInfo.cs
-// CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
+// FILE:	    TaskQueue.cs
+// CONTRIBUTOR: John C Burns
+// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,35 +17,29 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
+using System.Text;
 
 using Newtonsoft.Json;
 
-using Neon.Common;
-using Neon.Temporal;
-using Neon.Temporal.Internal;
+using Neon.Data;
 
 namespace Neon.Temporal
 {
     /// <summary>
-    /// Holds the changes to be made to a Temporal namespace's basic properties.
+    /// Represents a Temporal task queue with a <see cref="string"/> Name
+    /// and <see cref="TaskQueueKind"/> kind.
     /// </summary>
-    public class UpdateNamespaceInfo
+    public class TaskQueue
     {
         /// <summary>
-        /// The updated namespace description.
+        /// Identifies the name of the task queue.
         /// </summary>
-        public string Description { get; set; }
+        public string Name { get; set; }
 
         /// <summary>
-        /// The updated namespace owner email address.
+        /// Identifies the kind of task queue (normal/sticky).
         /// </summary>
-        [JsonProperty(PropertyName = "owner_email")]
-        public string OwnerEmail { get; set; }
-
-        /// <summary>
-        /// Key-value map for any customized purpose.
-        /// </summary>
-        public Dictionary<string, string> Data { get; set; }
+        [JsonConverter(typeof(IntegerEnumConverter<TaskQueueKind>))]
+        public TaskQueueKind Kind { get; set; }
     }
 }

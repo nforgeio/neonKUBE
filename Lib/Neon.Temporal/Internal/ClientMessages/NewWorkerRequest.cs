@@ -42,12 +42,28 @@ namespace Neon.Temporal.Internal
         public override InternalMessageTypes ReplyType => InternalMessageTypes.NewWorkerReply;
 
         /// <summary>
-        /// Specifies the name to be used to register the workflow or activity worker.
+        /// Optionally specifies the Temporal namespace for the worker.  This defaults to
+        /// <see cref="TemporalSettings.Namespace"/>.
         /// </summary>
-        public string Name
+        public string Namespace
         {
-            get => GetStringProperty(PropertyNames.Name);
-            set => SetStringProperty(PropertyNames.Name, value);
+            get => GetStringProperty(PropertyNames.Namespace);
+            set => SetStringProperty(PropertyNames.Namespace, value);
+        }
+
+        /// <summary>
+        /// <para>
+        /// Optionally specifies the Temporal task queue for the worker.  This defaults to
+        /// <see cref="TemporalSettings.TaskQueue"/>.
+        /// </para>
+        /// <note>
+        /// You must ensure that this is not <c>null</c> or empty.
+        /// </note>
+        /// </summary>
+        public string TaskQueue
+        {
+            get => GetStringProperty(PropertyNames.TaskQueue);
+            set => SetStringProperty(PropertyNames.TaskQueue, value);
         }
 
         /// <summary>
@@ -76,8 +92,10 @@ namespace Neon.Temporal.Internal
 
             var typedTarget = (NewWorkerRequest)target;
 
-            typedTarget.Name    = this.Name;
-            typedTarget.Options = this.Options;
+            typedTarget.Namespace = this.Namespace;
+            typedTarget.Options   = this.Options;
+            typedTarget.TaskQueue = this.TaskQueue;
+            typedTarget.Options   = this.Options;
         }
     }
 }

@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    NamespaceInfo.cs
-// CONTRIBUTOR: Jeff Lill
+// FILE:	    ResetPointinfo.cs
+// CONTRIBUTOR: John C. Burns
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,53 +17,51 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
+using System.Text;
 
 using Newtonsoft.Json;
-
-using Neon.Common;
-using Neon.Data;
-using Neon.Temporal;
-using Neon.Temporal.Internal;
 
 namespace Neon.Temporal
 {
     /// <summary>
-    /// Information about a Temporal namespace.
+    /// Defines workflow execution reset points.
     /// </summary>
-    public class NamespaceInfo
+    public class ResetPointInfo
     {
         /// <summary>
-        /// The namespace name.
+        /// The binary checksum of the reset point.
         /// </summary>
-        public string Name { get; set; }
+        [JsonProperty(PropertyName = "binary_checksum")]
+        public string BinaryChecksum { get; set; }
 
         /// <summary>
-        /// The namespace UUID.
+        /// The run id of the workflow exeuction.
         /// </summary>
-        public string Id { get; set; }
+        [JsonProperty(PropertyName = "run_id")]
+        public string RunId { get; set; }
 
         /// <summary>
-        /// The namespace status.
+        /// The id of the first completed workflow task.
         /// </summary>
-        [JsonConverter(typeof(IntegerEnumConverter<NamespaceState>))]
-        public NamespaceState State { get; set; }
+        [JsonProperty(PropertyName = "first_workflow_task_completed_id")]
+        public long FirstWorkflowTaskCompletedId { get; set; }
 
         /// <summary>
-        /// Ths namespace description.
+        /// The create time of the workflow execution.
         /// </summary>
-        public string Description { get; set; }
+        [JsonProperty(PropertyName = "create_time")]
+        public DateTime? CreateTime { get; set; }
 
         /// <summary>
-        /// The namespace owner's email address.
+        /// The expire time of the workflow execution.
         /// </summary>
-        [JsonProperty(PropertyName = "owner_email")]
-        public string OwnerEmail { get; set; }
+        [JsonProperty(PropertyName = "expire_time")]
+        public DateTime? ExpireTime { get; set; }
 
         /// <summary>
-        /// A dictionary of named string data that can be attached to namespace
-        /// and that can be used for any purpose.
+        /// Indicates if the workflow exeuction is resettable.
         /// </summary>
-        public Dictionary<string, string> Data { get; set; }
+        [JsonProperty(PropertyName = "resettable")]
+        public bool Resettable { get; set; }
     }
 }

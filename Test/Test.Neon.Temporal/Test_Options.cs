@@ -70,7 +70,7 @@ namespace TestTemporal
         // Option Precedence (highest to lowest)
         // -------------------------------------
         //
-        //  1. WorkflowOptions, ChildWorkflowOptions, ActivityOptions, LocalActivityOptions
+        //  1. StartWorkflowOptions, ChildWorkflowOptions, ActivityOptions, LocalActivityOptions
         //
         //      Any options specified explicitly in options passed to an execute method
         //      will take precedence over all other settings.  This allows developers to
@@ -124,10 +124,10 @@ namespace TestTemporal
                 ActivityScheduleToCloseTimeoutSeconds = 30,
                 ActivityScheduleToStartTimeoutSeconds = 40,
                 ActivityStartToCloseTimeoutSeconds    = 50,
-                WorkflowDecisionTaskTimeoutSeconds    = 10,
+                WorkflowTaskTimeoutSeconds    = 10,
                 WorkflowIdReusePolicy                 = WorkflowIdReusePolicy.UseDefault,
-                WorkflowStartToCloseTimeoutSeconds    = 70,
-                WorkflowScheduleToStartTimeoutSeconds = 80,
+                WorkflowExecutionTimeoutSeconds    = 70,
+                WorkflowRunTimeoutSeconds = 80,
             };
 
             test2Settings = new TemporalSettings()
@@ -147,10 +147,10 @@ namespace TestTemporal
                 ActivityScheduleToCloseTimeoutSeconds = 31,
                 ActivityScheduleToStartTimeoutSeconds = 41,
                 ActivityStartToCloseTimeoutSeconds    = 51,
-                WorkflowDecisionTaskTimeoutSeconds    = 11,
+                WorkflowTaskTimeoutSeconds    = 11,
                 WorkflowIdReusePolicy                 = WorkflowIdReusePolicy.AllowDuplicate,
-                WorkflowStartToCloseTimeoutSeconds    = 71,
-                WorkflowScheduleToStartTimeoutSeconds = 81,
+                WorkflowExecutionTimeoutSeconds    = 71,
+                WorkflowRunTimeoutSeconds = 81,
             };
 
             test3Settings = new TemporalSettings()
@@ -169,10 +169,10 @@ namespace TestTemporal
                 ActivityScheduleToCloseTimeoutSeconds = 32,
                 ActivityScheduleToStartTimeoutSeconds = 42,
                 ActivityStartToCloseTimeoutSeconds    = 52,
-                WorkflowDecisionTaskTimeoutSeconds    = 12,
+                WorkflowTaskTimeoutSeconds    = 12,
                 WorkflowIdReusePolicy                 = WorkflowIdReusePolicy.RejectDuplicate,
-                WorkflowStartToCloseTimeoutSeconds    = 72,
-                WorkflowScheduleToStartTimeoutSeconds = 82,
+                WorkflowExecutionTimeoutSeconds    = 72,
+                WorkflowRunTimeoutSeconds = 82,
             };
 
             if (fixture.Start(fixtureSettings, composeFile: TemporalTestHelper.TemporalStackDefinition, reconnect: true, keepRunning: TemporalTestHelper.KeepTemporalServerOpen) == TestFixtureStatus.Started)
@@ -276,12 +276,12 @@ namespace TestTemporal
         public interface IWorkflowWithMethodAttributes : IWorkflow
         {
             [WorkflowMethod(
-                Namespace                     = "test1-namespace", 
-                TaskQueue                     = "test1-taskqueue",
-                DecisionTaskTimeoutSeconds    = 55,
-                ScheduleToStartTimeoutSeconds = 56,
-                StartToCloseTimeoutSeconds    = 57,
-                WorkflowIdReusePolicy         = WorkflowIdReusePolicy.RejectDuplicate)]
+                Namespace                       = "test1-namespace", 
+                TaskQueue                       = "test1-taskqueue",
+                WorkflowTaskTimeoutSeconds      = 55,
+                WorkflowRunTimeoutSeconds       = 56,
+                WorkflowExecutionTimeoutSeconds = 57,
+                WorkflowIdReusePolicy           = WorkflowIdReusePolicy.RejectDuplicate)]
             Task RunAsync();
         }
 
@@ -440,7 +440,7 @@ namespace TestTemporal
         /// Temporarily hooks the <see cref="TemporalClient.WorkflowExecuteEvent"/> of the
         /// client passed and then executes the <see cref="IWorkflowWithNoAttributes.RunAsync()"/> 
         /// workflow.  The <paramref name="optionsChecker"/> function will be called with
-        /// the <see cref="WorkflowOptions"/> received from the hook giving the function a
+        /// the <see cref="StartWorkflowOptions"/> received from the hook giving the function a
         /// chance to verify that the options are correct by returning <c>true</c>.
         /// </summary>
         /// <param name="client">The Temporal client.</param>
@@ -449,10 +449,10 @@ namespace TestTemporal
         /// to verify option correctness.
         /// </param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task ExecuteWorkflowWithNoAttributesAsync(TemporalClient client, Action<WorkflowOptions> optionsChecker)
+        private async Task ExecuteWorkflowWithNoAttributesAsync(TemporalClient client, Action<StartWorkflowOptions> optionsChecker)
         {
-            EventHandler<WorkflowOptions> hook =
-                (object sender, WorkflowOptions options) =>
+            EventHandler<StartWorkflowOptions> hook =
+                (object sender, StartWorkflowOptions options) =>
                 {
                     optionsChecker(options);
                 };
@@ -475,7 +475,7 @@ namespace TestTemporal
         /// Temporarily hooks the <see cref="TemporalClient.WorkflowExecuteEvent"/> of the
         /// client passed and then executes the <see cref="IWorkflowWithInterfaceAttributes.RunAsync()"/> 
         /// workflow.  The <paramref name="optionsChecker"/> function will be called with
-        /// the <see cref="WorkflowOptions"/> received from the hook giving the function a
+        /// the <see cref="StartWorkflowOptions"/> received from the hook giving the function a
         /// chance to verify that the options are correct by returning <c>true</c>.
         /// </summary>
         /// <param name="client">The Temporal client.</param>
@@ -484,10 +484,10 @@ namespace TestTemporal
         /// to verify option correctness.
         /// </param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task ExecuteWorkflowWithInterfaceAttributesAsync(TemporalClient client, Action<WorkflowOptions> optionsChecker)
+        private async Task ExecuteWorkflowWithInterfaceAttributesAsync(TemporalClient client, Action<StartWorkflowOptions> optionsChecker)
         {
-            EventHandler<WorkflowOptions> hook =
-                (object sender, WorkflowOptions options) =>
+            EventHandler<StartWorkflowOptions> hook =
+                (object sender, StartWorkflowOptions options) =>
                 {
                     optionsChecker(options);
                 };
@@ -510,7 +510,7 @@ namespace TestTemporal
         /// Temporarily hooks the <see cref="TemporalClient.WorkflowExecuteEvent"/> of the
         /// client passed and then executes the <see cref="IWorkflowWithMethodAttributes.RunAsync()"/> 
         /// workflow.  The <paramref name="optionsChecker"/> function will be called with
-        /// the <see cref="WorkflowOptions"/> received from the hook giving the function a
+        /// the <see cref="StartWorkflowOptions"/> received from the hook giving the function a
         /// chance to verify that the options are correct by returning <c>true</c>.
         /// </summary>
         /// <param name="client">The Temporal client.</param>
@@ -520,10 +520,10 @@ namespace TestTemporal
         /// </param>
         /// <param name="options">Optional workflow options that should override any other settings.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task ExecuteWorkflowWithMethodAttributesAsync(TemporalClient client, Action<WorkflowOptions> optionsChecker, WorkflowOptions options = null)
+        private async Task ExecuteWorkflowWithMethodAttributesAsync(TemporalClient client, Action<StartWorkflowOptions> optionsChecker, StartWorkflowOptions options = null)
         {
-            EventHandler<WorkflowOptions> hook =
-                (object sender, WorkflowOptions options) =>
+            EventHandler<StartWorkflowOptions> hook =
+                (object sender, StartWorkflowOptions options) =>
                 {
                     optionsChecker(options);
                 };
@@ -569,7 +569,7 @@ namespace TestTemporal
 
             try
             {
-                var options = new WorkflowOptions()
+                var options = new StartWorkflowOptions()
                 {
                     Namespace = parentNamespace,
                     TaskQueue = parentTaskQueue
@@ -634,7 +634,7 @@ namespace TestTemporal
         /// </param>
         /// <param name="options">Optional workflow options that should override any other settings.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task ExecuteChildWorkflowWithMethodAttributesAsync(TemporalClient client, Action<ChildWorkflowOptions> optionsChecker, WorkflowOptions options = null)
+        private async Task ExecuteChildWorkflowWithMethodAttributesAsync(TemporalClient client, Action<ChildWorkflowOptions> optionsChecker, StartWorkflowOptions options = null)
         {
             EventHandler<ChildWorkflowOptions> hook =
                 (object sender, ChildWorkflowOptions options) =>
@@ -683,7 +683,7 @@ namespace TestTemporal
 
             try
             {
-                var options = new WorkflowOptions()
+                var options = new StartWorkflowOptions()
                 {
                     Namespace = parentNamespace,
                     TaskQueue = parentTaskQueue
@@ -785,9 +785,9 @@ namespace TestTemporal
                 {
                     Assert.Equal(test1Settings.Namespace, options.Namespace);
                     Assert.Equal(test1Settings.TaskQueue, options.TaskQueue);
-                    Assert.Equal(test1Settings.WorkflowDecisionTaskTimeout, options.DecisionTaskTimeout);
-                    Assert.Equal(test1Settings.WorkflowStartToCloseTimeout, options.StartToCloseTimeout);
-                    Assert.Equal(test1Settings.WorkflowScheduleToStartTimeout, options.ScheduleToStartTimeout);
+                    Assert.Equal(test1Settings.WorkflowTaskTimeout, options.WorkflowTaskTimeout);
+                    Assert.Equal(test1Settings.WorkflowExecutionTimeout, options.WorkflowExecutionTimeout);
+                    Assert.Equal(test1Settings.WorkflowRunTimeout, options.WorkflowRunTimeout);
                     Assert.Equal(test1Settings.WorkflowIdReusePolicy, options.WorkflowIdReusePolicy);
                 });
 
@@ -798,9 +798,9 @@ namespace TestTemporal
                 {
                     Assert.Equal(test2Settings.Namespace, options.Namespace);
                     Assert.Equal(test2Settings.TaskQueue, options.TaskQueue);
-                    Assert.Equal(test2Settings.WorkflowDecisionTaskTimeout, options.DecisionTaskTimeout);
-                    Assert.Equal(test2Settings.WorkflowStartToCloseTimeout, options.StartToCloseTimeout);
-                    Assert.Equal(test2Settings.WorkflowScheduleToStartTimeout, options.ScheduleToStartTimeout);
+                    Assert.Equal(test2Settings.WorkflowTaskTimeout, options.WorkflowTaskTimeout);
+                    Assert.Equal(test2Settings.WorkflowExecutionTimeout, options.WorkflowExecutionTimeout);
+                    Assert.Equal(test2Settings.WorkflowRunTimeout, options.WorkflowExecutionTimeout);
                     Assert.Equal(test2Settings.WorkflowIdReusePolicy, options.WorkflowIdReusePolicy);
                 });
         }
@@ -830,9 +830,9 @@ namespace TestTemporal
                 {
                     Assert.Equal("test1-namespace", options.Namespace);
                     Assert.Equal("test1-taskqueue", options.TaskQueue);
-                    Assert.Equal(55, options.DecisionTaskTimeout.TotalSeconds);
-                    Assert.Equal(56, options.ScheduleToStartTimeout.TotalSeconds);
-                    Assert.Equal(57, options.StartToCloseTimeout.TotalSeconds);
+                    Assert.Equal(55, options.WorkflowTaskTimeout.TotalSeconds);
+                    Assert.Equal(56, options.WorkflowRunTimeout.TotalSeconds);
+                    Assert.Equal(57, options.WorkflowExecutionTimeout.TotalSeconds);
                     Assert.Equal(WorkflowIdReusePolicy.RejectDuplicate, options.WorkflowIdReusePolicy);
                 });
         }
@@ -843,13 +843,13 @@ namespace TestTemporal
         {
             // Verify that workflow options are honored.
 
-            var workflowOptions = new WorkflowOptions()
+            var workflowOptions = new StartWorkflowOptions()
             {
                 Namespace              = "test1-namespace",
                 TaskQueue              = "test1-taskqueue",
-                DecisionTaskTimeout    = TimeSpan.FromSeconds(40),
-                ScheduleToStartTimeout = TimeSpan.FromSeconds(41),
-                StartToCloseTimeout    = TimeSpan.FromSeconds(42),
+                WorkflowTaskTimeout    = TimeSpan.FromSeconds(40),
+                WorkflowRunTimeout = TimeSpan.FromSeconds(41),
+                WorkflowExecutionTimeout    = TimeSpan.FromSeconds(42),
                 WorkflowIdReusePolicy  = WorkflowIdReusePolicy.AllowDuplicate
             };
 
@@ -858,9 +858,9 @@ namespace TestTemporal
                 {
                     Assert.Equal("test1-namespace", options.Namespace);
                     Assert.Equal("test1-taskqueue", options.TaskQueue);
-                    Assert.Equal(40, options.DecisionTaskTimeout.TotalSeconds);
-                    Assert.Equal(41, options.ScheduleToStartTimeout.TotalSeconds);
-                    Assert.Equal(42, options.StartToCloseTimeout.TotalSeconds);
+                    Assert.Equal(40, options.WorkflowTaskTimeout.TotalSeconds);
+                    Assert.Equal(41, options.WorkflowRunTimeout.TotalSeconds);
+                    Assert.Equal(42, options.WorkflowExecutionTimeout.TotalSeconds);
                     Assert.Equal(WorkflowIdReusePolicy.AllowDuplicate, options.WorkflowIdReusePolicy);
                 },
                 options: workflowOptions);
@@ -897,9 +897,9 @@ namespace TestTemporal
                 {
                     Assert.Equal(test1Settings.Namespace, options.Namespace);
                     Assert.Equal(test1Settings.TaskQueue, options.TaskQueue);
-                    Assert.Equal(test1Settings.WorkflowDecisionTaskTimeout, options.DecisionTaskTimeout);
-                    Assert.Equal(test1Settings.WorkflowStartToCloseTimeout, options.StartToCloseTimeout);
-                    Assert.Equal(test1Settings.WorkflowScheduleToStartTimeout, options.ScheduleToStartTimeout);
+                    Assert.Equal(test1Settings.WorkflowTaskTimeout, options.WorkflowTaskTimeout);
+                    Assert.Equal(test1Settings.WorkflowExecutionTimeout, options.WorkflowExecutionTimeout);
+                    Assert.Equal(test1Settings.WorkflowRunTimeout, options.WorkflowRunTimeout);
                     Assert.Equal(test1Settings.WorkflowIdReusePolicy, options.WorkflowIdReusePolicy);
                 });
 
@@ -910,9 +910,9 @@ namespace TestTemporal
                 {
                     Assert.Equal(test2Settings.Namespace, options.Namespace);
                     Assert.Equal(test2Settings.TaskQueue, options.TaskQueue);
-                    Assert.Equal(test2Settings.WorkflowDecisionTaskTimeout, options.DecisionTaskTimeout);
-                    Assert.Equal(test2Settings.WorkflowStartToCloseTimeout, options.StartToCloseTimeout);
-                    Assert.Equal(test2Settings.WorkflowScheduleToStartTimeout, options.ScheduleToStartTimeout);
+                    Assert.Equal(test2Settings.WorkflowTaskTimeout, options.WorkflowTaskTimeout);
+                    Assert.Equal(test2Settings.WorkflowExecutionTimeout, options.WorkflowExecutionTimeout);
+                    Assert.Equal(test2Settings.WorkflowRunTimeout, options.WorkflowRunTimeout);
                     Assert.Equal(test2Settings.WorkflowIdReusePolicy, options.WorkflowIdReusePolicy);
                 });
         }
@@ -959,9 +959,9 @@ namespace TestTemporal
                 {
                     Assert.Equal("test1-namespace", options.Namespace);
                     Assert.Equal("test1-taskqueue", options.TaskQueue);
-                    Assert.Equal(55, options.DecisionTaskTimeout.TotalSeconds);
-                    Assert.Equal(56, options.ScheduleToStartTimeout.TotalSeconds);
-                    Assert.Equal(57, options.StartToCloseTimeout.TotalSeconds);
+                    Assert.Equal(55, options.WorkflowTaskTimeout.TotalSeconds);
+                    Assert.Equal(56, options.WorkflowRunTimeout.TotalSeconds);
+                    Assert.Equal(57, options.WorkflowExecutionTimeout.TotalSeconds);
                     Assert.Equal(WorkflowIdReusePolicy.RejectDuplicate, options.WorkflowIdReusePolicy);
                 });
         }
@@ -972,14 +972,14 @@ namespace TestTemporal
         {
             // Verify that workflow options are honored for child workflows.
 
-            var workflowOptions = new WorkflowOptions()
+            var workflowOptions = new StartWorkflowOptions()
             {
-                Namespace              = "test1-namespace",
-                TaskQueue              = "test1-taskqueue",
-                DecisionTaskTimeout    = TimeSpan.FromSeconds(40),
-                ScheduleToStartTimeout = TimeSpan.FromSeconds(41),
-                StartToCloseTimeout    = TimeSpan.FromSeconds(42),
-                WorkflowIdReusePolicy  = WorkflowIdReusePolicy.AllowDuplicate
+                Namespace                = "test1-namespace",
+                TaskQueue                = "test1-taskqueue",
+                WorkflowTaskTimeout      = TimeSpan.FromSeconds(40),
+                WorkflowRunTimeout       = TimeSpan.FromSeconds(41),
+                WorkflowExecutionTimeout = TimeSpan.FromSeconds(42),
+                WorkflowIdReusePolicy    = WorkflowIdReusePolicy.AllowDuplicate
             };
 
             await ExecuteChildWorkflowWithMethodAttributesAsync(test3Client,
@@ -987,9 +987,9 @@ namespace TestTemporal
                 {
                     Assert.Equal("test1-namespace", options.Namespace);
                     Assert.Equal("test1-taskqueue", options.TaskQueue);
-                    Assert.Equal(40, options.DecisionTaskTimeout.TotalSeconds);
-                    Assert.Equal(41, options.ScheduleToStartTimeout.TotalSeconds);
-                    Assert.Equal(42, options.StartToCloseTimeout.TotalSeconds);
+                    Assert.Equal(40, options.WorkflowTaskTimeout.TotalSeconds);
+                    Assert.Equal(41, options.WorkflowRunTimeout.TotalSeconds);
+                    Assert.Equal(42, options.WorkflowExecutionTimeout.TotalSeconds);
                     Assert.Equal(WorkflowIdReusePolicy.AllowDuplicate, options.WorkflowIdReusePolicy);
                 },
                 options: workflowOptions);
@@ -1157,7 +1157,7 @@ namespace TestTemporal
             // Verify that a workflow can wait on an external workflow
             // running in a different namespace by execution.
 
-            var options = new WorkflowOptions() { TaskQueue = "test1-taskqueue", Namespace = "test1-namespace" };
+            var options = new StartWorkflowOptions() { TaskQueue = "test1-taskqueue", Namespace = "test1-namespace" };
             var helloStub = test3Client.NewWorkflowFutureStub<IWorkflowExternalWait>("HelloAsync", options);
             var helloFuture = await helloStub.StartAsync<string>("JEFF");
 
@@ -1176,7 +1176,7 @@ namespace TestTemporal
             // Verify that a workflow can wait on an external workflow
             // running in a different namespace by both workflow IDs.
 
-            var options = new WorkflowOptions() { TaskQueue = "test1-taskqueue", Namespace = "test1-namespace" };
+            var options = new StartWorkflowOptions() { TaskQueue = "test1-taskqueue", Namespace = "test1-namespace" };
             var helloStub = test3Client.NewWorkflowFutureStub<IWorkflowExternalWait>("HelloAsync", options);
             var helloFuture = await helloStub.StartAsync<string>("JEFF");
 
@@ -1195,7 +1195,7 @@ namespace TestTemporal
             // Verify that a workflow can wait on an external workflow
             // running in a different namespace by both workflow ID only.
 
-            var options = new WorkflowOptions() { TaskQueue = "test1-taskqueue", Namespace = "test1-namespace" };
+            var options = new StartWorkflowOptions() { TaskQueue = "test1-taskqueue", Namespace = "test1-namespace" };
             var helloStub = test3Client.NewWorkflowFutureStub<IWorkflowExternalWait>("HelloAsync", options);
             var helloFuture = await helloStub.StartAsync<string>("JEFF");
 

@@ -44,7 +44,7 @@ namespace Neon.Temporal
     public class WorkflowFutureStub<WorkflowInterface>
     {
         private TemporalClient      client;
-        private WorkflowOptions     options;
+        private StartWorkflowOptions     options;
         private string              workflowTypeName;
         private WorkflowExecution   execution;
 
@@ -58,7 +58,7 @@ namespace Neon.Temporal
         /// or empty string to target the default method.
         /// </param>
         /// <param name="options">Optional workflow options.</param>
-        internal WorkflowFutureStub(TemporalClient client, string methodName = null, WorkflowOptions options = null)
+        internal WorkflowFutureStub(TemporalClient client, string methodName = null, StartWorkflowOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
 
@@ -69,7 +69,7 @@ namespace Neon.Temporal
 
             this.client           = client;
             this.workflowTypeName = TemporalHelper.GetWorkflowTarget(workflowInterface, methodName).WorkflowTypeName;
-            this.options          = WorkflowOptions.Normalize(client, options, workflowInterface, method);
+            this.options          = StartWorkflowOptions.Normalize(client, options, workflowInterface, method);
         }
 
         /// <summary>

@@ -70,7 +70,7 @@ namespace TestCadence
         // Option Precedence (highest to lowest)
         // -------------------------------------
         //
-        //  1. WorkflowOptions, ChildWorkflowOptions, ActivityOptions, LocalActivityOptions
+        //  1. StartWorkflowOptions, ChildWorkflowOptions, ActivityOptions, LocalActivityOptions
         //
         //      Any options specified explicitly in options passed to an execute method
         //      will take precedence over all other settings.  This allows developers to
