@@ -281,10 +281,10 @@ services:
                 NeonHelper.Execute(NeonHelper.DockerCli, new object[] { "rm", "--force",
                     new string[]
                     {
-                        "cadence-dev_cadence",
-                        "cadence-dev_cadence-web",
-                        "cadence-dev_statsd",
-                        "cadence-dev_cassandra"
+                        "cadence-dev_cadence_1",
+                        "cadence-dev_cadence-web_1",
+                        "cadence-dev_cassandra_1",
+                        "cadence-dev_statsd_1"
                     } });
 
                 // Reset TemporalClient to its initial state.
