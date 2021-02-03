@@ -270,19 +270,24 @@ OPTIONS:
 
                 if (commandLine.HasOption("--upload-charts"))
                 {
-                    cluster.FirstMaster.SudoCommand($"rm -rf {KubeNodeFolders.Helm}/*");
-                    cluster.FirstMaster.NodeInstallHelmArchive(message => Console.WriteLine(message));
+                    setupController.AddNodeStep("upload Helm charts",
+                        (state, node) =>
+                        {
+                            cluster.FirstMaster.SudoCommand($"rm -rf {KubeNodeFolders.Helm}/*");
+                            cluster.FirstMaster.NodeInstallHelmArchive(state, message => Console.WriteLine(message));
 
-                    var zipPath = LinuxPath.Combine(KubeNodeFolders.Helm, "charts.zip");
+                            var zipPath = LinuxPath.Combine(KubeNodeFolders.Helm, "charts.zip");
 
-                    cluster.FirstMaster.SudoCommand($"unzip {zipPath} -d {KubeNodeFolders.Helm}");
-                    cluster.FirstMaster.SudoCommand($"rm -f {zipPath}");
+                            cluster.FirstMaster.SudoCommand($"unzip {zipPath} -d {KubeNodeFolders.Helm}");
+                            cluster.FirstMaster.SudoCommand($"rm -f {zipPath}");
+                        },
+                        (state, node) => node == cluster.FirstMaster);
                 }
 
                 //-----------------------------------------------------------------
                 // Kubernetes configuration.
 
-                setupController.AddNodeStep("install kubernetes", (setupState, node) => node.NodeInstallKubernetes());
+                setupController.AddNodeStep("install kubernetes", (setupState, node) => node.NodeInstallKubernetes(setupState));
                 setupController.AddGlobalStep("setup cluster", setupState => KubeSetup.SetupClusterAsync(setupState));
 
                 //-----------------------------------------------------------------
