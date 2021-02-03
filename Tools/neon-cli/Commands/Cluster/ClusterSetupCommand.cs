@@ -216,16 +216,7 @@ OPTIONS:
                 setupController.Add(KubeSetup.ClusterProxyProperty, cluster);
                 setupController.Add(KubeSetup.ClusterLoginProperty, clusterLogin);
                 setupController.Add(KubeSetup.HostingManagerProperty, hostingManager);
-
-                // Connect to existing cluster if it exists.
-
-                try
-                {
-                    KubeSetup.ConnectCluster(setupController);
-                } 
-                catch (Exception e)
-                {
-                }
+                setupController.Add(KubeSetup.HostingEnvironmentProperty, hostingManager.HostingEnvironment);
 
                 // Configure the setup steps.
 
@@ -233,9 +224,9 @@ OPTIONS:
                 setupController.AddWaitUntilOnlineStep("connect");
                 setupController.AddNodeStep("verify OS", (state, node) => node.VerifyNodeOS());
 
-                setupController.AddNodeStep("verify OS", (state, node) => node.SetupConfigureNtp(message => Console.WriteLine(message)),
+                setupController.AddNodeStep("setup NTP", 
+                    (state, node) => node.SetupConfigureNtp(message => Console.WriteLine(message)),
                     (state, node) => node.Metadata.IsWorker);
-
 
                 // Write the operation begin marker to all cluster node logs.
 
