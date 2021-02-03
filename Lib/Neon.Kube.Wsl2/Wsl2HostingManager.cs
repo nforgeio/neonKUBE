@@ -134,7 +134,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override void AddPostPrepareSteps(SetupController<NodeDefinition> setupController)
         {
-            throw new NotImplementedException();
+            // Nothing to do here.
         }
 
         /// <inheritdoc/>

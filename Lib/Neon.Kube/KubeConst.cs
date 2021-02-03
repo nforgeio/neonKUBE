@@ -301,5 +301,15 @@ namespace Neon.Kube
         /// CRI-O running on the host nodes.
         /// </summary>
         public const string ClusterRegistryName = "neon-registry." + ClusterNodeDomain;
+
+        /// <summary>
+        /// Identifies the main WSL2 distro hosting neonDESKTOP.
+        /// </summary>
+        public const string Wsl2MainDistroName = "neon-desktop";
+
+        /// <summary>
+        /// Identifies the data WSL2 distro where the neonDESKTOP data will be hosted.
+        /// </summary>
+        public const string WslDataDistroName = "neon-data";
     }
 }
