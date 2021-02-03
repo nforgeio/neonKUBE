@@ -2,10 +2,10 @@ nameOverride: ""
 fullnameOverride: ""
 
 image:
-  organization: neon-system-registry
+  organization: neon-registry.node.local
   repository: kiali-kiali-operator
   tag: v1.27.0
-  pullPolicy: Always
+  pullPolicy: IfNotPresent
   pullSecrets: []
 
 # Deployment options for the operator pod.
@@ -55,7 +55,7 @@ cr:
     version: default
     istio_namespace: istio-system
     deployment:
-      image_name: ghcr.io/neonrelease/kiali-kiali
+      image_name: neon-registry.node.local/kiali-kiali
       image_version: v1.28.0
       accessible_namespaces:
       - '**'

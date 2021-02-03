@@ -46,14 +46,15 @@ using k8s.Models;
 
 using Neon.Collections;
 using Neon.Common;
+using Neon.Cryptography;
 using Neon.Data;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
+using Neon.Tasks;
 using Neon.Windows;
-using Neon.Cryptography;
 
 namespace Neon.Kube
 {
@@ -387,12 +388,16 @@ namespace Neon.Kube
         /// cluster highly available.
         /// </summary>
         /// <param name="setupState">The setup controller state.</param>
-        public static void SetupEtcdHaProxy(ObjectDictionary setupState)
+        /// <param name="node">The node where the operation will be performed.</param>
+        public static void SetupEtcdHaProxy(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> node)
         {
-            var cluster   = setupState.Get<ClusterProxy>(ClusterProxyProperty);
-            var sbHaProxy = new StringBuilder();
+            var cluster = setupState.Get<ClusterProxy>(ClusterProxyProperty);
 
-            sbHaProxy.Append(
+            node.Status = "setup: etcd HA";
+
+            var sbHaProxyConfig = new StringBuilder();
+
+            sbHaProxyConfig.Append(
 $@"global
     daemon
     log stdout  format raw  local0  info
@@ -421,31 +426,45 @@ backend kubernetes_masters_backend
 
             foreach (var master in cluster.Masters)
             {
-                sbHaProxy.Append(
+                sbHaProxyConfig.Append(
 $@"
     server {master.Name}         {master.Address}:6443");
             }
 
-            foreach (var node in cluster.Nodes)
-            {
-                node.InvokeIdempotent("setup/etcd-ha",
-                    () =>
-                    {
-                        node.Status = "setup: etcd HA";
+            node.UploadText("/etc/neonkube/neon-etcd-proxy.cfg", sbHaProxyConfig);
 
-                        node.UploadText("/etc/neonkube/neon-etcd-proxy.cfg", sbHaProxy);
+            var sbHaProxyPod = new StringBuilder();
 
-                        node.SudoCommand("docker run",
-                            "--name=neon-etcd-proxy",
-                            "--detach",
-                            "--restart=always",
-                            "-v=/etc/neonkube/neon-etcd-proxy.cfg:/etc/haproxy/haproxy.cfg",
-                            "--network=host",
-                            "--log-driver=k8s-file",
-                            $"{NeonHelper.NeonLibraryBranchRegistry}/haproxy:neonkube-{KubeConst.NeonKubeVersion}"
-                        );
-                    });
-            }
+            sbHaProxyPod.Append(
+$@"
+apiVersion: v1
+kind: Pod
+metadata:
+  name: neon-etcd-proxy
+  namespace: kube-system
+  labels:
+    app: neon-etcd-proxy
+    role: neon-etcd-proxy
+    release: neon-etcd-proxy
+spec:
+  volumes:
+   - name: neon-etcd-proxy-config
+     hostPath:
+       path: /etc/neonkube/neon-etcd-proxy.cfg
+       type: File
+  hostNetwork: true
+  containers:
+    - name: web
+      image: {NeonHelper.NeonLibraryBranchRegistry}/haproxy:{KubeVersions.HaproxyVersion}
+      volumeMounts:
+        - name: neon-etcd-proxy-config
+          mountPath: /etc/haproxy/haproxy.cfg
+      ports:
+        - name: k8s-masters
+          containerPort: 6442
+          protocol: TCP
+");
+            node.UploadText("/etc/kubernetes/manifests/neon-etcd-proxy.yaml", sbHaProxyPod, permissions: "600", owner: "root:root");
         }
 
         /// <summary>
@@ -453,15 +472,17 @@ $@"
         /// </summary>
         /// <param name="setupState">The setup controller state.</param>
         /// <param name="master">The first master node where the operation will be performed.</param>
-        public static void LabelNodes(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master)
+        public static async Task LabelNodesAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master)
         {
+            await SyncContext.ClearAsync;
+
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             var cluster = setupState.Get<ClusterProxy>(ClusterProxyProperty);
 
-            master.InvokeIdempotent("setup/label-nodes",
-                () =>
+            await master.InvokeIdempotentAsync("setup/label-nodes",
+                async () =>
                 {
                     master.Status = "label: nodes";
 
@@ -512,6 +533,7 @@ $@"
                     {
                         master.Status = string.Empty;
                     }
+                    await Task.CompletedTask;
                 });
         }
 
@@ -530,27 +552,36 @@ $@"
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
             Covenant.Requires<ArgumentException>(maxParallel > 0, nameof(maxParallel));
 
-            var cluster      = setupState.Get<ClusterProxy>(ClusterProxyProperty);
+            var cluster = setupState.Get<ClusterProxy>(ClusterProxyProperty);
             var clusterLogin = setupState.Get<ClusterLogin>(ClusterLoginProperty);
-            var firstMaster  = cluster.FirstMaster;
+            var firstMaster = cluster.FirstMaster;
 
             cluster.ClearStatus();
 
+            var tasks = new List<Task>();
+
             ConfigureKubernetes(setupState, cluster.FirstMaster);
             ConfigureWorkstation(setupState, firstMaster);
-            KubeSetup.ConnectCluster(setupState);
-            InstallCalicoCni(setupState, firstMaster);
-            LabelNodes(setupState, firstMaster);
-            InstallIstio(setupState, firstMaster);
-            CreateRootUser(setupState, firstMaster);
-            InstallKubeDashboard(setupState, firstMaster);
-            ConfigureMasterTaints(setupState, firstMaster);
+            ConnectCluster(setupState);
+            tasks.Add(TaintNodesAsync(setupState));
+            tasks.Add(LabelNodesAsync(setupState, firstMaster));
+            tasks.AddRange(await CreateNamespacesAsync(setupState, firstMaster));
+            tasks.Add(CreateRootUserAsync(setupState, firstMaster));
+            tasks.Add(ConfigureMasterTaintsAsync(setupState, firstMaster));
+            tasks.Add(InstallCalicoCniAsync(setupState, firstMaster));
+            tasks.Add(InstallIstioAsync(setupState, firstMaster));
+
+            await NeonHelper.WaitAllAsync(tasks);
+
+            tasks.Add(InstallKialiAsync(setupState, firstMaster));
+            tasks.Add(InstallKubeDashboardAsync(setupState, firstMaster));
             await InstallOpenEBSAsync(setupState, firstMaster);
-            await CreateNeonNamespaceAsync(setupState, firstMaster);
             await InstallSystemDbAsync(setupState, firstMaster);
-            await InstallClusterManagerAsync(setupState, firstMaster);
-            await InstallContainerRegistryAsync(setupState, firstMaster);
-            await InstallKialiAsync(setupState, firstMaster);
+            tasks.Add(InstallClusterManagerAsync(setupState, firstMaster));
+            tasks.Add(InstallContainerRegistryAsync(setupState, firstMaster));
+            tasks.AddRange(await SetupMonitoringAsync(setupState));
+
+            await NeonHelper.WaitAllAsync(tasks);
         }
 
         /// <summary>
@@ -563,7 +594,7 @@ $@"
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
             Covenant.Requires<ArgumentNullException>(firstMaster != null, nameof(firstMaster));
 
-            var cluster      = setupState.Get<ClusterProxy>(ClusterProxyProperty);
+            var cluster = setupState.Get<ClusterProxy>(ClusterProxyProperty);
             var clusterLogin = setupState.Get<ClusterLogin>(ClusterLoginProperty);
 
             firstMaster.InvokeIdempotent("setup/cluster-init",
@@ -579,19 +610,21 @@ $@"
                     firstMaster.InvokeIdempotent("setup/kubernetes-init",
                         () =>
                         {
-                            firstMaster.Status = "initialize: cluster";
-
                             // It's possible that a previous cluster initialization operation
                             // was interrupted.  This command resets the state.
 
                             firstMaster.SudoCommand("kubeadm reset --force");
+
+                            SetupEtcdHaProxy(setupState, firstMaster);
+
+                            firstMaster.Status = "initialize: cluster";
 
                             // Configure the control plane's API server endpoint and initialize
                             // the certificate SAN names to include each master IP address as well
                             // as the HOSTNAME/ADDRESS of the API load balancer (if any).
 
                             var controlPlaneEndpoint = $"kubernetes-masters:6442";
-                            var sbCertSANs           = new StringBuilder();
+                            var sbCertSANs = new StringBuilder();
 
                             if (!string.IsNullOrEmpty(cluster.Definition.Kubernetes.ApiLoadBalancer))
                             {
@@ -646,7 +679,7 @@ volumePluginDir: /var/lib/kubelet/volume-plugins
                             var kubeInitScript =
 @"
 systemctl enable kubelet.service
-kubeadm init --config cluster.yaml
+kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-kubernetes-manifests
 ";
                             var response = firstMaster.SudoCommand(CommandBundle.FromScript(kubeInitScript).AddFile("cluster.yaml", clusterConfig));
 
@@ -769,13 +802,25 @@ kubeadm init --config cluster.yaml
                                     master.InvokeIdempotent("setup/master-join",
                                         () =>
                                         {
+                                            SetupEtcdHaProxy(setupState, master);
+
                                             var joined = false;
 
                                             master.Status = "join: as master";
 
+                                            master.SudoCommand("podman run",
+                                                   "--name=neon-etcd-proxy",
+                                                   "--detach",
+                                                   "--restart=always",
+                                                   "-v=/etc/neonkube/neon-etcd-proxy.cfg:/etc/haproxy/haproxy.cfg",
+                                                   "--network=host",
+                                                   "--log-driver=k8s-file",
+                                                   $"{NeonHelper.NeonLibraryBranchRegistry}/haproxy:{KubeVersions.HaproxyVersion}"
+                                               );
+
                                             for (int attempt = 0; attempt < maxJoinAttempts; attempt++)
                                             {
-                                                var response = master.SudoCommand(clusterLogin.SetupDetails.ClusterJoinCommand + " --control-plane", RunOptions.Defaults & ~RunOptions.FaultOnError);
+                                                var response = master.SudoCommand(clusterLogin.SetupDetails.ClusterJoinCommand + " --control-plane --ignore-preflight-errors=DirAvailable--etc-kubernetes-manifests", RunOptions.Defaults & ~RunOptions.FaultOnError);
 
                                                 if (response.Success)
                                                 {
@@ -790,6 +835,9 @@ kubeadm init --config cluster.yaml
                                             {
                                                 throw new Exception($"Unable to join node [{master.Name}] to the after [{maxJoinAttempts}] attempts.");
                                             }
+
+                                            master.SudoCommand("docker kill neon-etcd-proxy");
+                                            master.SudoCommand("docker rm neon-etcd-proxy");
                                         });
                                 });
                         }
@@ -819,7 +867,7 @@ kubeadm init --config cluster.yaml
 
 sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,Priority,ResourceQuota/' /etc/kubernetes/manifests/kube-apiserver.yaml
 "));
-                                }); 
+                                });
                         }
                         catch (Exception e)
                         {
@@ -846,13 +894,25 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                 worker.InvokeIdempotent("setup/worker-join",
                                     () =>
                                     {
+                                        SetupEtcdHaProxy(setupState, worker);
+
                                         var joined = false;
 
                                         worker.Status = "join: as worker";
 
+                                        worker.SudoCommand("podman run",
+                                            "--name=neon-etcd-proxy",
+                                            "--detach",
+                                            "--restart=always",
+                                            "-v=/etc/neonkube/neon-etcd-proxy.cfg:/etc/haproxy/haproxy.cfg",
+                                            "--network=host",
+                                            "--log-driver=k8s-file",
+                                            $"{NeonHelper.NeonLibraryBranchRegistry}/haproxy:{KubeVersions.HaproxyVersion}"
+                                        );
+
                                         for (int attempt = 0; attempt < maxJoinAttempts; attempt++)
                                         {
-                                            var response = worker.SudoCommand(clusterLogin.SetupDetails.ClusterJoinCommand, RunOptions.Defaults & ~RunOptions.FaultOnError);
+                                            var response = worker.SudoCommand(clusterLogin.SetupDetails.ClusterJoinCommand + " --ignore-preflight-errors=DirAvailable--etc-kubernetes-manifests", RunOptions.Defaults & ~RunOptions.FaultOnError);
 
                                             if (response.Success)
                                             {
@@ -867,6 +927,9 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                         {
                                             throw new Exception($"Unable to join node [{worker.Name}] to the cluster after [{maxJoinAttempts}] attempts.");
                                         }
+
+                                        worker.SudoCommand("docker kill neon-etcd-proxy");
+                                        worker.SudoCommand("docker rm neon-etcd-proxy");
                                     });
                             }
                             catch (Exception e)
@@ -911,7 +974,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                     if (!File.Exists(kubeConfigPath))
                     {
-                        File.WriteAllText(kubeConfigPath, configText);  
+                        File.WriteAllText(kubeConfigPath, configText);
                     }
                     else
                     {
@@ -963,15 +1026,17 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
         /// </summary>
         /// <param name="setupState">The setup controller state.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
-        public static void InstallCalicoCni(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master)
+        public static async Task InstallCalicoCniAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master)
         {
+            await SyncContext.ClearAsync;
+            
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             var cluster = master.Cluster;
 
-            master.InvokeIdempotent("setup/cluster-deploy-cni",
-                () =>
+            await master.InvokeIdempotentAsync("setup/cluster-deploy-cni",
+                async () =>
                 {
                     // Deploy Calico
 
@@ -982,10 +1047,10 @@ $@"
 
 curl {KubeHelper.CurlOptions} {KubeDownloads.CalicoSetupYamlUri} > /tmp/calico.yaml
 sed -i 's;192.168.0.0/16;{cluster.Definition.Network.PodSubnet};' /tmp/calico.yaml
-sed -i 's;calico/cni:v{KubeVersions.CalicoVersion}.*;{NeonHelper.NeonLibraryBranchRegistry}/calico-cni:neonkube-{KubeConst.NeonKubeVersion};' /tmp/calico.yaml
-sed -i 's;calico/kube-controllers:v{KubeVersions.CalicoVersion}.*;{NeonHelper.NeonLibraryBranchRegistry}/calico-kube-controllers:neonkube-{KubeConst.NeonKubeVersion};' /tmp/calico.yaml
-sed -i 's;calico/node:v{KubeVersions.CalicoVersion}.*;{NeonHelper.NeonLibraryBranchRegistry}/calico-node:neonkube-{KubeConst.NeonKubeVersion};' /tmp/calico.yaml
-sed -i 's;calico/pod2daemon-flexvol:v{KubeVersions.CalicoVersion}.*;{NeonHelper.NeonLibraryBranchRegistry}/calico-pod2daemon-flexvol:neonkube-{KubeConst.NeonKubeVersion};' /tmp/calico.yaml
+sed -i 's;calico/cni;{NeonHelper.NeonLibraryBranchRegistry}/calico-cni;' /tmp/calico.yaml
+sed -i 's;calico/kube-controllers;{NeonHelper.NeonLibraryBranchRegistry}/calico-kube-controllers;' /tmp/calico.yaml
+sed -i 's;calico/node;{NeonHelper.NeonLibraryBranchRegistry}/calico-node;' /tmp/calico.yaml
+sed -i 's;calico/pod2daemon-flexvol;{NeonHelper.NeonLibraryBranchRegistry}/calico-pod2daemon-flexvol;' /tmp/calico.yaml
 kubectl apply -f /tmp/calico.yaml
 rm /tmp/calico.yaml
 ";
@@ -994,10 +1059,10 @@ rm /tmp/calico.yaml
                     // Wait for Calico and CoreDNS pods to report that they're running.
                     // We're going to wait a maximum of 300 seconds.
 
-                    NeonHelper.WaitFor(
-                        () =>
+                    await NeonHelper.WaitForAsync(
+                        async () =>
                         {
-                            var pods = GetK8sClient(setupState).ListPodForAllNamespaces();
+                            var pods = await GetK8sClient(setupState).ListPodForAllNamespacesAsync();
 
                             foreach (var pod in pods.Items)
                             {
@@ -1016,6 +1081,55 @@ rm /tmp/calico.yaml
                         },
                         timeout:      clusterOpTimeout,
                         pollInterval: clusterOpRetryInterval);
+
+                    await master.InvokeIdempotentAsync("setup/cluster-deploy-cni-test",
+                        async () =>
+                        {
+                            var pods = await GetK8sClient(setupState).CreateNamespacedPodAsync(
+                                        new V1Pod()
+                                        {
+                                            Metadata = new V1ObjectMeta()
+                                            {
+                                                Name = "dnsutils",
+                                                NamespaceProperty = "default"
+                                            },
+                                            Spec = new V1PodSpec()
+                                            {
+                                                Containers = new List<V1Container>()
+                                                {
+                                                    new V1Container()
+                                                    {
+                                                        Name = "dnsutils",
+                                                        Image = "neon-registry.node.local/kubernetes-e2e-test-images-dnsutils:1.3",
+                                                        Command = new List<string>() {"sleep", "3600" },
+                                                        ImagePullPolicy = "IfNotPresent"
+                                                    }
+                                                },
+                                                RestartPolicy = "Always"
+                                            }
+                                        }, "default");
+                        });
+
+
+                    await NeonHelper.WaitForAsync(
+                        async () =>
+                        {
+                            var result = master.SudoCommand("kubectl exec -i -t dnsutils -- nslookup kubernetes.default", RunOptions.LogOutput);
+
+                            if (result.Success)
+                            {
+                                await GetK8sClient(setupState).DeleteNamespacedPodAsync("dnsutils", "default");
+                                return await Task.FromResult(true);
+                            }
+                            else
+                            {
+                                master.SudoCommand("kubectl rollout restart --namespace kube-system deployment/coredns", RunOptions.LogOnErrorOnly);
+                                await Task.Delay(5000);
+                                return await Task.FromResult(false);
+                            }
+                        },
+                        timeout:      clusterOpTimeout,
+                        pollInterval: clusterOpRetryInterval);
                 });
         }
 
@@ -1024,15 +1138,17 @@ rm /tmp/calico.yaml
         /// </summary>
         /// <param name="setupState">The setup controller state.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
-        public static void ConfigureMasterTaints(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master)
+        public static async Task ConfigureMasterTaintsAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master)
         {
+            await SyncContext.ClearAsync;
+
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             var cluster = master.Cluster;
 
-            master.InvokeIdempotent("setup/kubernetes-master-pods",
-                () =>
+            await master.InvokeIdempotentAsync("setup/kubernetes-master-pods",
+                async () =>
                 {
                     // The [kubectl taint] command looks like it can return a non-zero exit code.
                     // We'll ignore this.
@@ -1043,6 +1159,7 @@ rm /tmp/calico.yaml
                         master.SudoCommand("kubectl taint nodes --all node-role.kubernetes.io/master-", master.DefaultRunOptions & ~RunOptions.FaultOnError);
                         master.SudoCommand(@"until [ `kubectl get nodes -o json | jq .items[].spec | grep ""NoSchedule"" | wc -l ` == ""0"" ]; do sleep 1; done", master.DefaultRunOptions & ~RunOptions.FaultOnError);
                     }
+                    await Task.CompletedTask;
                 });
         }
 
@@ -1051,15 +1168,15 @@ rm /tmp/calico.yaml
         /// </summary>
         /// <param name="setupState">The setup controller state.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
-        public static void InstallIstio(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master)
+        public static async Task InstallIstioAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master)
         {
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             master.Status = "deploy: istio";
 
-            master.InvokeIdempotent("setup/istio",
-                () =>
+            await master.InvokeIdempotentAsync("setup/istio",
+                async () =>
                 {
                     var istioScript0 =
 $@"
@@ -1079,7 +1196,7 @@ rm -r ""${{tmp}}""
 
 export PATH=$PATH:$HOME/.istioctl/bin
 
-istioctl operator init --set hub={NeonHelper.NeonLibraryBranchRegistry}
+istioctl operator init --hub={NeonHelper.NeonLibraryBranchRegistry} --tag={KubeVersions.IstioVersion}-distroless
 
 kubectl create ns istio-system
 
@@ -1091,7 +1208,7 @@ metadata:
   name: istiocontrolplane
 spec:
   hub: {NeonHelper.NeonLibraryBranchRegistry}
-  tag: neonkube-{KubeConst.NeonKubeVersion}
+  tag: {KubeVersions.IstioVersion}-distroless
   meshConfig:
     rootNamespace: istio-system
   components:
@@ -1142,6 +1259,7 @@ spec:
       logging:
         level: ""default:info""
       logAsJson: true
+      imagePullPolicy: IfNotPresent
       defaultNodeSelector: 
         neonkube.io/istio: true
       tracer:
@@ -1167,7 +1285,7 @@ spec:
       enabled: true
       coreDNSImage: {NeonHelper.NeonLibraryBranchRegistry}/coredns-coredns
       coreDNSTag: {KubeVersions.CoreDNSVersion}
-      coreDNSPluginImage: {NeonHelper.NeonLibraryBranchRegistry}/coredns-plugin:neonkube-{KubeConst.NeonKubeVersion}
+      coreDNSPluginImage: {NeonHelper.NeonLibraryBranchRegistry}/coredns-plugin:{KubeVersions.CoreDNSPluginVersion}
     cni:
       excludeNamespaces:
        - istio-system
@@ -1180,8 +1298,9 @@ EOF
 
 istioctl install -f istio-cni.yaml
 ";
-                master.SudoCommand(CommandBundle.FromScript(istioScript0));
-            });
+                    master.SudoCommand(CommandBundle.FromScript(istioScript0));
+                    await Task.CompletedTask;
+                });
         }
 
         /// <summary>
@@ -1189,15 +1308,17 @@ istioctl install -f istio-cni.yaml
         /// </summary>
         /// <param name="setupState">The setup controller state.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
-        public static void CreateRootUser(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master)
+        public static async Task CreateRootUserAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master)
         {
+            await SyncContext.ClearAsync;
+
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             master.Status = "create: kubernetes root user";
 
-            master.InvokeIdempotent("setup/root-user",
-                () =>
+            await master.InvokeIdempotentAsync("setup/root-user",
+                async () =>
                 {
                     var userYaml =
 $@"
@@ -1221,6 +1342,8 @@ subjects:
   namespace: kube-system
 ";
                     master.KubectlApply(userYaml);
+
+                    await Task.CompletedTask;
                 });
         }
 
@@ -1229,12 +1352,14 @@ subjects:
         /// </summary>
         /// <param name="setupState">The setup controller state.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
-        public static void InstallKubeDashboard(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master)
+        public static async Task InstallKubeDashboardAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master)
         {
+            await SyncContext.ClearAsync;
+
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var cluster      = setupState.Get<ClusterProxy>(ClusterProxyProperty);
+            var cluster = setupState.Get<ClusterProxy>(ClusterProxyProperty);
             var clusterLogin = setupState.Get<ClusterLogin>(ClusterLoginProperty);
 
             master.Status = "install: kubernetes dashboard";
@@ -1477,8 +1602,8 @@ spec:
     spec:
       containers:
         - name: kubernetes-dashboard
-          image: {NeonHelper.NeonLibraryBranchRegistry}/kubernetesui-dashboard:neonkube-{KubeConst.NeonKubeVersion}
-          imagePullPolicy: Always
+          image: {NeonHelper.NeonLibraryBranchRegistry}/kubernetesui-dashboard:v{KubeVersions.KubernetesDashboardVersion}
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8443
               protocol: TCP
@@ -1554,7 +1679,7 @@ spec:
     spec:
       containers:
         - name: dashboard-metrics-scraper
-          image: {NeonHelper.NeonLibraryBranchRegistry}/kubernetesui-metrics-scraper:neonkube-{KubeConst.NeonKubeVersion}
+          image: {NeonHelper.NeonLibraryBranchRegistry}/kubernetesui-metrics-scraper:{KubeVersions.KubernetesDashboardMetricsVersion}
           ports:
             - containerPort: 8000
               protocol: TCP
@@ -1597,38 +1722,25 @@ spec:
 
                     master.KubectlApply(dashboardYaml);
                 });
-        }
 
-        /// <summary>
-        /// Initializes the EFK stack and other monitoring services.
-        /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task SetupMonitoringAsync(ObjectDictionary setupState)
-        {
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
-
-            var cluster     = setupState.Get<ClusterProxy>(ClusterProxyProperty);
-            var firstMaster = cluster.FirstMaster;
-
-            await KubeSetupAsync(setupState, firstMaster);
-            await InstallNeonMetricsAsync(setupState, firstMaster);
-            await InstallJaegerAsync(setupState, firstMaster);
+            await Task.CompletedTask;
         }
 
         /// <summary>
         /// Adds the node taints.
         /// </summary>
         /// <param name="setupState">The setup controller state.</param>
-        public static void TaintNodes(ObjectDictionary setupState)
+        public static async Task TaintNodesAsync(ObjectDictionary setupState)
         {
+            await SyncContext.ClearAsync;
+
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
 
-            var cluster     = setupState.Get<ClusterProxy>(ClusterProxyProperty);
+            var cluster = setupState.Get<ClusterProxy>(ClusterProxyProperty);
             var firstMaster = cluster.FirstMaster;
 
-            firstMaster.InvokeIdempotent("setup/cluster-taint-nodes",
-                () =>
+            await firstMaster.InvokeIdempotentAsync("setup/cluster-taint-nodes",
+                async () =>
                 {
                     firstMaster.Status = "taint: nodes";
 
@@ -1672,6 +1784,8 @@ spec:
                     {
                         firstMaster.Status = string.Empty;
                     }
+
+                    await Task.CompletedTask;
                 });
         }
 
@@ -1682,21 +1796,17 @@ spec:
         /// <param name="master">The master node where the operation will be performed.</param>
         private static async Task InstallKialiAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master)
         {
+            await SyncContext.ClearAsync;
+
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             master.Status = "deploy: kiali";
-           
+
             await master.InvokeIdempotentAsync("setup/kiali",
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
-
-                    values.Add(new KeyValuePair<string, object>("image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-
-                    values.Add(new KeyValuePair<string, object>("cr.spec.deployment.image_name", $"{NeonHelper.NeonLibraryBranchRegistry}/kiali-kiali"));
-                    values.Add(new KeyValuePair<string, object>("cr.spec.deployment.image_version", $"neonkube-{KubeConst.NeonKubeVersion}"));
 
                     int i = 0;
                     foreach (var t in await GetTaintsAsync(setupState, NodeLabels.LabelIstio, "true"))
@@ -1740,7 +1850,7 @@ spec:
                         },
                         timeout:      clusterOpTimeout,
                         pollInterval: clusterOpRetryInterval);
-                   });
+                });
 
             await Task.CompletedTask;
         }
@@ -1758,7 +1868,7 @@ spec:
 
             master.Status = "deploy: cluster-setup";
 
-            await master.InvokeIdempotentAsync("", async () => await master.InstallHelmChartAsync("cluster-setup"));
+            await master.InvokeIdempotentAsync("deploy/monitoring-cluster-setup", async () => await master.InstallHelmChartAsync("cluster_setup"));
         }
 
         /// <summary>
@@ -1797,29 +1907,6 @@ spec:
                 {
                     var values = new List<KeyValuePair<string, object>>();
 
-                    values.Add(new KeyValuePair<string, object>("apiserver.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("apiserver.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-                    values.Add(new KeyValuePair<string, object>("helper.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("helper.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-                    values.Add(new KeyValuePair<string, object>("localprovisioner.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("localprovisioner.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-                    values.Add(new KeyValuePair<string, object>("policies.monitoring.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("policies.monitoring.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-                    values.Add(new KeyValuePair<string, object>("snapshotOperator.controller.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("snapshotOperator.controller.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-                    values.Add(new KeyValuePair<string, object>("snapshotOperator.provisioner.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("snapshotOperator.provisioner.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-                    values.Add(new KeyValuePair<string, object>("provisioner.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("provisioner.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-                    values.Add(new KeyValuePair<string, object>("ndm.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("ndm.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-                    values.Add(new KeyValuePair<string, object>("ndmOperator.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("ndmOperator.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-                    values.Add(new KeyValuePair<string, object>("webhook.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("webhook.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-                    values.Add(new KeyValuePair<string, object>("jiva.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("jiva.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-
                     if (cluster.Definition.Workers.Count() >= 3)
                     {
                         var replicas = Math.Max(1, cluster.Definition.Workers.Count() / 3);
@@ -1839,47 +1926,8 @@ spec:
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
-                    values.Add(new KeyValuePair<string, object>("cspcOperator.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("cspcOperator.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-                    values.Add(new KeyValuePair<string, object>("cspcOperator.poolManager.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("cspcOperator.poolManager.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-                    values.Add(new KeyValuePair<string, object>("cspcOperator.cstorPool.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("cspcOperator.cstorPool.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-                    values.Add(new KeyValuePair<string, object>("cspcOperator.cstorPoolExporter.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("cspcOperator.cstorPoolExporter.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
 
-                    values.Add(new KeyValuePair<string, object>("cvcOperator.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("cvcOperator.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-                    values.Add(new KeyValuePair<string, object>("cvcOperator.target.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("cvcOperator.target.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-                    values.Add(new KeyValuePair<string, object>("cvcOperator.volumeMgmt.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("cvcOperator.volumeMgmt.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-                    values.Add(new KeyValuePair<string, object>("cvcOperator.volumeExporter.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("cvcOperator.volumeExporter.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-
-                    values.Add(new KeyValuePair<string, object>("csiController.resizer.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("csiController.resizer.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-                    values.Add(new KeyValuePair<string, object>("csiController.snapshotter.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("csiController.snapshotter.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-                    values.Add(new KeyValuePair<string, object>("csiController.snapshotController.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("csiController.snapshotController.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-                    values.Add(new KeyValuePair<string, object>("csiController.attacher.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("csiController.attacher.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-                    values.Add(new KeyValuePair<string, object>("csiController.provisioner.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("csiController.provisioner.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-                    values.Add(new KeyValuePair<string, object>("csiController.driverRegistrar.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("csiController.driverRegistrar.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-
-                    values.Add(new KeyValuePair<string, object>("cstorCSIPlugin.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("cstorCSIPlugin.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-
-                    values.Add(new KeyValuePair<string, object>("csiNode.driverRegistrar.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("csiNode.driverRegistrar.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-
-                    values.Add(new KeyValuePair<string, object>("admissionServer.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("admissionServer.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-
-                    await master.InstallHelmChartAsync("openebs-cstor-operator", releaseName: "neon-storage-openebs-cstor", values: values, @namespace: "openebs");
+                    await master.InstallHelmChartAsync("openebs_cstor_operator", releaseName: "neon-storage-openebs-cstor", values: values, @namespace: "openebs");
                 });
 
             await master.InvokeIdempotentAsync("setup/neon-storage-openebs-install-ready",
@@ -1895,7 +1943,7 @@ spec:
                             }
 
                             return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
-                        }, 
+                        },
                         timeout:      clusterOpTimeout,
                         pollInterval: clusterOpRetryInterval);
 
@@ -1912,7 +1960,7 @@ spec:
                         },
                         timeout:      clusterOpTimeout,
                         pollInterval: clusterOpRetryInterval);
-                   });
+                });
 
             await master.InvokeIdempotentAsync("setup/neon-storage-openebs-cstor-poolcluster",
                 async () =>
@@ -1921,7 +1969,7 @@ spec:
                     {
                         Metadata = new V1ObjectMeta()
                         {
-                            Name              = "cspc-stripe",
+                            Name = "cspc-stripe",
                             NamespaceProperty = "openebs"
                         },
                         Spec = new V1CStorPoolClusterSpec()
@@ -1937,28 +1985,28 @@ spec:
                         if (blockDevices.Items.Any(bd => bd.Spec.NodeAttributes.GetValueOrDefault("nodeName") == n.Name))
                         {
                             var pool = new V1CStorPoolSpec()
-                                {
-                                    NodeSelector = new Dictionary<string, string>()
+                            {
+                                NodeSelector = new Dictionary<string, string>()
                                     {
                                         { "kubernetes.io/hostname", n.Name }
                                     },
-                                    DataRaidGroups = new List<V1CStorDataRaidGroup>()
+                                DataRaidGroups = new List<V1CStorDataRaidGroup>()
                                     {
                                         new V1CStorDataRaidGroup()
                                         {
                                             BlockDevices = new List<V1CStorBlockDeviceRef>()
                                         }
                                     },
-                                    PoolConfig = new V1CStorPoolConfig()
-                                    {
-                                        DataRaidGroupType = DataRaidGroupType.Stripe,
-                                        Tolerations = new List<V1Toleration>()
+                                PoolConfig = new V1CStorPoolConfig()
+                                {
+                                    DataRaidGroupType = DataRaidGroupType.Stripe,
+                                    Tolerations = new List<V1Toleration>()
                                         {
                                             { new V1Toleration() { Effect = "NoSchedule", OperatorProperty = "Exists" } },
                                             { new V1Toleration() { Effect = "NoExecute", OperatorProperty = "Exists" } }
                                         }
-                                    }
-                                };
+                                }
+                            };
 
                             foreach (var bd in blockDevices.Items.Where(bd => bd.Spec.NodeAttributes.GetValueOrDefault("nodeName") == n.Name))
                             {
@@ -2020,11 +2068,8 @@ spec:
                 {
                     var values = new List<KeyValuePair<string, object>>();
 
-                    values.Add(new KeyValuePair<string, object>("image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-
                     values.Add(new KeyValuePair<string, object>($"persistence.size", ByteUnits.Parse(cluster.Definition.OpenEbs.NfsSize)));
-                      
+
                     await master.InstallHelmChartAsync("nfs", releaseName: "neon-storage-nfs", @namespace: "openebs", values: values);
                 });
 
@@ -2054,43 +2099,33 @@ spec:
         /// </summary>
         /// <param name="setupState">The setup controller state.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
+        /// <param name="name">The new Namespace name.</param>
+        /// <param name="istioInjectionEnabled">Whether Istio sidecar injection should be enabled.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task CreateNeonNamespaceAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master)
+        public static async Task CreateNamespaceAsync(
+            ObjectDictionary setupState,
+            NodeSshProxy<NodeDefinition> master,
+            string name,
+            bool istioInjectionEnabled = true)
         {
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            await master.InvokeIdempotentAsync("setup/cluster-neon-system-namespace",
+            await master.InvokeIdempotentAsync($"setup/cluster-{name}-namespace",
                 async () =>
                 {
                     await GetK8sClient(setupState).CreateNamespaceAsync(new V1Namespace()
                     {
                         Metadata = new V1ObjectMeta()
                         {
-                            Name = "neon-system",
+                            Name = name,
                             Labels = new Dictionary<string, string>()
                             {
-                                { "istio-injection", "enabled" }
+                                { "istio-injection", istioInjectionEnabled ? "enabled" : "disabled" }
                             }
                         }
                     });
                 });
-        }
-
-        /// <summary>
-        /// Setup Kube state metrics.
-        /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
-        /// <param name="master">The master node where the operation will be performed.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InstallKubeStateMetricsAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master)
-        {
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
-            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
-
-            master.Status = "deploy: kube-state-metrics";
-
-            await master.InstallHelmChartAsync("kubernetes");
         }
 
         /// <summary>
@@ -2126,7 +2161,7 @@ spec:
                         i++;
                     }
 
-                    await master.InstallHelmChartAsync("etcd-cluster", releaseName: "neon-metrics-etcd", @namespace: "monitoring", values: values);
+                    await master.InstallHelmChartAsync("etcd_cluster", releaseName: "neon-metrics-etcd", @namespace: "monitoring", values: values);
                 });
 
             await master.InvokeIdempotentAsync("deploy/neon-metrics-etcd-cluster-ready",
@@ -2151,46 +2186,22 @@ spec:
         }
 
         /// <summary>
-        /// Installs an Metrics cluster to the monitoring namespace.
+        /// Installs a Prometheus Operator to the monitoring namespace.
         /// </summary>
         /// <param name="setupState">The setup controller state.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InstallNeonMetricsAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master)
+        public static async Task InstallPrometheusAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master)
         {
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var cluster      = setupState.Get<ClusterProxy>(ClusterProxyProperty);
-            var cortexValues = new List<KeyValuePair<string, object>>();
-
-            master.Status = "deploy: neon-metrics";
+            var cluster = setupState.Get<ClusterProxy>(ClusterProxyProperty);
 
             await master.InvokeIdempotentAsync("deploy/neon-metrics-prometheus",
                 async () =>
                 {
-                    master.Status = "deploy: neon-metrics-prometheus";
-
                     var values = new List<KeyValuePair<string, object>>();
-                    
-                    values.Add(new KeyValuePair<string, object>($"alertmanager.alertmanagerSpec.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>($"alertmanager.alertmanagerSpec.image.tag", KubeVersions.AlertManagerVersion));
-                    values.Add(new KeyValuePair<string, object>($"prometheusOperator.tlsProxy.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>($"prometheusOperator.tlsProxy.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-                    values.Add(new KeyValuePair<string, object>($"prometheusOperator.admissionWebhooks.patch.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>($"prometheusOperator.admissionWebhooks.patch.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-                    values.Add(new KeyValuePair<string, object>($"prometheusOperator.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    //values.Add(new KeyValuePair<string, object>($"prometheusOperator.image.tag", KubeVersions.PrometheusVersion));
-                    values.Add(new KeyValuePair<string, object>($"prometheusOperator.configmapReloadImage.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>($"prometheusOperator.configmapReloadImage.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-                    values.Add(new KeyValuePair<string, object>($"prometheusOperator.prometheusConfigReloaderImage.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>($"prometheusOperator.prometheusConfigReloaderImage.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-                    values.Add(new KeyValuePair<string, object>($"prometheus.prometheusSpec.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>($"prometheus.prometheusSpec.image.tag", KubeVersions.PrometheusVersion));
-                    values.Add(new KeyValuePair<string, object>($"global.kubeStateMetrics.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>($"global.kubeStateMetrics.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-                    values.Add(new KeyValuePair<string, object>($"global.nodeExporter.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>($"global.nodeExporter.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
 
                     int i = 0;
                     foreach (var t in await GetTaintsAsync(setupState, NodeLabels.LabelMetrics, "true"))
@@ -2214,8 +2225,22 @@ spec:
                         i++;
                     }
 
-                    await master.InstallHelmChartAsync("prometheus-operator", releaseName: "neon-metrics-prometheus", @namespace: "monitoring", values: values);
+                    await master.InstallHelmChartAsync("prometheus_operator", releaseName: "neon-metrics-prometheus", @namespace: "monitoring", values: values);
                 });
+        }
+
+        /// <summary>
+        /// Waits for Prometheus to be fully ready.
+        /// </summary>
+        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="master">The master node where the operation will be performed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task WaitForPrometheusAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master)
+        {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
+
+            var cluster = setupState.Get<ClusterProxy>(ClusterProxyProperty);
 
             await master.InvokeIdempotentAsync("deploy/neon-metrics-prometheus-ready",
                 async () =>
@@ -2262,56 +2287,55 @@ spec:
                         timeout:      clusterOpTimeout,
                         pollInterval: clusterOpRetryInterval);
                 });
+        }
 
-            cortexValues.Add(new KeyValuePair<string, object>($"cortexConfig.ingester.lifecycler.ring.kvstore.store", "inmemory"));
+
+
+        /// <summary>
+        /// Installs Cortex to the monitoring namespace.
+        /// </summary>
+        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="master">The master node where the operation will be performed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task InstallCortexAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master)
+        {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
+
+            var cluster = setupState.Get<ClusterProxy>(ClusterProxyProperty);
+
+            var values = new List<KeyValuePair<string, object>>();
+
+            if (cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count() >= 3)
+            {
+                values.Add(new KeyValuePair<string, object>($"replicas", Math.Min(3, (cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count()))));
+                values.Add(new KeyValuePair<string, object>($"cortexConfig.ingester.lifecycler.ring.kvstore.store", "etcd"));
+                values.Add(new KeyValuePair<string, object>($"cortexConfig.ingester.lifecycler.ring.kvstore.replication_factor", 3));
+            }
+
 
             await master.InvokeIdempotentAsync("deploy/neon-metrics-cortex",
                 async () =>
                 {
                     if (cluster.Definition.Nodes.Any(n => n.Vm.GetMemory(cluster.Definition) < 4294965097L))
                     {
-                        cortexValues.Add(new KeyValuePair<string, object>($"cortexConfig.ingester.retain_period", $"120s"));
-                        cortexValues.Add(new KeyValuePair<string, object>($"cortexConfig.ingester.metadata_retain_period", $"5m"));
-                        cortexValues.Add(new KeyValuePair<string, object>($"cortexConfig.querier.batch_iterators", true));
-                        cortexValues.Add(new KeyValuePair<string, object>($"cortexConfig.querier.max_samples", 10000000));
-                        cortexValues.Add(new KeyValuePair<string, object>($"cortexConfig.table_manager.retention_period", "12h"));
+                        values.Add(new KeyValuePair<string, object>($"cortexConfig.ingester.retain_period", $"120s"));
+                        values.Add(new KeyValuePair<string, object>($"cortexConfig.ingester.metadata_retain_period", $"5m"));
+                        values.Add(new KeyValuePair<string, object>($"cortexConfig.querier.batch_iterators", true));
+                        values.Add(new KeyValuePair<string, object>($"cortexConfig.querier.max_samples", 10000000));
+                        values.Add(new KeyValuePair<string, object>($"cortexConfig.table_manager.retention_period", "12h"));
                     }
-
-                    switch (cluster.Definition.Monitor.Metrics.Storage)
-                    {
-                        case MetricsStorageOptions.Ephemeral:
-
-                            cortexValues.Add(new KeyValuePair<string, object>($"cortexConfig.schema.configs[0].store", $"boltdb"));
-                            cortexValues.Add(new KeyValuePair<string, object>($"cortexConfig.schema.configs[0].object_store", $"filesystem"));
-                            cortexValues.Add(new KeyValuePair<string, object>($"cortexConfig.schema.configs[0].object_store", $"filesystem"));
-                            break;
-
-                        case MetricsStorageOptions.Filesystem:
-
-                            cortexValues.Add(new KeyValuePair<string, object>($"replicas", Math.Min(3, (cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count()))));
-                            // create folders
-                            break;
-
-                        default:
-
-                            throw new NotImplementedException();
-                    }
-
-                    master.Status = "deploy: neon-metrics-cortex";
 
                     int i = 0;
                     foreach (var t in await GetTaintsAsync(setupState, NodeLabels.LabelMetrics, "true"))
                     {
-                        cortexValues.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
-                        cortexValues.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", t.Effect));
-                        cortexValues.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
+                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
+                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", t.Effect));
+                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
                         i++;
                     }
 
-                    cortexValues.Add(new KeyValuePair<string, object>("image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    cortexValues.Add(new KeyValuePair<string, object>("image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-
-                    await master.InstallHelmChartAsync("cortex", releaseName: "neon-metrics-cortex", @namespace: "monitoring", values: cortexValues);
+                    await master.InstallHelmChartAsync("cortex", releaseName: "neon-metrics-cortex", @namespace: "monitoring", values: values);
                 });
 
             await master.InvokeIdempotentAsync("deploy/neon-metrics-cortex-ready",
@@ -2331,42 +2355,93 @@ spec:
                         timeout:      clusterOpTimeout,
                         pollInterval: clusterOpRetryInterval);
                 });
+        }
 
-            await master.InvokeIdempotentAsync("deploy/istio-prometheus",
+        /// <summary>
+        /// Installs Loki to the monitoring namespace.
+        /// </summary>
+        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="master">The master node where the operation will be performed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task InstallLokiAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master)
+        {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
+
+            var cluster = setupState.Get<ClusterProxy>(ClusterProxyProperty);
+
+            await master.InvokeIdempotentAsync("deploy/loki",
                 async () =>
                 {
-                    master.Status = "deploy: neon-metrics-istio";
-
-                    await master.InstallHelmChartAsync("istio-prometheus", @namespace: "monitoring");
-                });
-
-            await master.InvokeIdempotentAsync("deploy/neon-metrics-grafana",
-                async () =>
-                {
-                    master.Status = "deploy: neon-metrics-grafana";
-
                     var values = new List<KeyValuePair<string, object>>();
 
-                    values.Add(new KeyValuePair<string, object>("image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-
-                    values.Add(new KeyValuePair<string, object>("downloadDashboardsImage.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("downloadDashboardsImage.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-
-                    values.Add(new KeyValuePair<string, object>("sidecar.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("sidecar.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-
-                    int i = 0;
-                    foreach (var t in await GetTaintsAsync(setupState, NodeLabels.LabelMetrics, "true"))
+                    if (cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count() >= 3)
                     {
-                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
-                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", t.Effect));
-                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
-                        i++;
+                        values.Add(new KeyValuePair<string, object>($"replicas", Math.Min(3, (cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count()))));
+                        values.Add(new KeyValuePair<string, object>($"config.ingester.lifecycler.ring.kvstore.store", "etcd"));
+                        values.Add(new KeyValuePair<string, object>($"config.ingester.lifecycler.ring.kvstore.replication_factor", 3));
                     }
 
-                    await master.InstallHelmChartAsync("grafana", releaseName: "neon-metrics-grafana", @namespace: "monitoring", values: values);
+                    await master.InstallHelmChartAsync("loki", releaseName: "neon-logs-loki", @namespace: "monitoring", values: values);
                 });
+        }
+
+        /// <summary>
+        /// Installs Promtail to the monitoring namespace.
+        /// </summary>
+        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="master">The master node where the operation will be performed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task InstallPromtailAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master)
+        {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
+
+            var cluster = setupState.Get<ClusterProxy>(ClusterProxyProperty);
+
+            await master.InvokeIdempotentAsync("deploy/promtail",
+                async () =>
+                {
+                    var values = new List<KeyValuePair<string, object>>();
+
+                    if (cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count() >= 3)
+                    {
+                        values.Add(new KeyValuePair<string, object>($"replicas", Math.Min(3, (cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count()))));
+                        values.Add(new KeyValuePair<string, object>($"config.ingester.lifecycler.ring.kvstore.store", "etcd"));
+                        values.Add(new KeyValuePair<string, object>($"config.ingester.lifecycler.ring.kvstore.replication_factor", 3));
+                    }
+
+                    await master.InstallHelmChartAsync("promtail", releaseName: "neon-logs-promtail", @namespace: "monitoring", values: values);
+                });
+        }
+
+        /// <summary>
+        /// Installs Grafana to the monitoring namespace.
+        /// </summary>
+        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="master">The master node where the operation will be performed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task InstallGrafanaAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master)
+        {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
+
+            await master.InvokeIdempotentAsync("deploy/neon-metrics-grafana",
+                    async () =>
+                    {
+                        var values = new List<KeyValuePair<string, object>>();
+
+                        int i = 0;
+                        foreach (var t in await GetTaintsAsync(setupState, NodeLabels.LabelMetrics, "true"))
+                        {
+                            values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
+                            values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", t.Effect));
+                            values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
+                            i++;
+                        }
+
+                        await master.InstallHelmChartAsync("grafana", releaseName: "neon-metrics-grafana", @namespace: "monitoring", values: values);
+                    });
 
             await master.InvokeIdempotentAsync("deploy/neon-metrics-grafana-ready",
                 async () =>
@@ -2385,8 +2460,71 @@ spec:
                         timeout:      clusterOpTimeout,
                         pollInterval: clusterOpRetryInterval);
                 });
+        }
 
-            await Task.CompletedTask;
+        /// <summary>
+        /// Installs a Minio cluster to the monitoring namespace.
+        /// </summary>
+        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="master">The master node where the operation will be performed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task InstallMinioAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master)
+        {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
+
+            var cluster = setupState.Get<ClusterProxy>(ClusterProxyProperty);
+
+            await master.InvokeIdempotentAsync("deploy/minio",
+                async () =>
+                {
+                    var values = new List<KeyValuePair<string, object>>();
+
+                    if (cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count() >= 3)
+                    {
+                        var replicas = Math.Min(4, Math.Max(4, cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count() / 4));
+                        values.Add(new KeyValuePair<string, object>($"replicas", replicas));
+                        values.Add(new KeyValuePair<string, object>($"mode", "distributed"));
+                    }
+
+                    await master.InstallHelmChartAsync("minio", releaseName: "neon-metrics-minio", @namespace: "monitoring", values: values);
+                });
+        }
+        
+        /// <summary>
+        /// Installs an Neon Monitoring to the monitoring namespace.
+        /// </summary>
+        /// <param name="setupState">The setup controller state.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task<List<Task>> SetupMonitoringAsync(ObjectDictionary setupState)
+        {
+            await SyncContext.ClearAsync;
+
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+
+            var cluster      = setupState.Get<ClusterProxy>(ClusterProxyProperty);
+            var master       = cluster.FirstMaster;
+
+            master.Status = "deploy: neon-metrics";
+
+            var tasks = new List<Task>();
+
+            if (cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count() >= 3)
+            {
+                await InstallEtcdAsync(setupState, master);
+            }
+
+            await InstallPrometheusAsync(setupState, master);
+
+            tasks.Add(WaitForPrometheusAsync(setupState, master));
+            tasks.Add(InstallMinioAsync(setupState, master));
+            tasks.Add(InstallCortexAsync(setupState, master));
+            tasks.Add(InstallLokiAsync(setupState, master));
+            tasks.Add(InstallPromtailAsync(setupState, master));
+            tasks.Add(master.InstallHelmChartAsync("istio_prometheus", @namespace: "monitoring"));
+            tasks.Add(InstallGrafanaAsync(setupState, master));
+
+            return tasks;
         }
 
         /// <summary>
@@ -2406,13 +2544,6 @@ spec:
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
-
-                    values.Add(new KeyValuePair<string, object>("agent.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("agent.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-                    values.Add(new KeyValuePair<string, object>("collector.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("collector.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-                    values.Add(new KeyValuePair<string, object>("query.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("query.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
 
                     int i = 0;
                     foreach (var t in await GetTaintsAsync(setupState, NodeLabels.LabelLogs, "true"))
@@ -2471,6 +2602,8 @@ spec:
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallContainerRegistryAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master)
         {
+            await SyncContext.ClearAsync;
+
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
@@ -2505,9 +2638,6 @@ spec:
                 {
                     var values = new List<KeyValuePair<string, object>>();
 
-                    values.Add(new KeyValuePair<string, object>("image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-
                     var replicas = Math.Min(3, cluster.Definition.Masters.Count());
                     values.Add(new KeyValuePair<string, object>($"replicas", $"{replicas}"));
 
@@ -2526,7 +2656,7 @@ spec:
                         i++;
                     }
 
-                    await master.InstallHelmChartAsync("redis-ha", releaseName: "neon-system-registry-redis", @namespace: "neon-system", values: values);
+                    await master.InstallHelmChartAsync("redis_ha", releaseName: "neon-system-registry-redis", @namespace: "neon-system", values: values);
                 });
 
             await master.InvokeIdempotentAsync("deploy/neon-system-registry-redis-ready",
@@ -2553,31 +2683,6 @@ spec:
                 {
                     var values = new List<KeyValuePair<string, object>>();
 
-                    values.Add(new KeyValuePair<string, object>("nginx.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("nginx.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-                    values.Add(new KeyValuePair<string, object>("portal.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("portal.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-                    values.Add(new KeyValuePair<string, object>("core.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("core.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-                    values.Add(new KeyValuePair<string, object>("jobservice.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("jobservice.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-                    values.Add(new KeyValuePair<string, object>("registry.registry.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("registry.registry.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-                    values.Add(new KeyValuePair<string, object>("registry.controller.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("registry.controller.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-                    values.Add(new KeyValuePair<string, object>("chartmuseum.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("chartmuseum.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-                    values.Add(new KeyValuePair<string, object>("clair.clair.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("clair.clair.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-                    values.Add(new KeyValuePair<string, object>("clair.adapter.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("clair.adapter.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-                    values.Add(new KeyValuePair<string, object>("trivy.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("trivy.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-                    values.Add(new KeyValuePair<string, object>("notary.server.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("notary.server.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-                    values.Add(new KeyValuePair<string, object>("notary.signer.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("notary.signer.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-                    
                     if (cluster.Definition.Masters.Count() > 1)
                     {
                         var redisConnStr = string.Empty;
@@ -2652,6 +2757,8 @@ spec:
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallClusterManagerAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master)
         {
+            await SyncContext.ClearAsync;
+
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
@@ -2662,10 +2769,7 @@ spec:
                 {
                     var values = new List<KeyValuePair<string, object>>();
 
-                    values.Add(new KeyValuePair<string, object>("image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>("image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-
-                    await master.InstallHelmChartAsync("neon-cluster-manager", releaseName: "neon-cluster-manager", @namespace: "neon-system", values: values);
+                    await master.InstallHelmChartAsync("neon_cluster_manager", releaseName: "neon-cluster-manager", @namespace: "neon-system", values: values);
                 });
 
             await master.InvokeIdempotentAsync("deploy/neon-cluster-manager-ready",
@@ -2690,6 +2794,30 @@ spec:
         }
 
         /// <summary>
+        /// Installs the Neon Cluster Manager.
+        /// </summary>
+        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="master">The master node where the operation will be performed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task<List<Task>> CreateNamespacesAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master)
+        {
+            await SyncContext.ClearAsync;
+
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
+
+            master.Status = "deploy: create namespaces";
+
+            var tasks = new List<Task>();
+
+            tasks.Add(CreateNamespaceAsync(setupState, master, "neon-system", true));
+            tasks.Add(CreateNamespaceAsync(setupState, master, "jobs", false));
+            tasks.Add(CreateNamespaceAsync(setupState, master, "monitoring", true));
+
+            return await Task.FromResult(tasks);
+        }
+
+        /// <summary>
         /// Installs a Citus-postgres database used by neon-system services.
         /// </summary>
         /// <param name="setupState">The setup controller state.</param>
@@ -2708,16 +2836,6 @@ spec:
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
-
-                    values.Add(new KeyValuePair<string, object>($"image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>($"image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-                    values.Add(new KeyValuePair<string, object>($"busybox.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>($"busybox.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-                    values.Add(new KeyValuePair<string, object>($"prometheus.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>($"prometheus.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
-
-                    values.Add(new KeyValuePair<string, object>($"manager.image.organization", NeonHelper.NeonLibraryBranchRegistry));
-                    values.Add(new KeyValuePair<string, object>($"manager.image.tag", $"neonkube-{KubeConst.NeonKubeVersion}"));
 
                     var replicas = Math.Max(1, cluster.Definition.Masters.Count() / 5);
 
@@ -2739,7 +2857,7 @@ spec:
                         i++;
                     }
 
-                    await master.InstallHelmChartAsync("citus-postgresql", releaseName: "neon-system-db", @namespace: "neon-system", values: values);
+                    await master.InstallHelmChartAsync("citus_postgresql", releaseName: "neon-system-db", @namespace: "neon-system", values: values);
                 });
 
             await master.InvokeIdempotentAsync("deploy/neon-system-db-ready",

@@ -45,7 +45,12 @@ namespace Neon.Kube
         /// <summary>
         /// The version of the Kubernetes dashboard to be installed.
         /// </summary>
-        public const string KubernetesDashboardVersion = "2.0.4";
+        public const string KubernetesDashboardVersion = "2.1.0";
+
+        /// <summary>
+        /// The version of the Kubernetes dashboard metrics scraper to be installed.
+        /// </summary>
+        public const string KubernetesDashboardMetricsVersion = "v1.0.1";
 
         /// <summary>
         /// The package version for Kubernetes admin service.
@@ -73,6 +78,11 @@ namespace Neon.Kube
         public const string CalicoVersion = "3.16";
 
         /// <summary>
+        /// The version of HaProxy to install.
+        /// </summary>
+        public const string HaproxyVersion = "1.9.2-alpine";
+
+        /// <summary>
         /// The version of Istio to install.
         /// </summary>
         public const string IstioVersion = "1.7.6";
@@ -86,6 +96,11 @@ namespace Neon.Kube
         /// The version of CoreDNS to be installed.
         /// </summary>
         public const string CoreDNSVersion = "1.6.2";
+
+        /// <summary>
+        /// The version of CoreDNS plugin to be installed.
+        /// </summary>
+        public const string CoreDNSPluginVersion = "0.2-istio-1.1";
 
         /// <summary>
         /// The version of Prometheus to be installed.

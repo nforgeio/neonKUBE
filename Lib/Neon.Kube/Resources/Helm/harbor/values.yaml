@@ -374,7 +374,7 @@ proxy:
 # If expose the service via "ingress", the Nginx will not be used
 nginx:
   image:
-    organization: neon-system-registry
+    organization: neon-registry.node.local
     repository: goharbor-nginx-photon
     tag: v2.1.1
   # set the service account to be used, default if left empty
@@ -397,7 +397,7 @@ nginx:
 
 portal:
   image:
-    organization: neon-system-registry
+    organization: neon-registry.node.local
     repository: goharbor-harbor-portal
     tag: v2.1.1
   # set the service account to be used, default if left empty
@@ -420,7 +420,7 @@ portal:
 
 core:
   image:
-    organization: neon-system-registry
+    organization: neon-registry.node.local
     repository: goharbor-harbor-core
     tag: v2.1.1
   # set the service account to be used, default if left empty
@@ -459,7 +459,7 @@ core:
 
 jobservice:
   image:
-    organization: neon-system-registry
+    organization: neon-registry.node.local
     repository: goharbor-harbor-jobservice
     tag: v2.1.1
   replicas: 1
@@ -492,7 +492,7 @@ registry:
   serviceAccountName: ""
   registry:
     image:
-      organization: neon-system-registry
+      organization: neon-registry.node.local
       repository: goharbor-registry-photon
       tag: v2.1.1
     # resources:
@@ -501,7 +501,7 @@ registry:
     #    cpu: 100m
   controller:
     image:
-      organization: neon-system-registry
+      organization: neon-registry.node.local
       repository: goharbor-harbor-registryctl
       tag: v2.1.1
 
@@ -554,7 +554,7 @@ chartmuseum:
   # Harbor defaults ChartMuseum to returning relative urls, if you want using absolute url you should enable it by change the following value to 'true'
   absoluteUrl: false
   image:
-    organization: neon-system-registry
+    organization: neon-registry.node.local
     repository: goharbor-chartmuseum-photon
     tag: v2.1.1
   replicas: 1
@@ -579,7 +579,7 @@ clair:
   serviceAccountName: ""
   clair:
     image:
-      organization: neon-system-registry
+      organization: neon-registry.node.local
       repository: goharbor-clair-photon
       tag: v2.1.1
     # resources:
@@ -588,7 +588,7 @@ clair:
     #    cpu: 100m
   adapter:
     image:
-      organization: neon-system-registry
+      organization: neon-registry.node.local
       repository: goharbor-clair-adapter-photon
       tag: v2.1.1
     # resources:
@@ -614,7 +614,7 @@ trivy:
   # enabled the flag to enable Trivy scanner
   enabled: false
   image:
-    organization: neon-system-registry
+    organization: neon-registry.node.local
     repository: goharbor-trivy-adapter-photon
     tag: v2.1.1
   # set the service account to be used, default if left empty
@@ -677,7 +677,7 @@ notary:
     # set the service account to be used, default if left empty
     serviceAccountName: ""
     image:
-      organization: neon-system-registry
+      organization: neon-registry.node.local
       repository: goharbor-notary-server-photon
       tag: v2.1.1
     replicas: 1
@@ -689,7 +689,7 @@ notary:
     # set the service account to be used, default if left empty
     serviceAccountName: ""
     image:
-      organization: neon-system-registry
+      organization: neon-registry.node.local
       repository: goharbor-notary-signer-photon
       tag: v2.1.1
     replicas: 1

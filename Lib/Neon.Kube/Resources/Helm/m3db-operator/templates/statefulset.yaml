@@ -23,7 +23,7 @@ spec:
           image: {{ .Values.image.repository}}:{{ .Values.image.tag }}
           command:
           - m3db-operator
-          imagePullPolicy: Always
+          imagepullPolicy: IfNotPresent
           env:
             - name: ENVIRONMENT
               value: {{ .Values.environment }}

@@ -4,10 +4,10 @@
 
 
 image:
-  organization: neon-system-registry
+  organization: neon-registry.node.local
   repository: neon-log-collector
   tag: 4.0.1-1
-  pullPolicy: Always
+  pullPolicy: IfNotPresent
 
 logLevel: info
 

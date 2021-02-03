@@ -43,10 +43,10 @@ secretMounts: []
 #    path: /usr/share/elasticsearch/config/certs
 
 image:
-  organization: neon-system-registry
+  organization: neon-registry.node.local
   repository: blacktop-elasticsearch
   tag: "7.10"
-  pullPolicy: Always
+  pullPolicy: IfNotPresent
 
 podAnnotations: {}
   # iam.amazonaws.com/role: es-cluster

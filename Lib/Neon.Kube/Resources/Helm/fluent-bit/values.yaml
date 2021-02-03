@@ -3,10 +3,10 @@
 on_minikube: false
 
 image:
-  organization: neon-system-registry
+  organization: neon-registry.node.local
   repository: neon-log-host
   tag: 1.6.9
-  pullPolicy: Always
+  pullPolicy: IfNotPresent
 
 testFramework:
   image: "dduportal/bats"

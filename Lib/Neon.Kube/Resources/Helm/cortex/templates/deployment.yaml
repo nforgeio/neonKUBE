@@ -52,6 +52,7 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:
             - "-config.file=/etc/cortex/cortex.yaml"
+            - "-config.expand-env"
             - "-log.level=info"
             - "-log.format=json"
             - "-validation.max-label-names-per-series=100"
@@ -62,8 +63,6 @@ spec:
             - name: http-metrics
               containerPort: {{ .Values.cortexConfig.server.http_listen_port }}
               protocol: TCP
-          startupProbe:
-            {{- toYaml .Values.startupProbe | nindent 12 }}
           livenessProbe:
             {{- toYaml .Values.livenessProbe | nindent 12 }}
           readinessProbe:

@@ -2,7 +2,7 @@
 ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
 ##
 image:
-  organization: neon-system-registry
+  organization: neon-registry.node.local
   repository: redis
   tag: 6.0.7-alpine
   pullPolicy: IfNotPresent
@@ -172,7 +172,7 @@ sysctlImage:
   registry: docker.io
   repository: busybox
   tag: 1.31.1
-  pullPolicy: Always
+  pullPolicy: IfNotPresent
   mountHostSys: false
   resources: {}
 

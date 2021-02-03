@@ -76,6 +76,9 @@ OPTIONS:
 
     --force             - Don't prompt before removing existing contexts
                           that reference the target cluster.
+
+    --upload-charts     - Upload helm charts to node before setup. This
+                          is useful when developing.
 ";
         private const string        logBeginMarker  = "# CLUSTER-BEGIN-SETUP ############################################################";
         private const string        logEndMarker    = "# CLUSTER-END-SETUP-SUCCESS ######################################################";
@@ -90,7 +93,7 @@ OPTIONS:
         public override string[] Words => new string[] { "cluster", "setup" };
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions => new string[] { "--unredacted", "--force" };
+        public override string[] ExtendedOptions => new string[] { "--unredacted", "--force", "--upload-charts" };
 
         /// <inheritdoc/>
         public override void Help()
@@ -216,13 +219,23 @@ OPTIONS:
 
                 // Connect to existing cluster if it exists.
 
-                KubeSetup.ConnectCluster(setupController);
+                try
+                {
+                    KubeSetup.ConnectCluster(setupController);
+                } 
+                catch (Exception e)
+                {
+                }
 
                 // Configure the setup steps.
 
                 setupController.AddGlobalStep("download binaries", async state => await KubeSetup.InstallWorkstationBinariesAsync(state));
                 setupController.AddWaitUntilOnlineStep("connect");
                 setupController.AddNodeStep("verify OS", (state, node) => node.VerifyNodeOS());
+
+                setupController.AddNodeStep("verify OS", (state, node) => node.SetupConfigureNtp(message => Console.WriteLine(message)),
+                    (state, node) => node.Metadata.IsWorker);
+
 
                 // Write the operation begin marker to all cluster node logs.
 
@@ -255,14 +268,22 @@ OPTIONS:
                         (state, node) => node != cluster.FirstMaster);
                 }
 
+                if (commandLine.HasOption("--upload-charts"))
+                {
+                    cluster.FirstMaster.SudoCommand($"rm -rf {KubeNodeFolders.Helm}/*");
+                    cluster.FirstMaster.NodeInstallHelmArchive(message => Console.WriteLine(message));
+
+                    var zipPath = LinuxPath.Combine(KubeNodeFolders.Helm, "charts.zip");
+
+                    cluster.FirstMaster.SudoCommand($"unzip {zipPath} -d {KubeNodeFolders.Helm}");
+                    cluster.FirstMaster.SudoCommand($"rm -f {zipPath}");
+                }
+
                 //-----------------------------------------------------------------
                 // Kubernetes configuration.
 
-                setupController.AddGlobalStep("setup etc HA", KubeSetup.SetupEtcdHaProxy);
                 setupController.AddNodeStep("install kubernetes", (setupState, node) => node.NodeInstallKubernetes());
                 setupController.AddGlobalStep("setup cluster", setupState => KubeSetup.SetupClusterAsync(setupState));
-                setupController.AddGlobalStep("taint nodes", KubeSetup.TaintNodes);
-                setupController.AddGlobalStep("setup monitoring", KubeSetup.SetupMonitoringAsync);
 
                 //-----------------------------------------------------------------
                 // Verify the cluster.

@@ -149,13 +149,13 @@ EOF
 # the local network, so the clocks should be very close to
 # being closely synchronized.
 
-sources=${GetNtpSources()}
+sources=({GetNtpSources()})
 
 echo ""*** TIME SOURCES = ${{sources}}"" 1>&2
 
 preferred_set=false
 
-for source in ${{sources}}
+for source in ""${{sources[@]}}"";
 do
     if ! ${{preferred_set}} ; then
         echo ""server $source burst iburst prefer"" >> /etc/ntp.conf
@@ -623,7 +623,7 @@ EOF
                 {
                     var script =
 @"
-echo KUBELET_EXTRA_ARGS=--network-plugin=cni --cni-bin-dir=/opt/cni/bin --cni-conf-dir=/etc/cni/net.d --feature-gates=\""AllAlpha=false,RunAsGroup=true\"" --container-runtime=remote --cgroup-driver=systemd --container-runtime-endpoint='unix:///var/run/crio/crio.sock' --runtime-request-timeout=5m > /etc/default/kubelet
+echo KUBELET_EXTRA_ARGS=--network-plugin=cni --cni-bin-dir=/opt/cni/bin --cni-conf-dir=/etc/cni/net.d --feature-gates=\""AllAlpha=false,RunAsGroup=true\"" --container-runtime=remote --cgroup-driver=systemd --container-runtime-endpoint='unix:///var/run/crio/crio.sock' --runtime-request-timeout=5m --resolv-conf=/run/systemd/resolve/resolv.conf > /etc/default/kubelet
 systemctl daemon-reload
 service kubelet restart
 ";
@@ -653,7 +653,7 @@ service kubelet restart
         {
             if (string.IsNullOrEmpty(releaseName))
             {
-                releaseName = chartName;
+                releaseName = chartName.Replace("_", "-");
             }
 
             // Unzip the Helm chart archive if we haven't done so already.
@@ -662,8 +662,8 @@ service kubelet restart
                 () =>
                 {
                     var zipPath = LinuxPath.Combine(KubeNodeFolders.Helm, "charts.zip");
-
-                    SudoCommand($"unzip {zipPath} -d {KubeNodeFolders.Helm}");
+                    
+                    SudoCommand($"unzip {zipPath} -d {KubeNodeFolders.Helm} || true");
                     SudoCommand($"rm -f {zipPath}");
                 });
 
@@ -682,32 +682,20 @@ service kubelet restart
 
                             if (valueType == typeof(string))
                             {
-                                valueOverrides.AppendWithSeparator($"--set-string {value.Key}=\"{value.Value}\"", @"\n");
-                            }
-                            else if (valueType == typeof(int))
-                            {
-                                valueOverrides.AppendWithSeparator($"--set {value.Key}={value.Value}", @"\n");
+                                valueOverrides.AppendWithSeparator($"--set-string {value.Key}=\"{value.Value}\"");
                             }
                             else
                             {
-                                throw new NotImplementedException();
+                                valueOverrides.AppendWithSeparator($"--set {value.Key}={value.Value}");
                             }
                         }
                     }
 
                     var helmChartScript =
 $@"
-cd /tmp/charts
+cd {KubeNodeFolders.Helm}
 
-until [ -f {chartName}.zip ]
-do
-  sleep 1
-done
-
-rm -rf {chartName}
-
-unzip {chartName}.zip -d {chartName}
-helm install {releaseName} {chartName} --namespace {@namespace} -f {chartName}/values.yaml {valueOverrides}
+helm install {releaseName} --namespace {@namespace} -f {chartName}/values.yaml {valueOverrides} ./{chartName}
 
 START=`date +%s`
 DEPLOY_END=$((START+15))
@@ -720,8 +708,6 @@ do
   fi
    sleep 1
 done
-
-rm -rf {chartName}*
 ";
                     SudoCommand(CommandBundle.FromScript(helmChartScript), RunOptions.None).EnsureSuccess();
                 });

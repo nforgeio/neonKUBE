@@ -5,10 +5,10 @@
 replicaCount: 1
 
 image:
-  organization: neon-system-registry
+  organization: neon-registry.node.local
   repository: neon-cluster-manager
   tag: neonkube-0.1.0-alpha
-  pullPolicy: Always
+  pullPolicy: IfNotPresent
 
 logging:
   level: info

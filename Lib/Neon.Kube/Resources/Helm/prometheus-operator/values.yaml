@@ -91,13 +91,13 @@ additionalPrometheusRulesMap: {}
 global:
   kubeStateMetrics:
     image:
-      organization: neon-system-registry
+      organization: neon-registry.node.local
       repository: coreos-kube-state-metrics
-      tag: v1.7.1
+      tag: v1.9.7
 
   nodeExporter:
     image:
-      organization: neon-system-registry
+      organization: neon-registry.node.local
       repository: prometheus-node-exporter
       tag: v1.0.1
   rbac:
@@ -380,7 +380,7 @@ alertmanager:
     ## Image of Alertmanager
     ##
     image:
-      organization: neon-system-registry
+      organization: neon-registry.node.local
       repository: prometheus-alertmanager
       tag: v0.21.0
 
@@ -577,7 +577,7 @@ alertmanager:
 ## Using default values from https://github.com/grafana/helm-charts/blob/main/charts/grafana/values.yaml
 ##
 grafana:
-  enabled: false
+  enabled: true
   namespaceOverride: ""
 
   ## Deploy default dashboards.
@@ -1247,7 +1247,7 @@ prometheusOperator:
     patch:
       enabled: true
       image:
-        organization: neon-system-registry
+        organization: neon-registry.node.local
         repository: jettech-kube-webhook-certgen
         tag: v1.5.0
         sha: ""
@@ -1428,7 +1428,7 @@ prometheusOperator:
   ## Prometheus-operator image
   ##
   image:
-    organization: neon-system-registry
+    organization: neon-registry.node.local
     repository: prometheus-operator-prometheus-operator
     tag: v0.43.2
     sha: ""
@@ -1437,7 +1437,7 @@ prometheusOperator:
   ## Configmap-reload image to use for reloading configmaps
   ##
   configmapReloadImage:
-    organization: neon-system-registry
+    organization: neon-registry.node.local
     repository: jimmidyson-configmap-reload
     tag: v0.4.0
     sha: ""
@@ -1445,7 +1445,7 @@ prometheusOperator:
   ## Prometheus-config-reloader image to use for config and rule reloading
   ##
   prometheusConfigReloaderImage:
-    organization: neon-system-registry
+    organization: neon-registry.node.local
     repository: prometheus-operator-prometheus-config-reloader
     tag: v0.44.0
     sha: ""
@@ -1721,7 +1721,7 @@ prometheus:
     ## Image of Prometheus.
     ##
     image:
-      organization: neon-system-registry
+      organization: neon-registry.node.local
       repository: prometheus-prometheus
       tag: v2.22.1
       sha: ""
@@ -1970,9 +1970,11 @@ prometheus:
 
     ## Resource limits & requests
     ##
-    resources: {}
-    # requests:
-    #   memory: 400Mi
+    resources:
+      requests:
+        memory: 100Mi
+      limits:
+        memory: 500Mi
 
     ## Prometheus StorageSpec for persistent data
     ## ref: https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/user-guides/storage.md

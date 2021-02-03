@@ -191,7 +191,7 @@ agent:
   enabled: true
   annotations: {}
   image:
-    organization: neon-system-registry
+    organization: neon-registry.node.local
     repository: jaegertracing-jaeger-agent
     tag: 1.19.2
   imagePullSecrets: []
@@ -257,7 +257,7 @@ collector:
   enabled: true
   annotations: {}
   image:
-    organization: neon-system-registry
+    organization: neon-registry.node.local
     repository: jaegertracing-jaeger-collector
     tag: 1.19.2
   imagePullSecrets: []
@@ -361,7 +361,7 @@ query:
     enabled: true
   annotations: {}
   image:
-    organization: neon-system-registry
+    organization: neon-registry.node.local
     repository: jaegertracing-jaeger-query
     tag: 1.19.2
   imagePullSecrets: []
@@ -439,7 +439,7 @@ spark:
   image: jaegertracing/spark-dependencies
   imagePullSecrets: []
   tag: latest
-  pullPolicy: Always
+  pullPolicy: IfNotPresent
   cmdlineParams: {}
   extraEnv: []
   schedule: "49 23 * * *"
@@ -475,7 +475,7 @@ esIndexCleaner:
   image: jaegertracing/jaeger-es-index-cleaner
   imagePullSecrets: []
   tag: latest
-  pullPolicy: Always
+  pullPolicy: IfNotPresent
   cmdlineParams: {}
   extraEnv: []
   schedule: "55 23 * * *"
@@ -511,7 +511,7 @@ hotrod:
   replicaCount: 1
   image:
     repository: jaegertracing/example-hotrod
-    pullPolicy: Always
+    pullPolicy: IfNotPresent
     pullSecrets: []
   service:
     annotations: {}

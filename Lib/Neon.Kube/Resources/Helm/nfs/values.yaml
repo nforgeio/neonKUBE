@@ -7,7 +7,7 @@ replicaCount: 1
 # imagePullSecrets:
 
 image:
-  organization: neon-system-registry
+  organization: neon-registry.node.local
   repository: kubernetes_incubator-nfs-provisioner
   tag: v2.3.0
   pullPolicy: IfNotPresent

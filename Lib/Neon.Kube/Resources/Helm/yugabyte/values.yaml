@@ -3,7 +3,7 @@
 # Declare variables to be passed into your templates.
 Component: "yugabytedb"
 Image:
-  organization: neon-system-registry
+  organization: neon-registry.node.local
   repository: yugabyte
   tag: 2.2.0.0-b80
   pullPolicy: IfNotPresent
@@ -21,7 +21,7 @@ storage:
 
 busybox:
   image: 
-    organization: neon-system-registry
+    organization: neon-registry.node.local
     repository: busybox
     tag: 1.32.0
 

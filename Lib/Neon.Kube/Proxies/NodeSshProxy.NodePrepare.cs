@@ -172,6 +172,28 @@ fi
         }
 
         /// <summary>
+        /// Required NFS setup.
+        /// </summary>
+        public void ConfigureNFS()
+        {
+            InvokeIdempotent("prepare/nfs",
+                () =>
+                {
+                    //-----------------------------------------------------------------
+                    // We need to install nfs-common tools for NFS to work.
+
+                    Status = "install: [nfs]";
+
+                    var InstallNfsScript =
+@"
+safe-apt-get update -y
+safe-apt-get install -y nfs-common
+";
+                    SudoCommand(CommandBundle.FromScript(InstallNfsScript), RunOptions.FaultOnError);
+                });
+        }
+
+        /// <summary>
         /// Configures <b>journald</b>.
         /// </summary>
         /// <param name="setupState">The setup controller state.</param>
@@ -219,6 +241,7 @@ systemctl restart rsyslog.service
                     BaseConfigureOpenSsh();
                     DisableSnap();
                     ConfigureJournald(setupState);
+                    ConfigureNFS();
                 });
         }
 
@@ -941,6 +964,11 @@ EOF
 cat <<EOF > /etc/crio/crio.conf.d/01-cgroup-manager.conf
 [crio.runtime]
 cgroup_manager = ""systemd""
+EOF
+
+cat <<EOF > /etc/crio/crio.conf.d/02-image.conf
+[crio.image]
+pause_image = ""neon-registry.node.local/pause:3.2""
 EOF
 
 # Configure CRI-O to start on boot and then restart it to pick up the new options.

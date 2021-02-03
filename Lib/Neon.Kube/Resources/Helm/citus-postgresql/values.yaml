@@ -3,10 +3,10 @@ fullnameOverride: ""
 imagePullSecrets: ""
 
 image:
-  organization: neon-system-registry
+  organization: neon-registry.node.local
   repository: citusdata-citus
-  tag: 9.5.1
-  pullPolicy: Always
+  tag: 9.5.1-alpine
+  pullPolicy: IfNotPresent
 
 readiness:
   enabled: true
@@ -63,10 +63,10 @@ service:
 manager:
   replicas: 3
   image:
-    organization: neon-system-registry
+    organization: neon-registry.node.local
     repository: bakdata-citus-membership-manager
     tag: v0.3
-    pullPolicy: Always
+    pullPolicy: IfNotPresent
   resources:
     requests:
       cpu: 100m
@@ -97,7 +97,7 @@ nodeSelector:
 
 busybox:
   image: 
-    organization: neon-system-registry
+    organization: neon-registry.node.local
     repository: busybox
     tag: 1.32.0
   
@@ -106,7 +106,7 @@ busybox:
 prometheus:
   enabled: true
   image: 
-    organization: neon-system-registry
+    organization: neon-registry.node.local
     repository: wrouesnel-postgres-exporter
     tag: v0.5.1
   port: 9187

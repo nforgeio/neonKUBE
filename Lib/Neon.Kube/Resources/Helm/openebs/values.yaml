@@ -22,7 +22,7 @@ image:
 apiserver:
   enabled: true
   image:
-    organization: neon-system-registry
+    organization: neon-registry.node.local
     repository: openebs-m-apiserver
     tag: 2.4.0
   replicas: 1
@@ -53,7 +53,7 @@ varDirectoryPath:
 provisioner:
   enabled: true
   image:
-    organization: neon-system-registry
+    organization: neon-registry.node.local
     repository: openebs-k8s-provisioner
     tag: 2.4.1
   replicas: 1
@@ -72,7 +72,7 @@ provisioner:
 localprovisioner:
   enabled: true
   image:
-    organization: neon-system-registry
+    organization: neon-registry.node.local
     repository: openebs-provisioner-localpv
     tag: 2.4.0
   replicas: 1
@@ -93,12 +93,12 @@ snapshotOperator:
   enabled: true
   controller:
     image:
-      organization: neon-system-registry
+      organization: neon-registry.node.local
       repository: openebs-snapshot-controller
       tag: 2.4.0
   provisioner:
     image:
-      organization: neon-system-registry
+      organization: neon-registry.node.local
       repository: openebs-snapshot-provisioner
       tag: 2.4.0
   replicas: 1
@@ -118,7 +118,7 @@ snapshotOperator:
 ndm:
   enabled: true
   image:
-    organization: neon-system-registry
+    organization: neon-registry.node.local
     repository: openebs-node-disk-manager
     tag: 1.0.1
   sparse:
@@ -147,7 +147,7 @@ ndm:
 ndmOperator:
   enabled: true
   image:
-    organization: neon-system-registry
+    organization: neon-registry.node.local
     repository: openebs-node-disk-operator
     tag: 1.0.1
   replicas: 1
@@ -169,7 +169,7 @@ ndmOperator:
 webhook:
   enabled: true
   image:
-    organization: neon-system-registry
+    organization: neon-registry.node.local
     repository: openebs-admission-server
     tag: 2.4.0
   failurePolicy: "Fail"
@@ -188,7 +188,7 @@ webhook:
 
 jiva:
   image:
-    organization: neon-system-registry
+    organization: neon-registry.node.local
     repository: openebs-jiva
     tag: 2.4.0
   replicas: 3
@@ -197,35 +197,35 @@ jiva:
 cstor:
   pool:
     image:
-      organization: neon-system-registry
+      organization: neon-registry.node.local
       repository: openebs-cstor-pool
       tag: 2.4.0
   poolMgmt:
     image:
-      organization: neon-system-registry
+      organization: neon-registry.node.local
       repository: openebs-cstor-pool-manager
       tag: 2.4.0
   target:
     image:
-      organization: neon-system-registry
+      organization: neon-registry.node.local
       repository: openebs-cstor-istgt
       tag: 2.4.0
   volumeMgmt:
     image:
-      organization: neon-system-registry
+      organization: neon-registry.node.local
       repository: openebs-cstor-volume-mgmt
       tag: 2.4.0
   webhook:
     image:
-      organization: neon-system-registry
+      organization: neon-registry.node.local
       repository: openebs-cstor-webhook
       tag: 2.4.0
 
 helper:
   image:
-    organization: neon-system-registry
+    organization: neon-registry.node.local
     repository: openebs-linux-utils
-    tag: 2.4.0
+    tag: 2.4.1
 
 featureGates:
   enabled: true
@@ -243,7 +243,7 @@ policies:
   monitoring:
     enabled: true
     image:
-      organization: neon-system-registry
+      organization: neon-registry.node.local
       repository: openebs-m-exporter
       tag: 2.4.0
 

@@ -97,7 +97,6 @@ namespace NeonClusterManager
 
             var tasks = new List<Task>();
 
-            tasks.Add(KibanaSetupAsync());
             tasks.Add(NeonSystemSetup());
 
             await NeonHelper.WaitAllAsync(tasks);
