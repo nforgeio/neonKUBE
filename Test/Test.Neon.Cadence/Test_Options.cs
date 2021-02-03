@@ -175,7 +175,7 @@ namespace TestCadence
                 WorkflowScheduleToStartTimeoutSeconds = 82,
             };
 
-            if (fixture.Start(fixtureSettings, image: CadenceTestHelper.CadenceImage, reconnect: true, keepRunning: CadenceTestHelper.KeepCadenceServerOpen) == TestFixtureStatus.Started)
+            if (fixture.Start(fixtureSettings, reconnect: true, keepRunning: CadenceTestHelper.KeepCadenceServerOpen) == TestFixtureStatus.Started)
             {
                 // Initialize the default default client and worker.
 
