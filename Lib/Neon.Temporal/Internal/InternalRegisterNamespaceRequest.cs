@@ -19,6 +19,8 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 
+using Newtonsoft.Json;
+
 using Neon.Common;
 using Neon.Temporal;
 
@@ -48,7 +50,8 @@ namespace Neon.Temporal.Internal
         /// The number of days to retain the history for workflowws
         /// completed in this namespace.  This defaults to <b>7 days</b>.
         /// </summary>
-        public int RetentionDays { get; set; } = 7;
+        [JsonConverter(typeof(GoTimeSpanJsonConverter))]
+        public TimeSpan WorkflowExecutionRetentionPeriod { get; set; } = TimeSpan.FromDays(7);
 
         /// <summary>
         /// Enables metric generation.  This defaults to <c>false.</c>

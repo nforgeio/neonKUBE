@@ -347,7 +347,7 @@ namespace TestTemporal
         public class LocalActivityWithouthResult : ActivityBase, ILocalActivityWithoutResult
         {
             public static string Name { get; private set; } = null;
-            public static ActivityTask Info { get; set; }
+            public static ActivityInfo Info { get; set; }
 
             public static void Reset()
             {
@@ -968,9 +968,9 @@ namespace TestTemporal
             // Verify that we can call a workflow that calls an activity
             // which throws an exception and that we see the error.
 
-            var options = new WorkflowOptions()
+            var options = new StartWorkflowOptions()
             {
-                DecisionTaskTimeout = TimeSpan.FromSeconds(60)
+                WorkflowTaskTimeout = TimeSpan.FromSeconds(60)
             };
 
             var stub  = client.NewWorkflowStub<IWorkflowActivityFail>(options);

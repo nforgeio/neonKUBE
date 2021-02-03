@@ -39,57 +39,48 @@ namespace Neon.Temporal.Internal
         }
 
         /// <summary>
-        /// The namespace name.
+        /// The namespace info.
         /// </summary>
-        public string NamespaceInfoName
+        public NamespaceInfo NamespaceInfo
         {
-            get => GetStringProperty(PropertyNames.NamespaceInfoName);
-            set => SetStringProperty(PropertyNames.NamespaceInfoName, value);
+            get => GetJsonProperty<NamespaceInfo>(PropertyNames.NamespaceInfo);
+            set => SetJsonProperty<NamespaceInfo>(PropertyNames.NamespaceInfo, value);
         }
 
         /// <summary>
-        /// Human readable description for the namespace.
+        /// The namespace configuration.
         /// </summary>
-        public string NamespaceInfoDescription
+        public NamespaceConfig NamespaceConfig
         {
-            get => GetStringProperty(PropertyNames.NamespaceInfoDescription);
-            set => SetStringProperty(PropertyNames.NamespaceInfoDescription, value);
+            get => GetJsonProperty<NamespaceConfig>(PropertyNames.NamespaceConfig);
+            set => SetJsonProperty<NamespaceConfig>(PropertyNames.NamespaceConfig, value);
         }
 
         /// <summary>
-        /// The namespace status.
+        /// The namespace replication configuration.
         /// </summary>
-        public NamespaceStatus NamespaceInfoStatus
+        public NamespaceReplicationConfig NamespaceReplicationConfig
         {
-            get => GetEnumProperty<NamespaceStatus>(PropertyNames.NamespaceInfoStatus);
-            set => SetEnumProperty<NamespaceStatus>(PropertyNames.NamespaceInfoStatus, value);
+            get => GetJsonProperty<NamespaceReplicationConfig>(PropertyNames.NamespaceReplicationConfig);
+            set => SetJsonProperty<NamespaceReplicationConfig>(PropertyNames.NamespaceReplicationConfig, value);
         }
 
         /// <summary>
-        /// Owner email address.
+        /// The failover version for the namespace.
         /// </summary>
-        public string NamespaceInfoOwnerEmail
+        public long FailoverVersion
         {
-            get => GetStringProperty(PropertyNames.NamespaceInfoOwnerEmail);
-            set => SetStringProperty(PropertyNames.NamespaceInfoOwnerEmail, value);
+            get => GetLongProperty(PropertyNames.FailoverVersion);
+            set => SetLongProperty(PropertyNames.FailoverVersion, value);
         }
 
         /// <summary>
-        /// The workflow history retention period in days.
+        /// Indicates whether the namespace is a global namespace.
         /// </summary>
-        public int ConfigurationRetentionDays
+        public bool IsGlobalNamespace
         {
-            get => GetIntProperty(PropertyNames.ConfigurationRetentionDays);
-            set => SetIntProperty(PropertyNames.ConfigurationRetentionDays, value);
-        }
-
-        /// <summary>
-        /// Enables metric generation.
-        /// </summary>
-        public bool ConfigurationEmitMetrics
-        {
-            get => GetBoolProperty(PropertyNames.ConfigurationEmitMetrics);
-            set => SetBoolProperty(PropertyNames.ConfigurationEmitMetrics, value);
+            get => GetBoolProperty(PropertyNames.IsGlobalNamespace);
+            set => SetBoolProperty(PropertyNames.IsGlobalNamespace, value);
         }
 
         /// <inheritdoc/>
@@ -109,12 +100,11 @@ namespace Neon.Temporal.Internal
 
             var typedTarget = (NamespaceDescribeReply)target;
 
-            typedTarget.ConfigurationRetentionDays = this.ConfigurationRetentionDays;
-            typedTarget.ConfigurationEmitMetrics   = this.ConfigurationEmitMetrics;
-            typedTarget.NamespaceInfoName          = this.NamespaceInfoName;
-            typedTarget.NamespaceInfoDescription   = this.NamespaceInfoDescription;
-            typedTarget.NamespaceInfoStatus        = this.NamespaceInfoStatus;
-            typedTarget.NamespaceInfoOwnerEmail    = this.NamespaceInfoOwnerEmail;
+            typedTarget.NamespaceInfo              = this.NamespaceInfo;
+            typedTarget.NamespaceConfig            = this.NamespaceConfig;
+            typedTarget.NamespaceReplicationConfig = this.NamespaceReplicationConfig;
+            typedTarget.FailoverVersion            = this.FailoverVersion;
+            typedTarget.IsGlobalNamespace          = this.IsGlobalNamespace;
         }
     }
 }

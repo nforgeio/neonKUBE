@@ -86,7 +86,7 @@ namespace Neon.Temporal
         /// that invoked it.  Note that this is not supported for local activities.
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown for local activities.</exception>
-        public ActivityTask Task => parent.ActivityTask;
+        public ActivityInfo Task => parent.ActivityTask;
 
         /// <summary>
         /// Returns the logger to be used for logging activity related events.

@@ -24,16 +24,15 @@ using System.Text;
 using k8s;
 using k8s.Models;
 
-using Microsoft.Rest;
-
 using Newtonsoft.Json;
+using Microsoft.Rest;
 
 namespace Neon.Kube
 {
     /// <summary>
     /// The kubernetes spec for the block device.
     /// </summary>
-    public partial class V1CStorBlockDeviceSpec
+    public class V1CStorBlockDeviceSpec
     {
         /// <summary>
         /// Constructor.

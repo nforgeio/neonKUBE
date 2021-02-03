@@ -56,7 +56,7 @@ namespace Neon.Xunit.Cadence
     /// are not true.
     /// </para>
     /// <para>
-    /// See <see cref="Start(CadenceSettings, string, string, string[], string, LogLevel, bool, bool, string, bool, bool, ContainerLimits)"/>
+    /// See <see cref="Start(CadenceSettings, string, string, string, LogLevel, bool, bool, string, bool, bool)"/>
     /// for more information about how this works.
     /// </para>
     /// <note>
@@ -67,10 +67,56 @@ namespace Neon.Xunit.Cadence
     /// </note>
     /// </remarks>
     /// <threadsafety instance="true"/>
-    public sealed class CadenceFixture : ContainerFixture
+    public sealed class CadenceFixture : DockerComposeFixture
     {
-        private TimeSpan            warmupDelay = TimeSpan.FromSeconds(2);  // Time to allow Cadence to start.
-        private TimeSpan            removeDelay = TimeSpan.FromSeconds(5);  // $hack(jefflill): FRAGILE
+        /// <summary>
+        /// The default Docker compose file text used to spin up Temporal and its related services
+        /// by the <see cref="CadenceFixture"/>.
+        /// </summary>
+        public const string DefaultComposeFile =
+@"version: '3'
+services:
+  cassandra:
+    image: cassandra:3.11
+    ports:
+      - 9042:9042
+    environment:
+      - HEAP_NEWSIZE=1M
+      - MAX_HEAP_SIZE=1024M
+    deploy:
+      resources:
+        limits:
+          memory: 1536M
+  statsd:
+    image: graphiteapp/graphite-statsd
+    ports:
+      - 8080:80
+      - 2003:2003
+      - 8125:8125
+      - 8126:8126
+  cadence:
+    image: ubercadence/server:master-auto-setup
+    ports:
+     - 7933:7933
+     - 7934:7934
+     - 7935:7935
+     - 7939:7939
+    environment:
+      - CASSANDRA_SEEDS=cassandra
+      - STATSD_ENDPOINT=statsd:8125
+      - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development.yaml
+    depends_on:
+      - cassandra
+      - statsd
+  cadence-web:
+    image: ubercadence/web:latest
+    environment:
+      - CADENCE_TCHANNEL_PEERS=cadence:7933
+    ports:
+      - 8088:8088
+    depends_on:
+      - cadence
+";
         private CadenceSettings     settings;
         private CadenceClient       client;
         private bool                reconnect;
@@ -94,14 +140,25 @@ namespace Neon.Xunit.Cadence
         /// to call this in your test class constructor instead of <see cref="ITestFixture.Start(Action)"/>.
         /// </para>
         /// <note>
-        /// You'll need to call <see cref="StartAsComposed(CadenceSettings, string, string, string[], string, LogLevel, bool, bool, string, bool, bool, ContainerLimits)"/>
+        /// You'll need to call <see cref="StartAsComposed(CadenceSettings, string, string, string, LogLevel, bool, bool, string, bool, bool)"/>
         /// instead when this fixture is being added to a <see cref="ComposedFixture"/>.
         /// </note>
         /// </summary>
         /// <param name="settings">Optional Cadence settings.</param>
-        /// <param name="image">Optionally specifies the Cadence container image (defaults to <b>ghcr.io/neonrelease/cadence-dev:latest</b>).</param>
         /// <param name="name">Optionally specifies the Cadence container name (defaults to <c>cadence-dev</c>).</param>
-        /// <param name="env">Optional environment variables to be passed to the Cadence container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
+        /// <param name="composeFile">
+        /// <para>
+        /// Optionally specifies the Temporal Docker compose file text.  This defaults to
+        /// <see cref="DefaultComposeFile"/> which configures Temporal server to start with
+        /// a new Cassandra database instance listening on port <b>9042</b> as well as the
+        /// Temporal web UI running on port <b>8088</b>.  Temporal server is listening on
+        /// its standard gRPC port <b>7233</b>.
+        /// </para>
+        /// <para>
+        /// You may specify your own Docker compose text file to customize this by configuring
+        /// a different backend database, etc.
+        /// </para>
+        /// </param>
         /// <param name="defaultDomain">Optionally specifies the default domain for the fixture's client.  This defaults to <b>test-domain</b>.</param>
         /// <param name="logLevel">Specifies the Cadence log level.  This defaults to <see cref="LogLevel.None"/>.</param>
         /// <param name="reconnect">
@@ -127,10 +184,6 @@ namespace Neon.Xunit.Cadence
         /// Optionally prevents the fixture from calling <see cref="CadenceClient.Reset()"/> to
         /// put the Cadence client library into its initial state before the fixture starts as well
         /// as when the fixture itself is reset.
-        /// </param>
-        /// <param name="limits">
-        /// Specifies the Docker container limits to use for hosting Couchbase.  Note that
-        /// this method will use reasonably small default limits when this is <c>null</c>.
         /// </param>
         /// <returns>
         /// <see cref="TestFixtureStatus.Started"/> if the fixture wasn't previously started and
@@ -151,37 +204,33 @@ namespace Neon.Xunit.Cadence
         /// </note>
         /// </remarks>
         public TestFixtureStatus Start(
-            CadenceSettings     settings        = null,
-            string              image           = "ghcr.io/neonrelease/cadence-dev:latest",
-            string              name            = "cadence-dev",
-            string[]            env             = null,
-            string              defaultDomain   = DefaultDomain,
-            LogLevel            logLevel        = LogLevel.None,
-            bool                reconnect       = false,
-            bool                keepRunning     = false,
-            string              hostInterface   = null,
-            bool                noClient        = false,
-            bool                noReset         = false,
-            ContainerLimits     limits          = null)
+            CadenceSettings     settings      = null,
+            string              name          = "cadence-dev",
+            string              composeFile   = DefaultComposeFile,
+            string              defaultDomain = DefaultDomain,
+            LogLevel            logLevel      = LogLevel.None,
+            bool                reconnect     = false,
+            bool                keepRunning   = false,
+            string              hostInterface = null,
+            bool                noClient      = false,
+            bool                noReset       = false)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image), nameof(image));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(composeFile), nameof(composeFile));
 
             return base.Start(
                 () =>
                 {
                     StartAsComposed(
                         settings:        settings, 
-                        image:           image, 
-                        name:            name, 
-                        env:             env, 
+                        name:            name,
+                        composeFile:     composeFile,
                         defaultDomain:   defaultDomain, 
                         logLevel:        logLevel,
                         reconnect:       reconnect,
                         keepRunning:     keepRunning, 
                         hostInterface:   hostInterface,
                         noClient:        noClient, 
-                        noReset:         noReset,
-                        limits:          limits);
+                        noReset:         noReset);
                 });
         }
 
@@ -189,15 +238,26 @@ namespace Neon.Xunit.Cadence
         /// Used to start the fixture within a <see cref="ComposedFixture"/>.
         /// </summary>
         /// <param name="settings">Optional Cadence settings.</param>
-        /// <param name="image">Optionally specifies the Cadence container image (defaults to <b>ghcr.io/neonrelease/cadence-dev:latest</b>).</param>
         /// <param name="name">Optionally specifies the Cadence container name (defaults to <c>cadence-dev</c>).</param>
-        /// <param name="env">Optional environment variables to be passed to the Cadence container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
+        /// <param name="composeFile">
+        /// <para>
+        /// Optionally specifies the Temporal Docker compose file text.  This defaults to
+        /// <see cref="DefaultComposeFile"/> which configures Temporal server to start with
+        /// a new Cassandra database instance listening on port <b>9042</b> as well as the
+        /// Temporal web UI running on port <b>8088</b>.  Temporal server is listening on
+        /// its standard gRPC port <b>7233</b>.
+        /// </para>
+        /// <para>
+        /// You may specify your own Docker compose text file to customize this by configuring
+        /// a different backend database, etc.
+        /// </para>
+        /// </param>
         /// <param name="defaultDomain">Optionally specifies the default domain for the fixture's client.  This defaults to <b>test-domain</b>.</param>
         /// <param name="logLevel">Specifies the Cadence log level.  This defaults to <see cref="LogLevel.None"/>.</param>
         /// <param name="reconnect">
         /// Optionally specifies that a new Cadence connection <b>should</b> be established for each
         /// unit test case.  By default, the same connection will be reused which will save about a 
-        /// second per test.
+        /// second per test case.
         /// </param>
         /// <param name="keepRunning">
         /// Optionally indicates that the container should remain running after the fixture is disposed.
@@ -218,10 +278,6 @@ namespace Neon.Xunit.Cadence
         /// put the Cadence client library into its initial state before the fixture starts as well
         /// as when the fixture itself is reset.
         /// </param>
-        /// <param name="limits">
-        /// Optionally specifies the Docker container limits to use for hosting Couchbase.  Note that
-        /// this method will use reasonably small default limits when this is <c>null</c>.
-        /// </param>
         /// <remarks>
         /// <note>
         /// A fresh Cadence client <see cref="Client"/> will be established every time this
@@ -230,20 +286,18 @@ namespace Neon.Xunit.Cadence
         /// </note>
         /// </remarks>
         public void StartAsComposed(
-            CadenceSettings     settings        = null,
-            string              image           = "ghcr.io/neonrelease/cadence-dev:latest",
-            string              name            = "cadence-dev",
-            string[]            env             = null,
-            string              defaultDomain   = DefaultDomain,
-            LogLevel            logLevel        = LogLevel.None,
-            bool                reconnect       = false,
-            bool                keepRunning     = false,
-            string              hostInterface   = null,
-            bool                noClient        = false,
-            bool                noReset         = false,
-            ContainerLimits     limits          = null)
+            CadenceSettings     settings      = null,
+            string              name          = "cadence-dev",
+            string              composeFile   = DefaultComposeFile,
+            string              defaultDomain = DefaultDomain,
+            LogLevel            logLevel      = LogLevel.None,
+            bool                reconnect     = false,
+            bool                keepRunning   = false,
+            string              hostInterface = null,
+            bool                noClient      = false,
+            bool                noReset       = false)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image), nameof(image));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(composeFile), nameof(composeFile));
 
             base.CheckWithinAction();
 
@@ -261,9 +315,9 @@ namespace Neon.Xunit.Cadence
                 NeonHelper.ExecuteCapture(NeonHelper.DockerCli, new object[] { "rm", "--force",
                     new string[]
                     {
-                        "temporal-dev_temporal_1",
                         "temporal-dev_cassandra_1",
-                        "temporal-dev_temporal-web_1"
+                        "temporal-dev_temporal-web_1",
+                        "temporal-dev_temporal_1"
                     } });
 
 
@@ -287,27 +341,29 @@ namespace Neon.Xunit.Cadence
                     CadenceClient.Reset();
                 }
 
-                // Use reasonable default limits.
-
-                limits = limits ?? new ContainerLimits()
-                {
-                    Memory = "1 GiB"
-                };
-
                 // Start the Cadence container.
 
-                base.StartAsComposed(name, image,
-                    new string[]
-                    {
-                        "--detach",
-                        "-p", $"{GetHostInterface(hostInterface)}:7933-7939:7933-7939",
-                        "-p", $"{GetHostInterface(hostInterface)}:8088:8088"
-                    },
-                    env: env,
-                    limits: limits,
-                    keepOpen: keepRunning);
+                base.StartAsComposed(name, composeFile, keepRunning);
 
-                Thread.Sleep(warmupDelay);
+                // It can take Cadence server some time to start.  Rather than relying on [cadence-proxy]
+                // to handle retries (which may take longer than the connect timeout), we're going to wait
+                // up to 4 minutes for Temporal to start listening on its RPC socket.
+
+                var retry = new LinearRetryPolicy(e => true, maxAttempts: int.MaxValue, retryInterval: TimeSpan.FromSeconds(0.5), timeout: TimeSpan.FromMinutes(4));
+
+                retry.Invoke(
+                    () =>
+                    {
+                        // The [socket.Connect()] calls below will throw [SocketException] until
+                        // Temporal starts listening on its RPC socket.
+
+                        var socket = new Socket(AddressFamily.InterNetworkV6, SocketType.Stream, ProtocolType.Tcp);
+
+                        socket.Connect(IPAddress.IPv6Loopback, NetworkPorts.Cadence);
+                        socket.Close();
+                    });
+
+                Thread.Sleep(TimeSpan.FromSeconds(5));  // Wait a bit longer for luck!
 
                 // Initialize the settings.
 
@@ -319,7 +375,7 @@ namespace Neon.Xunit.Cadence
                 };
 
                 settings.Servers.Clear();
-                settings.Servers.Add($"http://{GetHostInterface(hostInterface, forConnection: true)}:{NetworkPorts.Cadence}");
+                settings.Servers.Add($"http://10.0.0.2:{NetworkPorts.Cadence}");
 
                 this.settings  = settings;
                 this.reconnect = reconnect;
@@ -427,17 +483,27 @@ namespace Neon.Xunit.Cadence
 
             // $hack(jefflill): 
             //
-            // We're also going to dispose any clients saved in the
+            // We're also going to dispose/remove any clients saved in the
             // State dictionary because some Cadence unit tests 
             // persist client instances there.
 
-            foreach (var value in State.Values
-                .Where(v => v != null && v.GetType() == typeof(CadenceClient)))
+            var delList = new List<string>();
+
+            foreach (var item in State
+                .Where(item => item.Value.GetType() == typeof(CadenceClient)))
             {
-                var client = (CadenceClient)value;
+                var client = (CadenceClient)item.Value;
 
                 client.Dispose();
+                delList.Add(item.Key);
             }
+
+            foreach (var key in delList)
+            {
+                State.Remove(key);
+            }
+
+            // Dispose the clients.
 
             if (HttpClient != null)
             {

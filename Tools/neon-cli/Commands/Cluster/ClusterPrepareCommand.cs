@@ -445,6 +445,7 @@ Server Requirements:
 
                 // Configure the setup controller state.
 
+                setupController.Add(KubeSetup.HostingEnvironmentProperty, cluster.HostingManager.HostingEnvironment);
                 setupController.Add(KubeSetup.ClusterProxyProperty, cluster);
                 setupController.Add(KubeSetup.HostingManagerProperty, hostingManager);
 
@@ -455,7 +456,7 @@ Server Requirements:
                 setupController.AddNodeStep("node credentials",
                     (state, node) =>
                     {
-                        node.ConfigureSshKey(setupController, clusterLogin);
+                        node.ConfigureSshKey(setupController);
                     });
                 setupController.AddNodeStep("node prepare",
                     (state, node) =>

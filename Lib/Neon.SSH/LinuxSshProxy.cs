@@ -69,6 +69,12 @@ namespace Neon.SSH
         //---------------------------------------------------------------------
         // Static members
 
+        /// <summary>
+        /// Path to the file whose existence indicates that the proxy has already 
+        /// configured things like disabling SUDO password prompts.
+        /// </summary>
+        public const string SshProxyInitPath = "/etc/neon-sshproxy-init";
+
         private static Dictionary<string, object>   connectLocks = new Dictionary<string, object>(StringComparer.InvariantCultureIgnoreCase);
 
         /// <summary>
@@ -649,8 +655,8 @@ namespace Neon.SSH
         /// <param name="password">The current user's password.</param>
         /// <remarks>
         /// <para>
-        /// This method uses the existence of a <b>/etc/neon-sshproxy-init</b> file to
-        /// ensure that it only executes once per machine.  This file will be
+        /// This method uses the existence of a file at <see cref="SshProxyInitPath"/> 
+        /// file to ensure that it only executes once per machine.  This file will be
         /// created the first time this method is called on the machine.
         /// </para>
         /// </remarks>
@@ -658,7 +664,7 @@ namespace Neon.SSH
         {
             Covenant.Requires<ArgumentNullException>(password != null, nameof(password));
 
-            const string sshProxyInitPath = "/etc/neon-sshproxy-init";
+            const string sshProxyInitPath = SshProxyInitPath;
             
             var connectionInfo = GetConnectionInfo();
 
@@ -1424,7 +1430,7 @@ rm {HostFolders.Home(Username)}/askpass
         /// as uploading and downloading files.
         /// </para>
         /// <para>
-        /// This method creates the <b>/etc/neon-sshproxy-init</b> file such that these operations will only
+        /// This method creates the <see cref="SshProxyInitPath"/> file such that these operations will only
         /// be performed once.
         /// </para>
         /// </summary>

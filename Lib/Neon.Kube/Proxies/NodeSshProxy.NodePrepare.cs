@@ -52,18 +52,45 @@ namespace Neon.Kube
         where TMetadata : class
     {
         /// <summary>
+        /// Installs the neonKUBE related tools to the <see cref="KubeNodeFolders.Bin"/> folder.
+        /// </summary>
+        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        public void NodeInstallTools(ObjectDictionary setupState, Action<string> statusWriter = null)
+        {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+
+            InvokeIdempotent("node/tools",
+                () =>
+                {
+                    foreach (var file in KubeHelper.Resources.GetDirectory("/Tools").GetFiles())
+                    {
+                        KubeHelper.WriteStatus(statusWriter, "Install", "Tool scripts");
+                        Status = "install: tool scripts";
+
+                        // Upload each tool script, removing the extension.
+
+                        var targetName = LinuxPath.GetFileNameWithoutExtension(file.Path);
+                        var targetPath = LinuxPath.Combine(KubeNodeFolders.Bin, targetName);
+
+                        UploadText(targetPath, file.ReadAllText(), permissions: "774", owner: KubeConst.SysAdminUser);
+                    }
+                });
+        }
+
+        /// <summary>
         /// Configures a node's host public SSH key during node provisioning.
         /// </summary>
         /// <param name="setupState">The setup controller state.</param>
-        /// <param name="clusterLogin">The cluster login.</param>
-        public void ConfigureSshKey(ObjectDictionary setupState, ClusterLogin clusterLogin)
+        public void ConfigureSshKey(ObjectDictionary setupState)
         {
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
-            Covenant.Requires<ArgumentNullException>(clusterLogin != null, nameof(clusterLogin));
+
+            var clusterLogin = setupState.Get<ClusterLogin>(KubeSetup.ClusterLoginProperty);
 
             // Configure the SSH credentials on the node.
 
-            InvokeIdempotent("setup/ssh",
+            InvokeIdempotent("node/ssh",
                 () =>
                 {
                     CommandBundle bundle;
@@ -145,8 +172,12 @@ systemctl restart sshd
         /// <summary>
         /// Disables the <b>snapd</b> service.
         /// </summary>
-        public void DisableSnap()
+        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        public void DisableSnap(ObjectDictionary setupState, Action<string> statusWriter = null)
         {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+
             InvokeIdempotent("prepare/disable-snap",
                 () =>
                 {
@@ -155,6 +186,7 @@ systemctl restart sshd
                     // because we don't want it to randomlly update apps on cluster nodes.
 
                     Status = "disable: [snapd.service]";
+                    KubeHelper.WriteStatus(statusWriter, "Disable", "[snapd.service]");
 
                     var disableSnapScript =
 @"
@@ -197,13 +229,15 @@ safe-apt-get install -y nfs-common
         /// Configures <b>journald</b>.
         /// </summary>
         /// <param name="setupState">The setup controller state.</param>
-        public void ConfigureJournald(ObjectDictionary setupState)
+        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        public void ConfigureJournald(ObjectDictionary setupState, Action<string> statusWriter = null)
         {
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
 
             InvokeIdempotent("prepare/journald",
                 () =>
                 {
+                    KubeHelper.WriteStatus(statusWriter, "Configure", "Journald filters");
                     Status = "configure: journald filters";
 
                     var filterScript =
@@ -237,9 +271,10 @@ systemctl restart rsyslog.service
             InvokeIdempotent("prepare/complete",
                 () =>
                 {
+                    NodeInstallTools(setupState);
                     BaseConfigureApt(clusterDefinition.NodeOptions.PackageManagerRetries, clusterDefinition.NodeOptions.AllowPackageManagerIPv6);
-                    BaseConfigureOpenSsh();
-                    DisableSnap();
+                    BaseConfigureOpenSsh(setupState);
+                    DisableSnap(setupState);
                     ConfigureJournald(setupState);
                     ConfigureNFS();
                 });
@@ -248,10 +283,44 @@ systemctl restart rsyslog.service
         /// <summary>
         /// Performs low-level node initialization during cluster setup.
         /// </summary>
-        /// <param name="statusWriter">Optional log writer action.</param>
-        public void NodeInitialize(Action<string> statusWriter = null)
+        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        public void NodeInitialize(ObjectDictionary setupState, Action<string> statusWriter = null)
         {
-            // Additional initialization: This is from the old [node-setup.sh] script.
+            var hostEnvironment = setupState.Get<HostingEnvironment>(KubeSetup.HostingEnvironmentProperty);
+
+            if (hostEnvironment != HostingEnvironment.Wsl2)
+            {
+                InvokeIdempotent("node/blacklist-floppy",
+                    () =>
+                    {
+                        KubeHelper.WriteStatus(statusWriter, "Blacklist", "floppy drive");
+                        Status = "blacklist: floppy drive";
+
+                        var floppyScript =
+@"
+# We need to blacklist the floppy drive.  Not doing this can cause
+# node failures:
+
+rmmod floppy
+echo ""blacklist floppy"" | tee /etc/modprobe.d/blacklist-floppy.conf
+dpkg-reconfigure initramfs-tools
+";
+                        SudoCommand(CommandBundle.FromScript(floppyScript));
+                    });
+
+                InvokeIdempotent("node/sysstat",
+                    () =>
+                    {
+                        var statScript =
+@"
+# Enable system statistics collection (e.g. Page Faults,...)
+
+sed -i '/^ENABLED=""false""/c\ENABLED=""true""' /etc/default/sysstat
+";
+                        SudoCommand(CommandBundle.FromScript(statScript));
+                    });
+            }
 
             var script =
 $@"
@@ -259,17 +328,6 @@ $@"
 # Basic initialization
 
 timedatectl set-timezone UTC
-
-# We need to blacklist the floppy drive.  Not doing this can cause
-# node failures:
-
-rmmod floppy
-echo ""blacklist floppy"" | tee /etc/modprobe.d/blacklist-floppy.conf
-dpkg-reconfigure initramfs-tools
-
-# Enable system statistics collection (e.g. Page Faults,...)
-
-sed -i '/^ENABLED=""false""/c\ENABLED=""true""' /etc/default/sysstat
 
 #------------------------------------------------------------------------------
 # We need to increase the number of file descriptors and also how much memory
@@ -288,7 +346,7 @@ sed -i '/^ENABLED=""false""/c\ENABLED=""true""' /etc/default/sysstat
 # will be able to max-out files and RAM and DOS other services.
 #
 # Now that we'll be installing a lot fewer Linux services after switching
-# to Kubernetes, it probable makes more sense to set limits for the fewer
+# to Kubernetes, it probably makes more sense to set limits for the fewer
 # specific services we're actually deploying.
 
 cat <<EOF > /etc/security/limits.conf
@@ -706,7 +764,7 @@ EOF
 # commands that run for more than one day (which is pretty unlikely).  A better approach
 # would be to look for temporary command folders THAT HAVE COMPLETED (e.g. HAVE
 # an [exit] code file) and are older than one day (or perhaps even older than an
-# hour or two) and then purge those.  Not a high priority.
+# hour or two) and then purge just those.  Not a high priority.
 
 cat <<EOF > {KubeNodeFolders.Bin}/neon-cleaner
 #!/bin/bash
@@ -816,13 +874,11 @@ Restart=always
 WantedBy=multi-user.target
 EOF
 
-systemctl enable neon-cleaner
-systemctl daemon-reload
-systemctl restart neon-cleaner
+# Enable the new services.
 
+systemctl enable neon-cleaner
 systemctl enable iscsid
 systemctl daemon-reload
-systemctl restart iscsid
 ";
             InvokeIdempotent("node/initialize",
                 () =>
@@ -838,9 +894,12 @@ systemctl restart iscsid
         /// Installs the Helm charts as a single ZIP archive written to the 
         /// neonKUBE Helm folder.
         /// </summary>
-        /// <param name="statusWriter">Optional log writer action.</param>
-        public void NodeInstallHelmArchive(Action<string> statusWriter = null)
+        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        public void NodeInstallHelmArchive(ObjectDictionary setupState, Action<string> statusWriter = null)
         {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+
             using (var ms = new MemoryStream())
             {
                 KubeHelper.WriteStatus(statusWriter, "Install", "Helm Charts (archive)");
@@ -860,7 +919,7 @@ systemctl restart iscsid
         /// longer necessary after the node first boots and its credentials and network
         /// settings have been configured.
         /// </summary>
-        /// <param name="statusWriter">Optional log writer action.</param>
+        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         public void NodeDisableNeonInit(Action<string> statusWriter = null)
         {
             InvokeIdempotent("node/disable-neon-init",
@@ -871,27 +930,32 @@ systemctl restart iscsid
 
                     SudoCommand("systemctl disable neon-init.service", RunOptions.Defaults | RunOptions.FaultOnError);
                 });
-        }   
+        }
 
         /// <summary>
         /// Installs the <b>CRI-O</b> container runtime.
         /// </summary>
-        /// <param name="statusWriter">Optional log writer action.</param>
-        public void NodeInstallCriO(Action<string> statusWriter = null)
+        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        public void NodeInstallCriO(ObjectDictionary setupState, Action<string> statusWriter = null)
         {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+
+            var hostEnvironment = setupState.Get<HostingEnvironment>(KubeSetup.HostingEnvironmentProperty);
+
             InvokeIdempotent("node/cri-o",
                 () =>
                 {
-                    var setupScript =
-$@"
-# Configure Bash strict mode so that the entire script will fail if 
-# any of the commands fail.
-#
-# http://redsymbol.net/articles/unofficial-bash-strict-mode/
+                    if (hostEnvironment != HostingEnvironment.Wsl2)
+                    {
+                        // This doesn't work with WSL2 because the Microsoft Linux kernel doesn't
+                        // include these modules.  We'll set them up for the other environments.
+
+                        var moduleScript =
+@"
+# Create the .conf file to load required modules during boot.
 
 set -euo pipefail
-
-# Create the .conf file to load required modules during boot.
 
 cat <<EOF > /etc/modules-load.d/crio.conf
 overlay
@@ -904,6 +968,12 @@ modprobe overlay
 modprobe br_netfilter
 
 sysctl --system
+";                      SudoCommand(CommandBundle.FromScript(moduleScript));
+                    }
+
+                    var setupScript =
+$@"
+set -euo pipefail
 
 # Configure the CRI-O package respository.
 
@@ -923,8 +993,8 @@ curl {KubeHelper.CurlOptions} https://download.opensuse.org/repositories/devel:k
 
 # Install the CRI-O packages.
 
-safe-apt-get update -y
-safe-apt-get install -y cri-o cri-o-runc
+{KubeNodeFolders.Bin}/safe-apt-get update -y
+{KubeNodeFolders.Bin}/safe-apt-get install -y cri-o cri-o-runc
 
 # Generate the CRI-O configurations.
 
@@ -992,19 +1062,22 @@ apt-mark hold cri-o cri-o-runc
         /// <summary>
         /// Installs the <b>podman</b> CLI for managing <b>CRI-O</b>.
         /// </summary>
-        /// <param name="statusWriter">Optional log writer action.</param>
-        public void NodeInstallPodman(Action<string> statusWriter = null)
+        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        public void NodeInstallPodman(ObjectDictionary setupState, Action<string> statusWriter = null)
         {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+
             InvokeIdempotent("node/podman",
                 () =>
                 {
                     var setupScript =
-@"
+$@"
 source /etc/os-release
-echo ""deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/ /"" > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
-wget -nv https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/xUbuntu_${VERSION_ID}/Release.key -O- | apt-key add -
-safe-apt-get update -qq
-safe-apt-get install -yq podman-rootless
+echo ""deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${{VERSION_ID}}/ /"" > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
+wget -nv https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/xUbuntu_${{VERSION_ID}}/Release.key -O- | apt-key add -
+{KubeNodeFolders.Bin}/safe-apt-get update -qq
+{KubeNodeFolders.Bin}/safe-apt-get install -yq podman-rootless
 ln -s /usr/bin/podman /bin/docker
 
 # Prevent the package manager from automatically upgrading these components.
@@ -1022,9 +1095,12 @@ apt-mark hold podman
         /// <summary>
         /// Installs the Helm client.
         /// </summary>
-        /// <param name="statusWriter">Optional log writer action.</param>
-        public void NodeInstallHelm(Action<string> statusWriter = null)
+        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        public void NodeInstallHelm(ObjectDictionary setupState, Action<string> statusWriter = null)
         {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+
             InvokeIdempotent("node/helm-client",
                 () =>
                 {
@@ -1048,21 +1124,55 @@ rm -rf linux-amd64
         /// <summary>
         /// Installs the Kubernetes components: <b>kubeadm</b>, <b>kubectl</b>, and <b>kublet</b>.
         /// </summary>
-        /// <param name="statusWriter">Optional log writer action.</param>
-        public void NodeInstallKubernetes(Action<string> statusWriter = null)
+        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        public void NodeInstallKubernetes(ObjectDictionary setupState, Action<string> statusWriter = null)
         {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+
             InvokeIdempotent("node/install-kubernetes",
                 () =>
                 {
-                    var script =
+                    var hostingEnvironment = setupState.Get<HostingEnvironment>(KubeSetup.HostingEnvironmentProperty);
+
+                    // We need some custom configuration on WSL2 inspired by the 
+                    // Kubernetes-IN-Docker (KIND) project:
+                    //
+                    //      https://d2iq.com/blog/running-kind-inside-a-kubernetes-cluster-for-continuous-integration
+
+                    if (hostingEnvironment == HostingEnvironment.Wsl2)
+                    {
+                        // We need to disable IPv6 on WSL2.  We're going to accomplish this by
+                        // writing a config file to be included last by [/etc/sysctl.conf].
+
+                        var confScript =
+@"
+cat <<EOF > /etc/sysctl.d/990-wsl2-no-ipv6
+# neonKUBE needs to disable IPv6 when hosted on WSL2.
+
+net.ipv6.conf.all.disable_ipv6=1
+net.ipv6.conf.default.disable_ipv6=1
+net.ipv6.conf.lo.disable_ipv6=1
+EOF
+
+chmod 744 /etc/sysctl.d/990-wsl-no-ipv6 
+
+sysctl --system
+";
+                        SudoCommand(CommandBundle.FromScript(confScript), RunOptions.FaultOnError);
+                    }
+
+                    // Perform the install.
+
+                    var mainScript =
 $@"
 curl {KubeHelper.CurlOptions} https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
 echo ""deb https://apt.kubernetes.io/ kubernetes-xenial main"" > /etc/apt/sources.list.d/kubernetes.list
-safe-apt-get update
+{KubeNodeFolders.Bin}/safe-apt-get update
 
-safe-apt-get install -yq kubelet={KubeVersions.KubeletPackageVersion}
-safe-apt-get install -yq kubeadm={KubeVersions.KubeAdminPackageVersion}
-safe-apt-get install -yq kubectl={KubeVersions.KubeCtlPackageVersion}
+{KubeNodeFolders.Bin}/safe-apt-get install -yq kubelet={KubeVersions.KubeletPackageVersion}
+{KubeNodeFolders.Bin}/safe-apt-get install -yq kubeadm={KubeVersions.KubeAdminPackageVersion}
+{KubeNodeFolders.Bin}/safe-apt-get install -yq kubectl={KubeVersions.KubeCtlPackageVersion}
 
 # Prevent the package manager from automatically these components.
 
@@ -1085,7 +1195,16 @@ systemctl disable kubelet
                     KubeHelper.WriteStatus(statusWriter, "Install", "Kubernetes");
                     Status = "install: kubernetes";
 
-                    SudoCommand(CommandBundle.FromScript(script), RunOptions.Defaults | RunOptions.FaultOnError);
+                    SudoCommand(CommandBundle.FromScript(mainScript), RunOptions.Defaults | RunOptions.FaultOnError);
+
+                    // Additional special configuration for WSL2.
+
+                    if (hostingEnvironment == HostingEnvironment.Wsl2)
+                    {
+                        var script = KubeHelper.Resources.GetFile("/Scripts/wsl2-cgroup-setup.sh").ReadAllText();
+
+                        SudoCommand(CommandBundle.FromScript(script));
+                    }
                 });
         }
     }

@@ -19,7 +19,10 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 
+using Newtonsoft.Json;
+
 using Neon.Common;
+using Neon.Data;
 using Neon.Temporal;
 using Neon.Temporal.Internal;
 
@@ -38,12 +41,13 @@ namespace Neon.Temporal
         /// <summary>
         /// The namespace UUID.
         /// </summary>
-        public string Uuid { get; set; }
+        public string Id { get; set; }
 
         /// <summary>
         /// The namespace status.
         /// </summary>
-        public NamespaceStatus Status { get; set; }
+        [JsonConverter(typeof(IntegerEnumConverter<NamespaceState>))]
+        public NamespaceState State { get; set; }
 
         /// <summary>
         /// Ths namespace description.
@@ -53,12 +57,13 @@ namespace Neon.Temporal
         /// <summary>
         /// The namespace owner's email address.
         /// </summary>
+        [JsonProperty(PropertyName = "owner_email")]
         public string OwnerEmail { get; set; }
 
         /// <summary>
-        /// A dictionary of named byte data that can be attached to namespace
+        /// A dictionary of named string data that can be attached to namespace
         /// and that can be used for any purpose.
         /// </summary>
-        public Dictionary<string, byte[]> Data;
+        public Dictionary<string, string> Data { get; set; }
     }
 }

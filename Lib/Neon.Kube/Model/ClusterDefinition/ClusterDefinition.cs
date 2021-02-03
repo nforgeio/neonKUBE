@@ -38,8 +38,6 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
 using Neon.Net;
-using Remotion.Linq.Parsing;
-using Org.BouncyCastle.Cms;
 
 namespace Neon.Kube
 {

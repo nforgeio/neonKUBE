@@ -36,19 +36,19 @@ namespace Neon.Temporal
         /// <summary>
         /// Identifies and unspecified task queue.
         /// </summary>
-        [EnumMember(Value = "TASK_QUEUE_TYPE_UNSPECIFIED")]
-        Unspecified,
+        [EnumMember(Value = "UNSPECIFIED")]
+        Unspecified = 0,
         
         /// <summary>
         /// Identifies decision (AKA workflow) task lists.
         /// </summary>
-        [EnumMember(Value = "TASK_QUEUE_TYPE_WORKFLOW")]
-        Workflow,
+        [EnumMember(Value = "WORKFLOW")]
+        Workflow = 1,
 
         /// <summary>
         /// Identifies activity task lists.
         /// </summary>
-        [EnumMember(Value = "TASK_QUEUE_TYPE_ACTIVITY")]
-        Activity
+        [EnumMember(Value = "ACTIVITY")]
+        Activity = 2
     }
 }

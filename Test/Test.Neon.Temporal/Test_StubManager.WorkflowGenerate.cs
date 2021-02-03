@@ -101,7 +101,7 @@ namespace TestTemporal
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public void Generate_WorkflowResultWithOptions()
         {
-            var stub = StubManager.NewWorkflowStub<IWorkflowEntryResultWithArgs>(client, options: new WorkflowOptions() { TaskQueue = "my-taskqueue", Namespace = "my-namespace" });
+            var stub = StubManager.NewWorkflowStub<IWorkflowEntryResultWithArgs>(client, options: new StartWorkflowOptions() { TaskQueue = "my-taskqueue", Namespace = "my-namespace" });
 
             Assert.NotNull(stub);
         }

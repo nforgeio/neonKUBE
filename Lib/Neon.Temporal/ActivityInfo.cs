@@ -29,7 +29,7 @@ namespace Neon.Temporal
     /// <summary>
     /// Holds information about an executing activity.
     /// </summary>
-    public class ActivityTask
+    public class ActivityInfo
     {
         /// <summary>
         /// The opaque base-64 encoded activity task token.

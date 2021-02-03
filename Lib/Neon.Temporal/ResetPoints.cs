@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Namespacetatus.cs
-// CONTRIBUTOR: Jeff Lill
+// FILE:	    ResetPoints.cs
+// CONTRIBUTOR: John C. Burns
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,41 +15,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Runtime.Serialization;
-
-using Neon.Common;
-using Neon.Temporal;
-using Neon.Temporal.Internal;
+using System.Text;
 
 namespace Neon.Temporal
 {
     /// <summary>
-    /// Indicates a Temporal namespace status.
+    /// Defines a payload of reset points.
     /// </summary>
-    public enum NamespaceStatus
+    public class ResetPoints
     {
         /// <summary>
-        /// The namespace is registered and active.
+        /// Set of info about a workflow's reset points.
         /// </summary>
-        [EnumMember(Value = "REGISTERED")]
-        Registered = 0,
-
-        /// <summary>
-        /// The namespace is closed for new workflows but will remain
-        /// until already running workflows are completed and the
-        /// history retention period for the last executed workflow
-        /// has been satisified.
-        /// </summary>
-        [EnumMember(Value = "DEPRECATED")]
-        Deprecated,
-
-        /// <summary>
-        /// The namespace is deleted.
-        /// </summary>
-        [EnumMember(Value = "DELETED")]
-        Deleted
+        public List<ResetPointInfo> Points { get; set; }
     }
 }

@@ -177,6 +177,27 @@ namespace Neon.Common
 
                     continue;
                 }
+                else
+                {
+                    // Also support object[] args.
+
+                    var objectEnumerable = arg as IEnumerable<object>;
+
+                    if (objectEnumerable != null)
+                    {
+                        foreach (var value in objectEnumerable)
+                        {
+                            if (value == null || value.ToString() == string.Empty)
+                            {
+                                continue;
+                            }
+
+                            sb.AppendWithSeparator(NormalizeArg(value.ToString()));
+                        }
+
+                        continue;
+                    }
+                }
 
                 var argValue = arg.ToString();
 

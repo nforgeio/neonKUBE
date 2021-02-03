@@ -34,12 +34,10 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Microsoft.Win32;
-
-using Couchbase;
 using ICSharpCode.SharpZipLib.Zip;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Microsoft.Win32;
 
 using k8s;
 using k8s.Models;
@@ -112,6 +110,11 @@ namespace Neon.Kube
 
         //---------------------------------------------------------------------
         // These string constants are used to persist state in [SetupControllers].
+
+        /// <summary>
+        /// Property name for determining the current hosting environment: <see cref="HostingEnvironment"/>,
+        /// </summary>
+        public const string HostingEnvironmentProperty = "hosting-environment";
 
         /// <summary>
         /// Property name for accessing the <see cref="SetupController{NodeMetadata}"/>'s <see cref="ClusterProxy"/> property.
@@ -594,8 +597,9 @@ spec:
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
             Covenant.Requires<ArgumentNullException>(firstMaster != null, nameof(firstMaster));
 
-            var cluster = setupState.Get<ClusterProxy>(ClusterProxyProperty);
-            var clusterLogin = setupState.Get<ClusterLogin>(ClusterLoginProperty);
+            var hostingEnvironment = setupState.Get<HostingEnvironment>(KubeSetup.HostingEnvironmentProperty);
+            var cluster            = setupState.Get<ClusterProxy>(ClusterProxyProperty);
+            var clusterLogin       = setupState.Get<ClusterLogin>(ClusterLoginProperty);
 
             firstMaster.InvokeIdempotent("setup/cluster-init",
                 () =>
@@ -626,6 +630,13 @@ spec:
                             var controlPlaneEndpoint = $"kubernetes-masters:6442";
                             var sbCertSANs = new StringBuilder();
 
+                            if (hostingEnvironment == HostingEnvironment.Wsl2)
+                            {
+                                // Tweak the API server endpoint for WSL2.
+
+                                controlPlaneEndpoint = "localhost:6443";
+                            }
+
                             if (!string.IsNullOrEmpty(cluster.Definition.Kubernetes.ApiLoadBalancer))
                             {
                                 controlPlaneEndpoint = cluster.Definition.Kubernetes.ApiLoadBalancer;
@@ -638,6 +649,19 @@ spec:
                             foreach (var node in cluster.Masters)
                             {
                                 sbCertSANs.AppendLine($"  - \"{node.Address}\"");
+                            }
+
+                            var kubeletFailSwapOnLine           = string.Empty;
+                            var kubeInitgnoreSwapOnPreflightArg = string.Empty;
+
+                            if (hostingEnvironment == HostingEnvironment.Wsl2)
+                            {
+                                // SWAP will be enabled by the default Microsoft WSL2 kernel which
+                                // will cause Kubernetes to complain because this isn't a supported
+                                // configuration.  We need to disable these error checks.
+
+                                kubeletFailSwapOnLine           = "failSwapOn: false";
+                                kubeInitgnoreSwapOnPreflightArg = "--ignore-preflight-errors=Swap";
                             }
 
                             var clusterConfig =
@@ -675,9 +699,10 @@ logging:
   format: json
 nodeStatusReportFrequency: 4s
 volumePluginDir: /var/lib/kubelet/volume-plugins
+{kubeletFailSwapOnLine}
 ";
                             var kubeInitScript =
-@"
+$@"
 systemctl enable kubelet.service
 kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-kubernetes-manifests
 ";
@@ -2021,7 +2046,7 @@ spec:
                         }
                     }
 
-                    GetK8sClient(setupState).CreateNamespacedCustomObject(cStorPoolCluster, V1CStorPoolCluster.KubeGroup, V1CStorPoolCluster.KubeApiVersion, "openebs", "cstorpoolclusters");
+                    GetK8sClient(setupState).CreateNamespacedCustomObject(cStorPoolCluster, "cstor.openebs.io", "v1", "openebs", "cstorpoolclusters");
                 });
 
             await master.InvokeIdempotentAsync("setup/neon-storage-openebs-cstor-ready",

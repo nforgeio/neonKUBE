@@ -42,7 +42,7 @@ namespace Neon.Temporal.Internal
         public override InternalMessageTypes ReplyType => InternalMessageTypes.NamespaceUpdateReply;
 
         /// <summary>
-        /// The target Temporal namespace name.
+        /// Name of the namespace to update.
         /// </summary>
         public string Name
         {
@@ -51,39 +51,39 @@ namespace Neon.Temporal.Internal
         }
 
         /// <summary>
-        /// Specifies the new description.
+        /// Specifies the updated namespace info.
         /// </summary>
-        public string UpdatedInfoDescription
+        public UpdateNamespaceInfo UpdateNamespaceInfo
         {
-            get => GetStringProperty(PropertyNames.UpdatedInfoDescription);
-            set => SetStringProperty(PropertyNames.UpdatedInfoDescription, value);
+            get => GetJsonProperty<UpdateNamespaceInfo>(PropertyNames.UpdateNamespaceInfo);
+            set => SetJsonProperty<UpdateNamespaceInfo>(PropertyNames.UpdateNamespaceInfo, value);
         }
 
         /// <summary>
-        /// Specifies the new owner's email address.
+        /// Specifies the updated namespace config.
         /// </summary>
-        public string UpdatedInfoOwnerEmail
+        public NamespaceConfig NamespaceConfig
         {
-            get => GetStringProperty(PropertyNames.UpdatedInfoOwnerEmail);
-            set => SetStringProperty(PropertyNames.UpdatedInfoOwnerEmail, value);
+            get => GetJsonProperty<NamespaceConfig>(PropertyNames.NamespaceConfig);
+            set => SetJsonProperty<NamespaceConfig>(PropertyNames.NamespaceConfig, value);
         }
 
         /// <summary>
-        /// Specifies the metrics emission setting.
+        /// Specifies the updated namespace replication config.
         /// </summary>
-        public bool ConfigurationEmitMetrics
+        public NamespaceReplicationConfig NamespaceReplicationConfig
         {
-            get => GetBoolProperty(PropertyNames.ConfigurationEmitMetrics);
-            set => SetBoolProperty(PropertyNames.ConfigurationEmitMetrics, value);
+            get => GetJsonProperty<NamespaceReplicationConfig>(PropertyNames.NamespaceReplicationConfig);
+            set => SetJsonProperty<NamespaceReplicationConfig>(PropertyNames.NamespaceReplicationConfig, value);
         }
 
         /// <summary>
-        /// Specifies the workfloy history retention period in days.
+        /// Optional delete bad binary.
         /// </summary>
-        public int ConfigurationRetentionDays
+        public string DeleteBadBinary
         {
-            get => GetIntProperty(PropertyNames.ConfigurationRetentionDays);
-            set => SetIntProperty(PropertyNames.ConfigurationRetentionDays, value);
+            get => GetStringProperty(PropertyNames.DeleteBadBinary);
+            set => SetStringProperty(PropertyNames.DeleteBadBinary, value);
         }
 
         /// <summary>
@@ -113,10 +113,10 @@ namespace Neon.Temporal.Internal
             var typedTarget = (NamespaceUpdateRequest)target;
 
             typedTarget.Name                       = this.Name;
-            typedTarget.ConfigurationEmitMetrics   = this.ConfigurationEmitMetrics;
-            typedTarget.ConfigurationRetentionDays = this.ConfigurationRetentionDays;
-            typedTarget.UpdatedInfoDescription     = this.UpdatedInfoDescription;
-            typedTarget.UpdatedInfoOwnerEmail      = this.UpdatedInfoOwnerEmail;
+            typedTarget.NamespaceConfig            = this.NamespaceConfig;
+            typedTarget.NamespaceReplicationConfig = this.NamespaceReplicationConfig;
+            typedTarget.UpdateNamespaceInfo        = this.UpdateNamespaceInfo;
+            typedTarget.DeleteBadBinary            = this.DeleteBadBinary;
             typedTarget.SecurityToken              = this.SecurityToken;
         }
     }

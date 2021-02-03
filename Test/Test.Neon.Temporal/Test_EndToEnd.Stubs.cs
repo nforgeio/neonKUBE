@@ -157,7 +157,7 @@ namespace TestTemporal
 
             TestWorkflowStub_Execute.Reset();
 
-            var stub      = client.NewUntypedWorkflowStub("TestWorkflowStub_Execute[hello]", new WorkflowOptions() { TaskQueue = TemporalTestHelper.TaskQueue });
+            var stub      = client.NewUntypedWorkflowStub("TestWorkflowStub_Execute[hello]", new StartWorkflowOptions() { TaskQueue = TemporalTestHelper.TaskQueue });
             var execution = await stub.StartAsync("Jeff");
 
             Assert.NotNull(execution);
@@ -179,7 +179,7 @@ namespace TestTemporal
 
             TestWorkflowStub_Execute.Reset();
 
-            var stub = client.NewUntypedWorkflowStub("TestWorkflowStub_Execute[hello]", new WorkflowOptions() { TaskQueue = TemporalTestHelper.TaskQueue });
+            var stub = client.NewUntypedWorkflowStub("TestWorkflowStub_Execute[hello]", new StartWorkflowOptions() { TaskQueue = TemporalTestHelper.TaskQueue });
 
             Assert.Equal("Hello Jeff!", await stub.ExecuteAsync<string>("Jeff"));
 
@@ -189,7 +189,7 @@ namespace TestTemporal
 
             // Try this again with a workflow method that doesn't return a result.
 
-            stub = client.NewUntypedWorkflowStub("TestWorkflowStub_Execute[nop]", new WorkflowOptions() { TaskQueue = TemporalTestHelper.TaskQueue });
+            stub = client.NewUntypedWorkflowStub("TestWorkflowStub_Execute[nop]", new StartWorkflowOptions() { TaskQueue = TemporalTestHelper.TaskQueue });
 
             await stub.ExecuteAsync();
 
@@ -209,7 +209,7 @@ namespace TestTemporal
 
             TestWorkflowStub_Execute.Reset();
 
-            var stub      = client.NewUntypedWorkflowStub("TestWorkflowStub_Execute[hello]", new WorkflowOptions() { TaskQueue = TemporalTestHelper.TaskQueue });
+            var stub      = client.NewUntypedWorkflowStub("TestWorkflowStub_Execute[hello]", new StartWorkflowOptions() { TaskQueue = TemporalTestHelper.TaskQueue });
             var execution = await stub.StartAsync("Jeff");
 
             Assert.NotNull(execution);
@@ -240,7 +240,7 @@ namespace TestTemporal
 
             TestWorkflowStub_Execute.Reset();
 
-            var stub = client.NewUntypedWorkflowStub("TestWorkflowStub_Execute[wait-for-signals]", new WorkflowOptions() { TaskQueue = TemporalTestHelper.TaskQueue });
+            var stub = client.NewUntypedWorkflowStub("TestWorkflowStub_Execute[wait-for-signals]", new StartWorkflowOptions() { TaskQueue = TemporalTestHelper.TaskQueue });
 
             await stub.StartAsync();
             await TestWorkflowStub_Execute.WaitUntilRunningAsync();
@@ -266,7 +266,7 @@ namespace TestTemporal
 
             TestWorkflowStub_Execute.Reset();
 
-            var stub = client.NewUntypedWorkflowStub("TestWorkflowStub_Execute[wait-for-queries]", new WorkflowOptions() { TaskQueue = TemporalTestHelper.TaskQueue });
+            var stub = client.NewUntypedWorkflowStub("TestWorkflowStub_Execute[wait-for-queries]", new StartWorkflowOptions() { TaskQueue = TemporalTestHelper.TaskQueue });
 
             await stub.StartAsync();
             await TestWorkflowStub_Execute.WaitUntilRunningAsync();

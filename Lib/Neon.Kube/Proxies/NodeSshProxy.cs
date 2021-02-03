@@ -15,13 +15,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// This class spans of four source files.
-//
-//      NeonSshProxy.cs (this file)     - Common code
-//      NodeSshProxy.BasePrepare.cs     - Configure base images
-//      NodeSshProxy.ClusterSetup.cs    - Configure nodes string cluster setup
-//      NodeSshProxy.NodePrepare.cs     - Configure node images
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
@@ -476,7 +469,7 @@ namespace Neon.Kube
         /// Ensures that the node operating system and version is supported for a neonKUBE
         /// cluster.  This faults the nodeproxy on faliure.
         /// </summary>
-        /// <param name="statusWriter">Optional log writer action.</param>
+        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         /// <returns><c>true</c> if the operation system is supported.</returns>
         public bool VerifyNodeOS(Action<string> statusWriter = null)
         {
@@ -499,7 +492,7 @@ namespace Neon.Kube
         /// and then fills unreferenced file system blocks and nodes with zeros so the disk image will
         /// compress better.
         /// </summary>
-        /// <param name="statusWriter">Optional log writer action.</param>
+        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         public void Clean(Action<string> statusWriter = null)
         {
             KubeHelper.WriteStatus(statusWriter, "Clean", "VM");
@@ -535,12 +528,12 @@ fstrim /
                     if (fullUpgrade)
                     {
                         Status = "upgrade: full";
-                        SudoCommand("safe-apt-get dist-upgrade -yq");
+                        SudoCommand($"{KubeNodeFolders.Bin}/safe-apt-get dist-upgrade -yq");
                     }
                     else
                     {
                         Status = "upgrade: partial";
-                        SudoCommand("safe-apt-get upgrade -yq");
+                        SudoCommand($"{KubeNodeFolders.Bin}/safe-apt-get upgrade -yq");
                     }
 
                     // Check to see whether the upgrade requires a reboot and
@@ -555,7 +548,7 @@ fstrim /
                     // Clean up any cached APT files.
 
                     Status = "clean up";
-                    SudoCommand("safe-apt-get clean -yq");
+                    SudoCommand($"{KubeNodeFolders.Bin}/safe-apt-get clean -yq");
                     SudoCommand("rm -rf /var/lib/apt/lists");
                 });
         }

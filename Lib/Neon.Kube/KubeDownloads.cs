@@ -117,6 +117,10 @@ namespace Neon.Kube
 
                     return $"https://neonkube.s3-us-west-2.amazonaws.com/images/xenserver/node/neonkube.{KubeVersions.NeonKubeVersion}.xva";
 
+                case HostingEnvironment.Wsl2:
+
+                    return $"https://neonkube.s3-us-west-2.amazonaws.com/images/wsl2/node/neonkube.{KubeVersions.NeonKubeVersion}.tar";
+
                 default:
 
                     throw new NotImplementedException();

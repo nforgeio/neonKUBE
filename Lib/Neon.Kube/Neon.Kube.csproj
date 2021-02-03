@@ -766,6 +766,7 @@
     <None Remove="Resources\Helm\yugabyte\templates\_helpers.tpl" />
     <None Remove="Resources\Helm\yugabyte\values.yaml" />
     <None Remove="Resources\Helm\yugabyte\yugabyte-rbac.yaml" />
+    <None Remove="Resources\Scripts\wsl2-cgroup-setup.sh" />
     <None Remove="Resources\Tools\safe-apt-get.sh" />
   </ItemGroup>
 
@@ -1453,6 +1454,7 @@
     <EmbeddedResource Include="Resources\Helm\yugabyte\templates\_helpers.tpl" />
     <EmbeddedResource Include="Resources\Helm\yugabyte\values.yaml" />
     <EmbeddedResource Include="Resources\Helm\yugabyte\yugabyte-rbac.yaml" />
+    <EmbeddedResource Include="Resources\Scripts\wsl2-cgroup-setup.sh" />
     <EmbeddedResource Include="Resources\Tools\safe-apt-get.sh">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
@@ -1482,7 +1484,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
-    <ProjectReference Include="..\Neon.Couchbase\Neon.Couchbase.csproj" />
     <ProjectReference Include="..\Neon.Cryptography\Neon.Cryptography.csproj" />
     <ProjectReference Include="..\Neon.SSH.NET\Neon.SSH.NET.csproj" />
     <ProjectReference Include="..\Neon.SSH\Neon.SSH.csproj" />

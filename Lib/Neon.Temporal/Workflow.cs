@@ -1525,7 +1525,7 @@ namespace Neon.Temporal
         ///     Local activity types do not need to be registered with the worker.
         ///     </item>
         ///     <item>
-        ///     Local activities must complete within the <see cref="WorkflowOptions.DecisionTaskTimeout"/>.
+        ///     Local activities must complete within the <see cref="StartWorkflowOptions.WorkflowTaskTimeout"/>.
         ///     This defaults to 10 seconds and can be set to a maximum of 60 seconds.
         ///     </item>
         ///     <item>

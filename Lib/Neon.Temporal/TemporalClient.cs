@@ -109,7 +109,7 @@ namespace Neon.Temporal
     /// </para>
     /// <note>
     /// You can override the default client namespace for specific operations via <see cref="WorkerOptions"/>,
-    /// <see cref="WorkflowOptions"/>, <see cref="ChildWorkflowOptions"/>, <see cref="ActivityOptions"/> as
+    /// <see cref="StartWorkflowOptions"/>, <see cref="ChildWorkflowOptions"/>, <see cref="ActivityOptions"/> as
     /// well as via the <see cref="WorkflowInterfaceAttribute"/>, <see cref="WorkflowMethodAttribute"/>,
     /// <see cref="ActivityInterfaceAttribute"/> and <see cref="ActivityMethodAttribute"/> attributes
     /// decorating your workflow and activity interface definitions.
@@ -120,10 +120,10 @@ namespace Neon.Temporal
     /// <see cref="DescribeNamespaceAsync(string)"/>, and <see cref="UpdateNamespaceAsync(string, UpdateNamespaceRequest)"/>.
     /// </para>
     /// <para>
-    /// Workflows and activities are implemented by creating a <see cref="Worker"/> via <see cref="NewWorkerAsync(WorkerOptions)"/>,
-    /// registering your workflow and activity implementations with the worker and then starting
-    /// the worker via <see cref="Worker.StartAsync"/>.  Temporal will begin scheduling pending
-    /// workflows and activities on workers after they've been started.
+    /// Workflows and activities are implemented by creating a <see cref="Worker"/> via 
+    /// <see cref="NewWorkerAsync(string, string, WorkerOptions)"/>, registering your workflow and 
+    /// activity implementations with the worker and then starting the worker via <see cref="Worker.StartAsync"/>.  
+    /// Temporal will begin scheduling pending workflows and activities on workers after they've been started.
     /// </para>
     /// <para>
     /// The <see cref="Worker"/> class provides methods for registering individual workflow and
@@ -157,7 +157,7 @@ namespace Neon.Temporal
     /// </para>
     /// <para>
     /// You can create typed external workflow stubs via <see cref="NewWorkflowStub{TWorkflowInterface}(string, string, string)"/>
-    /// and <see cref="NewWorkflowStub{TWorkflowInterface}(WorkflowOptions, string)"/>.
+    /// and <see cref="NewWorkflowStub{TWorkflowInterface}(StartWorkflowOptions, string)"/>.
     /// </para>
     /// <para>
     /// Workflows can use their <see cref="Workflow"/> property to create child workflow as

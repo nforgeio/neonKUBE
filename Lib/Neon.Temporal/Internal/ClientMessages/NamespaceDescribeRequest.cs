@@ -45,28 +45,11 @@ namespace Neon.Temporal.Internal
         /// <para>
         /// The target Temporal namespace name. (or <c>null</c>).
         /// </para>
-        /// <note>
-        /// One of <see cref="Name"/> or <see cref="Uuid"/> must be non-null and non-empty.
-        /// </note>
         /// </summary>
         public string Name
         {
             get => GetStringProperty(PropertyNames.Name);
             set => SetStringProperty(PropertyNames.Name, value);
-        }
-
-        /// <summary>
-        /// <para>
-        /// The target Temporal namespace UUID (or <c>null</c>).
-        /// </para>
-        /// <note>
-        /// One of <see cref="Name"/> or <see cref="Uuid"/> must be non-null and non-empty.
-        /// </note>
-        /// </summary>
-        public string Uuid
-        {
-            get => GetStringProperty(PropertyNames.Uuid);
-            set => SetStringProperty(PropertyNames.Uuid, value);
         }
 
         /// <inheritdoc/>
@@ -87,7 +70,6 @@ namespace Neon.Temporal.Internal
             var typedTarget = (NamespaceDescribeRequest)target;
 
             typedTarget.Name = this.Name;
-            typedTarget.Uuid = this.Uuid;
         }
     }
 }

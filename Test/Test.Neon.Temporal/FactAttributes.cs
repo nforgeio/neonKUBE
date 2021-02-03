@@ -99,4 +99,17 @@ namespace TestTemporal
             //Skip = null;
         }
     }
+
+    /// <summary>
+    /// Use this to disable tests failing due to functionality that
+    /// is not yet implemented.
+    /// </summary>
+    public class Fact_NotImplemented : FactAttribute
+    {
+        public Fact_NotImplemented()
+        {
+            Skip = "Failing due to: Not Implemented";
+            //Skip = null;
+        }
+    }
 }

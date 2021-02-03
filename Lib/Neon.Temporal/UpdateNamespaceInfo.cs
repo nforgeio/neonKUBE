@@ -19,6 +19,8 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 
+using Newtonsoft.Json;
+
 using Neon.Common;
 using Neon.Temporal;
 using Neon.Temporal.Internal;
@@ -38,6 +40,12 @@ namespace Neon.Temporal
         /// <summary>
         /// The updated namespace owner email address.
         /// </summary>
+        [JsonProperty(PropertyName = "owner_email")]
         public string OwnerEmail { get; set; }
+
+        /// <summary>
+        /// Key-value map for any customized purpose.
+        /// </summary>
+        public Dictionary<string, string> Data { get; set; }
     }
 }

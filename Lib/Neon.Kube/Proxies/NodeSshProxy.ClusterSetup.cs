@@ -53,7 +53,7 @@ namespace Neon.Kube
         /// <summary>
         /// Configures NTP and also installs some tool scripts for managing this.
         /// </summary>
-        /// <param name="statusWriter">Optional log writer action.</param>
+        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         public void SetupConfigureNtp(Action<string> statusWriter = null)
         {
             InvokeIdempotent("setup/ntp",
@@ -490,11 +490,11 @@ ff02::2         ip6-allrouters
                     if (NodeDefinition.Role == NodeRole.Master)
                     {
                         var proxyServiceScript =
-@"
+$@"
 	set -eou pipefail	# Enable full failure detection
 
-	safe-apt-get update
-	safe-apt-get install -yq apt-cacher-ng
+	{KubeNodeFolders.Bin}/safe-apt-get update
+	{KubeNodeFolders.Bin}/safe-apt-get install -yq apt-cacher-ng
 
 	# Configure the cache to pass-thru SSL requests
 	# and then restart.

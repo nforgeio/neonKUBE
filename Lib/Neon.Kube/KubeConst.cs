@@ -147,7 +147,7 @@ namespace Neon.Kube
         /// <summary>
         /// The default host machine sysadmin user ID.
         /// </summary>
-        public const int SysAdminUID = 1234;
+        public const int SysAdminUID = 1000;
 
         /// <summary>
         /// The default host machine sysadmin group.
@@ -157,7 +157,7 @@ namespace Neon.Kube
         /// <summary>
         /// The default host machine sysadmin group ID.
         /// </summary>
-        public const int SysAdminGID = 1234;
+        public const int SysAdminGID = 1000;
 
         /// <summary>
         /// The root account password baked into the Hyper-V and XenServer cluster

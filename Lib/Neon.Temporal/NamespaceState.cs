@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    NamespaceConfiguration.cs
+// FILE:	    Namespacetatus.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Runtime.Serialization;
 
 using Neon.Common;
 using Neon.Temporal;
@@ -26,28 +27,35 @@ using Neon.Temporal.Internal;
 namespace Neon.Temporal
 {
     /// <summary>
-    /// Namespace configuration options.
+    /// Indicates a Temporal namespace status.
     /// </summary>
-    public class NamespaceConfiguration
+    public enum NamespaceState
     {
         /// <summary>
-        /// The workflow history retention period in days.
+        /// The namespace state is unspecified.
         /// </summary>
-        public int RetentionDays { get; set; }
+        [EnumMember(Value = "Unspecified")]
+        Unspecified = 0,
 
         /// <summary>
-        /// Enables metrics for workflows and activities running in the namespace.
+        /// The namespace is registered and active.
         /// </summary>
-        public bool EmitMetrics { get; set; }
+        [EnumMember(Value = "Registered")]
+        Registered,
 
-        // $todo(jefflill):
-        //
-        // We need to add support for these additional Temporal GOLANG properties:
-        //
-        //      BadBinaries
-        //      HistoryArchivalStatus
-        //      HistoryArchivalUri
-        //      VisibilityArchivalStatus
-        //      VisibilityArchivalUri
+        /// <summary>
+        /// The namespace is closed for new workflows but will remain
+        /// until already running workflows are completed and the
+        /// history retention period for the last executed workflow
+        /// has been satisified.
+        /// </summary>
+        [EnumMember(Value = "Deprecated")]
+        Deprecated,
+
+        /// <summary>
+        /// The namespace is deleted.
+        /// </summary>
+        [EnumMember(Value = "Deleted")]
+        Deleted
     }
 }

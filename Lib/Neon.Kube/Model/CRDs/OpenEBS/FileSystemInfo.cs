@@ -23,16 +23,15 @@ using System.Text;
 using k8s;
 using k8s.Models;
 
-using Microsoft.Rest;
-
 using Newtonsoft.Json;
+using Microsoft.Rest;
 
 namespace Neon.Kube
 {
     /// <summary>
-    /// 
+    /// File system information.
     /// </summary>
-    public partial class FileSystemInfo
+    public class FileSystemInfo
     {
         /// <summary>
         /// Initializes a new instance of the FileSystemInfo class.

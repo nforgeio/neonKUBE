@@ -20,9 +20,9 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 
-using Neon.Common;
-using Neon.Temporal;
-using Neon.Temporal.Internal;
+using Newtonsoft.Json;
+
+using Neon.Data;
 
 namespace Neon.Temporal
 {
@@ -34,21 +34,37 @@ namespace Neon.Temporal
         /// <summary>
         /// Describes the workflow execution.
         /// </summary>
-        public WorkflowExecution Execution { get; set; }
+        [JsonIgnore]
+        public WorkflowExecution Execution
+        { 
+            get
+            {
+                return InternalWorkflowExecution.ToWorkflowExecution();
+            }
+            set
+            {
+                InternalWorkflowExecution = new Internal.InternalWorkflowExecution(value);
+            }
+        }
+
+        [JsonProperty(PropertyName = "execution")]
+        private Internal.InternalWorkflowExecution InternalWorkflowExecution;
 
         /// <summary>
         /// Identifies the workflow implementation.
         /// </summary>
-        public string TypeName { get; set; }
+        public WorkflowType Type { get; set; }
 
         /// <summary>
         /// Workflow start time or <c>null</c> if the workflow hasn't started yet.
         /// </summary>
+        [JsonProperty(PropertyName = "start_time")]
         public DateTime? StartTime { get; set; }
 
         /// <summary>
         /// Workflow close time or <c>null</c> if the workflow hasn't completed yet.
         /// </summary>
+        [JsonProperty(PropertyName = "close_time")]
         public DateTime? CloseTime { get; set; }
 
         /// <summary>
@@ -56,6 +72,12 @@ namespace Neon.Temporal
         /// or has already completed.
         /// </summary>
         public bool HasStarted => StartTime != null;
+
+        /// <summary>
+        /// Workflow execution status describing the state of the workflow.
+        /// </summary>
+        [JsonConverter(typeof(IntegerEnumConverter<WorkflowExecutionStatus>))]
+        public WorkflowExecutionStatus Status { get; set; }
 
         /// <summary>
         /// Returns <c>true</c> if the workflow has been completed.
@@ -68,34 +90,64 @@ namespace Neon.Temporal
         public bool IsRunning => HasStarted && !IsClosed;
 
         /// <summary>
-        /// The status for a closed workflow.
-        /// </summary>
-        public WorkflowCloseStatus CloseStatus { get; set; }
-
-        /// <summary>
         /// Workflow history length.
         /// </summary>
+        [JsonProperty(PropertyName = "history_length")]
         public long HistoryLength { get; set; }
 
         /// <summary>
         /// Identifies the namespece where the parent workflow is running
         /// (or <c>null</c>).
         /// </summary>
-        public string ParentNamespace { get; set; }
+        [JsonProperty(PropertyName = "parent_namespace_id")]
+        public string ParentNamespaceId { get; set; }
 
         /// <summary>
         /// Identfies the parent workflow (or <c>null</c>).
         /// </summary>
-        public WorkflowExecution ParentExecution { get; set; }
+        [JsonIgnore]
+        public WorkflowExecution ParentExecution
+        {
+            get
+            {
+                return InternalParentWorkflowExecution.ToWorkflowExecution();
+            }
+            set
+            {
+                InternalParentWorkflowExecution = new Internal.InternalWorkflowExecution(value);
+            }
+        }
+
+        [JsonProperty(PropertyName = "parent_execution")]
+        private Internal.InternalWorkflowExecution InternalParentWorkflowExecution;
 
         /// <summary>
         /// The workflow execution time.
         /// </summary>
-        public TimeSpan ExecutionTime { get; set; }
+        [JsonProperty(PropertyName = "execution_time")]
+        public DateTime? ExecutionTime { get; set; }
 
         /// <summary>
         /// Optional workflow metadata.
         /// </summary>
-        public Dictionary<string, byte[]> Memo { get; set; }
+        public Memo Memo { get; set; }
+
+        /// <summary>
+        /// Workflow execution search attributes.
+        /// </summary>
+        [JsonProperty(PropertyName = "search_attributes")]
+        public SearchAttributes SearchAttributes { get; set; }
+
+        /// <summary>
+        /// The auto reset points of the workflow execution.
+        /// </summary>
+        [JsonProperty(PropertyName = "auto_reset_points")]
+        public ResetPoints AutoResetPoints { get; set; }
+
+        /// <summary>
+        /// The Task Queue the worker is running on.
+        /// </summary>
+        [JsonProperty(PropertyName = "task_queue")]
+        public string TaskQueue { get; set; }
     }
 }

@@ -1323,7 +1323,7 @@ namespace TestTemporal
             }
         }
 
-        private void AssertEqual(ActivityTask expected, ActivityTask actual)
+        private void AssertEqual(ActivityInfo expected, ActivityInfo actual)
         {
             Assert.Equal(expected.ActivityId , actual.ActivityId);
             Assert.Equal(expected.Attempt , actual.Attempt);
@@ -1373,7 +1373,7 @@ namespace TestTemporal
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
 
-                var expected = new ActivityTask()
+                var expected = new ActivityInfo()
                 {
                     ActivityId = "666",
                     Attempt = 4,

@@ -166,7 +166,7 @@ namespace TestTemporal
             // Verify that we can call a simple workflow that accepts a
             // parameter and results a result.
 
-            var options = new WorkflowOptions()
+            var options = new StartWorkflowOptions()
             {
                 Memo = new Dictionary<string, object>()
                 {
@@ -534,7 +534,7 @@ namespace TestTemporal
 
             CronActivity.CronCalls.Clear();     // Clear this to reset any old test state.
 
-            var options = new WorkflowOptions()
+            var options = new StartWorkflowOptions()
             {
                 Id           = "cron-workflow",
                 CronSchedule = "0/1 * * * *"
@@ -2412,9 +2412,9 @@ namespace TestTemporal
 
             // Verify that we see an exception thrown by a workflow.
 
-            var options = new WorkflowOptions()
+            var options = new StartWorkflowOptions()
             {
-                DecisionTaskTimeout = TimeSpan.FromSeconds(5)
+                WorkflowTaskTimeout = TimeSpan.FromSeconds(5)
             };
 
             var stub = client.NewWorkflowStub<IWorkflowWithError>(options);
@@ -2454,9 +2454,9 @@ namespace TestTemporal
             // unregistered workflow.  In this case, there is no class
             // defined that implements the workflow.
 
-            var options = new WorkflowOptions()
+            var options = new StartWorkflowOptions()
             {
-                DecisionTaskTimeout = TimeSpan.FromSeconds(5)
+                WorkflowTaskTimeout = TimeSpan.FromSeconds(5)
             };
 
             var stub = client.NewWorkflowStub<IWorkflowUnregistered>(options);
@@ -2578,7 +2578,7 @@ namespace TestTemporal
             // Verify that the [Workflow.WorkflowInfo] properties are
             // set correctly for a workflow.
 
-            var options = new WorkflowOptions()
+            var options = new StartWorkflowOptions()
             {
                 Namespace  = client.Settings.Namespace,
                 Id         = "my-workflow-id"
@@ -3378,7 +3378,7 @@ namespace TestTemporal
 
             // Verify that we can have Temporal reject duplicate workflow IDs.
 
-            var options = new WorkflowOptions()
+            var options = new StartWorkflowOptions()
             {
                 Id                    = $"Workflow_ExternalIdNoReuse-{Guid.NewGuid().ToString("d")}",
                 WorkflowIdReusePolicy = WorkflowIdReusePolicy.RejectDuplicate
@@ -3408,7 +3408,7 @@ namespace TestTemporal
             // Verify that we can reuse a workflow ID for an external
             // workflow via options.
 
-            var options = new WorkflowOptions()
+            var options = new StartWorkflowOptions()
             {
                 Id                    = $"Workflow_ExternalIdReuseViaOptions-{Guid.NewGuid().ToString("d")}",
                 WorkflowIdReusePolicy = WorkflowIdReusePolicy.AllowDuplicate
@@ -3436,7 +3436,7 @@ namespace TestTemporal
             // Verify that we can reuse a workflow ID for an external
             // workflow via a [WorkflowMethod] attribute.
 
-            var options = new WorkflowOptions()
+            var options = new StartWorkflowOptions()
             {
                 Id = $"Workflow_ExternalIdReuseViaAttribute-{Guid.NewGuid().ToString("d")}",
             };
@@ -4457,9 +4457,9 @@ namespace TestTemporal
             var sleepTime = TimeSpan.FromTicks(timeout.Ticks * 2);
 
             var stub = client.NewWorkflowStub<IWorkflowTimeout>(
-                new WorkflowOptions()
+                new StartWorkflowOptions()
                 {
-                    StartToCloseTimeout = timeout
+                    WorkflowExecutionTimeout = timeout
                 });
 
             await Assert.ThrowsAsync<StartToCloseTimeoutException>(async () => await stub.SleepAsync(sleepTime));
@@ -4600,7 +4600,7 @@ namespace TestTemporal
                 for (int i = 0; i < workflowCount; i++)
                 {
                     var stub = client.NewWorkflowStub<IBusyworkWorkflow>(
-                        new WorkflowOptions()
+                        new StartWorkflowOptions()
                         {
                             Id          = $"busywork-{Guid.NewGuid().ToString("d")}",
                             TaskQueue   = taskQueue

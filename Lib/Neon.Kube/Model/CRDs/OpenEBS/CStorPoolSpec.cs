@@ -19,20 +19,19 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Couchbase.Configuration.Client;
+
 using k8s;
 using k8s.Models;
 
-using Microsoft.Rest;
-
 using Newtonsoft.Json;
+using Microsoft.Rest;
 
 namespace Neon.Kube
 {
     /// <summary>
-    /// 
+    /// OpenEBS cStore pool specification.
     /// </summary>
-    public partial class V1CStorPoolSpec
+    public class V1CStorPoolSpec
     {
         /// <summary>
         /// Initializes a new instance of the V1CStorPoolSpec class.

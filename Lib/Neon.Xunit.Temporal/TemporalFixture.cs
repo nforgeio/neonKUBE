@@ -102,7 +102,6 @@ services:
     depends_on:
       - temporal
 ";
-
         private TemporalSettings    settings;
         private TemporalClient      client;
         private bool                reconnect;
@@ -131,6 +130,7 @@ services:
         /// </note>
         /// </summary>
         /// <param name="settings">Optional Temporal settings.</param>
+        /// <param name="name">Optionally specifies the Docker compose application name (defaults to <c>temporal-dev</c>).</param>
         /// <param name="composeFile">
         /// <para>
         /// Optionally specifies the Temporal Docker compose file text.  This defaults to
@@ -144,13 +144,12 @@ services:
         /// a different backend database, etc.
         /// </para>
         /// </param>
-        /// <param name="name">Optionally specifies the Docker compose application name (defaults to <c>temporal-dev</c>).</param>
         /// <param name="defaultNamespace">Optionally specifies the default namespace for the fixture's client.  This defaults to <b>test-namespace</b>.</param>
         /// <param name="logLevel">Specifies the Temporal log level.  This defaults to <see cref="LogLevel.None"/>.</param>
         /// <param name="reconnect">
         /// Optionally specifies that a new Temporal connection <b>should</b> be established for each
         /// unit test case.  By default, the same connection will be reused which will save about a 
-        /// second per test.
+        /// second per test case.
         /// </param>
         /// <param name="keepRunning">
         /// Optionally indicates that the application should remain running after the fixture is disposed.
@@ -186,8 +185,8 @@ services:
         /// </remarks>
         public TestFixtureStatus Start(
             TemporalSettings    settings         = null,
-            string              composeFile      = DefaultComposeFile,
             string              name             = "temporal-dev",
+            string              composeFile      = DefaultComposeFile,
             string              defaultNamespace = Namespace,
             LogLevel            logLevel         = LogLevel.None,
             bool                reconnect        = false,
@@ -202,8 +201,8 @@ services:
                 {
                     StartAsComposed(
                         settings:         settings, 
-                        composeFile:      composeFile, 
                         name:             name, 
+                        composeFile:      composeFile, 
                         defaultNamespace: defaultNamespace, 
                         logLevel:         logLevel,
                         reconnect:        reconnect,
@@ -217,6 +216,7 @@ services:
         /// Used to start the fixture within a <see cref="ComposedFixture"/>.
         /// </summary>
         /// <param name="settings">Optional Temporal settings.</param>
+        /// <param name="name">Optionally specifies the Docker compose application name (defaults to <c>temporal-dev</c>).</param>
         /// <param name="composeFile">
         /// <para>
         /// Optionally specifies the Temporal Docker compose file text.  This defaults to
@@ -230,7 +230,6 @@ services:
         /// a different backend database, etc.
         /// </para>
         /// </param>
-        /// <param name="name">Optionally specifies the Docker compose application name (defaults to <c>temporal-dev</c>).</param>
         /// <param name="defaultNamespace">Optionally specifies the default namespace for the fixture's client.  This defaults to <b>test-namespace</b>.</param>
         /// <param name="logLevel">Specifies the Temporal log level.  This defaults to <see cref="LogLevel.None"/>.</param>
         /// <param name="reconnect">
@@ -261,8 +260,8 @@ services:
         /// </remarks>
         public void StartAsComposed(
             TemporalSettings    settings         = null,
-            string              composeFile      = DefaultComposeFile,
             string              name             = "temporal-dev",
+            string              composeFile      = DefaultComposeFile,
             string              defaultNamespace = Namespace,
             LogLevel            logLevel         = LogLevel.None,
             bool                reconnect        = false,
@@ -279,7 +278,14 @@ services:
                 // The [cadence-dev] container started by [CadenceFixture] has conflicting ports
                 // for Cassandra and the web UI, so we're going to stop that container if it's running.
 
-                NeonHelper.Execute(NeonHelper.DockerCli, new object[] { "rm", "--force", "cadence-dev" });
+                NeonHelper.Execute(NeonHelper.DockerCli, new object[] { "rm", "--force",
+                    new string[]
+                    {
+                        "cadence-dev_cadence_1",
+                        "cadence-dev_cadence-web_1",
+                        "cadence-dev_cassandra_1",
+                        "cadence-dev_statsd_1"
+                    } });
 
                 // Reset TemporalClient to its initial state.
 
@@ -306,9 +312,9 @@ services:
                         // The [socket.Connect()] calls below will throw [SocketException] until
                         // Temporal starts listening on its RPC socket.
 
-                        var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                        var socket = new Socket(AddressFamily.InterNetworkV6, SocketType.Stream, ProtocolType.Tcp);
 
-                        socket.Connect(IPAddress.Loopback, NetworkPorts.Temporal);
+                        socket.Connect(IPAddress.IPv6Loopback, NetworkPorts.Temporal);
                         socket.Close();
                     });
 
@@ -429,17 +435,27 @@ services:
 
             // $hack(jefflill): 
             //
-            // We're also going to dispose any clients saved in the
+            // We're also going to dispose/remove any clients saved in the
             // State dictionary because some Temporal unit tests 
             // persist client instances there.
 
-            foreach (var value in State.Values
-                .Where(v => v != null && v.GetType() == typeof(TemporalClient)))
+            var delList = new List<string>();
+
+            foreach (var item in State
+                .Where(item => item.Value.GetType() == typeof(TemporalClient)))
             {
-                var client = (TemporalClient)value;
+                var client = (TemporalClient)item.Value;
 
                 client.Dispose();
+                delList.Add(item.Key);
             }
+
+            foreach (var key in delList)
+            {
+                State.Remove(key);
+            }
+
+            // Dispose the clients.
 
             if (HttpClient != null)
             {
