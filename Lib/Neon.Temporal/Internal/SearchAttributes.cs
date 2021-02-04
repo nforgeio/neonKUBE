@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ResetPoints.cs
+// FILE:	    SearchAttributes.cs
 // CONTRIBUTOR: John C. Burns
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -20,16 +20,17 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Neon.Temporal
+namespace Neon.Temporal.Internal
 {
     /// <summary>
-    /// Defines a payload of reset points.
+    /// Describes workflow execution search attributes.
     /// </summary>
-    public class ResetPoints
+    public class SearchAttributes
     {
         /// <summary>
-        /// Set of info about a workflow's reset points.
+        /// Key-value mapping of string index field to data payload.
         /// </summary>
-        public List<ResetPointInfo> Points { get; set; }
+        [JsonProperty(PropertyName = "indexed_fields")]
+        public Dictionary<string, Payload> IndexedFields { get; set; }
     }
 }

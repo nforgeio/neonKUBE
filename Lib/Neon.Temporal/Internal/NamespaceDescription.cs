@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    NamespaceInfo.cs
+// FILE:	    NamespaceDescription.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -19,51 +19,40 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 
-using Newtonsoft.Json;
-
 using Neon.Common;
-using Neon.Data;
 using Neon.Temporal;
 using Neon.Temporal.Internal;
 
-namespace Neon.Temporal
+namespace Neon.Temporal.Internal
 {
     /// <summary>
-    /// Information about a Temporal namespace.
+    /// Information returned by <see cref="TemporalClient.DescribeNamespaceAsync(string)"/>.
     /// </summary>
-    public class NamespaceInfo
+    public class NamespaceDescription
     {
         /// <summary>
-        /// The namespace name.
+        /// The namespace information.
         /// </summary>
-        public string Name { get; set; }
+        public NamespaceInfo NamespaceInfo { get; set; }
 
         /// <summary>
-        /// The namespace UUID.
+        /// The namespace configuration.
         /// </summary>
-        public string Id { get; set; }
+        public NamespaceConfig Config { get; set; }
 
         /// <summary>
-        /// The namespace status.
+        /// The namespace replication configuration.
         /// </summary>
-        [JsonConverter(typeof(IntegerEnumConverter<NamespaceState>))]
-        public NamespaceState State { get; set; }
+        public NamespaceReplicationConfig ReplicationConfig { get; set; }
 
         /// <summary>
-        /// Ths namespace description.
+        /// The namespace failover version.
         /// </summary>
-        public string Description { get; set; }
+        public long FailoverVersion { get; set; }
 
         /// <summary>
-        /// The namespace owner's email address.
+        /// Indicates whether the namespace is global.
         /// </summary>
-        [JsonProperty(PropertyName = "owner_email")]
-        public string OwnerEmail { get; set; }
-
-        /// <summary>
-        /// A dictionary of named string data that can be attached to namespace
-        /// and that can be used for any purpose.
-        /// </summary>
-        public Dictionary<string, string> Data { get; set; }
+        public bool IsGlobalNamespace { get; set; }
     }
 }

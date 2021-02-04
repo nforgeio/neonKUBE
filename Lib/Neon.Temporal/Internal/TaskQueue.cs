@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    SearchAttributes.cs
-// CONTRIBUTOR: John C. Burns
-// COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
+// FILE:	    TaskQueue.cs
+// CONTRIBUTOR: John C Burns
+// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,22 +15,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Neon.Temporal
+using Newtonsoft.Json;
+
+using Neon.Data;
+
+namespace Neon.Temporal.Internal
 {
     /// <summary>
-    /// Describes workflow execution search attributes.
+    /// Represents a Temporal task queue with a <see cref="string"/> Name
+    /// and <see cref="TaskQueueKind"/> kind.
     /// </summary>
-    public class SearchAttributes
+    public class TaskQueue
     {
         /// <summary>
-        /// Key-value mapping of string index field to data payload.
+        /// Identifies the name of the task queue.
         /// </summary>
-        [JsonProperty(PropertyName = "indexed_fields")]
-        public Dictionary<string, Payload> IndexedFields { get; set; }
+        public string Name { get; set; }
+
+        /// <summary>
+        /// Identifies the kind of task queue (normal/sticky).
+        /// </summary>
+        [JsonConverter(typeof(IntegerEnumConverter<TaskQueueKind>))]
+        public TaskQueueKind Kind { get; set; }
     }
 }

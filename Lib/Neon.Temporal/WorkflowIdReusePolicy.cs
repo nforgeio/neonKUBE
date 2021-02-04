@@ -19,10 +19,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 
-using Neon.Common;
-using Neon.Temporal;
-using Neon.Temporal.Internal;
-
 namespace Neon.Temporal
 {
     /// <summary>

@@ -25,10 +25,6 @@ using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using YamlDotNet.Serialization;
 
-using Neon.Common;
-using Neon.Temporal;
-using Neon.Temporal.Internal;
-
 namespace Neon.Temporal
 {
     /// <summary>

@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    PendingActivityState.cs
-// CONTRIBUTOR: Jeff Lill
+// FILE:	    Payload.cs
+// CONTRIBUTOR: John C. Burns
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,38 +17,23 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
+using System.Text;
 
-using Neon.Temporal;
-using Neon.Common;
-
-namespace Neon.Temporal
+namespace Neon.Temporal.Internal
 {
     /// <summary>
-    /// Enumerates the state of an activity.
+    /// Defines a temporal data payload.
     /// </summary>
-    public enum PendingActivityState
+    public class Payload
     {
-        // WARNING: These values must match those defined by [InternalPendingActivityState].
+        /// <summary>
+        /// Payload metadata.
+        /// </summary>
+        public Dictionary<string, byte[]> Metadata { get; set; }
 
         /// <summary>
-        /// The activity state is unspecified.
+        /// The payload byte[] data.
         /// </summary>
-        Unspecified = 0,
-
-        /// <summary>
-        /// The activity is waiting to be started.
-        /// </summary>
-        Scheduled = 1,
-
-        /// <summary>
-        /// The activity is running.
-        /// </summary>
-        Started = 2,
-
-        /// <summary>
-        /// The activity has a cancellation request pending.
-        /// </summary>
-        CancelRequested = 3
+        public byte[] Data { get; set; }
     }
 }

@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Memo.cs
-// CONTRIBUTOR: John C. Burns
+// FILE:	    Payloads.cs
+// CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,16 +19,19 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Neon.Temporal
+using Newtonsoft.Json;
+
+namespace Neon.Temporal.Internal
 {
     /// <summary>
-    /// Describers a temporal workflow execution memo.
+    /// Data payloads.
     /// </summary>
-    public class Memo
+    public class Payloads
     {
         /// <summary>
-        /// The key-value map of string fields to data payload.
+        /// List of data payloads with metadata.
         /// </summary>
-        public Dictionary<string, Payload> Fields { get; set; }
+        [JsonProperty(PropertyName = "payloads")]
+        public List<Payload> DataPayloads { get; set; }
     }
 }

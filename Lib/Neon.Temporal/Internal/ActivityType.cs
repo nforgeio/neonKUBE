@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Failure.cs
-// CONTRIBUTOR: John C. Burns
+// FILE:	    ActivityType.cs
+// CONTRIBUTOR: John C Burns
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,37 +19,16 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-using Newtonsoft.Json;
-
-namespace Neon.Temporal
+namespace Neon.Temporal.Internal
 {
     /// <summary>
-    /// Defines a workflow execution failure.
+    /// ActivityType identifies a Temporal activity type.
     /// </summary>
-    public class Failure
+    public class ActivityType
     {
         /// <summary>
-        /// The failure message.
+        /// The <see cref="string"/> Name of the activity type.
         /// </summary>
-        [JsonProperty(PropertyName = "message")]
-        public string Message { get; set; }
-
-        /// <summary>
-        /// The source of failure.
-        /// </summary>
-        [JsonProperty(PropertyName = "source")]
-        public string Source { get; set; }
-
-        /// <summary>
-        /// The failure stack trace.
-        /// </summary>
-        [JsonProperty(PropertyName = "stack_trace")]
-        public string StackTrace { get; set; }
-
-        /// <summary>
-        /// The cause of failure.
-        /// </summary>
-        [JsonProperty(PropertyName = "cause")]
-        public Failure Cause { get; set; }
+        public string Name { get; set; }
     }
 }

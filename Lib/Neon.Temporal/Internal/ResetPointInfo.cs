@@ -21,7 +21,7 @@ using System.Text;
 
 using Newtonsoft.Json;
 
-namespace Neon.Temporal
+namespace Neon.Temporal.Internal
 {
     /// <summary>
     /// Defines workflow execution reset points.

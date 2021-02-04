@@ -24,7 +24,7 @@ using Newtonsoft.Json;
 
 using Neon.Data;
 
-namespace Neon.Temporal
+namespace Neon.Temporal.Internal
 {
     /// <summary>
     /// Describes the current state of a workflow.

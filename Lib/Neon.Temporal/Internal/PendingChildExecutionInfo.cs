@@ -23,7 +23,7 @@ using Newtonsoft.Json;
 
 using Neon.Data;
 
-namespace Neon.Temporal
+namespace Neon.Temporal.Internal
 {
     /// <summary>
     /// Decribes the current state of a pending; child workflow.

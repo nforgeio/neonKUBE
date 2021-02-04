@@ -21,22 +21,40 @@ using System.Text;
 
 using Newtonsoft.Json;
 
-namespace Neon.Temporal
+namespace Neon.Temporal.Internal
 {
+    /// <summary>
+    /// Describes the status of a temporal task queue.
+    /// </summary>
     public class TaskQueueStatus
     {
+        /// <summary>
+        /// Task queue back log count hint.
+        /// </summary>
         [JsonProperty(PropertyName = "backlog_count_hint")]
         public long BackLogCountHint { get; set; }
 
+        /// <summary>
+        /// Task queue read level.
+        /// </summary>
         [JsonProperty(PropertyName = "read_level")]
         public long ReadLevel { get; set; }
 
+        /// <summary>
+        /// Task queue ack level.
+        /// </summary>
         [JsonProperty(PropertyName = "ack_level")]
         public long AckLevel { get; set; }
 
+        /// <summary>
+        /// Task queue rate per seconds.
+        /// </summary>
         [JsonProperty(PropertyName = "rate_per_second")]
         public double RatePerSecond { get; set; }
 
+        /// <summary>
+        /// Task queue task id block.
+        /// </summary>
         [JsonProperty(PropertyName = "task_id_block")]
         public TaskIdBlock TaskIdBlock { get; set; }
     }

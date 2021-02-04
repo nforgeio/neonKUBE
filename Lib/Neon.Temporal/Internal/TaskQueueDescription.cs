@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Namespacetatus.cs
+// FILE:	    TaskQueueDescription.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -18,44 +18,22 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Runtime.Serialization;
 
 using Neon.Common;
 using Neon.Temporal;
 using Neon.Temporal.Internal;
 
-namespace Neon.Temporal
+namespace Neon.Temporal.Internal
 {
     /// <summary>
-    /// Indicates a Temporal namespace status.
+    /// Describes the current status of a Temporal task queue.
     /// </summary>
-    public enum NamespaceState
+    public class TaskQueueDescription
     {
         /// <summary>
-        /// The namespace state is unspecified.
+        /// Lists the pollers (AKA workers) that have communicated with the Temporal cluster over
+        /// the past few minutes.
         /// </summary>
-        [EnumMember(Value = "Unspecified")]
-        Unspecified = 0,
-
-        /// <summary>
-        /// The namespace is registered and active.
-        /// </summary>
-        [EnumMember(Value = "Registered")]
-        Registered,
-
-        /// <summary>
-        /// The namespace is closed for new workflows but will remain
-        /// until already running workflows are completed and the
-        /// history retention period for the last executed workflow
-        /// has been satisified.
-        /// </summary>
-        [EnumMember(Value = "Deprecated")]
-        Deprecated,
-
-        /// <summary>
-        /// The namespace is deleted.
-        /// </summary>
-        [EnumMember(Value = "Deleted")]
-        Deleted
+        public List<PollerInfo> Pollers { get; set; } = new List<PollerInfo>();
     }
 }

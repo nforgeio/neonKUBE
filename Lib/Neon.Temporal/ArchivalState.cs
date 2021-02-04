@@ -22,7 +22,6 @@ using System.Runtime.Serialization;
 
 using Neon.Common;
 using Neon.Temporal;
-using Neon.Temporal.Internal;
 
 namespace Neon.Temporal
 {
