@@ -550,7 +550,7 @@ namespace Neon.Kube
         /// Sets the operation status text.
         /// </summary>
         /// <param name="status">The optional operation status text.</param>
-        public void SetOperationStatus(string status = null)
+        public void SetGlobalStepStatus(string status = null)
         {
             operationStatus = status ?? string.Empty;
         }
@@ -718,6 +718,8 @@ namespace Neon.Kube
                             {
                                 node.IsReady = true;
                             }
+
+                            SetGlobalStepStatus();
                         }
                         else if (step.AsyncGlobalAction != null)
                         {
@@ -767,6 +769,8 @@ namespace Neon.Kube
                             {
                                 node.IsReady = true;
                             }
+
+                            SetGlobalStepStatus();
                         }
                     });
 

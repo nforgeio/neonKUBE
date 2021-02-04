@@ -32,6 +32,8 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Neon.Windows;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -355,6 +357,44 @@ namespace Neon.Common
             regexPattern += '$';
 
             return new Regex(regexPattern, RegexOptions.IgnoreCase);
+        }
+
+        /// <summary>
+        /// Encrypts a file or directory when supported by the underlying operating system
+        /// and file system.  Currently, this only works on non-HOME versions of Windows
+        /// and NTFS file systems.
+        /// </summary>
+        /// <param name="path">The file or directory path.</param>
+        /// <returns><c>true</c> if the operation was successful.</returns>
+        public static bool EncryptFile(string path)
+        {
+            try
+            {
+                return Win32.EncryptFile(path);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Decrypts a file or directory when supported by the underlying operating system
+        /// and file system.  Currently, this only works on non-HOME versions of Windows
+        /// and NTFS file systems.
+        /// </summary>
+        /// <param name="path">The file or directory path.</param>
+        /// <returns><c>true</c> if the operation was successful.</returns>
+        public static bool DecryptFile(string path)
+        {
+            try
+            {
+                return Win32.DecryptFile(path);
+            }
+            catch
+            {
+                return false;
+            }
         }
     }
 }

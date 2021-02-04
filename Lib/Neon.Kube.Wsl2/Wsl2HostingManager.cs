@@ -43,6 +43,7 @@ using Neon.IO;
 using Neon.Net;
 using Neon.SSH;
 using Neon.Time;
+using Neon.Windows;
 
 namespace Neon.Kube
 {
@@ -69,6 +70,7 @@ namespace Neon.Kube
         // Instance members.
 
         private ClusterProxy    cluster;
+        private string          distroAddress;
 
         /// <summary>
         /// Creates an instance that is only capable of validating the hosting
@@ -140,8 +142,8 @@ namespace Neon.Kube
             // These define where the node image is downloaded from as well as where it 
             // will downloaded on the local workstation.
 
-            var nodeImageUri  = $"https://neonkube.s3-us-west-2.amazonaws.com/images/wsl2/node/ubuntu-20.04.{KubeVersions.NeonKubeVersion}.tar";
-            var nodeImagePath = Path.Combine(KubeHelper.NodeImageFolder, $"{KubeVersions.NeonKubeVersion}.tar");
+            var nodeImageUri = $"https://neonkube.s3-us-west-2.amazonaws.com/images/wsl2/node/ubuntu-20.04.{KubeVersions.NeonKubeVersion}.tar";
+            var nodeImagePath = Path.Combine(KubeHelper.NodeImageFolder, $"neonkube.{KubeVersions.NeonKubeVersion}.tar");
 
             // We need to ensure that the cluster has at least one ingress node.
 
@@ -154,7 +156,7 @@ namespace Neon.Kube
 
             // Initialize and run the [SetupController].
 
-            var operation       = $"Provisioning [{cluster.Definition.Name}] on WSL2";
+            var operation = $"Provisioning [{cluster.Definition.Name}] on WSL2";
             var setupController = new SetupController<NodeDefinition>(operation, cluster.Nodes)
             {
                 ShowStatus     = this.ShowStatus,
@@ -167,11 +169,13 @@ namespace Neon.Kube
                 {
                     if (!File.Exists(nodeImagePath))
                     {
+                        setupController.SetGlobalStepStatus($"Downloading: {nodeImageUri}");
+
                         try
                         {
                             using (var httpClient = new HttpClient())
                             {
-                                var response        = await httpClient.GetToFileSafeAsync(nodeImageUri, nodeImagePath);
+                                var response = await httpClient.GetToFileSafeAsync(nodeImageUri, nodeImagePath);
                                 var contentEncoding = response.Content.Headers.ContentEncoding.SingleOrDefault();
 
                                 if (string.IsNullOrEmpty(contentEncoding) || !contentEncoding.Equals("gzip", StringComparison.InvariantCultureIgnoreCase))
@@ -188,6 +192,10 @@ namespace Neon.Kube
                             throw;
                         }
                     }
+                    else
+                    {
+                        setupController.SetGlobalStepStatus($"[{nodeImageUri}] already cached");
+                    }
                 });
 
             setupController.AddGlobalStep($"Create WSL2 [{KubeConst.Wsl2MainDistroName}] distro",
@@ -198,14 +206,38 @@ namespace Neon.Kube
                         Wsl2Proxy.Unregister(KubeConst.Wsl2MainDistroName);
                     }
 
-                    Wsl2Proxy.Import(KubeConst.Wsl2MainDistroName, nodeImagePath, KubeHelper.DesktopWsl2Folder);
+                    using (var tempFile = new TempFile(suffix: ".wsl.tar"))
+                    {
+                        // WSL2 is not able to import the TAR file to a VHDX hosted in an encrypted
+                        // folder and the [~\.neonkube] folder is encrypted by default on Windows 10 Pro
+                        // for security.
+                        //
+                        // We're simply going to decrypt the [~\.neonkube\desktop] folder.
+
+                        NeonHelper.DecryptFile(KubeHelper.DesktopFolder);
+
+                        setupController.SetGlobalStepStatus("Decompressing WSL2 image");
+                        NeonHelper.GunzipFile(nodeImagePath, tempFile.Path);
+
+                        setupController.SetGlobalStepStatus("Importing WSL2 image");
+                        Wsl2Proxy.Import(KubeConst.Wsl2MainDistroName, tempFile.Path, KubeHelper.DesktopWsl2Folder);
+                    }
+
+                    setupController.SetGlobalStepStatus("Starting WSL2 image");
 
                     var distro = new Wsl2Proxy(KubeConst.Wsl2MainDistroName, KubeConst.SysAdminUser);
 
-                    distro.Start();
+                    distroAddress = distro.Start();
                 });
 
-            setupController.AddNodeStep("Connect", (state, node) => node.WaitForBoot(timeout: TimeSpan.FromMinutes(4)));
+            setupController.AddNodeStep("Connect", 
+                (state, node) =>
+                {
+                    var connectTimeout = TimeSpan.FromSeconds(30);
+
+                    node.Address = IPAddress.Parse(distroAddress);
+                    node.WaitForBoot(timeout: connectTimeout);
+                });
 
             setupController.AddNodeStep("credentials",
                 (state, node) =>

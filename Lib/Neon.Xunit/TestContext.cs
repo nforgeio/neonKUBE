@@ -114,25 +114,6 @@ namespace Neon.Xunit
         public Dictionary<string, byte[]> Files { get; private set; } = new Dictionary<string, byte[]>();
 
         /// <summary>
-        /// Encrypts a file or directory when supported by the underlying operating system
-        /// and file system.  Currently, this only works on non-HOME versions of Windows
-        /// and NTFS file systems.  This fails silently.
-        /// </summary>
-        /// <param name="path">The file or directory path.</param>
-        /// <returns><c>true</c> if the operation was successful.</returns>
-        private bool EncryptFile(string path)
-        {
-            try
-            {
-                return Win32.EncryptFile(path);
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        /// <summary>
         /// Looks up a password from the <b>~/.neonkube/passwords</b> folder.
         /// </summary>
         /// <param name="passwordName">The password name.</param>
@@ -152,7 +133,7 @@ namespace Neon.Xunit
 
                 try
                 {
-                    EncryptFile(neonKubeFolder);
+                    NeonHelper.EncryptFile(neonKubeFolder);
                 }
                 catch
                 {

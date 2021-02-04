@@ -284,7 +284,8 @@ namespace Neon.Kube
         /// distribution is already running.
         /// </note>
         /// </summary>
-        public void Start()
+        /// <returns>The IP address assigned to the distribution.</returns>
+        public string Start()
         {
             // $todo(jefflill): 
             //
@@ -434,6 +435,8 @@ touch {preparedStatePath}
             {
                 User = orgUser;
             }
+
+            return this.Address;
         }
 
         /// <summary>
