@@ -86,10 +86,7 @@ namespace Neon.Kube
         public double WaitSeconds { get; set; } = 0.0;
 
         /// <inheritdoc/>
-        public virtual bool IsProvisionNOP
-        {
-            get { return false; }
-        }
+        public virtual bool IsProvisionNOP => false;
 
         /// <inheritdoc/>
         public abstract HostingEnvironment HostingEnvironment { get; }

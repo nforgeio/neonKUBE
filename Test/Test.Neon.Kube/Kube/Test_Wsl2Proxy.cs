@@ -77,25 +77,9 @@ namespace TestKube
             {
                 try
                 {
-                    using (var output = new FileStream(imagePath, FileMode.Create, FileAccess.ReadWrite))
+                    using (var httpClient = new HttpClient())
                     {
-                        using (var httpClient = new HttpClient())
-                        {
-                            var stream = await httpClient.GetStreamSafeAsync(BaseImageUri);
-                            var buffer = new byte[64 * 1024];
-
-                            while (true)
-                            {
-                                var cb = stream.Read(buffer);
-
-                                if (cb == 0)
-                                {
-                                    break;
-                                }
-
-                                output.Write(buffer, 0, cb);
-                            }
-                        }
+                        await httpClient.GetToFileSafeAsync(BaseImageUri, imagePath);
                     }
                 }
                 catch
