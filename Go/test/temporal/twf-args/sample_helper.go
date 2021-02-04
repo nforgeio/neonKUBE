@@ -47,6 +47,12 @@ func (h *SampleHelper) SetupServiceConfig(configPath string) error {
 		panic(fmt.Sprintf("Error initializing configuration: %v", err))
 	}
 
+	h.clientOptions = client.Options{
+		Namespace: h.Config.Namespace,
+		HostPort:  h.Config.HostPort,
+		Identity:  h.Config.ServiceName,
+	}
+
 	// Initialize logger for running samples
 	logger, err := zap.NewDevelopment()
 	if err != nil {
@@ -237,8 +243,8 @@ func (h *SampleHelper) SignalWithStartWorkflowWithCtx(ctx context.Context, workf
 }
 
 // CreateWorker creates the workflow and activity worker based on configured options.
-func (h *SampleHelper) CreateWorker(domainName, groupName string, options worker.Options) {
-	h.Worker = worker.New(h.WorkflowClient, domainName, options)
+func (h *SampleHelper) CreateWorker(taskQueue string, options worker.Options) {
+	h.Worker = worker.New(h.WorkflowClient, taskQueue, options)
 }
 
 // StartWorkers starts workflow worker and activity worker.

@@ -32,13 +32,13 @@ func main() {
 	flag.StringVar(&stopFile, "stopfile", "", "Path to the program stop file.")
 	flag.StringVar(&readyFile, "readyfile", "", "Path to the program ready file.")
 
-	// Parse the -tasklist=<name> command line option which specifies the
-	// Temporal tasklist where the workflows and activities will be registered.
+	// Parse the -taskqueue=<name> command line option which specifies the
+	// Temporal taskqueue where the workflows and activities will be registered.
 	// This defaults to "wf-args".
 
 	var taskQueue string
 
-	flag.StringVar(&taskQueue, "tasklist", "wf-args", "Target Temporal task list.")
+	flag.StringVar(&taskQueue, "taskqueue", "wf-args", "Target Temporal task list.")
 
 	// Parse the -namespace=<name> command line option which specifies the
 	// Temporal namespace where the workflows and activities will be registered.
@@ -64,7 +64,7 @@ func main() {
 
 	workerOptions := worker.Options{}
 
-	h.CreateWorker(namespace, taskQueue, workerOptions)
+	h.CreateWorker(taskQueue, workerOptions)
 
 	h.Worker.RegisterWorkflow(NoArgsWorkflow)
 	h.Worker.RegisterActivity(NoArgsActivity)

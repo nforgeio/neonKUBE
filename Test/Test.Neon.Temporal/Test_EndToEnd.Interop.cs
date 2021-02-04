@@ -113,7 +113,7 @@ namespace TestTemporal
                     new object[]
                     {
                         $"-config={Path.Combine(goTestDir, "config.yaml")}",
-                        $"-domain={TemporalFixture.Namespace}", 
+                        $"-namespace={TemporalFixture.Namespace}", 
                         $"-taskqueue={TemporalTestHelper.TaskQueue_TwfArgs}", 
                         $"-readyfile={readyFile}",
                         $"-stopfile={stopFile}"
@@ -152,13 +152,13 @@ namespace TestTemporal
         [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue_TwfArgs)]
         public interface IGoWorkflow : IWorkflow
         {
-            [WorkflowMethod(Name = "main.NoArgsWorkflow", IsFullName = true)]
+            [WorkflowMethod(Name = "NoArgsWorkflow", IsFullName = true)]
             Task<string> NoArgsAsync();
 
-            [WorkflowMethod(Name = "main.OneArgWorkflow", IsFullName = true)]
+            [WorkflowMethod(Name = "OneArgWorkflow", IsFullName = true)]
             Task<string> OneArgAsync(string name);
 
-            [WorkflowMethod(Name = "main.TwoArgsWorkflow", IsFullName = true)]
+            [WorkflowMethod(Name = "TwoArgsWorkflow", IsFullName = true)]
             Task<string> TwoArgsAsync(string name1, string name2);
         }
 
@@ -168,19 +168,19 @@ namespace TestTemporal
         [ActivityInterface(TaskQueue = TemporalTestHelper.TaskQueue_TwfArgs)]
         public interface IGoActivity : IActivity
         {
-            [WorkflowMethod(Name = "main.NoArgsActivity", IsFullName = true)]
+            [ActivityMethod(Name = "NoArgsActivity", IsFullName = true)]
             Task<string> NoArgsAsync();
 
-            [WorkflowMethod(Name = "main.OneArgActivity", IsFullName = true)]
+            [ActivityMethod(Name = "OneArgActivity", IsFullName = true)]
             Task<string> OneArgAsync(string name);
 
-            [WorkflowMethod(Name = "main.TwoArgsActivity", IsFullName = true)]
+            [ActivityMethod(Name = "TwoArgsActivity", IsFullName = true)]
             Task<string> TwoArgsAsync(string name1, string name2);
         }
 
         //---------------------------------------------------------------------
 
-        [Fact_Failing_Interop]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Interop_Workflow_Untyped()
         {
@@ -200,7 +200,7 @@ namespace TestTemporal
                     TaskQueue   = TemporalTestHelper.TaskQueue_TwfArgs
                 };
 
-                var stub      = client.NewUntypedWorkflowStub("main.NoArgsWorkflow", options);
+                var stub      = client.NewUntypedWorkflowStub("NoArgsWorkflow", options);
                 var execution = await stub.StartAsync();
 
                 Assert.Equal("Hello there!", await stub.GetResultAsync<string>());
@@ -214,7 +214,7 @@ namespace TestTemporal
                     TaskQueue   = TemporalTestHelper.TaskQueue_TwfArgs
                 };
 
-                stub      = client.NewUntypedWorkflowStub("main.OneArgWorkflow", options);
+                stub      = client.NewUntypedWorkflowStub("OneArgWorkflow", options);
                 execution = await stub.StartAsync("JACK");
 
                 Assert.Equal("Hello JACK!", await stub.GetResultAsync<string>());
@@ -228,7 +228,7 @@ namespace TestTemporal
                     TaskQueue   = TemporalTestHelper.TaskQueue_TwfArgs
                 };
 
-                stub      = client.NewUntypedWorkflowStub("main.TwoArgsWorkflow", options);
+                stub      = client.NewUntypedWorkflowStub("TwoArgsWorkflow", options);
                 execution = await stub.StartAsync("JACK", "JILL");
 
                 Assert.Equal("Hello JACK & JILL!", await stub.GetResultAsync<string>());
@@ -242,7 +242,7 @@ namespace TestTemporal
                     TaskQueue   = TemporalTestHelper.TaskQueue_TwfArgs
                 };
 
-                stub      = client.NewUntypedWorkflowStub("main.ArrayArgWorkflow", options);
+                stub      = client.NewUntypedWorkflowStub("ArrayArgWorkflow", options);
                 execution = await stub.StartAsync(new int[] { 0, 1, 2, 3, 4 });
 
                 var arrayResult = await stub.GetResultAsync<int[]>();
@@ -258,7 +258,7 @@ namespace TestTemporal
                     TaskQueue   = TemporalTestHelper.TaskQueue_TwfArgs
                 };
 
-                stub = client.NewUntypedWorkflowStub("main.ArrayArgsWorkflow", options);
+                stub = client.NewUntypedWorkflowStub("ArrayArgsWorkflow", options);
                 execution = await stub.StartAsync(new int[] { 0, 1, 2, 3, 4 }, "test");
 
                 arrayResult = await stub.GetResultAsync<int[]>();
@@ -276,7 +276,7 @@ namespace TestTemporal
                     TaskQueue   = TemporalTestHelper.TaskQueue_TwfArgs
                 };
 
-                stub      = client.NewUntypedWorkflowStub("main.ErrorWorkflow", options);
+                stub      = client.NewUntypedWorkflowStub("ErrorWorkflow", options);
                 execution = await stub.StartAsync("");
 
                 await stub.GetResultAsync();
@@ -289,7 +289,7 @@ namespace TestTemporal
                     TaskQueue   = TemporalTestHelper.TaskQueue_TwfArgs
                 };
 
-                stub      = client.NewUntypedWorkflowStub("main.ErrorWorkflow", options);
+                stub      = client.NewUntypedWorkflowStub("ErrorWorkflow", options);
                 execution = await stub.StartAsync("error message");
 
                 try
@@ -316,7 +316,7 @@ namespace TestTemporal
                     TaskQueue   = TemporalTestHelper.TaskQueue_TwfArgs
                 };
 
-                stub      = client.NewUntypedWorkflowStub("main.StringErrorWorkflow", options);
+                stub      = client.NewUntypedWorkflowStub("StringErrorWorkflow", options);
                 execution = await stub.StartAsync("JEFF", "");
 
                 Assert.Equal("Hello JEFF!", await stub.GetResultAsync<string>());
@@ -329,7 +329,7 @@ namespace TestTemporal
                     TaskQueue   = TemporalTestHelper.TaskQueue_TwfArgs
                 };
 
-                stub      = client.NewUntypedWorkflowStub("main.ErrorWorkflow", options);
+                stub      = client.NewUntypedWorkflowStub("ErrorWorkflow", options);
                 execution = await stub.StartAsync("", "error message");
 
                 try
@@ -348,13 +348,13 @@ namespace TestTemporal
         [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IGoUntypedActivityTester : IWorkflow
         {
-            [WorkflowMethod(Name = "NoArgsWorkflow")]
+            [WorkflowMethod(Name = "NoArgsWorkflow", IsFullName = true)]
             Task<string> NoArgsAsync();
 
-            [WorkflowMethod(Name = "OneArgWorkflow")]
+            [WorkflowMethod(Name = "OneArgWorkflow", IsFullName = true)]
             Task<string> OneArgAsync(string name);
 
-            [WorkflowMethod(Name = "TwoArgsWorkflow")]
+            [WorkflowMethod(Name = "TwoArgsWorkflow", IsFullName = true)]
             Task<string> TwoArgsAsync(string name1, string name2);
         }
 
@@ -365,14 +365,14 @@ namespace TestTemporal
 
             public async Task<string> NoArgsAsync()
             {
-                var stub = Workflow.NewExternalActivityStub("main.NoArgsActivity", options);
+                var stub = Workflow.NewExternalActivityStub("NoArgsActivity", options);
 
                 return await stub.ExecuteAsync<string>();
             }
 
             public async Task<string> OneArgAsync(string name)
             {
-                var stub = Workflow.NewExternalActivityStub("main.OneArgActivity", options);
+                var stub = Workflow.NewExternalActivityStub("OneArgActivity", options);
 
                 return await stub.ExecuteAsync<string>(name);
             }
@@ -382,21 +382,21 @@ namespace TestTemporal
                 // Test an untyped future stub that returns no value.  We're
                 // essentially verifying that this doesn't barf.
 
-                var future1Stub = Workflow.NewActivityFutureStub("main.TwoArgsActivity", options);
+                var future1Stub = Workflow.NewActivityFutureStub("TwoArgsActivity", options);
                 var future1     = await future1Stub.StartAsync("JACK", "JILL");
 
                 await future1.GetAsync();
 
                 // Now test an a future stub that returns a value.
 
-                var future2Stub = Workflow.NewActivityFutureStub("main.TwoArgsActivity", options);
+                var future2Stub = Workflow.NewActivityFutureStub("TwoArgsActivity", options);
                 var future2     = await future2Stub.StartAsync<string>("JACK", "JILL");
 
                 return await future2.GetAsync();
             }
         }
 
-        [Fact_Failing_Interop]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Interop_Activity_Untyped()
         {
@@ -432,7 +432,7 @@ namespace TestTemporal
 
         //---------------------------------------------------------------------
 
-        [Fact_Failing_Interop]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Interop_Workflow_StubFullName()
         {
@@ -506,7 +506,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact_Failing_Interop]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Interop_Activity_StubFullName()
         {
