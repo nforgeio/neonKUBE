@@ -103,7 +103,7 @@ namespace Neon.Kube
 
             if (updateDistribution)
             {
-                BaseUpdateLinux(statusWriter);
+                BaseUpgradeLinuxDistro(statusWriter);
             }
         }
 
@@ -116,8 +116,8 @@ namespace Neon.Kube
             InvokeIdempotent("base/debian-frontend",
                 () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Configure", $"Terminal as non-interactive");
-                    Status = $"login: terminal as non-interactive";
+                    KubeHelper.WriteStatus(statusWriter, "Configure", $"Non-interactive terminal");
+                    Status = $"login: interactive terminal";
 
                     // We need to append [DEBIAN_FRONTEND] to the [/etc/environment] file but
                     // we haven't installed [zip/unzip] yet so we can't use a command bundle.
@@ -166,7 +166,7 @@ namespace Neon.Kube
 #       precedence ::ffff:0:0/96  100
 #
 # Note that this does not completely prevent the resolver from
-# returning IPv6 addresses.  You'll need to prevent this on an
+# returning IPv6 addresses.  You'll need to prvent this on an
 # application by application basis, like using the [curl -4] option.
 
 sed -i 's!^#precedence ::ffff:0:0/96  10$!precedence ::ffff:0:0/96  100!g' /etc/gai.conf
@@ -238,10 +238,29 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
         }
 
         /// <summary>
+        /// Updates Linux by applying just the outstanding security updates.
+        /// </summary>
+        /// <param name="statusWriter"></param>
+        public void BasePatchLinux(Action<string> statusWriter = null)
+        {
+            // $todo(jefflill): Implement this!
+        }
+
+        /// <summary>
+        /// Updates Linux by applying all outstanding package updates but without 
+        /// upgrading the distribution.
+        /// </summary>
+        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        public void BaseUpgradeLinux(Action<string> statusWriter = null)
+        {
+            // $todo(jefflill): Implement this!
+        }
+
+        /// <summary>
         /// Updates the Linux distribution.
         /// </summary>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public void BaseUpdateLinux(Action<string> statusWriter = null)
+        public void BaseUpgradeLinuxDistro(Action<string> statusWriter = null)
         {
             InvokeIdempotent("base/update-linux",
                 () =>
@@ -458,8 +477,8 @@ $@"
             InvokeIdempotent("base/apt",
                 () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Configure", "[apt] package manager");
-                    Status = "configure: [apt] package manager";
+                    KubeHelper.WriteStatus(statusWriter, "Configure", "package manager");
+                    Status = "configure: package manager";
 
                     if (!allowPackageManagerIPv6)
                     {
