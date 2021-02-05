@@ -156,7 +156,7 @@ namespace Neon.Kube
 
             // Initialize and run the [SetupController].
 
-            var operation = $"Provisioning [{cluster.Definition.Name}] on WSL2";
+            var operation       = $"Provisioning [{cluster.Definition.Name}] on WSL2";
             var setupController = new SetupController<NodeDefinition>(operation, cluster.Nodes)
             {
                 ShowStatus     = this.ShowStatus,
@@ -227,7 +227,7 @@ namespace Neon.Kube
 
                     var distro = new Wsl2Proxy(KubeConst.Wsl2MainDistroName, KubeConst.SysAdminUser);
 
-                    distroAddress = distro.Start();
+                    distroAddress = distro.Address;
                 });
 
             setupController.AddNodeStep("Connect", 
@@ -243,8 +243,15 @@ namespace Neon.Kube
                 (state, node) =>
                 {
                     // Update the node SSH proxies to use the secure SSH password.
+                    // Note that we're going to ignore "Password unchanged" errors.
 
-                    node.RunCommand(CommandBundle.FromScript($"echo \"{secureSshPassword}\" | chpasswd"));
+                    var response = node.RunCommand(CommandBundle.FromScript($"echo \"{KubeConst.SysAdminGroup}:{secureSshPassword}\" | chpasswd"), RunOptions.None);
+
+                    if (response.ExitCode != 0 && !response.ErrorText.Contains("Password unchanged"))
+                    {
+                        response.EnsureSuccess();
+                    }
+
                     node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, secureSshPassword));
                 },
                 quiet: true);

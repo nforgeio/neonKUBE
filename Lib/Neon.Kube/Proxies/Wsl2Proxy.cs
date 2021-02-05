@@ -262,8 +262,8 @@ namespace Neon.Kube
         /// Indicates whether the distribution has already been prepared for neonKUBE.
         /// </summary>
         public bool IsPrepared
-        { 
-            get => SudoExecute("ls", preparedStatePath).ExitCode == 0;
+        {
+            get => File.Exists(ToWindowsPath(preparedStatePath));
 
             set
             {
@@ -287,39 +287,59 @@ namespace Neon.Kube
         /// <returns>The IP address assigned to the distribution.</returns>
         public string Start()
         {
-            // $todo(jefflill): 
-            //
-            // This needs to launch a lifcycle stub app managing the distro?
-            // For now, we're just going to have Bash start a long running sleep.
-
-            NeonHelper.ExecuteCapture("wsl.exe",
-                new object[]
-                {
-                    "--distribution", Name,
-                    "--",
-                    "bash", "-c", "sleep 1000000 &"
-
-                }).EnsureSuccess();
-
-            // We need to disable SUDO password prompts if we haven't already done
-            // so for this distribution.  We're going to accomplish this by creating
-            // a temporary script file on the Windows host side and and then executing
-            // it in the distribution as root.
-
-            // We need to do this as [root].
-
-            var orgUser = User;
-
-            User = "root";
-
-            try
+            if (IsPrepared)
             {
-                if (!IsPrepared)
+                if (File.Exists(ToWindowsPath("/usr/sbin/start-systemd-namespace")))
+                {
+                    // The distro has already been prepared, so we can simply start
+                    // systemd in its own namespace to get things rolling, if it is
+                    // configured.  Note that this cannot be done as [root].
+
+                    Covenant.Assert(User != "root", "WSL2 distro prepared for [systemd] cannot be started as [root].");
+
+                    NeonHelper.ExecuteCapture("wsl.exe",
+                        new object[]
+                        {
+                        "--distribution", Name,
+                        "--user", User,
+                        "--",
+                        "source", "/usr/sbin/start-systemd-namespace"
+
+                        }).EnsureSuccess();
+                }
+            }
+            else
+            {
+                // Launch a sleep job that will run for a day to keep the
+                // distro running long enough for [neon-image] to configure
+                // systemd, completing the distro preparation.
+
+                NeonHelper.ExecuteCapture("wsl.exe",
+                    new object[]
+                    {
+                        "--distribution", Name,
+                        "--",
+                        "sleep", (int)TimeSpan.FromDays(1).TotalSeconds, "&"
+
+                    }).EnsureSuccess();
+
+                // We need to disable SUDO password prompts if we haven't already done
+                // so for this distribution.  We're going to accomplish this by creating
+                // a temporary script file on the Windows host side and and then executing
+                // it in the distribution as root.
+
+                // We need to do this as [root].
+
+                var orgUser = User;
+
+                User = "root";
+
+                try
                 {
                     using (var tempFile = new TempFile())
                     {
                         var homeFolder = HostFolders.Home(KubeConst.SysAdminUser);
-                        var script     =
+                        var script =
 $@"
 cat <<EOF > {homeFolder}/sudo-disable-prompt
 #!/bin/bash
@@ -360,80 +380,80 @@ touch {preparedStatePath}
 ";
                     SudoExecuteScript(setPreparedScript).EnsureSuccess();
                 }
-
-                // Execute [ip addr] in the distribution and parse the output to extract
-                // the distribution's IP address.  The output looks like somthing this:
-                //
-                //  1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
-                //      link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
-                //      inet 127.0.0.1/8 scope host lo
-                //         valid_lft forever preferred_lft forever
-                //      inet6 ::1/128 scope host
-                //         valid_lft forever preferred_lft forever
-                //  2: bond0: <BROADCAST,MULTICAST,MASTER> mtu 1500 qdisc noop state DOWN group default qlen 1000
-                //      link/ether 9e:3b:88:2a:08:55 brd ff:ff:ff:ff:ff:ff
-                //  3: dummy0: <BROADCAST,NOARP> mtu 1500 qdisc noop state DOWN group default qlen 1000
-                //      link/ether 46:cb:71:39:ad:4a brd ff:ff:ff:ff:ff:ff
-                //  4: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP group default qlen 1000
-                //      link/ether 00:15:5d:c8:ee:64 brd ff:ff:ff:ff:ff:ff
-                //      inet 172.25.250.51/20 brd 172.25.255.255 scope global eth0
-                //         valid_lft forever preferred_lft forever
-                //      inet6 fe80::215:5dff:fec8:ee64/64 scope link
-                //         valid_lft forever preferred_lft forever
-                //  5: sit0@NONE: <NOARP> mtu 1480 qdisc noop state DOWN group default qlen 1000
-                //      link/sit 0.0.0.0 brd 0.0.0.0
-                //
-                // We're going to parse the address from the [inet...] line for the [eth0] interface.
-
-                var response = Execute("ip", "address");
-
-                response.EnsureSuccess();
-
-                using (var reader = new StringReader(response.OutputText))
+                finally
                 {
-                    // Skip lines until we get to the [eth0] line.
-
-                    while (true)
-                    {
-                        var line = reader.ReadLine();
-
-                        if (line == null)
-                        {
-                            throw new KubeException("Cannot determine the WSL2 distribution address because the [eth0] interface is missing.");
-                        }
-
-                        if (line.Contains(" eth0: "))
-                        {
-                            break;
-                        }
-                    }
-
-                    // Scan for the [inet] line and extract the IP address.
-
-                    while (true)
-                    {
-                        var line = reader.ReadLine();
-
-                        if (line == null || !line.StartsWith(" "))
-                        {
-                            throw new KubeException("Cannot determine the WSL2 distribution address because the [eth0] interface does not specify an [inet] address.");
-                        }
-
-                        line = line.Trim();
-
-                        if (line.StartsWith("inet "))
-                        {
-                            var fields = line.Split(new char[] { ' ', '/' }, StringSplitOptions.RemoveEmptyEntries);
-
-                            Address = fields[1];
-                            break;
-                        }
-                    }
+                    User = orgUser;
                 }
             }
-            finally
+
+            // Execute [ip addr] in the distribution and parse the output to extract
+            // the distribution's IP address.  The output looks like somthing this:
+            //
+            //  1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+            //      link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+            //      inet 127.0.0.1/8 scope host lo
+            //         valid_lft forever preferred_lft forever
+            //      inet6 ::1/128 scope host
+            //         valid_lft forever preferred_lft forever
+            //  2: bond0: <BROADCAST,MULTICAST,MASTER> mtu 1500 qdisc noop state DOWN group default qlen 1000
+            //      link/ether 9e:3b:88:2a:08:55 brd ff:ff:ff:ff:ff:ff
+            //  3: dummy0: <BROADCAST,NOARP> mtu 1500 qdisc noop state DOWN group default qlen 1000
+            //      link/ether 46:cb:71:39:ad:4a brd ff:ff:ff:ff:ff:ff
+            //  4: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP group default qlen 1000
+            //      link/ether 00:15:5d:c8:ee:64 brd ff:ff:ff:ff:ff:ff
+            //      inet 172.25.250.51/20 brd 172.25.255.255 scope global eth0
+            //         valid_lft forever preferred_lft forever
+            //      inet6 fe80::215:5dff:fec8:ee64/64 scope link
+            //         valid_lft forever preferred_lft forever
+            //  5: sit0@NONE: <NOARP> mtu 1480 qdisc noop state DOWN group default qlen 1000
+            //      link/sit 0.0.0.0 brd 0.0.0.0
+            //
+            // We're going to parse the address from the [inet...] line for the [eth0] interface.
+
+            var response = Execute("ip", "address");
+
+            response.EnsureSuccess();
+
+            using (var reader = new StringReader(response.OutputText))
             {
-                User = orgUser;
+                // Skip lines until we get to the [eth0] line.
+
+                while (true)
+                {
+                    var line = reader.ReadLine();
+
+                    if (line == null)
+                    {
+                        throw new KubeException("Cannot determine the WSL2 distribution address because the [eth0] interface is missing.");
+                    }
+
+                    if (line.Contains(" eth0: "))
+                    {
+                        break;
+                    }
+                }
+
+                // Scan for the [inet] line and extract the IP address.
+
+                while (true)
+                {
+                    var line = reader.ReadLine();
+
+                    if (line == null || !line.StartsWith(" "))
+                    {
+                        throw new KubeException("Cannot determine the WSL2 distribution address because the [eth0] interface does not specify an [inet] address.");
+                    }
+
+                    line = line.Trim();
+
+                    if (line.StartsWith("inet "))
+                    {
+                        var fields = line.Split(new char[] { ' ', '/' }, StringSplitOptions.RemoveEmptyEntries);
+
+                        Address = fields[1];
+                        break;
+                    }
+                }
             }
 
             return this.Address;
