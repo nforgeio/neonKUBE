@@ -273,6 +273,136 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Configures OpenSSH server to bind to the distribution's current private
+        /// IPv4 address by adding a small config file at <b>[/etc/sshd_config/listen.conf]</b>.
+        /// This is called whenever a distribution is started.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if the distribution isn't running.</exception>
+        /// <remarks>
+        /// <para>
+        /// This is required because OpenSSH server listens on [0.0.0.0:22] by default.  
+        /// This will result in a port conflict when the Windows host machine is also 
+        /// listening on port 22 or if an other WSL2 distro is listening there.
+        /// </para>
+        /// <para>
+        /// To handle this, we need to bind OpenSSH to the distro's private [172.x.x.x] 
+        /// address but this is complicated because this address may change across
+        /// reboots.  We're going to manage this by via a [/etc/sshd_config/listen.conf]
+        /// file that specifies IPv4 as the address family and the current distro
+        /// IP address as the listing address.
+        /// </para>
+        /// </remarks>
+        private void ConfigureOpenSSH()
+        {
+            var listenConf =
+$@"# This file is regenerated whenever the WSL2 distribution is started by neonDESKTOP.
+#
+# This is required because OpenSSH server listens on [0.0.0.0:22] by default.  
+# This will result in a port conflict when the Windows host machine is also 
+# listening on port 22 or if an other WSL2 distro is listening there.
+#
+# To handle this, we need to bind OpenSSH to the distro's private [172.x.x.x] 
+# address but this is complicated because this address may change across
+# reboots.  We're going to manage this by via a [/etc/ssh/sshd_config.d/listen.conf]
+# file that specifies IPv4 as the address family and the current distro
+# IP address as the listing address.
+
+# Restrict to listening on IPv4 addresses to prevent conflicts.
+
+AddressFamily inet
+
+# Listen on the WSL distribution's private IP address.  This will be
+# updated whenever the distribution is started.
+
+ListenAddress {this.Address}
+";
+            SudoExecute("mkdir",
+                new object[]
+                {
+                    "sudo", "mkdir", "-p", "/etc/ssh/sshd_config.d"
+
+                }).EnsureSuccess();
+
+            UploadFile("/etc/ssh/sshd_config.d/listen.conf", listenConf, owner: "root", permissions: "644");
+        }
+
+        /// <summary>
+        /// Runs the <b>ip address</b> to intitialize the distribution's private IP address.
+        /// </summary>
+        private void GetAddress()
+        {
+            // Execute [ip address] in the distribution and parse the output to extract
+            // the distribution's IP address.  The output looks like somthing this:
+            //
+            //  1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+            //      link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+            //      inet 127.0.0.1/8 scope host lo
+            //         valid_lft forever preferred_lft forever
+            //      inet6 ::1/128 scope host
+            //         valid_lft forever preferred_lft forever
+            //  2: bond0: <BROADCAST,MULTICAST,MASTER> mtu 1500 qdisc noop state DOWN group default qlen 1000
+            //      link/ether 9e:3b:88:2a:08:55 brd ff:ff:ff:ff:ff:ff
+            //  3: dummy0: <BROADCAST,NOARP> mtu 1500 qdisc noop state DOWN group default qlen 1000
+            //      link/ether 46:cb:71:39:ad:4a brd ff:ff:ff:ff:ff:ff
+            //  4: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP group default qlen 1000
+            //      link/ether 00:15:5d:c8:ee:64 brd ff:ff:ff:ff:ff:ff
+            //      inet 172.25.250.51/20 brd 172.25.255.255 scope global eth0
+            //         valid_lft forever preferred_lft forever
+            //      inet6 fe80::215:5dff:fec8:ee64/64 scope link
+            //         valid_lft forever preferred_lft forever
+            //  5: sit0@NONE: <NOARP> mtu 1480 qdisc noop state DOWN group default qlen 1000
+            //      link/sit 0.0.0.0 brd 0.0.0.0
+            //
+            // We're going to parse the address from the [inet...] line for the [eth0] interface.
+
+            var response = Execute("ip", "address");
+
+            response.EnsureSuccess();
+
+            using (var reader = new StringReader(response.OutputText))
+            {
+                // Skip lines until we get to the [eth0] line.
+
+                while (true)
+                {
+                    var line = reader.ReadLine();
+
+                    if (line == null)
+                    {
+                        throw new KubeException("Cannot determine the WSL2 distribution address because the [eth0] interface is missing.");
+                    }
+
+                    if (line.Contains(" eth0: "))
+                    {
+                        break;
+                    }
+                }
+
+                // Scan for the [inet] line and extract the IP address.
+
+                while (true)
+                {
+                    var line = reader.ReadLine();
+
+                    if (line == null || !line.StartsWith(" "))
+                    {
+                        throw new KubeException("Cannot determine the WSL2 distribution address because the [eth0] interface does not specify an [inet] address.");
+                    }
+
+                    line = line.Trim();
+
+                    if (line.StartsWith("inet "))
+                    {
+                        var fields = line.Split(new char[] { ' ', '/' }, StringSplitOptions.RemoveEmptyEntries);
+
+                        Address = fields[1];
+                        break;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// <para>
         /// Connects to a distribution, starting it if it's not already running.
         /// This also performs some initialization if required, including disabling
@@ -289,6 +419,14 @@ namespace Neon.Kube
         {
             if (IsPrepared)
             {
+                // Get the distribution's private IP address.
+
+                GetAddress();
+
+                // Ensure that OpenSSH binds only to the private IP
+
+                ConfigureOpenSSH();
+
                 if (File.Exists(ToWindowsPath("/usr/sbin/start-systemd-namespace")))
                 {
                     // The distro has already been prepared, so we can simply start
@@ -300,10 +438,10 @@ namespace Neon.Kube
                     NeonHelper.ExecuteCapture("wsl.exe",
                         new object[]
                         {
-                        "--distribution", Name,
-                        "--user", User,
-                        "--",
-                        "source", "/usr/sbin/start-systemd-namespace"
+                            "--distribution", Name,
+                            "--user", User,
+                            "--",
+                            "source", "/usr/sbin/start-systemd-namespace"
 
                         }).EnsureSuccess();
                 }
@@ -379,80 +517,18 @@ mkdir -p {LinuxPath.GetDirectoryName(preparedStatePath)}
 touch {preparedStatePath}
 ";
                     SudoExecuteScript(setPreparedScript).EnsureSuccess();
+
+                    // Get the distribution's private IP address.
+
+                    GetAddress();
+
+                    // Ensure that OpenSSH binds only to the private IP
+
+                    ConfigureOpenSSH();
                 }
                 finally
                 {
                     User = orgUser;
-                }
-            }
-
-            // Execute [ip addr] in the distribution and parse the output to extract
-            // the distribution's IP address.  The output looks like somthing this:
-            //
-            //  1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
-            //      link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
-            //      inet 127.0.0.1/8 scope host lo
-            //         valid_lft forever preferred_lft forever
-            //      inet6 ::1/128 scope host
-            //         valid_lft forever preferred_lft forever
-            //  2: bond0: <BROADCAST,MULTICAST,MASTER> mtu 1500 qdisc noop state DOWN group default qlen 1000
-            //      link/ether 9e:3b:88:2a:08:55 brd ff:ff:ff:ff:ff:ff
-            //  3: dummy0: <BROADCAST,NOARP> mtu 1500 qdisc noop state DOWN group default qlen 1000
-            //      link/ether 46:cb:71:39:ad:4a brd ff:ff:ff:ff:ff:ff
-            //  4: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP group default qlen 1000
-            //      link/ether 00:15:5d:c8:ee:64 brd ff:ff:ff:ff:ff:ff
-            //      inet 172.25.250.51/20 brd 172.25.255.255 scope global eth0
-            //         valid_lft forever preferred_lft forever
-            //      inet6 fe80::215:5dff:fec8:ee64/64 scope link
-            //         valid_lft forever preferred_lft forever
-            //  5: sit0@NONE: <NOARP> mtu 1480 qdisc noop state DOWN group default qlen 1000
-            //      link/sit 0.0.0.0 brd 0.0.0.0
-            //
-            // We're going to parse the address from the [inet...] line for the [eth0] interface.
-
-            var response = Execute("ip", "address");
-
-            response.EnsureSuccess();
-
-            using (var reader = new StringReader(response.OutputText))
-            {
-                // Skip lines until we get to the [eth0] line.
-
-                while (true)
-                {
-                    var line = reader.ReadLine();
-
-                    if (line == null)
-                    {
-                        throw new KubeException("Cannot determine the WSL2 distribution address because the [eth0] interface is missing.");
-                    }
-
-                    if (line.Contains(" eth0: "))
-                    {
-                        break;
-                    }
-                }
-
-                // Scan for the [inet] line and extract the IP address.
-
-                while (true)
-                {
-                    var line = reader.ReadLine();
-
-                    if (line == null || !line.StartsWith(" "))
-                    {
-                        throw new KubeException("Cannot determine the WSL2 distribution address because the [eth0] interface does not specify an [inet] address.");
-                    }
-
-                    line = line.Trim();
-
-                    if (line.StartsWith("inet "))
-                    {
-                        var fields = line.Split(new char[] { ' ', '/' }, StringSplitOptions.RemoveEmptyEntries);
-
-                        Address = fields[1];
-                        break;
-                    }
                 }
             }
 
