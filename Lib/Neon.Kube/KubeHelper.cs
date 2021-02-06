@@ -446,6 +446,18 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Determines whether a cluster hosting environment deploys to on-premise hypervisors.
+        /// </summary>
+        /// <param name="hostingEnvironment">The hosting environment.</param>
+        /// <returns><c>true</c> for on-premise environments.</returns>
+        public static bool IsOnPremiseHypervisorEnvironment(HostingEnvironment hostingEnvironment)
+        {
+            return hostingEnvironment == HostingEnvironment.HyperV ||
+                   hostingEnvironment == HostingEnvironment.HyperVLocal ||
+                   hostingEnvironment == HostingEnvironment.XenServer;
+        }
+
+        /// <summary>
         /// Returns the path the folder holding the user specific Kubernetes files.
         /// </summary>
         /// <param name="ignoreNeonToolContainerVar">
