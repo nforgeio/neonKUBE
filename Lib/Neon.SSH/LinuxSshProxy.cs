@@ -167,7 +167,7 @@ namespace Neon.SSH
         private const string Redacted = "!!SECRETS-REDACTED!!";
 
         // Path to the transient file on the Linux box whose presence indicates
-        // that the server is still rebooting.
+        // that the remote machine is still rebooting.
         private readonly string RebootStatusPath = $"{HostFolders.Tmpfs}/rebooting";
 
         private readonly object     syncLock   = new object();
@@ -186,8 +186,8 @@ namespace Neon.SSH
         /// <summary>
         /// Constructs a <see cref="LinuxSshProxy{TMetadata}"/>.
         /// </summary>
-        /// <param name="name">The display name for the server.</param>
-        /// <param name="address">The private cluster IP address for the server.</param>
+        /// <param name="name">The display name for the remote machine.</param>
+        /// <param name="address">The private cluster IP address for the remote machine.</param>
         /// <param name="credentials">The credentials to be used for establishing SSH connections.</param>
         /// <param name="port">Optionally overrides the standard SSH port (22).</param>
         /// <param name="logWriter">The optional <see cref="TextWriter"/> where operation logs will be written.</param>
@@ -223,7 +223,7 @@ namespace Neon.SSH
         }
 
         /// <summary>
-        /// Releases all associated resources (e.g. any open server connections).
+        /// Releases all associated resources (e.g. any open remote machine connections).
         /// </summary>
         public void Dispose()
         {
@@ -231,7 +231,7 @@ namespace Neon.SSH
         }
 
         /// <summary>
-        /// Releases all associated resources (e.g. any open server connections).
+        /// Releases all associated resources (e.g. any open remote machine connections).
         /// </summary>
         /// <param name="disposing">Pass <c>true</c> if we're disposing, <c>false</c> if we're finalizing.</param>
         protected virtual void Dispose(bool disposing)
@@ -368,7 +368,7 @@ namespace Neon.SSH
         }
 
         /// <summary>
-        /// Closes any open connections to the Linux server but leaves open the
+        /// Closes any open connections to the Linux remote machine but leaves open the
         /// opportunity to reconnect later.
         /// </summary>
         /// <remarks>
@@ -378,7 +378,7 @@ namespace Neon.SSH
         /// </note>
         /// <para>
         /// This command is useful situations where the client application may temporarily
-        /// lose contact with the server if for example, when it is rebooted or the network
+        /// lose contact with the remote machine if for example, when it is rebooted or the network
         /// configuration changes.
         /// </para>
         /// </remarks>
@@ -471,14 +471,14 @@ namespace Neon.SSH
         }
 
         /// <summary>
-        /// Returns the display name for the server.
+        /// Returns the display name for the remote machine.
         /// </summary>
         public string Name { get; private set; }
 
         /// <summary>
-        /// Returns the cluster private IP address to used for connecting to the server.
+        /// The cluster private IP address to used for connecting to the remote machine.
         /// </summary>
-        public IPAddress Address { get; private set; }
+        public IPAddress Address { get; set; }
 
         /// <summary>
         /// The SSH port.  This defaults to <b>22</b>.
@@ -512,7 +512,7 @@ namespace Neon.SSH
         public RunOptions DefaultRunOptions { get; set; } = RunOptions.None;
 
         /// <summary>
-        /// The PATH to use on the remote server when executing commands in the
+        /// The PATH to use on the remote machine when executing commands in the
         /// session or <c>null</c>/empty to run commands without a path.  This
         /// defaults to the standard Linux path.
         /// </summary>
@@ -556,14 +556,14 @@ namespace Neon.SSH
         }
 
         /// <summary>
-        /// The current server status.
+        /// The current remote machine status.
         /// </summary>
         /// <remarks>
         /// <para>
         /// This property is intended to be used by management tools to indicate the state
-        /// of the server for UX purposes.  This property will be set by some methods such
+        /// of the remote machine for UX purposes.  This property will be set by some methods such
         /// as <see cref="WaitForBoot"/> but can also be set explicitly by tools when they
-        /// have an operation in progress on the server.
+        /// have an operation in progress on the remote machine.
         /// </para>
         /// <note>
         /// This will return <b>*** FAULTED ***</b> if the <see cref="IsFaulted"/>=<c>true</c>.
@@ -620,11 +620,11 @@ namespace Neon.SSH
         }
 
         /// <summary>
-        /// Indicates that the server has completed or has failed the current set of operations.
+        /// Indicates that the remote machine has completed or has failed the current set of operations.
         /// </summary>
         /// <remarks>
         /// <note>
-        /// This will always return <c>false</c> if the server has faulted (<see cref="IsFaulted"/>=<c>true</c>).
+        /// This will always return <c>false</c> if the remote machine has faulted (<see cref="IsFaulted"/>=<c>true</c>).
         /// </note>
         /// </remarks>
         public bool IsReady
@@ -634,7 +634,7 @@ namespace Neon.SSH
         }
 
         /// <summary>
-        /// Indicates that the server is in a faulted state because one or more operations
+        /// Indicates that the remote machine is in a faulted state because one or more operations
         /// have failed.
         /// </summary>
         public bool IsFaulted { get; private set; }
@@ -760,7 +760,7 @@ rm {HostFolders.Home(Username)}/askpass
         }
 
         /// <summary>
-        /// Shutdown the server.
+        /// Shutdown the remote machine.
         /// </summary>
         public void Shutdown()
         {
@@ -784,29 +784,29 @@ rm {HostFolders.Home(Username)}/askpass
                 scpClient = null;
             }
 
-            // Give the server a chance to stop.
+            // Give the remote machine a chance to stop.
 
             Thread.Sleep(TimeSpan.FromSeconds(10));
             Status = "stopped";
         }
 
         /// <summary>
-        /// Reboot the server.
+        /// Reboot the remote machine.
         /// </summary>
-        /// <param name="wait">Optionally wait for the server to reboot (defaults to <c>true</c>).</param>
+        /// <param name="wait">Optionally wait for the remote machine to reboot (defaults to <c>true</c>).</param>
         public void Reboot(bool wait = true)
         {
             Status = "restarting...";
 
-            // We need to be very sure that the remote server has actually 
+            // We need to be very sure that the remote machine has actually 
             // rebooted and that we're not logging into the same session.
             // Originally, I just waited 10 seconds and assumed that the
             // SSH server (and maybe Linux) would have shutdown by then
             // so all I'd need to do is wait to reconnect.
             //
             // This was fragile and I have encountered situations where
-            // SSH server was still running and the server hadn't restarted
-            // after 10 seconds so I essentially reconnected to the server
+            // SSH server was still running and the remote machine hadn't restarted
+            // after 10 seconds so I essentially reconnected to the remote machine
             // with the reboot still pending.
             //
             // To ensure we avoid this, I'm going to do the following:
@@ -815,7 +815,7 @@ rm {HostFolders.Home(Username)}/askpass
             //         Since [/dev/shm] is a TMPFS, this file will no longer
             //         exist after a reboot.
             //
-            //      2. Command the server to reboot.
+            //      2. Command the remote machine to reboot.
             //
             //      3. Loop and attempt to reconnect.  After reconnecting,
             //         verify that the [/dev/shm/neonssh/rebooting] file is no
@@ -861,7 +861,7 @@ rm {HostFolders.Home(Username)}/askpass
                 scpClient = null;
             }
 
-            // Give the server a chance to restart.
+            // Give the remote machine a chance to restart.
 
             Thread.Sleep(TimeSpan.FromSeconds(10));
 
@@ -976,7 +976,7 @@ rm {HostFolders.Home(Username)}/askpass
         }
 
         /// <summary>
-        /// Establishes a connection to the server, disconnecting first if the proxy is already connected.
+        /// Establishes a connection to the remote machine, disconnecting first if the proxy is already connected.
         /// </summary>
         /// <param name="timeout">Maximum amount of time to wait for a connection (defaults to <see cref="ConnectTimeout"/>).</param>
         /// <exception cref="SshProxyException">
@@ -1014,7 +1014,7 @@ rm {HostFolders.Home(Username)}/askpass
         }
 
         /// <summary>
-        /// Waits for the server to boot by continuously attempting to establish an SSH session.
+        /// Waits for the remote machine to boot by continuously attempting to establish an SSH session.
         /// </summary>
         /// <param name="timeout">The operation timeout (defaults to <b>10 minutes</b>).</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
@@ -1029,7 +1029,7 @@ rm {HostFolders.Home(Username)}/askpass
         /// can use TLS certificates.
         /// </note>
         /// <para>
-        /// The method will attempt to connect to the server every 10 seconds up to the specified
+        /// The method will attempt to connect to the remote machine every 10 seconds up to the specified
         /// timeout.  If it is unable to connect during this time, the exception thrown by the
         /// SSH client will be rethrown.
         /// </para>
@@ -1376,17 +1376,17 @@ rm {HostFolders.Home(Username)}/askpass
         }
 
         /// <summary>
-        /// Returns the path to the user's home folder on the server.
+        /// Returns the path to the user's home folder on the remote machine.
         /// </summary>
         public string HomeFolderPath => HostFolders.Home(Username);
 
         /// <summary>
-        /// Returns the path to the user's download folder on the server.
+        /// Returns the path to the user's download folder on the remote machine.
         /// </summary>
         public string DownloadFolderPath => HostFolders.Download(Username);
 
         /// <summary>
-        /// Returns the path to the user's upload folder on the server.
+        /// Returns the path to the user's upload folder on the remote machine.
         /// </summary>
         public string UploadFolderPath => HostFolders.Upload(Username);
 

@@ -55,7 +55,7 @@ namespace Neon.Kube
         /// <summary>
         /// The schema version for this state file.
         /// </summary>
-        [JsonProperty(PropertyName = "Schema", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "Schema", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.Populate)]
         [YamlMember(Alias = "schema", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Schema { get; set; } = "v1";
@@ -63,7 +63,7 @@ namespace Neon.Kube
         /// <summary>
         /// The globally unique client installation ID.
         /// </summary>
-        [JsonProperty(PropertyName = "InstallationId", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "InstallationId", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.Populate)]
         [YamlMember(Alias = "installationId", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string InstallationId { get; set; }
@@ -72,7 +72,7 @@ namespace Neon.Kube
         /// The interval the desktop application uses to poll for changes to the Kubernetes
         /// cluster configuration state.  This defaults to <b>1 second</b>.
         /// </summary>
-        [JsonProperty(PropertyName = "StatusPollSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "StatusPollSeconds", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.Populate)]
         [YamlMember(Alias = "statusPollSeconds", ApplyNamingConventions = false)]
         [DefaultValue(1)]
         public int StatusPollSeconds { get; set; } = 1;
@@ -82,7 +82,7 @@ namespace Neon.Kube
         /// the desktop service providing integration for the <b>neon-cli</b>
         /// command line tool.  This defaults to <see cref="KubeConst.DesktopServicePort"/>.
         /// </summary>
-        [JsonProperty(PropertyName = "DesktopServicePort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "DesktopServicePort", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.Populate)]
         [YamlMember(Alias = "desktopServicePort", ApplyNamingConventions = false)]
         [DefaultValue(KubeConst.DesktopServicePort)]
         public int DesktopServicePort { get; set; } = KubeConst.DesktopServicePort;
@@ -92,7 +92,7 @@ namespace Neon.Kube
         /// and forward traffic to the Kubernetes API server.  This 
         /// defaults to <see cref="KubeConst.KubectlProxyPort"/>.
         /// </summary>
-        [JsonProperty(PropertyName = "KubectlProxyPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "KubectlProxyPort", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.Populate)]
         [YamlMember(Alias = "kubectlProxyPort", ApplyNamingConventions = false)]
         [DefaultValue(KubeConst.KubectlProxyPort)]
         public int KubectlProxyPort { get; set; } = KubeConst.KubectlProxyPort;
@@ -102,7 +102,7 @@ namespace Neon.Kube
         /// the Kubernetes dashboard for the current cluster.  This 
         /// defaults to <see cref="KubeConst.KubeDashboardProxyPort"/>.
         /// </summary>
-        [JsonProperty(PropertyName = "KubeDashboardProxyPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "KubeDashboardProxyPort", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.Populate)]
         [YamlMember(Alias = "kubeDashboardProxyPort", ApplyNamingConventions = false)]
         [DefaultValue(KubeConst.KubeDashboardProxyPort)]
         public int KubeDashboardProxyPort { get; set; } = KubeConst.KubeDashboardProxyPort;
@@ -112,7 +112,7 @@ namespace Neon.Kube
         /// the Kibanarnetes dashboard for the current cluster.  This 
         /// defaults to <see cref="KubeConst.KibanaDashboardProxyPort"/>.
         /// </summary>
-        [JsonProperty(PropertyName = "KibanaDashboardProxyPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "KibanaDashboardProxyPort", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.Populate)]
         [YamlMember(Alias = "KibanaDashboardProxyPort", ApplyNamingConventions = false)]
         [DefaultValue(KubeConst.KibanaDashboardProxyPort)]
         public int KibanaDashboardProxyPort { get; set; } = KubeConst.KibanaDashboardProxyPort;
@@ -122,7 +122,7 @@ namespace Neon.Kube
         /// the Prometheusrnetes dashboard for the current cluster.  This 
         /// defaults to <see cref="KubeConst.PrometheusDashboardProxyPort"/>.
         /// </summary>
-        [JsonProperty(PropertyName = "PrometheusDashboardProxyPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "PrometheusDashboardProxyPort", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.Populate)]
         [YamlMember(Alias = "PrometheusDashboardProxyPort", ApplyNamingConventions = false)]
         [DefaultValue(KubeConst.PrometheusDashboardProxyPort)]
         public int PrometheusDashboardProxyPort { get; set; } = KubeConst.PrometheusDashboardProxyPort;
@@ -132,7 +132,7 @@ namespace Neon.Kube
         /// the Kialirnetes dashboard for the current cluster.  This 
         /// defaults to <see cref="KubeConst.KialiDashboardProxyPort"/>.
         /// </summary>
-        [JsonProperty(PropertyName = "KialiDashboardProxyPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "KialiDashboardProxyPort", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.Populate)]
         [YamlMember(Alias = "KialiDashboardProxyPort", ApplyNamingConventions = false)]
         [DefaultValue(KubeConst.KialiDashboardProxyPort)]
         public int KialiDashboardProxyPort { get; set; } = KubeConst.KialiDashboardProxyPort;
@@ -142,7 +142,7 @@ namespace Neon.Kube
         /// the Grafanarnetes dashboard for the current cluster.  This 
         /// defaults to <see cref="KubeConst.GrafanaDashboardProxyPort"/>.
         /// </summary>
-        [JsonProperty(PropertyName = "GrafanaDashboardProxyPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "GrafanaDashboardProxyPort", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.Populate)]
         [YamlMember(Alias = "GrafanaDashboardProxyPort", ApplyNamingConventions = false)]
         [DefaultValue(KubeConst.GrafanaDashboardProxyPort)]
         public int GrafanaDashboardProxyPort { get; set; } = KubeConst.GrafanaDashboardProxyPort;

@@ -102,6 +102,7 @@ namespace Neon.Kube
                 GoogleHostingManager.Load();
                 HyperVHostingManager.Load();
                 HyperVLocalHostingManager.Load();
+                Wsl2HostingManager.Load();
                 XenServerHostingManager.Load();
 
                 // We're going to reflect all loaded assemblies for classes that implement

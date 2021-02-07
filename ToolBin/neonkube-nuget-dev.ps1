@@ -92,7 +92,10 @@ function SetVersion
     $orgVersion     = $match.Groups[1].Value
     $tmpProjectFile = $orgProjectFile.Replace("<Version>$orgVersion</Version>", "<Version>$version</Version>")
 
-    Copy-Item "$projectPath" "$projectPath.bak"
+    if (!(Test-Path "$projectPath.bak"))
+    {
+        Copy-Item "$projectPath" "$projectPath.bak"
+    }
     
     $tmpProjectFile | Out-File -FilePath "$projectPath" -Encoding utf8
 }
@@ -293,4 +296,3 @@ RestoreVersion Neon.Kube.Xunit
 ""
 "** Package publication completed"
 ""
-pause

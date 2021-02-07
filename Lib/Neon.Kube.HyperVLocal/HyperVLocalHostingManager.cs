@@ -113,10 +113,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override bool IsProvisionNOP
-        {
-            get { return false; }
-        }
+        public override bool IsProvisionNOP => false;
 
         /// <inheritdoc/>
         public override HostingEnvironment HostingEnvironment => HostingEnvironment.HyperVLocal;
@@ -314,7 +311,7 @@ namespace Neon.Kube
             {
                 var nodeImageUri = KubeDownloads.GetNodeImageUri(this.HostingEnvironment);
 
-                setupController.SetOperationStatus($"Download node image VHDX: [{nodeImageUri}]");
+                setupController.SetGlobalStepStatus($"Download node image VHDX: [{nodeImageUri}]");
 
                 Task.Run(
                     async () =>
@@ -359,11 +356,11 @@ namespace Neon.Kube
                                             {
                                                 var percentComplete = (int)(((double)fileStream.Length / (double)contentLength) * 100.0);
 
-                                                setupController.SetOperationStatus($"Downloading VHDX: [{percentComplete}%] [{nodeImageUri}]");
+                                                setupController.SetGlobalStepStatus($"Downloading VHDX: [{percentComplete}%] [{nodeImageUri}]");
                                             }
                                             else
                                             {
-                                                setupController.SetOperationStatus($"Downloading VHDX: [{fileStream.Length} bytes] [{nodeImageUri}]");
+                                                setupController.SetGlobalStepStatus($"Downloading VHDX: [{fileStream.Length} bytes] [{nodeImageUri}]");
                                             }
                                         }
                                     }
@@ -385,7 +382,7 @@ namespace Neon.Kube
 
                     }).Wait();
 
-                setupController.SetOperationStatus();
+                setupController.SetGlobalStepStatus();
             }
 
             // Handle any necessary Hyper-V initialization.
@@ -395,7 +392,7 @@ namespace Neon.Kube
                 // We're going to create an external Hyper-V switch if there
                 // isn't already an external switch.
 
-                setupController.SetOperationStatus("Scanning network adapters");
+                setupController.SetGlobalStepStatus("Scanning network adapters");
 
                 var switches       = hyperv.ListVmSwitches();
                 var externalSwitch = switches.FirstOrDefault(s => s.Type == VirtualSwitchType.External);
@@ -413,12 +410,12 @@ namespace Neon.Kube
                 // taking care to issue a warning if any machines already exist 
                 // and we're not doing [force] mode.
 
-                setupController.SetOperationStatus("Scanning virtual machines");
+                setupController.SetGlobalStepStatus("Scanning virtual machines");
 
                 var existingMachines = hyperv.ListVms();
                 var conflicts        = string.Empty;
 
-                setupController.SetOperationStatus("Stopping virtual machines");
+                setupController.SetGlobalStepStatus("Stopping virtual machines");
 
                 foreach (var machine in existingMachines)
                 {
@@ -444,7 +441,7 @@ namespace Neon.Kube
                     throw new HyperVException($"[{conflicts}] virtual machine(s) already exist.");
                 }
 
-                setupController.SetOperationStatus();
+                setupController.SetGlobalStepStatus();
             }
         }
 

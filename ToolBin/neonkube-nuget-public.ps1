@@ -154,4 +154,4 @@ Publish Neon.YugaByte               $libraryVersion
 ""
 "** Package publication completed"
 ""
-pause
+

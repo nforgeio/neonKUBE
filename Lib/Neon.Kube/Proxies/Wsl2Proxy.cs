@@ -198,6 +198,8 @@ namespace Neon.Kube
 
         private readonly string preparedStatePath = LinuxPath.Combine(KubeNodeFolders.State, "prepare", "wsl2");
 
+        private string cachedAddress = null;
+
         /// <summary>
         /// Constructs a proxy connected to a specific WSL2 distribution, starting the
         /// distribution by default of it's npot already running.
@@ -251,7 +253,18 @@ namespace Neon.Kube
         /// This returns <c>null</c> when the distribution hasn't been started.
         /// </note>
         /// </summary>
-        public string Address { get; private set; }
+        public string Address
+        {
+            get
+            {
+                if (cachedAddress != null)
+                {
+                    return cachedAddress;
+                }
+
+                return cachedAddress = GetAddress();
+            }
+        }
 
         /// <summary>
         /// Determines whether the distribution is running.
@@ -262,8 +275,8 @@ namespace Neon.Kube
         /// Indicates whether the distribution has already been prepared for neonKUBE.
         /// </summary>
         public bool IsPrepared
-        { 
-            get => SudoExecute("ls", preparedStatePath).ExitCode == 0;
+        {
+            get => File.Exists(ToWindowsPath(preparedStatePath));
 
             set
             {
@@ -273,52 +286,206 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Configures OpenSSH server to bind to the distribution's current private
+        /// IPv4 address by adding a small config file at <b>[/etc/sshd_config/listen.conf]</b>.
+        /// This is called whenever a distribution is started.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if the distribution isn't running.</exception>
+        /// <remarks>
+        /// <para>
+        /// This is required because OpenSSH server listens on [0.0.0.0:22] by default.  
+        /// This will result in a port conflict when the Windows host machine is also 
+        /// listening on port 22 or if an other WSL2 distro is listening there.
+        /// </para>
+        /// <para>
+        /// To handle this, we need to bind OpenSSH to the distro's private [172.x.x.x] 
+        /// address but this is complicated because this address may change across
+        /// reboots.  We're going to manage this by via a [/etc/sshd_config/listen.conf]
+        /// file that specifies IPv4 as the address family and the current distro
+        /// IP address as the listing address.
+        /// </para>
+        /// </remarks>
+        private void ConfigureOpenSshInterface()
+        {
+            var listenConf =
+$@"# This file is regenerated whenever the WSL2 distribution is started by neonDESKTOP.
+#
+# This is required because OpenSSH server listens on [0.0.0.0:22] by default,  
+# which will result in a port conflict when the Windows host machine is also 
+# listening on port 22 or if an other WSL2 distro is listening there.
+#
+# To handle this, we need to bind OpenSSH to the distro's private [172.x.x.x] 
+# address but this is complicated because this address may change across
+# reboots.  We're going to manage this by via a [/etc/ssh/sshd_config.d/listen.conf]
+# file that specifies IPv4 as the address family and the current distro
+# IP address as the listing address.
+
+# Restrict to listening on IPv4 addresses to prevent conflicts.
+
+AddressFamily inet
+
+# Listen on the WSL distribution's private IP address.  This will be
+# updated whenever the distribution is started.
+
+ListenAddress {this.Address}
+";
+            SudoExecute("mkdir", new object[] { "-p", "/etc/ssh/sshd_config.d" }).EnsureSuccess();
+            UploadFile("/etc/ssh/sshd_config.d/listen.conf", listenConf, owner: "root", permissions: "644");
+
+            // We need to restart OpenSSH so it'll pick up the change if we're 
+            // not still running under MSFT's [init] process.
+
+            var response = SudoExecute("ps", new object[] { "-eF" }).EnsureSuccess();
+
+            if (!response.OutputText.Contains("/init"))
+            {
+                SudoExecute("systemctl", new object[] { "restart", "ssh" }).EnsureSuccess();
+            }
+        }
+
+        /// <summary>
+        /// Runs the <b>ip address</b> to determing the distribution's private IP address.
+        /// </summary>
+        /// <returns>The distribution address.</returns>
+        private string GetAddress()
+        {
+            // Execute [ip address] in the distribution and parse the output to extract
+            // the distribution's IP address.  The output looks like somthing this:
+            //
+            //  1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+            //      link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+            //      inet 127.0.0.1/8 scope host lo
+            //         valid_lft forever preferred_lft forever
+            //      inet6 ::1/128 scope host
+            //         valid_lft forever preferred_lft forever
+            //  2: bond0: <BROADCAST,MULTICAST,MASTER> mtu 1500 qdisc noop state DOWN group default qlen 1000
+            //      link/ether 9e:3b:88:2a:08:55 brd ff:ff:ff:ff:ff:ff
+            //  3: dummy0: <BROADCAST,NOARP> mtu 1500 qdisc noop state DOWN group default qlen 1000
+            //      link/ether 46:cb:71:39:ad:4a brd ff:ff:ff:ff:ff:ff
+            //  4: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP group default qlen 1000
+            //      link/ether 00:15:5d:c8:ee:64 brd ff:ff:ff:ff:ff:ff
+            //      inet 172.25.250.51/20 brd 172.25.255.255 scope global eth0
+            //         valid_lft forever preferred_lft forever
+            //      inet6 fe80::215:5dff:fec8:ee64/64 scope link
+            //         valid_lft forever preferred_lft forever
+            //  5: sit0@NONE: <NOARP> mtu 1480 qdisc noop state DOWN group default qlen 1000
+            //      link/sit 0.0.0.0 brd 0.0.0.0
+            //
+            // We're going to parse the address from the [inet...] line for the [eth0] interface.
+
+            var response = Execute("ip", "address");
+
+            response.EnsureSuccess();
+
+            using (var reader = new StringReader(response.OutputText))
+            {
+                // Skip lines until we get to the [eth0] line.
+
+                while (true)
+                {
+                    var line = reader.ReadLine();
+
+                    if (line == null)
+                    {
+                        throw new KubeException("Cannot determine the WSL2 distribution address because the [eth0] interface is missing.");
+                    }
+
+                    if (line.Contains(" eth0: "))
+                    {
+                        break;
+                    }
+                }
+
+                // Scan for the [inet] line and extract the IP address.
+
+                while (true)
+                {
+                    var line = reader.ReadLine();
+
+                    if (line == null || !line.StartsWith(" "))
+                    {
+                        throw new KubeException("Cannot determine the WSL2 distribution address because the [eth0] interface does not specify an [inet] address.");
+                    }
+
+                    line = line.Trim();
+
+                    if (line.StartsWith("inet "))
+                    {
+                        var fields = line.Split(new char[] { ' ', '/' }, StringSplitOptions.RemoveEmptyEntries);
+
+                        return fields[1];
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// <para>
         /// Connects to a distribution, starting it if it's not already running.
         /// This also performs some initialization if required, including disabling
         /// SUDO password prompts. 
         /// </para>
-        /// <note>
-        /// You need to call this for <see cref="Address"/> to be initialized if
-        /// you disabled start when constructing the instance even if the
-        /// distribution is already running.
-        /// </note>
         /// </summary>
-        public void Start()
+        /// <returns>The IP address assigned to the distribution.</returns>
+        public string Start()
         {
-            // $todo(jefflill): 
-            //
-            // This needs to launch a lifcycle stub app managing the distro?
-            // For now, we're just going to have Bash start a long running sleep.
-
-            NeonHelper.ExecuteCapture("wsl.exe",
-                new object[]
-                {
-                    "--distribution", Name,
-                    "--",
-                    "bash", "-c", "sleep 1000000 &"
-
-                }).EnsureSuccess();
-
-            // We need to disable SUDO password prompts if we haven't already done
-            // so for this distribution.  We're going to accomplish this by creating
-            // a temporary script file on the Windows host side and and then executing
-            // it in the distribution as root.
-
-            // We need to do this as [root].
-
-            var orgUser = User;
-
-            User = "root";
-
-            try
+            if (IsPrepared)
             {
-                if (!IsPrepared)
+                // Ensure that OpenSSH binds only to the private IP
+
+                ConfigureOpenSshInterface();
+
+                // The distro has already been prepared, so we can simply start
+                // systemd in its own namespace to get things rolling, if it is
+                // configured.  Note that this cannot be done as [root].
+
+                if (File.Exists(ToWindowsPath("/usr/sbin/start-systemd-namespace")))
+                {
+                    Covenant.Assert(User != "root", "WSL2 distro prepared for [systemd] cannot be started as [root].");
+
+                    NeonHelper.ExecuteCapture("wsl.exe",
+                        new object[]
+                        {
+                            "--distribution", Name,
+                            "--user", User,
+                            "--",
+                            "source", "/usr/sbin/start-systemd-namespace"
+
+                        }).EnsureSuccess();
+                }
+            }
+            else
+            {
+                // Launch a sleep job that will run for a day to keep the
+                // distro running long enough for [neon-image] to configure
+                // systemd, completing the distro preparation.
+
+                NeonHelper.ExecuteCapture("wsl.exe",
+                    new object[]
+                    {
+                        "--distribution", Name,
+                        "--",
+                        "sleep", (int)TimeSpan.FromDays(1).TotalSeconds, "&"
+
+                    }).EnsureSuccess();
+
+                // We need to disable SUDO password prompts if we haven't already done
+                // so for this distribution.  We're going to accomplish this by creating
+                // a temporary script file on the Windows host side and and then executing
+                // it in the distribution as root.
+
+                // We need to do this as [root].
+
+                var orgUser = User;
+
+                User = "root";
+
+                try
                 {
                     using (var tempFile = new TempFile())
                     {
                         var homeFolder = HostFolders.Home(KubeConst.SysAdminUser);
-                        var script     =
+                        var script =
 $@"
 cat <<EOF > {homeFolder}/sudo-disable-prompt
 #!/bin/bash
@@ -358,82 +525,63 @@ mkdir -p {LinuxPath.GetDirectoryName(preparedStatePath)}
 touch {preparedStatePath}
 ";
                     SudoExecuteScript(setPreparedScript).EnsureSuccess();
+
+                    // We need to remove SNAP before we configure SYSYEMD.
+
+                    var removeSnapPath   = LinuxPath.Combine(KubeNodeFolders.State, "base", "remove-snap");
+                    var removeSnapScript =
+$@"
+set -euo pipefail
+
+apt-get purge snapd -yq
+
+# Touch the [base/remove-snap] idempotent action ID for this operation.  
+# This must match the action ID used within [NodeSshProxy.BaseRemoveSnap()].
+
+mkdir -p {LinuxPath.GetDirectoryName(removeSnapPath)}
+touch {removeSnapPath}
+";
+                    SudoExecuteScript(removeSnapScript).EnsureSuccess();
+
+                    //---------------------------------------------------------
+                    // OpenSSH needs some additional configuration.
+
+                    // The distribution doesn't come with any host keys installed, so create them.
+
+                    SudoExecute("ssh-keygen", new object[] { "-A" }).EnsureSuccess();
+
+                    // Ensure that OpenSSH binds only to the private IP.
+
+                    ConfigureOpenSshInterface();
+
+                    // Upload our standard OpenSSH configuration.
+
+                    UploadFile("/etc/ssh/sshd_config", KubeHelper.OpenSshConfig, "root", "644");
+
+                    // We're going to restart SSH and ignore an error we don't care about.
+
+                    var response = SudoExecute("systemctl", "restart", "ssh");
+
+                    if (response.ExitCode != 0 && !response.ErrorText.Contains("your 131072x1 screen size is bogus"))
+                    {
+                        //response.EnsureSuccess();
+                    }
+
+                    // Ensure that OpenSSH binds only to the private IP.
+
+                    ConfigureOpenSshInterface();
+
+                    // The distribution is prepared now.
+
+                    IsPrepared = true;
                 }
-
-                // Execute [ip addr] in the distribution and parse the output to extract
-                // the distribution's IP address.  The output looks like somthing this:
-                //
-                //  1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
-                //      link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
-                //      inet 127.0.0.1/8 scope host lo
-                //         valid_lft forever preferred_lft forever
-                //      inet6 ::1/128 scope host
-                //         valid_lft forever preferred_lft forever
-                //  2: bond0: <BROADCAST,MULTICAST,MASTER> mtu 1500 qdisc noop state DOWN group default qlen 1000
-                //      link/ether 9e:3b:88:2a:08:55 brd ff:ff:ff:ff:ff:ff
-                //  3: dummy0: <BROADCAST,NOARP> mtu 1500 qdisc noop state DOWN group default qlen 1000
-                //      link/ether 46:cb:71:39:ad:4a brd ff:ff:ff:ff:ff:ff
-                //  4: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP group default qlen 1000
-                //      link/ether 00:15:5d:c8:ee:64 brd ff:ff:ff:ff:ff:ff
-                //      inet 172.25.250.51/20 brd 172.25.255.255 scope global eth0
-                //         valid_lft forever preferred_lft forever
-                //      inet6 fe80::215:5dff:fec8:ee64/64 scope link
-                //         valid_lft forever preferred_lft forever
-                //  5: sit0@NONE: <NOARP> mtu 1480 qdisc noop state DOWN group default qlen 1000
-                //      link/sit 0.0.0.0 brd 0.0.0.0
-                //
-                // We're going to parse the address from the [inet...] line for the [eth0] interface.
-
-                var response = Execute("ip", "address");
-
-                response.EnsureSuccess();
-
-                using (var reader = new StringReader(response.OutputText))
+                finally
                 {
-                    // Skip lines until we get to the [eth0] line.
-
-                    while (true)
-                    {
-                        var line = reader.ReadLine();
-
-                        if (line == null)
-                        {
-                            throw new KubeException("Cannot determine the WSL2 distribution address because the [eth0] interface is missing.");
-                        }
-
-                        if (line.Contains(" eth0: "))
-                        {
-                            break;
-                        }
-                    }
-
-                    // Scan for the [inet] line and extract the IP address.
-
-                    while (true)
-                    {
-                        var line = reader.ReadLine();
-
-                        if (line == null || !line.StartsWith(" "))
-                        {
-                            throw new KubeException("Cannot determine the WSL2 distribution address because the [eth0] interface does not specify an [inet] address.");
-                        }
-
-                        line = line.Trim();
-
-                        if (line.StartsWith("inet "))
-                        {
-                            var fields = line.Split(new char[] { ' ', '/' }, StringSplitOptions.RemoveEmptyEntries);
-
-                            Address = fields[1];
-                            break;
-                        }
-                    }
+                    User = orgUser;
                 }
             }
-            finally
-            {
-                User = orgUser;
-            }
+
+            return this.Address;
         }
 
         /// <summary>

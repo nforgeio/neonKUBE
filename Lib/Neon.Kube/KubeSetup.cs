@@ -3090,5 +3090,30 @@ done
 
             await Task.CompletedTask;
         }
+
+        /// <summary>
+        /// Returns the built-in cluster definition (as text) for a cluster provisioned on WSL2.
+        /// </summary>
+        /// <returns>The cluster definition text.</returns>
+        public static string GetWsl2ClusterDefintion()
+        {
+            var definition =
+@"
+name: wsl2
+datacenter: wsl2
+environment: development
+timeSources:
+- pool.ntp.org
+allowUnitTesting: true
+kubernetes:
+  allowPodsOnMasters: true
+hosting:
+  environment: wsl2
+nodes:
+  master-0:
+    role: master
+";
+            return definition;
+        }
     }
 }

@@ -59,8 +59,9 @@ namespace Neon.Common
         /// <summary>
         /// Ensure that the command returned a zero exit code.
         /// </summary>
+        /// <returns>The response for fluent-style chaining.</returns>
         /// <exception cref="ExecuteException">Thrown if the exit code isn't zero.</exception>
-        public void EnsureSuccess()
+        public ExecuteResponse EnsureSuccess()
         {
             if (ExitCode != 0)
             {
@@ -76,6 +77,8 @@ namespace Neon.Common
                     throw new ExecuteException(ExitCode, OutputText);
                 }
             }
+
+            return this;
         }
     }
 }

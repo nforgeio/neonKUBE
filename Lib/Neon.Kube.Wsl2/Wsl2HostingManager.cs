@@ -36,12 +36,14 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using YamlDotNet.Serialization;
 
+using Neon.Collections;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
 using Neon.Net;
 using Neon.SSH;
 using Neon.Time;
+using Neon.Windows;
 
 namespace Neon.Kube
 {
@@ -49,7 +51,7 @@ namespace Neon.Kube
     /// Manages cluster provisioning on the local workstation using Microsoft Hyper-V virtual machines.
     /// This is typically used for development and test purposes.
     /// </summary>
-    [HostingProvider(HostingEnvironment.HyperVLocal)]
+    [HostingProvider(HostingEnvironment.Wsl2)]
     public class Wsl2HostingManager : HostingManager
     {
         //---------------------------------------------------------------------
@@ -68,6 +70,7 @@ namespace Neon.Kube
         // Instance members.
 
         private ClusterProxy    cluster;
+        private string          distroAddress;
 
         /// <summary>
         /// Creates an instance that is only capable of validating the hosting
@@ -105,13 +108,20 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override bool IsProvisionNOP
-        {
-            get { return false; }
-        }
+        public override bool IsProvisionNOP => false;
 
         /// <inheritdoc/>
         public override HostingEnvironment HostingEnvironment => HostingEnvironment.Wsl2;
+
+        // NOTE:
+        //
+        // We're going to leave the default password for WSL2 distros to make them
+        // easier for users to manage.  This isn't a security gap because the OpenSSH
+        // service will only be reachable from the Windows host machine via the internal
+        // [127.x.x.x] address.  This will not be reachable from the LAN.
+
+        /// <inheritdoc/>
+        public override bool GenerateSecurePassword => false;
 
         /// <inheritdoc/>
         public override void Validate(ClusterDefinition clusterDefinition)
@@ -126,9 +136,133 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secureSshPassword), nameof(secureSshPassword));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(orgSshPassword), nameof(orgSshPassword));
             Covenant.Assert(cluster != null, $"[{nameof(Wsl2HostingManager)}] was created with the wrong constructor.");
+            Covenant.Assert(cluster.Definition.Nodes.Count() == 1, "WSL2 clusters may only include a single node.");
+            Covenant.Assert(Wsl2Proxy.IsWsl2Enabled, "WSL2 must be enabled before a WSL cluster can be provisioned.");
 
-            await Task.CompletedTask;
-            throw new NotImplementedException();
+            // These define where the node image is downloaded from as well as where it 
+            // will downloaded on the local workstation.
+
+            var nodeImageUri = $"https://neonkube.s3-us-west-2.amazonaws.com/images/wsl2/node/ubuntu-20.04.{KubeVersions.NeonKubeVersion}.tar";
+            var nodeImagePath = Path.Combine(KubeHelper.NodeImageFolder, $"neonkube.{KubeVersions.NeonKubeVersion}.tar");
+
+            // We need to ensure that the cluster has at least one ingress node.
+
+            KubeHelper.EnsureIngressNodes(cluster.Definition);
+
+            // We need to ensure that at least one node will host the OpenEBS
+            // cStor block device.
+
+            KubeHelper.EnsureOpenEbsNodes(cluster.Definition);
+
+            // Initialize and run the [SetupController].
+
+            var operation       = $"Provisioning [{cluster.Definition.Name}] on WSL2";
+            var setupController = new SetupController<NodeDefinition>(operation, cluster.Nodes)
+            {
+                ShowStatus     = this.ShowStatus,
+                ShowNodeStatus = true,
+                MaxParallel    = int.MaxValue       // There's no reason to constrain this
+            };
+
+            setupController.AddGlobalStep($"Download neonDESKTOP/WSL2 distro",
+                async state =>
+                {
+                    if (!File.Exists(nodeImagePath))
+                    {
+                        setupController.SetGlobalStepStatus($"Downloading: {nodeImageUri}");
+
+                        try
+                        {
+                            using (var httpClient = new HttpClient())
+                            {
+                                var response = await httpClient.GetToFileSafeAsync(nodeImageUri, nodeImagePath);
+                                var contentEncoding = response.Content.Headers.ContentEncoding.SingleOrDefault();
+
+                                if (string.IsNullOrEmpty(contentEncoding) || !contentEncoding.Equals("gzip", StringComparison.InvariantCultureIgnoreCase))
+                                {
+                                    throw new KubeException($"[{nodeImageUri}] has unsupported [Content-Encoding={contentEncoding}].  Expecting [gzip].");
+                                }
+                            }
+                        }
+                        catch
+                        {
+                            // Delete partially downloaded files.
+
+                            NeonHelper.DeleteFile(nodeImagePath);
+                            throw;
+                        }
+                    }
+                    else
+                    {
+                        setupController.SetGlobalStepStatus($"[{nodeImageUri}] already cached");
+                    }
+                });
+
+            setupController.AddGlobalStep($"Create WSL2 [{KubeConst.Wsl2MainDistroName}] distro",
+                state =>
+                {
+                    if (Wsl2Proxy.Exists(KubeConst.Wsl2MainDistroName))
+                    {
+                        Wsl2Proxy.Unregister(KubeConst.Wsl2MainDistroName);
+                    }
+
+                    using (var tempFile = new TempFile(suffix: ".wsl.tar"))
+                    {
+                        // WSL2 is not able to import the TAR file to a VHDX hosted in an encrypted
+                        // folder and the [~\.neonkube] folder is encrypted by default on Windows 10 Pro
+                        // for security.
+                        //
+                        // We're simply going to decrypt the [~\.neonkube\desktop] folder.
+
+                        NeonHelper.DecryptFile(KubeHelper.DesktopFolder);
+
+                        setupController.SetGlobalStepStatus("Decompressing WSL2 image");
+                        NeonHelper.GunzipFile(nodeImagePath, tempFile.Path);
+
+                        setupController.SetGlobalStepStatus("Importing WSL2 image");
+                        Wsl2Proxy.Import(KubeConst.Wsl2MainDistroName, tempFile.Path, KubeHelper.DesktopWsl2Folder);
+                    }
+
+                    setupController.SetGlobalStepStatus("Starting WSL2 image");
+
+                    var distro = new Wsl2Proxy(KubeConst.Wsl2MainDistroName, KubeConst.SysAdminUser);
+
+                    distroAddress = distro.Address;
+                });
+
+            setupController.AddNodeStep("Connect", 
+                (state, node) =>
+                {
+                    var connectTimeout = TimeSpan.FromSeconds(30);
+
+                    node.Address = IPAddress.Parse(distroAddress);
+                    node.WaitForBoot(timeout: connectTimeout);
+                });
+
+            setupController.AddNodeStep("credentials",
+                (state, node) =>
+                {
+                    // Update the node SSH proxies to use the secure SSH password.
+                    // Note that we're going to ignore "Password unchanged" errors.
+
+                    var response = node.RunCommand(CommandBundle.FromScript($"echo \"{KubeConst.SysAdminGroup}:{secureSshPassword}\" | chpasswd"), RunOptions.None);
+
+                    if (response.ExitCode != 0 && !response.ErrorText.Contains("Password unchanged"))
+                    {
+                        response.EnsureSuccess();
+                    }
+
+                    node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, secureSshPassword));
+                },
+                quiet: true);
+
+            if (!setupController.Run(leaveNodesConnected: false))
+            {
+                Console.WriteLine("*** One or more WSL2 provisioning steps failed.");
+                return await Task.FromResult(false);
+            }
+
+            return await Task.FromResult(true);
         }
 
         /// <inheritdoc/>
@@ -140,12 +274,13 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override (string Address, int Port) GetSshEndpoint(string nodeName)
         {
-            throw new NotImplementedException();
-            // return (Address: cluster.GetNode(nodeName).Address.ToString(), Port: NetworkPorts.SSH);
+            var distro = new Wsl2Proxy(KubeConst.Wsl2MainDistroName, KubeConst.SysAdminUser);
+
+            return (Address: distro.Address, Port: NetworkPorts.SSH);
         }
 
         /// <inheritdoc/>
-        public override bool RequiresAdminPrivileges => true;
+        public override bool RequiresAdminPrivileges => false;
 
         /// <inheritdoc/>
         public override string GetDataDisk(LinuxSshProxy node)

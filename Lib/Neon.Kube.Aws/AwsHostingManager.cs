@@ -1147,7 +1147,7 @@ namespace Neon.Kube
             setupController.AddNodeStep("node basics",
                 (state, node) =>
                 {
-                    node.BaseInitialize(secureSshPassword);
+                    node.BaseInitialize(HostingEnvironment, secureSshPassword);
                 });
 
             // We need to add any required OpenEBS cStor disks after the node has been otherwise

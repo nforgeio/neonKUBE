@@ -272,8 +272,8 @@ systemctl restart rsyslog.service
                 () =>
                 {
                     NodeInstallTools(setupState);
-                    BaseConfigureApt(clusterDefinition.NodeOptions.PackageManagerRetries, clusterDefinition.NodeOptions.AllowPackageManagerIPv6);
-                    BaseConfigureOpenSsh(setupState);
+                    BaseConfigureApt(hostingManager.HostingEnvironment, clusterDefinition.NodeOptions.PackageManagerRetries, clusterDefinition.NodeOptions.AllowPackageManagerIPv6);
+                    BaseConfigureOpenSsh(hostingManager.HostingEnvironment);
                     DisableSnap(setupState);
                     ConfigureJournald(setupState);
                     ConfigureNFS();

@@ -281,7 +281,9 @@ namespace Neon.Kube
                 throw new ClusterDefinitionException($"Node [{Name}] has invalid [{nameof(Role)}={Role}].  This must be [{NodeRole.Master}] or [{NodeRole.Worker}].");
             }
 
-            if (clusterDefinition.Hosting.IsOnPremiseProvider)
+            // We don't need to check the node address for cloud and WSL2 providers.
+
+            if (clusterDefinition.Hosting.IsOnPremiseProvider && clusterDefinition.Hosting.Environment != HostingEnvironment.Wsl2)
             {
                 if (string.IsNullOrEmpty(Address))
                 {
