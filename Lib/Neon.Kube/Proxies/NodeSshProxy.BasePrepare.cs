@@ -57,11 +57,13 @@ namespace Neon.Kube
         /// Hyper-V and XenServer/XCP-ng node templates when they are created and at cluster
         /// creation time for cloud and bare metal clusters.
         /// </summary>
+        /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
         /// <param name="sshPassword">The current <b>sysadmin</b> password.</param>
         /// <param name="updateDistribution">Optionally upgrade the node's Linux distribution.  This defaults to <c>false</c>.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public void BaseInitialize(string sshPassword, bool updateDistribution = false, Action<string> statusWriter = null)
+        public void BaseInitialize(HostingEnvironment hostingEnvironment, string sshPassword, bool updateDistribution = false, Action<string> statusWriter = null)
         {
+            Covenant.Requires<ArgumentException>(hostingEnvironment != HostingEnvironment.Unknown, nameof(hostingEnvironment));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(sshPassword), nameof(sshPassword));
 
             // $hack(jefflill):
@@ -90,34 +92,35 @@ namespace Neon.Kube
 
             WaitForBoot();
             VerifyNodeOS(statusWriter);
-            BaseDisableSwap(statusWriter);
-            BaseInstallToolScripts(statusWriter);
-            BaseConfigureDebianFrontend(statusWriter);
-            BaseInstallPackages(statusWriter);
-            BaseConfigureApt(statusWriter: statusWriter);
-            BaseConfigureBashEnvironment(statusWriter);
-            BaseConfigureDnsIPv4Preference(statusWriter);
-            BaseRemoveSnaps();
-            BaseRemovePackages();
-            BaseCreateKubeFolders(statusWriter);
+            BaseDisableSwap(hostingEnvironment, statusWriter);
+            BaseInstallToolScripts(hostingEnvironment, statusWriter);
+            BaseConfigureDebianFrontend(hostingEnvironment, statusWriter);
+            BaseInstallPackages(hostingEnvironment, statusWriter);
+            BaseConfigureApt(hostingEnvironment, statusWriter: statusWriter);
+            BaseConfigureBashEnvironment(hostingEnvironment, statusWriter);
+            BaseConfigureDnsIPv4Preference(hostingEnvironment, statusWriter);
+            BaseRemoveSnap(hostingEnvironment, statusWriter);
+            BaseRemovePackages(hostingEnvironment, statusWriter);
+            BaseCreateKubeFolders(hostingEnvironment, statusWriter);
 
             if (updateDistribution)
             {
-                BaseUpdateLinux(statusWriter);
+                BaseUpgradeLinuxDistro(hostingEnvironment, statusWriter);
             }
         }
 
         /// <summary>
         /// Configures the Debian frontend terminal to non-interactive.
         /// </summary>
+        /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public void BaseConfigureDebianFrontend(Action<string> statusWriter = null)
+        public void BaseConfigureDebianFrontend(HostingEnvironment hostingEnvironment, Action<string> statusWriter = null)
         {
             InvokeIdempotent("base/debian-frontend",
                 () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Configure", $"Terminal as non-interactive");
-                    Status = $"login: terminal as non-interactive";
+                    KubeHelper.WriteStatus(statusWriter, "Configure", $"Non-interactive terminal");
+                    Status = $"login: interactive terminal";
 
                     // We need to append [DEBIAN_FRONTEND] to the [/etc/environment] file but
                     // we haven't installed [zip/unzip] yet so we can't use a command bundle.
@@ -132,8 +135,9 @@ namespace Neon.Kube
         /// Ubuntu defaults DNS to prefer IPv6 lookups over IPv4 which can cause
         /// performance problems.  This method reconfigures DNS to favor IPv4.
         /// </summary>
+        /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public void BaseConfigureDnsIPv4Preference(Action<string> statusWriter = null)
+        public void BaseConfigureDnsIPv4Preference(HostingEnvironment hostingEnvironment, Action<string> statusWriter = null)
         {
             InvokeIdempotent("base/dns-ipv4",
                 () =>
@@ -166,7 +170,7 @@ namespace Neon.Kube
 #       precedence ::ffff:0:0/96  100
 #
 # Note that this does not completely prevent the resolver from
-# returning IPv6 addresses.  You'll need to prevent this on an
+# returning IPv6 addresses.  You'll need to prvent this on an
 # application by application basis, like using the [curl -4] option.
 
 sed -i 's!^#precedence ::ffff:0:0/96  10$!precedence ::ffff:0:0/96  100!g' /etc/gai.conf
@@ -178,14 +182,15 @@ sed -i 's!^#precedence ::ffff:0:0/96  10$!precedence ::ffff:0:0/96  100!g' /etc/
         /// <summary>
         /// Configures the Debian frontend terminal to non-interactive.
         /// </summary>
+        /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public void BaseConfigureBashEnvironment(Action<string> statusWriter = null)
+        public void BaseConfigureBashEnvironment(HostingEnvironment hostingEnvironment, Action<string> statusWriter = null)
         {
             InvokeIdempotent("base/bash-environment",
                 () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Configure", $"Bash environment vars");
-                    Status = $"configure: bash environment vars";
+                    KubeHelper.WriteStatus(statusWriter, "Configure", $"Environment vars");
+                    Status = $"configure: environment vars";
 
                     var script =
 @"
@@ -198,8 +203,9 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
         /// <summary>
         /// Installs the required <b>base image</b> packages.
         /// </summary>
+        /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public void BaseInstallPackages(Action<string> statusWriter = null)
+        public void BaseInstallPackages(HostingEnvironment hostingEnvironment, Action<string> statusWriter = null)
         {
             Status = "install: base packages";
             KubeHelper.WriteStatus(statusWriter, "Install", "Base packages");
@@ -238,10 +244,32 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
         }
 
         /// <summary>
+        /// Updates Linux by applying just the outstanding security updates.
+        /// </summary>
+        /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
+        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        public void BasePatchLinux(HostingEnvironment hostingEnvironment, Action<string> statusWriter = null)
+        {
+            // $todo(jefflill): Implement this!
+        }
+
+        /// <summary>
+        /// Updates Linux by applying all outstanding package updates but without 
+        /// upgrading the distribution.
+        /// </summary>
+        /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
+        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        public void BaseUpgradeLinux(HostingEnvironment hostingEnvironment, Action<string> statusWriter = null)
+        {
+            // $todo(jefflill): Implement this!
+        }
+
+        /// <summary>
         /// Updates the Linux distribution.
         /// </summary>
+        /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public void BaseUpdateLinux(Action<string> statusWriter = null)
+        public void BaseUpgradeLinuxDistro(HostingEnvironment hostingEnvironment, Action<string> statusWriter = null)
         {
             InvokeIdempotent("base/update-linux",
                 () =>
@@ -256,8 +284,9 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
         /// <summary>
         /// Disables the Linux memory swap file.
         /// </summary>
+        /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public void BaseDisableSwap(Action<string> statusWriter = null)
+        public void BaseDisableSwap(HostingEnvironment hostingEnvironment, Action<string> statusWriter = null)
         {
             InvokeIdempotent("base/swap-disable",
                 () =>
@@ -287,9 +316,17 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
         /// <summary>
         /// Installs hypervisor guest integration services.
         /// </summary>
+        /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public void BaseInstallGuestIntegrationServices(Action<string> statusWriter = null)
+        public void BaseInstallGuestIntegrationServices(HostingEnvironment hostingEnvironment, Action<string> statusWriter = null)
         {
+            // This currently applies only to on-premise hypervisors.
+
+            if (!KubeHelper.IsOnPremiseHypervisorEnvironment(hostingEnvironment))
+            {
+                return;
+            }
+
             InvokeIdempotent("base/guest-integration",
                 () =>
                 {
@@ -315,9 +352,15 @@ update-initramfs -u
         /// <summary>
         /// Disables DHCP.
         /// </summary>
+        /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public void BaseDisableDhcp(Action<string> statusWriter = null)
+        public void BaseDisableDhcp(HostingEnvironment hostingEnvironment, Action<string> statusWriter = null)
         {
+            if (hostingEnvironment == HostingEnvironment.Wsl2)
+            {
+                return;
+            }
+
             InvokeIdempotent("base/dhcp",
                 () =>
                 {
@@ -352,32 +395,38 @@ EOF
         /// <summary>
         /// Disables <b>cloud-init</b>.
         /// </summary>
+        /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public void BaseDisableCloudInit(Action<string> statusWriter = null)
+        public void BaseDisableCloudInit(HostingEnvironment hostingEnvironment, Action<string> statusWriter = null)
         {
+            // Do this only for non-cloud environments.
+
+            if (KubeHelper.IsCloudEnvironment(hostingEnvironment))
+            {
+                return;
+            }
+
             InvokeIdempotent("base/cloud-init",
                 () =>
                 {
-                KubeHelper.WriteStatus(statusWriter, "Disable", "cloud-init");
-                Status = "disable: cloud-init";
+                    KubeHelper.WriteStatus(statusWriter, "Disable", "cloud-init");
+                    Status = "disable: cloud-init";
 
-                var disableCloudInitScript =
+                    var disableCloudInitScript =
 $@"
 touch /etc/cloud/cloud-init.disabled
 ";
-                SudoCommand(CommandBundle.FromScript(disableCloudInitScript), RunOptions.Defaults | RunOptions.FaultOnError);
-            });
+                    SudoCommand(CommandBundle.FromScript(disableCloudInitScript), RunOptions.Defaults | RunOptions.FaultOnError);
+                });
         }
 
         /// <summary>
         /// Customizes the OpenSSH configuration on a 
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public void BaseConfigureOpenSsh(ObjectDictionary setupState, Action<string> statusWriter = null)
+        public void BaseConfigureOpenSsh(HostingEnvironment hostingEnvironment, Action<string> statusWriter = null)
         {
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
-
             InvokeIdempotent("base/openssh",
                 () =>
                 {
@@ -392,40 +441,51 @@ touch /etc/cloud/cloud-init.disabled
         }
 
         /// <summary>
-        /// Removes any installed snaps.
+        /// Removes any installed snaps as well as the entire snap infrastructure.
         /// </summary>
+        /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public void BaseRemoveSnaps(Action<string> statusWriter = null)
+        public void BaseRemoveSnap(HostingEnvironment hostingEnvironment, Action<string> statusWriter = null)
         {
-            InvokeIdempotent("base/clean-packages",
+            // NOTE:
+            //
+            // The "base/remove-snap" action ID string below must match the string
+            // used within [Wsl2Proxy.StartAsync()]
+
+            InvokeIdempotent("base/remove-snap",
                 () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Remove", "Snaps");
-                    Status = "remove: snaps";
+                    KubeHelper.WriteStatus(statusWriter, "Remove", "Snap");
+                    Status = "remove: snap";
 
                     var script =
 @"
-snap remove --purge lxd
-snap remove --purge core18
-snap remove --purge snapd
+set -euo pipefail
+
+apt-get purge snapd -yq
+
+rm -rf ~/snap
+rm -rf /var/cache/snapd
+rm -rf /snap
 ";
                     SudoCommand(CommandBundle.FromScript(script), RunOptions.Defaults | RunOptions.FaultOnError);
                 });
         }
 
         /// <summary>
-        /// Removes unnecessary packages.
+        /// Removes unneeded packages.
         /// </summary>
+        /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public void BaseRemovePackages(Action<string> statusWriter = null)
+        public void BaseRemovePackages(HostingEnvironment hostingEnvironment, Action<string> statusWriter = null)
         {
-            InvokeIdempotent("base/clean-packages",
+            InvokeIdempotent("base/remove-packages",
                 () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Remove", "Unnecessary packages");
-                    Status = "Remove: Unnecessary packages";
+                    KubeHelper.WriteStatus(statusWriter, "Remove", "Unneeded packages");
+                    Status = "remove: unneeded packages";
 
-                    // Purge unnecessary packages.
+                    // Purge unneeded packages.
 
 var removePackagesScript =
 $@"
@@ -450,16 +510,17 @@ $@"
         /// <summary>
         /// Configures the APT package manager.
         /// </summary>
+        /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
         /// <param name="packageManagerRetries">Optionally specifies the packager manager retries (defaults to <b>5</b>).</param>
         /// <param name="allowPackageManagerIPv6">Optionally prevent the package manager from using IPv6 (defaults to <c>false</c>.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public void BaseConfigureApt(int packageManagerRetries = 5, bool allowPackageManagerIPv6 = false, Action<string> statusWriter = null)
+        public void BaseConfigureApt(HostingEnvironment hostingEnvironment, int packageManagerRetries = 5, bool allowPackageManagerIPv6 = false, Action<string> statusWriter = null)
         {
             InvokeIdempotent("base/apt",
                 () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Configure", "[apt] package manager");
-                    Status = "configure: [apt] package manager";
+                    KubeHelper.WriteStatus(statusWriter, "Configure", "Package manager");
+                    Status = "configure: package manager";
 
                     if (!allowPackageManagerIPv6)
                     {
@@ -516,6 +577,7 @@ done
         /// use to configure the network and credentials for VMs hosted in non-cloud
         /// hypervisors.
         /// </summary>
+        /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         /// <remarks>
         /// <para>
@@ -538,7 +600,7 @@ done
         /// for debugging purposes.
         /// </note>
         /// </remarks>
-        public void BaseInstallNeonInit(Action<string> statusWriter = null)
+        public void BaseInstallNeonInit(HostingEnvironment hostingEnvironment, Action<string> statusWriter = null)
         {
             InvokeIdempotent("base/neon-init",
                 () =>
@@ -681,8 +743,9 @@ systemctl daemon-reload
         /// <summary>
         /// Create the node folders required by neoneKUBE.
         /// </summary>
+        /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public void BaseCreateKubeFolders(Action<string> statusWriter = null)
+        public void BaseCreateKubeFolders(HostingEnvironment hostingEnvironment, Action<string> statusWriter = null)
         {
             InvokeIdempotent("base/folders",
                 () =>
@@ -722,8 +785,9 @@ chmod 750 {KubeNodeFolders.State}/setup
         /// Any <b>".sh"</b> file extensions will be removed for ease-of-use.
         /// </note>
         /// </summary>
+        /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public void BaseInstallToolScripts(Action<string> statusWriter = null)
+        public void BaseInstallToolScripts(HostingEnvironment hostingEnvironment, Action<string> statusWriter = null)
         {
             InvokeIdempotent("base/tool-scripts",
                 () =>

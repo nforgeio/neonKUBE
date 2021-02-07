@@ -111,10 +111,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override bool IsProvisionNOP
-        {
-            get { return false; }
-        }
+        public override bool IsProvisionNOP => false;
 
         /// <inheritdoc/>
         public override HostingEnvironment HostingEnvironment => HostingEnvironment.BareMetal;
@@ -395,7 +392,7 @@ namespace Neon.Kube
                 nodeSshPassword = nodeToPassword[node.Metadata.Name];
             }
 
-            node.BaseInitialize(nodeSshPassword);
+            node.BaseInitialize(HostingEnvironment, nodeSshPassword);
         }
 
         /// <summary>

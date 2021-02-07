@@ -54,5 +54,14 @@ namespace Neon.Windows
         [DllImport("advapi32.dll", CharSet = CharSet.Ansi, SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool EncryptFile(string path);
+
+        /// <summary>
+        /// Has Windows decrypt a file or folder at rest.
+        /// </summary>
+        /// <param name="path">The file or folder path.</param>
+        /// <returns><c>true</c> on success.</returns>
+        [DllImport("advapi32.dll", CharSet = CharSet.Ansi, SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool DecryptFile(string path);
     }
 }

@@ -52,7 +52,8 @@ USAGE:
 
 ARGUMENTS:
 
-    CLUSTER-DEF     - Path to the cluster definition file
+    CLUSTER-DEF     - Path to the cluster definition file or ""WSL2"" to deploy
+                      the standard neonKUBE WSL2 distribution.
 
 OPTIONS:
 
@@ -141,6 +142,22 @@ Server Requirements:
 
             clusterDefPath = commandLine.Arguments[0];
 
+            if (clusterDefPath.Equals("WSL2", StringComparison.InvariantCultureIgnoreCase))
+            {
+                // This special-case argument indicates that we should use the built-in 
+                // WSL2 cluster definition.  We'll make a copy of this in the user's WSL2
+                // folder if it doesn't already exist.
+
+                var wsl2ClusterDefinitionPath = Path.Combine(KubeHelper.DesktopWsl2Folder, "cluster-definition.yaml");
+
+                if (!File.Exists(wsl2ClusterDefinitionPath))
+                {
+                    File.WriteAllText(wsl2ClusterDefinitionPath, KubeSetup.GetWsl2ClusterDefintion());
+                }
+
+                clusterDefPath = wsl2ClusterDefinitionPath;
+            }
+
             ClusterDefinition.ValidateFile(clusterDefPath, strict: true);
 
             var clusterDefinition = ClusterDefinition.FromFile(clusterDefPath, strict: true);
@@ -180,11 +197,14 @@ Server Requirements:
                 // environments because we're assuming that the cluster will run in its own
                 // private network so there'll be no possibility of conflicts.
                 //
-                // We also won't do this for cloud deployments because those nodes will be
-                // running in an isolated private network.
+                // We also won't do this for cloud deployments, bare metal or WSL2 because those 
+                // clusters will be running on an isolated private network and we don't do this
+                // for bare metal because we're currently assuming that the bare metal nodes are
+                // already running using the node IPs.
 
-                if (cluster.Definition.Hosting.Environment != HostingEnvironment.BareMetal && 
-                    !cluster.Definition.Hosting.IsCloudProvider)
+                if (!cluster.Definition.Hosting.IsCloudProvider &&
+                    cluster.Definition.Hosting.Environment != HostingEnvironment.Wsl2 &&
+                    cluster.Definition.Hosting.Environment != HostingEnvironment.BareMetal)
                 {
                     Console.WriteLine();
                     Console.WriteLine(" Scanning for IP address conflicts...");
@@ -307,10 +327,23 @@ Server Requirements:
                 //
                 // For bare metal, we're going to leave the password along and just use
                 // whatever the user specified when the nodes were built out.
+                //
+                // WSL2 NOTE:
+                //
+                // We're going to leave the default password in place for WSL2 distribution
+                // so that they'll be easy for the user to manage.  This isn't a security
+                // gap because WSL2 distros are configured such that OpenSSH server can
+                // only be reached from the host workstation via the internal [172.x.x.x]
+                // address and not from the external network.
 
                 var orgSshPassword = Program.MachinePassword;
 
-                if (hostingManager.GenerateSecurePassword && string.IsNullOrEmpty(clusterLogin.SshPassword))
+                if (!hostingManager.GenerateSecurePassword)
+                {
+                    clusterLogin.SshPassword = orgSshPassword;
+                    clusterLogin.Save();
+                }
+                else if (hostingManager.GenerateSecurePassword && string.IsNullOrEmpty(clusterLogin.SshPassword))
                 {
                     clusterLogin.SshPassword = NeonHelper.GetCryptoRandomPassword(clusterDefinition.Security.PasswordLength);
 

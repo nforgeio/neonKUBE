@@ -317,7 +317,10 @@ namespace Neon.Kube
                 }
             }
 
-            if (!isCloud)
+            // Note that we don't need to check the network settings for cloud environments or
+            // WSL2 deployments because we'll just use ambient settings in these cases.
+
+            if (!isCloud && clusterDefinition.Hosting.Environment != HostingEnvironment.Wsl2)
             {
                 // Verify [PremiseSubnet].
 

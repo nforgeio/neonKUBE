@@ -334,25 +334,6 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Encrypts a file or directory when supported by the underlying operating system
-        /// and file system.  Currently, this only works on non-HOME versions of Windows
-        /// and NTFS file systems.  This fails silently.
-        /// </summary>
-        /// <param name="path">The file or directory path.</param>
-        /// <returns><c>true</c> if the operation was successful.</returns>
-        private static bool EncryptFile(string path)
-        {
-            try
-            {
-                return Win32.EncryptFile(path);
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        /// <summary>
         /// Ensures that sensitive folders and files on the local workstation are encrypted at rest
         /// for security purposes.  These include the users <b>.kube</b>, <b>.neonkube</b>, and any
         /// the <b>OpenVPN</b> if it exists.
@@ -374,7 +355,7 @@ namespace Neon.Kube
                 {
                     if (Directory.Exists(sensitiveFolder))
                     {
-                        KubeHelper.EncryptFile(sensitiveFolder);
+                        NeonHelper.EncryptFile(sensitiveFolder);
                     }
                 }
             }
@@ -465,6 +446,25 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Determines whether a cluster hosting environment deploys to on-premise hypervisors.
+        /// </summary>
+        /// <param name="hostingEnvironment">The hosting environment.</param>
+        /// <returns><c>true</c> for on-premise environments.</returns>
+        /// <remarks>
+        /// <note>
+        /// Although <see cref="HostingEnvironment.Wsl2"/> is technically hosted on the Windows
+        /// Hyper-V platform, we're not going to consider it to be hosted by a hypervisor because
+        /// it's a special case.
+        /// </note>
+        /// </remarks>
+        public static bool IsOnPremiseHypervisorEnvironment(HostingEnvironment hostingEnvironment)
+        {
+            return hostingEnvironment == HostingEnvironment.HyperV ||
+                   hostingEnvironment == HostingEnvironment.HyperVLocal ||
+                   hostingEnvironment == HostingEnvironment.XenServer;
+        }
+
+        /// <summary>
         /// Returns the path the folder holding the user specific Kubernetes files.
         /// </summary>
         /// <param name="ignoreNeonToolContainerVar">
@@ -508,7 +508,7 @@ namespace Neon.Kube
 
                 try
                 {
-                    EncryptFile(path);
+                    NeonHelper.EncryptFile(path);
                 }
                 catch
                 {
@@ -573,16 +573,7 @@ namespace Neon.Kube
                 var path = Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"), ".kube");
 
                 Directory.CreateDirectory(path);
-
-                try
-                {
-                    EncryptFile(path);
-                }
-                catch
-                {
-                    // Encryption is not available on all platforms (e.g. Windows Home, or non-NTFS
-                    // file systems).  The secrets won't be encrypted for these situations.
-                }
+                NeonHelper.EncryptFile(path);
 
                 return cachedKubeUserFolder = path;
             }

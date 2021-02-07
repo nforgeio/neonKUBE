@@ -414,7 +414,7 @@ namespace Neon.Service
 
                 try
                 {
-                    EncryptFile(path);
+                    NeonHelper.EncryptFile(path);
                 }
                 catch
                 {
@@ -456,25 +456,6 @@ namespace Neon.Service
                 Directory.CreateDirectory(path);
 
                 return cachedPasswordsFolder = path;
-            }
-        }
-
-        /// <summary>
-        /// Encrypts a file or directory when supported by the underlying operating system
-        /// and file system.  Currently, this only works on non-HOME versions of Windows
-        /// and NTFS file systems.  This fails silently.
-        /// </summary>
-        /// <param name="path">The file or directory path.</param>
-        /// <returns><c>true</c> if the operation was successful.</returns>
-        private static bool EncryptFile(string path)
-        {
-            try
-            {
-                return Win32.EncryptFile(path);
-            }
-            catch
-            {
-                return false;
             }
         }
 

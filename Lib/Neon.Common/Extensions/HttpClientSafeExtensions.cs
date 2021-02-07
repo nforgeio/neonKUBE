@@ -28,10 +28,11 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Neon.Diagnostics;
 using Neon.Collections;
-using Neon.Tasks;
+using Neon.Common;
+using Neon.Diagnostics;
 using Neon.Net;
+using Neon.Tasks;
 
 namespace System.Net.Http
 {
@@ -83,6 +84,8 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default, 
             LogActivity             activity          = default)
         {
+            Covenant.Requires<ArgumentNullException>(requestUri != null, nameof(requestUri));
+
             await SyncContext.ClearAsync;
 
             var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
@@ -127,6 +130,8 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default, 
             LogActivity             activity          = default)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(requestUri), nameof(requestUri));
+
             await SyncContext.ClearAsync;
 
             var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
@@ -164,6 +169,8 @@ namespace System.Net.Http
             ArgDictionary           headers  = null,
             LogActivity             activity = default)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(requestUri), nameof(requestUri));
+
             await SyncContext.ClearAsync;
 
             var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
@@ -203,6 +210,8 @@ namespace System.Net.Http
             ArgDictionary           headers  = null,
             LogActivity             activity = default)
         {
+            Covenant.Requires<ArgumentNullException>(requestUri != null, nameof(requestUri));
+
             await SyncContext.ClearAsync;
 
             var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
@@ -242,6 +251,8 @@ namespace System.Net.Http
             ArgDictionary           headers  = null,
             LogActivity             activity = default)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(requestUri), nameof(requestUri));
+
             await SyncContext.ClearAsync;
 
             var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
@@ -281,6 +292,8 @@ namespace System.Net.Http
             ArgDictionary           headers  = null,
             LogActivity             activity = default)
         {
+            Covenant.Requires<ArgumentNullException>(requestUri != null, nameof(requestUri));
+
             await SyncContext.ClearAsync;
 
             var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
@@ -320,6 +333,8 @@ namespace System.Net.Http
             ArgDictionary           headers  = null,
             LogActivity             activity = default)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(requestUri), nameof(requestUri));
+
             await SyncContext.ClearAsync;
 
             var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
@@ -359,6 +374,8 @@ namespace System.Net.Http
             ArgDictionary           headers  = null,
             LogActivity             activity = default)
         {
+            Covenant.Requires<ArgumentNullException>(requestUri != null, nameof(requestUri));
+
             await SyncContext.ClearAsync;
 
             var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
@@ -379,6 +396,143 @@ namespace System.Net.Http
             var response = EnsureSuccess(await client.SendAsync(request));
 
             return await response.Content.ReadAsStringAsync();
+        }
+
+        /// <summary>
+        /// Downloads the contents of a string URI to a stream.
+        /// </summary>
+        /// <param name="client">The client.</param>
+        /// <param name="requestUri">The request URI.</param>
+        /// <param name="output">The stream where the URI contents will be written.</param>
+        /// <param name="headers">Optional request headers.</param>
+        /// <param name="activity">Optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
+        /// /// <returns>The <see cref="HttpResponseMessage"/> making things like response headers available.</returns>
+        public static async Task<HttpResponseMessage> GetToStreamSafeAsync(
+            this HttpClient         client,
+            string                  requestUri,
+            Stream                  output,
+            ArgDictionary           headers  = null,
+            LogActivity             activity = default)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(requestUri), nameof(requestUri));
+            Covenant.Requires<ArgumentNullException>(output != null);
+
+            return await GetToStreamSafeAsync(client, new Uri(requestUri), output, headers, activity);
+        }
+
+        /// <summary>
+        /// Downloads the contents of a URI to a stream.
+        /// </summary>
+        /// <param name="client">The client.</param>
+        /// <param name="requestUri">The request URI.</param>
+        /// <param name="output">The stream where the URI contents will be written.</param>
+        /// <param name="headers">Optional request headers.</param>
+        /// <param name="activity">Optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
+        /// <returns>The <see cref="HttpResponseMessage"/> making things like response headers available.</returns>
+        public static async Task<HttpResponseMessage> GetToStreamSafeAsync(
+            this HttpClient         client,
+            Uri                     requestUri,
+            Stream                  output,
+            ArgDictionary           headers  = null,
+            LogActivity             activity = default)
+        {
+            Covenant.Requires<ArgumentNullException>(requestUri != null, nameof(requestUri));
+            Covenant.Requires<ArgumentNullException>(output != null);
+
+            await SyncContext.ClearAsync;
+
+            var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
+
+            if (!string.IsNullOrEmpty(activity.Id))
+            {
+                request.Headers.Add(LogActivity.HttpHeader, activity.Id);
+            }
+
+            if (headers != null)
+            {
+                foreach (var header in headers)
+                {
+                    request.Headers.Add(header.Key, header.Value.ToString());
+                }
+            }
+
+            var response = EnsureSuccess(await client.SendAsync(request));
+
+            using (var download = await response.Content.ReadAsStreamAsync())
+            {
+                var buffer = new byte[64 * 1024];
+
+                while (true)
+                {
+                    var cb = await download.ReadAsync(buffer, 0, buffer.Length);
+
+                    if (cb == 0)
+                    {
+                        break;
+                    }
+
+                    await output.WriteAsync(buffer, 0, cb);
+                }
+            }
+
+            return response;
+        }
+
+        /// <summary>
+        /// Downloads the contents of a string URI to a file.
+        /// </summary>
+        /// <param name="client">The client.</param>
+        /// <param name="requestUri">The request URI.</param>
+        /// <param name="outputPath">The path to the output file.</param>
+        /// <param name="headers">Optional request headers.</param>
+        /// <param name="activity">Optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
+        /// <returns>The <see cref="HttpResponseMessage"/> making things like response headers available.</returns>
+        public static async Task<HttpResponseMessage> GetToFileSafeAsync(
+            this HttpClient         client,
+            string                  requestUri,
+            string                  outputPath,
+            ArgDictionary           headers  = null,
+            LogActivity             activity = default)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(requestUri), nameof(requestUri));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(outputPath), nameof(outputPath));
+
+            return await GetToFileSafeAsync(client, new Uri(requestUri), outputPath, headers, activity);
+        }
+
+        /// <summary>
+        /// Downloads the contents of a string URI to a file.
+        /// </summary>
+        /// <param name="client">The client.</param>
+        /// <param name="requestUri">The request URI.</param>
+        /// <param name="outputPath">The path to the output file.</param>
+        /// <param name="headers">Optional request headers.</param>
+        /// <param name="activity">Optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
+        /// <returns>The <see cref="HttpResponseMessage"/> making things like response headers available.</returns>
+        public static async Task<HttpResponseMessage> GetToFileSafeAsync(
+            this HttpClient         client,
+            Uri                     requestUri,
+            string                  outputPath,
+            ArgDictionary           headers  = null,
+            LogActivity             activity = default)
+        {
+            Covenant.Requires<ArgumentNullException>(requestUri != null, nameof(Uri));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(outputPath), nameof(outputPath));
+
+            try
+            {
+                using (var output = new FileStream(outputPath, FileMode.Create, FileAccess.ReadWrite))
+                {
+                    return await GetToStreamSafeAsync(client, requestUri, output, headers, activity);
+                }
+            }
+            catch
+            {
+                // Delete any partially downloaded files.
+
+                NeonHelper.DeleteFile(outputPath);
+                throw;
+            }
         }
 
         /// <summary>
@@ -407,6 +561,9 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default,
             LogActivity             activity          = default)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(requestUri), nameof(requestUri));
+            Covenant.Requires<ArgumentNullException>(content != null, nameof(content));
+
             await SyncContext.ClearAsync;
 
             var request = new HttpRequestMessage(HttpMethod.Post, requestUri);
@@ -455,6 +612,9 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default, 
             LogActivity             activity          = default)
         {
+            Covenant.Requires<ArgumentNullException>(requestUri != null, nameof(requestUri));
+            Covenant.Requires<ArgumentNullException>(content != null, nameof(content));
+
             await SyncContext.ClearAsync;
 
             var request = new HttpRequestMessage(HttpMethod.Post, requestUri);
@@ -503,6 +663,9 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default,
             LogActivity             activity          = default)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(requestUri), nameof(requestUri));
+            Covenant.Requires<ArgumentNullException>(content != null, nameof(content));
+
             await SyncContext.ClearAsync;
 
             var request = new HttpRequestMessage(HttpMethod.Put, requestUri);
@@ -551,6 +714,9 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default,
             LogActivity             activity          = default)
         {
+            Covenant.Requires<ArgumentNullException>(requestUri != null, nameof(requestUri));
+            Covenant.Requires<ArgumentNullException>(content != null, nameof(content));
+
             await SyncContext.ClearAsync;
 
             var request = new HttpRequestMessage(HttpMethod.Put, requestUri);
@@ -600,6 +766,9 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default,
             LogActivity             activity          = default)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(requestUri), nameof(requestUri));
+            Covenant.Requires<ArgumentNullException>(content != null, nameof(content));
+
             await SyncContext.ClearAsync;
 
             var request = new HttpRequestMessage(deleteMethod, requestUri);
@@ -651,6 +820,9 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default,
             LogActivity             activity          = default)
         {
+            Covenant.Requires<ArgumentNullException>(requestUri != null, nameof(requestUri));
+            Covenant.Requires<ArgumentNullException>(content != null, nameof(content));
+
             await SyncContext.ClearAsync;
 
             var request = new HttpRequestMessage(deleteMethod, requestUri);
@@ -702,6 +874,9 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default,
             LogActivity             activity          = default)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(requestUri), nameof(requestUri));
+            Covenant.Requires<ArgumentNullException>(content != null, nameof(content));
+
             await SyncContext.ClearAsync;
 
             var request = new HttpRequestMessage(patchMethod, requestUri);
@@ -750,6 +925,9 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default,
             LogActivity             activity          = default)
         {
+            Covenant.Requires<ArgumentNullException>(requestUri != null, nameof(requestUri));
+            Covenant.Requires<ArgumentNullException>(content != null, nameof(content));
+
             await SyncContext.ClearAsync;
 
             var request = new HttpRequestMessage(patchMethod, requestUri);
@@ -798,6 +976,9 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default,
             LogActivity             activity          = default)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(requestUri), nameof(requestUri));
+            Covenant.Requires<ArgumentNullException>(content != null, nameof(content));
+
             await SyncContext.ClearAsync;
 
             var request = new HttpRequestMessage(optionsMethod, requestUri);
@@ -849,6 +1030,9 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default, 
             LogActivity             activity          = default)
         {
+            Covenant.Requires<ArgumentNullException>(requestUri != null, nameof(requestUri));
+            Covenant.Requires<ArgumentNullException>(content != null, nameof(content));
+
             await SyncContext.ClearAsync;
 
             var request = new HttpRequestMessage(optionsMethod, requestUri);
@@ -900,6 +1084,9 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default, 
             LogActivity             activity          = default)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(requestUri), nameof(requestUri));
+            Covenant.Requires<ArgumentNullException>(content != null, nameof(content));
+
             await SyncContext.ClearAsync;
 
             var request = new HttpRequestMessage(headMethod, requestUri);
@@ -951,6 +1138,9 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default,
             LogActivity             activity          = default)
         {
+            Covenant.Requires<ArgumentNullException>(requestUri != null, nameof(requestUri));
+            Covenant.Requires<ArgumentNullException>(content != null, nameof(content));
+
             await SyncContext.ClearAsync;
 
             var request = new HttpRequestMessage(headMethod, requestUri);
@@ -1001,6 +1191,8 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default,
             LogActivity             activity          = default)
         {
+            Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
+
             await SyncContext.ClearAsync;
 
             if (!string.IsNullOrEmpty(activity.Id))

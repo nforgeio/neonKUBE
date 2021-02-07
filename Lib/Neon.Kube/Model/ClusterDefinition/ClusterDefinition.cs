@@ -739,6 +739,14 @@ namespace Neon.Kube
         [Pure]
         public void ValidatePrivateNodeAddresses()
         {
+            if (Hosting.Environment == HostingEnvironment.Wsl2)
+            {
+                // WSL2 nodes have dynamic IP addresses that change everytime the host
+                // machine reboots so this check makes no sense for this environment.
+
+                return;
+            }
+
             var ipAddressToNode = new Dictionary<IPAddress, NodeDefinition>();
 
             foreach (var node in SortedNodes.OrderBy(n => n.Name))
@@ -755,7 +763,7 @@ namespace Neon.Kube
 
                 if (address == IPAddress.Any)
                 {
-                    throw new ClusterDefinitionException($"Node [{node.Name}] has not been assigned a private IP address.");
+                    throw new ClusterDefinitionException($"Node [{node.Name}] cannot be assigned the [0.0.0.0] IP address.");
                 }
 
                 if (ipAddressToNode.TryGetValue(address, out var conflictingNode))
