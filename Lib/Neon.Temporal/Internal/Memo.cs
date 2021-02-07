@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Payload.cs
+// FILE:	    Memo.cs
 // CONTRIBUTOR: John C. Burns
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -19,21 +19,16 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Neon.Temporal
+namespace Neon.Temporal.Internal
 {
     /// <summary>
-    /// Defines a temporal data payload.
+    /// Describers a temporal workflow execution memo.
     /// </summary>
-    public class Payload
+    public class Memo
     {
         /// <summary>
-        /// Payload metadata.
+        /// The key-value map of string fields to data payload.
         /// </summary>
-        public Dictionary<string, byte[]> Metadata { get; set; }
-
-        /// <summary>
-        /// The payload byte[] data.
-        /// </summary>
-        public byte[] Data { get; set; }
+        public Dictionary<string, Payload> Fields { get; set; }
     }
 }

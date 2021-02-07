@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    NamespaceDescription.cs
+// FILE:	    PollerInfo.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -18,41 +18,35 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.Contracts;
 
 using Neon.Common;
 using Neon.Temporal;
-using Neon.Temporal.Internal;
+using Newtonsoft.Json;
 
-namespace Neon.Temporal
+namespace Neon.Temporal.Internal
 {
     /// <summary>
-    /// Information returned by <see cref="TemporalClient.DescribeNamespaceAsync(string)"/>.
+    /// Describes the status of a poller (AKA worker) listening to a task queue.
     /// </summary>
-    public class NamespaceDescription
+    public class PollerInfo
     {
         /// <summary>
-        /// The namespace information.
+        /// The last time the poller accessed Temporal.
         /// </summary>
-        public NamespaceInfo NamespaceInfo { get; set; }
+        [JsonProperty(PropertyName = "last_access_time")]
+        public DateTime? LastAccessTime { get; set; }
 
         /// <summary>
-        /// The namespace configuration.
+        /// Identifies the poller.
         /// </summary>
-        public NamespaceConfig Config { get; set; }
+        [JsonProperty(PropertyName = "identity")]
+        public string Identity { get; set; }
 
         /// <summary>
-        /// The namespace replication configuration.
+        /// Operations per second from the poller.
         /// </summary>
-        public NamespaceReplicationConfig ReplicationConfig { get; set; }
-
-        /// <summary>
-        /// The namespace failover version.
-        /// </summary>
-        public long FailoverVersion { get; set; }
-
-        /// <summary>
-        /// Indicates whether the namespace is global.
-        /// </summary>
-        public bool IsGlobalNamespace { get; set; }
+        [JsonProperty(PropertyName = "rate_per_second")]
+        public double RatePerSecond { get; set; }
     }
 }

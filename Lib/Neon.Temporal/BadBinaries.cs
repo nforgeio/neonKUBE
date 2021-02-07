@@ -26,6 +26,9 @@ namespace Neon.Temporal
     /// </summary>
     public class BadBinaries
     {
+        /// <summary>
+        /// Dictionary of string identifier to <see cref="BadBinaryInfo"/>.
+        /// </summary>
         public Dictionary<string, BadBinaryInfo> Binaries;
     }
 }

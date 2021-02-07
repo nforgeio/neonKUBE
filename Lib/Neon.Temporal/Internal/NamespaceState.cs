@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowDescription.cs
+// FILE:	    Namespacetatus.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -18,42 +18,44 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-
-using Newtonsoft.Json;
+using System.Runtime.Serialization;
 
 using Neon.Common;
 using Neon.Temporal;
 using Neon.Temporal.Internal;
 
-namespace Neon.Temporal
+namespace Neon.Temporal.Internal
 {
     /// <summary>
-    /// Describes a workflow execution.
+    /// Indicates a Temporal namespace status.
     /// </summary>
-    public class WorkflowDescription
+    public enum NamespaceState
     {
         /// <summary>
-        /// Describes the workflow's configuration.
+        /// The namespace state is unspecified.
         /// </summary>
-        [JsonProperty(PropertyName = "execution_config")]
-        public WorkflowExecutionConfig ExecutionConfig { get; set; }
+        [EnumMember(Value = "Unspecified")]
+        Unspecified = 0,
 
         /// <summary>
-        /// Describes the workflow's execution details.
+        /// The namespace is registered and active.
         /// </summary>
-        [JsonProperty(PropertyName = "workflow_execution_info")]
-        public WorkflowExecutionInfo WorkflowExecutionInfo { get; set; }
+        [EnumMember(Value = "Registered")]
+        Registered,
 
         /// <summary>
-        /// Describes the workflow's scheduled and executing activities.
+        /// The namespace is closed for new workflows but will remain
+        /// until already running workflows are completed and the
+        /// history retention period for the last executed workflow
+        /// has been satisified.
         /// </summary>
-        [JsonProperty(PropertyName = "pending_activities")]
-        public List<PendingActivityInfo> PendingActivities { get; set; } = new List<PendingActivityInfo>();
+        [EnumMember(Value = "Deprecated")]
+        Deprecated,
 
         /// <summary>
-        /// Describes the workflow's scheduled and executing child workflows.
+        /// The namespace is deleted.
         /// </summary>
-        [JsonProperty(PropertyName = "pending_children")]
-        public List<PendingChildExecutionInfo> PendingChildren { get; set; } = new List<PendingChildExecutionInfo>();
+        [EnumMember(Value = "Deleted")]
+        Deleted
     }
 }

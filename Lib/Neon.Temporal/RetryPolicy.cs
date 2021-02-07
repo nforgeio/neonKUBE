@@ -21,12 +21,12 @@ using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.Linq;
 
+using Newtonsoft.Json;
+
 using Neon.Common;
 using Neon.Retry;
 using Neon.Temporal;
 using Neon.Temporal.Internal;
-
-using Newtonsoft.Json;
 
 namespace Neon.Temporal
 {

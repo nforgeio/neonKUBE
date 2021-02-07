@@ -27,7 +27,6 @@ using System.Threading.Tasks;
 using Neon.Common;
 using Neon.Tasks;
 using Neon.Temporal;
-using Neon.Temporal.Internal;
 
 namespace Neon.Temporal
 {

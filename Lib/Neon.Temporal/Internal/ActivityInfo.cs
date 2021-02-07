@@ -24,7 +24,7 @@ using Newtonsoft.Json;
 using Neon.Temporal;
 using Neon.Common;
 
-namespace Neon.Temporal
+namespace Neon.Temporal.Internal
 {
     /// <summary>
     /// Holds information about an executing activity.

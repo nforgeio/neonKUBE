@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Payloads.cs
+// FILE:	    PendingActivityState.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -17,21 +17,38 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.ComponentModel;
 
-using Newtonsoft.Json;
+using Neon.Temporal;
+using Neon.Common;
 
-namespace Neon.Temporal
+namespace Neon.Temporal.Internal
 {
     /// <summary>
-    /// Data payloads.
+    /// Enumerates the state of an activity.
     /// </summary>
-    public class Payloads
+    public enum PendingActivityState
     {
+        // WARNING: These values must match those defined by [InternalPendingActivityState].
+
         /// <summary>
-        /// List of data payloads with metadata.
+        /// The activity state is unspecified.
         /// </summary>
-        [JsonProperty(PropertyName = "payloads")]
-        public List<Payload> DataPayloads { get; set; }
+        Unspecified = 0,
+
+        /// <summary>
+        /// The activity is waiting to be started.
+        /// </summary>
+        Scheduled = 1,
+
+        /// <summary>
+        /// The activity is running.
+        /// </summary>
+        Started = 2,
+
+        /// <summary>
+        /// The activity has a cancellation request pending.
+        /// </summary>
+        CancelRequested = 3
     }
 }

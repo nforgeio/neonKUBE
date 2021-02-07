@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    PollerInfo.cs
-// CONTRIBUTOR: Jeff Lill
+// FILE:	    Failure.cs
+// CONTRIBUTOR: John C. Burns
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,36 +17,39 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics.Contracts;
+using System.Text;
 
-using Neon.Common;
-using Neon.Temporal;
 using Newtonsoft.Json;
 
-namespace Neon.Temporal
+namespace Neon.Temporal.Internal
 {
     /// <summary>
-    /// Describes the status of a poller (AKA worker) listening to a task queue.
+    /// Defines a workflow execution failure.
     /// </summary>
-    public class PollerInfo
+    public class Failure
     {
         /// <summary>
-        /// The last time the poller accessed Temporal.
+        /// The failure message.
         /// </summary>
-        [JsonProperty(PropertyName = "last_access_time")]
-        public DateTime? LastAccessTime { get; set; }
+        [JsonProperty(PropertyName = "message")]
+        public string Message { get; set; }
 
         /// <summary>
-        /// Identifies the poller.
+        /// The source of failure.
         /// </summary>
-        [JsonProperty(PropertyName = "identity")]
-        public string Identity { get; set; }
+        [JsonProperty(PropertyName = "source")]
+        public string Source { get; set; }
 
         /// <summary>
-        /// Operations per second from the poller.
+        /// The failure stack trace.
         /// </summary>
-        [JsonProperty(PropertyName = "rate_per_second")]
-        public double RatePerSecond { get; set; }
+        [JsonProperty(PropertyName = "stack_trace")]
+        public string StackTrace { get; set; }
+
+        /// <summary>
+        /// The cause of failure.
+        /// </summary>
+        [JsonProperty(PropertyName = "cause")]
+        public Failure Cause { get; set; }
     }
 }

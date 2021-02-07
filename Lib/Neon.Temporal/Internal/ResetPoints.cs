@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ActivityType.cs
-// CONTRIBUTOR: John C Burns
+// FILE:	    ResetPoints.cs
+// CONTRIBUTOR: John C. Burns
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,20 +15,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Neon.Temporal
+namespace Neon.Temporal.Internal
 {
     /// <summary>
-    /// ActivityType identifies a Temporal activity type.
+    /// Defines a payload of reset points.
     /// </summary>
-    public class ActivityType
+    public class ResetPoints
     {
         /// <summary>
-        /// The <see cref="string"/> Name of the activity type.
+        /// Set of info about a workflow's reset points.
         /// </summary>
-        public string Name { get; set; }
+        public List<ResetPointInfo> Points { get; set; }
     }
 }

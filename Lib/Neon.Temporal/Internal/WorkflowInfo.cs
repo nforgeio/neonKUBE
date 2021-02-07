@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    UpdateNamespaceRequest.cs
+// FILE:	    WorkflowInfo.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -18,48 +18,57 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 
-using Newtonsoft.Json;
+using Neon.Common;
+using Neon.Temporal;
+using Neon.Temporal.Internal;
 
-namespace Neon.Temporal
+namespace Neon.Temporal.Internal
 {
     /// <summary>
-    /// Holds the changes to be made to a Temporal namespace.
+    /// Returns information about an executing workflow.
     /// </summary>
-    public class UpdateNamespaceRequest
+    public class WorkflowInfo
     {
         /// <summary>
-        /// The namespace name.
+        /// Returns the workflow namespace.
         /// </summary>
-        public string Name { get; set; }
+        public string Namespace { get; set; }
 
         /// <summary>
-        /// The updated basic namespace properties.
+        /// Returns the workflow ID.
         /// </summary>
-        [JsonProperty(PropertyName = "update_info")]
-        public UpdateNamespaceInfo UpdateInfo { get; set; } = new UpdateNamespaceInfo();
+        public string WorkflowId { get; set; }
 
         /// <summary>
-        /// The updated namespace configuration.
+        /// Returns the workflow's current run ID.
         /// </summary>
-        public NamespaceConfig Config { get; set; } = new NamespaceConfig();
+        public string RunId { get; set; }
 
         /// <summary>
-        /// The updated namespace replication configuration.
+        /// Returns the workflow's workflow type name.
         /// </summary>
-        [JsonProperty(PropertyName = "replication_config")]
-        public NamespaceReplicationConfig ReplicationConfig { get; set; }
+        public string WorkflowType { get; set; }
 
         /// <summary>
-        /// The updated namespace security token.
+        /// Returns the workflow task queue.
         /// </summary>
-        [JsonProperty(PropertyName = "security_token")]
-        public string SecurityToken { get; set; }
+        public string TaskQueue { get; set; }
+
+#if TODO
+        // $toodo(jefflill): These properties aren't supported yet.
 
         /// <summary>
-        /// The updated namespace bad binary.
+        /// Returns the maximum time the workflow is allowed to run from
+        /// the time the workflow was started until it completed.
         /// </summary>
-        [JsonProperty(PropertyName = "delete_bad_binary")]
-        public string DeleteBadBinary { get; set; }
+        public TimeSpan ExecutionStartToCloseTimeout { get; set; }
+
+        /// <summary>
+        /// Returns the workflow's child policy.
+        /// </summary>
+        public ChildPolicy ChildPolicy { get; set; }
+#endif
     }
 }

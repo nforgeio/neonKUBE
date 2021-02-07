@@ -21,7 +21,7 @@ using System.ComponentModel;
 
 using Newtonsoft.Json;
 
-namespace Neon.Temporal
+namespace Neon.Temporal.Internal
 {
     /// <summary>
     /// Describes a workflow's configuration.

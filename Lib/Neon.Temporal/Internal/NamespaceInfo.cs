@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowInfo.cs
+// FILE:	    NamespaceInfo.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -18,57 +18,52 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
+
+using Newtonsoft.Json;
 
 using Neon.Common;
+using Neon.Data;
 using Neon.Temporal;
 using Neon.Temporal.Internal;
 
-namespace Neon.Temporal
+namespace Neon.Temporal.Internal
 {
     /// <summary>
-    /// Returns information about an executing workflow.
+    /// Information about a Temporal namespace.
     /// </summary>
-    public class WorkflowInfo
+    public class NamespaceInfo
     {
         /// <summary>
-        /// Returns the workflow namespace.
+        /// The namespace name.
         /// </summary>
-        public string Namespace { get; set; }
+        public string Name { get; set; }
 
         /// <summary>
-        /// Returns the workflow ID.
+        /// The namespace UUID.
         /// </summary>
-        public string WorkflowId { get; set; }
+        public string Id { get; set; }
 
         /// <summary>
-        /// Returns the workflow's current run ID.
+        /// The namespace status.
         /// </summary>
-        public string RunId { get; set; }
+        [JsonConverter(typeof(IntegerEnumConverter<NamespaceState>))]
+        public NamespaceState State { get; set; }
 
         /// <summary>
-        /// Returns the workflow's workflow type name.
+        /// Ths namespace description.
         /// </summary>
-        public string WorkflowType { get; set; }
+        public string Description { get; set; }
 
         /// <summary>
-        /// Returns the workflow task queue.
+        /// The namespace owner's email address.
         /// </summary>
-        public string TaskQueue { get; set; }
-
-#if TODO
-        // $toodo(jefflill): These properties aren't supported yet.
+        [JsonProperty(PropertyName = "owner_email")]
+        public string OwnerEmail { get; set; }
 
         /// <summary>
-        /// Returns the maximum time the workflow is allowed to run from
-        /// the time the workflow was started until it completed.
+        /// A dictionary of named string data that can be attached to namespace
+        /// and that can be used for any purpose.
         /// </summary>
-        public TimeSpan ExecutionStartToCloseTimeout { get; set; }
-
-        /// <summary>
-        /// Returns the workflow's child policy.
-        /// </summary>
-        public ChildPolicy ChildPolicy { get; set; }
-#endif
+        public Dictionary<string, string> Data { get; set; }
     }
 }
