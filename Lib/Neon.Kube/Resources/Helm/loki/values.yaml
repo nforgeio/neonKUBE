@@ -57,7 +57,7 @@ config:
           store: inmemory
           etcd:
             endpoints:
-              - neon-metrics-etcd:2379
+              - neon-etcd.neon-system:2379
         replication_factor: 1
 
       ## Different ring configs can be used. E.g. Consul
@@ -92,7 +92,7 @@ config:
       shared_store: s3
     aws:
       bucketnames: loki
-      endpoint: neon-metrics-minio:9000
+      endpoint: neon-system-minio.neon-system:9000
       access_key_id: ${ACCESS_KEY_ID}
       secret_access_key: ${SECRET_ACCESS_KEY}
       insecure: true
@@ -272,12 +272,12 @@ env:
   - name: ACCESS_KEY_ID
     valueFrom:
       secretKeyRef:
-        name: neon-metrics-minio
+        name: neon-system-minio
         key: accesskey
   - name: SECRET_ACCESS_KEY
     valueFrom:
       secretKeyRef:
-        name: neon-metrics-minio
+        name: neon-system-minio
         key: secretkey
 
 # Specify Loki Alerting rules based on this documentation: https://grafana.com/docs/loki/latest/alerting/

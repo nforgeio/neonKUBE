@@ -1,3 +1,4 @@
+---
 # Source: calico/templates/calico-config.yaml
 # This ConfigMap is used to configure a self-hosted Calico installation.
 kind: ConfigMap
@@ -27,7 +28,7 @@ data:
         {
           "type": "calico",
           "log_level": "info",
-          "log_file_path": "/var/log/calico/cni/cni.log",
+          "log_file_path": "/var/log/neon-registry.node.local/calico-cni/cni.log",
           "datastore_type": "kubernetes",
           "nodename": "__KUBERNETES_NODE_NAME__",
           "mtu": __CNI_MTU__,
@@ -52,3 +53,5 @@ data:
         }
       ]
     }
+
+---

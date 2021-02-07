@@ -483,6 +483,11 @@ postgres://{{ template "harbor.database.username" . }}:{{ template "harbor.datab
   {{- printf "%s://%s:%s" (include "harbor.component.scheme" .) (include "harbor.registry" .) (include "harbor.registry.servicePort" .) -}}
 {{- end -}}
 
+{{/* REGISTRY_SERVICE */}}
+{{- define "harbor.registryService" -}}
+  {{- printf "%s://%s:%s" (include "harbor.component.scheme" .) (include "harbor.registry" .) (include "harbor.registry.servicePort" .) -}}
+{{- end -}}
+
 {{/* REGISTRY_CONTROLLER_URL */}}
 {{- define "harbor.registryControllerURL" -}}
   {{- printf "%s://%s:%s" (include "harbor.component.scheme" .) (include "harbor.registry" .) (include "harbor.registryctl.servicePort" .) -}}

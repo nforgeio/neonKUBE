@@ -2,14 +2,14 @@ expose:
   # Set the way how to expose the service. Set the type as "ingress",
   # "clusterIP", "nodePort" or "loadBalancer" and fill the information
   # in the corresponding section
-  type: nodePort
+  type: ingress
   tls:
     # Enable the tls or not. Note: if the type is "ingress" and the tls
     # is disabled, the port must be included in the command when pull/push
     # images. Refer to https://github.com/goharbor/harbor/issues/5291
     # for the detail.
     enabled: true
-    # The source of the tls certificate. Set it as "auto", "secret" 
+    # The source of the tls certificate. Set it as "auto", "secret"
     # or "none" and fill the information in the corresponding section
     # 1) auto: generate the tls certificate automatically
     # 2) secret: read the tls certificate from the specified secret.
@@ -20,7 +20,7 @@ expose:
     auto:
       # The common name used to generate the certificate, it's necessary
       # when the type isn't "ingress"
-      commonName: "harbor.local"
+      commonName: ""
     secret:
       # The name of secret which contains keys named:
       # "tls.crt" - the certificate
@@ -33,8 +33,8 @@ expose:
       notarySecretName: ""
   ingress:
     hosts:
-      core: core.harbor.domain
-      notary: notary.harbor.domain
+      core: neon-registry.node.local
+      notary: neon-notary.node.local
     # set to the type of ingress controller if it has specific requirements.
     # leave as `default` for most ingress controllers.
     # set to `gce` if using the GCE ingress controller
@@ -105,14 +105,13 @@ expose:
 # the IP address of k8s node
 #
 # If Harbor is deployed behind the proxy, set it as the URL of proxy
-externalURL: http://harbor.local
-externalHost: harbor.local
+externalURL: https://neon-registry.node.local
 
 # The internal TLS used for harbor components secure communicating. In order to enable https
 # in each components tls cert files need to provided in advance.
 internalTLS:
   # If internal TLS enabled
-  enabled: true
+  enabled: false
   # There are three ways to provide tls
   # 1) "auto" will generate cert automatically
   # 2) "manual" need provide cert file manually in following value
@@ -199,41 +198,41 @@ persistence:
       # Specify the "storageClass" used to provision the volume. Or the default
       # StorageClass will be used(the default).
       # Set it to "-" to disable dynamic provisioning
-      storageClass: "nfs"
+      storageClass: "neon-internal-harbor"
       subPath: ""
-      accessMode: ReadWriteMany
+      accessMode: ReadWriteOnce
       size: 5Gi
     chartmuseum:
       existingClaim: ""
-      storageClass: "nfs"
+      storageClass: "neon-internal-harbor"
       subPath: ""
-      accessMode: ReadWriteMany
-      size: 1Gi
+      accessMode: ReadWriteOnce
+      size: 5Gi
     jobservice:
       existingClaim: ""
-      storageClass: "nfs"
+      storageClass: "neon-internal-harbor"
       subPath: ""
-      accessMode: ReadWriteMany
+      accessMode: ReadWriteOnce
       size: 1Gi
     # If external database is used, the following settings for database will
     # be ignored
     database:
       existingClaim: ""
-      storageClass: "nfs"
+      storageClass: "neon-internal-harbor"
       subPath: ""
-      accessMode: ReadWriteMany
+      accessMode: ReadWriteOnce
       size: 1Gi
     # If external Redis is used, the following settings for Redis will
     # be ignored
     redis:
       existingClaim: ""
-      storageClass: ""
+      storageClass: "neon-internal-harbor"
       subPath: ""
       accessMode: ReadWriteOnce
       size: 1Gi
     trivy:
       existingClaim: ""
-      storageClass: "cstor-csi-stripe"
+      storageClass: "neon-internal-harbor"
       subPath: ""
       accessMode: ReadWriteOnce
       size: 5Gi
@@ -248,7 +247,7 @@ persistence:
     # Refer to
     # https://github.com/docker/distribution/blob/master/docs/configuration.md#redirect
     # for the detail.
-    disableredirect: false
+    disableredirect: true
     # Specify the "caBundleSecretName" if the storage service uses a self-signed certificate.
     # The secret must contain keys named "ca.crt" which will be injected into the trust store
     # of registry's and chartmuseum's containers.
@@ -258,7 +257,7 @@ persistence:
     # "oss" and fill the information needed in the corresponding section. The type
     # must be "filesystem" if you want to use persistent volumes for registry
     # and chartmuseum
-    type: filesystem
+    type: s3
     filesystem:
       rootdirectory: /storage
       #maxthreads: 100
@@ -274,14 +273,15 @@ persistence:
       #rootdirectory: /gcs/object/name/prefix
       #chunksize: "5242880"
     s3:
-      region: us-west-1
-      bucket: bucketname
+      region: neon
+      bucket: harbor
       #accesskey: awsaccesskey
       #secretkey: awssecretkey
-      #regionendpoint: http://myobjects.local
+      regionendpoint: http://neon-system-minio.neon-system:9000
       #encrypt: false
       #keyid: mykeyid
       #secure: true
+      #skipverify: false
       #v4auth: true
       #chunksize: "5242880"
       #rootdirectory: /s3/object/name/prefix
@@ -376,7 +376,7 @@ nginx:
   image:
     organization: neon-registry.node.local
     repository: goharbor-nginx-photon
-    tag: v2.1.1
+    tag: v2.1.3
   # set the service account to be used, default if left empty
   serviceAccountName: ""
   replicas: 1
@@ -399,7 +399,7 @@ portal:
   image:
     organization: neon-registry.node.local
     repository: goharbor-harbor-portal
-    tag: v2.1.1
+    tag: v2.1.3
   # set the service account to be used, default if left empty
   serviceAccountName: ""
   replicas: 1
@@ -422,13 +422,14 @@ core:
   image:
     organization: neon-registry.node.local
     repository: goharbor-harbor-core
-    tag: v2.1.1
+    tag: v2.1.3
   # set the service account to be used, default if left empty
   serviceAccountName: ""
   replicas: 1
-  ## Liveness probe values
-  livenessProbe:
-    initialDelaySeconds: 300
+  ## Startup probe values
+  startupProbe:
+    enabled: true
+    initialDelaySeconds: 10
   # resources:
   #  requests:
   #    memory: 256Mi
@@ -453,7 +454,7 @@ core:
   # "tls.crt" - the certificate
   # "tls.key" - the private key
   # The default key pair will be used if it isn't set
-  secretName: "neon-registry-harbor"
+  secretName: "neon-registry-harbor-internal"
   # The XSRF key. Will be generated automatically if it isn't specified
   xsrfKey: ""
 
@@ -461,7 +462,7 @@ jobservice:
   image:
     organization: neon-registry.node.local
     repository: goharbor-harbor-jobservice
-    tag: v2.1.1
+    tag: v2.1.3
   replicas: 1
   # set the service account to be used, default if left empty
   serviceAccountName: ""
@@ -474,7 +475,7 @@ jobservice:
   #     cpu: 100m
   nodeSelector: 
     neonkube.io/neon-system.registry: "true"
-  tolerations:
+  tolerations: 
   - operator: "Exists"
     effect: "NoSchedule"
   - operator: "Exists"
@@ -494,7 +495,7 @@ registry:
     image:
       organization: neon-registry.node.local
       repository: goharbor-registry-photon
-      tag: v2.1.1
+      tag: v2.1.3
     # resources:
     #  requests:
     #    memory: 256Mi
@@ -503,7 +504,7 @@ registry:
     image:
       organization: neon-registry.node.local
       repository: goharbor-harbor-registryctl
-      tag: v2.1.1
+      tag: v2.1.3
 
     # resources:
     #  requests:
@@ -512,7 +513,7 @@ registry:
   replicas: 1
   nodeSelector: 
     neonkube.io/neon-system.registry: "true"
-  tolerations:
+  tolerations: 
   - operator: "Exists"
     effect: "NoSchedule"
   - operator: "Exists"
@@ -527,7 +528,7 @@ registry:
   # Must be a string of 16 chars.
   secret: ""
   # If true, the registry returns relative URLs in Location headers. The client is responsible for resolving the correct URL.
-  relativeurls: false
+  relativeurls: true
   credentials:
     username: "harbor_registry_user"
     password: "harbor_registry_password"
@@ -556,7 +557,7 @@ chartmuseum:
   image:
     organization: neon-registry.node.local
     repository: goharbor-chartmuseum-photon
-    tag: v2.1.1
+    tag: v2.1.3
   replicas: 1
   # resources:
   #  requests:
@@ -581,7 +582,7 @@ clair:
     image:
       organization: neon-registry.node.local
       repository: goharbor-clair-photon
-      tag: v2.1.1
+      tag: v2.1.3
     # resources:
     #  requests:
     #    memory: 256Mi
@@ -590,7 +591,7 @@ clair:
     image:
       organization: neon-registry.node.local
       repository: goharbor-clair-adapter-photon
-      tag: v2.1.1
+      tag: v2.1.3
     # resources:
     #  requests:
     #    memory: 256Mi
@@ -612,11 +613,11 @@ clair:
 
 trivy:
   # enabled the flag to enable Trivy scanner
-  enabled: false
+  enabled: true
   image:
     organization: neon-registry.node.local
     repository: goharbor-trivy-adapter-photon
-    tag: v2.1.1
+    tag: v2.1.3
   # set the service account to be used, default if left empty
   serviceAccountName: ""
   # replicas the number of Pod replicas
@@ -679,7 +680,7 @@ notary:
     image:
       organization: neon-registry.node.local
       repository: goharbor-notary-server-photon
-      tag: v2.1.1
+      tag: v2.1.3
     replicas: 1
     # resources:
     #  requests:
@@ -691,7 +692,7 @@ notary:
     image:
       organization: neon-registry.node.local
       repository: goharbor-notary-signer-photon
-      tag: v2.1.1
+      tag: v2.1.3
     replicas: 1
     # resources:
     #  requests:
@@ -724,7 +725,7 @@ database:
     serviceAccountName: ""
     image:
       repository: goharbor/harbor-db
-      tag: v2.1.1
+      tag: v2.1.3
     # The initial superuser password for internal database
     password: "changeit"
     # resources:
@@ -733,11 +734,11 @@ database:
     #    cpu: 100m
     nodeSelector: 
       neonkube.io/neon-system.registry: "true"
-    tolerations: 
-    - operator: "Exists"
-      effect: "NoSchedule"
-    - operator: "Exists"
-      effect: "NoExecute"
+  tolerations: 
+  - operator: "Exists"
+    effect: "NoSchedule"
+  - operator: "Exists"
+    effect: "NoExecute"
     affinity: {}
   external:
     host: "neon-system-db-citus-postgresql.neon-system"
@@ -775,7 +776,7 @@ redis:
     serviceAccountName: ""
     image:
       repository: goharbor/redis-photon
-      tag: v2.1.1
+      tag: v2.1.3
     # resources:
     #  requests:
     #    memory: 256Mi

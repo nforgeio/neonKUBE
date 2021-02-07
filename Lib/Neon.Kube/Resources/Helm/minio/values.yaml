@@ -130,19 +130,9 @@ persistence:
   ## If defined, PVC must be created manually before volume will be bound
   existingClaim: ""
 
-  ## minio data Persistent Volume Storage Class
-  ## If defined, storageClassName: <storageClass>
-  ## If set to "-", storageClassName: "", which disables dynamic provisioning
-  ## If undefined (the default) or set to null, no storageClassName spec is
-  ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
-  ##   GKE, AWS & OpenStack)
-  ##
-  ## Storage class of PV to bind. By default it looks for standard storage class.
-  ## If the PV uses a different storage class, specify that here.
   storageClass: "neon-internal-minio"
   VolumeName: ""
   accessMode: ReadWriteOnce
-  replicaCount: 3 
   size: 16Gi
 
   ## If subPath is set mount a sub folder of a volume instead of the root of the volume.
@@ -253,6 +243,9 @@ buckets:
   - name: tempo
     policy: none
     purge: false
+  - name: harbor
+    policy: none
+    purge: false
 
 ## Additional Annotations for the Kubernetes Batch (make-bucket-job)
 makeBucketJob:
@@ -318,10 +311,11 @@ nasgateway:
 
 ## Use this field to add environment variables relevant to Minio server. These fields will be passed on to Minio container(s)
 ## when Chart is deployed
-environment: {}
+environment:
   ## Please refer for comprehensive list https://docs.minio.io/docs/minio-server-configuration-guide.html
   ## MINIO_DOMAIN: "chart-example.local"
   ## MINIO_BROWSER: "off"
+  MINIO_REGION_NAME: neon
 
 networkPolicy:
   enabled: false
@@ -356,7 +350,7 @@ metrics:
 ## Define endpoints to enable this section.
 etcd:
   endpoints:
-    - neon-metrics-etcd:2379
+    - neon-system-etcd:2379
   pathPrefix: ""
   corednsPathPrefix: ""
   clientCert: ""
