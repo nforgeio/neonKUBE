@@ -49,7 +49,7 @@ persistence:
 
 volumeClaimTemplate:
   accessModes: [ "ReadWriteOnce" ]
-  storageClassName: "openebs-hostpath"
+  storageClassName: "neon-internal-etcd"
   resources:
     requests:
       storage: 1Gi
@@ -64,9 +64,11 @@ memoryMode: false
 ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#taints-and-tolerations-beta-feature
 nodeSelector: 
   neonkube.io/monitor.metrics-internal: "true"
+
 tolerations:
   - effect: NoSchedule
     key: neonkube.io/metrics
     operator: Exists
+
 affinity: {}
 extraEnv: []

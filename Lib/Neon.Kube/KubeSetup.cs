@@ -77,9 +77,9 @@ namespace Neon.Kube
             /// <param name="owner">Optional file owner.</param>
             public RemoteFile(string path, string permissions = "600", string owner = "root:root")
             {
-                this.Path        = path;
+                this.Path = path;
                 this.Permissions = permissions;
-                this.Owner       = owner;
+                this.Owner = owner;
             }
 
             /// <summary>
@@ -101,12 +101,12 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Private constants
 
-        private const string                joinCommandMarker       = "kubeadm join";
-        private const int                   defaultMaxParallelNodes = 10;
-        private const int                   maxJoinAttempts         = 5;
-        private static readonly TimeSpan    joinRetryDelay          = TimeSpan.FromSeconds(5);
-        private static readonly TimeSpan    clusterOpTimeout        = TimeSpan.FromMinutes(10);
-        private static readonly TimeSpan    clusterOpRetryInterval  = TimeSpan.FromSeconds(10);
+        private const string joinCommandMarker = "kubeadm join";
+        private const int defaultMaxParallelNodes = 10;
+        private const int maxJoinAttempts = 5;
+        private static readonly TimeSpan joinRetryDelay = TimeSpan.FromSeconds(5);
+        private static readonly TimeSpan clusterOpTimeout = TimeSpan.FromMinutes(10);
+        private static readonly TimeSpan clusterOpRetryInterval = TimeSpan.FromSeconds(10);
 
         //---------------------------------------------------------------------
         // These string constants are used to persist state in [SetupControllers].
@@ -213,11 +213,11 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
 
-            var cluster           = setupState.Get<ClusterProxy>(KubeSetup.ClusterProxyProperty);
-            var firstMaster       = cluster.FirstMaster;
-            var hostPlatform      = KubeHelper.HostPlatform;
+            var cluster = setupState.Get<ClusterProxy>(KubeSetup.ClusterProxyProperty);
+            var firstMaster = cluster.FirstMaster;
+            var hostPlatform = KubeHelper.HostPlatform;
             var cachedKubeCtlPath = KubeHelper.GetCachedComponentPath(hostPlatform, "kubectl", KubeVersions.KubernetesVersion);
-            var cachedHelmPath    = KubeHelper.GetCachedComponentPath(hostPlatform, "helm", KubeVersions.HelmVersion);
+            var cachedHelmPath = KubeHelper.GetCachedComponentPath(hostPlatform, "helm", KubeVersions.HelmVersion);
 
             string kubeCtlUri;
             string helmUri;
@@ -227,19 +227,19 @@ namespace Neon.Kube
                 case KubeClientPlatform.Linux:
 
                     kubeCtlUri = KubeDownloads.KubeCtlLinuxUri;
-                    helmUri    = KubeDownloads.HelmLinuxUri;
+                    helmUri = KubeDownloads.HelmLinuxUri;
                     break;
 
                 case KubeClientPlatform.Osx:
 
                     kubeCtlUri = KubeDownloads.KubeCtlOsxUri;
-                    helmUri    = KubeDownloads.HelmOsxUri;
+                    helmUri = KubeDownloads.HelmOsxUri;
                     break;
 
                 case KubeClientPlatform.Windows:
 
                     kubeCtlUri = KubeDownloads.KubeCtlWindowsUri;
-                    helmUri    = KubeDownloads.HelmWindowsUri;
+                    helmUri = KubeDownloads.HelmWindowsUri;
                     break;
 
                 default:
@@ -375,7 +375,7 @@ namespace Neon.Kube
                 return;     // Already connected
             }
 
-            var cluster    = setupState.Get<ClusterProxy>(ClusterProxyProperty);
+            var cluster = setupState.Get<ClusterProxy>(ClusterProxyProperty);
             var configFile = Environment.GetEnvironmentVariable("KUBECONFIG").Split(';').Where(s => s.Contains("config")).FirstOrDefault();
 
             if (!string.IsNullOrEmpty(configFile) && File.Exists(configFile))
@@ -423,6 +423,20 @@ frontend kubernetes_masters
     option                  tcplog
     default_backend         kubernetes_masters_backend
 
+frontend harbor_http
+    bind                    *:80
+    mode                    http
+    log                     global
+    option                  httplog
+    default_backend         harbor_backend_http
+
+frontend harbor
+    bind                    *:443
+    mode                    tcp
+    log                     global
+    option                  tcplog
+    default_backend         harbor_backend
+
 backend kubernetes_masters_backend
     mode                    tcp
     balance                 roundrobin");
@@ -434,7 +448,33 @@ $@"
     server {master.Name}         {master.Address}:6443");
             }
 
-            node.UploadText("/etc/neonkube/neon-etcd-proxy.cfg", sbHaProxyConfig);
+            sbHaProxyConfig.Append(
+$@"
+backend harbor_backend_http
+    mode                    http
+    balance                 roundrobin");
+
+            foreach (var master in cluster.Masters)
+            {
+                sbHaProxyConfig.Append(
+$@"
+    server {master.Name}         {master.Address}:30080");
+            }
+
+            sbHaProxyConfig.Append(
+$@"
+backend harbor_backend
+    mode                    tcp
+    balance                 roundrobin");
+
+            foreach (var master in cluster.Masters)
+            {
+                sbHaProxyConfig.Append(
+$@"
+    server {master.Name}         {master.Address}:30443");
+            }
+
+            node.UploadText(" /etc/neonkube/neon-etcd-proxy.cfg", sbHaProxyConfig);
 
             var sbHaProxyPod = new StringBuilder();
 
@@ -566,20 +606,28 @@ spec:
             ConfigureKubernetes(setupState, cluster.FirstMaster);
             ConfigureWorkstation(setupState, firstMaster);
             ConnectCluster(setupState);
+            await ConfigureMasterTaintsAsync(setupState, firstMaster);
+
             tasks.Add(TaintNodesAsync(setupState));
             tasks.Add(LabelNodesAsync(setupState, firstMaster));
             tasks.AddRange(await CreateNamespacesAsync(setupState, firstMaster));
             tasks.Add(CreateRootUserAsync(setupState, firstMaster));
-            tasks.Add(ConfigureMasterTaintsAsync(setupState, firstMaster));
             tasks.Add(InstallCalicoCniAsync(setupState, firstMaster));
             tasks.Add(InstallIstioAsync(setupState, firstMaster));
 
             await NeonHelper.WaitAllAsync(tasks);
 
+            if (cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count() >= 3)
+            {
+                await InstallEtcdAsync(setupState, firstMaster);
+            }
+
             tasks.Add(InstallKialiAsync(setupState, firstMaster));
             tasks.Add(InstallKubeDashboardAsync(setupState, firstMaster));
             await InstallOpenEBSAsync(setupState, firstMaster);
+            await InstallPrometheusAsync(setupState, firstMaster);
             await InstallSystemDbAsync(setupState, firstMaster);
+            await InstallMinioAsync(setupState, firstMaster);
             tasks.Add(InstallClusterManagerAsync(setupState, firstMaster));
             tasks.Add(InstallContainerRegistryAsync(setupState, firstMaster));
             tasks.AddRange(await SetupMonitoringAsync(setupState));
@@ -598,8 +646,8 @@ spec:
             Covenant.Requires<ArgumentNullException>(firstMaster != null, nameof(firstMaster));
 
             var hostingEnvironment = setupState.Get<HostingEnvironment>(KubeSetup.HostingEnvironmentProperty);
-            var cluster            = setupState.Get<ClusterProxy>(ClusterProxyProperty);
-            var clusterLogin       = setupState.Get<ClusterLogin>(ClusterLoginProperty);
+            var cluster = setupState.Get<ClusterProxy>(ClusterProxyProperty);
+            var clusterLogin = setupState.Get<ClusterLogin>(ClusterLoginProperty);
 
             firstMaster.InvokeIdempotent("setup/cluster-init",
                 () =>
@@ -651,7 +699,7 @@ spec:
                                 sbCertSANs.AppendLine($"  - \"{node.Address}\"");
                             }
 
-                            var kubeletFailSwapOnLine           = string.Empty;
+                            var kubeletFailSwapOnLine = string.Empty;
                             var kubeInitgnoreSwapOnPreflightArg = string.Empty;
 
                             if (hostingEnvironment == HostingEnvironment.Wsl2)
@@ -660,7 +708,7 @@ spec:
                                 // will cause Kubernetes to complain because this isn't a supported
                                 // configuration.  We need to disable these error checks.
 
-                                kubeletFailSwapOnLine           = "failSwapOn: false";
+                                kubeletFailSwapOnLine = "failSwapOn: false";
                                 kubeInitgnoreSwapOnPreflightArg = "--ignore-preflight-errors=Swap";
                             }
 
@@ -981,8 +1029,8 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             master.InvokeIdempotent("setup/workstation",
                 () =>
                 {
-                    var cluster        = setupState.Get<ClusterProxy>(ClusterProxyProperty);
-                    var clusterLogin   = setupState.Get<ClusterLogin>(ClusterLoginProperty);
+                    var cluster = setupState.Get<ClusterProxy>(ClusterProxyProperty);
+                    var clusterLogin = setupState.Get<ClusterLogin>(ClusterLoginProperty);
                     var kubeConfigPath = KubeHelper.KubeConfigPath;
 
                     // Update kubeconfig.
@@ -1006,19 +1054,19 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         // The user already has an existing kubeconfig, so we need
                         // to merge in the new config.
 
-                        var newConfig      = NeonHelper.YamlDeserialize<KubeConfig>(configText);
+                        var newConfig = NeonHelper.YamlDeserialize<KubeConfig>(configText);
                         var existingConfig = KubeHelper.Config;
 
                         // Remove any existing user, context, and cluster with the same names.
                         // Note that we're assuming that there's only one of each in the config
                         // we downloaded from the cluster.
 
-                        var newCluster      = newConfig.Clusters.Single();
-                        var newContext      = newConfig.Contexts.Single();
-                        var newUser         = newConfig.Users.Single();
+                        var newCluster = newConfig.Clusters.Single();
+                        var newContext = newConfig.Contexts.Single();
+                        var newUser = newConfig.Users.Single();
                         var existingCluster = existingConfig.GetCluster(newCluster.Name);
                         var existingContext = existingConfig.GetContext(newContext.Name);
-                        var existingUser    = existingConfig.GetUser(newUser.Name);
+                        var existingUser = existingConfig.GetUser(newUser.Name);
 
                         if (existingConfig != null)
                         {
@@ -1054,7 +1102,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
         public static async Task InstallCalicoCniAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master)
         {
             await SyncContext.ClearAsync;
-            
+
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
@@ -1065,21 +1113,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                 {
                     // Deploy Calico
 
-                    var script =
-$@"
-# We need to edit the setup manifest to specify the 
-# cluster subnet before applying it.
-
-curl {KubeHelper.CurlOptions} {KubeDownloads.CalicoSetupYamlUri} > /tmp/calico.yaml
-sed -i 's;192.168.0.0/16;{cluster.Definition.Network.PodSubnet};' /tmp/calico.yaml
-sed -i 's;calico/cni;{NeonHelper.NeonLibraryBranchRegistry}/calico-cni;' /tmp/calico.yaml
-sed -i 's;calico/kube-controllers;{NeonHelper.NeonLibraryBranchRegistry}/calico-kube-controllers;' /tmp/calico.yaml
-sed -i 's;calico/node;{NeonHelper.NeonLibraryBranchRegistry}/calico-node;' /tmp/calico.yaml
-sed -i 's;calico/pod2daemon-flexvol;{NeonHelper.NeonLibraryBranchRegistry}/calico-pod2daemon-flexvol;' /tmp/calico.yaml
-kubectl apply -f /tmp/calico.yaml
-rm /tmp/calico.yaml
-";
-                    master.SudoCommand(CommandBundle.FromScript(script));
+                    await master.InstallHelmChartAsync("calico", releaseName: "calico");
 
                     // Wait for Calico and CoreDNS pods to report that they're running.
                     // We're going to wait a maximum of 300 seconds.
@@ -1104,7 +1138,7 @@ rm /tmp/calico.yaml
 
                             return true;
                         },
-                        timeout:      clusterOpTimeout,
+                        timeout: clusterOpTimeout,
                         pollInterval: clusterOpRetryInterval);
 
                     await master.InvokeIdempotentAsync("setup/cluster-deploy-cni-test",
@@ -1153,7 +1187,7 @@ rm /tmp/calico.yaml
                                 return await Task.FromResult(false);
                             }
                         },
-                        timeout:      clusterOpTimeout,
+                        timeout: clusterOpTimeout,
                         pollInterval: clusterOpRetryInterval);
                 });
         }
@@ -1859,7 +1893,7 @@ spec:
 
                             return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
                         },
-                        timeout:      clusterOpTimeout,
+                        timeout: clusterOpTimeout,
                         pollInterval: clusterOpRetryInterval);
 
                     await NeonHelper.WaitForAsync(
@@ -1873,7 +1907,7 @@ spec:
 
                             return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
                         },
-                        timeout:      clusterOpTimeout,
+                        timeout: clusterOpTimeout,
                         pollInterval: clusterOpRetryInterval);
                 });
 
@@ -1969,7 +2003,7 @@ spec:
 
                             return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
                         },
-                        timeout:      clusterOpTimeout,
+                        timeout: clusterOpTimeout,
                         pollInterval: clusterOpRetryInterval);
 
                     await NeonHelper.WaitForAsync(
@@ -1983,7 +2017,7 @@ spec:
 
                             return daemonsets.Items.All(p => p.Status.NumberAvailable == p.Status.DesiredNumberScheduled);
                         },
-                        timeout:      clusterOpTimeout,
+                        timeout: clusterOpTimeout,
                         pollInterval: clusterOpRetryInterval);
                 });
 
@@ -2063,64 +2097,23 @@ spec:
 
                             return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
                         },
-                        timeout:      clusterOpTimeout,
+                        timeout: clusterOpTimeout,
                         pollInterval: clusterOpRetryInterval);
                 });
 
-            master.InvokeIdempotent("setup/neon-storage-openebs-cstor-storageclass",
-                () =>
-                {
-                    var storageClass = new V1StorageClass()
-                    {
-                        Metadata = new V1ObjectMeta()
-                        {
-                            Name = "cstor-csi-stripe"
-                        },
-                        Provisioner = "cstor.csi.openebs.io",
-                        AllowVolumeExpansion = true,
-                        Parameters = new Dictionary<string, string>()
-                        {
-                            { "cas-type", "cstor" },
-                            { "cstorPoolCluster", "cspc-stripe" },
-                            { "replicaCount", "3" }
-                        }
-                    };
-                    GetK8sClient(setupState).CreateStorageClass(storageClass);
-                });
+            var replicas = 3;
 
-            await master.InvokeIdempotentAsync("setup/neon-storage-openebs-nfs-install",
-                async () =>
-                {
-                    var values = new List<KeyValuePair<string, object>>();
+            if (cluster.Definition.Nodes.Where(n => n.OpenEBS).Count() < 3)
+            {
+                replicas = 1;
+            }
 
-                    values.Add(new KeyValuePair<string, object>($"persistence.size", ByteUnits.Parse(cluster.Definition.OpenEbs.NfsSize)));
-
-                    await master.InstallHelmChartAsync("nfs", releaseName: "neon-storage-nfs", @namespace: "openebs", values: values);
-                });
-
-            await master.InvokeIdempotentAsync("setup/neon-storage-openebs-nfs-ready",
-                async () =>
-                {
-                    await NeonHelper.WaitForAsync(
-                        async () =>
-                        {
-                            var statefulsets = await GetK8sClient(setupState).ListNamespacedStatefulSetAsync("openebs", labelSelector: "release=neon-storage-nfs");
-                            if (statefulsets == null || statefulsets.Items.Count == 0)
-                            {
-                                return false;
-                            }
-
-                            return statefulsets.Items.All(p => p.Status.ReadyReplicas == p.Spec.Replicas);
-                        },
-                        timeout:      clusterOpTimeout,
-                        pollInterval: clusterOpRetryInterval);
-                });
-
-            await Task.CompletedTask;
+            await CreateCstorStorageClass(setupState, master, "openebs-cstor", replicaCount: replicas);
+            await CreateCstorStorageClass(setupState, master, "openebs-cstor-unreplicated", replicaCount: 1);
         }
 
         /// <summary>
-        /// Installs OpenEBS
+        /// Creates a Kubernetes namespace.
         /// </summary>
         /// <param name="setupState">The setup controller state.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
@@ -2154,6 +2147,93 @@ spec:
         }
 
         /// <summary>
+        /// Creates a Kubernetes Storage Class.
+        /// </summary>
+        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="master">The master node where the operation will be performed.</param>
+        /// <param name="name">The new <see cref="V1StorageClass"/> name.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task CreateHostPathStorageClass(
+            ObjectDictionary setupState,
+            NodeSshProxy<NodeDefinition> master,
+            string name)
+        {
+            await master.InvokeIdempotentAsync($"deploy/storage-class-hostpath-{name}",
+                async () =>
+                {
+                    var storageClass = new V1StorageClass()
+                    {
+                        Metadata = new V1ObjectMeta()
+                        {
+                            Name = name,
+                            Annotations = new Dictionary<string, string>()
+                    {
+                        {  "cas.openebs.io/config", $@"
+- name: StorageType
+value: ""hostpath""
+- name: BasePath
+value: /var/openebs/local
+" },
+                        {"openebs.io/cas-type", "local" }
+                    },
+                        },
+                        Provisioner = "openebs.io/local",
+                        ReclaimPolicy = "Delete",
+                        VolumeBindingMode = "WaitForFirstConsumer"
+                    };
+
+                    await GetK8sClient(setupState).CreateStorageClassAsync(storageClass);
+                });
+        }
+
+        /// <summary>
+        /// Creates an OpenEBS cStor Kubernetes Storage Class.
+        /// </summary>
+        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="master">The master node where the operation will be performed.</param>
+        /// <param name="name">The new <see cref="V1StorageClass"/> name.</param>
+        /// <param name="cstorPoolCluster"></param>
+        /// <param name="replicaCount"></param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task CreateCstorStorageClass(
+            ObjectDictionary setupState,
+            NodeSshProxy<NodeDefinition> master,
+            string name,
+            string cstorPoolCluster = "cspc-stripe",
+            int replicaCount = 3)
+        {
+            await master.InvokeIdempotentAsync($"deploy/storage-class-cstor-{name}",
+                async () =>
+                {
+                    if (master.Cluster.Definition.Nodes.Where(n => n.OpenEBS).Count() < replicaCount)
+                    {
+                        replicaCount = master.Cluster.Definition.Nodes.Where(n => n.OpenEBS).Count();
+                    }
+
+                    var storageClass = new V1StorageClass()
+                    {
+                        Metadata = new V1ObjectMeta()
+                        {
+                            Name = name
+                        },
+                        Parameters = new Dictionary<string, string>
+                        {
+                            {  "cas-type", "cstor" },
+                            {  "cstorPoolCluster", cstorPoolCluster },
+                            {  "replicaCount", $"{replicaCount}" },
+
+                        },
+                        AllowVolumeExpansion = true,
+                        Provisioner = "cstor.csi.openebs.io",
+                        ReclaimPolicy = "Delete",
+                        VolumeBindingMode = "Immediate"
+                    };
+
+                    await GetK8sClient(setupState).CreateStorageClassAsync(storageClass);
+                });
+        }
+
+        /// <summary>
         /// Installs an Etcd cluster to the monitoring namespace.
         /// </summary>
         /// <param name="setupState">The setup controller state.</param>
@@ -2166,9 +2246,11 @@ spec:
 
             var cluster = setupState.Get<ClusterProxy>(ClusterProxyProperty);
 
-            master.Status = "deploy: neon-metrics-etcd-cluster";
+            master.Status = "deploy: neon-system-etcd-cluster";
 
-            await master.InvokeIdempotentAsync("deploy/neon-metrics-etcd-cluster",
+            await CreateCstorStorageClass(setupState, master, "neon-internal-etcd");
+
+            await master.InvokeIdempotentAsync("deploy/neon-system-etcd-cluster",
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
@@ -2186,16 +2268,16 @@ spec:
                         i++;
                     }
 
-                    await master.InstallHelmChartAsync("etcd_cluster", releaseName: "neon-metrics-etcd", @namespace: "monitoring", values: values);
+                    await master.InstallHelmChartAsync("etcd_cluster", releaseName: "neon-etcd", @namespace: "neon-system", values: values);
                 });
 
-            await master.InvokeIdempotentAsync("deploy/neon-metrics-etcd-cluster-ready",
+            await master.InvokeIdempotentAsync("deploy/neon-system-etcd-cluster-ready",
                 async () =>
                 {
                     await NeonHelper.WaitForAsync(
                         async () =>
                         {
-                            var statefulsets = await GetK8sClient(setupState).ListNamespacedStatefulSetAsync("monitoring", labelSelector: "release=neon-metrics-etcd");
+                            var statefulsets = await GetK8sClient(setupState).ListNamespacedStatefulSetAsync("monitoring", labelSelector: "release=neon-system-etcd");
                             if (statefulsets == null || statefulsets.Items.Count == 0)
                             {
                                 return false;
@@ -2248,6 +2330,19 @@ spec:
                         values.Add(new KeyValuePair<string, object>($"prometheus.prometheusSpec.tolerations[{i}].operator", "Exists"));
 
                         i++;
+                    }
+
+                    if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2)
+                    {
+                        await CreateHostPathStorageClass(setupState, master, "neon-internal-prometheus");
+                        values.Add(new KeyValuePair<string, object>($"alertmanager.alertmanagerSpec.storage.volumeClaimTemplate.spec.storageClassName", $"neon-internal-prometheus"));
+                        values.Add(new KeyValuePair<string, object>($"alertmanager.alertmanagerSpec.storage.volumeClaimTemplate.spec.accessModes[0]", "ReadWriteOnce"));
+                        values.Add(new KeyValuePair<string, object>($"alertmanager.alertmanagerSpec.storage.volumeClaimTemplate.spec.resources.requests.storage", $"5Gi"));
+                        values.Add(new KeyValuePair<string, object>($"prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.storageClassName", $"neon-internal-prometheus"));
+                        values.Add(new KeyValuePair<string, object>($"prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.accessModes[0]", "ReadWriteOnce"));
+                        values.Add(new KeyValuePair<string, object>($"prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.resources.requests.storage", $"5Gi"));
+                        values.Add(new KeyValuePair<string, object>($"prometheus.prometheusSpec.remoteRead", null));
+                        values.Add(new KeyValuePair<string, object>($"prometheus.prometheusSpec.remoteWrite", null));
                     }
 
                     await master.InstallHelmChartAsync("prometheus_operator", releaseName: "neon-metrics-prometheus", @namespace: "monitoring", values: values);
@@ -2500,6 +2595,15 @@ spec:
 
             var cluster = setupState.Get<ClusterProxy>(ClusterProxyProperty);
 
+            if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2)
+            {
+                await CreateHostPathStorageClass(setupState, master, "neon-internal-minio");
+            }
+            else
+            {
+                await CreateCstorStorageClass(setupState, master, "neon-internal-minio");
+            }
+
             await master.InvokeIdempotentAsync("deploy/minio",
                 async () =>
                 {
@@ -2512,7 +2616,24 @@ spec:
                         values.Add(new KeyValuePair<string, object>($"mode", "distributed"));
                     }
 
-                    await master.InstallHelmChartAsync("minio", releaseName: "neon-metrics-minio", @namespace: "monitoring", values: values);
+                    await master.InstallHelmChartAsync("minio", releaseName: "neon-system-minio", @namespace: "neon-system", values: values);
+                });
+
+            await master.InvokeIdempotentAsync("deploy/minio-secret",
+                async () =>
+                {
+                    var secret = await GetK8sClient(setupState).ReadNamespacedSecretAsync("neon-system-minio", "neon-system");
+                    secret.Metadata.NamespaceProperty = "monitoring";
+
+                    var monitoringSecret = new V1Secret()
+                    {
+                        Metadata = new V1ObjectMeta()
+                        {
+                            Name = secret.Name()
+                        },
+                        Data = secret.Data,
+                    };
+                    await GetK8sClient(setupState).CreateNamespacedSecretAsync(monitoringSecret, "monitoring");
                 });
         }
         
@@ -2534,16 +2655,11 @@ spec:
 
             var tasks = new List<Task>();
 
-            if (cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count() >= 3)
-            {
-                await InstallEtcdAsync(setupState, master);
-            }
-
-            await InstallPrometheusAsync(setupState, master);
-
             tasks.Add(WaitForPrometheusAsync(setupState, master));
-            tasks.Add(InstallMinioAsync(setupState, master));
-            tasks.Add(InstallCortexAsync(setupState, master));
+            if (cluster.HostingManager.HostingEnvironment != HostingEnvironment.Wsl2)
+            {
+                tasks.Add(InstallCortexAsync(setupState, master));
+            }
             tasks.Add(InstallLokiAsync(setupState, master));
             tasks.Add(InstallPromtailAsync(setupState, master));
             tasks.Add(master.InstallHelmChartAsync("istio_prometheus", @namespace: "monitoring"));
@@ -2634,38 +2750,61 @@ spec:
 
             var cluster = setupState.Get<ClusterProxy>(ClusterProxyProperty);
 
+            var adminPassword = NeonHelper.GetCryptoRandomPassword(20);
+
             master.Status = "deploy: registry";
 
             await master.InvokeIdempotentAsync("deploy/neon-system-registry-secret",
                 async () =>
                 {
-                    var cert = TlsCertificate.CreateSelfSigned("*");
+                    await SyncContext.ClearAsync;
+
+                    var cert = KubeHelper.CreateSelfSigned("*");
+                    
+                    StringBuilder certBuilder = new StringBuilder();
+                    certBuilder.AppendLine("-----BEGIN CERTIFICATE-----");
+                    certBuilder.AppendLine(
+                        Convert.ToBase64String(cert.RawData, Base64FormattingOptions.InsertLineBreaks));
+                    certBuilder.AppendLine("-----END CERTIFICATE-----");
+
+                    var certPem = certBuilder.ToString();
+
+                    StringBuilder keyBuilder = new StringBuilder();
+                    keyBuilder.AppendLine("-----BEGIN PRIVATE KEY-----");
+                    keyBuilder.AppendLine(
+                            Convert.ToBase64String(cert.PrivateKey.ExportPkcs8PrivateKey(), Base64FormattingOptions.InsertLineBreaks));
+                    keyBuilder.AppendLine("-----END PRIVATE KEY-----");
+
+                    var keyPem = keyBuilder.ToString();
 
                     var harborCert = new V1Secret()
-                    {
-                        Metadata = new V1ObjectMeta()
                         {
-                            Name = "neon-registry-harbor"
-                        },
-                        Type = "Opaque",
-                        StringData = new Dictionary<string, string>()
-                        {
-                            { "tls.crt", cert.CertPemNormalized },
-                            { "tls.key", cert.KeyPemNormalized }
-                        }
-                    };
+                            Metadata = new V1ObjectMeta()
+                            {
+                                Name = "neon-registry-harbor-internal"
+                            },
+                            Type = "Opaque",
+                            StringData = new Dictionary<string, string>()
+                            {
+                                { "tls.crt", certPem },
+                                { "tls.key", keyPem }
+                            }
+                        };
 
-                    await GetK8sClient(setupState).CreateNamespacedSecretAsync(harborCert, "neon-system");
+                        await GetK8sClient(setupState).CreateNamespacedSecretAsync(harborCert, "neon-system");
                 });
 
             await master.InvokeIdempotentAsync("deploy/neon-system-registry-redis",
                 async () =>
                 {
+                    await SyncContext.ClearAsync;
+                    
                     var values = new List<KeyValuePair<string, object>>();
 
                     var replicas = Math.Min(3, cluster.Definition.Masters.Count());
                     values.Add(new KeyValuePair<string, object>($"replicas", $"{replicas}"));
-
+                    values.Add(new KeyValuePair<string, object>($"harborAdminPassword", adminPassword));
+                    
                     if (replicas < 2)
                     {
                         values.Add(new KeyValuePair<string, object>($"hardAntiAffinity", false));
@@ -2687,6 +2826,7 @@ spec:
             await master.InvokeIdempotentAsync("deploy/neon-system-registry-redis-ready",
                 async () =>
                 {
+                    await SyncContext.ClearAsync;
                     await NeonHelper.WaitForAsync(
                         async () =>
                         {
@@ -2767,11 +2907,30 @@ spec:
 
                                return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
                            },
-                           timeout:      clusterOpTimeout,
+                           timeout: clusterOpTimeout,
                            pollInterval: clusterOpRetryInterval);
                 });
 
-            await Task.CompletedTask;
+
+
+            await master.InvokeIdempotentAsync("deploy/neon-system-registry-harbor-loadimages",
+                async () =>
+                {
+                    var sbScript = new StringBuilder();
+
+                    sbScript.AppendLine($@"
+#!/bin/bash
+
+curl -k -u ""admin:{adminPassword}"" -X POST ""https://neon-registry.node.local/api/v2.0/projects"" -H ""accept: application/json"" -H ""Content-Type: application/json"" -d ""{{ \""project_name\"": \""neon-internal123\"", \""storage_limit\"": 0, \""public\"": true}}""
+
+for image in `docker image ls | grep neon - registry.node.local | awk '{{print $1"":""$2}}'`; do
+    docker push $image
+done
+");
+
+                    master.SudoCommand(CommandBundle.FromScript(sbScript));
+
+                });
         }
 
         /// <summary>
@@ -2814,8 +2973,6 @@ spec:
                         timeout:      clusterOpTimeout,
                         pollInterval: clusterOpRetryInterval);
                 });
-
-            await Task.CompletedTask;
         }
 
         /// <summary>
@@ -2857,6 +3014,15 @@ spec:
 
             master.Status = "deploy: neon-system-db";
 
+            if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2)
+            {
+                await CreateHostPathStorageClass(setupState, master, "neon-internal-citus");
+            }
+            else
+            {
+                await CreateCstorStorageClass(setupState, master, "neon-internal-citus");
+            }
+
             await master.InvokeIdempotentAsync("deploy/neon-system-db",
                 async () =>
                 {
@@ -2868,9 +3034,14 @@ spec:
                     values.Add(new KeyValuePair<string, object>($"manager.replicas", replicas));
                     values.Add(new KeyValuePair<string, object>($"worker.replicas", replicas));
 
-                    if (replicas < 2)
+                    if (replicas < 3)
                     {
                         values.Add(new KeyValuePair<string, object>($"manager.minimumWorkers", "1"));
+                    }
+
+                    if (cluster.Definition.Nodes.Where(n => n.Labels.OpenEBS).Count() < 3)
+                    {
+                        values.Add(new KeyValuePair<string, object>($"persistence.replicaCount", "1"));
                     }
 
                     int i = 0;

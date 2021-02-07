@@ -41,10 +41,10 @@ spec:
         runAsNonRoot: true
         runAsUser: 10000
         fsGroup: 10000
-      automountServiceAccountToken: true
+      automountServiceAccountToken: false
       containers:
         - name: trivy
-          image: "{{ .Values.trivy.image.organization }}/{{ .Values.trivy.image.repository }}:{{ .Values.trivy.image.tag }}"
+          image: {{ .Values.trivy.image.repository }}:{{ .Values.trivy.image.tag }}
           imagePullPolicy: {{ .Values.imagePullPolicy }}
           securityContext:
             privileged: false

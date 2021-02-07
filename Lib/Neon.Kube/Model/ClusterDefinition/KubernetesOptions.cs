@@ -221,8 +221,7 @@ namespace Neon.Kube
                 }
             }
 
-            if (!clusterDefinition.Nodes.Any(n => n.Labels.NeonSystemRegistry)
-                && clusterDefinition.Nodes.Count() > 1)
+            if (!clusterDefinition.Nodes.Any(n => n.Labels.NeonSystemRegistry))
             {
                 foreach (var m in clusterDefinition.Masters)
                 {

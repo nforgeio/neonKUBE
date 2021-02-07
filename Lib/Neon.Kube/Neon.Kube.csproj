@@ -397,7 +397,6 @@
     <None Remove="Resources\Helm\minio\templates\serviceaccount.yaml" />
     <None Remove="Resources\Helm\minio\templates\servicemonitor.yaml" />
     <None Remove="Resources\Helm\minio\templates\statefulset.yaml" />
-    <None Remove="Resources\Helm\minio\templates\storageClass.yaml" />
     <None Remove="Resources\Helm\minio\templates\_helpers.tpl" />
     <None Remove="Resources\Helm\minio\templates\_helper_create_bucket.txt" />
     <None Remove="Resources\Helm\minio\values.yaml" />
@@ -414,12 +413,12 @@
     <None Remove="Resources\Helm\nfs\OWNERS._" />
     <None Remove="Resources\Helm\nfs\README.md" />
     <None Remove="Resources\Helm\nfs\templates\clusterrole.yaml" />
+    <None Remove="Resources\Helm\nfs\templates\newStorageclass.yaml" />
     <None Remove="Resources\Helm\nfs\templates\NOTES.txt" />
     <None Remove="Resources\Helm\nfs\templates\rolebinding.yaml" />
     <None Remove="Resources\Helm\nfs\templates\service.yaml" />
     <None Remove="Resources\Helm\nfs\templates\serviceaccount.yaml" />
     <None Remove="Resources\Helm\nfs\templates\statefulset.yaml" />
-    <None Remove="Resources\Helm\nfs\templates\storageclass.yaml" />
     <None Remove="Resources\Helm\nfs\templates\_helpers.tpl" />
     <None Remove="Resources\Helm\nfs\values.yaml" />
     <None Remove="Resources\Helm\openebs-cstor-operator\.helmignore" />
@@ -795,6 +794,7 @@
     <EmbeddedResource Include="Resources\Helm\harbor\conf\clair.yaml" />
     <EmbeddedResource Include="Resources\Helm\harbor\conf\notary-server.json" />
     <EmbeddedResource Include="Resources\Helm\harbor\conf\notary-signer.json" />
+    <EmbeddedResource Include="Resources\Helm\harbor\LICENSE._" />
     <EmbeddedResource Include="Resources\Helm\loki\.helmignore" />
     <EmbeddedResource Include="Resources\Helm\loki\Chart.yaml" />
     <EmbeddedResource Include="Resources\Helm\loki\README.md" />
@@ -838,7 +838,6 @@
     <EmbeddedResource Include="Resources\Helm\minio\templates\serviceaccount.yaml" />
     <EmbeddedResource Include="Resources\Helm\minio\templates\servicemonitor.yaml" />
     <EmbeddedResource Include="Resources\Helm\minio\templates\statefulset.yaml" />
-    <EmbeddedResource Include="Resources\Helm\minio\templates\storageClass.yaml" />
     <EmbeddedResource Include="Resources\Helm\minio\templates\_helpers.tpl" />
     <EmbeddedResource Include="Resources\Helm\minio\templates\_helper_create_bucket.txt" />
     <EmbeddedResource Include="Resources\Helm\minio\values.yaml" />
@@ -1199,7 +1198,6 @@
     <EmbeddedResource Include="Resources\Helm\harbor\.helmignore" />
     <EmbeddedResource Include="Resources\Helm\harbor\Chart.yaml" />
     <EmbeddedResource Include="Resources\Helm\harbor\CONTRIBUTING.md" />
-    <EmbeddedResource Include="Resources\Helm\harbor\LICENSE._" />
     <EmbeddedResource Include="Resources\Helm\harbor\README.md" />
     <EmbeddedResource Include="Resources\Helm\harbor\templates\chartmuseum\chartmuseum-cm.yaml" />
     <EmbeddedResource Include="Resources\Helm\harbor\templates\chartmuseum\chartmuseum-dpl.yaml" />
@@ -1354,7 +1352,7 @@
     <EmbeddedResource Include="Resources\Helm\nfs\templates\service.yaml" />
     <EmbeddedResource Include="Resources\Helm\nfs\templates\serviceaccount.yaml" />
     <EmbeddedResource Include="Resources\Helm\nfs\templates\statefulset.yaml" />
-    <EmbeddedResource Include="Resources\Helm\nfs\templates\storageclass.yaml" />
+    <EmbeddedResource Include="Resources\Helm\nfs\templates\newStorageclass.yaml" />
     <EmbeddedResource Include="Resources\Helm\nfs\templates\_helpers.tpl" />
     <EmbeddedResource Include="Resources\Helm\nfs\values.yaml" />
     <EmbeddedResource Include="Resources\Helm\openebs\Chart.yaml" />

@@ -37,16 +37,7 @@ service:
 
 persistence:
   enabled: true
-
-  ## Persistent Volume Storage Class
-  ## If defined, storageClassName: <storageClass>
-  ## If set to "-", storageClassName: "", which disables dynamic provisioning
-  ## If undefined (the default) or set to null, no storageClassName spec is
-  ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
-  ##   GKE, AWS & OpenStack)
-  ##
-  storageClass: "cstor-csi-stripe"
-
+  storageClass: "neon-internal-harbor"
   accessMode: ReadWriteOnce
   size: 16Gi
 
@@ -92,8 +83,7 @@ resources: {}
   #  cpu: 100m
   #  memory: 128Mi
 
-nodeSelector:
-  neonkube.io/node.openebs: "true"
+nodeSelector: {}
 
 tolerations: 
 - operator: "Exists"

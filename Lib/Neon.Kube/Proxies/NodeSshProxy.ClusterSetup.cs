@@ -678,6 +678,11 @@ service kubelet restart
                     {
                         foreach (var value in values)
                         {
+                            if (value.Value == null)
+                            {
+                                valueOverrides.AppendWithSeparator($"--set {value.Key}=null");
+                            }
+
                             var valueType = value.Value.GetType();
 
                             if (valueType == typeof(string))

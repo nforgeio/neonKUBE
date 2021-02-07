@@ -1,3 +1,4 @@
+---
 # Source: calico/templates/calico-node.yaml
 # This manifest installs the calico-node container, as well
 # as the CNI plugins and network config on
@@ -44,7 +45,7 @@ spec:
         # It can be deleted if this is a fresh installation, or if you have already
         # upgraded to use calico-ipam.
         - name: upgrade-ipam
-          image: calico/cni:v3.16.6
+          image: neon-registry.node.local/calico-cni:v3.16.7
           command: ["/opt/cni/bin/calico-ipam", "-upgrade"]
           envFrom:
           - configMapRef:
@@ -71,7 +72,7 @@ spec:
         # This container installs the CNI binaries
         # and CNI network config file on each node.
         - name: install-cni
-          image: calico/cni:v3.16.6
+          image: neon-registry.node.local/calico-cni:v3.16.7
           command: ["/opt/cni/bin/install"]
           envFrom:
           - configMapRef:
@@ -112,7 +113,7 @@ spec:
         # Adds a Flex Volume Driver that creates a per-pod Unix Domain Socket to allow Dikastes
         # to communicate with Felix over the Policy Sync API.
         - name: flexvol-driver
-          image: calico/pod2daemon-flexvol:v3.16.6
+          image: neon-registry.node.local/calico-pod2daemon-flexvol:v3.16.7
           volumeMounts:
           - name: flexvol-driver-host
             mountPath: /host/driver
@@ -123,7 +124,7 @@ spec:
         # container programs network policy and routes on each
         # host.
         - name: calico-node
-          image: calico/node:v3.16.6
+          image: neon-registry.node.local/calico-node:v3.16.7
           envFrom:
           - configMapRef:
               # Allow KUBERNETES_SERVICE_HOST and KUBERNETES_SERVICE_PORT to be overridden for eBPF mode.
@@ -180,8 +181,8 @@ spec:
             # The default IPv4 pool to create on startup if none exists. Pod IPs will be
             # chosen from this range. Changing this value after installation will have
             # no effect. This should fall within `--cluster-cidr`.
-            #- name: CALICO_IPV4POOL_CIDR
-            #  value: "{{ .Values.ipv4PoolCidr }}"
+            # - name: CALICO_IPV4POOL_CIDR
+            #   value: "10.254.0.0/16"
             # Disable file logging so `kubectl logs` works.
             - name: CALICO_DISABLE_FILE_LOGGING
               value: "true"

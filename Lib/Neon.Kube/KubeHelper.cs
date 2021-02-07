@@ -1164,6 +1164,96 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Generates a self-signed certificate for arbitrary hostnames, possibly including 
+        /// hostnames with wildcards.
+        /// </summary>
+        /// <param name="hostnames">
+        /// <para>
+        /// The certificate hostnames.
+        /// </para>
+        /// <note>
+        /// You can use include a <b>"*"</b> to specify a wildcard
+        /// certificate like: <b>*.test.com</b>.
+        /// </note>
+        /// </param>
+        /// <param name="bitCount">The certificate key size in bits: one of <b>1024</b>, <b>2048</b>, or <b>4096</b> (defaults to <b>2048</b>).</param>
+        /// <param name="validDays">
+        /// The number of days the certificate will be valid.  This defaults to 365,000 days
+        /// or about 1,000 years.
+        /// </param>
+        /// <param name="issuedBy">Optionally specifies the issuer.</param>
+        /// <param name="issuedTo">Optionally specifies who/what the certificate is issued for.</param>
+        /// <returns>The new <see cref="TlsCertificate"/>.</returns>
+        public static X509Certificate2 CreateSelfSigned(
+            string hostname,
+            int bitCount = 2048,
+            int validDays = 365000,
+            Wildcard wildcard = Wildcard.None,
+            string issuedBy = null,
+            string issuedTo = null, 
+            string friendlyName = null)
+        {
+            Covenant.Requires<ArgumentException>(!string.IsNullOrEmpty(hostname), nameof(hostname));
+            Covenant.Requires<ArgumentException>(bitCount == 1024 || bitCount == 2048 || bitCount == 4096, nameof(bitCount));
+            Covenant.Requires<ArgumentException>(validDays > 1, nameof(validDays));
+
+            if (string.IsNullOrEmpty(issuedBy))
+            {
+                issuedBy = ".";
+            }
+
+            if (string.IsNullOrEmpty(issuedTo))
+            {
+                issuedTo = hostname;
+            }
+
+            SubjectAlternativeNameBuilder sanBuilder = new SubjectAlternativeNameBuilder();
+            switch (wildcard)
+            {
+                case Wildcard.None:
+
+                    sanBuilder.AddDnsName(hostname);
+                    break;
+
+                case Wildcard.SubdomainsOnly:
+
+                    hostname = $"*.{hostname}";
+                    sanBuilder.AddDnsName(hostname);
+                    break;
+
+                case Wildcard.RootAndSubdomains:
+
+                    sanBuilder.AddDnsName(hostname);
+                    sanBuilder.AddDnsName($"*.{hostname}");
+                    break;
+            }
+
+            X500DistinguishedName distinguishedName = new X500DistinguishedName($"CN={hostname}");
+
+            using (RSA rsa = RSA.Create(bitCount))
+            {
+                var request = new CertificateRequest(distinguishedName, rsa, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+
+                //request.CertificateExtensions.Add(
+                //    new X509KeyUsageExtension(X509KeyUsageFlags.DataEncipherment | X509KeyUsageFlags.KeyEncipherment | X509KeyUsageFlags.DigitalSignature, false));
+                
+                //request.CertificateExtensions.Add(
+                //        new X509BasicConstraintsExtension(false, false, 0, false));
+
+                //request.CertificateExtensions.Add(
+                //   new X509EnhancedKeyUsageExtension(
+                //       new OidCollection { new Oid("1.3.6.1.5.5.7.3.1") }, false));
+
+                request.CertificateExtensions.Add(sanBuilder.Build());
+
+                var certificate = request.CreateSelfSigned(new DateTimeOffset(DateTime.UtcNow.AddDays(-1)), new DateTimeOffset(DateTime.UtcNow.AddDays(validDays)));
+                certificate.FriendlyName = friendlyName;
+
+                return certificate;
+            }
+        }
+
+        /// <summary>
         /// Looks for a certificate with a friendly name.
         /// </summary>
         /// <param name="store">The certificate store.</param>
@@ -2185,9 +2275,12 @@ exit 0
                     node.OpenEBS = true;
                 }
 
-                foreach (var node in clusterDefinition.SortedMasterNodes.Take(3 - clusterDefinition.Workers.Count()))
+                if (clusterDefinition.Kubernetes.AllowPodsOnMasters.Value == true)
                 {
-                    node.OpenEBS = true;
+                    foreach (var node in clusterDefinition.SortedMasterNodes.Take(3 - clusterDefinition.Workers.Count()))
+                    {
+                        node.OpenEBS = true;
+                    }
                 }
             }
         }

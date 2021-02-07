@@ -17,6 +17,14 @@ tolerations:
   operator: "Exists"
   effect: "NoSchedule"
 
+## Enable persistence using Persistent Volume Claims
+## ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
+## 
+persistence:
+  enabled: true
+  storageClass: "neon-internal-citus"
+  accessMode: ReadWriteOnce
+
 ## Citus Worker
 worker:
   replicas: 3
@@ -33,7 +41,7 @@ worker:
   #    memory: 1Gi
   persistence:
     size: 5Gi
-    storageClassName: openebs-hostpath
+    storageClassName: neon-internal-citus
 
 ## Citus Master
 master:
@@ -49,7 +57,7 @@ master:
   #    memory: 1Gi
   persistence:
     size: 5Gi
-    storageClassName: openebs-hostpath
+    storageClassName: neon-internal-citus
 
 
 ## Citus Master Service
@@ -67,10 +75,7 @@ manager:
     repository: bakdata-citus-membership-manager
     tag: v0.3
     pullPolicy: IfNotPresent
-  resources:
-    requests:
-      cpu: 100m
-      memory: 100Mi
+  resources: {}
   namespace: "default"
   shortUrl: "True"
   minimumWorkers: "2"

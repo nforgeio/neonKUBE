@@ -69,6 +69,7 @@ rules:
       - update
       # watch for changes
       - watch
+
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
@@ -224,7 +225,6 @@ rules:
       - daemonsets
     verbs:
       - get
-
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
