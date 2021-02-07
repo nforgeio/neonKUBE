@@ -450,6 +450,13 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="hostingEnvironment">The hosting environment.</param>
         /// <returns><c>true</c> for on-premise environments.</returns>
+        /// <remarks>
+        /// <note>
+        /// Although <see cref="HostingEnvironment.Wsl2"/> is technically hosted on the Windows
+        /// Hyper-V platform, we're not going to consider it to be hosted by a hypervisor because
+        /// it's a special case.
+        /// </note>
+        /// </remarks>
         public static bool IsOnPremiseHypervisorEnvironment(HostingEnvironment hostingEnvironment)
         {
             return hostingEnvironment == HostingEnvironment.HyperV ||

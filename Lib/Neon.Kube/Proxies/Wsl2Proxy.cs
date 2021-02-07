@@ -518,11 +518,28 @@ touch {preparedStatePath}
 ";
                     SudoExecuteScript(setPreparedScript).EnsureSuccess();
 
+                    // We need to remove SNAP before we configure SYSYEMD.
+
+                    var removeSnapPath   = LinuxPath.Combine(KubeNodeFolders.State, "base", "remove-snap");
+                    var removeSnapScript =
+$@"
+set -euo pipefail
+
+apt-get purge snapd -yq
+
+# Touch the [base/remove-snap] idempotent action ID for this operation.  
+# This must match the action ID used within [NodeSshProxy.BaseRemoveSnap()].
+
+mkdir -p {LinuxPath.GetDirectoryName(removeSnapPath)}
+touch {removeSnapPath}
+";
+                    SudoExecuteScript(removeSnapScript).EnsureSuccess();
+
                     // Get the distribution's private IP address.
 
                     GetAddress();
 
-                    // Ensure that OpenSSH binds only to the private IP
+                    // Ensure that OpenSSH binds only to the private IP.
 
                     ConfigureOpenSSH();
                 }

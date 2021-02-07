@@ -99,7 +99,7 @@ namespace Neon.Kube
             BaseConfigureApt(hostingEnvironment, statusWriter: statusWriter);
             BaseConfigureBashEnvironment(hostingEnvironment, statusWriter);
             BaseConfigureDnsIPv4Preference(hostingEnvironment, statusWriter);
-            BaseRemoveSnaps(hostingEnvironment, statusWriter);
+            BaseRemoveSnap(hostingEnvironment, statusWriter);
             BaseRemovePackages(hostingEnvironment, statusWriter);
             BaseCreateKubeFolders(hostingEnvironment, statusWriter);
 
@@ -322,7 +322,7 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
         {
             // This currently applies only to on-premise hypervisors.
 
-            if (KubeHelper.IsOnPremiseHypervisorEnvironment(hostingEnvironment))
+            if (!KubeHelper.IsOnPremiseHypervisorEnvironment(hostingEnvironment))
             {
                 return;
             }
@@ -441,42 +441,51 @@ touch /etc/cloud/cloud-init.disabled
         }
 
         /// <summary>
-        /// Removes any installed snaps.
+        /// Removes any installed snaps as well as the entire snap infrastructure.
         /// </summary>
         /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public void BaseRemoveSnaps(HostingEnvironment hostingEnvironment, Action<string> statusWriter = null)
+        public void BaseRemoveSnap(HostingEnvironment hostingEnvironment, Action<string> statusWriter = null)
         {
-            InvokeIdempotent("base/clean-packages",
+            // NOTE:
+            //
+            // The "base/remove-snap" action ID string below must match the string
+            // used within [Wsl2Proxy.StartAsync()]
+
+            InvokeIdempotent("base/remove-snap",
                 () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Remove", "Snaps");
-                    Status = "remove: snaps";
+                    KubeHelper.WriteStatus(statusWriter, "Remove", "Snap");
+                    Status = "remove: snap";
 
                     var script =
 @"
-snap remove --purge lxd
-snap remove --purge core18
-snap remove --purge snapd
+set -euo pipefail
+
+apt-get purge snapd -yq
+
+rm -rf ~/snap
+rm -rf /var/cache/snapd
+rm -rf /snap
 ";
                     SudoCommand(CommandBundle.FromScript(script), RunOptions.Defaults | RunOptions.FaultOnError);
                 });
         }
 
         /// <summary>
-        /// Removes unnecessary packages.
+        /// Removes unneeded packages.
         /// </summary>
         /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         public void BaseRemovePackages(HostingEnvironment hostingEnvironment, Action<string> statusWriter = null)
         {
-            InvokeIdempotent("base/clean-packages",
+            InvokeIdempotent("base/remove-packages",
                 () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Remove", "Unnecessary packages");
-                    Status = "Remove: Unnecessary packages";
+                    KubeHelper.WriteStatus(statusWriter, "Remove", "Unneeded packages");
+                    Status = "remove: unneeded packages";
 
-                    // Purge unnecessary packages.
+                    // Purge unneeded packages.
 
 var removePackagesScript =
 $@"
@@ -510,7 +519,7 @@ $@"
             InvokeIdempotent("base/apt",
                 () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Configure", "package manager");
+                    KubeHelper.WriteStatus(statusWriter, "Configure", "Package manager");
                     Status = "configure: package manager";
 
                     if (!allowPackageManagerIPv6)
