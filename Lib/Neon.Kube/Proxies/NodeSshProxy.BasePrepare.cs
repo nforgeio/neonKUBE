@@ -189,8 +189,8 @@ sed -i 's!^#precedence ::ffff:0:0/96  10$!precedence ::ffff:0:0/96  100!g' /etc/
             InvokeIdempotent("base/bash-environment",
                 () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Configure", $"Bash environment vars");
-                    Status = $"configure: bash environment vars";
+                    KubeHelper.WriteStatus(statusWriter, "Configure", $"Environment vars");
+                    Status = $"configure: environment vars";
 
                     var script =
 @"

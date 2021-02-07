@@ -198,6 +198,8 @@ namespace Neon.Kube
 
         private readonly string preparedStatePath = LinuxPath.Combine(KubeNodeFolders.State, "prepare", "wsl2");
 
+        private string cachedAddress = null;
+
         /// <summary>
         /// Constructs a proxy connected to a specific WSL2 distribution, starting the
         /// distribution by default of it's npot already running.
@@ -251,7 +253,18 @@ namespace Neon.Kube
         /// This returns <c>null</c> when the distribution hasn't been started.
         /// </note>
         /// </summary>
-        public string Address { get; private set; }
+        public string Address
+        {
+            get
+            {
+                if (cachedAddress != null)
+                {
+                    return cachedAddress;
+                }
+
+                return cachedAddress = GetAddress();
+            }
+        }
 
         /// <summary>
         /// Determines whether the distribution is running.
@@ -292,13 +305,13 @@ namespace Neon.Kube
         /// IP address as the listing address.
         /// </para>
         /// </remarks>
-        private void ConfigureOpenSSH()
+        private void ConfigureOpenSshInterface()
         {
             var listenConf =
 $@"# This file is regenerated whenever the WSL2 distribution is started by neonDESKTOP.
 #
-# This is required because OpenSSH server listens on [0.0.0.0:22] by default.  
-# This will result in a port conflict when the Windows host machine is also 
+# This is required because OpenSSH server listens on [0.0.0.0:22] by default,  
+# which will result in a port conflict when the Windows host machine is also 
 # listening on port 22 or if an other WSL2 distro is listening there.
 #
 # To handle this, we need to bind OpenSSH to the distro's private [172.x.x.x] 
@@ -316,20 +329,25 @@ AddressFamily inet
 
 ListenAddress {this.Address}
 ";
-            SudoExecute("mkdir",
-                new object[]
-                {
-                    "sudo", "mkdir", "-p", "/etc/ssh/sshd_config.d"
-
-                }).EnsureSuccess();
-
+            SudoExecute("mkdir", new object[] { "-p", "/etc/ssh/sshd_config.d" }).EnsureSuccess();
             UploadFile("/etc/ssh/sshd_config.d/listen.conf", listenConf, owner: "root", permissions: "644");
+
+            // We need to restart OpenSSH so it'll pick up the change if we're 
+            // not still running under MSFT's [init] process.
+
+            var response = SudoExecute("ps", new object[] { "-eF" }).EnsureSuccess();
+
+            if (!response.OutputText.Contains("/init"))
+            {
+                SudoExecute("systemctl", new object[] { "restart", "ssh" }).EnsureSuccess();
+            }
         }
 
         /// <summary>
-        /// Runs the <b>ip address</b> to intitialize the distribution's private IP address.
+        /// Runs the <b>ip address</b> to determing the distribution's private IP address.
         /// </summary>
-        private void GetAddress()
+        /// <returns>The distribution address.</returns>
+        private string GetAddress()
         {
             // Execute [ip address] in the distribution and parse the output to extract
             // the distribution's IP address.  The output looks like somthing this:
@@ -395,8 +413,7 @@ ListenAddress {this.Address}
                     {
                         var fields = line.Split(new char[] { ' ', '/' }, StringSplitOptions.RemoveEmptyEntries);
 
-                        Address = fields[1];
-                        break;
+                        return fields[1];
                     }
                 }
             }
@@ -408,31 +425,22 @@ ListenAddress {this.Address}
         /// This also performs some initialization if required, including disabling
         /// SUDO password prompts. 
         /// </para>
-        /// <note>
-        /// You need to call this for <see cref="Address"/> to be initialized if
-        /// you disabled start when constructing the instance even if the
-        /// distribution is already running.
-        /// </note>
         /// </summary>
         /// <returns>The IP address assigned to the distribution.</returns>
         public string Start()
         {
             if (IsPrepared)
             {
-                // Get the distribution's private IP address.
-
-                GetAddress();
-
                 // Ensure that OpenSSH binds only to the private IP
 
-                ConfigureOpenSSH();
+                ConfigureOpenSshInterface();
+
+                // The distro has already been prepared, so we can simply start
+                // systemd in its own namespace to get things rolling, if it is
+                // configured.  Note that this cannot be done as [root].
 
                 if (File.Exists(ToWindowsPath("/usr/sbin/start-systemd-namespace")))
                 {
-                    // The distro has already been prepared, so we can simply start
-                    // systemd in its own namespace to get things rolling, if it is
-                    // configured.  Note that this cannot be done as [root].
-
                     Covenant.Assert(User != "root", "WSL2 distro prepared for [systemd] cannot be started as [root].");
 
                     NeonHelper.ExecuteCapture("wsl.exe",
@@ -535,13 +543,37 @@ touch {removeSnapPath}
 ";
                     SudoExecuteScript(removeSnapScript).EnsureSuccess();
 
-                    // Get the distribution's private IP address.
+                    //---------------------------------------------------------
+                    // OpenSSH needs some additional configuration.
 
-                    GetAddress();
+                    // The distribution doesn't come with any host keys installed, so create them.
+
+                    SudoExecute("ssh-keygen", new object[] { "-A" }).EnsureSuccess();
 
                     // Ensure that OpenSSH binds only to the private IP.
 
-                    ConfigureOpenSSH();
+                    ConfigureOpenSshInterface();
+
+                    // Upload our standard OpenSSH configuration.
+
+                    UploadFile("/etc/ssh/sshd_config", KubeHelper.OpenSshConfig, "root", "644");
+
+                    // We're going to restart SSH and ignore an error we don't care about.
+
+                    var response = SudoExecute("systemctl", "restart", "ssh");
+
+                    if (response.ExitCode != 0 && !response.ErrorText.Contains("your 131072x1 screen size is bogus"))
+                    {
+                        //response.EnsureSuccess();
+                    }
+
+                    // Ensure that OpenSSH binds only to the private IP.
+
+                    ConfigureOpenSshInterface();
+
+                    // The distribution is prepared now.
+
+                    IsPrepared = true;
                 }
                 finally
                 {
