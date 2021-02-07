@@ -293,4 +293,3 @@ RestoreVersion Neon.Kube.Xunit
 ""
 "** Package publication completed"
 ""
-pause
