@@ -48,6 +48,32 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="assets-Neon.XenServer\CommandLib.dll" />
+    <None Remove="assets-Neon.XenServer\win\CommandLib.dll" />
+    <None Remove="assets-Neon.XenServer\win\xe.exe" />
+    <None Remove="assets-Neon.XenServer\xe.exe" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="assets-Neon.XenServer\CommandLib.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <PackageCopyToOutput>true</PackageCopyToOutput>
+    </Content>
+    <Content Include="assets-Neon.XenServer\win\CommandLib.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <PackageCopyToOutput>true</PackageCopyToOutput>
+    </Content>
+    <Content Include="assets-Neon.XenServer\win\xe.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <PackageCopyToOutput>true</PackageCopyToOutput>
+    </Content>
+    <Content Include="assets-Neon.XenServer\xe.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <PackageCopyToOutput>true</PackageCopyToOutput>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
     <ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
   </ItemGroup>
@@ -55,6 +81,17 @@
   <ItemGroup>
     <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
     <None Include="..\..\LICENSE" Pack="True" PackagePath="" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="assets-Neon.XenServer\README.md">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="assets-Neon.XenServer\linux\" />
+    <Folder Include="assets-Neon.XenServer\osx\" />
   </ItemGroup>
 
 </Project>
