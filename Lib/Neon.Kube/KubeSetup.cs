@@ -2911,10 +2911,8 @@ value: /var/openebs/local
                            pollInterval: clusterOpRetryInterval);
                 });
 
-
-
-            await master.InvokeIdempotentAsync("deploy/neon-system-registry-harbor-loadimages",
-                async () =>
+            master.InvokeIdempotent("deploy/neon-system-registry-harbor-loadimages",
+                () =>
                 {
                     var sbScript = new StringBuilder();
 
@@ -2927,7 +2925,6 @@ for image in `docker image ls | grep neon - registry.node.local | awk '{{print $
     docker push $image
 done
 ");
-
                     master.SudoCommand(CommandBundle.FromScript(sbScript));
 
                 });
