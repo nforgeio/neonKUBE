@@ -48,26 +48,25 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="assets-Neon.XenServer\linux\**" />
+    <Compile Remove="assets-Neon.XenServer\osx\**" />
+    <EmbeddedResource Remove="assets-Neon.XenServer\linux\**" />
+    <EmbeddedResource Remove="assets-Neon.XenServer\osx\**" />
+    <None Remove="assets-Neon.XenServer\linux\**" />
+    <None Remove="assets-Neon.XenServer\osx\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="assets-Neon.XenServer\CommandLib.dll" />
-    <None Remove="assets-Neon.XenServer\win\CommandLib.dll" />
-    <None Remove="assets-Neon.XenServer\win\xe.exe" />
     <None Remove="assets-Neon.XenServer\xe.exe" />
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="assets-Neon.XenServer\CommandLib.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <PackageCopyToOutput>true</PackageCopyToOutput>
-    </Content>
     <Content Include="assets-Neon.XenServer\win\CommandLib.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <PackageCopyToOutput>true</PackageCopyToOutput>
     </Content>
     <Content Include="assets-Neon.XenServer\win\xe.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <PackageCopyToOutput>true</PackageCopyToOutput>
-    </Content>
-    <Content Include="assets-Neon.XenServer\xe.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <PackageCopyToOutput>true</PackageCopyToOutput>
     </Content>
@@ -87,11 +86,6 @@
     <None Update="assets-Neon.XenServer\README.md">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="assets-Neon.XenServer\linux\" />
-    <Folder Include="assets-Neon.XenServer\osx\" />
   </ItemGroup>
 
 </Project>

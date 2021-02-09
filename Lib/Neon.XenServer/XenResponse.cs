@@ -44,7 +44,7 @@ namespace Neon.XenServer
         /// Constructor.
         /// </summary>
         /// <param name="response">The low-level SSH command response.</param>
-        internal XenResponse(CommandResponse response)
+        internal XenResponse(ExecuteResponse response)
         {
             this.Response = response;
             this.Items    = new List<Dictionary<string, string>>();
@@ -170,7 +170,7 @@ namespace Neon.XenServer
         /// <summary>
         /// Returns the low-level command response.
         /// </summary>
-        public CommandResponse Response { get; private set; }
+        public ExecuteResponse Response { get; private set; }
 
         /// <summary>
         /// Returns the command exit code.

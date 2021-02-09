@@ -1,8 +1,13 @@
 # Binary Assets
 
+We need to switch away from using [LinuxSshProxy] to execute commands using the **xe-cli** on the XenServer host machine for various reasons.  We're going to temporily use the Windows **xe.exe** client but we'll need to figure something else out when we implement neonDESKTOP for OS/X and/or Linux.  Here are some tracking issues:
+
+* https://github.com/nforgeio/neonKUBE/issues/1130
+* https://github.com/nforgeio/neonKUBE/issues/1132
+
 The files (besides this README) in this folder will be included in the nuget package and will be published to the consuming project's **bin** folder.  We've picked a folder name that should hupefully be unique across all files that might land in the parent project's bin folder.
 
-This will work aout-of-the-box for Windows but file permissions won't be set automatically for other environments like Linux and OS/X.  As a convention, our libraries will attempt to configure these permissions when necessary, but that may fail depending on the permissions the current user is running under, in which case the user will need to manually configure permissions via a Dockerfile or other means.
+This will work out-of-the-box for Windows but file permissions won't be set automatically for other environments like Linux and OS/X.  As a convention, our libraries will attempt to configure these permissions when necessary, but that may fail depending on the permissions the current user is running under, in which case the user will need to manually configure permissions via a Dockerfile or other means.
 
 ## Files and sources
 

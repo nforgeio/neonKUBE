@@ -192,7 +192,11 @@ namespace Neon.Kube
             }
 
             // Build a list of [LinuxSshProxy] instances that map to the specified XenServer
-            // hosts.  We'll use the [XenClient] instances as proxy metadata.
+            // hosts.  We'll use the [XenClient] instances as proxy metadata.  Note that we're
+            // doing this to take advantage of [SetupController] to manage parallel operations
+            // but we're not going to ever connect to XenServers via [LinuxSshProxy] and will
+            // use [XenClient] ability to execute remote commands either via a local [xe-cli]
+            // or via the XenServer API (in the future).
 
             var xenSshProxies = new List<NodeSshProxy<XenClient>>();
 
@@ -210,10 +214,11 @@ namespace Neon.Kube
                     hostname = host.Address;
                 }
 
-                var xenHost = new XenClient(hostAddress, hostUsername, hostPassword, name: host.Name, logFolder: logFolder);
+                var sshProxy = new NodeSshProxy<XenClient>(hostname, NetHelper.ParseIPv4Address(hostAddress), SshCredentials.FromUserPassword(hostUsername, hostPassword)); 
+                var xenHost  = new XenClient(hostAddress, hostUsername, hostPassword, name: host.Name, logFolder: logFolder);
 
                 xenHosts.Add(xenHost);
-                xenSshProxies.Add(xenHost.SshProxy);
+                xenSshProxies.Add(sshProxy);
             }
 
             // We're going to provision the XenServer hosts in parallel to
