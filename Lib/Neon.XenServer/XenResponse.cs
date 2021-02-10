@@ -85,12 +85,16 @@ namespace Neon.XenServer
             //
             //
 
+            // When running XE commands directly on the XenServer host, this appears to 
+            // be a list of records with each record being terminated by two blank lines.
+            // When executing the commands remotely via the Windows [xe.exe] CLI, the
+            // blank are ommtted and it appears that the "uuid " at the beginning of
+            // the line indicates a new record.  I'm just going to ignore blank lines
+            // when parsing this and use the [uuid] property to indicate new records.
             //
-            // This appears to be a list of records with each record being terminated by 
-            // two blank lines.  Each line includes a read/write or read-only indicator 
-            // (which we'll strip out) followed by a colon and the property value.  I'm
-            // not entirely sure if this fully describes the format so I'm going to be
-            // a bit defensive below.
+            // Each line includes a read/write or read-only indicator (which we'll strip out) 
+            // followed by a colon and the property value.  I'm not entirely sure if this 
+            // fully describes the format so I'm going to be a bit defensive below.
 
             using (var reader = new StringReader(response.OutputText))
             {
@@ -108,6 +112,12 @@ namespace Neon.XenServer
 
                         if (line == null)
                         {
+                            if (rawRecord.Count > 0)
+                            {
+                                Items.Add(rawRecord);
+                                rawRecord = new Dictionary<string, string>();
+                            }
+
                             isEOF = true;
                             break;
                         }
@@ -116,23 +126,21 @@ namespace Neon.XenServer
 
                         if (line == string.Empty)
                         {
-                            // Looks like the end of the record, so read the
-                            // second blank line.
+                            // Ignore blank lines.
 
-                            line = reader.ReadLine();
-                            Covenant.Assert(line.Trim() == string.Empty);
+                            continue;
+                        }
 
-                            if (line == null)
+                        if (line.StartsWith("uuid "))
+                        {
+                            // Looks like the start of a new record, so add the previous record 
+                            // (if not empty) before beginning to parse the new record.
+
+                            if (rawRecord.Count > 0)
                             {
-                                isEOF = true;
-                                break;
+                                Items.Add(rawRecord);
+                                rawRecord = new Dictionary<string, string>();
                             }
-                            else if (line != string.Empty)
-                            {
-                                Covenant.Assert(line.Trim() == string.Empty, "Unexpected XenServer [xe] CLI output.");
-                            }
-
-                            break;
                         }
 
                         // Parse the property name and value.
@@ -141,7 +149,7 @@ namespace Neon.XenServer
 
                         if (colonPos == -1)
                         {
-                            continue;   // We shouldn't ever see this.
+                            continue;   // We shouldn't ever see this so ignore it.
                         }
 
                         var namePart  = line.Substring(0, colonPos).Trim();

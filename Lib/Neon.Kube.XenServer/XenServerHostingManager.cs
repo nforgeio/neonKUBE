@@ -218,6 +218,8 @@ namespace Neon.Kube
                 var xenHost  = new XenClient(hostAddress, hostUsername, hostPassword, name: host.Name, logFolder: logFolder);
 
                 xenHosts.Add(xenHost);
+
+                sshProxy.Metadata = xenHost;
                 xenSshProxies.Add(sshProxy);
             }
 
@@ -465,7 +467,7 @@ namespace Neon.Kube
                     xenTempIso = xenHost.CreateTempIso(tempIso.Path);
 
                     xenHost.Invoke($"vm-cd-eject", $"uuid={vm.Uuid}");
-                    xenHost.Invoke($"vm-cd-insert", $"uuid={vm.Uuid}", $"cd-name={xenTempIso.CdName}");
+                    xenHost.Invoke($"vm-cd-insert", $"uuid={vm.Uuid}", $"cd-name={xenTempIso.IsoName}");
 
                     // Start the VM for the first time with the mounted ISO.  The network
                     // configuration will happen automatically by the time we can connect.

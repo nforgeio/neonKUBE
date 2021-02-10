@@ -36,6 +36,8 @@ using Neon.IO;
 using Neon.Kube;
 using Neon.Net;
 
+using Renci.SshNet;
+
 //-----------------------------------------------------------------------------
 // IMPLEMENTATION NOTE:
 //
@@ -53,7 +55,7 @@ using Neon.Net;
 //        template XVA file to the controlling computer because there's not 
 //        enough disk space on the XenServer host file system (I believe it's
 //        limited to 4GB total).  If there was enough space, we could extract
-//        the template to the local XenServer filesystem and then used SCP to
+//        the template to the local XenServer filesystem and then used SFTP to
 //        download the file to the control computer.  But this won't work.
 //
 // I discovered that XenXenter and XCP-ng Center both include a small Windows
@@ -99,16 +101,13 @@ namespace Neon.XenServer
     /// <threadsafety instance="false"/>
     public sealed partial class XenClient : IDisposable, IXenClient
     {
-        /// <summary>
-        /// Path to the parent folder for all temporary Neon local storage repositories.
-        /// </summary>
-        public const string NeonTempSrPath = "/var/opt/neon-temp-sr";
-
-        private bool        isDisposed = false;
-        private string      username;
-        private string      password;
-        private string      xePath;
-        private string      xeFolder;
+        private bool            isDisposed = false;
+        private SftpClient      sftpClient = null;
+        private string          username;
+        private string          password;
+        private string          xePath;
+        private string          xeFolder;
+        private TextWriter      logWriter;
 
         // Implementation Note:
         // --------------------
@@ -132,9 +131,15 @@ namespace Neon.XenServer
         public XenClient(string addressOrFQDN, string username, string password, string name = null, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username), nameof(username));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(password), nameof(password));
+            Covenant.Requires<ArgumentNullException>(password != null, nameof(password));
 
-            if (!NeonHelper.IsWindows)
+            string platformSubfolder;
+
+            if (NeonHelper.IsWindows)
+            {
+                platformSubfolder = "win";
+            }
+            else
             {
                 throw new NotImplementedException($"[{nameof(XenClient)}] is currently only supported on Windows: https://github.com/nforgeio/neonKUBE/issues/113");
             }
@@ -150,22 +155,27 @@ namespace Neon.XenServer
 
                 address = hostEntry.AddressList.First();
             }
-
-            var logWriter = (TextWriter)null;
+            
+            this.logWriter = (TextWriter)null;
 
             if (!string.IsNullOrEmpty(logFolder))
             {
                 Directory.CreateDirectory(logFolder);
 
-                logWriter = new StreamWriter(Path.Combine(logFolder, $"XENSERVER-{addressOrFQDN}.log"));
+                this.logWriter = new StreamWriter(Path.Combine(logFolder, $"XENSERVER-{addressOrFQDN}.log"));
             }
 
-            this.Address  = addressOrFQDN;
-            this.username = username;
-            this.password = password;
-            this.Name     = name;
-            this.xePath   = Path.Combine(NeonHelper.GetAssemblyFolder(Assembly.GetExecutingAssembly()), "assets-Neon.XenServer", "xe.exe");
-            this.xeFolder = Path.GetDirectoryName(xePath);
+            this.Address   = addressOrFQDN;
+            this.username  = username;
+            this.password  = password;
+            this.Name      = name;
+            this.xePath    = Path.Combine(NeonHelper.GetAssemblyFolder(Assembly.GetExecutingAssembly()), "assets-Neon.XenServer", platformSubfolder, "xe.exe");
+            this.xeFolder  = Path.GetDirectoryName(xePath);
+
+            // Connect via SFTP.
+
+            this.sftpClient = new SftpClient(addressOrFQDN, username, password);
+            this.sftpClient.Connect();
 
             // Initialize the operation classes.
 
@@ -179,11 +189,17 @@ namespace Neon.XenServer
         /// </summary>
         public void Dispose()
         {
-            // $todo(jefflill):
-            //
-            // Nothing to do here after migrating away from [LinuxSshProxy] an using the embedded
-            // [xe.exe] CLI on Windows.  This will need to close the session after we switch to the 
-            // XenCenter SDK.
+            if (sftpClient != null)
+            {
+                sftpClient.Dispose();
+                sftpClient = null;
+            }
+
+            if (logWriter != null)
+            {
+                logWriter.Close();
+                logWriter = null;
+            }
 
             isDisposed = true;
         }
@@ -225,6 +241,98 @@ namespace Neon.XenServer
         }
 
         /// <summary>
+        /// Adds the host and credential arguments to the command and arguments passed.
+        /// </summary>
+        /// <param name="command">The XE command.</param>
+        /// <param name="args">The command arguments.</param>
+        /// <returns>
+        /// The complete set of arguments to the <b>xe</b> command including the host,
+        /// credentials, command and command arguments.
+        /// </returns>
+        private string[] NormalizeArgs(string command, string[] args)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(command), nameof(command));
+
+            var allArgs = new List<string>();
+
+            allArgs.Add("-s"); allArgs.Add(Address);
+            allArgs.Add("-u"); allArgs.Add(username);
+            allArgs.Add("-pw"); allArgs.Add(password);
+            allArgs.Add(command);
+
+            if (args != null)
+            {
+                foreach (var arg in args)
+                {
+                    allArgs.Add(arg);
+                }
+            }
+
+            return allArgs.ToArray();
+        }
+
+        /// <summary>
+        /// Logs an XE command execution.
+        /// </summary>
+        /// <param name="command">The <b>xe CLI</b> command.</param>
+        /// <param name="args">The command arguments.</param>
+        /// <param name="response">The command response.</param>
+        /// <returns>The <paramref name="response"/>.</returns>
+        private ExecuteResponse LogXeCommand(string command, string[] args, ExecuteResponse response)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(command), nameof(command));
+            Covenant.Requires<ArgumentNullException>(response != null, nameof(response));
+
+            if (logWriter == null)
+            {
+                return response;
+            }
+
+            args = args ?? new string[0];
+
+            logWriter.WriteLine($"START: xe -h {Address} -u {username} -p [REDACTED] {command} {NeonHelper.NormalizeExecArgs(args)}");
+
+            if (response.ExitCode != 0)
+            {
+                logWriter.WriteLine("STDOUT");
+
+                using (var reader = new StringReader(response.OutputText))
+                {
+                    foreach (var line in reader.Lines())
+                    {
+                        logWriter.WriteLine("    " + line);
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(response.ErrorText))
+                {
+                    logWriter.WriteLine("STDERR");
+
+                    using (var reader = new StringReader(response.ErrorText))
+                    {
+                        foreach (var line in reader.Lines())
+                        {
+                            logWriter.WriteLine("    " + line);
+                        }
+                    }
+                }
+            }
+
+            if (response.ExitCode == 0)
+            {
+                logWriter.WriteLine("END [OK]");
+            }
+            else
+            {
+                logWriter.WriteLine($"END [ERROR={response.ExitCode}]");
+            }
+
+            logWriter.Flush();
+
+            return response;
+        }
+
+        /// <summary>
         /// Invokes a low-level <b>xe CLI</b> command on the remote XenServer host
         /// that returns text.
         /// </summary>
@@ -235,7 +343,7 @@ namespace Neon.XenServer
         {
             EnsureNotDisposed();
 
-            return NeonHelper.ExecuteCapture(xePath, args, workingDirectory: xeFolder);
+            return LogXeCommand(command, args, NeonHelper.ExecuteCapture(xePath, NormalizeArgs(command, args), workingDirectory: xeFolder));
         }
 
         /// <summary>
@@ -249,7 +357,7 @@ namespace Neon.XenServer
         {
             EnsureNotDisposed();
 
-            return new XenResponse(NeonHelper.ExecuteCapture(xePath, args, workingDirectory: xeFolder));
+            return new XenResponse(Invoke(command, args));
         }
 
         /// <summary>
@@ -264,16 +372,7 @@ namespace Neon.XenServer
         {
             EnsureNotDisposed();
 
-            var allArgs = new List<string>();
-
-            allArgs.Add(command);
-
-            foreach (var arg in args)
-            {
-                allArgs.Add(arg);
-            }
-
-            var response = Invoke($"xe {command}", allArgs.ToArray());
+            var response = Invoke(command, args);
 
             if (response.ExitCode != 0)
             {
@@ -343,7 +442,7 @@ namespace Neon.XenServer
         /// <returns>A <see cref="XenTempIso"/> with information about the new storage repository and its contents.</returns>
         /// <remarks>
         /// <para>
-        /// During cluster setup on virtualization platforms like XenServer and Hyper-V, neonKUBE needs
+        /// During cluster setup on virtualization platforms like XenServer and Hyper-V, neonKUBE need
         /// to configure new VMs with IP addresses, hostnames, etc.  Traditionally, we've relied on
         /// being able to SSH into the VM to perform all of these actions, but this relied on being
         /// VM being able to obtain an IP address via DHCP and for setup to be able to discover the
@@ -360,11 +459,11 @@ namespace Neon.XenServer
         /// with a <b>neon-init</b> service that runs before the network service to determine
         /// whether a DVD (ISO) is inserted into the VM and runs the <b>neon-init.sh</b> script
         /// there one time, if it exists.  This script will initialize the node's IP address and 
-        /// could also be used for other configuration as well.
+        /// could also be used for other configuration as well, like setting user credentials.
         /// </para>
         /// <note>
         /// In theory, we could have used the same technique for mounting a <b>cloud-init</b> data source
-        /// via this ISO, but we decided not to go there, at least for now.
+        /// via this ISO, but we decided not to go there, at least for now (we couldn't get that working).
         /// </note>
         /// <note>
         /// neonKUBE doesn't use this technique for true cloud deployments (AWS, Azure, Google,...) because
@@ -398,7 +497,6 @@ namespace Neon.XenServer
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(isoPath), nameof(isoPath));
 
-#if TODO // $todo(jefflill): Implement this
             if (string.IsNullOrEmpty(srName))
             {
                 srName = "neon-" + Guid.NewGuid().ToString("d");
@@ -406,28 +504,29 @@ namespace Neon.XenServer
 
             var tempIso = new XenTempIso();
 
-            // Ensure that the root temporary local SR folder exists.
+            // Create the temporary SR subfolder and upload the ISO file.
 
-            SshProxy.SudoCommand("mkdir", RunOptions.LogOutput, NeonTempSrPath);
+            tempIso.SrPath  = LinuxPath.Combine("/var/run/sr-mount", Guid.NewGuid().ToString("d"));
+            tempIso.IsoName = $"neon-dvd-{Guid.NewGuid().ToString("d")}.iso";
 
-            // Create the SR subfolder and upload the ISO file.
+            if (!sftpClient.Exists(tempIso.SrPath))
+            {
+                sftpClient.CreateDirectory(tempIso.SrPath);
+                sftpClient.ChangePermissions(tempIso.SrPath, Convert.ToInt16("751", 8));
+            }
 
-            tempIso.SrPath = LinuxPath.Combine(NeonTempSrPath, Guid.NewGuid().ToString("d"));
-            tempIso.CdName = $"neon-dvd-{Guid.NewGuid().ToString("d")}.iso";
-
-            SshProxy.SudoCommand("mkdir", RunOptions.LogOutput | RunOptions.FaultOnError, tempIso.SrPath);
-
-            var xenIsoPath = LinuxPath.Combine(tempIso.SrPath, tempIso.CdName);
+            var xenIsoPath = LinuxPath.Combine(tempIso.SrPath, tempIso.IsoName);
 
             using (var isoInput = File.OpenRead(isoPath))
             {
-                SshProxy.Upload(xenIsoPath, isoInput);
+                sftpClient.UploadFile(isoInput, xenIsoPath);
+                sftpClient.ChangePermissions(xenIsoPath, Convert.ToInt16("751", 8));
             }
 
-            // Create the new storage repository.  This command returns the sr-uuid.
+            // Create the new storage repository.  This command returns the [sr-uuid].
 
             var response = SafeInvoke("sr-create",
-                $"name-label={tempIso.CdName}",
+                $"name-label={tempIso.IsoName}",
                 $"type=iso",
                 $"device-config:location={tempIso.SrPath}",
                 $"device-config:legacy_mode=true",
@@ -449,9 +548,6 @@ namespace Neon.XenServer
             tempIso.VdiUuid = result.Items.Single()["uuid"];
 
             return tempIso;
-#else
-            return null;
-#endif
         }
 
         /// <summary>
@@ -463,9 +559,6 @@ namespace Neon.XenServer
         /// </remarks>
         public void RemoveTempIso(XenTempIso tempIso)
         {
-            Covenant.Requires<ArgumentNullException>(tempIso != null, nameof(tempIso));
-
-#if TODO // $todo(jefflill): Implement this
             // Remove the PBD and SR.
 
             SafeInvoke("pbd-unplug", $"uuid={tempIso.PdbUuid}");
@@ -473,8 +566,7 @@ namespace Neon.XenServer
 
             // Remove the SR folder.
 
-            SshProxy.SudoCommand("rm", "-rf", tempIso.SrPath);
-#endif
+            sftpClient.DeleteDirectory(tempIso.SrPath);
         }
     }
 }
