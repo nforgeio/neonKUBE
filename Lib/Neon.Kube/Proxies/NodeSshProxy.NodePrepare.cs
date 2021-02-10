@@ -440,6 +440,9 @@ DefaultLimitMEMLOCK = infinity
 EOF
 
 chmod 664 /etc/systemd/user.conf.d/50-neonkube.conf
+cp /etc/systemd/user.conf.d/50-neonkube.conf /etc/systemd/system.conf
+
+echo ""session required pam_limits.so"" >> /etc/pam.d/common-session
 
 #------------------------------------------------------------------------------
 # Tweak some kernel settings.  I extracted this file from a clean Ubuntu install
@@ -533,6 +536,11 @@ fs.file-max = 1048576
 
 # We'll allow processes to open the same number of file handles.
 fs.nr_open = 1048576
+
+# podman specific entries
+fs.inotify.max_queued_events = 1048576
+fs.inotify.max_user_instances = 1048576
+fs.inotify.max_user_watches = 1048576
 
 ###################################################################
 # Boost the number of RAM pages a process can map as well as increasing 
@@ -1007,10 +1015,7 @@ unqualified-search-registries = [ ""docker.io"", ""quay.io"", ""registry.access.
 prefix = ""${{NEON_REGISTRY}}""
 insecure = false
 blocked = false
-location = ""${{NEON_REGISTRY}}""
-
-[[registry.mirror]]
-location = ""{KubeConst.ClusterRegistryName}""
+location = ""${{NEON_REGISTRY}}/{KubeConst.ClusterRegistryProjectName}""
 
 [[registry]]
 prefix = ""docker.io""

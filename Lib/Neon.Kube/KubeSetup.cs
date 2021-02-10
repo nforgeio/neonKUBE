@@ -2335,12 +2335,13 @@ value: /var/openebs/local
                     if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2)
                     {
                         await CreateHostPathStorageClass(setupState, master, "neon-internal-prometheus");
+
                         values.Add(new KeyValuePair<string, object>($"alertmanager.alertmanagerSpec.storage.volumeClaimTemplate.spec.storageClassName", $"neon-internal-prometheus"));
                         values.Add(new KeyValuePair<string, object>($"alertmanager.alertmanagerSpec.storage.volumeClaimTemplate.spec.accessModes[0]", "ReadWriteOnce"));
                         values.Add(new KeyValuePair<string, object>($"alertmanager.alertmanagerSpec.storage.volumeClaimTemplate.spec.resources.requests.storage", $"5Gi"));
-                        values.Add(new KeyValuePair<string, object>($"prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.storageClassName", $"neon-internal-prometheus"));
-                        values.Add(new KeyValuePair<string, object>($"prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.accessModes[0]", "ReadWriteOnce"));
-                        values.Add(new KeyValuePair<string, object>($"prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.resources.requests.storage", $"5Gi"));
+                        values.Add(new KeyValuePair<string, object>($"prometheus.prometheusSpec.storage.volumeClaimTemplate.spec.storageClassName", $"neon-internal-prometheus"));
+                        values.Add(new KeyValuePair<string, object>($"prometheus.prometheusSpec.storage.volumeClaimTemplate.spec.accessModes[0]", "ReadWriteOnce"));
+                        values.Add(new KeyValuePair<string, object>($"prometheus.prometheusSpec.storage.volumeClaimTemplate.spec.resources.requests.storage", $"5Gi"));
                         values.Add(new KeyValuePair<string, object>($"prometheus.prometheusSpec.remoteRead", null));
                         values.Add(new KeyValuePair<string, object>($"prometheus.prometheusSpec.remoteWrite", null));
                     }
@@ -2759,23 +2760,7 @@ value: /var/openebs/local
                 {
                     await SyncContext.ClearAsync;
 
-                    var cert = KubeHelper.CreateSelfSigned("*");
-                    
-                    StringBuilder certBuilder = new StringBuilder();
-                    certBuilder.AppendLine("-----BEGIN CERTIFICATE-----");
-                    certBuilder.AppendLine(
-                        Convert.ToBase64String(cert.RawData, Base64FormattingOptions.InsertLineBreaks));
-                    certBuilder.AppendLine("-----END CERTIFICATE-----");
-
-                    var certPem = certBuilder.ToString();
-
-                    StringBuilder keyBuilder = new StringBuilder();
-                    keyBuilder.AppendLine("-----BEGIN PRIVATE KEY-----");
-                    keyBuilder.AppendLine(
-                            Convert.ToBase64String(cert.PrivateKey.ExportPkcs8PrivateKey(), Base64FormattingOptions.InsertLineBreaks));
-                    keyBuilder.AppendLine("-----END PRIVATE KEY-----");
-
-                    var keyPem = keyBuilder.ToString();
+                    var cert = TlsCertificate.CreateSelfSigned(NeonHelper.NeonLibraryBranchRegistry, 4096);
 
                     var harborCert = new V1Secret()
                         {
@@ -2786,8 +2771,8 @@ value: /var/openebs/local
                             Type = "Opaque",
                             StringData = new Dictionary<string, string>()
                             {
-                                { "tls.crt", certPem },
-                                { "tls.key", keyPem }
+                                { "tls.crt", cert.CertPemNormalized },
+                                { "tls.key", cert.KeyPemNormalized }
                             }
                         };
 
@@ -2803,7 +2788,6 @@ value: /var/openebs/local
 
                     var replicas = Math.Min(3, cluster.Definition.Masters.Count());
                     values.Add(new KeyValuePair<string, object>($"replicas", $"{replicas}"));
-                    values.Add(new KeyValuePair<string, object>($"harborAdminPassword", adminPassword));
                     
                     if (replicas < 2)
                     {
@@ -2847,6 +2831,8 @@ value: /var/openebs/local
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
+
+                    values.Add(new KeyValuePair<string, object>($"harborAdminPassword", adminPassword));
 
                     if (cluster.Definition.Masters.Count() > 1)
                     {
@@ -2918,18 +2904,28 @@ value: /var/openebs/local
                 {
                     var sbScript = new StringBuilder();
 
-                    sbScript.AppendLine($@"
-#!/bin/bash
+                    sbScript.AppendLine(
+$@"#!/bin/bash
 
-curl -k -u ""admin:{adminPassword}"" -X POST ""https://neon-registry.node.local/api/v2.0/projects"" -H ""accept: application/json"" -H ""Content-Type: application/json"" -d ""{{ \""project_name\"": \""neon-internal123\"", \""storage_limit\"": 0, \""public\"": true}}""
+curl -k -u ""admin:{adminPassword}"" -X POST ""https://neon-registry.node.local/api/v2.0/projects"" -H ""accept: application/json"" -H ""Content-Type: application/json"" -d ""{{ \""project_name\"": \""neon-internal\"", \""storage_limit\"": 0, \""public\"": true}}""
 
-for image in `docker image ls | grep neon - registry.node.local | awk '{{print $1"":""$2}}'`; do
-    docker push $image
+docker login --tls-verify=false --username admin --password {adminPassword} neon-registry.node.local
+docker login --tls-verify=false --username admin --password {adminPassword} neon-registry.node.local/neon-internal
+
+     docker image ls | grep neon-registry.node.local | while read -r line; do
+    image=`echo -n $line | awk '{{print $1"":""$2}}'`
+    imageName=`echo -n $line | awk '{{print $1}}' | cut -d '/' -f 2`
+    imageTag=`echo -n $line | awk '{{print $2}}'`
+
+    docker tag $image neon-registry.node.local/neon-internal/$imageName:$imageTag
+
+    docker push --tls-verify=false neon-registry.node.local/neon-internal/$imageName:$imageTag
 done
 ");
 
-                    master.SudoCommand(CommandBundle.FromScript(sbScript));
+                    //master.SudoCommand(CommandBundle.FromScript(sbScript));
 
+                    await Task.CompletedTask;
                 });
         }
 

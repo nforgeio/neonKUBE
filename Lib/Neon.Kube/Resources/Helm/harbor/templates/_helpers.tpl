@@ -468,6 +468,11 @@ postgres://{{ template "harbor.database.username" . }}:{{ template "harbor.datab
   {{- printf "%s://%s:%s" (include "harbor.component.scheme" .) (include "harbor.core" .) (include "harbor.core.servicePort" .) -}}
 {{- end -}}
 
+{{/* CORE_SERVICE */}}
+{{- define "harbor.coreService" -}}
+  {{- printf "%s.%s.svc.cluster.local" (include "harbor.core" .) .Release.Namespace -}}
+{{- end -}}
+
 {{/* JOBSERVICE_URL */}}
 {{- define "harbor.jobserviceURL" -}}
   {{- printf "%s://%s-jobservice" (include "harbor.component.scheme" .)  (include "harbor.fullname" .) -}}
@@ -478,6 +483,11 @@ postgres://{{ template "harbor.database.username" . }}:{{ template "harbor.datab
   {{- printf "%s://%s" (include "harbor.component.scheme" .) (include "harbor.portal" .) -}}
 {{- end -}}
 
+{{/* PORTAL_SERVICE */}}
+{{- define "harbor.portalService" -}}
+  {{- printf "%s.%s.svc.cluster.local" (include "harbor.portal" .) .Release.Namespace -}}
+{{- end -}}
+
 {{/* REGISTRY_URL */}}
 {{- define "harbor.registryURL" -}}
   {{- printf "%s://%s:%s" (include "harbor.component.scheme" .) (include "harbor.registry" .) (include "harbor.registry.servicePort" .) -}}
@@ -485,7 +495,7 @@ postgres://{{ template "harbor.database.username" . }}:{{ template "harbor.datab
 
 {{/* REGISTRY_SERVICE */}}
 {{- define "harbor.registryService" -}}
-  {{- printf "%s://%s:%s" (include "harbor.component.scheme" .) (include "harbor.registry" .) (include "harbor.registry.servicePort" .) -}}
+  {{- printf "%s.%s.svc.cluster.local" (include "harbor.registry" .) .Release.Namespace -}}
 {{- end -}}
 
 {{/* REGISTRY_CONTROLLER_URL */}}

@@ -1225,15 +1225,16 @@ namespace Neon.Kube
             {
                 var request = new CertificateRequest(distinguishedName, rsa, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
-                //request.CertificateExtensions.Add(
-                //    new X509KeyUsageExtension(X509KeyUsageFlags.DataEncipherment | X509KeyUsageFlags.KeyEncipherment | X509KeyUsageFlags.DigitalSignature, false));
-                
-                //request.CertificateExtensions.Add(
-                //        new X509BasicConstraintsExtension(false, false, 0, false));
+                request.CertificateExtensions.Add(
+                    new X509KeyUsageExtension(X509KeyUsageFlags.KeyEncipherment 
+                    | X509KeyUsageFlags.CrlSign | X509KeyUsageFlags.KeyCertSign 
+                    | X509KeyUsageFlags.DigitalSignature, true));
 
-                //request.CertificateExtensions.Add(
-                //   new X509EnhancedKeyUsageExtension(
-                //       new OidCollection { new Oid("1.3.6.1.5.5.7.3.1") }, false));
+                request.CertificateExtensions.Add(
+                        new X509BasicConstraintsExtension(true, false, 0, true));
+
+                request.CertificateExtensions.Add(
+                        new X509SubjectKeyIdentifierExtension());
 
                 request.CertificateExtensions.Add(sanBuilder.Build());
 

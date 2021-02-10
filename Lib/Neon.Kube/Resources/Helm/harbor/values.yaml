@@ -528,7 +528,7 @@ registry:
   # Must be a string of 16 chars.
   secret: ""
   # If true, the registry returns relative URLs in Location headers. The client is responsible for resolving the correct URL.
-  relativeurls: true
+  relativeurls: false
   credentials:
     username: "harbor_registry_user"
     password: "harbor_registry_password"
@@ -583,10 +583,9 @@ clair:
       organization: neon-registry.node.local
       repository: goharbor-clair-photon
       tag: v2.1.3
-    # resources:
-    #  requests:
-    #    memory: 256Mi
-    #    cpu: 100m
+    resources:
+      limits:
+        memory: 256Mi
   adapter:
     image:
       organization: neon-registry.node.local
@@ -613,7 +612,7 @@ clair:
 
 trivy:
   # enabled the flag to enable Trivy scanner
-  enabled: true
+  enabled: false
   image:
     organization: neon-registry.node.local
     repository: goharbor-trivy-adapter-photon

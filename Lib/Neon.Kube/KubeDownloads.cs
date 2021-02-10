@@ -111,7 +111,7 @@ namespace Neon.Kube
                 case HostingEnvironment.HyperV:
                 case HostingEnvironment.HyperVLocal:
 
-                    return $"https://neonkube.s3-us-west-2.amazonaws.com/images/hyperv/node/neonkube.{KubeVersions.NeonKubeVersion}.vhdx";
+                    return $"https://neonkube.s3-us-west-2.amazonaws.com/images/hyperv/node/neonkube.{KubeVersions.NeonKubeVersion}.hyperv.vhdx";
 
                 case HostingEnvironment.XenServer:
 

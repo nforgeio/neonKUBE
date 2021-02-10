@@ -249,6 +249,6 @@ namespace Neon.Common
         /// <summary>
         /// Returns the public container neonLIBRARY registry to be used.
         /// </summary>
-        public static string NeonLibraryBranchRegistry = "neon-registry.node.local/neon-internal";
+        public static string NeonLibraryBranchRegistry = "neon-registry.node.local";
     }
 }

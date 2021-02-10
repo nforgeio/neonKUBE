@@ -46,7 +46,7 @@ spec:
       {{- end }}
       containers:
       - name: chartmuseum
-        image: {{ .Values.chartmuseum.image.repository }}:{{ .Values.chartmuseum.image.tag }}
+        image: {{ .Values.chartmuseum.image.organization }}/{{ .Values.chartmuseum.image.repository }}:{{ .Values.chartmuseum.image.tag }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         livenessProbe:
           httpGet:
@@ -72,6 +72,16 @@ spec:
         - secretRef:
             name: "{{ template "harbor.chartmuseum" . }}"
         env:
+          - name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                name: neon-system-minio
+                key: accesskey
+          - name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: neon-system-minio
+                key: secretkey
           {{- if has "chartmuseum" .Values.proxy.components }}
           - name: HTTP_PROXY
             value: "{{ .Values.proxy.httpProxy }}"

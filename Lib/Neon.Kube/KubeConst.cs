@@ -303,6 +303,11 @@ namespace Neon.Kube
         public const string ClusterRegistryName = "neon-registry." + ClusterNodeDomain;
 
         /// <summary>
+        /// Returns the Harbor Project name.
+        /// </summary>
+        public const string ClusterRegistryProjectName = "neon-internal";
+
+        /// <summary>
         /// Identifies the main WSL2 distro hosting neonDESKTOP.
         /// </summary>
         public const string Wsl2MainDistroName = "neon-desktop";
