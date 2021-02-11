@@ -397,6 +397,27 @@ namespace Neon.XenServer
             }
 
             /// <summary>
+            /// Removes a virtual machine and its drives.
+            /// </summary>
+            /// <param name="virtualMachine">The target virtual machine.</param>
+            /// <param name="noDriveRemoval">Optionally prevents the VM drives from being removed.</param>
+            public void Remove(XenVirtualMachine virtualMachine, bool noDriveRemoval = false)
+            {
+                Covenant.Requires<ArgumentNullException>(virtualMachine != null, nameof(virtualMachine));
+
+                client.SafeInvoke("vm-reset-powerstate", $"uuid={virtualMachine.Uuid}", "--force");
+
+                if (noDriveRemoval)
+                {
+                    client.SafeInvoke("vm-destroy", $"uuid={virtualMachine.Uuid}");
+                }
+                else
+                {
+                    client.SafeInvoke("vm-uninstall", $"uuid={virtualMachine.Uuid}");
+                }
+            }
+
+            /// <summary>
             /// <para>
             /// Adds a new disk to a virtual machine.
             /// </para>

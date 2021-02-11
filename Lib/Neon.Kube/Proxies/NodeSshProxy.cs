@@ -63,7 +63,7 @@ namespace Neon.Kube
 {
     /// <summary>
     /// <para>
-    /// Uses an SSH/SCP connection to provide access to Linux machines to access
+    /// Uses a SSH/SCP connection to provide access to Linux machines to access
     /// files, run commands, etc.
     /// </para>
     /// <note>
@@ -492,19 +492,45 @@ namespace Neon.Kube
         /// and then fills unreferenced file system blocks and nodes with zeros so the disk image will
         /// compress better.
         /// </summary>
+        /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public void Clean(Action<string> statusWriter = null)
+        public void Clean(HostingEnvironment hostingEnvironment, Action<string> statusWriter = null)
         {
             KubeHelper.WriteStatus(statusWriter, "Clean", "VM");
             Status = "clean: VM";
 
+            var cleanCommand = string.Empty;
+
+            switch (hostingEnvironment)
+            {
+                case HostingEnvironment.XenServer:
+
+                    // [fstrim] doesn't work on XenServer.
+
+                    cleanCommand = "sfill -fllz /";
+                    break;
+
+                case HostingEnvironment.Wsl2:
+
+                    // We don't need to clean WSL2 distros.
+
+                    break;
+
+                default:
+
+                    // Use [fstrim] for the other environments.
+
+                    cleanCommand = "fstrim /";
+                    break;
+            }
+
             var cleanScript =
-@"#!/bin/bash
+$@"#!/bin/bash
 cloud-init clean
 apt-get clean
 rm -rf /var/lib/apt/lists
 rm -rf /var/lib/dhcp/*
-fstrim /
+{cleanCommand}
 ";
             SudoCommand(CommandBundle.FromScript(cleanScript), RunOptions.FaultOnError);
         }

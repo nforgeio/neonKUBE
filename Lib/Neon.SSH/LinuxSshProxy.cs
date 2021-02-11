@@ -47,7 +47,7 @@ namespace Neon.SSH
 {
     /// <summary>
     /// <para>
-    /// Uses an SSH/SCP connection to provide access to Linux machines to access
+    /// Uses a SSH/SCP connection to provide access to Linux machines to access
     /// files, run commands, etc.
     /// </para>
     /// </summary>
@@ -1014,7 +1014,7 @@ rm {HostFolders.Home(Username)}/askpass
         }
 
         /// <summary>
-        /// Waits for the remote machine to boot by continuously attempting to establish an SSH session.
+        /// Waits for the remote machine to boot by continuously attempting to establish a SSH session.
         /// </summary>
         /// <param name="timeout">The operation timeout (defaults to <b>10 minutes</b>).</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
@@ -1254,7 +1254,7 @@ rm {HostFolders.Home(Username)}/askpass
         }
 
         /// <summary>
-        /// Ensures that an SSH connection has been established.
+        /// Ensures that a SSH connection has been established.
         /// </summary>
         /// <exception cref="SshConnectionException">Thrown if a connection could not be established.</exception>
         private void EnsureSshConnection()

@@ -94,7 +94,7 @@ namespace Neon.SSH
         public string Username { get; private set; }
 
         /// <summary>
-        /// Returns the authentication method to be used to establish an SSH.NET session.
+        /// Returns the authentication method to be used to establish a SSH.NET session.
         /// </summary>
         /// <exception cref="SshProxyException">Thrown if the SSH credentials are not available.</exception>
         internal AuthenticationMethod AuthenticationMethod

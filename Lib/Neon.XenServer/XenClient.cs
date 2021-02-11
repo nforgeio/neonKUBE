@@ -71,6 +71,10 @@ using Renci.SshNet;
 //      https://github.com/nforgeio/neonKUBE/issues/1130
 //      https://github.com/nforgeio/neonKUBE/issues/1132
 
+// NOTE: XE-CLI commands are documented here:
+//
+//      https://xcp-ng.org/docs/cli_reference.html#xe-command-reference
+
 namespace Neon.XenServer
 {
     /// <summary>
@@ -274,7 +278,7 @@ namespace Neon.XenServer
         /// <summary>
         /// Logs an XE command execution.
         /// </summary>
-        /// <param name="command">The <b>xe CLI</b> command.</param>
+        /// <param name="command">The <b>XE-CLI</b> command.</param>
         /// <param name="args">The command arguments.</param>
         /// <param name="response">The command response.</param>
         /// <returns>The <paramref name="response"/>.</returns>
@@ -333,10 +337,10 @@ namespace Neon.XenServer
         }
 
         /// <summary>
-        /// Invokes a low-level <b>xe CLI</b> command on the remote XenServer host
+        /// Invokes a low-level <b>XE-CLI</b> command on the remote XenServer host
         /// that returns text.
         /// </summary>
-        /// <param name="command">The <b>xe CLI</b> command.</param>
+        /// <param name="command">The <b>XE-CLI</b> command.</param>
         /// <param name="args">The optional arguments formatted as <b>name=value</b>.</param>
         /// <returns>The command response.</returns>
         public ExecuteResponse Invoke(string command, params string[] args)
@@ -347,10 +351,10 @@ namespace Neon.XenServer
         }
 
         /// <summary>
-        /// Invokes a low-level <b>xe CLI</b> command on the remote XenServer host
+        /// Invokes a low-level <b>XE-CLI</b> command on the remote XenServer host
         /// that returns a list of items.
         /// </summary>
-        /// <param name="command">The <b>xe CLI</b> command.</param>
+        /// <param name="command">The <b>XE-CLI</b> command.</param>
         /// <param name="args">The optional arguments formatted as <b>name=value</b>.</param>
         /// <returns>The command <see cref="XenResponse"/>.</returns>
         public XenResponse InvokeItems(string command, params string[] args)
@@ -361,10 +365,10 @@ namespace Neon.XenServer
         }
 
         /// <summary>
-        /// Invokes a low-level <b>xe CLI</b> command on the remote XenServer host
+        /// Invokes a low-level <b>XE-CLI</b> command on the remote XenServer host
         /// that returns text, throwing an exception on failure.
         /// </summary>
-        /// <param name="command">The <b>xe CLI</b> command.</param>
+        /// <param name="command">The <b>XE-CLI</b> command.</param>
         /// <param name="args">The optional arguments formatted as <b>name=value</b>.</param>
         /// <returns>The command response.</returns>
         /// <exception cref="XenException">Thrown if the operation failed.</exception>
@@ -383,10 +387,10 @@ namespace Neon.XenServer
         }
 
         /// <summary>
-        /// Invokes a low-level <b>xe CLI</b> command on the remote XenServer host
+        /// Invokes a low-level <b>XE-CLI</b> command on the remote XenServer host
         /// that returns a list of items, throwing an exception on failure.
         /// </summary>
-        /// <param name="command">The <b>xe CLI</b> command.</param>
+        /// <param name="command">The <b>XE-CLI</b> command.</param>
         /// <param name="args">The optional arguments formatted as <b>name=value</b>.</param>
         /// <returns>The command <see cref="XenResponse"/>.</returns>
         /// <exception cref="XenException">Thrown if the operation failed.</exception>

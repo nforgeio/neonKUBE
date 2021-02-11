@@ -298,9 +298,9 @@ namespace Neon.Kube
 
             Directory.CreateDirectory(vmDriveFolder);
 
-            // Download the GZIPed VHDX template if it's not already present or has 
-            // changed.  Note that we're going to name the file the same as the file 
-            // name from the URI.
+            // Download the GZIPed VHDX template if it's not already present.  Note that we're 
+            // going to name the file the same as the file name from the URI and also that 
+            // templates are considered to be invariant.
 
             var driveTemplateUri  = new Uri(KubeDownloads.GetNodeImageUri(this.HostingEnvironment));
             var driveTemplateName = driveTemplateUri.Segments.Last();
@@ -329,7 +329,7 @@ namespace Neon.Kube
 
                             if (string.IsNullOrEmpty(contentEncoding) || !contentEncoding.Equals("gzip", StringComparison.InvariantCultureIgnoreCase))
                             {
-                                throw new KubeException($"[{nodeImageUri}] has unsupported [Content-Encoding={contentEncoding}].  Expecting [gzip].");
+                                throw new KubeException($"[{nodeImageUri}] has unsupported [Content-Encoding={contentEncoding}].  Expecting [gzip]");
                             }
 
                             try
@@ -373,7 +373,7 @@ namespace Neon.Kube
 
                                 if (File.Exists(driveTemplatePath))
                                 {
-                                    File.Decrypt(driveTemplatePath);
+                                    File.Delete(driveTemplatePath);
                                 }
 
                                 throw;

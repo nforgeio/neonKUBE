@@ -19,8 +19,10 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
+using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -84,11 +86,13 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Instance members
 
-        private ClusterProxy        cluster;
-        private string              logFolder;
-        private List<XenClient>     xenHosts;
-        private int                 maxVmNameWidth;
-        private string              secureSshPassword;
+        private ClusterProxy                cluster;
+        private SetupController<XenClient>  setupController;
+        private string                      driveTemplatePath;
+        private string                      logFolder;
+        private List<XenClient>             xenHosts;
+        private int                         maxVmNameWidth;
+        private string                      secureSshPassword;
 
         /// <summary>
         /// Creates an instance that is only capable of validating the hosting
@@ -227,7 +231,7 @@ namespace Neon.Kube
             // speed up cluster setup.  This works because each XenServer
             // is essentially independent from the others.
 
-            var setupController = new SetupController<XenClient>($"Provisioning [{cluster.Definition.Name}] cluster", xenSshProxies)
+            setupController = new SetupController<XenClient>($"Provisioning [{cluster.Definition.Name}] cluster", xenSshProxies)
             {
                 ShowStatus  = this.ShowStatus,
                 MaxParallel = this.MaxParallel
@@ -367,22 +371,13 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the name to use for the node template to be persisted on the XenServers.
-        /// </summary>
-        /// <returns>The template name.</returns>
-        private string GetXenTemplateName()
-        {
-            return $"neon-{cluster.Definition.LinuxDistribution}-{cluster.Definition.LinuxVersion}";
-        }
-
-        /// <summary>
         /// Install the virtual machine template on the XenServer if it's not already present.
         /// </summary>
         /// <param name="xenSshProxy">The XenServer SSH proxy.</param>
         private void CheckVmTemplate(NodeSshProxy<XenClient> xenSshProxy)
         {
             var xenHost      = xenSshProxy.Metadata;
-            var templateName = GetXenTemplateName();
+            var templateName = $"neonkube-{KubeVersions.NeonKubeVersion}";
             var nodeImageUri = KubeDownloads.GetNodeImageUri(this.HostingEnvironment);
 
             xenSshProxy.Status = "check: template";
@@ -390,7 +385,93 @@ namespace Neon.Kube
             if (xenHost.Template.Find(templateName) == null)
             {
                 xenSshProxy.Status = "download: vm template (slow)";
-                xenHost.Template.Install(nodeImageUri, templateName, cluster.Definition.Hosting.XenServer.StorageRepository);
+
+                // Download the GZIPed XVA template if it's not already present.  Note that we're 
+                // going to name the file the same as the file name from the URI and also that 
+                // templates are considered to be invariant.
+
+                var driveTemplateUri = new Uri(KubeDownloads.GetNodeImageUri(this.HostingEnvironment));
+                var driveTemplateName = driveTemplateUri.Segments.Last();
+
+                driveTemplatePath = Path.Combine(KubeHelper.NodeImageFolder, driveTemplateName);
+
+                if (!File.Exists(driveTemplatePath))
+                {
+                    setupController.SetGlobalStepStatus($"Download node image VHDX: [{nodeImageUri}]");
+
+                    Task.Run(
+                        async () =>
+                        {
+                            using (var client = new HttpClient())
+                            {
+                                // Download the file.
+
+                                var response = await client.GetAsync(nodeImageUri, HttpCompletionOption.ResponseHeadersRead);
+
+                                response.EnsureSuccessStatusCode();
+
+                                var contentLength   = response.Content.Headers.ContentLength;
+                                var contentEncoding = response.Content.Headers.ContentEncoding.SingleOrDefault();
+
+                                if (string.IsNullOrEmpty(contentEncoding) || !contentEncoding.Equals("gzip", StringComparison.InvariantCultureIgnoreCase))
+                                {
+                                    throw new KubeException($"[{nodeImageUri}] has unsupported [Content-Encoding={contentEncoding}].  Expecting [gzip]");
+                                }
+
+                                try
+                                {
+                                    using (var fileStream = new FileStream(driveTemplatePath, FileMode.Create, FileAccess.ReadWrite))
+                                    {
+                                        using (var downloadStream = await response.Content.ReadAsStreamAsync())
+                                        {
+                                            var buffer = new byte[64 * 1024];
+                                            int cb;
+
+                                            while (true)
+                                            {
+                                                cb = await downloadStream.ReadAsync(buffer, 0, buffer.Length);
+
+                                                if (cb == 0)
+                                                {
+                                                    break;
+                                                }
+
+                                                await fileStream.WriteAsync(buffer, 0, cb);
+
+                                                if (contentLength.HasValue)
+                                                {
+                                                    var percentComplete = (int)(((double)fileStream.Length / (double)contentLength) * 100.0);
+
+                                                    setupController.SetGlobalStepStatus($"Downloading VHDX: [{percentComplete}%] [{nodeImageUri}]");
+                                                }
+                                                else
+                                                {
+                                                    setupController.SetGlobalStepStatus($"Downloading VHDX: [{fileStream.Length} bytes] [{nodeImageUri}]");
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                catch
+                                {
+                                    // Ensure that the template file is are deleted if there were any
+                                    // errors to help avoid using a corrupted template.
+
+                                    if (File.Exists(driveTemplatePath))
+                                    {
+                                        File.Delete(driveTemplatePath);
+                                    }
+
+                                    throw;
+                                }
+                            }
+
+                        }).Wait();
+
+                    setupController.SetGlobalStepStatus();
+
+                    xenHost.Template.ImportVmTemplate(driveTemplatePath, templateName, cluster.Definition.Hosting.XenServer.StorageRepository);
+                }
             }
         }
 
@@ -437,7 +518,7 @@ namespace Neon.Kube
 
                 xenSshProxy.Status = FormatVmStatus(vmName, "create: virtual machine");
 
-                var vm = xenHost.Machine.Create(vmName, GetXenTemplateName(),
+                var vm = xenHost.Machine.Create(vmName, $"neonkube-{KubeVersions.NeonKubeVersion}",
                     processors:                 processors,
                     memoryBytes:                memoryBytes,
                     diskBytes:                  osDiskBytes,
@@ -506,6 +587,8 @@ namespace Neon.Kube
                     // Be sure to delete the local and remote ISO files so these don't accumulate.
 
                     tempIso?.Dispose();
+
+                    // These can also accumulate on the XenServer.
 
                     if (xenTempIso != null)
                     {
