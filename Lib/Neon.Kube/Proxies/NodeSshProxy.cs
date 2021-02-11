@@ -499,28 +499,17 @@ namespace Neon.Kube
             KubeHelper.WriteStatus(statusWriter, "Clean", "VM");
             Status = "clean: VM";
 
-            var cleanCommand = string.Empty;
+            var cleanCommand = "fstrim /";
 
             switch (hostingEnvironment)
             {
                 case HostingEnvironment.XenServer:
-
-                    // [fstrim] doesn't work on XenServer.
-
-                    cleanCommand = "sfill -fllz /";
-                    break;
-
                 case HostingEnvironment.Wsl2:
 
-                    // We don't need to clean WSL2 distros.
+                    // We don't need to clean WSL2 and XenServer nodes because
+                    // the VM images aren't block devices for these.
 
-                    break;
-
-                default:
-
-                    // Use [fstrim] for the other environments.
-
-                    cleanCommand = "fstrim /";
+                    cleanCommand = string.Empty;
                     break;
             }
 
