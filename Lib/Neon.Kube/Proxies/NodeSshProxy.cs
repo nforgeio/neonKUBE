@@ -503,13 +503,20 @@ namespace Neon.Kube
 
             switch (hostingEnvironment)
             {
-                case HostingEnvironment.XenServer:
-                case HostingEnvironment.Wsl2:
+                 case HostingEnvironment.Wsl2:
 
-                    // We don't need to clean WSL2 and XenServer nodes because
-                    // the VM images aren't block devices for these.
+                    // We don't need to clean WSL2 because the VM image being
+                    // created is a TAR file rather than a block device image.
 
                     cleanCommand = string.Empty;
+                    break;
+
+                case HostingEnvironment.XenServer:
+
+                    // XenServer doesn't support [fstrim] so we'll fill free 
+                    // space with zeros instead.
+
+                    cleanCommand = "sfill -fllz /";
                     break;
             }
 

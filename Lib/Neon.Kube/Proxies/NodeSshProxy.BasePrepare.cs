@@ -217,7 +217,7 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
                     // yet, so we'll use the fully qualified path to [safe-apt-get].
 
                     SudoCommand($"{KubeNodeFolders.Bin}/safe-apt-get update", RunOptions.Defaults | RunOptions.FaultOnError);
-                    SudoCommand($"{KubeNodeFolders.Bin}/safe-apt-get install -yq apt-cacher-ng ntp zip", RunOptions.Defaults | RunOptions.FaultOnError);
+                    SudoCommand($"{KubeNodeFolders.Bin}/safe-apt-get install -yq apt-cacher-ng ntp secure-delete zip", RunOptions.Defaults | RunOptions.FaultOnError);
 
                     // I've seen some situations after a reboot where the machine complains about
                     // running out of entropy.  Apparently, modern CPUs have an instruction that

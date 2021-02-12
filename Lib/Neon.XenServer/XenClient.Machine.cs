@@ -409,11 +409,11 @@ namespace Neon.XenServer
 
                 if (noDriveRemoval)
                 {
-                    client.SafeInvoke("vm-destroy", $"uuid={virtualMachine.Uuid}");
+                    client.SafeInvoke("vm-destroy", $"uuid={virtualMachine.Uuid}", "--force");
                 }
                 else
                 {
-                    client.SafeInvoke("vm-uninstall", $"uuid={virtualMachine.Uuid}");
+                    client.SafeInvoke("vm-uninstall", $"uuid={virtualMachine.Uuid}", "--force");
                 }
             }
 
