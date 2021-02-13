@@ -467,7 +467,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// Ensures that the node operating system and version is supported for a neonKUBE
-        /// cluster.  This faults the nodeproxy on faliure.
+        /// cluster.  This faults the node proxy on faliure.
         /// </summary>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         /// <returns><c>true</c> if the operation system is supported.</returns>
@@ -488,6 +488,20 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Installs any security related updates on the node.
+        /// </summary>
+        /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
+        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        public void InstallSecurityUpgrades(HostingEnvironment hostingEnvironment, Action<string> statusWriter = null)
+        {
+            KubeHelper.WriteStatus(statusWriter, "Install", "Security Updates");
+            Status = "install: security updates";
+
+            SudoCommand("apt-get update");
+            SudoCommand("unattended-upgrade");
+        }
+
+        /// <summary>
         /// Cleans a node by removing unnecessary package manager metadata, cached DHCP information, etc.
         /// and then fills unreferenced file system blocks and nodes with zeros so the disk image will
         /// compress better.
@@ -496,8 +510,8 @@ namespace Neon.Kube
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         public void Clean(HostingEnvironment hostingEnvironment, Action<string> statusWriter = null)
         {
-            KubeHelper.WriteStatus(statusWriter, "Clean", "VM");
-            Status = "clean: VM";
+            KubeHelper.WriteStatus(statusWriter, "Clean", "File system");
+            Status = "clean: file system";
 
             var cleanCommand = "fstrim /";
 
