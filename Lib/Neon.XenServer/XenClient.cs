@@ -380,7 +380,7 @@ namespace Neon.XenServer
 
             if (response.ExitCode != 0)
             {
-                throw new XenException($"XE-COMMAND: {command} MESSAGE: {response.ErrorText}");
+                throw new XenException($"XE-COMMAND: {command} MESSAGE: {response.AllText}");
             }
 
             return response;
@@ -567,10 +567,6 @@ namespace Neon.XenServer
 
             SafeInvoke("pbd-unplug", $"uuid={tempIso.PdbUuid}");
             SafeInvoke("sr-forget", $"uuid={tempIso.SrUuid}");
-
-            // Remove the SR folder.
-
-            sftpClient.DeleteDirectory(tempIso.SrPath);
         }
     }
 }

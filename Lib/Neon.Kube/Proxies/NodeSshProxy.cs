@@ -492,12 +492,11 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public void InstallSecurityUpgrades(HostingEnvironment hostingEnvironment, Action<string> statusWriter = null)
+        public void InstallSecurityUpdates(HostingEnvironment hostingEnvironment, Action<string> statusWriter = null)
         {
             KubeHelper.WriteStatus(statusWriter, "Install", "Security Updates");
             Status = "install: security updates";
 
-            SudoCommand("apt-get update");
             SudoCommand("unattended-upgrade");
         }
 

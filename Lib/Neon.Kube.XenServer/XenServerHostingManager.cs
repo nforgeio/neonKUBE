@@ -575,7 +575,7 @@ namespace Neon.Kube
                     var partitionedDisks = node.ListPartitionedDisks();
                     var osDisk           = partitionedDisks.Single();
 
-                    if (osDiskBytes > KubeConst.NodeTemplateDiskSize)
+                    if (osDiskBytes > KubeConst.MinNodeDiskSizeGiB)
                     {
                         node.Status = $"resize: OS disk";
                         node.SudoCommand($"growpart {osDisk} 2", RunOptions.None);

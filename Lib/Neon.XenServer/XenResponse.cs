@@ -82,15 +82,19 @@ namespace Neon.XenServer
             //                host ( RO): xentest
             //                type ( RO): iso
             //        content-type ( RO): iso
-            //
-            //
 
             // When running XE commands directly on the XenServer host, this appears to 
             // be a list of records with each record being terminated by two blank lines.
             // When executing the commands remotely via the Windows [xe.exe] CLI, the
-            // blank are ommtted and it appears that the "uuid " at the beginning of
-            // the line indicates a new record.  I'm just going to ignore blank lines
-            // when parsing this and use the [uuid] property to indicate new records.
+            // blank are ommtted and it appears that the "uuid " or sometimes other property
+            // names like "Disk 0 VDI:" at at the beginning of the line indicates a new record.
+            //
+            // PARSING PROBLEM:
+            // ----------------
+            // The problem is that we may see more than one properties at the begining of
+            // the line for an individual record.  I'm going to assume that every record
+            // will include at least one [indented] property and also that all properties 
+            // that start the line appear at the begining of the record.
             //
             // Each line includes a read/write or read-only indicator (which we'll strip out) 
             // followed by a colon and the property value.  I'm not entirely sure if this 
@@ -104,7 +108,8 @@ namespace Neon.XenServer
                 {
                     // Read the next record.
 
-                    var rawRecord = new Dictionary<string, string>();
+                    var rawRecord      = new Dictionary<string, string>();
+                    var parsedIndented = false;
 
                     while (true)
                     {
@@ -122,16 +127,16 @@ namespace Neon.XenServer
                             break;
                         }
 
-                        line = line.Trim();
-
-                        if (line == string.Empty)
+                        if (string.IsNullOrEmpty(line))
                         {
                             // Ignore blank lines.
 
                             continue;
                         }
 
-                        if (line.StartsWith("uuid "))
+                        var isIndented = char.IsWhiteSpace(line.First());
+
+                        if (!isIndented && parsedIndented)
                         {
                             // Looks like the start of a new record, so add the previous record 
                             // (if not empty) before beginning to parse the new record.
@@ -141,7 +146,15 @@ namespace Neon.XenServer
                                 Items.Add(rawRecord);
                                 rawRecord = new Dictionary<string, string>();
                             }
+
+                            parsedIndented = false;
                         }
+                        else if (isIndented)
+                        {
+                            parsedIndented = true;
+                        }
+
+                        line = line.Trim();
 
                         // Parse the property name and value.
 
