@@ -494,7 +494,7 @@ namespace Neon.Kube
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         public void InstallSecurityUpdates(HostingEnvironment hostingEnvironment, Action<string> statusWriter = null)
         {
-            KubeHelper.WriteStatus(statusWriter, "Install", "Security Updates");
+            KubeHelper.WriteStatus(statusWriter, "Install", "Security updates");
             Status = "install: security updates";
 
             SudoCommand("unattended-upgrade");
