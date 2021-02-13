@@ -293,7 +293,7 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
                 {
                     // Disable SWAP by editing [/etc/fstab] to remove the [/swap.img...] line.
 
-                    KubeHelper.WriteStatus(statusWriter, "Disable", "swap");
+                    KubeHelper.WriteStatus(statusWriter, "Disable", "Swap");
                     Status = "disable: swap";
 
                     var sbFsTab = new StringBuilder();
