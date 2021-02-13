@@ -910,7 +910,7 @@ systemctl daemon-reload
 
             using (var ms = new MemoryStream())
             {
-                KubeHelper.WriteStatus(statusWriter, "Install", "Helm Charts (archive)");
+                KubeHelper.WriteStatus(statusWriter, "Install", "Helm Charts (zip)");
                 Status = "install: helm charts (archive)";
 
                 var helmFolder = KubeHelper.Resources.GetDirectory("/Helm");    // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1121

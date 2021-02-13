@@ -25,6 +25,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -34,12 +35,50 @@ using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
 using Neon.Net;
-using Neon.SSH;
+
+using Renci.SshNet;
+
+//-----------------------------------------------------------------------------
+// IMPLEMENTATION NOTE:
+//
+// This class originally used [LinuxSshProxy] to SSH into XenServer host machines
+// and use the native [xe] client there to manage the hosts and VMs.  This worked
+// relatively well, but there were some issues:
+//
+//      * [LinuxSshProxy] modifies some host Linux settings including disabling
+//        SUDO and writing some config proxy related config files.  This will 
+//        probably cause some eyebrow raising amongst serious security folks.
+//
+//      * There are some operations we can't perform like importing a VM template
+//        that needs to be downloaded in pieces and reassembled (to stay below
+//        GitHub Releases 2GB artifact file limit).  We also can't export an
+//        template XVA file to the controlling computer because there's not 
+//        enough disk space on the XenServer host file system (I believe it's
+//        limited to 4GB total).  If there was enough space, we could extract
+//        the template to the local XenServer filesystem and then used SFTP to
+//        download the file to the control computer.  But this won't work.
+//
+// I discovered that XenXenter and XCP-ng Center both include a small Windows
+// version of [xe.exe] that work's great.  This will be a simple drop-in for
+// the code below.  All we'll need to do is drop [LinuxSshProxy] and then
+// embed and call the [xe.exe] directly, passing the host name and user credentials.
+//
+// This is a temporary fix though because it won't work on OS/X or (eventually)
+// Linux when we port neonDESKTOP to those platforms.  We'll need to see if we
+// can build or obtain [xe] for these platforms or convert the code below to
+// use the XenServer SDK (C# bindings).  This is being tracked here:
+//
+//      https://github.com/nforgeio/neonKUBE/issues/1130
+//      https://github.com/nforgeio/neonKUBE/issues/1132
+
+// NOTE: XE-CLI commands are documented here:
+//
+//      https://xcp-ng.org/docs/cli_reference.html#xe-command-reference
 
 namespace Neon.XenServer
 {
     /// <summary>
-    /// This class provides a simple light-weight XenServer or CXP-ng 
+    /// This class provides a simple light-weight XenServer or XCP-ng 
     /// API that connects to the XenServer host operating system via 
     /// SSH and executes commands using the <b>xe</b> XenServer client
     /// tool.
@@ -66,10 +105,13 @@ namespace Neon.XenServer
     /// <threadsafety instance="false"/>
     public sealed partial class XenClient : IDisposable, IXenClient
     {
-        /// <summary>
-        /// Path to the parent folder for all temporary Neon local storage repositories.
-        /// </summary>
-        public const string NeonTempSrPath = "/var/opt/neon-temp-sr";
+        private bool            isDisposed = false;
+        private SftpClient      sftpClient = null;
+        private string          username;
+        private string          password;
+        private string          xePath;
+        private string          xeFolder;
+        private TextWriter      logWriter;
 
         // Implementation Note:
         // --------------------
@@ -78,8 +120,6 @@ namespace Neon.XenServer
         //
         //      https://docs.citrix.com/content/dam/docs/en-us/xenserver/current-release/downloads/xenserver-vm-users-guide.pdf
         //      https://docs.citrix.com/content/dam/docs/en-us/xenserver/xenserver-7-0/downloads/xenserver-7-0-management-api-guide.pdf
-
-        private RunOptions  runOptions;
 
         /// <summary>
         /// Constructor.  Note that you should dispose the instance when you're finished with it.
@@ -95,6 +135,18 @@ namespace Neon.XenServer
         public XenClient(string addressOrFQDN, string username, string password, string name = null, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username), nameof(username));
+            Covenant.Requires<ArgumentNullException>(password != null, nameof(password));
+
+            string platformSubfolder;
+
+            if (NeonHelper.IsWindows)
+            {
+                platformSubfolder = "win";
+            }
+            else
+            {
+                throw new NotImplementedException($"[{nameof(XenClient)}] is currently only supported on Windows: https://github.com/nforgeio/neonKUBE/issues/113");
+            }
 
             if (!NetHelper.TryParseIPv4Address(addressOrFQDN, out var address))
             {
@@ -107,27 +159,33 @@ namespace Neon.XenServer
 
                 address = hostEntry.AddressList.First();
             }
-
-            var logWriter = (TextWriter)null;
+            
+            this.logWriter = (TextWriter)null;
 
             if (!string.IsNullOrEmpty(logFolder))
             {
                 Directory.CreateDirectory(logFolder);
 
-                logWriter = new StreamWriter(Path.Combine(logFolder, $"XENSERVER-{addressOrFQDN}.log"));
+                this.logWriter = new StreamWriter(Path.Combine(logFolder, $"XENSERVER-{addressOrFQDN}.log"));
             }
 
-            Address           = addressOrFQDN;
-            Name              = name;
-            SshProxy          = new NodeSshProxy<XenClient>(addressOrFQDN, address, SshCredentials.FromUserPassword(username, password), logWriter: logWriter);
-            SshProxy.Metadata = this;
-            runOptions        = RunOptions.IgnoreRemotePath;
+            this.Address   = addressOrFQDN;
+            this.username  = username;
+            this.password  = password;
+            this.Name      = name;
+            this.xePath    = Path.Combine(NeonHelper.GetAssemblyFolder(Assembly.GetExecutingAssembly()), "assets-Neon.XenServer", platformSubfolder, "xe.exe");
+            this.xeFolder  = Path.GetDirectoryName(xePath);
+
+            // Connect via SFTP.
+
+            this.sftpClient = new SftpClient(addressOrFQDN, username, password);
+            this.sftpClient.Connect();
 
             // Initialize the operation classes.
 
-            Repository = new RepositoryOperations(this);
-            Template   = new TemplateOperations(this);
-            Machine    = new MachineOperations(this);
+            this.Repository = new RepositoryOperations(this);
+            this.Template   = new TemplateOperations(this);
+            this.Machine    = new MachineOperations(this);
         }
 
         /// <summary>
@@ -135,11 +193,19 @@ namespace Neon.XenServer
         /// </summary>
         public void Dispose()
         {
-            if (SshProxy == null)
+            if (sftpClient != null)
             {
-                SshProxy.Dispose();
-                SshProxy = null;
+                sftpClient.Dispose();
+                sftpClient = null;
             }
+
+            if (logWriter != null)
+            {
+                logWriter.Close();
+                logWriter = null;
+            }
+
+            isDisposed = true;
         }
 
         /// <summary>
@@ -151,11 +217,6 @@ namespace Neon.XenServer
         /// Returns the address or FQDN of the remote XenServer.
         /// </summary>
         public string Address { get; private set; }
-
-        /// <summary>
-        /// Returns the SSH proxy for the XenServer host.
-        /// </summary>
-        public NodeSshProxy<XenClient> SshProxy { get; private set; }
 
         /// <summary>
         /// Implements the XenServer storage repository operations.
@@ -175,67 +236,161 @@ namespace Neon.XenServer
         /// <summary>
         /// Verifies that that the instance hasn't been disposed.
         /// </summary>
-        private void VerifyNotDisposed()
+        private void EnsureNotDisposed()
         {
-            if (SshProxy == null)
+            if (isDisposed)
             {
                 throw new ObjectDisposedException(nameof(XenClient));
             }
         }
 
         /// <summary>
-        /// Invokes a low-level <b>xe CLI</b> command on the remote XenServer host
-        /// that returns text.
+        /// Adds the host and credential arguments to the command and arguments passed.
         /// </summary>
-        /// <param name="command">The <b>xe CLI</b> command.</param>
-        /// <param name="args">The optional arguments formatted as <b>name=value</b>.</param>
-        /// <returns>The command response.</returns>
-        public CommandResponse Invoke(string command, params string[] args)
+        /// <param name="command">The XE command.</param>
+        /// <param name="args">The command arguments.</param>
+        /// <returns>
+        /// The complete set of arguments to the <b>xe</b> command including the host,
+        /// credentials, command and command arguments.
+        /// </returns>
+        private string[] NormalizeArgs(string command, string[] args)
         {
-            VerifyNotDisposed();
-            return SshProxy.RunCommand($"xe {command}", runOptions, args);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(command), nameof(command));
+
+            var allArgs = new List<string>();
+
+            allArgs.Add("-s"); allArgs.Add(Address);
+            allArgs.Add("-u"); allArgs.Add(username);
+            allArgs.Add("-pw"); allArgs.Add(password);
+            allArgs.Add(command);
+
+            if (args != null)
+            {
+                foreach (var arg in args)
+                {
+                    allArgs.Add(arg);
+                }
+            }
+
+            return allArgs.ToArray();
         }
 
         /// <summary>
-        /// Invokes a low-level <b>xe CLI</b> command on the remote XenServer host
+        /// Logs an XE command execution.
+        /// </summary>
+        /// <param name="command">The <b>XE-CLI</b> command.</param>
+        /// <param name="args">The command arguments.</param>
+        /// <param name="response">The command response.</param>
+        /// <returns>The <paramref name="response"/>.</returns>
+        private ExecuteResponse LogXeCommand(string command, string[] args, ExecuteResponse response)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(command), nameof(command));
+            Covenant.Requires<ArgumentNullException>(response != null, nameof(response));
+
+            if (logWriter == null)
+            {
+                return response;
+            }
+
+            args = args ?? new string[0];
+
+            logWriter.WriteLine($"START: xe -h {Address} -u {username} -p [REDACTED] {command} {NeonHelper.NormalizeExecArgs(args)}");
+
+            if (response.ExitCode != 0)
+            {
+                logWriter.WriteLine("STDOUT");
+
+                using (var reader = new StringReader(response.OutputText))
+                {
+                    foreach (var line in reader.Lines())
+                    {
+                        logWriter.WriteLine("    " + line);
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(response.ErrorText))
+                {
+                    logWriter.WriteLine("STDERR");
+
+                    using (var reader = new StringReader(response.ErrorText))
+                    {
+                        foreach (var line in reader.Lines())
+                        {
+                            logWriter.WriteLine("    " + line);
+                        }
+                    }
+                }
+            }
+
+            if (response.ExitCode == 0)
+            {
+                logWriter.WriteLine("END [OK]");
+            }
+            else
+            {
+                logWriter.WriteLine($"END [ERROR={response.ExitCode}]");
+            }
+
+            logWriter.Flush();
+
+            return response;
+        }
+
+        /// <summary>
+        /// Invokes a low-level <b>XE-CLI</b> command on the remote XenServer host
+        /// that returns text.
+        /// </summary>
+        /// <param name="command">The <b>XE-CLI</b> command.</param>
+        /// <param name="args">The optional arguments formatted as <b>name=value</b>.</param>
+        /// <returns>The command response.</returns>
+        public ExecuteResponse Invoke(string command, params string[] args)
+        {
+            EnsureNotDisposed();
+
+            return LogXeCommand(command, args, NeonHelper.ExecuteCapture(xePath, NormalizeArgs(command, args), workingDirectory: xeFolder));
+        }
+
+        /// <summary>
+        /// Invokes a low-level <b>XE-CLI</b> command on the remote XenServer host
         /// that returns a list of items.
         /// </summary>
-        /// <param name="command">The <b>xe CLI</b> command.</param>
+        /// <param name="command">The <b>XE-CLI</b> command.</param>
         /// <param name="args">The optional arguments formatted as <b>name=value</b>.</param>
         /// <returns>The command <see cref="XenResponse"/>.</returns>
         public XenResponse InvokeItems(string command, params string[] args)
         {
-            VerifyNotDisposed();
-            return new XenResponse(SshProxy.RunCommand($"xe {command}", runOptions, args));
+            EnsureNotDisposed();
+
+            return new XenResponse(Invoke(command, args));
         }
 
         /// <summary>
-        /// Invokes a low-level <b>xe CLI</b> command on the remote XenServer host
+        /// Invokes a low-level <b>XE-CLI</b> command on the remote XenServer host
         /// that returns text, throwing an exception on failure.
         /// </summary>
-        /// <param name="command">The <b>xe CLI</b> command.</param>
+        /// <param name="command">The <b>XE-CLI</b> command.</param>
         /// <param name="args">The optional arguments formatted as <b>name=value</b>.</param>
         /// <returns>The command response.</returns>
         /// <exception cref="XenException">Thrown if the operation failed.</exception>
-        public CommandResponse SafeInvoke(string command, params string[] args)
+        public ExecuteResponse SafeInvoke(string command, params string[] args)
         {
-            VerifyNotDisposed();
+            EnsureNotDisposed();
 
-            var response = SshProxy.RunCommand($"xe {command}", runOptions, args);
+            var response = Invoke(command, args);
 
             if (response.ExitCode != 0)
             {
-                throw new XenException($"XE-COMMAND: {command} MESSAGE: {response.ErrorText}");
+                throw new XenException($"XE-COMMAND: {command} MESSAGE: {response.AllText}");
             }
 
             return response;
         }
 
         /// <summary>
-        /// Invokes a low-level <b>xe CLI</b> command on the remote XenServer host
+        /// Invokes a low-level <b>XE-CLI</b> command on the remote XenServer host
         /// that returns a list of items, throwing an exception on failure.
         /// </summary>
-        /// <param name="command">The <b>xe CLI</b> command.</param>
+        /// <param name="command">The <b>XE-CLI</b> command.</param>
         /// <param name="args">The optional arguments formatted as <b>name=value</b>.</param>
         /// <returns>The command <see cref="XenResponse"/>.</returns>
         /// <exception cref="XenException">Thrown if the operation failed.</exception>
@@ -291,7 +446,7 @@ namespace Neon.XenServer
         /// <returns>A <see cref="XenTempIso"/> with information about the new storage repository and its contents.</returns>
         /// <remarks>
         /// <para>
-        /// During cluster setup on virtualization platforms like XenServer and Hyper-V, neonKUBE needs
+        /// During cluster setup on virtualization platforms like XenServer and Hyper-V, neonKUBE need
         /// to configure new VMs with IP addresses, hostnames, etc.  Traditionally, we've relied on
         /// being able to SSH into the VM to perform all of these actions, but this relied on being
         /// VM being able to obtain an IP address via DHCP and for setup to be able to discover the
@@ -308,11 +463,11 @@ namespace Neon.XenServer
         /// with a <b>neon-init</b> service that runs before the network service to determine
         /// whether a DVD (ISO) is inserted into the VM and runs the <b>neon-init.sh</b> script
         /// there one time, if it exists.  This script will initialize the node's IP address and 
-        /// could also be used for other configuration as well.
+        /// could also be used for other configuration as well, like setting user credentials.
         /// </para>
         /// <note>
         /// In theory, we could have used the same technique for mounting a <b>cloud-init</b> data source
-        /// via this ISO, but we decided not to go there, at least for now.
+        /// via this ISO, but we decided not to go there, at least for now (we couldn't get that working).
         /// </note>
         /// <note>
         /// neonKUBE doesn't use this technique for true cloud deployments (AWS, Azure, Google,...) because
@@ -353,28 +508,29 @@ namespace Neon.XenServer
 
             var tempIso = new XenTempIso();
 
-            // Ensure that the root temporary local SR folder exists.
+            // Create the temporary SR subfolder and upload the ISO file.
 
-            SshProxy.SudoCommand("mkdir", RunOptions.LogOutput, NeonTempSrPath);
+            tempIso.SrPath  = LinuxPath.Combine("/var/run/sr-mount", Guid.NewGuid().ToString("d"));
+            tempIso.IsoName = $"neon-dvd-{Guid.NewGuid().ToString("d")}.iso";
 
-            // Create the SR subfolder and upload the ISO file.
+            if (!sftpClient.Exists(tempIso.SrPath))
+            {
+                sftpClient.CreateDirectory(tempIso.SrPath);
+                sftpClient.ChangePermissions(tempIso.SrPath, Convert.ToInt16("751", 8));
+            }
 
-            tempIso.SrPath = LinuxPath.Combine(NeonTempSrPath, Guid.NewGuid().ToString("d"));
-            tempIso.CdName = $"neon-dvd-{Guid.NewGuid().ToString("d")}.iso";
-
-            SshProxy.SudoCommand("mkdir", RunOptions.LogOutput | RunOptions.FaultOnError, tempIso.SrPath);
-
-            var xenIsoPath = LinuxPath.Combine(tempIso.SrPath, tempIso.CdName);
+            var xenIsoPath = LinuxPath.Combine(tempIso.SrPath, tempIso.IsoName);
 
             using (var isoInput = File.OpenRead(isoPath))
             {
-                SshProxy.Upload(xenIsoPath, isoInput);
+                sftpClient.UploadFile(isoInput, xenIsoPath);
+                sftpClient.ChangePermissions(xenIsoPath, Convert.ToInt16("751", 8));
             }
 
-            // Create the new storage repository.  This command returns the sr-uuid.
+            // Create the new storage repository.  This command returns the [sr-uuid].
 
             var response = SafeInvoke("sr-create",
-                $"name-label={tempIso.CdName}",
+                $"name-label={tempIso.IsoName}",
                 $"type=iso",
                 $"device-config:location={tempIso.SrPath}",
                 $"device-config:legacy_mode=true",
@@ -407,16 +563,10 @@ namespace Neon.XenServer
         /// </remarks>
         public void RemoveTempIso(XenTempIso tempIso)
         {
-            Covenant.Requires<ArgumentNullException>(tempIso != null, nameof(tempIso));
-
             // Remove the PBD and SR.
 
             SafeInvoke("pbd-unplug", $"uuid={tempIso.PdbUuid}");
             SafeInvoke("sr-forget", $"uuid={tempIso.SrUuid}");
-
-            // Remove the SR folder.
-
-            SshProxy.SudoCommand("rm", "-rf", tempIso.SrPath);
         }
     }
 }

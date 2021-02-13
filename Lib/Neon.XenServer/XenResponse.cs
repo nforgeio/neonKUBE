@@ -44,7 +44,7 @@ namespace Neon.XenServer
         /// Constructor.
         /// </summary>
         /// <param name="response">The low-level SSH command response.</param>
-        internal XenResponse(CommandResponse response)
+        internal XenResponse(ExecuteResponse response)
         {
             this.Response = response;
             this.Items    = new List<Dictionary<string, string>>();
@@ -82,15 +82,23 @@ namespace Neon.XenServer
             //                host ( RO): xentest
             //                type ( RO): iso
             //        content-type ( RO): iso
-            //
-            //
 
+            // When running XE commands directly on the XenServer host, this appears to 
+            // be a list of records with each record being terminated by two blank lines.
+            // When executing the commands remotely via the Windows [xe.exe] CLI, the
+            // blank are ommtted and it appears that the "uuid " or sometimes other property
+            // names like "Disk 0 VDI:" at at the beginning of the line indicates a new record.
             //
-            // This appears to be a list of records with each record being terminated by 
-            // two blank lines.  Each line includes a read/write or read-only indicator 
-            // (which we'll strip out) followed by a colon and the property value.  I'm
-            // not entirely sure if this fully describes the format so I'm going to be
-            // a bit defensive below.
+            // PARSING PROBLEM:
+            // ----------------
+            // The problem is that we may see more than one properties at the begining of
+            // the line for an individual record.  I'm going to assume that every record
+            // will include at least one [indented] property and also that all properties 
+            // that start the line appear at the begining of the record.
+            //
+            // Each line includes a read/write or read-only indicator (which we'll strip out) 
+            // followed by a colon and the property value.  I'm not entirely sure if this 
+            // fully describes the format so I'm going to be a bit defensive below.
 
             using (var reader = new StringReader(response.OutputText))
             {
@@ -100,7 +108,8 @@ namespace Neon.XenServer
                 {
                     // Read the next record.
 
-                    var rawRecord = new Dictionary<string, string>();
+                    var rawRecord      = new Dictionary<string, string>();
+                    var parsedIndented = false;
 
                     while (true)
                     {
@@ -108,32 +117,44 @@ namespace Neon.XenServer
 
                         if (line == null)
                         {
+                            if (rawRecord.Count > 0)
+                            {
+                                Items.Add(rawRecord);
+                                rawRecord = new Dictionary<string, string>();
+                            }
+
                             isEOF = true;
                             break;
                         }
 
-                        line = line.Trim();
-
-                        if (line == string.Empty)
+                        if (string.IsNullOrEmpty(line))
                         {
-                            // Looks like the end of the record, so read the
-                            // second blank line.
+                            // Ignore blank lines.
 
-                            line = reader.ReadLine();
-                            Covenant.Assert(line.Trim() == string.Empty);
-
-                            if (line == null)
-                            {
-                                isEOF = true;
-                                break;
-                            }
-                            else if (line != string.Empty)
-                            {
-                                Covenant.Assert(line.Trim() == string.Empty, "Unexpected XenServer [xe] CLI output.");
-                            }
-
-                            break;
+                            continue;
                         }
+
+                        var isIndented = char.IsWhiteSpace(line.First());
+
+                        if (!isIndented && parsedIndented)
+                        {
+                            // Looks like the start of a new record, so add the previous record 
+                            // (if not empty) before beginning to parse the new record.
+
+                            if (rawRecord.Count > 0)
+                            {
+                                Items.Add(rawRecord);
+                                rawRecord = new Dictionary<string, string>();
+                            }
+
+                            parsedIndented = false;
+                        }
+                        else if (isIndented)
+                        {
+                            parsedIndented = true;
+                        }
+
+                        line = line.Trim();
 
                         // Parse the property name and value.
 
@@ -141,7 +162,7 @@ namespace Neon.XenServer
 
                         if (colonPos == -1)
                         {
-                            continue;   // We shouldn't ever see this.
+                            continue;   // We shouldn't ever see this so ignore it.
                         }
 
                         var namePart  = line.Substring(0, colonPos).Trim();
@@ -170,7 +191,7 @@ namespace Neon.XenServer
         /// <summary>
         /// Returns the low-level command response.
         /// </summary>
-        public CommandResponse Response { get; private set; }
+        public ExecuteResponse Response { get; private set; }
 
         /// <summary>
         /// Returns the command exit code.

@@ -163,7 +163,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// The public and private parts of the SSH client key used to
-        /// authenticate an SSH session with a cluster node.
+        /// authenticate a SSH session with a cluster node.
         /// </summary>
         [JsonProperty(PropertyName = "SshClientKey", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "sshClientKey", ApplyNamingConventions = false)]

@@ -271,6 +271,9 @@ namespace Neon.Common
         /// <param name="process">
         /// The optional <see cref="Process"/> instance to use to launch the process.
         /// </param>
+        /// <param name="workingDirectory">
+        /// The optional working directory to set while executing the program.
+        /// </param>
         /// <returns>The process exit code.</returns>
         /// <exception cref="TimeoutException">Thrown if the process did not exit within the <paramref name="timeout"/> limit.</exception>
         /// <remarks>
@@ -281,9 +284,9 @@ namespace Neon.Common
         /// parameter will not be killed in this case.
         /// </note>
         /// </remarks>
-        public static int Execute(string path, object[] args, TimeSpan? timeout = null, Process process = null)
+        public static int Execute(string path, object[] args, TimeSpan? timeout = null, Process process = null, string workingDirectory = null)
         {
-            return Execute(path, NormalizeExecArgs(args), timeout, process);
+            return Execute(path, NormalizeExecArgs(args), timeout, process, workingDirectory);
         }
 
         /// <summary>
@@ -298,6 +301,9 @@ namespace Neon.Common
         /// <param name="process">
         /// The optional <see cref="Process"/> instance to use to launch the process.
         /// </param>
+        /// <param name="workingDirectory">
+        /// The optional working directory to set while executing the program.
+        /// </param>
         /// <returns>The process exit code.</returns>
         /// <exception cref="TimeoutException">Thrown if the process did not exit within the <paramref name="timeout"/> limit.</exception>
         /// <remarks>
@@ -308,7 +314,7 @@ namespace Neon.Common
         /// parameter will not be killed in this case.
         /// </note>
         /// </remarks>
-        public static int Execute(string path, string args, TimeSpan? timeout = null, Process process = null)
+        public static int Execute(string path, string args, TimeSpan? timeout = null, Process process = null, string workingDirectory = null)
         {
             var processInfo   = new ProcessStartInfo(GetProgramPath(path), args ?? string.Empty);
             var killOnTimeout = process == null;
@@ -324,7 +330,7 @@ namespace Neon.Common
                 processInfo.CreateNoWindow         = true;
                 processInfo.RedirectStandardError  = true;
                 processInfo.RedirectStandardOutput = true;
-                processInfo.WorkingDirectory       = Environment.CurrentDirectory;
+                processInfo.WorkingDirectory       = !string.IsNullOrEmpty(workingDirectory) ? workingDirectory : Environment.CurrentDirectory;
 
                 process.StartInfo                  = processInfo;
                 process.EnableRaisingEvents        = true;
@@ -423,6 +429,9 @@ namespace Neon.Common
         /// <param name="process">
         /// The optional <see cref="Process"/> instance to use to launch the process.
         /// </param>
+        /// <param name="workingDirectory">
+        /// The optional working directory to set while executing the program.
+        /// </param>
         /// <returns>The process exit code.</returns>
         /// <exception cref="TimeoutException">Thrown if the process did not exit within the <paramref name="timeout"/> limit.</exception>
         /// <remarks>
@@ -433,11 +442,11 @@ namespace Neon.Common
         /// parameter will not be killed in this case.
         /// </note>
         /// </remarks>
-        public static async Task<int> ExecuteAsync(string path, object[] args, TimeSpan? timeout = null, Process process = null)
+        public static async Task<int> ExecuteAsync(string path, object[] args, TimeSpan? timeout = null, Process process = null, string workingDirectory = null)
         {
             await SyncContext.ClearAsync;
 
-            return await ExecuteAsync(path, NormalizeExecArgs(args), timeout, process);
+            return await ExecuteAsync(path, NormalizeExecArgs(args), timeout, process, workingDirectory);
         }
 
         /// <summary>
@@ -452,6 +461,9 @@ namespace Neon.Common
         /// <param name="process">
         /// The optional <see cref="Process"/> instance to use to launch the process.
         /// </param>
+        /// <param name="workingDirectory">
+        /// The optional working directory to set while executing the program.
+        /// </param>
         /// <returns>The process exit code.</returns>
         /// <exception cref="TimeoutException">Thrown if the process did not exit within the <paramref name="timeout"/> limit.</exception>
         /// <remarks>
@@ -462,11 +474,11 @@ namespace Neon.Common
         /// parameter will not be killed in this case.
         /// </note>
         /// </remarks>
-        public static async Task<int> ExecuteAsync(string path, string args, TimeSpan? timeout = null, Process process = null)
+        public static async Task<int> ExecuteAsync(string path, string args, TimeSpan? timeout = null, Process process = null, string workingDirectory = null)
         {
             await SyncContext.ClearAsync;
 
-            return await Task.Run(() => Execute(path, args, timeout, process));
+            return await Task.Run(() => Execute(path, args, timeout, process, workingDirectory));
         }
 
         /// <summary>
@@ -549,6 +561,9 @@ namespace Neon.Common
         /// <param name="process">
         /// The optional <see cref="Process"/> instance to use to launch the process.
         /// </param>
+        /// <param name="workingDirectory">
+        /// The optional working directory to set while executing the program.
+        /// </param>
         /// <param name="outputAction">Optional action that will be called when the process outputs some text.</param>
         /// <param name="errorAction">Optional action that will be called when the process outputs some error text.</param>
         /// <returns>
@@ -573,12 +588,13 @@ namespace Neon.Common
         public static ExecuteResponse ExecuteCapture(
             string          path, 
             object[]        args, 
-            TimeSpan?       timeout      = null,
-            Process         process      = null,
-            Action<string>  outputAction = null,
-            Action<string>  errorAction  = null)
+            TimeSpan?       timeout          = null,
+            Process         process          = null,
+            string          workingDirectory = null,
+            Action<string>  outputAction     = null,
+            Action<string>  errorAction      = null)
         {
-            return ExecuteCapture(path, NormalizeExecArgs(args), timeout, process, outputAction, errorAction);
+            return ExecuteCapture(path, NormalizeExecArgs(args), timeout, process, workingDirectory, outputAction, errorAction);
         }
 
         /// <summary>
@@ -593,6 +609,9 @@ namespace Neon.Common
         /// </param>
         /// <param name="process">
         /// The optional <see cref="Process"/> instance to use to launch the process.
+        /// </param>
+        /// <param name="workingDirectory">
+        /// The optional working directory to set while executing the program.
         /// </param>
         /// <param name="outputAction">Optional action that will be called when the process outputs some text.</param>
         /// <param name="errorAction">Optional action that will be called when the process outputs some error text.</param>
@@ -618,10 +637,11 @@ namespace Neon.Common
         public static ExecuteResponse ExecuteCapture(
             string          path, 
             string          args, 
-            TimeSpan?       timeout      = null,
-            Process         process      = null,
-            Action<string>  outputAction = null,
-            Action<string>  errorAction  = null)
+            TimeSpan?       timeout          = null,
+            Process         process          = null,
+            string          workingDirectory = null,
+            Action<string>  outputAction     = null,
+            Action<string>  errorAction      = null)
         {
             var processInfo     = new ProcessStartInfo(GetProgramPath(path), args ?? string.Empty);
             var externalProcess = process != null;
@@ -642,7 +662,7 @@ namespace Neon.Common
                 processInfo.RedirectStandardError  = true;
                 processInfo.RedirectStandardOutput = true;
                 processInfo.CreateNoWindow         = true;
-                processInfo.WorkingDirectory       = Environment.CurrentDirectory;
+                processInfo.WorkingDirectory       = !string.IsNullOrEmpty(workingDirectory) ? workingDirectory : Environment.CurrentDirectory; ;
 
                 process.StartInfo                  = processInfo;
                 process.OutputDataReceived        += new DataReceivedEventHandler(redirector.OnOutput);
@@ -704,6 +724,9 @@ namespace Neon.Common
         /// <param name="process">
         /// The optional <see cref="Process"/> instance to use to launch the process.
         /// </param>
+        /// <param name="workingDirectory">
+        /// The optional working directory to set while executing the program.
+        /// </param>
         /// <returns>
         /// The <see cref="ExecuteResponse"/> including the process exit code and capture 
         /// standard output and error streams.
@@ -720,12 +743,13 @@ namespace Neon.Common
         public static async Task<ExecuteResponse> ExecuteCaptureAsync(
             string      path, 
             object[]    args,
-            TimeSpan?   timeout = null, 
-            Process     process = null)
+            string      workingDirectory = null,
+            TimeSpan?   timeout          = null, 
+            Process     process          = null)
         {
             await SyncContext.ClearAsync;
 
-            return await ExecuteCaptureAsync(path, NormalizeExecArgs(args), timeout, process);
+            return await ExecuteCaptureAsync(path, NormalizeExecArgs(args), timeout, process, workingDirectory);
         }
 
         /// <summary>
@@ -740,6 +764,9 @@ namespace Neon.Common
         /// </param>
         /// <param name="process">
         /// The optional <see cref="Process"/> instance to use to launch the process.
+        /// </param>
+        /// <param name="workingDirectory">
+        /// The optional working directory to set while executing the program.
         /// </param>
         /// <returns>
         /// The <see cref="ExecuteResponse"/> including the process exit code and capture 
@@ -757,12 +784,13 @@ namespace Neon.Common
         public static async Task<ExecuteResponse> ExecuteCaptureAsync(
             string      path, 
             string      args, 
-            TimeSpan?   timeout = null, 
-            Process     process = null)
+            TimeSpan?   timeout          = null, 
+            Process     process          = null, 
+            string      workingDirectory = null)
         {
             await SyncContext.ClearAsync;
 
-            return await Task.Run(() => ExecuteCapture(path, args, timeout, process));
+            return await Task.Run(() => ExecuteCapture(path, args, timeout, process, workingDirectory));
         }
 
 #if NETSTANDARD2_0

@@ -2897,10 +2897,8 @@ value: /var/openebs/local
                            pollInterval: clusterOpRetryInterval);
                 });
 
-
-
-            await master.InvokeIdempotentAsync("deploy/neon-system-registry-harbor-loadimages",
-                async () =>
+            master.InvokeIdempotent("deploy/neon-system-registry-harbor-loadimages",
+                () =>
                 {
                     var sbScript = new StringBuilder();
 
@@ -2922,10 +2920,7 @@ docker login --tls-verify=false --username admin --password {adminPassword} neon
     docker push --tls-verify=false neon-registry.node.local/neon-internal/$imageName:$imageTag
 done
 ");
-
                     //master.SudoCommand(CommandBundle.FromScript(sbScript));
-
-                    await Task.CompletedTask;
                 });
         }
 

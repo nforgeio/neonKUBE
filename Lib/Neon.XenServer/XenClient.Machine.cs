@@ -100,7 +100,7 @@ namespace Neon.XenServer
             /// <param name="templateName">Identifies the template.</param>
             /// <param name="processors">Optionally specifies the number of processors to assign.  This defaults to <b>2</b>.</param>
             /// <param name="memoryBytes">Optionally specifies the memory assigned to the machine (overriding the template).</param>
-            /// <param name="diskBytes">Optionally specifies the disk assigned to the machine (overriding the template).</param>
+            /// <param name="diskBytes">Optionally specifies the primary disk size (overriding the template).</param>
             /// <param name="snapshot">Optionally specifies that the virtual machine should snapshot the template.  This defaults to <c>false</c>.</param>
             /// <param name="extraDisks">
             /// Optionally specifies any additional virtual disks to be created and 
@@ -300,7 +300,15 @@ namespace Neon.XenServer
 
                     var vdiUuid = vdi["uuid"];
 
-                    client.SafeInvoke("vdi-resize", $"uuid={vdiUuid}", $"disk-size={diskBytes}");
+                    // Expand the disk only if the requested size is greater than the current
+                    // [virtual-size] because XenServer cannot shrink disks.
+
+                    var virtualSize = long.Parse(vdi["virtual-size"]);
+
+                    if (diskBytes > virtualSize)
+                    {
+                        client.SafeInvoke("vdi-resize", $"uuid={vdiUuid}", $"disk-size={diskBytes}");
+                    }
 
                     // Rename the disk to "operating system".
 
@@ -393,6 +401,27 @@ namespace Neon.XenServer
                 else
                 {
                     client.SafeInvoke("vm-reboot", $"uuid={virtualMachine.Uuid}");
+                }
+            }
+
+            /// <summary>
+            /// Removes a virtual machine and its drives.
+            /// </summary>
+            /// <param name="virtualMachine">The target virtual machine.</param>
+            /// <param name="noDriveRemoval">Optionally prevents the VM drives from being removed.</param>
+            public void Remove(XenVirtualMachine virtualMachine, bool noDriveRemoval = false)
+            {
+                Covenant.Requires<ArgumentNullException>(virtualMachine != null, nameof(virtualMachine));
+
+                client.SafeInvoke("vm-reset-powerstate", $"uuid={virtualMachine.Uuid}", "--force");
+
+                if (noDriveRemoval)
+                {
+                    client.SafeInvoke("vm-destroy", $"uuid={virtualMachine.Uuid}", "--force");
+                }
+                else
+                {
+                    client.SafeInvoke("vm-uninstall", $"uuid={virtualMachine.Uuid}", "--force");
                 }
             }
 

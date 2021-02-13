@@ -100,9 +100,10 @@ namespace Neon.XenServer
             }
 
             /// <summary>
-            /// Downloads and installs an XVA or OVA virtual machine template, optionally renaming it.
+            /// Installs from an XVA or OVA virtual machine template file on the local workstation to the 
+            /// remote XenServer host an XVA or OVA virtual machine template, optionally renaming it.
             /// </summary>
-            /// <param name="uri">The HTTP or FTP URI for the template file.</param>
+            /// <param name="path">The path to the template file on the local workstation.</param>
             /// <param name="name">The optional template name.</param>
             /// <param name="repositoryNameOrUuid">
             /// Optionally specifies the target storage repository by name or UUID.  
@@ -110,24 +111,14 @@ namespace Neon.XenServer
             /// </param>
             /// <returns>The installed template.</returns>
             /// <exception cref="XenException">Thrown if the operation failed.</exception>
-            public XenTemplate Install(string uri, string name = null, string repositoryNameOrUuid = "Local storage")
+            public XenTemplate ImportVmTemplate(string path, string name = null, string repositoryNameOrUuid = "Local storage")
             {
-                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri), nameof(uri));
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path), nameof(path));
                 Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(repositoryNameOrUuid), nameof(repositoryNameOrUuid));
-
-                if (!Uri.TryCreate(uri, UriKind.Absolute, out var uriParsed))
-                {
-                    throw new ArgumentException($"[{uri}] is not a valid URI", nameof(uri));
-                }
 
                 var sr = client.Repository.GetTargetStorageRepository(repositoryNameOrUuid);
 
-                if (uriParsed.Scheme != "http" && uriParsed.Scheme != "https" && uriParsed.Scheme != "ftp")
-                {
-                    throw new ArgumentException($"[{uri}] uses an unsupported scheme.  Only [http or ftp] are allowed.", nameof(uri));
-                }
-
-                var response = client.SafeInvoke("vm-import", $"url={uri}", $"sr-uuid={sr.Uuid}");
+                var response = client.SafeInvoke("vm-import", $"filename={path}", $"sr-uuid={sr.Uuid}");
                 var uuid     = response.OutputText.Trim();
                 var template = Find(uuid: uuid);
 
@@ -138,6 +129,8 @@ namespace Neon.XenServer
 
                 return template;
             }
+
+
 
             /// <summary>
             /// Renames a virtual machine template.
