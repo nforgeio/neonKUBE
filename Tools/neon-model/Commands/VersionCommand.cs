@@ -29,9 +29,8 @@ using Newtonsoft;
 using Newtonsoft.Json;
 
 using Neon.Common;
-using Neon.Kube;
 
-namespace NeonCli
+namespace ModelCli
 {
     /// <summary>
     /// Implements the <b>version</b> command.
@@ -40,7 +39,7 @@ namespace NeonCli
     public class VersionCommand : CommandBase
     {
         private const string usage = @"
-Prints the [neon-cli] version.
+Prints the [neon-model] version.
 
 USAGE:
 
@@ -99,11 +98,7 @@ OPTIONS:
                 {
                     var v = $"*** ERROR: [neon v{Program.Version}] is older than the required version [{minSemanticVersion}].";
 
-                    Console.Error.WriteLine($"*** ERROR: [{Program.Name} v{Program.Version}] is older than the required version [{minSemanticVersion}].");
-                    Console.Error.WriteLine();
-                    Console.Error.WriteLine($"You can obtain the latest releases from here:");
-                    Console.Error.WriteLine();
-                    Console.Error.WriteLine($"    https://github.com/nforgeio/neonKUBE/releases");
+                    Console.Error.WriteLine($"*** ERROR: [neon-model v{Program.Version}] is older than the required version [{minSemanticVersion}].");
                     Console.Error.WriteLine();
                     Program.Exit(1);
                 }

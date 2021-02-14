@@ -34,13 +34,10 @@ using Newtonsoft.Json;
 using Neon;
 using Neon.Common;
 using Neon.Diagnostics;
-using Neon.Kube;
-using Neon.Kube.Xunit;
 using Neon.IO;
-using Neon.SSH;
 using Neon.Windows;
 
-namespace NeonCli
+namespace ModelCli
 {
     /// <summary>
     /// This tool is used to configure and manage the nodes of a neonKUBE cluster.
@@ -51,32 +48,7 @@ namespace NeonCli
         /// The program version.
         /// </summary>
         public const string Version = Build.NeonDesktopVersion;
-
-        /// <summary>
-        /// Returns <c>true</c> if this is the enterprise <b>neon-cli</b> build.
-        /// </summary>
-        /// <remarks>
-        /// We use this to help with managing the source code duplicated for this in the
-        /// neonKUBE and neonCLOUD (enterprise) GitHub repositories.
-        /// </remarks>
-        public const bool IsEnterprise =
-#if ENTERPRISE
-            true;
-#else
-            false;
-#endif
-
-        /// <summary>
-        /// Returns the program name for printing help.  This will be <b>"neon"</b> for the community
-        /// version and <b>"neon enterprise"</b> for the enterprise version.
-        /// </summary>
-        public const string Name =
-#if ENTERPRISE
-            "neon enterprise";
-#else
-            "neon";
-#endif
-
+    
         /// <summary>
         /// Program entry point.
         /// </summary>
@@ -85,7 +57,7 @@ namespace NeonCli
         public static async Task<int> Main(params string[] args)
         {
             string usage = $@"
-{Program.Name} [v{Program.Version}]
+neonKUBE Management Tool: neon [v{Program.Version}]
 {Build.Copyright}
 
 USAGE:
@@ -97,7 +69,9 @@ COMMAND SUMMARY:
     neon help               COMMAND
     neon cluster prepare    [CLUSTER-DEF]
     neon cluster setup      [CLUSTER-DEF]
+    neon couchbase          COMMNAND
     neon generate iso       SOURCE-FOLDER ISO-PATH
+    neon generate models    [OPTIONS] ASSEMBLY-PATH [OUTPUT-PATH]
     neon login              COMMAND
     neon logout
     neon password           COMMAND
@@ -151,15 +125,6 @@ You can disable the use of this encrypted folder by specifying
 
             LogManager.Default.LogLevel = LogLevel.None;
 
-            // Use the version of Powershell Core installed with the application,
-            // if present.
-
-            PowerShell.PwshPath = KubeHelper.PwshPath;
-
-            // Ensure that all of the cluster hosting manager implementations are loaded.
-
-            new HostingManagerFactory(() => HostingLoader.Initialize());
-
             // Process the command line.
 
             try
@@ -199,18 +164,6 @@ You can disable the use of this encrypted folder by specifying
                 {
                     Console.WriteLine(usage);
                     Program.Exit(0);
-                }
-
-                if (!CommandLine.HasOption("--insecure"))
-                {
-                    // Ensure that temporary files are written to the user's temporary folder because
-                    // there's a decent chance that this folder will be encrypted at rest.
-
-                    if (KubeTestManager.Current == null)
-                    {
-                        TempFile.Root   = KubeHelper.TempFolder;
-                        TempFolder.Root = KubeHelper.TempFolder;
-                    }
                 }
 
                 // Scan for enabled commands in the current assembly.
@@ -273,104 +226,7 @@ You can disable the use of this encrypted folder by specifying
                 LogPath = LeftCommandLine.GetOption("--log-folder");
                 Quiet   = LeftCommandLine.GetFlag("--quiet");
 
-                if (KubeHelper.InToolContainer)
-                {
-                    // We hardcode logging to [/log] inside [neon-cli] containers.
-
-                    LogPath = "/log";
-                }
-                else if (!string.IsNullOrEmpty(LogPath))
-                {
-                    LogPath = Path.GetFullPath(LogPath);
-
-                    Directory.CreateDirectory(LogPath);
-                }
-                else
-                {
-                    LogPath = KubeHelper.LogFolder;
-
-                    // We can clear this folder because we know that there shouldn't be
-                    // any other files in here.
-
-                    NeonHelper.DeleteFolderContents(LogPath);
-                }
-
-                //-------------------------------------------------------------
-                // Process the standard command line options.
-
-                // Load the password from the command line options, if present.
-
-                MachinePassword = LeftCommandLine.GetOption("--machine-password", KubeConst.SysAdminPassword);
-
-                // Handle the other options.
-
-                var maxParallelOption = LeftCommandLine.GetOption("--max-parallel");
-                int maxParallel;
-
-                if (!int.TryParse(maxParallelOption, out maxParallel) || maxParallel < 1)
-                {
-                    Console.Error.WriteLine($"*** ERROR: [--max-parallel={maxParallelOption}] option is not valid.");
-                    Program.Exit(1);
-                }
-
-                Program.MaxParallel = maxParallel;
-
-                var waitSecondsOption = LeftCommandLine.GetOption("--wait");
-
-                if (!double.TryParse(waitSecondsOption, NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var waitSeconds) || waitSeconds < 0)
-                {
-                    Console.Error.WriteLine($"*** ERROR: [--wait={waitSecondsOption}] option is not valid.");
-                    Program.Exit(1);
-                }
-
-                Program.WaitSeconds = waitSeconds;
-
-                Debug = LeftCommandLine.HasOption("--debug");
-
-                // Ensure that there are no unexpected command line options.
-
-                if (command.CheckOptions)
-                {
-                    foreach (var optionName in command.ExtendedOptions)
-                    {
-                        validOptions.Add(optionName);
-                    }
-
-                    foreach (var option in LeftCommandLine.Options)
-                    {
-                        if (!validOptions.Contains(option.Key))
-                        {
-                            var commandWords = string.Empty;
-
-                            foreach (var word in command.Words)
-                            {
-                                if (commandWords.Length > 0)
-                                {
-                                    commandWords += " ";
-                                }
-
-                                commandWords += word;
-                            }
-
-                            Console.Error.WriteLine($"*** ERROR: [{commandWords}] command does not support [{option.Key}].");
-                            Program.Exit(1);
-                        }
-                    }
-                }
-
                 // Run the command.
-
-                if (command.NeedsSshCredentials(CommandLine) && string.IsNullOrEmpty(MachinePassword))
-                {
-                    Console.WriteLine();
-                    Console.WriteLine($"    Enter cluster SSH password for [{KubeConst.SysAdminUser}]:");
-                    Console.WriteLine($"    ------------------------------------------");
-
-                    while (string.IsNullOrEmpty(MachinePassword))
-                    {
-                        MachinePassword = NeonHelper.ReadConsolePassword("    password: ");
-                    }
-                }
 
                 if (command.SplitItem != null)
                 {
@@ -397,46 +253,6 @@ You can disable the use of this encrypted folder by specifying
             }
 
             return 0;
-        }
-
-        /// <summary>
-        /// Message written then a user is not logged into a cluster.
-        /// </summary>
-        public const string MustLoginMessage = "*** ERROR: You must first log into a cluster.";
-
-        /// <summary>
-        /// Returns the Git source code branch.
-        /// </summary>
-#pragma warning disable 0436
-        public static string GitBranch => ThisAssembly.Git.Branch;
-#pragma warning restore 0436
-
-        /// <summary>
-        /// Path to the WinSCP program executable.
-        /// </summary>
-        public static string WinScpPath
-        {
-            get { return Path.Combine(Environment.GetEnvironmentVariable("ProgramFiles(x86)"), @"WinSCP\WinSCP.exe"); }
-        }
-
-        /// <summary>
-        /// Path to the PuTTY program executable.
-        /// </summary>
-        public static string PuttyPath
-        {
-            get
-            {
-                // Look for a x64 or x86 version of PuTTY at their default install locations.
-
-                var path = Path.Combine(Environment.GetEnvironmentVariable("ProgramFiles"), @"PuTTY\putty.exe");
-
-                if (File.Exists(path))
-                {
-                    return path;
-                }
-
-                return Path.Combine(Environment.GetEnvironmentVariable("ProgramFiles(x86)"), @"PuTTY\putty.exe");
-            }
         }
 
         /// <summary>
@@ -527,10 +343,6 @@ You can disable the use of this encrypted folder by specifying
         /// <param name="exitCode">The exit code.</param>
         public static void Exit(int exitCode)
         {
-            // Ensure that all sensitive files and folders are encrypted at rest.  We're 
-            // running this after every command just to be super safe.
-
-            KubeHelper.EncryptSensitiveFiles();
             throw new ProgramExitException(exitCode);
         }
 
@@ -552,12 +364,6 @@ You can disable the use of this encrypted folder by specifying
 #pragma warning disable 0436
         public static bool IsRelease => ThisAssembly.Git.Branch.StartsWith("release-", StringComparison.InvariantCultureIgnoreCase);
 #pragma warning restore 0436
-
-        /// <summary>
-        /// The password used to secure the cluster nodes before they are setup.  This defaults
-        /// to <b>sysadmin0000</b> which is used for the cluster machine templates.
-        /// </summary>
-        public static string MachinePassword { get; set; } = KubeConst.SysAdminPassword;
 
         /// <summary>
         /// Returns the log folder path or a <c>null</c> or empty string 
@@ -584,76 +390,6 @@ You can disable the use of this encrypted folder by specifying
         /// Runs the command in DEBUG mode.
         /// </summary>
         public static bool Debug { get; set; }
-
-        /// <summary>
-        /// Creates a <see cref="NodeSshProxy{TMetadata}"/> for the specified host and server name,
-        /// configuring logging and the credentials as specified by the global command
-        /// line options.
-        /// </summary>
-        /// <param name="name">The node name.</param>
-        /// <param name="address">The node's private IP address.</param>
-        /// <param name="appendToLog">
-        /// Pass <c>true</c> to append to an existing log file (or create one if necessary)
-        /// or <c>false</c> to replace any existing log file with a new one.
-        /// </param>
-        /// 
-        /// <typeparam name="TMetadata">Defines the metadata type the command wishes to associate with the server.</typeparam>
-        /// <returns>The <see cref="NodeSshProxy{TMetadata}"/>.</returns>
-        public static NodeSshProxy<TMetadata> CreateNodeProxy<TMetadata>(string name, IPAddress address, bool appendToLog)
-            where TMetadata : class
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
-
-            var logWriter = (TextWriter)null;
-
-            if (!string.IsNullOrEmpty(LogPath))
-            {
-                var path = Path.Combine(LogPath, name + ".log");
-
-                logWriter = new StreamWriter(new FileStream(path, appendToLog ? FileMode.Append : FileMode.Create, appendToLog ? FileAccess.Write : FileAccess.ReadWrite));
-            }
-
-            SshCredentials sshCredentials;
-
-            if (!string.IsNullOrEmpty(KubeConst.SysAdminUser) && !string.IsNullOrEmpty(Program.MachinePassword))
-            {
-                sshCredentials = SshCredentials.FromUserPassword(KubeConst.SysAdminUser, Program.MachinePassword);
-            }
-            else if (KubeHelper.CurrentContext != null)
-            {
-                sshCredentials = KubeHelper.CurrentContext.Extension.SshCredentials;
-            }
-            else
-            {
-                Console.Error.WriteLine("*** ERROR: Expected some node credentials.");
-                Program.Exit(1);
-
-                return null;
-            }
-
-            return new NodeSshProxy<TMetadata>(name, address, sshCredentials, logWriter: logWriter);
-        }
-
-        /// <summary>
-        /// Returns a <see cref="ClusterProxy"/> for the current Kubernetes context.
-        /// </summary>
-        /// <returns>The <see cref="ClusterProxy"/>.</returns>
-        /// <remarks>
-        /// <note>
-        /// This method will terminate the program with an error message when not logged
-        /// into a neonKUBE cluster.
-        /// </note>
-        /// </remarks>
-        public static ClusterProxy GetCluster()
-        {
-            if (KubeHelper.CurrentContext == null)
-            {
-                Console.Error.WriteLine("*** ERROR: You are not logged into a cluster.");
-                Program.Exit(1);
-            }
-
-            return new ClusterProxy(KubeHelper.CurrentContext, Program.CreateNodeProxy<NodeDefinition>);
-        }
 
         /// <summary>
         /// Presents the user with a yes/no question and waits for a response.
@@ -686,53 +422,6 @@ You can disable the use of this encrypted folder by specifying
             finally
             {
                 Console.WriteLine();
-            }
-        }
-
-        /// <summary>
-        /// Uses WinSCP to convert an OpenSSH PEM formatted key to the PPK format
-        /// required by PuTTY/WinSCP.  This works only on Windows.
-        /// </summary>
-        /// <param name="kubeLogin">The cluster login.</param>
-        /// <param name="pemKey">The OpenSSH PEM key.</param>
-        /// <returns>The converted PPPK key.</returns>
-        /// <exception cref="NotImplementedException">Thrown when not running on Windows.</exception>
-        /// <exception cref="Win32Exception">Thrown if WinSCP could not be executed.</exception>
-        public static string ConvertPUBtoPPK(ClusterLogin kubeLogin, string pemKey)
-        {
-            if (!NeonHelper.IsWindows)
-            {
-                throw new NotImplementedException("Not implemented for non-Windows platforms.");
-            }
-
-            var programPath = "winscp.com";
-            var pemKeyPath  = Path.Combine(KubeHelper.TempFolder, Guid.NewGuid().ToString("d"));
-            var ppkKeyPath  = Path.Combine(KubeHelper.TempFolder, Guid.NewGuid().ToString("d"));
-
-            try
-            {
-                File.WriteAllText(pemKeyPath, pemKey);
-
-                var result = NeonHelper.ExecuteCapture(programPath, $@"/keygen ""{pemKeyPath}"" /comment=""{kubeLogin.ClusterDefinition.Name} Key"" /output=""{ppkKeyPath}""");
-
-                if (result.ExitCode != 0)
-                {
-                    Console.WriteLine(result.OutputText);
-                    Console.Error.WriteLine(result.ErrorText);
-                    Program.Exit(result.ExitCode);
-                }
-
-                return File.ReadAllText(ppkKeyPath);
-            }
-            catch (Win32Exception)
-            {
-                Console.Error.WriteLine($"*** ERROR: Cannot launch [{programPath}].");
-                throw;
-            }
-            finally
-            {
-                NeonHelper.DeleteFile(pemKeyPath);
-                NeonHelper.DeleteFile(ppkKeyPath);
             }
         }
 
@@ -801,44 +490,6 @@ You can disable the use of this encrypted folder by specifying
         }
 
         /// <summary>
-        /// Verify that the current user has administrator privileges, exiting
-        /// the application if this is not the case.
-        /// </summary>
-        /// <param name="message">Optional message.</param>
-        public static void VerifyAdminPrivileges(string message = null)
-        {
-            if (message == null)
-            {
-                message = "*** ERROR: This command requires elevated administrator privileges.";
-            }
-            else
-            {
-                if (!message.StartsWith("*** ERROR: "))
-                {
-                    message = $"** ERROR: {message}";
-                }
-            }
-
-            if (!KubeHelper.InToolContainer)
-            {
-                if (NeonHelper.IsWindows)
-                {
-                    var principal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
-
-                    if (!principal.IsInRole(WindowsBuiltInRole.Administrator))
-                    {
-                        Console.Error.WriteLine(message);
-                        Program.Exit(1);
-                    }
-                }
-                else if (NeonHelper.IsOSX)
-                {
-                    // $todo(jefflill): Implement this?
-                }
-            }
-        }
-
-        /// <summary>
         /// Searches the directory holding a file as well as any ancestor directories
         /// for the first <b>.password-name</b> file specifying a default password name.
         /// </summary>
@@ -886,25 +537,6 @@ You can disable the use of this encrypted folder by specifying
                 // walk the file directories all the way up to the root of the
                 // file system.  We'll just return NULL in this case.
 
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// Returns a password based on its name.
-        /// </summary>
-        /// <param name="passwordName">The password name.</param>
-        /// <returns>The password or <c>null</c> if the named password doesn't exist.</returns>
-        public static string LookupPassword(string passwordName)
-        {
-            var passwordPath = Path.Combine(KubeHelper.PasswordsFolder, passwordName);
-
-            if (File.Exists(passwordPath))
-            {
-                return File.ReadLines(passwordPath).First().Trim();
-            }
-            else
-            {
                 return null;
             }
         }
