@@ -54,7 +54,6 @@
     <ProjectReference Include="..\Neon.Kube.Google\Neon.Kube.Google.csproj" />
     <ProjectReference Include="..\Neon.Kube.HyperVLocal\Neon.Kube.HyperVLocal.csproj" />
     <ProjectReference Include="..\Neon.Kube.HyperV\Neon.Kube.HyperV.csproj" />
-    <ProjectReference Include="..\Neon.Kube.Wsl2\Neon.Kube.Wsl2.csproj" />
     <ProjectReference Include="..\Neon.Kube.XenServer\Neon.Kube.XenServer.csproj" />
     <ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
   </ItemGroup>

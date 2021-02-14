@@ -436,6 +436,26 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Determines whether a cluster hosting environment is available only for neonFORGE
+        /// enterprise (closed-source) related projects.
+        /// </summary>
+        /// <param name="hostingEnvironment">The hosting environment.</param>
+        /// <returns><c>true</c> for enteprise/closed-source related projects.</returns>
+        public static bool IsEnterpriseEnvironment(HostingEnvironment hostingEnvironment)
+        {
+            switch (hostingEnvironment)
+            {
+                case HostingEnvironment.Wsl2:
+
+                    return true;
+
+                default:
+
+                    return false;
+            }
+        }
+
+        /// <summary>
         /// Determines whether a cluster hosting environment deploys on-premise.
         /// </summary>
         /// <param name="hostingEnvironment">The hosting environment.</param>
