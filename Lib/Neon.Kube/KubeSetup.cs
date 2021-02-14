@@ -498,7 +498,7 @@ spec:
   hostNetwork: true
   containers:
     - name: web
-      image: {NeonHelper.NeonLibraryBranchRegistry}/haproxy:{KubeVersions.HaproxyVersion}
+      image: {KubeConst.ClusterRegistry}/haproxy:{KubeVersions.HaproxyVersion}
       volumeMounts:
         - name: neon-etcd-proxy-config
           mountPath: /etc/haproxy/haproxy.cfg
@@ -718,7 +718,7 @@ apiVersion: kubeadm.k8s.io/v1beta2
 kind: ClusterConfiguration
 clusterName: {cluster.Name}
 kubernetesVersion: ""v{KubeVersions.KubernetesVersion}""
-imageRepository: ""{NeonHelper.NeonLibraryBranchRegistry}""
+imageRepository: ""{KubeConst.ClusterRegistry}""
 apiServer:
   extraArgs:
     logging-format: json
@@ -888,7 +888,7 @@ kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-k
                                                    "-v=/etc/neonkube/neon-etcd-proxy.cfg:/etc/haproxy/haproxy.cfg",
                                                    "--network=host",
                                                    "--log-driver=k8s-file",
-                                                   $"{NeonHelper.NeonLibraryBranchRegistry}/haproxy:{KubeVersions.HaproxyVersion}"
+                                                   $"{KubeConst.ClusterRegistry}/haproxy:{KubeVersions.HaproxyVersion}"
                                                );
 
                                             for (int attempt = 0; attempt < maxJoinAttempts; attempt++)
@@ -980,7 +980,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                             "-v=/etc/neonkube/neon-etcd-proxy.cfg:/etc/haproxy/haproxy.cfg",
                                             "--network=host",
                                             "--log-driver=k8s-file",
-                                            $"{NeonHelper.NeonLibraryBranchRegistry}/haproxy:{KubeVersions.HaproxyVersion}"
+                                            $"{KubeConst.ClusterRegistry}/haproxy:{KubeVersions.HaproxyVersion}"
                                         );
 
                                         for (int attempt = 0; attempt < maxJoinAttempts; attempt++)
@@ -1255,7 +1255,7 @@ rm -r ""${{tmp}}""
 
 export PATH=$PATH:$HOME/.istioctl/bin
 
-istioctl operator init --hub={NeonHelper.NeonLibraryBranchRegistry} --tag={KubeVersions.IstioVersion}-distroless
+istioctl operator init --hub={KubeConst.ClusterRegistry} --tag={KubeVersions.IstioVersion}-distroless
 
 kubectl create ns istio-system
 
@@ -1266,7 +1266,7 @@ metadata:
   namespace: istio-system
   name: istiocontrolplane
 spec:
-  hub: {NeonHelper.NeonLibraryBranchRegistry}
+  hub: {KubeConst.ClusterRegistry}
   tag: {KubeVersions.IstioVersion}-distroless
   meshConfig:
     rootNamespace: istio-system
@@ -1342,9 +1342,9 @@ spec:
       enabled: false
     istiocoredns:
       enabled: true
-      coreDNSImage: {NeonHelper.NeonLibraryBranchRegistry}/coredns-coredns
+      coreDNSImage: {KubeConst.ClusterRegistry}/coredns-coredns
       coreDNSTag: {KubeVersions.CoreDNSVersion}
-      coreDNSPluginImage: {NeonHelper.NeonLibraryBranchRegistry}/coredns-plugin:{KubeVersions.CoreDNSPluginVersion}
+      coreDNSPluginImage: {KubeConst.ClusterRegistry}/coredns-plugin:{KubeVersions.CoreDNSPluginVersion}
     cni:
       excludeNamespaces:
        - istio-system
@@ -1661,7 +1661,7 @@ spec:
     spec:
       containers:
         - name: kubernetes-dashboard
-          image: {NeonHelper.NeonLibraryBranchRegistry}/kubernetesui-dashboard:v{KubeVersions.KubernetesDashboardVersion}
+          image: {KubeConst.ClusterRegistry}/kubernetesui-dashboard:v{KubeVersions.KubernetesDashboardVersion}
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8443
@@ -1738,7 +1738,7 @@ spec:
     spec:
       containers:
         - name: dashboard-metrics-scraper
-          image: {NeonHelper.NeonLibraryBranchRegistry}/kubernetesui-metrics-scraper:{KubeVersions.KubernetesDashboardMetricsVersion}
+          image: {KubeConst.ClusterRegistry}/kubernetesui-metrics-scraper:{KubeVersions.KubernetesDashboardMetricsVersion}
           ports:
             - containerPort: 8000
               protocol: TCP
@@ -2760,7 +2760,7 @@ value: /var/openebs/local
                 {
                     await SyncContext.ClearAsync;
 
-                    var cert = TlsCertificate.CreateSelfSigned(NeonHelper.NeonLibraryBranchRegistry, 4096);
+                    var cert = TlsCertificate.CreateSelfSigned(KubeConst.ClusterRegistry, 4096);
 
                     var harborCert = new V1Secret()
                         {
