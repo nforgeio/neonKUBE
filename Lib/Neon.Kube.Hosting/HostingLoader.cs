@@ -142,7 +142,7 @@ namespace Neon.Kube
         /// <summary>
         /// Returns <c>true</c> when the loader has already been initialized.
         /// </summary>
-        protected static bool IsIntialized => HostingLoader.environmentToHostingManager != null;
+        public static bool IsIntialized => HostingLoader.environmentToHostingManager != null;
 
         //---------------------------------------------------------------------
         // Instance members
