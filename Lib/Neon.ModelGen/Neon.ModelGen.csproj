@@ -7,7 +7,9 @@
     <Authors>neonFORGE Team</Authors>
     <Company>neonFORGE LLC</Company>
     <Product>neonLIBRARY</Product>
-    <Description>JSON data model generator for C#</Description>
+    <Description>JSON data model generator library for C# intended for people inetgrating this functionality into stand-alone solutiuons.
+
+Most people should reference the [Neon.ModelGenerator] library since it includes the [model-gen] client which can be referenced from your project build targets as required.</Description>
     <Copyright>Copyright © 2005-2021 by neonFORGE LLC.  All rights reserved.</Copyright>
     <PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.ModelGen/README.md</PackageProjectUrl>
     <RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>

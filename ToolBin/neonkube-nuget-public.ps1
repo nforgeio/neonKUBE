@@ -100,6 +100,7 @@ SetVersion Neon.HyperV              $libraryVersion
 # SetVersion Neon.Kube.Xunit          $neonkubeVersion
 SetVersion Neon.Service             $libraryVersion
 SetVersion Neon.ModelGen            $libraryVersion
+SetVersion Neon.ModelGenerator      $libraryVersion
 SetVersion Neon.Nats                $libraryVersion
 SetVersion Neon.Postgres            $libraryVersion
 SetVersion Neon.SSH                 $libraryVersion
@@ -137,6 +138,7 @@ Publish Neon.HyperV                 $libraryVersion
 # Publish Neon.Kube.Xunit             $neonkubeVersion
 Publish Neon.Service                $libraryVersion
 Publish Neon.ModelGen               $libraryVersion
+Publish Neon.ModelGenGenerator      $libraryVersion
 Publish Neon.Nats                   $libraryVersion
 Publish Neon.Postgres               $libraryVersion
 Publish Neon.SSH                    $libraryVersion

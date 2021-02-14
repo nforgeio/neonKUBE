@@ -97,8 +97,6 @@ OPTIONS:
 
                 if (toolSemanticVersion < minSemanticVersion)
                 {
-                    var v = $"*** ERROR: [neon v{Program.Version}] is older than the required version [{minSemanticVersion}].";
-
                     Console.Error.WriteLine($"*** ERROR: [{Program.Name} v{Program.Version}] is older than the required version [{minSemanticVersion}].");
                     Console.Error.WriteLine();
                     Console.Error.WriteLine($"You can obtain the latest releases from here:");

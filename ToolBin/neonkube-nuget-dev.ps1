@@ -193,6 +193,7 @@ SetVersion Neon.Docker              $libraryVersion
 SetVersion Neon.HyperV              $libraryVersion
 SetVersion Neon.Service             $libraryVersion
 SetVersion Neon.ModelGen            $libraryVersion
+SetVersion Neon.ModelGenerator      $libraryVersion
 SetVersion Neon.Nats                $libraryVersion
 SetVersion Neon.Postgres            $libraryVersion
 SetVersion Neon.SSH                 $libraryVersion
@@ -229,6 +230,7 @@ Publish Neon.Docker                 $libraryVersion
 Publish Neon.HyperV                 $libraryVersion
 Publish Neon.Service                $libraryVersion
 Publish Neon.ModelGen               $libraryVersion
+Publish Neon.ModelGenGenerator      $libraryVersion
 Publish Neon.Nats                   $libraryVersion
 Publish Neon.Postgres               $libraryVersion
 Publish Neon.SSH                    $libraryVersion
@@ -256,39 +258,40 @@ Publish Neon.Kube.Xunit             $kubeVersion
 
 # Restore the project versions
 
-RestoreVersion Neon.Cadence             
-RestoreVersion Neon.Cassandra           
-RestoreVersion Neon.Common              
-RestoreVersion Neon.Couchbase           
-RestoreVersion Neon.Cryptography        
-RestoreVersion Neon.Docker              
-RestoreVersion Neon.HyperV              
-RestoreVersion Neon.Service             
-RestoreVersion Neon.ModelGen            
-RestoreVersion Neon.Nats                
-RestoreVersion Neon.Postgres            
-RestoreVersion Neon.SSH                 
-RestoreVersion Neon.SSH.NET             
-RestoreVersion Neon.Temporal            
-RestoreVersion Neon.Web                 
-RestoreVersion Neon.XenServer           
-RestoreVersion Neon.Xunit               
-RestoreVersion Neon.Xunit.Cadence       
-RestoreVersion Neon.Xunit.Couchbase     
-RestoreVersion Neon.Xunit.Temporal      
-RestoreVersion Neon.Xunit.YugaByte      
-RestoreVersion Neon.YugaByte            
+RestoreVersion Neon.Cadence
+RestoreVersion Neon.Cassandra
+RestoreVersion Neon.Common
+RestoreVersion Neon.Couchbase
+RestoreVersion Neon.Cryptography
+RestoreVersion Neon.Docker
+RestoreVersion Neon.HyperV
+RestoreVersion Neon.Service
+RestoreVersion Neon.ModelGen
+RestoreVersion Neon.ModelGenerator
+RestoreVersion Neon.Nats
+RestoreVersion Neon.Postgres
+RestoreVersion Neon.SSH
+RestoreVersion Neon.SSH.NET
+RestoreVersion Neon.Temporal
+RestoreVersion Neon.Web
+RestoreVersion Neon.XenServer
+RestoreVersion Neon.Xunit
+RestoreVersion Neon.Xunit.Cadence
+RestoreVersion Neon.Xunit.Couchbase
+RestoreVersion Neon.Xunit.Temporal
+RestoreVersion Neon.Xunit.YugaByte
+RestoreVersion Neon.YugaByte
 
-RestoreVersion Neon.Kube                
-RestoreVersion Neon.Kube.Aws            
-RestoreVersion Neon.Kube.Azure          
-RestoreVersion Neon.Kube.BareMetal      
-RestoreVersion Neon.Kube.Google         
-RestoreVersion Neon.Kube.Hosting        
-RestoreVersion Neon.Kube.HyperV         
-RestoreVersion Neon.Kube.HyperVLocal     
-RestoreVersion Neon.Kube.XenServer      
-RestoreVersion Neon.Kube.Xunit          
+RestoreVersion Neon.Kube
+RestoreVersion Neon.Kube.Aws
+RestoreVersion Neon.Kube.Azure
+RestoreVersion Neon.Kube.BareMetal
+RestoreVersion Neon.Kube.Google
+RestoreVersion Neon.Kube.Hosting
+RestoreVersion Neon.Kube.HyperV
+RestoreVersion Neon.Kube.HyperVLocal
+RestoreVersion Neon.Kube.XenServer
+RestoreVersion Neon.Kube.Xunit
 
 ""
 "** Package publication completed"

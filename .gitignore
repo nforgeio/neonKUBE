@@ -120,3 +120,13 @@ Go/**/__debug_bin
 
 # OS/X related files
 .DS_Store
+
+############################
+### Neon.ModelGenberator ###
+############################
+
+# This project copies the binaries from the [neon-model] tool as a prebuild event
+# so they can be included in the published nuget package.  We need to exclude these
+# files so they won't be commited to GitHub.
+
+/Lib/Neon.ModelGenerator/neon-model/**/*
