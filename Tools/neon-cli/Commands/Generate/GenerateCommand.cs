@@ -45,7 +45,6 @@ Code generation commands.
 USAGE:
 
     neon generate iso      SOURCE-FOLDER ISO-PATH
-    neon generate prep-vfd IP-ADDRESS VFD-PATH
     neon generate models   [OPTIONS] ASSEMBLY-PATH [OUTPUT-PATH]
 ";
 
