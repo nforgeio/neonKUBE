@@ -39,6 +39,7 @@ namespace NeonCli
     /// <summary>
     /// Implements the <b>generate iso</b> command.
     /// </summary>
+    [Command]
     public class GenerateIsoCommand : CommandBase
     {
         private const string usage = @"

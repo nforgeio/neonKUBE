@@ -36,6 +36,7 @@ namespace NeonCli
     /// <summary>
     /// Implements the <b>login</b> command.
     /// </summary>
+    [Command]
     public class LogoutCommand : CommandBase
     {
         private const string usage = @"

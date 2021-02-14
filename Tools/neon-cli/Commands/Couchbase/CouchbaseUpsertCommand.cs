@@ -40,6 +40,7 @@ namespace NeonCli
     /// <summary>
     /// Implements the <b>couchbase upsert</b> command.
     /// </summary>
+    [Command]
     public class CouchbaseUpsertCommand : CommandBase
     {
         private const string usage = @"

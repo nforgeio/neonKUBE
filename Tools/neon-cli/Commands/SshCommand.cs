@@ -36,6 +36,7 @@ namespace NeonCli
     /// <summary>
     /// Implements the <b>ssh</b> command.
     /// </summary>
+    [Command]
     public class SshCommand : CommandBase
     {
         private const string usage = @"

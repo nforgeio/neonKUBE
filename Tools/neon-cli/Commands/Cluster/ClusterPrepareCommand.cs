@@ -40,6 +40,7 @@ namespace NeonCli
     /// <summary>
     /// Implements the <b>cluster prepare</b> command.
     /// </summary>
+    [Command]
     public class ClusterPrepareCommand : CommandBase
     {
         private const string usage = @"

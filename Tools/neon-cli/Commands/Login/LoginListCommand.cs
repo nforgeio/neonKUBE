@@ -36,6 +36,7 @@ namespace NeonCli
     /// <summary>
     /// Implements the <b>logins list</b> command.
     /// </summary>
+    [Command]
     public class LoginListCommand : CommandBase
     {
         //---------------------------------------------------------------------

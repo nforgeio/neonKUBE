@@ -55,6 +55,7 @@ namespace NeonCli
     /// <summary>
     /// Implements the <b>cluster setup</b> command.
     /// </summary>
+    [Command]
     public class ClusterSetupCommand : CommandBase
     {
         //---------------------------------------------------------------------

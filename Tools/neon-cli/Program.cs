@@ -190,43 +190,26 @@ You can disable the use of this encrypted folder by specifying
                     }
                 }
 
-                var commands = new List<ICommand>()
+                // Scan for enabled commands in the current assembly.
+
+                var commands = new List<ICommand>();
+
+                foreach (var type in Assembly.GetExecutingAssembly().GetTypes())
                 {
-                    new ClusterCommand(),
-                    new ClusterPrepareCommand(),
-                    new ClusterSetupCommand(),
-                    new ClusterVerifyCommand(),
-                    new CouchbaseCommand(),
-                    new CouchbaseQueryCommand(),
-                    new CouchbaseUpsertCommand(),
-                    new GenerateCommand(),
-                    new GenerateIsoCommand(),
-                    new GenerateModelsCommand(),
-                    new LoginCommand(),
-                    new LoginExportCommand(),
-                    new LoginImportCommand(),
-                    new LoginListCommand(),
-                    new LoginRemoveCommand(),
-                    new LogoutCommand(),
-                    new PasswordCommand(),
-                    new PasswordExportCommand(),
-                    new PasswordGenerateCommand(),
-                    new PasswordGetCommand(),
-                    new PasswordImportCommand(),
-                    new PasswordListCommand(),
-                    new PasswordRemoveCommand(),
-                    new PasswordSetCommand(),
-                    new RunCommand(),
-                    new ScpCommand(),
-                    new SshCommand(),
-                    new VaultCommand(),
-                    new VaultCreateCommand(),
-                    new VaultDecryptCommand(),
-                    new VaultEditCommand(),
-                    new VaultEncryptCommand(),
-                    new VaultPasswordNameCommand(),
-                    new VersionCommand()
-                };
+                    if (!type.Implements<ICommand>())
+                    {
+                        continue;
+                    }
+
+                    var commandAttribute = type.GetCustomAttribute<CommandAttribute>();
+
+                    if (commandAttribute == null || commandAttribute.Disabled)
+                    {
+                        continue;
+                    }
+
+                    commands.Add((ICommand)Activator.CreateInstance(type));
+                }
 
                 // Short-circuit the help command.
 

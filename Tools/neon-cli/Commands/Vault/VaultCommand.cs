@@ -35,6 +35,7 @@ namespace NeonCli
     /// <summary>
     /// Implements the <b>vault</b> command.
     /// </summary>
+    [Command]
     public class VaultCommand : CommandBase
     {
         private const string usage = @"

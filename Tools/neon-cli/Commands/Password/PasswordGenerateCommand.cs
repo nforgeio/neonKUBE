@@ -36,6 +36,7 @@ namespace NeonCli
     /// <summary>
     /// Implements the <b>password generate</b> command.
     /// </summary>
+    [Command]
     public class PasswordGenerateCommand : CommandBase
     {
         private const string usage = @"

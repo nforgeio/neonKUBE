@@ -37,6 +37,7 @@ namespace NeonCli
     /// <summary>
     /// Implements the <b>run</b> command.
     /// </summary>
+    [Command]
     public class RunCommand : CommandBase
     {
         private const string usage = @"

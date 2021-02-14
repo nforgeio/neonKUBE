@@ -36,6 +36,7 @@ namespace NeonCli
     /// <summary>
     /// Implements the <b>scp</b> command.
     /// </summary>
+    [Command]
     public class ScpCommand : CommandBase
     {
         private const string usage = @"

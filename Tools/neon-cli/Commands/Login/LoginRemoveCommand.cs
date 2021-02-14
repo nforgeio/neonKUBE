@@ -36,6 +36,7 @@ namespace NeonCli
     /// <summary>
     /// Implements the <b>login remove</b> command.
     /// </summary>
+    [Command]
     public class LoginRemoveCommand : CommandBase
     {
         private const string usage = @"

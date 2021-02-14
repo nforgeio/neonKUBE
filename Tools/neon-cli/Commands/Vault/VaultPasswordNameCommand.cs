@@ -38,6 +38,7 @@ namespace NeonCli
     /// <summary>
     /// Implements the <b>vault password-name</b> command.
     /// </summary>
+    [Command]
     public class VaultPasswordNameCommand : CommandBase
     {
         private const string usage = @"

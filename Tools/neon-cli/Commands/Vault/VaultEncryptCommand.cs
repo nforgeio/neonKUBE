@@ -37,6 +37,7 @@ namespace NeonCli
     /// <summary>
     /// Implements the <b>vault encrypt</b> command.
     /// </summary>
+    [Command]
     public class VaultEncryptCommand : CommandBase
     {
         private const string usage = @"

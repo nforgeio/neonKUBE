@@ -36,6 +36,7 @@ namespace NeonCli
     /// <summary>
     /// Implements the <b>couchbase</b> command.
     /// </summary>
+    [Command]
     public class CouchbaseCommand : CommandBase
     {
         private const string usage = @"

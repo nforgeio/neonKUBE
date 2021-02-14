@@ -37,6 +37,7 @@ namespace NeonCli
     /// <summary>
     /// Implements the <b>password remove</b> command.
     /// </summary>
+    [Command]
     public class PasswordRemoveCommand : CommandBase
     {
         private const string usage = @"

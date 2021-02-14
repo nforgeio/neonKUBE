@@ -38,6 +38,7 @@ namespace NeonCli
     /// <summary>
     /// Implements the <b>password import</b> command.
     /// </summary>
+    [Command]
     public class PasswordImportCommand : CommandBase
     {
         private const string usage = @"

@@ -36,6 +36,7 @@ namespace NeonCli
     /// <summary>
     /// Implements the <b>cluster</b> command.
     /// </summary>
+    [Command]
     public class ClusterCommand : CommandBase
     {
         private const string usage = @"

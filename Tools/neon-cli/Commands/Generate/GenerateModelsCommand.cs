@@ -38,6 +38,7 @@ namespace NeonCli
     /// <summary>
     /// Implements the <b>generate models</b> command.
     /// </summary>
+    [Command]
     public class GenerateModelsCommand : CommandBase
     {
         private const string usage = @"

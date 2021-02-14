@@ -36,6 +36,7 @@ namespace NeonCli
     /// <summary>
     /// Implements the <b>version</b> command.
     /// </summary>
+    [Command]
     public class VersionCommand : CommandBase
     {
         private const string usage = @"

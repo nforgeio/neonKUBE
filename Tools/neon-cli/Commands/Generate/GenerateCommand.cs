@@ -36,6 +36,7 @@ namespace NeonCli
     /// <summary>
     /// Implements the <b>generate</b> command.
     /// </summary>
+    [Command]
     public class GenerateCommand : CommandBase
     {
         private const string usage = @"
