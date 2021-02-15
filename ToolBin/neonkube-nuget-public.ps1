@@ -37,7 +37,7 @@ function SetVersion
     param (
         [Parameter(Position=0, Mandatory=1)]
         [string]$project,
-        [Parameter(Position=0, Mandatory=2)]
+        [Parameter(Position=1, Mandatory=2)]
         [string]$version
     )
 
@@ -52,7 +52,7 @@ function Publish
     param (
         [Parameter(Position=0, Mandatory=1)]
         [string]$project,
-        [Parameter(Position=0, Mandatory=2)]
+        [Parameter(Position=1, Mandatory=2)]
         [string]$version
     )
 
