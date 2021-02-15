@@ -21,8 +21,6 @@
 #
 # NOTE: This is script works only for maintainers with proper credentials.
 
-$ErrorActionPreference = "Stop"
-
 # Import the global project include file.
 
 . $env:NF_ROOT/Powershell/includes.ps1
@@ -138,7 +136,10 @@ function Publish
     $projectPath = [io.path]::combine($env:NF_ROOT, "Lib", "$project", "$project" + ".csproj")
 
     dotnet pack $projectPath  -c Debug --include-symbols --include-source -o "$env:NF_BUILD\nuget"
+    ThrowOnExitCode
+
     nuget push -Source $env:NC_NUGET_DEVFEED "$env:NF_BUILD\nuget\$project.$version.nupkg"
+    ThrowOnExitCode
    
     # NOTE: We're not doing this because including source and symbols above because
     # doesn't seem to to work.
@@ -230,7 +231,7 @@ Publish Neon.Docker                 $libraryVersion
 Publish Neon.HyperV                 $libraryVersion
 Publish Neon.Service                $libraryVersion
 Publish Neon.ModelGen               $libraryVersion
-Publish Neon.ModelGenGenerator      $libraryVersion
+Publish Neon.ModelGenerator         $libraryVersion
 Publish Neon.Nats                   $libraryVersion
 Publish Neon.Postgres               $libraryVersion
 Publish Neon.SSH                    $libraryVersion

@@ -50,6 +50,12 @@ param
     [string] $branch
 )
 
+# Import the global project include file.
+
+. $env:NF_ROOT/Powershell/includes.ps1
+
+# Initialize
+
 $nfRepos = "$env:NF_REPOS"
 
 # Ensure that there's a local [neon-cadence] repository in NF_REPOS.

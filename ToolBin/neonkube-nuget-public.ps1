@@ -18,6 +18,12 @@
 # Publishes RELEASE builds of the NeonForge Nuget packages to the
 # local file system and public Nuget.org repositories.
 
+# Import the global project include file.
+
+. $env:NF_ROOT/Powershell/includes.ps1
+
+# Handle permission elevation if necessary.
+
 if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))
 {
     # Relaunch as an elevated process:
@@ -37,6 +43,7 @@ function SetVersion
 
     "$project"
 	neon-build pack-version "$env:NF_ROOT\neonLIBRARY-version.txt" "$env:NF_ROOT\Lib\$project\$project.csproj"
+    ThrowOnExitCode
 }
 
 function Publish
@@ -67,12 +74,13 @@ function Publish
     }
 
 	nuget push -Source nuget.org "$env:NF_BUILD\nuget\$project.$libraryVersion$prerelease.nupkg"
+    ThrowOnExitCode
 }
 
 # Load the library and neonKUBE versions.
 
 $libraryVersion  = Get-Content "$env:NF_ROOT\neonLIBRARY-version.txt" -First 1
-$neonkubeVersion = Get-Content "$env:NF_ROOT\neonLKUBE-version.txt" -First 1
+$neonkubeVersion = Get-Content "$env:NF_ROOT\neonKUBE-version.txt" -First 1
 
 # Copy the version from [$/product-version] into [$/Lib/Neon/Common/Build.cs]
 
@@ -138,7 +146,7 @@ Publish Neon.HyperV                 $libraryVersion
 # Publish Neon.Kube.Xunit             $neonkubeVersion
 Publish Neon.Service                $libraryVersion
 Publish Neon.ModelGen               $libraryVersion
-Publish Neon.ModelGenGenerator      $libraryVersion
+Publish Neon.ModelGenerator         $libraryVersion
 Publish Neon.Nats                   $libraryVersion
 Publish Neon.Postgres               $libraryVersion
 Publish Neon.SSH                    $libraryVersion

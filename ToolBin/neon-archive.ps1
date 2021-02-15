@@ -34,6 +34,12 @@ param
 	$target = "C:\neonKUBE.zip"
 )
 
+# Import the global project include file.
+
+. $env:NF_ROOT/Powershell/includes.ps1
+
+# Initialize
+
 $nfRoot = "$env:NF_ROOT"
 
 # This removes the [$/Build], [$/Build-cache], and all [bin] and [obj] folders.

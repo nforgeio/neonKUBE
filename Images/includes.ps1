@@ -15,10 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Misc image build related utilities.
-
-$ErrorActionPreference = "Stop"
-
 #------------------------------------------------------------------------------
 # Import the global project include file.
 

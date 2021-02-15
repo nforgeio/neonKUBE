@@ -36,6 +36,12 @@ if ($all)
     $codedoc = $true
 }
 
+# Import the global project include file.
+
+. $env:NF_ROOT/Powershell/includes.ps1
+
+# Initialize
+
 $msbuild          = "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\amd64\MSBuild.exe"
 $nfRoot           = "$env:NF_ROOT"
 $nfSolution       = "$nfRoot\neonKUBE.sln"
