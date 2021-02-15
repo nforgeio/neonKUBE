@@ -407,9 +407,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Powershell", "Powershell", 
 		Powershell\README.md = Powershell\README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "neon-model", "Tools\neon-model\neon-model.csproj", "{DA8E55CC-D280-4050-8117-36A209B3B3A6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-model", "Tools\neon-model\neon-model.csproj", "{DA8E55CC-D280-4050-8117-36A209B3B3A6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neon.ModelGenerator", "Lib\Neon.ModelGenerator\Neon.ModelGenerator.csproj", "{70FC3F3B-A0EF-469C-BCA1-AE656FDC265B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.ModelGenerator", "Lib\Neon.ModelGenerator\Neon.ModelGenerator.csproj", "{70FC3F3B-A0EF-469C-BCA1-AE656FDC265B}"
 	ProjectSection(ProjectDependencies) = postProject
 		{1DC33C50-461F-4793-88FA-637E16D9C563} = {1DC33C50-461F-4793-88FA-637E16D9C563}
 		{DA8E55CC-D280-4050-8117-36A209B3B3A6} = {DA8E55CC-D280-4050-8117-36A209B3B3A6}
@@ -1829,8 +1829,8 @@ Global
 		{DA8E55CC-D280-4050-8117-36A209B3B3A6}.Release|x64.Build.0 = Release|Any CPU
 		{DA8E55CC-D280-4050-8117-36A209B3B3A6}.Release|x86.ActiveCfg = Release|Any CPU
 		{DA8E55CC-D280-4050-8117-36A209B3B3A6}.Release|x86.Build.0 = Release|Any CPU
-		{70FC3F3B-A0EF-469C-BCA1-AE656FDC265B}.CodeDoc|Any CPU.ActiveCfg = Debug|Any CPU
-		{70FC3F3B-A0EF-469C-BCA1-AE656FDC265B}.CodeDoc|Any CPU.Build.0 = Debug|Any CPU
+		{70FC3F3B-A0EF-469C-BCA1-AE656FDC265B}.CodeDoc|Any CPU.ActiveCfg = CodeDoc|Any CPU
+		{70FC3F3B-A0EF-469C-BCA1-AE656FDC265B}.CodeDoc|Any CPU.Build.0 = CodeDoc|Any CPU
 		{70FC3F3B-A0EF-469C-BCA1-AE656FDC265B}.CodeDoc|x64.ActiveCfg = Debug|Any CPU
 		{70FC3F3B-A0EF-469C-BCA1-AE656FDC265B}.CodeDoc|x64.Build.0 = Debug|Any CPU
 		{70FC3F3B-A0EF-469C-BCA1-AE656FDC265B}.CodeDoc|x86.ActiveCfg = Debug|Any CPU

@@ -18,12 +18,12 @@ This means that you'll need to manually include all of these binaries into the p
 * **Build Action: Content**
 * **Copy to Output Directory: Copy if newer**
 
-for each of these binaries after building **Neon.ModelGenerator** for the first time.  You'll also need to manual edit **Neon.ModelGenerator.cs** to add `<CopyToPublishDirectory>true</CopyToPublishDirectory>` to each of these files (so they'll be included in the nuget package) like:
+for each of these binaries after building **Neon.ModelGenerator** for the first time.  You'll also need to manual edit **Neon.ModelGenerator.cs** to add `<PackageCopyToOutput>true</PackageCopyToOutput>` to each of these files (so they'll be included in the nuget package) like:
 
 ```
 <Content Include="neon-model\Humanizer.dll">
     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    <CopyToPublishDirectory>true</CopyToPublishDirectory>
+    <PackageCopyToOutput>true</PackageCopyToOutput>
 </Content>
 ```
 
