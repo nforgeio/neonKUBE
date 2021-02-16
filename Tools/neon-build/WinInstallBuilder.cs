@@ -31,7 +31,7 @@ using Neon.Windows;
 namespace NeonBuild
 {
     /// <summary>
-    /// Builds the <b>ksetup</b> installer for Windows.
+    /// Builds the <b>neonDESKTOP</b> installer for Windows.
     /// </summary>
     public class WinInstallBuilder
     {

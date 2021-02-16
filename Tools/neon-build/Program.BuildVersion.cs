@@ -40,21 +40,21 @@ namespace NeonBuild
             var neonKubeVersion        = File.ReadLines(neonKubeVersionPath, Encoding.UTF8).First();
             var buildCsPath            = Path.Combine(Environment.GetEnvironmentVariable("NF_ROOT"), "Lib", "Neon.Common", "Build.cs");
 
-            if (string.IsNullOrEmpty(neonDesktopVersionPath))
+            if (string.IsNullOrEmpty(neonDesktopVersion))
             {
-                Console.Error.WriteLine($"[{neonDesktopVersionPath}] specifies no version.");
+                Console.Error.WriteLine($"[{neonDesktopVersionPath}] is empty.");
                 Program.Exit(1);
             }
 
             if (string.IsNullOrEmpty(neonLibraryVersion))
             {
-                Console.Error.WriteLine($"[{neonLibraryVersionPath}] specifies no version.");
+                Console.Error.WriteLine($"[{neonLibraryVersionPath}] is empty.");
                 Program.Exit(1);
             }
 
             if (string.IsNullOrEmpty(neonKubeVersionPath))
             {
-                Console.Error.WriteLine($"[{neonKubeVersionPath}] specifies no version.");
+                Console.Error.WriteLine($"[{neonKubeVersionPath}] is empty.");
                 Program.Exit(1);
             }
 

@@ -31,7 +31,7 @@ using Renci.SshNet.Common;
 namespace NeonBuild
 {
     /// <summary>
-    /// Kubernetes setup related information and actions (for <b>ksetup</b>).
+    /// Kubernetes setup related information and actions (for <b>neonDESKTOP</b>).
     /// </summary>
     public class KubeSetupHelper
     {
@@ -250,7 +250,7 @@ namespace NeonBuild
         public string UserFolder => Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 
         /// <summary>
-        /// Returns the path to the root KSETUP source folder.
+        /// Returns the path to the GitHub repo root folder.
         /// </summary>
         public string SourceRepoFolder => Environment.GetEnvironmentVariable("NF_ROOT");
 
