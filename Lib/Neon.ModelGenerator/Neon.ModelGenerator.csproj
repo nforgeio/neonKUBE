@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Version>2.10.0-preview</Version>
     <Authors>neonFORGE Team</Authors>
@@ -12,8 +12,6 @@
 
 NOTE: You must have a .NET Core 3.1 SDK or runtime installed for this to work because the client is built on this SDK.</Description>
     <Copyright>Copyright © 2005-2021 by neonFORGE LLC.  All rights reserved.</Copyright>
-    <PackAsTool>true</PackAsTool>
-    <ToolCommandName>neon-modelgen</ToolCommandName>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageIcon>nuget-icon.png</PackageIcon>
     <PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.ModelGenerator/README.md</PackageProjectUrl>
@@ -53,8 +51,8 @@ NOTE: You must have a .NET Core 3.1 SDK or runtime installed for this to work be
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
   </ItemGroup>
 
-  <Target Name="ModelGen" BeforeTargets="BeforeBuild">
+  <!--<Target Name="ModelGen" BeforeTargets="BeforeBuild">
     <Exec Command="copy &quot;%NF_ROOT%\Tools\neon-model\bin\Debug\netcoreapp3.1\*.*&quot; &quot;$(ProjectDir)neon-model&quot;" />
-  </Target>
+  </Target>-->
 
 </Project>

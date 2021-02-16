@@ -28,7 +28,7 @@ using Neon.ModelGen;
 namespace modelgen
 {
     /// <summary>
-    /// Implements the <c>modelgen</c> tool.
+    /// Implements the <c>neon-modelgen</c> tool.
     /// </summary>
     public static class Program
     {
@@ -40,7 +40,7 @@ within a compiled assembly.
 
 USAGE:
 
-    modelgen [OPTIONS] ASSEMBLY-PATH [OUTPUT-PATH]
+    neon-modelgen [OPTIONS] ASSEMBLY-PATH [OUTPUT-PATH]
 
 ARGUMENTS:
 
