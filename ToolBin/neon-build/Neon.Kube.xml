@@ -377,73 +377,6 @@
             <param name="message">The message.</param>
             <param name="innerException">The optional inner exception.</param>
         </member>
-        <member name="T:Neon.Kube.LinuxSshProxyExtensions">
-            <summary>
-            <see cref="T:Neon.Kube.NodeSshProxy`1"/> extension methods.
-            </summary>
-        </member>
-        <member name="M:Neon.Kube.LinuxSshProxyExtensions.BashSafeValue(System.Object)">
-            <summary>
-            Converts a string into a value suitable for use in a Bash script.
-            </summary>
-            <param name="value">The value to be made safe,</param>
-            <returns>The safe value.</returns>
-        </member>
-        <member name="M:Neon.Kube.LinuxSshProxyExtensions.SetBashVariable(Neon.IO.PreprocessReader,System.String,System.Object)">
-            <summary>
-            Sets a variable in a <see cref="T:Neon.IO.PreprocessReader"/> such that the value will be safe
-            to be included in a Bash variable set statement.
-            </summary>
-            <param name="preprocessReader">The reader.</param>
-            <param name="name">The variable name.</param>
-            <param name="value">The variable value.</param>
-        </member>
-        <member name="M:Neon.Kube.LinuxSshProxyExtensions.GetHostsFormattedAddress(Neon.Kube.NodeDefinition)">
-            <summary>
-            Returns the IP address for a node suitable for including in the
-            <b>/etc/hosts</b> file.  
-            </summary>
-            <param name="nodeDefinition">The target node definition.</param>
-            <returns>
-            The IP address, left adjusted with necessary spaces so that the
-            host definitions will align nicely.
-            </returns>
-        </member>
-        <member name="M:Neon.Kube.LinuxSshProxyExtensions.SetClusterVariables(Neon.IO.PreprocessReader,Neon.Kube.ClusterDefinition,Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition})">
-            <summary>
-            Sets cluster definition related variables for a <see cref="T:Neon.IO.PreprocessReader"/>.
-            </summary>
-            <param name="preprocessReader">The reader.</param>
-            <param name="clusterDefinition">The cluster definition.</param>
-            <param name="node">The target node.</param>
-        </member>
-        <member name="M:Neon.Kube.LinuxSshProxyExtensions.UploadFile``1(Neon.Kube.NodeSshProxy{``0},Neon.Kube.ClusterDefinition,Neon.IO.IStaticFile,System.String,System.String)">
-            <summary>
-            Uploads a resource file to the remote server after performing any necessary preprocessing.
-            </summary>
-            <typeparam name="TMetadata">The node metadata type.</typeparam>
-            <param name="node">The remote node.</param>
-            <param name="clusterDefinition">The cluster definition or <c>null</c>.</param>
-            <param name="file">The resource file.</param>
-            <param name="targetPath">The target path on the remote server.</param>
-            <param name="permissions">Optional Linux file permissions.</param>
-        </member>
-        <member name="M:Neon.Kube.LinuxSshProxyExtensions.UploadConfigFiles``1(Neon.Kube.NodeSshProxy{``0},Neon.Kube.ClusterDefinition)">
-            <summary>
-            Uploads the configuration files for the target operating system to the server.
-            </summary>
-            <typeparam name="Metadata">The node metadata type.</typeparam>
-            <param name="node">The remote node.</param>
-            <param name="clusterDefinition">The cluster definition.</param>
-        </member>
-        <member name="M:Neon.Kube.LinuxSshProxyExtensions.UploadResources``1(Neon.Kube.NodeSshProxy{``0},Neon.Kube.ClusterDefinition)">
-            <summary>
-            Uploads the setup and other scripts and tools for the target operating system to the server.
-            </summary>
-            <typeparam name="TMetadata">The server's metadata type.</typeparam>
-            <param name="server">The remote server.</param>
-            <param name="clusterDefinition">The cluster definition.</param>
-        </member>
         <member name="T:Neon.Kube.HostingManager">
             <summary>
             Base class for environment specific hosting managers. 
@@ -519,7 +452,7 @@
         <member name="M:Neon.Kube.HostingManager.GetSshEndpoint(System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Kube.HostingManager.GetDataDisk(Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition})">
+        <member name="M:Neon.Kube.HostingManager.GetDataDisk(Neon.SSH.LinuxSshProxy)">
             <inheritdoc/>
         </member>
         <member name="M:Neon.Kube.HostingManager.AssignNodeAddresses(Neon.Kube.ClusterDefinition)">
@@ -777,7 +710,7 @@
             cluster along with the public NAT port.
             </remarks>
         </member>
-        <member name="M:Neon.Kube.IHostingManager.GetDataDisk(Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition})">
+        <member name="M:Neon.Kube.IHostingManager.GetDataDisk(Neon.SSH.LinuxSshProxy)">
             <summary>
             Identifies the data disk device for a node.  This returns the data disk's device 
             name when an unitialized data disk exists or "PRIMARY" when the  OS disk
@@ -906,11 +839,6 @@
             The minimum required network interface cards for worker nodes.
             </summary>
         </member>
-        <member name="F:Neon.Kube.KubeConst.DockerPublicRegistry">
-            <summary>
-            Hostname of the Docker public registry.
-            </summary>
-        </member>
         <member name="F:Neon.Kube.KubeConst.RootUser">
             <summary>
             The root Kubernetes context username for provisioned clusters. 
@@ -1035,13 +963,6 @@
             </note>
             </summary>
         </member>
-        <member name="F:Neon.Kube.KubeConst.NodeTemplateDiskSize">
-            <summary>
-            The primary disk size in bytes for VMs created using the standard neonKUBE
-            node templates (XenServer and Hyper-V).  This is configured manually
-            when node templates are periodically created.
-            </summary>
-        </member>
         <member name="F:Neon.Kube.KubeConst.MinXenServerVersion">
             <summary>
             The minimum supported XenServer/XCP-ng hypervisor host version.
@@ -1073,9 +994,9 @@
             Default subnet for Kubernetes services.
             </summary>
         </member>
-        <member name="F:Neon.Kube.KubeConst.LatestClusterVersion">
+        <member name="F:Neon.Kube.KubeConst.NeonKubeVersion">
             <summary>
-            The latest neonKUBE cluster version supported.
+            The current neonKUBE cluster version supported.
             </summary>
         </member>
         <member name="F:Neon.Kube.KubeConst.SupportedClusterVersions">
@@ -1104,9 +1025,218 @@
             Returns the URL to th neonKUBE help site.
             </summary>
         </member>
+        <member name="F:Neon.Kube.KubeConst.ClusterNodeDomain">
+            <summary>
+            Returns the domain used to configure cluster DNS name that can
+            be resolved on the cluster nodes to access internal Kubernetes
+            services like the Harbor registry etc.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeConst.ClusterRegistryName">
+            <summary>
+            Returns a DNS name for the cluster registry that is reachable from
+            CRI-O running on the host nodes.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeConst.ClusterRegistryProjectName">
+            <summary>
+            Returns the Harbor Project name.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeConst.Wsl2MainDistroName">
+            <summary>
+            Identifies the main WSL2 distro hosting neonDESKTOP.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeConst.ClusterRegistry">
+            <summary>
+            Hostname used to access the local Harbor registry within the cluster.
+            </summary>
+        </member>
+        <member name="T:Neon.Kube.KubeContainerRegistry">
+            <summary>
+            Describes the location of the neonKUBE related container registries.
+            </summary>
+            <remarks>
+            <para>
+            neonKUBE uses four container registries for testing and deployment purposes.  
+            <see cref="F:Neon.Kube.KubeContainerRegistry.MainProdRegistry"/> and <see cref="F:Neon.Kube.KubeContainerRegistry.MainDevRegistry"/> hold the 
+            container images that will be used for deploying clusters via prepositioning
+            the images on the cluster VM images.  The images in these cluster will be
+            tagged like <b>neonkube-0.1.0-alpha</b>, specifying the cluster version
+            with <see cref="F:Neon.Kube.KubeContainerRegistry.MainProdRegistry"/> holding the released production images
+            and <see cref="F:Neon.Kube.KubeContainerRegistry.MainDevRegistry"/> holding intermediate development images.
+            </para>
+            <para>
+            The <see cref="F:Neon.Kube.KubeContainerRegistry.BaseProdRegistry"/> and <see cref="F:Neon.Kube.KubeContainerRegistry.BaseDevRegistry"/> registries
+            are used the base and layer images used for the creating the main container
+            images as well as for deploying clusters without prepositioning images (typically
+            while working on setting up new cluster features).
+            </para>
+            <para>
+            The <see cref="P:Neon.Kube.KubeContainerRegistry.MainBranchRegistry"/> and <see cref="P:Neon.Kube.KubeContainerRegistry.BaseBranchRegistry"/> properties
+            return the corresponding registry to use based on the the git branch the code was
+            built on.  These return the production registries for release branches whose names 
+            start with <b>release-</b> (by convention) otherwise the development registry will
+            be returned.
+            </para>
+            </remarks>
+        </member>
+        <member name="F:Neon.Kube.KubeContainerRegistry.MainProdRegistry">
+            <summary>
+            Identifies the production neonFORGE container image registry.  This is a public
+            registry that holds non-cluster setup related images.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeContainerRegistry.MainDevRegistry">
+            <summary>
+            Identifies the development neonFORGE container image registry.  This is a public
+            registry that holds non-cluster setup related images during development between
+            releases.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.KubeContainerRegistry.MainBranchRegistry">
+            <summary>
+            Returns the appropriate public container neonFORGE registry to be used for the git 
+            branch the assembly was built from.  This returns <see cref="F:Neon.Kube.KubeContainerRegistry.MainProdRegistry"/> for
+            release branches and <see cref="F:Neon.Kube.KubeContainerRegistry.MainDevRegistry"/> for all other branches.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeContainerRegistry.BaseProdRegistry">
+            <summary>
+            Identifies the production neonFORGE container image registry.  This is a public
+            registry that holds non-cluster setup related images.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeContainerRegistry.BaseDevRegistry">
+            <summary>
+            Identifies the development neonFORGE container image registry.  This is a public
+            registry that holds non-cluster setup related images during development between
+            releases.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.KubeContainerRegistry.BaseBranchRegistry">
+            <summary>
+            Returns the appropriate public container neonFORGE registry to be used for the git 
+            branch the assembly was built from.  This returns <see cref="F:Neon.Kube.KubeContainerRegistry.MainProdRegistry"/> for
+            release branches and <see cref="F:Neon.Kube.KubeContainerRegistry.MainDevRegistry"/> for all other branches.
+            </summary>
+        </member>
+        <member name="T:Neon.Kube.KubeDiagnostics">
+            <summary>
+            neonKUBE cluster diagnostics.
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.KubeDiagnostics.CheckMaster(Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition},Neon.Kube.ClusterDefinition)">
+            <summary>
+            Verifies that a cluster master node is healthy.
+            </summary>
+            <param name="node">The master node.</param>
+            <param name="clusterDefinition">The cluster definition.</param>
+        </member>
+        <member name="M:Neon.Kube.KubeDiagnostics.CheckWorker(Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition},Neon.Kube.ClusterDefinition)">
+            <summary>
+            Verifies that a cluster worker node is healthy.
+            </summary>
+            <param name="node">The server node.</param>
+            <param name="clusterDefinition">The cluster definition.</param>
+        </member>
+        <member name="M:Neon.Kube.KubeDiagnostics.CheckMasterNtp(Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition},Neon.Kube.ClusterDefinition)">
+            <summary>
+            Verifies that a master node's NTP health.
+            </summary>
+            <param name="node">The master node.</param>
+            <param name="clusterDefinition">The cluster definition.</param>
+        </member>
+        <member name="M:Neon.Kube.KubeDiagnostics.CheckWorkerNtp(Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition},Neon.Kube.ClusterDefinition)">
+            <summary>
+            Verifies that a worker node's NTP health.
+            </summary>
+            <param name="node">The worker node.</param>
+            <param name="clusterDefinition">The cluster definition.</param>
+        </member>
+        <member name="T:Neon.Kube.KubeDownloads">
+            <summary>
+            Kubernetes related component download URIs.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeDownloads.KubeCtlLinuxUri">
+            <summary>
+            The <b>kubectl</b> binary download URI for Linux.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeDownloads.KubeCtlOsxUri">
+            <summary>
+            The <b>kubectl</b> binary download URI for OS/X.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeDownloads.KubeCtlWindowsUri">
+            <summary>
+            The <b>kubectl</b> binary download URI for Windows.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeDownloads.KubeAdmLinuxUri">
+            <summary>
+            The <b>kubeadm</b> binary download URI for Linux.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeDownloads.KubeletLinuxUri">
+            <summary>
+            The <b>kubelet</b> binary download URI for Linux.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeDownloads.HelmLinuxUri">
+            <summary>
+            The Helm binary URL for Linux.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeDownloads.HelmOsxUri">
+            <summary>
+            The Helm binary URL for OS/X.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeDownloads.HelmWindowsUri">
+            <summary>
+            The Helm binary URL for Windows.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeDownloads.CalicoRbacYamlUri">
+            <summary>
+            The Calico RBAC rules download (YAML for kubectl).
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeDownloads.CalicoSetupYamlUri">
+            <summary>
+            The Calico setup download (YAML for kubectl).
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeDownloads.IstioLinuxUri">
+            <summary>
+            The Istio binary URL for Linux.
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.KubeDownloads.GetNodeImageUri(Neon.Kube.HostingEnvironment)">
+            <summary>
+            <para>
+            Returns the URI to be used for downloading the prepared neonKUBE virtual machine image 
+            for the current neonKUBE cluster version.
+            </para>
+            <note>
+            This will return <c>null</c> for cloud and bare metal environments because we don't
+            download images for those situations.
+            </note>
+            </summary>
+            <param name="hostingEnvironment"></param>
+            <returns>The dornload URI or <c>null</c>.</returns>
+        </member>
         <member name="T:Neon.Kube.KubeHelper">
             <summary>
             cluster related utilties.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeHelper.CurlOptions">
+            <summary>
+            CURL command common options.
             </summary>
         </member>
         <member name="M:Neon.Kube.KubeHelper.#cctor">
@@ -1199,15 +1329,6 @@
             Persists the <see cref="P:Neon.Kube.KubeHelper.ClientConfig"/> to disk.
             </summary>
         </member>
-        <member name="M:Neon.Kube.KubeHelper.EncryptFile(System.String)">
-            <summary>
-            Encrypts a file or directory when supported by the underlying operating system
-            and file system.  Currently, this only works on non-HOME versions of Windows
-            and NTFS file systems.  This fails silently.
-            </summary>
-            <param name="path">The file or directory path.</param>
-            <returns><c>true</c> if the operation was successful.</returns>
-        </member>
         <member name="M:Neon.Kube.KubeHelper.EncryptSensitiveFiles">
             <summary>
             Ensures that sensitive folders and files on the local workstation are encrypted at rest
@@ -1233,12 +1354,34 @@
             <param name="hostingEnvironment">The hosting environment.</param>
             <returns><c>true</c> for cloud environments.</returns>
         </member>
+        <member name="M:Neon.Kube.KubeHelper.IsEnterpriseEnvironment(Neon.Kube.HostingEnvironment)">
+            <summary>
+            Determines whether a cluster hosting environment is available only for neonFORGE
+            enterprise (closed-source) related projects.
+            </summary>
+            <param name="hostingEnvironment">The hosting environment.</param>
+            <returns><c>true</c> for enteprise/closed-source related projects.</returns>
+        </member>
         <member name="M:Neon.Kube.KubeHelper.IsOnPremiseEnvironment(Neon.Kube.HostingEnvironment)">
             <summary>
             Determines whether a cluster hosting environment deploys on-premise.
             </summary>
             <param name="hostingEnvironment">The hosting environment.</param>
             <returns><c>true</c> for on-premise environments.</returns>
+        </member>
+        <member name="M:Neon.Kube.KubeHelper.IsOnPremiseHypervisorEnvironment(Neon.Kube.HostingEnvironment)">
+            <summary>
+            Determines whether a cluster hosting environment deploys to on-premise hypervisors.
+            </summary>
+            <param name="hostingEnvironment">The hosting environment.</param>
+            <returns><c>true</c> for on-premise environments.</returns>
+            <remarks>
+            <note>
+            Although <see cref="F:Neon.Kube.HostingEnvironment.Wsl2"/> is technically hosted on the Windows
+            Hyper-V platform, we're not going to consider it to be hosted by a hypervisor because
+            it's a special case.
+            </note>
+            </remarks>
         </member>
         <member name="M:Neon.Kube.KubeHelper.GetNeonKubeUserFolder(System.Boolean)">
             <summary>
@@ -1330,6 +1473,12 @@
             </summary>
             <returns>The folder path.</returns>
         </member>
+        <member name="P:Neon.Kube.KubeHelper.DesktopWsl2Folder">
+            <summary>
+            Returns path to the neonDESKTOP WSL2 state folder.
+            </summary>
+            <returns>The folder path.</returns>
+        </member>
         <member name="P:Neon.Kube.KubeHelper.CacheFolder">
             <summary>
             Returns the path the folder containing cached files for various environments.
@@ -1367,7 +1516,7 @@
             <param name="name">The structured context name.</param>
             <returns>The <see cref="T:Neon.Kube.ClusterLogin"/> or <c>null</c>.</returns>
         </member>
-        <member name="P:Neon.Kube.KubeHelper.NodeImageCache">
+        <member name="P:Neon.Kube.KubeHelper.NodeImageFolder">
             <summary>
             Returns the path to the current user's cluster virtual machine node
             image cache, creating the directory if it doesn't already exist.
@@ -1451,6 +1600,36 @@
             cluster context or <c>null</c> if we're not connected to a cluster.
             </summary>
         </member>
+        <member name="M:Neon.Kube.KubeHelper.CreateSelfSigned(System.String,System.Int32,System.Int32,Neon.Cryptography.Wildcard,System.String,System.String,System.String)">
+            <summary>
+            Generates a self-signed certificate for arbitrary hostnames, possibly including 
+            hostnames with wildcards.
+            </summary>
+            <param name="hostname">
+            <para>
+            The certificate host names.
+            </para>
+            <note>
+            You can use include a <b>"*"</b> to specify a wildcard
+            certificate like: <b>*.test.com</b>.
+            </note>
+            </param>
+            <param name="bitCount">The certificate key size in bits: one of <b>1024</b>, <b>2048</b>, or <b>4096</b> (defaults to <b>2048</b>).</param>
+            <param name="validDays">
+            The number of days the certificate will be valid.  This defaults to 365,000 days
+            or about 1,000 years.
+            </param>
+            <param name="wildcard">
+            Optionally generate a wildcard certificate for the subdomains of 
+            <paramref name="hostname"/> or the combination of the subdomains
+            and the hostname.  This defaults to <see cref="F:Neon.Cryptography.Wildcard.None"/>
+            which does not generate a wildcard certificate.
+            </param>
+            <param name="issuedBy">Optionally specifies the issuer.</param>
+            <param name="issuedTo">Optionally specifies who/what the certificate is issued for.</param>
+            <param name="friendlyName">Optionally specifies the certificate's frendly name.</param>
+            <returns>The new <see cref="T:Neon.Cryptography.TlsCertificate"/>.</returns>
+        </member>
         <member name="M:Neon.Kube.KubeHelper.FindCertificateByFriendlyName(System.Security.Cryptography.X509Certificates.X509Store,System.String)">
             <summary>
             Looks for a certificate with a friendly name.
@@ -1476,12 +1655,12 @@
             </note>
             </summary>
         </member>
-        <member name="M:Neon.Kube.KubeHelper.InstallHelm">
+        <member name="M:Neon.Kube.KubeHelper.InstallWorkstationHelm">
             <summary>
             <para>
-            Ensures that <b>helm</b> tool whose version is at least as great as the requested
-            cluster version is installed to the <b>neonKUBE</b> programs folder by copying the
-            tool from the cache if necessary.
+            Ensures that <b>helm</b> client installed on the workstation version is at least as
+            great as the requested cluster version is installed to the <b>neonKUBE</b> programs 
+            folder by copying the tool from the cache if necessary.
             </para>
             <note>
             This will probably require elevated privileges.
@@ -1611,11 +1790,11 @@
             </para>
             </remarks>
         </member>
-        <member name="M:Neon.Kube.KubeHelper.LogStatus(System.Action{System.String},System.String,System.String)">
+        <member name="M:Neon.Kube.KubeHelper.WriteStatus(System.Action{System.String},System.String,System.String)">
             <summary>
-            Writes a status message to a log writer action when it's not <c>null</c>.
+            Writes a status message to a status writer action when it's not <c>null</c>.
             </summary>
-            <param name="logWriter">The log writer action ot <c>null</c>.</param>
+            <param name="statusWriter">The log writer action ot <c>null</c>.</param>
             <param name="label">The status label.</param>
             <param name="message">Optional message.</param>
         </member>
@@ -1672,149 +1851,6 @@
             <summary>
             Returns the OpenSSH configuration file used for cluster nodes.
             </summary>
-        </member>
-        <member name="T:Neon.Kube.KubeNode">
-            <summary>
-            Implements lower-level node preparation methods.
-            </summary>
-        </member>
-        <member name="M:Neon.Kube.KubeNode.VerifyNodeOS(Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition},System.Action{System.String})">
-            <summary>
-            Ensures that the node operating system and version is supported for a neonKUBE
-            cluster.  This faults the nodeproxy on faliure.
-            </summary>
-            <param name="node">The target node.</param>
-            <param name="logWriter">Optional log writer action.</param>
-            <returns><c>true</c> if the operation system is supported.</returns>
-        </member>
-        <member name="M:Neon.Kube.KubeNode.Initialize(Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition},System.String,System.Boolean,System.Action{System.String})">
-            <summary>
-            Performs low-level initialization of a cluster node.  This is applied one time to
-            Hyper-V and XenServer/XCP-ng node templates when they are created and at cluster
-            creation time for cloud and bare metal based clusters.  The node must already
-            be booted and running.
-            </summary>
-            <param name="node">The node's SSH proxy.</param>
-            <param name="sshPassword">The current <b>sysadmin</b> password.</param>
-            <param name="updateDistribution">Optionally upgrade the node's Linux distribution.  This defaults to <c>false</c>.</param>
-            <param name="logWriter">Optional log writer action.</param>
-        </member>
-        <member name="M:Neon.Kube.KubeNode.InstallGuestIntegrationServices(Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition},System.Action{System.String})">
-            <summary>
-            Installs hypervisor guest integration services.
-            </summary>
-            <param name="node">The target node.</param>
-            <param name="logWriter">Optional log writer action.</param>
-        </member>
-        <member name="M:Neon.Kube.KubeNode.DisableDhcp(Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition},System.Action{System.String})">
-            <summary>
-            Disables DHCP.
-            </summary>
-            <param name="node">The target node.</param>
-            <param name="logWriter">Optional log writer action.</param>
-        </member>
-        <member name="M:Neon.Kube.KubeNode.DisableCloudInit(Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition},System.Action{System.String})">
-            <summary>
-            Disables <b>cloud-init</b>.
-            </summary>
-            <param name="node">The target node.</param>
-            <param name="logWriter">Optional log writer action.</param>
-        </member>
-        <member name="M:Neon.Kube.KubeNode.Clean(Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition},System.Action{System.String})">
-            <summary>
-            Cleans a node by removing unnecessary package manager metadata, cached DHCP information, etc.
-            and then fills unreferenced file system blocks and nodes with zeros so the disk image will
-            compress better.
-            </summary>
-            <param name="node">The target node.</param>
-            <param name="logWriter">Optional log writer action.</param>
-        </member>
-        <member name="M:Neon.Kube.KubeNode.ConfigureOpenSsh(Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition},System.Action{System.String})">
-            <summary>
-            Customizes the OpenSSH configuration on a node.
-            </summary>
-            <param name="node">The target node.</param>
-            <param name="logWriter">Optional log writer action.</param>
-        </member>
-        <member name="M:Neon.Kube.KubeNode.CleanPackages(Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition},System.Action{System.String})">
-            <summary>
-            Removes unnecessary packages.
-            </summary>
-            <param name="node">The target node.</param>
-            <param name="logWriter">Optional log writer action.</param>
-        </member>
-        <member name="M:Neon.Kube.KubeNode.ConfigureApt(Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition},System.Int32,System.Boolean,System.Action{System.String})">
-            <summary>
-            Configures the APY package manager.
-            </summary>
-            <param name="node">The target node.</param>
-            <param name="packageManagerRetries">Optionally specifies the packager manager retries (defaults to <b>5</b>).</param>
-            <param name="allowPackageManagerIPv6">Optionally prevent the package manager from using IPv6 (defaults to <c>false</c>.</param>
-            <param name="logWriter">Optional log writer action.</param>
-        </member>
-        <member name="M:Neon.Kube.KubeNode.DisableSnap(Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition},System.Action{System.String})">
-            <summary>
-            Disables the SNAP package manasger.
-            </summary>
-            <param name="node">The target node.</param>
-            <param name="logWriter">Optional log writer action.</param>
-        </member>
-        <member name="M:Neon.Kube.KubeNode.InstallNeonInit(Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition},System.Action{System.String})">
-            <summary>
-            Installs the <b>neon-init</b> service which is a cloud-init like service we
-            use to configure the network and credentials for VMs hosted in non-cloud
-            hypervisors.
-            </summary>
-            <param name="node">The target node.</param>
-            <param name="logWriter">Optional log writer action.</param>
-            <remarks>
-            <para>
-            Install and configure the [neon-init] service.  This is a simple script
-            that is configured to run as a oneshot systemd service before networking is
-            started.  This is currently used to configure the node's static IP address
-            configuration on first boot, so we don't need to rely on DHCP (which may not
-            be available in some environments).
-            </para>
-            <para>
-            [neon-init] is intended to run the first time a node is booted after
-            being created from a template.  It checks to see if a special ISO with a
-            configuration script named [neon-init.sh] is inserted into the VMs DVD
-            drive and when present, the script will be executed and the [/etc/neon-init]
-            file will be created to indicate that the service no longer needs to do this for
-            subsequent reboots.
-            </para>
-            <note>
-            The script won't create the [/etc/neon-init] when the script ISO doesn't exist 
-            for debugging purposes.
-            </note>
-            </remarks>
-        </member>
-        <member name="M:Neon.Kube.KubeNode.CreateKubeFolders(Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition},System.Action{System.String})">
-            <summary>
-            Create the node folders required by neoneKUBE.
-            </summary>
-            <param name="node">The target node.</param>
-            <param name="logWriter">Optional log writer action.</param>
-        </member>
-        <member name="M:Neon.Kube.KubeNode.InstallToolScripts(Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition},System.Action{System.String})">
-            <summary>
-            <para>
-            Installs the tool scripts, making them executable.
-            </para>
-            <note>
-            Any <b>".sh"</b> file extensions will be removed for ease-of-use.
-            </note>
-            </summary>
-            <param name="node">The target node.</param>
-            <param name="logWriter">Optional log writer action.</param>
-        </member>
-        <member name="M:Neon.Kube.KubeNode.InstallHelmArchive(Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition},System.Action{System.String})">
-            <summary>
-            Installs the Helm charts as a single ZIP archive written to the 
-            neonKUBE Helm folder.
-            </summary>
-            <param name="node">The target node.</param>
-            <param name="logWriter">Optional log writer action.</param>
         </member>
         <member name="T:Neon.Kube.KubeNodeFolders">
             <summary>
@@ -1936,55 +1972,443 @@
             Implements cluster setup operations.
             </summary>
         </member>
-        <member name="M:Neon.Kube.KubeSetup.VerifyNodeOS(Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition})">
+        <member name="T:Neon.Kube.KubeSetup.RemoteFile">
             <summary>
-            Ensures that the node operating system and version is supported for a neonKUBE
-            cluster.  This faults the nodeproxy on faliure.
+            Holds information about a remote file we'll need to download.
             </summary>
-            <param name="node">The target node.</param>
         </member>
-        <member name="M:Neon.Kube.KubeSetup.PrepareNode(Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition},Neon.Kube.ClusterDefinition,Neon.Kube.HostingManager,System.Boolean)">
+        <member name="M:Neon.Kube.KubeSetup.RemoteFile.#ctor(System.String,System.String,System.String)">
             <summary>
-            Initializes a near virgin server with the basic capabilities required
-            for a cluster node.
+            Constructor.
             </summary>
-            <param name="node">The target cluster node.</param>
-            <param name="clusterDefinition">The cluster definition.</param>
-            <param name="hostingManager">The hosting manager.</param>
-            <param name="shutdown">Optionally shuts down the node.</param>
+            <param name="path">The file path.</param>
+            <param name="permissions">Optional file permissions.</param>
+            <param name="owner">Optional file owner.</param>
         </member>
-        <member name="M:Neon.Kube.KubeSetup.ConfigureEnvironmentVariables(Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition},Neon.Kube.ClusterDefinition)">
+        <member name="P:Neon.Kube.KubeSetup.RemoteFile.Path">
             <summary>
-            Configures the global environment variables that describe the configuration 
-            of the server within the cluster.
+            Returns the file path.
             </summary>
-            <param name="node">The server to be updated.</param>
-            <param name="clusterDefinition">The cluster definition.</param>
         </member>
-        <member name="M:Neon.Kube.KubeSetup.ConfigureSshKey(Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition},Neon.Kube.ClusterLogin)">
+        <member name="P:Neon.Kube.KubeSetup.RemoteFile.Permissions">
             <summary>
-            Configures a node's host public SSH key during node provisioning.
+            Returns the file permissions.
             </summary>
-            <param name="node">The target node.</param>
-            <param name="clusterLogin">The cluster login.</param>
         </member>
-        <member name="M:Neon.Kube.KubeSetup.InstallConfigFiles(Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition})">
+        <member name="P:Neon.Kube.KubeSetup.RemoteFile.Owner">
             <summary>
-            Installs the cluster configuration files.
+            Returns the file owner formatted as: USER:GROUP.
             </summary>
-            <param name="node">The target node.</param>
         </member>
-        <member name="M:Neon.Kube.KubeSetup.InstallSetupScripts(Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition})">
+        <member name="F:Neon.Kube.KubeSetup.HostingEnvironmentProperty">
             <summary>
-            Installs the setup scripts.
+            Property name for determining the current hosting environment: <see cref="T:Neon.Kube.HostingEnvironment"/>,
             </summary>
-            <param name="node">The target node.</param>
         </member>
-        <member name="M:Neon.Kube.KubeSetup.UnzipHelmArchives(Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition})">
+        <member name="F:Neon.Kube.KubeSetup.ClusterProxyProperty">
             <summary>
-            Unzips the Helm chart ZIP archive to make the charts available for use.
+            Property name for accessing the <see cref="T:Neon.Kube.SetupController`1"/>'s <see cref="T:Neon.Kube.ClusterProxy"/> property.
             </summary>
-            <param name="node">The target node.</param>
+        </member>
+        <member name="F:Neon.Kube.KubeSetup.ClusterLoginProperty">
+            <summary>
+            Property name for accessing the <see cref="T:Neon.Kube.SetupController`1"/>'s <see cref="T:Neon.Kube.ClusterLogin"/> property.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeSetup.HostingManagerProperty">
+            <summary>
+            Property name for accessing the <see cref="T:Neon.Kube.SetupController`1"/>'s <see cref="T:Neon.Kube.IHostingManager"/> property.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeSetup.K8sClientProperty">
+            <summary>
+            Property name for accessing the <see cref="T:Neon.Kube.SetupController`1"/>'s <see cref="T:k8s.Kubernetes"/> client property.
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.KubeSetup.GetK8sClient(Neon.Collections.ObjectDictionary)">
+            <summary>
+            Returns the <see cref="T:k8s.Kubernetes"/> client persisted in the dictionary passed.
+            </summary>
+            <param name="setupState">The setup state.</param>
+            <returns>The <see cref="T:k8s.Kubernetes"/> client.</returns>
+            <exception cref="T:System.InvalidOperationException">
+            Thrown when there is no persisted client, indicating that <see cref="M:Neon.Kube.KubeSetup.ConnectCluster(Neon.Collections.ObjectDictionary)"/>
+            has not been called yet.
+            </exception>
+        </member>
+        <member name="M:Neon.Kube.KubeSetup.GetLabelValue(System.Object)">
+            <summary>
+            Renders a Kubernetes label value in a format suitable for labeling a node.
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.KubeSetup.GetTaintsAsync(Neon.Collections.ObjectDictionary,System.String,System.String)">
+            <summary>
+            Gets a list of taints that are currently applied to all nodes matching the given node label/value pair.
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+            <param name="labelKey">The target nodes label key.</param>
+            <param name="labelValue">The target nodes label value.</param>
+            <returns>The taint list.</returns>
+        </member>
+        <member name="M:Neon.Kube.KubeSetup.InstallWorkstationBinariesAsync(Neon.Collections.ObjectDictionary)">
+            <summary>
+            Downloads and installs any required binaries to the workstation cache if they're not already present.
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+        </member>
+        <member name="M:Neon.Kube.KubeSetup.ConnectCluster(Neon.Collections.ObjectDictionary)">
+            <summary>
+            <para>
+            Connects to a Kubernetes cluster if it already exists.  This sets the <see cref="F:Neon.Kube.KubeSetup.K8sClientProperty"/>
+            property in the setup controller state when Kubernetes is running and a connection has not already 
+            been established.
+            </para>
+            <note>
+            The <see cref="F:Neon.Kube.KubeSetup.K8sClientProperty"/> will not be set when Kubernetes has not been started, so 
+            <see cref="M:Neon.Collections.ObjectDictionary.Get``1(System.String)"/> calls for this property will fail when the
+            cluster has not been connected yet, which will be useful for debugging setup steps that require
+            a connection but this hasn't happened yet.
+            </note>
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+        </member>
+        <member name="M:Neon.Kube.KubeSetup.SetupEtcdHaProxy(Neon.Collections.ObjectDictionary,Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition})">
+            <summary>
+            Configures a local HAProxy container that makes the Kubernetes Etc
+            cluster highly available.
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+            <param name="node">The node where the operation will be performed.</param>
+        </member>
+        <member name="M:Neon.Kube.KubeSetup.LabelNodesAsync(Neon.Collections.ObjectDictionary,Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition})">
+            <summary>
+            Adds the Kubernetes node labels.
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+            <param name="master">The first master node where the operation will be performed.</param>
+        </member>
+        <member name="M:Neon.Kube.KubeSetup.SetupClusterAsync(Neon.Collections.ObjectDictionary,System.Int32)">
+            <summary>
+            Initializes the cluster on the first manager, then joins the remaining
+            masters and workers to the cluster.
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+            <param name="maxParallel">
+            The maximum number of operations on separate nodes to be performed in parallel.
+            This defaults to <see cref="F:Neon.Kube.KubeSetup.defaultMaxParallelNodes"/>.
+            </param>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
+        <member name="M:Neon.Kube.KubeSetup.ConfigureKubernetes(Neon.Collections.ObjectDictionary,Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition})">
+            <summary>
+            Basic Kubernetes cluster initialization.
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+            <param name="firstMaster">The first master node.</param>
+        </member>
+        <member name="M:Neon.Kube.KubeSetup.ConfigureWorkstation(Neon.Collections.ObjectDictionary,Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition})">
+            <summary>
+            Configures the local workstation.
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+            <param name="master">The master node where the operation will be performed.</param>
+        </member>
+        <member name="M:Neon.Kube.KubeSetup.InstallCalicoCniAsync(Neon.Collections.ObjectDictionary,Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition})">
+            <summary>
+            Installs the Calico CNI.
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+            <param name="master">The master node where the operation will be performed.</param>
+        </member>
+        <member name="M:Neon.Kube.KubeSetup.ConfigureMasterTaintsAsync(Neon.Collections.ObjectDictionary,Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition})">
+            <summary>
+            Configures pods to be schedule on masters when enabled.
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+            <param name="master">The master node where the operation will be performed.</param>
+        </member>
+        <member name="M:Neon.Kube.KubeSetup.InstallIstioAsync(Neon.Collections.ObjectDictionary,Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition})">
+            <summary>
+            Installs Istio.
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+            <param name="master">The master node where the operation will be performed.</param>
+        </member>
+        <member name="M:Neon.Kube.KubeSetup.CreateRootUserAsync(Neon.Collections.ObjectDictionary,Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition})">
+            <summary>
+            Configures the root Kubernetes user.
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+            <param name="master">The master node where the operation will be performed.</param>
+        </member>
+        <member name="M:Neon.Kube.KubeSetup.InstallKubeDashboardAsync(Neon.Collections.ObjectDictionary,Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition})">
+            <summary>
+            Configures the root Kubernetes user.
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+            <param name="master">The master node where the operation will be performed.</param>
+        </member>
+        <member name="M:Neon.Kube.KubeSetup.TaintNodesAsync(Neon.Collections.ObjectDictionary)">
+            <summary>
+            Adds the node taints.
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+        </member>
+        <member name="M:Neon.Kube.KubeSetup.InstallKialiAsync(Neon.Collections.ObjectDictionary,Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition})">
+            <summary>
+            Deploy Kiali.
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+            <param name="master">The master node where the operation will be performed.</param>
+        </member>
+        <member name="M:Neon.Kube.KubeSetup.KubeSetupAsync(Neon.Collections.ObjectDictionary,Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition})">
+            <summary>
+            Some initial kubernetes configuration.
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+            <param name="master">The master node where the operation will be performed.</param>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
+        <member name="M:Neon.Kube.KubeSetup.InstallOpenEBSAsync(Neon.Collections.ObjectDictionary,Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition})">
+            <summary>
+            Installs OpenEBS.
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+            <param name="master">The master node where the operation will be performed.</param>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
+        <member name="M:Neon.Kube.KubeSetup.CreateNamespaceAsync(Neon.Collections.ObjectDictionary,Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition},System.String,System.Boolean)">
+            <summary>
+            Creates a Kubernetes namespace.
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+            <param name="master">The master node where the operation will be performed.</param>
+            <param name="name">The new Namespace name.</param>
+            <param name="istioInjectionEnabled">Whether Istio sidecar injection should be enabled.</param>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
+        <member name="M:Neon.Kube.KubeSetup.CreateHostPathStorageClass(Neon.Collections.ObjectDictionary,Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition},System.String)">
+            <summary>
+            Creates a Kubernetes Storage Class.
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+            <param name="master">The master node where the operation will be performed.</param>
+            <param name="name">The new <see cref="T:k8s.Models.V1StorageClass"/> name.</param>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
+        <member name="M:Neon.Kube.KubeSetup.CreateCstorStorageClass(Neon.Collections.ObjectDictionary,Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition},System.String,System.String,System.Int32)">
+            <summary>
+            Creates an OpenEBS cStor Kubernetes Storage Class.
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+            <param name="master">The master node where the operation will be performed.</param>
+            <param name="name">The new <see cref="T:k8s.Models.V1StorageClass"/> name.</param>
+            <param name="cstorPoolCluster"></param>
+            <param name="replicaCount"></param>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
+        <member name="M:Neon.Kube.KubeSetup.InstallEtcdAsync(Neon.Collections.ObjectDictionary,Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition})">
+            <summary>
+            Installs an Etcd cluster to the monitoring namespace.
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+            <param name="master">The master node where the operation will be performed.</param>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
+        <member name="M:Neon.Kube.KubeSetup.InstallPrometheusAsync(Neon.Collections.ObjectDictionary,Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition})">
+            <summary>
+            Installs a Prometheus Operator to the monitoring namespace.
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+            <param name="master">The master node where the operation will be performed.</param>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
+        <member name="M:Neon.Kube.KubeSetup.WaitForPrometheusAsync(Neon.Collections.ObjectDictionary,Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition})">
+            <summary>
+            Waits for Prometheus to be fully ready.
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+            <param name="master">The master node where the operation will be performed.</param>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
+        <member name="M:Neon.Kube.KubeSetup.InstallCortexAsync(Neon.Collections.ObjectDictionary,Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition})">
+            <summary>
+            Installs Cortex to the monitoring namespace.
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+            <param name="master">The master node where the operation will be performed.</param>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
+        <member name="M:Neon.Kube.KubeSetup.InstallLokiAsync(Neon.Collections.ObjectDictionary,Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition})">
+            <summary>
+            Installs Loki to the monitoring namespace.
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+            <param name="master">The master node where the operation will be performed.</param>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
+        <member name="M:Neon.Kube.KubeSetup.InstallPromtailAsync(Neon.Collections.ObjectDictionary,Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition})">
+            <summary>
+            Installs Promtail to the monitoring namespace.
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+            <param name="master">The master node where the operation will be performed.</param>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
+        <member name="M:Neon.Kube.KubeSetup.InstallGrafanaAsync(Neon.Collections.ObjectDictionary,Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition})">
+            <summary>
+            Installs Grafana to the monitoring namespace.
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+            <param name="master">The master node where the operation will be performed.</param>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
+        <member name="M:Neon.Kube.KubeSetup.InstallMinioAsync(Neon.Collections.ObjectDictionary,Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition})">
+            <summary>
+            Installs a Minio cluster to the monitoring namespace.
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+            <param name="master">The master node where the operation will be performed.</param>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
+        <member name="M:Neon.Kube.KubeSetup.SetupMonitoringAsync(Neon.Collections.ObjectDictionary)">
+            <summary>
+            Installs an Neon Monitoring to the monitoring namespace.
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
+        <member name="M:Neon.Kube.KubeSetup.InstallJaegerAsync(Neon.Collections.ObjectDictionary,Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition})">
+            <summary>
+            Installs Jaeger
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+            <param name="master">The master node where the operation will be performed.</param>
+            <remarks>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</remarks>
+        </member>
+        <member name="M:Neon.Kube.KubeSetup.InstallContainerRegistryAsync(Neon.Collections.ObjectDictionary,Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition})">
+            <summary>
+            Installs a harbor container registry and required components.
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+            <param name="master">The master node where the operation will be performed.</param>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
+        <member name="M:Neon.Kube.KubeSetup.InstallClusterManagerAsync(Neon.Collections.ObjectDictionary,Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition})">
+            <summary>
+            Installs the Neon Cluster Manager.
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+            <param name="master">The master node where the operation will be performed.</param>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
+        <member name="M:Neon.Kube.KubeSetup.CreateNamespacesAsync(Neon.Collections.ObjectDictionary,Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition})">
+            <summary>
+            Installs the Neon Cluster Manager.
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+            <param name="master">The master node where the operation will be performed.</param>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
+        <member name="M:Neon.Kube.KubeSetup.InstallSystemDbAsync(Neon.Collections.ObjectDictionary,Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition})">
+            <summary>
+            Installs a Citus-postgres database used by neon-system services.
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+            <param name="master">The master node where the operation will be performed.</param>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
+        <member name="M:Neon.Kube.KubeSetup.GetWsl2ClusterDefintion">
+            <summary>
+            Returns the built-in cluster definition (as text) for a cluster provisioned on WSL2.
+            </summary>
+            <returns>The cluster definition text.</returns>
+        </member>
+        <member name="T:Neon.Kube.KubeVersions">
+            <summary>
+            Specifies deployment related component versions for the current
+            neonKUBE release.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeVersions.NeonKubeVersion">
+            <summary>
+            The current neonKUBE version.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeVersions.KubernetesVersion">
+            <summary>
+            The version of Kubernetes to be installed.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeVersions.KubernetesDashboardVersion">
+            <summary>
+            The version of the Kubernetes dashboard to be installed.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeVersions.KubernetesDashboardMetricsVersion">
+            <summary>
+            The version of the Kubernetes dashboard metrics scraper to be installed.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeVersions.KubeAdminPackageVersion">
+            <summary>
+            The package version for Kubernetes admin service.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeVersions.KubeCtlPackageVersion">
+            <summary>
+            The package version for the Kubernetes cli.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeVersions.KubeletPackageVersion">
+            <summary>
+            The package version for the Kubelet service.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeVersions.CrioVersion">
+            <summary>
+            The version of CRI-O container runtime to be installed.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeVersions.CalicoVersion">
+            <summary>
+            The version of Calico to install.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeVersions.HaproxyVersion">
+            <summary>
+            The version of HaProxy to install.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeVersions.IstioVersion">
+            <summary>
+            The version of Istio to install.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeVersions.HelmVersion">
+            <summary>
+            The version of Helm to be installed.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeVersions.CoreDNSVersion">
+            <summary>
+            The version of CoreDNS to be installed.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeVersions.CoreDNSPluginVersion">
+            <summary>
+            The version of CoreDNS plugin to be installed.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeVersions.PrometheusVersion">
+            <summary>
+            The version of Prometheus to be installed.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeVersions.AlertManagerVersion">
+            <summary>
+            The version of AlertManager to be installed.
+            </summary>
         </member>
         <member name="T:Neon.Kube.ClusterLogin">
             <summary>
@@ -2053,7 +2477,7 @@
         <member name="P:Neon.Kube.ClusterLogin.SshKey">
             <summary>
             The public and private parts of the SSH client key used to
-            authenticate an SSH session with a cluster node.
+            authenticate a SSH session with a cluster node.
             </summary>
         </member>
         <member name="M:Neon.Kube.ClusterLogin.SetPath(System.String)">
@@ -2825,45 +3249,6 @@
         <member name="P:Neon.Kube.ClusterDefinition.Environment">
             <summary>
             Indicates how the cluster is being used.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.ClusterDefinition.LinuxDistribution">
-            <summary>
-            Specifies the distribution of Linux to be installed on the cluster nodes.  Currently
-            only <b>ubuntu</b> is supported.  This defaults to <b>ubuntu</b>.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.ClusterDefinition.LinuxVersion">
-            <summary>
-            <para>
-            Specifies the version of <see cref="P:Neon.Kube.ClusterDefinition.LinuxDistribution"/> to be installed.  This is
-            formatted like <b>20.04.#</b> where <b>#</b> is the minor release or <b>20.04-latest</b>
-            for the latest release.
-            </para>
-            <para>
-            Currently, only <b>Ubuntu 20.04.#</b> releases are supported.  You'll need to check the
-            cluster install documentation to discover which point releases are currently available.
-            </para>
-            <para>
-            This defaults to <b>20.04.latest</b>.
-            </para>
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.ClusterDefinition.LinuxTemplateUri">
-            <summary>
-            <para>
-            Optionally overrides the location of the Linux node template URI.  This is usually
-            located on a neonFORGE managed server and derived from <see cref="P:Neon.Kube.ClusterDefinition.LinuxDistribution"/>
-            and <see cref="P:Neon.Kube.ClusterDefinition.LinuxVersion"/> which should work for most users.
-            </para>
-            <para>
-            You may set this to a custom URI which may be useful for setting up air-gapped 
-            clusters for for testing purposes.  This defaults to <c>null</c>.
-            </para>
-            <note>
-            This URI can use HTTP, HTTPS, or FTP for all hosting environments except <see cref="F:Neon.Kube.HostingEnvironment.XenServer"/>
-            which doesn't support HTTPS.
-            </note>
             </summary>
         </member>
         <member name="P:Neon.Kube.ClusterDefinition.TimeSources">
@@ -4538,6 +4923,11 @@
             for production purposes).
             </summary>
         </member>
+        <member name="F:Neon.Kube.HostingEnvironment.Wsl2">
+            <summary>
+            Windows Subsystem for Linux.
+            </summary>
+        </member>
         <member name="T:Neon.Kube.HostingOptions">
             <summary>
             Specifies the cloud or colocation/on-premise hosting settings.
@@ -5178,24 +5568,8 @@
         </member>
         <member name="T:Neon.Kube.LogOptions">
             <summary>
-            Specifies the options for configuring the cluster integrated Elasticsearch 
-            metrics stack: <a href="https://Elastic.co/">https://Elastic.co/</a>
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.LogOptions.Enabled">
-            <summary>
-            Indicates whether Elasticsearch metrics are to be enabled for the cluster.  
-            This defaults to <c>true</c>.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.LogOptions.DiskSize">
-            <summary>
-            Specifies the amount of disk space to allocate to Elasticsearch.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.LogOptions.Resources">
-            <summary>
-            Compute Resources required by Elasticsearch.
+            Specifies the options for configuring the cluster integrated logging and
+            metrics.
             </summary>
         </member>
         <member name="P:Neon.Kube.LogOptions.LogRetentionDays">
@@ -5217,20 +5591,9 @@
             metrics stack: <a href="https://prometheus.io/">https://prometheus.io/</a>
             </summary>
         </member>
-        <member name="P:Neon.Kube.MetricsOptions.Enabled">
-            <summary>
-            Indicates whether Prometheus metrics are to be enabled for the cluster.  
-            This defaults to <c>true</c>.
-            </summary>
-        </member>
         <member name="P:Neon.Kube.MetricsOptions.Storage">
             <summary>
-            Indicates where Prometheus metrics should be stored.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.MetricsOptions.DiskSize">
-            <summary>
-            Specifies the amount of disk space to allocate to metrics storage.
+            Indicates where Prometheus metrics should be stored.  This defaults to <see cref="F:Neon.Kube.MetricsStorageOptions.Ephemeral"/>.
             </summary>
         </member>
         <member name="M:Neon.Kube.MetricsOptions.Validate(Neon.Kube.ClusterDefinition)">
@@ -5256,21 +5619,9 @@
             Filesystem storage.
             </summary>
         </member>
-        <member name="F:Neon.Kube.MetricsStorageOptions.Yugabyte">
-            <summary>
-            Yugabyte.
-            </summary>
-        </member>
         <member name="T:Neon.Kube.MonitorOptions">
             <summary>
-            Specifies the options for configuring the cluster integrated
-            Elasticsearch/Fluentd/Kibana (EFK) logging stack.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.MonitorOptions.Enabled">
-            <summary>
-            Indicates whether the EFK stack is to be enabled for the cluster.  
-            This defaults to <c>true</c>.
+            Specifies the options for configuring the cluster integrated logging stack.
             </summary>
         </member>
         <member name="P:Neon.Kube.MonitorOptions.Logs">
@@ -6292,31 +6643,26 @@
         <member name="P:Neon.Kube.NodeLabels.Logs">
             <summary>
             <b>io.neonkube.monitor.logs</b> [<c>bool</c>]: Indicates the user has 
-            specified that Elasticsearch should be deployed to this node 
-            if <see cref="P:Neon.Kube.LogOptions.Enabled"/> is <c>true</c>.  
-            This defaults to <c>false</c>.
+            specified that Loki logging should be deployed to the labeled node.  This 
+            defaults to <c>false</c>.
             </summary>
         </member>
         <member name="P:Neon.Kube.NodeLabels.LogsInternal">
             <summary>
-            <b>io.neonkube.monitor.logs-internal</b> [<c>bool</c>]: Indicates that Elasticsearch 
-            will be deployed to this node if <see cref="P:Neon.Kube.LogOptions.Enabled"/> is <c>true</c>.  
-            This defaults to <c>false</c>.
+            <b>io.neonkube.monitor.logs-internal</b> [<c>bool</c>]: Indicates that Liko
+            logging will be deployed to the labeled node.  This defaults to <c>false</c>.
             </summary>
         </member>
         <member name="P:Neon.Kube.NodeLabels.Metrics">
             <summary>
             <b>io.neonkube.monitor.metrics</b> [<c>bool</c>]: Indicates the user has specified
-            that Metrics should be deployed to this node if 
-            <see cref="P:Neon.Kube.MetricsOptions.Enabled"/> is <c>true</c>.  
-            This defaults to <c>false</c>.
+            that Cortex metrics should be deployed to the labeled node.  This defaults to <c>false</c>.
             </summary>
         </member>
         <member name="P:Neon.Kube.NodeLabels.MetricsInternal">
             <summary>
-            <b>io.neonkube.monitor.metrics-internal</b> [<c>bool</c>]: Indicates that Metrics 
-            will be deployed to this node if <see cref="P:Neon.Kube.MetricsOptions.Enabled"/> is <c>true</c>.  
-            This defaults to <c>false</c>.
+            <b>io.neonkube.monitor.metrics-internal</b> [<c>bool</c>]: Indicates that Cortex
+            metrics will be deployed to the labeled node.  This defaults to <c>false</c>.
             </summary>
         </member>
         <member name="P:Neon.Kube.NodeLabels.Custom">
@@ -6368,13 +6714,6 @@
             Describes cluster node options.
             </summary>
         </member>
-        <member name="P:Neon.Kube.NodeOptions.Upgrade">
-            <summary>
-            Specifies whether the cluster node operating system should be upgraded
-            during cluster preparation.  This defaults to <see cref="F:Neon.Kube.OsUpgrade.Full"/>
-            to pick up most criticial updates.
-            </summary>
-        </member>
         <member name="P:Neon.Kube.NodeOptions.AllowPackageManagerIPv6">
             <summary>
             Allow the Linux package manager to use IPv6 when communicating with
@@ -6409,26 +6748,6 @@
         <member name="F:Neon.Kube.NodeRole.Worker">
             <summary>
             The node is a cluster worker.
-            </summary>
-        </member>
-        <member name="T:Neon.Kube.OsUpgrade">
-            <summary>
-            Enumerates the possible cluster node operating system upgrade options.
-            </summary>
-        </member>
-        <member name="F:Neon.Kube.OsUpgrade.None">
-            <summary>
-            Perform no operating system upgrade.
-            </summary>
-        </member>
-        <member name="F:Neon.Kube.OsUpgrade.Partial">
-            <summary>
-            Upgrades many but not all components.  This is equivalent to performing: <b>apt-get upgrade</b>
-            </summary>
-        </member>
-        <member name="F:Neon.Kube.OsUpgrade.Full">
-            <summary>
-            Upgrades all components.  This is equivalent to performing: <b>apt-get dist-upgrade</b>
             </summary>
         </member>
         <member name="T:Neon.Kube.OpenEbsOptions">
@@ -6492,7 +6811,7 @@
         </member>
         <member name="T:Neon.Kube.BlockDeviceCapacity">
             <summary>
-            
+            Describes an OpenEBS block device capacity.
             </summary>
         </member>
         <member name="M:Neon.Kube.BlockDeviceCapacity.#ctor">
@@ -6517,7 +6836,7 @@
         </member>
         <member name="T:Neon.Kube.BlockDeviceDetails">
             <summary>
-            
+            OpenEBS block device details.
             </summary>
         </member>
         <member name="M:Neon.Kube.BlockDeviceDetails.#ctor">
@@ -6577,7 +6896,7 @@
         </member>
         <member name="T:Neon.Kube.BlockDeviceDevLink">
             <summary>
-            
+            OpenEBS block device links.
             </summary>
         </member>
         <member name="M:Neon.Kube.BlockDeviceDevLink.#ctor">
@@ -6632,7 +6951,7 @@
         </member>
         <member name="T:Neon.Kube.V1CStorBlockDevice">
             <summary>
-            
+            Describes an OpenEBS cStor block device.
             </summary>
         </member>
         <member name="M:Neon.Kube.V1CStorBlockDevice.#ctor">
@@ -6679,7 +6998,7 @@
         </member>
         <member name="T:Neon.Kube.V1CStorBlockDeviceList">
             <summary>
-            
+            OpenEBS cStor block devices.
             </summary>
         </member>
         <member name="M:Neon.Kube.V1CStorBlockDeviceList.#ctor">
@@ -6725,7 +7044,7 @@
         </member>
         <member name="T:Neon.Kube.V1CStorBlockDeviceRef">
             <summary>
-            
+            OpenEBS block device reference.
             </summary>
         </member>
         <member name="M:Neon.Kube.V1CStorBlockDeviceRef.#ctor">
@@ -6795,7 +7114,7 @@
         </member>
         <member name="T:Neon.Kube.V1CStorDataRaidGroup">
             <summary>
-            
+            OpenEBS RAID group.
             </summary>
         </member>
         <member name="M:Neon.Kube.V1CStorDataRaidGroup.#ctor">
@@ -6810,7 +7129,7 @@
         </member>
         <member name="T:Neon.Kube.V1CStorPoolCluster">
             <summary>
-            
+            OpenEBS cStor pool cluster.
             </summary>
         </member>
         <member name="M:Neon.Kube.V1CStorPoolCluster.#ctor">
@@ -6857,7 +7176,7 @@
         </member>
         <member name="T:Neon.Kube.V1CStorPoolClusterList">
             <summary>
-            
+            OpenEBS cStore pool cluster list.
             </summary>
         </member>
         <member name="M:Neon.Kube.V1CStorPoolClusterList.#ctor">
@@ -6918,7 +7237,7 @@
         </member>
         <member name="T:Neon.Kube.V1CStorPoolConfig">
             <summary>
-            
+            OpenEBS cStor pool configuration.
             </summary>
         </member>
         <member name="M:Neon.Kube.V1CStorPoolConfig.#ctor">
@@ -6938,7 +7257,7 @@
         </member>
         <member name="T:Neon.Kube.V1CStorPoolSpec">
             <summary>
-            
+            OpenEBS cStore pool specification.
             </summary>
         </member>
         <member name="M:Neon.Kube.V1CStorPoolSpec.#ctor">
@@ -7008,7 +7327,7 @@
         </member>
         <member name="T:Neon.Kube.FileSystemInfo">
             <summary>
-            
+            File system information.
             </summary>
         </member>
         <member name="M:Neon.Kube.FileSystemInfo.#ctor">
@@ -7063,7 +7382,7 @@
             <param name="appendToLog">Optionally have logs appended to an existing log file rather than creating a new one.</param>
             <param name="defaultRunOptions">
             Optionally specifies the <see cref="T:Neon.SSH.RunOptions"/> to be assigned to the 
-            <see cref="P:Neon.SSH.LinuxSshProxy`1.DefaultRunOptions"/> property for the
+            <see cref="P:Neon.SSH.LinuxSshProxy.DefaultRunOptions"/> property for the
             nodes managed by the cluster proxy.  This defaults to <see cref="F:Neon.SSH.RunOptions.None"/>.
             </param>
             <remarks>
@@ -7087,8 +7406,8 @@
             <param name="appendToLog">Optionally have logs appended to an existing log file rather than creating a new one.</param>
             <param name="defaultRunOptions">
             Optionally specifies the <see cref="T:Neon.SSH.RunOptions"/> to be assigned to the 
-            <see cref="P:Neon.SSH.LinuxSshProxy`1.DefaultRunOptions"/> property for the
-            nodes managed by the cluster proxy.  This defaults to <see cref="F:Neon.SSH.RunOptions.None"/>.
+            <see cref="P:Neon.SSH.LinuxSshProxy.DefaultRunOptions"/> property for the nodes managed
+            by the cluster proxy.  This defaults to <see cref="F:Neon.SSH.RunOptions.None"/>.
             </param>
             <remarks>
             The <paramref name="nodeProxyCreator"/> function will be called for each node in
@@ -7172,6 +7491,11 @@
             <param name="nodeName">The node name.</param>
             <returns>The node proxy instance or <c>null</c> if the named node does not exist.</returns>
         </member>
+        <member name="M:Neon.Kube.ClusterProxy.ClearStatus">
+            <summary>
+            Clears the status for the all of the cluster nodes.
+            </summary>
+        </member>
         <member name="M:Neon.Kube.ClusterProxy.GetReachableMaster(Neon.Net.ReachableHostMode)">
             <summary>
             Returns a master node that is reachable via the network because it answers a ping.
@@ -7239,51 +7563,10 @@
             </summary>
             <returns>The cluster's current <see cref="T:System.DateTime"/> (UTC).</returns>
         </member>
-        <member name="T:Neon.Kube.NodeSshProxy">
-            <summary>
-            <para>
-            Uses an SSH/SCP connection to provide access to Linux machines to access
-            files, run commands, etc.  This is a simplified version of <see cref="T:Neon.Kube.NodeSshProxy`1"/> 
-            that doesn't require the specification of a metadata type.
-            </para>
-            <note>
-            This is class is <b>not intended</b> to be a <b>general purpose SSH wrapper</b> 
-            at this time.  It currently assumes that the remote side is running some variant
-            of Linux and it makes some global changes including disabling SUDO password prompts
-            for all users as well as creating some global directories.
-            </note>
-            </summary>
-            <remarks>
-            <para>
-            This class includes methods to invoke Linux commands on the node,
-            </para>
-            <para>
-            Call <see cref="M:Neon.SSH.LinuxSshProxy`1.Dispose"/> or <see cref="M:Neon.SSH.LinuxSshProxy`1.Disconnect"/> to close the connection.
-            </para>
-            <note>
-            You can use <see cref="M:Neon.Kube.NodeSshProxy`1.Clone"/> to make a copy of a proxy that can be
-            used to perform parallel operations against the same machine.
-            </note>
-            </remarks>
-            <threadsafety instance="false"/>
-        </member>
-        <member name="M:Neon.Kube.NodeSshProxy.#ctor(System.String,System.Net.IPAddress,Neon.SSH.SshCredentials,System.Int32,System.IO.TextWriter)">
-            <summary>
-            Constructs a <see cref="T:Neon.Kube.NodeSshProxy"/>.
-            </summary>
-            <param name="name">The display name for the server.</param>
-            <param name="address">The private cluster IP address for the server.</param>
-            <param name="credentials">The credentials to be used for establishing SSH connections.</param>
-            <param name="port">Optionally overrides the standard SSH port (22).</param>
-            <param name="logWriter">The optional <see cref="T:System.IO.TextWriter"/> where operation logs will be written.</param>
-            <exception cref="T:System.ArgumentNullException">
-            Thrown if <paramref name="name"/> or if <paramref name="credentials"/> is <c>null</c>.
-            </exception>
-        </member>
         <member name="T:Neon.Kube.NodeSshProxy`1">
             <summary>
             <para>
-            Uses an SSH/SCP connection to provide access to Linux machines to access
+            Uses a SSH/SCP connection to provide access to Linux machines to access
             files, run commands, etc.
             </para>
             <note>
@@ -7307,7 +7590,7 @@
             This class includes methods to invoke Linux commands on the node,
             </para>
             <para>
-            Call <see cref="M:Neon.SSH.LinuxSshProxy`1.Dispose"/> or <see cref="M:Neon.SSH.LinuxSshProxy`1.Disconnect"/>
+            Call <see cref="M:Neon.SSH.LinuxSshProxy.Dispose"/> or <see cref="M:Neon.SSH.LinuxSshProxy.Disconnect"/>
             to close the connection.
             </para>
             <note>
@@ -7316,6 +7599,227 @@
             </note>
             </remarks>
             <threadsafety instance="false"/>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.BaseInitialize(Neon.Kube.HostingEnvironment,System.String,System.Boolean,System.Action{System.String})">
+            <summary>
+            Performs low-level initialization of a cluster   This is applied one time to
+            Hyper-V and XenServer/XCP-ng node templates when they are created and at cluster
+            creation time for cloud and bare metal clusters.
+            </summary>
+            <param name="hostingEnvironment">Specifies the hosting environment.</param>
+            <param name="sshPassword">The current <b>sysadmin</b> password.</param>
+            <param name="updateDistribution">Optionally upgrade the node's Linux distribution.  This defaults to <c>false</c>.</param>
+            <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.BaseConfigureDebianFrontend(Neon.Kube.HostingEnvironment,System.Action{System.String})">
+            <summary>
+            Configures the Debian frontend terminal to non-interactive.
+            </summary>
+            <param name="hostingEnvironment">Specifies the hosting environment.</param>
+            <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.BaseConfigureDnsIPv4Preference(Neon.Kube.HostingEnvironment,System.Action{System.String})">
+            <summary>
+            Ubuntu defaults DNS to prefer IPv6 lookups over IPv4 which can cause
+            performance problems.  This method reconfigures DNS to favor IPv4.
+            </summary>
+            <param name="hostingEnvironment">Specifies the hosting environment.</param>
+            <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.BaseConfigureBashEnvironment(Neon.Kube.HostingEnvironment,System.Action{System.String})">
+            <summary>
+            Configures the Debian frontend terminal to non-interactive.
+            </summary>
+            <param name="hostingEnvironment">Specifies the hosting environment.</param>
+            <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.BaseInstallPackages(Neon.Kube.HostingEnvironment,System.Action{System.String})">
+            <summary>
+            Installs the required <b>base image</b> packages.
+            </summary>
+            <param name="hostingEnvironment">Specifies the hosting environment.</param>
+            <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.BasePatchLinux(Neon.Kube.HostingEnvironment,System.Action{System.String})">
+            <summary>
+            Updates Linux by applying just the outstanding security updates.
+            </summary>
+            <param name="hostingEnvironment">Specifies the hosting environment.</param>
+            <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.BaseUpgradeLinux(Neon.Kube.HostingEnvironment,System.Action{System.String})">
+            <summary>
+            Updates Linux by applying all outstanding package updates but without 
+            upgrading the distribution.
+            </summary>
+            <param name="hostingEnvironment">Specifies the hosting environment.</param>
+            <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.BaseUpgradeLinuxDistro(Neon.Kube.HostingEnvironment,System.Action{System.String})">
+            <summary>
+            Updates the Linux distribution.
+            </summary>
+            <param name="hostingEnvironment">Specifies the hosting environment.</param>
+            <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.BaseDisableSwap(Neon.Kube.HostingEnvironment,System.Action{System.String})">
+            <summary>
+            Disables the Linux memory swap file.
+            </summary>
+            <param name="hostingEnvironment">Specifies the hosting environment.</param>
+            <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.BaseInstallGuestIntegrationServices(Neon.Kube.HostingEnvironment,System.Action{System.String})">
+            <summary>
+            Installs hypervisor guest integration services.
+            </summary>
+            <param name="hostingEnvironment">Specifies the hosting environment.</param>
+            <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.BaseDisableDhcp(Neon.Kube.HostingEnvironment,System.Action{System.String})">
+            <summary>
+            Disables DHCP.
+            </summary>
+            <param name="hostingEnvironment">Specifies the hosting environment.</param>
+            <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.BaseDisableCloudInit(Neon.Kube.HostingEnvironment,System.Action{System.String})">
+            <summary>
+            Disables <b>cloud-init</b>.
+            </summary>
+            <param name="hostingEnvironment">Specifies the hosting environment.</param>
+            <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.BaseConfigureOpenSsh(Neon.Kube.HostingEnvironment,System.Action{System.String})">
+            <summary>
+            Customizes the OpenSSH configuration on a 
+            </summary>
+            <param name="hostingEnvironment">Specifies the hosting environment.</param>
+            <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.BaseRemoveSnap(Neon.Kube.HostingEnvironment,System.Action{System.String})">
+            <summary>
+            Removes any installed snaps as well as the entire snap infrastructure.
+            </summary>
+            <param name="hostingEnvironment">Specifies the hosting environment.</param>
+            <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.BaseRemovePackages(Neon.Kube.HostingEnvironment,System.Action{System.String})">
+            <summary>
+            Removes unneeded packages.
+            </summary>
+            <param name="hostingEnvironment">Specifies the hosting environment.</param>
+            <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.BaseConfigureApt(Neon.Kube.HostingEnvironment,System.Int32,System.Boolean,System.Action{System.String})">
+            <summary>
+            Configures the APT package manager.
+            </summary>
+            <param name="hostingEnvironment">Specifies the hosting environment.</param>
+            <param name="packageManagerRetries">Optionally specifies the packager manager retries (defaults to <b>5</b>).</param>
+            <param name="allowPackageManagerIPv6">Optionally prevent the package manager from using IPv6 (defaults to <c>false</c>.</param>
+            <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.BaseInstallNeonInit(Neon.Kube.HostingEnvironment,System.Action{System.String})">
+            <summary>
+            Installs the <b>neon-init</b> service which is a cloud-init like service we
+            use to configure the network and credentials for VMs hosted in non-cloud
+            hypervisors.
+            </summary>
+            <param name="hostingEnvironment">Specifies the hosting environment.</param>
+            <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+            <remarks>
+            <para>
+            Install and configure the [neon-init] service.  This is a simple script
+            that is configured to run as a oneshot systemd service before networking is
+            started.  This is currently used to configure the node's static IP address
+            configuration on first boot, so we don't need to rely on DHCP (which may not
+            be available in some environments).
+            </para>
+            <para>
+            [neon-init] is intended to run the first time a node is booted after
+            being created from a template.  It checks to see if a special ISO with a
+            configuration script named [neon-init.sh] is inserted into the VMs DVD
+            drive and when present, the script will be executed and the [/etc/neon-init/ready]
+            file will be created to indicate that the service no longer needs to do this for
+            subsequent reboots.
+            </para>
+            <note>
+            The script won't create the [/etc/neon-init] when the script ISO doesn't exist 
+            for debugging purposes.
+            </note>
+            </remarks>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.BaseCreateKubeFolders(Neon.Kube.HostingEnvironment,System.Action{System.String})">
+            <summary>
+            Create the node folders required by neoneKUBE.
+            </summary>
+            <param name="hostingEnvironment">Specifies the hosting environment.</param>
+            <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.BaseInstallToolScripts(Neon.Kube.HostingEnvironment,System.Action{System.String})">
+            <summary>
+            <para>
+            Installs the tool scripts, making them executable.
+            </para>
+            <note>
+            Any <b>".sh"</b> file extensions will be removed for ease-of-use.
+            </note>
+            </summary>
+            <param name="hostingEnvironment">Specifies the hosting environment.</param>
+            <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.SetupConfigureNtp(System.Action{System.String})">
+            <summary>
+            Configures NTP and also installs some tool scripts for managing this.
+            </summary>
+            <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.ConfigureEnvironmentVariables(Neon.Collections.ObjectDictionary)">
+            <summary>
+            Configures the global environment variables that describe the configuration 
+            of the server within the cluster.
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.UpdateHostname">
+            <summary>
+            Updates the node hostname and related configuration.
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.SetupPackageProxy(Neon.Collections.ObjectDictionary)">
+            <summary>
+            Configures cluster package manager caching.
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.SetupNode(Neon.Collections.ObjectDictionary)">
+            <summary>
+            Performs common node configuration.
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.SetupKublet(Neon.Collections.ObjectDictionary)">
+            <summary>
+            Configures the the <b>kublet</b> service.
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.InstallHelmChartAsync(System.String,System.String,System.String,System.Collections.Generic.List{System.Collections.Generic.KeyValuePair{System.String,System.Object}})">
+            <summary>
+            Installs a prepositioned Helm chart from a master node.
+            </summary>
+            <param name="chartName">The name of the Helm chart.</param>
+            <param name="releaseName">Optionally specifies the component release name.</param>
+            <param name="namespace">Optionally specifies the namespace where Kubernetes namespace where the Helm chart should be installed. This defaults to <b>default</b></param>
+            <param name="values">Optionally specifies Helm chart values.</param>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+            <remarks>
+            neonKUBE images prepositions the Helm chart files embedded as resources in the <b>Resources/Helm</b>
+            project folder to cluster node images as the <b>/lib/neonkube/helm/charts.zip</b> archive.  This
+            method unzips that file to the same folder (if it hasn't been unzipped already) and then installs
+            the helm chart (if it hasn't already been installed).
+            </remarks>
         </member>
         <member name="M:Neon.Kube.NodeSshProxy`1.#ctor(System.String,System.Net.IPAddress,Neon.SSH.SshCredentials,System.Int32,System.IO.TextWriter)">
             <summary>
@@ -7332,8 +7836,38 @@
         </member>
         <member name="P:Neon.Kube.NodeSshProxy`1.Cluster">
             <summary>
-            The associated <see cref="T:Neon.Kube.ClusterProxy"/> or <c>null</c>.
+            Returns the associated <see cref="T:Neon.Kube.ClusterProxy"/> when there is one.
             </summary>
+            <exception cref="T:System.InvalidOperationException">Thrown when there is no associated cluster proxy.</exception>
+        </member>
+        <member name="P:Neon.Kube.NodeSshProxy`1.NodeDefinition">
+            <summary>
+            Returns the associated <see cref="P:Neon.Kube.NodeSshProxy`1.NodeDefinition"/> metadata when present.
+            </summary>
+            <exception cref="T:System.InvalidOperationException">Thrown when there is no associated node definition.</exception>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.GetNtpSources">
+            <summary>
+            Returns the NTP time sources to be used by the node.
+            </summary>
+            <returns>The quoted and space separated list of IP address or DNS hostnames for the node's NTP time sources in priority order.</returns>
+            <remarks>
+            <para>
+            The cluster will be configured such that the first master node (by sorted name) will be the primary timesource
+            for the cluster.  All other master and worker nodes will be configured to use the first master by default.
+            Secondary masters will be configured to use the external timesource next so any master can automatically
+            assume these duities.
+            </para>
+            <para>
+            Worker nodes will be configured to use master node in sorted order but will not be configured to use the 
+            external time sources to avoid having large clusters spam the sources.
+            </para>
+            <para>
+            The nice thing about this is that the cluster will almost always be closly synchronized with the first master
+            with gracefull fallback on node failures.
+            </para>
+            </remarks>
+            <exception cref="T:System.InvalidOperationException">Thrown when there is no associated cluster proxy.</exception>
         </member>
         <member name="M:Neon.Kube.NodeSshProxy`1.GetConnectionInfo">
             <summary>
@@ -7348,6 +7882,220 @@
             machine in parallel.
             </summary>
             <returns>The cloned <see cref="T:Neon.Kube.NodeSshProxy`1"/>.</returns>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.GetIdempotentState(System.String)">
+            <summary>
+            Indicates whether an idempotent action has been completed.
+            </summary>
+            <param name="actionId">The action ID.</param>
+            <returns><c>true</c> when the action has already been completed.</returns>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.SetIdempotentState(System.String)">
+            <summary>
+            Explicitly indicates that an idempotent action has been completed
+            on the node.
+            </summary>
+            <param name="actionId">The action ID.</param>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.InvokeIdempotent(System.String,System.Action)">
+            <summary>
+            Invokes a named action on the node if it has never been been performed
+            on the node before.
+            </summary>
+            <param name="actionId">The node-unique action ID.</param>
+            <param name="action">The action to be performed.</param>
+            <returns><c>true</c> if the action was invoked.</returns>
+            <remarks>
+            <para>
+            <paramref name="actionId"/> must uniquely identify the action on the node.
+            This may include letters, digits, dashes and periods as well as one or
+            more forward slashes that can be used to organize idempotent status files
+            into folders.
+            </para>
+            <para>
+            This method tracks successful action completion by creating a file
+            on the node at <see cref="F:Neon.Kube.KubeNodeFolders.State"/><b>/ACTION-ID</b>.
+            To ensure idempotency, this method first checks for the existence of
+            this file and returns immediately without invoking the action if it is 
+            present.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.InvokeIdempotentAsync(System.String,System.Func{System.Threading.Tasks.Task})">
+            <summary>
+            Invokes a named action asynchronously on the node if it has never been been performed
+            on the node before.
+            </summary>
+            <param name="actionId">The node-unique action ID.</param>
+            <param name="action">The asynchronous action to be performed.</param>
+            <returns><c>true</c> if the action was invoked.</returns>
+            <remarks>
+            <para>
+            <paramref name="actionId"/> must uniquely identify the action on the node.
+            This may include letters, digits, dashes and periods as well as one or
+            more forward slashes that can be used to organize idempotent status files
+            into folders.
+            </para>
+            <para>
+            This method tracks successful action completion by creating a file
+            on the node at <see cref="F:Neon.Kube.KubeNodeFolders.State"/><b>/ACTION-ID</b>.
+            To ensure idempotency, this method first checks for the existence of
+            this file and returns immediately without invoking the action if it is 
+            present.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.RebootAndWait(Neon.Collections.ObjectDictionary)">
+            <summary>
+            Reboots the cluster nodes.
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.VerifyNodeOS(System.Action{System.String})">
+            <summary>
+            Ensures that the node operating system and version is supported for a neonKUBE
+            cluster.  This faults the node proxy on faliure.
+            </summary>
+            <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+            <returns><c>true</c> if the operation system is supported.</returns>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.InstallSecurityUpdates(Neon.Kube.HostingEnvironment,System.Action{System.String})">
+            <summary>
+            Installs any security related updates on the node.
+            </summary>
+            <param name="hostingEnvironment">Specifies the hosting environment.</param>
+            <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.Clean(Neon.Kube.HostingEnvironment,System.Action{System.String})">
+            <summary>
+            Cleans a node by removing unnecessary package manager metadata, cached DHCP information, etc.
+            and then fills unreferenced file system blocks and nodes with zeros so the disk image will
+            compress better.
+            </summary>
+            <param name="hostingEnvironment">Specifies the hosting environment.</param>
+            <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.UpgradeNode(System.Boolean)">
+            <summary>
+            Upgrades the base Linux distribtion, rebooting the node when required.
+            </summary>
+            <param name="fullUpgrade">
+            Pass <c>true</c> to perform a full distribution upgrade or <c>false</c> to just 
+            upgrade packages.
+            </param>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.NodeInstallTools(Neon.Collections.ObjectDictionary,System.Action{System.String})">
+            <summary>
+            Installs the neonKUBE related tools to the <see cref="F:Neon.Kube.KubeNodeFolders.Bin"/> folder.
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+            <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.ConfigureSshKey(Neon.Collections.ObjectDictionary)">
+            <summary>
+            Configures a node's host public SSH key during node provisioning.
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.DisableSnap(Neon.Collections.ObjectDictionary,System.Action{System.String})">
+            <summary>
+            Disables the <b>snapd</b> service.
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+            <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.ConfigureNFS">
+            <summary>
+            Required NFS setup.
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.ConfigureJournald(Neon.Collections.ObjectDictionary,System.Action{System.String})">
+            <summary>
+            Configures <b>journald</b>.
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+            <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.PrepareNode(Neon.Collections.ObjectDictionary)">
+            <summary>
+            Initializes a near virgin server with the basic capabilities required
+            for a cluster node.
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.NodeInitialize(Neon.Collections.ObjectDictionary,System.Action{System.String})">
+            <summary>
+            Performs low-level node initialization during cluster setup.
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+            <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.NodeInstallHelmArchive(Neon.Collections.ObjectDictionary,System.Action{System.String})">
+            <summary>
+            Installs the Helm charts as a single ZIP archive written to the 
+            neonKUBE Helm folder.
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+            <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.NodeDisableNeonInit(System.Action{System.String})">
+            <summary>
+            Disables the <b>neon-init</b> service during cluster setup because it is no
+            longer necessary after the node first boots and its credentials and network
+            settings have been configured.
+            </summary>
+            <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.NodeInstallCriO(Neon.Collections.ObjectDictionary,System.Action{System.String})">
+            <summary>
+            Installs the <b>CRI-O</b> container runtime.
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+            <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.NodeInstallPodman(Neon.Collections.ObjectDictionary,System.Action{System.String})">
+            <summary>
+            Installs the <b>podman</b> CLI for managing <b>CRI-O</b>.
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+            <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.NodeInstallHelm(Neon.Collections.ObjectDictionary,System.Action{System.String})">
+            <summary>
+            Installs the Helm client.
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+            <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.NodeInstallKubernetes(Neon.Collections.ObjectDictionary,System.Action{System.String})">
+            <summary>
+            Installs the Kubernetes components: <b>kubeadm</b>, <b>kubectl</b>, and <b>kublet</b>.
+            </summary>
+            <param name="setupState">The setup controller state.</param>
+            <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        </member>
+        <member name="M:Neon.Kube.NodeSshProxy`1.InstallProvisionedHelmChart(System.String,System.String,System.String,System.TimeSpan,System.Collections.Generic.List{System.Collections.Generic.KeyValuePair{System.String,System.Object}})">
+            <summary>
+            <para>
+            Installs one of the Helm charts that was pre-positioned on the node
+            VM image.  These can be fond in the <see cref="F:Neon.Kube.KubeNodeFolders.Helm"/>
+            with a folder for each chart. 
+            </para>
+            <note>
+            This command <b>DOES NOT WAIT</b> for the Helm chart to be completely 
+            installed and any target services or assets to be running because that
+            does not appear to be reliable.  You'll need to explicitly verify that
+            deployment has completed when necessary.
+            </note>
+            </summary>
+            <param name="chartName">The Helm chart folder name.</param>
+            <param name="releaseName">Optional component release name.  This defaults to <paramref name="chartName"/>.</param>
+            <param name="namespace">
+            Optional namespace where Kubernetes namespace where the Helm chart should
+            be installed. This defaults to <b>"default"</b>.
+            </param>
+            <param name="timeout">Optional timeout.  This defaults to <b>unlimited</b>.</param>
+            <param name="values">Optional Helm chart value overrides.</param>
         </member>
         <member name="T:Neon.Kube.ActionStep">
             <summary>
@@ -7537,10 +8285,15 @@
         </member>
         <member name="T:Neon.Kube.SetupController`1">
             <summary>
-            Manages a cluster setup operation consisting of a series of  setup operations
-            steps, while displaying status to the <see cref="T:System.Console"/>.
+            Manages a cluster setup operation consisting of a series of setup steps
+            while displaying status to the <see cref="T:System.Console"/>.
             </summary>
             <typeparam name="NodeMetadata">Specifies the node metadata type.</typeparam>
+            <remarks>
+            This class inherits from <see cref="T:Neon.Collections.ObjectDictionary"/> which can be used to maintain
+            state that can be accessed by the setup step actions.  This dictionary is keyed by
+            case-sensitive strings and can store and retrieve objects with differing types.
+            </remarks>
         </member>
         <member name="M:Neon.Kube.SetupController`1.#ctor(System.String,System.Collections.Generic.IEnumerable{Neon.Kube.NodeSshProxy{`0}})">
             <summary>
@@ -7599,12 +8352,12 @@
         </member>
         <member name="M:Neon.Kube.SetupController`1.SetDefaultRunOptions(Neon.SSH.RunOptions)">
             <summary>
-            Sets the <see cref="P:Neon.SSH.LinuxSshProxy`1.DefaultRunOptions"/> property for
+            Sets the <see cref="P:Neon.SSH.LinuxSshProxy.DefaultRunOptions"/> property for
             all nodes managed by the controller.
             </summary>
             <param name="options">The options to be set.</param>
         </member>
-        <member name="M:Neon.Kube.SetupController`1.AddGlobalStep(System.String,System.Action,System.Boolean,System.Int32)">
+        <member name="M:Neon.Kube.SetupController`1.AddGlobalStep(System.String,System.Action{Neon.Collections.ObjectDictionary},System.Boolean,System.Int32)">
             <summary>
             Adds a synchronous global configuration step.
             </summary>
@@ -7616,7 +8369,7 @@
             to be inserted into the step list.
             </param>
         </member>
-        <member name="M:Neon.Kube.SetupController`1.AddGlobalStep(System.String,System.Func{System.Threading.Tasks.Task},System.Boolean,System.Int32)">
+        <member name="M:Neon.Kube.SetupController`1.AddGlobalStep(System.String,System.Func{Neon.Collections.ObjectDictionary,System.Threading.Tasks.Task},System.Boolean,System.Int32)">
             <summary>
             Adds an asynchronous global configuration step.
             </summary>
@@ -7628,7 +8381,7 @@
             to be inserted into the step list.
             </param>
         </member>
-        <member name="M:Neon.Kube.SetupController`1.AddWaitUntilOnlineStep(System.String,System.String,System.Func{Neon.Kube.NodeSshProxy{`0},System.Boolean},System.Boolean,System.Nullable{System.TimeSpan},System.Int32)">
+        <member name="M:Neon.Kube.SetupController`1.AddWaitUntilOnlineStep(System.String,System.String,System.Func{Neon.Collections.ObjectDictionary,Neon.Kube.NodeSshProxy{`0},System.Boolean},System.Boolean,System.Nullable{System.TimeSpan},System.Int32)">
             <summary>
             Adds a synchronous global step that waits for all nodes to be online.
             </summary>
@@ -7645,7 +8398,7 @@
             to be inserted into the step list.
             </param>
         </member>
-        <member name="M:Neon.Kube.SetupController`1.AddDelayStep(System.String,System.TimeSpan,System.String,System.Func{Neon.Kube.NodeSshProxy{`0},System.Boolean},System.Boolean,System.Int32)">
+        <member name="M:Neon.Kube.SetupController`1.AddDelayStep(System.String,System.TimeSpan,System.String,System.Func{Neon.Collections.ObjectDictionary,Neon.Kube.NodeSshProxy{`0},System.Boolean},System.Boolean,System.Int32)">
             <summary>
             Adds a synchronous global step that waits for a specified period of time.
             </summary>
@@ -7662,7 +8415,7 @@
             to be inserted into the step list.
             </param>
         </member>
-        <member name="M:Neon.Kube.SetupController`1.AddNodeStep(System.String,System.Action{Neon.Kube.NodeSshProxy{`0}},System.Func{Neon.Kube.NodeSshProxy{`0},System.Boolean},System.Boolean,System.Boolean,System.Int32,System.Int32)">
+        <member name="M:Neon.Kube.SetupController`1.AddNodeStep(System.String,System.Action{Neon.Collections.ObjectDictionary,Neon.Kube.NodeSshProxy{`0}},System.Func{Neon.Collections.ObjectDictionary,Neon.Kube.NodeSshProxy{`0},System.Boolean},System.Boolean,System.Boolean,System.Int32,System.Int32)">
             <summary>
             Appends a synchronous node configuration step.
             </summary>
@@ -7691,7 +8444,7 @@
             in parallel for this step, overriding the controller default.
             </param>
         </member>
-        <member name="M:Neon.Kube.SetupController`1.AddNodeStep(System.String,System.Func{Neon.Kube.NodeSshProxy{`0},System.Threading.Tasks.Task},System.Func{Neon.Kube.NodeSshProxy{`0},System.Boolean},System.Boolean,System.Boolean,System.Int32,System.Int32)">
+        <member name="M:Neon.Kube.SetupController`1.AddNodeStep(System.String,System.Func{Neon.Collections.ObjectDictionary,Neon.Kube.NodeSshProxy{`0},System.Threading.Tasks.Task},System.Func{Neon.Collections.ObjectDictionary,Neon.Kube.NodeSshProxy{`0},System.Boolean},System.Boolean,System.Boolean,System.Int32,System.Int32)">
             <summary>
             Appends an asynchronous node configuration step.
             </summary>
@@ -7727,7 +8480,7 @@
             <param name="leaveNodesConnected">Pass <c>true</c> leave the node proxies connected.</param>
             <returns><c>true</c> if all steps completed successfully.</returns>
         </member>
-        <member name="M:Neon.Kube.SetupController`1.SetOperationStatus(System.String)">
+        <member name="M:Neon.Kube.SetupController`1.SetGlobalStepStatus(System.String)">
             <summary>
             Sets the operation status text.
             </summary>
@@ -7741,18 +8494,18 @@
             <returns><c>true</c> if the step succeeded.</returns>
             <remarks>
             <para>
-            This method begins by setting the <see cref="P:Neon.SSH.LinuxSshProxy`1.IsReady"/>
+            This method begins by setting the <see cref="P:Neon.SSH.LinuxSshProxy.IsReady"/>
             state of each selected nodes to <c>false</c> and then it starts a new thread for
             each node and performs the action on these threads.
             </para>
             <para>
             In parallel, the method spins on the current thread, displaying status while
-            waiting for each of the nodes to transition to the <see cref="P:Neon.SSH.LinuxSshProxy`1.IsReady"/>=<c>true</c>
+            waiting for each of the nodes to transition to the <see cref="P:Neon.SSH.LinuxSshProxy.IsReady"/>=<c>true</c>
             state.
             </para>
             <para>
             The method returns <c>true</c> after all of the node actions have completed
-            and none of the nodes have <see cref="P:Neon.SSH.LinuxSshProxy`1.IsFaulted"/>=<c>true</c>.
+            and none of the nodes have <see cref="P:Neon.SSH.LinuxSshProxy.IsFaulted"/>=<c>true</c>.
             </para>
             <note>
             This method does nothing if a previous step failed.
@@ -7979,22 +8732,22 @@
             <summary>Repository URL: https://github.com/nforgeio/neonKUBE</summary>
         </member>
         <member name="F:ThisAssembly.Git.Branch">
-            <summary>Branch: master</summary>
+            <summary>Branch: jeff</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commit">
-            <summary>Commit: 8473fc731</summary>
+            <summary>Commit: d22a102d8</summary>
         </member>
         <member name="F:ThisAssembly.Git.Sha">
-            <summary>Sha: 8473fc731bb58727667dbb8fb25a164280fd5c5b</summary>
+            <summary>Sha: d22a102d873d8fc64fc1a8242e7a4d5e7ed6385b</summary>
         </member>
         <member name="F:ThisAssembly.Git.CommitDate">
-            <summary>Commit date: 2021-01-12T16:05:32-08:00</summary>
+            <summary>Commit date: 2021-02-16T10:45:32-08:00</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commits">
-            <summary>Commits on top of base version: 264</summary>
+            <summary>Commits on top of base version: 425</summary>
         </member>
         <member name="F:ThisAssembly.Git.Tag">
-            <summary>Tag: neonLIBRARY-v2.10.0-264-g8473fc731</summary>
+            <summary>Tag: neonLIBRARY-v2.10.0-425-gd22a102d8</summary>
         </member>
         <member name="F:ThisAssembly.Git.BaseTag">
             <summary>Base tag: neonLIBRARY-v2.10.0</summary>
@@ -8021,7 +8774,7 @@
             <summary>Minor: 10</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Patch">
-            <summary>Patch: 264</summary>
+            <summary>Patch: 425</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Label">
             <summary>Label: neonLIBRARY</summary>

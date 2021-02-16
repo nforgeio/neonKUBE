@@ -44,31 +44,6 @@ OPTIONS:
     --all           - clears the [Build-cache] folder too.
 
 ---------------------------------------------------------------------
-neon-build build-installer PLATFORM [--kube-version=VERSION]
-
-Builds a neonKUBE Installer
-
----------------------------------------------------------------------
-Removes cached components
-
-neon-build clear PLATFORM
-
----------------------------------------------------------------------
-neon-build download PLATFORM [--kubernetes-version=VERSION]
-
-Downloads KUBE PLATFORM components (if not already present):
-
-ARGUMENTS:
-
-    PLATFORM        - specifies the target platform, one of:
-
-                        windows, osx
-
-OPTIONS:
-
-    --kubernetes-version    - Specifies the Kubernetes version.
-
----------------------------------------------------------------------
 neon-build gzip SOURCE TARGET
 
 Compresses a file using GZIP if the target doesn't exist or is
@@ -150,8 +125,7 @@ ensuring that no files are present that aren't being embeded.
         /// <param name="args">The command line arguments.</param>
         public static void Main(string[] args)
         {
-            string              platform;
-            KubeSetupHelper     helper;
+            string   platform;
 
             commandLine = new CommandLine(args);
 
@@ -177,8 +151,6 @@ ensuring that no files are present that aren't being embeded.
                     Console.Error.WriteLine("*** ERROR: NF_ROOT environment variable does not reference the local neonKUBE repostory.");
                     Program.Exit(1);
                 }
-
-                Program.DefaultKubernetesVersion = File.ReadAllText(Path.Combine(Program.RepoRootFolder, "kubernetes-version.txt")).Trim();
 
                 // Handle the commands.
 
@@ -226,70 +198,6 @@ ensuring that no files are present that aren't being embeded.
                             }
                         }
 
-                        break;
-
-                    case "installer":
-
-                        platform = commandLine.Arguments.ElementAtOrDefault(1);
-
-                        if (string.IsNullOrEmpty(platform))
-                        {
-                            Console.Error.WriteLine("*** ERROR: PLATFORM argument is required.");
-                            Program.Exit(1);
-                        }
-
-                        helper = new KubeSetupHelper(platform, commandLine,
-                            outputAction: text => Console.Write(text),
-                            errorAction: text => Console.Write(text));
-
-                        EnsureOption("--kube-version", Program.DefaultKubernetesVersion);
-
-                        switch (helper.Platform)
-                        {
-                            case KubeClientPlatform.Windows:
-
-                                new WinInstallBuilder(helper).Run();
-                                break;
-
-                            case KubeClientPlatform.Osx:
-
-                                throw new NotImplementedException();
-                        }
-                        break;
-
-                    case "clear":
-
-                        platform = commandLine.Arguments.ElementAtOrDefault(1);
-
-                        if (string.IsNullOrEmpty(platform))
-                        {
-                            Console.Error.WriteLine("*** ERROR: PLATFORM argument is required.");
-                            Program.Exit(1);
-                        }
-
-                        helper = new KubeSetupHelper(platform, commandLine,
-                            outputAction: text => Console.Write(text),
-                            errorAction: text => Console.Write(text));
-
-                        helper.Clear();
-                        break;
-
-                    case "download":
-
-                        platform = commandLine.Arguments.ElementAtOrDefault(1);
-
-                        if (string.IsNullOrEmpty(platform))
-                        {
-                            Console.Error.WriteLine("*** ERROR: PLATFORM argument is required.");
-                            Program.Exit(1);
-                        }
-
-                        helper = new KubeSetupHelper(platform, commandLine,
-                            outputAction: text => Console.Write(text),
-                            errorAction: text => Console.Write(text));
-
-                        EnsureOption("--kube-version", Program.DefaultKubernetesVersion);
-                        helper.Download();
                         break;
 
                     case "copy":
@@ -374,11 +282,6 @@ ensuring that no files are present that aren't being embeded.
         /// Returns the path to the neonKUBE local repository root folder.
         /// </summary>
         public static string RepoRootFolder { get; private set; }
-
-        /// <summary>
-        /// Returns the default version of Kubernetes to be installed.
-        /// </summary>
-        public static string DefaultKubernetesVersion { get; private set; }
 
         /// <summary>
         /// Ensures that a command line option is present.
