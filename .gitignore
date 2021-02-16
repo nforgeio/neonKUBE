@@ -125,8 +125,7 @@ Go/**/__debug_bin
 ### Neon.ModelGenberator ###
 ############################
 
-# This project copies the binaries from the [neon-model] tool as a prebuild event
-# so they can be included in the published nuget package.  We need to exclude these
-# files so they won't be commited to GitHub.
+# This library generates a tool binary we need to exclude 
+# from GitHub.
 
-/Lib/Neon.ModelGenerator/neon-model/**/*
+/Lib/Neon.ModelGenerator/neon-model

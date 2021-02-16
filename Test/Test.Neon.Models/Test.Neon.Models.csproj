@@ -18,9 +18,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Lib\Neon.Cadence\Neon.Cadence.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Couchbase\Neon.Couchbase.csproj" />
-    <ProjectReference Include="..\..\Lib\Neon.ModelGenerator\Neon.ModelGenerator.csproj">
-      <PrivateAssets>all</PrivateAssets>
-    </ProjectReference>
     <ProjectReference Include="..\..\Lib\Neon.Temporal\Neon.Temporal.csproj" />
     <ProjectReference Include="..\Test.Neon.Models.Definitions\Test.Neon.Models.Definitions.csproj" />
     <ProjectReference Include="..\Test.Neon.Models.Temporal\Test.Neon.Models.Temporal.csproj" />
