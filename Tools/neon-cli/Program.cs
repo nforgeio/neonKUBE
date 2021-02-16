@@ -40,6 +40,10 @@ using Neon.IO;
 using Neon.SSH;
 using Neon.Windows;
 
+#if ENTERPRISE
+using HostingLoader = Neon.Kube.EnterpriseHostingLoader;
+#endif
+
 namespace NeonCli
 {
     /// <summary>
