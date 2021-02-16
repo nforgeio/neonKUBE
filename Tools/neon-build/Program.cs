@@ -16,6 +16,7 @@
 // limitations under the License.
 
 using System;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -51,8 +52,8 @@ older than the source.
 
 ARGUMENTS:
 
-    SOURCE          - path to the (uncompressed) source file.
-    TARGET          - path to the (compressed) target file.
+    SOURCE          - path to the (uncompressed) source file
+    TARGET          - path to the (compressed) target file
 
 ---------------------------------------------------------------------
 neon-build copy SOURCE TARGET
@@ -61,16 +62,34 @@ Copies a file if the target doesn't exist or is older than the source.
 
 ARGUMENTS:
 
-    SOURCE          - path to the (uncompressed) source file.
-    TARGET          - path to the (compressed) target file.
+    SOURCE          - path to the (uncompressed) source file
+    TARGET          - path to the (compressed) target file
 
 ---------------------------------------------------------------------
-neon-build build-version
+neon-build read-version [-n] CSPATH NAME
 
-Used to insert the first line of the [$/neonKUBE-version.txt] and
-[$/neonLIBRARY-version.txt] text files into the [$/Lib/Neon.Common/Build.cs] 
-file, replacing the value of the [neonKubeVersion] and [neonLibraryVersion]
-properties.
+Used to read a version constant from a C# source file.
+
+ARGUMENTS:
+
+    CSPATH          - path to the source file defining the version constant
+    NAME            - name of the the constant to be read
+
+OPTIONS:
+
+    -n              - omit the line terminator when writing the output
+
+REMARKS:
+
+The value of the constant read is written to STDOUT.
+
+NOTE: The constant must appear exactly like:
+
+    public const string NeonKubeVersion = ""0.1.0-alpha"";
+
+within the C# source file to be parsed correctly where [NeonKubeVersion]
+is the constant name in this case and [0.1.0-alpha] will be returned as
+the value.
 
 ------------------------------------------------
 neon-build pack-version VERSION-FILE CSPROJ-FILE
@@ -125,8 +144,6 @@ ensuring that no files are present that aren't being embeded.
         /// <param name="args">The command line arguments.</param>
         public static void Main(string[] args)
         {
-            string   platform;
-
             commandLine = new CommandLine(args);
 
             var command = commandLine.Arguments.FirstOrDefault();
@@ -242,9 +259,9 @@ ensuring that no files are present that aren't being embeded.
                         Gzip(commandLine);
                         break;
 
-                    case "build-version":
+                    case "read-version":
 
-                        BuildVersion(commandLine);
+                        ReadVersion(commandLine);
                         break;
 
                     case "pack-version":
@@ -284,26 +301,47 @@ ensuring that no files are present that aren't being embeded.
         public static string RepoRootFolder { get; private set; }
 
         /// <summary>
-        /// Ensures that a command line option is present.
-        /// </summary>
-        /// <param name="option">The option name.</param>
-        /// <param name="defValue">Optionally specifies the default value.</param>
-        private static void EnsureOption(string option, string defValue = null)
-        {
-            if (string.IsNullOrEmpty(commandLine.GetOption(option, defValue)))
-            {
-                Console.Error.WriteLine($"*** ERROR: Command line option [{option}] is invalid.");
-                Program.Exit(1);
-            }
-        }
-
-        /// <summary>
         /// Terminates the program with a specified exit code.
         /// </summary>
         /// <param name="exitCode">The exit code.</param>
         public static void Exit(int exitCode)
         {
             Environment.Exit(exitCode);
+        }
+
+        /// <summary>
+        /// Reads a version number from a C# source file.
+        /// </summary>
+        /// <param name="csPath">Path to the C# source file.</param>
+        /// <param name="name">Name of the version constant.</param>
+        /// <returns>The version string.</returns>
+        private static string ReadVersion(string csPath, string name)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(csPath), nameof(csPath));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+
+            // We're simply going to scan the source file for the first line 
+            // that looks like the constant definition.
+
+            var match = $"public const string {name} =";
+
+            using (var reader = new StreamReader(csPath))
+            {
+                foreach (var line in reader.Lines())
+                {
+                    if (line.Trim().StartsWith(match))
+                    {
+                        var fields  = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                        var version = fields[5];
+
+                        // Strip off the double quotes and semicolon
+
+                        return version.Substring(1, version.Length - 3);
+                    }
+                }
+            }
+
+            throw new Exception($" Cannot locate the constant [{name}] in [{csPath}].");
         }
     }
 }

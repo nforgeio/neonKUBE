@@ -49,11 +49,6 @@ namespace Neon
         public const string NeonLibraryVersion = "2.10.0";
 
         /// <summary>
-        /// The released neonKUBE version.
-        /// </summary>
-        public const string NeonDesktopVersion = "2.3.0-alpha";
-
-        /// <summary>
         /// The released neonKUBE cluster version.
         /// </summary>
         public const string NeonKubeVersion = "0.1.0-alpha";
