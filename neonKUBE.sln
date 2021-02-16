@@ -398,9 +398,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Powershell", "Powershell", 
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.ModelGenerator", "Lib\Neon.ModelGenerator\Neon.ModelGenerator.csproj", "{70FC3F3B-A0EF-469C-BCA1-AE656FDC265B}"
-	ProjectSection(ProjectDependencies) = postProject
-		{1DC33C50-461F-4793-88FA-637E16D9C563} = {1DC33C50-461F-4793-88FA-637E16D9C563}
-	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

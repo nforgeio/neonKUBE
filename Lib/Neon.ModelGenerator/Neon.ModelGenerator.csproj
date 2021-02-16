@@ -51,7 +51,6 @@ NOTE: You must have a .NET Core 3.1 SDK or runtime installed for this to work be
 
   <ItemGroup>
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
-    <ProjectReference Include="..\Neon.ModelGen\Neon.ModelGen.csproj" />
   </ItemGroup>
 
   <Target Name="ModelGen" BeforeTargets="BeforeBuild">
