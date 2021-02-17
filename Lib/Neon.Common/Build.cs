@@ -44,12 +44,24 @@ namespace Neon
         public const string ProductName = "neonLIBRARY";
 
         /// <summary>
+        /// <para>
         /// The released library/package version.
+        /// </para>
+        /// <note>
+        /// <b>WARNING:</b> Do not rename this constant without updating the relevant 
+        /// release scripts to match.
+        /// </note>
         /// </summary>
         public const string NeonLibraryVersion = "2.10.0";
 
         /// <summary>
+        /// <para>
         /// The released neonKUBE cluster version.
+        /// </para>
+        /// <note>
+        /// <b>WARNING:</b> Do not rename this constant without updating the relevant 
+        /// release scripts to match.
+        /// </note>
         /// </summary>
         public const string NeonKubeVersion = "0.1.0-alpha";
 

@@ -26,17 +26,24 @@
         </member>
         <member name="F:Neon.Build.NeonLibraryVersion">
             <summary>
+            <para>
             The released library/package version.
-            </summary>
-        </member>
-        <member name="F:Neon.Build.NeonDesktopVersion">
-            <summary>
-            The released neonKUBE version.
+            </para>
+            <note>
+            <b>WARNING:</b> Do not rename this constant without updating the relevant 
+            release scripts to match.
+            </note>
             </summary>
         </member>
         <member name="F:Neon.Build.NeonKubeVersion">
             <summary>
+            <para>
             The released neonKUBE cluster version.
+            </para>
+            <note>
+            <b>WARNING:</b> Do not rename this constant without updating the relevant 
+            release scripts to match.
+            </note>
             </summary>
         </member>
         <member name="F:Neon.Build.ProductLicense">
@@ -5024,8 +5031,9 @@
         </member>
         <member name="T:Neon.Common.NamespaceDoc">
             <summary>
-            This namespace includes a a lot of types used by the remaining class libraries. 
-            You might find some of these useful as well.
+            This namespace includes generally useful types that are consumed by
+            the remaining neonLIBRARY libraries and cal also be useful for
+            end-user applications.
             </summary>
         </member>
         <member name="T:Neon.Csv.CsvReader">
@@ -15448,19 +15456,19 @@
             <summary>Branch: jeff</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commit">
-            <summary>Commit: d22a102d8</summary>
+            <summary>Commit: 42bd1cd1a</summary>
         </member>
         <member name="F:ThisAssembly.Git.Sha">
-            <summary>Sha: d22a102d873d8fc64fc1a8242e7a4d5e7ed6385b</summary>
+            <summary>Sha: 42bd1cd1af9c8a711556f4fd261a01f08fa9c29e</summary>
         </member>
         <member name="F:ThisAssembly.Git.CommitDate">
-            <summary>Commit date: 2021-02-16T10:45:32-08:00</summary>
+            <summary>Commit date: 2021-02-16T15:15:49-08:00</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commits">
-            <summary>Commits on top of base version: 425</summary>
+            <summary>Commits on top of base version: 431</summary>
         </member>
         <member name="F:ThisAssembly.Git.Tag">
-            <summary>Tag: neonLIBRARY-v2.10.0-425-gd22a102d8</summary>
+            <summary>Tag: neonLIBRARY-v2.10.0-431-g42bd1cd1a</summary>
         </member>
         <member name="F:ThisAssembly.Git.BaseTag">
             <summary>Base tag: neonLIBRARY-v2.10.0</summary>
@@ -15487,7 +15495,7 @@
             <summary>Minor: 10</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Patch">
-            <summary>Patch: 425</summary>
+            <summary>Patch: 431</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Label">
             <summary>Label: neonLIBRARY</summary>

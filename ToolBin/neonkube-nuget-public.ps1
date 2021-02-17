@@ -42,7 +42,7 @@ function SetVersion
     )
 
     "$project"
-	neon-build pack-version "$env:NF_ROOT\neonLIBRARY-version.txt" "$env:NF_ROOT\Lib\$project\$project.csproj"
+	neon-build pack-version NeonLibraryVersion "$env:NF_ROOT\Lib\$project\$project.csproj"
     ThrowOnExitCode
 }
 
@@ -79,12 +79,14 @@ function Publish
 
 # Load the library and neonKUBE versions.
 
-$libraryVersion  = Get-Content "$env:NF_ROOT\neonLIBRARY-version.txt" -First 1
-$neonkubeVersion = Get-Content "$env:NF_ROOT\neonKUBE-version.txt" -First 1
-
-# Copy the version from [$/product-version] into [$/Lib/Neon/Common/Build.cs]
-
-neon-build build-version
+$nfRoot          = "$env:NF_ROOT"
+$nfSolution      = "$nfRoot\neonKUBE.sln"
+$nfBuild         = "$env:NF_BUILD"
+$nfLib           = "$nfRoot\Lib"
+$nfTools         = "$nfRoot\Tools"
+$nfToolBin       = "$nfRoot\ToolBin
+$libraryVersion  = $(& "$nfToolBin\neon-build" read-version "$nfLib/Neon.Common/Build.cs" NeonLibraryVersion)
+$neonkubeVersion = $(& "$nfToolBin\neon-build" read-version "$nfLib/Neon.Common/Build.cs" NeonKubeVersion)
 
 # Update the project versions.
 

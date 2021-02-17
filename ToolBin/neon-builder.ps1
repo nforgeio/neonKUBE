@@ -58,9 +58,10 @@ $msbuild        = "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community
 $nfRoot         = "$env:NF_ROOT"
 $nfSolution     = "$nfRoot\neonKUBE.sln"
 $nfBuild        = "$env:NF_BUILD"
+$nfLib          = "$nfRoot\Lib"
 $nfTools        = "$nfRoot\Tools"
-$desktopVersion = Get-Content "$env:NF_ROOT\neonDESKTOP-version.txt" -First 1
-$libraryVersion = Get-Content "$env:NF_ROOT\neonLIBRARY-version.txt" -First 1
+$nfToolBin      = "$nfRoot\ToolBin"
+$libraryVersion = $(& "$nfToolBin\neon-build" read-version "$nfLib\Neon.Common\Build.cs" NeonLibraryVersion)
 $config         = "Release"
 $buildConfig    = "-p:Configuration=Release"
 $env:PATH      += ";$nfBuild"
@@ -120,10 +121,6 @@ if ($?)
 
 $originalDir = $pwd
 cd $nfRoot
-
-# Copy the version from [$/product-version] into [$/Lib/Neon/Common/Build.cs]
-
-& neon-build build-version
 
 # Build the solution.
 

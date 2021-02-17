@@ -91,12 +91,12 @@ within the C# source file to be parsed correctly where [NeonKubeVersion]
 is the constant name in this case and [0.1.0-alpha] will be returned as
 the value.
 
-------------------------------------------------
-neon-build pack-version VERSION-FILE CSPROJ-FILE
+----------------------------------------------------
+neon-build pack-version VERSION-CONSTANT CSPROJ-FILE
 
 Updates the specified library CSPROJ file version to a combination of
-the global VERSION-FILE (typically [$/neonLIBRARY-version.txt] and an
-optional project local [prerelease.txt] file as specified here:
+a global constant from [Neon.Common.Build.cs] and an optional project
+local [prerelease.txt] file as specified here:
 
     https://github.com/nforgeio/neonKUBE/issues/715
 

@@ -42,19 +42,12 @@ namespace NeonBuild
                 Program.Exit(1);
             }
 
-            var solutionVersionPath = Environment.ExpandEnvironmentVariables(commandLine.Arguments[0]);
+            var versionConstantName = commandLine.Arguments[0];
             var csprojPath          = Environment.ExpandEnvironmentVariables(commandLine.Arguments[1]);
             var localVersionPath    = Path.Combine(Path.GetDirectoryName(csprojPath), "prerelease.txt");
-            var rawSolutionVersion  = File.ReadAllLines(solutionVersionPath).FirstOrDefault();
-
-            if (string.IsNullOrWhiteSpace(rawSolutionVersion))
-            {
-                Console.Error.WriteLine($"*** ERROR: [{solutionVersionPath}] does not specify a version.");
-                Program.Exit(1);
-            }
-
-            var solutionVersion = SemanticVersion.Parse(rawSolutionVersion.Trim());
-            var localPrerelease = (string)null;
+            var rawSolutionVersion  = ReadVersion(Path.Combine(Program.RepoRootFolder, "Lib", "Neon.Common", "Build.cs"), versionConstantName);
+            var solutionVersion     = SemanticVersion.Parse(rawSolutionVersion.Trim());
+            var localPrerelease     = (string)null;
 
             if (File.Exists(localVersionPath))
             {

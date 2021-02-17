@@ -46,12 +46,13 @@ $msbuild          = "C:\Program Files (x86)\Microsoft Visual Studio\2019\Communi
 $nfRoot           = "$env:NF_ROOT"
 $nfSolution       = "$nfRoot\neonKUBE.sln"
 $nfBuild          = "$env:NF_BUILD"
+$nfLib            = "$nfRoot\Lib"
 $nfTools          = "$nfRoot\Tools"
+$nfToolBin        = "$nfRoot\ToolBin"
 $nfCodeDoc        = "$nfRoot\..\nforgeio.github.io"
 $nfCadenceSamples = "$nfRoot\..\cadence-samples"
 $env:PATH        += ";$nfBuild"
-$libraryVersion   = Get-Content "$nfRoot\neonLIBRARY-version.txt" -First 1
-$desktopVersion   = Get-Content "$nfRoot\neonDESKTOP-version.txt" -First 1
+$libraryVersion   = $(& "$nfToolBin\neon-build" read-version "$nfLib\Neon.Common\Build.cs" NeonLibraryVersion)
 $originalDir      = $pwd
 
 # Publish the code documentation.
