@@ -35,10 +35,14 @@ namespace NeonBuild
 Internal neonKUBE project build related utilities: v1.1
 
 -----------------------
-neon-build clean [-all]
+neon-build clean [-all] REPO-PATH
 
 Deletes all of the [bin] and [obj] folders within the repo and
 also clears the [Build] folder.
+
+ARGUMENTS:
+
+    REPO-PATH       - Path to the GitHub repository root folder.
 
 OPTIONS:
 
@@ -175,7 +179,15 @@ ensuring that no files are present that aren't being embeded.
                 {
                     case "clean":
 
-                        var buildFolder = Path.Combine(Program.RepoRootFolder, "Build");
+                        var repoRoot = commandLine.Arguments.ElementAtOrDefault(1);
+
+                        if (string.IsNullOrEmpty(repoRoot))
+                        {
+                            Console.Error.WriteLine("*** ERROR: REPO-ROOT argument is required.");
+                            Program.Exit(1);
+                        }
+
+                        var buildFolder = Path.Combine(repoRoot, "Build");
 
                         if (Directory.Exists(buildFolder))
                         {

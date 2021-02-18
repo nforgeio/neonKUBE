@@ -85,8 +85,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ToolBin", "ToolBin", "{E9E3D01B-F890-4F0A-88F1-5F87E5D1F198}"
 	ProjectSection(SolutionItems) = preProject
 		ToolBin\cadence.cmd = ToolBin\cadence.cmd
-		ToolBin\neon-archive.cmd = ToolBin\neon-archive.cmd
-		ToolBin\neon-archive.ps1 = ToolBin\neon-archive.ps1
 		ToolBin\neon-build.cmd = ToolBin\neon-build.cmd
 		ToolBin\neon-builder.cmd = ToolBin\neon-builder.cmd
 		ToolBin\neon-builder.ps1 = ToolBin\neon-builder.ps1
@@ -95,6 +93,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ToolBin", "ToolBin", "{E9E3
 		ToolBin\neon-publish-images.cmd = ToolBin\neon-publish-images.cmd
 		ToolBin\neon-release.cmd = ToolBin\neon-release.cmd
 		ToolBin\neon-release.ps1 = ToolBin\neon-release.ps1
+		ToolBin\neonkube-archive.cmd = ToolBin\neonkube-archive.cmd
+		ToolBin\neonkube-archive.ps1 = ToolBin\neonkube-archive.ps1
 		ToolBin\neonkube-nuget-dev.cmd = ToolBin\neonkube-nuget-dev.cmd
 		ToolBin\neonkube-nuget-dev.ps1 = ToolBin\neonkube-nuget-dev.ps1
 		ToolBin\neonkube-nuget-public.cmd = ToolBin\neonkube-nuget-public.cmd
