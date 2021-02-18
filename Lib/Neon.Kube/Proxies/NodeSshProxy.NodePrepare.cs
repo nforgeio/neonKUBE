@@ -1162,7 +1162,7 @@ EOF
 
 chmod 744 /etc/sysctl.d/990-wsl-no-ipv6 
 
-sysctl --system
+sysctl -p /etc/sysctl.d/990-wsl2-no-ipv6
 ";
                         SudoCommand(CommandBundle.FromScript(confScript), RunOptions.FaultOnError);
                     }
