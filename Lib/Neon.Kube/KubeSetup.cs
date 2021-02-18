@@ -1048,8 +1048,8 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             master.InvokeIdempotent("setup/workstation",
                 () =>
                 {
-                    var cluster = setupState.Get<ClusterProxy>(ClusterProxyProperty);
-                    var clusterLogin = setupState.Get<ClusterLogin>(ClusterLoginProperty);
+                    var cluster        = setupState.Get<ClusterProxy>(ClusterProxyProperty);
+                    var clusterLogin   = setupState.Get<ClusterLogin>(ClusterLoginProperty);
                     var kubeConfigPath = KubeHelper.KubeConfigPath;
 
                     // Update kubeconfig.
@@ -1060,7 +1060,8 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     // https://github.com/nforgeio/neonKUBE/issues/888 will fix this by adding a proxy
                     // to neonDESKTOP and load balancing requests across the k8s api servers.
 
-                    var configText = clusterLogin.SetupDetails.MasterFiles["/etc/kubernetes/admin.conf"].Text;
+                    var configText  = clusterLogin.SetupDetails.MasterFiles["/etc/kubernetes/admin.conf"].Text;
+                    var firstMaster = cluster.Definition.SortedMasterNodes.First();
 
                     configText = configText.Replace("kubernetes-masters", $"{cluster.Definition.Masters.FirstOrDefault().Address}");
 
@@ -1080,12 +1081,12 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         // Note that we're assuming that there's only one of each in the config
                         // we downloaded from the cluster.
 
-                        var newCluster = newConfig.Clusters.Single();
-                        var newContext = newConfig.Contexts.Single();
-                        var newUser = newConfig.Users.Single();
+                        var newCluster      = newConfig.Clusters.Single();
+                        var newContext      = newConfig.Contexts.Single();
+                        var newUser         = newConfig.Users.Single();
                         var existingCluster = existingConfig.GetCluster(newCluster.Name);
                         var existingContext = existingConfig.GetContext(newContext.Name);
-                        var existingUser = existingConfig.GetUser(newUser.Name);
+                        var existingUser    = existingConfig.GetUser(newUser.Name);
 
                         if (existingConfig != null)
                         {

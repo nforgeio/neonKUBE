@@ -181,6 +181,15 @@ OPTIONS:
                 Program.Exit(1);
             }
 
+#if ENTERPRISE
+            if (hostingManager.HostingEnvironment == HostingEnvironment.Wsl2)
+            {
+                var wsl2Proxy = new Wsl2Proxy(KubeConst.Wsl2MainDistroName, KubeConst.SysAdminUser);
+                
+                cluster.FirstMaster.Address = IPAddress.Parse(wsl2Proxy.Address);
+            }
+#endif
+
             // Update the cluster node SSH credentials to use the secure password.
 
             var sshCredentials = SshCredentials.FromUserPassword(KubeConst.SysAdminUser, clusterLogin.SshPassword);
