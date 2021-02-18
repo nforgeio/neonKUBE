@@ -63,7 +63,7 @@ namespace Neon.Kube
 {
     /// <summary>
     /// <para>
-    /// Uses an SSH/SCP connection to provide access to Linux machines to access
+    /// Uses a SSH/SCP connection to provide access to Linux machines to access
     /// files, run commands, etc.
     /// </para>
     /// <note>
@@ -467,7 +467,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// Ensures that the node operating system and version is supported for a neonKUBE
-        /// cluster.  This faults the nodeproxy on faliure.
+        /// cluster.  This faults the node proxy on faliure.
         /// </summary>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         /// <returns><c>true</c> if the operation system is supported.</returns>
@@ -488,23 +488,58 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Installs any security related updates on the node.
+        /// </summary>
+        /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
+        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        public void InstallSecurityUpdates(HostingEnvironment hostingEnvironment, Action<string> statusWriter = null)
+        {
+            KubeHelper.WriteStatus(statusWriter, "Install", "Security updates");
+            Status = "install: security updates";
+
+            SudoCommand("unattended-upgrade");
+        }
+
+        /// <summary>
         /// Cleans a node by removing unnecessary package manager metadata, cached DHCP information, etc.
         /// and then fills unreferenced file system blocks and nodes with zeros so the disk image will
         /// compress better.
         /// </summary>
+        /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public void Clean(Action<string> statusWriter = null)
+        public void Clean(HostingEnvironment hostingEnvironment, Action<string> statusWriter = null)
         {
-            KubeHelper.WriteStatus(statusWriter, "Clean", "VM");
-            Status = "clean: VM";
+            KubeHelper.WriteStatus(statusWriter, "Clean", "File system");
+            Status = "clean: file system";
+
+            var cleanCommand = "fstrim /";
+
+            switch (hostingEnvironment)
+            {
+                 case HostingEnvironment.Wsl2:
+
+                    // We don't need to clean WSL2 because the VM image being
+                    // created is a TAR file rather than a block device image.
+
+                    cleanCommand = string.Empty;
+                    break;
+
+                case HostingEnvironment.XenServer:
+
+                    // XenServer doesn't support [fstrim] so we'll fill free 
+                    // space with zeros instead.
+
+                    cleanCommand = "sfill -fllz /";
+                    break;
+            }
 
             var cleanScript =
-@"#!/bin/bash
+$@"#!/bin/bash
 cloud-init clean
 apt-get clean
 rm -rf /var/lib/apt/lists
 rm -rf /var/lib/dhcp/*
-fstrim /
+{cleanCommand}
 ";
             SudoCommand(CommandBundle.FromScript(cleanScript), RunOptions.FaultOnError);
         }

@@ -37,6 +37,7 @@ namespace NeonCli
     /// <summary>
     /// Implements the <b>password list</b> command.
     /// </summary>
+    [Command]
     public class PasswordListCommand : CommandBase
     {
         private const string usage = @"

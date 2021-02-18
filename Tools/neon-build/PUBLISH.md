@@ -5,8 +5,6 @@ You'll need to publish this project as **Release** to the `$\ToolBin\neon-build`
 Note that there's a bit of a circular reference because:
 
 1. **neon-build** dependes on Neon.Kube
-2. **Neon.Kube** uses **neon-build** to ensure that all resource files are actually embedded as a pre-compile step
+2. **Neon.Kube** uses **neon-build** to ensure that all resource files are actually embedded as a pre-compile target
 
-You may need to temporarily disable the pre-build step by prefixing it with **echo**
-
-
+You may need to temporarily disable the pre-build target by prefixing it with **echo**

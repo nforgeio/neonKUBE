@@ -24,40 +24,41 @@
 # OPTIONS:
 #
 #       -tools        - Builds the command line tools
-#       -installer    - Builds installer (and everything being installed)
 #       -codedoc      - Builds the code documentation
 #       -all          - Builds with all of the options above
 
 param 
 (
-    [switch]$tools     = $false,
-	[switch]$installer = $false,
-    [switch]$codedoc   = $false,
-    [switch]$all       = $false
+    [switch]$tools   = $false,
+    [switch]$codedoc = $false,
+    [switch]$all     = $false
 )
 
 if ($all)
 {
-    $tools     = $true
-    $installer = $true
-    $codedoc   = $true
+    $tools   = $true
+    $codedoc = $true
 }
 
-if ($installer)
-{
-    $tools = $true
-}
+# Import the global project include file.
+
+. $env:NF_ROOT/Powershell/includes.ps1
+
+# Initialize
 
 $msbuild        = "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\amd64\MSBuild.exe"
 $nfRoot         = "$env:NF_ROOT"
 $nfSolution     = "$nfRoot\neonKUBE.sln"
 $nfBuild        = "$env:NF_BUILD"
+$nfLib          = "$nfRoot\Lib"
 $nfTools        = "$nfRoot\Tools"
-$desktopVersion = Get-Content "$env:NF_ROOT\neonDESKTOP-version.txt" -First 1
-$libraryVersion = Get-Content "$env:NF_ROOT\neonLIBRARY-version.txt" -First 1
+$nfToolBin      = "$nfRoot\ToolBin"
 $config         = "Release"
 $buildConfig    = "-p:Configuration=Release"
 $env:PATH      += ";$nfBuild"
+
+$libraryVersion = $(& "$nfToolBin\neon-build" read-version "$nfLib\Neon.Common\Build.cs" NeonLibraryVersion)
+ThrowOnExitCode
 
 function PublishCore
 {
@@ -115,10 +116,6 @@ if ($?)
 $originalDir = $pwd
 cd $nfRoot
 
-# Copy the version from [$/product-version] into [$/Lib/Neon/Common/Build.cs]
-
-& neon-build build-version
-
 # Build the solution.
 
 if (-not $nobuild)
@@ -128,7 +125,7 @@ if (-not $nobuild)
     # situations where I've upgraded SDKs or Visual Studio and Files
     # left over from previous builds caused build trouble.
 
-    & neon-build clean "$nfRoot"
+    & $nfToolBin\neon-build clean "$nfRoot"
 
     # Clean and build the solution.
 
@@ -202,60 +199,7 @@ if ($tools)
 	    ""
 	    exit 1
     }
-	
-    # Publish the WinDesktop binaries to the build folder.
-
-     md -Force "$nfBuild\win-desktop"
-     cp -R "$nfRoot\Desktop\WinDesktop\bin\Release\netcoreapp3.1\*" "$nfBuild\win-desktop"
  }
- 
- # Build the installer if requested.
-
-if ($installer)
-{
-    ""
-    "**********************************************************"
-    "***            WINDOWS DESKTOP INSTALLER               ***"
-    "**********************************************************"
-    ""
-
-    # Generate a CMD file that will execute the neonDESKTOP for Windows.  This will be
-    # included in the PATH so users can easily start the desktop from the command line.
-
-    $cmdFile  = "@echo off`r`n"
-    $cmdFile += 'start "" "%~dp0\neon\neonDESKTOP.exe" %*' + "`r`n"
-    $cmdFile | Out-File -Encoding "ASCII" "$nfBuild\neonDESKTOP.cmd"
-
-    # Build the installer.
-
-    & neon-build installer windows
-
-    if (-not $?)
-    {
-        ""
-        "*** Windows Installer: Build failed ***"
-        ""
-        exit 1
-    }
-
-    # We don't need this file any longer.
-
-    rm "$nfBuild\neonDESKTOP.cmd"
-
-    ""
-    "Generating windows installer SHA512..."
-	""
-	
-    & cat "$nfBuild\neonDESKTOP-setup-$desktopVersion.exe" | openssl dgst -sha512 -hex > "$nfBuild\neonDESKTOP-setup-$desktopVersion.sha512.txt"
-
-    if (-not $?)
-    {
-        ""
-        "*** Windows Installer: SHA512 failed ***"
-        ""
-        exit 1
-    }
-}
 
 # Build the code documentation if requested.
 

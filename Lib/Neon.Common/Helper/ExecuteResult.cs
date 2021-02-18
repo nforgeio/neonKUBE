@@ -22,7 +22,7 @@ namespace Neon.Common
 {
     /// <summary>
     /// Holds the process exit code and captured standard output from a process
-    /// launched by <see cref="NeonHelper.ExecuteCapture(string, string, TimeSpan?, Process, Action{string}, Action{string})"/>.
+    /// launched by <see cref="NeonHelper.ExecuteCapture(string, string, TimeSpan?, Process, string, Action{string}, Action{string})"/>.
     /// </summary>
     public class ExecuteResponse
     {

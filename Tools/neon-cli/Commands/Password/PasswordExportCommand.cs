@@ -38,6 +38,7 @@ namespace NeonCli
     /// <summary>
     /// Implements the <b>password export</b> command.
     /// </summary>
+    [Command]
     public class PasswordExportCommand : CommandBase
     {
         private const string usage = @"

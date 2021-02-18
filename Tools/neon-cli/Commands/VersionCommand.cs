@@ -36,6 +36,7 @@ namespace NeonCli
     /// <summary>
     /// Implements the <b>version</b> command.
     /// </summary>
+    [Command]
     public class VersionCommand : CommandBase
     {
         private const string usage = @"
@@ -96,9 +97,7 @@ OPTIONS:
 
                 if (toolSemanticVersion < minSemanticVersion)
                 {
-                    var v = $"*** ERROR: [neon v{Program.Version}] is older than the required version [{minSemanticVersion}].";
-
-                    Console.Error.WriteLine($"*** ERROR: [neon v{Program.Version}] is older than the required version [{minSemanticVersion}].");
+                    Console.Error.WriteLine($"*** ERROR: [{Program.Name} v{Program.Version}] is older than the required version [{minSemanticVersion}].");
                     Console.Error.WriteLine();
                     Console.Error.WriteLine($"You can obtain the latest releases from here:");
                     Console.Error.WriteLine();

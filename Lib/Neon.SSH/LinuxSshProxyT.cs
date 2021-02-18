@@ -50,7 +50,7 @@ namespace Neon.SSH
 {
     /// <summary>
     /// <para>
-    /// Uses an SSH/SCP connection to provide access to Linux machines to access
+    /// Uses a SSH/SCP connection to provide access to Linux machines to access
     /// files, run commands, etc.  This extends <see cref="LinuxSshProxy"/> by 
     /// adding the <see cref="Metadata"/> property with a generic type.
     /// </para>

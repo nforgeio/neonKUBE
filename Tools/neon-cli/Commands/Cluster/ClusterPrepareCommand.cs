@@ -35,11 +35,16 @@ using Neon.Kube;
 using Neon.Net;
 using Neon.SSH;
 
+#if ENTERPRISE
+using HostingLoader = Neon.Kube.EnterpriseHostingLoader;
+#endif
+
 namespace NeonCli
 {
     /// <summary>
     /// Implements the <b>cluster prepare</b> command.
     /// </summary>
+    [Command]
     public class ClusterPrepareCommand : CommandBase
     {
         private const string usage = @"

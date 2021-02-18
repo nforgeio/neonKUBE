@@ -120,3 +120,12 @@ Go/**/__debug_bin
 
 # OS/X related files
 .DS_Store
+
+############################
+### Neon.ModelGenberator ###
+############################
+
+# This library generates a tool binary we need to exclude 
+# from GitHub.
+
+/Lib/Neon.ModelGenerator/neon-model

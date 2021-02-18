@@ -375,7 +375,6 @@ namespace NeonBuild
                 }
 
                 NeonHelper.DeleteFolder(htmlFolder);
-                Directory.Delete(htmlFolder);
             }
 
             //-----------------------------------------------------------------

@@ -78,11 +78,6 @@ namespace Neon.Kube
         public const int MinWorkerNics = 1;
 
         /// <summary>
-        /// Hostname of the Docker public registry.
-        /// </summary>
-        public const string DockerPublicRegistry = "docker.io";
-
-        /// <summary>
         /// The root Kubernetes context username for provisioned clusters. 
         /// </summary>
         public const string RootUser = "root";
@@ -216,13 +211,6 @@ namespace Neon.Kube
         public const string LocalVolumePath = "/var/lib/neonkube/volumes";
 
         /// <summary>
-        /// The primary disk size in bytes for VMs created using the standard neonKUBE
-        /// node templates (XenServer and Hyper-V).  This is configured manually
-        /// when node templates are periodically created.
-        /// </summary>
-        public const decimal NodeTemplateDiskSize = 10 * ByteUnits.GibiBytes;
-
-        /// <summary>
         /// The minimum supported XenServer/XCP-ng hypervisor host version.
         /// </summary>
         public static readonly SemanticVersion MinXenServerVersion = SemanticVersion.Parse("8.2.0");
@@ -311,5 +299,10 @@ namespace Neon.Kube
         /// Identifies the main WSL2 distro hosting neonDESKTOP.
         /// </summary>
         public const string Wsl2MainDistroName = "neon-desktop";
+
+        /// <summary>
+        /// Hostname used to access the local Harbor registry within the cluster.
+        /// </summary>
+        public const string ClusterRegistry = "neon-registry.node.local";
     }
 }

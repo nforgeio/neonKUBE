@@ -36,6 +36,7 @@ namespace NeonCli
     /// <summary>
     /// Implements the <b>cluster verify</b> command.
     /// </summary>
+    [Command]
     public class ClusterVerifyCommand : CommandBase
     {
         private const string usage = @"

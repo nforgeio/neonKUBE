@@ -910,7 +910,7 @@ systemctl daemon-reload
 
             using (var ms = new MemoryStream())
             {
-                KubeHelper.WriteStatus(statusWriter, "Install", "Helm Charts (archive)");
+                KubeHelper.WriteStatus(statusWriter, "Install", "Helm Charts (zip)");
                 Status = "install: helm charts (archive)";
 
                 var helmFolder = KubeHelper.Resources.GetDirectory("/Helm");    // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1121
@@ -1006,7 +1006,7 @@ curl {KubeHelper.CurlOptions} https://download.opensuse.org/repositories/devel:k
 
 # Generate the CRI-O configurations.
 
-NEON_REGISTRY={NeonHelper.NeonLibraryBranchRegistry}
+NEON_REGISTRY={KubeConst.ClusterRegistry}
 
 cat <<EOF > /etc/containers/registries.conf
 unqualified-search-registries = [ ""docker.io"", ""quay.io"", ""registry.access.redhat.com"", ""registry.fedoraproject.org"" ]

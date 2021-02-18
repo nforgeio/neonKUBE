@@ -15,10 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Misc image build related utilities.
-
-$ErrorActionPreference = "Stop"
-
 #------------------------------------------------------------------------------
 # Import the global project include file.
 
@@ -36,9 +32,9 @@ $src_tools_path    = "$src_path\\Tools"
 #------------------------------------------------------------------------------
 # Global constants.
 
-# neonKUBE cluster release Version.
+# neonKUBE release Version.
 
-$neonKUBE_Version = Get-Content "$env:NF_ROOT\neonKUBE-version.txt" -First 1
+$neonKUBE_Version = $(& "$src_path\ToolBin\neon-build" read-version "$src_lib_path\Neon.Common\Build.cs" NeonKubeVersion)
 
 #------------------------------------------------------------------------------
 # Executes a command, throwing an exception for non-zero error codes.

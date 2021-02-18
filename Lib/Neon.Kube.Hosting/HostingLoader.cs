@@ -102,7 +102,6 @@ namespace Neon.Kube
                 GoogleHostingManager.Load();
                 HyperVHostingManager.Load();
                 HyperVLocalHostingManager.Load();
-                Wsl2HostingManager.Load();
                 XenServerHostingManager.Load();
 
                 // We're going to reflect all loaded assemblies for classes that implement
@@ -140,6 +139,11 @@ namespace Neon.Kube
             }
         }
 
+        /// <summary>
+        /// Returns <c>true</c> when the loader has already been initialized.
+        /// </summary>
+        public static bool IsIntialized => HostingLoader.environmentToHostingManager != null;
+
         //---------------------------------------------------------------------
         // Instance members
 
@@ -149,9 +153,25 @@ namespace Neon.Kube
             return KubeHelper.IsCloudEnvironment(environment);
         }
 
+        /// <summary>
+        /// Ensures that a hosting environment is opensource and not one of the 
+        /// enterprise (closed-source) environments.
+        /// </summary>
+        /// <param name="environment">The hosting environment.</param>
+        /// <exception cref="NotSupportedException">Thrown for enterprise hosting environments.</exception>
+        private void EnsureNonEnterpriseEnvironment(HostingEnvironment environment)
+        {
+            if (KubeHelper.IsEnterpriseEnvironment(environment))
+            {
+                throw new NotSupportedException($"The [{environment}] hosting environment is not available for opensource use.");
+            }
+        }
+
         /// <inheritdoc/>
         public HostingManager GetManager(HostingEnvironment environment)
         {
+            EnsureNonEnterpriseEnvironment(environment);
+
             if (!environmentToHostingManager.TryGetValue(environment, out var managerType))
             {
                 return null;
@@ -165,6 +185,8 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
             Covenant.Assert(environmentToHostingManager != null, $"[{nameof(HostingLoader)}] is not initialized.  You must call [{nameof(HostingLoader)}.{nameof(HostingLoader.Initialize)}()] first.");
+
+            EnsureNonEnterpriseEnvironment(cluster.Definition.Hosting.Environment);
 
             if (!environmentToHostingManager.TryGetValue(cluster.Definition.Hosting.Environment, out var managerType))
             {

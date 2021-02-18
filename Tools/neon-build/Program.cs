@@ -16,6 +16,7 @@
 // limitations under the License.
 
 using System;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -34,39 +35,18 @@ namespace NeonBuild
 Internal neonKUBE project build related utilities: v1.1
 
 -----------------------
-neon-build clean [-all]
+neon-build clean [-all] REPO-PATH
 
 Deletes all of the [bin] and [obj] folders within the repo and
 also clears the [Build] folder.
 
+ARGUMENTS:
+
+    REPO-PATH       - Path to the GitHub repository root folder.
+
 OPTIONS:
 
     --all           - clears the [Build-cache] folder too.
-
----------------------------------------------------------------------
-neon-build build-installer PLATFORM [--kube-version=VERSION]
-
-Builds a neonKUBE Installer
-
----------------------------------------------------------------------
-Removes cached components
-
-neon-build clear PLATFORM
-
----------------------------------------------------------------------
-neon-build download PLATFORM [--kubernetes-version=VERSION]
-
-Downloads KUBE PLATFORM components (if not already present):
-
-ARGUMENTS:
-
-    PLATFORM        - specifies the target platform, one of:
-
-                        windows, osx
-
-OPTIONS:
-
-    --kubernetes-version    - Specifies the Kubernetes version.
 
 ---------------------------------------------------------------------
 neon-build gzip SOURCE TARGET
@@ -76,8 +56,8 @@ older than the source.
 
 ARGUMENTS:
 
-    SOURCE          - path to the (uncompressed) source file.
-    TARGET          - path to the (compressed) target file.
+    SOURCE          - path to the (uncompressed) source file
+    TARGET          - path to the (compressed) target file
 
 ---------------------------------------------------------------------
 neon-build copy SOURCE TARGET
@@ -86,23 +66,41 @@ Copies a file if the target doesn't exist or is older than the source.
 
 ARGUMENTS:
 
-    SOURCE          - path to the (uncompressed) source file.
-    TARGET          - path to the (compressed) target file.
+    SOURCE          - path to the (uncompressed) source file
+    TARGET          - path to the (compressed) target file
 
 ---------------------------------------------------------------------
-neon-build build-version
+neon-build read-version [-n] CSPATH NAME
 
-Used to insert the first line of the [$/neonKUBE-version.txt] and
-[$/neonLIBRARY-version.txt] text files into the [$/Lib/Neon.Common/Build.cs] 
-file, replacing the value of the [neonKubeVersion] and [neonLibraryVersion]
-properties.
+Used to read a version constant from a C# source file.
 
-------------------------------------------------
-neon-build pack-version VERSION-FILE CSPROJ-FILE
+ARGUMENTS:
+
+    CSPATH          - path to the source file defining the version constant
+    NAME            - name of the the constant to be read
+
+OPTIONS:
+
+    -n              - omit the line terminator when writing the output
+
+REMARKS:
+
+The value of the constant read is written to STDOUT.
+
+NOTE: The constant must appear exactly like:
+
+    public const string NeonKubeVersion = ""0.1.0-alpha"";
+
+within the C# source file to be parsed correctly where [NeonKubeVersion]
+is the constant name in this case and [0.1.0-alpha] will be returned as
+the value.
+
+----------------------------------------------------
+neon-build pack-version VERSION-CONSTANT CSPROJ-FILE
 
 Updates the specified library CSPROJ file version to a combination of
-the global VERSION-FILE (typically [$/neonLIBRARY-version.txt] and an
-optional project local [prerelease.txt] file as specified here:
+a global constant from [Neon.Common.Build.cs] and an optional project
+local [prerelease.txt] file as specified here:
 
     https://github.com/nforgeio/neonKUBE/issues/715
 
@@ -150,9 +148,6 @@ ensuring that no files are present that aren't being embeded.
         /// <param name="args">The command line arguments.</param>
         public static void Main(string[] args)
         {
-            string              platform;
-            KubeSetupHelper     helper;
-
             commandLine = new CommandLine(args);
 
             var command = commandLine.Arguments.FirstOrDefault();
@@ -178,15 +173,21 @@ ensuring that no files are present that aren't being embeded.
                     Program.Exit(1);
                 }
 
-                Program.DefaultKubernetesVersion = File.ReadAllText(Path.Combine(Program.RepoRootFolder, "kubernetes-version.txt")).Trim();
-
                 // Handle the commands.
 
                 switch (command)
                 {
                     case "clean":
 
-                        var buildFolder = Path.Combine(Program.RepoRootFolder, "Build");
+                        var repoRoot = commandLine.Arguments.ElementAtOrDefault(1);
+
+                        if (string.IsNullOrEmpty(repoRoot))
+                        {
+                            Console.Error.WriteLine("*** ERROR: REPO-ROOT argument is required.");
+                            Program.Exit(1);
+                        }
+
+                        var buildFolder = Path.Combine(repoRoot, "Build");
 
                         if (Directory.Exists(buildFolder))
                         {
@@ -226,70 +227,6 @@ ensuring that no files are present that aren't being embeded.
                             }
                         }
 
-                        break;
-
-                    case "installer":
-
-                        platform = commandLine.Arguments.ElementAtOrDefault(1);
-
-                        if (string.IsNullOrEmpty(platform))
-                        {
-                            Console.Error.WriteLine("*** ERROR: PLATFORM argument is required.");
-                            Program.Exit(1);
-                        }
-
-                        helper = new KubeSetupHelper(platform, commandLine,
-                            outputAction: text => Console.Write(text),
-                            errorAction: text => Console.Write(text));
-
-                        EnsureOption("--kube-version", Program.DefaultKubernetesVersion);
-
-                        switch (helper.Platform)
-                        {
-                            case KubeClientPlatform.Windows:
-
-                                new WinInstallBuilder(helper).Run();
-                                break;
-
-                            case KubeClientPlatform.Osx:
-
-                                throw new NotImplementedException();
-                        }
-                        break;
-
-                    case "clear":
-
-                        platform = commandLine.Arguments.ElementAtOrDefault(1);
-
-                        if (string.IsNullOrEmpty(platform))
-                        {
-                            Console.Error.WriteLine("*** ERROR: PLATFORM argument is required.");
-                            Program.Exit(1);
-                        }
-
-                        helper = new KubeSetupHelper(platform, commandLine,
-                            outputAction: text => Console.Write(text),
-                            errorAction: text => Console.Write(text));
-
-                        helper.Clear();
-                        break;
-
-                    case "download":
-
-                        platform = commandLine.Arguments.ElementAtOrDefault(1);
-
-                        if (string.IsNullOrEmpty(platform))
-                        {
-                            Console.Error.WriteLine("*** ERROR: PLATFORM argument is required.");
-                            Program.Exit(1);
-                        }
-
-                        helper = new KubeSetupHelper(platform, commandLine,
-                            outputAction: text => Console.Write(text),
-                            errorAction: text => Console.Write(text));
-
-                        EnsureOption("--kube-version", Program.DefaultKubernetesVersion);
-                        helper.Download();
                         break;
 
                     case "copy":
@@ -334,9 +271,9 @@ ensuring that no files are present that aren't being embeded.
                         Gzip(commandLine);
                         break;
 
-                    case "build-version":
+                    case "read-version":
 
-                        BuildVersion(commandLine);
+                        ReadVersion(commandLine);
                         break;
 
                     case "pack-version":
@@ -376,31 +313,47 @@ ensuring that no files are present that aren't being embeded.
         public static string RepoRootFolder { get; private set; }
 
         /// <summary>
-        /// Returns the default version of Kubernetes to be installed.
-        /// </summary>
-        public static string DefaultKubernetesVersion { get; private set; }
-
-        /// <summary>
-        /// Ensures that a command line option is present.
-        /// </summary>
-        /// <param name="option">The option name.</param>
-        /// <param name="defValue">Optionally specifies the default value.</param>
-        private static void EnsureOption(string option, string defValue = null)
-        {
-            if (string.IsNullOrEmpty(commandLine.GetOption(option, defValue)))
-            {
-                Console.Error.WriteLine($"*** ERROR: Command line option [{option}] is invalid.");
-                Program.Exit(1);
-            }
-        }
-
-        /// <summary>
         /// Terminates the program with a specified exit code.
         /// </summary>
         /// <param name="exitCode">The exit code.</param>
         public static void Exit(int exitCode)
         {
             Environment.Exit(exitCode);
+        }
+
+        /// <summary>
+        /// Reads a version number from a C# source file.
+        /// </summary>
+        /// <param name="csPath">Path to the C# source file.</param>
+        /// <param name="name">Name of the version constant.</param>
+        /// <returns>The version string.</returns>
+        private static string ReadVersion(string csPath, string name)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(csPath), nameof(csPath));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+
+            // We're simply going to scan the source file for the first line 
+            // that looks like the constant definition.
+
+            var match = $"public const string {name} =";
+
+            using (var reader = new StreamReader(csPath))
+            {
+                foreach (var line in reader.Lines())
+                {
+                    if (line.Trim().StartsWith(match))
+                    {
+                        var fields  = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                        var version = fields[5];
+
+                        // Strip off the double quotes and semicolon
+
+                        return version.Substring(1, version.Length - 3);
+                    }
+                }
+            }
+
+            throw new Exception($" Cannot locate the constant [{name}] in [{csPath}].");
         }
     }
 }

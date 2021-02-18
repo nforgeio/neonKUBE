@@ -26,8 +26,9 @@ using Neon.Common;
 namespace Neon.Common
 {
     /// <summary>
-    /// This namespace includes a a lot of types used by the remaining class libraries. 
-    /// You might find some of these useful as well.
+    /// This namespace includes generally useful types that are consumed by
+    /// the remaining neonLIBRARY libraries and cal also be useful for
+    /// end-user applications.
     /// </summary>
     [System.Runtime.CompilerServices.CompilerGenerated]
     class NamespaceDoc

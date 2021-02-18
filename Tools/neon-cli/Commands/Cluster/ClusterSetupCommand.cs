@@ -48,13 +48,17 @@ using Neon.Time;
 
 using k8s;
 using k8s.Models;
-using Neon.Collections;
+
+#if ENTERPRISE
+using HostingLoader = Neon.Kube.EnterpriseHostingLoader;
+#endif
 
 namespace NeonCli
 {
     /// <summary>
     /// Implements the <b>cluster setup</b> command.
     /// </summary>
+    [Command]
     public class ClusterSetupCommand : CommandBase
     {
         //---------------------------------------------------------------------

@@ -436,6 +436,26 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Determines whether a cluster hosting environment is available only for neonFORGE
+        /// enterprise (closed-source) related projects.
+        /// </summary>
+        /// <param name="hostingEnvironment">The hosting environment.</param>
+        /// <returns><c>true</c> for enteprise/closed-source related projects.</returns>
+        public static bool IsEnterpriseEnvironment(HostingEnvironment hostingEnvironment)
+        {
+            switch (hostingEnvironment)
+            {
+                case HostingEnvironment.Wsl2:
+
+                    return true;
+
+                default:
+
+                    return false;
+            }
+        }
+
+        /// <summary>
         /// Determines whether a cluster hosting environment deploys on-premise.
         /// </summary>
         /// <param name="hostingEnvironment">The hosting environment.</param>
@@ -1158,9 +1178,9 @@ namespace Neon.Kube
         /// Generates a self-signed certificate for arbitrary hostnames, possibly including 
         /// hostnames with wildcards.
         /// </summary>
-        /// <param name="hostnames">
+        /// <param name="hostname">
         /// <para>
-        /// The certificate hostnames.
+        /// The certificate host names.
         /// </para>
         /// <note>
         /// You can use include a <b>"*"</b> to specify a wildcard
@@ -1172,17 +1192,24 @@ namespace Neon.Kube
         /// The number of days the certificate will be valid.  This defaults to 365,000 days
         /// or about 1,000 years.
         /// </param>
+        /// <param name="wildcard">
+        /// Optionally generate a wildcard certificate for the subdomains of 
+        /// <paramref name="hostname"/> or the combination of the subdomains
+        /// and the hostname.  This defaults to <see cref="Wildcard.None"/>
+        /// which does not generate a wildcard certificate.
+        /// </param>
         /// <param name="issuedBy">Optionally specifies the issuer.</param>
         /// <param name="issuedTo">Optionally specifies who/what the certificate is issued for.</param>
+        /// <param name="friendlyName">Optionally specifies the certificate's frendly name.</param>
         /// <returns>The new <see cref="TlsCertificate"/>.</returns>
         public static X509Certificate2 CreateSelfSigned(
-            string hostname,
-            int bitCount = 2048,
-            int validDays = 365000,
-            Wildcard wildcard = Wildcard.None,
-            string issuedBy = null,
-            string issuedTo = null, 
-            string friendlyName = null)
+            string      hostname,
+            int         bitCount     = 2048,
+            int         validDays    = 365000,
+            Wildcard    wildcard     = Wildcard.None,
+            string      issuedBy     = null,
+            string      issuedTo     = null, 
+            string      friendlyName = null)
         {
             Covenant.Requires<ArgumentException>(!string.IsNullOrEmpty(hostname), nameof(hostname));
             Covenant.Requires<ArgumentException>(bitCount == 1024 || bitCount == 2048 || bitCount == 4096, nameof(bitCount));
@@ -1198,7 +1225,8 @@ namespace Neon.Kube
                 issuedTo = hostname;
             }
 
-            SubjectAlternativeNameBuilder sanBuilder = new SubjectAlternativeNameBuilder();
+            var sanBuilder = new SubjectAlternativeNameBuilder();
+
             switch (wildcard)
             {
                 case Wildcard.None:
@@ -1238,7 +1266,7 @@ namespace Neon.Kube
 
                 request.CertificateExtensions.Add(sanBuilder.Build());
 
-                var certificate = request.CreateSelfSigned(new DateTimeOffset(DateTime.UtcNow.AddDays(-1)), new DateTimeOffset(DateTime.UtcNow.AddDays(validDays)));
+                var certificate          = request.CreateSelfSigned(new DateTimeOffset(DateTime.UtcNow.AddDays(-1)), new DateTimeOffset(DateTime.UtcNow.AddDays(validDays)));
                 certificate.FriendlyName = friendlyName;
 
                 return certificate;

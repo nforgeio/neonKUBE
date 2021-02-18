@@ -40,6 +40,10 @@ using Neon.IO;
 using Neon.SSH;
 using Neon.Windows;
 
+#if ENTERPRISE
+using HostingLoader = Neon.Kube.EnterpriseHostingLoader;
+#endif
+
 namespace NeonCli
 {
     /// <summary>
@@ -50,8 +54,33 @@ namespace NeonCli
         /// <summary>
         /// The program version.
         /// </summary>
-        public const string Version = Build.NeonDesktopVersion;
-    
+        public const string Version = Build.NeonKubeVersion;
+
+        /// <summary>
+        /// Returns <c>true</c> if this is the enterprise <b>neon-cli</b> build.
+        /// </summary>
+        /// <remarks>
+        /// We use this to help with managing the source code duplicated for this in the
+        /// neonKUBE and neonCLOUD (enterprise) GitHub repositories.
+        /// </remarks>
+        public const bool IsEnterprise =
+#if ENTERPRISE
+            true;
+#else
+            false;
+#endif
+
+        /// <summary>
+        /// Returns the program name for printing help.  This will be <b>"neon"</b> for the community
+        /// version and <b>"neon enterprise"</b> for the enterprise version.
+        /// </summary>
+        public const string Name =
+#if ENTERPRISE
+            "neon enterprise";
+#else
+            "neon";
+#endif
+
         /// <summary>
         /// Program entry point.
         /// </summary>
@@ -60,7 +89,7 @@ namespace NeonCli
         public static async Task<int> Main(params string[] args)
         {
             string usage = $@"
-neonKUBE Management Tool: neon [v{Program.Version}]
+{Program.Name} [v{Program.Version}]
 {Build.Copyright}
 
 USAGE:
@@ -72,9 +101,7 @@ COMMAND SUMMARY:
     neon help               COMMAND
     neon cluster prepare    [CLUSTER-DEF]
     neon cluster setup      [CLUSTER-DEF]
-    neon couchbase          COMMNAND
     neon generate iso       SOURCE-FOLDER ISO-PATH
-    neon generate models    [OPTIONS] ASSEMBLY-PATH [OUTPUT-PATH]
     neon login              COMMAND
     neon logout
     neon password           COMMAND
@@ -190,43 +217,26 @@ You can disable the use of this encrypted folder by specifying
                     }
                 }
 
-                var commands = new List<ICommand>()
+                // Scan for enabled commands in the current assembly.
+
+                var commands = new List<ICommand>();
+
+                foreach (var type in Assembly.GetExecutingAssembly().GetTypes())
                 {
-                    new ClusterCommand(),
-                    new ClusterPrepareCommand(),
-                    new ClusterSetupCommand(),
-                    new ClusterVerifyCommand(),
-                    new CouchbaseCommand(),
-                    new CouchbaseQueryCommand(),
-                    new CouchbaseUpsertCommand(),
-                    new GenerateCommand(),
-                    new GenerateIsoCommand(),
-                    new GenerateModelsCommand(),
-                    new LoginCommand(),
-                    new LoginExportCommand(),
-                    new LoginImportCommand(),
-                    new LoginListCommand(),
-                    new LoginRemoveCommand(),
-                    new LogoutCommand(),
-                    new PasswordCommand(),
-                    new PasswordExportCommand(),
-                    new PasswordGenerateCommand(),
-                    new PasswordGetCommand(),
-                    new PasswordImportCommand(),
-                    new PasswordListCommand(),
-                    new PasswordRemoveCommand(),
-                    new PasswordSetCommand(),
-                    new RunCommand(),
-                    new ScpCommand(),
-                    new SshCommand(),
-                    new VaultCommand(),
-                    new VaultCreateCommand(),
-                    new VaultDecryptCommand(),
-                    new VaultEditCommand(),
-                    new VaultEncryptCommand(),
-                    new VaultPasswordNameCommand(),
-                    new VersionCommand()
-                };
+                    if (!type.Implements<ICommand>())
+                    {
+                        continue;
+                    }
+
+                    var commandAttribute = type.GetCustomAttribute<CommandAttribute>();
+
+                    if (commandAttribute == null || commandAttribute.Disabled)
+                    {
+                        continue;
+                    }
+
+                    commands.Add((ICommand)Activator.CreateInstance(type));
+                }
 
                 // Short-circuit the help command.
 

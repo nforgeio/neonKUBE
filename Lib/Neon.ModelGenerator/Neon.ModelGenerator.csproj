@@ -1,0 +1,58 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <Version>2.10.0-preview</Version>
+    <Authors>neonFORGE Team</Authors>
+    <Company>neonFORGE LLC</Company>
+    <Product>neonLIBRARY</Product>
+    <Description>Includes the [neon-model] client which can be referenced from your project build targets as required.
+
+NOTE: You must have a .NET Core 3.1 SDK or runtime installed for this to work because the client is built on this SDK.</Description>
+    <Copyright>Copyright © 2005-2021 by neonFORGE LLC.  All rights reserved.</Copyright>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageIcon>nuget-icon.png</PackageIcon>
+    <PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.ModelGenerator/README.md</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>data utility</PackageTags>
+    <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
+    <AssemblyVersion>0.0.0.0</AssemblyVersion>
+    <FileVersion>0.0.0.0</FileVersion>
+    <Configurations>Debug;Release;CodeDoc</Configurations>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <NoWarn>1701;1702;NU5100</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <NoWarn>1701;1702;NU5100</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CodeDoc|AnyCPU'">
+    <NoWarn>1701;1702;NU5100</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+    <Content Include="..\nuget-icon.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
+  </ItemGroup>
+
+  <!--<Target Name="ModelGen" BeforeTargets="BeforeBuild">
+    <Exec Command="copy &quot;%NF_ROOT%\Tools\neon-model\bin\Debug\netcoreapp3.1\*.*&quot; &quot;$(ProjectDir)neon-model&quot;" />
+  </Target>-->
+
+</Project>

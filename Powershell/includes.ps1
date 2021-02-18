@@ -17,7 +17,20 @@
 
 $ErrorActionPreference = "Stop"
 
-# Common definitions and functions
+#------------------------------------------------------------------------------
+# Common error handling
+
+$ErrorActionPreference = "Stop"
+$PSDefaultParameterValues['*:ErrorAction']='Stop'
+
+# Call this after every native command to check for non-zero exit codes.
+function ThrowOnExitCode {
+
+    if ($LastExitCode -ne 0)
+    {
+        throw "ERROR: exitcode=$LastExitCode"
+    }
+}
 
 #------------------------------------------------------------------------------
 # Returns the current branch for a git repostory.

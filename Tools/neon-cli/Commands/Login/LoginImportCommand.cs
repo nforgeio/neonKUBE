@@ -36,6 +36,7 @@ namespace NeonCli
     /// <summary>
     /// Implements the <b>login import</b> command.
     /// </summary>
+    [Command]
     public class LoginImportCommand : CommandBase
     {
         private const string usage = @"
