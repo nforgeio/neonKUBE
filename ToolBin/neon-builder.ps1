@@ -24,28 +24,20 @@
 # OPTIONS:
 #
 #       -tools        - Builds the command line tools
-#       -installer    - Builds installer (and everything being installed)
 #       -codedoc      - Builds the code documentation
 #       -all          - Builds with all of the options above
 
 param 
 (
-    [switch]$tools     = $false,
-	[switch]$installer = $false,
-    [switch]$codedoc   = $false,
-    [switch]$all       = $false
+    [switch]$tools   = $false,
+    [switch]$codedoc = $false,
+    [switch]$all     = $false
 )
 
 if ($all)
 {
-    $tools     = $true
-    $installer = $true
-    $codedoc   = $true
-}
-
-if ($installer)
-{
-    $tools = $true
+    $tools   = $true
+    $codedoc = $true
 }
 
 # Import the global project include file.
@@ -205,60 +197,7 @@ if ($tools)
 	    ""
 	    exit 1
     }
-	
-    # Publish the WinDesktop binaries to the build folder.
-
-     md -Force "$nfBuild\win-desktop"
-     cp -R "$nfRoot\Desktop\WinDesktop\bin\Release\netcoreapp3.1\*" "$nfBuild\win-desktop"
  }
- 
- # Build the installer if requested.
-
-if ($installer)
-{
-    ""
-    "**********************************************************"
-    "***            WINDOWS DESKTOP INSTALLER               ***"
-    "**********************************************************"
-    ""
-
-    # Generate a CMD file that will execute the neonDESKTOP for Windows.  This will be
-    # included in the PATH so users can easily start the desktop from the command line.
-
-    $cmdFile  = "@echo off`r`n"
-    $cmdFile += 'start "" "%~dp0\neon\neonDESKTOP.exe" %*' + "`r`n"
-    $cmdFile | Out-File -Encoding "ASCII" "$nfBuild\neonDESKTOP.cmd"
-
-    # Build the installer.
-
-    & neon-build installer windows
-
-    if (-not $?)
-    {
-        ""
-        "*** Windows Installer: Build failed ***"
-        ""
-        exit 1
-    }
-
-    # We don't need this file any longer.
-
-    rm "$nfBuild\neonDESKTOP.cmd"
-
-    ""
-    "Generating windows installer SHA512..."
-	""
-	
-    & cat "$nfBuild\neonDESKTOP-setup-$desktopVersion.exe" | openssl dgst -sha512 -hex > "$nfBuild\neonDESKTOP-setup-$desktopVersion.sha512.txt"
-
-    if (-not $?)
-    {
-        ""
-        "*** Windows Installer: SHA512 failed ***"
-        ""
-        exit 1
-    }
-}
 
 # Build the code documentation if requested.
 
