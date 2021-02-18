@@ -798,11 +798,6 @@ kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-k
                             }
 
                             clusterLogin.Save();
-
-                            if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2)
-                            {
-                                firstMaster.SudoCommand("mount --make-rshared /");
-                            }
                         });
 
                     firstMaster.Status = "created";
@@ -1067,15 +1062,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                     var configText = clusterLogin.SetupDetails.MasterFiles["/etc/kubernetes/admin.conf"].Text;
 
-                    if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2)
-                    {
-                        var wsl2Proxy = new Wsl2Proxy(KubeConst.Wsl2MainDistroName, KubeConst.SysAdminUser);
-                        configText = configText.Replace("localhost", wsl2Proxy.Address);
-                    }
-                    else
-                    {
-                        configText = configText.Replace("kubernetes-masters", $"{cluster.Definition.Masters.FirstOrDefault().Address}");
-                    }
+                    configText = configText.Replace("kubernetes-masters", $"{cluster.Definition.Masters.FirstOrDefault().Address}");
 
                     if (!File.Exists(kubeConfigPath))
                     {
