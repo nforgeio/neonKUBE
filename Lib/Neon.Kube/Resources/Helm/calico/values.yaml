@@ -3,3 +3,8 @@
 # network, vxlan and ipam according to your deployment. 
 
 ipv4PoolCidr: "10.254.0.0/16"
+
+kubernetes:
+  service:
+    host: kubernetes-masters
+    port: 6442

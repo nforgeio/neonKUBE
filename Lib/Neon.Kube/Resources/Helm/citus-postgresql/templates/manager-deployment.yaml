@@ -39,7 +39,7 @@ spec:
         - name: citus-config-mount
           mountPath: "/etc/citus-config/"
         resources:
- {{ toYaml .Values.manager.resources | indent 12 }}
+        {{ toYaml .Values.manager.resources | nindent 10 }}
         env:
         - name: NAMESPACE
           value: {{ .Values.manager.namespace }}

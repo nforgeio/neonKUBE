@@ -308,13 +308,14 @@ plugins:
 ## Configure grafana datasources
 ## ref: http://docs.grafana.org/administration/provisioning/#datasources
 ##
+prometheusEndpoint: http://neon-metrics-cortex:9009/api/prom
 datasources:
   datasources.yaml:
     apiVersion: 1
     datasources:
     - name: Prometheus
       type: prometheus
-      url: http://neon-metrics-cortex:9009/api/prom
+      url: ${PROMETHEUS_ENDPOINT}
       access: proxy
       isDefault: true
       jsonData:

@@ -291,6 +291,8 @@ containers:
         containerPort: 3000
         protocol: TCP
     env:
+      - name: PROMETHEUS_ENDPOINT
+        value: {{ .Values.prometheusEndpoint }}
       {{- if not .Values.env.GF_SECURITY_ADMIN_USER }}
       - name: GF_SECURITY_ADMIN_USER
         valueFrom:

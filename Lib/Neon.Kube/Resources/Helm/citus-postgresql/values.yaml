@@ -22,7 +22,7 @@ tolerations:
 ## 
 persistence:
   enabled: true
-  storageClass: "openebs-hostpath"
+  storageClass: "neon-internal-citus"
   accessMode: ReadWriteOnce
 
 ## Citus Worker

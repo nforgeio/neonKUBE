@@ -84,7 +84,7 @@ spec:
         ports:
         - containerPort: {{ .Values.prometheus.port }}
         resources:
-{{ toYaml .Values.prometheus.resources | indent 12 }}
+        {{ toYaml .Values.prometheus.resources | nindent 10 }}
         env:
         - name: DATA_SOURCE_NAME
           value: postgresql://postgres@127.0.0.1:{{ .Values.superuser.port }}?sslmode=disable
