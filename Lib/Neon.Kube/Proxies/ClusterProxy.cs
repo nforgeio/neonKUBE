@@ -302,10 +302,20 @@ namespace Neon.Kube
         /// </exception>
         public NodeSshProxy<NodeDefinition> GetReachableMaster(ReachableHostMode failureMode = ReachableHostMode.ReturnFirst)
         {
-            var masterAddresses = Nodes
-                .Where(n => n.Metadata.IsMaster)
-                .Select(n => n.Address.ToString())
-                .ToList();
+            List<string> masterAddresses;
+            if (this.Definition.Hosting.Environment == HostingEnvironment.Wsl2)
+            {
+                var wsl2Proxy = new Wsl2Proxy(KubeConst.Wsl2MainDistroName, KubeConst.SysAdminUser);
+                masterAddresses = new List<string>() { wsl2Proxy.Address };
+                FirstMaster.Address = IPAddress.Parse(wsl2Proxy.Address);
+            }
+            else
+            {
+                masterAddresses = Nodes
+                    .Where(n => n.Metadata.IsMaster)
+                    .Select(n => n.Address.ToString())
+                    .ToList();
+            }
 
             var reachableHost = NetHelper.GetReachableHost(masterAddresses, failureMode);
 
