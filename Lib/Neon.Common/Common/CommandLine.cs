@@ -462,7 +462,7 @@ namespace Neon.Common
         private string[]                                arguments;
 
         /// <summary>
-        /// Constructs an instance optionally expanding any response file specified
+        /// Constructs an instance optionally expanding any response files specified
         /// in the arguments passed.
         /// </summary>
         /// <param name="args">The optional command line arguments.</param>
