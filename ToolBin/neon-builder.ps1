@@ -53,10 +53,12 @@ $nfBuild        = "$env:NF_BUILD"
 $nfLib          = "$nfRoot\Lib"
 $nfTools        = "$nfRoot\Tools"
 $nfToolBin      = "$nfRoot\ToolBin"
-$libraryVersion = $(& "$nfToolBin\neon-build" read-version "$nfLib\Neon.Common\Build.cs" NeonLibraryVersion)
 $config         = "Release"
 $buildConfig    = "-p:Configuration=Release"
 $env:PATH      += ";$nfBuild"
+
+$libraryVersion = $(& "$nfToolBin\neon-build" read-version "$nfLib\Neon.Common\Build.cs" NeonLibraryVersion)
+ThrowOnExitCode
 
 function PublishCore
 {
@@ -123,7 +125,7 @@ if (-not $nobuild)
     # situations where I've upgraded SDKs or Visual Studio and Files
     # left over from previous builds caused build trouble.
 
-    & neon-build clean "$nfRoot"
+    & $nfToolBin\neon-build clean "$nfRoot"
 
     # Clean and build the solution.
 
