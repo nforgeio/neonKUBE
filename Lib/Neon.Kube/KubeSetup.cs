@@ -1053,8 +1053,8 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             master.InvokeIdempotent("setup/workstation",
                 () =>
                 {
-                    var cluster = setupState.Get<ClusterProxy>(ClusterProxyProperty);
-                    var clusterLogin = setupState.Get<ClusterLogin>(ClusterLoginProperty);
+                    var cluster        = setupState.Get<ClusterProxy>(ClusterProxyProperty);
+                    var clusterLogin   = setupState.Get<ClusterLogin>(ClusterLoginProperty);
                     var kubeConfigPath = KubeHelper.KubeConfigPath;
 
                     // Update kubeconfig.
