@@ -92,7 +92,6 @@ OPTIONS:
         private ClusterLogin        clusterLogin;
         private ClusterProxy        cluster;
         private HostingManager      hostingManager;
-        private Wsl2Proxy           wsl2Proxy;
 
         /// <inheritdoc/>
         public override string[] Words => new string[] { "cluster", "setup" };
@@ -182,11 +181,14 @@ OPTIONS:
                 Program.Exit(1);
             }
 
+#if ENTERPRISE
             if (hostingManager.HostingEnvironment == HostingEnvironment.Wsl2)
             {
-                wsl2Proxy = new Wsl2Proxy(KubeConst.Wsl2MainDistroName, KubeConst.SysAdminUser);
+                var wsl2Proxy = new Wsl2Proxy(KubeConst.Wsl2MainDistroName, KubeConst.SysAdminUser);
+                
                 cluster.FirstMaster.Address = IPAddress.Parse(wsl2Proxy.Address);
             }
+#endif
 
             // Update the cluster node SSH credentials to use the secure password.
 
