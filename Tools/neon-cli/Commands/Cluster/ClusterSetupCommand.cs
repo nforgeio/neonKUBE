@@ -88,6 +88,7 @@ OPTIONS:
         private ClusterLogin        clusterLogin;
         private ClusterProxy        cluster;
         private HostingManager      hostingManager;
+        private Wsl2Proxy           wsl2Proxy;
 
         /// <inheritdoc/>
         public override string[] Words => new string[] { "cluster", "setup" };
@@ -177,6 +178,12 @@ OPTIONS:
                 Program.Exit(1);
             }
 
+            if (hostingManager.HostingEnvironment == HostingEnvironment.Wsl2)
+            {
+                wsl2Proxy = new Wsl2Proxy(KubeConst.Wsl2MainDistroName, KubeConst.SysAdminUser);
+                cluster.FirstMaster.Address = IPAddress.Parse(wsl2Proxy.Address);
+            }
+
             // Update the cluster node SSH credentials to use the secure password.
 
             var sshCredentials = SshCredentials.FromUserPassword(KubeConst.SysAdminUser, clusterLogin.SshPassword);
@@ -239,7 +246,7 @@ OPTIONS:
                     (state, node) =>
                     {
                         node.SetupNode(setupController);
-                        node.InvokeIdempotent("setup/common-restart", () => node.RebootAndWait(state));
+                        //node.InvokeIdempotent("setup/common-restart", () => node.RebootAndWait(state));
                     },
                     (state, node) => node == cluster.FirstMaster);
 

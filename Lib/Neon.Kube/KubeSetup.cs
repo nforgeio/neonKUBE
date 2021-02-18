@@ -712,7 +712,9 @@ spec:
                                 kubeInitgnoreSwapOnPreflightArg = "--ignore-preflight-errors=Swap";
                             }
 
-                            var clusterConfig =
+                            var clusterConfig = new StringBuilder();
+
+                            clusterConfig.AppendLine(
 $@"
 apiVersion: kubeadm.k8s.io/v1beta2
 kind: ClusterConfiguration
@@ -721,6 +723,7 @@ kubernetesVersion: ""v{KubeVersions.KubernetesVersion}""
 imageRepository: ""{NeonHelper.NeonLibraryBranchRegistry}""
 apiServer:
   extraArgs:
+    bind-address: 0.0.0.0
     logging-format: json
     default-not-ready-toleration-seconds: ""30"" # default 300
     default-unreachable-toleration-seconds: ""30"" #default  300
@@ -739,7 +742,22 @@ controllerManager:
     pod-eviction-timeout: 30s #default 5m0s
 scheduler:
   extraArgs:
-    logging-format: json
+    logging-format: json");
+
+                            if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2)
+                            {
+                                clusterConfig.AppendLine($@"
+etcd:
+  local:
+    extraArgs:
+        listen-peer-urls: https://127.0.0.1:2380
+        listen-client-urls: https://127.0.0.1:2379
+        advertise-client-urls: https://127.0.0.1:2379
+        initial-advertise-peer-urls: https://127.0.0.1:2380
+        initial-cluster=master-0: https://127.0.0.1:2380");
+                            }
+
+                            clusterConfig.AppendLine($@"
 ---
 apiVersion: kubelet.config.k8s.io/v1beta1
 kind: KubeletConfiguration
@@ -748,13 +766,14 @@ logging:
 nodeStatusReportFrequency: 4s
 volumePluginDir: /var/lib/kubelet/volume-plugins
 {kubeletFailSwapOnLine}
-";
+");
+
                             var kubeInitScript =
 $@"
 systemctl enable kubelet.service
 kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-kubernetes-manifests
 ";
-                            var response = firstMaster.SudoCommand(CommandBundle.FromScript(kubeInitScript).AddFile("cluster.yaml", clusterConfig));
+                            var response = firstMaster.SudoCommand(CommandBundle.FromScript(kubeInitScript).AddFile("cluster.yaml", clusterConfig.ToString()));
 
                             // Extract the cluster join command from the response.  We'll need this to join
                             // other nodes to the cluster.
@@ -779,6 +798,11 @@ kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-k
                             }
 
                             clusterLogin.Save();
+
+                            if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2)
+                            {
+                                firstMaster.SudoCommand("mount --make-rshared /");
+                            }
                         });
 
                     firstMaster.Status = "created";
@@ -1043,7 +1067,15 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                     var configText = clusterLogin.SetupDetails.MasterFiles["/etc/kubernetes/admin.conf"].Text;
 
-                    configText = configText.Replace("kubernetes-masters", $"{cluster.Definition.Masters.FirstOrDefault().Address}");
+                    if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2)
+                    {
+                        var wsl2Proxy = new Wsl2Proxy(KubeConst.Wsl2MainDistroName, KubeConst.SysAdminUser);
+                        configText = configText.Replace("localhost", wsl2Proxy.Address);
+                    }
+                    else
+                    {
+                        configText = configText.Replace("kubernetes-masters", $"{cluster.Definition.Masters.FirstOrDefault().Address}");
+                    }
 
                     if (!File.Exists(kubeConfigPath))
                     {
@@ -1112,8 +1144,16 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                 async () =>
                 {
                     // Deploy Calico
+                    var values = new List<KeyValuePair<string, object>>();
 
-                    await master.InstallHelmChartAsync("calico", releaseName: "calico");
+                    if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2)
+                    {
+                        values.Add(new KeyValuePair<string, object>($"neonDesktop", $"true"));
+                        values.Add(new KeyValuePair<string, object>($"kubernetes.service.host", $"localhost"));
+                        values.Add(new KeyValuePair<string, object>($"kubernetes.service.port", 6443));
+
+                    }
+                    await master.InstallHelmChartAsync("calico", releaseName: "calico", @namespace: "kube-system", values: values);
 
                     // Wait for Calico and CoreDNS pods to report that they're running.
                     // We're going to wait a maximum of 300 seconds.
@@ -1131,6 +1171,8 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                     {
                                         master.SudoCommand("kubectl rollout restart --namespace kube-system deployment/coredns", RunOptions.LogOnErrorOnly);
                                     }
+
+                                    await Task.Delay(5000);
 
                                     return false;
                                 }
@@ -1981,13 +2023,16 @@ spec:
                     await master.InstallHelmChartAsync("openebs", releaseName: "neon-storage-openebs", values: values, @namespace: "openebs");
                 });
 
-            await master.InvokeIdempotentAsync("setup/neon-storage-openebs-cstor-install",
+            if (cluster.HostingManager.HostingEnvironment != HostingEnvironment.Wsl2)
+            {
+                await master.InvokeIdempotentAsync("setup/neon-storage-openebs-cstor-install",
                 async () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
 
                     await master.InstallHelmChartAsync("openebs_cstor_operator", releaseName: "neon-storage-openebs-cstor", values: values, @namespace: "openebs");
                 });
+            }
 
             await master.InvokeIdempotentAsync("setup/neon-storage-openebs-install-ready",
                 async () =>
@@ -2021,7 +2066,9 @@ spec:
                         pollInterval: clusterOpRetryInterval);
                 });
 
-            await master.InvokeIdempotentAsync("setup/neon-storage-openebs-cstor-poolcluster",
+            if (cluster.HostingManager.HostingEnvironment != HostingEnvironment.Wsl2)
+            {
+                await master.InvokeIdempotentAsync("setup/neon-storage-openebs-cstor-poolcluster",
                 async () =>
                 {
                     var cStorPoolCluster = new V1CStorPoolCluster()
@@ -2083,33 +2130,39 @@ spec:
                     GetK8sClient(setupState).CreateNamespacedCustomObject(cStorPoolCluster, "cstor.openebs.io", "v1", "openebs", "cstorpoolclusters");
                 });
 
-            await master.InvokeIdempotentAsync("setup/neon-storage-openebs-cstor-ready",
-                async () =>
-                {
-                    await NeonHelper.WaitForAsync(
-                        async () =>
-                        {
-                            var deployments = await GetK8sClient(setupState).ListNamespacedDeploymentAsync("openebs", labelSelector: "app=cstor-pool");
-                            if (deployments == null || deployments.Items.Count == 0)
+                await master.InvokeIdempotentAsync("setup/neon-storage-openebs-cstor-ready",
+                    async () =>
+                    {
+                        await NeonHelper.WaitForAsync(
+                            async () =>
                             {
-                                return false;
-                            }
+                                var deployments = await GetK8sClient(setupState).ListNamespacedDeploymentAsync("openebs", labelSelector: "app=cstor-pool");
+                                if (deployments == null || deployments.Items.Count == 0)
+                                {
+                                    return false;
+                                }
 
-                            return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
-                        },
-                        timeout: clusterOpTimeout,
-                        pollInterval: clusterOpRetryInterval);
-                });
+                                return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
+                            },
+                            timeout: clusterOpTimeout,
+                            pollInterval: clusterOpRetryInterval);
+                    });
 
-            var replicas = 3;
+                var replicas = 3;
 
-            if (cluster.Definition.Nodes.Where(n => n.OpenEBS).Count() < 3)
-            {
-                replicas = 1;
+                if (cluster.Definition.Nodes.Where(n => n.OpenEBS).Count() < 3)
+                {
+                    replicas = 1;
+                }
+
+                await CreateCstorStorageClass(setupState, master, "openebs-cstor", replicaCount: replicas);
+                await CreateCstorStorageClass(setupState, master, "openebs-cstor-unreplicated", replicaCount: 1);
             }
-
-            await CreateCstorStorageClass(setupState, master, "openebs-cstor", replicaCount: replicas);
-            await CreateCstorStorageClass(setupState, master, "openebs-cstor-unreplicated", replicaCount: 1);
+            else
+            {
+                await CreateHostPathStorageClass(setupState, master, "openebs-cstor");
+                await CreateHostPathStorageClass(setupState, master, "openebs-cstor-unreplicated");
+            }
         }
 
         /// <summary>
@@ -2168,11 +2221,11 @@ spec:
                             Name = name,
                             Annotations = new Dictionary<string, string>()
                     {
-                        {  "cas.openebs.io/config", $@"
-- name: StorageType
-value: ""hostpath""
+                        {  "cas.openebs.io/config", 
+$@"- name: StorageType
+  value: ""hostpath""
 - name: BasePath
-value: /var/openebs/local
+  value: /var/openebs/local
 " },
                         {"openebs.io/cas-type", "local" }
                     },
@@ -2344,6 +2397,7 @@ value: /var/openebs/local
                         values.Add(new KeyValuePair<string, object>($"prometheus.prometheusSpec.storage.volumeClaimTemplate.spec.resources.requests.storage", $"5Gi"));
                         values.Add(new KeyValuePair<string, object>($"prometheus.prometheusSpec.remoteRead", null));
                         values.Add(new KeyValuePair<string, object>($"prometheus.prometheusSpec.remoteWrite", null));
+                        values.Add(new KeyValuePair<string, object>($"prometheus.prometheusSpec.scrapeInterval", "2m"));
                     }
 
                     await master.InstallHelmChartAsync("prometheus_operator", releaseName: "neon-metrics-prometheus", @namespace: "monitoring", values: values);
@@ -2503,6 +2557,13 @@ value: /var/openebs/local
                         values.Add(new KeyValuePair<string, object>($"config.ingester.lifecycler.ring.kvstore.replication_factor", 3));
                     }
 
+                    if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2)
+                    {
+                        values.Add(new KeyValuePair<string, object>($"config.limits_config.reject_old_samples_max_age", "15m"));
+                        values.Add(new KeyValuePair<string, object>($"resources.requests.memory", "64Mi"));
+                        values.Add(new KeyValuePair<string, object>($"resources.limits.memory", "128Mi"));
+                    }
+
                     await master.InstallHelmChartAsync("loki", releaseName: "neon-logs-loki", @namespace: "monitoring", values: values);
                 });
         }
@@ -2532,6 +2593,12 @@ value: /var/openebs/local
                         values.Add(new KeyValuePair<string, object>($"config.ingester.lifecycler.ring.kvstore.replication_factor", 3));
                     }
 
+                    if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2)
+                    {
+                        values.Add(new KeyValuePair<string, object>($"resources.requests.memory", "64Mi"));
+                        values.Add(new KeyValuePair<string, object>($"resources.limits.memory", "128Mi"));
+                    }
+
                     await master.InstallHelmChartAsync("promtail", releaseName: "neon-logs-promtail", @namespace: "monitoring", values: values);
                 });
         }
@@ -2559,6 +2626,13 @@ value: /var/openebs/local
                             values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", t.Effect));
                             values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
                             i++;
+                        }
+
+                        if (master.Cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2)
+                        {
+                            values.Add(new KeyValuePair<string, object>($"prometheusEndpoint", "http://prometheus-operated:9090"));
+                            values.Add(new KeyValuePair<string, object>($"resources.requests.memory", "64Mi"));
+                            values.Add(new KeyValuePair<string, object>($"resources.limits.memory", "128Mi"));
                         }
 
                         await master.InstallHelmChartAsync("grafana", releaseName: "neon-metrics-grafana", @namespace: "monitoring", values: values);
@@ -2615,6 +2689,12 @@ value: /var/openebs/local
                         var replicas = Math.Min(4, Math.Max(4, cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count() / 4));
                         values.Add(new KeyValuePair<string, object>($"replicas", replicas));
                         values.Add(new KeyValuePair<string, object>($"mode", "distributed"));
+                    }
+
+                    if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2)
+                    {
+                        values.Add(new KeyValuePair<string, object>($"resources.requests.memory", "64Mi"));
+                        values.Add(new KeyValuePair<string, object>($"resources.limits.memory", "128Mi"));
                     }
 
                     await master.InstallHelmChartAsync("minio", releaseName: "neon-system-minio", @namespace: "neon-system", values: values);
@@ -3010,9 +3090,17 @@ done
 
             master.Status = "deploy: neon-system-db";
 
+            var values = new List<KeyValuePair<string, object>>();
+
             if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2)
             {
                 await CreateHostPathStorageClass(setupState, master, "neon-internal-citus");
+                values.Add(new KeyValuePair<string, object>($"worker.resources.requests.memory", "64Mi"));
+                values.Add(new KeyValuePair<string, object>($"worker.resources.limits.memory", "128Mi"));
+                values.Add(new KeyValuePair<string, object>($"master.resources.requests.memory", "64Mi"));
+                values.Add(new KeyValuePair<string, object>($"master.resources.limits.memory", "128Mi"));
+                values.Add(new KeyValuePair<string, object>($"manager.resources.requests.memory", "64Mi"));
+                values.Add(new KeyValuePair<string, object>($"manager.resources.limits.memory", "128Mi"));
             }
             else
             {
@@ -3022,7 +3110,6 @@ done
             await master.InvokeIdempotentAsync("deploy/neon-system-db",
                 async () =>
                 {
-                    var values = new List<KeyValuePair<string, object>>();
 
                     var replicas = Math.Max(1, cluster.Definition.Masters.Count() / 5);
 

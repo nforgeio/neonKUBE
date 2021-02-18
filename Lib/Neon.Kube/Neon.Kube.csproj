@@ -69,6 +69,7 @@
     <None Remove="Resources\Helm\calico\templates\calico-config - Copy (5).yaml" />
     <None Remove="Resources\Helm\calico\templates\calico-config - Copy (6).yaml" />
     <None Remove="Resources\Helm\calico\templates\calico-config.yaml" />
+    <None Remove="Resources\Helm\calico\templates\calico-k8s-config.yaml" />
     <None Remove="Resources\Helm\calico\templates\daemonset.yaml" />
     <None Remove="Resources\Helm\calico\templates\deployment.yaml" />
     <None Remove="Resources\Helm\calico\templates\rbac.yaml" />
@@ -773,6 +774,7 @@
     <EmbeddedResource Include="Resources\Helm\calico\Chart.yaml" />
     <EmbeddedResource Include="Resources\Helm\calico\crds\crds.yaml" />
     <EmbeddedResource Include="Resources\Helm\calico\README.md" />
+    <EmbeddedResource Include="Resources\Helm\calico\templates\calico-k8s-config.yaml" />
     <EmbeddedResource Include="Resources\Helm\calico\templates\serviceAccount.yaml" />
     <EmbeddedResource Include="Resources\Helm\calico\templates\rbac.yaml" />
     <EmbeddedResource Include="Resources\Helm\calico\templates\daemonset.yaml" />
