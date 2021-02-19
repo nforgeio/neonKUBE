@@ -42,7 +42,7 @@
             <para>
               <b>Add <codeInline>GeneratePathProperty=true</codeInline> to your package reference:</b>
             </para>
-            <code source="Snippet.GeneratePathProperty.xml" region="code" language="xml" tabSize="2"/>
+            <code source="Content/Neon.ModelGen/Snippet.GeneratePathProperty.xml" language="xml" tabSize="2"/>
             <para>
               Adding this causes MSBuild to define the <codeInline>$(PkgNeon_ModelGenerator)</codeInline> variable
               which will reference the directory where the package is persisted in your
@@ -57,7 +57,7 @@
             <para>
               Add a pre-build target that uses <b>neon-modelgen</b> to generate your models:
             </para>
-            <code source="Snippet.PrebuildTarget.xml" region="code" language="xml" tabSize="2"/>
+            <code source="Content/Neon.ModelGen/Snippet.PrebuildTarget.xml" language="xml" tabSize="2"/>
             <para>
               This example executes the <b>win-x64</b> version of <b>neon-modelgen</b> located in the cached package
               directory, having it read model definitions from <b>foo.dll</b> and write the generated models 
@@ -87,7 +87,7 @@
               <linkUri>https://doc.neonkube.com/Neon.ModelGen-Overview.htm</linkUri>
             </externalLink>
         </para>
-        <code source="Snippet.NeonModelGenHelp.txt" region="code" language="none" tabSize="4"/>
+        <code source="Content/Neon.ModelGen/Snippet.NeonModelGenHelp.txt" language="none" tabSize="4"/>
       </content>
     </section>
 

@@ -26,9 +26,17 @@ using Neon.Common;
 namespace Neon.ModelGen
 {
     /// <summary>
+    /// <para>
     /// This namespace includes the types used to generate data models from interface definitions. 
     /// These models can be built to support round-tripping data without loss as well as optionally
     /// adding <see cref="INotifyPropertyChanged"/> related code for UX binding.
+    /// </para>
+    /// <para>
+    /// You can use these classes to integrate model generation into your own tooling or use the
+    /// <b>Neon.ModelGenerator</b> package which includes the pre-built <b>neon-modelgen</b> 
+    /// command line tool.  You'll add a reference to this package to your project and then
+    /// add a custom build target to invoke <b>neon-modelgen</b>.
+    /// </para>
     /// </summary>
     [System.Runtime.CompilerServices.CompilerGenerated]
     class NamespaceDoc

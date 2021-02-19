@@ -206,7 +206,9 @@
         </para>
         <para>
           You can use these classes to integrate model generation into your own tooling or use the 
-          <legacyBold>neon-cli</legacyBold> tool.
+          <legacyBold>Neon.ModelGenerator</legacyBold> package which includes the pre-built
+          <legacyBold>neon-modelgen</legacyBold> tool that can be referenced by your project
+          and executed via a custom build target.
         </para>
       </content>
     </section>

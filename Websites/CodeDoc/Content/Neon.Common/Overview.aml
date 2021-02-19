@@ -92,8 +92,8 @@
             <entry>
               <para>
                 This namespace includes a simple logger suitable -out-of-the-box for typical containerized applications.
-                The key classes are <codeEntityReference qualifyHint="false">T:Neon.Diagnostics.LogManager</codeEntityReference> and
-                <codeEntityReference qualifyHint="false">T:Neon.Diagnostics.NeonLogger</codeEntityReference>.  These
+                The key types are <codeEntityReference qualifyHint="false">T:Neon.Diagnostics.LogManager</codeEntityReference> and
+                <codeEntityReference qualifyHint="false">T:Neon.Diagnostics.INeonLogger</codeEntityReference>.  These
                 classes are referenced throughout Neon libraries and services for simplicity.  It is possible to
                 replace the underlying logging mechanism with custom code or another logger if required.
               </para>

@@ -40,8 +40,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="neon-modelgen\linux-x64\createdump" />
-    <None Remove="readme.txt" Pack="true" PackagePath="." />
+    <None Include="Neon.ModelGenerator.readme.txt" />
   </ItemGroup>
 
   <ItemGroup>
@@ -53,7 +52,7 @@
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </Content>
-    <Content Include="readme.txt">
+    <Content Include="Neon.ModelGenerator.readme.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
 

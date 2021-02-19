@@ -27,7 +27,6 @@
           Temporal will see the <codeEntityReference qualifyHint="false" autoUpgrade="true">M:Neon.Temporal.Activity.DoNotCompleteOnReturn</codeEntityReference>
           call and no result will be returned to the calling workflow (yet).  Instead, Temporal will wait for the the external
           system to complete the activity by calling <codeEntityReference qualifyHint="false" autoUpgrade="true">M:Neon.Temporal.TemporalClient.ActivityCompleteByTokenAsync(System.String,System.Object,System.String)</codeEntityReference>,
-          cancel the activity via <codeEntityReference qualifyHint="false" autoUpgrade="true">M:Neon.Temporal.TemporalClient.ActivityCancelByTokenAsync(System.String,System.String)</codeEntityReference>
           or fail the activity via <codeEntityReference qualifyHint="false" autoUpgrade="true">M:Neon.Temporal.TemporalClient.ActivityErrorByTokenAsync(System.String,System.Exception,System.String)</codeEntityReference>.
           The activity returns to the calling workflow when one of these methods is called.
         </para>

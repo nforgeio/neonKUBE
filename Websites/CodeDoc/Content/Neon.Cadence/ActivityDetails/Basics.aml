@@ -33,7 +33,7 @@
           activity can use to start where the last run left off.
         </para>
         <para>
-          Activities can call <codeEntityReference qualifyHint="false" autoUpgrade="true">M:Neon.Cadence.Activity.SendHeartbeatAsync(System.Byte[])</codeEntityReference>
+          Activities can call <codeEntityReference qualifyHint="false" autoUpgrade="true">M:Neon.Cadence.Activity.RecordHeartbeatAsync(System.Byte[])</codeEntityReference>
           or <codeEntityReference qualifyHint="false" autoUpgrade="true">M:Neon.Cadence.Activity.HeartbeatAsync(System.Func{System.Byte[]},System.Nullable{System.TimeSpan})</codeEntityReference>
           to record heartbeats.  The first method always transmits the heartbeat and should be used when you are recording checkpoint
           information.  The second method is handy when you're just heartbeating to indicate that the activity is still alive.
