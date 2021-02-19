@@ -62,15 +62,15 @@
     to avoid including any localization folders to reduce the package size.
     -->
 
-    <Content Include="neon-modelgen\linux-x64\*">
+    <Content Include="linux-x64\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>true</CopyToPublishDirectory>
     </Content>
-    <Content Include="neon-modelgen\osx-x64\*">
+    <Content Include="osx-x64\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>true</CopyToPublishDirectory>
     </Content>
-    <Content Include="neon-modelgen\win-x64\*">
+    <Content Include="win-x64\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>true</CopyToPublishDirectory>
     </Content>
@@ -87,5 +87,11 @@
   This assumes that this project has an explicit build dependency on the 
   [Tools/neon-modelgen] project.
   -->
+
+  <Target Name="ModelGen" BeforeTargets="BeforeBuild">
+    <Exec Command="neon-build dotnet publish &quot;%NF_ROOT%\Tools\neon-modelgen\neon-modelgen.csproj&quot; --framework netcoreapp3.1 --output &quot;%NF_ROOT%\Lib\Neon.ModelGenerator\linux-x64&quot; --configuration Release --runtime linux-x64" />
+    <Exec Command="neon-build dotnet publish &quot;%NF_ROOT%\Tools\neon-modelgen\neon-modelgen.csproj&quot; --framework netcoreapp3.1 --output &quot;%NF_ROOT%\Lib\Neon.ModelGenerator\osx-x64&quot; --configuration Release --runtime osx-x64" />
+    <Exec Command="neon-build dotnet publish &quot;%NF_ROOT%\Tools\neon-modelgen\neon-modelgen.csproj&quot; --framework netcoreapp3.1 --output &quot;%NF_ROOT%\Lib\Neon.ModelGenerator\win-x64&quot; --configuration Release --runtime win-x64" />
+  </Target>
 
 </Project>

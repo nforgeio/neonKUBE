@@ -127,4 +127,6 @@ Go/**/__debug_bin
 
 # This library includes binaries that shouldn't be committed.
 
-/Lib/Neon.ModelGenerator/neon-modelgen/**
+/Lib/Neon.ModelGenerator/linux-x64/**
+/Lib/Neon.ModelGenerator/osx-x64/**
+/Lib/Neon.ModelGenerator/win-x64/**

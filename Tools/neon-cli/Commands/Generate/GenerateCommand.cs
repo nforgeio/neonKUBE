@@ -40,12 +40,11 @@ namespace NeonCli
     public class GenerateCommand : CommandBase
     {
         private const string usage = @"
-Code generation commands.
+Generate commands.
 
 USAGE:
 
     neon generate iso      SOURCE-FOLDER ISO-PATH
-    neon generate models   [OPTIONS] ASSEMBLY-PATH [OUTPUT-PATH]
 ";
 
         /// <inheritdoc/>

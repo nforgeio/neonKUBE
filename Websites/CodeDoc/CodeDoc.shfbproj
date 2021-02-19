@@ -193,6 +193,7 @@ Copyright © Renci 2010-2017</NamespaceSummaryItem>
     <None Include="Content\Neon.Cadence\ActivityDetails\DendencyInjection.aml" />
     <None Include="Content\Neon.Cadence\OtherTopics\CrossPlatform.aml" />
     <None Include="Content\Neon.Cadence\WorkflowDetails\SyncSignals.aml" />
+    <None Include="Content\Neon.ModelGen\Snippet.PrebuildTarget.xml" />
     <None Include="Content\Neon.Service\Overview.aml" />
     <None Include="Content\Neon.Cadence\ActivityDetails\Basics.aml" />
     <None Include="Content\Neon.Cadence\ActivityDetails\ExternalCompletion.aml" />
@@ -263,6 +264,8 @@ Copyright © Renci 2010-2017</NamespaceSummaryItem>
     <ContentLayout Include="ContentLayout.content" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Content\Neon.ModelGen\Snippet.GeneratePathProperty.xml" />
+    <Content Include="Content\Neon.ModelGen\Snippet.NeonModelGenHelp.txt" />
     <Content Include="icons\Help.png" />
   </ItemGroup>
   <ItemGroup>
