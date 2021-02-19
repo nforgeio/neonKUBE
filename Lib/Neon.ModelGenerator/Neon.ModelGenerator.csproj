@@ -41,7 +41,7 @@
 
   <ItemGroup>
     <None Remove="neon-modelgen\linux-x64\createdump" />
-    <None Remove="readme.txt" />
+    <None Remove="readme.txt" Pack="true" PackagePath="." />
   </ItemGroup>
 
   <ItemGroup>
