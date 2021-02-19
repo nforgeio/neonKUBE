@@ -128,7 +128,7 @@ OPTIONS:
     --styles=FOLDER - Optionally specifies a folder with CSS style files
                       that will be copied to the site [styles] folder.
 
----------------------------------------------------------------------
+-------------------------------------------
 neon-build embed-check PROJECT EMBED-FOLDER
 
 ARGUMENTS:
@@ -139,6 +139,15 @@ ARGUMENTS:
 Verifies that a C# project file includes embedded resource file references
 to all of the files within EMBED-FOLDER (recurively).  This is handy for
 ensuring that no files are present that aren't being embeded.
+
+----------------------------------------
+neon-build dotnet [OPTIONS] ARGS
+
+Executes the [dotnet] command with most of the environment variables 
+removed.  This allows [dotnet] commands to be executed within the 
+context of a Visual Studio build.
+
+Any options and/or arguments are passed thru as-is to [dotnet].
 ";
         private static CommandLine commandLine;
 
@@ -289,6 +298,11 @@ ensuring that no files are present that aren't being embeded.
                     case "embed-check":
 
                         EmbedCheck(commandLine);
+                        break;
+
+                    case "dotnet":
+
+                        Dotnet(commandLine);
                         break;
 
                     default:
