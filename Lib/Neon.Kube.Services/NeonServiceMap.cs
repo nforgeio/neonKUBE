@@ -28,7 +28,7 @@ using Neon.Service;
 
 using Newtonsoft.Json;
 
-namespace Neon.Service
+namespace Neon.Kube
 {
     /// <summary>
     /// Holds more detailed information describing the Neon cluster services.  This a

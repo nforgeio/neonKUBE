@@ -51,7 +51,12 @@ namespace NeonCli
         /// <summary>
         /// The program version.
         /// </summary>
-        public const string Version = Neon.Cloud.Build.NeonDesktopVersion;
+        public const string Version =
+#if ENTERPRISE
+            Neon.Cloud.Build.NeonDesktopVersion;
+#else
+            Neon.Build.NeonKubeVersion;
+#endif
 
         /// <summary>
         /// Returns <c>true</c> if this is the enterprise <b>neon-cli</b> build.

@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Diagnostics;
+using Neon.Kube;
 using Neon.Net;
 using Neon.Service;
 using Neon.Tasks;

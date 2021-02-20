@@ -104,8 +104,9 @@ SetVersion Neon.HyperV              $libraryVersion
 # SetVersion Neon.Kube.Google         $neonkubeVersion
 # SetVersion Neon.Kube.Hosting        $neonkubeVersion
 # SetVersion Neon.Kube.HyperV         $neonkubeVersion
-# SetVersion Neon.Kube.HyperVLocal    $neonkubeVersion
 # SetVersion Neon.Kube.Wsl2           $neonkubeVersion
+# SetVersion Neon.Kube.HyperVLocal    $neonkubeVersion
+# SetVersion Neon.Kube.Services       $neonkubeVersion
 # SetVersion Neon.Kube.XenServer      $neonkubeVersion
 # SetVersion Neon.Kube.Xunit          $neonkubeVersion
 SetVersion Neon.Service             $libraryVersion
@@ -143,6 +144,7 @@ Publish Neon.HyperV                 $libraryVersion
 # Publish Neon.Kube.Hosting           $neonkubeVersion
 # Publish Neon.Kube.HyperV            $neonkubeVersion
 # Publish Neon.Kube.HyperVLocal       $neonkubeVersion
+# Publish Neon.Kube.Services          $neonkubeVersion
 # Publish Neon.Kube.Wsl2              $neonkubeVersion
 # Publish Neon.Kube.XenServer         $neonkubeVersion
 # Publish Neon.Kube.Xunit             $neonkubeVersion
