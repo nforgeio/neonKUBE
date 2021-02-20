@@ -30,6 +30,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Newtonsoft.Json;
+using Microsoft.Extensions.DependencyInjection;
 
 using Neon;
 using Neon.Common;
@@ -39,10 +40,6 @@ using Neon.Kube.Xunit;
 using Neon.IO;
 using Neon.SSH;
 using Neon.Windows;
-
-#if ENTERPRISE
-using HostingLoader = Neon.Kube.EnterpriseHostingLoader;
-#endif
 
 namespace NeonCli
 {
@@ -54,7 +51,7 @@ namespace NeonCli
         /// <summary>
         /// The program version.
         /// </summary>
-        public const string Version = Build.NeonKubeVersion;
+        public const string Version = Neon.Cloud.Build.NeonDesktopVersion;
 
         /// <summary>
         /// Returns <c>true</c> if this is the enterprise <b>neon-cli</b> build.
@@ -160,9 +157,17 @@ You can disable the use of this encrypted folder by specifying
 
             PowerShell.PwshPath = KubeHelper.PwshPath;
 
-            // Ensure that all of the cluster hosting manager implementations are loaded.
+            // Ensure that all of the non-enterprise cluster hosting manager 
+            // implementations are loaded.
 
             new HostingManagerFactory(() => HostingLoader.Initialize());
+
+#if ENTERPRISE
+            // Configure the enterprise service depedencies.
+
+            NeonHelper.ServiceContainer.AddSingleton<IEnterpriseHostingLoader>(new EnterpriseHostingLoader());
+            NeonHelper.ServiceContainer.AddSingleton<IEnterpriseHelper>(new EnterpriseHelper());
+#endif
 
             // Process the command line.
 

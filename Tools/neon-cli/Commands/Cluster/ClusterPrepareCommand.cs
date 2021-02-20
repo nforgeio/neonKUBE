@@ -35,10 +35,6 @@ using Neon.Kube;
 using Neon.Net;
 using Neon.SSH;
 
-#if ENTERPRISE
-using HostingLoader = Neon.Kube.EnterpriseHostingLoader;
-#endif
-
 namespace NeonCli
 {
     /// <summary>
@@ -502,7 +498,7 @@ Server Requirements:
                     {
                         node.PrepareNode(setupController);
                     });
-
+            
                 // Some hosting managers may have to some additional work after the node has
                 // been otherwise prepared.
 

@@ -49,10 +49,6 @@ using Neon.Time;
 using k8s;
 using k8s.Models;
 
-#if ENTERPRISE
-using HostingLoader = Neon.Kube.EnterpriseHostingLoader;
-#endif
-
 namespace NeonCli
 {
     /// <summary>
@@ -91,7 +87,8 @@ OPTIONS:
         private KubeConfigContext   kubeContext;
         private ClusterLogin        clusterLogin;
         private ClusterProxy        cluster;
-        private HostingManager      hostingManager;
+        private HostingManager      hostingManager; 
+        private Wsl2Proxy           wsl2Proxy;
 
         /// <inheritdoc/>
         public override string[] Words => new string[] { "cluster", "setup" };
@@ -173,6 +170,13 @@ OPTIONS:
             // Initialize the cluster proxy and the hbosting manager.
 
             cluster        = new ClusterProxy(kubeContext, Program.CreateNodeProxy<NodeDefinition>, appendToLog: true, defaultRunOptions: RunOptions.LogOutput | RunOptions.FaultOnError);
+
+            if (cluster.Definition.Hosting.Environment == HostingEnvironment.Wsl2)
+            {
+                wsl2Proxy = new Wsl2Proxy(KubeConst.Wsl2MainDistroName, KubeConst.SysAdminUser);
+                cluster.FirstMaster.Address = IPAddress.Parse(wsl2Proxy.Address);
+            }
+            
             hostingManager = new HostingManagerFactory(() => HostingLoader.Initialize()).GetManager(cluster, Program.LogPath);
 
             if (hostingManager == null)
