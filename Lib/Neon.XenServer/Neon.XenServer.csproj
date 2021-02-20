@@ -74,7 +74,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
-    <ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
+    <ProjectReference Include="..\Neon.SSH.NET\Neon.SSH.NET.csproj" />
   </ItemGroup>
 
   <ItemGroup>

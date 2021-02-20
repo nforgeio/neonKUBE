@@ -33,7 +33,6 @@ using System.Threading.Tasks;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.IO;
-using Neon.Kube;
 using Neon.Net;
 
 using Renci.SshNet;
@@ -93,8 +92,8 @@ namespace Neon.XenServer
     /// <para>
     /// The workaround is to simnply connect to the XenServer host via SSH
     /// and perform commands using the <b>xe</b> command line tool installed
-    /// with XenServer.  We're going to take advantage of the <see cref="NodeSshProxy{TMetadata}"/>
-    /// class to handle the SSH connection and command execution.
+    /// with XenServer.  We're going to take advantage of the SSH.NET package
+    /// to handle the SSH connection and command execution.
     /// </para>
     /// <para>
     /// XenServer template operations are implemented by the <see cref="Template"/>

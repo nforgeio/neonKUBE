@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    XenHostInfo.cs
+// FILE:	    IXenClient.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -17,13 +17,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.Contracts;
-using System.Dynamic;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -33,23 +29,15 @@ using Neon.Common;
 namespace Neon.XenServer
 {
     /// <summary>
-    /// Holds information about a XenServer or XCP-ng host machine.
+    /// <b>INTERNAL USE ONLY:</b> Used internally by cluster as a potentially temporary
+    /// hack required by <c>SetupController&lt;NodeMetadata&gt;</c> to display XenServer
+    /// provisioning status.  This may be removed at some point in the future.
     /// </summary>
-    public class XenHostInfo
+    public interface IXenClient
     {
         /// <summary>
-        /// Indicates the installed edition.  This will be <b>xcp-ng</b> or <b>xenserver</b>.
+        /// Returns the name of the connected XenServer.
         /// </summary>
-        public string Edition { get; internal set; }
-
-        /// <summary>
-        /// Indicates the XenServer/XCP-ng version number.
-        /// </summary>
-        public SemanticVersion Version { get; internal set; }
-
-        /// <summary>
-        /// Holds the raw host parameters.
-        /// </summary>
-        public IDictionary<string, string> Params { get; internal set; }
+        string Name { get; }
     }
 }
