@@ -1,4 +1,4 @@
-@echo on
+@echo off
 REM Configures the environment variables required to build neonKUBE projects.
 REM 
 REM 	buildenv [ <source folder> ]
