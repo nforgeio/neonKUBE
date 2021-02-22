@@ -53,7 +53,7 @@ ARGUMENTS:
 
 OPTIONS:
 
-    --force             - Don't prompt, just remove.
+    --force             - Don't prompt, just remove and ignore missing logins
 
 REMARKS:
 
@@ -82,6 +82,8 @@ USER@CLUSTER[/NAMESPACE is not specified.
             KubeConfigContext   context     = null;
             KubeContextName     contextName = null;
 
+            var force = commandLine.HasOption("--force");
+
             if (commandLine.Arguments.Length > 0)
             {
                 contextName = KubeContextName.Parse(commandLine.Arguments.FirstOrDefault());
@@ -93,8 +95,15 @@ USER@CLUSTER[/NAMESPACE is not specified.
 
                 if (context == null)
                 {
-                    Console.Error.WriteLine($"*** ERROR: Context [{contextName}] not found.");
-                    Program.Exit(1);
+                    if (!force)
+                    {
+                        Console.Error.WriteLine($"*** ERROR: Context [{contextName}] not found.");
+                        Program.Exit(1);
+                    }
+                    else
+                    {
+                        Program.Exit(0);
+                    }
                 }
             }
             else
@@ -103,14 +112,21 @@ USER@CLUSTER[/NAMESPACE is not specified.
 
                 if (context == null)
                 {
-                    Console.Error.WriteLine($"*** ERROR: You are not logged into a cluster.");
-                    Program.Exit(1);
+                    if (!force)
+                    {
+                        Console.Error.WriteLine($"*** ERROR: You are not logged into a cluster.");
+                        Program.Exit(1);
+                    }
+                    else
+                    {
+                        Program.Exit(0);
+                    }
                 }
 
                 contextName = (KubeContextName)context.Name;
             }
 
-            if (!commandLine.HasOption("--force") && !Program.PromptYesNo($"*** Are you sure you want to remove: {contextName}?"))
+            if (!force && !Program.PromptYesNo($"*** Are you sure you want to remove: {contextName}?"))
             {
                 return;
             }
