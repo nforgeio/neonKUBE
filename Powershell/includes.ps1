@@ -61,15 +61,14 @@ function GitBranch
 # you'll need for that operation.  This way you won't need to worry about the
 # 30 minute session expiring.
 #
+# This must be called before calling [OpGetPassword] or [OpGetValue]
+#
 # This script requires the following environment variables to be defined:
 #
-#   NEON_OP_DOMAIN
-#   NEON_OP_EMAIL_ADDRESS
-#   NEON_OP_SECRET_KEY
-#   NEON_OP_SIGNIN_ADDRESS
-#   NEON_OP_MASTER_PASSWORD     * Optional
+#   NC_OP_DOMAIN
+#   NC_OP_MASTER_PASSWORD * Optional
 #
-# NEON_OP_MASTER_PASSWORD is optional and you'll be prompted for this (once for 
+# NC_OP_MASTER_PASSWORD is optional and you'll be prompted for this (once for 
 # the current Powershell session) if this isn't defined.  The other variables
 # are initialized by [$/buildenv.cmd] so re-run that as administrator if necessary.
 
@@ -77,35 +76,55 @@ function OpSignin
 {
     $errorHelp = " environment variable is not defined.  Please run [$/buildenv.cmd] as administrator."
 
-    if ($env:NEON_OP_DOMAIN -eq "")
+    if ($env:NC_OP_DOMAIN -eq "")
     {
-        "[NEON_OP_DOMAIN]" + $errorHelp
+        Write-Error "** ERROR: [NC_OP_DOMAIN]" + $errorHelp
         exit 1
     }
 
-    if ($env:NEON_OP_EMAIL_ADDRESS -eq "")
+    if ([System.String]::IsNullOrEmpty($env:NC_OP_MASTER_PASSWORD))
     {
-        "[NEON_OP_EMAIL_ADDRESS]" + $errorHelp
-        exit 1
-    }
+        # The user will be prompted for the master password.
 
-    if ($env:NEON_OP_SECRET_KEY -eq "")
-    {
-        "[NEON_OP_SECRET_KEY]" + $errorHelp
-        exit 1
+        $env:NC_OP_SESSION_TOKEN = $(& op signin --raw $env:NC_OP_DOMAIN)
     }
-
-    if ($env:NEON_OP_SIGNIN_ADDRESS -eq "")
+    else
     {
-        "[NEON_OP_EMAIL_ADDRESS]" + $errorHelp
-        exit 1
+        $env:NC_OP_SESSION_TOKEN = $($env:NC_OP_MASTER_PASSWORD | & op signin --raw $env:NC_OP_DOMAIN)
     }
+}
 
-    if ($env:NEON_OP_SESSION_TOKEN -eq "" -or $env:NEON_OP_SESSION_TOKEN -eq $null)
+#------------------------------------------------------------------------------
+# Signs out from the 1Password by removing the session key environment variable,
+# when present.
+#
+# This can may be useful  in some sitations but it's not really necessary to Call
+# this in your scripts because the session environment variable will naturally
+# go out of scope and be effectively deleted after the script exits.
+
+function OpSignOut
+{
+    $env:NC_OP_SESSION_TOKEN = $null
+}
+
+#------------------------------------------------------------------------------
+# Returns [$true] when we're signed into 1Password.
+
+function OpSignedIn
+{
+    return ![System.String]::IsNullOrEmpty($env:NC_OP_SESSION_TOKEN)
+}
+
+#------------------------------------------------------------------------------
+# Ensures that the script is currently signed into 1Password.
+
+function OpEnsureSignIn
+{
+    if ([System.String]::IsNullOrEmpty($env:NC_OP_SESSION_TOKEN))
     {
-        ""
-        $env:NEON_OP_SESSION_TOKEN = $(& op signin --raw $env:NC_OP_DOMAIN)
-        ""
+        Write-Error "*** ERROR: The script is not currently signed into 1Password."
+        Write-Error "***        You need to call the Signin() function first."
+        exit 1
     }
 }
 
@@ -130,15 +149,16 @@ function OpGetVault
         [string]$vault
     )
 
-    if (($vault -eq $null) -or ($vault -eq ""))
+    OpEnsureSignin
+
+    if ([System.String]::IsNullOrEmpty($vault))
     {
         $vault = $env:NC_USER
 
-        if (($vault -eq $null) -or ($vault -eq ""))
+        if ([System.String]::IsNullOrEmpty($vault))
         {
-            ""
-            "*** ERROR: NC_USER environment variable doesn't exist.  You may need to re-run [buildenv.cmd] as administrator."
-            ""
+            Write-Error "*** ERROR: NC_USER environment variable doesn't exist.  You may"
+            Write-Error "***        need to re-run [buildenv.cmd] as administrator."
             exit 1
         }
 
@@ -150,7 +170,8 @@ function OpGetVault
 
 #------------------------------------------------------------------------------
 # Retrieves [password] field from from a password in the user's 1Password account.  
-# This will be written to STDOUT as plaintext.
+# This will be written to STDOUT as plaintext.  Note that you must call [OpSignin]
+# to sign into 1Passsword before calling this.
 #
 # Usage: OpGetPassword NAME [VAULT]
 #
@@ -177,15 +198,24 @@ function OpGetPassword
         [string]$vault = $null
     )
 
+    OpEnsureSignin
+
     $vault = OpGetVault $vault
 
-    op --session $env:NEON_OP_SESSION_TOKEN get item $passwordName --vault $vault --fields password
-}
+    op --session $env:NC_OP_SESSION_TOKEN get item $passwordName --vault $vault --fields password
 
+    if ($LastExitCode -ne 0)
+    {
+        Write-Error "*** ERROR: Cannot retrieve [$vault/$passwordName] password from 1Passsword."
+        Write-Error "***        Please check your 1Password configuration."
+        exit 1
+    }
+}
 
 #------------------------------------------------------------------------------
 # Retrieves the [value] field from from the user's 1Password account.  This will
-# be written to STDOUT as plaintext.
+# be written to STDOUT as plaintext.  Note that you must call [OpSignin] to sign
+# into 1Passsword before calling this.
 #
 # Usage: OpGetValue NAME [VAULT]
 #
@@ -214,5 +244,12 @@ function OpGetValue
 
     $vault = OpGetVault $vault
 
-    op --session $env:NEON_OP_SESSION_TOKEN get item $passwordName --vault $vault --fields value
+    op --session $env:NC_OP_SESSION_TOKEN get item $passwordName --vault $vault --fields value
+
+    if ($LastExitCode -ne 0)
+    {
+        Write-Error "*** ERROR: Cannot retrieve [$vault/$passwordName] value from 1Passsword."
+        Write-Error "***        Please check your 1Password configuration."
+        exit 1
+    }
 }
