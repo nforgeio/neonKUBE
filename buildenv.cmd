@@ -8,6 +8,10 @@ REM batch file.
 REM
 REM This must be [RUN AS ADMINISTRATOR].
 
+echo ===========================================
+echo * neonKUBE Build Environment Configurator *
+echo ===========================================
+
 REM Default NF_ROOT to the folder holding this batch file after stripping
 REM off the trailing backslash.
 
@@ -43,24 +47,28 @@ set NEON_SKIPSLOWTESTS=1
 set DOTNETPATH=%WINDIR%\Microsoft.NET\Framework64\v4.0.30319
 set WINSDKPATH=C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.6 Tools\x64
 
+echo.
+echo Persisting state...
+echo.
+
 REM Persist the environment variables.
 
-setx NF_REPOS "%NF_REPOS%" /M
-setx NF_ROOT "%NF_ROOT%" /M
-setx NF_TOOLBIN "%NF_TOOLBIN%" /M
-setx NF_BUILD "%NF_BUILD%" /M
-setx NF_CACHE "%NF_CACHE%" /M
-setx NF_SNIPPETS "%NF_SNIPPETS%" /M
-setx NF_TEST "%NF_TEST%" /M
-setx NF_TEMP "%NF_TEMP%" /M
-setx NF_CODEDOC "%NF_CODEDOC%" /M
-setx NF_SAMPLES_CADENCE "%NF_SAMPLES_CADENCE%" /M
-setx NEON_SKIPSLOWTESTS %NEON_SKIPSLOWTESTS% /M
-setx DOTNET_CLI_TELEMETRY_OPTOUT 1 /M
+setx NF_REPOS "%NF_REPOS%" /M                                 > nul
+setx NF_ROOT "%NF_ROOT%" /M                                   > nul
+setx NF_TOOLBIN "%NF_TOOLBIN%" /M                             > nul
+setx NF_BUILD "%NF_BUILD%" /M                                 > nul
+setx NF_CACHE "%NF_CACHE%" /M                                 > nul
+setx NF_SNIPPETS "%NF_SNIPPETS%" /M                           > nul
+setx NF_TEST "%NF_TEST%" /M                                   > nul
+setx NF_TEMP "%NF_TEMP%" /M                                   > nul
+setx NF_CODEDOC "%NF_CODEDOC%" /M                             > nul
+setx NF_SAMPLES_CADENCE "%NF_SAMPLES_CADENCE%" /M             > nul
+setx NEON_SKIPSLOWTESTS %NEON_SKIPSLOWTESTS% /M               > nul
+setx DOTNET_CLI_TELEMETRY_OPTOUT 1 /M                         > nul
 
-setx DOTNETPATH "%DOTNETPATH%" /M
-setx DEV_WORKSTATION 1 /M
-setx OPENSSL_CONF "%NF_ROOT%\External\OpenSSL\openssl.cnf" /M
+setx DOTNETPATH "%DOTNETPATH%" /M                             > nul
+setx DEV_WORKSTATION 1 /M                                     > nul
+setx OPENSSL_CONF "%NF_ROOT%\External\OpenSSL\openssl.cnf" /M > nul
 
 REM Make sure required folders exist.
 
@@ -100,10 +108,11 @@ REM Remove obsolete paths if they exist.
 REM Configure the neonKUBE kubeconfig path (as a USER environment variable).
 
 set KUBECONFIG=%USERPROFILE%\.kube\admin.conf
-reg add HKCU\Environment /v KUBECONFIG /t REG_EXPAND_SZ /d %USERPROFILE%\.kube\config /f 
+reg add HKCU\Environment /v KUBECONFIG /t REG_EXPAND_SZ /d %USERPROFILE%\.kube\config /f > /nul
 
-:done
-@echo "============================================================================================"
-@echo "* Be sure to close and reopen Visual Studio and any command windows to pick up the changes *"
-@echo "============================================================================================"
+echo.
+echo ============================================================================================
+echo * Be sure to close and reopen Visual Studio and any command windows to pick up the changes *
+echo ============================================================================================
 pause
+:done
