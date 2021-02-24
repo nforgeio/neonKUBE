@@ -128,7 +128,7 @@ function Publish
     dotnet pack $projectPath  -c Debug --include-symbols --include-source -o "$env:NF_BUILD\nuget"
     ThrowOnExitCode
 
-    nuget push -Source $env:NC_NUGET_DEVFEED --api-key $devFeedApiKey "$env:NF_BUILD\nuget\$project.$version.nupkg"
+    nuget push -Source $env:NC_NUGET_DEVFEED -ApiKey $devFeedApiKey "$env:NF_BUILD\nuget\$project.$version.nupkg"
     ThrowOnExitCode
    
     # NOTE: We're not doing this because including source and symbols above because

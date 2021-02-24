@@ -85,7 +85,7 @@ function Publish
         $prerelease = ""
     }
 
-	nuget push -Source nuget.org --api-key $nugetApiKey "$env:NF_BUILD\nuget\$project.$libraryVersion$prerelease.nupkg"
+	nuget push -Source nuget.org -ApiKey $nugetApiKey "$env:NF_BUILD\nuget\$project.$libraryVersion$prerelease.nupkg"
     ThrowOnExitCode
 }
 
