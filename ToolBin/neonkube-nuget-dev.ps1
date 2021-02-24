@@ -29,32 +29,12 @@
 # be available only for maintainers and are intialized by the neonCLOUD
 # [buildenv.cmd] script.
 
-if (!(Test-Path env:NC_NUGET_DEVFEED))
+if (!(Test-Path env:NC_USER))
 {
-    "ERROR: This script is intended for maintainers only"
+    "*** ERROR: This script is intended for maintainers only"
+    "           [NC_USER] environment variable is not defined."
     ""
-    "NC_NUGET_DEVFEED environment variable is not defined."
-    "Maintainers should re-run the neonCLOUD [buildenv.cmd] script."
-
-    return 1
-}
-
-if (!(Test-Path env:NC_NUGET_VERSIONER))
-{
-    "ERROR: This script is intended for maintainers only"
-    ""
-    "NC_NUGET_VERSIONER environment variable is not defined."
-    "Maintainers should re-run the neonCLOUD [buildenv.cmd] script."
-
-    return 1
-}
-
-if (!(Test-Path env:NC_NUGET_VERSIONER_APIKEY))
-{
-    "ERROR: This script is intended for maintainers only"
-    ""
-    "NC_NUGET_VERSIONER_APIKEY environment variable is not defined."
-    "Maintainers should re-run the neonCLOUD [buildenv.cmd] script."
+    "           Maintainers should re-run the neonCLOUD [buildenv.cmd] script."
 
     return 1
 }
@@ -68,6 +48,14 @@ if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
     exit
 }
 
+# Sign into 1Password and retrieve any necessary credentials.
+
+OpSignin
+
+$versionerKey  = OpGetPassword "NEON_OP_NUGET_VERSIONER_KEY"
+$devFeedApiKey = OpGetPassword "NEON_OP_DEVFEED_KEY"
+
+#------------------------------------------------------------------------------
 # Sets the package version in the specified project file and makes a backup
 # of the original project file named [$project.bak].
 
@@ -98,6 +86,7 @@ function SetVersion
     $tmpProjectFile | Out-File -FilePath "$projectPath" -Encoding utf8
 }
 
+#------------------------------------------------------------------------------
 # Restores the original project version for a project.
 
 function RestoreVersion
@@ -116,6 +105,7 @@ function RestoreVersion
     Remove-Item "$projectPath.bak"
 }
 
+#------------------------------------------------------------------------------
 # Builds and publishes the project.
 
 function Publish
@@ -138,7 +128,7 @@ function Publish
     dotnet pack $projectPath  -c Debug --include-symbols --include-source -o "$env:NF_BUILD\nuget"
     ThrowOnExitCode
 
-    nuget push -Source $env:NC_NUGET_DEVFEED "$env:NF_BUILD\nuget\$project.$version.nupkg"
+    nuget push -Source $env:NC_NUGET_DEVFEED --api-key $devFeedApiKey "$env:NF_BUILD\nuget\$project.$version.nupkg"
     ThrowOnExitCode
    
     # NOTE: We're not doing this because including source and symbols above because
@@ -170,7 +160,7 @@ $branch = GitBranch $env:NF_ROOT
 
 # Get the nuget versioner API key from the environment and convert it into a base-64 string.
 
-$versionerKeyBase64 = [Convert]::ToBase64String(([System.Text.Encoding]::UTF8.GetBytes($env:NC_NUGET_VERSIONER_APIKEY)))
+$versionerKeyBase64 = [Convert]::ToBase64String(([System.Text.Encoding]::UTF8.GetBytes($versionerKey)))
 
 # Submit PUTs request to the versioner service, specifying the counter name.  The service will
 # atomically increment the counter and return the next value.

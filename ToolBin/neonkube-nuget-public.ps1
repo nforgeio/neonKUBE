@@ -31,6 +31,15 @@ if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
     exit
 }
 
+# Sign into 1Password and retrieve any necessary credentials.
+
+OpSignin
+
+$nugetApiKey = OpGetPassword "NEON_OP_NUGET_KEY"
+
+#------------------------------------------------------------------------------
+# Sets the package version in the specified project file.
+
 function SetVersion
 {
     [CmdletBinding()]
@@ -45,6 +54,9 @@ function SetVersion
 	neon-build pack-version NeonLibraryVersion "$env:NF_ROOT\Lib\$project\$project.csproj"
     ThrowOnExitCode
 }
+
+#------------------------------------------------------------------------------
+# Builds and publishes the project.
 
 function Publish
 {
@@ -73,7 +85,7 @@ function Publish
         $prerelease = ""
     }
 
-	nuget push -Source nuget.org "$env:NF_BUILD\nuget\$project.$libraryVersion$prerelease.nupkg"
+	nuget push -Source nuget.org --api-key $nugetApiKey "$env:NF_BUILD\nuget\$project.$libraryVersion$prerelease.nupkg"
     ThrowOnExitCode
 }
 
