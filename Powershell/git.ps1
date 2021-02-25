@@ -1,5 +1,5 @@
-﻿#------------------------------------------------------------------------------
-# FILE:         includes.ps1
+#------------------------------------------------------------------------------
+# FILE:         git.ps1
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 #
@@ -15,18 +15,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Common error handling settinga
+#------------------------------------------------------------------------------
+# Returns the current branch for a git repostory.
 
-$ErrorActionPreference = "Stop"
-$PSDefaultParameterValues['*:ErrorAction'] = 'Stop'
+function GitBranch
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=1)]
+        [string]$gitRepoPath
+    )
 
-# Include all of the other global scripts.
+    Push-Location
+    Set-Location $gitRepoPath
 
-$includeOrgDir = $pwd
-cd $env:NF_ROOT/Powershell
+    $branch = git rev-parse --abbrev-ref HEAD
 
-. ./error-handling.ps1
-. ./git.ps1
-. ./one-password.ps1
+    Pop-Location
 
-cd $includeOrgDir
+    return $branch
+}
