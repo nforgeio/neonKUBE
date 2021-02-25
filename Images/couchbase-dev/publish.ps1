@@ -63,4 +63,4 @@ if ($allVersions)
 {
 }
 
-Build "community-6.0.0" -latest
+Build "enterprise-6.5.1" -latest
