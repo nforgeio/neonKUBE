@@ -739,5 +739,20 @@ namespace TestCommon
             Assert.NotNull(netConfig.Subnet);
             Assert.NotNull(netConfig.Gateway);
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void ToS3Uri()
+        {
+            Assert.Equal("s3://bucket/path/to/object", NetHelper.ToAwsS3Uri("s3://bucket/path/to/object"));
+            Assert.Equal("s3://bucket/path/to/object", NetHelper.ToAwsS3Uri("S3://bucket/path/to/object"));
+
+            Assert.Equal("s3://bucket/path/to/object", NetHelper.ToAwsS3Uri("https://bucket/path/to/object"));
+            Assert.Equal("s3://bucket/path/to/object", NetHelper.ToAwsS3Uri("https://bucket.s3-us-west-2.amazonaws.com/path/to/object"));
+
+            Assert.Throws<ArgumentException>(() => NetHelper.ToAwsS3Uri("http://bucket/path/to/object"));                                       // Only HTTPS is allowed
+            Assert.Throws<ArgumentException>(() => NetHelper.ToAwsS3Uri("https://127.0.0.1/path/to/object"));                                   // Host IPv4 address are not allowed
+            Assert.Throws<ArgumentException>(() => NetHelper.ToAwsS3Uri("https://[3FFE:0000:0000:0001:0200:F8FF:FE75:50DF]/path/to/object"));   // Host IPv6 address are not allowed
+        }
     }
 }

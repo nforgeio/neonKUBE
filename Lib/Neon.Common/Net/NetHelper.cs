@@ -1076,6 +1076,44 @@ namespace Neon.Net
 
             return null;
         }
+
+        /// <summary>
+        /// Converts an S3 or standard HTTPS URI into an S3 URI.
+        /// </summary>
+        /// <param name="uri">The source URI.</param>
+        /// <returns>The equivalent S3 URI.</returns>
+        public static string ToAwsS3Uri(string uri)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri), nameof(uri));
+
+            var uriValue = new Uri(uri, UriKind.Absolute);
+
+            switch (uriValue.Scheme)
+            {
+                case "s3":
+
+                    return uriValue.ToString();
+
+                case "https":
+
+                    // Ensure that the host is not an IP address.
+
+                    if (IPAddress.TryParse(uriValue.DnsSafeHost, out var address))
+                    {
+                        throw new ArgumentException($"URI host cannot be an IP address: {uri}", nameof(uri));
+                    }
+
+                    // The bucket name is the first host domain label.
+
+                    var bucket = uriValue.DnsSafeHost.Split('.').First();
+
+                    return $"s3://{bucket}{uriValue.PathAndQuery}";
+
+                default:
+
+                    throw new ArgumentException($"Only HTTPS or S3 URI schemes are allowed: {uri}", nameof(uri));
+            }
+        }
     }
 }
 
