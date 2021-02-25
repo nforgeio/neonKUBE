@@ -1103,9 +1103,24 @@ namespace Neon.Net
                         throw new ArgumentException($"URI host cannot be an IP address: {uri}", nameof(uri));
                     }
 
+                    // Ensure that the URI actually references an S3 bucket.  The host
+                    // should look something like:
+                    //
+                    //      neonkube.s3-us-west-2.amazonaws.com
+
+                    var domainLabels = uriValue.DnsSafeHost.Split('.');
+
+                    if (domainLabels.Length != 4 ||
+                        !domainLabels[1].StartsWith("s3-", StringComparison.InvariantCultureIgnoreCase) ||
+                        !domainLabels[2].Equals("amazonaws", StringComparison.InvariantCultureIgnoreCase) ||
+                        !domainLabels[3].Equals("com", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        throw new ArgumentException($"URI doesn't reference an S3 bucket: {uri}", nameof(uri));
+                    }
+
                     // The bucket name is the first host domain label.
 
-                    var bucket = uriValue.DnsSafeHost.Split('.').First();
+                    var bucket = domainLabels[0];
 
                     return $"s3://{bucket}{uriValue.PathAndQuery}";
 
