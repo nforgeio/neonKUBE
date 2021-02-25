@@ -170,7 +170,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public HostingManager GetManager(HostingEnvironment environment)
         {
-            EnsureNonEnterpriseEnvironment(environment);
+            //EnsureNonEnterpriseEnvironment(environment);
 
             if (!environmentToHostingManager.TryGetValue(environment, out var managerType))
             {
@@ -186,7 +186,7 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
             Covenant.Assert(environmentToHostingManager != null, $"[{nameof(HostingLoader)}] is not initialized.  You must call [{nameof(HostingLoader)}.{nameof(HostingLoader.Initialize)}()] first.");
 
-            EnsureNonEnterpriseEnvironment(cluster.Definition.Hosting.Environment);
+            //EnsureNonEnterpriseEnvironment(cluster.Definition.Hosting.Environment);
 
             if (!environmentToHostingManager.TryGetValue(cluster.Definition.Hosting.Environment, out var managerType))
             {
