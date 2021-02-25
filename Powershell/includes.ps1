@@ -102,7 +102,7 @@ function OpSignin
 # this in your scripts because the session environment variable will naturally
 # go out of scope and be effectively deleted after the script exits.
 
-function OpSignOut
+function OpSignout
 {
     $env:NC_OP_SESSION_TOKEN = $null
 }
@@ -110,7 +110,7 @@ function OpSignOut
 #------------------------------------------------------------------------------
 # Returns [$true] when we're signed into 1Password.
 
-function OpSignedIn
+function OpIsSignedIn
 {
     return ![System.String]::IsNullOrEmpty($env:NC_OP_SESSION_TOKEN)
 }
@@ -118,7 +118,7 @@ function OpSignedIn
 #------------------------------------------------------------------------------
 # Ensures that the script is currently signed into 1Password.
 
-function OpEnsureSignIn
+function OpEnsureSignedIn
 {
     if ([System.String]::IsNullOrEmpty($env:NC_OP_SESSION_TOKEN))
     {
@@ -149,7 +149,7 @@ function OpGetVault
         [string]$vault
     )
 
-    OpEnsureSignin
+    OpEnsureSignedIn
 
     if ([System.String]::IsNullOrEmpty($vault))
     {
@@ -198,7 +198,7 @@ function OpGetPassword
         [string]$vault = $null
     )
 
-    OpEnsureSignin
+    OpEnsureSignedIn
 
     $vault = OpGetVault $vault
 

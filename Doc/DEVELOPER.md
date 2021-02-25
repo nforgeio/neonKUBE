@@ -175,9 +175,6 @@ Follow the steps below to configure a development or test workstation:
 
     * **Download:** the latest recommended (at least **v5.8.0**) **nuget.exe** from [here](https://www.nuget.org/downloads) and put this somewhere in your `PATH`
     * Obtain a nuget API key from a maintainer and install the key on your workstation via:
-      ```
-      nuget SetApiKey APIKEY
-      ```
     * **Install:** GitHub CLI (amd64) v1.4.0 or greater from: https://github.com/cli/cli/releases
     * **Close:** all Visual Studio instances.
     * **Install:** the HTML Help Compiler by running `$/External/htmlhelp.exe` with the default options.  You can ignore any message about a newer version already being installed.
@@ -191,12 +188,14 @@ Follow the steps below to configure a development or test workstation:
       * Click **Next** until you get to the last page.
       * Click **Close** to close the SHFB installer.
 
-27. *Optional*: Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
+26. *Optional*: Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
+
+27. *Optional*: Maintainers will need to install then **GitHub CLI** from here: https://cli.github.com/
 
 27: *Optional:* Maintainers will need to **AWS client version 2** from: [here](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-windows.html)
 
-28: *Optional:* Maintainers authorized to perform releases will need to following the README.md instructions in the neonCLOUD repo to configure credentials for the GitHub Releases and the Container Registry.
+29: *Optional:* Maintainers authorized to perform releases will need to follow the README.md instructions in the neonCLOUD repo to configure credentials for the GitHub Releases and the Container Registry.
 
-29. *Optional:* Developers working on Cadence or Temporal will need to install Visual Studio Code and GO to work on the proxy:
+30. *Optional:* Developers working on Cadence or Temporal will need to install Visual Studio Code and GO to work on the proxy:
     * Install **Visual Studio Code** from [here](https://code.visualstudio.com/download)
     * Install **go1.13.windows-amd64.msi** or later for Windows from: [here](https://golang.org/dl/)
