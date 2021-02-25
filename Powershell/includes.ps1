@@ -102,7 +102,7 @@ function OpSignin
 # this in your scripts because the session environment variable will naturally
 # go out of scope and be effectively deleted after the script exits.
 
-function OpSignOut
+function OpSignout
 {
     $env:NC_OP_SESSION_TOKEN = $null
 }
