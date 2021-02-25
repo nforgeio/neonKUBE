@@ -1111,7 +1111,7 @@
         </member>
         <member name="M:Neon.Common.CommandLine.#ctor(System.Object[])">
             <summary>
-            Constructs an instance optionally expanding any response file specified
+            Constructs an instance optionally expanding any response files specified
             in the arguments passed.
             </summary>
             <param name="args">The optional command line arguments.</param>
@@ -15453,22 +15453,22 @@
             <summary>Repository URL: https://github.com/nforgeio/neonKUBE</summary>
         </member>
         <member name="F:ThisAssembly.Git.Branch">
-            <summary>Branch: jeff</summary>
+            <summary>Branch: master</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commit">
-            <summary>Commit: d47801435</summary>
+            <summary>Commit: ea1c0e95d</summary>
         </member>
         <member name="F:ThisAssembly.Git.Sha">
-            <summary>Sha: d478014355c59017d153dc069a8b862f3c3d8b27</summary>
+            <summary>Sha: ea1c0e95dd8ed3a4c68de693464e989925eda165</summary>
         </member>
         <member name="F:ThisAssembly.Git.CommitDate">
-            <summary>Commit date: 2021-02-17T11:53:20-08:00</summary>
+            <summary>Commit date: 2021-02-18T15:25:14-08:00</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commits">
-            <summary>Commits on top of base version: 432</summary>
+            <summary>Commits on top of base version: 446</summary>
         </member>
         <member name="F:ThisAssembly.Git.Tag">
-            <summary>Tag: neonLIBRARY-v2.10.0-432-gd47801435</summary>
+            <summary>Tag: neonLIBRARY-v2.10.0-446-gea1c0e95d</summary>
         </member>
         <member name="F:ThisAssembly.Git.BaseTag">
             <summary>Base tag: neonLIBRARY-v2.10.0</summary>
@@ -15495,7 +15495,7 @@
             <summary>Minor: 10</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Patch">
-            <summary>Patch: 432</summary>
+            <summary>Patch: 446</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Label">
             <summary>Label: neonLIBRARY</summary>

@@ -30,8 +30,6 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Common;
-using Neon.Kube;
-using Neon.SSH;
 
 namespace Neon.XenServer
 {

@@ -111,15 +111,15 @@ namespace Neon.Kube
                 case HostingEnvironment.HyperV:
                 case HostingEnvironment.HyperVLocal:
 
-                    return $"https://neonkube.s3-us-west-2.amazonaws.com/images/hyperv/node/neonkube.{KubeVersions.NeonKubeVersion}.hyperv.vhdx";
+                    return $"https://neonkube.s3-us-west-2.amazonaws.com/images/hyperv/node/neonkube-{KubeVersions.NeonKubeVersion}.hyperv.vhdx";
 
                 case HostingEnvironment.XenServer:
 
-                    return $"https://neonkube.s3-us-west-2.amazonaws.com/images/xenserver/node/neonkube.{KubeVersions.NeonKubeVersion}.xva";
+                    return $"https://neonkube.s3-us-west-2.amazonaws.com/images/xenserver/node/neonkube-{KubeVersions.NeonKubeVersion}.xva";
 
                 case HostingEnvironment.Wsl2:
 
-                    return $"https://neonkube.s3-us-west-2.amazonaws.com/images/wsl2/node/neonkube.{KubeVersions.NeonKubeVersion}.tar";
+                    return $"https://neonkube.s3-us-west-2.amazonaws.com/images/wsl2/node/neonkube-{KubeVersions.NeonKubeVersion}.tar";
 
                 default:
 

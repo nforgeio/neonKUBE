@@ -294,10 +294,25 @@ namespace Neon.Net
         public const int Postgres = 5433;
 
         /// <summary>
+        /// Default port for the Grafana dashboard.
+        /// </summary>
+        public const int GrafanaDashboard = 9000;
+
+        /// <summary>
         /// The standard Prometheus scraping port exposed by Neon related services,
         /// including custom user services built on <b>Neon.Service</b>.
         /// </summary>
-        public const int NeonPrometheus = 9762;
+        public const int NeonPrometheusScrape = 9762;
+
+        /// <summary>
+        /// Default port for the Cortex dashboard.
+        /// </summary>
+        public const int CortexDashboard = 9009;
+
+        /// <summary>
+        /// Default port for the Prometheus dashboard.
+        /// </summary>
+        public const int PrometheusDashboard = 9090;
 
         private static Dictionary<string, int> wellKnownMap;
 
@@ -313,7 +328,10 @@ namespace Neon.Net
             }
         }
 
-        static NetworkPorts()
+        /// <summary>
+        /// Initializes the well-known name to port map. 
+        /// </summary>
+        private static void InitializePortMap()
         {
             // Initialize the well known port map.
 
@@ -371,14 +389,35 @@ namespace Neon.Net
                 new Map("temporal", Temporal),
                 new Map("kubernetes-api", KubernetesApi),
                 new Map("cassandra", Cassandra),
-                new Map("postgres", Postgres)
+                new Map("postgres", Postgres),
+                new Map("neon-prometheusscrape", NeonPrometheusScrape),
+                new Map("grafana-dashboard", GrafanaDashboard),
+                new Map("cortex-dashboard", CortexDashboard),
+                new Map("prometheus-dashboard", PrometheusDashboard)
             };
 
-        wellKnownMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            // $note(jefflill):
+            //
+            // We're avoiding a lock here by creating the map in a local variable first
+            // and then assigning it to the static field as an atomic assignment.
+            // If we initialized the static field directly, it's possible that we
+            // could have two threads doing this at the same time with unpredictable
+            // results.
+            //
+            // This would happen rarely, but would be very difficult to diagnose.
+            //
+            // With this implementation there may be two threads doing this in parallel,
+            // but the last one to set the static field would "win" and everything will
+            // be OK.
+
+            var tempWellKnownMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
             foreach (Map map in ports)
             {
-                wellKnownMap.Add(map.Name, map.Port);
+                tempWellKnownMap.Add(map.Name, map.Port);
             }
+
+            wellKnownMap = tempWellKnownMap;
         }
 
         /// <summary>
@@ -387,7 +426,7 @@ namespace Neon.Net
         /// </summary>
         /// <param name="input">The port number or name as as string.</param>
         /// <param name="port">Receives the parsed port number.</param>
-        /// <returns><c>true</c> if a port was successfulyy parsed.</returns>
+        /// <returns><c>true</c> if a port was successfully parsed.</returns>
         public static bool TryParse(string input, out int port)
         {
             port  = 0;
@@ -396,6 +435,11 @@ namespace Neon.Net
             if (int.TryParse(input, out port))
             {
                 return true;
+            }
+
+            if (wellKnownMap == null)
+            {
+                InitializePortMap();
             }
 
             return wellKnownMap.TryGetValue(input, out port);

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    NamespaceDoc.cs
+// FILE:	    IXenClient.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -17,29 +17,27 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics.Contracts;
-using System.Reflection;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 using Neon.Common;
 
-namespace Neon.ModelGen
+namespace Neon.XenServer
 {
     /// <summary>
-    /// <para>
-    /// This namespace includes the types used to generate data models from interface definitions. 
-    /// These models can be built to support round-tripping data without loss as well as optionally
-    /// adding <see cref="INotifyPropertyChanged"/> related code for UX binding.
-    /// </para>
-    /// <para>
-    /// You can use these classes to integrate model generation into your own tooling or use the
-    /// <b>Neon.ModelGenerator</b> package which includes the pre-built <b>neon-modelgen</b> 
-    /// command line tool.  You'll add a reference to this package to your project and then
-    /// add a custom build target to invoke <b>neon-modelgen</b>.
-    /// </para>
+    /// <b>INTERNAL USE ONLY:</b> Used internally by cluster as a potentially temporary
+    /// hack required by <c>SetupController&lt;NodeMetadata&gt;</c> to display XenServer
+    /// provisioning status.  This may be removed at some point in the future.
     /// </summary>
-    [System.Runtime.CompilerServices.CompilerGenerated]
-    class NamespaceDoc
+    public interface IXenClient
     {
+        /// <summary>
+        /// Returns the name of the connected XenServer.
+        /// </summary>
+        string Name { get; }
     }
 }

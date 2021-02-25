@@ -20,7 +20,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 
 using Neon.Common;
-using Neon.Kube;
 
 namespace Neon.XenServer
 {

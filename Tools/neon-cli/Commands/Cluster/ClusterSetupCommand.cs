@@ -49,10 +49,6 @@ using Neon.Time;
 using k8s;
 using k8s.Models;
 
-#if ENTERPRISE
-using HostingLoader = Neon.Kube.EnterpriseHostingLoader;
-#endif
-
 namespace NeonCli
 {
     /// <summary>
@@ -91,7 +87,7 @@ OPTIONS:
         private KubeConfigContext   kubeContext;
         private ClusterLogin        clusterLogin;
         private ClusterProxy        cluster;
-        private HostingManager      hostingManager;
+        private HostingManager      hostingManager; 
 
         /// <inheritdoc/>
         public override string[] Words => new string[] { "cluster", "setup" };
@@ -172,7 +168,8 @@ OPTIONS:
 
             // Initialize the cluster proxy and the hbosting manager.
 
-            cluster        = new ClusterProxy(kubeContext, Program.CreateNodeProxy<NodeDefinition>, appendToLog: true, defaultRunOptions: RunOptions.LogOutput | RunOptions.FaultOnError);
+            cluster = new ClusterProxy(kubeContext, Program.CreateNodeProxy<NodeDefinition>, appendToLog: true, defaultRunOptions: RunOptions.LogOutput | RunOptions.FaultOnError);
+
             hostingManager = new HostingManagerFactory(() => HostingLoader.Initialize()).GetManager(cluster, Program.LogPath);
 
             if (hostingManager == null)
@@ -180,6 +177,15 @@ OPTIONS:
                 Console.Error.WriteLine($"*** ERROR: No hosting manager for the [{cluster.Definition.Hosting.Environment}] environment could be located.");
                 Program.Exit(1);
             }
+
+#if ENTERPRISE
+            if (hostingManager.HostingEnvironment == HostingEnvironment.Wsl2)
+            {
+                var wsl2Proxy = new Wsl2Proxy(KubeConst.Wsl2MainDistroName, KubeConst.SysAdminUser);
+                
+                cluster.FirstMaster.Address = IPAddress.Parse(wsl2Proxy.Address);
+            }
+#endif
 
             // Update the cluster node SSH credentials to use the secure password.
 

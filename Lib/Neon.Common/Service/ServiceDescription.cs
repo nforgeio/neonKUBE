@@ -162,7 +162,7 @@ namespace Neon.Service
         /// </summary>
         [JsonProperty(PropertyName = "MetricsPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "metricsPort", ApplyNamingConventions = false)]
-        public int MetricsPort { get; set; } = NetworkPorts.NeonPrometheus;
+        public int MetricsPort { get; set; } = NetworkPorts.NeonPrometheusScrape;
 
         /// <summary>
         /// Used to hold environment variables that will be set when deploying the service in a test

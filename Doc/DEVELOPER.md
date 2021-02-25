@@ -135,13 +135,11 @@ Follow the steps below to configure a development or test workstation:
 
 15. **Close** any running instances of **Visual Studio**
 
-16. Install the latest release of **neonKUBE** from [here](https://github.com/nforgeio/neonKUBE/releases)
+16. Install **7-Zip (32-bit)** (using the Windows *.msi* installer) from [here](http://www.7-zip.org/download.html)
 
-17. Install **7-Zip (32-bit)** (using the Windows *.msi* installer) from [here](http://www.7-zip.org/download.html)
+17. Install **Cygwin - setup-x86-64.exe** (all packages and default path) from: [here](https://www.cygwin.com/setup-x86_64.exe)
 
-18. Install **Cygwin - setup-x86-64.exe** (all packages and default path) from: [here](https://www.cygwin.com/setup-x86_64.exe)
-
-19. Many server components are deployed to Linux, so you’ll need terminal and file management programs.  We’re currently standardizing on **PuTTY** for the terminal and **WinSCP** for file transfer. install both programs to their default directories:
+18. Many server components are deployed to Linux, so you’ll need terminal and file management programs.  We’re currently standardizing on **PuTTY** for the terminal and **WinSCP** for file transfer. install both programs to their default directories:
 
     * Install **WinSCP** from [here](http://winscp.net/eng/download.php) (I typically use the "Explorer" interface)
     * Install **PuTTY** from [here](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html)
@@ -150,19 +148,19 @@ Follow the steps below to configure a development or test workstation:
     
       ![WinSCP Hidden Files](Images/Developer/WinSCPHiddenFiles.png?raw=true)
 
-20. Restart Visual Studio (to pick up the environment changes).
+19. Restart Visual Studio (to pick up the environment changes).
 
-21. Confirm that the solution builds:
+20. Confirm that the solution builds:
 
     * Run **Visual Studio** as **administrator**
     * Open **$/neonKUBE.sln** (where **$** is the repo root directory)
     * Select **Build/Rebuild** Solution
 
-22. *Optional*: Install **Notepad++** from [here](https://notepad-plus-plus.org/download)
+21. *Optional*: Install **Notepad++** from [here](https://notepad-plus-plus.org/download)
 
-23. *Optional*: Install **Postman** REST API tool from [here](https://www.getpostman.com/postman)
+22. *Optional*: Install **Postman** REST API tool from [here](https://www.getpostman.com/postman)
 
-24. *Optional*: Install **Cmdr/Mini** command shell:
+23. *Optional*: Install **Cmdr/Mini** command shell:
 
   * **IMPORTANT: Don't install the Full version** to avoid installing Linux command line tools that might conflict with the Cygwin tools installed earlier.
   * Download the ZIP archive from: [here](http://cmder.net/)
@@ -171,9 +169,9 @@ Follow the steps below to configure a development or test workstation:
   * Run Cmdr and configure settings as desired.
   * Consider removing the alias definitions in `$\config\user-aliases.cmd` file so that commands like `ls` will work properly.  I deleted all lines beneath the first `@echo off`.
 
-25. *Optional*: Install the latest version of **XCP-ng Center** from [here](https://github.com/xcp-ng/xenadmin/releases) if you'll need to manage Virtual Machines hosted on XCP-ng.
+24. *Optional*: Install the latest version of **XCP-ng Center** from [here](https://github.com/xcp-ng/xenadmin/releases) if you'll need to manage Virtual Machines hosted on XCP-ng.
 
-26. *Optional*: Maintainers who will be publishing releases will need to:
+25. *Optional*: Maintainers who will be publishing releases will need to:
 
     * **Download:** the latest recommended (at least **v5.8.0**) **nuget.exe** from [here](https://www.nuget.org/downloads) and put this somewhere in your `PATH`
     * Obtain a nuget API key from a maintainer and install the key on your workstation via:
@@ -193,49 +191,12 @@ Follow the steps below to configure a development or test workstation:
       * Click **Next** until you get to the last page.
       * Click **Close** to close the SHFB installer.
 
-27. *Optional*: Maintainers who will be publishing releases will need to configure your Personal Access Token (PAT) and GitHub username for GitHub registery access:
+27. *Optional*: Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
 
-    * Go to: https://github.com (and login if necessary)
-    * Click your **Profile Picture** at the top-right and click **Settings**
-    * Click **Developer settings** in the left panel towards the bottom
-    * Click **personal access tokens** in the left panel
-    * Click the **Generate new token** button
-    * Enter this as the note: **PAT**
-    * Check:
-      * **repo**
-      * **workflow**
-      * **write:packages** 
-      * **delete:packages**
-      * **admin:org
-      * **gist**
-    * Click **Generate Token**
-    * Copy the token hex to the clipboard
-    * _optional:_ Save the token to your Dashlane GitHub page
-    * Open a command Windows with admin priviledges
-    * Execute the commands below to save the token and your GitHub username as environment variables:
-    ```
-    set GITHUB_USERNAME=YOUR-GITHUB-USERNAME
-    set GITHUB_PAT=YOUR-TOKEN
+27: *Optional:* Maintainers will need to **AWS client version 2** from: [here](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-windows.html)
 
-    setx GITHUB_USERNAME %GITHUB_USERNAME% /M
-    setx GITHUB_PAT %GITHUB_PAT% /M
-    ```
-    * Login the docker-cli using the new credentials:
-    ```
-    echo %GITHUB_PAT% | docker login ghcr.io -u %GITHUB_USERNAME% --password-stdin
-    ```
-    * Login the githib-cli using the new credentials:
-    ```
-    echo %GITHUB_PAT% | gh auth login --with-token
-    ```
-    * Close and reopen any Visual Studio or command windows to pick up the change.
+28: *Optional:* Maintainers authorized to perform releases will need to following the README.md instructions in the neonCLOUD repo to configure credentials for the GitHub Releases and the Container Registry.
 
-28. *Optional*: Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
-
-29: *Optional:* Install the **AWS client version 2** from: [here](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-windows.html)
-
-30: *Optional:* Maintainers authorized to perform releases will need to following the README.md instructions in the neonCLOUD repo to configure credentials for the GitHub Releases and the Container Registry.
-
-31. *Optional:* Developers working on Cadence or Temporal will need to install Visual Studio Code and GO to work on the proxy:
+29. *Optional:* Developers working on Cadence or Temporal will need to install Visual Studio Code and GO to work on the proxy:
     * Install **Visual Studio Code** from [here](https://code.visualstudio.com/download)
     * Install **go1.13.windows-amd64.msi** or later for Windows from: [here](https://golang.org/dl/)

@@ -19,7 +19,6 @@ using System;
 using System.Collections.Generic;
 
 using Neon.Common;
-using Neon.Kube;
 
 namespace Neon.XenServer
 {

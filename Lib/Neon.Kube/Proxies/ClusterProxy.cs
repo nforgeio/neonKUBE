@@ -302,10 +302,9 @@ namespace Neon.Kube
         /// </exception>
         public NodeSshProxy<NodeDefinition> GetReachableMaster(ReachableHostMode failureMode = ReachableHostMode.ReturnFirst)
         {
-            var masterAddresses = Nodes
-                    .Where(n => n.Metadata.IsMaster)
-                    .Select(n => n.Address.ToString())
-                    .ToList();
+            var masterAddresses = Masters
+                .Select(n => n.Address.ToString())
+                .ToList();
 
             var reachableHost = NetHelper.GetReachableHost(masterAddresses, failureMode);
 
@@ -316,7 +315,7 @@ namespace Neon.Kube
 
             // Return the node that is assigned the reachable address.
 
-            return Nodes.Where(n => n.Address.ToString() == reachableHost.Host).First();
+            return Masters.Where(n => n.Address.ToString() == reachableHost.Host).First();
         }
 
         /// <summary>

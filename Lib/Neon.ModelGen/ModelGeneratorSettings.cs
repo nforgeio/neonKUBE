@@ -133,7 +133,7 @@ namespace Neon.ModelGen
         /// </para>
         /// <para>
         /// New projects should leave this alone but existing 1.x based projects
-        /// must set this to <c>true</c> or use the new <b>neon generated models --v1compatible</b> 
+        /// must set this to <c>true</c> or use the new <b>neon-modelgen --v1compatible</b> 
         /// option to avoid database corruption and/or data transmission issues. 
         /// See <a href="https://github.com/nforgeio/neonKUBE/issues/776">#776</a>
         /// for more information.

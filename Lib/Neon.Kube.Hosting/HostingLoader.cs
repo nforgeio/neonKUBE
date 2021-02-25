@@ -104,6 +104,15 @@ namespace Neon.Kube
                 HyperVLocalHostingManager.Load();
                 XenServerHostingManager.Load();
 
+                // For enterprise releases, load any additional enterprise-only hosting managers.
+
+                var enterpriseHelper = NeonHelper.ServiceContainer.GetService<IEnterpriseHelper>();
+
+                if (enterpriseHelper != null)
+                {
+                    enterpriseHelper.LoadHostingManagers();
+                }
+
                 // We're going to reflect all loaded assemblies for classes that implement
                 // [IHostingManager] and are decorated with an [HostingProviderAttribute],
                 // end then use the environment specified in the attributes to determine
@@ -153,31 +162,22 @@ namespace Neon.Kube
             return KubeHelper.IsCloudEnvironment(environment);
         }
 
-        /// <summary>
-        /// Ensures that a hosting environment is opensource and not one of the 
-        /// enterprise (closed-source) environments.
-        /// </summary>
-        /// <param name="environment">The hosting environment.</param>
-        /// <exception cref="NotSupportedException">Thrown for enterprise hosting environments.</exception>
-        private void EnsureNonEnterpriseEnvironment(HostingEnvironment environment)
-        {
-            if (KubeHelper.IsEnterpriseEnvironment(environment))
-            {
-                throw new NotSupportedException($"The [{environment}] hosting environment is not available for opensource use.");
-            }
-        }
-
         /// <inheritdoc/>
         public HostingManager GetManager(HostingEnvironment environment)
         {
-            //EnsureNonEnterpriseEnvironment(environment);
+            if (environmentToHostingManager.TryGetValue(environment, out var managerType))
+            {
+                return (HostingManager)Activator.CreateInstance(managerType);
+            }
 
-            if (!environmentToHostingManager.TryGetValue(environment, out var managerType))
+            var enterpriseHelper = NeonHelper.ServiceContainer.GetService<IEnterpriseHelper>();
+
+            if (enterpriseHelper == null)
             {
                 return null;
             }
 
-            return (HostingManager)Activator.CreateInstance(managerType);
+            return enterpriseHelper.GetHostingManager(environment);
         }
 
         /// <inheritdoc/>
@@ -186,14 +186,19 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
             Covenant.Assert(environmentToHostingManager != null, $"[{nameof(HostingLoader)}] is not initialized.  You must call [{nameof(HostingLoader)}.{nameof(HostingLoader.Initialize)}()] first.");
 
-            //EnsureNonEnterpriseEnvironment(cluster.Definition.Hosting.Environment);
+            if (environmentToHostingManager.TryGetValue(cluster.Definition.Hosting.Environment, out var managerType))
+            {
+                return (HostingManager)Activator.CreateInstance(managerType, cluster, logFolder);
+            }
 
-            if (!environmentToHostingManager.TryGetValue(cluster.Definition.Hosting.Environment, out var managerType))
+            var enterpriseHelper = NeonHelper.ServiceContainer.GetService<IEnterpriseHelper>();
+
+            if (enterpriseHelper == null)
             {
                 return null;
             }
 
-            return (HostingManager)Activator.CreateInstance(managerType, cluster, logFolder);
+            return enterpriseHelper.GetHostingManager(cluster, logFolder);
         }
     }
 }

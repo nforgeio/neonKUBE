@@ -125,7 +125,8 @@ Go/**/__debug_bin
 ### Neon.ModelGenberator ###
 ############################
 
-# This library generates a tool binary we need to exclude 
-# from GitHub.
+# This library includes binaries that shouldn't be committed.
 
-/Lib/Neon.ModelGenerator/neon-model
+/Lib/Neon.ModelGenerator/linux-x64/**
+/Lib/Neon.ModelGenerator/osx-x64/**
+/Lib/Neon.ModelGenerator/win-x64/**

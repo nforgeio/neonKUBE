@@ -17,19 +17,30 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
+using System.Dynamic;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Common;
+using Neon.Diagnostics;
+using Neon.IO;
+using Neon.Net;
+
+using Renci.SshNet;
 
 namespace Neon.Kube
 {
     /// <summary>
-    /// <b>INTERNAL USE ONLY:</b> Used internally by cluster as a potentially temporary
+    /// <b>INTERNAL USE ONLY:</b> Used internally by neonKUBE cluster as a potentially temporary
     /// hack required by <see cref="SetupController{NodeMetadata}"/> to display XenServer
     /// provisioning status.  This may be removed at some point in the future.
     /// </summary>
