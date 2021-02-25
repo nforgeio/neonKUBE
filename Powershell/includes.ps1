@@ -110,7 +110,7 @@ function OpSignout
 #------------------------------------------------------------------------------
 # Returns [$true] when we're signed into 1Password.
 
-function OpSignedIn
+function OpSigneiIn
 {
     return ![System.String]::IsNullOrEmpty($env:NC_OP_SESSION_TOKEN)
 }
