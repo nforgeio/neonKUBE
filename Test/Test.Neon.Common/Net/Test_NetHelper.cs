@@ -739,5 +739,27 @@ namespace TestCommon
             Assert.NotNull(netConfig.Subnet);
             Assert.NotNull(netConfig.Gateway);
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void ToAwsS3Uri()
+        {
+            Assert.Equal("s3://bucket/path/to/object", NetHelper.ToAwsS3Uri("s3://bucket/path/to/object"));
+            Assert.Equal("s3://bucket/path/to/object", NetHelper.ToAwsS3Uri("https://bucket.s3-us-west-2.amazonaws.com/path/to/object"));
+
+            Assert.Throws<ArgumentException>(() => NetHelper.ToAwsS3Uri("http://bucket/path/to/object"));                                       // Only HTTPS is allowed
+            Assert.Throws<ArgumentException>(() => NetHelper.ToAwsS3Uri("https://127.0.0.1/path/to/object"));                                   // Host IPv4 address are not allowed
+            Assert.Throws<ArgumentException>(() => NetHelper.ToAwsS3Uri("https://[3FFE:0000:0000:0001:0200:F8FF:FE75:50DF]/path/to/object"));   // Host IPv6 address are not allowed
+
+            // Ensure that we check that HTTP URIs actually reference an S3 bucket.
+
+            Assert.Throws<ArgumentException>(() => NetHelper.ToAwsS3Uri("https://bucket.s3-us-west-2.amazonaws.net/path/to/object"));           // Doesn't end with:                ".com"
+            Assert.Throws<ArgumentException>(() => NetHelper.ToAwsS3Uri("https://bucket.s3-us-west-2.XXXXXXXXX.com/path/to/object"));           // Domain label isn't:              "amazonaws"
+            Assert.Throws<ArgumentException>(() => NetHelper.ToAwsS3Uri("https://bucket.xx-us-west-2.amazonaws.com/path/to/object"));           // Domain label doesn't start with: "s3-"
+            Assert.Throws<ArgumentException>(() => NetHelper.ToAwsS3Uri("https://bucket.s3us-west-2.amazonaws.com/path/to/object"));            // Domain label doesn't start with: "s3-"
+            Assert.Throws<ArgumentException>(() => NetHelper.ToAwsS3Uri("https://bucket/path/to/object"));                                      // Not enough labels
+            Assert.Throws<ArgumentException>(() => NetHelper.ToAwsS3Uri("https://bucket.s3-us-west-2/path/to/object"));                         // Not enough labels
+            Assert.Throws<ArgumentException>(() => NetHelper.ToAwsS3Uri("https://bucket.s3-us-west-2.amazonaws/path/to/object"));               // Not enough labels
+        }
     }
 }

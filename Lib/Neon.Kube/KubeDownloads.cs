@@ -87,10 +87,19 @@ namespace Neon.Kube
         public static readonly string IstioLinuxUri = $"https://github.com/istio/istio/releases/download/{KubeVersions.IstioVersion}/istioctl-{KubeVersions.IstioVersion}-linux-amd64.tar.gz";
 
         /// <summary>
+        /// The HTTPS URI to the public AWS S3 bucket where we persist cluster VM images 
+        /// and perhaps other things.
+        /// </summary>
+        public const string NeonPublicBucketUri = "https://neon-public.s3-us-west-2.amazonaws.com";
+
+        /// <summary>
         /// <para>
-        /// Returns the URI to be used for downloading the prepared neonKUBE virtual machine image 
+        /// Returns the HTTPS URI to be used for downloading the prepared neonKUBE virtual machine image 
         /// for the current neonKUBE cluster version.
         /// </para>
+        /// <note>
+        /// The HTTPS URI returned may be converted into an S3 URI via <see cref="NetHelper.ToAwsS3Uri(string)"/>.
+        /// </note>
         /// <note>
         /// This will return <c>null</c> for cloud and bare metal environments because we don't
         /// download images for those situations.
@@ -111,15 +120,15 @@ namespace Neon.Kube
                 case HostingEnvironment.HyperV:
                 case HostingEnvironment.HyperVLocal:
 
-                    return $"https://neonkube.s3-us-west-2.amazonaws.com/images/hyperv/node/neonkube-{KubeVersions.NeonKubeVersion}.hyperv.vhdx";
+                    return $"{NeonPublicBucketUri}/vm-images/hyperv/node/neonkube-{KubeVersions.NeonKubeVersion}.hyperv.vhdx";
 
                 case HostingEnvironment.XenServer:
 
-                    return $"https://neonkube.s3-us-west-2.amazonaws.com/images/xenserver/node/neonkube-{KubeVersions.NeonKubeVersion}.xva";
+                    return $"{NeonPublicBucketUri}/vm-images/xenserver/node/neonkube-{KubeVersions.NeonKubeVersion}.xenserver.xva";
 
                 case HostingEnvironment.Wsl2:
 
-                    return $"https://neonkube.s3-us-west-2.amazonaws.com/images/wsl2/node/neonkube-{KubeVersions.NeonKubeVersion}.tar";
+                    return $"{NeonPublicBucketUri}/vm-images/wsl2/node/neonkube-{KubeVersions.NeonKubeVersion}.wsl2.tar";
 
                 default:
 

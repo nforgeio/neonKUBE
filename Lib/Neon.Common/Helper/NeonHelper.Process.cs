@@ -282,7 +282,7 @@ namespace Neon.Common
         /// <exception cref="TimeoutException">Thrown if the process did not exit within the <paramref name="timeout"/> limit.</exception>
         /// <remarks>
         /// <note>
-        /// If <paramref name="timeout"/> is exceeded and execution has not commpleted in time 
+        /// If <paramref name="timeout"/> is exceeded and execution has not completed in time 
         /// then a <see cref="TimeoutException"/> will be thrown and the process will be killed
         /// if it was created by this method.  Process instances passed via the <paramref name="process"/>
         /// parameter will not be killed in this case.
@@ -316,7 +316,7 @@ namespace Neon.Common
         /// <exception cref="TimeoutException">Thrown if the process did not exit within the <paramref name="timeout"/> limit.</exception>
         /// <remarks>
         /// <note>
-        /// If <paramref name="timeout"/> is exceeded and execution has not commpleted in time
+        /// If <paramref name="timeout"/> is exceeded and execution has not completed in time
         /// then a <see cref="TimeoutException"/> will be thrown and the process will be killed
         /// if it was created by this method.  Process instances passed via the <paramref name="process"/>
         /// parameter will not be killed in this case.
@@ -469,7 +469,7 @@ namespace Neon.Common
         /// <exception cref="TimeoutException">Thrown if the process did not exit within the <paramref name="timeout"/> limit.</exception>
         /// <remarks>
         /// <note>
-        /// If <paramref name="timeout"/> is exceeded and execution has not commpleted in time
+        /// If <paramref name="timeout"/> is exceeded and execution has not completed in time
         /// then a <see cref="TimeoutException"/> will be thrown and the process will be killed
         /// if it was created by this method.  Process instances passed via the <paramref name="process"/>
         /// parameter will not be killed in this case.
@@ -505,7 +505,7 @@ namespace Neon.Common
         /// <exception cref="TimeoutException">Thrown if the process did not exit within the <paramref name="timeout"/> limit.</exception>
         /// <remarks>
         /// <note>
-        /// If <paramref name="timeout"/> is exceeded and execution has not commpleted in time
+        /// If <paramref name="timeout"/> is exceeded and execution has not completed in time
         /// then a <see cref="TimeoutException"/> will be thrown and the process will be killed
         /// if it was created by this method.  Process instances passed via the <paramref name="process"/>
         /// parameter will not be killed in this case.
@@ -614,7 +614,7 @@ namespace Neon.Common
         /// <exception cref="TimeoutException">Thrown if the process did not exit within the <paramref name="timeout"/> limit.</exception>
         /// <remarks>
         /// <note>
-        /// If <paramref name="timeout"/> is exceeded and execution has not commpleted in time 
+        /// If <paramref name="timeout"/> is exceeded and execution has not completed in time 
         /// then a <see cref="TimeoutException"/> will be thrown and the process will be killed
         /// if it was created by this method.  Process instances passed via the <paramref name="process"/>
         /// parameter will not be killed in this case.
@@ -668,7 +668,7 @@ namespace Neon.Common
         /// <exception cref="TimeoutException">Thrown if the process did not exit within the <paramref name="timeout"/> limit.</exception>
         /// <remarks>
         /// <note>
-        /// If <paramref name="timeout"/> is exceeded and execution has not commpleted in time 
+        /// If <paramref name="timeout"/> is exceeded and execution has not completed in time 
         /// then a <see cref="TimeoutException"/> will be thrown and the process will be killed
         /// if it was created by this method.  Process instances passed via the <paramref name="process"/>
         /// parameter will not be killed in this case.
@@ -806,7 +806,7 @@ namespace Neon.Common
         /// <exception cref="TimeoutException">Thrown if the process did not exit within the <paramref name="timeout"/> limit.</exception>
         /// <remarks>
         /// <note>
-        /// If <paramref name="timeout"/> is exceeded and execution has not commpleted in time 
+        /// If <paramref name="timeout"/> is exceeded and execution has not completed in time 
         /// then a <see cref="TimeoutException"/> will be thrown and the process will be killed
         /// if it was created by this method.  Process instances passed via the <paramref name="process"/>
         /// parameter will not be killed in this case.
@@ -852,7 +852,7 @@ namespace Neon.Common
         /// <exception cref="TimeoutException">Thrown if the process did not exit within the <paramref name="timeout"/> limit.</exception>
         /// <remarks>
         /// <note>
-        /// If <paramref name="timeout"/> is exceeded and execution has not commpleted in time 
+        /// If <paramref name="timeout"/> is exceeded and execution has not completed in time 
         /// then a <see cref="TimeoutException"/> will be thrown and the process will be killed
         /// if it was created by this method.  Process instances passed via the <paramref name="process"/>
         /// parameter will not be killed in this case.

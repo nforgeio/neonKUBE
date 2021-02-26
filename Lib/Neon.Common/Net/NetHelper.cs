@@ -1076,6 +1076,59 @@ namespace Neon.Net
 
             return null;
         }
+
+        /// <summary>
+        /// Converts an S3 or standard HTTPS URI into an S3 URI.
+        /// </summary>
+        /// <param name="uri">The source URI.</param>
+        /// <returns>The equivalent S3 URI.</returns>
+        public static string ToAwsS3Uri(string uri)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri), nameof(uri));
+
+            var uriValue = new Uri(uri, UriKind.Absolute);
+
+            switch (uriValue.Scheme)
+            {
+                case "s3":
+
+                    return uriValue.ToString();
+
+                case "https":
+
+                    // Ensure that the host is not an IP address.
+
+                    if (IPAddress.TryParse(uriValue.DnsSafeHost, out var address))
+                    {
+                        throw new ArgumentException($"URI host cannot be an IP address: {uri}", nameof(uri));
+                    }
+
+                    // Ensure that the URI actually references an S3 bucket.  The host
+                    // should look something like:
+                    //
+                    //      neonkube.s3-us-west-2.amazonaws.com
+
+                    var domainLabels = uriValue.DnsSafeHost.Split('.');
+
+                    if (domainLabels.Length != 4 ||
+                        !domainLabels[1].StartsWith("s3-", StringComparison.InvariantCultureIgnoreCase) ||
+                        !domainLabels[2].Equals("amazonaws", StringComparison.InvariantCultureIgnoreCase) ||
+                        !domainLabels[3].Equals("com", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        throw new ArgumentException($"URI doesn't reference an S3 bucket: {uri}", nameof(uri));
+                    }
+
+                    // The bucket name is the first host domain label.
+
+                    var bucket = domainLabels[0];
+
+                    return $"s3://{bucket}{uriValue.PathAndQuery}";
+
+                default:
+
+                    throw new ArgumentException($"Only HTTPS or S3 URI schemes are allowed: {uri}", nameof(uri));
+            }
+        }
     }
 }
 

@@ -1,5 +1,5 @@
-﻿#------------------------------------------------------------------------------
-# FILE:         includes.ps1
+#------------------------------------------------------------------------------
+# FILE:         error-handling.ps1
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 #
@@ -15,18 +15,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Common error handling settinga
+#------------------------------------------------------------------------------
+# Call this after every native command to check for non-zero exit codes.
 
-$ErrorActionPreference = "Stop"
-$PSDefaultParameterValues['*:ErrorAction'] = 'Stop'
+function ThrowOnExitCode {
 
-# Include all of the other global scripts.
-
-$includeOrgDir = $pwd
-cd $env:NF_ROOT/Powershell
-
-. ./error-handling.ps1
-. ./git.ps1
-. ./one-password.ps1
-
-cd $includeOrgDir
+    if ($LastExitCode -ne 0)
+    {
+        throw "ERROR: exitcode=$LastExitCode"
+    }
+}
