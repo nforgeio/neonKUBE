@@ -48,11 +48,11 @@ function OpSignin
     {
         # The user will be prompted for the master password.
 
-        $env:NC_OP_SESSION_TOKEN = $(& op signin --raw $env:NC_OP_DOMAIN)
+        $env:NC_OP_SESSION_TOKEN = $(& op --cache signin --raw $env:NC_OP_DOMAIN)
     }
     else
     {
-        $env:NC_OP_SESSION_TOKEN = $($env:NC_OP_MASTER_PASSWORD | & op signin --raw $env:NC_OP_DOMAIN)
+        $env:NC_OP_SESSION_TOKEN = $($env:NC_OP_MASTER_PASSWORD | & op --cache signin --raw $env:NC_OP_DOMAIN)
     }
 }
 
@@ -164,7 +164,7 @@ function OpGetPassword
 
     $vault = OpGetVault $vault
 
-    op --session $env:NC_OP_SESSION_TOKEN get item $passwordName --vault $vault --fields password
+    op --cache --session $env:NC_OP_SESSION_TOKEN get item $passwordName --vault $vault --fields password
 
     if ($LastExitCode -ne 0)
     {
@@ -206,7 +206,7 @@ function OpGetValue
 
     $vault = OpGetVault $vault
 
-    op --session $env:NC_OP_SESSION_TOKEN get item $passwordName --vault $vault --fields value
+    op --cache --session $env:NC_OP_SESSION_TOKEN get item $passwordName --vault $vault --fields value
 
     if ($LastExitCode -ne 0)
     {
