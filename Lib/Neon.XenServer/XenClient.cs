@@ -34,6 +34,7 @@ using Neon.Common;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Net;
+using Neon.SSH;
 
 using Renci.SshNet;
 
@@ -512,7 +513,7 @@ namespace Neon.XenServer
             tempIso.SrPath  = LinuxPath.Combine("/var/run/sr-mount", Guid.NewGuid().ToString("d"));
             tempIso.IsoName = $"neon-dvd-{Guid.NewGuid().ToString("d")}.iso";
 
-            if (!sftpClient.Exists(tempIso.SrPath))
+            if (!sftpClient.PathExists(tempIso.SrPath))
             {
                 sftpClient.CreateDirectory(tempIso.SrPath);
                 sftpClient.ChangePermissions(tempIso.SrPath, Convert.ToInt16("751", 8));
