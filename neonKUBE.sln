@@ -391,7 +391,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "twf-args", "twf-args", "{20
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Powershell", "Powershell", "{42FB3B73-87D8-41BD-9F4F-FB3A2DC921CF}"
 	ProjectSection(SolutionItems) = preProject
+		Powershell\error-handling.ps1 = Powershell\error-handling.ps1
+		Powershell\git.ps1 = Powershell\git.ps1
 		Powershell\includes.ps1 = Powershell\includes.ps1
+		Powershell\one-password.ps1 = Powershell\one-password.ps1
 		Powershell\README.md = Powershell\README.md
 	EndProjectSection
 EndProject
@@ -402,7 +405,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.ModelGenerator", "Lib\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-modelgen", "Tools\neon-modelgen\neon-modelgen.csproj", "{FE55ED55-F4B5-45B0-AFF2-EBDCAACF691A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neon.Kube.Services", "Lib\Neon.Kube.Services\Neon.Kube.Services.csproj", "{98CA999D-D048-45A3-AB81-9F66145D3E8C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.Services", "Lib\Neon.Kube.Services\Neon.Kube.Services.csproj", "{98CA999D-D048-45A3-AB81-9F66145D3E8C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
