@@ -628,16 +628,7 @@ spec:
             await InstallPrometheusAsync(setupState, firstMaster);
             await InstallSystemDbAsync(setupState, firstMaster);
             await InstallMinioAsync(setupState, firstMaster);
-
-            //-----------------------------------------------------------------
-            // $debug(jefflill): 
-            //
-            // This is hanging right now and since the cluster manager doesn't
-            // actually do anything at the moment, this is OK.
-            //
-            // tasks.Add(InstallClusterManagerAsync(setupState, firstMaster));
-            //-----------------------------------------------------------------
-
+            tasks.Add(InstallClusterManagerAsync(setupState, firstMaster));
             tasks.Add(InstallContainerRegistryAsync(setupState, firstMaster));
             tasks.AddRange(await SetupMonitoringAsync(setupState));
 

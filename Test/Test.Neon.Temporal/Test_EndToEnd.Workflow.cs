@@ -4540,13 +4540,6 @@ namespace TestTemporal
 
             var testTemporalImage = $"{NeonHelper.NeonLibraryBranchRegistry}/test-temporal:latest";
 
-            // $debug(jefflill): 
-            //
-            // It might be useful to uncomment/modify this line while
-            // debugging changes to the [test-temporal] Docker image.
-
-            // TestTemporalImage = "ghcr.io/neonrelease/test-temporal:temporal-latest";
-
             NeonHelper.Execute(NeonHelper.DockerCli,
                 new object[]
                 {
