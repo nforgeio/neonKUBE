@@ -31,6 +31,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Neon.Collections;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
@@ -101,7 +102,7 @@ namespace Neon.Kube
         public virtual bool GenerateSecurePassword => true;
 
         /// <inheritdoc/>
-        public abstract Task<bool> ProvisionAsync(ClusterLogin clusterLogin, string secureSshPassword, string orgSshPassword = null);
+        public abstract Task<bool> ProvisionAsync(ClusterLogin clusterLogin, ObjectDictionary setupState, string secureSshPassword, string orgSshPassword = null);
 
         /// <inheritdoc/>
         public virtual void AddPostPrepareSteps(SetupController<NodeDefinition> setupController)

@@ -72,13 +72,32 @@ OPTIONS:
     --unredacted        - Runs Vault and other commands with potential
                           secrets without redacting logs.  This is useful 
                           for debugging cluster setup  issues.  Do not
-                          use for production hives.
+                          use for production clusters.
 
     --force             - Don't prompt before removing existing contexts
                           that reference the target cluster.
 
     --upload-charts     - Upload helm charts to node before setup. This
-                          is useful when developing.
+                          is useful when debugging.
+
+    --debug             - Implements cluster setup from the base rather
+                          than the node image.  This mode is useful while
+                          developing and debugging cluster setup.  This
+                          implies [--upload-charts].
+
+                          NOTE: This mode is not supported for cloud and
+                                bare-metal environments.
+
+    --base-image-name   - Specifies the base image name to use when operating
+                          in [--debug] mode.  This will be the name of the base
+                          image file as published to our public S3 bucket for
+                          the target hosting manager.  Examples:
+
+                                Hyper-V:   ubuntu-20.04.1.hyperv.vhdx
+                                WSL2:      ubuntu-20.04.20210206.wsl2.tar
+                                XenServer: ubuntu-20.04.1.xenserver.xva
+
+                          NOTE: This is required for [--debug]
 ";
         private const string        logBeginMarker  = "# CLUSTER-BEGIN-SETUP ############################################################";
         private const string        logEndMarker    = "# CLUSTER-END-SETUP-SUCCESS ######################################################";
@@ -93,7 +112,7 @@ OPTIONS:
         public override string[] Words => new string[] { "cluster", "setup" };
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions => new string[] { "--unredacted", "--force", "--upload-charts" };
+        public override string[] ExtendedOptions => new string[] { "--unredacted", "--force", "--upload-charts", "--debug", "--base-image-name" };
 
         /// <inheritdoc/>
         public override void Help()
@@ -110,8 +129,10 @@ OPTIONS:
                 Program.Exit(1);
             }
 
-            var contextName = KubeContextName.Parse(commandLine.Arguments[0]);
-            var kubeCluster = KubeHelper.Config.GetCluster(contextName.Cluster);
+            var contextName   = KubeContextName.Parse(commandLine.Arguments[0]);
+            var kubeCluster   = KubeHelper.Config.GetCluster(contextName.Cluster);
+            var debug         = commandLine.HasOption("--debug");
+            var uploadCharts  = commandLine.HasOption("--upload-charts") || debug;
 
             clusterLogin = KubeHelper.GetClusterLogin(contextName);
 
@@ -223,6 +244,7 @@ OPTIONS:
 
                 // Configure the setup controller state.
 
+                setupController.Add(KubeSetup.DebugModeProperty, debug);
                 setupController.Add(KubeSetup.ClusterProxyProperty, cluster);
                 setupController.Add(KubeSetup.ClusterLoginProperty, clusterLogin);
                 setupController.Add(KubeSetup.HostingManagerProperty, hostingManager);

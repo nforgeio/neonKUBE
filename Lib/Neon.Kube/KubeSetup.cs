@@ -112,6 +112,25 @@ namespace Neon.Kube
         // These string constants are used to persist state in [SetupControllers].
 
         /// <summary>
+        /// <para>
+        /// Property name for accessing a <c>bool</c> that indicates that we're running cluster prepare/setup in <b>debug mode</b>.
+        /// In debug mode, setup works like it did in the past, where we deployed the base node image first and then 
+        /// configured the node from that, rather than starting with the node image with assets already prepositioned.
+        /// </para>
+        /// <para>
+        /// This mode is useful when debugging cluster setup or adding new features.
+        /// </para>
+        /// </summary>
+        public const string DebugModeProperty = "debug-setup";
+
+        /// <summary>
+        /// Property name for a <c>bool</c> that identifies the base image name to be used for preparing
+        /// a cluster in <b>debug mode</b>.  This is the name of the base image file as persisted to our
+        /// public S3 bucket.  This will not be set for cluster setup.
+        /// </summary>
+        public const string BaseImageNameProperty = "base-image-name";
+
+        /// <summary>
         /// Property name for determining the current hosting environment: <see cref="HostingEnvironment"/>,
         /// </summary>
         public const string HostingEnvironmentProperty = "hosting-environment";
