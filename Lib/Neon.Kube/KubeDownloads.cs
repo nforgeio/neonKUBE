@@ -17,10 +17,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Neon.Collections;
 using Neon.Common;
 using Neon.Net;
 
@@ -105,30 +107,73 @@ namespace Neon.Kube
         /// download images for those situations.
         /// </note>
         /// </summary>
-        /// <param name="hostingEnvironment"></param>
-        /// <returns>The dornload URI or <c>null</c>.</returns>
-        public static string GetNodeImageUri(HostingEnvironment hostingEnvironment)
+        /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
+        /// <param name="setupState">Holds the cluster prepare/setup state.</param>
+        /// <returns>The download URI or <c>null</c>.</returns>
+        public static string GetNodeImageUri(HostingEnvironment hostingEnvironment, ObjectDictionary setupState)
         {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+
+            var setupDebugMode = setupState.Get<bool>(KubeSetup.DebugModeProperty, false);
+            var baseImageName  = setupState.Get<string>(KubeSetup.BaseImageNameProperty, null);
+
+            if (setupDebugMode)
+            {
+                throw new NotSupportedException($"[{nameof(setupState)}] must include [{KubeSetup.BaseImageNameProperty}] when [{KubeSetup.DebugModeProperty}=true].");
+            }
+
+            var imageType = setupDebugMode ? "base" : "node";
+
             switch (hostingEnvironment)
             {
+                case HostingEnvironment.BareMetal:
+
+                    throw new NotImplementedException("Cluster setup on bare-metal is not supported yet.");
+
                 case HostingEnvironment.Aws:
                 case HostingEnvironment.Azure:
                 case HostingEnvironment.Google:
+
+                    if (setupDebugMode)
+                    {
+                        throw new NotSupportedException("Cluster setup debug mode is not supported for cloud environments.");
+                    }
 
                     return null;
 
                 case HostingEnvironment.HyperV:
                 case HostingEnvironment.HyperVLocal:
 
-                    return $"{NeonPublicBucketUri}/vm-images/hyperv/node/neonkube-{KubeVersions.NeonKubeVersion}.hyperv.vhdx";
+                    if (setupDebugMode)
+                    {
+                        return $"{NeonPublicBucketUri}/vm-images/hyperv/base/{baseImageName}";
+                    }
+                    else
+                    {
+                        return $"{NeonPublicBucketUri}/vm-images/hyperv/node/neonkube-{KubeVersions.NeonKubeVersion}.hyperv.vhdx";
+                    }
 
                 case HostingEnvironment.XenServer:
 
-                    return $"{NeonPublicBucketUri}/vm-images/xenserver/node/neonkube-{KubeVersions.NeonKubeVersion}.xenserver.xva";
+                    if (setupDebugMode)
+                    {
+                        return $"{NeonPublicBucketUri}/vm-images/xenserver/base/{baseImageName}";
+                    }
+                    else
+                    {
+                        return $"{NeonPublicBucketUri}/vm-images/xenserver/node/neonkube-{KubeVersions.NeonKubeVersion}.xenserver.xva";
+                    }
 
                 case HostingEnvironment.Wsl2:
 
-                    return $"{NeonPublicBucketUri}/vm-images/wsl2/node/neonkube-{KubeVersions.NeonKubeVersion}.wsl2.tar";
+                    if (setupDebugMode)
+                    {
+                        return $"{NeonPublicBucketUri}/vm-images/wsl2/base/{baseImageName}";
+                    }
+                    else
+                    {
+                        return $"{NeonPublicBucketUri}/vm-images/wsl2/node/neonkube-{KubeVersions.NeonKubeVersion}.wsl2.tar";
+                    }
 
                 default:
 

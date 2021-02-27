@@ -611,6 +611,7 @@ namespace Neon.Kube
 
         private ClusterProxy                            cluster;
         private string                                  clusterName;
+        private ObjectDictionary                        setupState;
         private string                                  clusterEnvironment;
         private string                                  nodeUsername;
         private string                                  nodePassword;
@@ -884,13 +885,15 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override async Task<bool> ProvisionAsync(ClusterLogin clusterLogin, string secureSshPassword, string orgSshPassword = null)
+        public override async Task<bool> ProvisionAsync(ClusterLogin clusterLogin, ObjectDictionary setupState, string secureSshPassword, string orgSshPassword = null)
         {
             Covenant.Requires<ArgumentNullException>(clusterLogin != null, nameof(clusterLogin));
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secureSshPassword), nameof(secureSshPassword));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(orgSshPassword), nameof(orgSshPassword));
             Covenant.Assert(cluster != null, $"[{nameof(AzureHostingManager)}] was created with the wrong constructor.");
 
+            this.setupState        = setupState;
             this.secureSshPassword = secureSshPassword;
 
             // We need to ensure that the cluster has at least one ingress node.

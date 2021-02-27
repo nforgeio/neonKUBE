@@ -29,6 +29,7 @@ using System.Threading.Tasks;
 
 using Newtonsoft.Json;
 
+using Neon.Collections;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Kube;
@@ -73,6 +74,24 @@ OPTIONS:
                                   cluster will be created from the most recent
                                   template.
 
+    --debug                     - Implements cluster setup from the base rather
+                                  than the node image.  This mode is useful while
+                                  developing and debugging cluster setup.  This
+                                  implies [--upload-charts].
+
+                                  NOTE: This mode is not supported for cloud and
+                                        bare-metal environments.
+
+    --base-image-name           - Specifies the base image name to use when operating
+                                  in [--debug] mode.  This will be the name of the base
+                                  image file as published to our public S3 bucket for
+                                  the target hosting manager.  Examples:
+
+                                        Hyper-V:   ubuntu-20.04.1.hyperv.vhdx
+                                        WSL2:      ubuntu-20.04.20210206.wsl2.tar
+                                        XenServer: ubuntu-20.04.1.xenserver.xva
+
+                          NOTE: This is required for [--debug]
 Server Requirements:
 --------------------
 
@@ -93,7 +112,7 @@ Server Requirements:
         public override string[] Words => new string[] { "cluster", "prepare" };
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions => new string[] { "--package-caches", "--unredacted", "--remove-templates" };
+        public override string[] ExtendedOptions => new string[] { "--package-caches", "--unredacted", "--remove-templates", "--debug", "--base-image-name" };
 
         /// <inheritdoc/>
         public override bool NeedsSshCredentials(CommandLine commandLine) => !commandLine.HasOption("--remove-templates");
@@ -125,6 +144,15 @@ Server Requirements:
                 }
 
                 Program.Exit(0);
+            }
+
+            var debug         = commandLine.HasOption("--debug");
+            var baseImageName = commandLine.GetOption("--base-image-name");
+
+            if (debug && string.IsNullOrEmpty(baseImageName))
+            {
+                Console.Error.WriteLine($"*** ERROR: [--base-image-name] is required for [--debug] mode.");
+                Program.Exit(1);
             }
 
             // Implement the command.
@@ -307,6 +335,17 @@ Server Requirements:
                     clusterLogin.Save();
                 }
 
+                // Configure the setup controller state.
+
+                var setupState = new ObjectDictionary();
+
+                setupState.Add(KubeSetup.DebugModeProperty, debug);
+                setupState.Add(KubeSetup.BaseImageNameProperty, baseImageName);
+                setupState.Add(KubeSetup.ClusterProxyProperty, cluster);
+                setupState.Add(KubeSetup.ClusterLoginProperty, clusterLogin);
+                setupState.Add(KubeSetup.HostingManagerProperty, hostingManager);
+                setupState.Add(KubeSetup.HostingEnvironmentProperty, hostingManager.HostingEnvironment);
+
                 // We're going to generate a secure random password and we're going to append
                 // an extra 4-character string to ensure that the password meets Azure (and probably
                 // other cloud) minimum requirements:
@@ -410,7 +449,7 @@ Server Requirements:
                     }
                 }
 
-                if (!hostingManager.ProvisionAsync(clusterLogin, clusterLogin.SshPassword, orgSshPassword).Result)
+                if (!hostingManager.ProvisionAsync(clusterLogin, setupState, clusterLogin.SshPassword, orgSshPassword).Result)
                 {
                     Program.Exit(1);
                 }
@@ -478,6 +517,13 @@ Server Requirements:
                     };
 
                 // Configure the setup controller state.
+
+                setupController.Add(KubeSetup.DebugModeProperty, debug);
+
+                if (debug)
+                {
+                    setupController.Add(KubeSetup.BaseImageNameProperty, baseImageName);
+                }
 
                 setupController.Add(KubeSetup.ClusterProxyProperty, cluster);
                 setupController.Add(KubeSetup.ClusterLoginProperty, clusterLogin);

@@ -38,6 +38,7 @@ using Newtonsoft;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
+using Neon.Collections;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
@@ -68,11 +69,12 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Instance members
 
-        private ClusterProxy                    cluster;
-        private SetupController<NodeDefinition> controller;
-        private string                          driveTemplatePath;
-        private string                          vmDriveFolder;
-        private string                          switchName;
+        private ClusterProxy                        cluster;
+        private ObjectDictionary                    setupState;
+        private SetupController<NodeDefinition>     controller;
+        private string                              driveTemplatePath;
+        private string                              vmDriveFolder;
+        private string                              switchName;
 
         /// <summary>
         /// Creates an instance that is only capable of validating the hosting
@@ -121,12 +123,15 @@ namespace Neon.Kube
         public override bool RequiresAdminPrivileges => false;
 
         /// <inheritdoc/>
-        public override async Task<bool> ProvisionAsync(ClusterLogin clusterLogin, string secureSshPassword, string orgSshPassword = null)
+        public override async Task<bool> ProvisionAsync(ClusterLogin clusterLogin, ObjectDictionary setupState, string secureSshPassword, string orgSshPassword = null)
         {
             Covenant.Requires<ArgumentNullException>(clusterLogin != null, nameof(clusterLogin));
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secureSshPassword), nameof(secureSshPassword));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(orgSshPassword), nameof(orgSshPassword));
             Covenant.Assert(cluster != null, $"[{nameof(HyperVHostingManager)}] was created with the wrong constructor.");
+
+            this.setupState = setupState;
 
             await Task.CompletedTask;
             throw new NotImplementedException("$todo(jefflill): Implement this.");

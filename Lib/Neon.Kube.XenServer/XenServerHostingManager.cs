@@ -29,6 +29,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using YamlDotNet.Serialization;
 
+using Neon.Collections;
 using Neon.Common;
 using Neon.Net;
 using Neon.XenServer;
@@ -87,6 +88,7 @@ namespace Neon.Kube
         // Instance members
 
         private ClusterProxy                cluster;
+        private ObjectDictionary            setupState;
         private SetupController<XenClient>  setupController;
         private string                      driveTemplatePath;
         private string                      logFolder;
@@ -154,13 +156,15 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override async Task<bool> ProvisionAsync(ClusterLogin clusterLogin, string secureSshPassword, string orgSshPassword = null)
+        public override async Task<bool> ProvisionAsync(ClusterLogin clusterLogin, ObjectDictionary setupState, string secureSshPassword, string orgSshPassword = null)
         {
             Covenant.Requires<ArgumentNullException>(clusterLogin != null, nameof(clusterLogin));
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secureSshPassword), nameof(secureSshPassword));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(orgSshPassword), nameof(orgSshPassword));
             Covenant.Assert(cluster != null, $"[{nameof(XenServerHostingManager)}] was created with the wrong constructor.");
 
+            this.setupState        = setupState;
             this.secureSshPassword = secureSshPassword;
 
             if (IsProvisionNOP)
@@ -378,7 +382,7 @@ namespace Neon.Kube
         {
             var xenHost      = xenSshProxy.Metadata;
             var templateName = $"neonkube-{KubeVersions.NeonKubeVersion}";
-            var nodeImageUri = KubeDownloads.GetNodeImageUri(this.HostingEnvironment);
+            var nodeImageUri = KubeDownloads.GetNodeImageUri(this.HostingEnvironment, setupState);
 
             xenSshProxy.Status = "check: template";
 
@@ -390,7 +394,7 @@ namespace Neon.Kube
                 // going to name the file the same as the file name from the URI and also that 
                 // templates are considered to be invariant.
 
-                var driveTemplateUri = new Uri(KubeDownloads.GetNodeImageUri(this.HostingEnvironment));
+                var driveTemplateUri = new Uri(KubeDownloads.GetNodeImageUri(this.HostingEnvironment, setupState));
                 var driveTemplateName = driveTemplateUri.Segments.Last();
 
                 driveTemplatePath = Path.Combine(KubeHelper.NodeImageFolder, driveTemplateName);

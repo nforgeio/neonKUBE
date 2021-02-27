@@ -66,6 +66,25 @@ namespace Neon.Collections
         }
 
         /// <summary>
+        /// Returns the value of an item converted to a specific type.
+        /// </summary>
+        /// <typeparam name="TValue">The result type.</typeparam>
+        /// <param name="key">The key.</param>
+        /// <param name="default">Secifies the default value to return if the key doesn't exist.</param>
+        /// <returns>The value converted to <typeparamref name="TValue"/>.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if key is <c>null</c>.</exception>
+        /// <exception cref="InvalidCastException">Thrown if the item value cannot be cast into a <typeparamref name="TValue"/>.</exception>
+        public TValue Get<TValue>(string key, TValue @default = default(TValue))
+        {
+            if (base.TryGetValue(key, out var value))
+            {
+                return (TValue)value;
+            }
+
+            return @default;
+        }
+
+        /// <summary>
         /// Attempts to retrieve a specific value from the dictionary.
         /// </summary>
         /// <typeparam name="TValue">The result type.</typeparam>
