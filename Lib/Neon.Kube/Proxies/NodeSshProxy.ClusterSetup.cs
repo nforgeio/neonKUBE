@@ -53,14 +53,17 @@ namespace Neon.Kube
         /// <summary>
         /// Configures NTP and also installs some tool scripts for managing this.
         /// </summary>
+        /// <param name="setupState">The setup controller mstate.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public void SetupConfigureNtp(Action<string> statusWriter = null)
+        public void SetupConfigureNtp(ObjectDictionary setupState, Action<string> statusWriter = null)
         {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+
             InvokeIdempotent("setup/ntp",
                 () =>
                 {
                     KubeHelper.WriteStatus(statusWriter, "Configure", $"NTP");
-                    Status = $"configure: ntp";
+                    Status = $"configure: NTP";
 
                     var clusterDefinition = this.Cluster.Definition;
                     var nodeDefinition    = this.NodeDefinition;
@@ -336,7 +339,8 @@ service ntp restart
         /// of the server within the cluster.
         /// </summary>
         /// <param name="setupState">The setup controller state.</param>
-        public void ConfigureEnvironmentVariables(ObjectDictionary setupState)
+        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        public void ConfigureEnvironmentVariables(ObjectDictionary setupState, Action<string> statusWriter = null)
         {
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
 
@@ -462,7 +466,7 @@ service ntp restart
 $@"
 127.0.0.1	    localhost
 127.0.0.1       kubernetes-masters
-{nodeAddress}{separator}{Name}{separator}{KubeConst.ClusterRegistry}
+{nodeAddress}{separator}{Name}{separator}{KubeConst.LocalClusterRegistry}
 ::1             localhost ip6-localhost ip6-loopback
 ff02::1         ip6-allnodes
 ff02::2         ip6-allrouters
@@ -474,7 +478,8 @@ ff02::2         ip6-allrouters
         /// Configures cluster package manager caching.
         /// </summary>
         /// <param name="setupState">The setup controller state.</param>
-        public void SetupPackageProxy(ObjectDictionary setupState)
+        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        public void SetupPackageProxy(ObjectDictionary setupState, Action<string> statusWriter = null)
         {
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
 
@@ -591,7 +596,8 @@ EOF
         /// Performs common node configuration.
         /// </summary>
         /// <param name="setupState">The setup controller state.</param>
-        public void SetupNode(ObjectDictionary setupState)
+        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        public void SetupNode(ObjectDictionary setupState, Action<string> statusWriter = null)
         {
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
 
@@ -606,6 +612,7 @@ EOF
                     ConfigureEnvironmentVariables(setupState);
                     SetupPackageProxy(setupState);
                     UpdateHostname();
+                    NodeInstallKubernetes(setupState);
                     SetupKublet(setupState);
                 });
         }
@@ -614,7 +621,8 @@ EOF
         /// Configures the the <b>kublet</b> service.
         /// </summary>
         /// <param name="setupState">The setup controller state.</param>
-        public void SetupKublet(ObjectDictionary setupState)
+        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        public void SetupKublet(ObjectDictionary setupState, Action<string> statusWriter = null)
         {
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
 

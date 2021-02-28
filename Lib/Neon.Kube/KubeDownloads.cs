@@ -117,7 +117,7 @@ namespace Neon.Kube
             var setupDebugMode = setupState.Get<bool>(KubeSetup.DebugModeProperty, false);
             var baseImageName  = setupState.Get<string>(KubeSetup.BaseImageNameProperty, null);
 
-            if (setupDebugMode)
+            if (setupDebugMode && string.IsNullOrEmpty(baseImageName))
             {
                 throw new NotSupportedException($"[{nameof(setupState)}] must include [{KubeSetup.BaseImageNameProperty}] when [{KubeSetup.DebugModeProperty}=true].");
             }

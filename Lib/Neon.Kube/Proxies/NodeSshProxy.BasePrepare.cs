@@ -59,9 +59,9 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
         /// <param name="sshPassword">The current <b>sysadmin</b> password.</param>
-        /// <param name="updateDistribution">Optionally upgrade the node's Linux distribution.  This defaults to <c>false</c>.</param>
+        /// <param name="upgradeLinux">Optionally upgrade the node's Linux distribution.  This defaults to <c>false</c>.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public void BaseInitialize(HostingEnvironment hostingEnvironment, string sshPassword, bool updateDistribution = false, Action<string> statusWriter = null)
+        public void BaseInitialize(HostingEnvironment hostingEnvironment, string sshPassword, bool upgradeLinux = false, Action<string> statusWriter = null)
         {
             Covenant.Requires<ArgumentException>(hostingEnvironment != HostingEnvironment.Unknown, nameof(hostingEnvironment));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(sshPassword), nameof(sshPassword));
@@ -103,9 +103,9 @@ namespace Neon.Kube
             BaseRemovePackages(hostingEnvironment, statusWriter);
             BaseCreateKubeFolders(hostingEnvironment, statusWriter);
 
-            if (updateDistribution)
+            if (upgradeLinux)
             {
-                BaseUpgradeLinuxDistro(hostingEnvironment, statusWriter);
+                BaseUpgradeLinux(hostingEnvironment, statusWriter);
             }
         }
 
@@ -250,18 +250,26 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         public void BasePatchLinux(HostingEnvironment hostingEnvironment, Action<string> statusWriter = null)
         {
-            // $todo(jefflill): Implement this!
+            InvokeIdempotent("base/patch-linux",
+                () =>
+                {
+                    PatchLinux(hostingEnvironment, statusWriter);
+                });
         }
 
         /// <summary>
         /// Updates Linux by applying all outstanding package updates but without 
-        /// upgrading the distribution.
+        /// upgrading the Linux distribution.
         /// </summary>
         /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public void BaseUpgradeLinux(HostingEnvironment hostingEnvironment, Action<string> statusWriter = null)
+        public void BaseUpdateLinux(HostingEnvironment hostingEnvironment, Action<string> statusWriter = null)
         {
-            // $todo(jefflill): Implement this!
+            InvokeIdempotent("base/update-linux",
+                () =>
+                {
+                    UpdateLinux(hostingEnvironment, statusWriter);
+                });
         }
 
         /// <summary>
@@ -269,15 +277,12 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
         /// </summary>
         /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public void BaseUpgradeLinuxDistro(HostingEnvironment hostingEnvironment, Action<string> statusWriter = null)
+        public void BaseUpgradeLinux(HostingEnvironment hostingEnvironment, Action<string> statusWriter = null)
         {
-            InvokeIdempotent("base/update-linux",
+            InvokeIdempotent("base/upgrade-linux",
                 () =>
                 {
-                    Status = "update: linux";
-                    KubeHelper.WriteStatus(statusWriter, "Update", "Linux");
-
-                    SudoCommand("apt-get dist-upgrade -yq", RunOptions.Defaults | RunOptions.FaultOnError);
+                    UpgradeLinux(hostingEnvironment, statusWriter);
                 });
         }
 

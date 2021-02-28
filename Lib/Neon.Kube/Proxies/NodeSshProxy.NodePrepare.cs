@@ -60,7 +60,7 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
 
-            InvokeIdempotent("node/tools",
+            InvokeIdempotent("setup/tools",
                 () =>
                 {
                     foreach (var file in KubeHelper.Resources.GetDirectory("/Tools").GetFiles())
@@ -90,7 +90,7 @@ namespace Neon.Kube
 
             // Configure the SSH credentials on the node.
 
-            InvokeIdempotent("node/ssh",
+            InvokeIdempotent("base/ssh",
                 () =>
                 {
                     CommandBundle bundle;
@@ -178,7 +178,7 @@ systemctl restart sshd
         {
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
 
-            InvokeIdempotent("prepare/disable-snap",
+            InvokeIdempotent("base/disable-snap",
                 () =>
                 {
                     //-----------------------------------------------------------------
@@ -206,15 +206,20 @@ fi
         /// <summary>
         /// Required NFS setup.
         /// </summary>
-        public void ConfigureNFS()
+        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        public void ConfigureNFS(ObjectDictionary setupState, Action<string> statusWriter = null)
         {
-            InvokeIdempotent("prepare/nfs",
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+
+            InvokeIdempotent("base/nfs",
                 () =>
                 {
                     //-----------------------------------------------------------------
                     // We need to install nfs-common tools for NFS to work.
 
-                    Status = "install: [nfs]";
+                    KubeHelper.WriteStatus(statusWriter, "Configure", "NFS");
+                    Status = "configure: NFS";
 
                     var InstallNfsScript =
 @"
@@ -234,7 +239,7 @@ safe-apt-get install -y nfs-common
         {
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
 
-            InvokeIdempotent("prepare/journald",
+            InvokeIdempotent("base/journald",
                 () =>
                 {
                     KubeHelper.WriteStatus(statusWriter, "Configure", "Journald filters");
@@ -261,22 +266,26 @@ systemctl restart rsyslog.service
         /// for a cluster node.
         /// </summary>
         /// <param name="setupState">The setup controller state.</param>
-        public void PrepareNode(ObjectDictionary setupState)
+        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        public void PrepareNode(ObjectDictionary setupState, Action<string> statusWriter = null)
         {
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
 
             var hostingManager    = setupState.Get<IHostingManager>(KubeSetup.HostingManagerProperty);
             var clusterDefinition = cluster.Definition;
 
-            InvokeIdempotent("prepare/complete",
+            InvokeIdempotent("base/prepare-node",
                 () =>
                 {
-                    NodeInstallTools(setupState);
-                    BaseConfigureApt(hostingManager.HostingEnvironment, clusterDefinition.NodeOptions.PackageManagerRetries, clusterDefinition.NodeOptions.AllowPackageManagerIPv6);
-                    BaseConfigureOpenSsh(hostingManager.HostingEnvironment);
-                    DisableSnap(setupState);
-                    ConfigureJournald(setupState);
-                    ConfigureNFS();
+                    KubeHelper.WriteStatus(statusWriter, "Prepare", "node");
+                    Status = "prepare: node";
+
+                    NodeInstallTools(setupState, statusWriter);
+                    BaseConfigureApt(hostingManager.HostingEnvironment, clusterDefinition.NodeOptions.PackageManagerRetries, clusterDefinition.NodeOptions.AllowPackageManagerIPv6, statusWriter);
+                    BaseConfigureOpenSsh(hostingManager.HostingEnvironment, statusWriter);
+                    DisableSnap(setupState, statusWriter);
+                    ConfigureJournald(setupState, statusWriter);
+                    ConfigureNFS(setupState, statusWriter);
                 });
         }
 
@@ -291,7 +300,7 @@ systemctl restart rsyslog.service
 
             if (hostEnvironment != HostingEnvironment.Wsl2)
             {
-                InvokeIdempotent("node/blacklist-floppy",
+                InvokeIdempotent("base/blacklist-floppy",
                     () =>
                     {
                         KubeHelper.WriteStatus(statusWriter, "Blacklist", "floppy drive");
@@ -309,7 +318,7 @@ dpkg-reconfigure initramfs-tools
                         SudoCommand(CommandBundle.FromScript(floppyScript));
                     });
 
-                InvokeIdempotent("node/sysstat",
+                InvokeIdempotent("base/sysstat",
                     () =>
                     {
                         var statScript =
@@ -888,7 +897,7 @@ systemctl enable neon-cleaner
 systemctl enable iscsid
 systemctl daemon-reload
 ";
-            InvokeIdempotent("node/initialize",
+            InvokeIdempotent("base/initialize",
                 () =>
                 {
                     KubeHelper.WriteStatus(statusWriter, "Configure", "Node (low-level)");
@@ -930,7 +939,7 @@ systemctl daemon-reload
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         public void NodeDisableNeonInit(Action<string> statusWriter = null)
         {
-            InvokeIdempotent("node/disable-neon-init",
+            InvokeIdempotent("base/disable-neon-init",
                 () =>
                 {
                     KubeHelper.WriteStatus(statusWriter, "Disable", "[neon-init]");
@@ -951,7 +960,7 @@ systemctl daemon-reload
 
             var hostEnvironment = setupState.Get<HostingEnvironment>(KubeSetup.HostingEnvironmentProperty);
 
-            InvokeIdempotent("node/cri-o",
+            InvokeIdempotent("setup/cri-o",
                 () =>
                 {
                     if (hostEnvironment != HostingEnvironment.Wsl2)
@@ -1006,7 +1015,7 @@ curl {KubeHelper.CurlOptions} https://download.opensuse.org/repositories/devel:k
 
 # Generate the CRI-O configurations.
 
-NEON_REGISTRY={KubeConst.ClusterRegistry}
+NEON_REGISTRY={KubeConst.NeonContainerRegistery(setupState)}
 
 cat <<EOF > /etc/containers/registries.conf
 unqualified-search-registries = [ ""docker.io"", ""quay.io"", ""registry.access.redhat.com"", ""registry.fedoraproject.org"" ]
@@ -1073,7 +1082,7 @@ apt-mark hold cri-o cri-o-runc
         {
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
 
-            InvokeIdempotent("node/podman",
+            InvokeIdempotent("setup/podman",
                 () =>
                 {
                     var setupScript =
@@ -1106,7 +1115,7 @@ apt-mark hold podman
         {
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
 
-            InvokeIdempotent("node/helm-client",
+            InvokeIdempotent("setup/helm-client",
                 () =>
                 {
                     var script =
@@ -1135,7 +1144,7 @@ rm -rf linux-amd64
         {
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
 
-            InvokeIdempotent("node/install-kubernetes",
+            InvokeIdempotent("setup/install-kubernetes",
                 () =>
                 {
                     var hostingEnvironment = setupState.Get<HostingEnvironment>(KubeSetup.HostingEnvironmentProperty);

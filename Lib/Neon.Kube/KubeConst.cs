@@ -17,10 +17,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using k8s.Models;
+
+using Neon.Collections;
 using Neon.Common;
 using Neon.Net;
 
@@ -301,8 +304,33 @@ namespace Neon.Kube
         public const string Wsl2MainDistroName = "neon-desktop";
 
         /// <summary>
-        /// Hostname used to access the local Harbor registry within the cluster.
+        /// Hostname used to reference the local Harbor registry within the cluster.
         /// </summary>
-        public const string ClusterRegistry = "neon-registry.node.local";
+        public const string LocalClusterRegistry = "neon-registry.node.local";
+
+        /// <summary>
+        /// Returns the hostname and path to use for referencing neonKUBE cluster
+        /// container images based on the setup state passed.  This will typically 
+        /// return <see cref="LocalClusterRegistry"/> for production and test clusters
+        /// to use the prepackaged container images in the node VM image but when
+        /// we're setting up in <b>debug mode</b> (as defined by the <see cref="KubeSetup.DebugModeProperty"/>
+        /// property in <paramref name="setupState"/>, we'll return <see cref="NeonHelper.NeonLibraryBranchRegistry"/>
+        /// instead.
+        /// </summary>
+        /// <param name="setupState">The setup state.</param>
+        /// <returns>The registry to use for pulling neonKUBE cluster containers.</returns>
+        public static string NeonContainerRegistery(ObjectDictionary setupState)
+        {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+
+            if (setupState.Get<bool>(KubeSetup.DebugModeProperty, false))
+            {
+                return NeonHelper.NeonLibraryBranchRegistry;
+            }
+            else
+            {
+                return LocalClusterRegistry;
+            }
+        }
     }
 }

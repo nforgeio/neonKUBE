@@ -271,7 +271,7 @@ OPTIONS:
                     (state, node) =>
                     {
                         node.SetupNode(setupController);
-                        //node.InvokeIdempotent("setup/common-restart", () => node.RebootAndWait(state));
+                        node.InvokeIdempotent("setup/setup-node-restart", () => node.RebootAndWait(state));
                     },
                     (state, node) => node == cluster.FirstMaster);
 
@@ -283,7 +283,7 @@ OPTIONS:
                         (state, node) =>
                         {
                             node.SetupNode(setupController);
-                            node.InvokeIdempotent("setup/common-restart", () => node.RebootAndWait(setupController));
+                            node.InvokeIdempotent("setup/setup-node-restart", () => node.RebootAndWait(setupController));
                         },
                         (state, node) => node != cluster.FirstMaster);
                 }
@@ -305,9 +305,8 @@ OPTIONS:
                 }
 
                 //-----------------------------------------------------------------
-                // Kubernetes configuration.
+                // Cluster setup.
 
-                setupController.AddNodeStep("install kubernetes", (setupState, node) => node.NodeInstallKubernetes(setupState));
                 setupController.AddGlobalStep("setup cluster", setupState => KubeSetup.SetupClusterAsync(setupState));
 
                 //-----------------------------------------------------------------

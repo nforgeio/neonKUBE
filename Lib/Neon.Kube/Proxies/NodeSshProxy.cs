@@ -488,16 +488,44 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Installs any security related updates on the node.
+        /// Installs any security related updates on the node.  These are
+        /// the <b>unattended updates</b>.
         /// </summary>
         /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public void InstallSecurityUpdates(HostingEnvironment hostingEnvironment, Action<string> statusWriter = null)
+        public void PatchLinux(HostingEnvironment hostingEnvironment, Action<string> statusWriter = null)
         {
-            KubeHelper.WriteStatus(statusWriter, "Install", "Security updates");
-            Status = "install: security updates";
+            KubeHelper.WriteStatus(statusWriter, "Install", "Linux security updates");
+            Status = "install: linux security updates";
 
             SudoCommand("unattended-upgrade");
+        }
+
+        /// <summary>
+        /// Updates the node by applying all outstanding package updates but without 
+        /// upgrading the Linux distribution.
+        /// </summary>
+        /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
+        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        public void UpdateLinux(HostingEnvironment hostingEnvironment, Action<string> statusWriter = null)
+        {
+            KubeHelper.WriteStatus(statusWriter, "Install", "All Linux updates");
+            Status = "install: all linux updates";
+
+            SudoCommand("unattended-upgrade");
+        }
+
+        /// <summary>
+        /// Upgrades the Linux distribution on the node.
+        /// </summary>
+        /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
+        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        public void UpgradeLinux(HostingEnvironment hostingEnvironment, Action<string> statusWriter = null)
+        {
+            Status = "upgrade: linux";
+            KubeHelper.WriteStatus(statusWriter, "Upgrade", "Linux");
+
+            SudoCommand("apt-get dist-upgrade -yq", RunOptions.Defaults | RunOptions.FaultOnError);
         }
 
         /// <summary>
