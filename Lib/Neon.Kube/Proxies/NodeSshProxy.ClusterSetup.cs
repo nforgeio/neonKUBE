@@ -612,6 +612,8 @@ EOF
                     ConfigureEnvironmentVariables(setupState, statusWriter);
                     SetupPackageProxy(setupState, statusWriter);
                     UpdateHostname();
+                    NodeInstallCriO(setupState, statusWriter);
+                    NodeInstallPodman(setupState, statusWriter);
                     NodeInstallKubernetes(setupState, statusWriter);
                     SetupKublet(setupState, statusWriter);
                 });

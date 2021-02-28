@@ -550,6 +550,7 @@ namespace Neon.Kube
                     Console.WriteLine();
                     Console.WriteLine(new string('-', totalLabel.Length + 1));
                     Console.WriteLine($"{totalLabel}:    {filler}{ElapsedTime} ({ElapsedTime.TotalSeconds} sec)");
+                    Console.WriteLine();
                 }
             }
         }
