@@ -492,12 +492,8 @@ namespace Neon.Kube
         /// the <b>unattended updates</b>.
         /// </summary>
         /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public void PatchLinux(HostingEnvironment hostingEnvironment, Action<string> statusWriter = null)
+        public void PatchLinux(HostingEnvironment hostingEnvironment)
         {
-            KubeHelper.WriteStatus(statusWriter, "Install", "Linux security updates");
-            Status = "install: linux security updates";
-
             SudoCommand("unattended-upgrade");
         }
 
@@ -506,12 +502,8 @@ namespace Neon.Kube
         /// upgrading the Linux distribution.
         /// </summary>
         /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public void UpdateLinux(HostingEnvironment hostingEnvironment, Action<string> statusWriter = null)
+        public void UpdateLinux(HostingEnvironment hostingEnvironment)
         {
-            KubeHelper.WriteStatus(statusWriter, "Install", "All Linux updates");
-            Status = "install: all linux updates";
-
             SudoCommand("unattended-upgrade");
         }
 
@@ -519,12 +511,8 @@ namespace Neon.Kube
         /// Upgrades the Linux distribution on the node.
         /// </summary>
         /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public void UpgradeLinux(HostingEnvironment hostingEnvironment, Action<string> statusWriter = null)
+        public void UpgradeLinux(HostingEnvironment hostingEnvironment)
         {
-            Status = "upgrade: linux";
-            KubeHelper.WriteStatus(statusWriter, "Upgrade", "Linux");
-
             SudoCommand("apt-get dist-upgrade -yq", RunOptions.Defaults | RunOptions.FaultOnError);
         }
 
@@ -579,13 +567,17 @@ rm -rf /var/lib/dhcp/*
         /// Pass <c>true</c> to perform a full distribution upgrade or <c>false</c> to just 
         /// upgrade packages.
         /// </param>
-        public void UpgradeNode(bool fullUpgrade)
+        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        public void UpgradeNode(bool fullUpgrade, Action<string> statusWriter = null)
         {
             var nodeDefinition = NeonHelper.CastTo<NodeDefinition>(Metadata);
 
             InvokeIdempotent($"setup/upgrade-linux",
                 () =>
                 {
+                    Status = $"upgrade: linux [full={fullUpgrade}])";
+                    KubeHelper.WriteStatus(statusWriter, "Upgrade", $"Linux [full={fullUpgrade}]");
+
                     // Upgrade Linux packages if requested.
 
                     if (fullUpgrade)

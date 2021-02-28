@@ -608,12 +608,12 @@ EOF
             InvokeIdempotent("setup/common",
                 () =>
                 {
-                    PrepareNode(setupState);
-                    ConfigureEnvironmentVariables(setupState);
-                    SetupPackageProxy(setupState);
+                    PrepareNode(setupState, statusWriter);
+                    ConfigureEnvironmentVariables(setupState, statusWriter);
+                    SetupPackageProxy(setupState, statusWriter);
                     UpdateHostname();
-                    NodeInstallKubernetes(setupState);
-                    SetupKublet(setupState);
+                    NodeInstallKubernetes(setupState, statusWriter);
+                    SetupKublet(setupState, statusWriter);
                 });
         }
 
@@ -629,6 +629,9 @@ EOF
             InvokeIdempotent("setup/kublet",
                 () =>
                 {
+                    Status = "setup: kublet";
+                    KubeHelper.WriteStatus(statusWriter, "Setup", "Kublet");
+
                     var script =
 @"
 echo KUBELET_EXTRA_ARGS=--network-plugin=cni --cni-bin-dir=/opt/cni/bin --cni-conf-dir=/etc/cni/net.d --feature-gates=\""AllAlpha=false,RunAsGroup=true\"" --container-runtime=remote --cgroup-driver=systemd --container-runtime-endpoint='unix:///var/run/crio/crio.sock' --runtime-request-timeout=5m --resolv-conf=/run/systemd/resolve/resolv.conf > /etc/default/kubelet
@@ -646,6 +649,7 @@ service kubelet restart
         /// <param name="releaseName">Optionally specifies the component release name.</param>
         /// <param name="namespace">Optionally specifies the namespace where Kubernetes namespace where the Helm chart should be installed. This defaults to <b>default</b></param>
         /// <param name="values">Optionally specifies Helm chart values.</param>
+        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <remarks>
         /// neonKUBE images prepositions the Helm chart files embedded as resources in the <b>Resources/Helm</b>
@@ -655,9 +659,10 @@ service kubelet restart
         /// </remarks>
         public async Task InstallHelmChartAsync(
             string                              chartName,
-            string                              releaseName = null,
-            string                              @namespace  = "default",
-            List<KeyValuePair<string, object>>  values      = null)
+            string                              releaseName  = null,
+            string                              @namespace   = "default",
+            List<KeyValuePair<string, object>>  values       = null,
+            Action<string>                      statusWriter = null)
         {
             if (string.IsNullOrEmpty(releaseName))
             {
@@ -669,6 +674,9 @@ service kubelet restart
             InvokeIdempotent("setup/helm-unzip",
                 () =>
                 {
+                    Status = "unzip: helm charts";
+                    KubeHelper.WriteStatus(statusWriter, "Unzip", "Helm Charts");
+
                     var zipPath = LinuxPath.Combine(KubeNodeFolders.Helm, "charts.zip");
                     
                     SudoCommand($"unzip {zipPath} -d {KubeNodeFolders.Helm} || true");
@@ -680,6 +688,9 @@ service kubelet restart
             InvokeIdempotent($"setup/helm-install-{releaseName}",
                 () =>
                 {
+                    Status = $"helm: install [{releaseName}]";
+                    KubeHelper.WriteStatus(statusWriter, "Install", $"Helm Install [{releaseName}]");
+
                     var valueOverrides = new StringBuilder();
 
                     if (values != null)

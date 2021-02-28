@@ -63,6 +63,9 @@ namespace Neon.Kube
             InvokeIdempotent("setup/tools",
                 () =>
                 {
+                    KubeHelper.WriteStatus(statusWriter, "Setup", "Tools");
+                    Status = "setup: tools";
+
                     foreach (var file in KubeHelper.Resources.GetDirectory("/Tools").GetFiles())
                     {
                         KubeHelper.WriteStatus(statusWriter, "Install", "Tool scripts");
@@ -82,7 +85,8 @@ namespace Neon.Kube
         /// Configures a node's host public SSH key during node provisioning.
         /// </summary>
         /// <param name="setupState">The setup controller state.</param>
-        public void ConfigureSshKey(ObjectDictionary setupState)
+        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        public void ConfigureSshKey(ObjectDictionary setupState, Action<string> statusWriter = null)
         {
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
 
@@ -100,7 +104,8 @@ namespace Neon.Kube
                     //      https://help.ubuntu.com/community/SSH/OpenSSH/Configuring
                     //      https://help.ubuntu.com/community/SSH/OpenSSH/Keys
 
-                    Status = "setup: client SSH key";
+                    KubeHelper.WriteStatus(statusWriter, "Create", "SSH keys");
+                    Status = "create: SSH keys";
 
                     // Enable the public key by appending it to [$HOME/.ssh/authorized_keys],
                     // creating the file if necessary.  Note that we're allowing only a single
@@ -158,12 +163,15 @@ systemctl restart sshd
             // Verify that we can login with the new SSH private key and also verify that
             // the password still works.
 
-            Status = "ssh: verify private key auth";
+            KubeHelper.WriteStatus(statusWriter, "Verify", "SSH Key");
+            Status = "verify: SSH key";
+
             Disconnect();
             UpdateCredentials(SshCredentials.FromPrivateKey(KubeConst.SysAdminUser, clusterLogin.SshKey.PrivatePEM));
             WaitForBoot();
 
-            Status = "ssh: verify password auth";
+            KubeHelper.WriteStatus(statusWriter, "Verify", "SSH Password");
+            Status = "verify: SSH password";
             Disconnect();
             UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, clusterLogin.SshPassword));
             WaitForBoot();
@@ -181,12 +189,12 @@ systemctl restart sshd
             InvokeIdempotent("base/disable-snap",
                 () =>
                 {
+                    Status = "disable: [snapd.service]";
+                    KubeHelper.WriteStatus(statusWriter, "Disable", "[snapd.service]");
+
                     //-----------------------------------------------------------------
                     // We're going to stop and mask the [snapd.service] if it's running
                     // because we don't want it to randomlly update apps on cluster nodes.
-
-                    Status = "disable: [snapd.service]";
-                    KubeHelper.WriteStatus(statusWriter, "Disable", "[snapd.service]");
 
                     var disableSnapScript =
 @"
@@ -215,11 +223,11 @@ fi
             InvokeIdempotent("base/nfs",
                 () =>
                 {
-                    //-----------------------------------------------------------------
-                    // We need to install nfs-common tools for NFS to work.
-
                     KubeHelper.WriteStatus(statusWriter, "Configure", "NFS");
                     Status = "configure: NFS";
+
+                    //-----------------------------------------------------------------
+                    // We need to install nfs-common tools for NFS to work.
 
                     var InstallNfsScript =
 @"
@@ -321,6 +329,9 @@ dpkg-reconfigure initramfs-tools
                 InvokeIdempotent("base/sysstat",
                     () =>
                     {
+                        KubeHelper.WriteStatus(statusWriter, "Enable", "Sysstat");
+                        Status = "enable: sysstat";
+
                         var statScript =
 @"
 # Enable system statistics collection (e.g. Page Faults,...)
@@ -963,6 +974,9 @@ systemctl daemon-reload
             InvokeIdempotent("setup/cri-o",
                 () =>
                 {
+                    KubeHelper.WriteStatus(statusWriter, "Setup", "CRI-O");
+                    Status = "setup: CRI-O";
+
                     if (hostEnvironment != HostingEnvironment.Wsl2)
                     {
                         // This doesn't work with WSL2 because the Microsoft Linux kernel doesn't
@@ -1085,6 +1099,9 @@ apt-mark hold cri-o cri-o-runc
             InvokeIdempotent("setup/podman",
                 () =>
                 {
+                    KubeHelper.WriteStatus(statusWriter, "Setup", "Podman");
+                    Status = "setup: Podman";
+
                     var setupScript =
 $@"
 source /etc/os-release
@@ -1118,6 +1135,9 @@ apt-mark hold podman
             InvokeIdempotent("setup/helm-client",
                 () =>
                 {
+                    KubeHelper.WriteStatus(statusWriter, "Setup", "Helm Client");
+                    Status = "setup: Helm client";
+
                     var script =
 $@"
 cd /tmp
@@ -1128,9 +1148,6 @@ chmod 770 /usr/local/bin/helm
 rm -f helm.tar.gz
 rm -rf linux-amd64
 ";
-                    KubeHelper.WriteStatus(statusWriter, "Install", "Helm client");
-                    Status = "install: helm client";
-
                     SudoCommand(CommandBundle.FromScript(script), RunOptions.Defaults | RunOptions.FaultOnError);
                 });
         }

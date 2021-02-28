@@ -255,7 +255,7 @@ OPTIONS:
                 setupController.AddGlobalStep("download binaries", async state => await KubeSetup.InstallWorkstationBinariesAsync(state));
                 setupController.AddWaitUntilOnlineStep("connect");
                 setupController.AddNodeStep("verify OS", (state, node) => node.VerifyNodeOS());
-                setupController.AddNodeStep("setup NTP", (state, node) => node.SetupConfigureNtp());
+                setupController.AddNodeStep("setup NTP", (state, node) => node.SetupConfigureNtp(state));
 
                 // Write the operation begin marker to all cluster node logs.
 

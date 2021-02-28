@@ -207,12 +207,12 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         public void BaseInstallPackages(HostingEnvironment hostingEnvironment, Action<string> statusWriter = null)
         {
-            Status = "install: base packages";
-            KubeHelper.WriteStatus(statusWriter, "Install", "Base packages");
-
             InvokeIdempotent("base/base-packages",
                 () =>
                 {
+                    Status = "install: base packages";
+                    KubeHelper.WriteStatus(statusWriter, "Install", "Base packages");
+
                     // Install the packages.  Note that we haven't added our tool folder to the PATH 
                     // yet, so we'll use the fully qualified path to [safe-apt-get].
 
@@ -253,7 +253,10 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
             InvokeIdempotent("base/patch-linux",
                 () =>
                 {
-                    PatchLinux(hostingEnvironment, statusWriter);
+                    KubeHelper.WriteStatus(statusWriter, "Install", "Linux security updates");
+                    Status = "install: linux security updates";
+
+                    PatchLinux(hostingEnvironment);
                 });
         }
 
@@ -268,7 +271,10 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
             InvokeIdempotent("base/update-linux",
                 () =>
                 {
-                    UpdateLinux(hostingEnvironment, statusWriter);
+                    KubeHelper.WriteStatus(statusWriter, "Install", "All Linux updates");
+                    Status = "install: all linux updates";
+
+                    UpdateLinux(hostingEnvironment);
                 });
         }
 
@@ -282,7 +288,10 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
             InvokeIdempotent("base/upgrade-linux",
                 () =>
                 {
-                    UpgradeLinux(hostingEnvironment, statusWriter);
+                    Status = "upgrade: linux";
+                    KubeHelper.WriteStatus(statusWriter, "Upgrade", "Linux");
+
+                    UpgradeLinux(hostingEnvironment);
                 });
         }
 
@@ -296,10 +305,10 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
             InvokeIdempotent("base/swap-disable",
                 () =>
                 {
-                    // Disable SWAP by editing [/etc/fstab] to remove the [/swap.img...] line.
-
                     KubeHelper.WriteStatus(statusWriter, "Disable", "Swap");
                     Status = "disable: swap";
+
+                    // Disable SWAP by editing [/etc/fstab] to remove the [/swap.img...] line.
 
                     var sbFsTab = new StringBuilder();
 
@@ -435,6 +444,9 @@ touch /etc/cloud/cloud-init.disabled
             InvokeIdempotent("base/openssh",
                 () =>
                 {
+                    Status = "configure: openssh";
+                    KubeHelper.WriteStatus(statusWriter, "Configure", "OpenSSH");
+
                     // Upload the OpenSSH server configuration and restart OpenSSH.
 
                     KubeHelper.WriteStatus(statusWriter, "Configure", "OpenSSH");
