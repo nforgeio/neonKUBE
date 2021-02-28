@@ -172,6 +172,7 @@ systemctl restart sshd
 
             KubeHelper.WriteStatus(statusWriter, "Verify", "SSH Password");
             Status = "verify: SSH password";
+
             Disconnect();
             UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, clusterLogin.SshPassword));
             WaitForBoot();
@@ -189,8 +190,8 @@ systemctl restart sshd
             InvokeIdempotent("base/disable-snap",
                 () =>
                 {
-                    Status = "disable: [snapd.service]";
                     KubeHelper.WriteStatus(statusWriter, "Disable", "[snapd.service]");
+                    Status = "disable: [snapd.service]";
 
                     //-----------------------------------------------------------------
                     // We're going to stop and mask the [snapd.service] if it's running

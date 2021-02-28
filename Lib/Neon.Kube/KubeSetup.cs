@@ -278,8 +278,8 @@ namespace Neon.Kube
             {
                 if (!File.Exists(cachedKubeCtlPath))
                 {
-                    firstMaster.Status = "download: kubectl";
                     KubeHelper.WriteStatus(statusWriter, "Download", "kubectl");
+                    firstMaster.Status = "download: kubectl";
 
                     using (var response = await httpClient.GetStreamAsync(kubeCtlUri))
                     {
@@ -292,8 +292,8 @@ namespace Neon.Kube
 
                 if (!File.Exists(cachedHelmPath))
                 {
-                    firstMaster.Status = "download: Helm";
                     KubeHelper.WriteStatus(statusWriter, "Download", "helm");
+                    firstMaster.Status = "download: Helm";
 
                     using (var response = await httpClient.GetStreamAsync(helmUri))
                     {
@@ -419,8 +419,8 @@ namespace Neon.Kube
         {
             var cluster = setupState.Get<ClusterProxy>(ClusterProxyProperty);
 
-            node.Status = "setup: etcd HA";
             KubeHelper.WriteStatus(statusWriter, "Setup", "etc HA");
+            node.Status = "setup: etcd HA";
 
             var sbHaProxyConfig = new StringBuilder();
 
@@ -552,8 +552,8 @@ spec:
             await master.InvokeIdempotentAsync("setup/label-nodes",
                 async () =>
                 {
-                    master.Status = "label: nodes";
                     KubeHelper.WriteStatus(statusWriter, "Label", "Nodes");
+                    master.Status = "label: nodes";
 
                     try
                     {
@@ -683,16 +683,16 @@ spec:
                     //---------------------------------------------------------
                     // Initialize the cluster on the first master:
 
-                    firstMaster.Status = "create: cluster";
                     KubeHelper.WriteStatus(statusWriter, "Create", "Cluster");
+                    firstMaster.Status = "create: cluster";
 
                     // Initialize Kubernetes:
 
                     firstMaster.InvokeIdempotent("setup/kubernetes-init",
                         () =>
                         {
-                            firstMaster.Status = "initialize: kubernetes";
                             KubeHelper.WriteStatus(statusWriter, "Initialize", "Kubernetes");
+                            firstMaster.Status = "initialize: kubernetes";
 
                             // It's possible that a previous cluster initialization operation
                             // was interrupted.  This command resets the state.
@@ -701,8 +701,8 @@ spec:
 
                             SetupEtcdHaProxy(setupState, firstMaster, statusWriter);
 
-                            firstMaster.Status = "initialize: cluster";
                             KubeHelper.WriteStatus(statusWriter, "Initialize", "Cluster");
+                            firstMaster.Status = "initialize: cluster";
 
                             // Configure the control plane's API server endpoint and initialize
                             // the certificate SAN names to include each master IP address as well
@@ -832,15 +832,15 @@ kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-k
 
                             clusterLogin.Save();
 
-                            firstMaster.Status = "cluster created";
                             KubeHelper.WriteStatus(statusWriter, "Cluster", "Created");
+                            firstMaster.Status = "cluster created";
                         });
 
                     firstMaster.InvokeIdempotent("setup/kubectl",
                         () =>
                         {
-                            firstMaster.Status = "setup: kubectl";
                             KubeHelper.WriteStatus(statusWriter, "Setup", "Kubectl");
+                            firstMaster.Status = "setup: kubectl";
 
                             // Edit the Kubernetes configuration file to rename the context:
                             //
@@ -908,8 +908,8 @@ kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-k
                             master.InvokeIdempotent("setup/kubectl",
                                 () =>
                                 {
-                                    firstMaster.Status = "setup: kubectl";
                                     KubeHelper.WriteStatus(statusWriter, "Setup", "Kubectl");
+                                    firstMaster.Status = "setup: kubectl";
 
                                     // It's possible that a previous cluster join operation
                                     // was interrupted.  This command resets the state.
@@ -918,8 +918,8 @@ kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-k
 
                                     // The other (non-boot) masters need files downloaded from the boot master.
 
-                                    master.Status = "upload: master files";
                                     KubeHelper.WriteStatus(statusWriter, "Upload", "master files");
+                                    master.Status = "upload: master files";
 
                                     foreach (var file in clusterLogin.SetupDetails.MasterFiles)
                                     {
@@ -931,15 +931,15 @@ kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-k
                                     master.InvokeIdempotent("setup/master-join",
                                         () =>
                                         {
-                                            firstMaster.Status = "join: master to cluster";
                                             KubeHelper.WriteStatus(statusWriter, "Join", "Master to cluster");
+                                            firstMaster.Status = "join: master to cluster";
 
                                             SetupEtcdHaProxy(setupState, master, statusWriter);
 
                                             var joined = false;
 
-                                            master.Status = "join: as master";
                                             KubeHelper.WriteStatus(statusWriter, "Join", "As MASTER");
+                                            master.Status = "join: as master";
 
                                             master.SudoCommand("podman run",
                                                    "--name=neon-etcd-proxy",
@@ -980,8 +980,8 @@ kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-k
                             master.LogException(e);
                         }
 
-                        master.Status = "joined";
                         KubeHelper.WriteStatus(statusWriter, "Joined");
+                        master.Status = "joined";
                     }
 
                     // Configure [kube-apiserver] on all the masters
@@ -993,8 +993,8 @@ kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-k
                             master.InvokeIdempotent("setup/kubernetes-apiserver",
                                 () =>
                                 {
-                                    master.Status = "configure: kubernetes apiserver";
                                     KubeHelper.WriteStatus(statusWriter, "Configure", "Kubernetes API Server");
+                                    master.Status = "configure: kubernetes apiserver";
 
                                     master.SudoCommand(CommandBundle.FromScript(
 @"#!/bin/bash
@@ -1028,15 +1028,15 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                 worker.InvokeIdempotent("setup/worker-join",
                                     () =>
                                     {
-                                        firstMaster.Status = "join: worker to cluster";
                                         KubeHelper.WriteStatus(statusWriter, "Join", "Worker to Cluster");
+                                        firstMaster.Status = "join: worker to cluster";
 
                                         SetupEtcdHaProxy(setupState, worker, statusWriter);
 
                                         var joined = false;
 
-                                        worker.Status = "join: as worker";
                                         KubeHelper.WriteStatus(statusWriter, "Join", "As WORKER");
+                                        worker.Status = "join: as worker";
 
                                         worker.SudoCommand("podman run",
                                             "--name=neon-etcd-proxy",
@@ -1076,8 +1076,8 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                 worker.LogException(e);
                             }
 
-                            worker.Status = "joined";
                             KubeHelper.WriteStatus(statusWriter, "Joined");
+                            worker.Status = "joined";
                         });
                 });
         }
@@ -1096,8 +1096,8 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             master.InvokeIdempotent("setup/workstation",
                 () =>
                 {
-                    master.Status = "setup : workstation";
                     KubeHelper.WriteStatus(statusWriter, "Setup", "Workstation");
+                    master.Status = "setup : workstation";
 
                     var cluster        = setupState.Get<ClusterProxy>(ClusterProxyProperty);
                     var clusterLogin   = setupState.Get<ClusterLogin>(ClusterLoginProperty);
@@ -1183,8 +1183,8 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             await master.InvokeIdempotentAsync("setup/cni",
                 async () =>
                 {
-                    master.Status = "setup: calico";
                     KubeHelper.WriteStatus(statusWriter, "Setup", "Calico");
+                    master.Status = "setup: calico";
 
                     // Deploy Calico
                     var values = new List<KeyValuePair<string, object>>();
@@ -1229,8 +1229,8 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     await master.InvokeIdempotentAsync("setup/cni-ready",
                         async () =>
                         {
-                            master.Status = "wait: for calico";
                             KubeHelper.WriteStatus(statusWriter, "Wait", "for Calico");
+                            master.Status = "wait: for calico";
 
                             var pods = await GetK8sClient(setupState).CreateNamespacedPodAsync(
                                 new V1Pod()
@@ -1298,8 +1298,8 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             await master.InvokeIdempotentAsync("setup/kubernetes-master-taints",
                 async () =>
                 {
-                    master.Status = "configure: master taints";
                     KubeHelper.WriteStatus(statusWriter, "Configure", "Master Taints");
+                    master.Status = "configure: master taints";
 
                     // The [kubectl taint] command looks like it can return a non-zero exit code.
                     // We'll ignore this.
@@ -1328,8 +1328,8 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             await master.InvokeIdempotentAsync("setup/istio",
                 async () =>
                 {
-                    master.Status = "setup: istio";
                     KubeHelper.WriteStatus(statusWriter, "Setup", "Istio");
+                    master.Status = "setup: istio";
 
                     var istioScript0 =
 $@"
@@ -1472,8 +1472,8 @@ istioctl install -f istio-cni.yaml
             await master.InvokeIdempotentAsync("setup/root-user",
                 async () =>
                 {
-                    master.Status = "create: kubernetes root user";
                     KubeHelper.WriteStatus(statusWriter, "Create", "Kubernetes Root User");
+                    master.Status = "create: kubernetes root user";
 
                     var userYaml =
 $@"
@@ -1521,13 +1521,13 @@ subjects:
             master.InvokeIdempotent("setup/kube-dashboard",
                 () =>
                 {
-                    master.Status = "install: kubernetes dashboard";
                     KubeHelper.WriteStatus(statusWriter, "Install", "Kubernetes Dashboard");
+                    master.Status = "install: kubernetes dashboard";
 
                     if (clusterLogin.DashboardCertificate != null)
                     {
-                        master.Status = "generate: dashboard certificate";
                         KubeHelper.WriteStatus(statusWriter, "Generate", "Dashboard Certificate");
+                        master.Status = "generate: dashboard certificate";
 
                         // We're going to tie the custom certificate to the IP addresses
                         // of the master nodes only.  This means that only these nodes
@@ -1561,8 +1561,8 @@ subjects:
                     // encoded certificate and key PEM into the dashboard configuration
                     // YAML first.
 
-                    master.Status = "deploy: kubernetes dashboard";
                     KubeHelper.WriteStatus(statusWriter, "Deploy", "Kubernetes Dashboard");
+                    master.Status = "deploy: kubernetes dashboard";
 
                     var dashboardYaml =
 $@"# Copyright 2017 The Kubernetes Authors.
@@ -1902,8 +1902,8 @@ spec:
             await firstMaster.InvokeIdempotentAsync("setup/taint-nodes",
                 async () =>
                 {
-                    firstMaster.Status = "taint: nodes";
                     KubeHelper.WriteStatus(statusWriter, "Taint", "Nodes");
+                    firstMaster.Status = "taint: nodes";
 
                     try
                     {
@@ -1966,8 +1966,8 @@ spec:
             await master.InvokeIdempotentAsync("setup/kiali",
                 async () =>
                 {
-                    master.Status = "setup: kiali";
                     KubeHelper.WriteStatus(statusWriter, "Setup", "Kaili");
+                    master.Status = "setup: kiali";
 
                     var values = new List<KeyValuePair<string, object>>();
 
@@ -1986,8 +1986,8 @@ spec:
             await master.InvokeIdempotentAsync("setup/kiali-ready",
                 async () =>
                 {
-                    master.Status = "wait: for kaili";
                     KubeHelper.WriteStatus(statusWriter, "Wait", "for Kaili");
+                    master.Status = "wait: for kaili";
 
                     await NeonHelper.WaitForAsync(
                         async () =>
@@ -2036,8 +2036,8 @@ spec:
             await master.InvokeIdempotentAsync("setup/monitoring", async
                 () =>
                 {
-                    master.Status = "setup: monitoring";
                     KubeHelper.WriteStatus(statusWriter, "Setup", "Monitoring");
+                    master.Status = "setup: monitoring";
 
                     await master.InstallHelmChartAsync("cluster_setup", statusWriter: statusWriter);
                 });
@@ -2060,14 +2060,14 @@ spec:
             await master.InvokeIdempotentAsync("setup/openebs-all",
                 async () =>
                 {
-                    master.Status = "deploy: openebs";
                     KubeHelper.WriteStatus(statusWriter, "Deploy", "OpenEBS");
+                    master.Status = "deploy: openebs";
 
                     master.InvokeIdempotent("setup/openebs-namespace",
                         () =>
                         {
-                            master.Status = "deploy: openebs-namespace";
                             KubeHelper.WriteStatus(statusWriter, "Deploy", "OpenEBS Namespace");
+                            master.Status = "deploy: openebs-namespace";
 
                             GetK8sClient(setupState).CreateNamespace(new V1Namespace()
                             {
@@ -2085,8 +2085,8 @@ spec:
                     await master.InvokeIdempotentAsync("setup/openebs",
                         async () =>
                         {
-                            master.Status = "install: openebs";
                             KubeHelper.WriteStatus(statusWriter, "Install", "OpenEBS");
+                            master.Status = "install: openebs";
 
                             var values = new List<KeyValuePair<string, object>>();
 
@@ -2110,8 +2110,8 @@ spec:
                         await master.InvokeIdempotentAsync("setup/openebs-cstor",
                             async () =>
                             {
-                                master.Status = "install: openebs cstor";
                                 KubeHelper.WriteStatus(statusWriter, "Install", "OpenEBS cStor");
+                                master.Status = "install: openebs cstor";
 
                                 var values = new List<KeyValuePair<string, object>>();
 
@@ -2122,8 +2122,8 @@ spec:
                     await master.InvokeIdempotentAsync("setup/openebs-ready",
                         async () =>
                         {
-                            master.Status = "wait: for openebs";
                             KubeHelper.WriteStatus(statusWriter, "Wait", "for OpenEBS");
+                            master.Status = "wait: for openebs";
 
                             await NeonHelper.WaitForAsync(
                                 async () =>
@@ -2156,8 +2156,8 @@ spec:
 
                     if (cluster.HostingManager.HostingEnvironment != HostingEnvironment.Wsl2)
                     {
-                        master.Status = "setup: openebs pool";
                         KubeHelper.WriteStatus(statusWriter, "Setup", "OpenEBS Pool");
+                        master.Status = "setup: openebs pool";
 
                         await master.InvokeIdempotentAsync("setup/openebs-pool",
                         async () =>
@@ -2224,8 +2224,8 @@ spec:
                         await master.InvokeIdempotentAsync("setup/openebs-cstor-ready",
                             async () =>
                             {
-                                master.Status = "wait: for openebs cStore";
                                 KubeHelper.WriteStatus(statusWriter, "Wait", "for OpenEBS cStor");
+                                master.Status = "wait: for openebs cStore";
 
                                 await NeonHelper.WaitForAsync(
                                     async () =>
@@ -2404,8 +2404,8 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/monitoring-etc",
                 async () =>
                 {
-                    master.Status = "setup: etc";
                     KubeHelper.WriteStatus(statusWriter, "Setup", "Etc");
+                    master.Status = "setup: etc";
 
                     await CreateCstorStorageClass(setupState, master, "neon-internal-etcd");
 
@@ -2430,8 +2430,8 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/setup/monitoring-etc-ready",
                 async () =>
                 {
-                    master.Status = "wait: for etc (monitoring)";
                     KubeHelper.WriteStatus(statusWriter, "Wait", "for Etc (monitoring)");
+                    master.Status = "wait: for etc (monitoring)";
 
                     await NeonHelper.WaitForAsync(
                         async () =>
@@ -2468,8 +2468,8 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/monitoring-prometheus",
                 async () =>
                 {
-                    master.Status = "setup: prometheus";
                     KubeHelper.WriteStatus(statusWriter, "Setup", "Prometheus");
+                    master.Status = "setup: prometheus";
 
                     var values = new List<KeyValuePair<string, object>>();
 
@@ -2531,8 +2531,8 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/monitoring-prometheus-ready",
                 async () =>
                 {
-                    master.Status = "wait: for prometheus";
                     KubeHelper.WriteStatus(statusWriter, "Wait", "for Prometheus");
+                    master.Status = "wait: for prometheus";
 
                     await NeonHelper.WaitForAsync(
                         async () =>
@@ -2606,8 +2606,8 @@ $@"- name: StorageType
                     await master.InvokeIdempotentAsync("setup/monitoring-cortex",
                         async () =>
                         {
-                            master.Status = "setup: Cortex";
                             KubeHelper.WriteStatus(statusWriter, "Setup", "Cortex");
+                            master.Status = "setup: Cortex";
 
                             if (cluster.Definition.Nodes.Any(n => n.Vm.GetMemory(cluster.Definition) < 4294965097L))
                             {
@@ -2633,8 +2633,8 @@ $@"- name: StorageType
                     await master.InvokeIdempotentAsync("setup/monitoring-cortex-ready",
                         async () =>
                         {
-                            master.Status = "wait: for cortex";
                             KubeHelper.WriteStatus(statusWriter, "Wait", "for Cortex");
+                            master.Status = "wait: for cortex";
 
                             await NeonHelper.WaitForAsync(
                                 async () =>
@@ -2670,8 +2670,8 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/monitoring-loki",
                 async () =>
                 {
-                    master.Status = "setup: loki";
                     KubeHelper.WriteStatus(statusWriter, "Setup", "Loki");
+                    master.Status = "setup: loki";
 
                     var values = new List<KeyValuePair<string, object>>();
 
@@ -2710,8 +2710,8 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/monitoring-promtail",
                 async () =>
                 {
-                    master.Status = "setup: promtail";
                     KubeHelper.WriteStatus(statusWriter, "Setup", "Promtail");
+                    master.Status = "setup: promtail";
 
                     var values = new List<KeyValuePair<string, object>>();
 
@@ -2747,8 +2747,8 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/monitoring-grafana",
                     async () =>
                     {
-                        master.Status = "setup: Grafana";
                         KubeHelper.WriteStatus(statusWriter, "Setup", "Grafana");
+                        master.Status = "setup: Grafana";
 
                         var values = new List<KeyValuePair<string, object>>();
 
@@ -2774,8 +2774,8 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/monitoring-grafana-ready",
                 async () =>
                 {
-                    master.Status = "wait: for grafana";
                     KubeHelper.WriteStatus(statusWriter, "Wait", "for Grafana");
+                    master.Status = "wait: for grafana";
 
                     await NeonHelper.WaitForAsync(
                         async () =>
@@ -2822,8 +2822,8 @@ $@"- name: StorageType
                     await master.InvokeIdempotentAsync("setup/minio",
                         async () =>
                         {
-                            master.Status = "setup: minio";
                             KubeHelper.WriteStatus(statusWriter, "Setup", "Minio");
+                            master.Status = "setup: minio";
 
                             var values = new List<KeyValuePair<string, object>>();
 
@@ -2846,8 +2846,8 @@ $@"- name: StorageType
                     await master.InvokeIdempotentAsync("configure/minio-secret",
                         async () =>
                         {
-                            master.Status = "configure: minio secret";
                             KubeHelper.WriteStatus(statusWriter, "Configure", "Minio Secret");
+                            master.Status = "configure: minio secret";
 
                             var secret = await GetK8sClient(setupState).ReadNamespacedSecretAsync("neon-system-minio", "neon-system");
 
@@ -2881,8 +2881,8 @@ $@"- name: StorageType
             var cluster = setupState.Get<ClusterProxy>(ClusterProxyProperty);
             var master  = cluster.FirstMaster;
 
-            master.Status = "setup: metrics";
             KubeHelper.WriteStatus(statusWriter, "Setup", "Metrics");
+            master.Status = "setup: metrics";
 
             var tasks = new List<Task>();
 
@@ -2916,8 +2916,8 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/monitoring-jaeger",
                 async () =>
                 {
-                    master.Status = "setup: jaeger";
                     KubeHelper.WriteStatus(statusWriter, "Setup", "Jaeger");
+                    master.Status = "setup: jaeger";
 
                     var values = new List<KeyValuePair<string, object>>();
 
@@ -2952,8 +2952,8 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/monitoring-jaeger-ready",
                 async () =>
                 {
-                    master.Status = "wait: for jaeger";
                     KubeHelper.WriteStatus(statusWriter, "Wait", "for Jaeger");
+                    master.Status = "wait: for jaeger";
 
                     await NeonHelper.WaitForAsync(
                         async () =>
@@ -2994,8 +2994,8 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/harbor-certificate",
                 async () =>
                 {
-                    master.Status = "create: harbor certificate";
                     KubeHelper.WriteStatus(statusWriter, "Setup", "Harbor Certificate");
+                    master.Status = "create: harbor certificate";
 
                     await SyncContext.ClearAsync;
 
@@ -3023,8 +3023,8 @@ $@"- name: StorageType
                 {
                     await SyncContext.ClearAsync;
                     
-                    master.Status = "setup: harbor redis";
                     KubeHelper.WriteStatus(statusWriter, "Setup", "Harbor Redis");
+                    master.Status = "setup: harbor redis";
 
                     var values   = new List<KeyValuePair<string, object>>();
                     var replicas = Math.Min(3, cluster.Definition.Masters.Count());
@@ -3054,8 +3054,8 @@ $@"- name: StorageType
                 {
                     await SyncContext.ClearAsync;
 
-                    master.Status = "wait: for harbor redis";
                     KubeHelper.WriteStatus(statusWriter, "Wait", "for Harbor Redis");
+                    master.Status = "wait: for harbor redis";
 
                     await NeonHelper.WaitForAsync(
                         async () =>
@@ -3075,8 +3075,8 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/harbor",
                 async () =>
                 {
-                    master.Status = "setup: harbor";
                     KubeHelper.WriteStatus(statusWriter, "Setup", "Harbor");
+                    master.Status = "setup: harbor";
 
                     var values = new List<KeyValuePair<string, object>>();
 
@@ -3114,8 +3114,8 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/harbor-ready",
                 async () =>
                 {
-                    master.Status = "wait: for harbor";
                     KubeHelper.WriteStatus(statusWriter, "Wait", "for Harbor");
+                    master.Status = "wait: for harbor";
 
                     var startUtc = DateTime.UtcNow;
 
@@ -3166,8 +3166,8 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/cluster-manager",
                 async () =>
                 {
-                    master.Status = "setup: [neon-cluster-manager]";
                     KubeHelper.WriteStatus(statusWriter, "Setup", "[neon-cluster-manager]");
+                    master.Status = "setup: [neon-cluster-manager]";
 
                     var values = new List<KeyValuePair<string, object>>();
 
@@ -3177,8 +3177,8 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/cluster-manager-ready",
                 async () =>
                 {
-                    master.Status = "wait: for [neon-cluster-manager]";
                     KubeHelper.WriteStatus(statusWriter, "wait", "for [neon-cluster-manager]");
+                    master.Status = "wait: for [neon-cluster-manager]";
 
                     await NeonHelper.WaitForAsync(
                         async () =>
@@ -3254,8 +3254,8 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/system-db",
                 async () =>
                 {
-                    master.Status = "setup: system database";
                     KubeHelper.WriteStatus(statusWriter, "Setup", "System Database");
+                    master.Status = "setup: system database";
 
                     var replicas = Math.Max(1, cluster.Definition.Masters.Count() / 5);
 
@@ -3288,8 +3288,8 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/system-db-ready",
                 async () =>
                 {
-                    master.Status = "wait: for system database";
                     KubeHelper.WriteStatus(statusWriter, "Wait", "for System Database");
+                    master.Status = "wait: for system database";
 
                     await NeonHelper.WaitForAsync(
                         async () =>

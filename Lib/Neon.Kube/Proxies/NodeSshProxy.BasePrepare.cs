@@ -210,8 +210,8 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
             InvokeIdempotent("base/base-packages",
                 () =>
                 {
-                    Status = "install: base packages";
                     KubeHelper.WriteStatus(statusWriter, "Install", "Base packages");
+                    Status = "install: base packages";
 
                     // Install the packages.  Note that we haven't added our tool folder to the PATH 
                     // yet, so we'll use the fully qualified path to [safe-apt-get].
@@ -288,8 +288,8 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
             InvokeIdempotent("base/upgrade-linux",
                 () =>
                 {
-                    Status = "upgrade: linux";
                     KubeHelper.WriteStatus(statusWriter, "Upgrade", "Linux");
+                    Status = "upgrade: linux";
 
                     UpgradeLinux(hostingEnvironment);
                 });
@@ -444,8 +444,8 @@ touch /etc/cloud/cloud-init.disabled
             InvokeIdempotent("base/openssh",
                 () =>
                 {
-                    Status = "configure: openssh";
                     KubeHelper.WriteStatus(statusWriter, "Configure", "OpenSSH");
+                    Status = "configure: openssh";
 
                     // Upload the OpenSSH server configuration and restart OpenSSH.
 

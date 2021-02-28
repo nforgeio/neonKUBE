@@ -629,8 +629,8 @@ EOF
             InvokeIdempotent("setup/kublet",
                 () =>
                 {
-                    Status = "setup: kublet";
                     KubeHelper.WriteStatus(statusWriter, "Setup", "Kublet");
+                    Status = "setup: kublet";
 
                     var script =
 @"
@@ -674,8 +674,8 @@ service kubelet restart
             InvokeIdempotent("setup/helm-unzip",
                 () =>
                 {
-                    Status = "unzip: helm charts";
                     KubeHelper.WriteStatus(statusWriter, "Unzip", "Helm Charts");
+                    Status = "unzip: helm charts";
 
                     var zipPath = LinuxPath.Combine(KubeNodeFolders.Helm, "charts.zip");
                     
@@ -688,8 +688,8 @@ service kubelet restart
             InvokeIdempotent($"setup/helm-install-{releaseName}",
                 () =>
                 {
-                    Status = $"helm: install [{releaseName}]";
                     KubeHelper.WriteStatus(statusWriter, "Install", $"Helm Install [{releaseName}]");
+                    Status = $"helm: install [{releaseName}]";
 
                     var valueOverrides = new StringBuilder();
 

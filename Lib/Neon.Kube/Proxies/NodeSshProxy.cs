@@ -575,8 +575,8 @@ rm -rf /var/lib/dhcp/*
             InvokeIdempotent($"setup/upgrade-linux",
                 () =>
                 {
-                    Status = $"upgrade: linux [full={fullUpgrade}])";
                     KubeHelper.WriteStatus(statusWriter, "Upgrade", $"Linux [full={fullUpgrade}]");
+                    Status = $"upgrade: linux [full={fullUpgrade}])";
 
                     // Upgrade Linux packages if requested.
 
