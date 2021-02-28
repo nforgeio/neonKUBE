@@ -4468,13 +4468,6 @@ namespace TestCadence
 
             var testCadenceImage = $"{NeonHelper.NeonLibraryBranchRegistry}/test-cadence:latest";
 
-            // $debug(jefflill): 
-            //
-            // It might be useful to uncomment/modify this line while
-            // debugging changes to the [test-cadence] Docker image.
-
-            // testCadenceImage = "ghcr.io/neonrelease/test-cadence:cadence-latest";
-
             NeonHelper.Execute(NeonHelper.DockerCli,
                 new object[]
                 {

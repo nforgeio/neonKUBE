@@ -3039,6 +3039,7 @@ done
                         async () =>
                         {
                             var deployments = await GetK8sClient(setupState).ListNamespacedDeploymentAsync("neon-system", labelSelector: "release=neon-cluster-manager");
+
                             if (deployments == null || deployments.Items.Count == 0)
                             {
                                 return false;
