@@ -101,12 +101,12 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Private constants
 
-        private const string joinCommandMarker = "kubeadm join";
-        private const int defaultMaxParallelNodes = 10;
-        private const int maxJoinAttempts = 5;
-        private static readonly TimeSpan joinRetryDelay = TimeSpan.FromSeconds(5);
-        private static readonly TimeSpan clusterOpTimeout = TimeSpan.FromMinutes(10);
-        private static readonly TimeSpan clusterOpRetryInterval = TimeSpan.FromSeconds(10);
+        private const string                joinCommandMarker       = "kubeadm join";
+        private const int                   defaultMaxParallelNodes = 10;
+        private const int                   maxJoinAttempts         = 5;
+        private static readonly TimeSpan    joinRetryDelay          = TimeSpan.FromSeconds(5);
+        private static readonly TimeSpan    clusterOpTimeout        = TimeSpan.FromMinutes(10);
+        private static readonly TimeSpan    clusterOpRetryInterval  = TimeSpan.FromSeconds(10);
 
         //---------------------------------------------------------------------
         // These string constants are used to persist state in [SetupControllers].
@@ -232,11 +232,11 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
 
-            var cluster = setupState.Get<ClusterProxy>(KubeSetup.ClusterProxyProperty);
-            var firstMaster = cluster.FirstMaster;
-            var hostPlatform = KubeHelper.HostPlatform;
+            var cluster           = setupState.Get<ClusterProxy>(KubeSetup.ClusterProxyProperty);
+            var firstMaster       = cluster.FirstMaster;
+            var hostPlatform      = KubeHelper.HostPlatform;
             var cachedKubeCtlPath = KubeHelper.GetCachedComponentPath(hostPlatform, "kubectl", KubeVersions.KubernetesVersion);
-            var cachedHelmPath = KubeHelper.GetCachedComponentPath(hostPlatform, "helm", KubeVersions.HelmVersion);
+            var cachedHelmPath    = KubeHelper.GetCachedComponentPath(hostPlatform, "helm", KubeVersions.HelmVersion);
 
             string kubeCtlUri;
             string helmUri;
@@ -246,19 +246,19 @@ namespace Neon.Kube
                 case KubeClientPlatform.Linux:
 
                     kubeCtlUri = KubeDownloads.KubeCtlLinuxUri;
-                    helmUri = KubeDownloads.HelmLinuxUri;
+                    helmUri    = KubeDownloads.HelmLinuxUri;
                     break;
 
                 case KubeClientPlatform.Osx:
 
                     kubeCtlUri = KubeDownloads.KubeCtlOsxUri;
-                    helmUri = KubeDownloads.HelmOsxUri;
+                    helmUri    = KubeDownloads.HelmOsxUri;
                     break;
 
                 case KubeClientPlatform.Windows:
 
                     kubeCtlUri = KubeDownloads.KubeCtlWindowsUri;
-                    helmUri = KubeDownloads.HelmWindowsUri;
+                    helmUri    = KubeDownloads.HelmWindowsUri;
                     break;
 
                 default:
@@ -614,9 +614,9 @@ spec:
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
             Covenant.Requires<ArgumentException>(maxParallel > 0, nameof(maxParallel));
 
-            var cluster = setupState.Get<ClusterProxy>(ClusterProxyProperty);
+            var cluster      = setupState.Get<ClusterProxy>(ClusterProxyProperty);
             var clusterLogin = setupState.Get<ClusterLogin>(ClusterLoginProperty);
-            var firstMaster = cluster.FirstMaster;
+            var firstMaster  = cluster.FirstMaster;
 
             cluster.ClearStatus();
 
@@ -718,7 +718,7 @@ spec:
                                 sbCertSANs.AppendLine($"  - \"{node.Address}\"");
                             }
 
-                            var kubeletFailSwapOnLine = string.Empty;
+                            var kubeletFailSwapOnLine           = string.Empty;
                             var kubeInitgnoreSwapOnPreflightArg = string.Empty;
 
                             if (hostingEnvironment == HostingEnvironment.Wsl2)
@@ -1198,7 +1198,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                         {
                                             Metadata = new V1ObjectMeta()
                                             {
-                                                Name = "dnsutils",
+                                                Name              = "dnsutils",
                                                 NamespaceProperty = "default"
                                             },
                                             Spec = new V1PodSpec()
@@ -1207,9 +1207,9 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                                 {
                                                     new V1Container()
                                                     {
-                                                        Name = "dnsutils",
-                                                        Image = "neon-registry.node.local/kubernetes-e2e-test-images-dnsutils:1.3",
-                                                        Command = new List<string>() {"sleep", "3600" },
+                                                        Name            = "dnsutils",
+                                                        Image           = "neon-registry.node.local/kubernetes-e2e-test-images-dnsutils:1.3",
+                                                        Command         = new List<string>() {"sleep", "3600" },
                                                         ImagePullPolicy = "IfNotPresent"
                                                     }
                                                 },
@@ -1467,7 +1467,7 @@ subjects:
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var cluster = setupState.Get<ClusterProxy>(ClusterProxyProperty);
+            var cluster      = setupState.Get<ClusterProxy>(ClusterProxyProperty);
             var clusterLogin = setupState.Get<ClusterLogin>(ClusterLoginProperty);
 
             master.Status = "install: kubernetes dashboard";
@@ -1812,7 +1812,7 @@ spec:
 ";
 
                     var dashboardCert = TlsCertificate.Parse(clusterLogin.DashboardCertificate);
-                    var variables = new Dictionary<string, string>();
+                    var variables     = new Dictionary<string, string>();
 
                     variables.Add("CERTIFICATE", Convert.ToBase64String(Encoding.UTF8.GetBytes(dashboardCert.CertPemNormalized)));
                     variables.Add("PRIVATEKEY", Convert.ToBase64String(Encoding.UTF8.GetBytes(dashboardCert.KeyPemNormalized)));
@@ -2082,7 +2082,7 @@ spec:
                     {
                         Metadata = new V1ObjectMeta()
                         {
-                            Name = "cspc-stripe",
+                            Name              = "cspc-stripe",
                             NamespaceProperty = "openebs"
                         },
                         Spec = new V1CStorPoolClusterSpec()
@@ -2113,7 +2113,7 @@ spec:
                                 PoolConfig = new V1CStorPoolConfig()
                                 {
                                     DataRaidGroupType = DataRaidGroupType.Stripe,
-                                    Tolerations = new List<V1Toleration>()
+                                    Tolerations       = new List<V1Toleration>()
                                         {
                                             { new V1Toleration() { Effect = "NoSchedule", OperatorProperty = "Exists" } },
                                             { new V1Toleration() { Effect = "NoExecute", OperatorProperty = "Exists" } }
@@ -2181,10 +2181,10 @@ spec:
         /// <param name="istioInjectionEnabled">Whether Istio sidecar injection should be enabled.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task CreateNamespaceAsync(
-            ObjectDictionary setupState,
-            NodeSshProxy<NodeDefinition> master,
-            string name,
-            bool istioInjectionEnabled = true)
+            ObjectDictionary                setupState,
+            NodeSshProxy<NodeDefinition>    master,
+            string                          name,
+            bool                            istioInjectionEnabled = true)
         {
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
@@ -2214,9 +2214,9 @@ spec:
         /// <param name="name">The new <see cref="V1StorageClass"/> name.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task CreateHostPathStorageClass(
-            ObjectDictionary setupState,
-            NodeSshProxy<NodeDefinition> master,
-            string name)
+            ObjectDictionary                setupState,
+            NodeSshProxy<NodeDefinition>    master,
+            string                          name)
         {
             await master.InvokeIdempotentAsync($"deploy/storage-class-hostpath-{name}",
                 async () =>
@@ -2225,7 +2225,7 @@ spec:
                     {
                         Metadata = new V1ObjectMeta()
                         {
-                            Name = name,
+                            Name        = name,
                             Annotations = new Dictionary<string, string>()
                     {
                         {  "cas.openebs.io/config", 
@@ -2237,8 +2237,8 @@ $@"- name: StorageType
                         {"openebs.io/cas-type", "local" }
                     },
                         },
-                        Provisioner = "openebs.io/local",
-                        ReclaimPolicy = "Delete",
+                        Provisioner       = "openebs.io/local",
+                        ReclaimPolicy     = "Delete",
                         VolumeBindingMode = "WaitForFirstConsumer"
                     };
 
@@ -2256,11 +2256,11 @@ $@"- name: StorageType
         /// <param name="replicaCount"></param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task CreateCstorStorageClass(
-            ObjectDictionary setupState,
-            NodeSshProxy<NodeDefinition> master,
-            string name,
-            string cstorPoolCluster = "cspc-stripe",
-            int replicaCount = 3)
+            ObjectDictionary                setupState,
+            NodeSshProxy<NodeDefinition>    master,
+            string                          name,
+            string                          cstorPoolCluster = "cspc-stripe",
+            int                             replicaCount     = 3)
         {
             await master.InvokeIdempotentAsync($"deploy/storage-class-cstor-{name}",
                 async () =>
@@ -2284,9 +2284,9 @@ $@"- name: StorageType
 
                         },
                         AllowVolumeExpansion = true,
-                        Provisioner = "cstor.csi.openebs.io",
-                        ReclaimPolicy = "Delete",
-                        VolumeBindingMode = "Immediate"
+                        Provisioner          = "cstor.csi.openebs.io",
+                        ReclaimPolicy        = "Delete",
+                        VolumeBindingMode    = "Immediate"
                     };
 
                     await GetK8sClient(setupState).CreateStorageClassAsync(storageClass);
@@ -2494,7 +2494,6 @@ $@"- name: StorageType
                 values.Add(new KeyValuePair<string, object>($"cortexConfig.ingester.lifecycler.ring.kvstore.store", "etcd"));
                 values.Add(new KeyValuePair<string, object>($"cortexConfig.ingester.lifecycler.ring.kvstore.replication_factor", 3));
             }
-
 
             await master.InvokeIdempotentAsync("deploy/neon-metrics-cortex",
                 async () =>
@@ -2871,9 +2870,9 @@ $@"- name: StorageType
                 {
                     await SyncContext.ClearAsync;
                     
-                    var values = new List<KeyValuePair<string, object>>();
-
+                    var values   = new List<KeyValuePair<string, object>>();
                     var replicas = Math.Min(3, cluster.Definition.Masters.Count());
+
                     values.Add(new KeyValuePair<string, object>($"replicas", $"{replicas}"));
                     
                     if (replicas < 2)
@@ -2935,7 +2934,6 @@ $@"- name: StorageType
                         }
 
                         values.Add(new KeyValuePair<string, object>($"redis.external.addr", redisConnStr));
-
                         values.Add(new KeyValuePair<string, object>($"redis.external.sentinelMasterSet", "master"));
                     }
 
@@ -3112,7 +3110,6 @@ done
             await master.InvokeIdempotentAsync("deploy/neon-system-db",
                 async () =>
                 {
-
                     var replicas = Math.Max(1, cluster.Definition.Masters.Count() / 5);
 
                     values.Add(new KeyValuePair<string, object>($"master.replicas", replicas));
