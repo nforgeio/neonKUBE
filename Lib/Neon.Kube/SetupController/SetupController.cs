@@ -67,6 +67,7 @@ namespace Neon.Kube
             public Func<ObjectDictionary, NodeSshProxy<NodeMetadata>, bool>     Predicate;
             public StepStatus                                                   Status;
             public int                                                          ParallelLimit;
+            public bool                                                         WasExecuted;
             public TimeSpan                                                     ElapsedTime;
         }
 
@@ -83,7 +84,7 @@ namespace Neon.Kube
         private bool                                error;
         private bool                                hasNodeSteps;
         private StringBuilder                       sbDisplay;
-        private string                              lastDisplay;
+        private string                              previousDisplay;
 
         /// <summary>
         /// Constructor.
@@ -119,7 +120,7 @@ namespace Neon.Kube
             this.nodes           = nodes.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase).ToList();
             this.steps           = new List<Step>();
             this.sbDisplay       = new StringBuilder();
-            this.lastDisplay     = string.Empty;
+            this.previousDisplay     = string.Empty;
         }
 
         /// <summary>
@@ -528,20 +529,27 @@ namespace Neon.Kube
                     Console.WriteLine("Elapsed Step Times");
                     Console.WriteLine("------------------");
 
-                    var fill = string.Empty;
+                    var filler = string.Empty;
 
                     foreach (var step in steps)
                     {
-                        fill = new string(' ', maxLabelWidth - step.Label.Length);
+                        filler = new string(' ', maxLabelWidth - step.Label.Length);
 
-                        Console.WriteLine($"{step.Label}:    {fill}{step.ElapsedTime} ({step.ElapsedTime.TotalSeconds} sec)");
+                        if (step.WasExecuted)
+                        {
+                            Console.WriteLine($"{step.Label}:    {filler}{step.ElapsedTime} ({step.ElapsedTime.TotalSeconds} sec)");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"{step.Label}:    {filler}* NOT EXECUTED");
+                        }
                     }
 
-                    fill = new string(' ', maxLabelWidth - totalLabel.Length);
+                    filler = new string(' ', maxLabelWidth - totalLabel.Length);
 
                     Console.WriteLine();
                     Console.WriteLine(new string('-', totalLabel.Length + 1));
-                    Console.WriteLine($"{totalLabel}:    {fill}{ElapsedTime} ({ElapsedTime.TotalSeconds} sec)");
+                    Console.WriteLine($"{totalLabel}:    {filler}{ElapsedTime} ({ElapsedTime.TotalSeconds} sec)");
                 }
             }
         }
@@ -592,7 +600,8 @@ namespace Neon.Kube
                     return false;
                 }
 
-                step.Status = StepStatus.Running;
+                step.Status      = StepStatus.Running;
+                step.WasExecuted = true;
 
                 var stepNodes        = nodes.Where(node => step.Predicate(this, node));
                 var stepNodeNamesSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -1050,12 +1059,12 @@ namespace Neon.Kube
 
             var newDisplay = sbDisplay.ToString();
 
-            if (newDisplay != lastDisplay)
+            if (newDisplay != previousDisplay)
             {
                 Console.Clear();
                 Console.Write(newDisplay);
 
-                lastDisplay = newDisplay;
+                previousDisplay = newDisplay;
             }
         }
 
