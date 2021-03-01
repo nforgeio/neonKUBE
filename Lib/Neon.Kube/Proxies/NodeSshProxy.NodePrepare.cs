@@ -1081,9 +1081,6 @@ systemctl restart crio
 set +e      # Don't exit if the next command fails
 apt-mark hold cri-o cri-o-runc
 ";
-                    KubeHelper.WriteStatus(statusWriter, "Install", "CRI-O");
-                    Status = "install: cri-o";
-
                     SudoCommand(CommandBundle.FromScript(setupScript), RunOptions.Defaults | RunOptions.FaultOnError);
                 });
         }
@@ -1117,9 +1114,6 @@ ln -s /usr/bin/podman /bin/docker
 set +e      # Don't exit if the next command fails
 apt-mark hold podman
 ";
-                    KubeHelper.WriteStatus(statusWriter, "Install", "Podman");
-                    Status = "install: podman";
-
                     SudoCommand(CommandBundle.FromScript(setupScript), RunOptions.Defaults | RunOptions.FaultOnError);
                 });
         }
