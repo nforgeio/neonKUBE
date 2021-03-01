@@ -319,12 +319,15 @@ OPTIONS:
                     },
                     (state, node) => node.Metadata.IsMaster);
 
-                setupController.AddNodeStep("check workers",
-                    (state, node) =>
-                    {
-                        KubeDiagnostics.CheckWorker(node, cluster.Definition);
-                    },
-                    (state, node) => node.Metadata.IsWorker);
+                if (cluster.Workers.Count() > 0)
+                {
+                    setupController.AddNodeStep("check workers",
+                        (state, node) =>
+                        {
+                            KubeDiagnostics.CheckWorker(node, cluster.Definition);
+                        },
+                        (state, node) => node.Metadata.IsWorker);
+                }
 
                 // Start setup.
 

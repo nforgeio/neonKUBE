@@ -53,9 +53,7 @@ namespace Neon.Kube
         where TMetadata : class
     {
         /// <summary>
-        /// Performs low-level initialization of a cluster   This is applied one time to
-        /// Hyper-V and XenServer/XCP-ng node templates when they are created and at cluster
-        /// creation time for cloud and bare metal clusters.
+        /// Performs low-level initialization of a cluster.
         /// </summary>
         /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
         /// <param name="sshPassword">The current <b>sysadmin</b> password.</param>
@@ -217,7 +215,7 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
                     // yet, so we'll use the fully qualified path to [safe-apt-get].
 
                     SudoCommand($"{KubeNodeFolders.Bin}/safe-apt-get update", RunOptions.Defaults | RunOptions.FaultOnError);
-                    SudoCommand($"{KubeNodeFolders.Bin}/safe-apt-get install -yq apt-cacher-ng ntp secure-delete zip", RunOptions.Defaults | RunOptions.FaultOnError);
+                    SudoCommand($"{KubeNodeFolders.Bin}/safe-apt-get install -yq apt-cacher-ng ntp secure-delete sysstat zip", RunOptions.Defaults | RunOptions.FaultOnError);
 
                     // I've seen some situations after a reboot where the machine complains about
                     // running out of entropy.  Apparently, modern CPUs have an instruction that
