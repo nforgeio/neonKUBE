@@ -15,7 +15,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#------------------------------------------------------------------------------
+# Publishes DEBUG builds of the NeonForge Nuget packages to the repo
+# at http://nuget-dev.neoncloud.io so intermediate builds can be shared 
+# by maintainers.
+#
+# NOTE: This is script works only for maintainers with proper credentials.
+
 # Import the global project include file.
 
 . $env:NF_ROOT/Powershell/includes.ps1
