@@ -56,7 +56,7 @@ function SetVersion
 }
 
 #------------------------------------------------------------------------------
-# Builds and publishes the project.
+# Builds and publishes the project packages.
 
 function Publish
 {
@@ -68,7 +68,10 @@ function Publish
         [string]$version
     )
 
-	dotnet pack "$env:NF_ROOT\Lib\$project\$project.csproj" -c Release -o "$env:NF_BUILD\nuget"
+    $projectPath = [io.path]::combine($env:NF_ROOT, "Lib", "$project", "$project" + ".csproj")
+
+	dotnet pack $projectPath -c Release -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg -o "$env:NF_BUILD\nuget"
+    ThrowOnExitCode
 
     if (Test-Path "$env:NF_ROOT\Lib\$project\prerelease.txt")
     {

@@ -37,21 +37,21 @@ Follow the steps below to configure a development or test workstation:
 
 4. Ensure that Hyper-V is installed and enabled:
 
-    a. Run the following command in a **cmd** window to verify that your workstation is capable of virtualization and that it's enabled. You're looking for output like the image below:
+    * Run the following command in a **cmd** window to verify that your workstation is capable of virtualization and that it's enabled. You're looking for output like the image below:
       ```
       systeminfo
       ```
       ![Virtualization Info](Images/Developer/virtualization.png?raw=true)
 
-    or a message saying that: **A hypervisor has been detected.**
+      looking for a message saying that: **A hypervisor has been detected.**
 
-    b. Press the Windows key and enter: **windows features** and press ENTER.
+    * Press the Windows key and enter: **windows features** and press ENTER.
 
-    c. Ensure that the check boxes highlighted in red below are checked:
+    * Ensure that the check boxes highlighted in red below are checked:
 
     ![Hyper-V Features](Images/Developer/hyper-v.png?raw=true) 
 
-    d. Reboot your machine as required.
+    * Reboot your machine as required.
 
 5. Install the latest **32-bit** production release of PowerShell Core from [here](https://github.com/PowerShell/PowerShell/releases) (`PowerShell-#.#.#-win.x86.msi`)
 

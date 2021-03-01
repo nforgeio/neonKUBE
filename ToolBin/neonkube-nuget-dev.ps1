@@ -106,7 +106,7 @@ function RestoreVersion
 }
 
 #------------------------------------------------------------------------------
-# Builds and publishes the project.
+# Builds and publishes the project packages.
 
 function Publish
 {
@@ -125,16 +125,11 @@ function Publish
 
     $projectPath = [io.path]::combine($env:NF_ROOT, "Lib", "$project", "$project" + ".csproj")
 
-    dotnet pack $projectPath  -c Debug --include-symbols --include-source -o "$env:NF_BUILD\nuget"
+    dotnet pack $projectPath  -c Debug -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg -o "$env:NF_BUILD\nuget"
     ThrowOnExitCode
 
     nuget push -Source $env:NC_NUGET_DEVFEED -ApiKey $devFeedApiKey "$env:NF_BUILD\nuget\$project.$version.nupkg"
     ThrowOnExitCode
-   
-    # NOTE: We're not doing this because including source and symbols above because
-    # doesn't seem to to work.
-    #
-	# dotnet pack "$env:NF_ROOT\Lib\$project\$project.csproj" -c Debug --include-symbols --include-source -o "$env:NUGET_LOCAL_FEED"
 }
 
 # We're going to call the neonCLOUD nuget versioner service to atomically increment the 
