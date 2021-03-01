@@ -34,6 +34,7 @@ using Neon.Common;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Net;
+using Neon.Retry;
 using Neon.SSH;
 
 using Renci.SshNet;
@@ -539,17 +540,25 @@ namespace Neon.XenServer
             tempIso.SrUuid = response.OutputText.Trim();
 
             // XenServer created a PBD behind the scenes for the new SR.  We're going
-            // to need its UUID so we can completely remove the SR later.
+            // to need its UUID so we can completely remove the SR later.  Note that
+            // doesn't seem to appear immediately so, we'll retry a few times.
 
-            var result = SafeInvokeItems("pbd-list", $"sr-uuid={tempIso.SrUuid}");
+            var retry = new ExponentialRetryPolicy(typeof(InvalidOperationException), maxAttempts: 5, initialRetryInterval: TimeSpan.FromSeconds(0.5), maxRetryInterval: TimeSpan.FromSeconds(5));
 
-            tempIso.PdbUuid = result.Items.Single()["uuid"];
+            retry.Invoke(
+                () =>
+                {
+                    var result = SafeInvokeItems("pbd-list", $"sr-uuid={tempIso.SrUuid}");
 
-            // Obtain the UUID for the ISO's VDI within the SR.
+                    tempIso.PdbUuid = result.Items.Single()["uuid"];
 
-            result = SafeInvokeItems("vdi-list", $"sr-uuid={tempIso.SrUuid}");
+                    // Obtain the UUID for the ISO's VDI within the SR.
 
-            tempIso.VdiUuid = result.Items.Single()["uuid"];
+                    result = SafeInvokeItems("vdi-list", $"sr-uuid={tempIso.SrUuid}");
+
+                    tempIso.VdiUuid = result.Items.Single()["uuid"];
+
+                });
 
             return tempIso;
         }
