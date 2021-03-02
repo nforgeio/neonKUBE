@@ -255,6 +255,10 @@ OPTIONS:
                 setupController.AddGlobalStep("download binaries", async state => await KubeSetup.InstallWorkstationBinariesAsync(state));
                 setupController.AddWaitUntilOnlineStep("connect");
                 setupController.AddNodeStep("verify OS", (state, node) => node.VerifyNodeOS());
+
+                // $todo(jefflill): We don't support Linux distribution upgrades yet.
+                setupController.AddNodeStep("node basics", (state, node) => node.BaseInitialize(state.Get<HostingEnvironment>(KubeSetup.HostingEnvironmentProperty), upgradeLinux: false));
+                
                 setupController.AddNodeStep("setup NTP", (state, node) => node.SetupConfigureNtp(state));
 
                 // Write the operation begin marker to all cluster node logs.

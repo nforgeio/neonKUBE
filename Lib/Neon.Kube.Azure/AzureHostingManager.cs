@@ -986,14 +986,6 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override void AddPostPrepareSteps(SetupController<NodeDefinition> setupController)
         {
-            // Add a step to perform low-level node initialization.
-
-            setupController.AddNodeStep("node basics",
-                (state, node) =>
-                {
-                    node.BaseInitialize(HostingEnvironment, secureSshPassword);
-                });
-
             // We need to add any required OpenEBS cStor disks after the node has been otherwise
             // prepared.  We need to do this here because if we created the data and OpenEBS disks
             // when the VM is initially created, the disk setup scripts executed during prepare

@@ -56,13 +56,11 @@ namespace Neon.Kube
         /// Performs low-level initialization of a cluster.
         /// </summary>
         /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
-        /// <param name="sshPassword">The current <b>sysadmin</b> password.</param>
         /// <param name="upgradeLinux">Optionally upgrade the node's Linux distribution.  This defaults to <c>false</c>.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public void BaseInitialize(HostingEnvironment hostingEnvironment, string sshPassword, bool upgradeLinux = false, Action<string> statusWriter = null)
+        public void BaseInitialize(HostingEnvironment hostingEnvironment, bool upgradeLinux = false, Action<string> statusWriter = null)
         {
             Covenant.Requires<ArgumentException>(hostingEnvironment != HostingEnvironment.Unknown, nameof(hostingEnvironment));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(sshPassword), nameof(sshPassword));
 
             // $hack(jefflill):
             //

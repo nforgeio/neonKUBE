@@ -300,7 +300,6 @@ namespace Neon.Kube
 
             setupController.AddNodeStep("connect nodes", (state, node) => Connect(node));
             setupController.AddNodeStep("verify operating system", (state, node) => node.VerifyNodeOS());
-            setupController.AddNodeStep("configure nodes", (state, node) => Configure(state, node));
 
             if (secureSshPassword != orgSshPassword)
             {
@@ -377,25 +376,6 @@ namespace Neon.Kube
                     nodeToPassword[node.Name] = secureSshPassword;
                 }
             }
-        }
-
-        /// <summary>
-        /// Performs low-level node initialization.
-        /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
-        /// <param name="node">The target node.</param>
-        private void Configure(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> node)
-        {
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
-
-            string nodeSshPassword;
-
-            lock (nodeToPassword)
-            {
-                nodeSshPassword = nodeToPassword[node.Metadata.Name];
-            }
-
-            node.BaseInitialize(HostingEnvironment, nodeSshPassword);
         }
 
         /// <summary>
