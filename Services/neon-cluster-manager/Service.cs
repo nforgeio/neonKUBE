@@ -58,17 +58,17 @@ namespace NeonClusterManager
             await SetRunningAsync();
             await SetupClusterAsync();
 
+            // $todo(marcusbooyah):
+            // Implement the cluster manager. For now we're just having it sleep/loop
+
             // Launch the sub-tasks.  These will run until the service is terminated.
 
-            var tasks = new List<Task>();
+            while (true)
+            {
+                await Task.Delay(10000);
+            }
 
-            // Start a task that checks for Elasticsearch [logstash] and [metricbeat] indexes
-            // that are older than the number of retention days.
-
-            // Wait for all tasks to exit cleanly for a normal shutdown.
-
-            await NeonHelper.WaitAllAsync(tasks);
-            return 0;
+            //return 0;
         }
 
         /// <summary>
