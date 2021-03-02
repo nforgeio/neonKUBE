@@ -99,6 +99,27 @@ function DeleteFolder
 #
 # Note that you may set [$noImagePush=$true] to disable image pushing for debugging
 # purposes.  The [publish.ps1] scripts accept the [--nopush] switchto control this.
+#
+# ARGUMENTS:
+#
+#		image		- The fully qualified image path including the neonKUBE
+#				      version tag
+#
+#		baseTag		- Optionally specifies the original base image tag for
+#					  image (used for tagging setupm images for cluster setup
+#				      [debug mode]).
+#
+# REMARKS
+#
+# This function is used to publish packages to our container registries.  Base,
+# service, and other non-setup image scripts will pass only the [image] argument.
+#
+# Setup image scripts will also pass [baseVersion] which will be set to the 
+# original base version of the image.  This is required by cluster setup debug
+# mode because that will need to pull the images from our public container
+# registries directly.  When running in non-debug mode, cluster setup uses The
+# packages already prepositioned in the node image and those were already tagged
+# with the original base tag during node image creation.
 
 $noImagePush = $false
 
@@ -107,7 +128,9 @@ function PushImage
     [CmdletBinding()]
     param (
         [Parameter(Position=0, Mandatory=1)]
-        [string]$Image
+        [string]$image,
+        [Parameter(Position=1, Mandatory=0)]
+        [string]$baseTag = $null
     )
 
 	if ($noImagePush)
@@ -165,6 +188,21 @@ function PushImage
 
 		if ($exitCode -eq 0)
 		{
+			# Add the base version tag if requested.  I don't believe it'll
+			# be necessary to retry this operation.
+
+			if (![System.String]::IsNullOrEmpty($baseTag))
+			{
+				# Strip the tag off the image passed.
+
+				$fields    = $image -split ':'
+				$baseImage = $fields[0] + ":" + $baseTag
+
+				"tag image: $image --> $baseImage"
+				docker tag "$image" "$baseImage"
+				ThrowOnExitCode
+			}
+
 			return
 		}
 		
