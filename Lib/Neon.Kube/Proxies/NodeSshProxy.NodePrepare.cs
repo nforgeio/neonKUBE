@@ -1039,7 +1039,10 @@ unqualified-search-registries = [ ""docker.io"", ""quay.io"", ""registry.access.
 prefix = ""${{NEON_REGISTRY}}""
 insecure = false
 blocked = false
-location = ""${{NEON_REGISTRY}}/{KubeConst.ClusterRegistryProjectName}""
+location = ""${{NEON_REGISTRY}}""
+
+[[registry.mirror]]
+location = ""{KubeConst.ClusterRegistryName}""
 
 [[registry]]
 prefix = ""docker.io""
