@@ -547,7 +547,6 @@ namespace Neon.Kube
 
                     filler = new string(' ', maxLabelWidth - totalLabel.Length);
 
-                    Console.WriteLine();
                     Console.WriteLine(new string('-', totalLabel.Length + 1));
                     Console.WriteLine($"{totalLabel}:    {filler}{ElapsedTime} ({ElapsedTime.TotalSeconds} sec)");
                     Console.WriteLine();
