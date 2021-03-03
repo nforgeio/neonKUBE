@@ -526,8 +526,8 @@ namespace Neon.Kube
                         maxLabelWidth = totalLabel.Length;
                     }
 
-                    Console.WriteLine("Elapsed Step Times");
-                    Console.WriteLine("------------------");
+                    Console.WriteLine("Elapsed Step Timing");
+                    Console.WriteLine("-------------------");
 
                     var filler = string.Empty;
 
@@ -547,7 +547,6 @@ namespace Neon.Kube
 
                     filler = new string(' ', maxLabelWidth - totalLabel.Length);
 
-                    Console.WriteLine();
                     Console.WriteLine(new string('-', totalLabel.Length + 1));
                     Console.WriteLine($"{totalLabel}:    {filler}{ElapsedTime} ({ElapsedTime.TotalSeconds} sec)");
                     Console.WriteLine();

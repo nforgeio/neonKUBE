@@ -249,8 +249,8 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
             InvokeIdempotent("base/patch-linux",
                 () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Install", "Linux security updates");
-                    Status = "install: linux security updates";
+                    KubeHelper.WriteStatus(statusWriter, "Install", "Security updates");
+                    Status = "install: security updates";
 
                     PatchLinux(hostingEnvironment);
                 });
@@ -763,8 +763,8 @@ systemctl daemon-reload
             InvokeIdempotent("base/folders",
                 () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Create", "Cluster folders");
-                    Status = "create: cluster folders";
+                    KubeHelper.WriteStatus(statusWriter, "Create", "Node folders");
+                    Status = "create: node folders";
 
                     var folderScript =
 $@"
