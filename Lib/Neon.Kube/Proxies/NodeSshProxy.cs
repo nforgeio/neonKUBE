@@ -494,11 +494,7 @@ namespace Neon.Kube
         /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
         public void PatchLinux(HostingEnvironment hostingEnvironment)
         {
-            // $todo(jefflill):
-            //
-            // We're running this manually with the [-d] option; not sure if this is kosher.
-
-            SudoCommand("unattended-upgrade -d");
+            SudoCommand("unattended-upgrade");
         }
 
         /// <summary>
