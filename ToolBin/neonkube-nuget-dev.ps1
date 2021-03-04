@@ -31,7 +31,7 @@
 
 if (!(Test-Path env:NC_USER))
 {
-    "*** ERROR: This script is intended for maintainers only"
+    "*** ERROR: This script is intended for maintainers only:"
     "           [NC_USER] environment variable is not defined."
     ""
     "           Maintainers should re-run the neonCLOUD [buildenv.cmd] script."

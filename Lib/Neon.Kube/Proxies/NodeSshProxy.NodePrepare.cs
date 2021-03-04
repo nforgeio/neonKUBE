@@ -725,7 +725,7 @@ systemctl restart neon-disable-thp
 # of the local file system while still providing enough time for operators
 # to manually review local logs when something bad happened to cluster logging.
 
-cat <<EOF >> /etc/systemd/journald.conf
+cat <<EOF > /etc/systemd/journald.conf
 #------------------------------------------------------------------------------
 # FILE:         journald.conf
 # CONTRIBUTOR:  Jeff Lill
