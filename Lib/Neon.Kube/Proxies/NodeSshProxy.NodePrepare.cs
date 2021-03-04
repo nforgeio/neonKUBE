@@ -1070,7 +1070,7 @@ EOF
 
 cat <<EOF > /etc/crio/crio.conf.d/02-image.conf
 [crio.image]
-pause_image = ""neon-registry.node.local/pause:3.2""
+pause_image = ""{KubeConst.NeonContainerRegistery(setupState)}/pause:3.2""
 EOF
 
 # Configure CRI-O to start on boot and then restart it to pick up the new options.

@@ -34,7 +34,7 @@ spec:
       priorityClassName: system-cluster-critical
       containers:
         - name: calico-kube-controllers
-          image: neon-registry.node.local/calico-kube-controllers:v3.16.7
+          image: "{{ .Values.images.organization }}/{{ .Values.images.kubeControllers.repository }}:{{ .Values.images.kubeControllers.tag }}"
           env:
             # Choose which controllers to run.
             - name: ENABLED_CONTROLLERS

@@ -2,6 +2,21 @@
 # If this chart is used for deployment on other platforms, please change values datastore,
 # network, vxlan and ipam according to your deployment. 
 
+images:
+  organization: neon-registry.node.local
+  node:
+    repository: calico-node
+    tag: v3.16.7
+  cni:
+    repository: calico-cni
+    tag: v3.16.7
+  kubeControllers:
+    repository: calico-kube-controllers
+    tag: v3.16.7
+  pod2Daemon:
+    repository: calico-pod2daemon-flexvol
+    tag: v3.16.7
+
 ipv4PoolCidr: "10.254.0.0/16"
 
 kubernetes:

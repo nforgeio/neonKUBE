@@ -522,7 +522,7 @@ spec:
   hostNetwork: true
   containers:
     - name: web
-      image: {KubeConst.NeonContainerRegistery(setupState)}/haproxy:{KubeVersions.HaproxyVersion}
+      image: {KubeConst.NeonContainerRegistery(setupState)}/haproxy:neonkube-{KubeConst.NeonKubeVersion}
       volumeMounts:
         - name: neon-etcd-proxy-config
           mountPath: /etc/haproxy/haproxy.cfg
@@ -948,7 +948,7 @@ kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-k
                                                    "-v=/etc/neonkube/neon-etcd-proxy.cfg:/etc/haproxy/haproxy.cfg",
                                                    "--network=host",
                                                    "--log-driver=k8s-file",
-                                                   $"{KubeConst.NeonContainerRegistery(setupState)}/haproxy:{KubeVersions.HaproxyVersion}"
+                                                   $"{KubeConst.NeonContainerRegistery(setupState)}/haproxy:neonkube-{KubeConst.NeonKubeVersion}"
                                                );
 
                                             for (int attempt = 0; attempt < maxJoinAttempts; attempt++)
@@ -1045,7 +1045,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                             "-v=/etc/neonkube/neon-etcd-proxy.cfg:/etc/haproxy/haproxy.cfg",
                                             "--network=host",
                                             "--log-driver=k8s-file",
-                                            $"{KubeConst.NeonContainerRegistery(setupState)}/haproxy:{KubeVersions.HaproxyVersion}"
+                                            $"{KubeConst.NeonContainerRegistery(setupState)}/haproxy:neonkube-{KubeConst.NeonKubeVersion}"
                                         );
 
                                         for (int attempt = 0; attempt < maxJoinAttempts; attempt++)
@@ -1189,6 +1189,8 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     // Deploy Calico
                     var values = new List<KeyValuePair<string, object>>();
 
+                    values.Add(new KeyValuePair<string, object>("images.organization", KubeConst.NeonContainerRegistery(setupState)));
+
                     if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2)
                     {
                         values.Add(new KeyValuePair<string, object>($"neonDesktop", $"true"));
@@ -1247,7 +1249,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                             new V1Container()
                                             {
                                                 Name            = "dnsutils",
-                                                Image           = "neon-registry.node.local/kubernetes-e2e-test-images-dnsutils:1.3",
+                                                Image           = $"{KubeConst.NeonContainerRegistery(setupState)}/kubernetes-e2e-test-images-dnsutils:1.3",
                                                 Command         = new List<string>() {"sleep", "3600" },
                                                 ImagePullPolicy = "IfNotPresent"
                                             }
@@ -1971,6 +1973,8 @@ spec:
 
                     var values = new List<KeyValuePair<string, object>>();
 
+                    values.Add(new KeyValuePair<string, object>("image.organization", KubeConst.NeonContainerRegistery(setupState)));
+
                     int i = 0;
                     foreach (var t in await GetTaintsAsync(setupState, NodeLabels.LabelIstio, "true"))
                     {
@@ -2090,6 +2094,18 @@ spec:
 
                             var values = new List<KeyValuePair<string, object>>();
 
+                            values.Add(new KeyValuePair<string, object>("apiserver.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                            values.Add(new KeyValuePair<string, object>("helper.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                            values.Add(new KeyValuePair<string, object>("localprovisioner.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                            values.Add(new KeyValuePair<string, object>("policies.monitoring.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                            values.Add(new KeyValuePair<string, object>("snapshotOperator.controller.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                            values.Add(new KeyValuePair<string, object>("snapshotOperator.provisioner.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                            values.Add(new KeyValuePair<string, object>("provisioner.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                            values.Add(new KeyValuePair<string, object>("ndm.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                            values.Add(new KeyValuePair<string, object>("ndmOperator.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                            values.Add(new KeyValuePair<string, object>("webhook.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                            values.Add(new KeyValuePair<string, object>("jiva.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+
                             if (cluster.Definition.Workers.Count() >= 3)
                             {
                                 var replicas = Math.Max(1, cluster.Definition.Workers.Count() / 3);
@@ -2114,6 +2130,29 @@ spec:
                                 master.Status = "install: openebs cstor";
 
                                 var values = new List<KeyValuePair<string, object>>();
+
+                                values.Add(new KeyValuePair<string, object>("cspcOperator.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                                values.Add(new KeyValuePair<string, object>("cspcOperator.poolManager.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                                values.Add(new KeyValuePair<string, object>("cspcOperator.cstorPool.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                                values.Add(new KeyValuePair<string, object>("cspcOperator.cstorPoolExporter.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+
+                                values.Add(new KeyValuePair<string, object>("cvcOperator.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                                values.Add(new KeyValuePair<string, object>("cvcOperator.target.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                                values.Add(new KeyValuePair<string, object>("cvcOperator.volumeMgmt.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                                values.Add(new KeyValuePair<string, object>("cvcOperator.volumeExporter.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+
+                                values.Add(new KeyValuePair<string, object>("csiController.resizer.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                                values.Add(new KeyValuePair<string, object>("csiController.snapshotter.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                                values.Add(new KeyValuePair<string, object>("csiController.snapshotController.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                                values.Add(new KeyValuePair<string, object>("csiController.attacher.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                                values.Add(new KeyValuePair<string, object>("csiController.provisioner.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                                values.Add(new KeyValuePair<string, object>("csiController.driverRegistrar.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+
+                                values.Add(new KeyValuePair<string, object>("cstorCSIPlugin.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+
+                                values.Add(new KeyValuePair<string, object>("csiNode.driverRegistrar.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+
+                                values.Add(new KeyValuePair<string, object>("admissionServer.image.organization", KubeConst.NeonContainerRegistery(setupState)));
 
                                 await master.InstallHelmChartAsync("openebs_cstor_operator", releaseName: "neon-storage-openebs-cstor", values: values, @namespace: "openebs", statusWriter: statusWriter);
                             });
@@ -2473,6 +2512,16 @@ $@"- name: StorageType
 
                     var values = new List<KeyValuePair<string, object>>();
 
+                    values.Add(new KeyValuePair<string, object>($"alertmanager.alertmanagerSpec.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                    values.Add(new KeyValuePair<string, object>($"prometheusOperator.tlsProxy.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                    values.Add(new KeyValuePair<string, object>($"prometheusOperator.admissionWebhooks.patch.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                    values.Add(new KeyValuePair<string, object>($"prometheusOperator.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                    values.Add(new KeyValuePair<string, object>($"prometheusOperator.configmapReloadImage.organization", KubeConst.NeonContainerRegistery(setupState)));
+                    values.Add(new KeyValuePair<string, object>($"prometheusOperator.prometheusConfigReloaderImage.organization", KubeConst.NeonContainerRegistery(setupState)));
+                    values.Add(new KeyValuePair<string, object>($"prometheus.prometheusSpec.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                    values.Add(new KeyValuePair<string, object>($"global.kubeStateMetrics.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                    values.Add(new KeyValuePair<string, object>($"global.nodeExporter.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+
                     int i = 0;
                     foreach (var t in await GetTaintsAsync(setupState, NodeLabels.LabelMetrics, "true"))
                     {
@@ -2627,6 +2676,8 @@ $@"- name: StorageType
                                 i++;
                             }
 
+                            values.Add(new KeyValuePair<string, object>("image.organization", KubeConst.NeonContainerRegistery(setupState)));
+
                             await master.InstallHelmChartAsync("cortex", releaseName: "neon-metrics-cortex", @namespace: "monitoring", values: values, statusWriter: statusWriter);
                         });
 
@@ -2675,6 +2726,8 @@ $@"- name: StorageType
 
                     var values = new List<KeyValuePair<string, object>>();
 
+                    values.Add(new KeyValuePair<string, object>("image.organization", KubeConst.NeonContainerRegistery(setupState)));
+
                     if (cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count() >= 3)
                     {
                         values.Add(new KeyValuePair<string, object>($"replicas", Math.Min(3, (cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count()))));
@@ -2715,6 +2768,8 @@ $@"- name: StorageType
 
                     var values = new List<KeyValuePair<string, object>>();
 
+                    values.Add(new KeyValuePair<string, object>("image.organization", KubeConst.NeonContainerRegistery(setupState)));
+
                     if (cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count() >= 3)
                     {
                         values.Add(new KeyValuePair<string, object>($"replicas", Math.Min(3, (cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count()))));
@@ -2751,6 +2806,10 @@ $@"- name: StorageType
                         master.Status = "setup: Grafana";
 
                         var values = new List<KeyValuePair<string, object>>();
+
+                        values.Add(new KeyValuePair<string, object>("image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                        values.Add(new KeyValuePair<string, object>("downloadDashboardsImage.organization", KubeConst.NeonContainerRegistery(setupState)));
+                        values.Add(new KeyValuePair<string, object>("sidecar.image.organization", KubeConst.NeonContainerRegistery(setupState)));
 
                         int i = 0;
                         foreach (var t in await GetTaintsAsync(setupState, NodeLabels.LabelMetrics, "true"))
@@ -2826,6 +2885,10 @@ $@"- name: StorageType
                             master.Status = "setup: minio";
 
                             var values = new List<KeyValuePair<string, object>>();
+
+                            values.Add(new KeyValuePair<string, object>("image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                            values.Add(new KeyValuePair<string, object>("mcImage.organization", KubeConst.NeonContainerRegistery(setupState)));
+                            values.Add(new KeyValuePair<string, object>("helmKubectlJqImage.organization", KubeConst.NeonContainerRegistery(setupState)));
 
                             if (cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count() >= 3)
                             {
@@ -3027,6 +3090,9 @@ $@"- name: StorageType
                     master.Status = "setup: harbor redis";
 
                     var values   = new List<KeyValuePair<string, object>>();
+                    
+                    values.Add(new KeyValuePair<string, object>("image.organization", KubeConst.NeonContainerRegistery(setupState)));
+
                     var replicas = Math.Min(3, cluster.Definition.Masters.Count());
 
                     values.Add(new KeyValuePair<string, object>($"replicas", $"{replicas}"));
@@ -3079,6 +3145,19 @@ $@"- name: StorageType
                     master.Status = "setup: harbor";
 
                     var values = new List<KeyValuePair<string, object>>();
+
+                    values.Add(new KeyValuePair<string, object>("nginx.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                    values.Add(new KeyValuePair<string, object>("portal.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                    values.Add(new KeyValuePair<string, object>("core.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                    values.Add(new KeyValuePair<string, object>("jobservice.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                    values.Add(new KeyValuePair<string, object>("registry.registry.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                    values.Add(new KeyValuePair<string, object>("registry.controller.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                    values.Add(new KeyValuePair<string, object>("chartmuseum.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                    values.Add(new KeyValuePair<string, object>("clair.clair.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                    values.Add(new KeyValuePair<string, object>("clair.adapter.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                    values.Add(new KeyValuePair<string, object>("trivy.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                    values.Add(new KeyValuePair<string, object>("notary.server.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                    values.Add(new KeyValuePair<string, object>("notary.signer.image.organization", KubeConst.NeonContainerRegistery(setupState)));
 
                     values.Add(new KeyValuePair<string, object>($"harborAdminPassword", adminPassword));
 
@@ -3170,6 +3249,8 @@ $@"- name: StorageType
                     master.Status = "setup: [neon-cluster-manager]";
 
                     var values = new List<KeyValuePair<string, object>>();
+                    
+                    values.Add(new KeyValuePair<string, object>("image.organization", KubeConst.NeonContainerRegistery(setupState)));
 
                     await master.InstallHelmChartAsync("neon_cluster_manager", releaseName: "neon-cluster-manager", @namespace: "neon-system", values: values, statusWriter: statusWriter);
                 });
@@ -3235,6 +3316,11 @@ $@"- name: StorageType
             var cluster = setupState.Get<ClusterProxy>(ClusterProxyProperty);
 
             var values = new List<KeyValuePair<string, object>>();
+
+            values.Add(new KeyValuePair<string, object>($"image.organization", KubeConst.NeonContainerRegistery(setupState)));
+            values.Add(new KeyValuePair<string, object>($"busybox.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+            values.Add(new KeyValuePair<string, object>($"prometheus.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+            values.Add(new KeyValuePair<string, object>($"manager.image.organization", KubeConst.NeonContainerRegistery(setupState)));
 
             if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2)
             {

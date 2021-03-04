@@ -6,7 +6,7 @@ fullnameOverride: null
 
 image:
   # -- The Docker registry
-  registry: neon-registry.node.local
+  organization: neon-registry.node.local
   # -- Docker image repository
   repository: grafana-promtail
   # -- Overrides the image tag whose default is the chart's appVersion
