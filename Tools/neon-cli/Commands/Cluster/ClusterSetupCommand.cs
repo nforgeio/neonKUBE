@@ -275,7 +275,7 @@ OPTIONS:
                     (state, node) =>
                     {
                         node.SetupNode(setupController);
-                        node.InvokeIdempotent("setup/setup-node-restart", () => node.RebootAndWait(state));
+                        node.InvokeIdempotent("setup/setup-node-restart", () => node.Reboot(wait: true));
                     },
                     (state, node) => node == cluster.FirstMaster);
 
@@ -287,7 +287,7 @@ OPTIONS:
                         (state, node) =>
                         {
                             node.SetupNode(setupController);
-                            node.InvokeIdempotent("setup/setup-node-restart", () => node.RebootAndWait(setupController));
+                            node.InvokeIdempotent("setup/setup-node-restart", () => node.Reboot(wait: true));
                         },
                         (state, node) => node != cluster.FirstMaster);
                 }

@@ -793,7 +793,7 @@ rm {HostFolders.Home(Username)}/askpass
         /// <summary>
         /// Reboot the remote machine.
         /// </summary>
-        /// <param name="wait">Optionally wait for the remote machine to reboot (defaults to <c>true</c>).</param>
+        /// <param name="wait">Optionally waits for the remote machine to reboot and then reconnects (defaults to <c>true</c>).</param>
         public void Reboot(bool wait = true)
         {
             Status = "restarting...";
