@@ -628,12 +628,21 @@ spec:
 
             cluster.ClearStatus();
 
-            var tasks = new List<Task>();
-
             ConfigureKubernetes(setupState, cluster.FirstMaster, statusWriter);
             ConfigureWorkstation(setupState, firstMaster, statusWriter);
             ConnectCluster(setupState);
+
+            // Wait for the k8s API server to start.
+
+            await KubeHelper.WaitForK8sApiServer(GetK8sClient(setupState));
+
+            // We need to taint before deploying pods.
+
             await ConfigureMasterTaintsAsync(setupState, firstMaster, statusWriter);
+
+            // Run configuration tasks in parallel.
+
+            var tasks = new List<Task>();
 
             tasks.Add(TaintNodesAsync(setupState, statusWriter));
             tasks.Add(LabelNodesAsync(setupState, firstMaster, statusWriter));
@@ -648,6 +657,8 @@ spec:
             {
                 await InstallEtcdAsync(setupState, firstMaster, statusWriter);
             }
+
+            // Additional configuration.
 
             tasks.Add(InstallKialiAsync(setupState, firstMaster, statusWriter));
             tasks.Add(InstallKubeDashboardAsync(setupState, firstMaster, statusWriter));
