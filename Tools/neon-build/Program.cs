@@ -46,7 +46,7 @@ ARGUMENTS:
 
 OPTIONS:
 
-    --all           - clears the [Build-cache] folder too.
+    --all           - Clears the [Build-cache] folder too.
 
 ---------------------------------------------------------------------
 neon-build gzip SOURCE TARGET
@@ -56,8 +56,8 @@ older than the source.
 
 ARGUMENTS:
 
-    SOURCE          - path to the (uncompressed) source file
-    TARGET          - path to the (compressed) target file
+    SOURCE          - Path to the (uncompressed) source file
+    TARGET          - Path to the (compressed) target file
 
 ---------------------------------------------------------------------
 neon-build copy SOURCE TARGET
@@ -66,8 +66,8 @@ Copies a file if the target doesn't exist or is older than the source.
 
 ARGUMENTS:
 
-    SOURCE          - path to the (uncompressed) source file
-    TARGET          - path to the (compressed) target file
+    SOURCE          - Path to the (uncompressed) source file
+    TARGET          - Path to the (compressed) target file
 
 ---------------------------------------------------------------------
 neon-build read-version [-n] CSPATH NAME
@@ -76,12 +76,12 @@ Used to read a version constant from a C# source file.
 
 ARGUMENTS:
 
-    CSPATH          - path to the source file defining the version constant
-    NAME            - name of the the constant to be read
+    CSPATH          - Path to the source file defining the version constant
+    NAME            - Name of the the constant to be read
 
 OPTIONS:
 
-    -n              - omit the line terminator when writing the output
+    -n              - Omit the line terminator when writing the output
 
 REMARKS:
 
