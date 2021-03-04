@@ -292,7 +292,13 @@ OPTIONS:
                         (state, node) => node != cluster.FirstMaster);
                 }
 
-                if (commandLine.HasOption("--upload-charts"))
+                setupController.AddNodeStep("install helm",
+                    (state, node) =>
+                    {
+                        node.NodeInstallHelm(state);
+                    });
+
+                if (commandLine.HasOption("--upload-charts") || debug)
                 {
                     setupController.AddNodeStep("upload Helm charts",
                         (state, node) =>
