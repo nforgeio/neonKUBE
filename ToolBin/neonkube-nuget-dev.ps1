@@ -178,8 +178,8 @@ SetVersion Neon.Cryptography        $libraryVersion
 SetVersion Neon.Docker              $libraryVersion
 SetVersion Neon.HyperV              $libraryVersion
 SetVersion Neon.Service             $libraryVersion
-#SetVersion Neon.ModelGen            $libraryVersion
-#SetVersion Neon.ModelGenerator      $libraryVersion
+SetVersion Neon.ModelGen            $libraryVersion
+SetVersion Neon.ModelGenerator      $libraryVersion
 SetVersion Neon.Nats                $libraryVersion
 SetVersion Neon.Postgres            $libraryVersion
 SetVersion Neon.SSH                 $libraryVersion
@@ -216,8 +216,8 @@ Publish Neon.Cryptography           $libraryVersion
 Publish Neon.Docker                 $libraryVersion
 Publish Neon.HyperV                 $libraryVersion
 Publish Neon.Service                $libraryVersion
-#Publish Neon.ModelGen               $libraryVersion
-#Publish Neon.ModelGenerator         $libraryVersion
+Publish Neon.ModelGen               $libraryVersion
+Publish Neon.ModelGenerator         $libraryVersion
 Publish Neon.Nats                   $libraryVersion
 Publish Neon.Postgres               $libraryVersion
 Publish Neon.SSH                    $libraryVersion
@@ -254,8 +254,8 @@ RestoreVersion Neon.Cryptography
 RestoreVersion Neon.Docker
 RestoreVersion Neon.HyperV
 RestoreVersion Neon.Service
-#RestoreVersion Neon.ModelGen
-#RestoreVersion Neon.ModelGenerator
+RestoreVersion Neon.ModelGen
+RestoreVersion Neon.ModelGenerator
 RestoreVersion Neon.Nats
 RestoreVersion Neon.Postgres
 RestoreVersion Neon.SSH

@@ -75,10 +75,6 @@
     </Content>
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
-  </ItemGroup>
-
   <!-- 
   We're going to publish the [neon-modelgen] binaries for [linux-x64], [osx-x64],
   and [win-x64] to the [neon-modelgen] folder of this project.
