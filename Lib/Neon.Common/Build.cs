@@ -52,7 +52,7 @@ namespace Neon
         /// release scripts to match.
         /// </note>
         /// </summary>
-        public const string NeonLibraryVersion = "2.11.0";
+        public const string NeonLibraryVersion = "2.11.1";
 
         /// <summary>
         /// <para>
