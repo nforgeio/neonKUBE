@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neon.Xunit.Temporal</RootNamespace>
-    <Version>2.10.0-alpha</Version>
+    <Version>2.11.0-alpha</Version>
     <Authors>neonFORGE Team</Authors>
     <Company>neonFORGE LLC</Company>
     <Description>Xunit test fixture for Temporal</Description>

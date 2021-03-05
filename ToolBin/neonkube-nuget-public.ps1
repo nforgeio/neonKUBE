@@ -99,7 +99,7 @@ $nfSolution      = "$nfRoot\neonKUBE.sln"
 $nfBuild         = "$env:NF_BUILD"
 $nfLib           = "$nfRoot\Lib"
 $nfTools         = "$nfRoot\Tools"
-$nfToolBin       = "$nfRoot\ToolBin
+$nfToolBin       = "$nfRoot\ToolBin"
 $libraryVersion  = $(& "$nfToolBin\neon-build" read-version "$nfLib/Neon.Common/Build.cs" NeonLibraryVersion)
 $neonkubeVersion = $(& "$nfToolBin\neon-build" read-version "$nfLib/Neon.Common/Build.cs" NeonKubeVersion)
 
