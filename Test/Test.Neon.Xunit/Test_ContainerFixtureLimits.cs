@@ -46,7 +46,7 @@ namespace TestXunit
                 MemoryReservation = "40 MiB",
                 MemorySwap        = "100 MiB",
                 MemorySwappiness  = 50,
-                KernelMemory      = "4 MiB",
+                KernelMemory      = "250 MiB",
                 OomKillDisable    = true
             };
 

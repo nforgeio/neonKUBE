@@ -41,6 +41,12 @@ $image_root = "$env:NF_ROOT\\Images"
 . $image_root/includes.ps1
 #----------------------------------------------------------
 
+# Sign into 1Password and retrieve any necessary credentials.
+
+OpSignin
+
+# $todo(jefflill): Need to load the GITHUB PAT
+
 # Take care to ensure that you order the image builds such that
 # dependant images are built before any dependancies.
 
@@ -133,6 +139,7 @@ if ($other)
 
 if ($services)
 {
+    Publish "$image_root\\test"
     Publish "$image_root\\test-cadence"
     Publish "$image_root\\test-temporal"
     Publish "$image_root\\neon-cluster-manager"
