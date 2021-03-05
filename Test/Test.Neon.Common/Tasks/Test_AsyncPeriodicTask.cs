@@ -32,7 +32,6 @@ using Xunit;
 
 namespace TestCommon
 {
-    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_AsyncPeriodicTask
     {
         private TimeSpan defaultTimeout = TimeSpan.FromSeconds(15);

@@ -31,7 +31,6 @@ using Xunit;
 
 namespace TestCommon
 {
-    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_GoTimeSpan
     {
         private bool AreClose(double v1, double v2)

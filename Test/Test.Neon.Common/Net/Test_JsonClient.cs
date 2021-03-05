@@ -36,7 +36,6 @@ using Xunit;
 
 namespace TestCommon
 {
-    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public partial class Test_JsonClient
     {
         private readonly string baseUri = $"http://127.0.0.1:{NetHelper.GetUnusedIpPort(IPAddress.Loopback)}/";

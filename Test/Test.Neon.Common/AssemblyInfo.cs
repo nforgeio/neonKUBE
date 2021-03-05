@@ -3,4 +3,4 @@
 // Disable parallel test execution because [TestFixture] doesn't
 // support this in general.
 
-[assembly: CollectionBehavior(MaxParallelThreads = 4)]
+[assembly: CollectionBehavior(MaxParallelThreads = 8)]

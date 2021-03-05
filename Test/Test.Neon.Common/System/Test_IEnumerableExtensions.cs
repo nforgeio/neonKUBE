@@ -37,7 +37,6 @@ using Xunit;
 
 namespace TestCommon
 {
-    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_IEnumerableExtensions
     {
         [Fact]

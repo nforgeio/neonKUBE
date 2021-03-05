@@ -82,7 +82,6 @@ namespace TestCommon
 
     // $todo(jefflill): I'm only testing UTF-8 encoding at this time.
 
-    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_StaticFileSystem
     {
         public Test_StaticFileSystem()

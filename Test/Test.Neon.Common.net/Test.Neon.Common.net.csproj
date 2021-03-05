@@ -490,6 +490,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <EmbeddedResource Include="IORes\Resources\Folder8\Test._" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
@@ -506,6 +507,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
     <EmbeddedResource Include="IORes\Resources\Folder1\Folder3\TextFile5.txt" />
     <EmbeddedResource Include="IORes\Resources\Folder1\TextFile3.txt" />
     <EmbeddedResource Include="IORes\Resources\Folder1\TextFile4.txt" />
@@ -514,9 +518,6 @@
     <EmbeddedResource Include="IORes\Resources\Folder2\TextFile7.txt" />
     <EmbeddedResource Include="IORes\Resources\TextFile1.txt" />
     <EmbeddedResource Include="IORes\Resources\TextFile2.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Properties\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
