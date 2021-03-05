@@ -1485,7 +1485,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
     <ProjectReference Include="..\Neon.Cryptography\Neon.Cryptography.csproj" />
-    <ProjectReference Include="..\Neon.SSH.NET\Neon.SSH.NET.csproj" />
     <ProjectReference Include="..\Neon.SSH\Neon.SSH.csproj" />
   </ItemGroup>
 
