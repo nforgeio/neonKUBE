@@ -49,9 +49,12 @@ NOTE: This package has been tested against remote machines running Ubuntu 18.04+
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="SSH.NET" Version="2020.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
     <ProjectReference Include="..\Neon.Cryptography\Neon.Cryptography.csproj" />
-    <ProjectReference Include="..\Neon.SSH.NET\Neon.SSH.NET.csproj" />
   </ItemGroup>
 
 </Project>

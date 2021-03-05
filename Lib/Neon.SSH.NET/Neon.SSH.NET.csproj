@@ -6,9 +6,9 @@
     <Version>2.10.0</Version>
     <Company>Renci</Company>
     <Product>neonLIBRARY</Product>
-    <Description>SSH.NET is a Secure Shell (SSH) library for .NET, optimized for parallelism.
-
-This is a cloned and slightly updated build of https://www.nuget.org/packages/SSH.NET/ with some bug fixes since the official project hasn't been updated for some time.</Description>
+    <Description>
+      **IMPORTANT:** The **Neon.SSH.NET** library has been deprecated in favor of the resurgent [SSH.NET](https://www.nuget.org/packages/SSH.NET/) nuget package.  We forked an earlier repo of that project 4+ years ago when it was effectively abandoned to hack around a deadlock and an SCP compatibility issue with recent versions of OpenSSH.
+    </Description>
     <Copyright>Copyright © Renci 2010-2017 and Copyright © 2005-2021 by neonFORGE LLC</Copyright>
     <PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.SSH.NET/README.md</PackageProjectUrl>
     <RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
