@@ -49,7 +49,7 @@ namespace Test.NeonCli
                 var result = await runner.ExecuteAsync(Program.Main);
 
                 Assert.Equal(0, result.ExitCode);
-                Assert.Contains("neonKUBE Management Tool: neon", result.OutputText);
+                Assert.Contains("USAGE:", result.OutputText);
 
                 // Verify that we see an error for an unrecognized command.,
 

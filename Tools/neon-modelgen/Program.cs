@@ -20,12 +20,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 
 using Neon;
 using Neon.Common;
 using Neon.ModelGen;
 
-namespace modelgen
+namespace NeonModelGen
 {
     /// <summary>
     /// Implements the <c>neon-modelgen</c> tool.
@@ -111,7 +112,8 @@ style design conventions.  See this GitHub issue for more information:
         /// Program entry point.
         /// </summary>
         /// <param name="args">Command line arguments.</param>
-        public static void Main(string[] args)
+        /// <returns>The program exit code.</returns>
+        public static async Task<int> Main(string[] args)
         {
             var commandLine = new CommandLine(args);
 
@@ -178,7 +180,7 @@ style design conventions.  See this GitHub issue for more information:
                 else
                 {
                     LogError($"*** ERROR: [--ux={ux}] does not specify one of the supported UX frameworks: XAML", critical: true);
-                    Program.Exit(1, critical: true);
+                    Program.Exit(1);
                 }
             }
 
@@ -198,7 +200,7 @@ style design conventions.  See this GitHub issue for more information:
                 // show up in the Visual Studio error list and be annoying.
 
                 LogError(NeonHelper.ExceptionError(e), critical: false);
-                Program.Exit(1, critical: false);
+                Program.Exit(1);
             }
 
             try
@@ -209,17 +211,17 @@ style design conventions.  See this GitHub issue for more information:
             catch (Exception e)
             {
                 LogError(NeonHelper.ExceptionError(e), critical: true);
-                Program.Exit(1, critical: true);
+                Program.Exit(1);
             }
 
             if (output.HasErrors)
             {
                 foreach (var error in output.Errors)
                 {
-                    LogError(error, critical: true);
+                    LogError(error);
                 }
 
-                Program.Exit(1, critical: true);
+                Program.Exit(1);
             }
 
             try
@@ -247,13 +249,19 @@ style design conventions.  See this GitHub issue for more information:
                     Console.Write(output.SourceCode);
                 }
             }
+            catch (ProgramExitException e)
+            {
+                return e.ExitCode;
+            }
             catch (Exception e)
             {
-                LogError(NeonHelper.ExceptionError(e), critical: true);
-                Program.Exit(1, critical: true);
+                Console.Error.WriteLine($"*** ERROR: {NeonHelper.ExceptionError(e)}");
+                Console.Error.WriteLine(e.StackTrace);
+                Console.Error.WriteLine(string.Empty);
+                return 1;
             }
 
-            Program.Exit(0);
+            return await Task.FromResult(0);
         }
 
         /// <summary>
@@ -303,13 +311,12 @@ style design conventions.  See this GitHub issue for more information:
         }
 
         /// <summary>
-        /// Exits the program with an exit code or <b>0</b> when error reporting is disabled.
+        /// Exits the program returning the specified process exit code.
         /// </summary>
         /// <param name="exitCode">The exit code.</param>
-        /// <param name="critical">Optionally returns the exit code even for supression mode.</param>
-        private static void Exit(int exitCode, bool critical = false)
+        public static void Exit(int exitCode)
         {
-            Environment.Exit(suppressSpurious && !critical ? 0 : exitCode);
+            throw new ProgramExitException(exitCode);
         }
     }
 }

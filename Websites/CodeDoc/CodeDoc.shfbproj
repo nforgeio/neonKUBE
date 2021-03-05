@@ -33,7 +33,6 @@
       <DocumentationSource sourceFile="..\..\Lib\Neon.Docker\Neon.Docker.csproj" />
       <DocumentationSource sourceFile="..\..\Lib\Neon.ModelGen\Neon.ModelGen.csproj" />
       <DocumentationSource sourceFile="..\..\Lib\Neon.Nats\Neon.Nats.csproj" />
-      <DocumentationSource sourceFile="..\..\Lib\Neon.SSH.NET\Neon.SSH.NET.csproj" />
       <DocumentationSource sourceFile="..\..\Lib\Neon.Web\Neon.Web.csproj" />
       <DocumentationSource sourceFile="..\..\Lib\Neon.Xunit\Neon.Xunit.csproj" />
       <DocumentationSource sourceFile="..\..\Lib\Neon.Xunit.Cadence\Neon.Xunit.Cadence.csproj" />
