@@ -109,8 +109,6 @@ COMMAND SUMMARY:
     neon password           COMMAND
     neon prepare            COMMAND
     neon run                -- COMMAND
-    neon scp                [NODE]
-    neon ssh                [NODE]
     neon vault              COMMAND
     neon version            [-n] [--git] [--minimum=VERSION]
 
@@ -700,53 +698,6 @@ You can disable the use of this encrypted folder by specifying
             finally
             {
                 Console.WriteLine();
-            }
-        }
-
-        /// <summary>
-        /// Uses WinSCP to convert an OpenSSH PEM formatted key to the PPK format
-        /// required by PuTTY/WinSCP.  This works only on Windows.
-        /// </summary>
-        /// <param name="kubeLogin">The cluster login.</param>
-        /// <param name="pemKey">The OpenSSH PEM key.</param>
-        /// <returns>The converted PPPK key.</returns>
-        /// <exception cref="NotImplementedException">Thrown when not running on Windows.</exception>
-        /// <exception cref="Win32Exception">Thrown if WinSCP could not be executed.</exception>
-        public static string ConvertPUBtoPPK(ClusterLogin kubeLogin, string pemKey)
-        {
-            if (!NeonHelper.IsWindows)
-            {
-                throw new NotImplementedException("Not implemented for non-Windows platforms.");
-            }
-
-            var programPath = "winscp.com";
-            var pemKeyPath  = Path.Combine(KubeHelper.TempFolder, Guid.NewGuid().ToString("d"));
-            var ppkKeyPath  = Path.Combine(KubeHelper.TempFolder, Guid.NewGuid().ToString("d"));
-
-            try
-            {
-                File.WriteAllText(pemKeyPath, pemKey);
-
-                var result = NeonHelper.ExecuteCapture(programPath, $@"/keygen ""{pemKeyPath}"" /comment=""{kubeLogin.ClusterDefinition.Name} Key"" /output=""{ppkKeyPath}""");
-
-                if (result.ExitCode != 0)
-                {
-                    Console.WriteLine(result.OutputText);
-                    Console.Error.WriteLine(result.ErrorText);
-                    Program.Exit(result.ExitCode);
-                }
-
-                return File.ReadAllText(ppkKeyPath);
-            }
-            catch (Win32Exception)
-            {
-                Console.Error.WriteLine($"*** ERROR: Cannot launch [{programPath}].");
-                throw;
-            }
-            finally
-            {
-                NeonHelper.DeleteFile(pemKeyPath);
-                NeonHelper.DeleteFile(ppkKeyPath);
             }
         }
 
