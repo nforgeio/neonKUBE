@@ -43,6 +43,7 @@ using Xunit;
 
 namespace TestNeonService
 {
+    [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_Metrics
     {

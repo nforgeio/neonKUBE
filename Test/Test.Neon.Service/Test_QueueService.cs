@@ -39,6 +39,7 @@ namespace TestNeonService
     /// HTTP endpoint and that also exercises environment variable and file based 
     /// configuration.
     /// </summary>
+    [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_QueueService : IClassFixture<ComposedFixture>
     {

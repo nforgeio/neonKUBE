@@ -38,6 +38,7 @@ namespace TestNeonService
     /// <summary>
     /// Tests the <see cref="TestHelper.RunFixture{T}"/> method.
     /// </summary>
+    [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_RunFixture
     {

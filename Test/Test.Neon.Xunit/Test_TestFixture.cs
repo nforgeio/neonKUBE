@@ -33,6 +33,7 @@ namespace TestXunit
     /// <summary>
     /// Verify the base test fixture implementation.
     /// </summary>
+    [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_TestFixture : IClassFixture<EnvironmentFixture>
     {

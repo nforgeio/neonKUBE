@@ -45,6 +45,7 @@ namespace TestModelGen
     /// Used to wrap a dynamically generated and compiled service
     /// client class for testing purposes.
     /// </summary>
+    [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public sealed class ServiceWrapper : IDisposable
     {

@@ -38,6 +38,7 @@ namespace TestYugaByte
     /// These tests verify that we can connect to via Cassandra and Postgres and also
     /// that <see cref="YugaByteFixture.Restart()"/> actually clears the database.
     /// </summary>
+    [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_RestartAlways : IClassFixture<YugaByteFixture>
     {

@@ -40,6 +40,7 @@ using Xunit;
 
 namespace TestTemporal
 {
+    [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_MultiClient : IClassFixture<TemporalFixture>
     {

@@ -40,6 +40,7 @@ namespace TestCouchbase
     /// <summary>
     /// Verifies basic <see cref="CouchbaseFixture"/> capabilities.
     /// </summary>
+    [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_CouchbaseFixture : IClassFixture<CouchbaseFixture>
     {
@@ -57,9 +58,7 @@ namespace TestCouchbase
 
             jsonClient = new JsonClient();
             jsonClient.BaseAddress = new Uri("http://localhost:8094");
-            jsonClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
-                                                                                        "Basic",
-                                                                                        Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes($"Administrator:password")));
+            jsonClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes($"Administrator:password")));
         }
 
         /// <summary>

@@ -83,6 +83,7 @@ namespace TestModelGen.CustomOutput
     }
 
     [NoCodeGen]
+    [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_CustomOutput
     {

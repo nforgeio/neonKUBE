@@ -53,6 +53,20 @@ namespace Neon.Xunit
     /// <code language="csharp">
     /// [assembly: CollectionBehavior(DisableTestParallelization = true, MaxParallelThreads = 1)]
     /// </code>
+    /// <para>
+    /// and then define your test classes like:
+    /// </para>
+    /// <code language="csharp">
+    /// public class MyTests
+    /// {
+    ///     [Collection(TestCollection.NonParallel)]
+    ///     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
+    ///     [Fact]
+    ///     public void Test()
+    ///     {
+    ///     }
+    /// }
+    /// </code>
     /// </note>
     /// <para>
     /// This fixture resets the state of the local Docker daemon before and after

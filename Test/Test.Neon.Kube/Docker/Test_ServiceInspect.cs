@@ -44,6 +44,7 @@ namespace TestKube
     /// Verifies that the <see cref="ServiceDetails"/> class maps correctly to
     /// the service inspection details returned for actual Docker services.
     /// </summary>
+    [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_ServiceInspect : IClassFixture<DockerFixture>
     {

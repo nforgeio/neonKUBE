@@ -53,6 +53,7 @@ namespace TestModelGen.Validator
     /// This class verifies that <see cref="XunitExtensions.ValidateController{TServiceController}(Neon.Data.IGeneratedServiceClient)"/>
     /// actually works properly.
     /// </summary>
+    [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_ValidateController
     {

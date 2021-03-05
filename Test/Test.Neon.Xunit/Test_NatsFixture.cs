@@ -54,6 +54,7 @@ namespace TestXunit
     /// This class tests both the <see cref="NatsFixture"/> as well as the Neon
     /// NATS extensions.
     /// </summary>
+    [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_NatsFixture : IClassFixture<NatsFixture>
     {

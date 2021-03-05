@@ -59,6 +59,7 @@ namespace TestCadence
     // perform the specified operation on the first pass, trigger a replay, and
     // then ensure that the operation returned the same results on the second pass.
 
+    [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_Replay : IClassFixture<CadenceFixture>, IDisposable
     {
