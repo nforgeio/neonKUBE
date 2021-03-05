@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_Win32.cs
+// FILE:	    TestCollection.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -17,29 +17,31 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Common;
+using Neon.Cryptography;
+using Neon.Diagnostics;
+using Neon.IO;
 using Neon.Windows;
 using Neon.Xunit;
 
 using Xunit;
 
-namespace TestCommon
+namespace Neon.Xunit
 {
-    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
-    public class Test_Win32
+    /// <summary>
+    /// Enumerates the neonLIBRARY related xUnit test collections.
+    /// </summary>
+    public static class TestCollection
     {
-        [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public void GetPhysicallyInstalledSystemMemory()
-        {
-            Assert.True(Win32.GetPhysicallyInstalledSystemMemory(out var memKB));
-            Assert.True(memKB > ByteUnits.MebiBytes);
-        }
+        /// <summary>
+        /// Identifies the test collection where tests <b>are never</b> executed in parallel.
+        /// </summary>
+        public const string NonParallel = "Non-parallel";
     }
 }

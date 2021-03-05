@@ -31,6 +31,7 @@ using Xunit;
 
 namespace TestXunit
 {
+    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_EnvironmentFixture : IClassFixture<EnvironmentFixture>
     {
         private EnvironmentFixture fixture;

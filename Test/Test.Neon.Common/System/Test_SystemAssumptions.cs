@@ -35,6 +35,7 @@ namespace TestCommon
     /// <summary>
     /// This verifies assumptions about the standard .NET class libraries.
     /// </summary>
+    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_SystemAssumptions
     {
         [Fact]

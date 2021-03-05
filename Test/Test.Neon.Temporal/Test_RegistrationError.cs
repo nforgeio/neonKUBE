@@ -39,6 +39,7 @@ using Xunit;
 
 namespace TestTemporal
 {
+    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public partial class Test_RegistrationError : IClassFixture<TemporalFixture>, IDisposable
     {
         private TemporalFixture     fixture;

@@ -32,6 +32,7 @@ using Xunit;
 
 namespace TestCryptography
 {
+    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_NeonVault
     {
         private static string   unencryptedText =

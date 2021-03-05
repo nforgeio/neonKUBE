@@ -30,6 +30,7 @@ using Xunit;
 
 namespace TestXunit
 {
+    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_ProgramRunner
     {
         private bool mainExecuted = false;

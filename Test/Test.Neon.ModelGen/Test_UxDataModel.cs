@@ -197,6 +197,7 @@ namespace TestModelGen.UxDataModel
     }
 
     [NoCodeGen]
+    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_UxDataModel
     {
         [Fact]

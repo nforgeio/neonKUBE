@@ -31,6 +31,7 @@ using Xunit;
 
 namespace TestCommon
 {
+    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public partial class Test_EnvironmentParser
     {
         private string Var(string name)

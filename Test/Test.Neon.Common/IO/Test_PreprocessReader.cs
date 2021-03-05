@@ -31,6 +31,7 @@ using Xunit;
 
 namespace TestCommon
 {
+    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_PreprocessReader
     {
         private void SetVariables(PreprocessReader reader, KeyValuePair<string, string>[] variables)

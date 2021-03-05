@@ -32,6 +32,7 @@ using Xunit;
 
 namespace TestCryptography
 {
+    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_AesCipher
     {
         private int[] sizes = new int[] { 128, 192, 256 };

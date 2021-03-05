@@ -135,6 +135,7 @@ namespace Test.Neon.Web.Controller
     /// <summary>
     /// Basic tests for <see cref="NeonControllerBase"/>.
     /// </summary>
+    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_TestControllerBase : IClassFixture<AspNetFixture>
     {
         private AspNetFixture       fixture;

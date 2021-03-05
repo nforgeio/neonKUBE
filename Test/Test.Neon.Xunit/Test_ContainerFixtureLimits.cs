@@ -32,6 +32,7 @@ using Xunit;
 
 namespace TestXunit
 {
+    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_ContainerFixtureLimits : IClassFixture<ContainerFixture>
     {
         private ContainerFixture fixture;

@@ -32,6 +32,7 @@ using Xunit;
 
 namespace TestCommon
 {
+    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_AsyncAutoResetEvent
     {
         private TimeSpan defaultTimeout = TimeSpan.FromSeconds(15);

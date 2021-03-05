@@ -44,6 +44,7 @@ namespace TestCouchbase
     /// <summary>
     /// Verify that a test fixture composed of Couchbase and other fixtures works.
     /// </summary>
+    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_ComposingFixtures : IClassFixture<ComposedFixture>
     {
         //---------------------------------------------------------------------

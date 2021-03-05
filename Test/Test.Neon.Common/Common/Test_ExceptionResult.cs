@@ -29,6 +29,7 @@ using Xunit;
 
 namespace TestCommon
 {
+    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public partial class Test_ExceptionResult
     {
         public class TestException1 : Exception

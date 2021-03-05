@@ -487,7 +487,6 @@
     <Compile Include="..\Test.Neon.Common\Win32\Test_Win32.cs">
       <Link>Win32\Test_Win32.cs</Link>
     </Compile>
-    <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
@@ -515,6 +514,9 @@
     <EmbeddedResource Include="IORes\Resources\Folder2\TextFile7.txt" />
     <EmbeddedResource Include="IORes\Resources\TextFile1.txt" />
     <EmbeddedResource Include="IORes\Resources\TextFile2.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Properties\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

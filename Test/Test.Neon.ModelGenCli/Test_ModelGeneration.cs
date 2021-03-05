@@ -97,6 +97,7 @@ namespace Test.NeonCli
     /// <summary>
     /// Tests <b>neon generate models</b> commands.
     /// </summary>
+    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_ModelGeneration
     {
         private string thisAssemblyPath = Assembly.GetExecutingAssembly().Location;

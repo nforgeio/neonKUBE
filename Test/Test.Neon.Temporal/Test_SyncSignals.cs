@@ -42,6 +42,7 @@ using Xunit;
 
 namespace TestTemporal
 {
+    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_SyncSignals : IClassFixture<TemporalFixture>, IDisposable
     {
         private const int testIterations = 2;

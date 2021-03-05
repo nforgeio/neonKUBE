@@ -41,6 +41,7 @@ using Newtonsoft.Json.Linq;
 
 namespace TestTemporal
 {
+    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_JsonDataConverter
     {
         public class TestData

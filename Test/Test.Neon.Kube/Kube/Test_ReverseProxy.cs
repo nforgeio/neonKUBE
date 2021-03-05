@@ -39,6 +39,7 @@ using Xunit;
 
 namespace TestKube
 {
+    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_ReverseProxy
     {
         //---------------------------------------------------------------------

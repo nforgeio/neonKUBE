@@ -40,6 +40,7 @@ namespace TestCouchbase
     /// <summary>
     /// Verifies basic <see cref="CouchbaseFixture"/> capabilities.
     /// </summary>
+    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_CouchbaseFixture : IClassFixture<CouchbaseFixture>
     {
         private CouchbaseFixture    couchbase;

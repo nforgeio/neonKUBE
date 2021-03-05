@@ -34,6 +34,7 @@ using Xunit;
 
 namespace TestXunit
 {
+    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_TestContext
     {
         private const string password = "don't forget your bitcoin password!";

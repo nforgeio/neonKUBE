@@ -33,6 +33,7 @@ namespace TestXunit
     /// <summary>
     /// Verify that a test fixture composed of other fixtures works.
     /// </summary>
+    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_ComposedSimpleFixture : IClassFixture<ComposedFixture>
     {
         //---------------------------------------------------------------------

@@ -39,6 +39,7 @@ namespace TestYugaByte
     /// that we can initialize test databases and that the data will be retained across
     /// unit test runs.
     /// </summary>
+    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_UseDataset : IClassFixture<YugaByteFixture>
     {
         private ISession            cassandra;

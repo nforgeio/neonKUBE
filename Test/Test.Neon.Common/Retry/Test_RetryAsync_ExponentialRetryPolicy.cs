@@ -30,6 +30,7 @@ using Xunit;
 
 namespace TestCommon
 {
+    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_RetryAsync_ExponentialRetryPolicy
     {
         private class TransientException : Exception

@@ -32,6 +32,7 @@ using Xunit;
 
 namespace TestCryptography
 {
+    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_CryptoHelper
     {
         private string hashInputString1 = "how now brown cow. how now brown cow. how now brown cow. how now brown cow. how now brown cow. how now brown cow.";

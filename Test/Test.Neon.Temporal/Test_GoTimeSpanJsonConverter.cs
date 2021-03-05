@@ -29,6 +29,7 @@ using Xunit;
 
 namespace TestTemporal
 {
+    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_GoTimeSpanJsonConverter
     {
         public class MyData

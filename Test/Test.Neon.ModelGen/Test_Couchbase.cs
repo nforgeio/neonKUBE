@@ -53,6 +53,7 @@ namespace TestModelGen.Couchbase
         public string Foo { get; set; }
     }
 
+    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_Couchbase : IClassFixture<CouchbaseFixture>
     {
         private const string username = "Administrator";

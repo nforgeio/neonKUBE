@@ -36,6 +36,7 @@ using Xunit;
 
 namespace Test.Neon.Cassandra
 {
+    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_SchemaManager : IClassFixture<YugaByteFixture>
     {
         //---------------------------------------------------------------------

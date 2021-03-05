@@ -48,6 +48,7 @@ namespace TestXunit
     /// <summary>
     /// Verify that we can start fixtures in parallel by group.
     /// </summary>
+    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_ComposedParallelFixtures : IClassFixture<ComposedFixture>
     {
         //---------------------------------------------------------------------

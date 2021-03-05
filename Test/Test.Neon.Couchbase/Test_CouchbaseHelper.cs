@@ -32,6 +32,7 @@ using Xunit;
 
 namespace TestCouchbase
 {
+    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_CouchbaseHelper
     {
         [Fact]

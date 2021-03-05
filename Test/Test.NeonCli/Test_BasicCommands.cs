@@ -36,6 +36,7 @@ using NeonCli;
 
 namespace Test.NeonCli
 {
+    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_BasicCommands
     {
         [Fact]

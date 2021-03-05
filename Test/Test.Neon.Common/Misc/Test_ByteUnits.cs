@@ -36,6 +36,7 @@ using Xunit;
 
 namespace TestCommon
 {
+    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_ByteUnits
     {
         public static decimal Pow(decimal x, uint y)

@@ -34,6 +34,7 @@ using Xunit;
 
 namespace TestXunit
 {
+    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_DockerComposeFixture : IClassFixture<DockerComposeFixture>
     {
         private const string alpineDefinition =

@@ -33,6 +33,7 @@ using Xunit;
 
 namespace TestCouchbase
 {
+    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_NeonBucket : IClassFixture<CouchbaseFixture>
     {
         private const string username = "Administrator";

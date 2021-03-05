@@ -43,6 +43,7 @@ namespace TestModelGen
     /// <summary>
     /// Implements assembly context for testing.
     /// </summary>
+    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class AssemblyContext : AssemblyLoadContext, IDisposable
     {
         //---------------------------------------------------------------------

@@ -40,6 +40,7 @@ using Xunit;
 
 namespace TestCadence
 {
+    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_Settings : IClassFixture<CadenceFixture>, IDisposable
     {
         private CadenceFixture  fixture;

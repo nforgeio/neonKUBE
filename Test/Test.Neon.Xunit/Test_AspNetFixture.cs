@@ -44,6 +44,7 @@ using Xunit;
 
 namespace TestXunit
 {
+    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_AspNetFixture : IClassFixture<AspNetFixture>
     {
         //---------------------------------------------------------------------

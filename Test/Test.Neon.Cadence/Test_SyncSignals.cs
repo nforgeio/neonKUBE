@@ -42,6 +42,7 @@ using Xunit;
 
 namespace TestCadence
 {
+    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_SyncSignals : IClassFixture<CadenceFixture>, IDisposable
     {
         private const int testIterations = 2;

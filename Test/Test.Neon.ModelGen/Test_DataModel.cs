@@ -205,6 +205,7 @@ namespace TestModelGen.DataModel
     }
 
     [NoCodeGen]
+    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_DataModel
     {
         [Fact]

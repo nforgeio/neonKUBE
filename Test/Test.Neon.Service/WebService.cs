@@ -43,6 +43,7 @@ namespace TestNeonService
     /// <summary>
     /// Startup class for <see cref="WebService"/>.
     /// </summary>
+    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class WebServiceStartup
     {
         private WebService service;

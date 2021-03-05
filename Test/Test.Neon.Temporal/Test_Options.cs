@@ -39,6 +39,7 @@ using Neon.Xunit.Temporal;
 
 namespace TestTemporal
 {
+    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public partial class Test_Options : IClassFixture<TemporalFixture>, IDisposable
     {
         // IMPLEMENTATION NOTES:

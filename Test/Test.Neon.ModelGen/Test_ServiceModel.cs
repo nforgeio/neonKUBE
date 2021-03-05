@@ -351,6 +351,7 @@ namespace TestModelGen.ServiceModel
     }
 
     [NoCodeGen]
+    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public partial class Test_ServiceModel
     {
         [Fact]

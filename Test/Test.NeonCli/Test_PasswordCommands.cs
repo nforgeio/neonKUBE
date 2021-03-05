@@ -41,6 +41,7 @@ namespace Test.NeonCli
     /// <summary>
     /// Tests <b>neon passwords</b> commands.
     /// </summary>
+    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_PasswordCommands
     {
         [Fact]

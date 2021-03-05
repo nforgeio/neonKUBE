@@ -37,6 +37,7 @@ using Xunit;
 
 namespace TestCryptography
 {
+    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_TlsCertificate
     {
         private const string TestCertPart =

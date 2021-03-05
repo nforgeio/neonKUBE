@@ -52,6 +52,7 @@ namespace TestXunit
     /// <summary>
     /// This class tests both the <see cref="NatsStreamingFixture"/> as well as the Neon
     /// STAN extensions.
+    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_NatsStreamingFixture : IClassFixture<NatsStreamingFixture>
     {
         private NatsStreamingFixture    fixture;
