@@ -333,7 +333,7 @@ namespace TestCadence
 
             var utcNow = DateTime.UtcNow;
 
-            Assert.True(NeonHelper.IsWithin(utcNow, wakeTimeUtc, CadenceTestHelper.TimeFudge));
+            Assert.True(utcNow >= wakeTimeUtc);
 
             // Verify that scheduling a sleep time in the past is
             // essentially a NOP.
