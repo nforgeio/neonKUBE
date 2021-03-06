@@ -11,7 +11,11 @@
     <section address="summary">
       <content>
         <para>
-          The <legacyBold>Neon.SSH</legacyBold> library extends the <codeEntityReference qualifyHint="false">N:Neon.SSH.NET</codeEntityReference>
+          The <legacyBold>Neon.SSH</legacyBold> library extends the
+          <externalLink>
+            <linkText>SSH.NET</linkText>
+            <linkUri>https://github.com/sshnet/SSH.NET/</linkUri>
+          </externalLink>
           SSH/SCP client library by adding enhancements for performing remote operations on Linux computers.  This originally intended for internal
           use by our neonKUBE project but we've found this usefule for sister companies and projects, so we've broken this out and published it as
           a public nuget package.  The package still has vestages of its history as a neonKUBE dependency and we may or may not clean this up in
@@ -73,7 +77,10 @@
     </section>
 
     <relatedTopics>
-      <codeEntityReference qualifyHint="false">N:Neon.SSH.NET</codeEntityReference>
+      <externalLink>
+        <linkText>SSH.NET</linkText>
+        <linkUri>https://github.com/sshnet/SSH.NET/</linkUri>
+      </externalLink>
     </relatedTopics>
   </developerConceptualDocument>
 </topic>

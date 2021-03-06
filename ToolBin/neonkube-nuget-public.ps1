@@ -130,7 +130,6 @@ SetVersion Neon.ModelGenerator      $libraryVersion
 SetVersion Neon.Nats                $libraryVersion
 SetVersion Neon.Postgres            $libraryVersion
 SetVersion Neon.SSH                 $libraryVersion
-SetVersion Neon.SSH.NET             $libraryVersion
 SetVersion Neon.Temporal            $libraryVersion
 SetVersion Neon.Web                 $libraryVersion
 SetVersion Neon.XenServer           $libraryVersion
@@ -169,7 +168,6 @@ Publish Neon.ModelGenerator         $libraryVersion
 Publish Neon.Nats                   $libraryVersion
 Publish Neon.Postgres               $libraryVersion
 Publish Neon.SSH                    $libraryVersion
-Publish Neon.SSH.NET                $libraryVersion
 Publish Neon.Temporal               $libraryVersion
 Publish Neon.Web                    $libraryVersion
 Publish Neon.XenServer              $libraryVersion

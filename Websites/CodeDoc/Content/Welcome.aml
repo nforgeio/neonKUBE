@@ -226,32 +226,6 @@
       </content>
     </section>
 
-    <section>
-      <title>Neon.SSH.NET</title>
-      <content>
-        <para>
-          <mediaLinkInline><image xlink:href="NETStandard2.0"/></mediaLinkInline> package is used to establish manage SSH connections to
-          remote computers.
-        </para>
-        <para>
-          This is a partial clone of the
-          <externalLink>
-            <linkText>SSH.NET</linkText>
-            <linkUri>https://github.com/sshnet/SSH.NET</linkUri>
-          </externalLink>
-          GitHub project that fixes a
-          <externalLink>
-            <linkText>serious bug</linkText>
-            <linkUri>https://github.com/sshnet/SSH.NET/pull/515</linkUri>
-          </externalLink>
-          preventing connections to machines running modern Linux distributions.  The parent
-          repo seems to have gone inactive so we cloned this and hacked a fix to solve our
-          immediate problem.  We didn't clone unit tests and we'd rather not sign-on to maintain
-          this long-term, but feel free to use this as you wish.
-        </para>
-      </content>
-    </section>
-
     <section address="Neon.Temporal">
       <title>Neon.Temporal</title>
       <content>
