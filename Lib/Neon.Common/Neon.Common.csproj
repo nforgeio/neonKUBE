@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neon.Common</RootNamespace>
-    <Version>2.10.0</Version>
+    <Version>2.11.1</Version>
     <Company>neonFORGE LLC</Company>
     <Authors>neonFORGE Team</Authors>
     <Description>Useful classes used by other neonLIBRARY packages as well as neonFORGE applications</Description>

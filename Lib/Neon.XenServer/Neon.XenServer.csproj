@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <LangVersion>latest</LangVersion>
-    <Version>2.10.0-internal</Version>
+    <Version>2.11.1-internal</Version>
     <Authors>neonFORGE Team</Authors>
     <Company>neonFORGE LLC</Company>
     <Product>neonLIBRARY</Product>
@@ -74,7 +74,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
-    <ProjectReference Include="..\Neon.SSH.NET\Neon.SSH.NET.csproj" />
     <ProjectReference Include="..\Neon.SSH\Neon.SSH.csproj" />
   </ItemGroup>
 
