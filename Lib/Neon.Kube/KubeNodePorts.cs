@@ -21,6 +21,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Neon.Net;
+
 namespace Neon.Kube
 {
     /// <summary>
@@ -29,9 +31,9 @@ namespace Neon.Kube
     public static class KubeNodePorts
     {
         /// <summary>
-        /// Port exposed by the Kubernetes API servers on the master nodes.
+        /// The port exposed by the Kubernetes API servers on the master nodes.
         /// </summary>
-        public const int KubeApiServer = 6443;
+        public const int KubeApiServer = NetworkPorts.KubernetesApiServer;
 
         /// <summary>
         /// The first port reserved by Kubernetes for exposing service node ports.

@@ -281,7 +281,7 @@ namespace Neon.Net
         /// <summary>
         /// Kubernetes API port.
         /// </summary>
-        public const int KubernetesApi = 6443;
+        public const int KubernetesApiServer = 6443;
 
         /// <summary>
         /// The Cassnadra database port.
@@ -387,7 +387,7 @@ namespace Neon.Net
                 new Map("aptcacherng", AppCacherNg),
                 new Map("cadence", Cadence),
                 new Map("temporal", Temporal),
-                new Map("kubernetes-api", KubernetesApi),
+                new Map("kubernetes-api", KubernetesApiServer),
                 new Map("cassandra", Cassandra),
                 new Map("postgres", Postgres),
                 new Map("neon-prometheusscrape", NeonPrometheusScrape),

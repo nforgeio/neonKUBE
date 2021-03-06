@@ -469,7 +469,7 @@ backend kubernetes_masters_backend
             {
                 sbHaProxyConfig.Append(
 $@"
-    server {master.Name}         {master.Address}:6443");
+    server {master.Name}         {master.Address}:{KubeNodePorts.KubeApiServer}");
             }
 
             sbHaProxyConfig.Append(
@@ -726,7 +726,7 @@ spec:
                             {
                                 // Tweak the API server endpoint for WSL2.
 
-                                controlPlaneEndpoint = "localhost:6443";
+                                controlPlaneEndpoint = $"localhost:{KubeNodePorts.KubeApiServer}";
                             }
 
                             if (!string.IsNullOrEmpty(cluster.Definition.Kubernetes.ApiLoadBalancer))
@@ -1206,7 +1206,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     {
                         values.Add(new KeyValuePair<string, object>($"neonDesktop", $"true"));
                         values.Add(new KeyValuePair<string, object>($"kubernetes.service.host", $"localhost"));
-                        values.Add(new KeyValuePair<string, object>($"kubernetes.service.port", 6443));
+                        values.Add(new KeyValuePair<string, object>($"kubernetes.service.port", KubeNodePorts.KubeApiServer));
 
                     }
                     await master.InstallHelmChartAsync("calico", releaseName: "calico", @namespace: "kube-system", values: values, statusWriter: statusWriter);

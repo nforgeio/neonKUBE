@@ -188,12 +188,11 @@ namespace Neon.Kube
 			//
 			//      https://github.com/nforgeio/neonKUBE/issues/new
 
-#if NETSTANDARD_21
-			var httpHandler  =
+			var httpHandler =
 				new SocketsHttpHandler()
 				{
 					AllowAutoRedirect           = false,
-					AutomaticDecompression      = DecompressionMethods.All,
+					AutomaticDecompression      = DecompressionMethods.GZip | DecompressionMethods.Deflate,
 					ConnectTimeout              = TimeSpan.FromSeconds(5),
 					MaxConnectionsPerServer     = 100,
 					PooledConnectionIdleTimeout = TimeSpan.FromSeconds(10),
@@ -216,6 +215,7 @@ namespace Neon.Kube
 					{
 						return clientCertificate;
 					};
+			}
 
 			if (remoteTls)
 			{
@@ -242,40 +242,6 @@ namespace Neon.Kube
 						}
 					};
 			}
-#else
-			var httpHandler = new HttpClientHandler()
-			{
-					AllowAutoRedirect       = false,
-					AutomaticDecompression  = DecompressionMethods.Deflate | DecompressionMethods.GZip,
-					MaxConnectionsPerServer = 100,
-			};
-
-			if (remoteTls)
-			{
-				httpHandler.ServerCertificateCustomValidationCallback =
-					(request, remoteCertificate, chain, policyErrors) =>
-					{
-						var remoteCertificate2 = (X509Certificate2)remoteCertificate;
-
-						// If this proxy instance was passed a server certificate,
-						// we're going to require that the remote certificate
-						// thumbprint matches that one.
-						//
-						// Otherwise, we're going to require that the remote
-						// certificate has been validated by the operating
-						// system.
-
-						if (validCertificate != null)
-						{
-							return remoteCertificate2.Thumbprint == validCertificate.Thumbprint;
-						}
-						else
-						{
-							return policyErrors == SslPolicyErrors.None;
-						}
-					};
-			}
-#endif
 
 			client = new HttpClient(httpHandler, disposeHandler: true)
 			{
@@ -302,7 +268,7 @@ namespace Neon.Kube
 			Task.Run(() => RequestProcessor());
 		}
 
-		/// <ingeritdoc/>
+		/// <inheritdoc/>
 		public void Dispose()
 		{
 			lock (syncLock)

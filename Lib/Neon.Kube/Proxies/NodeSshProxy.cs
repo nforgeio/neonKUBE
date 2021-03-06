@@ -48,17 +48,6 @@ using Renci.SshNet.Common;
 // The download methods don't seem to be working for paths like [/proc/meminfo].
 // They just return an empty stream.
 
-// $todo(jefflill):
-//
-// Most of this code has been copied to the [Neon.SSH.NET] project under
-// the [Neon.SSH] namespace.  There's just a tiny bit of extra functionality
-// implemented by this and the derived [LinuxSshProxy] class.
-//
-// We should convert this class to inherit from the [Neon.SSH.NET] class
-// so we don't have to maintain duplicate code.
-//
-//      https://github.com/nforgeio/neonKUBE/issues/1006
-
 namespace Neon.Kube
 {
     /// <summary>

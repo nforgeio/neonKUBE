@@ -3232,8 +3232,8 @@ groupmod -n sysadmin ubuntu
                     {
                         Name                  = "kubeapi",
                         Protocol              = IngressProtocol.Tcp,
-                        ExternalPort          = NetworkPorts.KubernetesApi,
-                        NodePort              = NetworkPorts.KubernetesApi,
+                        ExternalPort          = NetworkPorts.KubernetesApiServer,
+                        NodePort              = NetworkPorts.KubernetesApiServer,
                         Target                = IngressRuleTarget.Neon,
                         AddressRules          = networkOptions.ManagementAddressRules,
                         IdleTcpReset          = true,

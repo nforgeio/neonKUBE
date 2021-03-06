@@ -134,7 +134,7 @@ namespace Neon.Kube
 			KubeHelper.PortForward(serviceName, remotePort, localPort, @namespace, kubectlProxyProcess);
 		}
 
-		/// <ingeritdoc/>
+		/// <inheritdoc/>
 		public void Dispose()
 		{
 			lock (syncLock)

@@ -429,7 +429,7 @@ namespace Neon.Kube
                 {
                     NetworkPorts.HTTP,
                     NetworkPorts.HTTPS,
-                    NetworkPorts.KubernetesApi
+                    NetworkPorts.KubernetesApiServer
                 };
 
             foreach (int reservedPort in reservedPorts)

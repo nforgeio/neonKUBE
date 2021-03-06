@@ -1683,8 +1683,8 @@ namespace Neon.Kube
                     {
                         Name                  = "kubernetes-api",
                         Protocol              = IngressProtocol.Tcp,
-                        ExternalPort          = NetworkPorts.KubernetesApi,
-                        NodePort              = NetworkPorts.KubernetesApi,
+                        ExternalPort          = NetworkPorts.KubernetesApiServer,
+                        NodePort              = NetworkPorts.KubernetesApiServer,
                         Target                = IngressRuleTarget.Neon,
                         AddressRules          = networkOptions.ManagementAddressRules,
                         IdleTcpReset          = true,
