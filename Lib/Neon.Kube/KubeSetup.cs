@@ -522,7 +522,7 @@ spec:
   hostNetwork: true
   containers:
     - name: web
-      image: {KubeConst.NeonContainerRegistery(setupState)}/haproxy:neonkube-{KubeConst.NeonKubeVersion}
+      image: {KubeConst.NeonContainerRegistery(setupState)}/haproxy:{KubeVersions.HaproxyVersion}
       volumeMounts:
         - name: neon-etcd-proxy-config
           mountPath: /etc/haproxy/haproxy.cfg
@@ -1985,6 +1985,7 @@ spec:
                     var values = new List<KeyValuePair<string, object>>();
 
                     values.Add(new KeyValuePair<string, object>("image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                    values.Add(new KeyValuePair<string, object>("cr.spec.deployment.image_name", $"{KubeConst.NeonContainerRegistery(setupState)}/kiali-kiali"));
 
                     int i = 0;
                     foreach (var t in await GetTaintsAsync(setupState, NodeLabels.LabelIstio, "true"))
