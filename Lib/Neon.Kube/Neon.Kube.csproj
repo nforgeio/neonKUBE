@@ -1,7 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <OutputType>Library</OutputType>
     <RootNamespace>Neon.Kube</RootNamespace>
     <Authors>neonFORGE Team</Authors>
     <Version>2.10.0-preview</Version>
@@ -27,7 +28,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DefineConstants>TRACE;DEBUG;NETSTANDARD2_0</DefineConstants>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
     <DocumentationFile>bin\Debug\Neon.Kube.xml</DocumentationFile>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
@@ -35,7 +36,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DefineConstants>TRACE;RELEASE;NETSTANDARD2_0</DefineConstants>
+    <DefineConstants>TRACE;RELEASE</DefineConstants>
     <DocumentationFile>bin\Release\Neon.Kube.xml</DocumentationFile>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <WarningsAsErrors>NU1605</WarningsAsErrors>
@@ -43,7 +44,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CodeDoc|AnyCPU'">
-    <DefineConstants>TRACE;RELEASE;NETSTANDARD2_0</DefineConstants>
+    <DefineConstants>TRACE;RELEASE</DefineConstants>
     <DocumentationFile>bin\Release\Neon.Kube.xml</DocumentationFile>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <WarningsAsErrors>NU1605</WarningsAsErrors>
@@ -1070,9 +1071,6 @@
     <EmbeddedResource Include="Resources\Helm\redis-ha\ci\haproxy-enabled-values.yaml" />
     <EmbeddedResource Include="Resources\Helm\redis-ha\templates\tests\test-redis-ha-configmap.yaml" />
     <EmbeddedResource Include="Resources\Helm\redis-ha\templates\tests\test-redis-ha-pod.yaml" />
-  </ItemGroup>
-
-  <ItemGroup>
     <EmbeddedResource Include="Resources\Helm\citus-postgresql\.helmignore" />
     <EmbeddedResource Include="Resources\Helm\citus-postgresql\Chart.yaml" />
     <EmbeddedResource Include="Resources\Helm\citus-postgresql\OWNERS._" />
@@ -1476,6 +1474,7 @@
     <PackageReference Include="SSH.NET" Version="2020.0.1" />
     <PackageReference Include="System.Diagnostics.Contracts" Version="4.3.0" />
     <PackageReference Include="System.IO.Compression" Version="4.3.0" />
+    <PackageReference Include="System.Net.Http" Version="4.3.4" />
     <PackageReference Include="System.Net.NetworkInformation" Version="4.3.0" />
     <PackageReference Include="System.Net.Ping" Version="4.3.0" />
     <PackageReference Include="System.Security.Cryptography.Algorithms" Version="4.3.1" />
@@ -1492,10 +1491,6 @@
   <ItemGroup>
     <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
     <None Include="..\..\LICENSE" Pack="True" PackagePath="" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Resources\Helm\prometheus-operator\templates\grafana\" />
   </ItemGroup>
 
   <Target Name="ModelGen" BeforeTargets="BeforeCompile">

@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
+    <OutputType>Library</OutputType>
     <Version>2.11.1</Version>
     <Authors>neonFORGE Team</Authors>
     <Company>neonFORGE LLC</Company>

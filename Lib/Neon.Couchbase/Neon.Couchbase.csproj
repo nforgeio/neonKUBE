@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <OutputType>Library</OutputType>
     <RootNamespace>Neon.Couchbase</RootNamespace>
     <Authors>neonFORGE Team</Authors>
     <Version>2.11.1</Version>
