@@ -25,6 +25,8 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
@@ -34,12 +36,15 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.Win32;
+using Microsoft.Rest;
+
 using Newtonsoft.Json;
 
 using k8s;
 using k8s.Models;
 
 using Neon.Common;
+using Neon.Cryptography;
 using Neon.Data;
 using Neon.Diagnostics;
 using Neon.IO;
@@ -47,9 +52,6 @@ using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
 using Neon.Windows;
-using Neon.Cryptography;
-using System.Net.Http;
-using System.Net.Sockets;
 
 namespace Neon.Kube
 {
@@ -92,11 +94,23 @@ namespace Neon.Kube
         /// </summary>
         public static readonly IRetryPolicy K8sBootRetryPolicy =
             new ExponentialRetryPolicy(
-                transientDetector:    exception => exception.GetType() == typeof(HttpRequestException) && exception.InnerException != null && exception.InnerException.GetType() == typeof(SocketException),
-                maxAttempts:          5,
+                transientDetector: exception => exception.GetType() == typeof(HttpRequestException) && exception.InnerException != null && exception.InnerException.GetType() == typeof(SocketException),
+                maxAttempts: 5,
                 initialRetryInterval: TimeSpan.FromSeconds(1),
-                maxRetryInterval:     TimeSpan.FromSeconds(5),
-                timeout:              TimeSpan.FromSeconds(120));
+                maxRetryInterval: TimeSpan.FromSeconds(5),
+                timeout: TimeSpan.FromSeconds(120));
+
+        /// <summary>
+        /// Use this retry policy for calls to <see cref="Kubernetes"/> when the API server
+        /// may be in the process of restarting.
+        /// </summary>
+        public static readonly IRetryPolicy K8sAuthRetryPolicy =
+            new ExponentialRetryPolicy(
+                transientDetector: exception => exception.GetType() == typeof(HttpOperationException) && ((HttpOperationException)exception).Response.StatusCode == HttpStatusCode.Forbidden,
+                maxAttempts: 5,
+                initialRetryInterval: TimeSpan.FromSeconds(1),
+                maxRetryInterval: TimeSpan.FromSeconds(5),
+                timeout: TimeSpan.FromSeconds(120));
 
         /// <summary>
         /// Static constructor.
@@ -1197,6 +1211,7 @@ namespace Neon.Kube
         public static async Task WaitForK8sApiServer(Kubernetes client)
         {
             await KubeHelper.K8sBootRetryPolicy.InvokeAsync(async () => await client.ListNamespaceAsync());
+            await KubeHelper.K8sAuthRetryPolicy.InvokeAsync(async () => await client.ListNamespaceAsync());
         }
 
         /// <summary>
