@@ -208,12 +208,8 @@ Server Requirements:
                 cluster.SecureRunOptions = RunOptions.None;
             }
 
-            var failed = false;
-
             try
             {
-                await KubeHelper.Desktop.StartOperationAsync($"Preparing [{cluster.Name}]");
-
                 //-----------------------------------------------------------------
                 // Try to ensure that no servers are already deployed on the IP addresses defined
                 // for cluster nodes because provisoning over an existing cluster will likely
@@ -566,24 +562,14 @@ Server Requirements:
 
                 cluster.LogLine(logEndMarker);
             }
-            catch
-            {
-                failed = true;
-                throw;
-            }
             finally
             {
                 hostingManager?.Dispose();
-
-                if (!failed)
-                {
-                    await KubeHelper.Desktop.EndOperationAsync($"Cluster [{cluster.Name}] has been prepared and is ready for setup.");
-                }
-                else
-                {
-                    await KubeHelper.Desktop.EndOperationAsync($"Cluster [{cluster.Name}] prepare has failed.", failed: true);
-                }
             }
+
+            Console.WriteLine();
+
+            await Task.CompletedTask;
         }
     }
 }

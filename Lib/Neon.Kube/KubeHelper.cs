@@ -63,7 +63,6 @@ namespace Neon.Kube
         private static INeonLogger          log = LogManager.Default.GetLogger(typeof(KubeHelper));
         private static string               orgKUBECONFIG;
         private static string               testFolder;
-        private static DesktopClient        desktopClient;
         private static KubeConfig           cachedConfig;
         private static KubeConfigContext    cachedContext;
         private static string               cachedNeonKubeUserFolder;
@@ -214,23 +213,6 @@ namespace Neon.Kube
         /// Returns <c>true</c> if the class is running in test mode.
         /// </summary>
         public static bool IsTestMode => testFolder != null;
-
-        /// <summary>
-        /// Returns the <see cref="DesktopClient"/> suitable for communicating
-        /// with the neonDESKTOP application.
-        /// </summary>
-        public static DesktopClient Desktop
-        {
-            get
-            {
-                if (desktopClient == null)
-                {
-                    desktopClient = new DesktopClient($"http://localhost:{ClientConfig.DesktopServicePort}/");
-                }
-
-                return desktopClient;
-            }
-        }
 
         /// <summary>
         /// Returns the <see cref="IStaticDirectory"/> for the assembly's resources.

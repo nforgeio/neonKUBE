@@ -217,168 +217,145 @@ OPTIONS:
                 node.UpdateCredentials(sshCredentials);
             }
 
-            // Get on with cluster setup.
+            // Configure global options.
 
-            var failed = false;
-
-            try
+            if (commandLine.HasOption("--unredacted"))
             {
-                await KubeHelper.Desktop.StartOperationAsync($"Setting up [{cluster.Name}]");
+                cluster.SecureRunOptions = RunOptions.None;
+            }
 
-                // Configure global options.
+            // Perform the setup operations.
 
-                if (commandLine.HasOption("--unredacted"))
+            var setupController =
+                new SetupController<NodeDefinition>(new string[] { "cluster", "setup", $"[{cluster.Name}]" }, cluster.Nodes)
                 {
-                    cluster.SecureRunOptions = RunOptions.None;
-                }
+                    ShowStatus  = !Program.Quiet,
+                    MaxParallel = Program.MaxParallel,
+                    ShowElapsed = true
+                };
 
-                // Perform the setup operations.
+            // Configure the setup controller state.
 
-                var setupController =
-                    new SetupController<NodeDefinition>(new string[] { "cluster", "setup", $"[{cluster.Name}]" }, cluster.Nodes)
-                    {
-                        ShowStatus  = !Program.Quiet,
-                        MaxParallel = Program.MaxParallel,
-                        ShowElapsed = true
-                    };
+            setupController.Add(KubeSetup.DebugModeProperty, debug);
+            setupController.Add(KubeSetup.ClusterProxyProperty, cluster);
+            setupController.Add(KubeSetup.ClusterLoginProperty, clusterLogin);
+            setupController.Add(KubeSetup.HostingManagerProperty, hostingManager);
+            setupController.Add(KubeSetup.HostingEnvironmentProperty, hostingManager.HostingEnvironment);
 
-                // Configure the setup controller state.
+            // Configure the setup steps.
 
-                setupController.Add(KubeSetup.DebugModeProperty, debug);
-                setupController.Add(KubeSetup.ClusterProxyProperty, cluster);
-                setupController.Add(KubeSetup.ClusterLoginProperty, clusterLogin);
-                setupController.Add(KubeSetup.HostingManagerProperty, hostingManager);
-                setupController.Add(KubeSetup.HostingEnvironmentProperty, hostingManager.HostingEnvironment);
+            setupController.AddGlobalStep("download binaries", async state => await KubeSetup.InstallWorkstationBinariesAsync(state));
+            setupController.AddWaitUntilOnlineStep("connect");
+            setupController.AddNodeStep("verify OS", (state, node) => node.VerifyNodeOS());
 
-                // Configure the setup steps.
-
-                setupController.AddGlobalStep("download binaries", async state => await KubeSetup.InstallWorkstationBinariesAsync(state));
-                setupController.AddWaitUntilOnlineStep("connect");
-                setupController.AddNodeStep("verify OS", (state, node) => node.VerifyNodeOS());
-
-                // $todo(jefflill): We don't support Linux distribution upgrades yet.
-                setupController.AddNodeStep("node basics", (state, node) => node.BaseInitialize(state.Get<HostingEnvironment>(KubeSetup.HostingEnvironmentProperty), upgradeLinux: false));
+            // $todo(jefflill): We don't support Linux distribution upgrades yet.
+            setupController.AddNodeStep("node basics", (state, node) => node.BaseInitialize(state.Get<HostingEnvironment>(KubeSetup.HostingEnvironmentProperty), upgradeLinux: false));
                 
-                setupController.AddNodeStep("setup NTP", (state, node) => node.SetupConfigureNtp(state));
+            setupController.AddNodeStep("setup NTP", (state, node) => node.SetupConfigureNtp(state));
 
-                // Write the operation begin marker to all cluster node logs.
+            // Write the operation begin marker to all cluster node logs.
 
-                cluster.LogLine(logBeginMarker);
+            cluster.LogLine(logBeginMarker);
 
-                // Perform common configuration for the bootstrap node first.
-                // We need to do this so the the package cache will be running
-                // when the remaining nodes are configured.
+            // Perform common configuration for the bootstrap node first.
+            // We need to do this so the the package cache will be running
+            // when the remaining nodes are configured.
 
-                var configureFirstMasterStepLabel = cluster.Definition.Masters.Count() > 1 ? "setup first master" : "setup master";
+            var configureFirstMasterStepLabel = cluster.Definition.Masters.Count() > 1 ? "setup first master" : "setup master";
 
-                setupController.AddNodeStep(configureFirstMasterStepLabel,
+            setupController.AddNodeStep(configureFirstMasterStepLabel,
+                (state, node) =>
+                {
+                    node.SetupNode(setupController);
+                    node.InvokeIdempotent("setup/setup-node-restart", () => node.Reboot(wait: true));
+                },
+                (state, node) => node == cluster.FirstMaster);
+
+            // Perform common configuration for the remaining nodes (if any).
+
+            if (cluster.Definition.Nodes.Count() > 1)
+            {
+                setupController.AddNodeStep("setup other nodes",
                     (state, node) =>
                     {
                         node.SetupNode(setupController);
                         node.InvokeIdempotent("setup/setup-node-restart", () => node.Reboot(wait: true));
                     },
-                    (state, node) => node == cluster.FirstMaster);
+                    (state, node) => node != cluster.FirstMaster);
+            }
 
-                // Perform common configuration for the remaining nodes (if any).
-
-                if (cluster.Definition.Nodes.Count() > 1)
+            setupController.AddNodeStep("install helm",
+                (state, node) =>
                 {
-                    setupController.AddNodeStep("setup other nodes",
-                        (state, node) =>
-                        {
-                            node.SetupNode(setupController);
-                            node.InvokeIdempotent("setup/setup-node-restart", () => node.Reboot(wait: true));
-                        },
-                        (state, node) => node != cluster.FirstMaster);
-                }
+                    node.NodeInstallHelm(state);
+                });
 
-                setupController.AddNodeStep("install helm",
+            if (commandLine.HasOption("--upload-charts") || debug)
+            {
+                setupController.AddNodeStep("upload Helm charts",
                     (state, node) =>
                     {
-                        node.NodeInstallHelm(state);
-                    });
+                        cluster.FirstMaster.SudoCommand($"rm -rf {KubeNodeFolders.Helm}/*");
+                        cluster.FirstMaster.NodeInstallHelmArchive(state, message => Console.WriteLine(message));
 
-                if (commandLine.HasOption("--upload-charts") || debug)
-                {
-                    setupController.AddNodeStep("upload Helm charts",
-                        (state, node) =>
-                        {
-                            cluster.FirstMaster.SudoCommand($"rm -rf {KubeNodeFolders.Helm}/*");
-                            cluster.FirstMaster.NodeInstallHelmArchive(state, message => Console.WriteLine(message));
+                        var zipPath = LinuxPath.Combine(KubeNodeFolders.Helm, "charts.zip");
 
-                            var zipPath = LinuxPath.Combine(KubeNodeFolders.Helm, "charts.zip");
-
-                            cluster.FirstMaster.SudoCommand($"unzip {zipPath} -d {KubeNodeFolders.Helm}");
-                            cluster.FirstMaster.SudoCommand($"rm -f {zipPath}");
-                        },
-                        (state, node) => node == cluster.FirstMaster);
-                }
-
-                //-----------------------------------------------------------------
-                // Cluster setup.
-
-                setupController.AddGlobalStep("setup cluster", setupState => KubeSetup.SetupClusterAsync(setupState));
-
-                //-----------------------------------------------------------------
-                // Verify the cluster.
-
-                setupController.AddNodeStep("check masters",
-                    (state, node) =>
-                    {
-                        KubeDiagnostics.CheckMaster(node, cluster.Definition);
+                        cluster.FirstMaster.SudoCommand($"unzip {zipPath} -d {KubeNodeFolders.Helm}");
+                        cluster.FirstMaster.SudoCommand($"rm -f {zipPath}");
                     },
-                    (state, node) => node.Metadata.IsMaster);
-
-                if (cluster.Workers.Count() > 0)
-                {
-                    setupController.AddNodeStep("check workers",
-                        (state, node) =>
-                        {
-                            KubeDiagnostics.CheckWorker(node, cluster.Definition);
-                        },
-                        (state, node) => node.Metadata.IsWorker);
-                }
-
-                // Start setup.
-
-                if (!setupController.Run())
-                {
-                    // Write the operation end/failed marker to all cluster node logs.
-
-                    cluster.LogLine(logFailedMarker);
-
-                    Console.Error.WriteLine("*** ERROR: One or more configuration steps failed.");
-                    Program.Exit(1);
-                }
-
-                // Indicate that setup is complete.
-
-                clusterLogin.ClusterDefinition.ClearSetupState();
-                clusterLogin.SetupDetails.SetupPending = false;
-                clusterLogin.Save();
-
-                // Write the operation end marker to all cluster node logs.
-
-                cluster.LogLine(logEndMarker);
+                    (state, node) => node == cluster.FirstMaster);
             }
-            catch
+
+            //-----------------------------------------------------------------
+            // Cluster setup.
+
+            setupController.AddGlobalStep("setup cluster", setupState => KubeSetup.SetupClusterAsync(setupState));
+
+            //-----------------------------------------------------------------
+            // Verify the cluster.
+
+            setupController.AddNodeStep("check masters",
+                (state, node) =>
+                {
+                    KubeDiagnostics.CheckMaster(node, cluster.Definition);
+                },
+                (state, node) => node.Metadata.IsMaster);
+
+            if (cluster.Workers.Count() > 0)
             {
-                failed = true;
-                throw;
+                setupController.AddNodeStep("check workers",
+                    (state, node) =>
+                    {
+                        KubeDiagnostics.CheckWorker(node, cluster.Definition);
+                    },
+                    (state, node) => node.Metadata.IsWorker);
             }
-            finally
+
+            // Start setup.
+
+            if (!setupController.Run())
             {
-                if (!failed)
-                {
-                    await KubeHelper.Desktop.EndOperationAsync($"Cluster [{cluster.Name}] is ready for use.");
-                }
-                else
-                {
-                    await KubeHelper.Desktop.EndOperationAsync($"Cluster [{cluster.Name}] setup failed.", failed: true);
-                }
+                // Write the operation end/failed marker to all cluster node logs.
+
+                cluster.LogLine(logFailedMarker);
+
+                Console.Error.WriteLine("*** ERROR: One or more configuration steps failed.");
+                Program.Exit(1);
             }
+
+            // Indicate that setup is complete.
+
+            clusterLogin.ClusterDefinition.ClearSetupState();
+            clusterLogin.SetupDetails.SetupPending = false;
+            clusterLogin.Save();
+
+            // Write the operation end marker to all cluster node logs.
+
+            cluster.LogLine(logEndMarker);
 
             Console.WriteLine();
+
+            await Task.CompletedTask;
         }
     }
 }

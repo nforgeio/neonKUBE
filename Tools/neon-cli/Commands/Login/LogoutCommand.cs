@@ -73,9 +73,7 @@ USAGE:
             KubeHelper.SetCurrentContext((string)null);
             Console.WriteLine("");
 
-            // Notify the desktop application.
-
-            await KubeHelper.Desktop.Logout();
+            await Task.CompletedTask;
         }
     }
 }

@@ -134,15 +134,13 @@ USER@CLUSTER[/NAMESPACE is not specified.
             if (KubeHelper.CurrentContextName == contextName)
             {
                 Console.WriteLine($"Logging out of: {contextName}");
-                KubeHelper.Desktop.Logout().Wait();
             }
 
             KubeHelper.Config.RemoveContext(context);
             Console.WriteLine($"Removed: {contextName}");
+            Console.WriteLine();
 
-            // Notify the desktop application.
-
-            await KubeHelper.Desktop.UpdateUIAsync();
+            await Task.CompletedTask;
         }
     }
 }
