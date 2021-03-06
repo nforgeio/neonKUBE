@@ -22,7 +22,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub", "GitHub", "{4442F1
 		.gitignore = .gitignore
 		.password-name = .password-name
 		buildenv.cmd = buildenv.cmd
-		global.json = global.json
 		LICENSE = LICENSE
 		README.md = README.md
 		Doc\TEST-VERSION.md = Doc\TEST-VERSION.md
@@ -30,7 +29,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub", "GitHub", "{4442F1
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Lib", "Lib", "{DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}"
 	ProjectSection(SolutionItems) = preProject
-		Lib\global.json = Lib\global.json
 		Lib\nuget-icon.png = Lib\nuget-icon.png
 	EndProjectSection
 EndProject
@@ -43,9 +41,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Xunit", "Lib\Neon.Xunit\Neon.Xunit.csproj", "{468E440F-2284-483D-A54A-EC540C85F76E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{FE7764F7-F5B5-4A92-9BE2-F51690EDF870}"
-	ProjectSection(SolutionItems) = preProject
-		Tools\global.json = Tools\global.json
-	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "unix-text", "Tools\unix-text\unix-text.csproj", "{66229C6D-EC7E-4340-8BC0-6C9E6EF830C6}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -208,9 +203,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.Cadence", "Test\T
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Services", "Services", "{9BF7513A-5219-4862-A290-7D2A00589312}"
-	ProjectSection(SolutionItems) = preProject
-		Services\global.json = Services\global.json
-	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.NeonCli", "Test\Test.NeonCli\Test.NeonCli.csproj", "{9F508BA8-DE43-4D48-AF91-B03E009C0BD4}"
 EndProject
@@ -404,7 +396,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-modelgen", "Tools\neon
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.Services", "Lib\Neon.Kube.Services\Neon.Kube.Services.csproj", "{98CA999D-D048-45A3-AB81-9F66145D3E8C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.Neon.ModelGenCli", "Test\Test.Neon.ModelGenCli\Test.Neon.ModelGenCli.csproj", "{4763008F-F4FE-48D8-9CF4-A02D692267EB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.ModelGenCli", "Test\Test.Neon.ModelGenCli\Test.Neon.ModelGenCli.csproj", "{4763008F-F4FE-48D8-9CF4-A02D692267EB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
