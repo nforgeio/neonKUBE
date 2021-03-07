@@ -79,6 +79,14 @@ namespace Neon.Kube
         public KubeConfigContextProperties Properties { get; set; }
 
         /// <summary>
+        /// Indicates whether the Kubernetes context is a neonKUBE context or
+        /// just a standard one.
+        /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
+        public bool IsNeonKubeContext => KubeContextName.Parse(Name).IsNeonKubeContext;
+
+        /// <summary>
         /// The cluster login information for the context.
         /// </summary>
         [JsonIgnore]

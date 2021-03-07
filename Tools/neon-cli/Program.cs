@@ -660,7 +660,7 @@ You can disable the use of this encrypted folder by specifying
         {
             if (KubeHelper.CurrentContext == null)
             {
-                Console.Error.WriteLine("*** ERROR: You are not logged into a cluster.");
+                Console.Error.WriteLine("*** ERROR: You are not logged into a neonKUBE cluster.");
                 Program.Exit(1);
             }
 

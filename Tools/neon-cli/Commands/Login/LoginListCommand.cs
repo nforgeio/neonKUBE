@@ -68,7 +68,7 @@ namespace NeonCli
         // Implementation
         
         private const string usage = @"
-Lists the Kubernetes contexts available on the local computer.
+Lists the neonKUBE contexts available on the local computer.
 
 USAGE:
 
@@ -94,7 +94,9 @@ USAGE:
             var current = KubeHelper.CurrentContext;
             var logins  = new List<LoginInfo>();
 
-            foreach (var context in KubeHelper.Config.Contexts.OrderBy(c => c.Name))
+            foreach (var context in KubeHelper.Config.Contexts
+                .Where(c => c.IsNeonKubeContext)
+                .OrderBy(c => c.Name))
             {
                 logins.Add(new LoginInfo(context));
             }
@@ -103,7 +105,7 @@ USAGE:
 
             if (logins.Count == 0)
             {
-                Console.Error.WriteLine("*** No Kubernetes contexts.");
+                Console.Error.WriteLine("*** No neonKUBE contexts.");
             }
             else
             {

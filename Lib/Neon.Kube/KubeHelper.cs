@@ -1081,7 +1081,12 @@ namespace Neon.Kube
                     throw new ArgumentException($"Kubernetes [context={contextName}] does not exist.", nameof(contextName));
                 }
 
-                cachedContext         = newContext;
+                if (!contextName.IsNeonKubeContext)
+                {
+                    throw new ArgumentException($"[{contextName}] is not a neonKUBE context.", nameof(contextName));
+                }
+
+                cachedContext = newContext;
                 Config.CurrentContext = (string)contextName;
             }
 

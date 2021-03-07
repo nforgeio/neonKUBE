@@ -87,6 +87,12 @@ USER@CLUSTER[/NAMESPACE is not specified.
             if (commandLine.Arguments.Length > 0)
             {
                 contextName = KubeContextName.Parse(commandLine.Arguments.FirstOrDefault());
+
+                if (!contextName.IsNeonKubeContext)
+                {
+                    Console.Error.WriteLine($"*** ERROR: [{contextName}] is not a neonKUBE context.");
+                    Program.Exit(1);
+                }
             }
 
             if (contextName != null)
@@ -114,7 +120,7 @@ USER@CLUSTER[/NAMESPACE is not specified.
                 {
                     if (!force)
                     {
-                        Console.Error.WriteLine($"*** ERROR: You are not logged into a cluster.");
+                        Console.Error.WriteLine($"*** ERROR: You are not logged into a neonKUBE cluster.");
                         Program.Exit(1);
                     }
                     else

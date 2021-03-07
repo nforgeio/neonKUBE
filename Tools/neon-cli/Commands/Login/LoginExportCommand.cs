@@ -82,6 +82,12 @@ REMARKS:
             if (rawName != null)
             {
                 contextName = KubeContextName.Parse(rawName);
+
+                if (!contextName.IsNeonKubeContext)
+                {
+                    Console.Error.WriteLine($"*** ERROR: [{contextName}] is not a neonKUBE context.");
+                    Program.Exit(1);
+                }
             }
             else
             {
@@ -89,7 +95,7 @@ REMARKS:
 
                 if (contextName == null)
                 {
-                    Console.Error.WriteLine($"*** ERROR: You are not logged into a cluster.");
+                    Console.Error.WriteLine($"*** ERROR: You are not logged into a neonKUBE cluster.");
                     Program.Exit(1);
                 }
             }

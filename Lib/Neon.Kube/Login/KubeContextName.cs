@@ -100,14 +100,14 @@ namespace Neon.Kube
         /// <returns><c>true</c> if the names are equal.</returns>
         public static bool operator ==(KubeContextName name1, KubeContextName name2)
         {
-            var name1iIsNull = object.ReferenceEquals(name1, null);
-            var name2iIsNull = object.ReferenceEquals(name2, null);
+            var name1IsNull = object.ReferenceEquals(name1, null);
+            var name2IsNull = object.ReferenceEquals(name2, null);
 
-            if (name1iIsNull && name2iIsNull)
+            if (name1IsNull && name2IsNull)
             {
                 return true;
             }
-            else if (name1iIsNull != name2iIsNull)
+            else if (name1IsNull != name2IsNull)
             {
                 return false;
             }
@@ -125,14 +125,14 @@ namespace Neon.Kube
         /// <returns><c>true</c> if the names are not equal.</returns>
         public static bool operator !=(KubeContextName name1, KubeContextName name2)
         {
-            var name1iIsNull = object.ReferenceEquals(name1, null);
-            var name2iIsNull = object.ReferenceEquals(name2, null);
+            var name1IsNull = object.ReferenceEquals(name1, null);
+            var name2IsNull = object.ReferenceEquals(name2, null);
 
-            if (name1iIsNull && name2iIsNull)
+            if (name1IsNull && name2IsNull)
             {
                 return false;
             }
-            else if (name1iIsNull != name2iIsNull)
+            else if (name1IsNull != name2IsNull)
             {
                 return true;
             }
@@ -143,76 +143,130 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Parses a Kubernetes context name like: <b>USER</b> "@" <b>CLUSTER</b> [ "/" <b>NAMESPACE</b> ]
+        /// Parses a Kubernetes context name.
         /// </summary>
-        /// <param name="text">The input text.</param>
+        /// <param name="input">The input text.</param>
         /// <returns>The parsed name.</returns>
         /// <remarks>
+        /// <para>
+        /// neonKUBE supports a context name format that includes a user name like:
+        /// </para>
+        /// <example>
+        /// <b>USER</b> "@" <b>CLUSTER</b> [ "/" <b>NAMESPACE</b> ]
+        /// </example>
+        /// <para>
+        /// We assume that contexts including an <b>"@"</b> are associated with a
+        /// neonKUBE cluster and use this to link to additional login information.
+        /// We can also parse context names without an <b>"@"</b>.  The parsed
+        /// <see cref="User"/> property will be set to <c>null</c> in this case.
+        /// </para>
+        /// <example>
+        /// <b>CLUSTER</b> [ "/" <b>NAMESPACE</b> ]
+        /// </example>
         /// <note>
-        /// The username, cluster, and namespace will be converted to lowercase.
+        /// The <see cref="User"/>, <see cref="Cluster"/>, and <see cref="Namespace"/>
+        /// properties will be converted to lowercase.
         /// </note>
         /// </remarks>
         /// <exception cref="FormatException">Thrown if the name is not valid.</exception>
-        public static KubeContextName Parse(string text)
+        public static KubeContextName Parse(string input)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(text), nameof(text));
+            if (string.IsNullOrEmpty(input))
+            {
+                throw new FormatException("Context name cannot be empty.");
+            }
 
-            // $todo(jefflill):
-            //
-            // We should probably honor any Kubernetes restrictions on 
-            // the name parts.
-
-            var pAt    = text.IndexOf('@');
-            var pSlash = text.IndexOf('/');
+            var pAt    = input.IndexOf('@');
+            var pSlash = input.IndexOf('/');
 
             if (pAt == -1)
             {
-                throw new FormatException($"Kubernetes context [name={text}] is missing an '@'.");
-            }
+                // Looks like a standard (non-neonKUBE) context name.
 
-            if (pSlash != -1 && pSlash < pAt)
-            {
-                throw new FormatException($"Kubernetes context [name={text}] has a '/' before the '@'.");
-            }
+                var name = new KubeContextName();
 
-            var name = new KubeContextName();
+                if (pSlash == -1)
+                {
+                    name.Cluster   = input;
+                    name.Namespace = "default";
+                }
+                else
+                {
+                    name.Cluster   = input.Substring(0, pSlash);
+                    name.Namespace = input.Substring(pSlash + 1);
 
-            name.User = text.Substring(0, pAt);
+                    if (name.Namespace == string.Empty)
+                    {
+                        name.Namespace = "default";
+                    }
+                }
 
-            pAt++;
-            if (pSlash == -1)
-            {
-                name.Cluster   = text.Substring(pAt);
-                name.Namespace = "default";
+                if (name.User == string.Empty)
+                {
+                    throw new FormatException($"Kubernetes context [name={input}] specifies an invalid user.");
+                }
+
+                if (name.Cluster == string.Empty)
+                {
+                    throw new FormatException($"Kubernetes context [name={input}] specifies an invalid cluster.");
+                }
+
+                name.User      = null;
+                name.Cluster   = name.Cluster.ToLowerInvariant();
+                name.Namespace = name.Namespace.ToLowerInvariant();
+
+                name.Validate();
+
+                return name;
             }
             else
             {
-                name.Cluster   = text.Substring(pAt, pSlash - pAt);
-                name.Namespace = text.Substring(pSlash + 1);
+                // Looks like a neonKUBE context name.
 
-                if (name.Namespace == string.Empty)
+                if (pSlash != -1 && pSlash < pAt)
                 {
+                    throw new FormatException($"Kubernetes context [name={input}] has a '/' before the '@'.");
+                }
+
+                var name = new KubeContextName();
+
+                name.User = input.Substring(0, pAt);
+
+                pAt++;
+                if (pSlash == -1)
+                {
+                    name.Cluster   = input.Substring(pAt);
                     name.Namespace = "default";
                 }
+                else
+                {
+                    name.Cluster   = input.Substring(pAt, pSlash - pAt);
+                    name.Namespace = input.Substring(pSlash + 1);
+
+                    if (name.Namespace == string.Empty)
+                    {
+                        name.Namespace = "default";
+                    }
+                }
+
+                if (name.User == string.Empty)
+                {
+                    throw new FormatException($"Kubernetes context [name={input}] specifies an invalid user.");
+                }
+
+                if (name.Cluster == string.Empty)
+                {
+                    throw new FormatException($"Kubernetes context [name={input}] specifies an invalid cluster.");
+                }
+
+                name.User      = name.User.ToLowerInvariant();
+                name.Cluster   = name.Cluster.ToLowerInvariant();
+                name.Namespace = name.Namespace.ToLowerInvariant();
+
+                name.Validate();
+
+                return name;
             }
-
-            if (name.User == string.Empty)
-            {
-                throw new FormatException($"Kubernetes context [name={text}] specifies an invalid user.");
-            }
-
-            if (name.Cluster == string.Empty)
-            {
-                throw new FormatException($"Kubernetes context [name={text}] specifies an invalid cluster.");
-            }
-
-            name.User      = name.User.ToLowerInvariant();
-            name.Cluster   = name.Cluster.ToLowerInvariant();
-            name.Namespace = name.Namespace.ToLowerInvariant();
-
-            name.Validate();
-
-            return name;
         }
 
         //---------------------------------------------------------------------
@@ -228,7 +282,7 @@ namespace Neon.Kube
         /// <summary>
         /// Parameterized constructor.
         /// </summary>
-        /// <param name="username">The username.</param>
+        /// <param name="username">The username.  This may be <c>null</c> for non-neonKUBE cluster logins.</param>
         /// <param name="cluster">The cluster name.</param>
         /// <param name="kubeNamespace">Optionally specifies the namespace (defaults to <b>"default"</b>).</param>
         /// <remarks>
@@ -238,7 +292,6 @@ namespace Neon.Kube
         /// </remarks>
         public KubeContextName(string username, string cluster, string kubeNamespace = "default")
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username), nameof(username));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(cluster), nameof(cluster));
 
             if (string.IsNullOrEmpty(kubeNamespace))
@@ -246,7 +299,7 @@ namespace Neon.Kube
                 kubeNamespace = "default";
             }
 
-            this.User      = username.ToLowerInvariant();
+            this.User      = username?.ToLowerInvariant();
             this.Cluster   = cluster.ToLowerInvariant();
             this.Namespace = kubeNamespace.ToLowerInvariant();
 
@@ -254,7 +307,13 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the username.
+        /// <para>
+        /// Returns the username if present, otherwise <c>null</c>.
+        /// </para>
+        /// <note>
+        /// We currently assume that only contexts with a <see cref="User"/> are
+        /// neonKUBE clusters.
+        /// </note>
         /// </summary>
         public string User { get; private set; }
 
@@ -267,6 +326,12 @@ namespace Neon.Kube
         /// Returns the namespace or <b>default</b>.
         /// </summary>
         public string Namespace { get; private set; }
+
+        /// <summary>
+        /// Indicates whether this is a neonKUBE context name or a standard one.
+        /// neonKUBE contexts include a user name before the <b>"@"</b> symbol.
+        /// </summary>
+        public bool IsNeonKubeContext => User != null;
 
         /// <summary>
         /// Validates that a name component includes only nvalid characters.
@@ -294,23 +359,28 @@ namespace Neon.Kube
         /// <exception cref="FormatException">Thrown when there's a problem.</exception>
         private void Validate()
         {
+            // The user property may be NULL.
+
+            if (User != null)
+            {
+                if (User.Length == 0)
+                {
+                    throw new FormatException($"[{nameof(KubeConfig)}.{nameof(User)}] cannot be empty.");
+                }
+
+                if (User.Length > 253)
+                {
+                    throw new FormatException($"[{nameof(KubeConfig)}.{nameof(User)}={User}] exceeds 253 characters.");
+                }
+
+                if (!ValidateName(User))
+                {
+                    throw new FormatException($"[{nameof(KubeConfig)}.{nameof(User)}={User}] includes invalid characters.");
+                }
+            }
+
             // Looks like these fields must all be non-empty, be a maximum of 253 characters
             // long and may include only letters, digits, dashes, and periods.
-
-            if (User.Length == 0)
-            {
-                throw new FormatException($"[{nameof(KubeConfig)}.{nameof(User)}] cannot be empty.");
-            }
-
-            if (User.Length > 253)
-            {
-                throw new FormatException($"[{nameof(KubeConfig)}.{nameof(User)}={User}] exceeds 253 characters.");
-            }
-
-            if (!ValidateName(User))
-            {
-                throw new FormatException($"[{nameof(KubeConfig)}.{nameof(User)}={User}] includes invalid characters.");
-            }
 
             if (Cluster.Length == 0)
             {
@@ -346,13 +416,27 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override string ToString()
         {
-            if (string.IsNullOrEmpty(Namespace) || Namespace == "default")
+            if (User == null)
             {
-                return $"{User}@{Cluster}";
+                if (string.IsNullOrEmpty(Namespace) || Namespace == "default")
+                {
+                    return $"{Cluster}";
+                }
+                else
+                {
+                    return $"{Cluster}/{Namespace}";
+                }
             }
             else
             {
-                return $"{User}@{Cluster}/{Namespace}";
+                if (string.IsNullOrEmpty(Namespace) || Namespace == "default")
+                {
+                    return $"{User}@{Cluster}";
+                }
+                else
+                {
+                    return $"{User}@{Cluster}/{Namespace}";
+                }
             }
         }
 
@@ -379,7 +463,14 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override int GetHashCode()
         {
-            return User.GetHashCode() ^ Cluster.GetHashCode() ^ Namespace.GetHashCode();
+            if (User == null)
+            {
+                return Cluster.GetHashCode() ^ Namespace.GetHashCode();
+            }
+            else
+            {
+                return User.GetHashCode() ^ Cluster.GetHashCode() ^ Namespace.GetHashCode();
+            }
         }
     }
 }
