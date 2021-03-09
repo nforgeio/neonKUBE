@@ -63,4 +63,4 @@ if ($allVersions)
 {
 }
 
-Build $neonKUBE_Version -latest
+Build $neonKUBE_Tag -latest

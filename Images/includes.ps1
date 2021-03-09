@@ -39,7 +39,10 @@ $ncTools    = "$ncRoot\\Tools"
 
 # neonKUBE release Version.
 
-$neonKUBE_Version = "neonkube-" + $(& "$ncRoot\ToolBin\neon-build" read-version "$src_lib_path\Neon.Common\Build.cs" NeonKubeVersion)
+$neonKUBE_Version = $(& "$ncRoot\ToolBin\neon-build" read-version "$src_lib_path\Neon.Common\Build.cs" NeonKubeVersion)
+ThrowOnExitCode
+
+$neonKUBE_Tag = "neonkube-" + $neonKUBE_Version
 
 #------------------------------------------------------------------------------
 # Executes a command, throwing an exception for non-zero error codes.
