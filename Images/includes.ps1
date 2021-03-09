@@ -28,18 +28,18 @@
 #------------------------------------------------------------------------------
 # Important source code paths.
 
-$src_path          = $env:NF_ROOT
-$src_images_path   = "$src_path\\Images"
-$src_lib_path      = "$src_path\\Lib"
-$src_services_path = "$src_path\\Services"
-$src_tools_path    = "$src_path\\Tools"
+$ncRoot     = $env:NC_ROOT
+$ncImages   = "$ncRoot\\Images"
+$ncLib      = "$ncRoot\\Lib"
+$ncServices = "$ncRoot\\Services"
+$ncTools    = "$ncRoot\\Tools"
 
 #------------------------------------------------------------------------------
 # Global constants.
 
 # neonKUBE release Version.
 
-$neonKUBE_Version = $(& "$src_path\ToolBin\neon-build" read-version "$src_lib_path\Neon.Common\Build.cs" NeonKubeVersion)
+$neonKUBE_Version = "neonkube-" + $(& "$ncRoot\ToolBin\neon-build" read-version "$src_lib_path\Neon.Common\Build.cs" NeonKubeVersion)
 
 #------------------------------------------------------------------------------
 # Executes a command, throwing an exception for non-zero error codes.
