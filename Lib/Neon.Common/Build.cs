@@ -39,7 +39,7 @@ namespace Neon
         public const string Copyright = "Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.";
 
         /// <summary>
-        /// Trademark statement.s
+        /// Trademark statement.
         /// </summary>
         public const string Trademark = "neonDESKTOP, neonLIBRARY and neonKUBE are trademarks of neonFORGE LLC";
 
