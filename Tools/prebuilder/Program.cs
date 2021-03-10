@@ -25,15 +25,6 @@ using k8s;
 
 using Neon.Common;
 
-// $note(jefflill):
-//
-// It turns out that we don't actually need this for the [Kubernetes] client class
-// because it already supports a custom retry policy.  I was a dumbshit and didn't
-// see this until I noticed this method was being generated and hads a problem.
-//
-// I'm going to keep this code though because it might be useful for generating
-// other wrapper classes in the future.  Perhaps we could add this to [ModelGen].
-
 namespace Prebuilder
 {
     /// <summary>

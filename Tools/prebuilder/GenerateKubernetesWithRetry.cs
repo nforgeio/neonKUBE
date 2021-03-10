@@ -58,7 +58,14 @@ namespace Prebuilder
                 Program.Exit(1);
             }
 
-            using (var writer = new StreamWriter(targetPath))
+            // We're going to write the generated source to a [StringBuilder] and then
+            // compare the results to the target file and only write when there's a
+            // change.  This will help mitigate SSD wear when Visual Studio compiles
+            // in the background.
+
+            var sbSource = new StringBuilder();
+
+            using (var writer = new StringWriter(sbSource))
             {
                 //-----------------------------------------------------------------
                 // Generate the file header and opening namespace statement as well
@@ -228,18 +235,46 @@ namespace {targetNamespace}
 
                         continue;
                     }
+                    else if (method.Name == "Dispose")
+                    {
+                        // We already generated the [Dispose()] method above.
 
-                    var parameters  = method.GetParameters();
-                    var isAsync     = method.ReturnType == typeof(Task) || method.ReturnType.ToString().StartsWith("System.Threading.Tasks.Task`");
-                    
+                        continue;
+                    }
+
+                    var parameters = method.GetParameters();
+                    var isAsync    = method.ReturnType == typeof(Task) || method.ReturnType.ToString().StartsWith("System.Threading.Tasks.Task`");
+                    var isOverride = false;
+                    var @override  = string.Empty;
+
+                    // $hack(jefflill): Special case inherited virtual methods.
+
+                    switch (method.Name)
+                    {
+                        case "ToString":
+                        case "Equals":
+                        case "GetHashCode":
+
+                            isOverride = true;
+                            @override  = " override";
+                            break;
+
+                        case "GetType":
+
+                            // We're not generating this method.
+                            continue;
+                    }
+
                     if (isAsync)
                     {
-                        writer.WriteLine(); ;
+                        Covenant.Assert(!isOverride);
+
+                        writer.WriteLine();
                         writer.WriteLine($"        /// <inheritdoc/>");
                         writer.WriteLine($"        public async {ResolveTypeReference(method.ReturnType, isResultType: true)} {method.Name}{GetGenericArgsDefinition(method)}({GetParameterDefinition(parameters)})");
                         writer.WriteLine($"        {{");
 
-                        if (method.ReturnType == typeof(void))
+                        if (method.ReturnType == typeof(Task))
                         {
                             writer.WriteLine($"            await NormalizedRetryPolicy.Invoke(");
                             writer.WriteLine($"                async () =>");
@@ -260,24 +295,38 @@ namespace {targetNamespace}
                     {
                         writer.WriteLine();
                         writer.WriteLine($"        /// <inheritdoc/>");
-                        writer.WriteLine($"        public {ResolveTypeReference(method.ReturnType, isResultType: true)} {method.Name}{GetGenericArgsDefinition(method)}({GetParameterDefinition(parameters)})");
+                        writer.WriteLine($"        public{@override} {ResolveTypeReference(method.ReturnType, isResultType: true)} {method.Name}{GetGenericArgsDefinition(method)}({GetParameterDefinition(parameters)})");
                         writer.WriteLine($"        {{");
 
-                        if (method.ReturnType == typeof(Task))
+                        if (method.ReturnType == typeof(void))
                         {
-                            writer.WriteLine($"            NormalizedRetryPolicy.Invoke(");
-                            writer.WriteLine($"                () =>");
-                            writer.WriteLine($"                {{");
-                            writer.WriteLine($"                    kubernetes.{method.Name}({GetParameterNames(parameters)});");
-                            writer.WriteLine($"                }});");
+                            if (isOverride)
+                            {
+                                writer.WriteLine($"            kubernetes.{method.Name}({GetParameterNames(parameters)});");
+                            }
+                            else
+                            {
+                                writer.WriteLine($"            NormalizedRetryPolicy.Invoke(");
+                                writer.WriteLine($"                () =>");
+                                writer.WriteLine($"                {{");
+                                writer.WriteLine($"                    kubernetes.{method.Name}({GetParameterNames(parameters)});");
+                                writer.WriteLine($"                }});");
+                            }
                         }
                         else
                         {
-                            writer.WriteLine($"            return NormalizedRetryPolicy.Invoke(");
-                            writer.WriteLine($"                () =>");
-                            writer.WriteLine($"                {{");
-                            writer.WriteLine($"                    return kubernetes.{method.Name}({GetParameterNames(parameters)});");
-                            writer.WriteLine($"                }});");
+                            if (isOverride)
+                            {
+                                writer.WriteLine($"            return kubernetes.{method.Name}({GetParameterNames(parameters)});");
+                            }
+                            else
+                            {
+                                writer.WriteLine($"            return NormalizedRetryPolicy.Invoke(");
+                                writer.WriteLine($"                () =>");
+                                writer.WriteLine($"                {{");
+                                writer.WriteLine($"                    return kubernetes.{method.Name}({GetParameterNames(parameters)});");
+                                writer.WriteLine($"                }});");
+                            }
                         }
                     }
 
@@ -289,6 +338,16 @@ namespace {targetNamespace}
 
                 writer.WriteLine($"    }}");
                 writer.WriteLine($"}}");
+            }
+
+            // Compare the newly generated source with the target file and update
+            // the target only when it doesn't exist or there's a change.
+
+            var source = sbSource.ToString();
+
+            if (!File.Exists(targetPath) || !string.Equals(source, File.ReadAllText(targetPath)))
+            {
+                File.WriteAllText(targetPath, source);
             }
         }
 

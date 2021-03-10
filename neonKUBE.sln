@@ -35,6 +35,9 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Common", "Lib\Neon.Common\Neon.Common.csproj", "{8D3BD5BA-AAF6-4233-879F-69A63EB6CDA1}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube", "Lib\Neon.Kube\Neon.Kube.csproj", "{C23307A1-4E5A-4B83-A8EB-90DE334868C6}"
+	ProjectSection(ProjectDependencies) = postProject
+		{4A7C244B-D9F4-46CE-B6CC-704BE2F9CB23} = {4A7C244B-D9F4-46CE-B6CC-704BE2F9CB23}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Docker", "Lib\Neon.Docker\Neon.Docker.csproj", "{893C943F-C1A7-448B-AACF-825DB9560AB4}"
 EndProject
@@ -398,7 +401,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.Services", "Lib\N
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.ModelGenCli", "Test\Test.Neon.ModelGenCli\Test.Neon.ModelGenCli.csproj", "{4763008F-F4FE-48D8-9CF4-A02D692267EB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "prebuilder", "Tools\prebuilder\prebuilder.csproj", "{4A7C244B-D9F4-46CE-B6CC-704BE2F9CB23}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "prebuilder", "Tools\prebuilder\prebuilder.csproj", "{4A7C244B-D9F4-46CE-B6CC-704BE2F9CB23}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
