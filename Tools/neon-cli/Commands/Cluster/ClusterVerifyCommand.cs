@@ -73,7 +73,7 @@ ARGUMENTS:
 
             ClusterDefinition.FromFile(commandLine.Arguments[0], strict: true);
 
-            Console.WriteLine("");
+            Console.WriteLine();
             Console.WriteLine("*** The cluster definition is OK.");
 
             await Task.CompletedTask;

@@ -59,7 +59,7 @@ USAGE:
         /// <inheritdoc/>
         public override async Task RunAsync(CommandLine commandLine)
         {
-            Console.WriteLine("");
+            Console.WriteLine();
 
             // Actually logout.
 
@@ -71,7 +71,7 @@ USAGE:
 
             Console.WriteLine($"Logging out of: {KubeHelper.CurrentContext.Name}");
             KubeHelper.SetCurrentContext((string)null);
-            Console.WriteLine("");
+            Console.WriteLine();
 
             await Task.CompletedTask;
         }
