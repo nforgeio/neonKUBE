@@ -21,8 +21,9 @@
 #   BRANCH          - The current GitHub branch
 
 ARG         ORGANIZATION
-ARG         BRANCH
-FROM        ${ORGANIZATION}/aspnet-layer:latest
+ARG         BASE_ORGANIZATION
+ARG         CLUSTER_VERSION
+FROM        ${BASE_ORGANIZATION}/aspnet-layer:${CLUSTER_VERSION}
 MAINTAINER  marcus@euarctos.com
 STOPSIGNAL  SIGTERM
 ARG         APPNAME

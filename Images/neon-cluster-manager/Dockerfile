@@ -21,8 +21,9 @@
 #   CLUSTER_VERSION - The neonKUBE cluster version
 
 ARG         ORGANIZATION
+ARG         BASE_ORGANIZATION
 ARG         CLUSTER_VERSION
-FROM        ${ORGANIZATION}/aspnet-layer:${CLUSTER_VERSION}
+FROM        ${BASE_ORGANIZATION}/aspnet-layer:${CLUSTER_VERSION}
 MAINTAINER  marcus@euarctos.com
 STOPSIGNAL  SIGTERM
 ARG         APPNAME

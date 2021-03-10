@@ -28,18 +28,18 @@
 #------------------------------------------------------------------------------
 # Important source code paths.
 
-$ncRoot     = $env:NC_ROOT
-$ncImages   = "$ncRoot\\Images"
-$ncLib      = "$ncRoot\\Lib"
-$ncServices = "$ncRoot\\Services"
-$ncTools    = "$ncRoot\\Tools"
+$NF_ROOT     = $env:NF_ROOT
+$nfImages   = "$NF_ROOT\\Images"
+$nfLib      = "$NF_ROOT\\Lib"
+$nfServices = "$NF_ROOT\\Services"
+$nfTools    = "$NF_ROOT\\Tools"
 
 #------------------------------------------------------------------------------
 # Global constants.
 
 # neonKUBE release Version.
 
-$neonKUBE_Version = $(& "$ncRoot\ToolBin\neon-build" read-version "$src_lib_path\Neon.Common\Build.cs" NeonKubeVersion)
+$neonKUBE_Version = $(& "$NF_ROOT\ToolBin\neon-build" read-version "$nfLib\Neon.Common\Build.cs" NeonKubeVersion)
 ThrowOnExitCode
 
 $neonKUBE_Tag = "neonkube-" + $neonKUBE_Version
@@ -423,6 +423,21 @@ function GetKubeBaseRegistry($image)
 	else
 	{
 		return "ghcr.io/neonkube-base-dev/" + $image
+	}
+}
+
+#------------------------------------------------------------------------------
+# Returns the neonLIBRARY registry organization corresponding to the current git branch.
+
+function KubeBaseRegistryOrg
+{
+	if (IsRelease)
+	{
+		return "ghcr.io/neonkube-base"
+	}
+	else
+	{
+		return "ghcr.io/neonkube-base-dev"
 	}
 }
 
