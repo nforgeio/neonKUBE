@@ -1909,7 +1909,7 @@ spec:
 
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
 
-            var cluster = setupState.Get<ClusterProxy>(ClusterProxyProperty);
+            var cluster     = setupState.Get<ClusterProxy>(ClusterProxyProperty);
             var firstMaster = cluster.FirstMaster;
 
             await firstMaster.InvokeIdempotentAsync("setup/taint-nodes",
@@ -2049,11 +2049,11 @@ spec:
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            await master.InvokeIdempotentAsync("setup/monitoring", async
+            await master.InvokeIdempotentAsync("setup/initial-kubernetes", async
                 () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Setup", "Monitoring");
-                    master.Status = "setup: monitoring";
+                    KubeHelper.WriteStatus(statusWriter, "Setup", "Kubernetes");
+                    master.Status = "setup: kubernetes";
 
                     await master.InstallHelmChartAsync("cluster_setup", statusWriter: statusWriter);
                 });
@@ -2949,17 +2949,18 @@ $@"- name: StorageType
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task<List<Task>> SetupMonitoringAsync(ObjectDictionary setupState, Action<string> statusWriter = null)
         {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+
             await SyncContext.ClearAsync;
 
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
 
             var cluster = setupState.Get<ClusterProxy>(ClusterProxyProperty);
             var master  = cluster.FirstMaster;
+            var tasks   = new List<Task>();
 
             KubeHelper.WriteStatus(statusWriter, "Setup", "Metrics");
             master.Status = "setup: metrics";
-
-            var tasks = new List<Task>();
 
             tasks.Add(WaitForPrometheusAsync(setupState, master, statusWriter));
 
@@ -3218,15 +3219,16 @@ $@"- name: StorageType
                                if (DateTime.UtcNow > startUtc.AddMinutes(3))
                                {
                                    var pods = await GetK8sClient(setupState).ListNamespacedPodAsync("neon-system", labelSelector: "release=neon-system-registry-harbor");
-                                   foreach (var p in pods.Items.Where(i => i.Status.Phase != "Running"))
+                                   foreach (var pod in pods.Items.Where(i => i.Status.Phase != "Running"))
                                    {
-                                       if (p.Status.ContainerStatuses.Any(c => c.RestartCount > 0))
+                                       if (pod.Status.ContainerStatuses.Any(c => c.RestartCount > 0))
                                        {
                                            startUtc = DateTime.UtcNow;
-                                           await GetK8sClient(setupState).DeleteNamespacedPodAsync(p.Name(), "neon-system");
+                                           await GetK8sClient(setupState).DeleteNamespacedPodAsync(pod.Name(), "neon-system");
                                        }
                                    }
                                }
+
                                var deployments = await GetK8sClient(setupState).ListNamespacedDeploymentAsync("neon-system", labelSelector: "release=neon-system-registry-harbor");
                                if (deployments == null || deployments.Items.Count < 8)
                                {

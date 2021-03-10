@@ -93,11 +93,11 @@ namespace Neon.Kube
         /// </summary>
         public static readonly IRetryPolicy K8sBootRetryPolicy =
             new ExponentialRetryPolicy(
-                transientDetector: exception => exception.GetType() == typeof(HttpRequestException) && exception.InnerException != null && exception.InnerException.GetType() == typeof(SocketException),
-                maxAttempts: 5,
-                initialRetryInterval: TimeSpan.FromSeconds(1),
-                maxRetryInterval: TimeSpan.FromSeconds(5),
-                timeout: TimeSpan.FromSeconds(120));
+                transientDetector:      exception => exception.GetType() == typeof(HttpRequestException) && exception.InnerException != null && exception.InnerException.GetType() == typeof(SocketException),
+                maxAttempts:            5,
+                initialRetryInterval:   TimeSpan.FromSeconds(1),
+                maxRetryInterval:       TimeSpan.FromSeconds(5),
+                timeout:                TimeSpan.FromSeconds(120));
 
         /// <summary>
         /// Use this retry policy for calls to <see cref="Kubernetes"/> when the API server
@@ -105,11 +105,11 @@ namespace Neon.Kube
         /// </summary>
         public static readonly IRetryPolicy K8sAuthRetryPolicy =
             new ExponentialRetryPolicy(
-                transientDetector: exception => exception.GetType() == typeof(HttpOperationException) && ((HttpOperationException)exception).Response.StatusCode == HttpStatusCode.Forbidden,
-                maxAttempts: 5,
-                initialRetryInterval: TimeSpan.FromSeconds(1),
-                maxRetryInterval: TimeSpan.FromSeconds(5),
-                timeout: TimeSpan.FromSeconds(120));
+                transientDetector:      exception => exception.GetType() == typeof(HttpOperationException) && ((HttpOperationException)exception).Response.StatusCode == HttpStatusCode.Forbidden,
+                maxAttempts:            5,
+                initialRetryInterval:   TimeSpan.FromSeconds(1),
+                maxRetryInterval:       TimeSpan.FromSeconds(5),
+                timeout:                TimeSpan.FromSeconds(120));
 
         /// <summary>
         /// Static constructor.
@@ -1227,7 +1227,7 @@ namespace Neon.Kube
         /// </param>
         /// <param name="issuedBy">Optionally specifies the issuer.</param>
         /// <param name="issuedTo">Optionally specifies who/what the certificate is issued for.</param>
-        /// <param name="friendlyName">Optionally specifies the certificate's frendly name.</param>
+        /// <param name="friendlyName">Optionally specifies the certificate's friendly name.</param>
         /// <returns>The new <see cref="TlsCertificate"/>.</returns>
         public static X509Certificate2 CreateSelfSigned(
             string      hostname,
