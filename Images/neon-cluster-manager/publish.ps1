@@ -41,8 +41,8 @@ function Build
 		[switch]$latest = $false
 	)
 
-	$registry    = GetKubeMainRegistry "neon-cluster-manager"
-	$tag         = "neonkube-$version"
+	$registry    = GetLibraryRegistry "neon-cluster-manager"
+	$tag         = "$version"
 	$tagAsLatest = TagAsLatest
 
 	# Build and publish the images.
