@@ -2959,24 +2959,20 @@ $@"- name: StorageType
             var master  = cluster.FirstMaster;
             var tasks   = new List<Task>();
 
-            master.InvokeIdempotent("setup/monitoring",
-                () =>
-                {
-                    KubeHelper.WriteStatus(statusWriter, "Setup", "Metrics");
-                    master.Status = "setup: metrics";
+            KubeHelper.WriteStatus(statusWriter, "Setup", "Metrics");
+            master.Status = "setup: metrics";
 
-                    tasks.Add(WaitForPrometheusAsync(setupState, master, statusWriter));
+            tasks.Add(WaitForPrometheusAsync(setupState, master, statusWriter));
 
-                    if (cluster.HostingManager.HostingEnvironment != HostingEnvironment.Wsl2)
-                    {
-                        tasks.Add(InstallCortexAsync(setupState, master, statusWriter));
-                    }
+            if (cluster.HostingManager.HostingEnvironment != HostingEnvironment.Wsl2)
+            {
+                tasks.Add(InstallCortexAsync(setupState, master, statusWriter));
+            }
 
-                    tasks.Add(InstallLokiAsync(setupState, master, statusWriter));
-                    tasks.Add(InstallPromtailAsync(setupState, master, statusWriter));
-                    tasks.Add(master.InstallHelmChartAsync("istio_prometheus", @namespace: "monitoring", statusWriter: statusWriter));
-                    tasks.Add(InstallGrafanaAsync(setupState, master, statusWriter));
-                });
+            tasks.Add(InstallLokiAsync(setupState, master, statusWriter));
+            tasks.Add(InstallPromtailAsync(setupState, master, statusWriter));
+            tasks.Add(master.InstallHelmChartAsync("istio_prometheus", @namespace: "monitoring", statusWriter: statusWriter));
+            tasks.Add(InstallGrafanaAsync(setupState, master, statusWriter));
 
             return tasks;
         }
@@ -3312,13 +3308,9 @@ $@"- name: StorageType
 
             var tasks = new List<Task>();
 
-            master.InvokeIdempotent("setup/namespaces",
-                () =>
-                {
-                    tasks.Add(CreateNamespaceAsync(setupState, master, "neon-system", true));
-                    tasks.Add(CreateNamespaceAsync(setupState, master, "jobs", false));
-                    tasks.Add(CreateNamespaceAsync(setupState, master, "monitoring", true));
-                });
+            tasks.Add(CreateNamespaceAsync(setupState, master, "neon-system", true));
+            tasks.Add(CreateNamespaceAsync(setupState, master, "jobs", false));
+            tasks.Add(CreateNamespaceAsync(setupState, master, "monitoring", true));
 
             return await Task.FromResult(tasks);
         }
