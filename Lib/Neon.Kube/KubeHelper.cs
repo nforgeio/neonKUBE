@@ -88,30 +88,6 @@ namespace Neon.Kube
         public const string CurlOptions = "-4fsSL --retry 10 --retry-delay 30";
 
         /// <summary>
-        /// Use this retry policy for calls to <see cref="Kubernetes"/> when the API server
-        /// may be in the process of restarting.
-        /// </summary>
-        public static readonly IRetryPolicy K8sBootRetryPolicy =
-            new ExponentialRetryPolicy(
-                transientDetector:      exception => exception.GetType() == typeof(HttpRequestException) && exception.InnerException != null && exception.InnerException.GetType() == typeof(SocketException),
-                maxAttempts:            5,
-                initialRetryInterval:   TimeSpan.FromSeconds(1),
-                maxRetryInterval:       TimeSpan.FromSeconds(5),
-                timeout:                TimeSpan.FromSeconds(120));
-
-        /// <summary>
-        /// Use this retry policy for calls to <see cref="Kubernetes"/> when the API server
-        /// may be in the process of restarting.
-        /// </summary>
-        public static readonly IRetryPolicy K8sAuthRetryPolicy =
-            new ExponentialRetryPolicy(
-                transientDetector:      exception => exception.GetType() == typeof(HttpOperationException) && ((HttpOperationException)exception).Response.StatusCode == HttpStatusCode.Forbidden,
-                maxAttempts:            5,
-                initialRetryInterval:   TimeSpan.FromSeconds(1),
-                maxRetryInterval:       TimeSpan.FromSeconds(5),
-                timeout:                TimeSpan.FromSeconds(120));
-
-        /// <summary>
         /// Static constructor.
         /// </summary>
         static KubeHelper()
@@ -1187,18 +1163,6 @@ namespace Neon.Kube
 
                 return null;
             }
-        }
-
-        /// <summary>
-        /// Waits for the Kubernetes API server to boot and be ready for business.  This is useful
-        /// for scenarios that cluster might have been recently restarted such as cluster setup.
-        /// </summary>
-        /// <param name="client">The Kubernetes client.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task WaitForK8sApiServer(Kubernetes client)
-        {
-            await KubeHelper.K8sBootRetryPolicy.InvokeAsync(async () => await client.ListNamespaceAsync());
-            await KubeHelper.K8sAuthRetryPolicy.InvokeAsync(async () => await client.ListNamespaceAsync());
         }
 
         /// <summary>

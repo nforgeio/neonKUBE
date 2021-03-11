@@ -1464,7 +1464,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="KubernetesClient" Version="3.0.16" />
+    <PackageReference Include="KubernetesClient" Version="4.0.16" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
     <PackageReference Include="Microsoft.Net.Http.Server" Version="1.1.4" />
     <PackageReference Include="Microsoft.OpenApi" Version="1.2.3" />
@@ -1494,6 +1494,7 @@
   </ItemGroup>
 
   <Target Name="ModelGen" BeforeTargets="BeforeCompile">
+    <Exec Command="$(SolutionDir)Tools\prebuilder\bin\$(Configuration)\netcoreapp3.1\prebuilder prebuilder generate-kubernetes-with-retry &quot;$(ProjectPath)KubernetesWithRetry.cs&quot; Neon.Kube" />
     <Exec Command="neon-build embed-check &quot;$(ProjectPath)&quot; &quot;$(ProjectDir)\Resources&quot;" />
   </Target>
 
