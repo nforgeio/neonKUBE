@@ -2005,33 +2005,12 @@ spec:
                     KubeHelper.WriteStatus(statusWriter, "Wait", "for Kaili");
                     master.Status = "wait: for kaili";
 
-                    await NeonHelper.WaitForAsync(
-                        async () =>
+                    await NeonHelper.WaitAllAsync(
+                        new List<Task>()
                         {
-                            var deployments = await GetK8sClient(setupState).ListNamespacedDeploymentAsync("istio-system", labelSelector: "app=kiali-operator");
-                            if (deployments == null || deployments.Items.Count == 0)
-                            {
-                                return false;
-                            }
-
-                            return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
-                        },
-                        timeout: clusterOpTimeout,
-                        pollInterval: clusterOpRetryInterval);
-
-                    await NeonHelper.WaitForAsync(
-                        async () =>
-                        {
-                            var deployments = await GetK8sClient(setupState).ListNamespacedDeploymentAsync("istio-system", labelSelector: "app=kiali");
-                            if (deployments == null || deployments.Items.Count == 0)
-                            {
-                                return false;
-                            }
-
-                            return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
-                        },
-                        timeout: clusterOpTimeout,
-                        pollInterval: clusterOpRetryInterval);
+                            WaitForDeploymentAsync(setupState, "istio-system", "kiali-operator"),
+                            WaitForDeploymentAsync(setupState, "istio-system", "kiali")
+                        });
                 });
 
             await Task.CompletedTask;
@@ -2278,6 +2257,7 @@ spec:
                                 KubeHelper.WriteStatus(statusWriter, "Wait", "for OpenEBS cStor");
                                 master.Status = "wait: for openebs cStore";
 
+                                await WaitForDeploymentAsync(setupState, "openebs", "neon-cluster-manager");
                                 await NeonHelper.WaitForAsync(
                                     async () =>
                                     {
@@ -2595,47 +2575,15 @@ $@"- name: StorageType
                     KubeHelper.WriteStatus(statusWriter, "Wait", "for Prometheus");
                     master.Status = "wait: for prometheus";
 
-                    await NeonHelper.WaitForAsync(
-                        async () =>
+                    await NeonHelper.WaitAllAsync(
+                        new List<Task>()
                         {
-                            var deployments = await GetK8sClient(setupState).ListNamespacedDeploymentAsync("monitoring", labelSelector: "release=neon-metrics-prometheus");
-                            if (deployments == null || deployments.Items.Count == 0)
-                            {
-                                return false;
-                            }
-
-                            return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
-                        },
-                        timeout:      clusterOpTimeout,
-                        pollInterval: clusterOpRetryInterval);
-
-                    await NeonHelper.WaitForAsync(
-                        async () =>
-                        {
-                            var daemonsets = await GetK8sClient(setupState).ListNamespacedDaemonSetAsync("monitoring", labelSelector: "release=neon-metrics-prometheus");
-                            if (daemonsets == null || daemonsets.Items.Count == 0)
-                            {
-                                return false;
-                            }
-
-                            return daemonsets.Items.All(p => p.Status.NumberAvailable == p.Status.DesiredNumberScheduled);
-                        },
-                        timeout:      clusterOpTimeout,
-                        pollInterval: clusterOpRetryInterval);
-
-                    await NeonHelper.WaitForAsync(
-                        async () =>
-                        {
-                            var statefulsets = await GetK8sClient(setupState).ListNamespacedStatefulSetAsync("monitoring", labelSelector: "release=neon-metrics-prometheus");
-                            if (statefulsets == null || statefulsets.Items.Count < 2)
-                            {
-                                return false;
-                            }
-
-                            return statefulsets.Items.All(p => p.Status.ReadyReplicas == p.Spec.Replicas);
-                        },
-                        timeout:      clusterOpTimeout,
-                        pollInterval: clusterOpRetryInterval);
+                            WaitForDeploymentAsync(setupState, "monitoring", "neon-metrics-prometheus-ku-operator"),
+                            WaitForDeploymentAsync(setupState, "monitoring", "neon-metrics-prometheus-kube-state-metrics"),
+                            WaitForDaemonsetAsync(setupState, "monitoring", "neon-metrics-prometheus-prometheus-node-exporter"),
+                            WaitForStatefulsetAsync(setupState, "monitoring", "alertmanager-neon-metrics-prometheus-ku-alertmanager"),
+                            WaitForStatefulsetAsync(setupState, "monitoring", "prometheus-neon-metrics-prometheus-ku-prometheus")
+                        });
                 });
         }
 
@@ -2699,19 +2647,7 @@ $@"- name: StorageType
                             KubeHelper.WriteStatus(statusWriter, "Wait", "for Cortex");
                             master.Status = "wait: for cortex";
 
-                            await NeonHelper.WaitForAsync(
-                                async () =>
-                                {
-                                    var deployments = await GetK8sClient(setupState).ListNamespacedDeploymentAsync("monitoring", labelSelector: "release=neon-metrics-cortex");
-                                    if (deployments == null || deployments.Items.Count == 0)
-                                    {
-                                        return false;
-                                    }
-
-                                    return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
-                                },
-                                timeout: clusterOpTimeout,
-                                pollInterval: clusterOpRetryInterval);
+                            await WaitForDeploymentAsync(setupState, "monitoring", "neon-metrics-cortex");
                         });
                 });
         }
@@ -2848,19 +2784,7 @@ $@"- name: StorageType
                     KubeHelper.WriteStatus(statusWriter, "Wait", "for Grafana");
                     master.Status = "wait: for grafana";
 
-                    await NeonHelper.WaitForAsync(
-                        async () =>
-                        {
-                            var deployments = await GetK8sClient(setupState).ListNamespacedDeploymentAsync("monitoring", labelSelector: "release=neon-metrics-grafana");
-                            if (deployments == null || deployments.Items.Count == 0)
-                            {
-                                return false;
-                            }
-
-                            return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
-                        },
-                        timeout:      clusterOpTimeout,
-                        pollInterval: clusterOpRetryInterval);
+                    await WaitForDeploymentAsync(setupState, "monitoring", "neon-metrics-grafana");
                 });
         }
 
@@ -3211,34 +3135,18 @@ $@"- name: StorageType
 
                     var startUtc = DateTime.UtcNow;
 
-                    await NeonHelper.WaitForAsync(
-                           async () =>
-                           {
-                               // Restart pods if they aren't happy after 3 minutes.
-
-                               if (DateTime.UtcNow > startUtc.AddMinutes(3))
-                               {
-                                   var pods = await GetK8sClient(setupState).ListNamespacedPodAsync("neon-system", labelSelector: "release=neon-system-registry-harbor");
-                                   foreach (var pod in pods.Items.Where(i => i.Status.Phase != "Running"))
-                                   {
-                                       if (pod.Status.ContainerStatuses.Any(c => c.RestartCount > 0))
-                                       {
-                                           startUtc = DateTime.UtcNow;
-                                           await GetK8sClient(setupState).DeleteNamespacedPodAsync(pod.Name(), "neon-system");
-                                       }
-                                   }
-                               }
-
-                               var deployments = await GetK8sClient(setupState).ListNamespacedDeploymentAsync("neon-system", labelSelector: "release=neon-system-registry-harbor");
-                               if (deployments == null || deployments.Items.Count < 8)
-                               {
-                                   return false;
-                               }
-
-                               return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
-                           },
-                           timeout: clusterOpTimeout,
-                           pollInterval: clusterOpRetryInterval);
+                    await NeonHelper.WaitAllAsync(
+                        new List<Task>()
+                        {
+                            WaitForDeploymentAsync(setupState, "neon-system", "neon-system-registry-harbor-chartmuseum"),
+                            WaitForDeploymentAsync(setupState, "neon-system", "neon-system-registry-harbor-clair"),
+                            WaitForDeploymentAsync(setupState, "neon-system", "neon-system-registry-harbor-core"),
+                            WaitForDeploymentAsync(setupState, "neon-system", "neon-system-registry-harbor-jobservice"),
+                            WaitForDeploymentAsync(setupState, "neon-system", "neon-system-registry-harbor-notary-server"),
+                            WaitForDeploymentAsync(setupState, "neon-system", "neon-system-registry-harbor-notary-signer"),
+                            WaitForDeploymentAsync(setupState, "neon-system", "neon-system-registry-harbor-portal"),
+                            WaitForDeploymentAsync(setupState, "neon-system", "neon-system-registry-harbor-registry")
+                        });
                 });
         }
 
@@ -3275,20 +3183,7 @@ $@"- name: StorageType
                     KubeHelper.WriteStatus(statusWriter, "wait", "for [neon-cluster-manager]");
                     master.Status = "wait: for [neon-cluster-manager]";
 
-                    await NeonHelper.WaitForAsync(
-                        async () =>
-                        {
-                            var deployments = await GetK8sClient(setupState).ListNamespacedDeploymentAsync("neon-system", labelSelector: "release=neon-cluster-manager");
-
-                            if (deployments == null || deployments.Items.Count == 0)
-                            {
-                                return false;
-                            }
-
-                            return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
-                        },
-                        timeout:      clusterOpTimeout,
-                        pollInterval: clusterOpRetryInterval);
+                    await WaitForDeploymentAsync(setupState, "neon-system", "neon-cluster-manager");
                 });
         }
 
@@ -3391,36 +3286,157 @@ $@"- name: StorageType
                     KubeHelper.WriteStatus(statusWriter, "Wait", "for System Database");
                     master.Status = "wait: for system database";
 
-                    await NeonHelper.WaitForAsync(
-                        async () =>
+                    await NeonHelper.WaitAllAsync(
+                        new List<Task>()
                         {
-                            var statefulsets = await GetK8sClient(setupState).ListNamespacedStatefulSetAsync("neon-system", labelSelector: "release=neon-system-db");
-                            if (statefulsets == null || statefulsets.Items.Count < 2)
-                            {
-                                return false;
-                            }
-
-                            return statefulsets.Items.All(p => p.Status.ReadyReplicas == p.Spec.Replicas);
-                        },
-                        timeout:      clusterOpTimeout,
-                        pollInterval: clusterOpRetryInterval);
-
-                    await NeonHelper.WaitForAsync(
-                        async () =>
-                        {
-                            var deployments = await GetK8sClient(setupState).ListNamespacedDeploymentAsync("neon-system", labelSelector: "release=neon-system-db");
-                            if (deployments == null || deployments.Items.Count == 0)
-                            {
-                                return false;
-                            }
-
-                            return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
-                        },
-                        timeout:      clusterOpTimeout,
-                        pollInterval: clusterOpRetryInterval);
+                            WaitForDeploymentAsync(setupState, "neon-system", "neon-system-db-citus-postgresql-manager"),
+                            WaitForStatefulsetAsync(setupState, "neon-system", "neon-system-db-citus-postgresql-master"),
+                            WaitForStatefulsetAsync(setupState, "neon-system", "neon-system-db-citus-postgresql-worker")
+                        });
                 });
 
             await Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="setupState"></param>
+        /// <param name="namespace"></param>
+        /// <param name="name"></param>
+        /// <param name="labelSelector"></param>
+        /// <param name="fieldSelector"></param>
+        /// <returns></returns>
+        public static async Task WaitForDeploymentAsync(
+            ObjectDictionary setupState, 
+            string @namespace, 
+            string name = null, 
+            string labelSelector = null,
+            string fieldSelector = null)
+        {
+            Covenant.Requires<ArgumentException>(name != null || labelSelector != null || fieldSelector != null, "One of name, labelSelector or fieldSelector must be set,");
+
+            if (!string.IsNullOrEmpty(name))
+            {
+                if (!string.IsNullOrEmpty(fieldSelector)){
+                    fieldSelector += $",metadata.name={name}";
+                }
+                else
+                {
+                    fieldSelector = $"metadata.name={name}";
+                }
+            }
+
+            await NeonHelper.WaitForAsync(
+                async () =>
+                {
+                    try
+                    {
+                        var deployments = await GetK8sClient(setupState).ListNamespacedDeploymentAsync(@namespace, fieldSelector: fieldSelector, labelSelector: labelSelector);
+                        if (deployments == null || deployments.Items.Count == 0)
+                        {
+                            return false;
+                        }
+
+                        return deployments.Items.All(d => d.Status.AvailableReplicas == d.Spec.Replicas);
+                    }
+                    catch
+                    {
+                        return false;
+                    }
+                            
+                },
+                timeout: clusterOpTimeout,
+                pollInterval: clusterOpRetryInterval);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="setupState"></param>
+        /// <param name="namespace"></param>
+        /// <param name="name"></param>
+        /// <param name="labelSelector"></param>
+        /// <param name="fieldSelector"></param>
+        /// <returns></returns>
+        public static async Task WaitForStatefulsetAsync(
+            ObjectDictionary setupState,
+            string @namespace,
+            string name = null,
+            string labelSelector = null,
+            string fieldSelector = null)
+        {
+            Covenant.Requires<ArgumentException>(name != null || labelSelector != null || fieldSelector != null, "One of name, labelSelector or fieldSelector must be set,");
+
+            if (!string.IsNullOrEmpty(name))
+            {
+                if (!string.IsNullOrEmpty(fieldSelector))
+                {
+                    fieldSelector += $",metadata.name={name}";
+                }
+                else
+                {
+                    fieldSelector = $"metadata.name={name}";
+                }
+            }
+
+            await NeonHelper.WaitForAsync(
+                async () =>
+                {
+                    var statefulsets = await GetK8sClient(setupState).ListNamespacedStatefulSetAsync(@namespace, fieldSelector: fieldSelector, labelSelector: labelSelector);
+                    if (statefulsets == null || statefulsets.Items.Count == 0)
+                    {
+                        return false;
+                    }
+
+                    return statefulsets.Items.All(s => s.Status.ReadyReplicas == s.Spec.Replicas);
+                },
+                timeout: clusterOpTimeout,
+                pollInterval: clusterOpRetryInterval);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="setupState"></param>
+        /// <param name="namespace"></param>
+        /// <param name="name"></param>
+        /// <param name="labelSelector"></param>
+        /// <param name="fieldSelector"></param>
+        /// <returns></returns>
+        public static async Task WaitForDaemonsetAsync(
+            ObjectDictionary setupState,
+            string @namespace,
+            string name = null,
+            string labelSelector = null,
+            string fieldSelector = null)
+        {
+            Covenant.Requires<ArgumentException>(name != null || labelSelector != null || fieldSelector != null, "One of name, labelSelector or fieldSelector must be set,");
+
+            if (!string.IsNullOrEmpty(name))
+            {
+                if (!string.IsNullOrEmpty(fieldSelector))
+                {
+                    fieldSelector += $",metadata.name={name}";
+                }
+                else
+                {
+                    fieldSelector = $"metadata.name={name}";
+                }
+            }
+            await NeonHelper.WaitForAsync(
+                async () =>
+                {
+                    var daemonsets = await GetK8sClient(setupState).ListNamespacedDaemonSetAsync(@namespace, fieldSelector: fieldSelector, labelSelector: labelSelector);
+                    if (daemonsets == null || daemonsets.Items.Count == 0)
+                    {
+                        return false;
+                    }
+
+                    return daemonsets.Items.All(d => d.Status.NumberAvailable == d.Status.DesiredNumberScheduled);
+                },
+                timeout: clusterOpTimeout,
+                pollInterval: clusterOpRetryInterval);
         }
 
         /// <summary>
