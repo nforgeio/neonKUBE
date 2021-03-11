@@ -26,6 +26,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
@@ -53,6 +54,7 @@ using Neon.Retry;
 using Neon.SSH;
 using Neon.Tasks;
 using Neon.Windows;
+using Microsoft.Rest;
 
 namespace Neon.Kube
 {
@@ -167,13 +169,13 @@ namespace Neon.Kube
         /// Thrown when there is no persisted client, indicating that <see cref="ConnectCluster(ObjectDictionary)"/>
         /// has not been called yet.
         /// </exception>
-        public static Kubernetes GetK8sClient(ObjectDictionary setupState)
+        public static IKubernetes GetK8sClient(ObjectDictionary setupState)
         {
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
 
             try
             {
-                return setupState.Get<Kubernetes>(K8sClientProperty);
+                return setupState.Get<IKubernetes>(K8sClientProperty);
             }
             catch (Exception e)
             {
@@ -402,7 +404,48 @@ namespace Neon.Kube
 
             if (!string.IsNullOrEmpty(configFile) && File.Exists(configFile))
             {
-                var k8sClient = new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigFile(configFile, currentContext: cluster.KubeContext.Name));
+                // We're using a generated wrapper class to handle transient retries rather than 
+                // modifying the built-in base retry policy.  We're really just trying to handle
+                // the transients that happen during setup when the API server is unavailable for
+                // some reaon (like it's being restarted).
+
+                var k8sClient = new KubernetesWithRetry(KubernetesClientConfiguration.BuildConfigFromConfigFile(configFile, currentContext: cluster.KubeContext.Name));
+
+                k8sClient.RetryPolicy =
+                    new ExponentialRetryPolicy(
+                        transientDetector: 
+                            exception =>
+                            {
+                                var exceptionType = exception.GetType();
+
+                                // Exceptions like this happen when a API server can't be established
+                                // because the server isn't running or ready.
+
+                                if (exceptionType == typeof(HttpRequestException) && exception.InnerException != null && exception.InnerException.GetType() == typeof(SocketException))
+                                {
+                                    return true;
+                                }
+
+                                // We also see this sometimes when the API server isn't ready.
+
+                                if (exceptionType == typeof(HttpOperationException) && ((HttpOperationException)exception).Response.StatusCode == HttpStatusCode.Forbidden)
+                                {
+                                    return true;
+                                }
+
+                                // This might be another variant of the check just above.
+
+                                if (exceptionType == typeof(HttpRequestException) && exception.InnerException != null && exception.InnerException.GetType() == typeof(IOException))
+                                {
+                                    return true;
+                                }
+
+                                return false;
+                            },
+                        maxAttempts:          int.MaxValue,
+                        initialRetryInterval: TimeSpan.FromSeconds(1),
+                        maxRetryInterval:     TimeSpan.FromSeconds(5),
+                        timeout:              TimeSpan.FromSeconds(120));
 
                 setupState.Add(K8sClientProperty, k8sClient);
             }
@@ -625,6 +668,7 @@ spec:
             var cluster      = setupState.Get<ClusterProxy>(ClusterProxyProperty);
             var clusterLogin = setupState.Get<ClusterLogin>(ClusterLoginProperty);
             var firstMaster  = cluster.FirstMaster;
+            var debugMode    = setupState.Get<bool>(KubeSetup.DebugModeProperty);
 
             cluster.ClearStatus();
 
@@ -632,26 +676,34 @@ spec:
             ConfigureWorkstation(setupState, firstMaster, statusWriter);
             ConnectCluster(setupState);
 
-            // Wait for the k8s API server to start.
-
-            await KubeHelper.WaitForK8sApiServer(GetK8sClient(setupState));
-
             // We need to taint before deploying pods.
 
             await ConfigureMasterTaintsAsync(setupState, firstMaster, statusWriter);
 
-            // Run configuration tasks in parallel.
+            // Run configuration tasks in parallel when not [--debug] mode.
 
-            var tasks = new List<Task>();
+            if (debugMode)
+            {
+                await TaintNodesAsync(setupState, statusWriter);
+                await LabelNodesAsync(setupState, firstMaster, statusWriter));
+                await NeonHelper.WaitAllAsync(await CreateNamespacesAsync(setupState, firstMaster, statusWriter)));
+                await CreateRootUserAsync(setupState, firstMaster, statusWriter));
+                await InstallCalicoCniAsync(setupState, firstMaster, statusWriter));
+                await InstallIstioAsync(setupState, firstMaster, statusWriter));
+            }
+            else
+            {
+                var tasks = new List<Task>();
 
-            tasks.Add(TaintNodesAsync(setupState, statusWriter));
-            tasks.Add(LabelNodesAsync(setupState, firstMaster, statusWriter));
-            tasks.AddRange(await CreateNamespacesAsync(setupState, firstMaster, statusWriter));
-            tasks.Add(CreateRootUserAsync(setupState, firstMaster, statusWriter));
-            tasks.Add(InstallCalicoCniAsync(setupState, firstMaster, statusWriter));
-            tasks.Add(InstallIstioAsync(setupState, firstMaster, statusWriter));
+                tasks.Add(TaintNodesAsync(setupState, statusWriter));
+                tasks.Add(LabelNodesAsync(setupState, firstMaster, statusWriter));
+                tasks.AddRange(await CreateNamespacesAsync(setupState, firstMaster, statusWriter));
+                tasks.Add(CreateRootUserAsync(setupState, firstMaster, statusWriter));
+                tasks.Add(InstallCalicoCniAsync(setupState, firstMaster, statusWriter));
+                tasks.Add(InstallIstioAsync(setupState, firstMaster, statusWriter));
 
-            await NeonHelper.WaitAllAsync(tasks);
+                await NeonHelper.WaitAllAsync(tasks);
+            }
 
             if (cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count() >= 3)
             {
@@ -660,17 +712,34 @@ spec:
 
             // Additional configuration.
 
-            tasks.Add(InstallKialiAsync(setupState, firstMaster, statusWriter));
-            tasks.Add(InstallKubeDashboardAsync(setupState, firstMaster, statusWriter));
-            await InstallOpenEBSAsync(setupState, firstMaster, statusWriter);
-            await InstallPrometheusAsync(setupState, firstMaster, statusWriter);
-            await InstallSystemDbAsync(setupState, firstMaster, statusWriter);
-            await InstallMinioAsync(setupState, firstMaster, statusWriter);
-            tasks.Add(InstallClusterManagerAsync(setupState, firstMaster, statusWriter));
-            tasks.Add(InstallContainerRegistryAsync(setupState, firstMaster, statusWriter));
-            tasks.AddRange(await SetupMonitoringAsync(setupState, statusWriter));
+            if (debugMode)
+            {
+                await InstallKialiAsync(setupState, firstMaster, statusWriter));
+                await InstallKubeDashboardAsync(setupState, firstMaster, statusWriter));
+                await InstallOpenEBSAsync(setupState, firstMaster, statusWriter);
+                await InstallPrometheusAsync(setupState, firstMaster, statusWriter);
+                await InstallSystemDbAsync(setupState, firstMaster, statusWriter);
+                await InstallMinioAsync(setupState, firstMaster, statusWriter);
+                await InstallClusterManagerAsync(setupState, firstMaster, statusWriter));
+                await (InstallContainerRegistryAsync(setupState, firstMaster, statusWriter));
+                await NeonHelper.WaitAllAsync((await SetupMonitoringAsync(setupState, statusWriter));
+            }
+            else
+            {
+                var tasks = new List<Task>();
 
-            await NeonHelper.WaitAllAsync(tasks);
+                tasks.Add(InstallKialiAsync(setupState, firstMaster, statusWriter));
+                tasks.Add(InstallKubeDashboardAsync(setupState, firstMaster, statusWriter));
+                await InstallOpenEBSAsync(setupState, firstMaster, statusWriter);
+                await InstallPrometheusAsync(setupState, firstMaster, statusWriter);
+                await InstallSystemDbAsync(setupState, firstMaster, statusWriter);
+                await InstallMinioAsync(setupState, firstMaster, statusWriter);
+                tasks.Add(InstallClusterManagerAsync(setupState, firstMaster, statusWriter));
+                tasks.Add(InstallContainerRegistryAsync(setupState, firstMaster, statusWriter));
+                tasks.AddRange(await SetupMonitoringAsync(setupState, statusWriter));
+
+                await NeonHelper.WaitAllAsync(tasks);
+            }
         }
 
         /// <summary>
@@ -3192,10 +3261,10 @@ $@"- name: StorageType
                     }
 
                     int j = 0;
-                    foreach (var t in await GetTaintsAsync(setupState, NodeLabels.LabelNeonSystemRegistry, "true"))
+                    foreach (var taint in await GetTaintsAsync(setupState, NodeLabels.LabelNeonSystemRegistry, "true"))
                     {
-                        values.Add(new KeyValuePair<string, object>($"tolerations[{j}].key", $"{t.Key.Split("=")[0]}"));
-                        values.Add(new KeyValuePair<string, object>($"tolerations[{j}].effect", t.Effect));
+                        values.Add(new KeyValuePair<string, object>($"tolerations[{j}].key", $"{taint.Key.Split("=")[0]}"));
+                        values.Add(new KeyValuePair<string, object>($"tolerations[{j}].effect", taint.Effect));
                         values.Add(new KeyValuePair<string, object>($"tolerations[{j}].operator", "Exists"));
                         j++;
                     }
