@@ -685,11 +685,11 @@ spec:
             if (debugMode)
             {
                 await TaintNodesAsync(setupState, statusWriter);
-                await LabelNodesAsync(setupState, firstMaster, statusWriter));
-                await NeonHelper.WaitAllAsync(await CreateNamespacesAsync(setupState, firstMaster, statusWriter)));
-                await CreateRootUserAsync(setupState, firstMaster, statusWriter));
-                await InstallCalicoCniAsync(setupState, firstMaster, statusWriter));
-                await InstallIstioAsync(setupState, firstMaster, statusWriter));
+                await LabelNodesAsync(setupState, firstMaster, statusWriter);
+                await NeonHelper.WaitAllAsync(await CreateNamespacesAsync(setupState, firstMaster, statusWriter));
+                await CreateRootUserAsync(setupState, firstMaster, statusWriter);
+                await InstallCalicoCniAsync(setupState, firstMaster, statusWriter);
+                await InstallIstioAsync(setupState, firstMaster, statusWriter);
             }
             else
             {
@@ -714,15 +714,15 @@ spec:
 
             if (debugMode)
             {
-                await InstallKialiAsync(setupState, firstMaster, statusWriter));
-                await InstallKubeDashboardAsync(setupState, firstMaster, statusWriter));
+                await InstallKialiAsync(setupState, firstMaster, statusWriter);
+                await InstallKubeDashboardAsync(setupState, firstMaster, statusWriter);
                 await InstallOpenEBSAsync(setupState, firstMaster, statusWriter);
                 await InstallPrometheusAsync(setupState, firstMaster, statusWriter);
                 await InstallSystemDbAsync(setupState, firstMaster, statusWriter);
                 await InstallMinioAsync(setupState, firstMaster, statusWriter);
-                await InstallClusterManagerAsync(setupState, firstMaster, statusWriter));
-                await (InstallContainerRegistryAsync(setupState, firstMaster, statusWriter));
-                await NeonHelper.WaitAllAsync((await SetupMonitoringAsync(setupState, statusWriter));
+                await InstallClusterManagerAsync(setupState, firstMaster, statusWriter);
+                await InstallContainerRegistryAsync(setupState, firstMaster, statusWriter);
+                await NeonHelper.WaitAllAsync(await SetupMonitoringAsync(setupState, statusWriter));
             }
             else
             {
@@ -1603,8 +1603,8 @@ subjects:
             master.InvokeIdempotent("setup/kube-dashboard",
                 () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Install", "Kubernetes Dashboard");
-                    master.Status = "install: kubernetes dashboard";
+                    KubeHelper.WriteStatus(statusWriter, "Setup", "Kubernetes Dashboard");
+                    master.Status = "setup: kubernetes dashboard";
 
                     if (clusterLogin.DashboardCertificate != null)
                     {
@@ -2170,8 +2170,8 @@ spec:
                     await master.InvokeIdempotentAsync("setup/openebs",
                         async () =>
                         {
-                            KubeHelper.WriteStatus(statusWriter, "Install", "OpenEBS");
-                            master.Status = "install: openebs";
+                            KubeHelper.WriteStatus(statusWriter, "Setup", "OpenEBS");
+                            master.Status = "setup: openebs";
 
                             var values = new List<KeyValuePair<string, object>>();
 
@@ -2207,8 +2207,8 @@ spec:
                         await master.InvokeIdempotentAsync("setup/openebs-cstor",
                             async () =>
                             {
-                                KubeHelper.WriteStatus(statusWriter, "Install", "OpenEBS cStor");
-                                master.Status = "install: openebs cstor";
+                                KubeHelper.WriteStatus(statusWriter, "Setup", "OpenEBS cStor");
+                                master.Status = "setup: openebs cstor";
 
                                 var values = new List<KeyValuePair<string, object>>();
 
