@@ -15,46 +15,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using ICSharpCode.SharpZipLib.Zip;
+using k8s;
+using k8s.Models;
+using Microsoft.Rest;
+using Neon.Collections;
+using Neon.Common;
+using Neon.Cryptography;
+using Neon.IO;
+using Neon.Retry;
+using Neon.SSH;
+using Neon.Tasks;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
 using System.Diagnostics.Contracts;
-using System.Dynamic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
-using System.Runtime.InteropServices;
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-
-using ICSharpCode.SharpZipLib.Zip;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using Microsoft.Win32;
-
-using k8s;
-using k8s.Models;
-
-using Neon.Collections;
-using Neon.Common;
-using Neon.Cryptography;
-using Neon.Data;
-using Neon.Diagnostics;
-using Neon.IO;
-using Neon.Net;
-using Neon.Retry;
-using Neon.SSH;
-using Neon.Tasks;
-using Neon.Windows;
-using Microsoft.Rest;
 
 namespace Neon.Kube
 {
@@ -433,7 +417,7 @@ namespace Neon.Kube
                                     return true;
                                 }
 
-                                // This might be another variant of the check just above.
+                                // This might be another variant of the check just above.  This looks like an SSL negotiation problem.
 
                                 if (exceptionType == typeof(HttpRequestException) && exception.InnerException != null && exception.InnerException.GetType() == typeof(IOException))
                                 {
