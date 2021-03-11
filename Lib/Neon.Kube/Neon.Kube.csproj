@@ -1494,7 +1494,7 @@
   </ItemGroup>
 
   <Target Name="ModelGen" BeforeTargets="BeforeCompile">
-    <Exec Command="$(SolutionDir)Tools\prebuilder\bin\$(Configuration)\netcoreapp3.1\prebuilder prebuilder generate-kubernetes-with-retry &quot;$(ProjectPath)KubernetesWithRetry.cs&quot; Neon.Kube" />
+    <Exec Command="..\..\Tools\prebuilder\bin\$(Configuration)\netcoreapp3.1\prebuilder prebuilder generate-kubernetes-with-retry &quot;$(ProjectPath)KubernetesWithRetry.cs&quot; Neon.Kube" />
     <Exec Command="neon-build embed-check &quot;$(ProjectPath)&quot; &quot;$(ProjectDir)\Resources&quot;" />
   </Target>
 

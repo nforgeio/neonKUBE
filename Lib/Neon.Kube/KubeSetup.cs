@@ -2910,7 +2910,7 @@ $@"- name: StorageType
                                 return false;
                             }
 
-                            return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
+                            return deployments.Items.All(deployments => deployments.Status.AvailableReplicas == deployments.Spec.Replicas);
                         },
                         timeout:      clusterOpTimeout,
                         pollInterval: clusterOpRetryInterval);
