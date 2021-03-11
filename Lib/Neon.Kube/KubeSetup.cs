@@ -2208,33 +2208,17 @@ spec:
                             KubeHelper.WriteStatus(statusWriter, "Wait", "for OpenEBS");
                             master.Status = "wait: for openebs";
 
-                            await NeonHelper.WaitForAsync(
-                                async () =>
+                            await NeonHelper.WaitAllAsync(
+                                new List<Task>()
                                 {
-                                    var deployments = await GetK8sClient(setupState).ListNamespacedDeploymentAsync("openebs");
-                                    if (deployments == null || deployments.Items.Count == 0)
-                                    {
-                                        return false;
-                                    }
-
-                                    return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
-                                },
-                                timeout: clusterOpTimeout,
-                                pollInterval: clusterOpRetryInterval);
-
-                            await NeonHelper.WaitForAsync(
-                                async () =>
-                                {
-                                    var daemonsets = await GetK8sClient(setupState).ListNamespacedDaemonSetAsync("openebs");
-                                    if (daemonsets == null || daemonsets.Items.Count == 0)
-                                    {
-                                        return false;
-                                    }
-
-                                    return daemonsets.Items.All(p => p.Status.NumberAvailable == p.Status.DesiredNumberScheduled);
-                                },
-                                timeout: clusterOpTimeout,
-                                pollInterval: clusterOpRetryInterval);
+                                    WaitForDaemonsetAsync(setupState, "openebs", "neon-storage-openebs-ndm"),
+                                    WaitForDeploymentAsync(setupState, "openebs", "neon-storage-openebs-admission-server"),
+                                    WaitForDeploymentAsync(setupState, "openebs", "neon-storage-openebs-apiserver"),
+                                    WaitForDeploymentAsync(setupState, "openebs", "neon-storage-openebs-localpv-provisioner"),
+                                    WaitForDeploymentAsync(setupState, "openebs", "neon-storage-openebs-ndm-operator"),
+                                    WaitForDeploymentAsync(setupState, "openebs", "neon-storage-openebs-provisioner"),
+                                    WaitForDeploymentAsync(setupState, "openebs", "neon-storage-openebs-snapshot-operator")
+                                });
                         });
 
                     if (cluster.HostingManager.HostingEnvironment != HostingEnvironment.Wsl2)
@@ -2310,20 +2294,14 @@ spec:
                                 KubeHelper.WriteStatus(statusWriter, "Wait", "for OpenEBS cStor");
                                 master.Status = "wait: for openebs cStore";
 
-                                await WaitForDeploymentAsync(setupState, "openebs", "neon-cluster-manager");
-                                await NeonHelper.WaitForAsync(
-                                    async () =>
+                                await NeonHelper.WaitAllAsync(
+                                    new List<Task>()
                                     {
-                                        var deployments = await GetK8sClient(setupState).ListNamespacedDeploymentAsync("openebs", labelSelector: "app=cstor-pool");
-                                        if (deployments == null || deployments.Items.Count == 0)
-                                        {
-                                            return false;
-                                        }
-
-                                        return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
-                                    },
-                                    timeout: clusterOpTimeout,
-                                    pollInterval: clusterOpRetryInterval);
+                                        WaitForDaemonsetAsync(setupState, "openebs", "neon-storage-openebs-cstor-csi-node"),
+                                        WaitForDeploymentAsync(setupState, "openebs", "neon-storage-openebs-cstor-admission-server"),
+                                        WaitForDeploymentAsync(setupState, "openebs", "neon-storage-openebs-cstor-cvc-operator"),
+                                        WaitForDeploymentAsync(setupState, "openebs", "neon-storage-openebs-cstor-cspc-operator")
+                                    });
                             });
 
                         var replicas = 3;
@@ -2517,19 +2495,7 @@ $@"- name: StorageType
                     KubeHelper.WriteStatus(statusWriter, "Wait", "for Etc (monitoring)");
                     master.Status = "wait: for etc (monitoring)";
 
-                    await NeonHelper.WaitForAsync(
-                        async () =>
-                        {
-                            var statefulsets = await GetK8sClient(setupState).ListNamespacedStatefulSetAsync("monitoring", labelSelector: "release=neon-system-etcd");
-                            if (statefulsets == null || statefulsets.Items.Count == 0)
-                            {
-                                return false;
-                            }
-
-                            return statefulsets.Items.All(p => p.Status.ReadyReplicas == p.Spec.Replicas);
-                        },
-                        timeout:      clusterOpTimeout,
-                        pollInterval: clusterOpRetryInterval);
+                    await WaitForStatefulsetAsync(setupState, "monitoring", "neon-system-etcd");
                 });
 
             await Task.CompletedTask;
@@ -3113,19 +3079,7 @@ $@"- name: StorageType
                     KubeHelper.WriteStatus(statusWriter, "Wait", "for Harbor Redis");
                     master.Status = "wait: for harbor redis";
 
-                    await NeonHelper.WaitForAsync(
-                        async () =>
-                        {
-                            var statefulsets = await GetK8sClient(setupState).ListNamespacedStatefulSetAsync("neon-system", labelSelector: "release=neon-system-registry-redis");
-                            if (statefulsets == null || statefulsets.Items.Count == 0)
-                            {
-                                return false;
-                            }
-
-                            return statefulsets.Items.All(p => p.Status.ReadyReplicas == p.Spec.Replicas);
-                        },
-                        timeout:      clusterOpTimeout,
-                        pollInterval: clusterOpRetryInterval);
+                    await WaitForStatefulsetAsync(setupState, "neon-system", "neon-system-registry-redis-server");
                 });
 
             await master.InvokeIdempotentAsync("setup/harbor",
@@ -3436,13 +3390,20 @@ $@"- name: StorageType
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
-                    var statefulsets = await GetK8sClient(setupState).ListNamespacedStatefulSetAsync(@namespace, fieldSelector: fieldSelector, labelSelector: labelSelector);
-                    if (statefulsets == null || statefulsets.Items.Count == 0)
+                    try
+                    {
+                        var statefulsets = await GetK8sClient(setupState).ListNamespacedStatefulSetAsync(@namespace, fieldSelector: fieldSelector, labelSelector: labelSelector);
+                        if (statefulsets == null || statefulsets.Items.Count == 0)
+                        {
+                            return false;
+                        }
+
+                        return statefulsets.Items.All(s => s.Status.ReadyReplicas == s.Spec.Replicas);
+                    }
+                    catch
                     {
                         return false;
                     }
-
-                    return statefulsets.Items.All(s => s.Status.ReadyReplicas == s.Spec.Replicas);
                 },
                 timeout: clusterOpTimeout,
                 pollInterval: clusterOpRetryInterval);
@@ -3480,13 +3441,20 @@ $@"- name: StorageType
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
-                    var daemonsets = await GetK8sClient(setupState).ListNamespacedDaemonSetAsync(@namespace, fieldSelector: fieldSelector, labelSelector: labelSelector);
-                    if (daemonsets == null || daemonsets.Items.Count == 0)
+                    try
+                    {
+                        var daemonsets = await GetK8sClient(setupState).ListNamespacedDaemonSetAsync(@namespace, fieldSelector: fieldSelector, labelSelector: labelSelector);
+                        if (daemonsets == null || daemonsets.Items.Count == 0)
+                        {
+                            return false;
+                        }
+
+                        return daemonsets.Items.All(d => d.Status.NumberAvailable == d.Status.DesiredNumberScheduled);
+                    }
+                    catch
                     {
                         return false;
                     }
-
-                    return daemonsets.Items.All(d => d.Status.NumberAvailable == d.Status.DesiredNumberScheduled);
                 },
                 timeout: clusterOpTimeout,
                 pollInterval: clusterOpRetryInterval);
