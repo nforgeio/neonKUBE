@@ -98,10 +98,10 @@ namespace Neon.Kube
         /// neonKUBE requires that each master and worker node have at least 4 CPUs.
         /// </note>
         /// </summary>
-        [JsonProperty(PropertyName = "Processors", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "processors", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "Cores", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "cores", ApplyNamingConventions = false)]
         [DefaultValue(4)]
-        public int Processors { get; set; } = 4;
+        public int Cores { get; set; } = 4;
 
         /// <summary>
         /// <para>
@@ -222,9 +222,9 @@ namespace Neon.Kube
                 }
             }
 
-            if (Processors <= 0)
+            if (Cores <= 0)
             {
-                throw new ClusterDefinitionException($"[{nameof(LocalHyperVHostingOptions)}.{nameof(Processors)}={Processors}] must be positive.");
+                throw new ClusterDefinitionException($"[{nameof(LocalHyperVHostingOptions)}.{nameof(Cores)}={Cores}] must be positive.");
             }
 
             Memory = Memory ?? DefaultMemory;

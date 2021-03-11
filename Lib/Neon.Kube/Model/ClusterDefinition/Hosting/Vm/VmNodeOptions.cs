@@ -64,16 +64,16 @@ namespace Neon.Kube
         /// <summary>
         /// <para>
         /// Specifies the number of processors to assigned to this node when provisioned on a hypervisor.  This
-        /// defaults to the value specified by <see cref="VmHostingOptions.Processors"/>.
+        /// defaults to the value specified by <see cref="VmHostingOptions.Cores"/>.
         /// </para>
         /// <note>
         /// neonKUBE requires that each master and worker node have at least 4 CPUs.
         /// </note>
         /// </summary>
-        [JsonProperty(PropertyName = "Processors", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "processors", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "Cores", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "cores", ApplyNamingConventions = false)]
         [DefaultValue(0)]
-        public int Processors { get; set; } = 0;
+        public int Cores { get; set; } = 0;
 
         /// <summary>
         /// <para>
@@ -120,13 +120,13 @@ namespace Neon.Kube
         /// <returns>The number of cores.</returns>
         public int GetProcessors(ClusterDefinition clusterDefinition)
         {
-            if (Processors != 0)
+            if (Cores != 0)
             {
-                return Processors;
+                return Cores;
             }
             else
             {
-                return clusterDefinition.Hosting.Vm.Processors;
+                return clusterDefinition.Hosting.Vm.Cores;
             }
         }
 

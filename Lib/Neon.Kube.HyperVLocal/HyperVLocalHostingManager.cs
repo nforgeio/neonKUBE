@@ -161,7 +161,7 @@ namespace Neon.Kube
             foreach (var node in cluster.Definition.Nodes)
             {
                 node.Labels.PhysicalMachine = Environment.MachineName;
-                node.Labels.ComputeCores    = cluster.Definition.Hosting.Vm.Processors;
+                node.Labels.ComputeCores    = cluster.Definition.Hosting.Vm.Cores;
                 node.Labels.ComputeRam      = (int)(ClusterDefinition.ValidateSize(cluster.Definition.Hosting.Vm.Memory, typeof(HostingOptions), nameof(HostingOptions.Vm.Memory))/ ByteUnits.MebiBytes);
                 node.Labels.StorageSize     = ByteUnits.ToGiB(node.Vm.GetMemory(cluster.Definition));
             }
