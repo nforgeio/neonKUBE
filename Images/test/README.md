@@ -6,4 +6,4 @@ These images are all exactly the same.  The different tags are used for unit tes
 
 # Description
 
-This is a very light-weight container used the internal **cluster** unit tests.  The container currently does nothing but go to sleep for 365 days.
+This is a very light-weight container used the internal **cluster** unit tests.  The container currently does nothing but go to sleep forever.

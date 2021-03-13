@@ -16,7 +16,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# The test service currently just sleeps for a 365 days.
+# The test service currently just sleeps forever.
 
-echo "Sleeping for 365 days."
-sleep 31536000
+echo "Shhhhh! Sleeping..."
+
+while :
+do
+    sleep 30
+done
