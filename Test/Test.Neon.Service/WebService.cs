@@ -43,8 +43,6 @@ namespace TestNeonService
     /// <summary>
     /// Startup class for <see cref="WebService"/>.
     /// </summary>
-    [Collection(TestCollection.NonParallel)]
-    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class WebServiceStartup
     {
         private WebService service;
@@ -55,7 +53,7 @@ namespace TestNeonService
             this.service       = service;
         }
 
-        public IConfiguration Configuration { get; }
+        public IConfiguration Configuration { get; private set; }
 
         public void ConfigureServices(IServiceCollection services)
         {
@@ -84,7 +82,7 @@ namespace TestNeonService
     /// The service looks for the <b>WEB_RESULT</b> environment variable and
     /// if present, will return the value as the endpoint response text.  Otherwise,
     /// the service will look for a configuration file at the logical path
-    /// <b>/etc/web/response</b> and return its contents of present.  If neither
+    /// <b>/etc/web/response</b> and return its contents if present.  If neither
     /// the environment variable or file are present, the endpoint will return
     /// <b>UNCONFIGURED</b>.
     /// </para>
