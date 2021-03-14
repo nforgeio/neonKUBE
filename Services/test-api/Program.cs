@@ -38,7 +38,7 @@ namespace TestApiService
         /// <param name="args">The command line arguments.</param>
         public static async Task Main(string[] args)
         {
-            await new Service("test-echo", version: "0.0.0")
+            await new Service("test-api", version: "0.0.0")
                 .RunAsync();
         }
     }

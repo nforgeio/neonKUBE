@@ -29,7 +29,7 @@ param
 
 Log-ImageBuild $registry $tag
 
-$appname           = "test-echo"
+$appname           = "test-api"
 $organization      = LibraryRegistryOrg
 $base_organization = KubeBaseRegistryOrg
 
