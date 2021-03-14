@@ -189,7 +189,6 @@ SetVersion Neon.XenServer           $libraryVersion
 SetVersion Neon.Xunit               $libraryVersion
 SetVersion Neon.Xunit.Cadence       $libraryVersion
 SetVersion Neon.Xunit.Couchbase     $libraryVersion
-SetVersion Neon.Xunit.Kubernetes    $libraryVersion
 SetVersion Neon.Xunit.Temporal      $libraryVersion
 SetVersion Neon.Xunit.YugaByte      $libraryVersion
 SetVersion Neon.YugaByte            $libraryVersion
@@ -227,7 +226,6 @@ Publish Neon.XenServer              $libraryVersion
 Publish Neon.Xunit                  $libraryVersion
 Publish Neon.Xunit.Cadence          $libraryVersion
 Publish Neon.Xunit.Couchbase        $libraryVersion
-Publish Neon.Xunit.Kubernetes       $libraryVersion
 Publish Neon.Xunit.Temporal         $libraryVersion
 Publish Neon.Xunit.YugaByte         $libraryVersion
 Publish Neon.YugaByte               $libraryVersion
@@ -265,7 +263,6 @@ RestoreVersion Neon.XenServer
 RestoreVersion Neon.Xunit
 RestoreVersion Neon.Xunit.Cadence
 RestoreVersion Neon.Xunit.Couchbase
-RestoreVersion Neon.Xunit.Kubernetes
 RestoreVersion Neon.Xunit.Temporal
 RestoreVersion Neon.Xunit.YugaByte
 RestoreVersion Neon.YugaByte

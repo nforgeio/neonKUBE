@@ -47,7 +47,6 @@
       <DocumentationSource sourceFile="..\..\Lib\Neon.SSH\Neon.SSH.csproj" />
       <DocumentationSource sourceFile="..\..\Lib\Neon.Cassandra\Neon.Cassandra.csproj" />
       <DocumentationSource sourceFile="..\..\Lib\Neon.Postgres\Neon.Postgres.csproj" />
-      <DocumentationSource sourceFile="..\..\Lib\Neon.Xunit.Kubernetes\Neon.Xunit.Kubernetes.csproj" />
     </DocumentationSources>
     <HelpFileFormat>HtmlHelp1, Website</HelpFileFormat>
     <SyntaxFilters>Standard</SyntaxFilters>
