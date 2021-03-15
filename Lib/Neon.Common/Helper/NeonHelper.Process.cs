@@ -360,8 +360,8 @@ namespace Neon.Common
                     }
                 }
 
-                process.StartInfo                  = processInfo;
-                process.EnableRaisingEvents        = true;
+                process.StartInfo           = processInfo;
+                process.EnableRaisingEvents = true;
 
                 // Configure the sub-process STDOUT and STDERR streams to use
                 // code page 1252 which simply passes byte values through.
@@ -759,10 +759,10 @@ namespace Neon.Common
                     }
                 }
 
-                process.StartInfo                  = processInfo;
-                process.OutputDataReceived        += new DataReceivedEventHandler(redirector.OnOutput);
-                process.ErrorDataReceived         += new DataReceivedEventHandler(redirector.OnError);
-                process.EnableRaisingEvents        = true;
+                process.StartInfo           = processInfo;
+                process.OutputDataReceived += new DataReceivedEventHandler(redirector.OnOutput);
+                process.ErrorDataReceived  += new DataReceivedEventHandler(redirector.OnError);
+                process.EnableRaisingEvents = true;
 
                 process.Start();
                 process.BeginOutputReadLine();
