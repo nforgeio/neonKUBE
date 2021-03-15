@@ -1,0 +1,232 @@
+﻿//-----------------------------------------------------------------------------
+// FILE:	    Test_NeonAssistantMessages.cs
+// CONTRIBUTOR: Jeff Lill
+// COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Xunit;
+
+using Neon.Common;
+using Neon.Deployment;
+using Neon.IO;
+using Neon.Xunit;
+
+namespace TestDeployment
+{
+    public class Test_NeonAssistantMessages
+    {
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonDeployment)]
+        public void Request_Create()
+        {
+            //---------------------------------------------
+
+            var request = NeonAssistantRequest.Create("TEST");
+
+            Assert.Equal("TEST", request.Command);
+            Assert.Empty(request.Args);
+            Assert.Equal("TEST:", request.ToString());
+
+            //---------------------------------------------
+
+            var args = new Dictionary<string, string>();
+
+            request = NeonAssistantRequest.Create("TEST", args);
+
+            Assert.Equal("TEST", request.Command);
+            Assert.Empty(request.Args);
+            Assert.Equal("TEST:", request.ToString());
+
+            //---------------------------------------------
+
+            args["arg1"] = "1";
+
+            request = NeonAssistantRequest.Create("TEST", args);
+
+            Assert.Equal("TEST", request.Command);
+            Assert.Single(request.Args);
+            Assert.Equal("1", request.Args["arg1"]);
+            Assert.Equal("TEST: arg1=1", request.ToString());
+
+            //---------------------------------------------
+
+            args["arg2"] = "2";
+
+            request = NeonAssistantRequest.Create("TEST", args);
+
+            Assert.Equal("TEST", request.Command);
+            Assert.Equal(2, request.Args.Count);
+            Assert.Equal("1", request.Args["arg1"]);
+            Assert.Equal("2", request.Args["arg2"]);
+            Assert.Equal("TEST: arg1=1, arg2=2", request.ToString());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonDeployment)]
+        public void Request_Parse_NoArgs()
+        {
+            var request = NeonAssistantRequest.Parse("TEST:");
+
+            Assert.Equal("TEST", request.Command);
+            Assert.Empty(request.Args);
+            Assert.Equal("TEST:", request.ToString());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonDeployment)]
+        public void Request_Parse_WithArgs()
+        {
+            var request = NeonAssistantRequest.Parse("TEST: arg1=1, arg2=2");
+
+            Assert.Equal("TEST", request.Command);
+            Assert.Equal(2, request.Args.Count);
+            Assert.Equal("1", request.Args["arg1"]);
+            Assert.Equal("2", request.Args["arg2"]);
+            Assert.Equal("TEST: arg1=1, arg2=2", request.ToString());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonDeployment)]
+        public void Request_ParseFailure()
+        {
+            Assert.Throws<ArgumentNullException>(() => NeonAssistantRequest.Parse(null));
+            Assert.Throws<ArgumentNullException>(() => NeonAssistantRequest.Parse(string.Empty));
+            Assert.Throws<FormatException>(() => NeonAssistantRequest.Parse("TEST"));
+            Assert.Throws<FormatException>(() => NeonAssistantRequest.Parse("TEST: arg"));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonDeployment)]
+        public void Response_Create()
+        {
+            var response = NeonAssistantResponse.Create("HELLO WORLD!");
+
+            Assert.True(response.Success);
+            Assert.Equal("HELLO WORLD!", response.Value);
+            Assert.Null(response.JObject);
+            Assert.Equal("OK: HELLO WORLD!", response.ToString());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonDeployment)]
+        public void Response_CreateJson()
+        {
+            //---------------------------------------------
+            
+            var response = NeonAssistantResponse.Create(new JObject());
+
+            Assert.True(response.Success);
+            Assert.Null(response.Value);
+            Assert.NotNull(response.JObject);
+
+            Assert.Empty(response.JObject.Properties());
+            Assert.Equal("OK-JSON: {}", response.ToString());
+
+            //---------------------------------------------
+
+            var jObj = 
+                new JObject(
+                    new JProperty("hello", "world!")
+                );
+
+            response = NeonAssistantResponse.Create(jObj);
+
+            Assert.True(response.Success);
+            Assert.Null(response.Value);
+            Assert.NotNull(response.JObject);
+
+            Assert.Single(response.JObject.Properties());
+            Assert.Equal("world!", response.JObject["hello"]);
+            Assert.Equal("OK-JSON: {\"hello\":\"world!\"}", response.ToString());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonDeployment)]
+        public void Response_CreateError()
+        {
+            //---------------------------------------------
+
+            var response = NeonAssistantResponse.CreateError("ERROR MESSAGE");
+
+            Assert.False(response.Success);
+            Assert.Null(response.Value);
+            Assert.Null(response.JObject);
+            Assert.Equal("ERROR MESSAGE", response.Error);
+            Assert.Equal("ERROR: ERROR MESSAGE", response.ToString());
+
+            //---------------------------------------------
+
+            Assert.Throws<ArgumentNullException>(() => NeonAssistantResponse.CreateError(null));
+            Assert.Throws<ArgumentNullException>(() => NeonAssistantResponse.CreateError(string.Empty));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonDeployment)]
+        public void Response_Parse()
+        {
+            var response = NeonAssistantResponse.Parse("OK: HELLO WORLD!");
+
+            Assert.True(response.Success);
+            Assert.Equal("HELLO WORLD!", response.Value);
+            Assert.Null(response.JObject);
+            Assert.Equal("OK: HELLO WORLD!", response.ToString());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonDeployment)]
+        public void Response_ParseJson()
+        {
+            var response = NeonAssistantResponse.Parse("OK-JSON: {\"hello\":\"world!\"}");
+
+            Assert.True(response.Success);
+            Assert.Null(response.Value);
+            Assert.Single(response.JObject.Properties());
+            Assert.Equal("world!", response.JObject["hello"]);
+            Assert.Equal("OK-JSON: {\"hello\":\"world!\"}", response.ToString());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonDeployment)]
+        public void Response_ParseError()
+        {
+            var response = NeonAssistantResponse.Parse("ERROR: HELLO WORLD!");
+
+            Assert.False(response.Success);
+            Assert.Null(response.Value);
+            Assert.Null(response.JObject);
+            Assert.Equal("HELLO WORLD!", response.Error);
+            Assert.Equal("ERROR: HELLO WORLD!", response.ToString());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonDeployment)]
+        public void Response_ParseFailure()
+        {
+            Assert.Throws<ArgumentNullException>(() => NeonAssistantResponse.Parse(null));
+            Assert.Throws<ArgumentNullException>(() => NeonAssistantResponse.Parse(string.Empty));
+            Assert.Throws<FormatException>(() => NeonAssistantResponse.Parse("NOT-OK"));
+            Assert.Throws<FormatException>(() => NeonAssistantResponse.Parse("NOT-OK:"));
+            Assert.Throws<FormatException>(() => NeonAssistantResponse.Parse("OK-JSON: { BAD }"));
+        }
+    }
+}
