@@ -61,6 +61,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="Resources\Helm\metrics-server\Chart.yaml" />
+    <None Remove="Resources\Helm\metrics-server\README.md" />
+    <None Remove="Resources\Helm\metrics-server\templates\apiService.yaml" />
+    <None Remove="Resources\Helm\metrics-server\templates\deployment.yaml" />
+    <None Remove="Resources\Helm\metrics-server\templates\rbac.yaml" />
+    <None Remove="Resources\Helm\metrics-server\templates\service.yaml" />
+    <None Remove="Resources\Helm\metrics-server\templates\serviceAccount.yaml" />
+    <None Remove="Resources\Helm\metrics-server\values.yaml" />
     <None Remove="Resources\Helm\calico\Chart.yaml" />
     <None Remove="Resources\Helm\calico\crds\crd.projectcalico.org_bgpconfigurations.yaml" />
     <None Remove="Resources\Helm\calico\crds\crds.yaml" />
@@ -772,6 +780,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Resources\Helm\metrics-server\Chart.yaml" />
+    <EmbeddedResource Include="Resources\Helm\metrics-server\README.md" />
+    <EmbeddedResource Include="Resources\Helm\metrics-server\templates\service.yaml" />
+    <EmbeddedResource Include="Resources\Helm\metrics-server\templates\apiService.yaml" />
+    <EmbeddedResource Include="Resources\Helm\metrics-server\templates\deployment.yaml" />
+    <EmbeddedResource Include="Resources\Helm\metrics-server\templates\rbac.yaml" />
+    <EmbeddedResource Include="Resources\Helm\metrics-server\templates\serviceAccount.yaml" />
+    <EmbeddedResource Include="Resources\Helm\metrics-server\values.yaml" />
     <EmbeddedResource Include="Resources\Helm\calico\Chart.yaml" />
     <EmbeddedResource Include="Resources\Helm\calico\crds\crds.yaml" />
     <EmbeddedResource Include="Resources\Helm\calico\README.md" />

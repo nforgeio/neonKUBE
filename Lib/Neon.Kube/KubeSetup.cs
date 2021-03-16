@@ -674,6 +674,7 @@ spec:
                 await CreateRootUserAsync(setupState, firstMaster, statusWriter);
                 await InstallCalicoCniAsync(setupState, firstMaster, statusWriter);
                 await InstallIstioAsync(setupState, firstMaster, statusWriter);
+                await InstallMetricsServerAsync(setupState, firstMaster, statusWriter);
             }
             else
             {
@@ -685,6 +686,7 @@ spec:
                 tasks.Add(CreateRootUserAsync(setupState, firstMaster, statusWriter));
                 tasks.Add(InstallCalicoCniAsync(setupState, firstMaster, statusWriter));
                 tasks.Add(InstallIstioAsync(setupState, firstMaster, statusWriter));
+                tasks.Add(InstallMetricsServerAsync(setupState, firstMaster, statusWriter));
 
                 await NeonHelper.WaitAllAsync(tasks);
             }
@@ -1381,6 +1383,44 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
         }
 
         /// <summary>
+        /// Installs the Kubernetes Metrics Server service.
+        /// </summary>
+        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="master">The master node where the operation will be performed.</param>
+        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        public static async Task InstallMetricsServerAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        {
+            await SyncContext.ClearAsync;
+
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
+
+            var cluster = master.Cluster;
+
+            await master.InvokeIdempotentAsync("setup/kubernetes-metrics-server",
+                async () =>
+                {
+                    KubeHelper.WriteStatus(statusWriter, "Setup", "Kubernetes Metrics Server");
+                    master.Status = "setup: kubernetes-metrics-server";
+
+                    var values = new List<KeyValuePair<string, object>>();
+
+                    values.Add(new KeyValuePair<string, object>("image.organization", KubeConst.NeonContainerRegistery(setupState)));
+
+                    int i = 0;
+                    foreach (var t in await GetTaintsAsync(setupState, NodeLabels.LabelMetrics, "true"))
+                    {
+                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
+                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", t.Effect));
+                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
+                        i++;
+                    }
+
+                    await master.InstallHelmChartAsync("metrics-server", releaseName: "metrics-server", @namespace: "kube-system", values: values, statusWriter: statusWriter);
+                });
+        }
+
+        /// <summary>
         /// Installs Istio.
         /// </summary>
         /// <param name="setupState">The setup controller state.</param>
@@ -1461,8 +1501,8 @@ spec:
             nodePort: 31922
         resources:
           requests:
-            cpu: 100m
-            memory: 128Mi
+            cpu: 10m
+            memory: 64Mi
           limits:
             cpu: 2000m
             memory: 1024Mi
@@ -1479,6 +1519,14 @@ spec:
         level: ""default:info""
       logAsJson: true
       imagePullPolicy: IfNotPresent
+      proxy:
+        resources:
+          limits:
+            cpu: 2000m
+            memory: 1024Mi
+          requests:
+            cpu: 10m
+            memory: 64Mi
       defaultNodeSelector: 
         neonkube.io/istio: true
       tracer:
@@ -2555,7 +2603,8 @@ $@"- name: StorageType
                         i++;
                     }
 
-                    if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2)
+                    if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2
+                        || cluster.Definition.Nodes.Count() == 1)
                     {
                         await CreateHostPathStorageClass(setupState, master, "neon-internal-prometheus");
 
@@ -2702,7 +2751,8 @@ $@"- name: StorageType
                         values.Add(new KeyValuePair<string, object>($"config.ingester.lifecycler.ring.kvstore.replication_factor", 3));
                     }
 
-                    if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2)
+                    if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2
+                        || cluster.Definition.Nodes.Count() == 1)
                     {
                         values.Add(new KeyValuePair<string, object>($"config.limits_config.reject_old_samples_max_age", "15m"));
                         values.Add(new KeyValuePair<string, object>($"resources.requests.memory", "64Mi"));
@@ -2744,7 +2794,8 @@ $@"- name: StorageType
                         values.Add(new KeyValuePair<string, object>($"config.ingester.lifecycler.ring.kvstore.replication_factor", 3));
                     }
 
-                    if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2)
+                    if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2
+                        || cluster.Definition.Nodes.Count() == 1)
                     {
                         values.Add(new KeyValuePair<string, object>($"resources.requests.memory", "64Mi"));
                         values.Add(new KeyValuePair<string, object>($"resources.limits.memory", "128Mi"));
@@ -2787,7 +2838,8 @@ $@"- name: StorageType
                             i++;
                         }
 
-                        if (master.Cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2)
+                        if (master.Cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2
+                            || master.Cluster.Definition.Nodes.Count() == 1)
                         {
                             values.Add(new KeyValuePair<string, object>($"prometheusEndpoint", "http://prometheus-operated:9090"));
                             values.Add(new KeyValuePair<string, object>($"resources.requests.memory", "64Mi"));
@@ -2852,7 +2904,8 @@ $@"- name: StorageType
                                 values.Add(new KeyValuePair<string, object>($"mode", "distributed"));
                             }
 
-                            if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2)
+                            if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2
+                                || cluster.Definition.Nodes.Count() == 1)
                             {
                                 values.Add(new KeyValuePair<string, object>($"resources.requests.memory", "64Mi"));
                                 values.Add(new KeyValuePair<string, object>($"resources.limits.memory", "128Mi"));
@@ -3238,7 +3291,8 @@ $@"- name: StorageType
             values.Add(new KeyValuePair<string, object>($"prometheus.image.organization", KubeConst.NeonContainerRegistery(setupState)));
             values.Add(new KeyValuePair<string, object>($"manager.image.organization", KubeConst.NeonContainerRegistery(setupState)));
 
-            if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2)
+            if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2
+                || cluster.Definition.Nodes.Count() == 1)
             {
                 await CreateHostPathStorageClass(setupState, master, "neon-internal-citus");
                 values.Add(new KeyValuePair<string, object>($"worker.resources.requests.memory", "64Mi"));
