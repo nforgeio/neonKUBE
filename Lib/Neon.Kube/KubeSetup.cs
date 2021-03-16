@@ -2935,7 +2935,7 @@ $@"- name: StorageType
                                 || cluster.Definition.Nodes.Count() == 1)
                             {
                                 values.Add(new KeyValuePair<string, object>($"resources.requests.memory", "64Mi"));
-                                values.Add(new KeyValuePair<string, object>($"resources.limits.memory", "128Mi"));
+                                values.Add(new KeyValuePair<string, object>($"resources.limits.memory", "256Mi"));
                             }
 
                             await master.InstallHelmChartAsync("minio", releaseName: "neon-system-minio", @namespace: "neon-system", values: values, statusWriter: statusWriter);
