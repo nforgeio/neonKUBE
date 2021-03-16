@@ -1416,7 +1416,16 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         i++;
                     }
 
-                    await master.InstallHelmChartAsync("metrics-server", releaseName: "metrics-server", @namespace: "kube-system", values: values, statusWriter: statusWriter);
+                    await master.InstallHelmChartAsync("metrics_server", releaseName: "metrics-server", @namespace: "kube-system", values: values, statusWriter: statusWriter);
+                });
+
+            await master.InvokeIdempotentAsync("setup/kubernetes-metrics-server-ready",
+                async () =>
+                {
+                    KubeHelper.WriteStatus(statusWriter, "Wait", "for Metrics Server");
+                    master.Status = "wait: for promtail";
+
+                    await WaitForDeploymentAsync(setupState, "kube-system", "metrics-server");
                 });
         }
 
@@ -2761,6 +2770,15 @@ $@"- name: StorageType
 
                     await master.InstallHelmChartAsync("loki", releaseName: "neon-logs-loki", @namespace: "monitoring", values: values, statusWriter: statusWriter);
                 });
+
+            await master.InvokeIdempotentAsync("setup/monitoring-loki-ready",
+                async () =>
+                {
+                    KubeHelper.WriteStatus(statusWriter, "Wait", "for Loki");
+                    master.Status = "wait: for loki";
+
+                    await WaitForDeploymentAsync(setupState, "monitoring", "neon-logs-loki");
+                });
         }
 
         /// <summary>
@@ -2802,6 +2820,15 @@ $@"- name: StorageType
                     }
 
                     await master.InstallHelmChartAsync("promtail", releaseName: "neon-logs-promtail", @namespace: "monitoring", values: values, statusWriter: statusWriter);
+                });
+
+            await master.InvokeIdempotentAsync("setup/monitoring-promtail-ready",
+                async () =>
+                {
+                    KubeHelper.WriteStatus(statusWriter, "Wait", "for Promtail");
+                    master.Status = "wait: for promtail";
+
+                    await WaitForDeploymentAsync(setupState, "monitoring", "neon-logs-promtail");
                 });
         }
 
