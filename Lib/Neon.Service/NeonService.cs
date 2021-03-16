@@ -759,11 +759,11 @@ namespace Neon.Service
 
                 if (status == NeonServiceStatus.Unhealthy)
                 {
-                    Log.LogWarn($"[{Name}] status is now: {status}");
+                    Log.LogWarn($"[{Name}] status changed to: {status}");
                 }
                 else
                 {
-                    Log.LogInfo($"[{Name}] status is now: {status}");
+                    Log.LogInfo($"[{Name}] status changed to: {status}");
                 }
 
                 if (statusFilePath != null)

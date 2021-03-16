@@ -1,0 +1,57 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Neon.Deployment</RootNamespace>
+    <Version>2.12.0-alpha</Version>
+    <Company>neonFORGE LLC</Company>
+    <Authors>neonFORGE Team</Authors>
+    <Description>CI/CD utility classes</Description>
+    <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
+    <Copyright>Copyright © 2005-2021 by neonFORGE LLC.  All rights reserved.</Copyright>
+    <AssemblyVersion>0.0.0.0</AssemblyVersion>
+    <FileVersion>0.0.0.0</FileVersion>
+    <Product>neonLIBRARY</Product>
+    <LangVersion>latest</LangVersion>
+    <IsPackable>true</IsPackable>
+    <PackageLicenseUrl></PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Deployment/README.md</PackageProjectUrl>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <Configurations>Debug;Release;CodeDoc</Configurations>
+    <PackageIcon>nuget-icon.png</PackageIcon>
+    <PackageTags>deployment</PackageTags>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CodeDoc|AnyCPU'">
+    <DocumentationFile>bin\CodeDoc\Neon.Deployment.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile>bin\Debug\Neon.Deployment.xml</DocumentationFile>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DocumentationFile>bin\Release\Neon.Deployment.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+    <None Include="..\nuget-icon.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
+
+</Project>

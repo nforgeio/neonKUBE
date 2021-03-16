@@ -110,6 +110,7 @@ SetVersion Neon.Cassandra           $libraryVersion
 SetVersion Neon.Common              $libraryVersion
 SetVersion Neon.Couchbase           $libraryVersion
 SetVersion Neon.Cryptography        $libraryVersion
+SetVersion Neon.Deployment          $libraryVersion
 SetVersion Neon.Docker              $libraryVersion
 SetVersion Neon.HyperV              $libraryVersion
 # SetVersion Neon.Kube                $neonkubeVersion
@@ -136,7 +137,6 @@ SetVersion Neon.XenServer           $libraryVersion
 SetVersion Neon.Xunit               $libraryVersion
 SetVersion Neon.Xunit.Cadence       $libraryVersion
 SetVersion Neon.Xunit.Couchbase     $libraryVersion
-SetVersion Neon.Kube.Xunit          $libraryVersion
 SetVersion Neon.Xunit.Temporal      $libraryVersion
 SetVersion Neon.Xunit.YugaByte      $libraryVersion
 SetVersion Neon.YugaByte            $libraryVersion
@@ -148,6 +148,7 @@ Publish Neon.Cassandra              $libraryVersion
 Publish Neon.Common                 $libraryVersion
 Publish Neon.Couchbase              $libraryVersion
 Publish Neon.Cryptography           $libraryVersion
+Publish Neon.Deployment             $libraryVersion
 Publish Neon.Docker                 $libraryVersion
 Publish Neon.HyperV                 $libraryVersion
 # Publish Neon.Kube                   $neonkubeVersion

@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <OutputType>Library</OutputType>
     <RootNamespace>Neon.Common</RootNamespace>
-    <Version>2.11.1</Version>
+    <Version>2.12.0</Version>
     <Company>neonFORGE LLC</Company>
     <Authors>neonFORGE Team</Authors>
     <Description>Useful classes used by other neonLIBRARY packages as well as neonFORGE applications</Description>

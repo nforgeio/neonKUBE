@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
@@ -269,10 +270,14 @@ namespace Neon.Common
         /// indefinitely.
         /// </param>
         /// <param name="process">
-        /// The optional <see cref="Process"/> instance to use to launch the process.
+        /// Optional existing <see cref="Process"/> instance used to launch the process.
         /// </param>
         /// <param name="workingDirectory">
-        /// The optional working directory to set while executing the program.
+        /// Optionally specifies the working directory for executing the program.
+        /// </param>
+        /// <param name="environmentVariables">
+        /// Optionally specifies the environment variables to be passed into the process.
+        /// The new process inherits the current processes variables when this is <c>null</c>.
         /// </param>
         /// <param name="input">
         /// Optionally specifies a <see cref="TextReader"/> with text to be sent 
@@ -288,9 +293,9 @@ namespace Neon.Common
         /// parameter will not be killed in this case.
         /// </note>
         /// </remarks>
-        public static int Execute(string path, object[] args, TimeSpan? timeout = null, Process process = null, string workingDirectory = null, TextReader input = null)
+        public static int Execute(string path, object[] args, TimeSpan? timeout = null, Process process = null, string workingDirectory = null, Dictionary<string, string> environmentVariables = null, TextReader input = null)
         {
-            return Execute(path, NormalizeExecArgs(args), timeout, process, workingDirectory, input);
+            return Execute(path, NormalizeExecArgs(args), timeout, process, workingDirectory, environmentVariables, input);
         }
 
         /// <summary>
@@ -303,10 +308,14 @@ namespace Neon.Common
         /// indefinitely.
         /// </param>
         /// <param name="process">
-        /// The optional <see cref="Process"/> instance to use to launch the process.
+        /// Optional existing <see cref="Process"/> instance used to launch the process.
         /// </param>
         /// <param name="workingDirectory">
-        /// The optional working directory to set while executing the program.
+        /// Optionally specifies the working directory for executing the program.
+        /// </param>
+        /// <param name="environmentVariables">
+        /// Optionally specifies the environment variables to be passed into the process.
+        /// The new process inherits the current processes variables when this is <c>null</c>.
         /// </param>
         /// <param name="input">
         /// Optionally specifies a <see cref="TextReader"/> with text to be sent 
@@ -322,7 +331,7 @@ namespace Neon.Common
         /// parameter will not be killed in this case.
         /// </note>
         /// </remarks>
-        public static int Execute(string path, string args, TimeSpan? timeout = null, Process process = null, string workingDirectory = null, TextReader input = null)
+        public static int Execute(string path, string args, TimeSpan? timeout = null, Process process = null, string workingDirectory = null, Dictionary<string, string> environmentVariables = null, TextReader input = null)
         {
             var processInfo   = new ProcessStartInfo(GetProgramPath(path), args ?? string.Empty);
             var killOnTimeout = process == null;
@@ -341,8 +350,18 @@ namespace Neon.Common
                 processInfo.RedirectStandardOutput = true;
                 processInfo.WorkingDirectory       = !string.IsNullOrEmpty(workingDirectory) ? workingDirectory : Environment.CurrentDirectory;
 
-                process.StartInfo                  = processInfo;
-                process.EnableRaisingEvents        = true;
+                if (environmentVariables != null)
+                {
+                    processInfo.EnvironmentVariables.Clear();
+
+                    foreach (var variable in environmentVariables)
+                    {
+                        processInfo.EnvironmentVariables.Add(variable.Key, variable.Value);
+                    }
+                }
+
+                process.StartInfo           = processInfo;
+                process.EnableRaisingEvents = true;
 
                 // Configure the sub-process STDOUT and STDERR streams to use
                 // code page 1252 which simply passes byte values through.
@@ -456,10 +475,14 @@ namespace Neon.Common
         /// indefinitely.
         /// </param>
         /// <param name="process">
-        /// The optional <see cref="Process"/> instance to use to launch the process.
+        /// Optional existing <see cref="Process"/> instance used to launch the process.Optional existing <see cref="Process"/> instance used to launch the process.
         /// </param>
         /// <param name="workingDirectory">
-        /// The optional working directory to set while executing the program.
+        /// Optionally specifies the working directory for executing the program.
+        /// </param>
+        /// <param name="environmentVariables">
+        /// Optionally specifies the environment variables to be passed into the process.
+        /// The new process inherits the current processes variables when this is <c>null</c>.
         /// </param>
         /// <param name="input">
         /// Optionally specifies a <see cref="TextReader"/> with text to be sent 
@@ -475,11 +498,11 @@ namespace Neon.Common
         /// parameter will not be killed in this case.
         /// </note>
         /// </remarks>
-        public static async Task<int> ExecuteAsync(string path, object[] args, TimeSpan? timeout = null, Process process = null, string workingDirectory = null, TextReader input = null)
+        public static async Task<int> ExecuteAsync(string path, object[] args, TimeSpan? timeout = null, Process process = null, string workingDirectory = null, Dictionary<string, string> environmentVariables = null, TextReader input = null)
         {
             await SyncContext.ClearAsync;
 
-            return await ExecuteAsync(path, NormalizeExecArgs(args), timeout, process, workingDirectory, input);
+            return await ExecuteAsync(path, NormalizeExecArgs(args), timeout, process, workingDirectory, environmentVariables, input);
         }
 
         /// <summary>
@@ -492,10 +515,14 @@ namespace Neon.Common
         /// indefinitely.
         /// </param>
         /// <param name="process">
-        /// The optional <see cref="Process"/> instance to use to launch the process.
+        /// Optional existing <see cref="Process"/> instance used to launch the process.
         /// </param>
         /// <param name="workingDirectory">
-        /// The optional working directory to set while executing the program.
+        /// Optionally specifies the working directory for executing the program.
+        /// </param>
+        /// <param name="environmentVariables">
+        /// Optionally specifies the environment variables to be passed into the process.
+        /// The new process inherits the current processes variables when this is <c>null</c>.
         /// </param>
         /// <param name="input">
         /// Optionally specifies a <see cref="TextReader"/> with text to be sent 
@@ -511,11 +538,11 @@ namespace Neon.Common
         /// parameter will not be killed in this case.
         /// </note>
         /// </remarks>
-        public static async Task<int> ExecuteAsync(string path, string args, TimeSpan? timeout = null, Process process = null, string workingDirectory = null, TextReader input = null)
+        public static async Task<int> ExecuteAsync(string path, string args, TimeSpan? timeout = null, Process process = null, string workingDirectory = null, Dictionary<string, string> environmentVariables = null, TextReader input = null)
         {
             await SyncContext.ClearAsync;
 
-            return await Task.Run(() => Execute(path, args, timeout, process, workingDirectory, input));
+            return await Task.Run(() => Execute(path, args, timeout, process, workingDirectory, environmentVariables, input));
         }
 
         /// <summary>
@@ -596,10 +623,14 @@ namespace Neon.Common
         /// indefinitely.
         /// </param>
         /// <param name="process">
-        /// The optional <see cref="Process"/> instance to use to launch the process.
+        /// Optional existing <see cref="Process"/> instance used to launch the process.
         /// </param>
         /// <param name="workingDirectory">
-        /// The optional working directory to set while executing the program.
+        /// Optionally specifies the working directory for executing the program.
+        /// </param>
+        /// <param name="environmentVariables">
+        /// Optionally specifies the environment variables to be passed into the process.
+        /// The new process inherits the current processes variables when this is <c>null</c>.
         /// </param>
         /// <param name="outputAction">Optional action that will be called when the process outputs some text.</param>
         /// <param name="errorAction">Optional action that will be called when the process outputs some error text.</param>
@@ -627,16 +658,17 @@ namespace Neon.Common
         /// </para>
         /// </remarks>
         public static ExecuteResponse ExecuteCapture(
-            string          path, 
-            object[]        args, 
-            TimeSpan?       timeout          = null,
-            Process         process          = null,
-            string          workingDirectory = null,
-            Action<string>  outputAction     = null,
-            Action<string>  errorAction      = null,
-            TextReader      input            = null)
+            string                      path, 
+            object[]                    args, 
+            TimeSpan?                   timeout              = null,
+            Process                     process              = null,
+            string                      workingDirectory     = null,
+            Dictionary<string, string>  environmentVariables = null,
+            Action<string>              outputAction         = null,
+            Action<string>              errorAction          = null,
+            TextReader                  input                = null)
         {
-            return ExecuteCapture(path, NormalizeExecArgs(args), timeout, process, workingDirectory, outputAction, errorAction, input);
+            return ExecuteCapture(path, NormalizeExecArgs(args), timeout, process, workingDirectory, environmentVariables, outputAction, errorAction, input);
         }
 
         /// <summary>
@@ -650,10 +682,14 @@ namespace Neon.Common
         /// indefinitely.
         /// </param>
         /// <param name="process">
-        /// The optional <see cref="Process"/> instance to use to launch the process.
+        /// Optional existing <see cref="Process"/> instance used to launch the process.
         /// </param>
         /// <param name="workingDirectory">
-        /// The optional working directory to set while executing the program.
+        /// Optionally specifies the working directory for executing the program.
+        /// </param>
+        /// <param name="environmentVariables">
+        /// Optionally specifies the environment variables to be passed into the process.
+        /// The new process inherits the current processes variables when this is <c>null</c>.
         /// </param>
         /// <param name="outputAction">Optional action that will be called when the process outputs some text.</param>
         /// <param name="errorAction">Optional action that will be called when the process outputs some error text.</param>
@@ -681,15 +717,16 @@ namespace Neon.Common
         /// </para>
         /// </remarks>
         public static ExecuteResponse ExecuteCapture(
-            string          path, 
-            string          args, 
-            TimeSpan?       timeout          = null,
-            Process         process          = null,
-            string          workingDirectory = null,
-            Action<string>  outputAction     = null,
-            Action<string>  errorAction      = null,
-            TextReader      input            = null)
-        {
+            string                      path, 
+            string                      args, 
+            TimeSpan?                   timeout              = null,
+            Process                     process              = null,
+            string                      workingDirectory     = null,
+            Dictionary<string, string>  environmentVariables = null,
+            Action<string>              outputAction         = null,
+            Action<string>              errorAction          = null,
+            TextReader                  input                = null)
+        {       
             var processInfo     = new ProcessStartInfo(GetProgramPath(path), args ?? string.Empty);
             var externalProcess = process != null;
             var redirector      = new ProcessStreamRedirector()
@@ -710,12 +747,22 @@ namespace Neon.Common
                 processInfo.RedirectStandardError  = true;
                 processInfo.RedirectStandardOutput = true;
                 processInfo.CreateNoWindow         = true;
-                processInfo.WorkingDirectory       = !string.IsNullOrEmpty(workingDirectory) ? workingDirectory : Environment.CurrentDirectory; ;
+                processInfo.WorkingDirectory       = !string.IsNullOrEmpty(workingDirectory) ? workingDirectory : Environment.CurrentDirectory;
 
-                process.StartInfo                  = processInfo;
-                process.OutputDataReceived        += new DataReceivedEventHandler(redirector.OnOutput);
-                process.ErrorDataReceived         += new DataReceivedEventHandler(redirector.OnError);
-                process.EnableRaisingEvents        = true;
+                if (environmentVariables != null)
+                {
+                    processInfo.EnvironmentVariables.Clear();
+
+                    foreach (var variable in environmentVariables)
+                    {
+                        processInfo.EnvironmentVariables.Add(variable.Key, variable.Value);
+                    }
+                }
+
+                process.StartInfo           = processInfo;
+                process.OutputDataReceived += new DataReceivedEventHandler(redirector.OnOutput);
+                process.ErrorDataReceived  += new DataReceivedEventHandler(redirector.OnError);
+                process.EnableRaisingEvents = true;
 
                 process.Start();
                 process.BeginOutputReadLine();
@@ -790,10 +837,14 @@ namespace Neon.Common
         /// indefinitely.
         /// </param>
         /// <param name="process">
-        /// The optional <see cref="Process"/> instance to use to launch the process.
+        /// Optional existing <see cref="Process"/> instance used to launch the process.
         /// </param>
         /// <param name="workingDirectory">
-        /// The optional working directory to set while executing the program.
+        /// Optionally specifies the working directory for executing the program.
+        /// </param>
+        /// <param name="environmentVariables">
+        /// Optionally specifies the environment variables to be passed into the process.
+        /// The new process inherits the current processes variables when this is <c>null</c>.
         /// </param>
         /// <param name="input">
         /// Optionally specifies a <see cref="TextReader"/> with text to be sent 
@@ -813,16 +864,17 @@ namespace Neon.Common
         /// </note>
         /// </remarks>
         public static async Task<ExecuteResponse> ExecuteCaptureAsync(
-            string      path, 
-            object[]    args,
-            string      workingDirectory = null,
-            TimeSpan?   timeout          = null, 
-            Process     process          = null,
-            TextReader  input            = null)
+            string                      path, 
+            object[]                    args,
+            string                      workingDirectory     = null,
+            Dictionary<string, string>  environmentVariables = null,
+            TimeSpan?                   timeout              = null, 
+            Process                     process              = null,
+            TextReader                  input                = null)
         {
             await SyncContext.ClearAsync;
 
-            return await ExecuteCaptureAsync(path, NormalizeExecArgs(args), timeout, process, workingDirectory, input);
+            return await ExecuteCaptureAsync(path, NormalizeExecArgs(args), timeout, process, workingDirectory, environmentVariables, input);
         }
 
         /// <summary>
@@ -836,10 +888,14 @@ namespace Neon.Common
         /// indefinitely.
         /// </param>
         /// <param name="process">
-        /// The optional <see cref="Process"/> instance to use to launch the process.
+        /// Optional existing <see cref="Process"/> instance used to launch the process.
         /// </param>
         /// <param name="workingDirectory">
-        /// The optional working directory to set while executing the program.
+        /// Optionally specifies the working directory for executing the program.
+        /// </param>
+        /// <param name="environmentVariables">
+        /// Optionally specifies the environment variables to be passed into the process.
+        /// The new process inherits the current processes variables when this is <c>null</c>.
         /// </param>
         /// <param name="input">
         /// Optionally specifies a <see cref="TextReader"/> with text to be sent 
@@ -859,16 +915,17 @@ namespace Neon.Common
         /// </note>
         /// </remarks>
         public static async Task<ExecuteResponse> ExecuteCaptureAsync(
-            string      path, 
-            string      args, 
-            TimeSpan?   timeout          = null, 
-            Process     process          = null, 
-            string      workingDirectory = null,
-            TextReader  input            = null)
+            string                      path, 
+            string                      args, 
+            TimeSpan?                   timeout              = null, 
+            Process                     process              = null, 
+            string                      workingDirectory     = null,
+            Dictionary<string, string>  environmentVariables = null,
+            TextReader                  input                = null)
         {
             await SyncContext.ClearAsync;
 
-            return await Task.Run(() => ExecuteCapture(path, args, timeout, process, workingDirectory, input: input));
+            return await Task.Run(() => ExecuteCapture(path, args, timeout, process, workingDirectory, environmentVariables, input: input));
         }
 
 #if NETSTANDARD2_0
