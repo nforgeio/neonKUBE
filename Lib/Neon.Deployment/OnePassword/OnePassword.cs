@@ -30,7 +30,7 @@ namespace Neon.Deployment
     /// <note>
     /// This class is not entirely general purpose; it's currently oriented towards supporting CI/CD
     /// for neonFORGE maintainers who have configured their workstations by installing both the
-    /// 1Password application and CLI with the client having been manually signedin for the first
+    /// 1Password application and CLI with the client having been manually signed-in for the first
     /// time and the <b>NC_USER</b> environment variable set to the 1Password shortname used to sign-in.
     /// This also assumes that account's vaults configured a a specific way.
     /// </note>
@@ -122,7 +122,7 @@ namespace Neon.Deployment
         /// or <see cref="GetValue(string, string)"/>.
         /// </para>
         /// <para>
-        /// This script requires the following environment variables to be defined:
+        /// This script uses the following environment variables:
         /// </para>
         /// <list type="bullet">
         ///     <item><c>NC_OP_DOMAIN</c></item>

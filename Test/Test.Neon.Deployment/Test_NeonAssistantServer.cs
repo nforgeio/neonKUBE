@@ -45,8 +45,50 @@ namespace TestDeployment
         {
             server.GetMasterPasswordHandler = () => NeonAssistantHandlerResult.Create("master");
             server.GetProfileValueHandler   = name => NeonAssistantHandlerResult.Create($"{name}-profile");
-            server.GetSecretPasswordHandler = (name, vault) => NeonAssistantHandlerResult.Create(vault == null ? $"{name}-password" : $"{name}-{vault}-password");
-            server.GetSecretValueHandler    = (name, vault) => NeonAssistantHandlerResult.Create(vault == null ? $"{name}-secret" : $"{name}-{vault}-secret");
+
+            server.GetSecretPasswordHandler = 
+                (name, vault, masterPassword) =>
+                {
+                    var sb = new StringBuilder();
+
+                    sb.Append(name);
+
+                    if (vault != null)
+                    {
+                        sb.AppendWithSeparator(vault, "-");
+                    }
+
+                    if (masterPassword != null)
+                    {
+                        sb.AppendWithSeparator(masterPassword, "-");
+                    }
+
+                    sb.Append("-password");
+
+                    return NeonAssistantHandlerResult.Create(sb.ToString());
+                };
+
+            server.GetSecretValueHandler =
+                (name, vault, masterPassword) =>
+                {
+                    var sb = new StringBuilder();
+
+                    sb.Append(name);
+
+                    if (vault != null)
+                    {
+                        sb.AppendWithSeparator(vault, "-");
+                    }
+
+                    if (masterPassword != null)
+                    {
+                        sb.AppendWithSeparator(masterPassword, "-");
+                    }
+
+                    sb.Append("-secret");
+
+                    return NeonAssistantHandlerResult.Create(sb.ToString());
+                };
         }
 
         [Fact]
@@ -132,6 +174,21 @@ namespace TestDeployment
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonDeployment)]
+        public void GetSecretPassword_UsingMasterPassword()
+        {
+            var client = new NeonAssistantClient();
+
+            using (var server = new NeonAssistantServer())
+            {
+                SetDefaultHandlers(server);
+                server.Start();
+
+                Assert.Equal("test-vault-master-password", client.GetSecretPassword("test", "vault", "master"));
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonDeployment)]
         public void GetSecretPassword_Exception()
         {
             var client = new NeonAssistantClient();
@@ -140,7 +197,7 @@ namespace TestDeployment
             {
                 SetDefaultHandlers(server);
 
-                server.GetSecretPasswordHandler = (name, value) => throw new Exception("test exception");
+                server.GetSecretPasswordHandler = (name, value, masterpassword) => throw new Exception("test exception");
 
                 server.Start();
 
@@ -165,6 +222,21 @@ namespace TestDeployment
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonDeployment)]
+        public void GetSecretValue_UsingMasterPassword()
+        {
+            var client = new NeonAssistantClient();
+
+            using (var server = new NeonAssistantServer())
+            {
+                SetDefaultHandlers(server);
+                server.Start();
+
+                Assert.Equal("test-vault-master-secret", client.GetSecretValue("test", "vault", "master"));
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonDeployment)]
         public void GetSecretValue_Exception()
         {
             var client = new NeonAssistantClient();
@@ -173,7 +245,7 @@ namespace TestDeployment
             {
                 SetDefaultHandlers(server);
 
-                server.GetSecretValueHandler = (name, value) => throw new Exception("test exception");
+                server.GetSecretValueHandler = (name, value, masterpassword) => throw new Exception("test exception");
 
                 server.Start();
 

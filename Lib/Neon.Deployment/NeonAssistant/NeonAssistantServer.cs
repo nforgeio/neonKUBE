@@ -85,22 +85,32 @@ namespace Neon.Deployment
     /// <item>
     ///     <term><b>GET-SECRET-PASSWORD</b></term>
     ///     <description>
-    ///     <para><c>(name, [vault])</c></para>
+    ///     <para><c>(name, [vault], [masterpassword])</c></para>
     ///     <para>
-    ///     This requests a password from 1Password by <c>NAME</c> and <c>VAULT</c>, which
-    ///     is optional and default's to the user name as defined by the <b>NC_USER</b>
-    ///     environment variable.  The password is returned as the response.
+    ///     This requests a password from 1Password by <b>name</b> and <b>vault</b>, which
+    ///     is optional and defaults to the user name as defined by the <b>userVault</b>
+    ///     neonASSISTANT setting.  The password is returned as the response.
+    ///     </para>
+    ///     <para>
+    ///     <b>masterpassword</b> is optional.  This is passed in circumstances where the
+    ///     caller already knows the master password, such as for fully automated
+    ///     CI/CD operations.
     ///     </para>
     ///     </description>
     /// </item>
     /// <item>
     ///     <term><b>GET-SECRET-VALUE</b></term>
     ///     <description>
-    ///     <para><c>(name, [vault])</c></para>
+    ///     <para><c>(name, [vault], [masterpassword])</c></para>
     ///     <para>
-    ///     This requests a secret value from 1Password by <c>NAME</c> and <c>VAULT</c>, which
-    ///     is optional and default's to the user name as defined by the <b>NC_USER</b>
-    ///     environment variable.  The value is returned as the response.
+    ///     This requests a secret value from 1Password by <b>name</b> and <b>vault</b>, which
+    ///     is optional and defaults to the user name as defined by the <b>userVault</b>
+    ///     neonASSISTANT saetting.  The value is returned as the response.
+    ///     </para>
+    ///     <para>
+    ///     <b>masterpassword</b> is optional.  This is passed in circumstances where the
+    ///     caller already knows the master password, such as for fully automated
+    ///     CI/CD operations.
     ///     </para>
     ///     </description>
     /// </item>
@@ -199,7 +209,7 @@ namespace Neon.Deployment
 
         /// <summary>
         /// <para>
-        /// Callback to retrieve a profile value.  The parameter is the profile value name.
+        /// Callback to retrieve a profile value.  The parameters is the profile value name.
         /// </para>
         /// <note>
         /// This must be initalized before calling <see cref="Start()"/>.
@@ -210,24 +220,24 @@ namespace Neon.Deployment
         /// <summary>
         /// <para>
         /// Callback to retrieve a secret password.  The parameters are the secret name
-        /// and the optional vault.
+        /// optional vault and master password.
         /// </para>
         /// <note>
         /// This must be initalized before calling <see cref="Start()"/>.
         /// </note>
         /// </summary>
-        public Func<string, string, NeonAssistantHandlerResult> GetSecretPasswordHandler { get; set; }
+        public Func<string, string, string, NeonAssistantHandlerResult> GetSecretPasswordHandler { get; set; }
 
         /// <summary>
         /// <para>
         /// Callback to retrieve a secret value.  The parameters are the secret name
-        /// and the optional vault.
+        /// optional vault, and master password.
         /// </para>
         /// <note>
         /// This must be initalized before calling <see cref="Start()"/>.
         /// </note>
         /// </summary>
-        public Func<string, string, NeonAssistantHandlerResult> GetSecretValueHandler { get; set; }
+        public Func<string, string, string, NeonAssistantHandlerResult> GetSecretValueHandler { get; set; }
 
         /// <summary>
         /// Handles incoming client connections on a background thread.
@@ -273,6 +283,7 @@ namespace Neon.Deployment
 
                         request.Args.TryGetValue("name", out var name);
                         request.Args.TryGetValue("vault", out var vault);
+                        request.Args.TryGetValue("masterpassword", out var masterPassword);
 
                         try
                         {
@@ -302,7 +313,7 @@ namespace Neon.Deployment
                                         break;
                                     }
 
-                                    handlerResult = GetSecretPasswordHandler(name, vault);
+                                    handlerResult = GetSecretPasswordHandler(name, vault, masterPassword);
                                     break;
 
                                 case "GET-SECRET-VALUE":
@@ -313,7 +324,7 @@ namespace Neon.Deployment
                                         break;
                                     }
 
-                                    handlerResult = GetSecretValueHandler(name, vault);
+                                    handlerResult = GetSecretValueHandler(name, vault, masterPassword);
                                     break;
 
                                 default:

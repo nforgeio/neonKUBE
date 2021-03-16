@@ -80,7 +80,7 @@ namespace Neon.Deployment
         }
 
         /// <inheritdoc/>
-        public string GetSecretPassword(string name, string vault = null)
+        public string GetSecretPassword(string name, string vault = null, string masterPassword = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
@@ -93,11 +93,16 @@ namespace Neon.Deployment
                 args.Add("vault", vault);
             }
 
+            if (!string.IsNullOrEmpty(masterPassword))
+            {
+                args.Add("masterpassword", masterPassword);
+            }
+
             return Call(NeonAssistantRequest.Create("GET-SECRET-PASSWORD", args)).Value;
         }
 
         /// <inheritdoc/>
-        public string GetSecretValue(string name, string vault = null)
+        public string GetSecretValue(string name, string vault = null, string masterPassword = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
@@ -108,6 +113,11 @@ namespace Neon.Deployment
             if (!string.IsNullOrEmpty(vault))
             {
                 args.Add("vault", vault);
+            }
+
+            if (!string.IsNullOrEmpty(masterPassword))
+            {
+                args.Add("masterpassword", masterPassword);
             }
 
             return Call(NeonAssistantRequest.Create("GET-SECRET-VALUE", args)).Value;

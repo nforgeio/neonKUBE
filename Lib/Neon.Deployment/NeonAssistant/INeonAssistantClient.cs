@@ -39,8 +39,8 @@ namespace Neon.Deployment
     /// </para>
     /// <para>
     /// Use the <see cref="Call(NeonAssistantRequest)"/> method to submit a generic request
-    /// to the assistant and the <see cref="GetMasterPassword()"/>, <see cref="GetSecretPassword(string, string)"/>,
-    /// <see cref="GetSecretValue(string, string)"/>, and <see cref="GetProfileValue(string)"/> methods
+    /// to the assistant and the <see cref="GetMasterPassword()"/>, <see cref="GetSecretPassword(string, string, string)"/>,
+    /// <see cref="GetSecretValue(string, string, string)"/>, and <see cref="GetProfileValue(string)"/> methods
     /// to perform common operations.
     /// </para>
     /// <note>
@@ -72,18 +72,20 @@ namespace Neon.Deployment
         /// </summary>
         /// <param name="name">Specifies the secret name.</param>
         /// <param name="vault">Optionally specifies the 1Password vault.  This defaults to the developer's neonFORGE user name as specified by the <c>NC_USER</c> environment variable.</param>
+        /// <param name="masterPassword">Optionally specifies the master 1Password when it is already known.</param>
         /// <returns>The password value.</returns>
         /// <exception cref="NeonAssistantException">Thrown if the neonASSISTANT returns an error.</exception>
-        string GetSecretPassword(string name, string vault = null);
+        string GetSecretPassword(string name, string vault = null, string masterPassword = null);
 
         /// <summary>
         ///  Requests the value of a secret value from 1Password via the assistant.
         /// </summary>
         /// <param name="name">Specifies the secret name.</param>
         /// <param name="vault">Optionally specifies the 1Password vault.  This defaults to the developer's neonFORGE user name as specified by the <c>NC_USER</c> environment variable.</param>
+        /// <param name="masterPassword">Optionally specifies the master 1Password when it is already known.</param>
         /// <returns>The password value.</returns>
         /// <exception cref="NeonAssistantException">Thrown if the neonASSISTANT returns an error.</exception>
-        string GetSecretValue(string name, string vault = null);
+        string GetSecretValue(string name, string vault = null, string masterPassword = null);
 
         /// <summary>
         /// Requests a profile value from the assistant.
