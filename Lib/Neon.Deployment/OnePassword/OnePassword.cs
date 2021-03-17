@@ -253,7 +253,7 @@ retry:          var response = NeonHelper.ExecuteCapture("op",
 
                         // Obtain a fresh session token and retry the operation.
 
-                        Signin(account, defaultVault, masterPassword);
+                        Signin(account, masterPassword, defaultVault);
 
                         retrying = true;
                         goto retry;
@@ -310,7 +310,7 @@ retry:          var response = NeonHelper.ExecuteCapture("op",
 
                         // Obtain a fresh session token and retry the operation.
 
-                        Signin(account, defaultVault, masterPassword);
+                        Signin(account, masterPassword, defaultVault);
 
                         retrying = true;
                         goto retry;
