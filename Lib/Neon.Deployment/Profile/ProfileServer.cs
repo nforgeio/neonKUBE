@@ -198,6 +198,13 @@ namespace Neon.Deployment
         }
 
         /// <summary>
+        /// Optional callback used to determine whether the profile server implementation
+        /// is ready for requests.  The handler returns <c>null</c> when ready or the
+        /// a <see cref="ProfileHandlerResult"/> error to be returned to the caller.
+        /// </summary>
+        public Func<ProfileHandlerResult> GetIsReady { get; set; }
+
+        /// <summary>
         /// <para>
         /// Callback to retrieve the master 1Password.
         /// </para>
@@ -264,7 +271,6 @@ namespace Neon.Deployment
                     {
                         var requestLine   = reader.ReadLine();
                         var request       = (ProfileRequest)null;
-                        var response      = (ProfileResponse)null;
                         var handlerResult = (ProfileHandlerResult)null;
 
                         try
@@ -279,6 +285,19 @@ namespace Neon.Deployment
                             writer.WriteLine(ProfileResponse.CreateError("Malformed request"));
                             writer.Flush();
                             return;
+                        }
+
+                        if (GetIsReady != null)
+                        {
+                            handlerResult = GetIsReady();
+
+                            if (handlerResult != null)
+                            {
+                                writer.WriteLine(handlerResult.ToResponse());
+                                writer.Flush();
+                            }
+
+                            continue;
                         }
 
                         request.Args.TryGetValue("name", out var name);
@@ -338,16 +357,7 @@ namespace Neon.Deployment
                             handlerResult = ProfileHandlerResult.CreateError(NeonHelper.ExceptionError(e));
                         }
 
-                        if (handlerResult.Error != null)
-                        {
-                            response = ProfileResponse.CreateError(handlerResult.Error); 
-                        }
-                        else
-                        {
-                            response = ProfileResponse.Create(handlerResult.Value);
-                        }
-
-                        writer.WriteLine(response);
+                        writer.WriteLine(handlerResult.ToResponse());
                         writer.Flush();
                     }
                 }

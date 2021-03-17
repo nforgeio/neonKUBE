@@ -89,5 +89,21 @@ namespace Neon.Deployment
         /// Specifies an error message when not <c>null</c>.
         /// </summary>
         public string Error { get; private set; }
+
+        /// <summary>
+        /// Convertes the handler response into a <see cref="ProfileResponse"/>.
+        /// </summary>
+        /// <returns>The <see cref="ProfileResponse"/>.</returns>
+        internal ProfileResponse ToResponse()
+        {
+            if (Error != null)
+            {
+                return ProfileResponse.CreateError(Error);
+            }
+            else
+            {
+                return ProfileResponse.Create(Value);
+            }
+        }
     }
 }

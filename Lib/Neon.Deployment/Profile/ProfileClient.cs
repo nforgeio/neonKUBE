@@ -32,6 +32,8 @@ namespace Neon.Deployment
     /// <inheritdoc/>
     public class ProfileClient : IProfileClient
     {
+        private static readonly TimeSpan    connectTimeout = TimeSpan.FromSeconds(2);
+
         /// <inheritdoc/>
         public IProfileResponse Call(IProfileRequest request)
         {
@@ -39,7 +41,7 @@ namespace Neon.Deployment
 
             using (var pipe = new NamedPipeClientStream(".", DeploymentHelper.NeonProfileServicePipe, PipeDirection.InOut))
             {
-                pipe.Connect(30000);
+                pipe.Connect((int)connectTimeout.TotalMilliseconds);
 
                 using (var reader = new StreamReader(pipe))
                 {
