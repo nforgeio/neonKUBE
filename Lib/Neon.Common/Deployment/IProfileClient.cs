@@ -75,7 +75,7 @@ namespace Neon.Deployment
     /// </summary>
     /// <remarks>
     /// <para>
-    /// The <see cref="IProfileClient"/> is used to submit requests to the neonASSISTANT
+    /// The <see cref="IProfileClient"/> is used to submit requests to the Neon Assistant
     /// application running on the local workstation including retrieving the user's 
     /// master 1Password, secrets, as well as user profile values.
     /// </para>
@@ -95,18 +95,18 @@ namespace Neon.Deployment
     public interface IProfileClient
     {
         /// <summary>
-        /// Submits a request to the neonASSISTANT and returns the response.
+        /// Submits a request to the profile server and returns the response.
         /// </summary>
         /// <param name="request">The request.</param>
         /// <returns>The response.</returns>
-        /// <exception cref="ProfileException">Thrown if the neonASSISTANT returns an error.</exception>
+        /// <exception cref="ProfileException">Thrown if the profile server returns an error.</exception>
         IProfileResponse Call(IProfileRequest request);
 
         /// <summary>
         /// Requests the current developer's master 1password from the assistant.
         /// </summary>
         /// <returns>The master password.</returns>
-        /// <exception cref="ProfileException">Thrown if the neonASSISTANT returns an error.</exception>
+        /// <exception cref="ProfileException">Thrown if the profile server returns an error.</exception>
         string GetMasterPassword();
 
         /// <summary>
@@ -116,7 +116,7 @@ namespace Neon.Deployment
         /// <param name="vault">Optionally specifies the 1Password vault.  This defaults to the developer's neonFORGE user name as specified by the <c>NC_USER</c> environment variable.</param>
         /// <param name="masterPassword">Optionally specifies the master 1Password when it is already known.</param>
         /// <returns>The password value.</returns>
-        /// <exception cref="ProfileException">Thrown if the neonASSISTANT returns an error.</exception>
+        /// <exception cref="ProfileException">Thrown if the profile server returns an error.</exception>
         string GetSecretPassword(string name, string vault = null, string masterPassword = null);
 
         /// <summary>
@@ -126,7 +126,7 @@ namespace Neon.Deployment
         /// <param name="vault">Optionally specifies the 1Password vault.  This defaults to the developer's neonFORGE user name as specified by the <c>NC_USER</c> environment variable.</param>
         /// <param name="masterPassword">Optionally specifies the master 1Password when it is already known.</param>
         /// <returns>The password value.</returns>
-        /// <exception cref="ProfileException">Thrown if the neonASSISTANT returns an error.</exception>
+        /// <exception cref="ProfileException">Thrown if the profile server returns an error.</exception>
         string GetSecretValue(string name, string vault = null, string masterPassword = null);
 
         /// <summary>
@@ -134,7 +134,7 @@ namespace Neon.Deployment
         /// </summary>
         /// <param name="name">Identifies the profile value.</param>
         /// <returns>The password value.</returns>
-        /// <exception cref="ProfileException">Thrown if the neonASSISTANT returns an error.</exception>
+        /// <exception cref="ProfileException">Thrown if the profile server returns an error.</exception>
         string GetProfileValue(string name);
     }
 }

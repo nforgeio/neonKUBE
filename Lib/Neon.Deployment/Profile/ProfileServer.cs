@@ -60,13 +60,14 @@ namespace Neon.Deployment
     /// <b>ERROR: MESSAGE</b>
     /// </example>
     /// <para>
-    /// where the "OK:" prefix indicates that the operation succeeded.  Some operations
-    /// like password or value lookups simply return the request result as the string
-    /// after the prefix.  Other (future) operations may return a JSON result.
+    /// where the "OK:" and "OK-JSON:" prefixes indicate that the operation succeeded.
+    /// Some operations like password or value lookups simply return the request result
+    /// as the string after the prefix.  Future) operations may return a JSON result.
     /// </para>
     /// <para>
-    /// The <b>ERROR:</b> prefix indicates an error occured.  The response may include
-    /// an error message describing what happened.
+    /// The <b>ERROR[STATUS]:</b> prefix indicates an error occured.  <b>STATUS</b> identifies
+    /// the specific error and the response will typically include an message describing
+    /// what happened.  The supported status codes are defined by <see cref="ProfileStatus"/>.
     /// </para>
     /// <para>
     /// Here are the supported commands:
@@ -89,7 +90,7 @@ namespace Neon.Deployment
     ///     <para>
     ///     This requests a password from 1Password by <b>name</b> and <b>vault</b>, which
     ///     is optional and defaults to the user name as defined by the <b>userVault</b>
-    ///     neonASSISTANT setting.  The password is returned as the response.
+    ///     Neon Assistant setting.  The password is returned as the response.
     ///     </para>
     ///     <para>
     ///     <b>masterpassword</b> is optional.  This is passed in circumstances where the
@@ -105,7 +106,7 @@ namespace Neon.Deployment
     ///     <para>
     ///     This requests a secret value from 1Password by <b>name</b> and <b>vault</b>, which
     ///     is optional and defaults to the user name as defined by the <b>userVault</b>
-    ///     neonASSISTANT setting.  The value is returned as the response.
+    ///     Neon Assistant setting.  The value is returned as the response.
     ///     </para>
     ///     <para>
     ///     <b>masterpassword</b> is optional.  This is passed in circumstances where the
@@ -144,7 +145,7 @@ namespace Neon.Deployment
         /// <exception cref="InvalidOperationException">Thrown if any of the handlers are not initialized.</exception>
         public void Start()
         {
-            // Ensure that all of thge handlers are initialized.
+            // Ensure that all of the handlers are initialized.
 
             if (GetMasterPasswordHandler == null)
             {
@@ -170,7 +171,7 @@ namespace Neon.Deployment
             // single client connection at a time and only allow the processes
             // belonging to the current user to connect.
 
-            serverPipe = new NamedPipeServerStream("neon-assistant", PipeDirection.InOut, maxNumberOfServerInstances: 1, PipeTransmissionMode.Message, PipeOptions.CurrentUserOnly);
+            serverPipe = new NamedPipeServerStream(DeploymentHelper.NeonProfileServicePipe, PipeDirection.InOut, maxNumberOfServerInstances: 1, PipeTransmissionMode.Message, PipeOptions.CurrentUserOnly);
 
             // Start the listening thread.
 
@@ -282,7 +283,7 @@ namespace Neon.Deployment
                             // Report an malformed request to the client and then continue
                             // listening for the next request.
 
-                            writer.WriteLine(ProfileResponse.CreateError("Malformed request"));
+                            writer.WriteLine(ProfileResponse.CreateError(ProfileStatus.BadRequest, "Malformed request"));
                             writer.Flush();
                             return;
                         }
@@ -317,7 +318,7 @@ namespace Neon.Deployment
 
                                     if (name == null)
                                     {
-                                        handlerResult = ProfileHandlerResult.CreateError($"GET-PROFILE-VALUE: [name] argument is required.");
+                                        handlerResult = ProfileHandlerResult.CreateError(ProfileStatus.MissingArg, $"GET-PROFILE-VALUE: [name] argument is required.");
                                         break;
                                     }
 
@@ -328,7 +329,7 @@ namespace Neon.Deployment
 
                                     if (name == null)
                                     {
-                                        handlerResult = ProfileHandlerResult.CreateError($"GET-SECRET-PASSWORD: [name] argument is required.");
+                                        handlerResult = ProfileHandlerResult.CreateError(ProfileStatus.MissingArg,$"GET-SECRET-PASSWORD: [name] argument is required.");
                                         break;
                                     }
 
@@ -339,7 +340,7 @@ namespace Neon.Deployment
 
                                     if (name == null)
                                     {
-                                        handlerResult = ProfileHandlerResult.CreateError($"GET-SECRET-VALUE: [name] argument is required.");
+                                        handlerResult = ProfileHandlerResult.CreateError(ProfileStatus.MissingArg,$"GET-SECRET-VALUE: [name] argument is required.");
                                         break;
                                     }
 
@@ -348,13 +349,13 @@ namespace Neon.Deployment
 
                                 default:
 
-                                    handlerResult = ProfileHandlerResult.CreateError($"Unexpected command: {request.Command}");
+                                    handlerResult = ProfileHandlerResult.CreateError(ProfileStatus.BadCommand, $"Unexpected command: {request.Command}");
                                     break;
                             }
                         }
                         catch (Exception e)
                         {
-                            handlerResult = ProfileHandlerResult.CreateError(NeonHelper.ExceptionError(e));
+                            handlerResult = ProfileHandlerResult.CreateError(ProfileStatus.BadCommand, NeonHelper.ExceptionError(e));
                         }
 
                         writer.WriteLine(handlerResult.ToResponse());

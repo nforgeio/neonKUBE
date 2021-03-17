@@ -136,6 +136,7 @@ namespace TestDeployment
             var response = ProfileResponse.Create(new JObject());
 
             Assert.True(response.Success);
+            Assert.Equal(ProfileStatus.OK, response.Status);
             Assert.Null(response.Value);
             Assert.NotNull(response.JObject);
 
@@ -152,6 +153,7 @@ namespace TestDeployment
             response = ProfileResponse.Create(jObj);
 
             Assert.True(response.Success);
+            Assert.Equal(ProfileStatus.OK, response.Status);
             Assert.Null(response.Value);
             Assert.NotNull(response.JObject);
 
@@ -166,18 +168,23 @@ namespace TestDeployment
         {
             //---------------------------------------------
 
-            var response = ProfileResponse.CreateError("ERROR MESSAGE");
+            var response = ProfileResponse.CreateError(ProfileStatus.Connect, "ERROR MESSAGE");
 
             Assert.False(response.Success);
+            Assert.Equal(ProfileStatus.Connect, response.Status);
             Assert.Null(response.Value);
             Assert.Null(response.JObject);
             Assert.Equal("ERROR MESSAGE", response.Error);
-            Assert.Equal("ERROR: ERROR MESSAGE", response.ToString());
+            Assert.Equal($"ERROR[{ProfileStatus.Connect}]: ERROR MESSAGE", response.ToString());
 
             //---------------------------------------------
 
-            Assert.Throws<ArgumentNullException>(() => ProfileResponse.CreateError(null));
-            Assert.Throws<ArgumentNullException>(() => ProfileResponse.CreateError(string.Empty));
+            Assert.Throws<ArgumentNullException>(() => ProfileResponse.CreateError(null, null));
+            Assert.Throws<ArgumentNullException>(() => ProfileResponse.CreateError(string.Empty, string.Empty));
+            Assert.Throws<ArgumentNullException>(() => ProfileResponse.CreateError(ProfileStatus.Connect, null));
+            Assert.Throws<ArgumentNullException>(() => ProfileResponse.CreateError(null, "Error"));
+            Assert.Throws<ArgumentNullException>(() => ProfileResponse.CreateError(ProfileStatus.Connect, string.Empty));
+            Assert.Throws<ArgumentNullException>(() => ProfileResponse.CreateError(string.Empty, "Error"));
         }
 
         [Fact]
@@ -199,6 +206,7 @@ namespace TestDeployment
             var response = ProfileResponse.Parse("OK-JSON: {\"hello\":\"world!\"}");
 
             Assert.True(response.Success);
+            Assert.Equal(ProfileStatus.OK, response.Status);
             Assert.Null(response.Value);
             Assert.Single(response.JObject.Properties());
             Assert.Equal("world!", response.JObject["hello"]);
@@ -209,13 +217,13 @@ namespace TestDeployment
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonDeployment)]
         public void Response_ParseError()
         {
-            var response = ProfileResponse.Parse("ERROR: HELLO WORLD!");
+            var response = ProfileResponse.Parse($"ERROR[{ProfileStatus.BadRequest}]: HELLO WORLD!");
 
             Assert.False(response.Success);
             Assert.Null(response.Value);
             Assert.Null(response.JObject);
             Assert.Equal("HELLO WORLD!", response.Error);
-            Assert.Equal("ERROR: HELLO WORLD!", response.ToString());
+            Assert.Equal($"ERROR[{ProfileStatus.BadRequest}]: HELLO WORLD!", response.ToString());
         }
 
         [Fact]
@@ -225,8 +233,12 @@ namespace TestDeployment
             Assert.Throws<ArgumentNullException>(() => ProfileResponse.Parse(null));
             Assert.Throws<ArgumentNullException>(() => ProfileResponse.Parse(string.Empty));
             Assert.Throws<FormatException>(() => ProfileResponse.Parse("NOT-OK"));
-            Assert.Throws<FormatException>(() => ProfileResponse.Parse("NOT-OK:"));
-            Assert.Throws<FormatException>(() => ProfileResponse.Parse("OK-JSON: { BAD }"));
+            Assert.Throws<FormatException>(() => ProfileResponse.Parse("NOT-OK"));
+            Assert.Throws<FormatException>(() => ProfileResponse.Parse("ERROR:"));
+            Assert.Throws<FormatException>(() => ProfileResponse.Parse("ERROR[:"));
+            Assert.Throws<FormatException>(() => ProfileResponse.Parse("ERROR]:"));
+            Assert.Throws<FormatException>(() => ProfileResponse.Parse("ERROR[]:"));
+            Assert.Throws<FormatException>(() => ProfileResponse.Parse("OK-JSON: { BAD JSON }"));
         }
     }
 }

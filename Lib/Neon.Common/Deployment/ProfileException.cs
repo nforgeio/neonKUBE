@@ -29,7 +29,7 @@ using Neon.Common;
 namespace Neon.Deployment
 {
     /// <summary>
-    /// Thrown by <see cref="IProfileClient"/> instance when the neonASSISTANT
+    /// Thrown by <see cref="IProfileClient"/> instance when the profile server
     /// returned an error.
     /// </summary>
     public class ProfileException : Exception 

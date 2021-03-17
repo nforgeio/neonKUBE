@@ -32,7 +32,7 @@ namespace Neon.Deployment
     /// <inheritdoc/>
     public class ProfileClient : IProfileClient
     {
-        private static readonly TimeSpan    connectTimeout = TimeSpan.FromSeconds(2);
+        private static readonly TimeSpan    connectTimeout = TimeSpan.FromSeconds(10);
 
         /// <inheritdoc/>
         public IProfileResponse Call(IProfileRequest request)

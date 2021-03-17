@@ -28,6 +28,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
 using Neon.Common;
+using Neon.Deployment;
 
 namespace Neon.IO
 {
@@ -150,7 +151,7 @@ namespace Neon.IO
     /// These are referenced as <b>$&lt;$lt;name&gt;&gt;</b>.
     /// </para>
     /// <note>
-    /// You may encounter situations where the default was of referencing variables
+    /// You may encounter situations where the default ways of referencing variables
     /// conflicts with the syntax of the underlying source text being processed.
     /// In these cases, you can set <see cref="VariableExpansionRegex"/> to 
     /// <see cref="CurlyVariableExpansionRegex"/> or <see cref="ParenVariableExpansionRegex"/>
@@ -182,6 +183,78 @@ namespace Neon.IO
     /// <see cref="RemoveBlank"/>,  <see cref="ProcessStatements"/>, <see cref="Indent"/>, <see cref="TabStop"/>, 
     /// and <see cref="StatementMarker"/>
     /// properties.
+    /// </para>
+    /// <para><b>Secret and profile Values</b></para>
+    /// <para>
+    /// This class can integrate with a <see cref="IProfileClient"/> implementation added to
+    /// <see cref="NeonHelper.serviceContainer"/>.  This provides a way to abstract access to
+    /// secrets and profile values from an external source.  Three item types are supported:
+    /// </para>
+    /// <list type="table">
+    /// <item>
+    ///     <term><b>secret-password</b></term>
+    ///     <description>
+    ///     <para>
+    ///     Secret passwords are often protected by a password manager.  neonFORGE has standardized
+    ///     internally on 1Password for example.  Passwords are often required to satisfy complexity
+    ///     and other rules.
+    ///     </para>
+    ///     <para>
+    ///     Passwords are named by a string and are often persisted to a named location.  1Password stores
+    ///     to secrets in <i>vaults</i>.  You'll need the password name and optionally, its location when
+    ///     referencing a password value.
+    ///     </para>
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><b>secret-value</b></term>
+    ///     <description>
+    ///     <para>
+    ///     Secret values are often protected by a password manager.  neonFORGE has standardized
+    ///     internally on 1Password for example.  Secret values are similar to passwords but the
+    ///     typically don't comply with complexity or other requirements.
+    ///     </para>
+    ///     <para>
+    ///     Secret values are named by a string and are often persisted to a named location.  1Password stores
+    ///     to secrets in <i>vaults</i>.  You'll need the value name and optionally, its location when
+    ///     referencing a password value.
+    ///     </para>
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><b>profile-value</b></term>
+    ///     <description>
+    ///     <para>
+    ///     Profile values are string name/value pairs that include non-secret definitions for
+    ///     the user, workstation, or overall environment such as the LAN.  These can come in
+    ///     handy when implementing CI/CD where each server/user can be assigned unique profile
+    ///     values that reference specific test endpoints, etc.  This is quite powerful.
+    ///     </para>
+    ///     <para>
+    ///     Profile values are simply named by a string.  There is currently no concept of a source, 
+    ///     like secrets have.
+    ///     </para>
+    ///     </description>
+    /// </item>
+    /// </list>
+    /// <para>
+    /// Secrets and profile values can be referenced by as as <b>$&lt;$lt;&lt;type:name[:source]&gt;&gt;&gt;</b>
+    /// where <b>type</b> is one of <b>password</b>, <b>secret</b> (value), or <b>profile</b> and <b>name</b>
+    /// identifies the secret or profile value and <b>source</b> optionall specifies the secret source
+    /// (this is ignored for profile values).
+    /// </para>
+    /// <code>
+    /// $&lt;$&lt;$&lt;password:my-password;my-vault&gt;&gt;&gt;    # password from specific source
+    /// $&lt;$&lt;$&lt;password:my-password&gt;&gt;&gt;             # password from default source
+    /// $&lt;$&lt;$&lt;secret:my-secret;my-vault&gt;&gt;&gt;        # secret from specific source
+    /// $&lt;$&lt;$&lt;secret:my-secret&gt;&gt;&gt;                 # secret from default source
+    /// $&lt;$&lt;$&lt;profile:my-profile&gt;&gt;&gt;               # profile value
+    /// </code>
+    /// <para>
+    /// This class will throw <see cref="ProfileException"/> when it encounters a secret/profile
+    /// reference and there no injected <see cref="IProfileClient"/> implementation or if the implementation
+    /// has trouble communicating with the profile server.  This class also also throws a 
+    /// <see cref="KeyNotFoundException"/> when a named secret or profile value doesn't exist.
     /// </para>
     /// </remarks>
     /// <threadsafety instance="false"/>

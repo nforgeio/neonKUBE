@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
+using System.Linq;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -46,8 +47,7 @@ namespace Neon.Deployment
 
             return new ProfileResponse()
             {
-                Success = true,
-                Value   = value
+                Value = value
             };
         }
 
@@ -62,7 +62,6 @@ namespace Neon.Deployment
 
             return new ProfileResponse()
             {
-                Success = true,
                 JObject = jObject
             };
         }
@@ -70,16 +69,18 @@ namespace Neon.Deployment
         /// <summary>
         /// Creates a failed command response with an error message.
         /// </summary>
+        /// <param name="status">The status code (one of the <see cref="ProfileStatus"/> values).</param>
         /// <param name="message">The error message.</param>
         /// <returns>The <see cref="ProfileResponse"/>.</returns>
-        public static ProfileResponse CreateError(string message)
+        public static ProfileResponse CreateError(string status, string message)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(status), nameof(status));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(message), nameof(message));
 
             return new ProfileResponse()
             {
-                Success = false,
-                Error   = message
+                Status = status,
+                Error  = message
             };
         }
 
@@ -97,14 +98,44 @@ namespace Neon.Deployment
 
             if (colonPos == -1)
             {
-                throw new FormatException("Invalid profile service response line: Response colon is missing.");
+                throw new FormatException("Invalid profile response line: Response colon is missing.");
             }
 
-            var status = responseLine.Substring(0, colonPos).Trim();
+            var status     = responseLine.Substring(0, colonPos).Trim();
+            var statusCode = ProfileStatus.OK;
 
             if (status == string.Empty)
             {
-                throw new FormatException("Invalid profile service response line: Response status is empty.");
+                throw new FormatException("Invalid profile response line: Missing status.");
+            }
+
+            if (status.StartsWith("ERROR"))
+            {
+                var bracketPos = status.IndexOf('[');
+
+                if (bracketPos == -1)
+                {
+                    throw new FormatException("Invalid profile response line: Malformed status code.");
+                }
+
+                if (status.Last() != ']')
+                {
+                    throw new FormatException("Invalid profile response line: Malformed status code.");
+                }
+
+                statusCode = status.Substring(bracketPos + 1, status.Length - bracketPos - 2);
+
+                if (statusCode == string.Empty)
+                {
+                    throw new FormatException("Invalid profile response line: Malformed status code.");
+                }
+
+                status = "ERROR";
+            }
+
+            if (status == string.Empty)
+            {
+                throw new FormatException("Invalid profile response line: Empty status code.");
             }
 
             var result = responseLine.Substring(colonPos + 1).Trim();
@@ -115,7 +146,6 @@ namespace Neon.Deployment
 
                     return new ProfileResponse()
                     {
-                        Success = true,
                         Value   = result,
                         JObject = null,
                         Error   = null
@@ -127,10 +157,9 @@ namespace Neon.Deployment
                     {
                         return new ProfileResponse()
                         {
-                            Success = true,
-                            Value = null,
+                            Value   = null,
                             JObject = JObject.Parse(responseLine.Substring(colonPos + 1)),
-                            Error = null
+                            Error   = null
                         };
                     }
                     catch (JsonReaderException e)
@@ -142,7 +171,7 @@ namespace Neon.Deployment
 
                     return new ProfileResponse()
                     {
-                        Success = false,
+                        Status  = statusCode,
                         Value   = null,
                         JObject = null,
                         Error   = responseLine.Substring(colonPos + 1).Trim()
@@ -165,9 +194,15 @@ namespace Neon.Deployment
         }
 
         /// <summary>
-        /// Retrurns <c>true</c> for successful requests, <c>false</c> for failed ones.
+        /// Returns <c>true</c> for successful requests, <c>false</c> for failed ones.
         /// </summary>
-        public bool Success { get; private set; }
+        public bool Success => Status == ProfileStatus.OK;
+
+        /// <summary>
+        /// One of the <see cref="ProfileStatus"/> values.  This
+        /// defaults to <see cref="ProfileStatus.OK"/>.
+        /// </summary>
+        public string Status { get; private set; } = ProfileStatus.OK;
 
         /// <summary>
         /// Returns the simply response string (for non-JSON responses).
@@ -189,7 +224,7 @@ namespace Neon.Deployment
         {
             if (!Success)
             {
-                return $"ERROR: {Error}";
+                return $"ERROR[{Status}]: {Error}";
             }
 
             if (Value != null)

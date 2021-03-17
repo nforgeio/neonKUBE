@@ -58,15 +58,19 @@ namespace Neon.Deployment
         /// <summary>
         /// Constructs an error result.
         /// </summary>
+        /// <param name="status">One of the <see cref="ProfileStatus"/> codes.</param>
         /// <param name="message">The error message.</param>
         /// <returns>The <see cref="ProfileHandlerResult"/>.</returns>
-        public static ProfileHandlerResult CreateError(string message)
+        public static ProfileHandlerResult CreateError(string status, string message)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(status), nameof(status));
+            Covenant.Requires<ArgumentException>(status != ProfileStatus.OK, nameof(status));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(message));
 
             return new ProfileHandlerResult()
             {
-                Error = message
+                Status = status,
+                Error  = message
             };
         }
 
@@ -86,9 +90,15 @@ namespace Neon.Deployment
         public string Value { get; private set; }
 
         /// <summary>
-        /// Specifies an error message when not <c>null</c>.
+        /// Returns a human readable error message.
         /// </summary>
         public string Error { get; private set; }
+
+        /// <summary>
+        /// Specifies one of the <see cref="ProfileStatus"/> values.  This defaults
+        /// to <see cref="ProfileStatus.OK"/>.
+        /// </summary>
+        public string Status { get; private set; } = ProfileStatus.OK;
 
         /// <summary>
         /// Convertes the handler response into a <see cref="ProfileResponse"/>.
@@ -96,9 +106,9 @@ namespace Neon.Deployment
         /// <returns>The <see cref="ProfileResponse"/>.</returns>
         internal ProfileResponse ToResponse()
         {
-            if (Error != null)
+            if (Status != ProfileStatus.OK)
             {
-                return ProfileResponse.CreateError(Error);
+                return ProfileResponse.CreateError(Status, Error);
             }
             else
             {
