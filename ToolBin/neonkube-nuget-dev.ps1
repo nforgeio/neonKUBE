@@ -97,7 +97,7 @@ function RestoreVersion
         [string]$project
     )
 
-    "* Restore: ${project}:${version}"
+    "* Restore: ${project}"
 
     $projectPath = [io.path]::combine($env:NF_ROOT, "Lib", "$project", "$project" + ".csproj")
 
