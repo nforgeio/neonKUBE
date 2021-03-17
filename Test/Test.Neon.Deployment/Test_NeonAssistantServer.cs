@@ -41,10 +41,10 @@ namespace TestDeployment
         /// Sets handlers that return reasonable defauilt values.
         /// </summary>
         /// <param name="server">The assistant erver.</param>
-        private void SetDefaultHandlers(NeonAssistantServer server)
+        private void SetDefaultHandlers(ProfileServer server)
         {
-            server.GetMasterPasswordHandler = () => NeonAssistantHandlerResult.Create("master");
-            server.GetProfileValueHandler   = name => NeonAssistantHandlerResult.Create($"{name}-profile");
+            server.GetMasterPasswordHandler = () => ProfileHandlerResult.Create("master");
+            server.GetProfileValueHandler   = name => ProfileHandlerResult.Create($"{name}-profile");
 
             server.GetSecretPasswordHandler = 
                 (name, vault, masterPassword) =>
@@ -65,7 +65,7 @@ namespace TestDeployment
 
                     sb.Append("-password");
 
-                    return NeonAssistantHandlerResult.Create(sb.ToString());
+                    return ProfileHandlerResult.Create(sb.ToString());
                 };
 
             server.GetSecretValueHandler =
@@ -87,7 +87,7 @@ namespace TestDeployment
 
                     sb.Append("-secret");
 
-                    return NeonAssistantHandlerResult.Create(sb.ToString());
+                    return ProfileHandlerResult.Create(sb.ToString());
                 };
         }
 
@@ -95,9 +95,9 @@ namespace TestDeployment
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonDeployment)]
         public void GetMasterPassword()
         {
-            var client = new NeonAssistantClient();
+            var client = new ProfileClient();
 
-            using (var server = new NeonAssistantServer())
+            using (var server = new ProfileServer())
             {
                 SetDefaultHandlers(server);
                 server.Start();
@@ -110,9 +110,9 @@ namespace TestDeployment
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonDeployment)]
         public void GetMasterPassword_Exception()
         {
-            var client = new NeonAssistantClient();
+            var client = new ProfileClient();
 
-            using (var server = new NeonAssistantServer())
+            using (var server = new ProfileServer())
             {
                 SetDefaultHandlers(server);
 
@@ -120,7 +120,7 @@ namespace TestDeployment
 
                 server.Start();
 
-                Assert.Throws<NeonAssistantException>(() => client.GetMasterPassword());
+                Assert.Throws<ProfileException>(() => client.GetMasterPassword());
             }
         }
 
@@ -128,9 +128,9 @@ namespace TestDeployment
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonDeployment)]
         public void GetProfileValue()
         {
-            var client = new NeonAssistantClient();
+            var client = new ProfileClient();
 
-            using (var server = new NeonAssistantServer())
+            using (var server = new ProfileServer())
             {
                 SetDefaultHandlers(server);
                 server.Start();
@@ -143,9 +143,9 @@ namespace TestDeployment
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonDeployment)]
         public void GetProfileValue_Exception()
         {
-            var client = new NeonAssistantClient();
+            var client = new ProfileClient();
 
-            using (var server = new NeonAssistantServer())
+            using (var server = new ProfileServer())
             {
                 SetDefaultHandlers(server);
 
@@ -153,7 +153,7 @@ namespace TestDeployment
 
                 server.Start();
 
-                Assert.Throws<NeonAssistantException>(() => client.GetProfileValue("test"));
+                Assert.Throws<ProfileException>(() => client.GetProfileValue("test"));
             }
         }
 
@@ -161,9 +161,9 @@ namespace TestDeployment
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonDeployment)]
         public void GetSecretPassword()
         {
-            var client = new NeonAssistantClient();
+            var client = new ProfileClient();
 
-            using (var server = new NeonAssistantServer())
+            using (var server = new ProfileServer())
             {
                 SetDefaultHandlers(server);
                 server.Start();
@@ -176,9 +176,9 @@ namespace TestDeployment
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonDeployment)]
         public void GetSecretPassword_UsingMasterPassword()
         {
-            var client = new NeonAssistantClient();
+            var client = new ProfileClient();
 
-            using (var server = new NeonAssistantServer())
+            using (var server = new ProfileServer())
             {
                 SetDefaultHandlers(server);
                 server.Start();
@@ -191,9 +191,9 @@ namespace TestDeployment
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonDeployment)]
         public void GetSecretPassword_Exception()
         {
-            var client = new NeonAssistantClient();
+            var client = new ProfileClient();
 
-            using (var server = new NeonAssistantServer())
+            using (var server = new ProfileServer())
             {
                 SetDefaultHandlers(server);
 
@@ -201,7 +201,7 @@ namespace TestDeployment
 
                 server.Start();
 
-                Assert.Throws<NeonAssistantException>(() => client.GetSecretPassword("test"));
+                Assert.Throws<ProfileException>(() => client.GetSecretPassword("test"));
             }
         }
 
@@ -209,9 +209,9 @@ namespace TestDeployment
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonDeployment)]
         public void GetSecretValue()
         {
-            var client = new NeonAssistantClient();
+            var client = new ProfileClient();
 
-            using (var server = new NeonAssistantServer())
+            using (var server = new ProfileServer())
             {
                 SetDefaultHandlers(server);
                 server.Start();
@@ -224,9 +224,9 @@ namespace TestDeployment
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonDeployment)]
         public void GetSecretValue_UsingMasterPassword()
         {
-            var client = new NeonAssistantClient();
+            var client = new ProfileClient();
 
-            using (var server = new NeonAssistantServer())
+            using (var server = new ProfileServer())
             {
                 SetDefaultHandlers(server);
                 server.Start();
@@ -239,9 +239,9 @@ namespace TestDeployment
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonDeployment)]
         public void GetSecretValue_Exception()
         {
-            var client = new NeonAssistantClient();
+            var client = new ProfileClient();
 
-            using (var server = new NeonAssistantServer())
+            using (var server = new ProfileServer())
             {
                 SetDefaultHandlers(server);
 
@@ -249,7 +249,7 @@ namespace TestDeployment
 
                 server.Start();
 
-                Assert.Throws<NeonAssistantException>(() => client.GetSecretValue("test"));
+                Assert.Throws<ProfileException>(() => client.GetSecretValue("test"));
             }
         }
     }

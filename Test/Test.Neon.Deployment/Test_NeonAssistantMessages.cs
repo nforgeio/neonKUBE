@@ -41,7 +41,7 @@ namespace TestDeployment
         {
             //---------------------------------------------
 
-            var request = NeonAssistantRequest.Create("TEST");
+            var request = ProfileRequest.Create("TEST");
 
             Assert.Equal("TEST", request.Command);
             Assert.Empty(request.Args);
@@ -51,7 +51,7 @@ namespace TestDeployment
 
             var args = new Dictionary<string, string>();
 
-            request = NeonAssistantRequest.Create("TEST", args);
+            request = ProfileRequest.Create("TEST", args);
 
             Assert.Equal("TEST", request.Command);
             Assert.Empty(request.Args);
@@ -61,7 +61,7 @@ namespace TestDeployment
 
             args["arg1"] = "1";
 
-            request = NeonAssistantRequest.Create("TEST", args);
+            request = ProfileRequest.Create("TEST", args);
 
             Assert.Equal("TEST", request.Command);
             Assert.Single(request.Args);
@@ -72,7 +72,7 @@ namespace TestDeployment
 
             args["arg2"] = "2";
 
-            request = NeonAssistantRequest.Create("TEST", args);
+            request = ProfileRequest.Create("TEST", args);
 
             Assert.Equal("TEST", request.Command);
             Assert.Equal(2, request.Args.Count);
@@ -85,7 +85,7 @@ namespace TestDeployment
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonDeployment)]
         public void Request_Parse_NoArgs()
         {
-            var request = NeonAssistantRequest.Parse("TEST:");
+            var request = ProfileRequest.Parse("TEST:");
 
             Assert.Equal("TEST", request.Command);
             Assert.Empty(request.Args);
@@ -96,7 +96,7 @@ namespace TestDeployment
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonDeployment)]
         public void Request_Parse_WithArgs()
         {
-            var request = NeonAssistantRequest.Parse("TEST: arg1=1, arg2=2");
+            var request = ProfileRequest.Parse("TEST: arg1=1, arg2=2");
 
             Assert.Equal("TEST", request.Command);
             Assert.Equal(2, request.Args.Count);
@@ -109,17 +109,17 @@ namespace TestDeployment
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonDeployment)]
         public void Request_ParseFailure()
         {
-            Assert.Throws<ArgumentNullException>(() => NeonAssistantRequest.Parse(null));
-            Assert.Throws<ArgumentNullException>(() => NeonAssistantRequest.Parse(string.Empty));
-            Assert.Throws<FormatException>(() => NeonAssistantRequest.Parse("TEST"));
-            Assert.Throws<FormatException>(() => NeonAssistantRequest.Parse("TEST: arg"));
+            Assert.Throws<ArgumentNullException>(() => ProfileRequest.Parse(null));
+            Assert.Throws<ArgumentNullException>(() => ProfileRequest.Parse(string.Empty));
+            Assert.Throws<FormatException>(() => ProfileRequest.Parse("TEST"));
+            Assert.Throws<FormatException>(() => ProfileRequest.Parse("TEST: arg"));
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonDeployment)]
         public void Response_Create()
         {
-            var response = NeonAssistantResponse.Create("HELLO WORLD!");
+            var response = ProfileResponse.Create("HELLO WORLD!");
 
             Assert.True(response.Success);
             Assert.Equal("HELLO WORLD!", response.Value);
@@ -133,7 +133,7 @@ namespace TestDeployment
         {
             //---------------------------------------------
             
-            var response = NeonAssistantResponse.Create(new JObject());
+            var response = ProfileResponse.Create(new JObject());
 
             Assert.True(response.Success);
             Assert.Null(response.Value);
@@ -149,7 +149,7 @@ namespace TestDeployment
                     new JProperty("hello", "world!")
                 );
 
-            response = NeonAssistantResponse.Create(jObj);
+            response = ProfileResponse.Create(jObj);
 
             Assert.True(response.Success);
             Assert.Null(response.Value);
@@ -166,7 +166,7 @@ namespace TestDeployment
         {
             //---------------------------------------------
 
-            var response = NeonAssistantResponse.CreateError("ERROR MESSAGE");
+            var response = ProfileResponse.CreateError("ERROR MESSAGE");
 
             Assert.False(response.Success);
             Assert.Null(response.Value);
@@ -176,15 +176,15 @@ namespace TestDeployment
 
             //---------------------------------------------
 
-            Assert.Throws<ArgumentNullException>(() => NeonAssistantResponse.CreateError(null));
-            Assert.Throws<ArgumentNullException>(() => NeonAssistantResponse.CreateError(string.Empty));
+            Assert.Throws<ArgumentNullException>(() => ProfileResponse.CreateError(null));
+            Assert.Throws<ArgumentNullException>(() => ProfileResponse.CreateError(string.Empty));
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonDeployment)]
         public void Response_Parse()
         {
-            var response = NeonAssistantResponse.Parse("OK: HELLO WORLD!");
+            var response = ProfileResponse.Parse("OK: HELLO WORLD!");
 
             Assert.True(response.Success);
             Assert.Equal("HELLO WORLD!", response.Value);
@@ -196,7 +196,7 @@ namespace TestDeployment
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonDeployment)]
         public void Response_ParseJson()
         {
-            var response = NeonAssistantResponse.Parse("OK-JSON: {\"hello\":\"world!\"}");
+            var response = ProfileResponse.Parse("OK-JSON: {\"hello\":\"world!\"}");
 
             Assert.True(response.Success);
             Assert.Null(response.Value);
@@ -209,7 +209,7 @@ namespace TestDeployment
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonDeployment)]
         public void Response_ParseError()
         {
-            var response = NeonAssistantResponse.Parse("ERROR: HELLO WORLD!");
+            var response = ProfileResponse.Parse("ERROR: HELLO WORLD!");
 
             Assert.False(response.Success);
             Assert.Null(response.Value);
@@ -222,11 +222,11 @@ namespace TestDeployment
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonDeployment)]
         public void Response_ParseFailure()
         {
-            Assert.Throws<ArgumentNullException>(() => NeonAssistantResponse.Parse(null));
-            Assert.Throws<ArgumentNullException>(() => NeonAssistantResponse.Parse(string.Empty));
-            Assert.Throws<FormatException>(() => NeonAssistantResponse.Parse("NOT-OK"));
-            Assert.Throws<FormatException>(() => NeonAssistantResponse.Parse("NOT-OK:"));
-            Assert.Throws<FormatException>(() => NeonAssistantResponse.Parse("OK-JSON: { BAD }"));
+            Assert.Throws<ArgumentNullException>(() => ProfileResponse.Parse(null));
+            Assert.Throws<ArgumentNullException>(() => ProfileResponse.Parse(string.Empty));
+            Assert.Throws<FormatException>(() => ProfileResponse.Parse("NOT-OK"));
+            Assert.Throws<FormatException>(() => ProfileResponse.Parse("NOT-OK:"));
+            Assert.Throws<FormatException>(() => ProfileResponse.Parse("OK-JSON: { BAD }"));
         }
     }
 }

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    NeonAssistantServer.cs
+// FILE:	    ProfileServer.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -33,9 +33,9 @@ using Neon.Common;
 namespace Neon.Deployment
 {
     /// <summary>
-    /// Implements a named-pipe based server that the neonASSISTANT will used to
-    /// receive requests from <see cref="NeonAssistantClient"/>.  This server listens
-    /// on the <see cref="DeploymentHelper.NeonAssistantPipe"/> pipe and only allows 
+    /// Implements a named-pipe based server that will be used to receive
+    /// requests from <see cref="ProfileClient"/>.  This server listens
+    /// on the <see cref="DeploymentHelper.NeonProfileServicePipe"/> pipe and only allows 
     /// connections from other processes running on behalf of the current user.
     /// </summary>
     /// <remarks>
@@ -105,7 +105,7 @@ namespace Neon.Deployment
     ///     <para>
     ///     This requests a secret value from 1Password by <b>name</b> and <b>vault</b>, which
     ///     is optional and defaults to the user name as defined by the <b>userVault</b>
-    ///     neonASSISTANT saetting.  The value is returned as the response.
+    ///     neonASSISTANT setting.  The value is returned as the response.
     ///     </para>
     ///     <para>
     ///     <b>masterpassword</b> is optional.  This is passed in circumstances where the
@@ -126,7 +126,7 @@ namespace Neon.Deployment
     /// </item>
     /// </list>
     /// </remarks>
-    public sealed class NeonAssistantServer : IDisposable
+    public sealed class ProfileServer : IDisposable
     {
         private NamedPipeServerStream   serverPipe;
         private Thread                  serverThread;
@@ -134,7 +134,7 @@ namespace Neon.Deployment
         /// <summary>
         /// Constructor.
         /// </summary>
-        public NeonAssistantServer()
+        public ProfileServer()
         {
         }
 
@@ -205,7 +205,7 @@ namespace Neon.Deployment
         /// This must be initalized before calling <see cref="Start()"/>.
         /// </note>
         /// </summary>
-        public Func<NeonAssistantHandlerResult> GetMasterPasswordHandler { get; set; }
+        public Func<ProfileHandlerResult> GetMasterPasswordHandler { get; set; }
 
         /// <summary>
         /// <para>
@@ -215,7 +215,7 @@ namespace Neon.Deployment
         /// This must be initalized before calling <see cref="Start()"/>.
         /// </note>
         /// </summary>
-        public Func<string, NeonAssistantHandlerResult> GetProfileValueHandler { get; set; }
+        public Func<string, ProfileHandlerResult> GetProfileValueHandler { get; set; }
 
         /// <summary>
         /// <para>
@@ -226,7 +226,7 @@ namespace Neon.Deployment
         /// This must be initalized before calling <see cref="Start()"/>.
         /// </note>
         /// </summary>
-        public Func<string, string, string, NeonAssistantHandlerResult> GetSecretPasswordHandler { get; set; }
+        public Func<string, string, string, ProfileHandlerResult> GetSecretPasswordHandler { get; set; }
 
         /// <summary>
         /// <para>
@@ -237,7 +237,7 @@ namespace Neon.Deployment
         /// This must be initalized before calling <see cref="Start()"/>.
         /// </note>
         /// </summary>
-        public Func<string, string, string, NeonAssistantHandlerResult> GetSecretValueHandler { get; set; }
+        public Func<string, string, string, ProfileHandlerResult> GetSecretValueHandler { get; set; }
 
         /// <summary>
         /// Handles incoming client connections on a background thread.
@@ -263,20 +263,20 @@ namespace Neon.Deployment
                     using (var writer = new StreamWriter(serverPipe))
                     {
                         var requestLine   = reader.ReadLine();
-                        var request       = (NeonAssistantRequest)null;
-                        var response      = (NeonAssistantResponse)null;
-                        var handlerResult = (NeonAssistantHandlerResult)null;
+                        var request       = (ProfileRequest)null;
+                        var response      = (ProfileResponse)null;
+                        var handlerResult = (ProfileHandlerResult)null;
 
                         try
                         {
-                            request = NeonAssistantRequest.Parse(requestLine);
+                            request = ProfileRequest.Parse(requestLine);
                         }
                         catch (FormatException)
                         {
                             // Report an malformed request to the client and then continue
                             // listening for the next request.
 
-                            writer.WriteLine(NeonAssistantResponse.CreateError("Malformed request"));
+                            writer.WriteLine(ProfileResponse.CreateError("Malformed request"));
                             writer.Flush();
                             return;
                         }
@@ -298,7 +298,7 @@ namespace Neon.Deployment
 
                                     if (name == null)
                                     {
-                                        handlerResult = NeonAssistantHandlerResult.CreateError($"GET-PROFILE-VALUE: [name] argument is required.");
+                                        handlerResult = ProfileHandlerResult.CreateError($"GET-PROFILE-VALUE: [name] argument is required.");
                                         break;
                                     }
 
@@ -309,7 +309,7 @@ namespace Neon.Deployment
 
                                     if (name == null)
                                     {
-                                        handlerResult = NeonAssistantHandlerResult.CreateError($"GET-SECRET-PASSWORD: [name] argument is required.");
+                                        handlerResult = ProfileHandlerResult.CreateError($"GET-SECRET-PASSWORD: [name] argument is required.");
                                         break;
                                     }
 
@@ -320,7 +320,7 @@ namespace Neon.Deployment
 
                                     if (name == null)
                                     {
-                                        handlerResult = NeonAssistantHandlerResult.CreateError($"GET-SECRET-VALUE: [name] argument is required.");
+                                        handlerResult = ProfileHandlerResult.CreateError($"GET-SECRET-VALUE: [name] argument is required.");
                                         break;
                                     }
 
@@ -329,22 +329,22 @@ namespace Neon.Deployment
 
                                 default:
 
-                                    handlerResult = NeonAssistantHandlerResult.CreateError($"Unexpected command: {request.Command}");
+                                    handlerResult = ProfileHandlerResult.CreateError($"Unexpected command: {request.Command}");
                                     break;
                             }
                         }
                         catch (Exception e)
                         {
-                            handlerResult = NeonAssistantHandlerResult.CreateError(NeonHelper.ExceptionError(e));
+                            handlerResult = ProfileHandlerResult.CreateError(NeonHelper.ExceptionError(e));
                         }
 
                         if (handlerResult.Error != null)
                         {
-                            response = NeonAssistantResponse.CreateError(handlerResult.Error); 
+                            response = ProfileResponse.CreateError(handlerResult.Error); 
                         }
                         else
                         {
-                            response = NeonAssistantResponse.Create(handlerResult.Value);
+                            response = ProfileResponse.Create(handlerResult.Value);
                         }
 
                         writer.WriteLine(response);

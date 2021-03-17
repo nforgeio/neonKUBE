@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    NeonAssistantHandlerResult.cs
+// FILE:	   ProfileHandlerResult.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -33,9 +33,9 @@ using Neon.Common;
 namespace Neon.Deployment
 {
     /// <summary>
-    /// Describes the results returned by <see cref="NeonAssistantServer"/> handlers.
+    /// Describes the results returned by <see cref="ProfileServer"/> handlers.
     /// </summary>
-    public class NeonAssistantHandlerResult
+    public class ProfileHandlerResult
     {
         //---------------------------------------------------------------------
         // Static members
@@ -44,12 +44,12 @@ namespace Neon.Deployment
         /// Constructs a handler value result.
         /// </summary>
         /// <param name="value"></param>
-        /// <returns>The <see cref="NeonAssistantHandlerResult"/>.</returns>
-        public static NeonAssistantHandlerResult Create(string value)
+        /// <returns>The <see cref="ProfileHandlerResult"/>.</returns>
+        public static ProfileHandlerResult Create(string value)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(value));
 
-            return new NeonAssistantHandlerResult()
+            return new ProfileHandlerResult()
             {
                 Value = value
             };
@@ -59,12 +59,12 @@ namespace Neon.Deployment
         /// Constructs an error result.
         /// </summary>
         /// <param name="message">The error message.</param>
-        /// <returns>The <see cref="NeonAssistantHandlerResult"/>.</returns>
-        public static NeonAssistantHandlerResult CreateError(string message)
+        /// <returns>The <see cref="ProfileHandlerResult"/>.</returns>
+        public static ProfileHandlerResult CreateError(string message)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(message));
 
-            return new NeonAssistantHandlerResult()
+            return new ProfileHandlerResult()
             {
                 Error = message
             };
@@ -76,7 +76,7 @@ namespace Neon.Deployment
         /// <summary>
         /// Private constructor.
         /// </summary>
-        private NeonAssistantHandlerResult()
+        private ProfileHandlerResult()
         {
         }
 

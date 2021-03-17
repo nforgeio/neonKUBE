@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DeploymentHelper.cs
+// FILE:	    IProfileRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -29,15 +29,18 @@ using Neon.Common;
 namespace Neon.Deployment
 {
     /// <summary>
-    /// Deployment related defintions and utilities.
+    /// Abstracts Neon Profile Service named pipe command requests.
     /// </summary>
-    public static class DeploymentHelper
+    public interface IProfileRequest
     {
         /// <summary>
-        /// Identifies the named pipe used to communicate with the Neon profile
-        /// service running on the local workstation to query for user profile
-        /// information as well as secrets.
+        /// Returns the command.
         /// </summary>
-        public const string NeonProfileServicePipe = "neon-profile-service";
+        string Command { get; }
+
+        /// <summary>
+        /// Returns the standard command arguments.
+        /// </summary>
+        Dictionary<string, string> Args { get; }
     }
 }

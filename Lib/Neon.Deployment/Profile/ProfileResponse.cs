@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    NeonAssistantResponse.cs
+// FILE:	    ProfileResponse.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -28,9 +28,9 @@ using Neon.Common;
 namespace Neon.Deployment
 {
     /// <summary>
-    /// Abstracts neonASSISTANT named pipe command responses.
+    /// Abstracts Neon Profile Service named pipe command responses.
     /// </summary>
-    public class NeonAssistantResponse
+    public class ProfileResponse : IProfileResponse
     {
         //---------------------------------------------------------------------
         // Static members
@@ -39,12 +39,12 @@ namespace Neon.Deployment
         /// Creates a successful command response with with a simple string value.
         /// </summary>
         /// <param name="value">The optional command arguments.</param>
-        /// <returns>The <see cref="NeonAssistantResponse"/>.</returns>
-        public static NeonAssistantResponse Create(string value)
+        /// <returns>The <see cref="ProfileResponse"/>.</returns>
+        public static ProfileResponse Create(string value)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(value), nameof(value));
 
-            return new NeonAssistantResponse()
+            return new ProfileResponse()
             {
                 Success = true,
                 Value   = value
@@ -55,12 +55,12 @@ namespace Neon.Deployment
         /// Creates a successful command response with with a JSON value.
         /// </summary>
         /// <param name="jObject">The JSON value.</param>
-        /// <returns>The <see cref="NeonAssistantResponse"/>.</returns>
-        public static NeonAssistantResponse Create(JObject jObject)
+        /// <returns>The <see cref="ProfileResponse"/>.</returns>
+        public static ProfileResponse Create(JObject jObject)
         {
             Covenant.Requires<ArgumentNullException>(jObject != null, nameof(jObject));
 
-            return new NeonAssistantResponse()
+            return new ProfileResponse()
             {
                 Success = true,
                 JObject = jObject
@@ -71,12 +71,12 @@ namespace Neon.Deployment
         /// Creates a failed command response with an error message.
         /// </summary>
         /// <param name="message">The error message.</param>
-        /// <returns>The <see cref="NeonAssistantResponse"/>.</returns>
-        public static NeonAssistantResponse CreateError(string message)
+        /// <returns>The <see cref="ProfileResponse"/>.</returns>
+        public static ProfileResponse CreateError(string message)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(message), nameof(message));
 
-            return new NeonAssistantResponse()
+            return new ProfileResponse()
             {
                 Success = false,
                 Error   = message
@@ -87,9 +87,9 @@ namespace Neon.Deployment
         /// Parses a request from a line of text read from the named pipe.
         /// </summary>
         /// <param name="responseLine">The response line.</param>
-        /// <returns>The <see cref="NeonAssistantResponse"/>.</returns>
+        /// <returns>The <see cref="ProfileResponse"/>.</returns>
         /// <exception cref="FormatException">Thrown for invalid response lines.</exception>
-        public static NeonAssistantResponse Parse(string responseLine)
+        public static ProfileResponse Parse(string responseLine)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(responseLine), nameof(responseLine));
 
@@ -97,14 +97,14 @@ namespace Neon.Deployment
 
             if (colonPos == -1)
             {
-                throw new FormatException("Invalid neonASSISTANT response line: Response colon is missing.");
+                throw new FormatException("Invalid profile service response line: Response colon is missing.");
             }
 
             var status = responseLine.Substring(0, colonPos).Trim();
 
             if (status == string.Empty)
             {
-                throw new FormatException("Invalid neonASSISTANT response line: Response status is empty.");
+                throw new FormatException("Invalid profile service response line: Response status is empty.");
             }
 
             var result = responseLine.Substring(colonPos + 1).Trim();
@@ -113,7 +113,7 @@ namespace Neon.Deployment
             {
                 case "OK":
 
-                    return new NeonAssistantResponse()
+                    return new ProfileResponse()
                     {
                         Success = true,
                         Value   = result,
@@ -125,7 +125,7 @@ namespace Neon.Deployment
 
                     try
                     {
-                        return new NeonAssistantResponse()
+                        return new ProfileResponse()
                         {
                             Success = true,
                             Value = null,
@@ -140,7 +140,7 @@ namespace Neon.Deployment
 
                 case "ERROR":
 
-                    return new NeonAssistantResponse()
+                    return new ProfileResponse()
                     {
                         Success = false,
                         Value   = null,
@@ -160,7 +160,7 @@ namespace Neon.Deployment
         /// <summary>
         /// Private constructor.
         /// </summary>
-        private NeonAssistantResponse()
+        private ProfileResponse()
         {
         }
 

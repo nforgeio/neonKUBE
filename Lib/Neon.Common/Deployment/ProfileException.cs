@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    NeonAssistantException.cs
+// FILE:	    ProfileException.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -29,17 +29,17 @@ using Neon.Common;
 namespace Neon.Deployment
 {
     /// <summary>
-    /// Thrown by <see cref="INeonAssistantClient"/> instance when the neonASSISTANT
+    /// Thrown by <see cref="IProfileClient"/> instance when the neonASSISTANT
     /// returned an error.
     /// </summary>
-    public class NeonAssistantException : Exception 
+    public class ProfileException : Exception 
     {
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="message">The error message.</param>
         /// <param name="inner">Optionally specifies an inner exception.</param>
-        public NeonAssistantException(string message, Exception inner = null)
+        public ProfileException(string message, Exception inner = null)
             : base(message, inner)
         {
         }

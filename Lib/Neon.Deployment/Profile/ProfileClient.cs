@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    NeonAssistantClient.cs
+// FILE:	    ProfileClient.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -30,14 +30,14 @@ using Neon.Common;
 namespace Neon.Deployment
 {
     /// <inheritdoc/>
-    public class NeonAssistantClient : INeonAssistantClient
+    public class ProfileClient : IProfileClient
     {
         /// <inheritdoc/>
-        public NeonAssistantResponse Call(NeonAssistantRequest request)
+        public IProfileResponse Call(IProfileRequest request)
         {
             Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
 
-            using (var pipe = new NamedPipeClientStream(".", DeploymentHelper.NeonAssistantPipe, PipeDirection.InOut))
+            using (var pipe = new NamedPipeClientStream(".", DeploymentHelper.NeonProfileServicePipe, PipeDirection.InOut))
             {
                 pipe.Connect(30000);
 
@@ -48,11 +48,11 @@ namespace Neon.Deployment
                         writer.WriteLine(request);
                         writer.Flush();
 
-                        var response = NeonAssistantResponse.Parse(reader.ReadLine());
+                        var response = ProfileResponse.Parse(reader.ReadLine());
 
                         if (!response.Success)
                         {
-                            throw new NeonAssistantException(response.Error);
+                            throw new ProfileException(response.Error);
                         }
 
                         return response;
@@ -64,7 +64,7 @@ namespace Neon.Deployment
         /// <inheritdoc/>
         public string GetMasterPassword()
         {
-            return Call(NeonAssistantRequest.Create("GET-MASTER-PASSWORD")).Value;
+            return Call(ProfileRequest.Create("GET-MASTER-PASSWORD")).Value;
         }
 
         /// <inheritdoc/>
@@ -76,7 +76,7 @@ namespace Neon.Deployment
 
             args.Add("name", name);
 
-            return Call(NeonAssistantRequest.Create("GET-PROFILE-VALUE", args)).Value;
+            return Call(ProfileRequest.Create("GET-PROFILE-VALUE", args)).Value;
         }
 
         /// <inheritdoc/>
@@ -98,7 +98,7 @@ namespace Neon.Deployment
                 args.Add("masterpassword", masterPassword);
             }
 
-            return Call(NeonAssistantRequest.Create("GET-SECRET-PASSWORD", args)).Value;
+            return Call(ProfileRequest.Create("GET-SECRET-PASSWORD", args)).Value;
         }
 
         /// <inheritdoc/>
@@ -120,7 +120,7 @@ namespace Neon.Deployment
                 args.Add("masterpassword", masterPassword);
             }
 
-            return Call(NeonAssistantRequest.Create("GET-SECRET-VALUE", args)).Value;
+            return Call(ProfileRequest.Create("GET-SECRET-VALUE", args)).Value;
         }
     }
 }

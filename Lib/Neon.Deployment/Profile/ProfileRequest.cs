@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    NeonAssistantRequest.cs
+// FILE:	    ProfileRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -29,9 +29,9 @@ using Neon.Common;
 namespace Neon.Deployment
 {
     /// <summary>
-    /// Abstracts neonASSISTANT named pipe command requests.
+    /// Abstracts Neon Profile Service named pipe command requests.
     /// </summary>
-    public class NeonAssistantRequest
+    public class ProfileRequest : IProfileRequest
     {
         //---------------------------------------------------------------------
         // Static members
@@ -43,12 +43,12 @@ namespace Neon.Deployment
         /// </summary>
         /// <param name="command">The command name.</param>
         /// <param name="args">The optional arguments.</param>
-        /// <returns>The <see cref="NeonAssistantRequest"/>.</returns>
-        public static NeonAssistantRequest Create(string command, Dictionary<string, string> args = null)
+        /// <returns>The <see cref="ProfileRequest"/>.</returns>
+        public static ProfileRequest Create(string command, Dictionary<string, string> args = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(command), nameof(command));
 
-            return new NeonAssistantRequest()
+            return new ProfileRequest()
             {
                 Command = command,
                 Args    = args ?? new Dictionary<string, string>()
@@ -59,9 +59,9 @@ namespace Neon.Deployment
         /// Parses a request from a line of text read from the named pipe.
         /// </summary>
         /// <param name="commandLine">The command line.</param>
-        /// <returns>The <see cref="NeonAssistantRequest"/>.</returns>
+        /// <returns>The <see cref="ProfileRequest"/>.</returns>
         /// <exception cref="FormatException">Thrown for invalid command lines.</exception>
-        public static NeonAssistantRequest Parse(string commandLine)
+        public static ProfileRequest Parse(string commandLine)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(commandLine), nameof(commandLine));
 
@@ -69,17 +69,17 @@ namespace Neon.Deployment
 
             if (colonPos == -1)
             {
-                throw new FormatException("Invalid neonASSISTANT command line: Command colon is missing.");
+                throw new FormatException("Invalid profile service command line: Command colon is missing.");
             }
 
             var command = commandLine.Substring(0, colonPos).Trim();
 
             if (command == string.Empty)
             {
-                throw new FormatException("Invalid neonASSISTANT command line: Command is empty.");
+                throw new FormatException("Invalid profile service command line: Command is empty.");
             }
 
-            var request = new NeonAssistantRequest() { Command = command };
+            var request = new ProfileRequest() { Command = command };
             var args    = commandLine.Substring(colonPos + 1).Split(commaArray, StringSplitOptions.RemoveEmptyEntries);
 
             foreach (var arg in args)
@@ -88,7 +88,7 @@ namespace Neon.Deployment
 
                 if (fields.Length != 2)
                 {
-                    throw new FormatException("Invalid neonASSISTANT command line: Malformed argument");
+                    throw new FormatException("Invalid profile service command line: Malformed argument");
                 }
 
                 request.Args[fields[0].Trim()] = fields[1].Trim();
@@ -103,7 +103,7 @@ namespace Neon.Deployment
         /// <summary>
         /// Private constructor.
         /// </summary>
-        private NeonAssistantRequest()
+        private ProfileRequest()
         {
         }
 

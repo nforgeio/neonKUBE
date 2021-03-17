@@ -24,187 +24,189 @@ using Neon.Common;
 namespace Neon.Deployment
 {
     /// <summary>
-    /// <para>
-    /// Provides access to a developers's 1Password secrets for testing and executing CI/CD purposes.
-    /// </para>
-    /// <note>
-    /// This class is not entirely general purpose; it's currently oriented towards supporting CI/CD
-    /// for neonFORGE maintainers who have configured their workstations by installing both the
-    /// 1Password application and CLI with the client having been manually signed-in for the first
-    /// time and the <b>NC_USER</b> environment variable set to the 1Password shortname used to sign-in.
-    /// This also assumes that account's vaults configured a a specific way.
-    /// </note>
+    /// Wraps the 1Password CLI.
     /// </summary>
     /// <remarks>
-    /// <note>
-    /// This class requires that the developer has followed the developer onboarding instructions
-    /// and has already configured the current workstation by installing 1Password etc.
-    /// </note>
-    /// <para>
-    /// neonFORGE has decided to use the <a href="https://1password.com">1Password</a> password manager
-    /// company wide for password management including devops related activities.  All developers will
-    /// have a neonFORGE 1Password account holding necessary credentials for the individual.  All 
-    /// company users will have a 1Password vault named [user-USERNAME] where USERNAME is the person's
-    /// Microsoft Office user name, such as [sally] from [sally@neonforge.com].  Most, if not all of
-    /// a person's credentials will be stored in this vault.
-    /// </para>
-    /// <para>
-    /// Each developer will have a standard set of passwords with well-defined names such that they
-    /// can be accessed by common CI/CD scripts, etc.
-    /// </para>
-    /// <para>
-    /// We're currently persisting credentials available for automation as 1Password passwords.  For real
-    /// secrets, we'll persist the value using the [password] field within the 1Password password.  For
-    /// information that is not really a secret (and may trigger 1Password complexity warnings), we use
-    /// the [value] field.
-    /// </para>
-    /// <para>
-    /// Use <see cref="GetPassword(string, string)"/> to retrieve a password and <see cref="GetValue(string, string)"/>
-    /// to retrieve a value for the current user.
-    /// </para>
-    /// <note>
-    /// The current user is determined by the <b>NC_USER</b> environment variable.  This is
-    /// set to the user's neonFORGE Microsoft Office user name when the workstation is configured
-    /// by the developer.
-    /// </note>
-    /// <note>
-    /// This class mimics the PowerShell 1Password script functions found in <b>$/Powershell/includes.ps1</b>
-    /// so C# code can also access secrets.
-    /// </note>
-    /// <note>
-    /// This class can interoperate with the 1Password PowerShell script functions.
-    /// </note>
     /// </remarks>
     public static class OnePassword
     {
+        //---------------------------------------------------------------------
+        // Private types
+
         /// <summary>
-        /// Prompts the user for the master 1Password when the <c>NC_OP_MASTER_PASSWORD</c>
-        /// environment is not set.  This can be used for tools that may be run directly by
-        /// the user and will need the user to manually enter the password as well as by
-        /// automated scripts where the password is already present as the environment
-        /// variable.
+        /// Unfortunately, the 1Password CLI doesn't appear to return specific
+        /// exit codes detailing the for specific error yet.  We're going to 
+        /// hack this by examining the response text.
         /// </summary>
-        /// <param name="prompt">Optionally specifies a custom password prompt.</param>
-        /// <returns></returns>
-        public static string ReadPasswordFromConsole(string prompt = null)
+        private enum OnePasswordStatus
         {
-            prompt = prompt ?? "Please enter your master 1Password: ";
+            /// <summary>
+            /// The operation was successful.
+            /// </summary>
+            OK = 0,
 
-            var password = Environment.GetEnvironmentVariable("NC_OP_MASTER_PASSWORD");
+            /// <summary>
+            /// The session token has expired.
+            /// </summary>
+            SessionExpired,
 
-            if (password != null)
-            {
-                return password;
-            }
-
-            Console.WriteLine();
-            password = NeonHelper.ReadConsolePassword(prompt);
-            Console.WriteLine();
-
-            return password;
+            /// <summary>
+            /// Unspecified error.
+            /// </summary>
+            Other
         }
 
+        //---------------------------------------------------------------------
+        // Implementation
+
+        private static readonly object      syncLock = new object();
+        private static string               account;
+        private static string               defaultVault;
+        private static string               masterPassword;
+        private static string               sessionToken;
+
         /// <summary>
-        /// Signs into 1Password so you'll be able to access secrets. 
+        /// Returns <c>true</c> if the class is signed-in.
         /// </summary>
-        /// <param name="masterPassword">
-        /// Optionally specifies master password rather than using the
-        /// <b>NC_OP_MASTER_PASSWORD</b> environment variable.
-        /// </param>
-        /// <exception cref="OnePasswordException">Thrown on errors.</exception>
+        public static bool Signedin => masterPassword != null;
+
+        /// <summary>
+        /// Configures and signs into 1Password for the first time on a machine.  This
+        /// must be called once before <see cref="Signin(string, string, string)"/> will
+        /// work.
+        /// </summary>
+        /// <param name="signinAddress">Specifies the 1Password signin address.</param>
+        /// <param name="account">Specifies the 1Password shorthand name to use for the account (e.g. "sally@neonforge.com").</param>
+        /// <param name="secretKey">The 1Password secret key for the account.</param>
+        /// <param name="masterPassword">Specified the master 1Password.</param>
+        /// <param name="defaultVault">Specifies the default 1Password vault.</param>
         /// <remarks>
         /// <para>
-        /// This will start a 30 minute session that will allow you to use the 1Password [op]
-        /// CLI without requiring additional credentials.  We recommend that you call this at
-        /// the  beginning of all CI/CD operations and then immediately grab all of the secrets 
-        /// you'll need for that operation.  This way you won't need to worry about the
-        /// 30 minute session expiring.  This must be called before <see cref="GetPassword(string, string)"/>
-        /// or <see cref="GetValue(string, string)"/>.
+        /// Typically, you'll first call <see cref="Configure(string, string, string, string, string)"/> once
+        /// for a workstation to configure the signin address and 1Password secret key during manual
+        /// configuration.  The account shorthand name used for that operation can then be used thereafter
+        /// for calls to <see cref="Signin(string, string, string)"/> which don't require the additional 
+        /// information.
         /// </para>
         /// <para>
-        /// This script uses the following environment variables:
-        /// </para>
-        /// <list type="bullet">
-        ///     <item><c>NC_OP_DOMAIN</c></item>
-        ///     <item><c>NC_OP_MASTER_PASSWORD</c> - <i>optional</i></item>
-        /// </list>
-        /// <para>
-        /// NC_OP_MASTER_PASSWORD is optional and you'll be prompted for this (once for 
-        /// the current Powershell session) if this isn't defined.  The other variables
-        /// are initialized by <b>$/buildenv.cmd</b> so re-run that as administrator if necessary.
+        /// This two-stage process enhances security because both the master password and secret
+        /// key are required to authenticate and the only time the secret key will need to be
+        /// presented for the full login which will typically done manually once.  1Password
+        /// securely stores the secret key on the workstation and it will never need to be present
+        /// as plaintext again on the machine.
         /// </para>
         /// </remarks>
-        public static void Signin(string masterPassword = null)
+        public static void Configure(string signinAddress, string account, string secretKey, string masterPassword, string defaultVault)
         {
-            const string errorHelp = " environment variable is not defined.  Please run [$/buildenv.cmd] as administrator";
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signinAddress), nameof(signinAddress));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(account), nameof(account));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secretKey), nameof(secretKey));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(masterPassword), nameof(masterPassword));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(defaultVault), nameof(defaultVault));
 
-            var neonOpDomain         = Environment.GetEnvironmentVariable("NC_OP_DOMAIN");
-            var neonOpMasterPassword = string.Empty;
-
-            if (!string.IsNullOrEmpty(masterPassword))
+            lock (syncLock)
             {
-                neonOpMasterPassword = masterPassword;
-            }
-            else
-            {
-                neonOpMasterPassword = Environment.GetEnvironmentVariable("NC_OP_MASTER_PASSWORD");
-            }
+                OnePassword.account        = account;
+                OnePassword.defaultVault   = defaultVault;
+                OnePassword.masterPassword = masterPassword;
 
-            if (string.IsNullOrEmpty(neonOpDomain))
-            {
-                throw new OnePasswordException($"[NC_OP_DOMAIN]{errorHelp}");
-            }
+                var input = new StringReader(masterPassword);
 
-            ExecuteResponse response;
-
-            if (string.IsNullOrEmpty(neonOpMasterPassword))
-            {
-                // The user will be prompted for the master password.
-
-                response = NeonHelper.ExecuteCapture("op",
+                var response = NeonHelper.ExecuteCapture("op",
                     new string[]
                     {
                         "--cache",
                         "signin",
                         "--raw",
-                        neonOpDomain
-                    });
-            }
-            else
-            {
-                var input = new StringReader(neonOpMasterPassword);
-
-                response = NeonHelper.ExecuteCapture("op",
-                    new string[]
-                    {
-                        "--cache",
-                        "signin",
-                        "--raw",
-                        neonOpDomain
+                        signinAddress,
+                        account,
+                        secretKey,
+                        "--shorthand", account
                     },
                     input: input);
-            }
 
-            if (response.ExitCode != 0)
-            {
-                throw new OnePasswordException(response.ErrorText);
-            }
+                if (response.ExitCode != 0)
+                {
+                    Signout();
+                    throw new OnePasswordException(response.AllText);
+                }
 
-            Environment.SetEnvironmentVariable("NC_OP_SESSION_TOKEN", response.OutputText.Trim());
+                SetSessionToken(response.OutputText.Trim());
+            }
         }
 
         /// <summary>
-        /// Signs out from 1Password by removing the session environment variable.
+        /// Signs into 1Password using just the account, master password, and default vault.  You'll
+        /// typically call this rather than <see cref="Configure(string, string, string, string, string)"/>
+        /// which also requires the signin address as well as the secret key.
+        /// </summary>
+        /// <param name="account">The account's shorthand name (e.g. (e.g. "sally@neonforge.com").</param>
+        /// <param name="masterPassword">The master password.</param>
+        /// <param name="defaultVault">The default vault.</param>
+        /// <remarks>
+        /// <para>
+        /// Typically, you'll first call <see cref="Configure(string, string, string, string, string)"/> once
+        /// for a workstation to configure the signin address and 1Password secret key during manual
+        /// configuration.  The account shorthand name used for that operation can then be used thereafter
+        /// for calls to this method which don't require the additional information.
+        /// </para>
+        /// <para>
+        /// This two-stage process enhances security because both the master password and secret
+        /// key are required to authenticate and the only time the secret key will need to be
+        /// presented for the full login which will typically done manually once.  1Password
+        /// securely stores the secret key on the workstation and it will never need to be present
+        /// as plaintext again on the machine.
+        /// </para>
+        /// </remarks>
+        public static void Signin(string account, string masterPassword, string defaultVault)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(account), nameof(account));;
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(masterPassword), nameof(masterPassword));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(defaultVault), nameof(defaultVault));
+
+            lock (syncLock)
+            {
+                OnePassword.account        = account;
+                OnePassword.defaultVault   = defaultVault;
+                OnePassword.masterPassword = masterPassword;
+
+                var input = new StringReader(masterPassword);
+
+                var response = NeonHelper.ExecuteCapture("op",
+                    new string[]
+                    {
+                        "--cache",
+                        "signin",
+                        "--raw",
+                        account
+                    },
+                    input: input);
+
+                if (response.ExitCode != 0)
+                {
+                    Signout();
+                    throw new OnePasswordException(response.AllText);
+                }
+
+                SetSessionToken(response.OutputText.Trim());
+            }
+        }
+
+        /// <summary>
+        /// Signs out.
         /// </summary>
         public static void Signout()
         {
-            Environment.SetEnvironmentVariable("NC_OP_SESSION_TOKEN", null);
-        }
+            lock (syncLock)
+            {
+                NeonHelper.ExecuteCapture("op", new string[] { "signout" });
 
-        /// <summary>
-        /// Returns <c>true</c> when we're signed into 1Password.
-        /// </summary>
-        public static bool SignedIn => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("NC_OP_SESSION_TOKEN"));
+                OnePassword.account         = null;
+                OnePassword.defaultVault   = null;
+                OnePassword.masterPassword = null;
+                OnePassword.sessionToken   = null;
+            }
+        }
 
         /// <summary>
         /// Returns a named password from the current user's standard 1Password 
@@ -214,30 +216,53 @@ namespace Neon.Deployment
         /// <param name="vault">Optionally specifies a specific vault.</param>
         /// <returns>The requested password (from the password's [password] field).</returns>
         /// <exception cref="OnePasswordException">Thrown for 1Password related problems.</exception>
-        public static string GetPassword(string name, string vault = null)
+        public static string GetSecretPassword(string name, string vault = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
-            EnsureSignedIn();
+            var retrying = false;
 
-            vault = GetVault(vault);
-
-            var response = NeonHelper.ExecuteCapture("op",
-                new string[]
-                {
-                    "--cache",
-                    "--session", Environment.GetEnvironmentVariable("NC_OP_SESSION_TOKEN"),
-                    "get", "item", name,
-                    "--vault", vault,
-                    "--fields", "password"
-                });
-
-            if (response.ExitCode != 0)
+            lock (syncLock)
             {
-                throw new OnePasswordException(response.ErrorText);
-            }
+                EnsureSignedIn();
 
-            return response.OutputText.Trim();
+                vault = GetVault(vault);
+
+retry:          var response = NeonHelper.ExecuteCapture("op",
+                    new string[]
+                    {
+                        "--cache",
+                        "--session", sessionToken,
+                        "get", "item", name,
+                        "--vault", vault,
+                        "--fields", "password"
+                    });
+
+                switch (GetStatus(response))
+                {
+                    case OnePasswordStatus.OK:
+
+                        return response.OutputText.Trim();
+
+                    case OnePasswordStatus.SessionExpired:
+
+                        if (retrying)
+                        {
+                            throw new OnePasswordException(response.AllText);
+                        }
+
+                        // Obtain a fresh session token and retry the operation.
+
+                        Signin(account, defaultVault, masterPassword);
+
+                        retrying = true;
+                        goto retry;
+
+                    default:
+
+                        throw new OnePasswordException(response.AllText);
+                }
+            }
         }
 
         /// <summary>
@@ -248,63 +273,62 @@ namespace Neon.Deployment
         /// <param name="vault">Optionally specifies a specific vault.</param>
         /// <returns>The requested value (from the password's [value] field).</returns>
         /// <exception cref="OnePasswordException">Thrown for 1Password related problems.</exception>
-        public static string GetValue(string name, string vault = null)
+        public static string GetSecretValue(string name, string vault = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
-            EnsureSignedIn();
+            var retrying = false;
 
-            vault = GetVault(vault);
-
-            var response = NeonHelper.ExecuteCapture("op",
-                new string[]
-                {
-                    "--cache",
-                    "--session", Environment.GetEnvironmentVariable("NC_OP_SESSION_TOKEN"),
-                    "get", "item", name,
-                    "--vault", vault,
-                    "--fields", "value"
-                });
-
-            if (response.ExitCode != 0)
+            lock (syncLock)
             {
-                throw new OnePasswordException(response.ErrorText);
+                EnsureSignedIn();
+
+                vault = GetVault(vault);
+
+retry:          var response = NeonHelper.ExecuteCapture("op",
+                    new string[]
+                    {
+                        "--cache",
+                        "--session", sessionToken,
+                        "get", "item", name,
+                        "--vault", vault,
+                        "--fields", "value"
+                    });
+
+                switch (GetStatus(response))
+                {
+                    case OnePasswordStatus.OK:
+
+                        return response.OutputText.Trim();
+
+                    case OnePasswordStatus.SessionExpired:
+
+                        if (retrying)
+                        {
+                            throw new OnePasswordException(response.AllText);
+                        }
+
+                        // Obtain a fresh session token and retry the operation.
+
+                        Signin(account, defaultVault, masterPassword);
+
+                        retrying = true;
+                        goto retry;
+
+                    default:
+
+                        throw new OnePasswordException(response.AllText);
+                }
             }
-
-            return response.OutputText.Trim();
         }
 
         /// <summary>
-        /// <para>
-        /// Retrieves the AWS-CLI NEON_OP_AWS_ACCESS_KEY_ID and NEON_OP_AWS_SECRET_ACCESS_KEY
-        /// credentials from 1Password and sets these enviroment variables:
-        /// </para>
-        /// <list type="bullet">
-        ///     <item><c>AWS_ACCESS_KEY_ID</c></item>
-        ///     <item><c>AWS_SECRET_ACCESS_KEY</c></item>
-        /// </list>
+        /// Updates the session token.
         /// </summary>
-        public static void GetAwsCredentials()
+        /// <param name="sessionToken">The new session token or <c>null</c>.</param>
+        private static void SetSessionToken(string sessionToken)
         {
-            EnsureSignedIn();
-
-            Environment.SetEnvironmentVariable("AWS_ACCESS_KEY_ID", GetPassword("NEON_OP_AWS_ACCESS_KEY_ID"));
-            Environment.SetEnvironmentVariable("AWS_SECRET_ACCESS_KEY", GetPassword("NEON_OP_AWS_SECRET_ACCESS_KEY"));
-        }
-
-        /// <summary>
-        /// <para>
-        /// Removes the AWS-CLI credential environment variables if present:
-        /// </para>
-        /// <list type="bullet">
-        ///     <item><c>AWS_ACCESS_KEY_ID</c></item>
-        ///     <item><c>AWS_SECRET_ACCESS_KEY</c></item>
-        /// </list>
-        /// </summary>
-        public static void ClearAwsCredentials()
-        {
-            Environment.SetEnvironmentVariable("AWS_ACCESS_KEY_ID", null);
-            Environment.SetEnvironmentVariable("AWS_SECRET_ACCESS_KEY", null);
+            OnePassword.sessionToken = sessionToken;
         }
 
         /// <summary>
@@ -313,14 +337,14 @@ namespace Neon.Deployment
         /// <exception cref="OnePasswordException">Thrown if we're not signed in.</exception>
         private static void EnsureSignedIn()
         {
-            if (Environment.GetEnvironmentVariable("NC_OP_SESSION_TOKEN") == null)
+            if (!Signedin)
             {
                 throw new OnePasswordException("You are not signed into 1Password.");
             }
         }
 
         /// <summary>
-        /// Returns the target vault name to be accessed.
+        /// Returns the target vault name.
         /// </summary>
         /// <param name="vault">Optionally specifies a specific vault.</param>
         /// <returns>The target vault name.</returns>
@@ -340,6 +364,38 @@ namespace Neon.Deployment
             }
 
             return $"user-{user}";
+        }
+
+        /// <summary>
+        /// Returns a <see cref="OnePasswordStatus"/> corresponding to a 1Password CLI response.
+        /// </summary>
+        /// <param name="response">The 1Password CLI response.</param>
+        /// <returns>The status code.</returns>
+        private static OnePasswordStatus GetStatus(ExecuteResponse response)
+        {
+            Covenant.Requires<ArgumentNullException>(response != null, nameof(response));
+            
+            // $hack(jefflill):
+            //
+            // The 1Password CLI doesn't return useful exit codes at this time,
+            // so we're going to try to figure out what we need from the response
+            // text returned by the CLI.
+
+            if (response.ExitCode == 0)
+            {
+                return OnePasswordStatus.OK;
+            }
+            else
+            {
+                if (response.AllText.Contains("session expired"))
+                {
+                    return OnePasswordStatus.SessionExpired;
+                }
+                else
+                {
+                    return OnePasswordStatus.Other;
+                }
+            }
         }
     }
 }

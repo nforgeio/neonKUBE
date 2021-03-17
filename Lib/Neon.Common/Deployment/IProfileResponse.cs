@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DeploymentHelper.cs
+// FILE:	    IProfileResponse.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -19,7 +19,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
-using System.Text;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -29,15 +28,28 @@ using Neon.Common;
 namespace Neon.Deployment
 {
     /// <summary>
-    /// Deployment related defintions and utilities.
+    /// Abstracts Neon Profile Service named pipe command responses.
     /// </summary>
-    public static class DeploymentHelper
+    public interface IProfileResponse
     {
         /// <summary>
-        /// Identifies the named pipe used to communicate with the Neon profile
-        /// service running on the local workstation to query for user profile
-        /// information as well as secrets.
+        /// Retrurns <c>true</c> for successful requests, <c>false</c> for failed ones.
         /// </summary>
-        public const string NeonProfileServicePipe = "neon-profile-service";
+        bool Success { get; }
+
+        /// <summary>
+        /// Returns the simply response string (for non-JSON responses).
+        /// </summary>
+        string Value { get; }
+
+        /// <summary>
+        /// Returns the <see cref="JObject"/> for JSON responses.
+        /// </summary>
+        JObject JObject { get; }
+
+        /// <summary>
+        /// Returns the error message for failed requests.
+        /// </summary>
+        string Error { get; }
     }
 }
