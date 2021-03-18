@@ -129,19 +129,25 @@ namespace Neon.Deployment
     /// </remarks>
     public sealed class ProfileServer : IDisposable
     {
-        private string                  pipeName;
-        private NamedPipeServerStream   serverPipe;
-        private Thread                  serverThread;
+        private readonly object             syncLock = new object();
+        private string                      pipeName;
+        private Thread[]                    threads;
+        private NamedPipeServerStream[]     pipes;
+        private bool                        disposing;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="pipeName">The server named pipe name.  This defaults to <see cref="DeploymentHelper.NeonProfileServicePipe"/>.</param>
-        public ProfileServer(string pipeName = DeploymentHelper.NeonProfileServicePipe)
+        /// <param name="threadCount">Optionally specifies the number of threads to create to handle inbound requests.  This defaults to <b>1</b>.</param>
+        public ProfileServer(string pipeName = DeploymentHelper.NeonProfileServicePipe, int threadCount = 1)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(pipeName));
+            Covenant.Requires<ArgumentException>(threadCount > 0, nameof(threadCount));
 
             this.pipeName = pipeName;
+            this.threads  = new Thread[threadCount];
+            this.pipes    = new NamedPipeServerStream[threadCount];
         }
 
         /// <summary>
@@ -172,35 +178,81 @@ namespace Neon.Deployment
                 throw new InvalidOperationException($"The [{nameof(GetSecretValueHandler)}] is not initalized.");
             }
 
-            // Create the server side named pipe and configure it to allow only a
-            // single client connection at a time and only allow the processes
-            // belonging to the current user to connect.
+            // Start the listening threads.
 
-            serverPipe = new NamedPipeServerStream(pipeName, PipeDirection.InOut, maxNumberOfServerInstances: 1, PipeTransmissionMode.Message, PipeOptions.CurrentUserOnly);
-
-            // Start the listening thread.
-
-            serverThread = new Thread(new ThreadStart(ListenerLoop));
-            serverThread.Start();
+            for (int i = 0; i < threads.Length; i++)
+            {
+                threads[i] = new Thread(new ParameterizedThreadStart(ServerLoop));
+                threads[i].Start(i);
+            }
         }
 
         /// <inheritdoc/>
         public void Dispose()
         {
-            if (serverPipe != null)
+            lock (syncLock)
             {
-                // Close the server side pipe.  Note that this will cause
-                // the server thread exit as well.
+                if (disposing)
+                {
+                    return;
+                }
 
-                serverPipe.Dispose();
-                serverPipe = null;
+                disposing = true;
+
+                for (int i = 0; i < pipes.Length; i++)
+                {
+                    if (pipes[i] != null)
+                    {
+                        pipes[i].Dispose();
+                        pipes[i] = null;
+                    }
+                }
+
+                // $hack(jefflill):
+                //
+                // The [NamedPipeStream.WaitForConnection()] doesn't throw an exception
+                // when the underlying pipe id disposed.  I was hoping to catch an
+                // [ObjectDisposedException] in the server threads as the signal for 
+                // the thread to exit.
+                //
+                // The simple alternative is to establish a (fake) client connection
+                // for each thread.
             }
 
-            if (serverThread != null)
+            // $hack(jefflill):
+            //
+            // The [NamedPipeStream.WaitForConnection()] doesn't throw an exception
+            // when the underlying pipe id disposed.  I was hoping to catch an
+            // [ObjectDisposedException] in the server threads as the signal for 
+            // the thread to exit.
+            //
+            // The simple alternative is to establish a (fake) client connection
+            // for each thread.  This will cause the [WaitForConnection()] to return
+            // and then the thread will use [disposing] to know when to exit.
+
+            for (int i = 0; i < threads.Length; i++)
             {
-                serverThread.Join();
-                serverThread = null;
+                using (var clientPipe = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut))
+                {
+                    try
+                    {
+                        clientPipe.Connect(100);
+                    }
+                    catch (TimeoutException)
+                    {
+                        // Ignoring these
+                    }
+                }
             }
+
+            // Wait for the threads to terminate.
+
+            foreach (var thread in threads)
+            {
+                thread.Join();
+            }
+
+            threads = null;
         }
 
         /// <summary>
@@ -255,118 +307,144 @@ namespace Neon.Deployment
         /// <summary>
         /// Handles incoming client connections on a background thread.
         /// </summary>
-        private void ListenerLoop()
+        /// <param name="pipeIndexObject">Passes as the index into the [pipes] array this thread will use for its server side pipe.</param>
+        private void ServerLoop(object pipeIndexObject)
         {
-            while (true)
+            try
             {
-                try
-                {
-                    serverPipe.WaitForConnection();
-                }
-                catch (Exception e)
-                {
-                    // This will fail when the server pipe is disposed.  We'll
-                    // use this as a signal to exit the thread.
+                var pipeIndex = (int)pipeIndexObject;
 
-                    return;
-                }
-
-                using (var reader = new StreamReader(serverPipe))
+                while (true)
                 {
-                    using (var writer = new StreamWriter(serverPipe))
+                    lock (syncLock)
                     {
-                        var requestLine   = reader.ReadLine();
-                        var request       = (ProfileRequest)null;
-                        var handlerResult = (ProfileHandlerResult)null;
-
-                        try
+                        if (disposing)
                         {
-                            request = ProfileRequest.Parse(requestLine);
-                        }
-                        catch (FormatException)
-                        {
-                            // Report an malformed request to the client and then continue
-                            // listening for the next request.
+                            // The server is shutting down, so exit the thread.
 
-                            writer.WriteLine(ProfileResponse.CreateError(ProfileStatus.BadRequest, "Malformed request"));
-                            writer.Flush();
                             return;
                         }
 
-                        if (GetIsReady != null)
+                        if (pipes[pipeIndex] != null)
                         {
-                            handlerResult = GetIsReady();
+                            pipes[pipeIndex].Dispose();
+                            pipes[pipeIndex] = null;
+                        }
 
-                            if (handlerResult != null)
+                        pipes[pipeIndex] = new NamedPipeServerStream(pipeName, PipeDirection.InOut, maxNumberOfServerInstances: threads.Length, PipeTransmissionMode.Message, PipeOptions.CurrentUserOnly);
+                    }
+
+                    var pipe = pipes[pipeIndex];
+
+                    pipe.WaitForConnection();
+
+                    if (disposing)
+                    {
+                        return;
+                    }
+
+                    using (var reader = new StreamReader(pipe))
+                    {
+                        using (var writer = new StreamWriter(pipe))
+                        {
+                            writer.AutoFlush = true;
+
+                            var requestLine   = reader.ReadLine();
+                            var request       = (ProfileRequest)null;
+                            var handlerResult = (ProfileHandlerResult)null;
+
+                            try
                             {
-                                writer.WriteLine(handlerResult.ToResponse());
-                                writer.Flush();
+                                request = ProfileRequest.Parse(requestLine);
+                            }
+                            catch (FormatException)
+                            {
+                                // Report an malformed request to the client and then continue
+                                // listening for the next request.
+
+                                writer.WriteLine(ProfileResponse.CreateError(ProfileStatus.BadRequest, "Malformed request"));
+                                return;
                             }
 
-                            continue;
-                        }
-
-                        request.Args.TryGetValue("name", out var name);
-                        request.Args.TryGetValue("vault", out var vault);
-                        request.Args.TryGetValue("masterpassword", out var masterPassword);
-
-                        try
-                        {
-                            switch (request.Command)
+                            if (GetIsReady != null)
                             {
-                                case "GET-MASTER-PASSWORD":
+                                handlerResult = GetIsReady();
 
-                                    handlerResult = GetMasterPasswordHandler();
-                                    break;
+                                if (handlerResult != null)
+                                {
+                                    writer.WriteLine(handlerResult.ToResponse());
+                                }
 
-                                case "GET-PROFILE-VALUE":
-
-                                    if (name == null)
-                                    {
-                                        handlerResult = ProfileHandlerResult.CreateError(ProfileStatus.MissingArg, $"GET-PROFILE-VALUE: [name] argument is required.");
-                                        break;
-                                    }
-
-                                    handlerResult = GetProfileValueHandler(name);
-                                    break;
-
-                                case "GET-SECRET-PASSWORD":
-
-                                    if (name == null)
-                                    {
-                                        handlerResult = ProfileHandlerResult.CreateError(ProfileStatus.MissingArg,$"GET-SECRET-PASSWORD: [name] argument is required.");
-                                        break;
-                                    }
-
-                                    handlerResult = GetSecretPasswordHandler(name, vault, masterPassword);
-                                    break;
-
-                                case "GET-SECRET-VALUE":
-
-                                    if (name == null)
-                                    {
-                                        handlerResult = ProfileHandlerResult.CreateError(ProfileStatus.MissingArg,$"GET-SECRET-VALUE: [name] argument is required.");
-                                        break;
-                                    }
-
-                                    handlerResult = GetSecretValueHandler(name, vault, masterPassword);
-                                    break;
-
-                                default:
-
-                                    handlerResult = ProfileHandlerResult.CreateError(ProfileStatus.BadCommand, $"Unexpected command: {request.Command}");
-                                    break;
+                                continue;
                             }
-                        }
-                        catch (Exception e)
-                        {
-                            handlerResult = ProfileHandlerResult.CreateError(ProfileStatus.BadCommand, NeonHelper.ExceptionError(e));
-                        }
 
-                        writer.WriteLine(handlerResult.ToResponse());
-                        writer.Flush();
+                            request.Args.TryGetValue("name", out var name);
+                            request.Args.TryGetValue("vault", out var vault);
+                            request.Args.TryGetValue("masterpassword", out var masterPassword);
+
+                            try
+                            {
+                                switch (request.Command)
+                                {
+                                    case "GET-MASTER-PASSWORD":
+
+                                        handlerResult = GetMasterPasswordHandler();
+                                        break;
+
+                                    case "GET-PROFILE-VALUE":
+
+                                        if (name == null)
+                                        {
+                                            handlerResult = ProfileHandlerResult.CreateError(ProfileStatus.MissingArg, $"GET-PROFILE-VALUE: [name] argument is required.");
+                                            break;
+                                        }
+
+                                        handlerResult = GetProfileValueHandler(name);
+                                        break;
+
+                                    case "GET-SECRET-PASSWORD":
+
+                                        if (name == null)
+                                        {
+                                            handlerResult = ProfileHandlerResult.CreateError(ProfileStatus.MissingArg, $"GET-SECRET-PASSWORD: [name] argument is required.");
+                                            break;
+                                        }
+
+                                        handlerResult = GetSecretPasswordHandler(name, vault, masterPassword);
+                                        break;
+
+                                    case "GET-SECRET-VALUE":
+
+                                        if (name == null)
+                                        {
+                                            handlerResult = ProfileHandlerResult.CreateError(ProfileStatus.MissingArg, $"GET-SECRET-VALUE: [name] argument is required.");
+                                            break;
+                                        }
+
+                                        handlerResult = GetSecretValueHandler(name, vault, masterPassword);
+                                        break;
+
+                                    default:
+
+                                        handlerResult = ProfileHandlerResult.CreateError(ProfileStatus.BadCommand, $"Unexpected command: {request.Command}");
+                                        break;
+                                }
+                            }
+                            catch (Exception e)
+                            {
+                                handlerResult = ProfileHandlerResult.CreateError(ProfileStatus.BadCommand, NeonHelper.ExceptionError(e));
+                            }
+
+                            writer.WriteLine(handlerResult.ToResponse());
+                        }
                     }
                 }
+            }
+            catch
+            {
+                // Handle all exceptions by exiting the thread.
+
+                return;
             }
         }
     }

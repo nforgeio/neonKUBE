@@ -67,8 +67,9 @@ namespace Neon.Deployment
                 {
                     using (var writer = new StreamWriter(pipe))
                     {
+                        writer.AutoFlush = true;
+
                         writer.WriteLine(request);
-                        writer.Flush();
 
                         var response = ProfileResponse.Parse(reader.ReadLine());
 

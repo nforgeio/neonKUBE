@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_NeonAssistantMessages.cs
+// FILE:	    Test_ProfileMessages.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -33,7 +33,7 @@ using Neon.Xunit;
 
 namespace TestDeployment
 {
-    public class Test_NeonAssistantMessages
+    public class Test_ProfileMessages
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonDeployment)]
