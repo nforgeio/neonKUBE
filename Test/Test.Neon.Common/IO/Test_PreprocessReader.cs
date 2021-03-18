@@ -21,9 +21,13 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.DependencyInjection;
+
 using Neon.Common;
+using Neon.Deployment;
 using Neon.IO;
 using Neon.Xunit;
 
@@ -1202,5 +1206,119 @@ line2
                 Assert.Equal("# line1\r\nline2\r\n# line3\r\n", reader.ReadToEnd());
             }
         }
+
+#if !NETFRAMEWORK
+        // The [Neon.Deployment] library targets .NET Standard 2.1 to gain access to
+        // Windows Compatability named pipe APIs and is not compatible with 
+        // .NET Framework.
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void ProfileReferences()
+        {
+            // Verify that [IProfileClient] integration works by starting a profile
+            // server, injecting an [IProfileClient] implementation and then verifying
+            // that secret passwords, secret values, and profile values can be
+            // resolved.
+
+            var pipeName = Guid.NewGuid().ToString("d");
+            var server   = new ProfileServer(pipeName);
+
+            server.GetMasterPasswordHandler =
+                () =>
+                {
+                    return ProfileHandlerResult.Create("foobar");
+                };
+
+            server.GetProfileValueHandler =
+                name =>
+                {
+                    if (name == "missing")
+                    {
+                        return ProfileHandlerResult.CreateError(ProfileStatus.NotFound, $"[{name}] variable not found.");
+                    }
+
+                    return ProfileHandlerResult.Create($"{name}-profile");
+                };
+
+            server.GetSecretPasswordHandler =
+                (name, vault, masterPassword) =>
+                {
+                    if (name == "missing")
+                    {
+                        return ProfileHandlerResult.CreateError(ProfileStatus.NotFound, $"[{name}] variable not found.");
+                    }
+
+                    if (vault == null)
+                    {
+                        return ProfileHandlerResult.Create($"{name}-password");
+                    }
+                    else
+                    {
+                        return ProfileHandlerResult.Create($"{name}-password-{vault}");
+                    }
+                };
+
+            server.GetSecretValueHandler =
+                (name, vault, masterPassword) =>
+                {
+                    if (name == "missing")
+                    {
+                        return ProfileHandlerResult.CreateError(ProfileStatus.NotFound, $"[{name}] variable not found.");
+                    }
+
+                    if (vault == null)
+                    {
+                        return ProfileHandlerResult.Create($"{name}-secret");
+                    }
+                    else
+                    {
+                        return ProfileHandlerResult.Create($"{name}-secret-{vault}");
+                    }
+                };
+
+            server.Start();
+
+            try
+            {
+                var client = new ProfileClient(pipeName);
+
+                NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(client);
+
+                //-------------------------------------------------------------
+                // Verify secret passwords
+
+                var source = "TEST = $<<<password:test>>>";
+                var output = new PreprocessReader(source).ReadToEnd().Trim();
+
+                source = "TEST = $<<<password:test:vault>>>";
+                output = new PreprocessReader(source).ReadToEnd().Trim();
+
+                Assert.Equal("TEST = test-password-vault", output);
+
+                Assert.Throws<ProfileException>(() => new PreprocessReader("TEST = $<<<password:missing>>>").ReadToEnd());
+
+                //-------------------------------------------------------------
+                // Verify secret values
+
+                //-------------------------------------------------------------
+                // Verify profile values
+
+
+            }
+            finally
+            {
+                NeonHelper.ServiceContainer.Remove(NeonHelper.ServiceContainer.Single(service => service.ServiceType == typeof(IProfileClient)));
+
+                server.Dispose();
+            }
+        }
+#else
+        [Fact(Skip = "Not compatible with .NET Framework")]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void ProfileReferences()
+        {
+        }
+#endif
     }
 }

@@ -35,8 +35,8 @@ namespace Neon.Deployment
     /// <summary>
     /// Implements a named-pipe based server that will be used to receive
     /// requests from <see cref="ProfileClient"/>.  This server listens
-    /// on the <see cref="DeploymentHelper.NeonProfileServicePipe"/> pipe and only allows 
-    /// connections from other processes running on behalf of the current user.
+    /// on a named pipe and only allows connections from other processes 
+    /// running on behalf of the current user.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -129,14 +129,19 @@ namespace Neon.Deployment
     /// </remarks>
     public sealed class ProfileServer : IDisposable
     {
+        private string                  pipeName;
         private NamedPipeServerStream   serverPipe;
         private Thread                  serverThread;
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        public ProfileServer()
+        /// <param name="pipeName">The server named pipe name.  This defaults to <see cref="DeploymentHelper.NeonProfileServicePipe"/>.</param>
+        public ProfileServer(string pipeName = DeploymentHelper.NeonProfileServicePipe)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(pipeName));
+
+            this.pipeName = pipeName;
         }
 
         /// <summary>
@@ -171,7 +176,7 @@ namespace Neon.Deployment
             // single client connection at a time and only allow the processes
             // belonging to the current user to connect.
 
-            serverPipe = new NamedPipeServerStream(DeploymentHelper.NeonProfileServicePipe, PipeDirection.InOut, maxNumberOfServerInstances: 1, PipeTransmissionMode.Message, PipeOptions.CurrentUserOnly);
+            serverPipe = new NamedPipeServerStream(pipeName, PipeDirection.InOut, maxNumberOfServerInstances: 1, PipeTransmissionMode.Message, PipeOptions.CurrentUserOnly);
 
             // Start the listening thread.
 
@@ -258,7 +263,7 @@ namespace Neon.Deployment
                 {
                     serverPipe.WaitForConnection();
                 }
-                catch
+                catch (Exception e)
                 {
                     // This will fail when the server pipe is disposed.  We'll
                     // use this as a signal to exit the thread.

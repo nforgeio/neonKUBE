@@ -288,33 +288,41 @@ namespace Neon.IO
         //---------------------------------------------------------------------
         // Static members
 
-        private const RegexOptions regexOptions           = RegexOptions.Compiled;
-        private const RegexOptions regexIgnoreCaseOptions = RegexOptions.IgnoreCase | RegexOptions.Compiled;
+        private const RegexOptions      regexOptions           = RegexOptions.Compiled;
+        private const RegexOptions      regexIgnoreCaseOptions = RegexOptions.IgnoreCase | RegexOptions.Compiled;
+        private static readonly char[]  colonArray             = new char[] { ':' };
 
         /// <summary>
-        /// A variable expansion <see cref="Regex"/> that matches normal variables like <b>$&lt;test&gt;</b> and environment
-        /// variables like <b>&lt;&lt;test&gt;&gt;&gt;</b>.
+        /// A variable expansion <see cref="Regex"/> that matches normal variables like <b>$&lt;test&gt;</b>, environment
+        /// variables like <b>&lt;&lt;test&gt;&gt;&gt;</b>, and profile references like <b>&lt;&lt;$lt;secret:my-secret:my-vault&gt;&gt;&gt;&gt;</b>
+        /// You can set the <see cref="VariableExpansionRegex"/> property to this value to change the
+        /// <see cref="PreprocessReader"/> behavior.
         /// </summary>
-        public static Regex AngleVariableExpansionRegex { get; private set; } = new Regex(@"\$<(?<name><{0,1}[a-z0-9_\.\-]+>{0,1})>", regexIgnoreCaseOptions);
+        public static Regex AngleVariableExpansionRegex { get; private set; } = new Regex(@"\$<(?<name><{0,2}[a-z0-9_:\.\-]+>{0,2})>", regexIgnoreCaseOptions);
 
         /// <summary>
-        /// A variable expansion <see cref="Regex"/> that matches normal variables like <b>${test}</b> and environment 
-        /// variables like <b>${{test}}</b>. You can set the <see cref="VariableExpansionRegex"/> property to this value 
-        /// to change the <see cref="PreprocessReader"/> behavior.
+        /// A variable expansion <see cref="Regex"/> that matches normal variables like <b>${test}</b>, environment 
+        /// variables like <b>${{test}}</b> and profile references like <b>${{{secret:my-secret:my-vault}}}</b>. 
+        /// You can set the <see cref="VariableExpansionRegex"/> property to this value to change the
+        /// <see cref="PreprocessReader"/> behavior.
         /// </summary>
-        public static Regex CurlyVariableExpansionRegex { get; private set; } = new Regex(@"\$\{(?<name>\{{0,1}[a-z0-9_\.\-]+\}{0,1})\}", regexIgnoreCaseOptions);
+        public static Regex CurlyVariableExpansionRegex { get; private set; } = new Regex(@"\$\{(?<name>\{{0,2}[a-z0-9_:\.\-]+\}{0,2})\}", regexIgnoreCaseOptions);
 
         /// <summary>
-        /// The default variable expansion <see cref="Regex"/>.  This defaults to <see cref="AngleVariableExpansionRegex"/> 
-        /// that matches normal variables like <b>$&lt;test&gt;</b> and environment variables like <b>$$lt;&lt;test&gt;&gt;</b>.
+        /// A variable expansion <see cref="Regex"/> that matches normal variables like <b>${test}</b>, environment 
+        /// variables like <b>$((test))</b> and profile references like <b>$(((secret:my-secret:my-vault)))</b>. 
+        /// You can set the <see cref="VariableExpansionRegex"/> property to this value to change the
+        /// <see cref="PreprocessReader"/> behavior.
+        /// </summary>
+        public static Regex ParenVariableExpansionRegex { get; private set; } = new Regex(@"\$\((?<name>\({0,2}[a-z0-9_:\.\-]+\){0,2})\)", regexIgnoreCaseOptions);
+
+        /// <summary>
+        /// The default variable expansion <see cref="Regex"/> that matches normal variables like <b>$&lt;test&gt;</b>, environment
+        /// variables like <b>&lt;&lt;test&gt;&gt;&gt;</b>, and profile references like <b>&lt;&lt;$lt;secret:my-secret:my-vault&gt;&gt;&gt;&gt;</b>
+        /// You can set the <see cref="VariableExpansionRegex"/> property to this value to change the
+        /// <see cref="PreprocessReader"/> behavior.
         /// </summary>
         public static Regex DefaultVariableExpansionRegex { get; private set; } = AngleVariableExpansionRegex;
-
-        /// <summary>A alternate variable expansion <see cref="Regex"/> that matches normal variables like <b>$(test)</b>
-        /// and environment variables like <b>$((test))</b>.. You can set the <see cref="VariableExpansionRegex"/> 
-        /// property to this value to change the <see cref="PreprocessReader"/> behavior.
-        /// </summary>
-        public static Regex ParenVariableExpansionRegex { get; private set; } = new Regex(@"\$\((?<name>\({0,1}[a-z0-9_\.\-]+\){0,1})\)", regexIgnoreCaseOptions);
 
         /// <summary>
         /// <b>INTERNAL USE ONLY:</b> The <see cref="Regex"/> used to validate variable names.
@@ -325,6 +333,7 @@ namespace Neon.IO
         // Instance members
 
         private TextReader                  reader;
+        private IProfileClient              profileClient          = NeonHelper.ServiceContainer.GetService<IProfileClient>();
         private Dictionary<string, string>  variables              = new Dictionary<string, string>();
         private Regex                       variableExpansionRegex = DefaultVariableExpansionRegex;
         private string                      indent                 = string.Empty;
@@ -825,19 +834,67 @@ namespace Neon.IO
 
                 if (matchCount++ > 128)
                 {
-                    throw new FormatException($"Line {lineNumber}: More than 128 variable expansions required.  Verify that there are no recursively defined variables on line: {input}");
+                    throw new FormatException($"Line {lineNumber}: More than 128 variable expansions are required.  Verify that there are no recursively defined variables on line: {input}");
                 }
 
                 string value;
 
-                if (name.First() == match.Value[1] || name.Last() == match.Value.Last())
+                if (name.StartsWith("<<") && name.EndsWith(">>") ||
+                    name.StartsWith("((") && name.EndsWith("))") ||
+                    name.StartsWith("{{") && name.EndsWith("}}"))
+                {
+                    // This is a profile reference.
+
+                    var reference = name.Substring(2, name.Length - 4);
+                    var fields    = reference.Split(colonArray, StringSplitOptions.RemoveEmptyEntries);
+
+                    if (fields.Length < 2)
+                    {
+                        throw new ProfileException($"[{name}] is not a valid profile reference.  Both [type] and [name] are required.");
+                    }
+
+                    switch (fields[0].ToLower())
+                    {
+                        case "password":
+
+                            if (profileClient == null)
+                            {
+                                throw new ProfileException($"Cannot lookup the secret password [{name}] because no [{nameof(IProfileClient)}] implementation is available.");
+                            }
+
+                            value = profileClient.GetSecretPassword(fields[1], fields.Length >= 3 ? fields[2] : null);
+                            break;
+
+                        case "secret":
+
+                            if (profileClient == null)
+                            {
+                                throw new ProfileException($"Cannot lookup the secret value [{name}] because no [{nameof(IProfileClient)}] implementation is available.");
+                            }
+
+                            value = profileClient.GetSecretValue(fields[1], fields.Length >= 3 ? fields[2] : null);
+                            break;
+
+                        case "profile":
+
+                            if (profileClient == null)
+                            {
+                                throw new ProfileException($"Cannot lookup the profile value [{name}] because no [{nameof(IProfileClient)}] implementation is available.");
+                            }
+
+                            value = profileClient.GetProfileValue(fields[1]);
+                            break;
+
+                        default:
+
+                            throw new ProfileException($"[{fields[0]}] is not a valid profile type.  Only [password], [secret], and [profile] are supported.");
+                    }
+                }
+                else if (name.StartsWith("<") && name.EndsWith(">") ||
+                         name.StartsWith("(") && name.EndsWith(")") ||
+                         name.StartsWith("{") && name.EndsWith("}"))
                 {
                     // This is an environment variable.
-
-                    if (name.First() != match.Value[1] || name.Last() != match.Value.Last())
-                    {
-                        throw new FormatException($"Line {lineNumber}: Invalid variable reference [{match.Value}].");
-                    }
 
                     name  = name.Substring(1, name.Length - 2);
                     value = Environment.GetEnvironmentVariable(name);

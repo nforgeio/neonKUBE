@@ -22,6 +22,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.DependencyInjection;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Xunit;
@@ -95,7 +97,7 @@ namespace TestDeployment
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonDeployment)]
         public void GetMasterPassword()
         {
-            var client = new ProfileClient();
+            var client = new ProfileClient(DeploymentHelper.NeonProfileServicePipe);
 
             using (var server = new ProfileServer())
             {

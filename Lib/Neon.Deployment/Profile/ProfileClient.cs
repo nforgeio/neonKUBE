@@ -32,14 +32,34 @@ namespace Neon.Deployment
     /// <inheritdoc/>
     public class ProfileClient : IProfileClient
     {
-        private static readonly TimeSpan    connectTimeout = TimeSpan.FromSeconds(10);
+        private readonly string     pipeName;
+        private readonly TimeSpan   connectTimeout;
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="pipeName">The server pipe name.  This defaults to <see cref="DeploymentHelper.NeonProfileServicePipe"/>.</param>
+        /// <param name="connectTimeout">Optionally specifies the connection timeout.  This defaults to <b>10 seconds</b>.</param>
+        public ProfileClient(string pipeName = DeploymentHelper.NeonProfileServicePipe, TimeSpan connectTimeout = default)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(pipeName), nameof(pipeName));
+
+            this.pipeName = pipeName;
+
+            if (connectTimeout <= TimeSpan.Zero)
+            {
+                connectTimeout = TimeSpan.FromSeconds(10);
+            }
+
+            this.connectTimeout = connectTimeout;
+        }
 
         /// <inheritdoc/>
         public IProfileResponse Call(IProfileRequest request)
         {
             Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
 
-            using (var pipe = new NamedPipeClientStream(".", DeploymentHelper.NeonProfileServicePipe, PipeDirection.InOut))
+            using (var pipe = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut))
             {
                 pipe.Connect((int)connectTimeout.TotalMilliseconds);
 
