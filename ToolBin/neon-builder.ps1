@@ -105,7 +105,7 @@ function PublishCore
 # We see somewhat random build problems when Visual Studio has the solution open,
 # so have the user close Visual Studio instances first.
 
-Get-Process -Name devenv -ErrorAction SilentlyContinue
+Get-Process -Name devenv -ErrorAction SilentlyContinue | Out-Null
 
 if ($?)
 {
@@ -123,7 +123,7 @@ if (-not $nobuild)
     # Clear the NF_BUILD folder and delete any [bin] or [obj] folders
     # to be really sure we're doing a clean build.  I've run into 
     # situations where I've upgraded SDKs or Visual Studio and Files
-    # left over from previous builds caused build trouble.
+    # left over from previous builds that caused build trouble.
 
     & $nfToolBin\neon-build clean "$nfRoot"
 
