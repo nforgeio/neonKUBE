@@ -39,19 +39,28 @@ namespace TestDeployment
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public partial class Test_ProfileServer
     {
-        // The profile server has the potential for race condition type bugs
-        // so we can use this constant to repeat the tests several times to
+        /// <summary>
+        /// The profile server has the potential for race condition type bugs
+        /// so we can use this constant to repeat the tests several times to
         // gain more confidence.
-
+        //// </summary>
         private const int repeatCount = 10;
 
+        /// <summary>
         // Use a unique pipe name so we won't conflict with the real profile
         // server if it's running on this machine.
-
+        /// </summary>
         private const string pipeName = "9621a996-b35f-4f84-8c6c-7ff72cb69106";
 
         /// <summary>
-        /// Sets handlers that return reasonable defauilt values.
+        /// Delay to be introduced by the profile client between sending the request
+        /// and reading the response.  This is used to detect potential race conditions
+        /// when communicating with the server.
+        /// </summary>
+        private readonly TimeSpan ClientDebugDelay = TimeSpan.FromMilliseconds(10);
+
+        /// <summary>
+        /// Sets handlers that return reasonable default values.
         /// </summary>
         /// <param name="server">The assistant erver.</param>
         private void SetDefaultHandlers(ProfileServer server)

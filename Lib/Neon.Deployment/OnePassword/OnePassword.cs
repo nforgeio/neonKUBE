@@ -201,7 +201,7 @@ namespace Neon.Deployment
             {
                 NeonHelper.ExecuteCapture("op", new string[] { "signout" });
 
-                OnePassword.account         = null;
+                OnePassword.account        = null;
                 OnePassword.defaultVault   = null;
                 OnePassword.masterPassword = null;
                 OnePassword.sessionToken   = null;

@@ -182,7 +182,7 @@ namespace Neon.Deployment
 
             for (int i = 0; i < threads.Length; i++)
             {
-                threads[i] = new Thread(new ParameterizedThreadStart(ServerLoop));
+                threads[i] = new Thread(new ParameterizedThreadStart(ServerThread));
                 threads[i].Start(i);
             }
         }
@@ -308,7 +308,7 @@ namespace Neon.Deployment
         /// Handles incoming client connections on a background thread.
         /// </summary>
         /// <param name="pipeIndexObject">Passes as the index into the [pipes] array this thread will use for its server side pipe.</param>
-        private void ServerLoop(object pipeIndexObject)
+        private void ServerThread(object pipeIndexObject)
         {
             try
             {
@@ -343,101 +343,101 @@ namespace Neon.Deployment
                         return;
                     }
 
-                    using (var reader = new StreamReader(pipe))
+                    var reader = new StreamReader(pipe);
+                    var writer = new StreamWriter(pipe);
+
+                    writer.AutoFlush = true;
+
+                    var requestLine   = reader.ReadLine();
+                    var request       = (ProfileRequest)null;
+                    var handlerResult = (ProfileHandlerResult)null;
+
+                    try
                     {
-                        using (var writer = new StreamWriter(pipe))
+                        request = ProfileRequest.Parse(requestLine);
+                    }
+                    catch (FormatException)
+                    {
+                        // Report an malformed request to the client and then continue
+                        // listening for the next request.
+
+                        writer.WriteLine(ProfileResponse.CreateError(ProfileStatus.BadRequest, "Malformed request"));
+                        return;
+                    }
+
+                    if (GetIsReady != null)
+                    {
+                        handlerResult = GetIsReady();
+
+                        if (handlerResult != null)
                         {
-                            writer.AutoFlush = true;
-
-                            var requestLine   = reader.ReadLine();
-                            var request       = (ProfileRequest)null;
-                            var handlerResult = (ProfileHandlerResult)null;
-
-                            try
-                            {
-                                request = ProfileRequest.Parse(requestLine);
-                            }
-                            catch (FormatException)
-                            {
-                                // Report an malformed request to the client and then continue
-                                // listening for the next request.
-
-                                writer.WriteLine(ProfileResponse.CreateError(ProfileStatus.BadRequest, "Malformed request"));
-                                return;
-                            }
-
-                            if (GetIsReady != null)
-                            {
-                                handlerResult = GetIsReady();
-
-                                if (handlerResult != null)
-                                {
-                                    writer.WriteLine(handlerResult.ToResponse());
-                                }
-
-                                continue;
-                            }
-
-                            request.Args.TryGetValue("name", out var name);
-                            request.Args.TryGetValue("vault", out var vault);
-                            request.Args.TryGetValue("masterpassword", out var masterPassword);
-
-                            try
-                            {
-                                switch (request.Command)
-                                {
-                                    case "GET-MASTER-PASSWORD":
-
-                                        handlerResult = GetMasterPasswordHandler();
-                                        break;
-
-                                    case "GET-PROFILE-VALUE":
-
-                                        if (name == null)
-                                        {
-                                            handlerResult = ProfileHandlerResult.CreateError(ProfileStatus.MissingArg, $"GET-PROFILE-VALUE: [name] argument is required.");
-                                            break;
-                                        }
-
-                                        handlerResult = GetProfileValueHandler(name);
-                                        break;
-
-                                    case "GET-SECRET-PASSWORD":
-
-                                        if (name == null)
-                                        {
-                                            handlerResult = ProfileHandlerResult.CreateError(ProfileStatus.MissingArg, $"GET-SECRET-PASSWORD: [name] argument is required.");
-                                            break;
-                                        }
-
-                                        handlerResult = GetSecretPasswordHandler(name, vault, masterPassword);
-                                        break;
-
-                                    case "GET-SECRET-VALUE":
-
-                                        if (name == null)
-                                        {
-                                            handlerResult = ProfileHandlerResult.CreateError(ProfileStatus.MissingArg, $"GET-SECRET-VALUE: [name] argument is required.");
-                                            break;
-                                        }
-
-                                        handlerResult = GetSecretValueHandler(name, vault, masterPassword);
-                                        break;
-
-                                    default:
-
-                                        handlerResult = ProfileHandlerResult.CreateError(ProfileStatus.BadCommand, $"Unexpected command: {request.Command}");
-                                        break;
-                                }
-                            }
-                            catch (Exception e)
-                            {
-                                handlerResult = ProfileHandlerResult.CreateError(ProfileStatus.BadCommand, NeonHelper.ExceptionError(e));
-                            }
-
                             writer.WriteLine(handlerResult.ToResponse());
+                            pipe.WaitForPipeDrain();
+                            pipe.Close();
+                            continue;
                         }
                     }
+
+                    request.Args.TryGetValue("name", out var name);
+                    request.Args.TryGetValue("vault", out var vault);
+                    request.Args.TryGetValue("masterpassword", out var masterPassword);
+
+                    try
+                    {
+                        switch (request.Command)
+                        {
+                            case "GET-MASTER-PASSWORD":
+
+                                handlerResult = GetMasterPasswordHandler();
+                                break;
+
+                            case "GET-PROFILE-VALUE":
+
+                                if (name == null)
+                                {
+                                    handlerResult = ProfileHandlerResult.CreateError(ProfileStatus.MissingArg, $"GET-PROFILE-VALUE: [name] argument is required.");
+                                    break;
+                                }
+
+                                handlerResult = GetProfileValueHandler(name);
+                                break;
+
+                            case "GET-SECRET-PASSWORD":
+
+                                if (name == null)
+                                {
+                                    handlerResult = ProfileHandlerResult.CreateError(ProfileStatus.MissingArg, $"GET-SECRET-PASSWORD: [name] argument is required.");
+                                    break;
+                                }
+
+                                handlerResult = GetSecretPasswordHandler(name, vault, masterPassword);
+                                break;
+
+                            case "GET-SECRET-VALUE":
+
+                                if (name == null)
+                                {
+                                    handlerResult = ProfileHandlerResult.CreateError(ProfileStatus.MissingArg, $"GET-SECRET-VALUE: [name] argument is required.");
+                                    break;
+                                }
+
+                                handlerResult = GetSecretValueHandler(name, vault, masterPassword);
+                                break;
+
+                            default:
+
+                                handlerResult = ProfileHandlerResult.CreateError(ProfileStatus.BadCommand, $"Unexpected command: {request.Command}");
+                                break;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        handlerResult = ProfileHandlerResult.CreateError(ProfileStatus.BadCommand, NeonHelper.ExceptionError(e));
+                    }
+
+                    writer.WriteLine(handlerResult.ToResponse());
+                    pipe.WaitForPipeDrain();
+                    pipe.Disconnect();
                 }
             }
             catch

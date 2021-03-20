@@ -21,6 +21,7 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.IO.Pipes;
 using System.Text;
+using System.Threading;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -61,26 +62,38 @@ namespace Neon.Deployment
 
             using (var pipe = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut))
             {
-                pipe.Connect((int)connectTimeout.TotalMilliseconds);
-
-                using (var reader = new StreamReader(pipe))
+                try
                 {
-                    using (var writer = new StreamWriter(pipe))
-                    {
-                        writer.AutoFlush = true;
-
-                        writer.WriteLine(request);
-
-                        var response = ProfileResponse.Parse(reader.ReadLine());
-
-                        if (!response.Success)
-                        {
-                            throw new ProfileException(response.Error);
-                        }
-
-                        return response;
-                    }
+                    pipe.Connect((int)connectTimeout.TotalMilliseconds);
                 }
+                catch (TimeoutException e)
+                {
+                    throw new ProfileException("Cannot connect to profile server.  Is [neon-assistant] running?", e);
+                }
+
+                var reader = new StreamReader(pipe);
+                var writer = new StreamWriter(pipe);
+
+                writer.AutoFlush = true;
+                writer.WriteLine(request);
+
+                var responseLine = reader.ReadLine();
+
+                if (responseLine != null)
+                {
+                    throw new ProfileException("The profile server did not respond.");
+                }
+
+                var response = ProfileResponse.Parse(reader.ReadLine());
+
+                pipe.Close();
+
+                if (!response.Success)
+                {
+                    throw new ProfileException(response.Error);
+                }
+
+                return response;
             }
         }
 
