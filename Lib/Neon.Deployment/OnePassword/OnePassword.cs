@@ -106,6 +106,12 @@ namespace Neon.Deployment
 
             lock (syncLock)
             {
+                // 1Password doesn't allow reconfiguring without being signed-out first.
+
+                Signout();
+
+                // Sign back in.
+
                 OnePassword.account        = account;
                 OnePassword.defaultVault   = defaultVault;
                 OnePassword.masterPassword = masterPassword;
