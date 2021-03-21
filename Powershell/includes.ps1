@@ -27,6 +27,6 @@ cd $env:NF_ROOT/Powershell
 
 . ./error-handling.ps1
 . ./git.ps1
-. ./one-password.ps1
+. ./profile-client.ps1
 
 cd $includeOrgDir

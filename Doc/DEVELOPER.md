@@ -53,7 +53,7 @@ Follow the steps below to configure a development or test workstation:
 
     * Reboot your machine as required.
 
-5. Install the latest **32-bit** production release of PowerShell Core from [here](https://github.com/PowerShell/PowerShell/releases) (`PowerShell-#.#.#-win.x86.msi`)
+5. Install the latest **32-bit** production release of PowerShell 7 from [here](https://github.com/PowerShell/PowerShell/releases) (`PowerShell-#.#.#-win.x86.msi`)
 
 6. Enable PowerShell script execution via (in a CMD window as administrator):
     ```

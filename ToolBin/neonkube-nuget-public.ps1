@@ -31,11 +31,9 @@ if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
     exit
 }
 
-# Sign into 1Password and retrieve any necessary credentials.
+# Retrieve any necessary credentials.
 
-OpSignin
-
-$nugetApiKey = OpGetPassword "NEON_OP_NUGET_KEY"
+$nugetApiKey = GetSecretPassword "NEON_OP_NUGET_KEY"
 
 #------------------------------------------------------------------------------
 # Sets the package version in the specified project file.

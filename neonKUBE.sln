@@ -386,7 +386,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Powershell", "Powershell", 
 		Powershell\error-handling.ps1 = Powershell\error-handling.ps1
 		Powershell\git.ps1 = Powershell\git.ps1
 		Powershell\includes.ps1 = Powershell\includes.ps1
-		Powershell\one-password.ps1 = Powershell\one-password.ps1
+		Powershell\profile-client.ps1 = Powershell\profile-client.ps1
 		Powershell\README.md = Powershell\README.md
 	EndProjectSection
 EndProject
@@ -407,7 +407,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "test-api", "Services\test-a
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Deployment", "Lib\Neon.Deployment\Neon.Deployment.csproj", "{8150D072-C4B4-45A1-A950-FEEA014CB485}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.Neon.Deployment", "Test\Test.Neon.Deployment\Test.Neon.Deployment.csproj", "{F6A4A1FF-165D-4A02-8211-CF202CD64E0B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.Deployment", "Test\Test.Neon.Deployment\Test.Neon.Deployment.csproj", "{F6A4A1FF-165D-4A02-8211-CF202CD64E0B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

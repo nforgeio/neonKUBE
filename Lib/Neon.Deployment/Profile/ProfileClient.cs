@@ -31,7 +31,7 @@ using Neon.Common;
 namespace Neon.Deployment
 {
     /// <inheritdoc/>
-    public class ProfileClient : IProfileClient
+    public partial class ProfileClient : IProfileClient
     {
         private readonly string     pipeName;
         private readonly TimeSpan   connectTimeout;
