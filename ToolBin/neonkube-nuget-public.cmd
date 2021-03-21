@@ -19,4 +19,4 @@ REM limitations under the License.
 REM Publishes RELEASE builds of the NeonForge Nuget packages to the
 REM local file system and public Nuget.org repositories.
 
-powershell -file "%NF_ROOT%\ToolBin\neonkube-nuget-public.ps1" %*
+pwsh -file "%NF_ROOT%\ToolBin\neonkube-nuget-public.ps1" %*

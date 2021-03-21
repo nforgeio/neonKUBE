@@ -1,2 +1,2 @@
 @echo off
-powershell -file "%NF_ROOT%\ToolBin\neon-builder.ps1" %*
+pwsh -file "%NF_ROOT%\ToolBin\neon-builder.ps1" %*
