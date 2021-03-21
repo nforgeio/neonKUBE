@@ -1,4 +1,5 @@
-﻿#------------------------------------------------------------------------------
+﻿#Requires -Version 7.0
+#------------------------------------------------------------------------------
 # FILE:         publish.ps1
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
@@ -41,9 +42,7 @@ $image_root = "$env:NF_ROOT\\Images"
 . $image_root/includes.ps1
 #----------------------------------------------------------
 
-# Sign into 1Password and retrieve any necessary credentials.
-
-OpSignin
+# Retrieve any necessary credentials.
 
 # $todo(jefflill): Need to load the GITHUB PAT
 
