@@ -5,7 +5,7 @@
 #
 # Builds the Neon [test-temporal] image.
 #
-# Usage: powershell -file build.ps1 REGISTRY VERSION TAG
+# USAGE: pwsh -file build.ps1 REGISTRY VERSION TAG
 
 param 
 (

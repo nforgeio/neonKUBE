@@ -17,7 +17,7 @@
 
 # Builds the cadence-dev Cadence Server test images.
 #
-# Usage: powershell -file build.ps1 REGISTRY VERSION GO-VERSION TAG 
+# USAGE: pwsh -file build.ps1 REGISTRY VERSION GO-VERSION TAG 
 
 param 
 (

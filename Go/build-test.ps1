@@ -18,7 +18,7 @@
 # This script builds the [tests] GOLANG executables and writes
 # them to: $NF_BUILD/go-test.
 #
-# USAGE: powershell -file build-test.ps1
+# USAGE: pwsh -file build-test.ps1
 
 $env:GO111MODULE = "on"
 $projectPath     = "$env:NF_ROOT\Go\test"

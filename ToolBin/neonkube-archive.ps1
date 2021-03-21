@@ -1,3 +1,4 @@
+#Requires -Version 7.0
 #------------------------------------------------------------------------------
 # FILE:         neonkube-archive.ps1
 # CONTRIBUTOR:  Jeff Lill
@@ -20,7 +21,7 @@
 # (e.g. Go vendor files) that are not part of the source tree before
 # generating the archive.
 #
-# USAGE: powershell -file ./neon-archive.ps1 [-target PATH]
+# USAGE: pwsh -file ./neon-archive.ps1 [-target PATH]
 #
 # OPTIONS:
 #

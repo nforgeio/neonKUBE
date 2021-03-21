@@ -1,3 +1,4 @@
+#Requires -Version 7.0
 #------------------------------------------------------------------------------
 # FILE:         neon-builder.ps1
 # CONTRIBUTOR:  Jeff Lill
@@ -19,7 +20,7 @@
 # to the [$/build] folder.  This can also optionally build the neonKUBE
 # Desktop installer.
 #
-# USAGE: powershell -file ./neon-builder.ps1 [OPTIONS]
+# USAGE: pwsh -file ./neon-builder.ps1 [OPTIONS]
 #
 # OPTIONS:
 #

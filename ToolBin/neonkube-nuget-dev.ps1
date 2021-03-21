@@ -1,3 +1,4 @@
+#Requires -Version 7.0
 #------------------------------------------------------------------------------
 # FILE:         neonkube-nuget-dev.ps1
 # CONTRIBUTOR:  Jeff Lill

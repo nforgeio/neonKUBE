@@ -1,3 +1,4 @@
+#Requires -Version 7.0
 #------------------------------------------------------------------------------
 # FILE:         error-handling.ps1
 # CONTRIBUTOR:  Jeff Lill

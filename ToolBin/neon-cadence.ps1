@@ -1,3 +1,4 @@
+#Requires -Version 7.0
 #------------------------------------------------------------------------------
 # FILE:         neonkube-cadence.ps1
 # CONTRIBUTOR:  Jeff Lill
@@ -19,7 +20,7 @@
 # new Cadence release branches from the source http://github.com/uber/cadence
 # repository.
 #
-# USAGE: powershell -file ./neon-cadence.ps1 PATH BRANCH
+# USAGE: pwsh -file ./neon-cadence.ps1 PATH BRANCH
 #
 # COMMANDS:
 #

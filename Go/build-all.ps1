@@ -17,7 +17,7 @@
 #
 # This script builds all GOLANG projects.
 #
-# USAGE: powershell -file build-all.ps1 [CONFIGURATION]
+# USAGE: pwsh -file build-all.ps1 [CONFIGURATION]
 #
 # ARGUMENTS:
 #

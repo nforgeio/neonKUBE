@@ -18,7 +18,7 @@
 # This script builds the [temporal-proxy] GOLANG executables and writes
 # them to: $NF_BUILD.
 #
-# USAGE: powershell -file build-temporal-proxy.ps1
+# USAGE: pwsh -file build-temporal-proxy.ps1
 
 $env:GOPATH   = "$env:NF_ROOT\Go"
 $buildPath    = "$env:NF_BUILD"

@@ -17,7 +17,7 @@
 
 # Builds the test container image.
 #
-# Usage: powershell -file build.ps1 REGISTRY VERSION TAG
+# USAGE: pwsh -file build.ps1 REGISTRY VERSION TAG
 
 param 
 (

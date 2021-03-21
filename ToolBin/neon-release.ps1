@@ -1,3 +1,4 @@
+#Requires -Version 7.0
 #------------------------------------------------------------------------------
 # FILE:         neon-release.ps1
 # CONTRIBUTOR:  Jeff Lill
@@ -18,7 +19,7 @@
 # Performs neonKUBE release related functions.  Note that the 
 # neon-builder.ps1 script must have been run successfully.
 #
-# USAGE: powershell -file ./neon-release.ps1 [OPTIONS]
+# USAGE: pwsh -file ./neon-release.ps1 [OPTIONS]
 #
 # OPTIONS:
 #
