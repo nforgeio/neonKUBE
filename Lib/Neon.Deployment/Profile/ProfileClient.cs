@@ -37,11 +37,20 @@ namespace Neon.Deployment
         private readonly TimeSpan   connectTimeout;
 
         /// <summary>
+        /// Constructs a profile client with default parameters.  This is suitable for 
+        /// constructing from Powershell scripts.
+        /// </summary>
+        public ProfileClient()
+            : this(DeploymentHelper.NeonProfileServicePipe)
+        {
+        }
+
+        /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="pipeName">The server pipe name.  This defaults to <see cref="DeploymentHelper.NeonProfileServicePipe"/>.</param>
+        /// <param name="pipeName">Specifies the server pipe name.</param>
         /// <param name="connectTimeout">Optionally specifies the connection timeout.  This defaults to <b>10 seconds</b>.</param>
-        public ProfileClient(string pipeName = DeploymentHelper.NeonProfileServicePipe, TimeSpan connectTimeout = default)
+        public ProfileClient(string pipeName, TimeSpan connectTimeout = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(pipeName), nameof(pipeName));
 
@@ -79,12 +88,12 @@ namespace Neon.Deployment
 
                 var responseLine = reader.ReadLine();
 
-                if (responseLine != null)
+                if (responseLine == null)
                 {
                     throw new ProfileException("The profile server did not respond.");
                 }
 
-                var response = ProfileResponse.Parse(reader.ReadLine());
+                var response = ProfileResponse.Parse(responseLine);
 
                 pipe.Close();
 
