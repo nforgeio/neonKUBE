@@ -323,7 +323,8 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
 
-            if (setupState.Get<bool>(KubeSetup.DebugModeProperty, false))
+            if (setupState.Get<bool>(KubeSetup.DebugModeProperty, false)
+                  && !setupState.Get<bool>(KubeSetup.MaintainerModeProperty, false))
             {
                 return NeonHelper.NeonLibraryBranchRegistry;
             }

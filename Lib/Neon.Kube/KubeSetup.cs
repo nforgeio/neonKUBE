@@ -110,6 +110,20 @@ namespace Neon.Kube
         public const string DebugModeProperty = "debug-setup";
 
         /// <summary>
+        /// <para>
+        /// Property name for accessing a <c>bool</c> that indicates that we're running cluster prepare/setup in <b>release mode</b>.
+        /// </para>
+        /// </summary>
+        public const string ReleaseModeProperty = "release-setup";
+
+        /// <summary>
+        /// <para>
+        /// Property name for accessing a <c>bool</c> that indicates that we're running cluster prepare/setup in <b>maintainer mode</b>.
+        /// </para>
+        /// </summary>
+        public const string MaintainerModeProperty = "maintainer-setup";
+
+        /// <summary>
         /// Property name for a <c>bool</c> that identifies the base image name to be used for preparing
         /// a cluster in <b>debug mode</b>.  This is the name of the base image file as persisted to our
         /// public S3 bucket.  This will not be set for cluster setup.
@@ -2777,7 +2791,7 @@ $@"- name: StorageType
                     KubeHelper.WriteStatus(statusWriter, "Wait", "for Loki");
                     master.Status = "wait: for loki";
 
-                    await WaitForDeploymentAsync(setupState, "monitoring", "neon-logs-loki");
+                    await WaitForStatefulsetAsync(setupState, "monitoring", "neon-logs-loki");
                 });
         }
 
@@ -2828,7 +2842,7 @@ $@"- name: StorageType
                     KubeHelper.WriteStatus(statusWriter, "Wait", "for Promtail");
                     master.Status = "wait: for promtail";
 
-                    await WaitForDeploymentAsync(setupState, "monitoring", "neon-logs-promtail");
+                    await WaitForDaemonsetAsync(setupState, "monitoring", "neon-logs-promtail");
                 });
         }
 
