@@ -402,7 +402,7 @@ namespace Neon.Kube
                             {
                                 var exceptionType = exception.GetType();
 
-                                // Exceptions like this happen when a API server can't be established
+                                // Exceptions like this happen when a API server connection can't be established
                                 // because the server isn't running or ready.
 
                                 if (exceptionType == typeof(HttpRequestException) && exception.InnerException != null && exception.InnerException.GetType() == typeof(SocketException))
