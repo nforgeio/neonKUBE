@@ -255,11 +255,6 @@ OPTIONS:
 
             setupController.AddNodeStep("setup NTP", (state, node) => node.SetupConfigureNtp(state));
 
-            if (commandLine.HasOption("--debug"))
-            {
-                setupController.AddNodeStep("load images", (state, node) => node.NodeLoadImagesAsync(state));
-            }
-
             // Write the operation begin marker to all cluster node logs.
 
             cluster.LogLine(logBeginMarker);
@@ -289,6 +284,11 @@ OPTIONS:
                         node.InvokeIdempotent("setup/setup-node-restart", () => node.Reboot(wait: true));
                     },
                     (state, node) => node != cluster.FirstMaster);
+            }
+
+            if (commandLine.HasOption("--debug"))
+            {
+                setupController.AddNodeStep("load images", (state, node) => node.NodeLoadImagesAsync(state, downloadParallel: 5, loadParallel: 3));
             }
 
             setupController.AddNodeStep("install helm",
