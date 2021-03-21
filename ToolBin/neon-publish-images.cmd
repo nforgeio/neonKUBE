@@ -1,2 +1,2 @@
 @echo off 
-powershell -file "%NF_ROOT%\Images\publish.ps1" %*
+pwsh -file "%NF_ROOT%\Images\publish.ps1" %*

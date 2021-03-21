@@ -914,7 +914,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the path to the neonKUBE program folder.
+        /// Returns the path to the neon program folder.
         /// </summary>
         public static string ProgramFolder
         {
@@ -929,7 +929,7 @@ namespace Neon.Kube
 
                 if (cachedProgramFolder == null)
                 {
-                    cachedProgramFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "neonKUBE");
+                    cachedProgramFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "neonFORGE", "neonDESKTOP");
 
                     // For some reason, [SpecialFolder.ProgramFiles] is returning: 
                     //

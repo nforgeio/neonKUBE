@@ -48,12 +48,10 @@ if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
     exit
 }
 
-# Sign into 1Password and retrieve any necessary credentials.
+# Retrieve any necessary credentials.
 
-OpSignin
-
-$versionerKey  = OpGetPassword "NEON_OP_NUGET_VERSIONER_KEY"
-$devFeedApiKey = OpGetPassword "NEON_OP_DEVFEED_KEY"
+$versionerKey  = GetSecretPassword "NEON_OP_NUGET_VERSIONER_KEY"
+$devFeedApiKey = GetSecretPassword "NEON_OP_DEVFEED_KEY"
 
 #------------------------------------------------------------------------------
 # Sets the package version in the specified project file and makes a backup
@@ -97,7 +95,7 @@ function RestoreVersion
         [string]$project
     )
 
-    "* Restore: ${project}:${version}"
+    "* Restore: ${project}"
 
     $projectPath = [io.path]::combine($env:NF_ROOT, "Lib", "$project", "$project" + ".csproj")
 

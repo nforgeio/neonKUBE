@@ -562,7 +562,6 @@ namespace System.Net.Http
             LogActivity             activity          = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(requestUri), nameof(requestUri));
-            Covenant.Requires<ArgumentNullException>(content != null, nameof(content));
 
             await SyncContext.ClearAsync;
 
@@ -613,7 +612,6 @@ namespace System.Net.Http
             LogActivity             activity          = default)
         {
             Covenant.Requires<ArgumentNullException>(requestUri != null, nameof(requestUri));
-            Covenant.Requires<ArgumentNullException>(content != null, nameof(content));
 
             await SyncContext.ClearAsync;
 
@@ -664,7 +662,6 @@ namespace System.Net.Http
             LogActivity             activity          = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(requestUri), nameof(requestUri));
-            Covenant.Requires<ArgumentNullException>(content != null, nameof(content));
 
             await SyncContext.ClearAsync;
 
@@ -715,7 +712,6 @@ namespace System.Net.Http
             LogActivity             activity          = default)
         {
             Covenant.Requires<ArgumentNullException>(requestUri != null, nameof(requestUri));
-            Covenant.Requires<ArgumentNullException>(content != null, nameof(content));
 
             await SyncContext.ClearAsync;
 
@@ -767,7 +763,6 @@ namespace System.Net.Http
             LogActivity             activity          = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(requestUri), nameof(requestUri));
-            Covenant.Requires<ArgumentNullException>(content != null, nameof(content));
 
             await SyncContext.ClearAsync;
 
@@ -821,7 +816,6 @@ namespace System.Net.Http
             LogActivity             activity          = default)
         {
             Covenant.Requires<ArgumentNullException>(requestUri != null, nameof(requestUri));
-            Covenant.Requires<ArgumentNullException>(content != null, nameof(content));
 
             await SyncContext.ClearAsync;
 
@@ -875,7 +869,6 @@ namespace System.Net.Http
             LogActivity             activity          = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(requestUri), nameof(requestUri));
-            Covenant.Requires<ArgumentNullException>(content != null, nameof(content));
 
             await SyncContext.ClearAsync;
 
@@ -926,7 +919,6 @@ namespace System.Net.Http
             LogActivity             activity          = default)
         {
             Covenant.Requires<ArgumentNullException>(requestUri != null, nameof(requestUri));
-            Covenant.Requires<ArgumentNullException>(content != null, nameof(content));
 
             await SyncContext.ClearAsync;
 
@@ -977,7 +969,6 @@ namespace System.Net.Http
             LogActivity             activity          = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(requestUri), nameof(requestUri));
-            Covenant.Requires<ArgumentNullException>(content != null, nameof(content));
 
             await SyncContext.ClearAsync;
 
@@ -1031,7 +1022,6 @@ namespace System.Net.Http
             LogActivity             activity          = default)
         {
             Covenant.Requires<ArgumentNullException>(requestUri != null, nameof(requestUri));
-            Covenant.Requires<ArgumentNullException>(content != null, nameof(content));
 
             await SyncContext.ClearAsync;
 
@@ -1085,7 +1075,6 @@ namespace System.Net.Http
             LogActivity             activity          = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(requestUri), nameof(requestUri));
-            Covenant.Requires<ArgumentNullException>(content != null, nameof(content));
 
             await SyncContext.ClearAsync;
 
@@ -1139,7 +1128,6 @@ namespace System.Net.Http
             LogActivity             activity          = default)
         {
             Covenant.Requires<ArgumentNullException>(requestUri != null, nameof(requestUri));
-            Covenant.Requires<ArgumentNullException>(content != null, nameof(content));
 
             await SyncContext.ClearAsync;
 

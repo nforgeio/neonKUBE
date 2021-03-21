@@ -22,4 +22,4 @@ REM by maintainers.
 REM
 REM NOTE: This is script works only for maintainers with proper credentials.
 
-powershell -file "%NF_ROOT%\ToolBin\neonkube-nuget-dev.ps1" %*
+pwsh -file "%NF_ROOT%\ToolBin\neonkube-nuget-dev.ps1" %*

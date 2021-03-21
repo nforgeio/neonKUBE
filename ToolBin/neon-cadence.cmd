@@ -1,2 +1,2 @@
 @echo off 
-powershell -file "%~dp0\neon-cadence.ps1" %*
+pwsh -file "%~dp0\neon-cadence.ps1" %*

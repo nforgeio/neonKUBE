@@ -65,6 +65,11 @@ namespace Neon.Xunit
         public const string NeonCryptography = "Neon.Cryptography";
 
         /// <summary>
+        /// Identifies <b>Neon.Deployment</b> tests.
+        /// </summary>
+        public const string NeonDeployment = "Neon.Deployment";
+
+        /// <summary>
         /// Identifies <b>Neon.Kube</b> tests.
         /// </summary>
         public const string NeonKube = "Neon.Kube";

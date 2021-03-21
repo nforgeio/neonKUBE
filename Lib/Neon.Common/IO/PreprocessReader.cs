@@ -28,6 +28,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
 using Neon.Common;
+using Neon.Deployment;
 
 namespace Neon.IO
 {
@@ -150,7 +151,7 @@ namespace Neon.IO
     /// These are referenced as <b>$&lt;$lt;name&gt;&gt;</b>.
     /// </para>
     /// <note>
-    /// You may encounter situations where the default was of referencing variables
+    /// You may encounter situations where the default ways of referencing variables
     /// conflicts with the syntax of the underlying source text being processed.
     /// In these cases, you can set <see cref="VariableExpansionRegex"/> to 
     /// <see cref="CurlyVariableExpansionRegex"/> or <see cref="ParenVariableExpansionRegex"/>
@@ -182,6 +183,78 @@ namespace Neon.IO
     /// <see cref="RemoveBlank"/>,  <see cref="ProcessStatements"/>, <see cref="Indent"/>, <see cref="TabStop"/>, 
     /// and <see cref="StatementMarker"/>
     /// properties.
+    /// </para>
+    /// <para><b>Secret and profile Values</b></para>
+    /// <para>
+    /// This class can integrate with a <see cref="IProfileClient"/> implementation added to
+    /// <see cref="NeonHelper.serviceContainer"/>.  This provides a way to abstract access to
+    /// secrets and profile values from an external source.  Three item types are supported:
+    /// </para>
+    /// <list type="table">
+    /// <item>
+    ///     <term><b>secret-password</b></term>
+    ///     <description>
+    ///     <para>
+    ///     Secret passwords are often protected by a password manager.  neonFORGE has standardized
+    ///     internally on 1Password for example.  Passwords are often required to satisfy complexity
+    ///     and other rules.
+    ///     </para>
+    ///     <para>
+    ///     Passwords are named by a string and are often persisted to a named location.  1Password stores
+    ///     to secrets in <i>vaults</i>.  You'll need the password name and optionally, its location when
+    ///     referencing a password value.
+    ///     </para>
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><b>secret-value</b></term>
+    ///     <description>
+    ///     <para>
+    ///     Secret values are often protected by a password manager.  neonFORGE has standardized
+    ///     internally on 1Password for example.  Secret values are similar to passwords but the
+    ///     typically don't comply with complexity or other requirements.
+    ///     </para>
+    ///     <para>
+    ///     Secret values are named by a string and are often persisted to a named location.  1Password stores
+    ///     to secrets in <i>vaults</i>.  You'll need the value name and optionally, its location when
+    ///     referencing a password value.
+    ///     </para>
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><b>profile-value</b></term>
+    ///     <description>
+    ///     <para>
+    ///     Profile values are string name/value pairs that include non-secret definitions for
+    ///     the user, workstation, or overall environment such as the LAN.  These can come in
+    ///     handy when implementing CI/CD where each server/user can be assigned unique profile
+    ///     values that reference specific test endpoints, etc.  This is quite powerful.
+    ///     </para>
+    ///     <para>
+    ///     Profile values are simply named by a string.  There is currently no concept of a source, 
+    ///     like secrets have.
+    ///     </para>
+    ///     </description>
+    /// </item>
+    /// </list>
+    /// <para>
+    /// Secrets and profile values can be referenced by as as <b>$&lt;$lt;&lt;type:name[:source]&gt;&gt;&gt;</b>
+    /// where <b>type</b> is one of <b>password</b>, <b>secret</b> (value), or <b>profile</b> and <b>name</b>
+    /// identifies the secret or profile value and <b>source</b> optionall specifies the secret source
+    /// (this is ignored for profile values).
+    /// </para>
+    /// <code>
+    /// $&lt;$&lt;$&lt;password:my-password;my-vault&gt;&gt;&gt;    # password from specific source
+    /// $&lt;$&lt;$&lt;password:my-password&gt;&gt;&gt;             # password from default source
+    /// $&lt;$&lt;$&lt;secret:my-secret;my-vault&gt;&gt;&gt;        # secret from specific source
+    /// $&lt;$&lt;$&lt;secret:my-secret&gt;&gt;&gt;                 # secret from default source
+    /// $&lt;$&lt;$&lt;profile:my-profile&gt;&gt;&gt;               # profile value
+    /// </code>
+    /// <para>
+    /// This class will throw <see cref="ProfileException"/> when it encounters a secret/profile
+    /// reference and there no injected <see cref="IProfileClient"/> implementation or if the implementation
+    /// has trouble communicating with the profile server.  This class also also throws a 
+    /// <see cref="KeyNotFoundException"/> when a named secret or profile value doesn't exist.
     /// </para>
     /// </remarks>
     /// <threadsafety instance="false"/>
@@ -215,33 +288,41 @@ namespace Neon.IO
         //---------------------------------------------------------------------
         // Static members
 
-        private const RegexOptions regexOptions           = RegexOptions.Compiled;
-        private const RegexOptions regexIgnoreCaseOptions = RegexOptions.IgnoreCase | RegexOptions.Compiled;
+        private const RegexOptions      regexOptions           = RegexOptions.Compiled;
+        private const RegexOptions      regexIgnoreCaseOptions = RegexOptions.IgnoreCase | RegexOptions.Compiled;
+        private static readonly char[]  colonArray             = new char[] { ':' };
 
         /// <summary>
-        /// A variable expansion <see cref="Regex"/> that matches normal variables like <b>$&lt;test&gt;</b> and environment
-        /// variables like <b>&lt;&lt;test&gt;&gt;&gt;</b>.
+        /// A variable expansion <see cref="Regex"/> that matches normal variables like <b>$&lt;test&gt;</b>, environment
+        /// variables like <b>&lt;&lt;test&gt;&gt;&gt;</b>, and profile references like <b>&lt;&lt;$lt;secret:my-secret:my-vault&gt;&gt;&gt;&gt;</b>
+        /// You can set the <see cref="VariableExpansionRegex"/> property to this value to change the
+        /// <see cref="PreprocessReader"/> behavior.
         /// </summary>
-        public static Regex AngleVariableExpansionRegex { get; private set; } = new Regex(@"\$<(?<name><{0,1}[a-z0-9_\.\-]+>{0,1})>", regexIgnoreCaseOptions);
+        public static Regex AngleVariableExpansionRegex { get; private set; } = new Regex(@"\$<(?<name><{0,2}[a-z0-9_:\.\-]+>{0,2})>", regexIgnoreCaseOptions);
 
         /// <summary>
-        /// A variable expansion <see cref="Regex"/> that matches normal variables like <b>${test}</b> and environment 
-        /// variables like <b>${{test}}</b>. You can set the <see cref="VariableExpansionRegex"/> property to this value 
-        /// to change the <see cref="PreprocessReader"/> behavior.
+        /// A variable expansion <see cref="Regex"/> that matches normal variables like <b>${test}</b>, environment 
+        /// variables like <b>${{test}}</b> and profile references like <b>${{{secret:my-secret:my-vault}}}</b>. 
+        /// You can set the <see cref="VariableExpansionRegex"/> property to this value to change the
+        /// <see cref="PreprocessReader"/> behavior.
         /// </summary>
-        public static Regex CurlyVariableExpansionRegex { get; private set; } = new Regex(@"\$\{(?<name>\{{0,1}[a-z0-9_\.\-]+\}{0,1})\}", regexIgnoreCaseOptions);
+        public static Regex CurlyVariableExpansionRegex { get; private set; } = new Regex(@"\$\{(?<name>\{{0,2}[a-z0-9_:\.\-]+\}{0,2})\}", regexIgnoreCaseOptions);
 
         /// <summary>
-        /// The default variable expansion <see cref="Regex"/>.  This defaults to <see cref="AngleVariableExpansionRegex"/> 
-        /// that matches normal variables like <b>$&lt;test&gt;</b> and environment variables like <b>$$lt;&lt;test&gt;&gt;</b>.
+        /// A variable expansion <see cref="Regex"/> that matches normal variables like <b>${test}</b>, environment 
+        /// variables like <b>$((test))</b> and profile references like <b>$(((secret:my-secret:my-vault)))</b>. 
+        /// You can set the <see cref="VariableExpansionRegex"/> property to this value to change the
+        /// <see cref="PreprocessReader"/> behavior.
+        /// </summary>
+        public static Regex ParenVariableExpansionRegex { get; private set; } = new Regex(@"\$\((?<name>\({0,2}[a-z0-9_:\.\-]+\){0,2})\)", regexIgnoreCaseOptions);
+
+        /// <summary>
+        /// The default variable expansion <see cref="Regex"/> that matches normal variables like <b>$&lt;test&gt;</b>, environment
+        /// variables like <b>&lt;&lt;test&gt;&gt;&gt;</b>, and profile references like <b>&lt;&lt;$lt;secret:my-secret:my-vault&gt;&gt;&gt;&gt;</b>
+        /// You can set the <see cref="VariableExpansionRegex"/> property to this value to change the
+        /// <see cref="PreprocessReader"/> behavior.
         /// </summary>
         public static Regex DefaultVariableExpansionRegex { get; private set; } = AngleVariableExpansionRegex;
-
-        /// <summary>A alternate variable expansion <see cref="Regex"/> that matches normal variables like <b>$(test)</b>
-        /// and environment variables like <b>$((test))</b>.. You can set the <see cref="VariableExpansionRegex"/> 
-        /// property to this value to change the <see cref="PreprocessReader"/> behavior.
-        /// </summary>
-        public static Regex ParenVariableExpansionRegex { get; private set; } = new Regex(@"\$\((?<name>\({0,1}[a-z0-9_\.\-]+\){0,1})\)", regexIgnoreCaseOptions);
 
         /// <summary>
         /// <b>INTERNAL USE ONLY:</b> The <see cref="Regex"/> used to validate variable names.
@@ -252,6 +333,7 @@ namespace Neon.IO
         // Instance members
 
         private TextReader                  reader;
+        private IProfileClient              profileClient          = NeonHelper.ServiceContainer.GetService<IProfileClient>();
         private Dictionary<string, string>  variables              = new Dictionary<string, string>();
         private Regex                       variableExpansionRegex = DefaultVariableExpansionRegex;
         private string                      indent                 = string.Empty;
@@ -752,19 +834,67 @@ namespace Neon.IO
 
                 if (matchCount++ > 128)
                 {
-                    throw new FormatException($"Line {lineNumber}: More than 128 variable expansions required.  Verify that there are no recursively defined variables on line: {input}");
+                    throw new FormatException($"Line {lineNumber}: More than 128 variable expansions are required.  Verify that there are no recursively defined variables on line: {input}");
                 }
 
                 string value;
 
-                if (name.First() == match.Value[1] || name.Last() == match.Value.Last())
+                if (name.StartsWith("<<") && name.EndsWith(">>") ||
+                    name.StartsWith("((") && name.EndsWith("))") ||
+                    name.StartsWith("{{") && name.EndsWith("}}"))
+                {
+                    // This is a profile reference.
+
+                    var reference = name.Substring(2, name.Length - 4);
+                    var fields    = reference.Split(colonArray, StringSplitOptions.RemoveEmptyEntries);
+
+                    if (fields.Length < 2)
+                    {
+                        throw new ProfileException($"[{name}] is not a valid profile reference.  Both [type] and [name] are required.");
+                    }
+
+                    switch (fields[0].ToLower())
+                    {
+                        case "password":
+
+                            if (profileClient == null)
+                            {
+                                throw new ProfileException($"Cannot lookup the secret password [{name}] because no [{nameof(IProfileClient)}] implementation is available.");
+                            }
+
+                            value = profileClient.GetSecretPassword(fields[1], fields.Length >= 3 ? fields[2] : null);
+                            break;
+
+                        case "secret":
+
+                            if (profileClient == null)
+                            {
+                                throw new ProfileException($"Cannot lookup the secret value [{name}] because no [{nameof(IProfileClient)}] implementation is available.");
+                            }
+
+                            value = profileClient.GetSecretValue(fields[1], fields.Length >= 3 ? fields[2] : null);
+                            break;
+
+                        case "profile":
+
+                            if (profileClient == null)
+                            {
+                                throw new ProfileException($"Cannot lookup the profile value [{name}] because no [{nameof(IProfileClient)}] implementation is available.");
+                            }
+
+                            value = profileClient.GetProfileValue(fields[1]);
+                            break;
+
+                        default:
+
+                            throw new ProfileException($"[{fields[0]}] is not a valid profile type.  Only [password], [secret], and [profile] are supported.");
+                    }
+                }
+                else if (name.StartsWith("<") && name.EndsWith(">") ||
+                         name.StartsWith("(") && name.EndsWith(")") ||
+                         name.StartsWith("{") && name.EndsWith("}"))
                 {
                     // This is an environment variable.
-
-                    if (name.First() != match.Value[1] || name.Last() != match.Value.Last())
-                    {
-                        throw new FormatException($"Line {lineNumber}: Invalid variable reference [{match.Value}].");
-                    }
 
                     name  = name.Substring(1, name.Length - 2);
                     value = Environment.GetEnvironmentVariable(name);
