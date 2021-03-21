@@ -237,6 +237,8 @@ OPTIONS:
             // Configure the setup controller state.
 
             setupController.Add(KubeSetup.DebugModeProperty, debug);
+            setupController.Add(KubeSetup.ReleaseModeProperty, Program.IsRelease);
+            setupController.Add(KubeSetup.MaintainerModeProperty, !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("NC_ROOT")));
             setupController.Add(KubeSetup.ClusterProxyProperty, cluster);
             setupController.Add(KubeSetup.ClusterLoginProperty, clusterLogin);
             setupController.Add(KubeSetup.HostingManagerProperty, hostingManager);
@@ -250,8 +252,13 @@ OPTIONS:
 
             // $todo(jefflill): We don't support Linux distribution upgrades yet.
             setupController.AddNodeStep("node basics", (state, node) => node.BaseInitialize(state.Get<HostingEnvironment>(KubeSetup.HostingEnvironmentProperty), upgradeLinux: false));
-                
+
             setupController.AddNodeStep("setup NTP", (state, node) => node.SetupConfigureNtp(state));
+
+            if (commandLine.HasOption("--debug"))
+            {
+                setupController.AddNodeStep("load images", (state, node) => node.NodeLoadImagesAsync(state));
+            }
 
             // Write the operation begin marker to all cluster node logs.
 

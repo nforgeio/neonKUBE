@@ -1151,6 +1151,147 @@ rm -rf linux-amd64
         }
 
         /// <summary>
+        /// Loads the docker images onto the node. This is used for debug mode only.
+        /// </summary>
+        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        /// <param name="downloadParallel">The optional limit for parallelism when downloading images from GitHub registry.</param>
+        /// <param name="loadParallel">The optional limit for parallelism when loading images into the cluster.</param>
+        public async Task NodeLoadImagesAsync(
+            ObjectDictionary setupState, 
+            Action<string> statusWriter = null, 
+            int downloadParallel = 5, 
+            int loadParallel = 2)
+        {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+
+            await InvokeIdempotentAsync("setup/debug-load-images",
+                async () =>
+                {
+                    if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("NC_ROOT")))
+                    {
+                        await Task.CompletedTask;
+                        return;
+                    }
+
+                    KubeHelper.WriteStatus(statusWriter, "Setup", "Load docker images for debug mode");
+                    Status = "setup: debug images";
+
+                    var dockerPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), $@"DockerDesktop\version-bin\docker.exe");
+
+                    var images = new List<NodeImageInfo>();
+
+                    var setupImageFolders = Directory.EnumerateDirectories($"{Environment.GetEnvironmentVariable("NC_ROOT")}/Images/setup")
+                        .Select(path => Path.GetFullPath(path))
+                        .ToArray();
+
+                    var registry = setupState.Get<bool>(KubeSetup.ReleaseModeProperty) ? "ghcr.io/neonrelease" : "ghcr.io/neonrelease-dev";
+
+                    var pullImageTasks = new List<Task>();
+
+                    foreach (var imageFolder in setupImageFolders)
+                    {
+                        var imageName = Path.GetFileName(imageFolder);
+                        var versionPath = Path.Combine(imageFolder, ".version");
+                        var importPath = Path.Combine(imageFolder, ".import");
+                        var targetTag = (string)null;
+
+                        if (File.Exists(versionPath))
+                        {
+                            targetTag = File.ReadAllLines(versionPath).First().Trim();
+
+                            if (string.IsNullOrEmpty(targetTag))
+                            {
+                                throw new FileNotFoundException($"Setup image folder [{imageFolder}] has an empty a [.version] file.");
+                            }
+                        }
+                        else
+                        {
+                            Covenant.Assert(File.Exists(importPath));
+
+                            targetTag = $"neonkube-{KubeVersions.NeonKubeVersion}";
+                        }
+
+                        var sourceImage = $"{registry}/{imageName}:{targetTag}";
+
+                        while (pullImageTasks.Where(t => t.Status < TaskStatus.RanToCompletion).Count() >= downloadParallel)
+                        {
+                            await Task.Delay(100);
+                        }
+
+                        images.Add(new NodeImageInfo(imageFolder, imageName, targetTag, registry));
+                        pullImageTasks.Add(NeonHelper.ExecuteCaptureAsync(dockerPath, new string[] { "pull", sourceImage }));
+                    }
+
+                    await NeonHelper.WaitAllAsync(pullImageTasks);
+
+                    var loadImageTasks = new List<Task>();
+
+                    foreach (var image in images)
+                    {
+                        while (loadImageTasks.Where(t => t.Status < TaskStatus.RanToCompletion).Count() >= loadParallel)
+                        {
+                            await Task.Delay(100);
+                        }
+
+                        loadImageTasks.Add(LoadImageAsync(image));
+                    }
+
+                    await NeonHelper.WaitAllAsync(loadImageTasks);
+
+                    SudoCommand($"rm -rf /tmp/container-image-*");
+                });
+        }
+
+        /// <summary>
+        /// Method to load specific image to the node.
+        /// </summary>
+        /// <param name="image"></param>
+        /// <returns></returns>
+        public async Task LoadImageAsync(NodeImageInfo image)
+        {
+            await Task.Yield();
+
+            var dockerPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), $@"DockerDesktop\version-bin\docker.exe");
+
+            await InvokeIdempotentAsync($"setup/debug-load-images-{image.Name}",
+                async () =>
+                {
+                    await Task.CompletedTask;
+
+                    var id = Guid.NewGuid().ToString("d");
+
+                    using (var tempFile = new TempFile(suffix: ".image.tar", null))
+                    {
+                        NeonHelper.ExecuteCapture(dockerPath,
+                            new string[] {
+                                "save",
+                                "--output", tempFile.Path,
+                                image.SourceImage }).EnsureSuccess();
+
+                        using (var imageStream = new FileStream(tempFile.Path, FileMode.Open, FileAccess.ReadWrite))
+                        {
+                            Upload($"/tmp/container-image-{id}.tar", imageStream);
+
+                            SudoCommand("podman load", RunOptions.Defaults | RunOptions.FaultOnError,
+                                new string[]
+                                {
+                                    "--input", $"/tmp/container-image-{id}.tar"
+                                });
+
+                            SudoCommand("podman tag", RunOptions.Defaults | RunOptions.FaultOnError,
+                                new string[]
+                                {
+                                    image.SourceImage, image.TargetImage
+                                });
+
+                            SudoCommand($"rm /tmp/container-image-{id}.tar");
+                        }
+                    }
+                });
+        }
+  
+        /// <summary>
         /// Installs the Kubernetes components: <b>kubeadm</b>, <b>kubectl</b>, and <b>kublet</b>.
         /// </summary>
         /// <param name="setupState">The setup controller state.</param>
