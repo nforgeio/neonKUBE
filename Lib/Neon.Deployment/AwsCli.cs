@@ -60,22 +60,41 @@ namespace Neon.Deployment
         /// The target S3 URI.  This may be either an <b>s3://...</b> or 
         /// <b>https://...</b> URI that references to an S3 bucket.=
         /// </param>
+        /// <param name="metadata">
+        /// <para>
+        /// Optionally specifies metadata headers to be returning when the object is
+        /// downloaded from S3.  This formatted as as comma separated a list of 
+        /// key/value pairs like:
+        /// </para>
+        /// <example>
+        /// Content-Type=text,x-amz-meta-app-version=1.0.0
+        /// </example>
+        /// </param>
         /// <param name="gzip">Optionally indicates that the target content encoding should be set to <b>gzip</b>.</param>
-        public static void S3Upload(string sourcePath, string targetUri, bool gzip = false)
+        public static void S3Upload(string sourcePath, string targetUri, bool gzip = false, string metadata = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(sourcePath), nameof(sourcePath));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(targetUri), nameof(targetUri));
 
             var s3Uri = NetHelper.ToAwsS3Uri(targetUri);
+            var args  = new List<string>()
+            {
+                "s3", "cp", sourcePath, targetUri
+            };
 
             if (gzip)
             {
-                ExecuteSafe("s3", "cp", sourcePath, targetUri, "--content-encoding", "gzip");
+                args.Add("--Content-Encoding");
+                args.Add("gzip");
             }
-            else
+
+            if (metadata != null && metadata.Contains('='))
             {
-                ExecuteSafe("s3", "cp", sourcePath, targetUri);
+                args.Add("--metadata");
+                args.Add(metadata);
             }
+
+            ExecuteSafe(args.ToArray());
         }
     }
 }

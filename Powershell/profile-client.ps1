@@ -16,8 +16,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Load these assemblies from the [neon-assistant] installation folder
+# to ensure we'll be compatible.
+
+Add-Type -Path "$env:NEON_ASSISTANT_HOME\Neon.Common.dll"
+Add-Type -Path "$env:NEON_ASSISTANT_HOME\Neon.Deployment.dll"
+
 #------------------------------------------------------------------------------
-# Returns a global [Neon.Deployment.ProfileClient] instance creating on if necessary.
+# Returns a global [Neon.Deployment.ProfileClient] instance creating one if necessary.
 # This can be used to query the [neon-assistant] installed on the workstation for
 # secret passwords, secret values, as well as profile values.  The client is thread-safe,
 # can be used multiple times, and does not need to be disposed.
@@ -30,9 +36,6 @@ function GetProfileClient
     {
         return $global:neonProfileClient
     }
-
-    Add-Type -Path "$env:NEON_ASSISTANT_HOME\Neon.Common.dll"
-    Add-Type -Path "$env:NEON_ASSISTANT_HOME\Neon.Deployment.dll"
 
     $global:neonProfileClient = New-Object "Neon.Deployment.ProfileClient"
 
