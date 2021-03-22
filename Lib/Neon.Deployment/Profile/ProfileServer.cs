@@ -244,16 +244,6 @@ namespace Neon.Deployment
 
         /// <summary>
         /// <para>
-        /// Callback to retrieve the master 1Password.
-        /// </para>
-        /// <note>
-        /// This must be initalized before calling <see cref="Start()"/>.
-        /// </note>
-        /// </summary>
-        public Func<ProfileHandlerResult> GetMasterPasswordHandler { get; set; }
-
-        /// <summary>
-        /// <para>
         /// Callback to retrieve a profile value.  The parameters is the profile value name.
         /// </para>
         /// <note>
