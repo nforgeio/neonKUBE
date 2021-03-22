@@ -64,8 +64,13 @@ namespace Neon.Deployment
             this.connectTimeout = connectTimeout;
         }
 
-        /// <inheritdoc/>
-        public IProfileResponse Call(IProfileRequest request)
+        /// <summary>
+        /// Submits a request to the profile server and returns the response.
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <returns>The response.</returns>
+        /// <exception cref="ProfileException">Thrown if the profile server returns an error.</exception>
+        private IProfileResponse Call(IProfileRequest request)
         {
             Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
 
@@ -104,12 +109,6 @@ namespace Neon.Deployment
 
                 return response;
             }
-        }
-
-        /// <inheritdoc/>
-        public string GetMasterPassword()
-        {
-            return Call(ProfileRequest.Create("GET-MASTER-PASSWORD")).Value;
         }
 
         /// <inheritdoc/>

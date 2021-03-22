@@ -79,36 +79,9 @@ namespace Neon.Deployment
     /// application running on the local workstation including retrieving the user's 
     /// master 1Password, secrets, as well as user profile values.
     /// </para>
-    /// <para>
-    /// Use the <see cref="Call(IProfileRequest)"/> method to submit a generic request
-    /// to the assistant and the <see cref="GetMasterPassword()"/>, <see cref="GetSecretPassword(string, string, string)"/>,
-    /// <see cref="GetSecretValue(string, string, string)"/>, and <see cref="GetProfileValue(string)"/> methods
-    /// to perform common operations.
-    /// </para>
-    /// <note>
-    /// The underlying <see cref="Call(IProfileRequest)"/> method works by establishing a
-    /// named pipe connection to the server listing on a named pipe or other mechanism
-    /// and then submiting a request and waiting for a response on that pipe.  A new
-    /// connection will be established for every request.
-    /// </note>
     /// </remarks>
     public interface IProfileClient
     {
-        /// <summary>
-        /// Submits a request to the profile server and returns the response.
-        /// </summary>
-        /// <param name="request">The request.</param>
-        /// <returns>The response.</returns>
-        /// <exception cref="ProfileException">Thrown if the profile server returns an error.</exception>
-        IProfileResponse Call(IProfileRequest request);
-
-        /// <summary>
-        /// Requests the current developer's master 1password from the assistant.
-        /// </summary>
-        /// <returns>The master password.</returns>
-        /// <exception cref="ProfileException">Thrown if the profile server returns an error.</exception>
-        string GetMasterPassword();
-
         /// <summary>
         /// Requests the value of a secret password from 1Password via the assistant.
         /// </summary>

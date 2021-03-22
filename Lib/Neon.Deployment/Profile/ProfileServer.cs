@@ -74,16 +74,6 @@ namespace Neon.Deployment
     /// </para>
     /// <list type="table">
     /// <item>
-    ///     <term><b>GET-MASTER-PASSWORD</b></term>
-    ///     <description>
-    ///     <para><c>(no args)</c></para>
-    ///     <para>
-    ///     This requests the user's master 1Password.  No parameters are supported.
-    ///     The password is returned as the response.
-    ///     </para>
-    ///     </description>
-    /// </item>
-    /// <item>
     ///     <term><b>GET-SECRET-PASSWORD</b></term>
     ///     <description>
     ///     <para><c>(name, [vault], [masterpassword])</c></para>
@@ -158,11 +148,6 @@ namespace Neon.Deployment
         {
             // Ensure that all of the handlers are initialized.
 
-            if (GetMasterPasswordHandler == null)
-            {
-                throw new InvalidOperationException($"The [{nameof(GetMasterPasswordHandler)}] is not initalized.");
-            }
-
             if (GetProfileValueHandler == null)
             {
                 throw new InvalidOperationException($"The [{nameof(GetProfileValueHandler)}] is not initalized.");
@@ -171,11 +156,6 @@ namespace Neon.Deployment
             if (GetSecretPasswordHandler == null)
             {
                 throw new InvalidOperationException($"The [{nameof(GetSecretPasswordHandler)}] is not initalized.");
-            }
-
-            if (GetMasterPasswordHandler == null)
-            {
-                throw new InvalidOperationException($"The [{nameof(GetSecretValueHandler)}] is not initalized.");
             }
 
             // Start the listening threads.
@@ -386,11 +366,6 @@ namespace Neon.Deployment
                     {
                         switch (request.Command)
                         {
-                            case "GET-MASTER-PASSWORD":
-
-                                handlerResult = GetMasterPasswordHandler();
-                                break;
-
                             case "GET-PROFILE-VALUE":
 
                                 if (name == null)

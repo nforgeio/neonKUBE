@@ -35,17 +35,22 @@ namespace Neon.Deployment
         /// <summary>
         /// <para>
         /// Retrieves the AWS-CLI NEON_OP_AWS_ACCESS_KEY_ID and NEON_OP_AWS_SECRET_ACCESS_KEY
-        /// credentials from 1Password and sets these enviroment variables:
+        /// credentials (by default) from 1Password and sets these enviroment variables:
         /// </para>
         /// <list type="bullet">
         ///     <item><c>AWS_ACCESS_KEY_ID</c></item>
         ///     <item><c>AWS_SECRET_ACCESS_KEY</c></item>
         /// </list>
         /// </summary>
-        public void GetAwsCredentials()
+        /// <param name="awsAccessKeyId">Optionally specfies a custom name for the AWS <b>access key ID</b> secret.</param>
+        /// <param name="awsSecretAccessKey">Optionally specfies a custom name for the AWS <b>access key</b> secret.</param>
+        public void GetAwsCredentials(string awsAccessKeyId = "NEON_OP_AWS_ACCESS_KEY_ID", string awsSecretAccessKey = "NEON_OP_AWS_SECRET_ACCESS_KEY")
         {
-            Environment.SetEnvironmentVariable("AWS_ACCESS_KEY_ID", GetSecretPassword("NEON_OP_AWS_ACCESS_KEY_ID"));
-            Environment.SetEnvironmentVariable("AWS_SECRET_ACCESS_KEY", GetSecretPassword("NEON_OP_AWS_SECRET_ACCESS_KEY"));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(awsAccessKeyId), nameof(awsAccessKeyId));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(awsSecretAccessKey), nameof(awsSecretAccessKey));
+
+            Environment.SetEnvironmentVariable("AWS_ACCESS_KEY_ID", GetSecretPassword(awsAccessKeyId));
+            Environment.SetEnvironmentVariable("AWS_SECRET_ACCESS_KEY", GetSecretPassword(awsSecretAccessKey));
         }
 
         /// <summary>
