@@ -51,8 +51,8 @@ if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
 
 # Retrieve any necessary credentials.
 
-$versionerKey  = GetSecretPassword "NEON_OP_NUGET_VERSIONER_KEY"
-$devFeedApiKey = GetSecretPassword "DEVFEED_KEY"
+$versionerKey  = GetSecretPassword "NUGET_VERSIONER_KEY"
+$devFeedApiKey = GetSecretPassword "NUGET_DEVFEED_KEY"
 
 #------------------------------------------------------------------------------
 # Sets the package version in the specified project file and makes a backup
