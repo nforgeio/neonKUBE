@@ -44,7 +44,7 @@ namespace Neon.Deployment
         /// </summary>
         /// <param name="awsAccessKeyId">Optionally specfies a custom name for the AWS <b>access key ID</b> secret.</param>
         /// <param name="awsSecretAccessKey">Optionally specfies a custom name for the AWS <b>access key</b> secret.</param>
-        public void GetAwsCredentials(string awsAccessKeyId = "NEON_OP_AWS_ACCESS_KEY_ID", string awsSecretAccessKey = "NEON_OP_AWS_SECRET_ACCESS_KEY")
+        public void GetAwsCredentials(string awsAccessKeyId = "AWS_ACCESS_KEY_ID", string awsSecretAccessKey = "AWS_SECRET_ACCESS_KEY")
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(awsAccessKeyId), nameof(awsAccessKeyId));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(awsSecretAccessKey), nameof(awsSecretAccessKey));

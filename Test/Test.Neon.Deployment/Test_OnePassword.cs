@@ -65,8 +65,8 @@ namespace TestDeployment
             // Verify that we see exceptions when 1Password isn't signed-in.
 
             Assert.False(OnePassword.Signedin);
-            Assert.Throws<OnePasswordException>(() => OnePassword.GetSecretPassword("NEON_OP_AWS_ACCESS_KEY_ID"));
-            Assert.Throws<OnePasswordException>(() => OnePassword.GetSecretValue("NEON_OP_EMAIL_ADDRESS"));
+            Assert.Throws<OnePasswordException>(() => OnePassword.GetSecretPassword("AWS_ACCESS_KEY_ID"));
+            Assert.Throws<OnePasswordException>(() => OnePassword.GetSecretValue("EMAIL_ADDRESS"));
             OnePassword.Signout();      // This shouldn't throw an exception when we're not signed-in
 
             //-----------------------------------------------------------------
@@ -74,11 +74,7 @@ namespace TestDeployment
 
             OnePassword.Configure(signinAddress, account, secretKey, masterPassword, defaultVault);
 
-            var value = OnePassword.GetSecretPassword("NEON_OP_AWS_ACCESS_KEY_ID");
-
-            Assert.NotEmpty(value);
-
-            value = OnePassword.GetSecretValue("NEON_OP_EMAIL_ADDRESS");
+            var value = OnePassword.GetSecretPassword("AWS_ACCESS_KEY_ID");
 
             Assert.NotEmpty(value);
 
@@ -89,11 +85,7 @@ namespace TestDeployment
 
             OnePassword.Signin(account, masterPassword, defaultVault);
 
-            value = OnePassword.GetSecretPassword("NEON_OP_AWS_ACCESS_KEY_ID");
-
-            Assert.NotEmpty(value);
-
-            value = OnePassword.GetSecretValue("NEON_OP_EMAIL_ADDRESS");
+            value = OnePassword.GetSecretPassword("AWS_ACCESS_KEY_ID");
 
             Assert.NotEmpty(value);
 
@@ -103,11 +95,7 @@ namespace TestDeployment
 
             Thread.Sleep(TimeSpan.FromMinutes(35));
 
-            value = OnePassword.GetSecretPassword("NEON_OP_AWS_ACCESS_KEY_ID");
-
-            Assert.NotEmpty(value);
-
-            value = OnePassword.GetSecretValue("NEON_OP_EMAIL_ADDRESS");
+            value = OnePassword.GetSecretPassword("AWS_ACCESS_KEY_ID");
 
             Assert.NotEmpty(value);
         }

@@ -34,7 +34,7 @@ if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
 
 # Retrieve any necessary credentials.
 
-$nugetApiKey = GetSecretPassword "NEON_OP_NUGET_KEY"
+$nugetApiKey = GetSecretPassword "NUGET_PUBLIC_KEY"
 
 #------------------------------------------------------------------------------
 # Sets the package version in the specified project file.

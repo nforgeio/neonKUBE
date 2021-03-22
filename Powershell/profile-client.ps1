@@ -103,9 +103,9 @@ function GetAwsCliCredentials
     [CmdletBinding()]
     param (
         [Parameter(Position=0, Mandatory=0)]
-        [string]$awsAccessKeyId = "NEON_OP_AWS_ACCESS_KEY_ID",
+        [string]$awsAccessKeyId = "AWS_ACCESS_KEY_ID",
         [Parameter(Position=1, Mandatory=0)]
-        [string]$awsSecretAccessKey = "NEON_OP_AWS_SECRET_ACCESS_KEY"
+        [string]$awsSecretAccessKey = "AWS_SECRET_ACCESS_KEY"
     )
 
     $client = GetProfileClient
