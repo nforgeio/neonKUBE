@@ -67,8 +67,21 @@ namespace Neon.Deployment
         /// key/value pairs like:
         /// </para>
         /// <example>
-        /// Content-Type=text,x-amz-meta-app-version=1.0.0
+        /// Content-Type=text,app-version=1.0.0
         /// </example>
+        /// <note>
+        /// <para>
+        /// AWS supports <b>system</b> as well as <b>custom</b> headers.  System headers
+        /// include standard HTTP headers such as <b>Content-Type</b> and <b>Content-Encoding</b>.
+        /// Custom headers will include the <b>x-amz-meta-</b> prefix.
+        /// </para>
+        /// <para>
+        /// <b>IMPORTANT:</b> You shouldn't don't need to specify the <b>x-amz-meta-</b> prefix 
+        /// for setting custom headers; the AWS-CLI detects custom header names and adds the
+        /// prefix automatically.  This method will strip the prefix if present before calling
+        /// the AWS-CLI to ensure the prefix doesn't end up being duplicated.
+        /// </para>
+        /// </note>
         /// </param>
         /// <param name="gzip">Optionally indicates that the target content encoding should be set to <b>gzip</b>.</param>
         public static void S3Upload(string sourcePath, string targetUri, bool gzip = false, string metadata = null)
@@ -90,6 +103,19 @@ namespace Neon.Deployment
 
             if (metadata != null && metadata.Contains('='))
             {
+                // Strip off the [x-amz-meta-] prefix from the name, if present.
+
+                const string customPrefix = "x-amz-meta-";
+
+                var fields = metadata.Split('=', 2, StringSplitOptions.RemoveEmptyEntries);
+
+                if (fields[0].StartsWith(customPrefix))
+                {
+                    fields[0] = fields[0].Substring(customPrefix.Length);
+
+                    metadata = $"{fields[0]}={fields[1]}";
+                }
+
                 args.Add("--metadata");
                 args.Add(metadata);
             }
