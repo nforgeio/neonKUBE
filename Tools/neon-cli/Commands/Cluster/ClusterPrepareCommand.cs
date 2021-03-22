@@ -132,7 +132,7 @@ Server Requirements:
                 Program.Exit(0);
             }
 
-            // Special-case handling of the [--remove-templates] option.
+            // Handle the [--remove-templates] option.
 
             if (commandLine.HasOption("--remove-templates"))
             {
@@ -142,8 +142,6 @@ Server Requirements:
                 {
                     File.Delete(fileName);
                 }
-
-                Program.Exit(0);
             }
 
             var debug         = commandLine.HasOption("--debug");
