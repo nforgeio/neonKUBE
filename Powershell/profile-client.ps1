@@ -92,18 +92,26 @@ function GetSecretValue
 }
 
 #------------------------------------------------------------------------------
-# Retrieves the AWS-CLI NEON_OP_AWS_ACCESS_KEY_ID and NEON_OP_AWS_SECRET_ACCESS_KEY
-# credentials from 1Password and sets these enviroment variables:
+# Retrieves the AWS access key ID and secret access key from from 1Password 
+# and sets these enviroment variables form use by the AWS-CLI:
 #
 #       AWS_ACCESS_KEY_ID
 #       AWS_SECRET_ACCESS_KEY
 
 function GetAwsCliCredentials
 {
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=0)]
+        [string]$awsAccessKeyId = "NEON_OP_AWS_ACCESS_KEY_ID",
+        [Parameter(Position=1, Mandatory=0)]
+        [string]$awsSecretAccessKey = "NEON_OP_AWS_SECRET_ACCESS_KEY"
+    )
+
     $client = GetProfileClient
 
-    $env:AWS_ACCESS_KEY_ID     = $client.GetSecretPassword("NEON_OP_AWS_ACCESS_KEY_ID")
-    $env:AWS_SECRET_ACCESS_KEY = $client.GetSecretPassword("NEON_OP_AWS_SECRET_ACCESS_KEY")
+    $env:AWS_ACCESS_KEY_ID     = $client.GetSecretPassword($awsAccessKeyId)
+    $env:AWS_SECRET_ACCESS_KEY = $client.GetSecretPassword($awsSecretAccessKey)
 }
 
 #------------------------------------------------------------------------------

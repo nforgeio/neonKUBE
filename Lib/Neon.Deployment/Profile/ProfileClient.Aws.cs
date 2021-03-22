@@ -34,8 +34,8 @@ namespace Neon.Deployment
     {
         /// <summary>
         /// <para>
-        /// Retrieves the AWS-CLI NEON_OP_AWS_ACCESS_KEY_ID and NEON_OP_AWS_SECRET_ACCESS_KEY
-        /// credentials (by default) from 1Password and sets these enviroment variables:
+        /// Retrieves the AWS access key ID and secret access key from 1Password 
+        /// and sets these enviroment variables for use by the AWS-CLI:
         /// </para>
         /// <list type="bullet">
         ///     <item><c>AWS_ACCESS_KEY_ID</c></item>
