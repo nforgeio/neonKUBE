@@ -161,7 +161,7 @@ namespace Neon.Kube
         /// <summary>
         /// Returns the <see cref="Kubernetes"/> client persisted in the dictionary passed.
         /// </summary>
-        /// <param name="controller">The setup state.</param>
+        /// <param name="controller">The setup controller.</param>
         /// <returns>The <see cref="Kubernetes"/> client.</returns>
         /// <exception cref="InvalidOperationException">
         /// Thrown when there is no persisted client, indicating that <see cref="ConnectCluster(ISetupController)"/>
@@ -228,13 +228,12 @@ namespace Neon.Kube
         /// Downloads and installs any required binaries to the workstation cache if they're not already present.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public static async Task InstallWorkstationBinariesAsync(ISetupController controller, Action<string> statusWriter = null)
+        public static async Task InstallWorkstationBinariesAsync(ISetupController controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             var cluster           = controller.Get<ClusterProxy>(KubeSetup.ClusterProxyProperty);
-            var firstMaster       = cluster.FirstMaster;
+            var master            = cluster.FirstMaster;
             var hostPlatform      = KubeHelper.HostPlatform;
             var cachedKubeCtlPath = KubeHelper.GetCachedComponentPath(hostPlatform, "kubectl", KubeVersions.KubernetesVersion);
             var cachedHelmPath    = KubeHelper.GetCachedComponentPath(hostPlatform, "helm", KubeVersions.HelmVersion);
@@ -278,8 +277,7 @@ namespace Neon.Kube
             {
                 if (!File.Exists(cachedKubeCtlPath))
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Download", "kubectl");
-                    firstMaster.Status = "download: kubectl";
+                    controller.LogProgress(master, verb: "download", message: "kubectl");
 
                     using (var response = await httpClient.GetStreamAsync(kubeCtlUri))
                     {
@@ -292,8 +290,7 @@ namespace Neon.Kube
 
                 if (!File.Exists(cachedHelmPath))
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Download", "helm");
-                    firstMaster.Status = "download: Helm";
+                    controller.LogProgress(master, verb: "download", message: "Helm");
 
                     using (var response = await httpClient.GetStreamAsync(helmUri))
                     {
@@ -371,7 +368,7 @@ namespace Neon.Kube
             KubeHelper.InstallKubeCtl();
             KubeHelper.InstallWorkstationHelm();
 
-            firstMaster.Status = string.Empty;
+            master.Status = string.Empty;
         }
 
         /// <summary>

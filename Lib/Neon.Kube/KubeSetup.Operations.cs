@@ -51,13 +51,13 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="node">The node where the operation will be performed.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public static void SetupEtcdHaProxy(ISetupController controller, NodeSshProxy<NodeDefinition> node, Action<string> statusWriter = null)
+        public static void SetupEtcdHaProxy(ISetupController controller, NodeSshProxy<NodeDefinition> node)
         {
+            Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
+
             var cluster = controller.Get<ClusterProxy>(ClusterProxyProperty);
 
-            KubeHelper.WriteStatus(statusWriter, "Setup", "etc HA");
-            node.Status = "setup: etcd HA";
+            controller.LogProgress(node, verb: "configure", message: "etc high availability");
 
             var sbHaProxyConfig = new StringBuilder();
 
@@ -176,8 +176,7 @@ spec:
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="master">The first master node where the operation will be performed.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public static async Task LabelNodesAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        public static async Task LabelNodesAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
             await SyncContext.ClearAsync;
 
@@ -189,8 +188,7 @@ spec:
             await master.InvokeIdempotentAsync("setup/label-nodes",
                 async () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Label", "Nodes");
-                    master.Status = "label: nodes";
+                    controller.LogProgress(master, verb: "label", message: "nodes");
 
                     try
                     {
@@ -252,87 +250,86 @@ spec:
         /// The maximum number of operations on separate nodes to be performed in parallel.
         /// This defaults to <see cref="defaultMaxParallelNodes"/>.
         /// </param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task SetupClusterAsync(ISetupController controller, int maxParallel = defaultMaxParallelNodes, Action<string> statusWriter = null)
+        public static async Task SetupClusterAsync(ISetupController controller, int maxParallel = defaultMaxParallelNodes)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentException>(maxParallel > 0, nameof(maxParallel));
 
             var cluster      = controller.Get<ClusterProxy>(ClusterProxyProperty);
             var clusterLogin = controller.Get<ClusterLogin>(ClusterLoginProperty);
-            var firstMaster  = cluster.FirstMaster;
+            var master       = cluster.FirstMaster;
             var debugMode    = controller.Get<bool>(KubeSetup.DebugModeProperty);
 
             cluster.ClearStatus();
 
-            ConfigureKubernetes(controller, cluster.FirstMaster, statusWriter);
-            ConfigureWorkstation(controller, firstMaster, statusWriter);
+            ConfigureKubernetes(controller, cluster.FirstMaster);
+            ConfigureWorkstation(controller, master);
             ConnectCluster(controller);
 
             // We need to taint before deploying pods.
 
-            await ConfigureMasterTaintsAsync(controller, firstMaster, statusWriter);
+            await ConfigureMasterTaintsAsync(controller, master);
 
             // Run configuration tasks in parallel when not [--debug] mode.
 
             if (debugMode)
             {
-                await TaintNodesAsync(controller, statusWriter);
-                await LabelNodesAsync(controller, firstMaster, statusWriter);
-                await NeonHelper.WaitAllAsync(await CreateNamespacesAsync(controller, firstMaster, statusWriter));
-                await CreateRootUserAsync(controller, firstMaster, statusWriter);
-                await InstallCalicoCniAsync(controller, firstMaster, statusWriter);
-                await InstallIstioAsync(controller, firstMaster, statusWriter);
-                await InstallMetricsServerAsync(controller, firstMaster, statusWriter);
+                await TaintNodesAsync(controller);
+                await LabelNodesAsync(controller, master);
+                await NeonHelper.WaitAllAsync(await CreateNamespacesAsync(controller, master));
+                await CreateRootUserAsync(controller, master);
+                await InstallCalicoCniAsync(controller, master);
+                await InstallIstioAsync(controller, master);
+                await InstallMetricsServerAsync(controller, master);
             }
             else
             {
                 var tasks = new List<Task>();
 
-                tasks.Add(TaintNodesAsync(controller, statusWriter));
-                tasks.Add(LabelNodesAsync(controller, firstMaster, statusWriter));
-                tasks.AddRange(await CreateNamespacesAsync(controller, firstMaster, statusWriter));
-                tasks.Add(CreateRootUserAsync(controller, firstMaster, statusWriter));
-                tasks.Add(InstallCalicoCniAsync(controller, firstMaster, statusWriter));
-                tasks.Add(InstallIstioAsync(controller, firstMaster, statusWriter));
-                tasks.Add(InstallMetricsServerAsync(controller, firstMaster, statusWriter));
+                tasks.Add(TaintNodesAsync(controller));
+                tasks.Add(LabelNodesAsync(controller, master));
+                tasks.AddRange(await CreateNamespacesAsync(controller, master));
+                tasks.Add(CreateRootUserAsync(controller, master));
+                tasks.Add(InstallCalicoCniAsync(controller, master));
+                tasks.Add(InstallIstioAsync(controller, master));
+                tasks.Add(InstallMetricsServerAsync(controller, master));
 
                 await NeonHelper.WaitAllAsync(tasks);
             }
 
             if (cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count() >= 3)
             {
-                await InstallEtcdAsync(controller, firstMaster, statusWriter);
+                await InstallEtcdAsync(controller, master);
             }
 
             // Additional configuration.
 
             if (debugMode)
             {
-                await InstallKialiAsync(controller, firstMaster, statusWriter);
-                await InstallKubeDashboardAsync(controller, firstMaster, statusWriter);
-                await InstallOpenEBSAsync(controller, firstMaster, statusWriter);
-                await InstallPrometheusAsync(controller, firstMaster, statusWriter);
-                await InstallSystemDbAsync(controller, firstMaster, statusWriter);
-                await InstallMinioAsync(controller, firstMaster, statusWriter);
-                await InstallClusterManagerAsync(controller, firstMaster, statusWriter);
-                await InstallContainerRegistryAsync(controller, firstMaster, statusWriter);
-                await NeonHelper.WaitAllAsync(await SetupMonitoringAsync(controller, statusWriter));
+                await InstallKialiAsync(controller, master);
+                await InstallKubeDashboardAsync(controller, master);
+                await InstallOpenEBSAsync(controller, master);
+                await InstallPrometheusAsync(controller, master);
+                await InstallSystemDbAsync(controller, master);
+                await InstallMinioAsync(controller, master);
+                await InstallClusterManagerAsync(controller, master);
+                await InstallContainerRegistryAsync(controller, master);
+                await NeonHelper.WaitAllAsync(await SetupMonitoringAsync(controller));
             }
             else
             {
                 var tasks = new List<Task>();
 
-                tasks.Add(InstallKialiAsync(controller, firstMaster, statusWriter));
-                tasks.Add(InstallKubeDashboardAsync(controller, firstMaster, statusWriter));
-                await InstallOpenEBSAsync(controller, firstMaster, statusWriter);
-                await InstallPrometheusAsync(controller, firstMaster, statusWriter);
-                await InstallSystemDbAsync(controller, firstMaster, statusWriter);
-                await InstallMinioAsync(controller, firstMaster, statusWriter);
-                tasks.Add(InstallClusterManagerAsync(controller, firstMaster, statusWriter));
-                tasks.Add(InstallContainerRegistryAsync(controller, firstMaster, statusWriter));
-                tasks.AddRange(await SetupMonitoringAsync(controller, statusWriter));
+                tasks.Add(InstallKialiAsync(controller, master));
+                tasks.Add(InstallKubeDashboardAsync(controller, master));
+                await InstallOpenEBSAsync(controller, master);
+                await InstallPrometheusAsync(controller, master);
+                await InstallSystemDbAsync(controller, master);
+                await InstallMinioAsync(controller, master);
+                tasks.Add(InstallClusterManagerAsync(controller, master));
+                tasks.Add(InstallContainerRegistryAsync(controller, master));
+                tasks.AddRange(await SetupMonitoringAsync(controller));
 
                 await NeonHelper.WaitAllAsync(tasks);
             }
@@ -342,47 +339,43 @@ spec:
         /// Basic Kubernetes cluster initialization.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
-        /// <param name="firstMaster">The first master node.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public static void ConfigureKubernetes(ISetupController controller, NodeSshProxy<NodeDefinition> firstMaster, Action<string> statusWriter = null)
+        /// <param name="master">The master node where the operation will be performed.</param>
+        public static void ConfigureKubernetes(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-            Covenant.Requires<ArgumentNullException>(firstMaster != null, nameof(firstMaster));
+            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetup.HostingEnvironmentProperty);
             var cluster            = controller.Get<ClusterProxy>(ClusterProxyProperty);
             var clusterLogin       = controller.Get<ClusterLogin>(ClusterLoginProperty);
 
-            firstMaster.InvokeIdempotent("setup/cluster-init",
+            master.InvokeIdempotent("setup/cluster-init",
                 () =>
                 {
                     //---------------------------------------------------------
                     // Initialize the cluster on the first master:
 
-                    KubeHelper.WriteStatus(statusWriter, "Create", "Cluster");
-                    firstMaster.Status = "create: cluster";
+                    controller.LogProgress(master, verb: "create", message: "cluster");
 
                     // Initialize Kubernetes:
 
-                    firstMaster.InvokeIdempotent("setup/kubernetes-init",
+                    master.InvokeIdempotent("setup/kubernetes-init",
                         () =>
                         {
-                            KubeHelper.WriteStatus(statusWriter, "Initialize", "Kubernetes");
-                            firstMaster.Status = "initialize: kubernetes";
+                            controller.LogProgress(master, verb: "initialize", message: "kubernetes");
 
                             // It's possible that a previous cluster initialization operation
                             // was interrupted.  This command resets the state.
 
-                            firstMaster.SudoCommand("kubeadm reset --force");
+                            master.SudoCommand("kubeadm reset --force");
 
-                            SetupEtcdHaProxy(controller, firstMaster, statusWriter);
-
-                            KubeHelper.WriteStatus(statusWriter, "Initialize", "Cluster");
-                            firstMaster.Status = "initialize: cluster";
+                            SetupEtcdHaProxy(controller, master);
 
                             // Configure the control plane's API server endpoint and initialize
                             // the certificate SAN names to include each master IP address as well
                             // as the HOSTNAME/ADDRESS of the API load balancer (if any).
+
+                            controller.LogProgress(master, verb: "initialize", message: "cluster");
 
                             var controlPlaneEndpoint = $"kubernetes-masters:6442";
                             var sbCertSANs           = new StringBuilder();
@@ -482,7 +475,7 @@ $@"
 systemctl enable kubelet.service
 kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-kubernetes-manifests
 ";
-                            var response = firstMaster.SudoCommand(CommandBundle.FromScript(kubeInitScript).AddFile("cluster.yaml", clusterConfig.ToString()));
+                            var response = master.SudoCommand(CommandBundle.FromScript(kubeInitScript).AddFile("cluster.yaml", clusterConfig.ToString()));
 
                             // Extract the cluster join command from the response.  We'll need this to join
                             // other nodes to the cluster.
@@ -508,15 +501,13 @@ kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-k
 
                             clusterLogin.Save();
 
-                            KubeHelper.WriteStatus(statusWriter, "Cluster", "Created");
-                            firstMaster.Status = "cluster created";
+                            controller.LogProgress(verb: "created", message: "cluster");
                         });
 
-                    firstMaster.InvokeIdempotent("setup/kubectl",
+                    master.InvokeIdempotent("setup/kubectl",
                         () =>
                         {
-                            KubeHelper.WriteStatus(statusWriter, "Setup", "Kubectl");
-                            firstMaster.Status = "setup: kubectl";
+                            controller.LogProgress(master, verb: "configure", message: "kubectl");
 
                             // Edit the Kubernetes configuration file to rename the context:
                             //
@@ -526,12 +517,12 @@ kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-k
                             //
                             //      CLUSTERNAME-admin --> CLUSTERNAME-root 
 
-                            var adminConfig = firstMaster.DownloadText("/etc/kubernetes/admin.conf");
+                            var adminConfig = master.DownloadText("/etc/kubernetes/admin.conf");
 
                             adminConfig = adminConfig.Replace($"kubernetes-admin@{cluster.Definition.Name}", $"root@{cluster.Definition.Name}");
                             adminConfig = adminConfig.Replace("kubernetes-admin", $"root@{cluster.Definition.Name}");
 
-                            firstMaster.UploadText("/etc/kubernetes/admin.conf", adminConfig, permissions: "600", owner: "root:root");
+                            master.UploadText("/etc/kubernetes/admin.conf", adminConfig, permissions: "600", owner: "root:root");
                         });
 
                     // Download the boot master files that will need to be provisioned on
@@ -564,7 +555,7 @@ kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-k
 
                         foreach (var file in files)
                         {
-                            var text = firstMaster.DownloadText(file.Path);
+                            var text = master.DownloadText(file.Path);
 
                             clusterLogin.SetupDetails.MasterFiles[file.Path] = new KubeFileDetails(text, permissions: file.Permissions, owner: file.Owner);
                         }
@@ -577,15 +568,14 @@ kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-k
                     //---------------------------------------------------------
                     // Join the remaining masters to the cluster:
 
-                    foreach (var master in cluster.Masters.Where(m => m != firstMaster))
+                    foreach (var master in cluster.Masters.Where(m => m != master))
                     {
                         try
                         {
                             master.InvokeIdempotent("setup/kubectl",
                                 () =>
                                 {
-                                    KubeHelper.WriteStatus(statusWriter, "Setup", "Kubectl");
-                                    firstMaster.Status = "setup: kubectl";
+                                    controller.LogProgress(master, verb: "setup", message: "kubectl");
 
                                     // It's possible that a previous cluster join operation
                                     // was interrupted.  This command resets the state.
@@ -594,8 +584,7 @@ kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-k
 
                                     // The other (non-boot) masters need files downloaded from the boot master.
 
-                                    KubeHelper.WriteStatus(statusWriter, "Upload", "master files");
-                                    master.Status = "upload: master files";
+                                    controller.LogProgress(master, verb: "upload", message: "master files");
 
                                     foreach (var file in clusterLogin.SetupDetails.MasterFiles)
                                     {
@@ -607,15 +596,13 @@ kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-k
                                     master.InvokeIdempotent("setup/master-join",
                                         () =>
                                         {
-                                            KubeHelper.WriteStatus(statusWriter, "Join", "Master to cluster");
-                                            firstMaster.Status = "join: master to cluster";
+                                            controller.LogProgress(master, verb: "join", message: "master to cluster");
 
-                                            SetupEtcdHaProxy(controller, master, statusWriter);
+                                            SetupEtcdHaProxy(controller, master);
 
                                             var joined = false;
 
-                                            KubeHelper.WriteStatus(statusWriter, "Join", "As MASTER");
-                                            master.Status = "join: as master";
+                                            controller.LogProgress(master, verb: "join", message: "as master");
 
                                             master.SudoCommand("podman run",
                                                    "--name=neon-etcd-proxy",
@@ -656,8 +643,7 @@ kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-k
                             master.LogException(e);
                         }
 
-                        KubeHelper.WriteStatus(statusWriter, "Joined");
-                        master.Status = "joined";
+                        controller.LogProgress(master, verb: "joined", message: "to cluster");
                     }
 
                     // Configure [kube-apiserver] on all the masters
@@ -669,8 +655,7 @@ kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-k
                             master.InvokeIdempotent("setup/kubernetes-apiserver",
                                 () =>
                                 {
-                                    KubeHelper.WriteStatus(statusWriter, "Configure", "Kubernetes API Server");
-                                    master.Status = "configure: kubernetes apiserver";
+                                    controller.LogProgress(master, verb: "configure", message: "kubernetes api server");
 
                                     master.SudoCommand(CommandBundle.FromScript(
 @"#!/bin/bash
@@ -704,15 +689,13 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                 worker.InvokeIdempotent("setup/worker-join",
                                     () =>
                                     {
-                                        KubeHelper.WriteStatus(statusWriter, "Join", "Worker to Cluster");
-                                        firstMaster.Status = "join: worker to cluster";
+                                        controller.LogProgress(worker, verb: "join", message: "worker to cluster");
 
-                                        SetupEtcdHaProxy(controller, worker, statusWriter);
+                                        SetupEtcdHaProxy(controller, worker);
 
                                         var joined = false;
 
-                                        KubeHelper.WriteStatus(statusWriter, "Join", "As WORKER");
-                                        worker.Status = "join: as worker";
+                                        controller.LogProgress(worker, verb: "join", message: "as worker");
 
                                         worker.SudoCommand("podman run",
                                             "--name=neon-etcd-proxy",
@@ -752,8 +735,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                 worker.LogException(e);
                             }
 
-                            KubeHelper.WriteStatus(statusWriter, "Joined");
-                            worker.Status = "joined";
+                            controller.LogProgress(worker, verb: "joined", message: "to cluster");
                         });
                 });
         }
@@ -762,18 +744,16 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
         /// Configures the local workstation.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
-        /// <param name="master">The master node where the operation will be performed.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public static void ConfigureWorkstation(ISetupController controller, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        /// <param name="firstMaster">The master node where the operation will be performed.</param>
+        public static void ConfigureWorkstation(ISetupController controller, NodeSshProxy<NodeDefinition> firstMaster)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
+            Covenant.Requires<ArgumentNullException>(firstMaster != null, nameof(firstMaster));
 
-            master.InvokeIdempotent("setup/workstation",
-                () =>
+            firstMaster.InvokeIdempotent("setup/workstation",
+                (Action)(() =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Setup", "Workstation");
-                    master.Status = "setup : workstation";
+                    controller.LogProgress((object)firstMaster, verb: "configure", message: "workstation");
 
                     var cluster        = controller.Get<ClusterProxy>(ClusterProxyProperty);
                     var clusterLogin   = controller.Get<ClusterLogin>(ClusterLoginProperty);
@@ -787,8 +767,8 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     // https://github.com/nforgeio/neonKUBE/issues/888 will fix this by adding a proxy
                     // to neonDESKTOP and load balancing requests across the k8s api servers.
 
-                    var configText  = clusterLogin.SetupDetails.MasterFiles["/etc/kubernetes/admin.conf"].Text;
-                    var firstMaster = cluster.Definition.SortedMasterNodes.First();
+                    var configText = clusterLogin.SetupDetails.MasterFiles["/etc/kubernetes/admin.conf"].Text;
+                    var master     = cluster.Definition.SortedMasterNodes.First();
 
                     configText = configText.Replace("kubernetes-masters", $"{cluster.Definition.Masters.FirstOrDefault().Address}");
 
@@ -801,7 +781,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         // The user already has an existing kubeconfig, so we need
                         // to merge in the new config.
 
-                        var newConfig = NeonHelper.YamlDeserialize<KubeConfig>(configText);
+                        var newConfig      = NeonHelper.YamlDeserialize<KubeConfig>(configText);
                         var existingConfig = KubeHelper.Config;
 
                         // Remove any existing user, context, and cluster with the same names.
@@ -838,7 +818,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                         KubeHelper.SetConfig(existingConfig);
                     }
-                });
+                }));
         }
 
         /// <summary>
@@ -846,8 +826,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public static async Task InstallCalicoCniAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        public static async Task InstallCalicoCniAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
             await SyncContext.ClearAsync;
 
@@ -859,10 +838,8 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             await master.InvokeIdempotentAsync("setup/cni",
                 async () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Setup", "Calico");
-                    master.Status = "setup: calico";
+                    controller.LogProgress(master, verb: "setup", message: "calico");
 
-                    // Deploy Calico
                     var values = new List<KeyValuePair<string, object>>();
 
                     values.Add(new KeyValuePair<string, object>("images.organization", KubeConst.NeonContainerRegistery(controller)));
@@ -874,7 +851,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         values.Add(new KeyValuePair<string, object>($"kubernetes.service.port", KubeNodePorts.KubeApiServer));
 
                     }
-                    await master.InstallHelmChartAsync("calico", releaseName: "calico", @namespace: "kube-system", values: values, statusWriter: statusWriter);
+                    await master.InstallHelmChartAsync(controller, "calico", releaseName: "calico", @namespace: "kube-system", values: values);
 
                     // Wait for Calico and CoreDNS pods to report that they're running.
                     // We're going to wait a maximum of 300 seconds.
@@ -907,8 +884,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     await master.InvokeIdempotentAsync("setup/cni-ready",
                         async () =>
                         {
-                            KubeHelper.WriteStatus(statusWriter, "Wait", "for Calico");
-                            master.Status = "wait: for calico";
+                            controller.LogProgress(master, verb: "wait", message: "for calico");
 
                             var pods = await GetK8sClient(controller).CreateNamespacedPodAsync(
                                 new V1Pod()
@@ -963,8 +939,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public static async Task ConfigureMasterTaintsAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        public static async Task ConfigureMasterTaintsAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
             await SyncContext.ClearAsync;
 
@@ -976,8 +951,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             await master.InvokeIdempotentAsync("setup/kubernetes-master-taints",
                 async () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Configure", "Master Taints");
-                    master.Status = "configure: master taints";
+                    controller.LogProgress(master, verb: "configure", message: "master taints");
 
                     // The [kubectl taint] command looks like it can return a non-zero exit code.
                     // We'll ignore this.
@@ -997,8 +971,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public static async Task InstallMetricsServerAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        public static async Task InstallMetricsServerAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
             await SyncContext.ClearAsync;
 
@@ -1010,8 +983,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             await master.InvokeIdempotentAsync("setup/kubernetes-metrics-server",
                 async () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Setup", "Kubernetes Metrics Server");
-                    master.Status = "setup: kubernetes-metrics-server";
+                    controller.LogProgress(master, verb: "deploy", message: "metrics-server");
 
                     var values = new List<KeyValuePair<string, object>>();
 
@@ -1026,14 +998,13 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         i++;
                     }
 
-                    await master.InstallHelmChartAsync("metrics_server", releaseName: "metrics-server", @namespace: "kube-system", values: values, statusWriter: statusWriter);
+                    await master.InstallHelmChartAsync(controller, "metrics_server", releaseName: "metrics-server", @namespace: "kube-system", values: values);
                 });
 
             await master.InvokeIdempotentAsync("setup/kubernetes-metrics-server-ready",
                 async () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Wait", "for Metrics Server");
-                    master.Status = "wait: for promtail";
+                    controller.LogProgress(master, verb: "wait", message: "for metrics-server");
 
                     await WaitForDeploymentAsync(controller, "kube-system", "metrics-server");
                 });
@@ -1044,8 +1015,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public static async Task InstallIstioAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        public static async Task InstallIstioAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
@@ -1053,8 +1023,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             await master.InvokeIdempotentAsync("setup/istio",
                 async () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Setup", "Istio");
-                    master.Status = "setup: istio";
+                    controller.LogProgress(master, verb: "deploy", message: "istio");
 
                     var istioScript0 =
 $@"
@@ -1194,8 +1163,7 @@ istioctl install -f istio-cni.yaml
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public static async Task CreateRootUserAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        public static async Task CreateRootUserAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
             await SyncContext.ClearAsync;
 
@@ -1205,8 +1173,7 @@ istioctl install -f istio-cni.yaml
             await master.InvokeIdempotentAsync("setup/root-user",
                 async () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Create", "Kubernetes Root User");
-                    master.Status = "create: kubernetes root user";
+                    controller.LogProgress(master, verb: "create", message: "kubernetes root user");
 
                     var userYaml =
 $@"
@@ -1240,8 +1207,7 @@ subjects:
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public static async Task InstallKubeDashboardAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        public static async Task InstallKubeDashboardAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
             await SyncContext.ClearAsync;
 
@@ -1254,13 +1220,11 @@ subjects:
             master.InvokeIdempotent("setup/kube-dashboard",
                 () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Setup", "Kubernetes Dashboard");
-                    master.Status = "setup: kubernetes dashboard";
+                    controller.LogProgress(master, verb: "setup", message: "kubernetes dashboard");
 
                     if (clusterLogin.DashboardCertificate != null)
                     {
-                        KubeHelper.WriteStatus(statusWriter, "Generate", "Dashboard Certificate");
-                        master.Status = "generate: dashboard certificate";
+                        controller.LogProgress(master, verb: "generate", message: "kubernetes dashboard certificate");
 
                         // We're going to tie the custom certificate to the IP addresses
                         // of the master nodes only.  This means that only these nodes
@@ -1294,8 +1258,7 @@ subjects:
                     // encoded certificate and key PEM into the dashboard configuration
                     // YAML first.
 
-                    KubeHelper.WriteStatus(statusWriter, "Deploy", "Kubernetes Dashboard");
-                    master.Status = "deploy: kubernetes dashboard";
+                    controller.LogProgress(master, verb: "deploy", message: "kubernetes dashboard");
 
                     var dashboardYaml =
 $@"# Copyright 2017 The Kubernetes Authors.
@@ -1622,21 +1585,19 @@ spec:
         /// Adds the node taints.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public static async Task TaintNodesAsync(ISetupController controller, Action<string> statusWriter = null)
+        public static async Task TaintNodesAsync(ISetupController controller)
         {
             await SyncContext.ClearAsync;
 
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
-            var cluster     = controller.Get<ClusterProxy>(ClusterProxyProperty);
-            var firstMaster = cluster.FirstMaster;
+            var cluster = controller.Get<ClusterProxy>(ClusterProxyProperty);
+            var master  = cluster.FirstMaster;
 
-            await firstMaster.InvokeIdempotentAsync("setup/taint-nodes",
+            await master.InvokeIdempotentAsync("setup/taint-nodes",
                 async () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Taint", "Nodes");
-                    firstMaster.Status = "taint: nodes";
+                    controller.LogProgress(master, verb: "taint", message: "nodes");
 
                     try
                     {
@@ -1672,11 +1633,11 @@ spec:
                             }
                         }
 
-                        firstMaster.SudoCommand(CommandBundle.FromScript(sbScript));
+                        master.SudoCommand(CommandBundle.FromScript(sbScript));
                     }
                     finally
                     {
-                        firstMaster.Status = string.Empty;
+                        master.Status = string.Empty;
                     }
 
                     await Task.CompletedTask;
@@ -1688,8 +1649,7 @@ spec:
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        private static async Task InstallKialiAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        private static async Task InstallKialiAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
             await SyncContext.ClearAsync;
 
@@ -1699,8 +1659,7 @@ spec:
             await master.InvokeIdempotentAsync("setup/kiali",
                 async () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Setup", "Kaili");
-                    master.Status = "setup: kiali";
+                    controller.LogProgress(master, verb: "deploy", message: "kaili");
 
                     var values = new List<KeyValuePair<string, object>>();
 
@@ -1716,14 +1675,13 @@ spec:
                         i++;
                     }
 
-                    await master.InstallHelmChartAsync("kiali", releaseName: "kiali-operator", @namespace: "istio-system", values: values, statusWriter: statusWriter);
+                    await master.InstallHelmChartAsync(controller, "kiali", releaseName: "kiali-operator", @namespace: "istio-system", values: values);
                 });
 
             await master.InvokeIdempotentAsync("setup/kiali-ready",
                 async () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Wait", "for Kaili");
-                    master.Status = "wait: for kaili";
+                    controller.LogProgress(master, verb: "wait", message: "for kaili");
 
                     await NeonHelper.WaitAllAsync(
                         new List<Task>()
@@ -1741,9 +1699,8 @@ spec:
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task KubeSetupAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        public static async Task KubeSetupAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
@@ -1751,10 +1708,9 @@ spec:
             await master.InvokeIdempotentAsync("setup/initial-kubernetes", async
                 () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Setup", "Kubernetes");
-                    master.Status = "setup: kubernetes";
+                    controller.LogProgress(master, verb: "setup", message: "kubernetes");
 
-                    await master.InstallHelmChartAsync("cluster_setup", statusWriter: statusWriter);
+                    await master.InstallHelmChartAsync(controller, "cluster_setup");
                 });
         }
 
@@ -1763,9 +1719,8 @@ spec:
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InstallOpenEBSAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        public static async Task InstallOpenEBSAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
@@ -1775,14 +1730,12 @@ spec:
             await master.InvokeIdempotentAsync("setup/openebs-all",
                 async () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Deploy", "OpenEBS");
-                    master.Status = "deploy: openebs";
+                    controller.LogProgress(master, verb: "deploy", message: "openebs");
 
                     master.InvokeIdempotent("setup/openebs-namespace",
                         () =>
                         {
-                            KubeHelper.WriteStatus(statusWriter, "Deploy", "OpenEBS Namespace");
-                            master.Status = "deploy: openebs-namespace";
+                            controller.LogProgress(master, verb: "deploy", message: "openebs-namespace");
 
                             GetK8sClient(controller).CreateNamespace(new V1Namespace()
                             {
@@ -1800,8 +1753,7 @@ spec:
                     await master.InvokeIdempotentAsync("setup/openebs",
                         async () =>
                         {
-                            KubeHelper.WriteStatus(statusWriter, "Setup", "OpenEBS");
-                            master.Status = "setup: openebs";
+                            controller.LogProgress(master, verb: "deploy", message: "openebs");
 
                             var values = new List<KeyValuePair<string, object>>();
 
@@ -1829,7 +1781,7 @@ spec:
                                 values.Add(new KeyValuePair<string, object>($"webhook.replicas", replicas));
                             }
 
-                            await master.InstallHelmChartAsync("openebs", releaseName: "neon-storage-openebs", values: values, @namespace: "openebs", statusWriter: statusWriter);
+                            await master.InstallHelmChartAsync(controller, "openebs", releaseName: "neon-storage-openebs", values: values, @namespace: "openebs");
                         });
 
                     if (cluster.HostingManager.HostingEnvironment != HostingEnvironment.Wsl2)
@@ -1837,8 +1789,7 @@ spec:
                         await master.InvokeIdempotentAsync("setup/openebs-cstor",
                             async () =>
                             {
-                                KubeHelper.WriteStatus(statusWriter, "Setup", "OpenEBS cStor");
-                                master.Status = "setup: openebs cstor";
+                                controller.LogProgress(master, verb: "deploy", message: "openebs cstor");
 
                                 var values = new List<KeyValuePair<string, object>>();
 
@@ -1865,15 +1816,14 @@ spec:
 
                                 values.Add(new KeyValuePair<string, object>("admissionServer.image.organization", KubeConst.NeonContainerRegistery(controller)));
 
-                                await master.InstallHelmChartAsync("openebs_cstor_operator", releaseName: "neon-storage-openebs-cstor", values: values, @namespace: "openebs", statusWriter: statusWriter);
+                                await master.InstallHelmChartAsync(controller, "openebs_cstor_operator", releaseName: "neon-storage-openebs-cstor", values: values, @namespace: "openebs");
                             });
                     }
 
                     await master.InvokeIdempotentAsync("setup/openebs-ready",
                         async () =>
                         {
-                            KubeHelper.WriteStatus(statusWriter, "Wait", "for OpenEBS");
-                            master.Status = "wait: for openebs";
+                            controller.LogProgress(master, verb: "wait", message: "for openebs");
 
                             await NeonHelper.WaitAllAsync(
                                 new List<Task>()
@@ -1890,8 +1840,7 @@ spec:
 
                     if (cluster.HostingManager.HostingEnvironment != HostingEnvironment.Wsl2)
                     {
-                        KubeHelper.WriteStatus(statusWriter, "Setup", "OpenEBS Pool");
-                        master.Status = "setup: openebs pool";
+                        controller.LogProgress(master, verb: "deploy", message: "openebs pool");
 
                         await master.InvokeIdempotentAsync("setup/openebs-pool",
                         async () =>
@@ -1958,8 +1907,7 @@ spec:
                         await master.InvokeIdempotentAsync("setup/openebs-cstor-ready",
                             async () =>
                             {
-                                KubeHelper.WriteStatus(statusWriter, "Wait", "for OpenEBS cStor");
-                                master.Status = "wait: for openebs cStore";
+                                controller.LogProgress(master, verb: "wait", message: "for openebs cstor");
 
                                 await NeonHelper.WaitAllAsync(
                                     new List<Task>()
@@ -1996,14 +1944,12 @@ spec:
         /// <param name="master">The master node where the operation will be performed.</param>
         /// <param name="name">The new Namespace name.</param>
         /// <param name="istioInjectionEnabled">Whether Istio sidecar injection should be enabled.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task CreateNamespaceAsync(
             ISetupController                controller,
             NodeSshProxy<NodeDefinition>    master,
             string                          name,
-            bool                            istioInjectionEnabled = true,
-            Action<string>                  statusWriter          = null)
+            bool                            istioInjectionEnabled = true)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
@@ -2031,13 +1977,11 @@ spec:
         /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
         /// <param name="name">The new <see cref="V1StorageClass"/> name.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task CreateHostPathStorageClass(
             ISetupController                controller,
             NodeSshProxy<NodeDefinition>    master,
-            string                          name,
-            Action<string>                  statusWriter = null)
+            string                          name)
         {
             await master.InvokeIdempotentAsync($"setup/storage-class-hostpath-{name}",
                 async () =>
@@ -2075,15 +2019,13 @@ $@"- name: StorageType
         /// <param name="name">The new <see cref="V1StorageClass"/> name.</param>
         /// <param name="cstorPoolCluster">Specifies the cStor pool name.</param>
         /// <param name="replicaCount">Specifies the data replication factor.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task CreateCstorStorageClass(
             ISetupController                controller,
             NodeSshProxy<NodeDefinition>    master,
             string                          name,
             string                          cstorPoolCluster = "cspc-stripe",
-            int                             replicaCount     = 3,
-            Action<string>                  statusWriter     = null)
+            int                             replicaCount     = 3)
         {
             await master.InvokeIdempotentAsync($"setup/storage-class-cstor-{name}",
                 async () =>
@@ -2121,9 +2063,8 @@ $@"- name: StorageType
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InstallEtcdAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        public static async Task InstallEtcdAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
@@ -2133,8 +2074,7 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/monitoring-etc",
                 async () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Setup", "Etc");
-                    master.Status = "setup: etc";
+                    controller.LogProgress(master, verb: "setup", message: "etc");
 
                     await CreateCstorStorageClass(controller, master, "neon-internal-etcd");
 
@@ -2153,16 +2093,15 @@ $@"- name: StorageType
                         i++;
                     }
 
-                    await master.InstallHelmChartAsync("etcd_cluster", releaseName: "neon-etcd", @namespace: "neon-system", values: values, statusWriter: statusWriter);
+                    await master.InstallHelmChartAsync(controller, "etcd_cluster", releaseName: "neon-etcd", @namespace: "neon-system", values: values);
                 });
 
             await master.InvokeIdempotentAsync("setup/setup/monitoring-etc-ready",
                 async () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Wait", "for Etc (monitoring)");
-                    master.Status = "wait: for etc (monitoring)";
+                    controller.LogProgress(master, verb: "wait", message: "for etc (monitoring)");
 
-                    await WaitForStatefulsetAsync(controller, "monitoring", "neon-system-etcd");
+                    await WaitForStatefulSetAsync(controller, "monitoring", "neon-system-etcd");
                 });
 
             await Task.CompletedTask;
@@ -2173,9 +2112,8 @@ $@"- name: StorageType
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InstallPrometheusAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        public static async Task InstallPrometheusAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
@@ -2185,8 +2123,7 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/monitoring-prometheus",
                 async () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Setup", "Prometheus");
-                    master.Status = "setup: prometheus";
+                    controller.LogProgress(master, verb: "deploy", message: "prometheus");
 
                     var values = new List<KeyValuePair<string, object>>();
 
@@ -2238,7 +2175,7 @@ $@"- name: StorageType
                         values.Add(new KeyValuePair<string, object>($"prometheus.prometheusSpec.scrapeInterval", "2m"));
                     }
 
-                    await master.InstallHelmChartAsync("prometheus_operator", releaseName: "neon-metrics-prometheus", @namespace: "monitoring", values: values, statusWriter: statusWriter);
+                    await master.InstallHelmChartAsync(controller, "prometheus_operator", releaseName: "neon-metrics-prometheus", @namespace: "monitoring", values: values);
                 });
         }
 
@@ -2247,9 +2184,8 @@ $@"- name: StorageType
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task WaitForPrometheusAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        public static async Task WaitForPrometheusAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
@@ -2259,8 +2195,7 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/monitoring-prometheus-ready",
                 async () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Wait", "for Prometheus");
-                    master.Status = "wait: for prometheus";
+                    controller.LogProgress(master, verb: "wait", message: "for prometheus");
 
                     await NeonHelper.WaitAllAsync(
                         new List<Task>()
@@ -2268,8 +2203,8 @@ $@"- name: StorageType
                             WaitForDeploymentAsync(controller, "monitoring", "neon-metrics-prometheus-ku-operator"),
                             WaitForDeploymentAsync(controller, "monitoring", "neon-metrics-prometheus-kube-state-metrics"),
                             WaitForDaemonsetAsync(controller, "monitoring", "neon-metrics-prometheus-prometheus-node-exporter"),
-                            WaitForStatefulsetAsync(controller, "monitoring", "alertmanager-neon-metrics-prometheus-ku-alertmanager"),
-                            WaitForStatefulsetAsync(controller, "monitoring", "prometheus-neon-metrics-prometheus-ku-prometheus")
+                            WaitForStatefulSetAsync(controller, "monitoring", "alertmanager-neon-metrics-prometheus-ku-alertmanager"),
+                            WaitForStatefulSetAsync(controller, "monitoring", "prometheus-neon-metrics-prometheus-ku-prometheus")
                         });
                 });
         }
@@ -2279,9 +2214,8 @@ $@"- name: StorageType
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InstallCortexAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        public static async Task InstallCortexAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
@@ -2302,8 +2236,7 @@ $@"- name: StorageType
                     await master.InvokeIdempotentAsync("setup/monitoring-cortex",
                         async () =>
                         {
-                            KubeHelper.WriteStatus(statusWriter, "Setup", "Cortex");
-                            master.Status = "setup: Cortex";
+                            controller.LogProgress(master, verb: "setup", message: "cortex");
 
                             if (cluster.Definition.Nodes.Any(n => n.Vm.GetMemory(cluster.Definition) < 4294965097L))
                             {
@@ -2325,14 +2258,13 @@ $@"- name: StorageType
 
                             values.Add(new KeyValuePair<string, object>("image.organization", KubeConst.NeonContainerRegistery(controller)));
 
-                            await master.InstallHelmChartAsync("cortex", releaseName: "neon-metrics-cortex", @namespace: "monitoring", values: values, statusWriter: statusWriter);
+                            await master.InstallHelmChartAsync(controller, "cortex", releaseName: "neon-metrics-cortex", @namespace: "monitoring", values: values);
                         });
 
                     await master.InvokeIdempotentAsync("setup/monitoring-cortex-ready",
                         async () =>
                         {
-                            KubeHelper.WriteStatus(statusWriter, "Wait", "for Cortex");
-                            master.Status = "wait: for cortex";
+                            controller.LogProgress(master, verb: "wait", message: "for cortex");
 
                             await WaitForDeploymentAsync(controller, "monitoring", "neon-metrics-cortex");
                         });
@@ -2344,9 +2276,8 @@ $@"- name: StorageType
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InstallLokiAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        public static async Task InstallLokiAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
@@ -2356,8 +2287,7 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/monitoring-loki",
                 async () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Setup", "Loki");
-                    master.Status = "setup: loki";
+                    controller.LogProgress(master, verb: "deploy", message: "loki");
 
                     var values = new List<KeyValuePair<string, object>>();
 
@@ -2378,16 +2308,15 @@ $@"- name: StorageType
                         values.Add(new KeyValuePair<string, object>($"resources.limits.memory", "128Mi"));
                     }
 
-                    await master.InstallHelmChartAsync("loki", releaseName: "neon-logs-loki", @namespace: "monitoring", values: values, statusWriter: statusWriter);
+                    await master.InstallHelmChartAsync(controller, "loki", releaseName: "neon-logs-loki", @namespace: "monitoring", values: values);
                 });
 
             await master.InvokeIdempotentAsync("setup/monitoring-loki-ready",
                 async () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Wait", "for Loki");
-                    master.Status = "wait: for loki";
+                    controller.LogProgress(master, verb: "wait", message: "for loki");
 
-                    await WaitForStatefulsetAsync(controller, "monitoring", "neon-logs-loki");
+                    await WaitForStatefulSetAsync(controller, "monitoring", "neon-logs-loki");
                 });
         }
 
@@ -2396,9 +2325,8 @@ $@"- name: StorageType
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InstallPromtailAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        public static async Task InstallPromtailAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
@@ -2408,8 +2336,7 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/monitoring-promtail",
                 async () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Setup", "Promtail");
-                    master.Status = "setup: promtail";
+                    controller.LogProgress(master, verb: "deploy", message: "promtail");
 
                     var values = new List<KeyValuePair<string, object>>();
 
@@ -2429,14 +2356,13 @@ $@"- name: StorageType
                         values.Add(new KeyValuePair<string, object>($"resources.limits.memory", "128Mi"));
                     }
 
-                    await master.InstallHelmChartAsync("promtail", releaseName: "neon-logs-promtail", @namespace: "monitoring", values: values, statusWriter: statusWriter);
+                    await master.InstallHelmChartAsync(controller, "promtail", releaseName: "neon-logs-promtail", @namespace: "monitoring", values: values);
                 });
 
             await master.InvokeIdempotentAsync("setup/monitoring-promtail-ready",
                 async () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Wait", "for Promtail");
-                    master.Status = "wait: for promtail";
+                    controller.LogProgress(master, verb: "wait", message: "for promtail");
 
                     await WaitForDaemonsetAsync(controller, "monitoring", "neon-logs-promtail");
                 });
@@ -2447,9 +2373,8 @@ $@"- name: StorageType
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InstallGrafanaAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        public static async Task InstallGrafanaAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
@@ -2457,8 +2382,7 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/monitoring-grafana",
                     async () =>
                     {
-                        KubeHelper.WriteStatus(statusWriter, "Setup", "Grafana");
-                        master.Status = "setup: Grafana";
+                        controller.LogProgress(master, verb: "setup", message: "grafana");
 
                         var values = new List<KeyValuePair<string, object>>();
 
@@ -2483,14 +2407,13 @@ $@"- name: StorageType
                             values.Add(new KeyValuePair<string, object>($"resources.limits.memory", "128Mi"));
                         }
 
-                        await master.InstallHelmChartAsync("grafana", releaseName: "neon-metrics-grafana", @namespace: "monitoring", values: values, statusWriter: statusWriter);
+                        await master.InstallHelmChartAsync(controller, "grafana", releaseName: "neon-metrics-grafana", @namespace: "monitoring", values: values);
                     });
 
             await master.InvokeIdempotentAsync("setup/monitoring-grafana-ready",
                 async () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Wait", "for Grafana");
-                    master.Status = "wait: for grafana";
+                    controller.LogProgress(master, verb: "wait", message: "for grafana");
 
                     await WaitForDeploymentAsync(controller, "monitoring", "neon-metrics-grafana");
                 });
@@ -2501,9 +2424,8 @@ $@"- name: StorageType
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InstallMinioAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        public static async Task InstallMinioAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
@@ -2525,8 +2447,7 @@ $@"- name: StorageType
                     await master.InvokeIdempotentAsync("setup/minio",
                         async () =>
                         {
-                            KubeHelper.WriteStatus(statusWriter, "Setup", "Minio");
-                            master.Status = "setup: minio";
+                            controller.LogProgress(master, verb: "deploy", message: "minio");
 
                             var values = new List<KeyValuePair<string, object>>();
 
@@ -2548,14 +2469,13 @@ $@"- name: StorageType
                                 values.Add(new KeyValuePair<string, object>($"resources.limits.memory", "256Mi"));
                             }
 
-                            await master.InstallHelmChartAsync("minio", releaseName: "neon-system-minio", @namespace: "neon-system", values: values, statusWriter: statusWriter);
+                            await master.InstallHelmChartAsync(controller, "minio", releaseName: "neon-system-minio", @namespace: "neon-system", values: values);
                         });
 
                     await master.InvokeIdempotentAsync("configure/minio-secret",
                         async () =>
                         {
-                            KubeHelper.WriteStatus(statusWriter, "Configure", "Minio Secret");
-                            master.Status = "configure: minio secret";
+                            controller.LogProgress(master, verb: "configure", message: "minio secret");
 
                             var secret = await GetK8sClient(controller).ReadNamespacedSecretAsync("neon-system-minio", "neon-system");
 
@@ -2578,9 +2498,8 @@ $@"- name: StorageType
         /// Installs an Neon Monitoring to the monitoring namespace.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task<List<Task>> SetupMonitoringAsync(ISetupController controller, Action<string> statusWriter = null)
+        public static async Task<List<Task>> SetupMonitoringAsync(ISetupController controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
@@ -2592,20 +2511,19 @@ $@"- name: StorageType
             var master  = cluster.FirstMaster;
             var tasks   = new List<Task>();
 
-            KubeHelper.WriteStatus(statusWriter, "Setup", "Metrics");
-            master.Status = "setup: metrics";
+            controller.LogProgress(master, verb: "setup", message: "cluster metrics");
 
-            tasks.Add(WaitForPrometheusAsync(controller, master, statusWriter));
+            tasks.Add(WaitForPrometheusAsync(controller, master));
 
             if (cluster.HostingManager.HostingEnvironment != HostingEnvironment.Wsl2)
             {
-                tasks.Add(InstallCortexAsync(controller, master, statusWriter));
+                tasks.Add(InstallCortexAsync(controller, master));
             }
 
-            tasks.Add(InstallLokiAsync(controller, master, statusWriter));
-            tasks.Add(InstallPromtailAsync(controller, master, statusWriter));
-            tasks.Add(master.InstallHelmChartAsync("istio_prometheus", @namespace: "monitoring", statusWriter: statusWriter));
-            tasks.Add(InstallGrafanaAsync(controller, master, statusWriter));
+            tasks.Add(InstallLokiAsync(controller, master));
+            tasks.Add(InstallPromtailAsync(controller, master));
+            tasks.Add(master.InstallHelmChartAsync(controller, "istio_prometheus", @namespace: "monitoring"));
+            tasks.Add(InstallGrafanaAsync(controller, master));
 
             return tasks;
         }
@@ -2615,9 +2533,8 @@ $@"- name: StorageType
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         /// <remarks>The tracking <see cref="Task"/>.</remarks>
-        public static async Task InstallJaegerAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        public static async Task InstallJaegerAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
@@ -2625,8 +2542,7 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/monitoring-jaeger",
                 async () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Setup", "Jaeger");
-                    master.Status = "setup: jaeger";
+                    controller.LogProgress(master, verb: "deploy", message: "jaeger");
 
                     var values = new List<KeyValuePair<string, object>>();
 
@@ -2655,14 +2571,13 @@ $@"- name: StorageType
                         i++;
                     }
 
-                    await master.InstallHelmChartAsync("jaeger", releaseName: "neon-logs-jaeger", @namespace: "monitoring", values: values, statusWriter: statusWriter);
+                    await master.InstallHelmChartAsync(controller, "jaeger", releaseName: "neon-logs-jaeger", @namespace: "monitoring", values: values);
                 });
 
             await master.InvokeIdempotentAsync("setup/monitoring-jaeger-ready",
                 async () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Wait", "for Jaeger");
-                    master.Status = "wait: for jaeger";
+                    controller.LogProgress(master, verb: "wait", message: "for jaeger");
 
                     await NeonHelper.WaitForAsync(
                         async () =>
@@ -2687,9 +2602,8 @@ $@"- name: StorageType
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InstallContainerRegistryAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        public static async Task InstallContainerRegistryAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
             await SyncContext.ClearAsync;
 
@@ -2703,8 +2617,7 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/harbor-certificate",
                 async () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Setup", "Harbor Certificate");
-                    master.Status = "create: harbor certificate";
+                    controller.LogProgress(master, verb: "configure", message: "harbor certificate");
 
                     await SyncContext.ClearAsync;
 
@@ -2731,9 +2644,8 @@ $@"- name: StorageType
                 async () =>
                 {
                     await SyncContext.ClearAsync;
-                    
-                    KubeHelper.WriteStatus(statusWriter, "Setup", "Harbor Redis");
-                    master.Status = "setup: harbor redis";
+
+                    controller.LogProgress(master, verb: "setup", message: "harbor redis");
 
                     var values   = new List<KeyValuePair<string, object>>();
                     
@@ -2758,7 +2670,7 @@ $@"- name: StorageType
                         i++;
                     }
 
-                    await master.InstallHelmChartAsync("redis_ha", releaseName: "neon-system-registry-redis", @namespace: "neon-system", values: values, statusWriter: statusWriter);
+                    await master.InstallHelmChartAsync(controller, "redis_ha", releaseName: "neon-system-registry-redis", @namespace: "neon-system", values: values);
                 });
 
             await master.InvokeIdempotentAsync("setup/harbor-redis-ready",
@@ -2766,17 +2678,15 @@ $@"- name: StorageType
                 {
                     await SyncContext.ClearAsync;
 
-                    KubeHelper.WriteStatus(statusWriter, "Wait", "for Harbor Redis");
-                    master.Status = "wait: for harbor redis";
+                    controller.LogProgress(master, verb: "wait", message: "for harbor redis");
 
-                    await WaitForStatefulsetAsync(controller, "neon-system", "neon-system-registry-redis-server");
+                    await WaitForStatefulSetAsync(controller, "neon-system", "neon-system-registry-redis-server");
                 });
 
             await master.InvokeIdempotentAsync("setup/harbor",
                 async () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Setup", "Harbor");
-                    master.Status = "setup: harbor";
+                    controller.LogProgress(master, verb: "deploy", message: "harbor");
 
                     var values = new List<KeyValuePair<string, object>>();
 
@@ -2821,14 +2731,13 @@ $@"- name: StorageType
                         j++;
                     }
 
-                    await master.InstallHelmChartAsync("harbor", releaseName: "neon-system-registry-harbor", @namespace: "neon-system", values: values, statusWriter: statusWriter);
+                    await master.InstallHelmChartAsync(controller, "harbor", releaseName: "neon-system-registry-harbor", @namespace: "neon-system", values: values);
                 });
 
             await master.InvokeIdempotentAsync("setup/harbor-ready",
                 async () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Wait", "for Harbor");
-                    master.Status = "wait: for harbor";
+                    controller.LogProgress(master, verb: "wait", message: "for harbor");
 
                     var startUtc = DateTime.UtcNow;
 
@@ -2852,9 +2761,8 @@ $@"- name: StorageType
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InstallClusterManagerAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        public static async Task InstallClusterManagerAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
             await SyncContext.ClearAsync;
 
@@ -2864,21 +2772,19 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/cluster-manager",
                 async () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Setup", "[neon-cluster-manager]");
-                    master.Status = "setup: [neon-cluster-manager]";
+                    controller.LogProgress(master, verb: "setup", message: "neon-cluster-manager");
 
                     var values = new List<KeyValuePair<string, object>>();
                     
                     values.Add(new KeyValuePair<string, object>("image.organization", KubeConst.NeonContainerRegistery(controller)));
 
-                    await master.InstallHelmChartAsync("neon_cluster_manager", releaseName: "neon-cluster-manager", @namespace: "neon-system", values: values, statusWriter: statusWriter);
+                    await master.InstallHelmChartAsync(controller, "neon_cluster_manager", releaseName: "neon-cluster-manager", @namespace: "neon-system", values: values);
                 });
 
             await master.InvokeIdempotentAsync("setup/cluster-manager-ready",
                 async () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "wait", "for [neon-cluster-manager]");
-                    master.Status = "wait: for [neon-cluster-manager]";
+                    controller.LogProgress(master, verb: "wait", message: "for neon-cluster-manager");
 
                     await WaitForDeploymentAsync(controller, "neon-system", "neon-cluster-manager");
                 });
@@ -2889,9 +2795,8 @@ $@"- name: StorageType
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task<List<Task>> CreateNamespacesAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        public static async Task<List<Task>> CreateNamespacesAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
@@ -2912,9 +2817,8 @@ $@"- name: StorageType
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InstallSystemDbAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        public static async Task InstallSystemDbAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
@@ -2947,8 +2851,7 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/system-db",
                 async () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Setup", "System Database");
-                    master.Status = "setup: system database";
+                    controller.LogProgress(master, verb: "deploy", message: "system database");
 
                     var replicas = Math.Max(1, cluster.Definition.Masters.Count() / 5);
 
@@ -2975,29 +2878,37 @@ $@"- name: StorageType
                         i++;
                     }
 
-                    await master.InstallHelmChartAsync("citus_postgresql", releaseName: "neon-system-db", @namespace: "neon-system", values: values, statusWriter: statusWriter);
+                    await master.InstallHelmChartAsync(controller, "citus_postgresql", releaseName: "neon-system-db", @namespace: "neon-system", values: values);
                 });
 
             await master.InvokeIdempotentAsync("setup/system-db-ready",
                 async () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Wait", "for System Database");
-                    master.Status = "wait: for system database";
+                    controller.LogProgress(master, verb: "wait", message: "for system database");
 
                     await NeonHelper.WaitAllAsync(
                         new List<Task>()
                         {
                             WaitForDeploymentAsync(controller, "neon-system", "neon-system-db-citus-postgresql-manager"),
-                            WaitForStatefulsetAsync(controller, "neon-system", "neon-system-db-citus-postgresql-master"),
-                            WaitForStatefulsetAsync(controller, "neon-system", "neon-system-db-citus-postgresql-worker")
+                            WaitForStatefulSetAsync(controller, "neon-system", "neon-system-db-citus-postgresql-master"),
+                            WaitForStatefulSetAsync(controller, "neon-system", "neon-system-db-citus-postgresql-worker")
                         });
                 });
 
             await Task.CompletedTask;
         }
 
+        /// <summary>
+        /// Waits for a service deployment to complete.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        /// <param name="namespace">The namespace.</param>
+        /// <param name="name">The deployment name.</param>
+        /// <param name="labelSelector">The optional label selector.</param>
+        /// <param name="fieldSelector">The optional field selector.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task WaitForDeploymentAsync(
-            ISetupController     controller, 
+            ISetupController    controller, 
             string              @namespace, 
             string              name          = null, 
             string              labelSelector = null,
@@ -3040,7 +2951,16 @@ $@"- name: StorageType
                 pollInterval: clusterOpRetryInterval);
         }
 
-        public static async Task WaitForStatefulsetAsync(
+        /// <summary>
+        /// Waits for a stateful set deployment to complete.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        /// <param name="namespace">The namespace.</param>
+        /// <param name="name">The deployment name.</param>
+        /// <param name="labelSelector">The optional label selector.</param>
+        /// <param name="fieldSelector">The optional field selector.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task WaitForStatefulSetAsync(
             ISetupController    controller,
             string              @namespace,
             string              name          = null,
@@ -3083,6 +3003,15 @@ $@"- name: StorageType
                 pollInterval: clusterOpRetryInterval);
         }
 
+        /// <summary>
+        /// Waits for a daemon set deployment to complete.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        /// <param name="namespace">The namespace.</param>
+        /// <param name="name">The deployment name.</param>
+        /// <param name="labelSelector">The optional label selector.</param>
+        /// <param name="fieldSelector">The optional field selector.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task WaitForDaemonsetAsync(
             ISetupController    controller,
             string              @namespace,

@@ -82,7 +82,7 @@ namespace Neon.Kube
         /// The login for the cluster being provisioned.
         /// This is required.
         /// </param>
-        /// <param name="controller">Cluster prepare/setup related state.</param>
+        /// <param name="controller">The setup controller.</param>
         /// <param name="secureSshPassword">
         /// The secure SSH password to be set for all node VMs. This is required.
         /// </param>

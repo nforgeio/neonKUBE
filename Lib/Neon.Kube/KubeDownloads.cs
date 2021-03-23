@@ -108,7 +108,7 @@ namespace Neon.Kube
         /// </note>
         /// </summary>
         /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
-        /// <param name="controller">Holds the cluster prepare/setup state.</param>
+        /// <param name="controller">The setup controller.</param>
         /// <returns>The download URI or <c>null</c>.</returns>
         public static string GetNodeImageUri(HostingEnvironment hostingEnvironment, ISetupController controller)
         {

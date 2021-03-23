@@ -36,5 +36,69 @@ namespace Neon.Kube
     /// </summary>
     public interface ISetupController : IObjectDictionary
     {
+        /// <summary>
+        /// Logs a progress message.
+        /// </summary>
+        /// <param name="message">The message.</param>
+        void LogProgress(string message);
+
+        /// <summary>
+        /// Logs a progress message with a verb.  This will be formatted
+        /// like <b>VERB: MESSAGE</b>.
+        /// </summary>
+        /// <param name="verb">The message verb.</param>
+        /// <param name="message">The message.</param>
+        void LogProgress(string verb, string message);
+
+        /// <summary>
+        /// Logs a progress message for a specific node.  This sets the <b>status</b>
+        /// text for the node.
+        /// </summary>
+        /// <param name="node">
+        /// The node reference as an object (so we can avoid dealing with the
+        /// node generic parameter here).
+        /// </param>
+        /// <param name="message">The message.</param>
+        void LogProgress(object node, string message);
+
+        /// <summary>
+        /// Logs a progress for a specific node with a verb and message.  
+        /// This will be formatted like <b>VERB: MESSAGE</b>.
+        /// </summary>
+        /// <param name="node">
+        /// The node reference as an object (so we can avoid dealing with the
+        /// node generic parameter here).
+        /// </param>
+        /// <param name="verb">The message verb.</param>
+        /// <param name="message">The message.</param>
+        void LogProgress(object node, string verb, string message);
+
+        /// <summary>
+        /// <para>
+        /// Logs an error message.
+        /// </para>
+        /// <note>
+        /// Setup will terminate after any step that reports an error
+        /// via this method.
+        /// </note>
+        /// </summary>
+        /// <param name="message">The message.</param>
+        void LogError(string message);
+
+        /// <summary>
+        /// <para>
+        /// Logs an error message for a specific node.
+        /// </para>
+        /// <note>
+        /// Setup will terminate after any step that reports an error
+        /// via this method.
+        /// </note>
+        /// </summary>
+        /// <param name="node">
+        /// The node reference as an object (so we can avoid dealing with the
+        /// node generic parameter here).
+        /// </param>
+        /// <param name="message">The message.</param>
+        void LogError(object node, string message);
     }
 }

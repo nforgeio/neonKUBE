@@ -120,7 +120,7 @@ namespace Neon.Kube
             this.nodes           = nodes.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase).ToList();
             this.steps           = new List<Step>();
             this.sbDisplay       = new StringBuilder();
-            this.previousDisplay     = string.Empty;
+            this.previousDisplay = string.Empty;
         }
 
         /// <summary>
@@ -134,6 +134,11 @@ namespace Neon.Kube
         /// defaults to <c>true</c>.
         ///</summary>
         public bool ShowNodeStatus { get; set; } = true;
+
+        /// <summary>
+        /// Raises when progress/error messages are received from setup steps.
+        /// </summary>
+        public event SetupProgressDelegate ProgressEvent;
 
         /// <summary>
         /// Specifies the maximum number of setup steps to be displayed.
@@ -796,7 +801,7 @@ namespace Neon.Kube
                     Thread.Sleep(TimeSpan.FromMilliseconds(100));
                 }
 
-                error = stepNodes.FirstOrDefault(n => n.IsFaulted) != null;
+                error = error || stepNodes.FirstOrDefault(n => n.IsFaulted) != null;
 
                 if (error)
                 {
@@ -1076,6 +1081,143 @@ namespace Neon.Kube
             if (error)
             {
                 throw new KubeException($"[{nodes.Count(n => n.IsFaulted)}] nodes are faulted.");
+            }
+        }
+
+        //---------------------------------------------------------------------
+        // ISetupController implementation
+
+        // These methods are intended to unify how progress and error messages are
+        // reported by prepare/setup code as well as to refactor how higher-level
+        // code can receive and process these.
+        //
+        // The setup code has evolved over 4+ years, starting with the setup controller
+        // being configured by the [neon-cli] console application assuming that status
+        // can be written directly to the console and that errors can be handled by
+        // just terminating [neon-cli].
+        // 
+        // This is part of the final setup refactor where all cluster prepare/setup 
+        // related code is relocated to the [Neon.Kube] library so it can be referenced
+        // by different kinds of applications.  This will include [neon-cli] as well
+        // as neonDESKTOP right now and perhaps Temporal based workflows in the future
+        // as part of a neonCLOUD offering.
+        //
+        // The LogProgress() methods update global or node-specific status.  For nodes,
+        // this will be set as the node status text.  The Error() methods do the same
+        // thing for error messages while also ensuring that setup terminates after the
+        // current step completes.
+
+        /// <inheritdoc/>
+        public void LogProgress(string message)
+        {
+            if (string.IsNullOrEmpty(message))
+            {
+                return;
+            }
+
+            if (ProgressEvent != null)
+            {
+                ProgressEvent.Invoke(
+                    new SetupProgressMessage()
+                    {
+                        Message = message
+                    });
+            }
+        }
+
+        /// <inheritdoc/>
+        public void LogProgress(string verb, string message)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(verb), nameof(verb));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(message), nameof(message));
+
+            if (ProgressEvent != null)
+            {
+                ProgressEvent.Invoke(
+                    new SetupProgressMessage()
+                    {
+                        Verb    = verb,
+                        Message = message
+                    });
+            }
+        }
+
+        /// <inheritdoc/>
+        public void LogProgress(object node, string message)
+        {
+            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(message), nameof(message));
+
+            ((NodeSshProxy<NodeMetadata>)node).Status = message;
+
+            if (ProgressEvent != null)
+            {
+                ProgressEvent.Invoke(
+                    new SetupProgressMessage()
+                    {
+                        Node    = node,
+                        Message = message
+                    });
+            }
+        }
+
+        /// <inheritdoc/>
+        public void LogProgress(object node, string verb, string message)
+        {
+            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(verb), nameof(verb));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(message), nameof(message));
+
+            ((NodeSshProxy<NodeMetadata>)node).Status = $"{verb}: {message}";
+
+            if (ProgressEvent != null)
+            {
+                ProgressEvent.Invoke(
+                    new SetupProgressMessage()
+                    {
+                        Node    = node,
+                        Verb    = verb,
+                        Message = message
+                    });
+            }
+        }
+
+        /// <inheritdoc/>
+        public void LogError(string message)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(message), nameof(message));
+
+            this.error = true;
+
+            if (ProgressEvent != null)
+            {
+                ProgressEvent.Invoke(
+                    new SetupProgressMessage()
+                    {
+                        Message = message,
+                        IsError = true
+                    });
+            }
+        }
+
+        /// <inheritdoc/>
+        public void LogError(object node, string message)
+        {
+            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(message), nameof(message));
+
+            ((NodeSshProxy<NodeMetadata>)node).Status    = message;
+            ((NodeSshProxy<NodeMetadata>)node).IsFaulted = true;
+
+            if (ProgressEvent != null)
+            {
+                ProgressEvent.Invoke(
+                    new SetupProgressMessage()
+                    {
+                        Node    = node,
+                        Message = message,
+                        IsError = true
+                    });
             }
         }
     }

@@ -637,7 +637,7 @@ namespace Neon.SSH
         /// Indicates that the remote machine is in a faulted state because one or more operations
         /// have failed.
         /// </summary>
-        public bool IsFaulted { get; private set; }
+        public bool IsFaulted { get; set; }
 
         /// <summary>
         /// <para>

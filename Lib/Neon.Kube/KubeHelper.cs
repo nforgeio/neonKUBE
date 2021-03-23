@@ -1968,38 +1968,6 @@ exit 0
         }
 
         /// <summary>
-        /// Writes a status message to a status writer action when it's not <c>null</c>.
-        /// </summary>
-        /// <param name="statusWriter">The log writer action ot <c>null</c>.</param>
-        /// <param name="label">The status label.</param>
-        /// <param name="message">Optional message.</param>
-        public static void WriteStatus(Action<string> statusWriter, string label, string message = null)
-        {
-            if (statusWriter != null)
-            {
-                const int labelWidth = 15;
-
-                if (string.IsNullOrEmpty(label))
-                {
-                    label = new string(' ', labelWidth + 1);
-                }
-                else
-                {
-                    if (label.Length < labelWidth)
-                    {
-                        label = label + ':' + new string(' ', labelWidth - label.Length);
-                    }
-                    else
-                    {
-                        label = label + ':';
-                    }
-                }
-
-                statusWriter($"{label}{message ?? string.Empty}");
-            }
-        }
-
-        /// <summary>
         /// Returns the path to the <b>ssh-keygen.exe</b> tool to be used for creating
         /// and managing SSH keys.
         /// </summary>

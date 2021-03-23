@@ -310,14 +310,14 @@ namespace Neon.Kube
 
         /// <summary>
         /// Returns the hostname and path to use for referencing neonKUBE cluster
-        /// container images based on the setup state passed.  This will typically 
+        /// container images based on the setup controller state passed.  This will typically 
         /// return <see cref="LocalClusterRegistry"/> for production and test clusters
         /// to use the prepackaged container images in the node VM image but when
         /// we're setting up in <b>debug mode</b> (as defined by the <see cref="KubeSetup.DebugModeProperty"/>
         /// property in <paramref name="controller"/>, we'll return <see cref="NeonHelper.NeonLibraryBranchRegistry"/>
         /// instead.
         /// </summary>
-        /// <param name="controller">The setup state.</param>
+        /// <param name="controller">The setup controller.</param>
         /// <returns>The registry to use for pulling neonKUBE cluster containers.</returns>
         public static string NeonContainerRegistery(ISetupController controller)
         {

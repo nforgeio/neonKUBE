@@ -55,21 +55,16 @@ namespace Neon.Kube
         /// Installs the neonKUBE related tools to the <see cref="KubeNodeFolders.Bin"/> folder.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public void NodeInstallTools(ISetupController controller, Action<string> statusWriter = null)
+        public void NodeInstallTools(ISetupController controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             InvokeIdempotent("setup/tools",
                 () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Setup", "Tools");
-                    Status = "setup: tools";
-
                     foreach (var file in KubeHelper.Resources.GetDirectory("/Tools").GetFiles())
                     {
-                        KubeHelper.WriteStatus(statusWriter, "Install", "Tool scripts");
-                        Status = "install: tool scripts";
+                        controller.LogProgress(this, verb: "deploy", message: "tools");
 
                         // Upload each tool script, removing the extension.
 
@@ -85,8 +80,7 @@ namespace Neon.Kube
         /// Configures a node's host public SSH key during node provisioning.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public void ConfigureSshKey(ISetupController controller, Action<string> statusWriter = null)
+        public void ConfigureSshKey(ISetupController controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
@@ -104,8 +98,7 @@ namespace Neon.Kube
                     //      https://help.ubuntu.com/community/SSH/OpenSSH/Configuring
                     //      https://help.ubuntu.com/community/SSH/OpenSSH/Keys
 
-                    KubeHelper.WriteStatus(statusWriter, "Create", "SSH keys");
-                    Status = "create: SSH keys";
+                    controller.LogProgress(this, verb: "generate", message: "ssh keys");
 
                     // Enable the public key by appending it to [$HOME/.ssh/authorized_keys],
                     // creating the file if necessary.  Note that we're allowing only a single
@@ -163,15 +156,13 @@ systemctl restart sshd
             // Verify that we can login with the new SSH private key and also verify that
             // the password still works.
 
-            KubeHelper.WriteStatus(statusWriter, "Verify", "SSH Key");
-            Status = "verify: SSH key";
+            controller.LogProgress(this, verb: "verify", message: "ssh keys");
 
             Disconnect();
             UpdateCredentials(SshCredentials.FromPrivateKey(KubeConst.SysAdminUser, clusterLogin.SshKey.PrivatePEM));
             WaitForBoot();
 
-            KubeHelper.WriteStatus(statusWriter, "Verify", "SSH Password");
-            Status = "verify: SSH password";
+            controller.LogProgress(this, verb: "verify", message: "ssh password");
 
             Disconnect();
             UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, clusterLogin.SshPassword));
@@ -182,16 +173,14 @@ systemctl restart sshd
         /// Disables the <b>snapd</b> service.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public void DisableSnap(ISetupController controller, Action<string> statusWriter = null)
+        public void DisableSnap(ISetupController controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             InvokeIdempotent("base/disable-snap",
                 () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Disable", "[snapd.service]");
-                    Status = "disable: [snapd.service]";
+                    controller.LogProgress(this, verb: "disable", message: "snapd.service");
 
                     //-----------------------------------------------------------------
                     // We're going to stop and mask the [snapd.service] if it's running
@@ -216,16 +205,14 @@ fi
         /// Required NFS setup.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public void ConfigureNFS(ISetupController controller, Action<string> statusWriter = null)
+        public void ConfigureNFS(ISetupController controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             InvokeIdempotent("base/nfs",
                 () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Configure", "NFS");
-                    Status = "configure: NFS";
+                    controller.LogProgress(this, verb: "configure", message: "nfs");
 
                     //-----------------------------------------------------------------
                     // We need to install nfs-common tools for NFS to work.
@@ -243,16 +230,14 @@ safe-apt-get install -y nfs-common
         /// Configures <b>journald</b>.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public void ConfigureJournald(ISetupController controller, Action<string> statusWriter = null)
+        public void ConfigureJournald(ISetupController controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             InvokeIdempotent("base/journald",
                 () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Configure", "Journald filters");
-                    Status = "configure: journald filters";
+                    controller.LogProgress(this, verb: "configure", message: "journald filters");
 
                     var filterScript =
 @"
@@ -275,8 +260,7 @@ systemctl restart rsyslog.service
         /// for a cluster node.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public void PrepareNode(ISetupController controller, Action<string> statusWriter = null)
+        public void PrepareNode(ISetupController controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
@@ -286,15 +270,14 @@ systemctl restart rsyslog.service
             InvokeIdempotent("base/prepare-node",
                 () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Prepare", "node");
-                    Status = "prepare: node";
+                    controller.LogProgress(this, verb: "prepare", message: "node");
 
-                    NodeInstallTools(controller, statusWriter);
-                    BaseConfigureApt(hostingManager.HostingEnvironment, clusterDefinition.NodeOptions.PackageManagerRetries, clusterDefinition.NodeOptions.AllowPackageManagerIPv6, statusWriter);
-                    BaseConfigureOpenSsh(hostingManager.HostingEnvironment, statusWriter);
-                    DisableSnap(controller, statusWriter);
-                    ConfigureJournald(controller, statusWriter);
-                    ConfigureNFS(controller, statusWriter);
+                    NodeInstallTools(controller);
+                    BaseConfigureApt(controller, clusterDefinition.NodeOptions.PackageManagerRetries, clusterDefinition.NodeOptions.AllowPackageManagerIPv6);
+                    BaseConfigureOpenSsh(controller);
+                    DisableSnap(controller);
+                    ConfigureJournald(controller);
+                    ConfigureNFS(controller);
                 });
         }
 
@@ -302,9 +285,10 @@ systemctl restart rsyslog.service
         /// Performs low-level node initialization during cluster setup.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public void NodeInitialize(ISetupController controller, Action<string> statusWriter = null)
+        public void NodeInitialize(ISetupController controller)
         {
+            Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
+
             var hostEnvironment = controller.Get<HostingEnvironment>(KubeSetup.HostingEnvironmentProperty);
 
             if (hostEnvironment != HostingEnvironment.Wsl2)
@@ -312,8 +296,7 @@ systemctl restart rsyslog.service
                 InvokeIdempotent("base/blacklist-floppy",
                     () =>
                     {
-                        KubeHelper.WriteStatus(statusWriter, "Blacklist", "floppy drive");
-                        Status = "blacklist: floppy drive";
+                        controller.LogProgress(this, verb: "blacklist", message: "floppy drive");
 
                         var floppyScript =
 @"
@@ -330,8 +313,7 @@ dpkg-reconfigure initramfs-tools
                 InvokeIdempotent("base/sysstat",
                     () =>
                     {
-                        KubeHelper.WriteStatus(statusWriter, "Enable", "Sysstat");
-                        Status = "enable: sysstat";
+                        controller.LogProgress(this, verb: "enable", message: "sysstat");
 
                         var statScript =
 @"
@@ -912,8 +894,7 @@ systemctl daemon-reload
             InvokeIdempotent("base/initialize",
                 () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Configure", "Node (low-level)");
-                    Status = "configure: node (low-level)";
+                    controller.LogProgress(this, verb: "configure", message: "node (low-level)");
 
                     SudoCommand(CommandBundle.FromScript(script), RunOptions.Defaults | RunOptions.FaultOnError);
                 });
@@ -924,15 +905,13 @@ systemctl daemon-reload
         /// neonKUBE Helm folder.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public void NodeInstallHelmArchive(ISetupController controller, Action<string> statusWriter = null)
+        public void NodeInstallHelmArchive(ISetupController controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             using (var ms = new MemoryStream())
             {
-                KubeHelper.WriteStatus(statusWriter, "Install", "Helm Charts (zip)");
-                Status = "install: helm charts (archive)";
+                controller.LogProgress(this, verb: "install", message: "helm charts (zip)");
 
                 var helmFolder = KubeHelper.Resources.GetDirectory("/Helm");    // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1121
 
@@ -948,14 +927,15 @@ systemctl daemon-reload
         /// longer necessary after the node first boots and its credentials and network
         /// settings have been configured.
         /// </summary>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public void NodeDisableNeonInit(Action<string> statusWriter = null)
+        /// <param name="controller">The setup controller.</param>
+        public void NodeDisableNeonInit(ISetupController controller)
         {
+            Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
+
             InvokeIdempotent("base/disable-neon-init",
                 () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Disable", "[neon-init]");
-                    Status = "disable: [node-init]";
+                    controller.LogProgress(this, verb: "disable", message: "neon-init.service");
 
                     SudoCommand("systemctl disable neon-init.service", RunOptions.Defaults | RunOptions.FaultOnError);
                 });
@@ -965,8 +945,7 @@ systemctl daemon-reload
         /// Installs the <b>CRI-O</b> container runtime.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public void NodeInstallCriO(ISetupController controller, Action<string> statusWriter = null)
+        public void NodeInstallCriO(ISetupController controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
@@ -975,8 +954,7 @@ systemctl daemon-reload
             InvokeIdempotent("setup/cri-o",
                 () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Setup", "CRI-O");
-                    Status = "setup: CRI-O";
+                    controller.LogProgress(this, verb: "install", message: "cri-o");
 
                     if (hostEnvironment != HostingEnvironment.Wsl2)
                     {
@@ -1092,16 +1070,14 @@ apt-mark hold cri-o cri-o-runc
         /// Installs the <b>podman</b> CLI for managing <b>CRI-O</b>.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public void NodeInstallPodman(ISetupController controller, Action<string> statusWriter = null)
+        public void NodeInstallPodman(ISetupController controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             InvokeIdempotent("setup/podman",
                 () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Setup", "Podman");
-                    Status = "setup: Podman";
+                    controller.LogProgress(this, verb: "install", message: "podman");
 
                     var setupScript =
 $@"
@@ -1125,16 +1101,14 @@ apt-mark hold podman
         /// Installs the Helm client.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public void NodeInstallHelm(ISetupController controller, Action<string> statusWriter = null)
+        public void NodeInstallHelm(ISetupController controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             InvokeIdempotent("setup/helm-client",
                 () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Setup", "Helm Client");
-                    Status = "setup: Helm client";
+                    controller.LogProgress(this, verb: "install", message: "helm client");
 
                     var script =
 $@"
@@ -1154,12 +1128,10 @@ rm -rf linux-amd64
         /// Loads the docker images onto the node. This is used for debug mode only.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         /// <param name="downloadParallel">The optional limit for parallelism when downloading images from GitHub registry.</param>
         /// <param name="loadParallel">The optional limit for parallelism when loading images into the cluster.</param>
         public async Task NodeLoadImagesAsync(
             ISetupController    controller, 
-            Action<string>      statusWriter     = null, 
             int                 downloadParallel = 5, 
             int                 loadParallel     = 2)
         {
@@ -1174,8 +1146,7 @@ rm -rf linux-amd64
                         return;
                     }
 
-                    KubeHelper.WriteStatus(statusWriter, "Setup", "Load docker images for debug mode");
-                    Status = "setup: debug images";
+                    controller.LogProgress(this, verb: "load", message: "container images (debug mode)");
 
                     var dockerPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), $@"DockerDesktop\version-bin\docker.exe");
 
@@ -1295,8 +1266,7 @@ rm -rf linux-amd64
         /// Installs the Kubernetes components: <b>kubeadm</b>, <b>kubectl</b>, and <b>kublet</b>.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public void NodeInstallKubernetes(ISetupController controller, Action<string> statusWriter = null)
+        public void NodeInstallKubernetes(ISetupController controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
@@ -1362,8 +1332,7 @@ systemctl daemon-reload
 systemctl stop kubelet
 systemctl disable kubelet
 ";
-                    KubeHelper.WriteStatus(statusWriter, "Install", "Kubernetes");
-                    Status = "install: kubernetes";
+                    controller.LogProgress(this, verb: "install", message: "kubernetes");
 
                     SudoCommand(CommandBundle.FromScript(mainScript), RunOptions.Defaults | RunOptions.FaultOnError);
 

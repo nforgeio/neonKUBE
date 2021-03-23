@@ -446,12 +446,14 @@ namespace Neon.Kube
         /// Ensures that the node operating system and version is supported for a neonKUBE
         /// cluster.  This faults the node proxy on faliure.
         /// </summary>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
+        /// <param name="controller">Optional setup controller.</param>
         /// <returns><c>true</c> if the operation system is supported.</returns>
-        public bool VerifyNodeOS(Action<string> statusWriter = null)
+        public bool VerifyNodeOS(ISetupController controller = null)
         {
-            KubeHelper.WriteStatus(statusWriter, "Check", "Operating system");
-            Status = "check: operating system";
+            if (controller != null)
+            {
+                controller.LogProgress(this, verb: "check", message: "operating system");
+            }
 
             // $todo(jefflill): We're currently hardcoded to Ubuntu 20.04.x
 
@@ -503,12 +505,14 @@ namespace Neon.Kube
         /// and then fills unreferenced file system blocks and nodes with zeros so the disk image will
         /// compress better.
         /// </summary>
-        /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public void Clean(HostingEnvironment hostingEnvironment, Action<string> statusWriter = null)
+        /// <param name="controller">The setup controller.</param>
+        public void Clean(ISetupController controller)
         {
-            KubeHelper.WriteStatus(statusWriter, "Clean", "File system");
-            Status = "clean: file system";
+            Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
+
+            var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetup.HostingEnvironmentProperty);
+
+            controller.LogProgress(this, verb: "clean", message: "file system");
 
             var cleanCommand = "fstrim /";
 
@@ -545,20 +549,21 @@ rm -rf /var/lib/dhcp/*
         /// <summary>
         /// Upgrades the base Linux distribtion, rebooting the node when required.
         /// </summary>
+        /// <param name="controller">The setup controller.</param>
         /// <param name="fullUpgrade">
         /// Pass <c>true</c> to perform a full distribution upgrade or <c>false</c> to just 
         /// upgrade packages.
         /// </param>
-        /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public void UpgradeNode(bool fullUpgrade, Action<string> statusWriter = null)
+        public void UpgradeNode(ISetupController controller, bool fullUpgrade)
         {
+            Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
+
             var nodeDefinition = NeonHelper.CastTo<NodeDefinition>(Metadata);
 
             InvokeIdempotent($"setup/upgrade-linux",
                 () =>
                 {
-                    KubeHelper.WriteStatus(statusWriter, "Upgrade", $"Linux [full={fullUpgrade}]");
-                    Status = $"upgrade: linux [full={fullUpgrade}])";
+                    controller.LogProgress(this, verb: "upgrade", message: $"linux [full={fullUpgrade}]");
 
                     // Upgrade Linux packages if requested.
 
