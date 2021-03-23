@@ -251,7 +251,7 @@ OPTIONS:
             setupController.AddNodeStep("verify OS", (controller, node) => node.VerifyNodeOS());
 
             // $todo(jefflill): We don't support Linux distribution upgrades yet.
-            setupController.AddNodeStep("node basics", (controller, node) => node.BaseInitialize(controller.Get<HostingEnvironment>(KubeSetup.HostingEnvironmentProperty), upgradeLinux: false));
+            setupController.AddNodeStep("node basics", (controller, node) => node.BaseInitialize(controller, upgradeLinux: false));
 
             setupController.AddNodeStep("setup NTP", (controller, node) => node.SetupConfigureNtp(controller));
 
@@ -303,7 +303,7 @@ OPTIONS:
                     (controller, node) =>
                     {
                         cluster.FirstMaster.SudoCommand($"rm -rf {KubeNodeFolders.Helm}/*");
-                        cluster.FirstMaster.NodeInstallHelmArchive(controller, message => Console.WriteLine(message));
+                        cluster.FirstMaster.NodeInstallHelmArchive(controller);
 
                         var zipPath = LinuxPath.Combine(KubeNodeFolders.Helm, "charts.zip");
 

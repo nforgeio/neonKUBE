@@ -71,13 +71,12 @@ namespace Neon.Kube
 
         private const string defaultSwitchName = "external";
 
-        private ClusterProxy                    cluster;
-        private ObjectDictionary                setupState;
-        private SetupController<NodeDefinition> setupController;
-        private string                          driveTemplatePath;
-        private string                          vmDriveFolder;
-        private string                          switchName;
-        private string                          secureSshPassword;
+        private ClusterProxy                        cluster;
+        private SetupController<NodeDefinition>     controller;
+        private string                              driveTemplatePath;
+        private string                              vmDriveFolder;
+        private string                              switchName;
+        private string                              secureSshPassword;
 
         /// <summary>
         /// Creates an instance that is only capable of validating the hosting
@@ -127,15 +126,14 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override async Task<bool> ProvisionAsync(ClusterLogin clusterLogin, ObjectDictionary setupState, string secureSshPassword, string orgSshPassword = null)
+        public override async Task<bool> ProvisionAsync(ISetupController controller, string secureSshPassword, string orgSshPassword = null)
         {
-            Covenant.Requires<ArgumentNullException>(clusterLogin != null, nameof(clusterLogin));
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secureSshPassword), nameof(secureSshPassword));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(orgSshPassword), nameof(orgSshPassword));
             Covenant.Assert(cluster != null, $"[{nameof(HyperVLocalHostingManager)}] was created with the wrong constructor.");
 
-            this.setupState        = setupState;
+            this.controller        = (SetupController<NodeDefinition>)controller;
             this.secureSshPassword = secureSshPassword;
 
             if (IsProvisionNOP)
@@ -168,17 +166,17 @@ namespace Neon.Kube
 
             // Perform the provisioning operations.
 
-            setupController = new SetupController<NodeDefinition>($"Provisioning [{cluster.Definition.Name}] cluster", cluster.Nodes)
+            this.controller = new SetupController<NodeDefinition>($"Provisioning [{cluster.Definition.Name}] cluster", cluster.Nodes)
             {
                 ShowStatus  = this.ShowStatus,
                 MaxParallel = 1     // We're only going to provision one VM at a time on a local Hyper-V instance.
             };
 
-            setupController.AddGlobalStep("prepare hyper-v", state => PrepareHyperV());
-            setupController.AddNodeStep("create virtual machines", (state, node) => ProvisionVM(node));
-            setupController.AddGlobalStep(string.Empty, state => Finish(), quiet: true);
+            this.controller.AddGlobalStep("prepare hyper-v", controller => PrepareHyperV());
+            this.controller.AddNodeStep("create virtual machines", (controller, node) => ProvisionVM(node));
+            this.controller.AddGlobalStep(string.Empty, controller => Finish(), quiet: true);
 
-            if (!setupController.Run())
+            if (!this.controller.Run())
             {
                 Console.Error.WriteLine("*** ERROR: One or more configuration steps failed.");
                 return await Task.FromResult(false);
@@ -306,16 +304,16 @@ namespace Neon.Kube
             // going to name the file the same as the file name from the URI and also that 
             // templates are considered to be invariant.
 
-            var driveTemplateUri  = new Uri(KubeDownloads.GetNodeImageUri(this.HostingEnvironment, setupState));
+            var driveTemplateUri  = new Uri(KubeDownloads.GetNodeImageUri(this.HostingEnvironment, controller));
             var driveTemplateName = driveTemplateUri.Segments.Last();
 
             driveTemplatePath = Path.Combine(KubeHelper.NodeImageFolder, driveTemplateName);
 
             if (!File.Exists(driveTemplatePath))
             {
-                var nodeImageUri = KubeDownloads.GetNodeImageUri(this.HostingEnvironment, setupState);
+                var nodeImageUri = KubeDownloads.GetNodeImageUri(this.HostingEnvironment, controller);
 
-                setupController.SetGlobalStepStatus($"Download node image VHDX: [{nodeImageUri}]");
+                controller.SetGlobalStepStatus($"Download node image VHDX: [{nodeImageUri}]");
 
                 Task.Run(
                     async () =>
@@ -360,11 +358,11 @@ namespace Neon.Kube
                                             {
                                                 var percentComplete = (int)(((double)fileStream.Length / (double)contentLength) * 100.0);
 
-                                                setupController.SetGlobalStepStatus($"Downloading VHDX: [{percentComplete}%] [{nodeImageUri}]");
+                                                controller.SetGlobalStepStatus($"Downloading VHDX: [{percentComplete}%] [{nodeImageUri}]");
                                             }
                                             else
                                             {
-                                                setupController.SetGlobalStepStatus($"Downloading VHDX: [{fileStream.Length} bytes] [{nodeImageUri}]");
+                                                controller.SetGlobalStepStatus($"Downloading VHDX: [{fileStream.Length} bytes] [{nodeImageUri}]");
                                             }
                                         }
                                     }
@@ -386,7 +384,7 @@ namespace Neon.Kube
 
                     }).Wait();
 
-                setupController.SetGlobalStepStatus();
+                controller.SetGlobalStepStatus();
             }
 
             // Handle any necessary Hyper-V initialization.
@@ -396,7 +394,7 @@ namespace Neon.Kube
                 // We're going to create an external Hyper-V switch if there
                 // isn't already an external switch.
 
-                setupController.SetGlobalStepStatus("Scanning network adapters");
+                controller.SetGlobalStepStatus("Scanning network adapters");
 
                 var switches       = hyperv.ListVmSwitches();
                 var externalSwitch = switches.FirstOrDefault(s => s.Type == VirtualSwitchType.External);
@@ -414,12 +412,12 @@ namespace Neon.Kube
                 // taking care to issue a warning if any machines already exist 
                 // and we're not doing [force] mode.
 
-                setupController.SetGlobalStepStatus("Scanning virtual machines");
+                controller.SetGlobalStepStatus("Scanning virtual machines");
 
                 var existingMachines = hyperv.ListVms();
                 var conflicts        = string.Empty;
 
-                setupController.SetGlobalStepStatus("Stopping virtual machines");
+                controller.SetGlobalStepStatus("Stopping virtual machines");
 
                 foreach (var machine in existingMachines)
                 {
@@ -445,7 +443,7 @@ namespace Neon.Kube
                     throw new HyperVException($"[{conflicts}] virtual machine(s) already exist.");
                 }
 
-                setupController.SetGlobalStepStatus();
+                controller.SetGlobalStepStatus();
             }
         }
 

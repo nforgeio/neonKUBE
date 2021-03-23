@@ -443,10 +443,12 @@ Server Requirements:
                     }
                 }
 
-                if (!hostingManager.ProvisionAsync(clusterLogin, setupState, clusterLogin.SshPassword, orgSshPassword).Result)
-                {
-                    Program.Exit(1);
-                }
+                throw new NotImplementedException("$todo(jefflill): IMPKEMENT THIS!");
+
+                //if (!hostingManager.ProvisionAsync(setupController, clusterLogin.SshPassword, orgSshPassword).Result)
+                //{
+                //    Program.Exit(1);
+                //}
 
                 // Ensure that the nodes have valid IP addresses.
 

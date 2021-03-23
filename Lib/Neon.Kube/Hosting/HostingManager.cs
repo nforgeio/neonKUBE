@@ -102,7 +102,7 @@ namespace Neon.Kube
         public virtual bool GenerateSecurePassword => true;
 
         /// <inheritdoc/>
-        public abstract Task<bool> ProvisionAsync(ClusterLogin clusterLogin, ISetupController controller, string secureSshPassword, string orgSshPassword = null);
+        public abstract Task<bool> ProvisionAsync(ISetupController controller, string secureSshPassword, string orgSshPassword = null);
 
         /// <inheritdoc/>
         public virtual void AddPostPrepareSteps(SetupController<NodeDefinition> setupController)

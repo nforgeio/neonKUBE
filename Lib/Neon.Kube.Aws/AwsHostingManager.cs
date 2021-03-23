@@ -736,7 +736,7 @@ namespace Neon.Kube
 
         private ClusterProxy                        cluster;
         private string                              clusterName;
-        private ObjectDictionary                    setupState;
+        private ISetupController                    controller;
         private string                              clusterEnvironment;
         private HostingOptions                      hostingOptions;
         private CloudOptions                        cloudOptions;
@@ -1076,15 +1076,16 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override async Task<bool> ProvisionAsync(ClusterLogin clusterLogin, ObjectDictionary setupState, string secureSshPassword, string orgSshPassword = null)
+        public override async Task<bool> ProvisionAsync(ISetupController controller, string secureSshPassword, string orgSshPassword = null)
         {
-            Covenant.Requires<ArgumentNullException>(clusterLogin != null, nameof(clusterLogin));
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secureSshPassword), nameof(secureSshPassword));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(orgSshPassword), nameof(orgSshPassword));
             Covenant.Assert(cluster != null, $"[{nameof(AwsHostingManager)}] was created with the wrong constructor.");
 
-            this.setupState = setupState;
+            var clusterLogin = controller.Get<ClusterLogin>(KubeSetup.ClusterLoginProperty);
+
+            this.controller = controller;
 
             // We need to ensure that the cluster has at least one ingress node.
 
@@ -1123,7 +1124,7 @@ namespace Neon.Kube
             setupController.AddGlobalStep("ssh keys", ImportKeyPairAsync);
             setupController.AddNodeStep("node instances", CreateNodeInstanceAsync);
             setupController.AddNodeStep("credentials",
-                (state, node) =>
+                (controller, node) =>
                 {
                     // Update the node SSH proxies to use the secure SSH password.
 
@@ -1132,7 +1133,7 @@ namespace Neon.Kube
                 quiet: true);
             setupController.AddGlobalStep("load balancer", ConfigureLoadBalancerAsync);
             setupController.AddNodeStep("load balancer targets", WaitForSshTargetAsync);
-            setupController.AddGlobalStep("internet routing", async state => await UpdateNetworkAsync(NetworkOperations.InternetRouting | NetworkOperations.EnableSsh));
+            setupController.AddGlobalStep("internet routing", async controller => await UpdateNetworkAsync(NetworkOperations.InternetRouting | NetworkOperations.EnableSsh));
 
             if (!setupController.Run(leaveNodesConnected: false))
             {
@@ -1157,7 +1158,7 @@ namespace Neon.Kube
             // the OpenEBS disk will be easy to identify as the only unpartitioned disk.
 
             setupController.AddNodeStep("openebs",
-                async (state, node) =>
+                async (controller, node) =>
                 {
                     node.Status = "openebs: checking";
 
@@ -1258,7 +1259,7 @@ namespace Neon.Kube
                             }
                         });
                 },
-                (state, node) => node.Metadata.OpenEBS);
+                (controller, node) => node.Metadata.OpenEBS);
         }
 
         /// <inheritdoc/>
