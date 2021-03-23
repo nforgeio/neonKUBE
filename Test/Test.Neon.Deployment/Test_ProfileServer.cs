@@ -65,8 +65,7 @@ namespace TestDeployment
         /// <param name="server">The assistant erver.</param>
         private void SetDefaultHandlers(ProfileServer server)
         {
-            server.GetMasterPasswordHandler = () => ProfileHandlerResult.Create("master");
-            server.GetProfileValueHandler   = name => ProfileHandlerResult.Create($"{name}-profile");
+            server.GetProfileValueHandler = name => ProfileHandlerResult.Create($"{name}-profile");
 
             server.GetSecretPasswordHandler = 
                 (name, vault, masterPassword) =>
@@ -186,41 +185,6 @@ namespace TestDeployment
                 await Task.Run(() => Assert.Equal("seven-profile", client.GetProfileValue("seven")));
                 await Task.Run(() => Assert.Equal("eight-profile", client.GetProfileValue("eight")));
                 await Task.Run(() => Assert.Equal("nine-profile", client.GetProfileValue("nine")));
-            }
-        }
-
-        [Theory]
-        [Repeat(repeatCount)]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonDeployment)]
-        public void GetMasterPassword(int repeatCount)
-        {
-            var client = new ProfileClient(pipeName);
-
-            using (var server = new ProfileServer(pipeName))
-            {
-                SetDefaultHandlers(server);
-                server.Start();
-
-                Assert.Equal("master", client.GetMasterPassword());
-            }
-        }
-
-        [Theory]
-        [Repeat(repeatCount)]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonDeployment)]
-        public void GetMasterPassword_Exception(int repeatCount)
-        {
-            var client = new ProfileClient(pipeName);
-
-            using (var server = new ProfileServer(pipeName))
-            {
-                SetDefaultHandlers(server);
-
-                server.GetMasterPasswordHandler = () => throw new Exception("test exception");
-
-                server.Start();
-
-                Assert.Throws<ProfileException>(() => client.GetMasterPassword());
             }
         }
 

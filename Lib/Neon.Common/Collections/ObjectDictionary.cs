@@ -41,7 +41,7 @@ namespace Neon.Collections
     /// Describes dictionaries mapping case-sensitive strings to objects along with nice 
     /// generic methods that converts item values to specific types.
     /// </summary>
-    public class ObjectDictionary : Dictionary<string, object>
+    public class ObjectDictionary : Dictionary<string, object>, IObjectDictionary
     {
         /// <summary>
         /// Constructor.
@@ -51,29 +51,13 @@ namespace Neon.Collections
         {
         }
 
-        /// <summary>
-        /// Returns the value of an item converted to a specific type.
-        /// </summary>
-        /// <typeparam name="TValue">The result type.</typeparam>
-        /// <param name="key">The key.</param>
-        /// <returns>The value converted to <typeparamref name="TValue"/>.</returns>
-        /// <exception cref="ArgumentNullException">Thrown if key is <c>null</c>.</exception>
-        /// <exception cref="KeyNotFoundException">Thrown by the getter if the key doesn't exist.</exception>
-        /// <exception cref="InvalidCastException">Thrown if the item value cannot be cast into a <typeparamref name="TValue"/>.</exception>
+        /// <inheritdoc/>
         public TValue Get<TValue>(string key)
         {
             return (TValue)base[key];
         }
 
-        /// <summary>
-        /// Returns the value of an item converted to a specific type.
-        /// </summary>
-        /// <typeparam name="TValue">The result type.</typeparam>
-        /// <param name="key">The key.</param>
-        /// <param name="default">Secifies the default value to return if the key doesn't exist.</param>
-        /// <returns>The value converted to <typeparamref name="TValue"/>.</returns>
-        /// <exception cref="ArgumentNullException">Thrown if key is <c>null</c>.</exception>
-        /// <exception cref="InvalidCastException">Thrown if the item value cannot be cast into a <typeparamref name="TValue"/>.</exception>
+        /// <inheritdoc/>
         public TValue Get<TValue>(string key, TValue @default = default(TValue))
         {
             if (base.TryGetValue(key, out var value))
@@ -84,14 +68,7 @@ namespace Neon.Collections
             return @default;
         }
 
-        /// <summary>
-        /// Attempts to retrieve a specific value from the dictionary.
-        /// </summary>
-        /// <typeparam name="TValue">The result type.</typeparam>
-        /// <param name="key">The key.</param>
-        /// <param name="value">Returns as the value when the key exists.</param>
-        /// <returns><c>true</c> if the key exists and the value was returned.</returns>
-        /// <exception cref="ArgumentNullException">Thrown if key is <c>null</c>.</exception>
+        /// <inheritdoc/>
         public bool TryGetValue<TValue>(string key, out TValue value)
         {
             if (base.TryGetValue(key, out var v))

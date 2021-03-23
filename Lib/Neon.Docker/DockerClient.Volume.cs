@@ -54,7 +54,7 @@ namespace Neon.Docker
         /// Creates a Docker volume.
         /// </summary>
         /// <param name="name">The optional volume name (Docker will generate a name if this is not specified).</param>
-        /// <param name="driver">The optional volume driver name (defaults to <c>local)</c><./param>
+        /// <param name="driver">The optional volume driver name (defaults to <c>local)</c></param>
         /// <param name="cancellationToken">Optional cancellation token.</param>
         /// <param name="driverOpts">The custom driver options.</param>
         /// <returns>The docker volume.</returns>

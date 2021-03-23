@@ -82,7 +82,7 @@ namespace Neon.Kube
         /// The login for the cluster being provisioned.
         /// This is required.
         /// </param>
-        /// <param name="setupState">Cluster prepare/setup related state.</param>
+        /// <param name="controller">Cluster prepare/setup related state.</param>
         /// <param name="secureSshPassword">
         /// The secure SSH password to be set for all node VMs. This is required.
         /// </param>
@@ -103,7 +103,7 @@ namespace Neon.Kube
         /// equivalent to calling <see cref="EnableInternetSshAsync"/>.
         /// </para>
         /// </remarks>
-        Task<bool> ProvisionAsync(ClusterLogin clusterLogin, ObjectDictionary setupState, string secureSshPassword, string orgSshPassword = null);
+        Task<bool> ProvisionAsync(ClusterLogin clusterLogin, ISetupController controller, string secureSshPassword, string orgSshPassword = null);
 
         /// <summary>
         /// Adds any steps to be performed after the node has been otherwise prepared.

@@ -133,7 +133,7 @@ namespace Neon.Kube
         /// Explicitly sets the class <see cref="INeonLogger"/> implementation.  This defaults to
         /// a reasonable value.
         /// </summary>
-        /// <param name="log"></param>
+        /// <param name="log">The logger.</param>
         public static void SetLogger(INeonLogger log)
         {
             Covenant.Requires<ArgumentNullException>(log != null, nameof(log));
@@ -1741,7 +1741,7 @@ public class ISOFile
         /// and <see cref="NodeDefinition"/>.
         /// </para>
         /// </summary>
-        /// <param name="clusterDefinition"></param>
+        /// <param name="clusterDefinition">The cluster definition.</param>
         /// <param name="nodeDefinition">The node definition.</param>
         /// <param name="securePassword">Optionally specifies a secure SSH password.</param>
         /// <returns>A <see cref="TempFile"/> that references the generated ISO file.</returns>

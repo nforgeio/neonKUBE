@@ -314,17 +314,17 @@ namespace Neon.Kube
         /// return <see cref="LocalClusterRegistry"/> for production and test clusters
         /// to use the prepackaged container images in the node VM image but when
         /// we're setting up in <b>debug mode</b> (as defined by the <see cref="KubeSetup.DebugModeProperty"/>
-        /// property in <paramref name="setupState"/>, we'll return <see cref="NeonHelper.NeonLibraryBranchRegistry"/>
+        /// property in <paramref name="controller"/>, we'll return <see cref="NeonHelper.NeonLibraryBranchRegistry"/>
         /// instead.
         /// </summary>
-        /// <param name="setupState">The setup state.</param>
+        /// <param name="controller">The setup state.</param>
         /// <returns>The registry to use for pulling neonKUBE cluster containers.</returns>
-        public static string NeonContainerRegistery(ObjectDictionary setupState)
+        public static string NeonContainerRegistery(ISetupController controller)
         {
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
-            if (setupState.Get<bool>(KubeSetup.DebugModeProperty, false)
-                  && !setupState.Get<bool>(KubeSetup.MaintainerModeProperty, false))
+            if (controller.Get<bool>(KubeSetup.DebugModeProperty, false)
+                  && !controller.Get<bool>(KubeSetup.MaintainerModeProperty, false))
             {
                 return NeonHelper.NeonLibraryBranchRegistry;
             }

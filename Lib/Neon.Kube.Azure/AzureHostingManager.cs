@@ -1494,10 +1494,10 @@ namespace Neon.Kube
         /// that we're not actually going to write the VM tags here; we'll do that when we
         /// actually create any new VMs.
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
-        private void AssignExternalSshPorts(ObjectDictionary setupState)
+        /// <param name="controller">The setup controller.</param>
+        private void AssignExternalSshPorts(ISetupController controller)
         {
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             // $todo(jefflill):
             //
@@ -1555,11 +1555,11 @@ namespace Neon.Kube
         /// <summary>
         /// Creates the NIC and VM for a cluster node.
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="controller">The setup controller.</param>
         /// <param name="node">The target node.</param>
-        private void CreateVm(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> node)
+        private void CreateVm(ISetupController controller, NodeSshProxy<NodeDefinition> node)
         {
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             var azureNode = nameToVm[node.Name];
 
@@ -1630,11 +1630,11 @@ namespace Neon.Kube
         /// <summary>
         /// Performs some basic node initialization.
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="controller">The setup controller.</param>
         /// <param name="node">The target node.</param>
-        private void ConfigureNode(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> node)
+        private void ConfigureNode(ISetupController controller, NodeSshProxy<NodeDefinition> node)
         {
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             node.WaitForBoot();
 

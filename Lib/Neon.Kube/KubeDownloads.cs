@@ -108,18 +108,18 @@ namespace Neon.Kube
         /// </note>
         /// </summary>
         /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
-        /// <param name="setupState">Holds the cluster prepare/setup state.</param>
+        /// <param name="controller">Holds the cluster prepare/setup state.</param>
         /// <returns>The download URI or <c>null</c>.</returns>
-        public static string GetNodeImageUri(HostingEnvironment hostingEnvironment, ObjectDictionary setupState)
+        public static string GetNodeImageUri(HostingEnvironment hostingEnvironment, ISetupController controller)
         {
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
-            var setupDebugMode = setupState.Get<bool>(KubeSetup.DebugModeProperty, false);
-            var baseImageName  = setupState.Get<string>(KubeSetup.BaseImageNameProperty, null);
+            var setupDebugMode = controller.Get<bool>(KubeSetup.DebugModeProperty, false);
+            var baseImageName  = controller.Get<string>(KubeSetup.BaseImageNameProperty, null);
 
             if (setupDebugMode && string.IsNullOrEmpty(baseImageName))
             {
-                throw new NotSupportedException($"[{nameof(setupState)}] must include [{KubeSetup.BaseImageNameProperty}] when [{KubeSetup.DebugModeProperty}=true].");
+                throw new NotSupportedException($"[{nameof(controller)}] must include [{KubeSetup.BaseImageNameProperty}] when [{KubeSetup.DebugModeProperty}=true].");
             }
 
             var imageType = setupDebugMode ? "base" : "node";

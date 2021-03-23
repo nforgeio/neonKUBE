@@ -41,7 +41,7 @@ namespace Neon.Kube
     /// state that can be accessed by the setup step actions.  This dictionary is keyed by
     /// case-sensitive strings and can store and retrieve objects with differing types.
     /// </remarks>
-    public class SetupController<NodeMetadata> : ObjectDictionary
+    public class SetupController<NodeMetadata> : ObjectDictionary, ISetupController
         where NodeMetadata : class
     {
         //---------------------------------------------------------------------
@@ -60,11 +60,11 @@ namespace Neon.Kube
             public int                                                          Number;
             public string                                                       Label;
             public bool                                                         Quiet;
-            public Action<ObjectDictionary>                                     SyncGlobalAction;
-            public Func<ObjectDictionary, Task>                                 AsyncGlobalAction;
-            public Action<ObjectDictionary, NodeSshProxy<NodeMetadata>>         SyncNodeAction;
-            public Func<ObjectDictionary, NodeSshProxy<NodeMetadata>, Task>     AsyncNodeAction;
-            public Func<ObjectDictionary, NodeSshProxy<NodeMetadata>, bool>     Predicate;
+            public Action<ISetupController>                                     SyncGlobalAction;
+            public Func<ISetupController, Task>                                 AsyncGlobalAction;
+            public Action<ISetupController, NodeSshProxy<NodeMetadata>>         SyncNodeAction;
+            public Func<ISetupController, NodeSshProxy<NodeMetadata>, Task>     AsyncNodeAction;
+            public Func<ISetupController, NodeSshProxy<NodeMetadata>, bool>     Predicate;
             public StepStatus                                                   Status;
             public int                                                          ParallelLimit;
             public bool                                                         WasExecuted;
@@ -187,7 +187,7 @@ namespace Neon.Kube
         /// The optional zero-based index of the position where the step is
         /// to be inserted into the step list.
         /// </param>
-        public void AddGlobalStep(string stepLabel, Action<ObjectDictionary> action, bool quiet = false, int position = -1)
+        public void AddGlobalStep(string stepLabel, Action<ISetupController> action, bool quiet = false, int position = -1)
         {
             if (position < 0)
             {
@@ -215,7 +215,7 @@ namespace Neon.Kube
         /// The optional zero-based index of the position where the step is
         /// to be inserted into the step list.
         /// </param>
-        public void AddGlobalStep(string stepLabel, Func<ObjectDictionary, Task> action, bool quiet = false, int position = -1)
+        public void AddGlobalStep(string stepLabel, Func<ISetupController, Task> action, bool quiet = false, int position = -1)
         {
             if (position < 0)
             {
@@ -251,7 +251,7 @@ namespace Neon.Kube
         public void AddWaitUntilOnlineStep(
             string                                                      stepLabel     = "connect", 
             string                                                      status        = null, 
-            Func<ObjectDictionary, NodeSshProxy<NodeMetadata>, bool>    nodePredicate = null, 
+            Func<ISetupController, NodeSshProxy<NodeMetadata>, bool>    nodePredicate = null, 
             bool                                                        quiet         = false, 
             TimeSpan?                                                   timeout       = null, 
             int                                                         position      = -1)
@@ -297,7 +297,7 @@ namespace Neon.Kube
             string                                                      stepLabel, 
             TimeSpan                                                    delay, 
             string                                                      status        = null,
-            Func<ObjectDictionary, NodeSshProxy<NodeMetadata>, bool>    nodePredicate = null, 
+            Func<ISetupController, NodeSshProxy<NodeMetadata>, bool>    nodePredicate = null, 
             bool                                                        quiet         = false, 
             int                                                         position      = -1)
         {
@@ -343,15 +343,15 @@ namespace Neon.Kube
         /// </param>
         public void AddNodeStep(
             string stepLabel,
-            Action<ObjectDictionary, NodeSshProxy<NodeMetadata>>        nodeAction,
-            Func<ObjectDictionary, NodeSshProxy<NodeMetadata>, bool>    nodePredicate   = null,
+            Action<ISetupController, NodeSshProxy<NodeMetadata>>        nodeAction,
+            Func<ISetupController, NodeSshProxy<NodeMetadata>, bool>    nodePredicate   = null,
             bool                                                        quiet           = false,
             bool                                                        noParallelLimit = false,
             int                                                         position        = -1,
             int                                                         parallelLimit   = 0)
         {
-            nodeAction    = nodeAction ?? new Action<ObjectDictionary, NodeSshProxy<NodeMetadata>>((state, node) => { });
-            nodePredicate = nodePredicate ?? new Func<ObjectDictionary, NodeSshProxy<NodeMetadata>, bool>((state, node) => true);
+            nodeAction    = nodeAction ?? new Action<ISetupController, NodeSshProxy<NodeMetadata>>((state, node) => { });
+            nodePredicate = nodePredicate ?? new Func<ISetupController, NodeSshProxy<NodeMetadata>, bool>((state, node) => true);
 
             if (position < 0)
             {
@@ -404,15 +404,15 @@ namespace Neon.Kube
         /// </param>
         public void AddNodeStep(
             string stepLabel,
-            Func<ObjectDictionary, NodeSshProxy<NodeMetadata>, Task>    nodeAction,
-            Func<ObjectDictionary, NodeSshProxy<NodeMetadata>, bool>    nodePredicate   = null,
+            Func<ISetupController, NodeSshProxy<NodeMetadata>, Task>    nodeAction,
+            Func<ISetupController, NodeSshProxy<NodeMetadata>, bool>    nodePredicate   = null,
             bool                                                        quiet           = false,
             bool                                                        noParallelLimit = false,
             int                                                         position        = -1,
             int                                                         parallelLimit   = 0)
         {
-            nodeAction    = nodeAction ?? new Func<ObjectDictionary, NodeSshProxy<NodeMetadata>, Task>((state, node) => { return Task.CompletedTask; });
-            nodePredicate = nodePredicate ?? new Func<ObjectDictionary, NodeSshProxy<NodeMetadata>, bool>((state, node) => true);
+            nodeAction    = nodeAction ?? new Func<ISetupController, NodeSshProxy<NodeMetadata>, Task>((state, node) => { return Task.CompletedTask; });
+            nodePredicate = nodePredicate ?? new Func<ISetupController, NodeSshProxy<NodeMetadata>, bool>((state, node) => true);
 
             if (position < 0)
             {

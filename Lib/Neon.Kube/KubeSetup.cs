@@ -161,19 +161,19 @@ namespace Neon.Kube
         /// <summary>
         /// Returns the <see cref="Kubernetes"/> client persisted in the dictionary passed.
         /// </summary>
-        /// <param name="setupState">The setup state.</param>
+        /// <param name="controller">The setup state.</param>
         /// <returns>The <see cref="Kubernetes"/> client.</returns>
         /// <exception cref="InvalidOperationException">
-        /// Thrown when there is no persisted client, indicating that <see cref="ConnectCluster(ObjectDictionary)"/>
+        /// Thrown when there is no persisted client, indicating that <see cref="ConnectCluster(ISetupController)"/>
         /// has not been called yet.
         /// </exception>
-        public static IKubernetes GetK8sClient(ObjectDictionary setupState)
+        public static IKubernetes GetK8sClient(ISetupController controller)
         {
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             try
             {
-                return setupState.Get<IKubernetes>(K8sClientProperty);
+                return controller.Get<IKubernetes>(K8sClientProperty);
             }
             catch (Exception e)
             {
@@ -197,17 +197,17 @@ namespace Neon.Kube
         /// <summary>
         /// Gets a list of taints that are currently applied to all nodes matching the given node label/value pair.
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="controller">The setup controller.</param>
         /// <param name="labelKey">The target nodes label key.</param>
         /// <param name="labelValue">The target nodes label value.</param>
         /// <returns>The taint list.</returns>
-        public static async Task<List<V1Taint>> GetTaintsAsync(ObjectDictionary setupState, string labelKey, string labelValue)
+        public static async Task<List<V1Taint>> GetTaintsAsync(ISetupController controller, string labelKey, string labelValue)
         {
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             var taints = new List<V1Taint>();
 
-            foreach (var n in (await GetK8sClient(setupState).ListNodeAsync()).Items.Where(n => n.Metadata.Labels.Any(l => l.Key == labelKey && l.Value == labelValue)))
+            foreach (var n in (await GetK8sClient(controller).ListNodeAsync()).Items.Where(n => n.Metadata.Labels.Any(l => l.Key == labelKey && l.Value == labelValue)))
             {
                 if (n.Spec.Taints?.Count() > 0)
                 {
@@ -227,13 +227,13 @@ namespace Neon.Kube
         /// <summary>
         /// Downloads and installs any required binaries to the workstation cache if they're not already present.
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="controller">The setup controller.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public static async Task InstallWorkstationBinariesAsync(ObjectDictionary setupState, Action<string> statusWriter = null)
+        public static async Task InstallWorkstationBinariesAsync(ISetupController controller, Action<string> statusWriter = null)
         {
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
-            var cluster           = setupState.Get<ClusterProxy>(KubeSetup.ClusterProxyProperty);
+            var cluster           = controller.Get<ClusterProxy>(KubeSetup.ClusterProxyProperty);
             var firstMaster       = cluster.FirstMaster;
             var hostPlatform      = KubeHelper.HostPlatform;
             var cachedKubeCtlPath = KubeHelper.GetCachedComponentPath(hostPlatform, "kubectl", KubeVersions.KubernetesVersion);
@@ -387,17 +387,17 @@ namespace Neon.Kube
         /// a connection but this hasn't happened yet.
         /// </note>
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
-        public static void ConnectCluster(ObjectDictionary setupState)
+        /// <param name="controller">The setup controller.</param>
+        public static void ConnectCluster(ISetupController controller)
         {
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
-            if (setupState.ContainsKey(K8sClientProperty))
+            if (controller.ContainsKey(K8sClientProperty))
             {
                 return;     // Already connected
             }
 
-            var cluster    = setupState.Get<ClusterProxy>(ClusterProxyProperty);
+            var cluster    = controller.Get<ClusterProxy>(ClusterProxyProperty);
             var configFile = Environment.GetEnvironmentVariable("KUBECONFIG").Split(';').Where(s => s.Contains("config")).FirstOrDefault();
 
             if (!string.IsNullOrEmpty(configFile) && File.Exists(configFile))
@@ -445,7 +445,7 @@ namespace Neon.Kube
                         maxRetryInterval:     TimeSpan.FromSeconds(5),
                         timeout:              TimeSpan.FromSeconds(120));
 
-                setupState.Add(K8sClientProperty, k8sClient);
+                controller.Add(K8sClientProperty, k8sClient);
             }
         }
     }

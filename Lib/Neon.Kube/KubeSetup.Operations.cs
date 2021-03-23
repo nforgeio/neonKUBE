@@ -49,12 +49,12 @@ namespace Neon.Kube
         /// Configures a local HAProxy container that makes the Kubernetes Etc
         /// cluster highly available.
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="controller">The setup controller.</param>
         /// <param name="node">The node where the operation will be performed.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public static void SetupEtcdHaProxy(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> node, Action<string> statusWriter = null)
+        public static void SetupEtcdHaProxy(ISetupController controller, NodeSshProxy<NodeDefinition> node, Action<string> statusWriter = null)
         {
-            var cluster = setupState.Get<ClusterProxy>(ClusterProxyProperty);
+            var cluster = controller.Get<ClusterProxy>(ClusterProxyProperty);
 
             KubeHelper.WriteStatus(statusWriter, "Setup", "etc HA");
             node.Status = "setup: etcd HA";
@@ -159,7 +159,7 @@ spec:
   hostNetwork: true
   containers:
     - name: web
-      image: {KubeConst.NeonContainerRegistery(setupState)}/haproxy:{KubeVersions.HaproxyVersion}
+      image: {KubeConst.NeonContainerRegistery(controller)}/haproxy:{KubeVersions.HaproxyVersion}
       volumeMounts:
         - name: neon-etcd-proxy-config
           mountPath: /etc/haproxy/haproxy.cfg
@@ -174,17 +174,17 @@ spec:
         /// <summary>
         /// Adds the Kubernetes node labels.
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="controller">The setup controller.</param>
         /// <param name="master">The first master node where the operation will be performed.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public static async Task LabelNodesAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        public static async Task LabelNodesAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
         {
             await SyncContext.ClearAsync;
 
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var cluster = setupState.Get<ClusterProxy>(ClusterProxyProperty);
+            var cluster = controller.Get<ClusterProxy>(ClusterProxyProperty);
 
             await master.InvokeIdempotentAsync("setup/label-nodes",
                 async () =>
@@ -247,92 +247,92 @@ spec:
         /// Initializes the cluster on the first manager, then joins the remaining
         /// masters and workers to the cluster.
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="controller">The setup controller.</param>
         /// <param name="maxParallel">
         /// The maximum number of operations on separate nodes to be performed in parallel.
         /// This defaults to <see cref="defaultMaxParallelNodes"/>.
         /// </param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task SetupClusterAsync(ObjectDictionary setupState, int maxParallel = defaultMaxParallelNodes, Action<string> statusWriter = null)
+        public static async Task SetupClusterAsync(ISetupController controller, int maxParallel = defaultMaxParallelNodes, Action<string> statusWriter = null)
         {
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentException>(maxParallel > 0, nameof(maxParallel));
 
-            var cluster      = setupState.Get<ClusterProxy>(ClusterProxyProperty);
-            var clusterLogin = setupState.Get<ClusterLogin>(ClusterLoginProperty);
+            var cluster      = controller.Get<ClusterProxy>(ClusterProxyProperty);
+            var clusterLogin = controller.Get<ClusterLogin>(ClusterLoginProperty);
             var firstMaster  = cluster.FirstMaster;
-            var debugMode    = setupState.Get<bool>(KubeSetup.DebugModeProperty);
+            var debugMode    = controller.Get<bool>(KubeSetup.DebugModeProperty);
 
             cluster.ClearStatus();
 
-            ConfigureKubernetes(setupState, cluster.FirstMaster, statusWriter);
-            ConfigureWorkstation(setupState, firstMaster, statusWriter);
-            ConnectCluster(setupState);
+            ConfigureKubernetes(controller, cluster.FirstMaster, statusWriter);
+            ConfigureWorkstation(controller, firstMaster, statusWriter);
+            ConnectCluster(controller);
 
             // We need to taint before deploying pods.
 
-            await ConfigureMasterTaintsAsync(setupState, firstMaster, statusWriter);
+            await ConfigureMasterTaintsAsync(controller, firstMaster, statusWriter);
 
             // Run configuration tasks in parallel when not [--debug] mode.
 
             if (debugMode)
             {
-                await TaintNodesAsync(setupState, statusWriter);
-                await LabelNodesAsync(setupState, firstMaster, statusWriter);
-                await NeonHelper.WaitAllAsync(await CreateNamespacesAsync(setupState, firstMaster, statusWriter));
-                await CreateRootUserAsync(setupState, firstMaster, statusWriter);
-                await InstallCalicoCniAsync(setupState, firstMaster, statusWriter);
-                await InstallIstioAsync(setupState, firstMaster, statusWriter);
-                await InstallMetricsServerAsync(setupState, firstMaster, statusWriter);
+                await TaintNodesAsync(controller, statusWriter);
+                await LabelNodesAsync(controller, firstMaster, statusWriter);
+                await NeonHelper.WaitAllAsync(await CreateNamespacesAsync(controller, firstMaster, statusWriter));
+                await CreateRootUserAsync(controller, firstMaster, statusWriter);
+                await InstallCalicoCniAsync(controller, firstMaster, statusWriter);
+                await InstallIstioAsync(controller, firstMaster, statusWriter);
+                await InstallMetricsServerAsync(controller, firstMaster, statusWriter);
             }
             else
             {
                 var tasks = new List<Task>();
 
-                tasks.Add(TaintNodesAsync(setupState, statusWriter));
-                tasks.Add(LabelNodesAsync(setupState, firstMaster, statusWriter));
-                tasks.AddRange(await CreateNamespacesAsync(setupState, firstMaster, statusWriter));
-                tasks.Add(CreateRootUserAsync(setupState, firstMaster, statusWriter));
-                tasks.Add(InstallCalicoCniAsync(setupState, firstMaster, statusWriter));
-                tasks.Add(InstallIstioAsync(setupState, firstMaster, statusWriter));
-                tasks.Add(InstallMetricsServerAsync(setupState, firstMaster, statusWriter));
+                tasks.Add(TaintNodesAsync(controller, statusWriter));
+                tasks.Add(LabelNodesAsync(controller, firstMaster, statusWriter));
+                tasks.AddRange(await CreateNamespacesAsync(controller, firstMaster, statusWriter));
+                tasks.Add(CreateRootUserAsync(controller, firstMaster, statusWriter));
+                tasks.Add(InstallCalicoCniAsync(controller, firstMaster, statusWriter));
+                tasks.Add(InstallIstioAsync(controller, firstMaster, statusWriter));
+                tasks.Add(InstallMetricsServerAsync(controller, firstMaster, statusWriter));
 
                 await NeonHelper.WaitAllAsync(tasks);
             }
 
             if (cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count() >= 3)
             {
-                await InstallEtcdAsync(setupState, firstMaster, statusWriter);
+                await InstallEtcdAsync(controller, firstMaster, statusWriter);
             }
 
             // Additional configuration.
 
             if (debugMode)
             {
-                await InstallKialiAsync(setupState, firstMaster, statusWriter);
-                await InstallKubeDashboardAsync(setupState, firstMaster, statusWriter);
-                await InstallOpenEBSAsync(setupState, firstMaster, statusWriter);
-                await InstallPrometheusAsync(setupState, firstMaster, statusWriter);
-                await InstallSystemDbAsync(setupState, firstMaster, statusWriter);
-                await InstallMinioAsync(setupState, firstMaster, statusWriter);
-                await InstallClusterManagerAsync(setupState, firstMaster, statusWriter);
-                await InstallContainerRegistryAsync(setupState, firstMaster, statusWriter);
-                await NeonHelper.WaitAllAsync(await SetupMonitoringAsync(setupState, statusWriter));
+                await InstallKialiAsync(controller, firstMaster, statusWriter);
+                await InstallKubeDashboardAsync(controller, firstMaster, statusWriter);
+                await InstallOpenEBSAsync(controller, firstMaster, statusWriter);
+                await InstallPrometheusAsync(controller, firstMaster, statusWriter);
+                await InstallSystemDbAsync(controller, firstMaster, statusWriter);
+                await InstallMinioAsync(controller, firstMaster, statusWriter);
+                await InstallClusterManagerAsync(controller, firstMaster, statusWriter);
+                await InstallContainerRegistryAsync(controller, firstMaster, statusWriter);
+                await NeonHelper.WaitAllAsync(await SetupMonitoringAsync(controller, statusWriter));
             }
             else
             {
                 var tasks = new List<Task>();
 
-                tasks.Add(InstallKialiAsync(setupState, firstMaster, statusWriter));
-                tasks.Add(InstallKubeDashboardAsync(setupState, firstMaster, statusWriter));
-                await InstallOpenEBSAsync(setupState, firstMaster, statusWriter);
-                await InstallPrometheusAsync(setupState, firstMaster, statusWriter);
-                await InstallSystemDbAsync(setupState, firstMaster, statusWriter);
-                await InstallMinioAsync(setupState, firstMaster, statusWriter);
-                tasks.Add(InstallClusterManagerAsync(setupState, firstMaster, statusWriter));
-                tasks.Add(InstallContainerRegistryAsync(setupState, firstMaster, statusWriter));
-                tasks.AddRange(await SetupMonitoringAsync(setupState, statusWriter));
+                tasks.Add(InstallKialiAsync(controller, firstMaster, statusWriter));
+                tasks.Add(InstallKubeDashboardAsync(controller, firstMaster, statusWriter));
+                await InstallOpenEBSAsync(controller, firstMaster, statusWriter);
+                await InstallPrometheusAsync(controller, firstMaster, statusWriter);
+                await InstallSystemDbAsync(controller, firstMaster, statusWriter);
+                await InstallMinioAsync(controller, firstMaster, statusWriter);
+                tasks.Add(InstallClusterManagerAsync(controller, firstMaster, statusWriter));
+                tasks.Add(InstallContainerRegistryAsync(controller, firstMaster, statusWriter));
+                tasks.AddRange(await SetupMonitoringAsync(controller, statusWriter));
 
                 await NeonHelper.WaitAllAsync(tasks);
             }
@@ -341,17 +341,17 @@ spec:
         /// <summary>
         /// Basic Kubernetes cluster initialization.
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="controller">The setup controller.</param>
         /// <param name="firstMaster">The first master node.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public static void ConfigureKubernetes(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> firstMaster, Action<string> statusWriter = null)
+        public static void ConfigureKubernetes(ISetupController controller, NodeSshProxy<NodeDefinition> firstMaster, Action<string> statusWriter = null)
         {
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(firstMaster != null, nameof(firstMaster));
 
-            var hostingEnvironment = setupState.Get<HostingEnvironment>(KubeSetup.HostingEnvironmentProperty);
-            var cluster            = setupState.Get<ClusterProxy>(ClusterProxyProperty);
-            var clusterLogin       = setupState.Get<ClusterLogin>(ClusterLoginProperty);
+            var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetup.HostingEnvironmentProperty);
+            var cluster            = controller.Get<ClusterProxy>(ClusterProxyProperty);
+            var clusterLogin       = controller.Get<ClusterLogin>(ClusterLoginProperty);
 
             firstMaster.InvokeIdempotent("setup/cluster-init",
                 () =>
@@ -375,7 +375,7 @@ spec:
 
                             firstMaster.SudoCommand("kubeadm reset --force");
 
-                            SetupEtcdHaProxy(setupState, firstMaster, statusWriter);
+                            SetupEtcdHaProxy(controller, firstMaster, statusWriter);
 
                             KubeHelper.WriteStatus(statusWriter, "Initialize", "Cluster");
                             firstMaster.Status = "initialize: cluster";
@@ -429,7 +429,7 @@ apiVersion: kubeadm.k8s.io/v1beta2
 kind: ClusterConfiguration
 clusterName: {cluster.Name}
 kubernetesVersion: ""v{KubeVersions.KubernetesVersion}""
-imageRepository: ""{KubeConst.NeonContainerRegistery(setupState)}""
+imageRepository: ""{KubeConst.NeonContainerRegistery(controller)}""
 apiServer:
   extraArgs:
     bind-address: 0.0.0.0
@@ -610,7 +610,7 @@ kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-k
                                             KubeHelper.WriteStatus(statusWriter, "Join", "Master to cluster");
                                             firstMaster.Status = "join: master to cluster";
 
-                                            SetupEtcdHaProxy(setupState, master, statusWriter);
+                                            SetupEtcdHaProxy(controller, master, statusWriter);
 
                                             var joined = false;
 
@@ -624,7 +624,7 @@ kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-k
                                                    "-v=/etc/neonkube/neon-etcd-proxy.cfg:/etc/haproxy/haproxy.cfg",
                                                    "--network=host",
                                                    "--log-driver=k8s-file",
-                                                   $"{KubeConst.NeonContainerRegistery(setupState)}/haproxy:neonkube-{KubeConst.NeonKubeVersion}"
+                                                   $"{KubeConst.NeonContainerRegistery(controller)}/haproxy:neonkube-{KubeConst.NeonKubeVersion}"
                                                );
 
                                             for (int attempt = 0; attempt < maxJoinAttempts; attempt++)
@@ -707,7 +707,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                         KubeHelper.WriteStatus(statusWriter, "Join", "Worker to Cluster");
                                         firstMaster.Status = "join: worker to cluster";
 
-                                        SetupEtcdHaProxy(setupState, worker, statusWriter);
+                                        SetupEtcdHaProxy(controller, worker, statusWriter);
 
                                         var joined = false;
 
@@ -721,7 +721,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                             "-v=/etc/neonkube/neon-etcd-proxy.cfg:/etc/haproxy/haproxy.cfg",
                                             "--network=host",
                                             "--log-driver=k8s-file",
-                                            $"{KubeConst.NeonContainerRegistery(setupState)}/haproxy:neonkube-{KubeConst.NeonKubeVersion}"
+                                            $"{KubeConst.NeonContainerRegistery(controller)}/haproxy:neonkube-{KubeConst.NeonKubeVersion}"
                                         );
 
                                         for (int attempt = 0; attempt < maxJoinAttempts; attempt++)
@@ -761,12 +761,12 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
         /// <summary>
         /// Configures the local workstation.
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public static void ConfigureWorkstation(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        public static void ConfigureWorkstation(ISetupController controller, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
         {
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             master.InvokeIdempotent("setup/workstation",
@@ -775,8 +775,8 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     KubeHelper.WriteStatus(statusWriter, "Setup", "Workstation");
                     master.Status = "setup : workstation";
 
-                    var cluster        = setupState.Get<ClusterProxy>(ClusterProxyProperty);
-                    var clusterLogin   = setupState.Get<ClusterLogin>(ClusterLoginProperty);
+                    var cluster        = controller.Get<ClusterProxy>(ClusterProxyProperty);
+                    var clusterLogin   = controller.Get<ClusterLogin>(ClusterLoginProperty);
                     var kubeConfigPath = KubeHelper.KubeConfigPath;
 
                     // Update kubeconfig.
@@ -844,14 +844,14 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
         /// <summary>
         /// Installs the Calico CNI.
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public static async Task InstallCalicoCniAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        public static async Task InstallCalicoCniAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
         {
             await SyncContext.ClearAsync;
 
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             var cluster = master.Cluster;
@@ -865,7 +865,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     // Deploy Calico
                     var values = new List<KeyValuePair<string, object>>();
 
-                    values.Add(new KeyValuePair<string, object>("images.organization", KubeConst.NeonContainerRegistery(setupState)));
+                    values.Add(new KeyValuePair<string, object>("images.organization", KubeConst.NeonContainerRegistery(controller)));
 
                     if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2)
                     {
@@ -882,7 +882,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     await NeonHelper.WaitForAsync(
                         async () =>
                         {
-                            var pods = await GetK8sClient(setupState).ListPodForAllNamespacesAsync();
+                            var pods = await GetK8sClient(controller).ListPodForAllNamespacesAsync();
 
                             foreach (var pod in pods.Items)
                             {
@@ -910,7 +910,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             KubeHelper.WriteStatus(statusWriter, "Wait", "for Calico");
                             master.Status = "wait: for calico";
 
-                            var pods = await GetK8sClient(setupState).CreateNamespacedPodAsync(
+                            var pods = await GetK8sClient(controller).CreateNamespacedPodAsync(
                                 new V1Pod()
                                 {
                                     Metadata = new V1ObjectMeta()
@@ -925,7 +925,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                             new V1Container()
                                             {
                                                 Name            = "dnsutils",
-                                                Image           = $"{KubeConst.NeonContainerRegistery(setupState)}/kubernetes-e2e-test-images-dnsutils:1.3",
+                                                Image           = $"{KubeConst.NeonContainerRegistery(controller)}/kubernetes-e2e-test-images-dnsutils:1.3",
                                                 Command         = new List<string>() {"sleep", "3600" },
                                                 ImagePullPolicy = "IfNotPresent"
                                             }
@@ -943,7 +943,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                             if (result.Success)
                             {
-                                await GetK8sClient(setupState).DeleteNamespacedPodAsync("dnsutils", "default");
+                                await GetK8sClient(controller).DeleteNamespacedPodAsync("dnsutils", "default");
                                 return await Task.FromResult(true);
                             }
                             else
@@ -961,14 +961,14 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
         /// <summary>
         /// Configures pods to be schedule on masters when enabled.
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public static async Task ConfigureMasterTaintsAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        public static async Task ConfigureMasterTaintsAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
         {
             await SyncContext.ClearAsync;
 
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             var cluster = master.Cluster;
@@ -995,14 +995,14 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
         /// <summary>
         /// Installs the Kubernetes Metrics Server service.
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public static async Task InstallMetricsServerAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        public static async Task InstallMetricsServerAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
         {
             await SyncContext.ClearAsync;
 
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             var cluster = master.Cluster;
@@ -1015,10 +1015,10 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                     var values = new List<KeyValuePair<string, object>>();
 
-                    values.Add(new KeyValuePair<string, object>("image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                    values.Add(new KeyValuePair<string, object>("image.organization", KubeConst.NeonContainerRegistery(controller)));
 
                     int i = 0;
-                    foreach (var t in await GetTaintsAsync(setupState, NodeLabels.LabelMetrics, "true"))
+                    foreach (var t in await GetTaintsAsync(controller, NodeLabels.LabelMetrics, "true"))
                     {
                         values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
                         values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", t.Effect));
@@ -1035,19 +1035,19 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     KubeHelper.WriteStatus(statusWriter, "Wait", "for Metrics Server");
                     master.Status = "wait: for promtail";
 
-                    await WaitForDeploymentAsync(setupState, "kube-system", "metrics-server");
+                    await WaitForDeploymentAsync(controller, "kube-system", "metrics-server");
                 });
         }
 
         /// <summary>
         /// Installs Istio.
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public static async Task InstallIstioAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        public static async Task InstallIstioAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
         {
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             await master.InvokeIdempotentAsync("setup/istio",
@@ -1074,7 +1074,7 @@ rm -r ""${{tmp}}""
 
 export PATH=$PATH:$HOME/.istioctl/bin
 
-istioctl operator init --hub={KubeConst.NeonContainerRegistery(setupState)} --tag={KubeVersions.IstioVersion}-distroless
+istioctl operator init --hub={KubeConst.NeonContainerRegistery(controller)} --tag={KubeVersions.IstioVersion}-distroless
 
 kubectl create ns istio-system
 
@@ -1085,7 +1085,7 @@ metadata:
   namespace: istio-system
   name: istiocontrolplane
 spec:
-  hub: {KubeConst.NeonContainerRegistery(setupState)}
+  hub: {KubeConst.NeonContainerRegistery(controller)}
   tag: {KubeVersions.IstioVersion}-distroless
   meshConfig:
     rootNamespace: istio-system
@@ -1169,9 +1169,9 @@ spec:
       enabled: false
     istiocoredns:
       enabled: true
-      coreDNSImage: {KubeConst.NeonContainerRegistery(setupState)}/coredns-coredns
+      coreDNSImage: {KubeConst.NeonContainerRegistery(controller)}/coredns-coredns
       coreDNSTag: {KubeVersions.CoreDNSVersion}
-      coreDNSPluginImage: {KubeConst.NeonContainerRegistery(setupState)}/coredns-plugin:{KubeVersions.CoreDNSPluginVersion}
+      coreDNSPluginImage: {KubeConst.NeonContainerRegistery(controller)}/coredns-plugin:{KubeVersions.CoreDNSPluginVersion}
     cni:
       excludeNamespaces:
        - istio-system
@@ -1192,14 +1192,14 @@ istioctl install -f istio-cni.yaml
         /// <summary>
         /// Configures the root Kubernetes user.
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public static async Task CreateRootUserAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        public static async Task CreateRootUserAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
         {
             await SyncContext.ClearAsync;
 
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             await master.InvokeIdempotentAsync("setup/root-user",
@@ -1238,18 +1238,18 @@ subjects:
         /// <summary>
         /// Configures the root Kubernetes user.
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public static async Task InstallKubeDashboardAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        public static async Task InstallKubeDashboardAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
         {
             await SyncContext.ClearAsync;
 
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var cluster      = setupState.Get<ClusterProxy>(ClusterProxyProperty);
-            var clusterLogin = setupState.Get<ClusterLogin>(ClusterLoginProperty);
+            var cluster      = controller.Get<ClusterProxy>(ClusterProxyProperty);
+            var clusterLogin = controller.Get<ClusterLogin>(ClusterLoginProperty);
 
             master.InvokeIdempotent("setup/kube-dashboard",
                 () =>
@@ -1494,7 +1494,7 @@ spec:
     spec:
       containers:
         - name: kubernetes-dashboard
-          image: {KubeConst.NeonContainerRegistery(setupState)}/kubernetesui-dashboard:v{KubeVersions.KubernetesDashboardVersion}
+          image: {KubeConst.NeonContainerRegistery(controller)}/kubernetesui-dashboard:v{KubeVersions.KubernetesDashboardVersion}
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8443
@@ -1571,7 +1571,7 @@ spec:
     spec:
       containers:
         - name: dashboard-metrics-scraper
-          image: {KubeConst.NeonContainerRegistery(setupState)}/kubernetesui-metrics-scraper:{KubeVersions.KubernetesDashboardMetricsVersion}
+          image: {KubeConst.NeonContainerRegistery(controller)}/kubernetesui-metrics-scraper:{KubeVersions.KubernetesDashboardMetricsVersion}
           ports:
             - containerPort: 8000
               protocol: TCP
@@ -1621,15 +1621,15 @@ spec:
         /// <summary>
         /// Adds the node taints.
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="controller">The setup controller.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        public static async Task TaintNodesAsync(ObjectDictionary setupState, Action<string> statusWriter = null)
+        public static async Task TaintNodesAsync(ISetupController controller, Action<string> statusWriter = null)
         {
             await SyncContext.ClearAsync;
 
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
-            var cluster     = setupState.Get<ClusterProxy>(ClusterProxyProperty);
+            var cluster     = controller.Get<ClusterProxy>(ClusterProxyProperty);
             var firstMaster = cluster.FirstMaster;
 
             await firstMaster.InvokeIdempotentAsync("setup/taint-nodes",
@@ -1686,14 +1686,14 @@ spec:
         /// <summary>
         /// Deploy Kiali.
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
-        private static async Task InstallKialiAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        private static async Task InstallKialiAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
         {
             await SyncContext.ClearAsync;
 
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             await master.InvokeIdempotentAsync("setup/kiali",
@@ -1704,11 +1704,11 @@ spec:
 
                     var values = new List<KeyValuePair<string, object>>();
 
-                    values.Add(new KeyValuePair<string, object>("image.organization", KubeConst.NeonContainerRegistery(setupState)));
-                    values.Add(new KeyValuePair<string, object>("cr.spec.deployment.image_name", $"{KubeConst.NeonContainerRegistery(setupState)}/kiali-kiali"));
+                    values.Add(new KeyValuePair<string, object>("image.organization", KubeConst.NeonContainerRegistery(controller)));
+                    values.Add(new KeyValuePair<string, object>("cr.spec.deployment.image_name", $"{KubeConst.NeonContainerRegistery(controller)}/kiali-kiali"));
 
                     int i = 0;
-                    foreach (var t in await GetTaintsAsync(setupState, NodeLabels.LabelIstio, "true"))
+                    foreach (var t in await GetTaintsAsync(controller, NodeLabels.LabelIstio, "true"))
                     {
                         values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
                         values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", t.Effect));
@@ -1728,8 +1728,8 @@ spec:
                     await NeonHelper.WaitAllAsync(
                         new List<Task>()
                         {
-                            WaitForDeploymentAsync(setupState, "istio-system", "kiali-operator"),
-                            WaitForDeploymentAsync(setupState, "istio-system", "kiali")
+                            WaitForDeploymentAsync(controller, "istio-system", "kiali-operator"),
+                            WaitForDeploymentAsync(controller, "istio-system", "kiali")
                         });
                 });
 
@@ -1739,13 +1739,13 @@ spec:
         /// <summary>
         /// Some initial kubernetes configuration.
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task KubeSetupAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        public static async Task KubeSetupAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
         {
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             await master.InvokeIdempotentAsync("setup/initial-kubernetes", async
@@ -1761,16 +1761,16 @@ spec:
         /// <summary>
         /// Installs OpenEBS.
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InstallOpenEBSAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        public static async Task InstallOpenEBSAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
         {
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var cluster = setupState.Get<ClusterProxy>(ClusterProxyProperty);
+            var cluster = controller.Get<ClusterProxy>(ClusterProxyProperty);
 
             await master.InvokeIdempotentAsync("setup/openebs-all",
                 async () =>
@@ -1784,7 +1784,7 @@ spec:
                             KubeHelper.WriteStatus(statusWriter, "Deploy", "OpenEBS Namespace");
                             master.Status = "deploy: openebs-namespace";
 
-                            GetK8sClient(setupState).CreateNamespace(new V1Namespace()
+                            GetK8sClient(controller).CreateNamespace(new V1Namespace()
                             {
                                 Metadata = new V1ObjectMeta()
                                 {
@@ -1805,17 +1805,17 @@ spec:
 
                             var values = new List<KeyValuePair<string, object>>();
 
-                            values.Add(new KeyValuePair<string, object>("apiserver.image.organization", KubeConst.NeonContainerRegistery(setupState)));
-                            values.Add(new KeyValuePair<string, object>("helper.image.organization", KubeConst.NeonContainerRegistery(setupState)));
-                            values.Add(new KeyValuePair<string, object>("localprovisioner.image.organization", KubeConst.NeonContainerRegistery(setupState)));
-                            values.Add(new KeyValuePair<string, object>("policies.monitoring.image.organization", KubeConst.NeonContainerRegistery(setupState)));
-                            values.Add(new KeyValuePair<string, object>("snapshotOperator.controller.image.organization", KubeConst.NeonContainerRegistery(setupState)));
-                            values.Add(new KeyValuePair<string, object>("snapshotOperator.provisioner.image.organization", KubeConst.NeonContainerRegistery(setupState)));
-                            values.Add(new KeyValuePair<string, object>("provisioner.image.organization", KubeConst.NeonContainerRegistery(setupState)));
-                            values.Add(new KeyValuePair<string, object>("ndm.image.organization", KubeConst.NeonContainerRegistery(setupState)));
-                            values.Add(new KeyValuePair<string, object>("ndmOperator.image.organization", KubeConst.NeonContainerRegistery(setupState)));
-                            values.Add(new KeyValuePair<string, object>("webhook.image.organization", KubeConst.NeonContainerRegistery(setupState)));
-                            values.Add(new KeyValuePair<string, object>("jiva.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                            values.Add(new KeyValuePair<string, object>("apiserver.image.organization", KubeConst.NeonContainerRegistery(controller)));
+                            values.Add(new KeyValuePair<string, object>("helper.image.organization", KubeConst.NeonContainerRegistery(controller)));
+                            values.Add(new KeyValuePair<string, object>("localprovisioner.image.organization", KubeConst.NeonContainerRegistery(controller)));
+                            values.Add(new KeyValuePair<string, object>("policies.monitoring.image.organization", KubeConst.NeonContainerRegistery(controller)));
+                            values.Add(new KeyValuePair<string, object>("snapshotOperator.controller.image.organization", KubeConst.NeonContainerRegistery(controller)));
+                            values.Add(new KeyValuePair<string, object>("snapshotOperator.provisioner.image.organization", KubeConst.NeonContainerRegistery(controller)));
+                            values.Add(new KeyValuePair<string, object>("provisioner.image.organization", KubeConst.NeonContainerRegistery(controller)));
+                            values.Add(new KeyValuePair<string, object>("ndm.image.organization", KubeConst.NeonContainerRegistery(controller)));
+                            values.Add(new KeyValuePair<string, object>("ndmOperator.image.organization", KubeConst.NeonContainerRegistery(controller)));
+                            values.Add(new KeyValuePair<string, object>("webhook.image.organization", KubeConst.NeonContainerRegistery(controller)));
+                            values.Add(new KeyValuePair<string, object>("jiva.image.organization", KubeConst.NeonContainerRegistery(controller)));
 
                             if (cluster.Definition.Workers.Count() >= 3)
                             {
@@ -1842,28 +1842,28 @@ spec:
 
                                 var values = new List<KeyValuePair<string, object>>();
 
-                                values.Add(new KeyValuePair<string, object>("cspcOperator.image.organization", KubeConst.NeonContainerRegistery(setupState)));
-                                values.Add(new KeyValuePair<string, object>("cspcOperator.poolManager.image.organization", KubeConst.NeonContainerRegistery(setupState)));
-                                values.Add(new KeyValuePair<string, object>("cspcOperator.cstorPool.image.organization", KubeConst.NeonContainerRegistery(setupState)));
-                                values.Add(new KeyValuePair<string, object>("cspcOperator.cstorPoolExporter.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                                values.Add(new KeyValuePair<string, object>("cspcOperator.image.organization", KubeConst.NeonContainerRegistery(controller)));
+                                values.Add(new KeyValuePair<string, object>("cspcOperator.poolManager.image.organization", KubeConst.NeonContainerRegistery(controller)));
+                                values.Add(new KeyValuePair<string, object>("cspcOperator.cstorPool.image.organization", KubeConst.NeonContainerRegistery(controller)));
+                                values.Add(new KeyValuePair<string, object>("cspcOperator.cstorPoolExporter.image.organization", KubeConst.NeonContainerRegistery(controller)));
 
-                                values.Add(new KeyValuePair<string, object>("cvcOperator.image.organization", KubeConst.NeonContainerRegistery(setupState)));
-                                values.Add(new KeyValuePair<string, object>("cvcOperator.target.image.organization", KubeConst.NeonContainerRegistery(setupState)));
-                                values.Add(new KeyValuePair<string, object>("cvcOperator.volumeMgmt.image.organization", KubeConst.NeonContainerRegistery(setupState)));
-                                values.Add(new KeyValuePair<string, object>("cvcOperator.volumeExporter.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                                values.Add(new KeyValuePair<string, object>("cvcOperator.image.organization", KubeConst.NeonContainerRegistery(controller)));
+                                values.Add(new KeyValuePair<string, object>("cvcOperator.target.image.organization", KubeConst.NeonContainerRegistery(controller)));
+                                values.Add(new KeyValuePair<string, object>("cvcOperator.volumeMgmt.image.organization", KubeConst.NeonContainerRegistery(controller)));
+                                values.Add(new KeyValuePair<string, object>("cvcOperator.volumeExporter.image.organization", KubeConst.NeonContainerRegistery(controller)));
 
-                                values.Add(new KeyValuePair<string, object>("csiController.resizer.image.organization", KubeConst.NeonContainerRegistery(setupState)));
-                                values.Add(new KeyValuePair<string, object>("csiController.snapshotter.image.organization", KubeConst.NeonContainerRegistery(setupState)));
-                                values.Add(new KeyValuePair<string, object>("csiController.snapshotController.image.organization", KubeConst.NeonContainerRegistery(setupState)));
-                                values.Add(new KeyValuePair<string, object>("csiController.attacher.image.organization", KubeConst.NeonContainerRegistery(setupState)));
-                                values.Add(new KeyValuePair<string, object>("csiController.provisioner.image.organization", KubeConst.NeonContainerRegistery(setupState)));
-                                values.Add(new KeyValuePair<string, object>("csiController.driverRegistrar.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                                values.Add(new KeyValuePair<string, object>("csiController.resizer.image.organization", KubeConst.NeonContainerRegistery(controller)));
+                                values.Add(new KeyValuePair<string, object>("csiController.snapshotter.image.organization", KubeConst.NeonContainerRegistery(controller)));
+                                values.Add(new KeyValuePair<string, object>("csiController.snapshotController.image.organization", KubeConst.NeonContainerRegistery(controller)));
+                                values.Add(new KeyValuePair<string, object>("csiController.attacher.image.organization", KubeConst.NeonContainerRegistery(controller)));
+                                values.Add(new KeyValuePair<string, object>("csiController.provisioner.image.organization", KubeConst.NeonContainerRegistery(controller)));
+                                values.Add(new KeyValuePair<string, object>("csiController.driverRegistrar.image.organization", KubeConst.NeonContainerRegistery(controller)));
 
-                                values.Add(new KeyValuePair<string, object>("cstorCSIPlugin.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                                values.Add(new KeyValuePair<string, object>("cstorCSIPlugin.image.organization", KubeConst.NeonContainerRegistery(controller)));
 
-                                values.Add(new KeyValuePair<string, object>("csiNode.driverRegistrar.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                                values.Add(new KeyValuePair<string, object>("csiNode.driverRegistrar.image.organization", KubeConst.NeonContainerRegistery(controller)));
 
-                                values.Add(new KeyValuePair<string, object>("admissionServer.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                                values.Add(new KeyValuePair<string, object>("admissionServer.image.organization", KubeConst.NeonContainerRegistery(controller)));
 
                                 await master.InstallHelmChartAsync("openebs_cstor_operator", releaseName: "neon-storage-openebs-cstor", values: values, @namespace: "openebs", statusWriter: statusWriter);
                             });
@@ -1878,13 +1878,13 @@ spec:
                             await NeonHelper.WaitAllAsync(
                                 new List<Task>()
                                 {
-                                    WaitForDaemonsetAsync(setupState, "openebs", "neon-storage-openebs-ndm"),
-                                    WaitForDeploymentAsync(setupState, "openebs", "neon-storage-openebs-admission-server"),
-                                    WaitForDeploymentAsync(setupState, "openebs", "neon-storage-openebs-apiserver"),
-                                    WaitForDeploymentAsync(setupState, "openebs", "neon-storage-openebs-localpv-provisioner"),
-                                    WaitForDeploymentAsync(setupState, "openebs", "neon-storage-openebs-ndm-operator"),
-                                    WaitForDeploymentAsync(setupState, "openebs", "neon-storage-openebs-provisioner"),
-                                    WaitForDeploymentAsync(setupState, "openebs", "neon-storage-openebs-snapshot-operator")
+                                    WaitForDaemonsetAsync(controller, "openebs", "neon-storage-openebs-ndm"),
+                                    WaitForDeploymentAsync(controller, "openebs", "neon-storage-openebs-admission-server"),
+                                    WaitForDeploymentAsync(controller, "openebs", "neon-storage-openebs-apiserver"),
+                                    WaitForDeploymentAsync(controller, "openebs", "neon-storage-openebs-localpv-provisioner"),
+                                    WaitForDeploymentAsync(controller, "openebs", "neon-storage-openebs-ndm-operator"),
+                                    WaitForDeploymentAsync(controller, "openebs", "neon-storage-openebs-provisioner"),
+                                    WaitForDeploymentAsync(controller, "openebs", "neon-storage-openebs-snapshot-operator")
                                 });
                         });
 
@@ -1909,7 +1909,7 @@ spec:
                                 }
                             };
 
-                            var blockDevices = ((JObject)await GetK8sClient(setupState).ListNamespacedCustomObjectAsync("openebs.io", "v1alpha1", "openebs", "blockdevices")).ToObject<V1CStorBlockDeviceList>();
+                            var blockDevices = ((JObject)await GetK8sClient(controller).ListNamespacedCustomObjectAsync("openebs.io", "v1alpha1", "openebs", "blockdevices")).ToObject<V1CStorBlockDeviceList>();
 
                             foreach (var n in cluster.Definition.Nodes)
                             {
@@ -1952,7 +1952,7 @@ spec:
                                 }
                             }
 
-                            GetK8sClient(setupState).CreateNamespacedCustomObject(cStorPoolCluster, "cstor.openebs.io", "v1", "openebs", "cstorpoolclusters");
+                            GetK8sClient(controller).CreateNamespacedCustomObject(cStorPoolCluster, "cstor.openebs.io", "v1", "openebs", "cstorpoolclusters");
                         });
 
                         await master.InvokeIdempotentAsync("setup/openebs-cstor-ready",
@@ -1964,10 +1964,10 @@ spec:
                                 await NeonHelper.WaitAllAsync(
                                     new List<Task>()
                                     {
-                                        WaitForDaemonsetAsync(setupState, "openebs", "neon-storage-openebs-cstor-csi-node"),
-                                        WaitForDeploymentAsync(setupState, "openebs", "neon-storage-openebs-cstor-admission-server"),
-                                        WaitForDeploymentAsync(setupState, "openebs", "neon-storage-openebs-cstor-cvc-operator"),
-                                        WaitForDeploymentAsync(setupState, "openebs", "neon-storage-openebs-cstor-cspc-operator")
+                                        WaitForDaemonsetAsync(controller, "openebs", "neon-storage-openebs-cstor-csi-node"),
+                                        WaitForDeploymentAsync(controller, "openebs", "neon-storage-openebs-cstor-admission-server"),
+                                        WaitForDeploymentAsync(controller, "openebs", "neon-storage-openebs-cstor-cvc-operator"),
+                                        WaitForDeploymentAsync(controller, "openebs", "neon-storage-openebs-cstor-cspc-operator")
                                     });
                             });
 
@@ -1978,13 +1978,13 @@ spec:
                             replicas = 1;
                         }
 
-                        await CreateCstorStorageClass(setupState, master, "openebs-cstor", replicaCount: replicas);
-                        await CreateCstorStorageClass(setupState, master, "openebs-cstor-unreplicated", replicaCount: 1);
+                        await CreateCstorStorageClass(controller, master, "openebs-cstor", replicaCount: replicas);
+                        await CreateCstorStorageClass(controller, master, "openebs-cstor-unreplicated", replicaCount: 1);
                     }
                     else
                     {
-                        await CreateHostPathStorageClass(setupState, master, "openebs-cstor");
-                        await CreateHostPathStorageClass(setupState, master, "openebs-cstor-unreplicated");
+                        await CreateHostPathStorageClass(controller, master, "openebs-cstor");
+                        await CreateHostPathStorageClass(controller, master, "openebs-cstor-unreplicated");
                     }
                 });
         }
@@ -1992,26 +1992,26 @@ spec:
         /// <summary>
         /// Creates a Kubernetes namespace.
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
         /// <param name="name">The new Namespace name.</param>
         /// <param name="istioInjectionEnabled">Whether Istio sidecar injection should be enabled.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task CreateNamespaceAsync(
-            ObjectDictionary                setupState,
+            ISetupController                controller,
             NodeSshProxy<NodeDefinition>    master,
             string                          name,
             bool                            istioInjectionEnabled = true,
             Action<string>                  statusWriter          = null)
         {
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             await master.InvokeIdempotentAsync($"setup/{name}-namespace",
                 async () =>
                 {
-                    await GetK8sClient(setupState).CreateNamespaceAsync(new V1Namespace()
+                    await GetK8sClient(controller).CreateNamespaceAsync(new V1Namespace()
                     {
                         Metadata = new V1ObjectMeta()
                         {
@@ -2028,13 +2028,13 @@ spec:
         /// <summary>
         /// Creates a Kubernetes Storage Class.
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
         /// <param name="name">The new <see cref="V1StorageClass"/> name.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task CreateHostPathStorageClass(
-            ObjectDictionary                setupState,
+            ISetupController                controller,
             NodeSshProxy<NodeDefinition>    master,
             string                          name,
             Action<string>                  statusWriter = null)
@@ -2063,22 +2063,22 @@ $@"- name: StorageType
                         VolumeBindingMode = "WaitForFirstConsumer"
                     };
 
-                    await GetK8sClient(setupState).CreateStorageClassAsync(storageClass);
+                    await GetK8sClient(controller).CreateStorageClassAsync(storageClass);
                 });
         }
 
         /// <summary>
         /// Creates an OpenEBS cStor Kubernetes Storage Class.
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
         /// <param name="name">The new <see cref="V1StorageClass"/> name.</param>
-        /// <param name="cstorPoolCluster"></param>
-        /// <param name="replicaCount"></param>
+        /// <param name="cstorPoolCluster">Specifies the cStor pool name.</param>
+        /// <param name="replicaCount">Specifies the data replication factor.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task CreateCstorStorageClass(
-            ObjectDictionary                setupState,
+            ISetupController                controller,
             NodeSshProxy<NodeDefinition>    master,
             string                          name,
             string                          cstorPoolCluster = "cspc-stripe",
@@ -2112,23 +2112,23 @@ $@"- name: StorageType
                         VolumeBindingMode    = "Immediate"
                     };
 
-                    await GetK8sClient(setupState).CreateStorageClassAsync(storageClass);
+                    await GetK8sClient(controller).CreateStorageClassAsync(storageClass);
                 });
         }
 
         /// <summary>
         /// Installs an Etcd cluster to the monitoring namespace.
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InstallEtcdAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        public static async Task InstallEtcdAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
         {
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var cluster = setupState.Get<ClusterProxy>(ClusterProxyProperty);
+            var cluster = controller.Get<ClusterProxy>(ClusterProxyProperty);
 
             await master.InvokeIdempotentAsync("setup/monitoring-etc",
                 async () =>
@@ -2136,7 +2136,7 @@ $@"- name: StorageType
                     KubeHelper.WriteStatus(statusWriter, "Setup", "Etc");
                     master.Status = "setup: etc";
 
-                    await CreateCstorStorageClass(setupState, master, "neon-internal-etcd");
+                    await CreateCstorStorageClass(controller, master, "neon-internal-etcd");
 
                     var values = new List<KeyValuePair<string, object>>();
 
@@ -2145,7 +2145,7 @@ $@"- name: StorageType
                     values.Add(new KeyValuePair<string, object>($"volumeClaimTemplate.resources.requests.storage", "1Gi"));
 
                     int i = 0;
-                    foreach (var t in await GetTaintsAsync(setupState, NodeLabels.LabelMetrics, "true"))
+                    foreach (var t in await GetTaintsAsync(controller, NodeLabels.LabelMetrics, "true"))
                     {
                         values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
                         values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", t.Effect));
@@ -2162,7 +2162,7 @@ $@"- name: StorageType
                     KubeHelper.WriteStatus(statusWriter, "Wait", "for Etc (monitoring)");
                     master.Status = "wait: for etc (monitoring)";
 
-                    await WaitForStatefulsetAsync(setupState, "monitoring", "neon-system-etcd");
+                    await WaitForStatefulsetAsync(controller, "monitoring", "neon-system-etcd");
                 });
 
             await Task.CompletedTask;
@@ -2171,16 +2171,16 @@ $@"- name: StorageType
         /// <summary>
         /// Installs a Prometheus Operator to the monitoring namespace.
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InstallPrometheusAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        public static async Task InstallPrometheusAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
         {
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var cluster = setupState.Get<ClusterProxy>(ClusterProxyProperty);
+            var cluster = controller.Get<ClusterProxy>(ClusterProxyProperty);
 
             await master.InvokeIdempotentAsync("setup/monitoring-prometheus",
                 async () =>
@@ -2190,18 +2190,18 @@ $@"- name: StorageType
 
                     var values = new List<KeyValuePair<string, object>>();
 
-                    values.Add(new KeyValuePair<string, object>($"alertmanager.alertmanagerSpec.image.organization", KubeConst.NeonContainerRegistery(setupState)));
-                    values.Add(new KeyValuePair<string, object>($"prometheusOperator.tlsProxy.image.organization", KubeConst.NeonContainerRegistery(setupState)));
-                    values.Add(new KeyValuePair<string, object>($"prometheusOperator.admissionWebhooks.patch.image.organization", KubeConst.NeonContainerRegistery(setupState)));
-                    values.Add(new KeyValuePair<string, object>($"prometheusOperator.image.organization", KubeConst.NeonContainerRegistery(setupState)));
-                    values.Add(new KeyValuePair<string, object>($"prometheusOperator.configmapReloadImage.organization", KubeConst.NeonContainerRegistery(setupState)));
-                    values.Add(new KeyValuePair<string, object>($"prometheusOperator.prometheusConfigReloaderImage.organization", KubeConst.NeonContainerRegistery(setupState)));
-                    values.Add(new KeyValuePair<string, object>($"prometheus.prometheusSpec.image.organization", KubeConst.NeonContainerRegistery(setupState)));
-                    values.Add(new KeyValuePair<string, object>($"global.kubeStateMetrics.image.organization", KubeConst.NeonContainerRegistery(setupState)));
-                    values.Add(new KeyValuePair<string, object>($"global.nodeExporter.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                    values.Add(new KeyValuePair<string, object>($"alertmanager.alertmanagerSpec.image.organization", KubeConst.NeonContainerRegistery(controller)));
+                    values.Add(new KeyValuePair<string, object>($"prometheusOperator.tlsProxy.image.organization", KubeConst.NeonContainerRegistery(controller)));
+                    values.Add(new KeyValuePair<string, object>($"prometheusOperator.admissionWebhooks.patch.image.organization", KubeConst.NeonContainerRegistery(controller)));
+                    values.Add(new KeyValuePair<string, object>($"prometheusOperator.image.organization", KubeConst.NeonContainerRegistery(controller)));
+                    values.Add(new KeyValuePair<string, object>($"prometheusOperator.configmapReloadImage.organization", KubeConst.NeonContainerRegistery(controller)));
+                    values.Add(new KeyValuePair<string, object>($"prometheusOperator.prometheusConfigReloaderImage.organization", KubeConst.NeonContainerRegistery(controller)));
+                    values.Add(new KeyValuePair<string, object>($"prometheus.prometheusSpec.image.organization", KubeConst.NeonContainerRegistery(controller)));
+                    values.Add(new KeyValuePair<string, object>($"global.kubeStateMetrics.image.organization", KubeConst.NeonContainerRegistery(controller)));
+                    values.Add(new KeyValuePair<string, object>($"global.nodeExporter.image.organization", KubeConst.NeonContainerRegistery(controller)));
 
                     int i = 0;
-                    foreach (var t in await GetTaintsAsync(setupState, NodeLabels.LabelMetrics, "true"))
+                    foreach (var t in await GetTaintsAsync(controller, NodeLabels.LabelMetrics, "true"))
                     {
                         values.Add(new KeyValuePair<string, object>($"alertmanager.alertmanagerSpec.tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
                         values.Add(new KeyValuePair<string, object>($"alertmanager.alertmanagerSpec.tolerations[{i}].effect", t.Effect));
@@ -2225,7 +2225,7 @@ $@"- name: StorageType
                     if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2
                         || cluster.Definition.Nodes.Count() == 1)
                     {
-                        await CreateHostPathStorageClass(setupState, master, "neon-internal-prometheus");
+                        await CreateHostPathStorageClass(controller, master, "neon-internal-prometheus");
 
                         values.Add(new KeyValuePair<string, object>($"alertmanager.alertmanagerSpec.storage.volumeClaimTemplate.spec.storageClassName", $"neon-internal-prometheus"));
                         values.Add(new KeyValuePair<string, object>($"alertmanager.alertmanagerSpec.storage.volumeClaimTemplate.spec.accessModes[0]", "ReadWriteOnce"));
@@ -2245,16 +2245,16 @@ $@"- name: StorageType
         /// <summary>
         /// Waits for Prometheus to be fully ready.
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task WaitForPrometheusAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        public static async Task WaitForPrometheusAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
         {
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var cluster = setupState.Get<ClusterProxy>(ClusterProxyProperty);
+            var cluster = controller.Get<ClusterProxy>(ClusterProxyProperty);
 
             await master.InvokeIdempotentAsync("setup/monitoring-prometheus-ready",
                 async () =>
@@ -2265,11 +2265,11 @@ $@"- name: StorageType
                     await NeonHelper.WaitAllAsync(
                         new List<Task>()
                         {
-                            WaitForDeploymentAsync(setupState, "monitoring", "neon-metrics-prometheus-ku-operator"),
-                            WaitForDeploymentAsync(setupState, "monitoring", "neon-metrics-prometheus-kube-state-metrics"),
-                            WaitForDaemonsetAsync(setupState, "monitoring", "neon-metrics-prometheus-prometheus-node-exporter"),
-                            WaitForStatefulsetAsync(setupState, "monitoring", "alertmanager-neon-metrics-prometheus-ku-alertmanager"),
-                            WaitForStatefulsetAsync(setupState, "monitoring", "prometheus-neon-metrics-prometheus-ku-prometheus")
+                            WaitForDeploymentAsync(controller, "monitoring", "neon-metrics-prometheus-ku-operator"),
+                            WaitForDeploymentAsync(controller, "monitoring", "neon-metrics-prometheus-kube-state-metrics"),
+                            WaitForDaemonsetAsync(controller, "monitoring", "neon-metrics-prometheus-prometheus-node-exporter"),
+                            WaitForStatefulsetAsync(controller, "monitoring", "alertmanager-neon-metrics-prometheus-ku-alertmanager"),
+                            WaitForStatefulsetAsync(controller, "monitoring", "prometheus-neon-metrics-prometheus-ku-prometheus")
                         });
                 });
         }
@@ -2277,19 +2277,19 @@ $@"- name: StorageType
         /// <summary>
         /// Installs Cortex to the monitoring namespace.
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InstallCortexAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        public static async Task InstallCortexAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
         {
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             await master.InvokeIdempotentAsync("setup/monitoring-cortex-all",
                 async () =>
                 {
-                    var cluster = setupState.Get<ClusterProxy>(ClusterProxyProperty);
+                    var cluster = controller.Get<ClusterProxy>(ClusterProxyProperty);
                     var values  = new List<KeyValuePair<string, object>>();
 
                     if (cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count() >= 3)
@@ -2315,7 +2315,7 @@ $@"- name: StorageType
                             }
 
                             int i = 0;
-                            foreach (var t in await GetTaintsAsync(setupState, NodeLabels.LabelMetrics, "true"))
+                            foreach (var t in await GetTaintsAsync(controller, NodeLabels.LabelMetrics, "true"))
                             {
                                 values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
                                 values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", t.Effect));
@@ -2323,7 +2323,7 @@ $@"- name: StorageType
                                 i++;
                             }
 
-                            values.Add(new KeyValuePair<string, object>("image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                            values.Add(new KeyValuePair<string, object>("image.organization", KubeConst.NeonContainerRegistery(controller)));
 
                             await master.InstallHelmChartAsync("cortex", releaseName: "neon-metrics-cortex", @namespace: "monitoring", values: values, statusWriter: statusWriter);
                         });
@@ -2334,7 +2334,7 @@ $@"- name: StorageType
                             KubeHelper.WriteStatus(statusWriter, "Wait", "for Cortex");
                             master.Status = "wait: for cortex";
 
-                            await WaitForDeploymentAsync(setupState, "monitoring", "neon-metrics-cortex");
+                            await WaitForDeploymentAsync(controller, "monitoring", "neon-metrics-cortex");
                         });
                 });
         }
@@ -2342,16 +2342,16 @@ $@"- name: StorageType
         /// <summary>
         /// Installs Loki to the monitoring namespace.
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InstallLokiAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        public static async Task InstallLokiAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
         {
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var cluster = setupState.Get<ClusterProxy>(ClusterProxyProperty);
+            var cluster = controller.Get<ClusterProxy>(ClusterProxyProperty);
 
             await master.InvokeIdempotentAsync("setup/monitoring-loki",
                 async () =>
@@ -2361,7 +2361,7 @@ $@"- name: StorageType
 
                     var values = new List<KeyValuePair<string, object>>();
 
-                    values.Add(new KeyValuePair<string, object>("image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                    values.Add(new KeyValuePair<string, object>("image.organization", KubeConst.NeonContainerRegistery(controller)));
 
                     if (cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count() >= 3)
                     {
@@ -2387,23 +2387,23 @@ $@"- name: StorageType
                     KubeHelper.WriteStatus(statusWriter, "Wait", "for Loki");
                     master.Status = "wait: for loki";
 
-                    await WaitForStatefulsetAsync(setupState, "monitoring", "neon-logs-loki");
+                    await WaitForStatefulsetAsync(controller, "monitoring", "neon-logs-loki");
                 });
         }
 
         /// <summary>
         /// Installs Promtail to the monitoring namespace.
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InstallPromtailAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        public static async Task InstallPromtailAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
         {
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var cluster = setupState.Get<ClusterProxy>(ClusterProxyProperty);
+            var cluster = controller.Get<ClusterProxy>(ClusterProxyProperty);
 
             await master.InvokeIdempotentAsync("setup/monitoring-promtail",
                 async () =>
@@ -2413,7 +2413,7 @@ $@"- name: StorageType
 
                     var values = new List<KeyValuePair<string, object>>();
 
-                    values.Add(new KeyValuePair<string, object>("image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                    values.Add(new KeyValuePair<string, object>("image.organization", KubeConst.NeonContainerRegistery(controller)));
 
                     if (cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count() >= 3)
                     {
@@ -2438,20 +2438,20 @@ $@"- name: StorageType
                     KubeHelper.WriteStatus(statusWriter, "Wait", "for Promtail");
                     master.Status = "wait: for promtail";
 
-                    await WaitForDaemonsetAsync(setupState, "monitoring", "neon-logs-promtail");
+                    await WaitForDaemonsetAsync(controller, "monitoring", "neon-logs-promtail");
                 });
         }
 
         /// <summary>
         /// Installs Grafana to the monitoring namespace.
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InstallGrafanaAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        public static async Task InstallGrafanaAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
         {
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             await master.InvokeIdempotentAsync("setup/monitoring-grafana",
@@ -2462,12 +2462,12 @@ $@"- name: StorageType
 
                         var values = new List<KeyValuePair<string, object>>();
 
-                        values.Add(new KeyValuePair<string, object>("image.organization", KubeConst.NeonContainerRegistery(setupState)));
-                        values.Add(new KeyValuePair<string, object>("downloadDashboardsImage.organization", KubeConst.NeonContainerRegistery(setupState)));
-                        values.Add(new KeyValuePair<string, object>("sidecar.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                        values.Add(new KeyValuePair<string, object>("image.organization", KubeConst.NeonContainerRegistery(controller)));
+                        values.Add(new KeyValuePair<string, object>("downloadDashboardsImage.organization", KubeConst.NeonContainerRegistery(controller)));
+                        values.Add(new KeyValuePair<string, object>("sidecar.image.organization", KubeConst.NeonContainerRegistery(controller)));
 
                         int i = 0;
-                        foreach (var t in await GetTaintsAsync(setupState, NodeLabels.LabelMetrics, "true"))
+                        foreach (var t in await GetTaintsAsync(controller, NodeLabels.LabelMetrics, "true"))
                         {
                             values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
                             values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", t.Effect));
@@ -2492,34 +2492,34 @@ $@"- name: StorageType
                     KubeHelper.WriteStatus(statusWriter, "Wait", "for Grafana");
                     master.Status = "wait: for grafana";
 
-                    await WaitForDeploymentAsync(setupState, "monitoring", "neon-metrics-grafana");
+                    await WaitForDeploymentAsync(controller, "monitoring", "neon-metrics-grafana");
                 });
         }
 
         /// <summary>
         /// Installs a Minio cluster to the monitoring namespace.
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InstallMinioAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        public static async Task InstallMinioAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
         {
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             await master.InvokeIdempotentAsync("setup/minio-all",
                 async () =>
                 {
-                    var cluster = setupState.Get<ClusterProxy>(ClusterProxyProperty);
+                    var cluster = controller.Get<ClusterProxy>(ClusterProxyProperty);
 
                     if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2)
                     {
-                        await CreateHostPathStorageClass(setupState, master, "neon-internal-minio");
+                        await CreateHostPathStorageClass(controller, master, "neon-internal-minio");
                     }
                     else
                     {
-                        await CreateCstorStorageClass(setupState, master, "neon-internal-minio");
+                        await CreateCstorStorageClass(controller, master, "neon-internal-minio");
                     }
 
                     await master.InvokeIdempotentAsync("setup/minio",
@@ -2530,9 +2530,9 @@ $@"- name: StorageType
 
                             var values = new List<KeyValuePair<string, object>>();
 
-                            values.Add(new KeyValuePair<string, object>("image.organization", KubeConst.NeonContainerRegistery(setupState)));
-                            values.Add(new KeyValuePair<string, object>("mcImage.organization", KubeConst.NeonContainerRegistery(setupState)));
-                            values.Add(new KeyValuePair<string, object>("helmKubectlJqImage.organization", KubeConst.NeonContainerRegistery(setupState)));
+                            values.Add(new KeyValuePair<string, object>("image.organization", KubeConst.NeonContainerRegistery(controller)));
+                            values.Add(new KeyValuePair<string, object>("mcImage.organization", KubeConst.NeonContainerRegistery(controller)));
+                            values.Add(new KeyValuePair<string, object>("helmKubectlJqImage.organization", KubeConst.NeonContainerRegistery(controller)));
 
                             if (cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count() >= 3)
                             {
@@ -2557,7 +2557,7 @@ $@"- name: StorageType
                             KubeHelper.WriteStatus(statusWriter, "Configure", "Minio Secret");
                             master.Status = "configure: minio secret";
 
-                            var secret = await GetK8sClient(setupState).ReadNamespacedSecretAsync("neon-system-minio", "neon-system");
+                            var secret = await GetK8sClient(controller).ReadNamespacedSecretAsync("neon-system-minio", "neon-system");
 
                             secret.Metadata.NamespaceProperty = "monitoring";
 
@@ -2569,7 +2569,7 @@ $@"- name: StorageType
                                 },
                                 Data = secret.Data,
                             };
-                            await GetK8sClient(setupState).CreateNamespacedSecretAsync(monitoringSecret, "monitoring");
+                            await GetK8sClient(controller).CreateNamespacedSecretAsync(monitoringSecret, "monitoring");
                         });
                 });
         }
@@ -2577,35 +2577,35 @@ $@"- name: StorageType
         /// <summary>
         /// Installs an Neon Monitoring to the monitoring namespace.
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="controller">The setup controller.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task<List<Task>> SetupMonitoringAsync(ObjectDictionary setupState, Action<string> statusWriter = null)
+        public static async Task<List<Task>> SetupMonitoringAsync(ISetupController controller, Action<string> statusWriter = null)
         {
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             await SyncContext.ClearAsync;
 
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
-            var cluster = setupState.Get<ClusterProxy>(ClusterProxyProperty);
+            var cluster = controller.Get<ClusterProxy>(ClusterProxyProperty);
             var master  = cluster.FirstMaster;
             var tasks   = new List<Task>();
 
             KubeHelper.WriteStatus(statusWriter, "Setup", "Metrics");
             master.Status = "setup: metrics";
 
-            tasks.Add(WaitForPrometheusAsync(setupState, master, statusWriter));
+            tasks.Add(WaitForPrometheusAsync(controller, master, statusWriter));
 
             if (cluster.HostingManager.HostingEnvironment != HostingEnvironment.Wsl2)
             {
-                tasks.Add(InstallCortexAsync(setupState, master, statusWriter));
+                tasks.Add(InstallCortexAsync(controller, master, statusWriter));
             }
 
-            tasks.Add(InstallLokiAsync(setupState, master, statusWriter));
-            tasks.Add(InstallPromtailAsync(setupState, master, statusWriter));
+            tasks.Add(InstallLokiAsync(controller, master, statusWriter));
+            tasks.Add(InstallPromtailAsync(controller, master, statusWriter));
             tasks.Add(master.InstallHelmChartAsync("istio_prometheus", @namespace: "monitoring", statusWriter: statusWriter));
-            tasks.Add(InstallGrafanaAsync(setupState, master, statusWriter));
+            tasks.Add(InstallGrafanaAsync(controller, master, statusWriter));
 
             return tasks;
         }
@@ -2613,13 +2613,13 @@ $@"- name: StorageType
         /// <summary>
         /// Installs Jaeger
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         /// <remarks>The tracking <see cref="Task"/>.</remarks>
-        public static async Task InstallJaegerAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        public static async Task InstallJaegerAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
         {
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             await master.InvokeIdempotentAsync("setup/monitoring-jaeger",
@@ -2631,7 +2631,7 @@ $@"- name: StorageType
                     var values = new List<KeyValuePair<string, object>>();
 
                     int i = 0;
-                    foreach (var t in await GetTaintsAsync(setupState, NodeLabels.LabelLogs, "true"))
+                    foreach (var t in await GetTaintsAsync(controller, NodeLabels.LabelLogs, "true"))
                     {
                         values.Add(new KeyValuePair<string, object>($"ingester.tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
                         values.Add(new KeyValuePair<string, object>($"ingester.tolerations[{i}].effect", t.Effect));
@@ -2667,7 +2667,7 @@ $@"- name: StorageType
                     await NeonHelper.WaitForAsync(
                         async () =>
                         {
-                            var deployments = await GetK8sClient(setupState).ListNamespacedDeploymentAsync("monitoring", labelSelector: "release=neon-logs-jaeger");
+                            var deployments = await GetK8sClient(controller).ListNamespacedDeploymentAsync("monitoring", labelSelector: "release=neon-logs-jaeger");
                             if (deployments == null || deployments.Items.Count < 2)
                             {
                                 return false;
@@ -2685,18 +2685,18 @@ $@"- name: StorageType
         /// <summary>
         /// Installs a harbor container registry and required components.
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InstallContainerRegistryAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        public static async Task InstallContainerRegistryAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
         {
             await SyncContext.ClearAsync;
 
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var cluster = setupState.Get<ClusterProxy>(ClusterProxyProperty);
+            var cluster = controller.Get<ClusterProxy>(ClusterProxyProperty);
 
             var adminPassword = NeonHelper.GetCryptoRandomPassword(20);
 
@@ -2708,7 +2708,7 @@ $@"- name: StorageType
 
                     await SyncContext.ClearAsync;
 
-                    var cert = TlsCertificate.CreateSelfSigned(KubeConst.NeonContainerRegistery(setupState), 4096);
+                    var cert = TlsCertificate.CreateSelfSigned(KubeConst.NeonContainerRegistery(controller), 4096);
 
                     var harborCert = new V1Secret()
                         {
@@ -2724,7 +2724,7 @@ $@"- name: StorageType
                             }
                         };
 
-                        await GetK8sClient(setupState).CreateNamespacedSecretAsync(harborCert, "neon-system");
+                        await GetK8sClient(controller).CreateNamespacedSecretAsync(harborCert, "neon-system");
                 });
 
             await master.InvokeIdempotentAsync("setup/harbor-redis",
@@ -2737,7 +2737,7 @@ $@"- name: StorageType
 
                     var values   = new List<KeyValuePair<string, object>>();
                     
-                    values.Add(new KeyValuePair<string, object>("image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                    values.Add(new KeyValuePair<string, object>("image.organization", KubeConst.NeonContainerRegistery(controller)));
 
                     var replicas = Math.Min(3, cluster.Definition.Masters.Count());
 
@@ -2750,7 +2750,7 @@ $@"- name: StorageType
                     }
 
                     int i = 0;
-                    foreach (var t in await GetTaintsAsync(setupState, NodeLabels.LabelNeonSystemRegistry, "true"))
+                    foreach (var t in await GetTaintsAsync(controller, NodeLabels.LabelNeonSystemRegistry, "true"))
                     {
                         values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
                         values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", t.Effect));
@@ -2769,7 +2769,7 @@ $@"- name: StorageType
                     KubeHelper.WriteStatus(statusWriter, "Wait", "for Harbor Redis");
                     master.Status = "wait: for harbor redis";
 
-                    await WaitForStatefulsetAsync(setupState, "neon-system", "neon-system-registry-redis-server");
+                    await WaitForStatefulsetAsync(controller, "neon-system", "neon-system-registry-redis-server");
                 });
 
             await master.InvokeIdempotentAsync("setup/harbor",
@@ -2780,18 +2780,18 @@ $@"- name: StorageType
 
                     var values = new List<KeyValuePair<string, object>>();
 
-                    values.Add(new KeyValuePair<string, object>("nginx.image.organization", KubeConst.NeonContainerRegistery(setupState)));
-                    values.Add(new KeyValuePair<string, object>("portal.image.organization", KubeConst.NeonContainerRegistery(setupState)));
-                    values.Add(new KeyValuePair<string, object>("core.image.organization", KubeConst.NeonContainerRegistery(setupState)));
-                    values.Add(new KeyValuePair<string, object>("jobservice.image.organization", KubeConst.NeonContainerRegistery(setupState)));
-                    values.Add(new KeyValuePair<string, object>("registry.registry.image.organization", KubeConst.NeonContainerRegistery(setupState)));
-                    values.Add(new KeyValuePair<string, object>("registry.controller.image.organization", KubeConst.NeonContainerRegistery(setupState)));
-                    values.Add(new KeyValuePair<string, object>("chartmuseum.image.organization", KubeConst.NeonContainerRegistery(setupState)));
-                    values.Add(new KeyValuePair<string, object>("clair.clair.image.organization", KubeConst.NeonContainerRegistery(setupState)));
-                    values.Add(new KeyValuePair<string, object>("clair.adapter.image.organization", KubeConst.NeonContainerRegistery(setupState)));
-                    values.Add(new KeyValuePair<string, object>("trivy.image.organization", KubeConst.NeonContainerRegistery(setupState)));
-                    values.Add(new KeyValuePair<string, object>("notary.server.image.organization", KubeConst.NeonContainerRegistery(setupState)));
-                    values.Add(new KeyValuePair<string, object>("notary.signer.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                    values.Add(new KeyValuePair<string, object>("nginx.image.organization", KubeConst.NeonContainerRegistery(controller)));
+                    values.Add(new KeyValuePair<string, object>("portal.image.organization", KubeConst.NeonContainerRegistery(controller)));
+                    values.Add(new KeyValuePair<string, object>("core.image.organization", KubeConst.NeonContainerRegistery(controller)));
+                    values.Add(new KeyValuePair<string, object>("jobservice.image.organization", KubeConst.NeonContainerRegistery(controller)));
+                    values.Add(new KeyValuePair<string, object>("registry.registry.image.organization", KubeConst.NeonContainerRegistery(controller)));
+                    values.Add(new KeyValuePair<string, object>("registry.controller.image.organization", KubeConst.NeonContainerRegistery(controller)));
+                    values.Add(new KeyValuePair<string, object>("chartmuseum.image.organization", KubeConst.NeonContainerRegistery(controller)));
+                    values.Add(new KeyValuePair<string, object>("clair.clair.image.organization", KubeConst.NeonContainerRegistery(controller)));
+                    values.Add(new KeyValuePair<string, object>("clair.adapter.image.organization", KubeConst.NeonContainerRegistery(controller)));
+                    values.Add(new KeyValuePair<string, object>("trivy.image.organization", KubeConst.NeonContainerRegistery(controller)));
+                    values.Add(new KeyValuePair<string, object>("notary.server.image.organization", KubeConst.NeonContainerRegistery(controller)));
+                    values.Add(new KeyValuePair<string, object>("notary.signer.image.organization", KubeConst.NeonContainerRegistery(controller)));
 
                     values.Add(new KeyValuePair<string, object>($"harborAdminPassword", adminPassword));
 
@@ -2813,7 +2813,7 @@ $@"- name: StorageType
                     }
 
                     int j = 0;
-                    foreach (var taint in await GetTaintsAsync(setupState, NodeLabels.LabelNeonSystemRegistry, "true"))
+                    foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelNeonSystemRegistry, "true"))
                     {
                         values.Add(new KeyValuePair<string, object>($"tolerations[{j}].key", $"{taint.Key.Split("=")[0]}"));
                         values.Add(new KeyValuePair<string, object>($"tolerations[{j}].effect", taint.Effect));
@@ -2835,14 +2835,14 @@ $@"- name: StorageType
                     await NeonHelper.WaitAllAsync(
                         new List<Task>()
                         {
-                            WaitForDeploymentAsync(setupState, "neon-system", "neon-system-registry-harbor-chartmuseum"),
-                            WaitForDeploymentAsync(setupState, "neon-system", "neon-system-registry-harbor-clair"),
-                            WaitForDeploymentAsync(setupState, "neon-system", "neon-system-registry-harbor-core"),
-                            WaitForDeploymentAsync(setupState, "neon-system", "neon-system-registry-harbor-jobservice"),
-                            WaitForDeploymentAsync(setupState, "neon-system", "neon-system-registry-harbor-notary-server"),
-                            WaitForDeploymentAsync(setupState, "neon-system", "neon-system-registry-harbor-notary-signer"),
-                            WaitForDeploymentAsync(setupState, "neon-system", "neon-system-registry-harbor-portal"),
-                            WaitForDeploymentAsync(setupState, "neon-system", "neon-system-registry-harbor-registry")
+                            WaitForDeploymentAsync(controller, "neon-system", "neon-system-registry-harbor-chartmuseum"),
+                            WaitForDeploymentAsync(controller, "neon-system", "neon-system-registry-harbor-clair"),
+                            WaitForDeploymentAsync(controller, "neon-system", "neon-system-registry-harbor-core"),
+                            WaitForDeploymentAsync(controller, "neon-system", "neon-system-registry-harbor-jobservice"),
+                            WaitForDeploymentAsync(controller, "neon-system", "neon-system-registry-harbor-notary-server"),
+                            WaitForDeploymentAsync(controller, "neon-system", "neon-system-registry-harbor-notary-signer"),
+                            WaitForDeploymentAsync(controller, "neon-system", "neon-system-registry-harbor-portal"),
+                            WaitForDeploymentAsync(controller, "neon-system", "neon-system-registry-harbor-registry")
                         });
                 });
         }
@@ -2850,15 +2850,15 @@ $@"- name: StorageType
         /// <summary>
         /// Installs the Neon Cluster Manager.
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InstallClusterManagerAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        public static async Task InstallClusterManagerAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
         {
             await SyncContext.ClearAsync;
 
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             await master.InvokeIdempotentAsync("setup/cluster-manager",
@@ -2869,7 +2869,7 @@ $@"- name: StorageType
 
                     var values = new List<KeyValuePair<string, object>>();
                     
-                    values.Add(new KeyValuePair<string, object>("image.organization", KubeConst.NeonContainerRegistery(setupState)));
+                    values.Add(new KeyValuePair<string, object>("image.organization", KubeConst.NeonContainerRegistery(controller)));
 
                     await master.InstallHelmChartAsync("neon_cluster_manager", releaseName: "neon-cluster-manager", @namespace: "neon-system", values: values, statusWriter: statusWriter);
                 });
@@ -2880,29 +2880,29 @@ $@"- name: StorageType
                     KubeHelper.WriteStatus(statusWriter, "wait", "for [neon-cluster-manager]");
                     master.Status = "wait: for [neon-cluster-manager]";
 
-                    await WaitForDeploymentAsync(setupState, "neon-system", "neon-cluster-manager");
+                    await WaitForDeploymentAsync(controller, "neon-system", "neon-cluster-manager");
                 });
         }
 
         /// <summary>
         /// Installs the Neon Cluster Manager.
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task<List<Task>> CreateNamespacesAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        public static async Task<List<Task>> CreateNamespacesAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
         {
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             await SyncContext.ClearAsync;
 
             var tasks = new List<Task>();
 
-            tasks.Add(CreateNamespaceAsync(setupState, master, "neon-system", true));
-            tasks.Add(CreateNamespaceAsync(setupState, master, "jobs", false));
-            tasks.Add(CreateNamespaceAsync(setupState, master, "monitoring", true));
+            tasks.Add(CreateNamespaceAsync(controller, master, "neon-system", true));
+            tasks.Add(CreateNamespaceAsync(controller, master, "jobs", false));
+            tasks.Add(CreateNamespaceAsync(controller, master, "monitoring", true));
 
             return await Task.FromResult(tasks);
         }
@@ -2910,28 +2910,28 @@ $@"- name: StorageType
         /// <summary>
         /// Installs a Citus-postgres database used by neon-system services.
         /// </summary>
-        /// <param name="setupState">The setup controller state.</param>
+        /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
         /// <param name="statusWriter">Optional status writer used when the method is not being executed within a setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InstallSystemDbAsync(ObjectDictionary setupState, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
+        public static async Task InstallSystemDbAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, Action<string> statusWriter = null)
         {
-            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var cluster = setupState.Get<ClusterProxy>(ClusterProxyProperty);
+            var cluster = controller.Get<ClusterProxy>(ClusterProxyProperty);
 
             var values = new List<KeyValuePair<string, object>>();
 
-            values.Add(new KeyValuePair<string, object>($"image.organization", KubeConst.NeonContainerRegistery(setupState)));
-            values.Add(new KeyValuePair<string, object>($"busybox.image.organization", KubeConst.NeonContainerRegistery(setupState)));
-            values.Add(new KeyValuePair<string, object>($"prometheus.image.organization", KubeConst.NeonContainerRegistery(setupState)));
-            values.Add(new KeyValuePair<string, object>($"manager.image.organization", KubeConst.NeonContainerRegistery(setupState)));
+            values.Add(new KeyValuePair<string, object>($"image.organization", KubeConst.NeonContainerRegistery(controller)));
+            values.Add(new KeyValuePair<string, object>($"busybox.image.organization", KubeConst.NeonContainerRegistery(controller)));
+            values.Add(new KeyValuePair<string, object>($"prometheus.image.organization", KubeConst.NeonContainerRegistery(controller)));
+            values.Add(new KeyValuePair<string, object>($"manager.image.organization", KubeConst.NeonContainerRegistery(controller)));
 
             if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2
                 || cluster.Definition.Nodes.Count() == 1)
             {
-                await CreateHostPathStorageClass(setupState, master, "neon-internal-citus");
+                await CreateHostPathStorageClass(controller, master, "neon-internal-citus");
                 values.Add(new KeyValuePair<string, object>($"worker.resources.requests.memory", "64Mi"));
                 values.Add(new KeyValuePair<string, object>($"worker.resources.limits.memory", "128Mi"));
                 values.Add(new KeyValuePair<string, object>($"master.resources.requests.memory", "64Mi"));
@@ -2941,7 +2941,7 @@ $@"- name: StorageType
             }
             else
             {
-                await CreateCstorStorageClass(setupState, master, "neon-internal-citus");
+                await CreateCstorStorageClass(controller, master, "neon-internal-citus");
             }
 
             await master.InvokeIdempotentAsync("setup/system-db",
@@ -2967,7 +2967,7 @@ $@"- name: StorageType
                     }
 
                     int i = 0;
-                    foreach (var t in await GetTaintsAsync(setupState, NodeLabels.LabelNeonSystemDb, "true"))
+                    foreach (var t in await GetTaintsAsync(controller, NodeLabels.LabelNeonSystemDb, "true"))
                     {
                         values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
                         values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", t.Effect));
@@ -2987,36 +2987,28 @@ $@"- name: StorageType
                     await NeonHelper.WaitAllAsync(
                         new List<Task>()
                         {
-                            WaitForDeploymentAsync(setupState, "neon-system", "neon-system-db-citus-postgresql-manager"),
-                            WaitForStatefulsetAsync(setupState, "neon-system", "neon-system-db-citus-postgresql-master"),
-                            WaitForStatefulsetAsync(setupState, "neon-system", "neon-system-db-citus-postgresql-worker")
+                            WaitForDeploymentAsync(controller, "neon-system", "neon-system-db-citus-postgresql-manager"),
+                            WaitForStatefulsetAsync(controller, "neon-system", "neon-system-db-citus-postgresql-master"),
+                            WaitForStatefulsetAsync(controller, "neon-system", "neon-system-db-citus-postgresql-worker")
                         });
                 });
 
             await Task.CompletedTask;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="setupState"></param>
-        /// <param name="namespace"></param>
-        /// <param name="name"></param>
-        /// <param name="labelSelector"></param>
-        /// <param name="fieldSelector"></param>
-        /// <returns></returns>
         public static async Task WaitForDeploymentAsync(
-            ObjectDictionary setupState, 
-            string @namespace, 
-            string name = null, 
-            string labelSelector = null,
-            string fieldSelector = null)
+            ISetupController     controller, 
+            string              @namespace, 
+            string              name          = null, 
+            string              labelSelector = null,
+            string              fieldSelector = null)
         {
             Covenant.Requires<ArgumentException>(name != null || labelSelector != null || fieldSelector != null, "One of name, labelSelector or fieldSelector must be set,");
 
             if (!string.IsNullOrEmpty(name))
             {
-                if (!string.IsNullOrEmpty(fieldSelector)){
+                if (!string.IsNullOrEmpty(fieldSelector))
+                {
                     fieldSelector += $",metadata.name={name}";
                 }
                 else
@@ -3030,7 +3022,7 @@ $@"- name: StorageType
                 {
                     try
                     {
-                        var deployments = await GetK8sClient(setupState).ListNamespacedDeploymentAsync(@namespace, fieldSelector: fieldSelector, labelSelector: labelSelector);
+                        var deployments = await GetK8sClient(controller).ListNamespacedDeploymentAsync(@namespace, fieldSelector: fieldSelector, labelSelector: labelSelector);
                         if (deployments == null || deployments.Items.Count == 0)
                         {
                             return false;
@@ -3048,21 +3040,12 @@ $@"- name: StorageType
                 pollInterval: clusterOpRetryInterval);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="setupState"></param>
-        /// <param name="namespace"></param>
-        /// <param name="name"></param>
-        /// <param name="labelSelector"></param>
-        /// <param name="fieldSelector"></param>
-        /// <returns></returns>
         public static async Task WaitForStatefulsetAsync(
-            ObjectDictionary setupState,
-            string @namespace,
-            string name = null,
-            string labelSelector = null,
-            string fieldSelector = null)
+            ISetupController    controller,
+            string              @namespace,
+            string              name          = null,
+            string              labelSelector = null,
+            string              fieldSelector = null)
         {
             Covenant.Requires<ArgumentException>(name != null || labelSelector != null || fieldSelector != null, "One of name, labelSelector or fieldSelector must be set,");
 
@@ -3083,7 +3066,7 @@ $@"- name: StorageType
                 {
                     try
                     {
-                        var statefulsets = await GetK8sClient(setupState).ListNamespacedStatefulSetAsync(@namespace, fieldSelector: fieldSelector, labelSelector: labelSelector);
+                        var statefulsets = await GetK8sClient(controller).ListNamespacedStatefulSetAsync(@namespace, fieldSelector: fieldSelector, labelSelector: labelSelector);
                         if (statefulsets == null || statefulsets.Items.Count == 0)
                         {
                             return false;
@@ -3100,21 +3083,12 @@ $@"- name: StorageType
                 pollInterval: clusterOpRetryInterval);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="setupState"></param>
-        /// <param name="namespace"></param>
-        /// <param name="name"></param>
-        /// <param name="labelSelector"></param>
-        /// <param name="fieldSelector"></param>
-        /// <returns></returns>
         public static async Task WaitForDaemonsetAsync(
-            ObjectDictionary setupState,
-            string @namespace,
-            string name = null,
-            string labelSelector = null,
-            string fieldSelector = null)
+            ISetupController    controller,
+            string              @namespace,
+            string              name          = null,
+            string              labelSelector = null,
+            string              fieldSelector = null)
         {
             Covenant.Requires<ArgumentException>(name != null || labelSelector != null || fieldSelector != null, "One of name, labelSelector or fieldSelector must be set,");
 
@@ -3134,7 +3108,7 @@ $@"- name: StorageType
                 {
                     try
                     {
-                        var daemonsets = await GetK8sClient(setupState).ListNamespacedDaemonSetAsync(@namespace, fieldSelector: fieldSelector, labelSelector: labelSelector);
+                        var daemonsets = await GetK8sClient(controller).ListNamespacedDaemonSetAsync(@namespace, fieldSelector: fieldSelector, labelSelector: labelSelector);
                         if (daemonsets == null || daemonsets.Items.Count == 0)
                         {
                             return false;

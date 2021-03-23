@@ -1224,12 +1224,6 @@ line2
             var pipeName = Guid.NewGuid().ToString("d");
             var server   = new ProfileServer(pipeName);
 
-            server.GetMasterPasswordHandler =
-                () =>
-                {
-                    return ProfileHandlerResult.Create("foobar");
-                };
-
             server.GetProfileValueHandler =
                 name =>
                 {
