@@ -86,7 +86,7 @@ namespace Neon.Kube
         /// Ensure that the service description properties have been initialized
         /// for all service endpoints.
         /// </summary>
-        /// <param name="map"></param>
+        /// <param name="map">The service map.</param>
         private static void VerifyInit(NeonServiceMap map)
         {
             foreach (var serviceDescription in map.Values)

@@ -41,7 +41,7 @@ namespace Neon.Data
         /// Parses a <see cref="CouchbaseSettings"/> from a JSON or YAML string,
         /// automatically detecting the input format.
         /// </summary>
-        /// <param name="jsonOrYaml"></param>
+        /// <param name="jsonOrYaml">The JSON or YAML text.</param>
         /// <param name="strict">Optionally require that all input properties map to route properties.</param>
         /// <returns>The parsed <see cref="CouchbaseSettings"/>.</returns>
         public static CouchbaseSettings Parse(string jsonOrYaml, bool strict = false)

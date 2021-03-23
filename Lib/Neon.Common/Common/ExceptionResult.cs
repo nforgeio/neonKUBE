@@ -87,7 +87,7 @@ namespace Neon.Common
             /// <summary>
             /// Throws a local exception type, including the message passed.
             /// </summary>
-            /// <param name="message"></param>
+            /// <param name="message">The exception message.</param>
             public void Throw(string message)
             {
                 if (MessageConstructor != null)

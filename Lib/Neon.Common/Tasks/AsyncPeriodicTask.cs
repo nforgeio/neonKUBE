@@ -166,7 +166,7 @@ namespace Neon.Tasks
         /// <summary>
         /// Asynchronously invokes the termination handler (if present).
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task OnTerminateAsync()
         {
             if (onTerminateAsync != null)

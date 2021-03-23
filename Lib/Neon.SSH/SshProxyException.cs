@@ -47,8 +47,8 @@ namespace Neon.SSH
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="message"></param>
-        /// <param name="innerException"></param>
+        /// <param name="message">Specifies the exception message.</param>
+        /// <param name="innerException">Optionally specifies an inner exception.</param>
         public SshProxyException(string message, Exception innerException = null)
             : base(message, innerException)
         {

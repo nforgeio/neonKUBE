@@ -43,7 +43,7 @@ namespace Neon.Deployment
         /// <summary>
         /// Constructs a handler value result.
         /// </summary>
-        /// <param name="value"></param>
+        /// <param name="value">The handler result.</param>
         /// <returns>The <see cref="ProfileHandlerResult"/>.</returns>
         public static ProfileHandlerResult Create(string value)
         {

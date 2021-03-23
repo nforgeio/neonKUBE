@@ -48,7 +48,7 @@ namespace Neon.Tasks
         /// <summary>
         /// Returns the value from the operation.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The future.</returns>
         Task<T> GetAsync();
     }
 }

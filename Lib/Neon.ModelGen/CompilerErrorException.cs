@@ -39,7 +39,7 @@ namespace Neon.ModelGen
         /// Converts compiler diagnostics into a string.
         /// </summary>
         /// <param name="diagnostics">The compiler diagnostics.</param>
-        /// <returns></returns>
+        /// <returns>The diagnostics string.</returns>
         private static string GetMessage(IEnumerable<Diagnostic> diagnostics)
         {
             Covenant.Requires<ArgumentNullException>(diagnostics != null, nameof(diagnostics));

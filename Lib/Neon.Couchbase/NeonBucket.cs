@@ -173,7 +173,7 @@ namespace Couchbase
         /// <summary>
         /// <b>INTERNAL USE ONLY:</b> Returns the internal bucket.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The internal <see cref="IBucket"/>.</returns>
         public IBucket GetInternalBucket()
         {
             return this.bucket;

@@ -29,7 +29,7 @@ namespace Neon.Temporal
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="message"></param>
+        /// <param name="message">Specifies the exception message.</param>
         public RegistrationException(string message)
             : base(message)
         {

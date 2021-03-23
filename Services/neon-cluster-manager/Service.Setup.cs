@@ -52,7 +52,7 @@ namespace NeonClusterManager
         /// <summary>
         /// Method to wait for neon-system Citus database to be ready.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task WaitForCitusAsync()
         {
             Log.LogInfo("[neon-system-db] Waiting for neon-system database to be ready.");
@@ -118,9 +118,9 @@ namespace NeonClusterManager
         /// <summary>
         /// Helper method to create a database with default user.
         /// </summary>
-        /// <param name="dbName"></param>
-        /// <param name="dbUser"></param>
-        /// <returns></returns>
+        /// <param name="dbName">Specifies the database name.</param>
+        /// <param name="dbUser">Specifies the database user name.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task CreateDatabaseAsync(string dbName, string dbUser, string dbPass = null)
         {
             try

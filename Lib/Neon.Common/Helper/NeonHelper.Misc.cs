@@ -1373,7 +1373,7 @@ namespace Neon.Common
         /// Optionally specifies the encoding to use to convert the input to bytes 
         /// before base64 encoding it.  This defaults to <see cref="Encoding.UTF8"/>.
         /// </param>
-        /// <returns></returns>
+        /// <returns>The converted base-64 string.</returns>
         public static string ToBase64(string value, Encoding encoding = null)
         {
             Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
@@ -1391,7 +1391,7 @@ namespace Neon.Common
         /// Optionally specifies the encoding to use to convert the decoded bytes 
         /// to the result.  This defaults to <see cref="Encoding.UTF8"/>.
         /// </param>
-        /// <returns></returns>
+        /// <returns>The converted string.</returns>
         public static string FromBase64(string encodedValue, Encoding encoding = null)
         {
             Covenant.Requires<ArgumentNullException>(encodedValue != null, nameof(encodedValue));

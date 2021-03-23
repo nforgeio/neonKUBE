@@ -77,7 +77,7 @@ namespace Neon.SSH
         /// <summary>
         /// Returns an instance indicating that there are no available credentials.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The credentials.</returns>
         public static SshCredentials None
         {
             get { return new SshCredentials(); }

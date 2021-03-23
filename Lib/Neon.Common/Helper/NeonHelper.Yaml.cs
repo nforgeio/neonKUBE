@@ -248,13 +248,6 @@ namespace Neon.Common
             return sbYaml.ToString();
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="sbYaml"></param>
-        /// <param name="jToken"></param>
-        /// <param name="nesting"></param>
-        /// <param name="isArrayElement"></param>
         private static void SerializeYaml(StringBuilder sbYaml, JToken jToken, int nesting, bool isArrayElement = false)
         {
             string firstItemIndent;

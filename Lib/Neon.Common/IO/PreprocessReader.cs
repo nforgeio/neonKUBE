@@ -772,7 +772,7 @@ namespace Neon.IO
         /// <summary>
         /// Determines whether the line passed is a comment.
         /// </summary>
-        /// <param name="line"></param>
+        /// <param name="line">The text line.</param>
         /// <returns><b>true</b> if the line is a comment.</returns>
         private bool IsComment(string line)
         {
@@ -957,7 +957,7 @@ namespace Neon.IO
         /// <summary>
         /// Determines whether the line passed is a statement.
         /// </summary>
-        /// <param name="line"></param>
+        /// <param name="line">The text line.</param>
         /// <returns><b>true</b> if the line is a statement.</returns>
         private bool IsStatement(string line)
         {

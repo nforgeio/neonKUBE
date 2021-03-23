@@ -38,7 +38,7 @@ namespace Neon.Docker
         /// <summary>
         /// Constructs the response from a lower-level <see cref="JsonResponse"/>.
         /// </summary>
-        /// <param name="response"></param>
+        /// <param name="response">The response.</param>
         internal ServiceListResponse(JsonResponse response)
             : base(response)
         {

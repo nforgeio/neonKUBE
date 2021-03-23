@@ -159,7 +159,7 @@ namespace Neon.Time
         /// <summary>
         /// Handles the timer dispatch.
         /// </summary>
-        /// <param name="state"></param>
+        /// <param name="state">The timer state.</param>
         private void OnTimer(object state)
         {
             lock (syncLock)

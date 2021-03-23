@@ -550,7 +550,7 @@ namespace Neon.Common
         /// <param name="sourceOffset">Logical offset of the first byte to copy.</param>
         /// <param name="target">The output byte array.</param>
         /// <param name="targetOffset">Target offset where the first byte is to be written.</param>
-        /// <param name="length"></param>
+        /// <param name="length">The number of bytes to copy.</param>
         public void CopyTo(int sourceOffset, byte[] target, int targetOffset, int length)
         {
             int     cbRemain, cbAvail, cbCopy;

@@ -83,7 +83,7 @@ namespace Neon.IO
         /// </note>
         /// </summary>
         /// <param name="encoding">Optionally specifies the text encoding.  This defaults to <b>UTF-8</b>,</param>
-        /// <returns></returns>
+        /// <returns>The <see cref="TextReader"/>.</returns>
         public TextReader OpenReader(Encoding encoding = null);
 
         /// <summary>
@@ -95,7 +95,7 @@ namespace Neon.IO
         /// </note>
         /// </summary>
         /// <param name="encoding">Optionally specifies the text encoding.  This defaults to <b>UTF-8</b>,</param>
-        /// <returns></returns>
+        /// <returns>The <see cref="TextReader"/>.</returns>
         public Task<TextReader> OpenReaderAsync(Encoding encoding = null);
 
         /// <summary>

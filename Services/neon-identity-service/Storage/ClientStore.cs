@@ -82,7 +82,7 @@ namespace NeonIdentityService
         /// </note>
         /// </summary>
         /// <param name="connectionOpenerAsync">Asynchronous function that returns a new database connection for operations.</param>
-        /// <returns></returns>
+        /// <returns>The <see cref="ClientStore"/>.</returns>
         public static async Task<ClientStore> CreateAsync(Func<Task<NpgsqlConnection>> connectionOpenerAsync)
         {
             Covenant.Requires<ArgumentNullException>(connectionOpenerAsync != null, nameof(connectionOpenerAsync));

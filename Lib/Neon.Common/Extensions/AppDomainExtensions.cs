@@ -37,7 +37,7 @@ namespace System
         /// loaded in the <see cref="AppDomain"/>.  This can be used as a performance
         /// optimization when you only need to scan user assemblies.
         /// </summary>
-        /// <param name="appDomain"></param>
+        /// <param name="appDomain">The <see cref="AppDomain"/>.</param>
         /// <returns>The enumerated assemblies.</returns>
         /// <remarks>
         /// We also use this to work around this Visual Studio bug: 
