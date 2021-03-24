@@ -62,8 +62,8 @@ namespace Neon.Deployment
         /// </param>
         /// <param name="metadata">
         /// <para>
-        /// Optionally specifies metadata headers to be returning when the object is
-        /// downloaded from S3.  This formatted as as comma separated a list of 
+        /// Optionally specifies HTTP metadata headers to be returned when the object
+        /// is downloaded from S3.  This formatted as as comma separated a list of 
         /// key/value pairs like:
         /// </para>
         /// <example>
@@ -73,13 +73,13 @@ namespace Neon.Deployment
         /// <para>
         /// AWS supports <b>system</b> as well as <b>custom</b> headers.  System headers
         /// include standard HTTP headers such as <b>Content-Type</b> and <b>Content-Encoding</b>.
-        /// Custom headers will include the <b>x-amz-meta-</b> prefix.
+        /// Custom headers are required to include the <b>x-amz-meta-</b> prefix.
         /// </para>
         /// <para>
-        /// <b>IMPORTANT:</b> You shouldn't don't need to specify the <b>x-amz-meta-</b> prefix 
-        /// for setting custom headers; the AWS-CLI detects custom header names and adds the
-        /// prefix automatically.  This method will strip the prefix if present before calling
-        /// the AWS-CLI to ensure the prefix doesn't end up being duplicated.
+        /// You don't need to specify the <b>x-amz-meta-</b> prefix for setting custom 
+        /// headers; the AWS-CLI detects custom header names and adds the prefix automatically. 
+        /// This method will strip the prefix if present before calling the AWS-CLI to ensure 
+        /// the prefix doesn't end up being duplicated.
         /// </para>
         /// </note>
         /// </param>
@@ -95,29 +95,46 @@ namespace Neon.Deployment
                 "s3", "cp", sourcePath, targetUri
             };
 
+            var sbMetadata = new StringBuilder();
+
             if (gzip)
             {
-                args.Add("--Content-Encoding");
-                args.Add("gzip");
+                sbMetadata.AppendWithSeparator("content-encoding=gzip", ",");
             }
 
             if (metadata != null && metadata.Contains('='))
             {
-                // Strip off the [x-amz-meta-] prefix from the name, if present.
-
-                const string customPrefix = "x-amz-meta-";
-
-                var fields = metadata.Split('=', 2, StringSplitOptions.RemoveEmptyEntries);
-
-                if (fields[0].StartsWith(customPrefix))
+                foreach (var item in metadata.Split(',', StringSplitOptions.RemoveEmptyEntries))
                 {
-                    fields[0] = fields[0].Substring(customPrefix.Length);
+                    // Strip off the [x-amz-meta-] prefix from the name, if present.
 
-                    metadata = $"{fields[0]}={fields[1]}";
+                    const string customPrefix = "x-amz-meta-";
+
+                    var fields = item.Split('=', 2, StringSplitOptions.RemoveEmptyEntries);
+
+                    if (fields.Length != 2)
+                    {
+                        throw new ArgumentException($"Invalid metadata [{metadata}].", nameof(metadata));
+                    }
+
+                    var name  = fields[0].Trim();
+                    var value = fields[1].Trim();
+
+                    if (name.StartsWith(customPrefix))
+                    {
+                        name = name.Substring(customPrefix.Length);
+
+                        metadata = $"{name}={value}";
+                    }
+
+                    sbMetadata.AppendWithSeparator($"{name}={value}", ",");
                 }
+            }
 
+            if (sbMetadata.Length > 0)
+            {
                 args.Add("--metadata");
-                args.Add(metadata);
+                args.Add(sbMetadata.ToString());
             }
 
             ExecuteSafe(args.ToArray());
