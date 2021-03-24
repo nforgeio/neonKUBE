@@ -753,7 +753,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             firstMaster.InvokeIdempotent("setup/workstation",
                 (Action)(() =>
                 {
-                    controller.LogProgress((object)firstMaster, verb: "configure", message: "workstation");
+                    controller.LogProgress(firstMaster, verb: "configure", message: "workstation");
 
                     var cluster        = controller.Get<ClusterProxy>(ClusterProxyProperty);
                     var clusterLogin   = controller.Get<ClusterLogin>(ClusterLoginProperty);
@@ -768,7 +768,6 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     // to neonDESKTOP and load balancing requests across the k8s api servers.
 
                     var configText = clusterLogin.SetupDetails.MasterFiles["/etc/kubernetes/admin.conf"].Text;
-                    var master     = cluster.Definition.SortedMasterNodes.First();
 
                     configText = configText.Replace("kubernetes-masters", $"{cluster.Definition.Masters.FirstOrDefault().Address}");
 

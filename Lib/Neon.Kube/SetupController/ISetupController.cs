@@ -55,23 +55,23 @@ namespace Neon.Kube
         /// text for the node.
         /// </summary>
         /// <param name="node">
-        /// The node reference as an object (so we can avoid dealing with the
-        /// node generic parameter here).
+        /// The node reference as a <see cref="LinuxSshProxy"/> so we can 
+        /// avoid dealing with the node generic parameter here.
         /// </param>
         /// <param name="message">The message.</param>
-        void LogProgress(object node, string message);
+        void LogProgress(LinuxSshProxy node, string message);
 
         /// <summary>
         /// Logs a progress for a specific node with a verb and message.  
         /// This will be formatted like <b>VERB: MESSAGE</b>.
         /// </summary>
         /// <param name="node">
-        /// The node reference as an object (so we can avoid dealing with the
-        /// node generic parameter here).
+        /// The node reference as a <see cref="LinuxSshProxy"/> so we can 
+        /// avoid dealing with the node generic parameter here.
         /// </param>
         /// <param name="verb">The message verb.</param>
         /// <param name="message">The message.</param>
-        void LogProgress(object node, string verb, string message);
+        void LogProgress(LinuxSshProxy node, string verb, string message);
 
         /// <summary>
         /// <para>
@@ -95,10 +95,10 @@ namespace Neon.Kube
         /// </note>
         /// </summary>
         /// <param name="node">
-        /// The node reference as an object (so we can avoid dealing with the
-        /// node generic parameter here).
+        /// The node reference as a <see cref="LinuxSshProxy"/> so we can 
+        /// avoid dealing with the node generic parameter here.
         /// </param>
         /// <param name="message">The message.</param>
-        void LogError(object node, string message);
+        void LogError(LinuxSshProxy node, string message);
     }
 }

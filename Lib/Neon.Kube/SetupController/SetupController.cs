@@ -1143,7 +1143,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public void LogProgress(object node, string message)
+        public void LogProgress(LinuxSshProxy node, string message)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(message), nameof(message));
@@ -1162,7 +1162,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public void LogProgress(object node, string verb, string message)
+        public void LogProgress(LinuxSshProxy node, string verb, string message)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(verb), nameof(verb));
@@ -1201,7 +1201,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public void LogError(object node, string message)
+        public void LogError(LinuxSshProxy node, string message)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(message), nameof(message));

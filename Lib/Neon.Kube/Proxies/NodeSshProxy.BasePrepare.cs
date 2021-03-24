@@ -63,25 +63,6 @@ namespace Neon.Kube
 
             var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetup.HostingEnvironmentProperty);
 
-            // $hack(jefflill):
-            //
-            // This method is going to be called for two different scenarios that will each
-            // call for different logging mechanisms.
-            //
-            //      1. For the [neon prepare node-template] command, we're simply going 
-            //         to write status to the console as lines via the [statusWriter].
-            //
-            //      2. For node preparation for cloud and bare metal clusters, we're
-            //         going to set the node status and use the standard setup progress
-            //         mechanism to display the status.
-            //
-            // [statusWriter] will be NULL for the second scenario so we'll call the log helper
-            // method above which won't do anything.
-            //
-            // For scenario #1, there is no setup display mechanism, so updating node status
-            // won't actually display anything, so we'll just set the status as well without
-            // harming anything.
-
             // Wait for boot/connect.
 
             controller.LogProgress(this, verb: "login", message: $"[{KubeConst.SysAdminUser}]");
