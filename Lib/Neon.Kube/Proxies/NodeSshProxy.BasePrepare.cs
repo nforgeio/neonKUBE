@@ -93,6 +93,7 @@ namespace Neon.Kube
             InvokeIdempotent("base/initialize-reboot",
                 () =>
                 {
+                    controller.LogProgress(this, verb: "reboot", message: $"[{this.Name}]");
                     Reboot(wait: true);
                 });
         }
