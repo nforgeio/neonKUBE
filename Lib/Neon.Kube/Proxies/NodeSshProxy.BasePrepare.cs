@@ -179,7 +179,7 @@ sed -i 's!^#precedence ::ffff:0:0/96  10$!precedence ::ffff:0:0/96  100!g' /etc/
             InvokeIdempotent("base/bash-environment",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "configure", message: "environmane variables");
+                    controller.LogProgress(this, verb: "configure", message: "environmant variables");
 
                     var script =
 @"
