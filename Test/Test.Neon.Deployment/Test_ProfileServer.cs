@@ -65,7 +65,7 @@ namespace TestDeployment
         /// <param name="server">The assistant erver.</param>
         private void SetDefaultHandlers(ProfileServer server)
         {
-            server.GetProfileValueHandler = name => ProfileHandlerResult.Create($"{name}-profile");
+            server.GetProfileValueHandler   = name => ProfileHandlerResult.Create($"{name}-profile");
 
             server.GetSecretPasswordHandler = 
                 (name, vault, masterPassword) =>

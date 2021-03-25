@@ -21,6 +21,7 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
@@ -28,7 +29,7 @@ using System.Threading.Tasks;
 using Neon.Common;
 using Neon.IO;
 
-namespace System
+namespace System.Reflection
 {
     /// <summary>
     /// Implements custom <see cref="Assembly"/> extension methods.
@@ -420,6 +421,43 @@ namespace System
             }
 
             return root;
+        }
+
+        /// <summary>
+        /// <para>
+        /// Retrieves all of the extensions methods in an assembly targeting a specific type.
+        /// </para>
+        /// <note>
+        /// This doesn't currently support nested or generic target types.
+        /// </note>
+        /// </summary>
+        /// <param name="assembly">The source assembly.</param>
+        /// <param name="targetType">The type being extended.</param>
+        /// <param name="allowPrivate">Optionally specifies that only private methods are to be returned as well as public ones.</param>
+        /// <returns>The extension methods.</returns>
+        public static IEnumerable<MethodInfo> GetExtensionMethodsFor(this Assembly assembly, Type targetType, bool allowPrivate = false)
+        {
+            Covenant.Requires<ArgumentNullException>(assembly != null, nameof(assembly));
+            Covenant.Requires<ArgumentNullException>(targetType != null, nameof(targetType));
+            Covenant.Requires<ArgumentException>(!targetType.IsNested, nameof(targetType), "Nested target types are not currently supported.");
+            Covenant.Requires<ArgumentException>(!targetType.IsGenericType, nameof(targetType), "Generic target types are not currently supported.");
+
+            var bindingFlags = BindingFlags.Static | BindingFlags.Public;
+
+            if (allowPrivate)
+            {
+                bindingFlags |= BindingFlags.NonPublic;
+            }
+
+            var query = 
+                from type in assembly.GetTypes()
+                where !type.IsGenericType && !type.IsNested
+                from method in type.GetMethods(bindingFlags)
+                    where method.IsDefined(typeof(ExtensionAttribute), false)
+                    where method.GetParameters()[0].ParameterType == targetType
+                    select method;
+            
+            return query;
         }
     }
 }
