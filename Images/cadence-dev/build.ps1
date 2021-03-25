@@ -37,6 +37,11 @@ param
 "* CADENCE_UI_VERSION:" + $uiVersion
 "==========================================================="
 
+# Pull the source image.
+
+Exec { docker pull golang/curl:$goVersion }
+Exec { docker pull openjdk:8-jdk-stretch }
+
 # Build the image.
 
 Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$version" --build-arg "GO_VERSION=$goVersion" --build-arg "UI_VERSION=$uiVersion" . }
