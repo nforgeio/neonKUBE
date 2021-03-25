@@ -352,44 +352,6 @@ function GetNeonCloudRegistry($image)
 }
 
 #------------------------------------------------------------------------------
-# Prefixes the image name passed with the target neonKUBE MAIN GitHub container 
-# registry for the current git branch by default such that when the current branch
-# name starts with "release-" the image will be pushed to "ghcr.io/neonrelease/"
-# otherwise it will be pushed to "ghcr.io/neonrelease-dev/".  The MAIN registry
-# holds the neonKUBE images tagged by cluster version.
-#
-# This default behavior can be overridden by setting the [$rel] or [$dev] Variable
-# to $true.  These are generally passed as arguments to the root publish script.
-
-function GetKubeMainRegistry($image)
-{
-	if ($dev -and $rel)
-	{
-		'ERROR: $dev and $rel cannot both be $true.'
-		exit 1
-	}
-
-	if ($dev)
-	{
-		return "ghcr.io/neonkube-dev/" + $image
-	}
-	
-	if ($rel)
-	{
-		return "ghcr.io/neonkube/" + $image
-	}
-
-	if (IsRelease)
-	{
-		return "ghcr.io/neonkube/" + $image
-	}
-	else
-	{
-		return "ghcr.io/neonkube-dev/" + $image
-	}
-}
-
-#------------------------------------------------------------------------------
 # Prefixes the image name passed with the target neonKUBE BASE GitHub container 
 # registry for the current git branch by default such that when the current branch
 # name starts with "release-" the image will be pushed to "ghcr.io/neonrelease/"
