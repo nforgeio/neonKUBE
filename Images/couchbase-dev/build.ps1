@@ -29,6 +29,10 @@ param
 
 Log-ImageBuild $registry $tag
 
+# Pull the source image.
+
+Exec { docker pull couchbase/server:$version }
+
 # Build the image.
 
 Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$version" . }

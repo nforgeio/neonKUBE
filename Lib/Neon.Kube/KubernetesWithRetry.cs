@@ -27609,7 +27609,7 @@ namespace Neon.Kube
     /// Combines the <see cref="IKubernetes"/> definitions with the <see cref="KubernetesExtensions"/>
     /// into one huge interface implemented by <see cref="KubernetesWithRetry"/>.
     /// </summary>
-    public interface IKubernetesWithRetry : IDisposable
+    public interface IKubernetesWithRetry : IKubernetes
     {
 
         global::System.Uri BaseUri { get; set; }
