@@ -402,7 +402,7 @@ $@"
     /// Combines the <see cref=""IKubernetes""/> definitions with the <see cref=""KubernetesExtensions""/>
     /// into one huge interface implemented by <see cref=""{wrapperClassName}""/>.
     /// </summary>
-    public interface I{wrapperClassName} : IDisposable
+    public interface I{wrapperClassName} : IKubernetes
     {{");
                 // Generate the [IKubernetes] property definitions.
 
