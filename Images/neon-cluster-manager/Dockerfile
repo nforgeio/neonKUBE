@@ -17,13 +17,12 @@
 #
 # ARGUMENTS:
 #
-#   ORGANIZATION    - The Docker Hub organization
-#   CLUSTER_VERSION - The neonKUBE cluster version
+#   BASE_ORGANIZATION   - The organization to use for any base images
+#   CLUSTER_VERSION     - The neonKUBE cluster version
 
-ARG         ORGANIZATION
 ARG         BASE_ORGANIZATION
 ARG         CLUSTER_VERSION
-FROM        ${BASE_ORGANIZATION}/aspnet-layer:${CLUSTER_VERSION}
+FROM        ${BASE_ORGANIZATION}/aspnet-layer:3.1.10
 MAINTAINER  marcus@euarctos.com
 STOPSIGNAL  SIGTERM
 ARG         APPNAME
