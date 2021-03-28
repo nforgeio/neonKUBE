@@ -443,9 +443,9 @@ Server Requirements:
                     }
                 }
 
-                throw new NotImplementedException("$todo(jefflill): IMPKEMENT THIS!");
+                throw new NotImplementedException("$todo(jefflill): IMPLEMENT THIS!");
 
-                //if (!hostingManager.ProvisionAsync(setupController, clusterLogin.SshPassword, orgSshPassword).Result)
+                //if (!hostingManager.ProvisionAsync(controller, clusterLogin.SshPassword, orgSshPassword).Result)
                 //{
                 //    Program.Exit(1);
                 //}
@@ -504,7 +504,7 @@ Server Requirements:
 
                 var operation = $"Preparing [{cluster.Definition.Name}] cluster nodes";
 
-                var setupController = 
+                var controller = 
                     new SetupController<NodeDefinition>(operation, cluster.Nodes)
                     {
                         ShowStatus  = !Program.Quiet,
@@ -514,41 +514,41 @@ Server Requirements:
 
                 // Configure the setup controller state.
 
-                setupController.Add(KubeSetup.DebugModeProperty, debug);
+                controller.Add(KubeSetup.DebugModeProperty, debug);
 
                 if (debug)
                 {
-                    setupController.Add(KubeSetup.BaseImageNameProperty, baseImageName);
+                    controller.Add(KubeSetup.BaseImageNameProperty, baseImageName);
                 }
 
-                setupController.Add(KubeSetup.ClusterProxyProperty, cluster);
-                setupController.Add(KubeSetup.ClusterLoginProperty, clusterLogin);
-                setupController.Add(KubeSetup.HostingManagerProperty, hostingManager);
-                setupController.Add(KubeSetup.HostingEnvironmentProperty, hostingManager.HostingEnvironment);
+                controller.Add(KubeSetup.ClusterProxyProperty, cluster);
+                controller.Add(KubeSetup.ClusterLoginProperty, clusterLogin);
+                controller.Add(KubeSetup.HostingManagerProperty, hostingManager);
+                controller.Add(KubeSetup.HostingEnvironmentProperty, hostingManager.HostingEnvironment);
 
                 // Configure the setup steps.
 
-                setupController.AddWaitUntilOnlineStep(timeout: TimeSpan.FromMinutes(15));
-                setupController.AddNodeStep("node OS verify", (state, node) => node.VerifyNodeOS());
-                setupController.AddNodeStep("node credentials",
+                controller.AddWaitUntilOnlineStep(timeout: TimeSpan.FromMinutes(15));
+                controller.AddNodeStep("node OS verify", (state, node) => node.VerifyNodeOS());
+                controller.AddNodeStep("node credentials",
                     (state, node) =>
                     {
-                        node.ConfigureSshKey(setupController);
+                        node.ConfigureSshKey(controller);
                     });
-                setupController.AddNodeStep("node prepare",
+                controller.AddNodeStep("node prepare",
                     (state, node) =>
                     {
-                        node.PrepareNode(setupController);
+                        node.PrepareNode(controller);
                     });
             
                 // Some hosting managers may have to some additional work after the node has
                 // been otherwise prepared.
 
-                hostingManager.AddPostPrepareSteps(setupController);
+                hostingManager.AddPostPrepareSteps(controller);
 
                 // Start cluster preparation.
 
-                if (!setupController.Run())
+                if (!controller.Run())
                 {
                     // Write the operation end/failed marker to all cluster node logs.
 
