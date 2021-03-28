@@ -60,40 +60,26 @@ Follow the steps below to configure a development or test workstation:
     powershell Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser
     ```
 
-7. Install **Visual Studio 2019 Community 16.3+** from [here](https://visualstudio.microsoft.com/thank-you-downloading-visual-studio/?sku=Community&rel=16)
+7. Install **Visual Studio 2019 Community 16.9+** from [here](https://visualstudio.microsoft.com/thank-you-downloading-visual-studio/?sku=Community&rel=16)
 
   * Select **all workloads** on the first panel
   * Click **Individual components**, type *Git* in the search box and select **Git for Windows** and **GitHub extension for Visual Studio**
   * Click **Install** (and take a coffee break)
   * Apply any pending **Visual Studio updates**
   * **Close** Visual Studio to install any updates
+  * **NOTE:** You need sign into Visual Studio using the **devops@neonforge.com**.  The password for this can be found at 1Password at **user-devops/NEONFORGE_LOGIN**
 
-8. Disable **Python Import Warnings** via **Tools/Options: by unchecking this**
-
-   ![System Tray](Images/Developer/PythonImports.png?raw=true)
-  
 9. Create a **shortcut** for Visual Studio and configure it to run as **administrator**.  To build and run neonKUBE applications and services, **Visual Studio must be running with elevated privileges**.
 
-10. Install some SDKs:
+9. Install some SDKs:
    * Install .NET Core SDK v3.1.403 from [here](https://dotnet.microsoft.com/download/dotnet-core/3.1)
    * Install **.NET Framework 4.8 Developer Pack** from [here](https://dotnet.microsoft.com/download/thank-you/net48-developer-pack)
 
-11. Install **Docker for Windows (Stable)** from [here](http://hub.docker.com)
+10. Install **Docker for Windows (Stable)** from [here](http://hub.docker.com)
 
     * You'll need to create a DockerHub account if you don't already have one.
-    * **Right-click** the Docker icon in the system tray and select **Settings...**
 
-      ![System Tray](Images/Developer/DockerSysTray.png?raw=true)
-
-    * Select the **Shared Drives** tab click the check box to **share** the drive where you'll clone the project source code (typically drive C:)
-    * Click **Apply** (You may need to enter your workstation **credentials**).
-    * Select the **Advanced** tab and enable **Manual DNS Configuration** and set the DNS to **8.8.8.8**.
-    * Click **Apply**
-    * Select the **Resource** tab on the left set **CPUs=4** and **Memory=4GB**.
-    * Click **Apply**
-    * **IMPORTANT:** **Do not enable WSL2** support if available.  WSL2 doesn't support IPv4 loopback addresses which will result in failed unit tests.
-
-12. **Clone** the [https://github.com/nforgeio/neonKUBE](https://github.com/nforgeio/neonKUBE) repository to your workstation:
+11. **Clone** the [https://github.com/nforgeio/neonKUBE](https://github.com/nforgeio/neonKUBE) repository to your workstation:
 
     * **IMPORTANT:** All neonFORGE related repositories must be cloned within the same parent directory and their folder names cannot be changed.
     * Create an individual GitHub account [here](https://github.com/join?source=header-home) if you don't already have one
@@ -101,9 +87,13 @@ Follow the steps below to configure a development or test workstation:
     * Go to the neonKUBE [repository](https://github.com/nforgeio/neonKUBE).
     * Click the *green* **Code** button and select **Open in Visual Studio**
     * A *Launch Application* dialog will appear.  Select **Microsoft Visual Studio Protocol Handler Selector** and click **Open Link**
-    * Choose or enter the directory where the repository will be cloned.  This defaults to a user specific folder.  I typically change this to a global folder to keep the file paths short.
+    * Choose or enter the directory where the repository will be cloned.  This defaults to a user specific folder.  I typically change this to a global folder (like **C:\src**) to keep the file paths short.
     * Click **Clone**
 
+12. Disable **Python Import Warnings** via **Tools/Options: by unchecking this**
+
+   ![System Tray](Images/Developer/PythonImports.png?raw=true)
+  
 13. Configure the build **environment variables**:
 
     * Open **File Explorer**
@@ -148,33 +138,38 @@ Follow the steps below to configure a development or test workstation:
     
       ![WinSCP Hidden Files](Images/Developer/WinSCPHiddenFiles.png?raw=true)
 
-19. Restart Visual Studio (to pick up the environment changes).
+20. Install Visual Studio Code and GO (needed for the Cadence and Temporal proxy builds):
+    * Install **Visual Studio Code** from [here](https://code.visualstudio.com/download)
+    * Install **go1.13.windows-amd64.msi** or later for Windows from: [here](https://golang.org/dl/)
 
-20. Confirm that the solution builds:
+21. Confirm that the solution builds:
 
-    * Run **Visual Studio** as **administrator**
+    * Restart **Visual Studio** as **administrator** (to pick up the new environment variables)
     * Open **$/neonKUBE.sln** (where **$** is the repo root directory)
     * Select **Build/Rebuild** Solution
 
-21. *Optional*: Install **Notepad++** from [here](https://notepad-plus-plus.org/download)
+22. *Optional*: Install **Notepad++** from [here](https://notepad-plus-plus.org/download)
 
-22. *Optional*: Install **Postman** REST API tool from [here](https://www.getpostman.com/postman)
+23. *Optional*: Install **Postman** REST API tool from [here](https://www.getpostman.com/postman)
 
-23. *Optional*: Install **Cmdr/Mini** command shell:
+24. *Optional*: Install **Cmdr/Mini** command shell:
 
   * **IMPORTANT: Don't install the Full version** to avoid installing Linux command line tools that might conflict with the Cygwin tools installed earlier.
   * Download the ZIP archive from: [here](http://cmder.net/)
   * Unzip it into a new folder and then ensure that this folder is in your **PATH**.
   * Create a desktop shortcut if you wish and configure it to run as administrator.
-  * Run Cmdr and configure settings as desired.
-  * Consider removing the alias definitions in `$\config\user-aliases.cmd` file so that commands like `ls` will work properly.  I deleted all lines beneath the first `@echo off`.
+  * Consider removing the alias definitions in `$\vendor\user_aliases.cmd.default` file so that commands like `ls` will work properly.  I deleted all lines beneath the first `@echo off`.
+  * Run Cmdr to complete the installation.
 
-24. *Optional*: Install the latest version of **XCP-ng Center** from [here](https://github.com/xcp-ng/xenadmin/releases) if you'll need to manage Virtual Machines hosted on XCP-ng.
+25. *Optional*: Install the latest version of **XCP-ng Center** from [here](https://github.com/xcp-ng/xenadmin/releases) if you'll need to manage Virtual Machines hosted on XCP-ng.
 
-25. *Optional*: Maintainers who will be publishing releases will need to:
+26. *Optional*: Maintainers who will be publishing releases will need to:
 
     * **Download:** the latest recommended (at least **v5.8.0**) **nuget.exe** from [here](https://www.nuget.org/downloads) and put this somewhere in your `PATH`
     * Obtain a nuget API key from a maintainer and install the key on your workstation via:
+	
+	  `nuget SetApiKey YOUR-KEY`
+	
     * **Install:** GitHub CLI (amd64) v1.4.0 or greater from: https://github.com/cli/cli/releases
     * **Close:** all Visual Studio instances.
     * **Install:** the HTML Help Compiler by running `$/External/htmlhelp.exe` with the default options.  You can ignore any message about a newer version already being installed.
@@ -188,14 +183,11 @@ Follow the steps below to configure a development or test workstation:
       * Click **Next** until you get to the last page.
       * Click **Close** to close the SHFB installer.
 
-26. *Optional*: Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
+27. *Optional*: Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
 
-27. *Optional*: Maintainers will need to install then **GitHub CLI** from here: https://cli.github.com/
+28. *Optional*: Maintainers will need to install then **GitHub CLI** from here: https://cli.github.com/
 
-27: *Optional:* Maintainers will need to **AWS client version 2** from: [here](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-windows.html)
+29: *Optional:* Maintainers will need to **AWS client version 2** from: [here](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-windows.html)
 
-29: *Optional:* Maintainers authorized to perform releases will need to follow the README.md instructions in the neonCLOUD repo to configure credentials for the GitHub Releases and the Container Registry.
+30: *Optional:* Maintainers authorized to perform releases will need to follow the README.md instructions in the neonCLOUD repo to configure credentials for the GitHub Releases and the Container Registry.
 
-30. *Optional:* Developers working on Cadence or Temporal will need to install Visual Studio Code and GO to work on the proxy:
-    * Install **Visual Studio Code** from [here](https://code.visualstudio.com/download)
-    * Install **go1.13.windows-amd64.msi** or later for Windows from: [here](https://golang.org/dl/)
