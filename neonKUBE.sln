@@ -383,10 +383,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "twf-args", "twf-args", "{20
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Powershell", "Powershell", "{42FB3B73-87D8-41BD-9F4F-FB3A2DC921CF}"
 	ProjectSection(SolutionItems) = preProject
+		Powershell\deployment.ps1 = Powershell\deployment.ps1
 		Powershell\error-handling.ps1 = Powershell\error-handling.ps1
 		Powershell\git.ps1 = Powershell\git.ps1
 		Powershell\includes.ps1 = Powershell\includes.ps1
-		Powershell\profile-client.ps1 = Powershell\profile-client.ps1
 		Powershell\README.md = Powershell\README.md
 	EndProjectSection
 EndProject
