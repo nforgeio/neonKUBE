@@ -1083,7 +1083,7 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(orgSshPassword), nameof(orgSshPassword));
             Covenant.Assert(cluster != null, $"[{nameof(AwsHostingManager)}] was created with the wrong constructor.");
 
-            var clusterLogin = controller.Get<ClusterLogin>(KubeSetup.ClusterLoginProperty);
+            var clusterLogin = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
 
             this.controller = controller;
 
@@ -1108,7 +1108,6 @@ namespace Neon.Kube
             var operation       = $"Provisioning [{cluster.Definition.Name}] on AWS [{availabilityZone}/{resourceGroupName}]";
             var setupController = new SetupController<NodeDefinition>(operation, cluster.Nodes)
             {
-                ShowStatus     = this.ShowStatus,
                 ShowNodeStatus = true,
                 MaxParallel    = int.MaxValue       // There's no reason to constrain this
             };

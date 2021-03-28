@@ -37,6 +37,21 @@ namespace Neon.Kube
     public interface ISetupController : IObjectDictionary
     {
         /// <summary>
+        /// Optionally specifies the line written as the first line of log files.
+        /// </summary>
+        string LogBeginMarker { get; set; }
+
+        /// <summary>
+        /// Optionally specifies the line written as the last line of log files when the operation succeeded.
+        /// </summary>
+        string LogEndMarker { get; set; }
+
+        /// <summary>
+        /// Optionally specifies the line written as the last line of log files when the operation failed.
+        /// </summary>
+        string LogFailedMarker { get; set; }
+
+        /// <summary>
         /// Logs a progress message.
         /// </summary>
         /// <param name="message">The message.</param>
@@ -100,5 +115,25 @@ namespace Neon.Kube
         /// </param>
         /// <param name="message">The message.</param>
         void LogError(LinuxSshProxy node, string message);
+
+        /// <summary>
+        /// Performs the setup operation steps in the in the order they were added to the controller.
+        /// </summary>
+        /// <param name="leaveNodesConnected">Pass <c>true</c> leave the node proxies connected.</param>
+        /// <returns><c>true</c> if all steps completed successfully.</returns>
+        bool Run(bool leaveNodesConnected = false);
+
+        /// <summary>
+        /// Adds an <see cref="IDisposable"/> instance to the controller so that they
+        /// can be properly disposed when <see cref="Run(bool)"/> exits.
+        /// </summary>
+        /// <param name="disposable"></param>
+        void AddDisposable(IDisposable disposable);
+
+        /// <summary>
+        /// Returns setup related log information for each of the nodes.
+        /// </summary>
+        /// <returns>An the <see cref="NodeLog"/> values.</returns>
+        IEnumerable<NodeLog> GetNodeLogs();
     }
 }

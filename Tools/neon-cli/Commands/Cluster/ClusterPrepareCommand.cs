@@ -60,7 +60,7 @@ ARGUMENTS:
 OPTIONS:
 
     --package-caches=HOST:PORT  - Optionally specifies one or more APT Package cache
-                                  servers by hostname/IO and port.  Specify multiple
+                                  servers by hostname and port.  Specify multiple
                                   servers by separating the endpoints with spaces.
 
     --unredacted                - Runs commands with potential secrets without 
@@ -95,7 +95,7 @@ OPTIONS:
 Server Requirements:
 --------------------
 
-    * Supported version of Linux (server)
+    * Ubuntu 20.04.x (server)
     * Known [sysadmin] sudoer user
     * OpenSSH installed
 ";
@@ -299,7 +299,6 @@ Server Requirements:
                     Program.Exit(1);
                 }
 
-                hostingManager.ShowStatus  = !Program.Quiet;
                 hostingManager.MaxParallel = Program.MaxParallel;
                 hostingManager.WaitSeconds = Program.WaitSeconds;
 
@@ -333,12 +332,12 @@ Server Requirements:
 
                 var setupState = new ObjectDictionary();
 
-                setupState.Add(KubeSetup.DebugModeProperty, debug);
-                setupState.Add(KubeSetup.BaseImageNameProperty, baseImageName);
-                setupState.Add(KubeSetup.ClusterProxyProperty, cluster);
-                setupState.Add(KubeSetup.ClusterLoginProperty, clusterLogin);
-                setupState.Add(KubeSetup.HostingManagerProperty, hostingManager);
-                setupState.Add(KubeSetup.HostingEnvironmentProperty, hostingManager.HostingEnvironment);
+                setupState.Add(KubeSetupProperty.DebugMode, debug);
+                setupState.Add(KubeSetupProperty.BaseImageName, baseImageName);
+                setupState.Add(KubeSetupProperty.ClusterProxy, cluster);
+                setupState.Add(KubeSetupProperty.ClusterLogin, clusterLogin);
+                setupState.Add(KubeSetupProperty.HostingManager, hostingManager);
+                setupState.Add(KubeSetupProperty.HostingEnvironment, hostingManager.HostingEnvironment);
 
                 // We're going to generate a secure random password and we're going to append
                 // an extra 4-character string to ensure that the password meets Azure (and probably
@@ -473,7 +472,7 @@ Server Requirements:
                     ipAddressToServer.Add(node.Address, node);
                 }
 
-                // We're going to use the masters to be package caches unless the user
+                // We're going to use the masters as package caches unless the user
                 // has specified something else.
 
                 packageCaches = commandLine.GetOption("--package-caches");    // This overrides the cluster definition, when specified.

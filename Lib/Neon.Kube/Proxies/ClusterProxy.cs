@@ -172,7 +172,6 @@ namespace Neon.Kube
 
             this.Nodes       = nodes;
             this.FirstMaster = Nodes.Where(n => n.Metadata.IsMaster).OrderBy(n => n.Name).First();
-
         }
 
         /// <summary>
@@ -182,6 +181,21 @@ namespace Neon.Kube
         {
             Dispose(true);
         }
+
+        /// <summary>
+        /// Optionally specifies the line written as the first line of log files.
+        /// </summary>
+        public string LogBeginMarker { get; set; }
+
+        /// <summary>
+        /// Optionally specifies the line written as the last line of log files when the operation succeeded.
+        /// </summary>
+        public string LogEndMarker { get; set; }
+
+        /// <summary>
+        /// Optionally specifies the line written as the last line of log files when the operation failed.
+        /// </summary>
+        public string LogFailedMarker { get; set; }
 
         /// <summary>
         /// Releases all associated resources.

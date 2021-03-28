@@ -84,7 +84,7 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
-            var clusterLogin = controller.Get<ClusterLogin>(KubeSetup.ClusterLoginProperty);
+            var clusterLogin = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
 
             // Configure the SSH credentials on the node.
 
@@ -264,7 +264,7 @@ systemctl restart rsyslog.service
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
-            var hostingManager    = controller.Get<IHostingManager>(KubeSetup.HostingManagerProperty);
+            var hostingManager    = controller.Get<IHostingManager>(KubeSetupProperty.HostingManager);
             var clusterDefinition = cluster.Definition;
 
             InvokeIdempotent("base/prepare-node",
@@ -289,7 +289,7 @@ systemctl restart rsyslog.service
         {
             Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
 
-            var hostEnvironment = controller.Get<HostingEnvironment>(KubeSetup.HostingEnvironmentProperty);
+            var hostEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
 
             if (hostEnvironment != HostingEnvironment.Wsl2)
             {
@@ -949,7 +949,7 @@ systemctl daemon-reload
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
-            var hostEnvironment = controller.Get<HostingEnvironment>(KubeSetup.HostingEnvironmentProperty);
+            var hostEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
 
             InvokeIdempotent("setup/cri-o",
                 () =>
@@ -1156,7 +1156,7 @@ rm -rf linux-amd64
                         .Select(path => Path.GetFullPath(path))
                         .ToArray();
 
-                    var registry = controller.Get<bool>(KubeSetup.ReleaseModeProperty) ? "ghcr.io/neonrelease" : "ghcr.io/neonrelease-dev";
+                    var registry = controller.Get<bool>(KubeSetupProperty.ReleaseMode) ? "ghcr.io/neonrelease" : "ghcr.io/neonrelease-dev";
 
                     var pullImageTasks = new List<Task>();
 
@@ -1273,7 +1273,7 @@ rm -rf linux-amd64
             InvokeIdempotent("setup/install-kubernetes",
                 () =>
                 {
-                    var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetup.HostingEnvironmentProperty);
+                    var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
 
                     // We need some custom configuration on WSL2 inspired by the 
                     // Kubernetes-IN-Docker (KIND) project:

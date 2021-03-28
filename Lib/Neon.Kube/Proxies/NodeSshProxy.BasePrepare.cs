@@ -61,7 +61,7 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
 
-            var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetup.HostingEnvironmentProperty);
+            var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
 
             // Wait for boot/connect.
 
@@ -240,7 +240,7 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
         {
             Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
 
-            var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetup.HostingEnvironmentProperty);
+            var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
 
             InvokeIdempotent("base/patch-linux",
                 () =>
@@ -260,7 +260,7 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
         {
             Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
 
-            var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetup.HostingEnvironmentProperty);
+            var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
 
             InvokeIdempotent("base/update-linux",
                 () =>
@@ -279,7 +279,7 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
         {
             Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
 
-            var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetup.HostingEnvironmentProperty);
+            var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
 
             InvokeIdempotent("base/upgrade-linux",
                 () =>
@@ -330,7 +330,7 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
         {
             Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
 
-            var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetup.HostingEnvironmentProperty);
+            var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
 
             // This currently applies only to on-premise hypervisors.
 
@@ -368,7 +368,7 @@ update-initramfs -u
         {
             Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
 
-            var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetup.HostingEnvironmentProperty);
+            var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
 
             if (hostingEnvironment == HostingEnvironment.Wsl2)
             {
@@ -413,7 +413,7 @@ EOF
         {
             Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
 
-            var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetup.HostingEnvironmentProperty);
+            var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
 
             // Do this only for non-cloud environments.
 

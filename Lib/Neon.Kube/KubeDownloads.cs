@@ -114,12 +114,12 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
-            var setupDebugMode = controller.Get<bool>(KubeSetup.DebugModeProperty, false);
-            var baseImageName  = controller.Get<string>(KubeSetup.BaseImageNameProperty, null);
+            var setupDebugMode = controller.Get<bool>(KubeSetupProperty.DebugMode, false);
+            var baseImageName  = controller.Get<string>(KubeSetupProperty.BaseImageName, null);
 
             if (setupDebugMode && string.IsNullOrEmpty(baseImageName))
             {
-                throw new NotSupportedException($"[{nameof(controller)}] must include [{KubeSetup.BaseImageNameProperty}] when [{KubeSetup.DebugModeProperty}=true].");
+                throw new NotSupportedException($"[{nameof(controller)}] must include [{KubeSetupProperty.BaseImageName}] when [{KubeSetupProperty.DebugMode}=true].");
             }
 
             var imageType = setupDebugMode ? "base" : "node";

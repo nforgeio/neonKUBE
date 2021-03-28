@@ -29,8 +29,10 @@ using System.Net.Http;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Security;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.Security.Principal;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -2390,5 +2392,35 @@ ClientAliveInterval 30
 ClientAliveCountMax 20
 TCPKeepAlive yes
 ";
+
+        /// <summary>
+        /// Verifies that the current user has administrator privileges.
+        /// </summary>
+        /// <param name="message">Optional message.</param>
+        /// <exception cref="SecurityException">Thrown when the user does not have administrator privileges.</exception>
+        public static void VerifyAdminPrivileges(string message = null)
+        {
+            if (NeonHelper.IsWindows)
+            {
+                var principal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
+
+                if (!principal.IsInRole(WindowsBuiltInRole.Administrator))
+                {
+                    throw new SecurityException(message ?? "Admin privileges are required.");
+                }
+            }
+            else if (NeonHelper.IsOSX)
+            {
+                throw new NotImplementedException();
+            }
+            else if (NeonHelper.IsLinux)
+            {
+                throw new NotImplementedException();
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
+        }
     }
 }

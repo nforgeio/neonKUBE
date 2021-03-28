@@ -235,7 +235,6 @@ namespace Neon.Kube
 
             controller = new SetupController<XenClient>($"Provisioning [{cluster.Definition.Name}] cluster", xenSshProxies)
             {
-                ShowStatus  = this.ShowStatus,
                 MaxParallel = this.MaxParallel
             };
 

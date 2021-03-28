@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeSetup.PrepareController.cs
+// FILE:	    NodeLog.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -15,34 +15,45 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using ICSharpCode.SharpZipLib.Zip;
-using k8s;
-using k8s.Models;
-using Microsoft.Rest;
-using Neon.Collections;
-using Neon.Common;
-using Neon.Cryptography;
-using Neon.IO;
-using Neon.Retry;
-using Neon.SSH;
-using Neon.Tasks;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Net.Sockets;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Neon.Common;
+
 namespace Neon.Kube
 {
-    public static partial class KubeSetup
+    /// <summary>
+    /// Holds the setup related log for a specific cluster node.
+    /// </summary>
+    public struct NodeLog
     {
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="nodeName">The node name.</param>
+        /// <param name="logText">The log text.</param>
+        public NodeLog(string nodeName, string logText)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
+
+            this.NodeName = nodeName;
+            this.LogText  = logText ?? string.Empty;
+        }
+
+        /// <summary>
+        /// Returns the node name.
+        /// </summary>
+        public string NodeName { get; private set; }
+
+        /// <summary>
+        /// Returns the node's log text.
+        /// </summary>
+        public string LogText { get; private set; }
     }
 }

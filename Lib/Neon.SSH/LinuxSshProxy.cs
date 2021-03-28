@@ -875,7 +875,7 @@ rm {HostFolders.Home(Username)}/askpass
         /// Writes text to the operation log.
         /// </summary>
         /// <param name="text">The text.</param>
-        public void Log(string text)
+        public virtual void Log(string text)
         {
             if (logWriter != null)
             {
@@ -887,7 +887,7 @@ rm {HostFolders.Home(Username)}/askpass
         /// Writes a line of text to the operation log.
         /// </summary>
         /// <param name="text">The text.</param>
-        public void LogLine(string text)
+        public virtual void LogLine(string text)
         {
             if (logWriter != null)
             {
@@ -899,7 +899,7 @@ rm {HostFolders.Home(Username)}/askpass
         /// <summary>
         /// Flushes the log.
         /// </summary>
-        public void LogFlush()
+        public virtual void LogFlush()
         {
             if (logWriter != null)
             {

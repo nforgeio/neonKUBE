@@ -69,12 +69,6 @@ namespace Neon.Kube
         public abstract void Dispose(bool disposing);
 
         /// <summary>
-        /// Specifies whether the class should print setup status to the console.
-        /// This defaults to <c>false</c>.
-        /// </summary>
-        public bool ShowStatus { get; set; } = false;
-
-        /// <summary>
         /// The maximum number of nodes that will execute provisioning steps in parallel.  This
         /// defaults to <b>5</b>.
         /// </summary>

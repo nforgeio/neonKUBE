@@ -168,7 +168,6 @@ namespace Neon.Kube
 
             this.controller = new SetupController<NodeDefinition>($"Provisioning [{cluster.Definition.Name}] cluster", cluster.Nodes)
             {
-                ShowStatus  = this.ShowStatus,
                 MaxParallel = 1     // We're only going to provision one VM at a time on a local Hyper-V instance.
             };
 

@@ -76,6 +76,7 @@ namespace Neon.Kube
 
         private const int UnlimitedParallel = 500;  // Treat this as "unlimited"
 
+        private List<IDisposable>                   disposables = new List<IDisposable>();
         private string                              operationTitle;
         private string                              operationStatus;
         private List<NodeSshProxy<NodeMetadata>>    nodes;
@@ -168,6 +169,22 @@ namespace Neon.Kube
         /// Returns the time spent performing setup after setup has completed (or failed).
         /// </summary>
         public TimeSpan ElapsedTime { get; private set; }
+
+        /// <inheritdoc/>
+        public void AddDisposable(IDisposable disposable)
+        {
+            Covenant.Requires<ArgumentNullException>(disposable != null, nameof(disposable));
+
+            disposables.Add(disposable);
+        }
+
+        /// <inheritdoc/>
+        public IEnumerable<NodeLog> GetNodeLogs()
+        {
+            return nodes
+                .OrderBy(node => node.Name, StringComparer.InvariantCultureIgnoreCase)
+                .Select(node => node.GetNodeLog());
+        }
 
         /// <summary>
         /// Sets the <see cref="LinuxSshProxy.DefaultRunOptions"/> property for
@@ -441,120 +458,138 @@ namespace Neon.Kube
             steps.Insert(position, step);
         }
 
-        /// <summary>
-        /// Performs the operation steps in the order they were added.
-        /// </summary>
-        /// <param name="leaveNodesConnected">Pass <c>true</c> leave the node proxies connected.</param>
-        /// <returns><c>true</c> if all steps completed successfully.</returns>
+        /// <inheritdoc/>
         public bool Run(bool leaveNodesConnected = false)
         {
-            var stopWatch = new Stopwatch();
-
-            stopWatch.Start();
-
-            // Number the steps.  Note that quiet steps don't 
-            // get their own step number.
-
-            var position = 1;
-
-            foreach (var step in steps)
-            {
-                if (step.Quiet)
-                {
-                    step.Number = position;
-                }
-                else
-                {
-                    step.Number = position++;
-                }
-            }
-
-            // We don't display node status if there aren't any node specific steps.
-
-            hasNodeSteps = steps.Exists(s => s.SyncNodeAction != null || s.AsyncNodeAction != null);
+            var cluster = Get<ClusterProxy>(KubeSetupProperty.ClusterProxy, null);
 
             try
             {
+                cluster?.LogLine(cluster.LogBeginMarker);
+
+                // We're going to time how long this takes.
+
+                var stopWatch = new Stopwatch();
+
+                stopWatch.Start();
+
+                // Number the steps.  Note that quiet steps don't 
+                // get their own step number.
+
+                var position = 1;
+
                 foreach (var step in steps)
                 {
-                    currentStep = step;
-
-                    try
+                    if (step.Quiet)
                     {
-                        if (!PerformStep(step))
+                        step.Number = position;
+                    }
+                    else
+                    {
+                        step.Number = position++;
+                    }
+                }
+
+                // We don't display node status if there aren't any node specific steps.
+
+                hasNodeSteps = steps.Exists(s => s.SyncNodeAction != null || s.AsyncNodeAction != null);
+
+                try
+                {
+                    foreach (var step in steps)
+                    {
+                        currentStep = step;
+
+                        try
                         {
-                            break;
+                            if (!PerformStep(step))
+                            {
+                                break;
+                            }
+                        }
+                        finally
+                        {
+                            currentStep = null;
                         }
                     }
-                    finally
+
+                    if (error)
                     {
-                        currentStep = null;
+                        cluster?.LogLine(cluster.LogFailedMarker);
+
+                        return false;
                     }
-                }
-
-                if (error)
-                {
-                    return false;
-                }
-
-                foreach (var node in nodes)
-                {
-                    node.Status = "[x] READY";
-                }
-
-                DisplayStatus();
-                return true;
-            }
-            finally
-            {
-                ElapsedTime = stopWatch.Elapsed;
-
-                if (!leaveNodesConnected)
-                {
-                    // Disconnect all of the nodes.
 
                     foreach (var node in nodes)
                     {
-                        node.Disconnect();
+                        node.Status = "[x] READY";
+                    }
+
+                    DisplayStatus();
+                    cluster?.LogLine(cluster.LogEndMarker);
+
+                    return true;
+                }
+                finally
+                {
+                    ElapsedTime = stopWatch.Elapsed;
+
+                    if (!leaveNodesConnected)
+                    {
+                        // Disconnect all of the nodes.
+
+                        foreach (var node in nodes)
+                        {
+                            node.Disconnect();
+                        }
+                    }
+
+                    Console.WriteLine();    // Add an extra line after the status to look nice.
+
+                    if (ShowElapsed)
+                    {
+                        var totalLabel    = "Total Setup Time";
+                        var maxLabelWidth = steps.Max(step => step.Label.Length);
+
+                        if (maxLabelWidth < totalLabel.Length)
+                        {
+                            maxLabelWidth = totalLabel.Length;
+                        }
+
+                        Console.WriteLine("Elapsed Step Timing");
+                        Console.WriteLine("-------------------");
+
+                        var filler = string.Empty;
+
+                        foreach (var step in steps)
+                        {
+                            filler = new string(' ', maxLabelWidth - step.Label.Length);
+
+                            if (step.WasExecuted)
+                            {
+                                Console.WriteLine($"{step.Label}:    {filler}{step.ElapsedTime} ({step.ElapsedTime.TotalSeconds} sec)");
+                            }
+                            else
+                            {
+                                Console.WriteLine($"{step.Label}:    {filler}* NOT EXECUTED");
+                            }
+                        }
+
+                        filler = new string(' ', maxLabelWidth - totalLabel.Length);
+
+                        Console.WriteLine(new string('-', totalLabel.Length + 1));
+                        Console.WriteLine($"{totalLabel}:    {filler}{ElapsedTime} ({ElapsedTime.TotalSeconds} sec)");
+                        Console.WriteLine();
                     }
                 }
+            }
+            finally
+            {
+                // Dispose any disposables.
 
-                Console.WriteLine();    // Add an extra line after the status to look nice.
-
-                if (ShowElapsed)
+                foreach (var disposable in disposables)
                 {
-                    var totalLabel    = "Total Setup Time";
-                    var maxLabelWidth = steps.Max(step => step.Label.Length);
-
-                    if (maxLabelWidth < totalLabel.Length)
-                    {
-                        maxLabelWidth = totalLabel.Length;
-                    }
-
-                    Console.WriteLine("Elapsed Step Timing");
-                    Console.WriteLine("-------------------");
-
-                    var filler = string.Empty;
-
-                    foreach (var step in steps)
-                    {
-                        filler = new string(' ', maxLabelWidth - step.Label.Length);
-
-                        if (step.WasExecuted)
-                        {
-                            Console.WriteLine($"{step.Label}:    {filler}{step.ElapsedTime} ({step.ElapsedTime.TotalSeconds} sec)");
-                        }
-                        else
-                        {
-                            Console.WriteLine($"{step.Label}:    {filler}* NOT EXECUTED");
-                        }
-                    }
-
-                    filler = new string(' ', maxLabelWidth - totalLabel.Length);
-
-                    Console.WriteLine(new string('-', totalLabel.Length + 1));
-                    Console.WriteLine($"{totalLabel}:    {filler}{ElapsedTime} ({ElapsedTime.TotalSeconds} sec)");
-                    Console.WriteLine();
+                    disposable.Dispose();
                 }
             }
         }
@@ -1106,6 +1141,15 @@ namespace Neon.Kube
         // this will be set as the node status text.  The Error() methods do the same
         // thing for error messages while also ensuring that setup terminates after the
         // current step completes.
+
+        /// <inheritdoc/>
+        public string LogBeginMarker { get; set; }
+
+        /// <inheritdoc/>
+        public string LogEndMarker { get; set; }
+
+        /// <inheritdoc/>
+        public string LogFailedMarker { get; set; }
 
         /// <inheritdoc/>
         public void LogProgress(string message)

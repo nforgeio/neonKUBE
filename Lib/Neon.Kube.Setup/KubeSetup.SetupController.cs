@@ -15,20 +15,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using ICSharpCode.SharpZipLib.Zip;
-using k8s;
-using k8s.Models;
-using Microsoft.Rest;
-using Neon.Collections;
-using Neon.Common;
-using Neon.Cryptography;
-using Neon.IO;
-using Neon.Retry;
-using Neon.SSH;
-using Neon.Tasks;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
@@ -39,6 +28,20 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+
+using ICSharpCode.SharpZipLib.Zip;
+using k8s;
+using k8s.Models;
+using Microsoft.Rest;
+
+using Neon.Collections;
+using Neon.Common;
+using Neon.Cryptography;
+using Neon.IO;
+using Neon.Retry;
+using Neon.SSH;
+using Neon.Tasks;
+using Newtonsoft.Json.Linq;
 
 namespace Neon.Kube
 {
