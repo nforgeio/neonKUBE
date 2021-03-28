@@ -62,17 +62,6 @@ namespace Prebuilder
             // The stock [Kubernetes] class implements the [IKubernetes] interface and the
             // [KubernetesExtensions] class then adds a very large number of additional
             // methods.  We need to wrap both the interface and extension methods.
-            //
-            // For this to work, our generated class cannot implement [IKubernetes] because
-            // that will cause our generated methods to conflict with the extension methods.
-            // The workaround is to generate an [IKubernetesWithRetry] interface that
-            // includes both the [IKubernetes] as well as the extension methods.  We're 
-            // going to generate both the interface and the class in the same file, to
-            // keep things simple.
-            //
-            // The nice thing about doing this as that folks authoring unit tests will be
-            // able to mock all of the client methods instead of just the ones defined
-            // in [IKubernetes].
 
             // We're going to write the generated source to a [StringBuilder] and then
             // compare the results to the target file and only write when there's a
@@ -131,13 +120,6 @@ namespace {targetNamespace}
     /// This is intended to be a drop-in replacement for the <see cref=""Kubernetes""/> class,
     /// adding support for an optional <see cref=""IRetryPolicy""/> for all instance method calls.
     /// </para>
-    /// <note>
-    /// The <see cref=""KubernetesWithRetry""/> class implements <see cref=""IKubernetesWithRetry""/>
-    /// rather than <see cref=""IKubernetes""/> because much of the <see cref=""Kubernetes""/> class
-    /// is actually implemented via extension methods and we include these extensions in our class.
-    /// This will be an advantage when mocking the client for unit testing but does mean that any
-    /// additional extensions that for <see cref=""IKubernetes""/> won't apply to <see cref=""IKubernetesWithRetry""/>.
-    /// </note>
     /// <para>
     /// To use, simply instantiate an instance and assign your custom <see cref=""IRetryPolicy""/>
     /// to the <see cref=""RetryPolicy""/> property.  This property defaults to <see cref=""NoRetryPolicy""/>
@@ -148,7 +130,7 @@ namespace {targetNamespace}
     /// Static methods don't honor the retry policy.
     /// </note>
     /// </remarks>
-    public sealed class {wrapperClassName} : I{wrapperClassName}
+    public sealed class {wrapperClassName} : IKubernetes
     {{");
                 //-----------------------------------------------------------------
                 // Generate the local fields
@@ -252,19 +234,19 @@ namespace {targetNamespace}
 
                 foreach (var sourceType in new Type[] { kubernetesType, typeof(KubernetesExtensions) }) 
                 {
-                    var generatinghExtensions = false;
-                    var methods               = (IEnumerable<MethodInfo>)null;
+                    var generatingExtensions = false;
+                    var methods              = (IEnumerable<MethodInfo>)null;
 
                     if (sourceType == kubernetesType)
                     {
-                        generatinghExtensions = false;
+                        generatingExtensions = false;
                         methods               = sourceType.GetMethods(BindingFlags.Public | BindingFlags.Instance);
 
                     }
                     else
                     {
-                        generatinghExtensions = true;
-                        methods               = sourceType.Assembly.GetExtensionMethodsFor(typeof(IKubernetes));
+                        generatingExtensions = true;
+                        methods              = sourceType.Assembly.GetExtensionMethodsFor(typeof(IKubernetes));
                     }
 
                     foreach (var method in methods)
@@ -274,17 +256,17 @@ namespace {targetNamespace}
                         var isOverride = false;
                         var @override  = string.Empty;
 
-                        if (generatinghExtensions)
+                        if (generatingExtensions)
                         {
                             // We're only going to generate extension methods whose first
-                            // parameter type is [IKubernetes].
+                            // parameter type is [IKubernetes] (just to be safe).
 
                             if (parameters.Length < 0 || parameters.First().ParameterType != typeof(IKubernetes))
                             {
                                 continue;
                             }
 
-                            // Remove the first parameter since it'll be implictl here.
+                            // Remove the first parameter since it'll be implicit here.
 
                             parameters = parameters.Skip(1).ToArray();
                         }
@@ -320,13 +302,22 @@ namespace {targetNamespace}
                                 continue;
                         }
 
+                        if (!generatingExtensions)
+                        {
+                            // The generated extension methods need the [new] override to prevent
+                            // conflicts with the actual IKubernetes extension methods because our
+                            // generated type also needs to implement [IKubernetes].
+
+                            //@override += " new";
+                        }
+
                         if (isAsync)
                         {
                             Covenant.Assert(!isOverride);
 
                             writer.WriteLine();
                             writer.WriteLine($"        /// <inheritdoc/>");
-                            writer.WriteLine($"        public async {ResolveTypeReference(method.ReturnType, isResultType: true)} {method.Name}{GetGenericArgsDefinition(method)}({GetParameterDefinition(parameters)})");
+                            writer.WriteLine($"        public{@override} async {ResolveTypeReference(method.ReturnType, isResultType: true)} {method.Name}{GetGenericArgsDefinition(method)}({GetParameterDefinition(parameters)})");
                             writer.WriteLine($"        {{");
 
                             if (method.ReturnType == typeof(Task))
@@ -393,6 +384,7 @@ namespace {targetNamespace}
 
                 writer.WriteLine($"    }}");
 
+#if DONT_NEED_THIS
                 //-----------------------------------------------------------------
                 // Define the [IKubernetesWithRetry] interface.
 
@@ -402,7 +394,7 @@ $@"
     /// Combines the <see cref=""IKubernetes""/> definitions with the <see cref=""KubernetesExtensions""/>
     /// into one huge interface implemented by <see cref=""{wrapperClassName}""/>.
     /// </summary>
-    public interface I{wrapperClassName} : IDisposable
+    public interface I{wrapperClassName} : IKubernetes
     {{");
                 // Generate the [IKubernetes] property definitions.
 
@@ -483,6 +475,7 @@ $@"
                 // Close the interface definition.
 
                 writer.WriteLine($"    }}");
+#endif
 
                 //-----------------------------------------------------------------
                 // Close the namespace definition.
