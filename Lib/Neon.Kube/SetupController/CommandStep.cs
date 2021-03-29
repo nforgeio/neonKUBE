@@ -33,7 +33,7 @@ namespace Neon.Kube
     /// Runs a Linux command on a node, optionally uploading some command related files first.
     /// Commands are executed with root privileges.
     /// </summary>
-    public class CommandStep : ConfigStep
+    public class CommandStep : SetupStep
     {
         //---------------------------------------------------------------------
         // Static members

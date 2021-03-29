@@ -366,7 +366,7 @@ namespace Neon.Kube
         /// Performs cluster configuration steps.
         /// </summary>
         /// <param name="steps">The configuration steps.</param>
-        public void Configure(ConfigStepList steps)
+        public void Configure(SetupStepList steps)
         {
             Covenant.Requires<ArgumentNullException>(steps != null, nameof(steps));
 
@@ -386,11 +386,11 @@ namespace Neon.Kube
         /// <param name="outputEncoding">Optionally specifies the output text encoding (defaults to UTF-8).</param>
         /// <param name="permissions">Optionally specifies target file permissions (must be <c>chmod</c> compatible).</param>
         /// <returns>The steps.</returns>
-        public IEnumerable<ConfigStep> GetFileUploadSteps(IEnumerable<NodeSshProxy<NodeDefinition>> nodes, string path, string text, int tabStop = 0, Encoding outputEncoding = null, string permissions = null)
+        public IEnumerable<SetupStep> GetFileUploadSteps(IEnumerable<NodeSshProxy<NodeDefinition>> nodes, string path, string text, int tabStop = 0, Encoding outputEncoding = null, string permissions = null)
         {
             Covenant.Requires<ArgumentNullException>(nodes != null, nameof(nodes));
 
-            var steps = new ConfigStepList();
+            var steps = new SetupStepList();
 
             foreach (var node in nodes)
             {
@@ -410,7 +410,7 @@ namespace Neon.Kube
         /// <param name="outputEncoding">Optionally specifies the output text encoding (defaults to UTF-8).</param>
         /// <param name="permissions">Optionally specifies target file permissions (must be <c>chmod</c> compatible).</param>
         /// <returns>The steps.</returns>
-        public IEnumerable<ConfigStep> GetFileUploadSteps(NodeSshProxy<NodeDefinition> node, string path, string text, int tabStop = 0, Encoding outputEncoding = null, string permissions = null)
+        public IEnumerable<SetupStep> GetFileUploadSteps(NodeSshProxy<NodeDefinition> node, string path, string text, int tabStop = 0, Encoding outputEncoding = null, string permissions = null)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 

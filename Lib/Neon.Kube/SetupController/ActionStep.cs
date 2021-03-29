@@ -31,7 +31,7 @@ namespace Neon.Kube
     /// <summary>
     /// Runs an <see cref="Action{LinuxSshProxy}"/> as a cluster setup step.
     /// </summary>
-    public class ActionStep : ConfigStep
+    public class ActionStep : SetupStep
     {
         //---------------------------------------------------------------------
         // Static members

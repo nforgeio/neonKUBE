@@ -74,6 +74,7 @@ namespace Neon.Kube
         /// <param name="debugMode">Optionally indicates that the cluster will be prepared in debug mode.</param>
         /// <param name="baseImageName">Optionally specifies the base image name to use for debug mode.</param>
         /// <returns>The <see cref="ISetupController"/>.</returns>
+        /// <exception cref="KubeException">Thrown when there's a problem.</exception>
         public static ISetupController CreatePrepareController(
             ClusterDefinition           clusterDefinition, 
             string                      stateFolder, 
@@ -134,17 +135,16 @@ namespace Neon.Kube
 
             // Configure the hosting manager.
 
+            var hostingManager = new HostingManagerFactory(() => HostingLoader.Initialize()).GetManager(cluster, stateFolder);
+
+            if (hostingManager == null)
+            {
+                throw new KubeException($"No hosting manager for the [{cluster.Definition.Hosting.Environment}] environment could be located.");
+            }
+
             controller.AddGlobalStep("configure: hosting manager",
                 controller =>
                 {
-                    var hostingManager = new HostingManagerFactory(() => HostingLoader.Initialize()).GetManager(cluster, stateFolder);
-
-                    if (hostingManager == null)
-                    {
-                        controller.LogError($"No hosting manager for the [{cluster.Definition.Hosting.Environment}] environment could be located.");
-                        return;
-                    }
-
                     hostingManager.MaxParallel = maxParallel;
 
                     if (hostingManager.RequiresAdminPrivileges)
@@ -301,6 +301,24 @@ namespace Neon.Kube
                         }
                     }
                 });
+
+            controller.AddWaitUntilOnlineStep(timeout: TimeSpan.FromMinutes(15));
+            controller.AddNodeStep("node OS verify", (state, node) => node.VerifyNodeOS());
+            controller.AddNodeStep("node credentials",
+                (state, node) =>
+                {
+                    node.ConfigureSshKey(controller);
+                });
+            controller.AddNodeStep("node prepare",
+                (state, node) =>
+                {
+                    node.PrepareNode(controller);
+                });
+
+            // Some hosting managers may have to some additional work after
+            // the cluster has been otherwise prepared.
+
+            hostingManager.AddPostPrepareSteps(controller);
 
             return controller;
         }

@@ -236,23 +236,20 @@ OPTIONS:
 
             // Configure the setup controller state.
 
-            controller.Add(KubeSetup.DebugModeProperty, debug);
-            controller.Add(KubeSetup.ReleaseModeProperty, Program.IsRelease);
-            controller.Add(KubeSetup.MaintainerModeProperty, !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("NC_ROOT")));
-            controller.Add(KubeSetup.ClusterProxyProperty, cluster);
-            controller.Add(KubeSetup.ClusterLoginProperty, clusterLogin);
-            controller.Add(KubeSetup.HostingManagerProperty, hostingManager);
-            controller.Add(KubeSetup.HostingEnvironmentProperty, hostingManager.HostingEnvironment);
+            controller.Add(KubeSetupProperty.DebugMode, debug);
+            controller.Add(KubeSetupProperty.ReleaseMode, Program.IsRelease);
+            controller.Add(KubeSetupProperty.MaintainerMode, !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("NC_ROOT")));
+            controller.Add(KubeSetupProperty.ClusterProxy, cluster);
+            controller.Add(KubeSetupProperty.ClusterLogin, clusterLogin);
+            controller.Add(KubeSetupProperty.HostingManager, hostingManager);
+            controller.Add(KubeSetupProperty.HostingEnvironment, hostingManager.HostingEnvironment);
 
             // Configure the setup steps.
 
             controller.AddGlobalStep("download binaries", async controller => await KubeSetup.InstallWorkstationBinariesAsync(controller));
             controller.AddWaitUntilOnlineStep("connect");
             controller.AddNodeStep("verify OS", (controller, node) => node.VerifyNodeOS());
-
-            // $todo(jefflill): We don't support Linux distribution upgrades yet.
-            controller.AddNodeStep("node basics", (controller, node) => node.BaseInitialize(controller, upgradeLinux: false));
-
+            controller.AddNodeStep("node basics", (controller, node) => node.BaseInitialize(controller, upgradeLinux: false));  // $todo(jefflill): We don't support Linux distribution upgrades yet.
             controller.AddNodeStep("setup NTP", (controller, node) => node.SetupConfigureNtp(controller));
 
             // Write the operation begin marker to all cluster node logs.

@@ -82,7 +82,7 @@ namespace Neon.Kube
         private List<NodeSshProxy<NodeMetadata>>    nodes;
         private List<Step>                          steps;
         private Step                                currentStep;
-        private bool                                error;
+        private bool                                isFaulted;
         private bool                                hasNodeSteps;
         private StringBuilder                       sbDisplay;
         private string                              previousDisplay;
@@ -513,7 +513,7 @@ namespace Neon.Kube
                         }
                     }
 
-                    if (error)
+                    if (isFaulted)
                     {
                         cluster?.LogLine(cluster.LogFailedMarker);
 
@@ -635,7 +635,7 @@ namespace Neon.Kube
 
             try
             {
-                if (error)
+                if (isFaulted)
                 {
                     return false;
                 }
@@ -836,9 +836,9 @@ namespace Neon.Kube
                     Thread.Sleep(TimeSpan.FromMilliseconds(100));
                 }
 
-                error = error || stepNodes.FirstOrDefault(n => n.IsFaulted) != null;
+                isFaulted = isFaulted || stepNodes.FirstOrDefault(n => n.IsFaulted) != null;
 
-                if (error)
+                if (isFaulted)
                 {
                     step.Status = StepStatus.Failed;
 
@@ -1113,7 +1113,7 @@ namespace Neon.Kube
         /// </summary>
         public void ThrowOnError()
         {
-            if (error)
+            if (isFaulted)
             {
                 throw new KubeException($"[{nodes.Count(n => n.IsFaulted)}] nodes are faulted.");
             }
@@ -1231,7 +1231,8 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(message), nameof(message));
 
-            this.error = true;
+            this.isFaulted = true;
+            this.LastError = message;
 
             if (ProgressEvent != null)
             {
@@ -1264,5 +1265,11 @@ namespace Neon.Kube
                     });
             }
         }
+
+        /// <inheritdoc/>
+        public bool IsFaulted => isFaulted || nodes.Any(node => node.IsFaulted);
+
+        /// <inheritdoc/>
+        public string LastError { get; private set; }
     }
 }

@@ -513,17 +513,17 @@ Server Requirements:
 
                 // Configure the setup controller state.
 
-                controller.Add(KubeSetup.DebugModeProperty, debug);
+                controller.Add(KubeSetupProperty.DebugMode, debug);
 
                 if (debug)
                 {
-                    controller.Add(KubeSetup.BaseImageNameProperty, baseImageName);
+                    controller.Add(KubeSetupProperty.BaseImageName, baseImageName);
                 }
 
-                controller.Add(KubeSetup.ClusterProxyProperty, cluster);
-                controller.Add(KubeSetup.ClusterLoginProperty, clusterLogin);
-                controller.Add(KubeSetup.HostingManagerProperty, hostingManager);
-                controller.Add(KubeSetup.HostingEnvironmentProperty, hostingManager.HostingEnvironment);
+                controller.Add(KubeSetupProperty.ClusterProxy, cluster);
+                controller.Add(KubeSetupProperty.ClusterLogin, clusterLogin);
+                controller.Add(KubeSetupProperty.HostingManager, hostingManager);
+                controller.Add(KubeSetupProperty.HostingEnvironment, hostingManager.HostingEnvironment);
 
                 // Configure the setup steps.
 

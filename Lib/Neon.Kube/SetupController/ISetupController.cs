@@ -117,6 +117,17 @@ namespace Neon.Kube
         void LogError(LinuxSshProxy node, string message);
 
         /// <summary>
+        /// Indicates whether cluster setup is faulted due to a global problem or when
+        /// any node is faulted.
+        /// </summary>
+        bool IsFaulted { get; }
+
+        /// <summary>
+        /// Returns the last error message logged by <see cref="LogError(string)"/.
+        /// </summary>
+        string LastError { get; }
+
+        /// <summary>
         /// Performs the setup operation steps in the in the order they were added to the controller.
         /// </summary>
         /// <param name="leaveNodesConnected">Pass <c>true</c> leave the node proxies connected.</param>

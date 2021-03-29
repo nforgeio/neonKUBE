@@ -57,7 +57,7 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
 
-            var cluster = controller.Get<ClusterProxy>(ClusterProxyProperty);
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
             controller.LogProgress(node, verb: "configure", message: "etc high availability");
 
@@ -185,7 +185,7 @@ spec:
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var cluster = controller.Get<ClusterProxy>(ClusterProxyProperty);
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
             await master.InvokeIdempotentAsync("setup/label-nodes",
                 async () =>
@@ -258,10 +258,10 @@ spec:
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentException>(maxParallel > 0, nameof(maxParallel));
 
-            var cluster      = controller.Get<ClusterProxy>(ClusterProxyProperty);
-            var clusterLogin = controller.Get<ClusterLogin>(ClusterLoginProperty);
+            var cluster      = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var clusterLogin = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
             var master       = cluster.FirstMaster;
-            var debugMode    = controller.Get<bool>(KubeSetup.DebugModeProperty);
+            var debugMode    = controller.Get<bool>(KubeSetupProperty.DebugMode);
 
             cluster.ClearStatus();
 
@@ -347,9 +347,9 @@ spec:
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetup.HostingEnvironmentProperty);
-            var cluster            = controller.Get<ClusterProxy>(ClusterProxyProperty);
-            var clusterLogin       = controller.Get<ClusterLogin>(ClusterLoginProperty);
+            var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
+            var cluster            = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var clusterLogin       = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
 
             master.InvokeIdempotent("setup/cluster-init",
                 () =>
@@ -757,8 +757,8 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                 {
                     controller.LogProgress(firstMaster, verb: "configure", message: "workstation");
 
-                    var cluster        = controller.Get<ClusterProxy>(ClusterProxyProperty);
-                    var clusterLogin   = controller.Get<ClusterLogin>(ClusterLoginProperty);
+                    var cluster        = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+                    var clusterLogin   = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
                     var kubeConfigPath = KubeHelper.KubeConfigPath;
 
                     // Update kubeconfig.
@@ -1215,8 +1215,8 @@ subjects:
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var cluster      = controller.Get<ClusterProxy>(ClusterProxyProperty);
-            var clusterLogin = controller.Get<ClusterLogin>(ClusterLoginProperty);
+            var cluster      = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var clusterLogin = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
 
             master.InvokeIdempotent("setup/kube-dashboard",
                 () =>
@@ -1592,7 +1592,7 @@ spec:
 
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
-            var cluster = controller.Get<ClusterProxy>(ClusterProxyProperty);
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var master  = cluster.FirstMaster;
 
             await master.InvokeIdempotentAsync("setup/taint-nodes",
@@ -1726,7 +1726,7 @@ spec:
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var cluster = controller.Get<ClusterProxy>(ClusterProxyProperty);
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
             await master.InvokeIdempotentAsync("setup/openebs-all",
                 async () =>
@@ -2070,7 +2070,7 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var cluster = controller.Get<ClusterProxy>(ClusterProxyProperty);
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
             await master.InvokeIdempotentAsync("setup/monitoring-etc",
                 async () =>
@@ -2119,7 +2119,7 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var cluster = controller.Get<ClusterProxy>(ClusterProxyProperty);
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
             await master.InvokeIdempotentAsync("setup/monitoring-prometheus",
                 async () =>
@@ -2191,7 +2191,7 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var cluster = controller.Get<ClusterProxy>(ClusterProxyProperty);
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
             await master.InvokeIdempotentAsync("setup/monitoring-prometheus-ready",
                 async () =>
@@ -2224,7 +2224,7 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/monitoring-cortex-all",
                 async () =>
                 {
-                    var cluster = controller.Get<ClusterProxy>(ClusterProxyProperty);
+                    var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
                     var values  = new List<KeyValuePair<string, object>>();
 
                     if (cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count() >= 3)
@@ -2283,7 +2283,7 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var cluster = controller.Get<ClusterProxy>(ClusterProxyProperty);
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
             await master.InvokeIdempotentAsync("setup/monitoring-loki",
                 async () =>
@@ -2332,7 +2332,7 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var cluster = controller.Get<ClusterProxy>(ClusterProxyProperty);
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
             await master.InvokeIdempotentAsync("setup/monitoring-promtail",
                 async () =>
@@ -2434,7 +2434,7 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/minio-all",
                 async () =>
                 {
-                    var cluster = controller.Get<ClusterProxy>(ClusterProxyProperty);
+                    var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
                     if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2)
                     {
@@ -2508,7 +2508,7 @@ $@"- name: StorageType
 
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
-            var cluster = controller.Get<ClusterProxy>(ClusterProxyProperty);
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var master  = cluster.FirstMaster;
             var tasks   = new List<Task>();
 
@@ -2611,7 +2611,7 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var cluster = controller.Get<ClusterProxy>(ClusterProxyProperty);
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
             var adminPassword = NeonHelper.GetCryptoRandomPassword(20);
 
@@ -2824,7 +2824,7 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var cluster = controller.Get<ClusterProxy>(ClusterProxyProperty);
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
             var values = new List<KeyValuePair<string, object>>();
 
@@ -2833,8 +2833,7 @@ $@"- name: StorageType
             values.Add(new KeyValuePair<string, object>($"prometheus.image.organization", KubeConst.NeonContainerRegistery(controller)));
             values.Add(new KeyValuePair<string, object>($"manager.image.organization", KubeConst.NeonContainerRegistery(controller)));
 
-            if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2
-                || cluster.Definition.Nodes.Count() == 1)
+            if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2 || cluster.Definition.Nodes.Count() == 1)
             {
                 await CreateHostPathStorageClass(controller, master, "neon-internal-citus");
                 values.Add(new KeyValuePair<string, object>($"worker.resources.requests.memory", "64Mi"));

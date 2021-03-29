@@ -24,7 +24,7 @@ namespace Neon.Kube
     /// <summary>
     /// Uploads a file.
     /// </summary>
-    public class UploadStep : ConfigStep
+    public class UploadStep : SetupStep
     {
         //---------------------------------------------------------------------
         // Static members

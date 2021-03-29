@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ConfigStepList.cs
+// FILE:	    SetupStep.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -29,26 +29,23 @@ using Neon.Common;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Implements a list of <see cref="ConfigStep"/>s to be performed
-    /// on a cluster.
+    /// The <c>abstract</c> base class for node configuration step implementations.
     /// </summary>
-    public class ConfigStepList : List<ConfigStep>
+    public abstract class SetupStep
     {
         /// <summary>
-        /// Adds a set of configuration steps to the list.
+        /// Implements the configuration step.
         /// </summary>
-        /// <param name="steps">The steps.</param>
-        public void Add(IEnumerable<ConfigStep> steps)
-        {
-            if (steps == null)
-            {
-                return;
-            }
+        /// <param name="cluster">The cluster proxy instance.</param>
+        public abstract void Run(ClusterProxy cluster);
 
-            foreach (var step in steps)
-            {
-                base.Add(step);
-            }
+        /// <summary>
+        /// Pause briefly to allow the configuration UI a chance to display
+        /// step information.
+        /// </summary>
+        protected void StatusPause()
+        {
+            Thread.Sleep(TimeSpan.FromMilliseconds(500));
         }
     }
 }
