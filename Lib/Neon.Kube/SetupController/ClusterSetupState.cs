@@ -93,6 +93,11 @@ namespace Neon.Kube
         public IEnumerable<NodeSetupState> Nodes => nameToNodeState.Values;
 
         /// <summary>
+        /// Returns information about the setup steps in order of execution. 
+        /// </summary>
+        public List<SetupStepState> Steps { get; private set; } = new List<SetupStepState>();
+
+        /// <summary>
         /// Updates the cluster setup state from the related <see cref="ClusterProxy"/>.  This
         /// also detects whether the state has changed since the previous <see cref="Update"/>
         /// call and returns a clone of the new state on the change.

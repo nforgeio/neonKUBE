@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    SetupStep.cs
+// FILE:	    StepStatus.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -15,37 +15,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-
-using Neon.Common;
-
 namespace Neon.Kube
 {
     /// <summary>
-    /// The <c>abstract</c> base class for node configuration step implementations.
+    /// Enumerates possible status codes for a cluster setup step.
     /// </summary>
-    public abstract class SetupStep
+    public enum StepStatus
     {
         /// <summary>
-        /// Implements the configuration step.
+        /// The step is awaiting execution.
         /// </summary>
-        /// <param name="cluster">The cluster proxy instance.</param>
-        public abstract void Run(ClusterProxy cluster);
+        Pending,
 
         /// <summary>
-        /// Pause briefly to allow the configuration UI a chance to display
-        /// step information.
+        /// The step is running.
         /// </summary>
-        protected void StatusPause()
-        {
-            Thread.Sleep(TimeSpan.FromMilliseconds(500));
-        }
+        Running,
+
+        /// <summary>
+        /// The step has completed successfully.
+        /// </summary>
+        Done,
+
+        /// <summary>
+        /// The step failed.
+        /// </summary>
+        Failed
     }
 }

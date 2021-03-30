@@ -36,13 +36,30 @@ namespace Neon.Kube
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="step">The setup step.</param>
-        /// <param name="isCurrent">Indicates whether this is the currently executing step.</param>
-        internal SetupStepState(SetupStep step, bool isCurrent)
+        /// <param name="stepLabel">The setup step label.</param>
+        /// <param name="stepStatus">The current status for the step..</param>
+        /// <param name="runTime">Specifies the runtime for the step or <see cref="TimeSpan.Zero"/> when the step hasn't been executed yet.</param>
+        internal SetupStepState(string stepLabel, StepStatus stepStatus, TimeSpan runTime)
         {
-            Covenant.Requires<ArgumentNullException>(step != null, nameof(step));
+            this.Label   = string.IsNullOrEmpty(stepLabel) ? "<unlabeled step>" : stepLabel;
+            this.Status  = stepStatus;
+            this.Runtime = runTime > TimeSpan.Zero ? runTime : TimeSpan.Zero;
         }
 
-        public string 
+        /// <summary>
+        /// Returns the step label.
+        /// </summary>
+        public string Label { get; private set; }
+
+        /// <summary>
+        /// Returns the step status.
+        /// </summary>
+        public StepStatus Status { get; private set; }
+
+        /// <summary>
+        /// Returns how long the step has been executing for the current step or how
+        /// long completed steps too to run.
+        /// </summary>
+        public TimeSpan Runtime { get; private set; }
     }
 }

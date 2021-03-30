@@ -123,7 +123,7 @@ namespace Neon.Kube
         bool IsFaulted { get; }
 
         /// <summary>
-        /// Returns the last error message logged by <see cref="LogError(string)"/.
+        /// Returns the last error message logged by <see cref="LogError(string)"/>.
         /// </summary>
         string LastError { get; }
 

@@ -47,14 +47,6 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Private types
 
-        private enum StepStatus
-        {
-            None,
-            Running,
-            Done,
-            Failed
-        }
-
         private class Step
         {
             public int                                                          Number;
@@ -1002,7 +994,7 @@ namespace Neon.Kube
             {
                 switch (step.Status)
                 {
-                    case StepStatus.None:
+                    case StepStatus.Pending:
 
                         sbDisplay.AppendLine($"     {FormatStepNumber(step.Number)}{step.Label}");
                         break;
