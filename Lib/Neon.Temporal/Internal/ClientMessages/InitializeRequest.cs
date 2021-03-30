@@ -54,8 +54,8 @@ namespace Neon.Temporal.Internal
         }
 
         /// <summary>
-        /// The port where the Temporal client is listening for proxy messages
-        /// send by the <b>temporal-proxy</b>.
+        /// The port where the Temporal client is listening for messages
+        /// sent by the <b>temporal-proxy</b>.
         /// </summary>
         public int LibraryPort
         {

@@ -43,14 +43,17 @@ namespace TestCommon
             if (framework.StartsWith(".NET Core"))
             {
                 Assert.Equal(NetFramework.Core, NeonHelper.Framework);
+                return;
             }
             else if (framework.StartsWith(".NET Framework"))
             {
                 Assert.Equal(NetFramework.NetFramework, NeonHelper.Framework);
+                return;
             }
             else if (framework.StartsWith(".NET Native"))
             {
                 Assert.Equal(NetFramework.Native, NeonHelper.Framework);
+                return;
             }
 
             // .NET 5.0 and beyond will have framework descriptions like
@@ -61,7 +64,7 @@ namespace TestCommon
 
             var netRegex = new Regex(@"^.NET \d");
 
-            if (netRegex.IsMatch(RuntimeInformation.FrameworkDescription))
+            if (netRegex.IsMatch(framework))
             {
                 Assert.Equal(NetFramework.Net, NeonHelper.Framework);
             }

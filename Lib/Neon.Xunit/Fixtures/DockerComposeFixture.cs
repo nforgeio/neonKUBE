@@ -165,12 +165,7 @@ namespace Neon.Xunit
                 }
             }
 
-            if (networkNames.Count > 0)
-            {
-                result = NeonHelper.ExecuteCapture(NeonHelper.DockerCli, new object[] { "network", "rm", networkNames });
-
-                Covenant.Assert(result.ExitCode == 0, result.ErrorText);
-            }
+            NeonHelper.ExecuteCapture(NeonHelper.DockerCli, new object[] { "network", "rm", networkNames });
         }
 
         //---------------------------------------------------------------------
