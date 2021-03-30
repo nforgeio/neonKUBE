@@ -44,7 +44,7 @@ namespace TestCadence
 {
     public partial class Test_EndToEnd
     {
-        [SlowFact]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Base_Ping()
         {
@@ -71,7 +71,7 @@ namespace TestCadence
             Console.WriteLine($"Transactions/sec: {tps}");
         }
 
-        [SlowFact]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Base_PingAttack()
         {
