@@ -23,14 +23,9 @@
 
 . $env:NF_ROOT/Powershell/includes.ps1
 
-# Handle permission elevation if necessary.
+# This needs to run with elevated privileges.
 
-if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))
-{
-    # Relaunch as an elevated process:
-    Start-Process powershell.exe "-file",('"{0}"' -f $MyInvocation.MyCommand.Path) -Verb RunAs
-    exit
-}
+RequestAdminPermissions
 
 # Retrieve any necessary credentials.
 
