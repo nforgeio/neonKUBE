@@ -199,13 +199,17 @@ namespace Neon.Kube
         /// <summary>
         /// Performs the setup operation steps in the in the order they were added to the controller.
         /// </summary>
-        /// <param name="leaveNodesConnected">Pass <c>true</c> leave the node proxies connected.</param>
+        /// <param name="reportingController">
+        /// Optionally forward status updates to this controller.  This is useful when implementing
+        /// sub-controllers but is a bit of a hack.
+        /// </param>
+        /// <param name="leaveNodesConnected">Optionally leave the node proxies connected after setup completed.</param>
         /// <returns><c>true</c> if all steps completed successfully.</returns>
-        bool Run(bool leaveNodesConnected = false);
+        bool Run(ISetupController reportingController = null, bool leaveNodesConnected = false);
 
         /// <summary>
         /// Adds an <see cref="IDisposable"/> instance to the controller so that they
-        /// can be properly disposed when <see cref="Run(bool)"/> exits.
+        /// can be properly disposed when <see cref="Run(ISetupController, bool)"/> exits.
         /// </summary>
         /// <param name="disposable"></param>
         void AddDisposable(IDisposable disposable);

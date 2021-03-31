@@ -88,7 +88,7 @@ namespace Neon.Kube
         // Instance members
 
         private ClusterProxy                cluster;
-        private SetupController<XenClient>  controller;
+        private SetupController<XenClient>  xenController;
         private string                      driveTemplatePath;
         private string                      logFolder;
         private List<XenClient>             xenHosts;
@@ -162,7 +162,6 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(orgSshPassword), nameof(orgSshPassword));
             Covenant.Assert(cluster != null, $"[{nameof(XenServerHostingManager)}] was created with the wrong constructor.");
 
-            this.controller        = (SetupController<XenClient>)controller;
             this.secureSshPassword = secureSshPassword;
 
             if (IsProvisionNOP)
@@ -233,25 +232,23 @@ namespace Neon.Kube
             // speed up cluster setup.  This works because each XenServer
             // is essentially independent from the others.
 
-            controller = new SetupController<XenClient>($"Provisioning [{cluster.Definition.Name}] cluster", xenSshProxies)
+            xenController = new SetupController<XenClient>($"Provisioning [{cluster.Definition.Name}] cluster", xenSshProxies)
             {
                 MaxParallel = this.MaxParallel
             };
 
-            throw new NotImplementedException("$todo(jefflill): iMPLEMENT THIS!");
-             
-            //controller.AddWaitUntilOnlineStep();
+            xenController.AddWaitUntilOnlineStep();
 
-            //controller.AddNodeStep("verify readiness", (controller, node) => VerifyReady(node));
-            //controller.AddNodeStep("virtual machine template", (controller, node) => CheckVmTemplate(node));
-            //controller.AddNodeStep("create virtual machines", (controller, node) => ProvisionVM(node));
-            //controller.AddGlobalStep(string.Empty, controller => Finish(), quiet: true);
+            xenController.AddNodeStep("verify readiness", (controller, node) => VerifyReady(node));
+            xenController.AddNodeStep("virtual machine template", (controller, node) => CheckVmTemplate(node));
+            xenController.AddNodeStep("create virtual machines", (controller, node) => ProvisionVM(node));
+            xenController.AddGlobalStep(string.Empty, controller => Finish(), quiet: true);
 
-            //if (!controller.Run())
-            //{
-            //    Console.Error.WriteLine("*** ERROR: One or more configuration steps failed.");
-            //    return await Task.FromResult(false);
-            //}
+            if (!xenController.Run())
+            {
+                Console.Error.WriteLine("*** ERROR: One or more configuration steps failed.");
+                return await Task.FromResult(false);
+            }
 
             return await Task.FromResult(true);
         }
@@ -381,7 +378,7 @@ namespace Neon.Kube
         {
             var xenHost      = xenSshProxy.Metadata;
             var templateName = $"neonkube-{KubeVersions.NeonKubeVersion}";
-            var nodeImageUri = KubeDownloads.GetNodeImageUri(this.HostingEnvironment, controller);
+            var nodeImageUri = KubeDownloads.GetNodeImageUri(this.HostingEnvironment, xenController);
 
             xenSshProxy.Status = "check: template";
 
@@ -393,14 +390,14 @@ namespace Neon.Kube
                 // going to name the file the same as the file name from the URI and also that 
                 // templates are considered to be invariant.
 
-                var driveTemplateUri = new Uri(KubeDownloads.GetNodeImageUri(this.HostingEnvironment, controller));
+                var driveTemplateUri = new Uri(KubeDownloads.GetNodeImageUri(this.HostingEnvironment, xenController));
                 var driveTemplateName = driveTemplateUri.Segments.Last();
 
                 driveTemplatePath = Path.Combine(KubeHelper.NodeImageFolder, driveTemplateName);
 
                 if (!File.Exists(driveTemplatePath))
                 {
-                    controller.SetGlobalStepStatus($"Download node image VHDX: [{nodeImageUri}]");
+                    xenController.SetGlobalStepStatus($"Download node image VHDX: [{nodeImageUri}]");
 
                     Task.Run(
                         async () =>
@@ -445,11 +442,11 @@ namespace Neon.Kube
                                                 {
                                                     var percentComplete = (int)(((double)fileStream.Length / (double)contentLength) * 100.0);
 
-                                                    controller.SetGlobalStepStatus($"Downloading VHDX: [{percentComplete}%] [{nodeImageUri}]");
+                                                    xenController.SetGlobalStepStatus($"Downloading VHDX: [{percentComplete}%] [{nodeImageUri}]");
                                                 }
                                                 else
                                                 {
-                                                    controller.SetGlobalStepStatus($"Downloading VHDX: [{fileStream.Length} bytes] [{nodeImageUri}]");
+                                                    xenController.SetGlobalStepStatus($"Downloading VHDX: [{fileStream.Length} bytes] [{nodeImageUri}]");
                                                 }
                                             }
                                         }
@@ -471,7 +468,7 @@ namespace Neon.Kube
 
                         }).Wait();
 
-                    controller.SetGlobalStepStatus();
+                    xenController.SetGlobalStepStatus();
 
                     xenHost.Template.ImportVmTemplate(driveTemplatePath, templateName, cluster.Definition.Hosting.XenServer.StorageRepository);
                 }

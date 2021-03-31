@@ -403,7 +403,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public bool Run(bool leaveNodesConnected = false)
+        public bool Run(ISetupController reportingController = null, bool leaveNodesConnected = false)
         {
             var cluster = Get<ClusterProxy>(KubeSetupProperty.ClusterProxy, null);
 
