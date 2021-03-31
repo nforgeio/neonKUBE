@@ -442,35 +442,9 @@ Server Requirements:
                     }
                 }
 
-                throw new NotImplementedException("$todo(jefflill): IMPLEMENT THIS!");
-
-                //if (!hostingManager.ProvisionAsync(controller, clusterLogin.SshPassword, orgSshPassword).Result)
-                //{
-                //    Program.Exit(1);
-                //}
-
                 // Ensure that the nodes have valid IP addresses.
 
                 cluster.Definition.ValidatePrivateNodeAddresses();
-
-                var ipAddressToServer = new Dictionary<IPAddress, NodeSshProxy<NodeDefinition>>();
-
-                foreach (var node in cluster.Nodes.OrderBy(n => n.Name))
-                {
-                    NodeSshProxy<NodeDefinition> duplicateServer;
-
-                    if (node.Address == IPAddress.Any)
-                    {
-                        throw new ArgumentException($"Node [{node.Name}] has not been assigned an IP address.");
-                    }
-
-                    if (ipAddressToServer.TryGetValue(node.Address, out duplicateServer))
-                    {
-                        throw new ArgumentException($"Nodes [{duplicateServer.Name}] and [{node.Name}] have the same IP address [{node.Metadata.Address}].");
-                    }
-
-                    ipAddressToServer.Add(node.Address, node);
-                }
 
                 // We're going to use the masters as package caches unless the user
                 // has specified something else.
@@ -508,8 +482,13 @@ Server Requirements:
                     {
                         ShowStatus  = !Program.Quiet,
                         MaxParallel = Program.MaxParallel,
-                        ShowElapsed = true
+                        ShowRuntime = true
                     };
+
+                if (!hostingManager.ProvisionAsync(controller, clusterLogin.SshPassword, orgSshPassword).Result)
+                {
+                    Program.Exit(1);
+                }
 
                 // Configure the setup controller state.
 

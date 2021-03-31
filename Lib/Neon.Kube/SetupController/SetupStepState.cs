@@ -15,51 +15,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-
-using Neon.Common;
-
 namespace Neon.Kube
 {
     /// <summary>
-    /// Holds state information about a setup step.
+    /// Enumerates possible status codes for a cluster setup step.
     /// </summary>
-    public class SetupStepState
+    public enum SetupStepState
     {
         /// <summary>
-        /// Constructor.
+        /// The step is awaiting execution.
         /// </summary>
-        /// <param name="stepLabel">The setup step label.</param>
-        /// <param name="stepStatus">The current status for the step..</param>
-        /// <param name="runTime">Specifies the runtime for the step or <see cref="TimeSpan.Zero"/> when the step hasn't been executed yet.</param>
-        internal SetupStepState(string stepLabel, StepStatus stepStatus, TimeSpan runTime)
-        {
-            this.Label   = string.IsNullOrEmpty(stepLabel) ? "<unlabeled step>" : stepLabel;
-            this.Status  = stepStatus;
-            this.Runtime = runTime > TimeSpan.Zero ? runTime : TimeSpan.Zero;
-        }
+        Pending,
 
         /// <summary>
-        /// Returns the step label.
+        /// The step is running.
         /// </summary>
-        public string Label { get; private set; }
+        Running,
 
         /// <summary>
-        /// Returns the step status.
+        /// The step has completed successfully.
         /// </summary>
-        public StepStatus Status { get; private set; }
+        Done,
 
         /// <summary>
-        /// Returns how long the step has been executing for the current step or how
-        /// long completed steps too to run.
+        /// The step failed.
         /// </summary>
-        public TimeSpan Runtime { get; private set; }
+        Failed
     }
 }

@@ -58,7 +58,8 @@ namespace Neon.Kube
     }
 
     /// <summary>
-    /// 
+    /// Used for sending progress messages from an <see cref="ISetupController"/> to listeners.
     /// </summary>
+    /// <param name="message">The status message.</param>
     public delegate void SetupProgressDelegate(SetupProgressMessage message);
 }

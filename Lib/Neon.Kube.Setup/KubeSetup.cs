@@ -314,12 +314,12 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Connects to a Kubernetes cluster if it already exists.  This sets the <see cref="K8sClientProperty"/>
+        /// Connects to a Kubernetes cluster if it already exists.  This sets the <see cref="KubeSetupProperty.K8sClient"/>
         /// property in the setup controller state when Kubernetes is running and a connection has not already 
         /// been established.
         /// </para>
         /// <note>
-        /// The <see cref="K8sClientProperty"/> will not be set when Kubernetes has not been started, so 
+        /// The <see cref="KubeSetupProperty.K8sClient"/> will not be set when Kubernetes has not been started, so 
         /// <see cref="ObjectDictionary.Get{TValue}(string)"/> calls for this property will fail when the
         /// cluster has not been connected yet, which will be useful for debugging setup steps that require
         /// a connection but this hasn't happened yet.

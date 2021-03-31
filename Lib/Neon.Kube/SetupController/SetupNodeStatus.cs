@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    NodeSetupState.cs
+// FILE:	    SetupNodeStatus.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -24,6 +24,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Newtonsoft.Json;
+
 using Neon.Common;
 
 namespace Neon.Kube
@@ -31,7 +33,7 @@ namespace Neon.Kube
     /// <summary>
     /// Describes the current state of a node during cluster setup.
     /// </summary>
-    public struct NodeSetupState
+    public class SetupNodeStatus
     {
         private string      status;
         private bool        isReady;
@@ -39,13 +41,15 @@ namespace Neon.Kube
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="nodeDefinition">The node definition.</param>
-        internal NodeSetupState(NodeDefinition nodeDefinition)
+        /// <param name="name">The node name.</param>
+        /// <param name="metadata">The node metadata.</param>
+        internal SetupNodeStatus(string name, object metadata)
         {
-            Covenant.Requires<ArgumentNullException>(nodeDefinition != null, nameof(nodeDefinition));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+            Covenant.Requires<ArgumentNullException>(metadata != null, nameof(metadata));
 
-            this.Name      = nodeDefinition.Name;
-            this.Role      = nodeDefinition.Role;
+            this.Name      = name;
+            this.Metadata  = metadata;
             this.isReady   = false;
             this.IsFaulted = false;
             this.status    = string.Empty;
@@ -55,11 +59,6 @@ namespace Neon.Kube
         /// Returns the node name.
         /// </summary>
         public string Name { get; private set; }
-
-        /// <summary>
-        /// Returns the node's role in the cluster, one of the <see cref="NodeRole"/> values.
-        /// </summary>
-        public string Role { get; private set; }
 
         /// <summary>
         /// Indicates that the node has successfully  completed the current setup step.
@@ -86,10 +85,17 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Returns the node metadata as an object.  The actual type can be determined
+        /// by examining <see cref="ISetupController.NodeMetadataType"/>.
+        /// </summary>
+        [JsonIgnore]
+        public object Metadata { get; internal set; }
+
+        /// <summary>
         /// Copies the state properties of this instance to another.
         /// </summary>
         /// <param name="target">The target instance.</param>
-        internal void CopyTo(NodeSetupState target)
+        internal void CopyTo(SetupNodeStatus target)
         {
             target.isReady   = this.isReady;
             target.IsFaulted = this.IsFaulted;

@@ -52,6 +52,75 @@ namespace Neon.Kube
         string LogFailedMarker { get; set; }
 
         /// <summary>
+        /// Returns the operation title.
+        /// </summary>
+        string OperationTitle { get; }
+
+        /// <summary>
+        /// Specifies whether the class should print setup status to the console.
+        /// This defaults to <c>false</c>.
+        /// </summary>
+        bool ShowStatus { get; set; }
+
+        /// <summary>
+        /// Specifies whether that node status will be displayed.  This
+        /// defaults to <c>true</c>.
+        ///</summary>
+        bool ShowNodeStatus { get; set; }
+
+        /// <summary>
+        /// Specifies the maximum number of setup steps to be displayed.
+        /// This defaults to <b>5</b>.  You can set <b>0</b> to allow an 
+        /// unlimited number of steps may be displayed.
+        /// </summary>
+        int MaxDisplayedSteps { get; set; }
+
+        /// <summary>
+        /// The maximum number of nodes that will execute setup steps in parallel.  This
+        /// defaults to effectively unconstrained.
+        /// </summary>
+        int MaxParallel { get; set; }
+
+        /// <summary>
+        /// Returns the number of setup steps.
+        /// </summary>
+        int StepCount { get; }
+
+        /// <summary>
+        /// Returns the time spent performing setup after setup has completed (or failed).
+        /// </summary>
+        TimeSpan Runtime { get; }
+
+        /// <summary>
+        /// Optionally displays the elapsed time for each step as well as the overall
+        /// operation when setup completes (or fails).
+        /// </summary>
+        bool ShowRuntime { get; set; }
+
+        /// <summary>
+        /// <para>
+        /// Raised periodically when the overall status changes during cluster setup.
+        /// </para>
+        /// <note>
+        /// This event will be raised on a background thread.
+        /// </note>
+        /// </summary>
+        event SetupStatusChangedDelegate StatusChangedEvent;
+
+        /// <summary>
+        /// <para>
+        /// Raised when individual progress/error messages are received from setup steps.
+        /// This is used in situations where only limited status needs to be
+        /// displayed or logged.
+        /// </para>
+        /// <note>
+        /// This event will be raised on the same thread that logged progress, typically
+        /// the thread running the step.
+        /// </note>
+        /// </summary>
+        event SetupProgressDelegate ProgressEvent;
+
+        /// <summary>
         /// Logs a progress message.
         /// </summary>
         /// <param name="message">The message.</param>
@@ -146,5 +215,28 @@ namespace Neon.Kube
         /// </summary>
         /// <returns>An the <see cref="NodeLog"/> values.</returns>
         IEnumerable<NodeLog> GetNodeLogs();
+
+        /// <summary>
+        /// Returns <c>true</c> if the controller has an nodes with setup steps.
+        /// </summary>
+        bool HasNodeSteps { get; }
+
+        /// <summary>
+        /// Returns the <see cref="SetupController{NodeMetadata}"/>'s node metadata type.
+        /// </summary>
+        Type NodeMetadataType { get; }
+
+        /// <summary>
+        /// Returns a <see cref="HashSet{T}"/> with the names of the cluster nodes participating
+        /// in the internal node step passed.  This step is available as <see cref="SetupStepStatus.InternalStep"/>.
+        /// </summary>
+        /// <param name="internalStep">The internal node step.</param>
+        /// <returns>The set of names affected by the setup sstep.</returns>
+        HashSet<string> GetStepNodeNames(object internalStep);
+
+        /// <summary>
+        /// Returns any status for the overall setup operation.
+        /// </summary>
+        public string GlobalStatus { get; }
     }
 }

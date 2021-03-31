@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    StepStatus.cs
+// FILE:	    SetupStatusChangedDelegate.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -15,31 +15,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Diagnostics.Contracts;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+
+using Neon.Collections;
+using Neon.Common;
+using Neon.SSH;
+
 namespace Neon.Kube
 {
     /// <summary>
-    /// Enumerates possible status codes for a cluster setup step.
+    /// Used to send changes to an <see cref="ISetupController"/>'s <see cref="SetupClusterStatus"/>
+    /// to listeners.
     /// </summary>
-    public enum StepStatus
-    {
-        /// <summary>
-        /// The step is awaiting execution.
-        /// </summary>
-        Pending,
-
-        /// <summary>
-        /// The step is running.
-        /// </summary>
-        Running,
-
-        /// <summary>
-        /// The step has completed successfully.
-        /// </summary>
-        Done,
-
-        /// <summary>
-        /// The step failed.
-        /// </summary>
-        Failed
-    }
+    /// <param name="status">The new status.</param>
+    public delegate void SetupStatusChangedDelegate(SetupClusterStatus status);
 }

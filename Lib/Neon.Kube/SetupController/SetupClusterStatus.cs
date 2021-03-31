@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterSetupState.cs
+// FILE:	    SetupClusterStatus.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -33,7 +33,7 @@ namespace Neon.Kube
     /// <summary>
     /// Describes the current state of cluster setup.
     /// </summary>
-    public class ClusterSetupState
+    public partial class SetupClusterStatus
     {
         // This can be changed to [Formatting.Indented] whil debugging.
         private const Formatting jsonFormatting = Formatting.None; 
@@ -42,26 +42,27 @@ namespace Neon.Kube
         private ISetupController                    controller;
         private ClusterProxy                        cluster;
         private bool                                isFaulted;
-        private Dictionary<string, NodeSetupState>  nameToNodeState;
+        private Dictionary<string, SetupNodeStatus> nameToNodeState;
         private string                              lastStateJson;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
-        internal ClusterSetupState(ISetupController controller)
+        internal SetupClusterStatus(ISetupController controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             this.controller      = controller;
             this.cluster         = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            this.nameToNodeState = new Dictionary<string, NodeSetupState>(StringComparer.OrdinalIgnoreCase);
+            this.nameToNodeState = new Dictionary<string, SetupNodeStatus>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var nodeDefinition in cluster.Definition.Nodes)
             {
-                nameToNodeState.Add(nodeDefinition.Name, new NodeSetupState(nodeDefinition));
+                nameToNodeState.Add(nodeDefinition.Name, new SetupNodeStatus(nodeDefinition.Name, nodeDefinition));
             }
 
+            this.GlobalStatus  = controller.GlobalStatus;
             this.lastStateJson = null;
         }
 
@@ -90,23 +91,33 @@ namespace Neon.Kube
         /// <summary>
         /// Returns the current node setup state.
         /// </summary>
-        public IEnumerable<NodeSetupState> Nodes => nameToNodeState.Values;
+        public IEnumerable<SetupNodeStatus> Nodes => nameToNodeState.Values;
 
         /// <summary>
         /// Returns information about the setup steps in order of execution. 
         /// </summary>
-        public List<SetupStepState> Steps { get; private set; } = new List<SetupStepState>();
+        public List<SetupStepStatus> Steps { get; private set; } = new List<SetupStepStatus>();
+
+        /// <summary>
+        /// Returns the currently executing step status (or <c>null</c>).
+        /// </summary>
+        public SetupStepStatus CurrentStep { get; private set; }
+
+        /// <summary>
+        /// Returns any status for the overall setup operation.
+        /// </summary>
+        public string GlobalStatus { get; private set; }
 
         /// <summary>
         /// Updates the cluster setup state from the related <see cref="ClusterProxy"/>.  This
-        /// also detects whether the state has changed since the previous <see cref="Update"/>
-        /// call and returns a clone of the new state on the change.
+        /// also detects whether the state has changed since the previous <see cref="GetUpdate"/>
+        /// call and returns a clone of the new state on any change.
         /// </summary>
         /// <returns>
-        /// A cloned copy of the <see cref="ClusterSetupState"/> when the state has changed 
+        /// A cloned copy of the <see cref="SetupClusterStatus"/> when the state has changed 
         /// since the previous call.
         /// </returns>
-        internal ClusterSetupState Update()
+        internal SetupClusterStatus GetUpdate()
         {
             lock (syncLock)
             {
@@ -151,9 +162,9 @@ namespace Neon.Kube
         /// Returns a copy of the instance.
         /// </summary>
         /// <returns>The copy.</returns>
-        private ClusterSetupState Clone()
+        private SetupClusterStatus Clone()
         {
-            var clone = new ClusterSetupState(controller)
+            var clone = new SetupClusterStatus(controller)
             {
                 IsFaulted = this.IsFaulted
             };

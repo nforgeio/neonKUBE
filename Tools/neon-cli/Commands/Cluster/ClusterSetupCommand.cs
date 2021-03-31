@@ -231,7 +231,7 @@ OPTIONS:
                 {
                     ShowStatus  = !Program.Quiet,
                     MaxParallel = Program.MaxParallel,
-                    ShowElapsed = true
+                    ShowRuntime = true
                 };
 
             // Configure the setup controller state.
