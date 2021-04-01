@@ -52,9 +52,9 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <param name="stateFolder">
-        /// Specifies the folder where operation state will be written.  This folder will be
-        /// created if it doesn't already exist and will be cleared before the operation starts
-        /// when it does exist.
+        /// Specifies the folder where operation state including logs will be written.  This folder 
+        /// will be created if it doesn't already exist and will be cleared before the operation
+        /// starts when it does exist.
         /// </param>
         /// <param name="maxParallel">
         /// Optionally specifies the maximum number of node operations to be performed in parallel.
@@ -109,6 +109,10 @@ namespace Neon.Kube
                 cluster.SecureRunOptions = RunOptions.None;
             }
 
+            // Ensure that the nodes have valid IP addresses.
+
+            cluster.Definition.ValidatePrivateNodeAddresses();
+
             // Override the cluster definition package caches when requested.
 
             if (packageCacheEndpoints != null && packageCacheEndpoints.Count() > 0)
@@ -145,8 +149,6 @@ namespace Neon.Kube
             controller.AddGlobalStep("configure: hosting manager",
                 controller =>
                 {
-                    hostingManager.MaxParallel = maxParallel;
-
                     if (hostingManager.RequiresAdminPrivileges)
                     {
                         try
@@ -241,7 +243,7 @@ namespace Neon.Kube
                         clusterLogin.SshPassword = NeonHelper.GetCryptoRandomPassword(clusterDefinition.Security.PasswordLength);
 
                         // Append a string that guarantees that the generated password meets
-                        // cloud minimum requirements.
+                        // minimum cloud requirements.
 
                         clusterLogin.SshPassword += ".Aa0";
                         clusterLogin.Save();
@@ -303,13 +305,13 @@ namespace Neon.Kube
                 });
 
             controller.AddWaitUntilOnlineStep(timeout: TimeSpan.FromMinutes(15));
-            controller.AddNodeStep("node OS verify", (state, node) => node.VerifyNodeOS());
-            controller.AddNodeStep("node credentials",
+            controller.AddNodeStep("verify node OS", (state, node) => node.VerifyNodeOS());
+            controller.AddNodeStep("configure node credentials",
                 (state, node) =>
                 {
                     node.ConfigureSshKey(controller);
                 });
-            controller.AddNodeStep("node prepare",
+            controller.AddNodeStep("prepare nodes",
                 (state, node) =>
                 {
                     node.PrepareNode(controller);
@@ -319,6 +321,10 @@ namespace Neon.Kube
             // the cluster has been otherwise prepared.
 
             hostingManager.AddPostPrepareSteps(controller);
+
+            // We need to dispose this after the setup controller runs.
+
+            controller.AddDisposable(hostingManager);
 
             return controller;
         }

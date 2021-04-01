@@ -70,6 +70,14 @@ namespace Neon.Kube
         bool RequiresAdminPrivileges { get; }
 
         /// <summary>
+        /// Returns <c>true</c> if the hosting manager requires that the LAN be scanned
+        /// for devices assigned IP addresses that may conflict with node addresses.  This
+        /// is typically required only for clusters deployed on-premise because cloud
+        /// clusters are typically provisioned to their own isolated network.
+        /// </summary>
+        bool RequiresNodeAddressCheck { get; }
+
+        /// <summary>
         /// Specifies whether a cryptographically random node password should be generated.
         /// </summary>
         bool GenerateSecurePassword { get; }

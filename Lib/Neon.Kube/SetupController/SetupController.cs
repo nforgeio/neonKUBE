@@ -21,12 +21,14 @@ using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Collections;
 using Neon.Common;
+using Neon.Net;
 using Neon.SSH;
 
 namespace Neon.Kube
@@ -146,7 +148,7 @@ namespace Neon.Kube
         /// <summary>
         /// Adds a synchronous global configuration step.
         /// </summary>
-        /// <param name="stepLabel">Brief step summary.</param>
+        /// <param name="stepLabel">Specifies the step label.</param>
         /// <param name="action">The synchronous global action to be performed.</param>
         /// <param name="quiet">Optionally specifies that the step is not to be reported in the progress.</param>
         /// <param name="position">
@@ -167,14 +169,14 @@ namespace Neon.Kube
                     Label            = stepLabel,
                     IsQuiet            = quiet,
                     SyncGlobalAction = action,
-                    Predicate        = (state, node) => true
+                    Predicate        = (controller, node) => true
                 });
         }
 
         /// <summary>
         /// Adds an asynchronous global configuration step.
         /// </summary>
-        /// <param name="stepLabel">Brief step summary.</param>
+        /// <param name="stepLabel">Specifies the step label.</param>
         /// <param name="action">The asynchronous global action to be performed.</param>
         /// <param name="quiet">Optionally specifies that the step is not to be reported in the progress.</param>
         /// <param name="position">
@@ -195,14 +197,84 @@ namespace Neon.Kube
                     Label             = stepLabel,
                     IsQuiet             = quiet,
                     AsyncGlobalAction = action,
-                    Predicate         = (state, node) => true,
+                    Predicate         = (controller, node) => true,
+                });
+        }
+
+        /// <summary>
+        /// Adds a global step that scans for existing machines that conflict with any of
+        /// the IP addressess assigned to the cluster.  This is used by some hosting managers
+        /// to ensure that we're not conficting with and exising cluster or other assets
+        /// deployed on the LAN.
+        /// </summary>
+        /// <param name="stepLabel">Optionally specifies the step label.</param>
+        public void AddCheckForIpConflcits(string stepLabel = "scan for IP address conflicts")
+        {
+            AddGlobalStep(stepLabel,
+                controller =>
+                {
+                    var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+                    var pingOptions   = new PingOptions(ttl: 32, dontFragment: true);
+                    var pingTimeout   = TimeSpan.FromSeconds(2);
+                    var pingConflicts = new List<NodeDefinition>();
+                    var pingAttempts  = 2;
+
+                    // I'm going to use up to 20 threads at a time here for simplicity
+                    // rather then doing this as async operations.
+
+                    var parallelOptions = new ParallelOptions()
+                    {
+                        MaxDegreeOfParallelism = 20
+                    };
+
+                    Parallel.ForEach(cluster.Definition.NodeDefinitions.Values, parallelOptions,
+                        node =>
+                        {
+                            using (var pinger = new Pinger())
+                            {
+                                // We're going to try pinging up to [pingAttempts] times for each node
+                                // just in case the network is sketchy and we're losing reply packets.
+
+                                for (int i = 0; i < pingAttempts; i++)
+                                {
+                                    var reply = pinger.SendPingAsync(node.Address, (int)pingTimeout.TotalMilliseconds).Result;
+
+                                    if (reply.Status == IPStatus.Success)
+                                    {
+                                        lock (pingConflicts)
+                                        {
+                                            pingConflicts.Add(node);
+                                        }
+
+                                        break;
+                                    }
+                                }
+                            }
+                        });
+
+                    if (pingConflicts.Count > 0)
+                    {
+                        var sb = new StringBuilder();
+
+                        using (var writer = new StringWriter(sb))
+                        {
+                            writer.WriteLine($"Cannot provision the cluster because [{pingConflicts.Count}] other machines conflict with the following cluster nodes:");
+                            
+                            foreach (var node in pingConflicts.OrderBy(n => NetHelper.AddressToUint(NetHelper.ParseIPv4Address(n.Address))))
+                            {
+                                writer.WriteLine($"{node.Address, 16}:    {node.Name}");
+                            }
+                        }
+
+                        LogError(sb.ToString());
+                    }
                 });
         }
 
         /// <summary>
         /// Adds a synchronous global step that waits for all nodes to be online.
         /// </summary>
-        /// <param name="stepLabel">Brief step summary.</param>
+        /// <param name="stepLabel">Optionally specifies the step label.</param>
         /// <param name="status">The optional node status.</param>
         /// <param name="nodePredicate">
         /// Optional predicate used to select the nodes that participate in the step
@@ -232,7 +304,7 @@ namespace Neon.Kube
             }
 
             AddNodeStep(stepLabel,
-                (state, node) =>
+                (controller, node) =>
                 {
                     node.Status = status ?? "connecting...";
                     node.WaitForBoot(timeout: timeout);
@@ -247,7 +319,7 @@ namespace Neon.Kube
         /// <summary>
         /// Adds a synchronous global step that waits for a specified period of time.
         /// </summary>
-        /// <param name="stepLabel">Brief step summary.</param>
+        /// <param name="stepLabel">Specifies the step label.</param>
         /// <param name="delay">The amount of time to wait.</param>
         /// <param name="status">The optional node status.</param>
         /// <param name="nodePredicate">
@@ -268,7 +340,7 @@ namespace Neon.Kube
             int                                                         position      = -1)
         {
             AddNodeStep(stepLabel,
-                (state, node) =>
+                (controller, node) =>
                 {
                     node.Status = status ?? $"delay: [{delay.TotalSeconds}] seconds";
                     Thread.Sleep(delay);
@@ -283,7 +355,7 @@ namespace Neon.Kube
         /// <summary>
         /// Appends a synchronous node configuration step.
         /// </summary>
-        /// <param name="stepLabel">Brief step summary.</param>
+        /// <param name="stepLabel">Specifies the step label.</param>
         /// <param name="nodeAction">
         /// The action to be performed on each node.  Two parameters will be passed
         /// to this action: the node's <see cref="NodeSshProxy{T}"/> and a <see cref="TimeSpan"/>
@@ -316,8 +388,8 @@ namespace Neon.Kube
             int                                                         position        = -1,
             int                                                         parallelLimit   = 0)
         {
-            nodeAction    = nodeAction ?? new Action<ISetupController, NodeSshProxy<NodeMetadata>>((state, node) => { });
-            nodePredicate = nodePredicate ?? new Func<ISetupController, NodeSshProxy<NodeMetadata>, bool>((state, node) => true);
+            nodeAction    = nodeAction ?? new Action<ISetupController, NodeSshProxy<NodeMetadata>>((controller, node) => { });
+            nodePredicate = nodePredicate ?? new Func<ISetupController, NodeSshProxy<NodeMetadata>, bool>((controller, node) => true);
 
             if (position < 0)
             {
@@ -344,7 +416,7 @@ namespace Neon.Kube
         /// <summary>
         /// Appends an asynchronous node configuration step.
         /// </summary>
-        /// <param name="stepLabel">Brief step summary.</param>
+        /// <param name="stepLabel">Specifies the step label.</param>
         /// <param name="nodeAction">
         /// The action to be performed on each node.  Two parameters will be passed
         /// to this action: the node's <see cref="NodeSshProxy{T}"/> and a <see cref="TimeSpan"/>
@@ -377,8 +449,8 @@ namespace Neon.Kube
             int                                                         position        = -1,
             int                                                         parallelLimit   = 0)
         {
-            nodeAction    = nodeAction ?? new Func<ISetupController, NodeSshProxy<NodeMetadata>, Task>((state, node) => { return Task.CompletedTask; });
-            nodePredicate = nodePredicate ?? new Func<ISetupController, NodeSshProxy<NodeMetadata>, bool>((state, node) => true);
+            nodeAction    = nodeAction ?? new Func<ISetupController, NodeSshProxy<NodeMetadata>, Task>((controller, node) => { return Task.CompletedTask; });
+            nodePredicate = nodePredicate ?? new Func<ISetupController, NodeSshProxy<NodeMetadata>, bool>((controller, node) => true);
 
             if (position < 0)
             {

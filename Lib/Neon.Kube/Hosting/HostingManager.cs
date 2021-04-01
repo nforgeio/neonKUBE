@@ -93,6 +93,9 @@ namespace Neon.Kube
         public virtual bool RequiresAdminPrivileges => true;
 
         /// <inheritdoc/>
+        public virtual bool RequiresNodeAddressCheck => false;
+
+        /// <inheritdoc/>
         public virtual bool GenerateSecurePassword => true;
 
         /// <inheritdoc/>

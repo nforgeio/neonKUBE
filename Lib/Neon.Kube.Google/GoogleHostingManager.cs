@@ -106,6 +106,9 @@ namespace Neon.Kube
         public override HostingEnvironment HostingEnvironment => HostingEnvironment.Google;
 
         /// <inheritdoc/>
+        public override bool RequiresNodeAddressCheck => false;
+
+        /// <inheritdoc/>
         public override void Validate(ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));

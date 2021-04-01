@@ -32,8 +32,7 @@ using Neon.SSH;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Used to send changes to an <see cref="ISetupController"/>'s <see cref="SetupClusterStatus"/>
-    /// to listeners.
+    /// Used for raising the <see cref="ISetupController.StatusChangedEvent"/>.
     /// </summary>
     /// <param name="status">The new status.</param>
     public delegate void SetupStatusChangedDelegate(SetupClusterStatus status);

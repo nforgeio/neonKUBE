@@ -62,27 +62,27 @@ namespace Neon.Kube
     /// </summary>
     public static class KubeHelper
     {
-        private static INeonLogger          log = LogManager.Default.GetLogger(typeof(KubeHelper));
-        private static string               orgKUBECONFIG;
-        private static string               testFolder;
-        private static KubeConfig           cachedConfig;
-        private static KubeConfigContext    cachedContext;
-        private static string               cachedNeonKubeUserFolder;
-        private static string               cachedKubeUserFolder;
-        private static string               cachedRunFolder;
-        private static string               cachedLogFolder;
-        private static string               cachedTempFolder;
-        private static string               cachedLoginsFolder;
-        private static string               cachedPasswordsFolder;
-        private static string               cachedCacheFolder;
-        private static string               cachedDesktopFolder;
-        private static string               cachedDesktopWsl2Folder;
-        private static KubeClientConfig     cachedClientConfig;
-        private static X509Certificate2     cachedClusterCertificate;
-        private static string               cachedProgramFolder;
-        private static string               cachedPwshPath;
-        private static IStaticDirectory     cachedResources;
-        private static string               cachedNodeImageFolder;
+        private static INeonLogger log = LogManager.Default.GetLogger(typeof(KubeHelper));
+        private static string orgKUBECONFIG;
+        private static string testFolder;
+        private static KubeConfig cachedConfig;
+        private static KubeConfigContext cachedContext;
+        private static string cachedNeonKubeUserFolder;
+        private static string cachedKubeUserFolder;
+        private static string cachedRunFolder;
+        private static string cachedLogFolder;
+        private static string cachedTempFolder;
+        private static string cachedLoginsFolder;
+        private static string cachedPasswordsFolder;
+        private static string cachedCacheFolder;
+        private static string cachedDesktopFolder;
+        private static string cachedDesktopWsl2Folder;
+        private static KubeClientConfig cachedClientConfig;
+        private static X509Certificate2 cachedClusterCertificate;
+        private static string cachedProgramFolder;
+        private static string cachedPwshPath;
+        private static IStaticDirectory cachedResources;
+        private static string cachedNodeImageFolder;
 
         /// <summary>
         /// CURL command common options.
@@ -111,24 +111,24 @@ namespace Neon.Kube
         /// </summary>
         private static void ClearCachedItems()
         {
-            cachedConfig             = null;
-            cachedContext            = null;
+            cachedConfig = null;
+            cachedContext = null;
             cachedNeonKubeUserFolder = null;
-            cachedKubeUserFolder     = null;
-            cachedRunFolder          = null;
-            cachedLogFolder          = null;
-            cachedTempFolder         = null;
-            cachedLoginsFolder       = null;
-            cachedPasswordsFolder    = null;
-            cachedCacheFolder        = null;
-            cachedDesktopFolder      = null;
-            cachedDesktopWsl2Folder  = null;
-            cachedClientConfig       = null;
+            cachedKubeUserFolder = null;
+            cachedRunFolder = null;
+            cachedLogFolder = null;
+            cachedTempFolder = null;
+            cachedLoginsFolder = null;
+            cachedPasswordsFolder = null;
+            cachedCacheFolder = null;
+            cachedDesktopFolder = null;
+            cachedDesktopWsl2Folder = null;
+            cachedClientConfig = null;
             cachedClusterCertificate = null;
-            cachedProgramFolder      = null;
-            cachedPwshPath           = null;
-            cachedResources          = null;
-            cachedNodeImageFolder    = null;
+            cachedProgramFolder = null;
+            cachedPwshPath = null;
+            cachedResources = null;
+            cachedNodeImageFolder = null;
         }
 
         /// <summary>
@@ -166,7 +166,7 @@ namespace Neon.Kube
 
             ClearCachedItems();
 
-            testFolder    = folder;
+            testFolder = folder;
             orgKUBECONFIG = Environment.GetEnvironmentVariable("KUBECONFIG");
 
             Environment.SetEnvironmentVariable("KUBECONFIG", Path.Combine(testFolder, ".kube", "config"));
@@ -225,7 +225,7 @@ namespace Neon.Kube
             var text = string.Empty;
 
             retry.Invoke(
-                () => 
+                () =>
                 {
                     text = File.ReadAllText(path);
                 });
@@ -1047,7 +1047,7 @@ namespace Neon.Kube
         {
             if (contextName == null)
             {
-                cachedContext         = null;
+                cachedContext = null;
                 Config.CurrentContext = null;
             }
             else
@@ -1158,10 +1158,10 @@ namespace Neon.Kube
                 }
 
                 var userContext = KubeHelper.Config.GetUser(KubeHelper.CurrentContext.Properties.User);
-                var certPem     = Encoding.UTF8.GetString(Convert.FromBase64String(userContext.Properties.ClientCertificateData));
-                var keyPem      = Encoding.UTF8.GetString(Convert.FromBase64String(userContext.Properties.ClientKeyData));
-                var tlsCert     = TlsCertificate.FromPemParts(certPem, keyPem);
-                var clientCert  = tlsCert.ToX509();
+                var certPem = Encoding.UTF8.GetString(Convert.FromBase64String(userContext.Properties.ClientCertificateData));
+                var keyPem = Encoding.UTF8.GetString(Convert.FromBase64String(userContext.Properties.ClientKeyData));
+                var tlsCert = TlsCertificate.FromPemParts(certPem, keyPem);
+                var clientCert = tlsCert.ToX509();
 
                 return null;
             }
@@ -1196,13 +1196,13 @@ namespace Neon.Kube
         /// <param name="friendlyName">Optionally specifies the certificate's friendly name.</param>
         /// <returns>The new <see cref="TlsCertificate"/>.</returns>
         public static X509Certificate2 CreateSelfSigned(
-            string      hostname,
-            int         bitCount     = 2048,
-            int         validDays    = 365000,
-            Wildcard    wildcard     = Wildcard.None,
-            string      issuedBy     = null,
-            string      issuedTo     = null, 
-            string      friendlyName = null)
+            string hostname,
+            int bitCount = 2048,
+            int validDays = 365000,
+            Wildcard wildcard = Wildcard.None,
+            string issuedBy = null,
+            string issuedTo = null,
+            string friendlyName = null)
         {
             Covenant.Requires<ArgumentException>(!string.IsNullOrEmpty(hostname), nameof(hostname));
             Covenant.Requires<ArgumentException>(bitCount == 1024 || bitCount == 2048 || bitCount == 4096, nameof(bitCount));
@@ -1247,8 +1247,8 @@ namespace Neon.Kube
                 var request = new CertificateRequest(distinguishedName, rsa, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
                 request.CertificateExtensions.Add(
-                    new X509KeyUsageExtension(X509KeyUsageFlags.KeyEncipherment 
-                    | X509KeyUsageFlags.CrlSign | X509KeyUsageFlags.KeyCertSign 
+                    new X509KeyUsageExtension(X509KeyUsageFlags.KeyEncipherment
+                    | X509KeyUsageFlags.CrlSign | X509KeyUsageFlags.KeyCertSign
                     | X509KeyUsageFlags.DigitalSignature, true));
 
                 request.CertificateExtensions.Add(
@@ -1259,7 +1259,7 @@ namespace Neon.Kube
 
                 request.CertificateExtensions.Add(sanBuilder.Build());
 
-                var certificate          = request.CreateSelfSigned(new DateTimeOffset(DateTime.UtcNow.AddDays(-1)), new DateTimeOffset(DateTime.UtcNow.AddDays(validDays)));
+                var certificate = request.CreateSelfSigned(new DateTimeOffset(DateTime.UtcNow.AddDays(-1)), new DateTimeOffset(DateTime.UtcNow.AddDays(validDays)));
                 certificate.FriendlyName = friendlyName;
 
                 return certificate;
@@ -1305,9 +1305,9 @@ namespace Neon.Kube
         /// </summary>
         public static void InstallKubeCtl()
         {
-            var hostPlatform      = KubeHelper.HostPlatform;
+            var hostPlatform = KubeHelper.HostPlatform;
             var cachedKubeCtlPath = KubeHelper.GetCachedComponentPath(hostPlatform, "kubectl", KubeVersions.KubernetesVersion);
-            var targetPath        = Path.Combine(KubeHelper.ProgramFolder);
+            var targetPath = Path.Combine(KubeHelper.ProgramFolder);
 
             switch (hostPlatform)
             {
@@ -1332,7 +1332,7 @@ namespace Neon.Kube
                         // The [KUBECONFIG] environment variable exists but we still need to
                         // ensure that the path to our [USER/.neonkube] config is present.
 
-                        var sb    = new StringBuilder();
+                        var sb = new StringBuilder();
                         var found = false;
 
                         foreach (var path in kubeConfigVar.Split(';', StringSplitOptions.RemoveEmptyEntries))
@@ -1371,10 +1371,10 @@ namespace Neon.Kube
 
                         // $hack(jefflill): Simple client version extraction
 
-                        var pattern  = "GitVersion:\"v";
+                        var pattern = "GitVersion:\"v";
                         var response = NeonHelper.ExecuteCapture(targetPath, "version");
-                        var pStart   = response.OutputText.IndexOf(pattern);
-                        var error    = "Cannot identify existing [kubectl] version.";
+                        var pStart = response.OutputText.IndexOf(pattern);
+                        var error = "Cannot identify existing [kubectl] version.";
 
                         if (pStart == -1)
                         {
@@ -1432,9 +1432,9 @@ namespace Neon.Kube
         /// </summary>
         public static void InstallWorkstationHelm()
         {
-            var hostPlatform   = KubeHelper.HostPlatform;
+            var hostPlatform = KubeHelper.HostPlatform;
             var cachedHelmPath = KubeHelper.GetCachedComponentPath(hostPlatform, "helm", KubeVersions.HelmVersion);
-            var targetPath     = Path.Combine(KubeHelper.ProgramFolder);
+            var targetPath = Path.Combine(KubeHelper.ProgramFolder);
 
             switch (hostPlatform)
             {
@@ -1454,10 +1454,10 @@ namespace Neon.Kube
 
                         // $hack(jefflill): Simple client version extraction
 
-                        var pattern  = "Version:\"v";
+                        var pattern = "Version:\"v";
                         var response = NeonHelper.ExecuteCapture(targetPath, "version");
-                        var pStart   = response.OutputText.IndexOf(pattern);
-                        var error    = "Cannot identify existing [helm] version.";
+                        var pStart = response.OutputText.IndexOf(pattern);
+                        var error = "Cannot identify existing [helm] version.";
 
                         if (pStart == -1)
                         {
@@ -1511,13 +1511,13 @@ namespace Neon.Kube
         /// <returns>The <see cref="ExecuteResponse"/>.</returns>
         public static void PortForward(string serviceName, int remotePort, int localPort, string @namespace, Process process)
         {
-            Task.Run(() => NeonHelper.ExecuteAsync("kubectl", 
+            Task.Run(() => NeonHelper.ExecuteAsync("kubectl",
                 args: new string[]
                 {
-                    "--namespace", @namespace, 
+                    "--namespace", @namespace,
                     "port-forward",
-                    $"svc/{serviceName}", 
-                    $"{localPort}:{remotePort}" 
+                    $"svc/{serviceName}",
+                    $"{localPort}:{remotePort}"
                 },
                 process: process));
         }
@@ -1533,13 +1533,13 @@ namespace Neon.Kube
         public static async Task<string> ExecuteInPod(IKubernetes client, V1Pod pod, string @namespace, string[] command)
         {
             var webSocket = await client.WebSocketNamespacedPodExecAsync(pod.Metadata.Name, @namespace, command, pod.Spec.Containers[0].Name);
-            var demux     = new StreamDemuxer(webSocket);
+            var demux = new StreamDemuxer(webSocket);
 
             demux.Start();
 
-            var buff   = new byte[4096];
+            var buff = new byte[4096];
             var stream = demux.GetStream(1, 1);
-            var read   = stream.Read(buff, 0, 4096);
+            var read = stream.Read(buff, 0, 4096);
 
             return Encoding.Default.GetString(buff.Where(b => b != 0).ToArray());
         }
@@ -1698,7 +1698,7 @@ public class ISOFile
             // otherwise just launch Powershell from the PATH.
 
             var neonKubeProgramFolder = Environment.GetEnvironmentVariable("NEONDESKTOP_PROGRAM_FOLDER");
-            var powershellPath        = "powershell";
+            var powershellPath = "powershell";
 
             if (neonKubeProgramFolder != null)
             {
@@ -1762,9 +1762,9 @@ public class ISOFile
         /// </para>
         /// </remarks>
         public static TempFile CreateNeonInitIso(
-            ClusterDefinition       clusterDefinition,
-            NodeDefinition          nodeDefinition,
-            string                  securePassword = null)
+            ClusterDefinition clusterDefinition,
+            NodeDefinition nodeDefinition,
+            string securePassword = null)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
             Covenant.Requires<ArgumentNullException>(nodeDefinition != null, nameof(nodeDefinition));
@@ -1772,10 +1772,10 @@ public class ISOFile
             var clusterNetwork = clusterDefinition.Network;
 
             return CreateNeonInitIso(
-                address:        nodeDefinition.Address,
-                subnet:         clusterNetwork.PremiseSubnet,
-                gateway:        clusterNetwork.Gateway,
-                nameServers:    clusterNetwork.Nameservers,
+                address: nodeDefinition.Address,
+                subnet: clusterNetwork.PremiseSubnet,
+                gateway: clusterNetwork.Gateway,
+                nameServers: clusterNetwork.Nameservers,
                 securePassword: securePassword);
         }
 
@@ -1812,11 +1812,11 @@ public class ISOFile
         /// </para>
         /// </remarks>
         public static TempFile CreateNeonInitIso(
-            string                  address,
-            string                  subnet,
-            string                  gateway,
-            IEnumerable<string>     nameServers,
-            string                  securePassword = null)
+            string address,
+            string subnet,
+            string gateway,
+            IEnumerable<string> nameServers,
+            string securePassword = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(address), nameof(address));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(subnet), nameof(subnet));
@@ -1989,7 +1989,7 @@ exit 0
             // Look for the installed version first.
 
             var desktopProgramFolder = Environment.GetEnvironmentVariable("NEONDESKTOP_PROGRAM_FOLDER");
-            var path1                = desktopProgramFolder != null ? Path.Combine(Environment.GetEnvironmentVariable("NEONDESKTOP_PROGRAM_FOLDER"), "SSH", "ssh-keygen.exe") : null;
+            var path1 = desktopProgramFolder != null ? Path.Combine(Environment.GetEnvironmentVariable("NEONDESKTOP_PROGRAM_FOLDER"), "SSH", "ssh-keygen.exe") : null;
 
             if (path1 != null && File.Exists(path1))
             {
@@ -1999,7 +1999,7 @@ exit 0
             // Fall back to the executable from our Git repo.
 
             var repoFolder = Environment.GetEnvironmentVariable("NF_ROOT");
-            var path2      = repoFolder != null ? Path.Combine(repoFolder, "External", "SSH", "ssh-keygen.exe") : null;
+            var path2 = repoFolder != null ? Path.Combine(repoFolder, "External", "SSH", "ssh-keygen.exe") : null;
 
             if (path2 != null && File.Exists(path2))
             {
@@ -2042,7 +2042,7 @@ exit 0
                     throw new KubeException("Cannot generate SSH key:\r\n\r\n" + result.AllText);
                 }
 
-                var publicPUB      = File.ReadAllText(Path.Combine(tempFolder.Path, "key.pub"));
+                var publicPUB = File.ReadAllText(Path.Combine(tempFolder.Path, "key.pub"));
                 var privateOpenSSH = File.ReadAllText(Path.Combine(tempFolder.Path, "key"));
 
                 //-------------------------------------------------------------
@@ -2160,12 +2160,12 @@ exit 0
 
                 return new KubeSshKey()
                 {
-                    PublicPUB         = publicPUB,
-                    PublicOpenSSH     = publicOpenSSH,
-                    PublicSSH2        = publicSSH2,
-                    PrivateOpenSSH    = privateOpenSSH,
-                    PrivatePEM        = privatePEM,
-                    FingerprintMd5    = fingerprintMd5,
+                    PublicPUB = publicPUB,
+                    PublicOpenSSH = publicOpenSSH,
+                    PublicSSH2 = publicSSH2,
+                    PrivateOpenSSH = privateOpenSSH,
+                    PrivatePEM = privatePEM,
+                    FingerprintMd5 = fingerprintMd5,
                     FingerprintSha256 = fingerprintSha2565
                 };
             }
@@ -2420,6 +2420,30 @@ TCPKeepAlive yes
             else
             {
                 throw new NotImplementedException();
+            }
+        }
+
+        /// <summary>
+        /// Ensures that the current process has enhanced admin privileges.
+        /// </summary>
+        /// <exception cref="KubeException">Thrown when enhanced privileges are not available.</exception>
+        public static void EnsureAdminPrivileges()
+        {
+            if (!KubeHelper.InToolContainer)
+            {
+                if (NeonHelper.IsWindows)
+                {
+                    var principal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
+
+                    if (!principal.IsInRole(WindowsBuiltInRole.Administrator))
+                    {
+                        throw new KubeException("Enhanced admin privileges are required but not assigned.");
+                    }
+                }
+                else if (NeonHelper.IsOSX)
+                {
+                    // $todo(jefflill): Implement this?
+                }
             }
         }
     }
