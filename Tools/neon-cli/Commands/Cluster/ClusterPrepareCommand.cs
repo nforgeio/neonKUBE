@@ -103,11 +103,6 @@ Server Requirements:
         private const string    logEndMarker    = "# CLUSTER-END-PREPARE-SUCCESS ####################################################";
         private const string    logFailedMarker = "# CLUSTER-END-PREPARE-FAILED #####################################################";
 
-        private ClusterProxy    cluster;
-        private HostingManager  hostingManager;
-        private string          clusterDefPath;
-        private string          packageCaches;
-
         /// <inheritdoc/>
         public override string[] Words => new string[] { "cluster", "prepare" };
 
@@ -167,7 +162,7 @@ Server Requirements:
                 Program.Exit(1);
             }
 
-            clusterDefPath = commandLine.Arguments[0];
+            var clusterDefPath = commandLine.Arguments[0];
 
             if (clusterDefPath.Equals("WSL2", StringComparison.InvariantCultureIgnoreCase))
             {
@@ -210,7 +205,7 @@ Server Requirements:
 
             var clusterDefinition = ClusterDefinition.FromFile(clusterDefPath, strict: true);
 
-            var controller = KubeSetup.CreatePrepareController(
+            var controller = KubeSetup.CreateClusterPrepareController(
                 clusterDefinition, 
                 KubeHelper.LogFolder,
                 maxParallel:           Program.MaxParallel,

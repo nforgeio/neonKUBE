@@ -131,14 +131,7 @@ OPTIONS:
     -m=COUNT, --max-parallel=COUNT      - Maximum number of nodes to be 
                                           configured in parallel [default=6]
 
-    --machine-password=PASSWORD         - Overrides default initial machine
-                                          password for the [sysadmin] account.
-                                          This defaults to: sysadmin0000
-
     -q, --quiet                         - Disables operation progress
-
-    -w=SECONDS, --wait=SECONDS          - Seconds to delay for cluster stablization 
-                                          (defaults to 60s).
 
 REMARKS:
 
@@ -285,13 +278,7 @@ You can disable the use of this encrypted folder by specifying
                 LogPath = LeftCommandLine.GetOption("--log-folder");
                 Quiet   = LeftCommandLine.GetFlag("--quiet");
 
-                if (KubeHelper.InToolContainer)
-                {
-                    // We hardcode logging to [/log] inside [neon-cli] containers.
-
-                    LogPath = "/log";
-                }
-                else if (!string.IsNullOrEmpty(LogPath))
+                if (!string.IsNullOrEmpty(LogPath))
                 {
                     LogPath = Path.GetFullPath(LogPath);
 
@@ -310,10 +297,6 @@ You can disable the use of this encrypted folder by specifying
                 //-------------------------------------------------------------
                 // Process the standard command line options.
 
-                // Load the password from the command line options, if present.
-
-                MachinePassword = LeftCommandLine.GetOption("--machine-password", KubeConst.SysAdminPassword);
-
                 // Handle the other options.
 
                 var maxParallelOption = LeftCommandLine.GetOption("--max-parallel");
@@ -326,16 +309,6 @@ You can disable the use of this encrypted folder by specifying
                 }
 
                 Program.MaxParallel = maxParallel;
-
-                var waitSecondsOption = LeftCommandLine.GetOption("--wait");
-
-                if (!double.TryParse(waitSecondsOption, NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var waitSeconds) || waitSeconds < 0)
-                {
-                    Console.Error.WriteLine($"*** ERROR: [--wait={waitSecondsOption}] option is not valid.");
-                    Program.Exit(1);
-                }
-
-                Program.WaitSeconds = waitSeconds;
 
                 Debug = LeftCommandLine.HasOption("--debug");
 
@@ -371,18 +344,6 @@ You can disable the use of this encrypted folder by specifying
                 }
 
                 // Run the command.
-
-                if (command.NeedsSshCredentials(CommandLine) && string.IsNullOrEmpty(MachinePassword))
-                {
-                    Console.WriteLine();
-                    Console.WriteLine($"    Enter cluster SSH password for [{KubeConst.SysAdminUser}]:");
-                    Console.WriteLine($"    ------------------------------------------");
-
-                    while (string.IsNullOrEmpty(MachinePassword))
-                    {
-                        MachinePassword = NeonHelper.ReadConsolePassword("    password: ");
-                    }
-                }
 
                 if (command.SplitItem != null)
                 {
@@ -566,12 +527,6 @@ You can disable the use of this encrypted folder by specifying
 #pragma warning restore 0436
 
         /// <summary>
-        /// The password used to secure the cluster nodes before they are setup.  This defaults
-        /// to <b>sysadmin0000</b> which is used for the cluster machine templates.
-        /// </summary>
-        public static string MachinePassword { get; set; } = KubeConst.SysAdminPassword;
-
-        /// <summary>
         /// Returns the log folder path or a <c>null</c> or empty string 
         /// to disable logging.
         /// </summary>
@@ -581,11 +536,6 @@ You can disable the use of this encrypted folder by specifying
         /// The maximum number of nodes to be configured in parallel.
         /// </summary>
         public static int MaxParallel { get; set; }
-
-        /// <summary>
-        /// The seconds to wait after operations that may need a stablization period.
-        /// </summary>
-        public static double WaitSeconds { get; set; }
 
         /// <summary>
         /// Indicates whether operation progress output is to be suppressed.
@@ -614,57 +564,9 @@ You can disable the use of this encrypted folder by specifying
         public static NodeSshProxy<TMetadata> CreateNodeProxy<TMetadata>(string name, IPAddress address, bool appendToLog)
             where TMetadata : class
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+            // $todo(jefflill): DELETE THIS METHOD!
 
-            var logWriter = (TextWriter)null;
-
-            if (!string.IsNullOrEmpty(LogPath))
-            {
-                var path = Path.Combine(LogPath, name + ".log");
-
-                logWriter = new StreamWriter(new FileStream(path, appendToLog ? FileMode.Append : FileMode.Create, appendToLog ? FileAccess.Write : FileAccess.ReadWrite));
-            }
-
-            SshCredentials sshCredentials;
-
-            if (!string.IsNullOrEmpty(KubeConst.SysAdminUser) && !string.IsNullOrEmpty(Program.MachinePassword))
-            {
-                sshCredentials = SshCredentials.FromUserPassword(KubeConst.SysAdminUser, Program.MachinePassword);
-            }
-            else if (KubeHelper.CurrentContext != null)
-            {
-                sshCredentials = KubeHelper.CurrentContext.Extension.SshCredentials;
-            }
-            else
-            {
-                Console.Error.WriteLine("*** ERROR: Expected some node credentials.");
-                Program.Exit(1);
-
-                return null;
-            }
-
-            return new NodeSshProxy<TMetadata>(name, address, sshCredentials, logWriter: logWriter);
-        }
-
-        /// <summary>
-        /// Returns a <see cref="ClusterProxy"/> for the current Kubernetes context.
-        /// </summary>
-        /// <returns>The <see cref="ClusterProxy"/>.</returns>
-        /// <remarks>
-        /// <note>
-        /// This method will terminate the program with an error message when not logged
-        /// into a neonKUBE cluster.
-        /// </note>
-        /// </remarks>
-        public static ClusterProxy GetCluster()
-        {
-            if (KubeHelper.CurrentContext == null)
-            {
-                Console.Error.WriteLine("*** ERROR: You are not logged into a neonKUBE cluster.");
-                Program.Exit(1);
-            }
-
-            return new ClusterProxy(KubeHelper.CurrentContext, Program.CreateNodeProxy<NodeDefinition>);
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -698,108 +600,6 @@ You can disable the use of this encrypted folder by specifying
             finally
             {
                 Console.WriteLine();
-            }
-        }
-
-        /// <summary>
-        /// Executes a command on the local operating system, writing an error and
-        /// existing the program if the command fails.
-        /// </summary>
-        /// <param name="programPath">The program.</param>
-        /// <param name="args">The arguments.</param>
-        public static void Execute(string programPath, params object[] args)
-        {
-            var sbArgs = new StringBuilder();
-
-            foreach (var arg in args)
-            {
-                var argString = arg.ToString();
-
-                if (argString.Contains(" "))
-                {
-                    argString = "\"" + argString + "\"";
-                }
-
-                sbArgs.AppendWithSeparator(argString);
-            }
-
-            try
-            {
-                var result = NeonHelper.ExecuteCapture(programPath, sbArgs.ToString());
-
-                if (result.ExitCode != 0)
-                {
-                    Console.Error.Write(result.AllText);
-                    Program.Exit(result.ExitCode);
-                }
-            }
-            catch (Win32Exception)
-            {
-                Console.Error.WriteLine($"*** ERROR: Cannot launch [{programPath}].");
-                Program.Exit(1);
-            }
-        }
-
-        /// <summary>
-        /// <para>
-        /// Recursively executes a <b>neon-cli</b> command by launching a new
-        /// instance of the tool with the arguments passed and capturing the
-        /// process output streams.
-        /// </para>
-        /// <note>
-        /// This does not recurse into  a container, it simply launches a new
-        /// process instance of the program in the current environment with
-        /// the arguments passed.
-        /// </note>
-        /// </summary>
-        /// <param name="args">The arguments.</param>
-        /// <returns>The process response.</returns>
-        public static ExecuteResponse ExecuteRecurseCaptureStreams(params object[] args)
-        {
-            // We need to prepend the program assembly path to the arguments.
-
-            var argList = new List<object>(args);
-
-            argList.Insert(0, NeonHelper.GetEntryAssemblyPath());
-
-            return NeonHelper.ExecuteCapture("dotnet", argList.ToArray());
-        }
-
-        /// <summary>
-        /// Verify that the current user has administrator privileges, exiting
-        /// the application if this is not the case.
-        /// </summary>
-        /// <param name="message">Optional message.</param>
-        public static void VerifyAdminPrivileges(string message = null)
-        {
-            if (message == null)
-            {
-                message = "*** ERROR: This command requires elevated administrator privileges.";
-            }
-            else
-            {
-                if (!message.StartsWith("*** ERROR: "))
-                {
-                    message = $"** ERROR: {message}";
-                }
-            }
-
-            if (!KubeHelper.InToolContainer)
-            {
-                if (NeonHelper.IsWindows)
-                {
-                    var principal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
-
-                    if (!principal.IsInRole(WindowsBuiltInRole.Administrator))
-                    {
-                        Console.Error.WriteLine(message);
-                        Program.Exit(1);
-                    }
-                }
-                else if (NeonHelper.IsOSX)
-                {
-                    // $todo(jefflill): Implement this?
-                }
             }
         }
 

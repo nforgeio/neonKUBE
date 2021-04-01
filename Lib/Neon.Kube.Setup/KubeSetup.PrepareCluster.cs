@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeSetup.PrepareController.cs
+// FILE:	    KubeSetup.PrepareCluster.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -75,7 +75,7 @@ namespace Neon.Kube
         /// <param name="baseImageName">Optionally specifies the base image name to use for debug mode.</param>
         /// <returns>The <see cref="ISetupController"/>.</returns>
         /// <exception cref="KubeException">Thrown when there's a problem.</exception>
-        public static ISetupController CreatePrepareController(
+        public static ISetupController CreateClusterPrepareController(
             ClusterDefinition           clusterDefinition, 
             string                      stateFolder, 
             int                         maxParallel           = 500, 
