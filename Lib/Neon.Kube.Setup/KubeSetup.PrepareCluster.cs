@@ -146,7 +146,39 @@ namespace Neon.Kube
                 throw new KubeException($"No hosting manager for the [{cluster.Definition.Hosting.Environment}] environment could be located.");
             }
 
-            controller.AddGlobalStep("configure: hosting manager",
+            // Load the cluster login information if it exists and when it indicates that
+            // setup is still pending, we'll use that information (especially the generated
+            // secure SSH password).
+            //
+            // Otherwise, we'll write (or overwrite) the context file with a fresh context.
+
+            var clusterLoginPath = KubeHelper.GetClusterLoginPath((KubeContextName)$"{KubeConst.RootUser}@{clusterDefinition.Name}");
+            var clusterLogin = ClusterLogin.Load(clusterLoginPath);
+
+            if (clusterLogin == null || !clusterLogin.SetupDetails.SetupPending)
+            {
+                clusterLogin = new ClusterLogin(clusterLoginPath)
+                {
+                    ClusterDefinition = clusterDefinition,
+                    SshUsername       = KubeConst.SysAdminUser,
+                    SetupDetails      = new KubeSetupDetails() { SetupPending = true }
+                };
+
+                clusterLogin.Save();
+            }
+
+            // Configure the setup controller state.
+
+            controller.Add(KubeSetupProperty.DebugMode, debugMode);
+            controller.Add(KubeSetupProperty.BaseImageName, baseImageName);
+            controller.Add(KubeSetupProperty.ClusterProxy, cluster);
+            controller.Add(KubeSetupProperty.ClusterLogin, clusterLogin);
+            controller.Add(KubeSetupProperty.HostingManager, hostingManager);
+            controller.Add(KubeSetupProperty.HostingEnvironment, hostingManager.HostingEnvironment);
+
+            // Configure the cluster preparation steps.
+
+            controller.AddGlobalStep("configure hosting manager",
                 controller =>
                 {
                     if (hostingManager.RequiresAdminPrivileges)
@@ -164,39 +196,9 @@ namespace Neon.Kube
 
                     hostingManager.MaxParallel = maxParallel;
                     hostingManager.WaitSeconds = 60;
-
-                    // Load the cluster login information if it exists and when it indicates that
-                    // setup is still pending, we'll use that information (especially the generated
-                    // secure SSH password).
-                    //
-                    // Otherwise, we'll write (or overwrite) the context file with a fresh context.
-
-                    var clusterLoginPath = KubeHelper.GetClusterLoginPath((KubeContextName)$"{KubeConst.RootUser}@{clusterDefinition.Name}");
-                    var clusterLogin     = ClusterLogin.Load(clusterLoginPath);
-
-                    if (clusterLogin == null || !clusterLogin.SetupDetails.SetupPending)
-                    {
-                        clusterLogin = new ClusterLogin(clusterLoginPath)
-                        {
-                            ClusterDefinition = clusterDefinition,
-                            SshUsername       = KubeConst.SysAdminUser,
-                            SetupDetails      = new KubeSetupDetails() { SetupPending = true }
-                        };
-
-                        clusterLogin.Save();
-                    }
-
-                    // Configure the setup controller state.
-
-                    controller.Add(KubeSetupProperty.DebugMode, debugMode);
-                    controller.Add(KubeSetupProperty.BaseImageName, baseImageName);
-                    controller.Add(KubeSetupProperty.ClusterProxy, cluster);
-                    controller.Add(KubeSetupProperty.ClusterLogin, clusterLogin);
-                    controller.Add(KubeSetupProperty.HostingManager, hostingManager);
-                    controller.Add(KubeSetupProperty.HostingEnvironment, hostingManager.HostingEnvironment);
                 });
 
-            controller.AddGlobalStep("generate: ssh credentials",
+            controller.AddGlobalStep("generate ssh credentials",
                 controller =>
                 {
                     // We're going to generate a secure random password and we're going to append
@@ -231,11 +233,10 @@ namespace Neon.Kube
 
                     var hostingManager = controller.Get<IHostingManager>(KubeSetupProperty.HostingManager);
                     var clusterLogin   = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
-                    var orgSshPassword = KubeConst.SysAdminPassword;
 
                     if (!hostingManager.GenerateSecurePassword)
                     {
-                        clusterLogin.SshPassword = orgSshPassword;
+                        clusterLogin.SshPassword = KubeConst.SysAdminPassword;
                         clusterLogin.Save();
                     }
                     else if (hostingManager.GenerateSecurePassword && string.IsNullOrEmpty(clusterLogin.SshPassword))
@@ -304,6 +305,8 @@ namespace Neon.Kube
                     }
                 });
 
+            hostingManager.AddProvisioningSteps(controller);
+
             controller.AddWaitUntilOnlineStep(timeout: TimeSpan.FromMinutes(15));
             controller.AddNodeStep("verify node OS", (state, node) => node.VerifyNodeOS());
             controller.AddNodeStep("configure node credentials",
@@ -320,7 +323,7 @@ namespace Neon.Kube
             // Some hosting managers may have to some additional work after
             // the cluster has been otherwise prepared.
 
-            hostingManager.AddPostPrepareSteps(controller);
+            hostingManager.AddPostProvisioningSteps(controller);
 
             // We need to dispose this after the setup controller runs.
 

@@ -143,9 +143,6 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override bool IsProvisionNOP => false;
-
-        /// <inheritdoc/>
         public override HostingEnvironment HostingEnvironment => HostingEnvironment.XenServer;
 
         /// <inheritdoc/>
@@ -158,21 +155,14 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override async Task<bool> ProvisionAsync(ISetupController controller, string secureSshPassword, string orgSshPassword = null)
+        public override void AddProvisioningSteps(SetupController<NodeDefinition> controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secureSshPassword), nameof(secureSshPassword));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(orgSshPassword), nameof(orgSshPassword));
             Covenant.Assert(cluster != null, $"[{nameof(XenServerHostingManager)}] was created with the wrong constructor.");
 
-            this.secureSshPassword = secureSshPassword;
+            var clusterLogin = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
 
-            if (IsProvisionNOP)
-            {
-                // There's nothing to do here.
-
-                return true;
-            }
+            this.secureSshPassword = clusterLogin.SshPassword;
 
             // We need to ensure that the cluster has at least one ingress node.
 
@@ -241,23 +231,23 @@ namespace Neon.Kube
             };
 
             xenController.AddWaitUntilOnlineStep();
-
             xenController.AddNodeStep("verify readiness", (controller, node) => VerifyReady(node));
             xenController.AddNodeStep("virtual machine template", (controller, node) => CheckVmTemplate(node));
             xenController.AddNodeStep("create virtual machines", (controller, node) => ProvisionVM(node));
             xenController.AddGlobalStep(string.Empty, controller => Finish(), quiet: true);
 
-            if (!xenController.Run())
-            {
-                Console.Error.WriteLine("*** ERROR: One or more configuration steps failed.");
-                return await Task.FromResult(false);
-            }
-
-            return await Task.FromResult(true);
+            controller.AddGlobalStep("prepare: cluster infrastructure",
+                controller =>
+                {
+                    if (!xenController.Run(controller))
+                    {
+                        controller.LogError("Cluster provisioning failed.");
+                    }
+                });
         }
 
         /// <inheritdoc/>
-        public override void AddPostPrepareSteps(SetupController<NodeDefinition> setupController)
+        public override void AddPostProvisioningSteps(SetupController<NodeDefinition> setupController)
         {
             // We need to add any required OpenEBS cStor disks after the node has been otherwise
             // prepared.  We need to do this here because if we created the data and OpenEBS disks

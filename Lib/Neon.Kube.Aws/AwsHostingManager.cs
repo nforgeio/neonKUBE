@@ -736,7 +736,7 @@ namespace Neon.Kube
 
         private ClusterProxy                        cluster;
         private string                              clusterName;
-        private ISetupController                    controller;
+        private SetupController<NodeDefinition>     controller;
         private string                              clusterEnvironment;
         private HostingOptions                      hostingOptions;
         private CloudOptions                        cloudOptions;
@@ -1079,11 +1079,9 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override async Task<bool> ProvisionAsync(ISetupController controller, string secureSshPassword, string orgSshPassword = null)
+        public override void AddProvisioningSteps(SetupController<NodeDefinition> controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secureSshPassword), nameof(secureSshPassword));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(orgSshPassword), nameof(orgSshPassword));
             Covenant.Assert(cluster != null, $"[{nameof(AwsHostingManager)}] was created with the wrong constructor.");
 
             var clusterLogin = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
@@ -1103,29 +1101,24 @@ namespace Neon.Kube
             // the SSH key when the instances are provisioned and then upload and enable 
             // the SSH password ourselves.
 
-            this.secureSshPassword = secureSshPassword;
+            this.secureSshPassword = clusterLogin.SshPassword;
             this.sshKey            = clusterLogin.SshKey;
 
             Covenant.Assert(sshKey != null);
 
-            var operation       = $"Provisioning [{cluster.Definition.Name}] on AWS [{availabilityZone}/{resourceGroupName}]";
-            var setupController = new SetupController<NodeDefinition>(operation, cluster.Nodes)
-            {
-                ShowNodeStatus = true,
-                MaxParallel    = int.MaxValue       // There's no reason to constrain this
-            };
+            var operation = $"Provisioning [{cluster.Definition.Name}] on AWS [{availabilityZone}/{resourceGroupName}]";
 
-            setupController.AddGlobalStep("AWS connect", ConnectAwsAsync);
-            setupController.AddGlobalStep("region check", VerifyRegionAndInstanceTypesAsync);
-            setupController.AddGlobalStep("locate ami", LocateAmiAsync);
-            setupController.AddGlobalStep("resource group", CreateResourceGroupAsync);
-            setupController.AddGlobalStep("elastic ip", CreateAddressesAsync);
-            setupController.AddGlobalStep("placement groups", ConfigurePlacementGroupAsync);
-            setupController.AddGlobalStep("external ssh ports", AssignExternalSshPorts, quiet: true);
-            setupController.AddGlobalStep("network", ConfigureNetworkAsync);
-            setupController.AddGlobalStep("ssh keys", ImportKeyPairAsync);
-            setupController.AddNodeStep("node instances", CreateNodeInstanceAsync);
-            setupController.AddNodeStep("credentials",
+            controller.AddGlobalStep("AWS connect", ConnectAwsAsync);
+            controller.AddGlobalStep("region check", VerifyRegionAndInstanceTypesAsync);
+            controller.AddGlobalStep("locate ami", LocateAmiAsync);
+            controller.AddGlobalStep("resource group", CreateResourceGroupAsync);
+            controller.AddGlobalStep("elastic ip", CreateAddressesAsync);
+            controller.AddGlobalStep("placement groups", ConfigurePlacementGroupAsync);
+            controller.AddGlobalStep("external ssh ports", AssignExternalSshPorts, quiet: true);
+            controller.AddGlobalStep("network", ConfigureNetworkAsync);
+            controller.AddGlobalStep("ssh keys", ImportKeyPairAsync);
+            controller.AddNodeStep("node instances", CreateNodeInstanceAsync);
+            controller.AddNodeStep("credentials",
                 (controller, node) =>
                 {
                     // Update the node SSH proxies to use the secure SSH password.
@@ -1133,21 +1126,13 @@ namespace Neon.Kube
                     node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, secureSshPassword));
                 },
                 quiet: true);
-            setupController.AddGlobalStep("load balancer", ConfigureLoadBalancerAsync);
-            setupController.AddNodeStep("load balancer targets", WaitForSshTargetAsync);
-            setupController.AddGlobalStep("internet routing", async controller => await UpdateNetworkAsync(NetworkOperations.InternetRouting | NetworkOperations.EnableSsh));
-
-            if (!setupController.Run(leaveNodesConnected: false))
-            {
-                Console.WriteLine("*** One or more AWS provisioning steps failed.");
-                return await Task.FromResult(false);
-            }
-
-            return await Task.FromResult(true);
+            controller.AddGlobalStep("load balancer", ConfigureLoadBalancerAsync);
+            controller.AddNodeStep("load balancer targets", WaitForSshTargetAsync);
+            controller.AddGlobalStep("internet routing", async controller => await UpdateNetworkAsync(NetworkOperations.InternetRouting | NetworkOperations.EnableSsh));
         }
 
         /// <inheritdoc/>
-        public override void AddPostPrepareSteps(SetupController<NodeDefinition> setupController)
+        public override void AddPostProvisioningSteps(SetupController<NodeDefinition> setupController)
         {
             // Add a step to perform low-level node initialization.
 

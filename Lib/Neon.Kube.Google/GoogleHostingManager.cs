@@ -65,8 +65,8 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Instance members
 
-        private ClusterProxy        cluster;
-        private ISetupController    controller;
+        private ClusterProxy                    cluster;
+        private SetupController<NodeDefinition> controller;
 
         /// <summary>
         /// Creates an instance that is only capable of validating the hosting
@@ -115,16 +115,13 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override async Task<bool> ProvisionAsync(ISetupController controller, string secureSshPassword, string orgSshPassword = null)
+        public override void AddProvisioningSteps(SetupController<NodeDefinition> controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secureSshPassword), nameof(secureSshPassword));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(orgSshPassword), nameof(orgSshPassword));
             Covenant.Assert(cluster != null, $"[{nameof(GoogleHostingManager)}] was created with the wrong constructor.");
 
             this.controller = controller;
 
-            await Task.CompletedTask;
             throw new NotImplementedException("$todo(jefflill): Implement this.");
         }
 

@@ -62,7 +62,7 @@ namespace Neon.Kube
             public SetupStepState                                               Status;
             public int                                                          ParallelLimit;
             public bool                                                         WasExecuted;
-            public TimeSpan                                                     ElapsedTime;
+            public TimeSpan                                                     RunTime;
         }
 
         //---------------------------------------------------------------------
@@ -76,9 +76,6 @@ namespace Neon.Kube
         private List<Step>                          steps;
         private Step                                currentStep;
         private bool                                isFaulted;
-        private bool                                hasNodeSteps;
-        private StringBuilder                       sbDisplay;
-        private string                              previousDisplay;
 
         /// <summary>
         /// Constructor.
@@ -109,11 +106,9 @@ namespace Neon.Kube
                 title += name;
             }
 
-            this.OperationTitle  = title;
-            this.nodes           = nodes.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase).ToList();
-            this.steps           = new List<Step>();
-            this.sbDisplay       = new StringBuilder();
-            this.previousDisplay = string.Empty;
+            this.OperationTitle = title;
+            this.nodes          = nodes.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase).ToList();
+            this.steps          = new List<Step>();
         }
 
         /// <inheritdoc/>
@@ -460,7 +455,7 @@ namespace Neon.Kube
             var step = new Step()
             {
                 Label           = stepLabel,
-                IsQuiet           = quiet,
+                IsQuiet         = quiet,
                 AsyncNodeAction = nodeAction,
                 Predicate       = nodePredicate,
                 ParallelLimit   = noParallelLimit ? UnlimitedParallel : 0
@@ -508,24 +503,13 @@ namespace Neon.Kube
 
                 // We don't display node status if there aren't any node specific steps.
 
-                hasNodeSteps = steps.Exists(s => s.SyncNodeAction != null || s.AsyncNodeAction != null);
-
                 try
                 {
                     foreach (var step in steps)
                     {
-                        currentStep = step;
-
-                        try
+                        if (!PerformStep(step))
                         {
-                            if (!PerformStep(step))
-                            {
-                                break;
-                            }
-                        }
-                        finally
-                        {
-                            currentStep = null;
+                            break;
                         }
                     }
 
@@ -650,6 +634,8 @@ namespace Neon.Kube
                 NeonHelper.ThreadRun(
                     () =>
                     {
+                        currentStep = step;
+
                         if (step.SyncNodeAction != null)
                         {
                             // Execute the step on the selected nodes.
@@ -801,15 +787,17 @@ namespace Neon.Kube
                 // The setup steps are executing above in one or more threads and we're
                 // going to loop here to raise [StatusEvent] when we detect a change.
 
-                var status = new SetupClusterStatus(this);
+                var lastJson = (string)null;
 
                 while (true)
                 {
-                    var update = status.GetUpdate();
+                    var status  = new SetupClusterStatus(this);
+                    var newJson = NeonHelper.JsonSerialize(status);
 
-                    if (update != null)
+                    if (lastJson == null || lastJson != newJson)
                     {
-                        StatusChangedEvent?.Invoke(update);
+                        StatusChangedEvent?.Invoke(status);
+                        lastJson = newJson;
                     }
 
                     if (stepNodes.Count(n => !n.IsReady) == 0)
@@ -839,7 +827,7 @@ namespace Neon.Kube
             }
             finally
             {
-                step.ElapsedTime = stopWatch.Elapsed;
+                step.RunTime = stopWatch.Elapsed;
             }
         }
 
@@ -1058,9 +1046,31 @@ namespace Neon.Kube
         public int StepCount => steps.Count;
 
         /// <inheritdoc/>
+        public int CurrentStepNumber
+        {
+            get
+            {
+                if (currentStep == null || currentStep.Number == 0)
+                {
+                    return -1;
+                }
+                else
+                {
+                    return currentStep.Number;
+                }
+            }
+        }
+
+        /// <inheritdoc/>
         public TimeSpan Runtime { get; private set; }
 
         /// <inheritdoc/>
         public bool ShowRuntime { get; set; } = false;
+
+        /// <inheritdoc/>
+        public IEnumerable<SetupStepStatus> GetStepStatus()
+        {
+            return steps.Select(step => new SetupStepStatus(step.Number, step.Label, step.Status, step.RunTime, step));
+        }
     }
 }

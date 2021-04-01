@@ -69,11 +69,11 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Instance members
 
-        private ClusterProxy        cluster;
-        private ISetupController    controller;
-        private string              driveTemplatePath;
-        private string              vmDriveFolder;
-        private string              switchName;
+        private ClusterProxy                    cluster;
+        private SetupController<NodeDefinition> controller;
+        private string                          driveTemplatePath;
+        private string                          vmDriveFolder;
+        private string                          switchName;
 
         /// <summary>
         /// Creates an instance that is only capable of validating the hosting
@@ -94,6 +94,8 @@ namespace Neon.Kube
         public HyperVHostingManager(ClusterProxy cluster, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
+
+            var clusterLogin = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
 
             cluster.HostingManager = this;
 
@@ -125,16 +127,13 @@ namespace Neon.Kube
         public override bool RequiresAdminPrivileges => false;
 
         /// <inheritdoc/>
-        public override async Task<bool> ProvisionAsync(ISetupController controller, string secureSshPassword, string orgSshPassword = null)
+        public override void AddProvisioningSteps(SetupController<NodeDefinition> controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secureSshPassword), nameof(secureSshPassword));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(orgSshPassword), nameof(orgSshPassword));
             Covenant.Assert(cluster != null, $"[{nameof(HyperVHostingManager)}] was created with the wrong constructor.");
 
             this.controller = controller;
 
-            await Task.CompletedTask;
             throw new NotImplementedException("$todo(jefflill): Implement this.");
         }
 

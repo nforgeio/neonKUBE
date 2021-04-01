@@ -35,15 +35,11 @@ namespace Neon.Kube
     /// </summary>
     public partial class SetupClusterStatus
     {
-        // This can be changed to [Formatting.Indented] whil debugging.
-        private const Formatting jsonFormatting = Formatting.None; 
-
         private object                              syncLock = new object();
         private ISetupController                    controller;
         private ClusterProxy                        cluster;
         private bool                                isFaulted;
         private Dictionary<string, SetupNodeStatus> nameToNodeState;
-        private string                              lastStateJson;
 
         /// <summary>
         /// Constructor.
@@ -55,15 +51,15 @@ namespace Neon.Kube
 
             this.controller      = controller;
             this.cluster         = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            this.GlobalStatus    = controller.GlobalStatus;
+            this.Steps           = controller.GetStepStatus().ToList();
+            this.CurrentStep     = Steps.SingleOrDefault(step => step.Number == controller.CurrentStepNumber);
             this.nameToNodeState = new Dictionary<string, SetupNodeStatus>(StringComparer.OrdinalIgnoreCase);
 
-            foreach (var nodeDefinition in cluster.Definition.Nodes)
+            foreach (var node in cluster.Nodes)
             {
-                nameToNodeState.Add(nodeDefinition.Name, new SetupNodeStatus(nodeDefinition.Name, nodeDefinition));
+                nameToNodeState.Add(node.Name, new SetupNodeStatus(node.Name, node.Status, node.NodeDefinition));
             }
-
-            this.GlobalStatus  = controller.GlobalStatus;
-            this.lastStateJson = null;
         }
 
         /// <summary>
@@ -107,56 +103,6 @@ namespace Neon.Kube
         /// Returns any status for the overall setup operation.
         /// </summary>
         public string GlobalStatus { get; private set; }
-
-        /// <summary>
-        /// Updates the cluster setup state from the related <see cref="ClusterProxy"/>.  This
-        /// also detects whether the state has changed since the previous <see cref="GetUpdate"/>
-        /// call and returns a clone of the new state on any change.
-        /// </summary>
-        /// <returns>
-        /// A cloned copy of the <see cref="SetupClusterStatus"/> when the state has changed 
-        /// since the previous call.
-        /// </returns>
-        internal SetupClusterStatus GetUpdate()
-        {
-            lock (syncLock)
-            {
-                foreach (var node in cluster.Nodes)
-                {
-                    var nodeState = nameToNodeState[node.Name];
-
-                    nodeState.IsFaulted = node.IsFaulted;
-                    node.IsReady        = node.IsReady;
-                }
-
-                // Detect whether the state has changed since the last call by serializing as
-                // JSON and comparing against the previous state.
-
-                if (lastStateJson == null)
-                {
-                    // This is the first call to [Update()] so we'll treat this as a change.
-
-                    lastStateJson = NeonHelper.JsonSerialize(this, jsonFormatting);
-
-                    return this.Clone();
-                }
-                else
-                {
-                    var newStateJson = NeonHelper.JsonSerialize(this, jsonFormatting);
-
-                    if (newStateJson == lastStateJson)
-                    {
-                        lastStateJson = newStateJson;
-
-                        return this.Clone();
-                    }
-                    else
-                    {
-                        return null;
-                    }
-                }
-            }
-        }
 
         /// <summary>
         /// Returns a copy of the instance.

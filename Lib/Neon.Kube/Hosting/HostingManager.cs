@@ -81,9 +81,6 @@ namespace Neon.Kube
         public double WaitSeconds { get; set; } = 0.0;
 
         /// <inheritdoc/>
-        public virtual bool IsProvisionNOP => false;
-
-        /// <inheritdoc/>
         public abstract HostingEnvironment HostingEnvironment { get; }
 
         /// <inheritdoc/>
@@ -99,10 +96,10 @@ namespace Neon.Kube
         public virtual bool GenerateSecurePassword => true;
 
         /// <inheritdoc/>
-        public abstract Task<bool> ProvisionAsync(ISetupController controller, string secureSshPassword, string orgSshPassword = null);
+        public abstract void AddProvisioningSteps(SetupController<NodeDefinition> controller);
 
         /// <inheritdoc/>
-        public virtual void AddPostPrepareSteps(SetupController<NodeDefinition> setupController)
+        public virtual void AddPostProvisioningSteps(SetupController<NodeDefinition> setupController)
         {
         }
 

@@ -85,7 +85,7 @@ namespace Neon.Kube
         public TimeSpan Runtime { get; private set; }
 
         /// <summary>
-        /// Rerturns the internal <see cref="SetupController{NodeMetadata}"/> step.
+        /// Returns the internal <see cref="SetupController{NodeMetadata}"/> step.
         /// </summary>
         [JsonIgnore]
         public object InternalStep { get; private set; }

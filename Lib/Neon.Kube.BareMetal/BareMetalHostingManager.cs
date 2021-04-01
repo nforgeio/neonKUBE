@@ -70,10 +70,7 @@ namespace Neon.Kube
         // Instance members
 
         private ClusterProxy                    cluster;
-        private ISetupController                controller;
-        private string                          orgSshPassword;
-        private string                          secureSshPassword;
-        private Dictionary<string, string>      nodeToPassword;
+        private SetupController<NodeDefinition> controller;
 
         /// <summary>
         /// Creates an instance that is only capable of validating the hosting
@@ -98,8 +95,7 @@ namespace Neon.Kube
 
             cluster.HostingManager = this;
 
-            this.cluster        = cluster;
-            this.nodeToPassword = new Dictionary<string, string>();
+            this.cluster = cluster;
         }
 
         /// <inheritdoc/>
@@ -110,9 +106,6 @@ namespace Neon.Kube
                 GC.SuppressFinalize(this);
             }
         }
-
-        /// <inheritdoc/>
-        public override bool IsProvisionNOP => false;
 
         /// <inheritdoc/>
         public override HostingEnvironment HostingEnvironment => HostingEnvironment.BareMetal;
@@ -130,24 +123,18 @@ namespace Neon.Kube
         public override bool GenerateSecurePassword => true;
 
         /// <inheritdoc/>
-        public override async Task<bool> ProvisionAsync(ISetupController controller, string secureSshPassword, string orgSshPassword = null)
+        public override void AddProvisioningSteps(SetupController<NodeDefinition> controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secureSshPassword), nameof(secureSshPassword));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(orgSshPassword), nameof(orgSshPassword));
             Covenant.Assert(cluster != null, $"[{nameof(BareMetalHostingManager)}] was created with the wrong constructor.");
 
-            this.controller        = controller;
-            this.secureSshPassword = secureSshPassword;
-            this.orgSshPassword    = orgSshPassword;
-
-            await Task.CompletedTask;
+            this.controller = controller;
 
             throw new NotImplementedException();
         }
 
         /// <inheritdoc/>
-        public override void AddPostPrepareSteps(SetupController<NodeDefinition> setupController)
+        public override void AddPostProvisioningSteps(SetupController<NodeDefinition> setupController)
         {
         }
 
@@ -155,82 +142,6 @@ namespace Neon.Kube
         public override (string Address, int Port) GetSshEndpoint(string nodeName)
         {
             return (Address: cluster.GetNode(nodeName).Address.ToString(), Port: NetworkPorts.SSH);
-        }
-
-        /// <summary>
-        /// Connects the proxy to the node.
-        /// </summary>
-        /// <param name="node">The target node.</param>
-        private void Connect(NodeSshProxy<NodeDefinition> node)
-        {
-            // We'll start by using the insecure credentials to connect to the node.
-            // It is possible though that a first provisiong run failed the first time
-            // and was partially completed with some node passwords being changed to
-            // the secure password and with other nodes still having the insecure
-            // default password.
-            //
-            // We don't want to make the operator have to go back and reset the secure
-            // passwords on those nodes, so we'll try the secure password if the insecure
-            // one fails.
-            //
-            // Note that we're going to use the [nodeToPassword] dictionary to record
-            // the password for the node (by name) so that this will be available when
-            // we'll need to pass it to [KubeHelper.InitializeNode()].
-
-            try
-            {
-                node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, orgSshPassword));
-                node.Connect();
-
-                lock (nodeToPassword)
-                {
-                    nodeToPassword[node.Name] = orgSshPassword;
-                }
-            }
-            catch (SshProxyException)
-            {
-                // Fall back to the original password if it is different from the secure one,
-                // otherwise rethrow the error.
-
-                if (orgSshPassword == secureSshPassword)
-                {
-                    throw;
-                }
-
-                node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, secureSshPassword));
-                node.Connect();
-
-                lock (nodeToPassword)
-                {
-                    nodeToPassword[node.Name] = secureSshPassword;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Changes the password for the [sysadmin] account on the node to the new
-        /// secure password and reconnects the node using the new password.
-        /// </summary>
-        /// <param name="node">The target node.</param>
-        private void SetSecurePassword(NodeSshProxy<NodeDefinition> node)
-        {
-            node.Status = "setting secure password";
-
-            var script =
-$@"
-echo '{KubeConst.SysAdminUser}:{secureSshPassword}' | chpasswd
-";
-            var response = node.SudoCommand(CommandBundle.FromScript(script));
-
-            if (response.ExitCode != 0)
-            {
-                throw new KubeException($"*** ERROR: Unable to set the strong SSH password [exitcode={response.ExitCode}].");
-            }
-
-            // Update the node credentials and then reconnect. 
-
-            node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, secureSshPassword));
-            node.Connect();
         }
 
         /// <summary>

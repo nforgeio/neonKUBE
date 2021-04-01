@@ -102,7 +102,7 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="maxDisplayedSteps">The maximum number of steps to be displayed.  This <b>defaults to 5</b>.</param>
         /// <param name="showNodeStatus">Controls whether individual node status is displayed.  This defaults to <c>true</c>.</param>
-        private void WriteToConsole(int maxDisplayedSteps = 5, bool showNodeStatus = true)
+        public void WriteToConsole(int maxDisplayedSteps = 5, bool showNodeStatus = true)
         {
             Covenant.Requires<ArgumentException>(maxDisplayedSteps > 0, nameof(maxDisplayedSteps));
 
@@ -218,8 +218,7 @@ namespace Neon.Kube
                 // It would be more flexible to implement some kind of callback or virtual
                 // method to handle this.
 
-                var stepNodes        = controller.GetStepNodeNames(CurrentStep.InternalStep);
-                var stepNodeNamesSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                var stepNodeNamesSet = controller.GetStepNodeNames(CurrentStep.InternalStep);
 
                 foreach (var node in Nodes)
                 {

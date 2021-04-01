@@ -214,10 +214,16 @@ Server Requirements:
                 debugMode:             debug,
                 baseImageName:         baseImageName);
 
+            controller.StatusChangedEvent +=
+                status =>
+                {
+                    status.WriteToConsole();
+                };
+
             if (controller.Run())
             {
                 Console.WriteLine();
-                Console.WriteLine("*** SUCCESS: Cluster is prepared.");
+                Console.WriteLine("Cluster is prepared.");
                 Console.WriteLine();
                 Program.Exit(0);
             }

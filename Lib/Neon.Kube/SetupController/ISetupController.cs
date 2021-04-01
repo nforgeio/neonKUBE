@@ -87,6 +87,11 @@ namespace Neon.Kube
         int StepCount { get; }
 
         /// <summary>
+        /// Returns the current step number or -1 for quiet steps or when setup hasn't started yet.
+        /// </summary>
+        int CurrentStepNumber { get; }
+
+        /// <summary>
         /// Returns the time spent performing setup after setup has completed (or failed).
         /// </summary>
         TimeSpan Runtime { get; }
@@ -242,5 +247,11 @@ namespace Neon.Kube
         /// Returns any status for the overall setup operation.
         /// </summary>
         public string GlobalStatus { get; }
+
+        /// <summary>
+        /// Returns the status for all of the setup steps in order of execution.
+        /// </summary>
+        /// <returns>The step status items.</returns>
+        IEnumerable<SetupStepStatus> GetStepStatus();
     }
 }
