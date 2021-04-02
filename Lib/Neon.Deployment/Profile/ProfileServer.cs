@@ -29,6 +29,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using Neon.Common;
+using System.Linq;
 
 namespace Neon.Deployment
 {
@@ -119,6 +120,51 @@ namespace Neon.Deployment
     /// </remarks>
     public sealed class ProfileServer : IDisposable
     {
+        //---------------------------------------------------------------------
+        // Static members
+
+        /// <summary>
+        /// <para>
+        /// Parses a secret name by extracting the <b>name</b> and <b>property</b>
+        /// components.  secret names can be formatted like: <b>NAME</b> or <b>NAME[PROPERTY]</b>.
+        /// </para>
+        /// <note>
+        /// When the property syntax passed is malformed, we're just going to return the
+        /// entire input string as the name rather than throwing an exception here.  This
+        /// will probably result in a failed lookup which will be reported to the user who
+        /// will have a good chance then of figuring out what happened.
+        /// </note>
+        /// </summary>
+        /// <param name="secretName">The secret name.</param>
+        /// <returns>An anonymous structure including the name and property (if specified).</returns>
+        public static (string Name, string Property) ParseSecretName(string secretName)
+        {
+            Covenant.Requires<ArgumentNullException>(secretName != null, nameof(secretName));
+
+            var pLeftBracket  = secretName.IndexOf('[');
+            var pRightBracket = -1;
+
+            if (pLeftBracket != -1)
+            {
+                if (secretName.Last() == ']')
+                {
+                    pRightBracket = secretName.Length - 1;
+                }
+            }
+
+            if (pLeftBracket != -1 && pRightBracket != -1)
+            {
+                return (Name: secretName.Substring(0, pLeftBracket), Property: secretName.Substring(pLeftBracket + 1, pRightBracket - pLeftBracket - 1));
+            }
+            else
+            {
+                return (Name: secretName, Property: null);
+            }
+        }
+
+        //---------------------------------------------------------------------
+        // Instance members
+
         private readonly object             syncLock = new object();
         private string                      pipeName;
         private Thread[]                    threads;
