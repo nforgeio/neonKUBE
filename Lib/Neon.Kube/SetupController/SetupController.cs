@@ -552,6 +552,15 @@ namespace Neon.Kube
                 {
                     disposable.Dispose();
                 }
+
+                // Raise one more status changed an wait for a bit so any
+                // listening UI can display the status.
+
+                if (StatusChangedEvent != null)
+                {
+                    StatusChangedEvent.Invoke(new SetupClusterStatus(this));
+                    Thread.Sleep(TimeSpan.FromSeconds(0.5));
+                }
             }
         }
 
