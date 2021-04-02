@@ -388,9 +388,6 @@ services:
                     LogLevel      = logLevel
                 };
 
-                settings.Servers.Clear();
-                settings.Servers.Add($"http://10.0.0.2:{NetworkPorts.Cadence}");
-
                 this.settings  = settings;
                 this.reconnect = reconnect;
 
