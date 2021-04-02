@@ -462,7 +462,7 @@ service ntp restart
             sbHosts.Append(
 $@"
 127.0.0.1	    localhost
-127.0.0.1       kubernetes-masters
+127.0.0.1       kubernetes-masters neon-desktop
 {nodeAddress}{separator}{Name}{separator}{KubeConst.LocalClusterRegistry}
 ::1             localhost ip6-localhost ip6-loopback
 ff02::1         ip6-allnodes

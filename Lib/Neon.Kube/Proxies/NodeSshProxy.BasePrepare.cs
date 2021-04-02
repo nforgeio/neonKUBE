@@ -90,12 +90,12 @@ namespace Neon.Kube
             // some other changes.  We might be able to just reconnect but we'll
             // reboot, just to be safe.
 
-            InvokeIdempotent("base/initialize-reboot",
-                () =>
-                {
-                    controller.LogProgress(this, verb: "reboot", message: $"[{this.Name}]");
-                    Reboot(wait: true);
-                });
+            //InvokeIdempotent("base/initialize-reboot",
+            //    () =>
+            //    {
+            //        controller.LogProgress(this, verb: "reboot", message: $"[{this.Name}]");
+            //        Reboot(wait: true);
+            //    });
         }
 
         /// <summary>

@@ -269,7 +269,7 @@ OPTIONS:
                 (controller, node) =>
                 {
                     node.SetupNode(controller);
-                    node.InvokeIdempotent("setup/setup-node-restart", () => node.Reboot(wait: true));
+                    //node.InvokeIdempotent("setup/setup-node-restart", () => node.Reboot(wait: true));
                 },
                 (controller, node) => node == cluster.FirstMaster);
 

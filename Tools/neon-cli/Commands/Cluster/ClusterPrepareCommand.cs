@@ -99,14 +99,14 @@ Server Requirements:
     * Known [sysadmin] sudoer user
     * OpenSSH installed
 ";
-        private const string    logBeginMarker  = "# CLUSTER-BEGIN-PREPARE ##########################################################";
-        private const string    logEndMarker    = "# CLUSTER-END-PREPARE-SUCCESS ####################################################";
-        private const string    logFailedMarker = "# CLUSTER-END-PREPARE-FAILED #####################################################";
+        private const string logBeginMarker = "# CLUSTER-BEGIN-PREPARE ##########################################################";
+        private const string logEndMarker = "# CLUSTER-END-PREPARE-SUCCESS ####################################################";
+        private const string logFailedMarker = "# CLUSTER-END-PREPARE-FAILED #####################################################";
 
-        private ClusterProxy    cluster;
-        private HostingManager  hostingManager;
-        private string          clusterDefPath;
-        private string          packageCaches;
+        private ClusterProxy cluster;
+        private HostingManager hostingManager;
+        private string clusterDefPath;
+        private string packageCaches;
 
         /// <inheritdoc/>
         public override string[] Words => new string[] { "cluster", "prepare" };
@@ -122,7 +122,7 @@ Server Requirements:
         {
             Console.WriteLine(usage);
         }
-        
+
         /// <inheritdoc/>
         public override async Task RunAsync(CommandLine commandLine)
         {
@@ -144,7 +144,7 @@ Server Requirements:
                 }
             }
 
-            var debug         = commandLine.HasOption("--debug");
+            var debug = commandLine.HasOption("--debug");
             var baseImageName = commandLine.GetOption("--base-image-name");
 
             if (debug && string.IsNullOrEmpty(baseImageName))
@@ -233,10 +233,10 @@ Server Requirements:
                     Console.WriteLine(" Scanning for IP address conflicts...");
                     Console.WriteLine();
 
-                    var pingOptions   = new PingOptions(ttl: 32, dontFragment: true);
-                    var pingTimeout   = TimeSpan.FromSeconds(2);
+                    var pingOptions = new PingOptions(ttl: 32, dontFragment: true);
+                    var pingTimeout = TimeSpan.FromSeconds(2);
                     var pingConflicts = new List<NodeDefinition>();
-                    var pingAttempts  = 2;
+                    var pingAttempts = 2;
 
                     // I'm going to use up to 20 threads at a time here for simplicity
                     // rather then doing this as async operations.
@@ -279,7 +279,7 @@ Server Requirements:
 
                         foreach (var node in pingConflicts.OrderBy(n => NetHelper.AddressToUint(NetHelper.ParseIPv4Address(n.Address))))
                         {
-                            Console.Error.WriteLine($"{node.Address, 16}:    {node.Name}");
+                            Console.Error.WriteLine($"{node.Address,16}:    {node.Name}");
                         }
 
                         Program.Exit(1);
@@ -299,7 +299,7 @@ Server Requirements:
                     Program.Exit(1);
                 }
 
-                hostingManager.ShowStatus  = !Program.Quiet;
+                hostingManager.ShowStatus = !Program.Quiet;
                 hostingManager.MaxParallel = Program.MaxParallel;
                 hostingManager.WaitSeconds = Program.WaitSeconds;
 
@@ -315,15 +315,15 @@ Server Requirements:
                 // Otherwise, we'll write (or overwrite) the context file with a fresh context.
 
                 var clusterLoginPath = KubeHelper.GetClusterLoginPath((KubeContextName)$"{KubeConst.RootUser}@{clusterDefinition.Name}");
-                var clusterLogin     = ClusterLogin.Load(clusterLoginPath);
+                var clusterLogin = ClusterLogin.Load(clusterLoginPath);
 
                 if (clusterLogin == null || !clusterLogin.SetupDetails.SetupPending)
                 {
                     clusterLogin = new ClusterLogin(clusterLoginPath)
                     {
                         ClusterDefinition = clusterDefinition,
-                        SshUsername       = KubeConst.SysAdminUser,
-                        SetupDetails      = new KubeSetupDetails() { SetupPending = true }
+                        SshUsername = KubeConst.SysAdminUser,
+                        SetupDetails = new KubeSetupDetails() { SetupPending = true }
                     };
 
                     clusterLogin.Save();
@@ -443,12 +443,7 @@ Server Requirements:
                     }
                 }
 
-                throw new NotImplementedException("$todo(jefflill): IMPLEMENT THIS!");
 
-                //if (!hostingManager.ProvisionAsync(controller, clusterLogin.SshPassword, orgSshPassword).Result)
-                //{
-                //    Program.Exit(1);
-                //}
 
                 // Ensure that the nodes have valid IP addresses.
 
@@ -504,13 +499,18 @@ Server Requirements:
 
                 var operation = $"Preparing [{cluster.Definition.Name}] cluster nodes";
 
-                var controller = 
+                var controller =
                     new SetupController<NodeDefinition>(operation, cluster.Nodes)
                     {
-                        ShowStatus  = !Program.Quiet,
+                        ShowStatus = !Program.Quiet,
                         MaxParallel = Program.MaxParallel,
                         ShowElapsed = true
                     };
+
+                if (!hostingManager.ProvisionAsync(controller, clusterLogin.SshPassword, orgSshPassword).Result)
+                {
+                    Program.Exit(1);
+                }
 
                 // Configure the setup controller state.
 
@@ -540,7 +540,7 @@ Server Requirements:
                     {
                         node.PrepareNode(controller);
                     });
-            
+
                 // Some hosting managers may have to some additional work after the node has
                 // been otherwise prepared.
 

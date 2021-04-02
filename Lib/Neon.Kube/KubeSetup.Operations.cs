@@ -384,7 +384,7 @@ spec:
                             {
                                 // Tweak the API server endpoint for WSL2.
 
-                                controlPlaneEndpoint = $"localhost:{KubeNodePorts.KubeApiServer}";
+                                controlPlaneEndpoint = $"neon-desktop:{KubeNodePorts.KubeApiServer}";
                             }
 
                             if (!string.IsNullOrEmpty(cluster.Definition.Kubernetes.ApiLoadBalancer))
@@ -399,6 +399,13 @@ spec:
                             foreach (var node in cluster.Masters)
                             {
                                 sbCertSANs.AppendLine($"  - \"{node.Address}\"");
+                                sbCertSANs.AppendLine($"  - \"{node.Name}\"");
+                            }
+
+                            if (hostingEnvironment == HostingEnvironment.Wsl2)
+                            {
+                                sbCertSANs.AppendLine($"  - \"{Dns.GetHostName()}\"");
+                                sbCertSANs.AppendLine($"  - \"neon-desktop\"");
                             }
 
                             var kubeletFailSwapOnLine           = string.Empty;
@@ -426,6 +433,7 @@ imageRepository: ""{KubeConst.NeonContainerRegistery(controller)}""
 apiServer:
   extraArgs:
     bind-address: 0.0.0.0
+    advertise-address: 0.0.0.0
     logging-format: json
     default-not-ready-toleration-seconds: ""30"" # default 300
     default-unreachable-toleration-seconds: ""30"" #default  300
@@ -446,18 +454,18 @@ scheduler:
   extraArgs:
     logging-format: json");
 
-                            if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2)
-                            {
-                                clusterConfig.AppendLine($@"
-etcd:
-  local:
-    extraArgs:
-        listen-peer-urls: https://127.0.0.1:2380
-        listen-client-urls: https://127.0.0.1:2379
-        advertise-client-urls: https://127.0.0.1:2379
-        initial-advertise-peer-urls: https://127.0.0.1:2380
-        initial-cluster=master-0: https://127.0.0.1:2380");
-                            }
+//                            if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2)
+//                            {
+//                                clusterConfig.AppendLine($@"
+//etcd:
+//  local:
+//    extraArgs:
+//        listen-peer-urls: https://neon-desktop:2380
+//        listen-client-urls: https://neon-desktop:2379
+//        advertise-client-urls: https://neon-deskt:2379
+//        initial-advertise-peer-urls: https://127.0.0.1:2380
+//        initial-cluster=master-0: https://127.0.0.1:2380");
+//                            }
 
                             clusterConfig.AppendLine($@"
 ---
@@ -846,7 +854,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2)
                     {
                         values.Add(new KeyValuePair<string, object>($"neonDesktop", $"true"));
-                        values.Add(new KeyValuePair<string, object>($"kubernetes.service.host", $"localhost"));
+                        values.Add(new KeyValuePair<string, object>($"kubernetes.service.host", $"neon-desktop"));
                         values.Add(new KeyValuePair<string, object>($"kubernetes.service.port", KubeNodePorts.KubeApiServer));
 
                     }
@@ -905,7 +913,12 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                                 ImagePullPolicy = "IfNotPresent"
                                             }
                                         },
-                                        RestartPolicy = "Always"
+                                        RestartPolicy = "Always",
+                                        Tolerations = new List<V1Toleration>()
+                                        {
+                                            { new V1Toleration() { Effect = "NoSchedule", OperatorProperty = "Exists" } },
+                                            { new V1Toleration() { Effect = "NoExecute", OperatorProperty = "Exists" } }
+                                        }
                                     }
                                 }, "default");
                         });
