@@ -326,14 +326,14 @@ namespace TestCadence
             // wake time in the future.
 
             var startUtcNow = DateTime.UtcNow;
-            var sleepTime   = TimeSpan.FromSeconds(5);
+            var sleepTime   = TimeSpan.FromSeconds(30);
             var wakeTimeUtc = startUtcNow + sleepTime;
 
             await stub.SleepUntilUtcAsync(wakeTimeUtc);
 
             var utcNow = DateTime.UtcNow;
 
-            Assert.True(utcNow >= wakeTimeUtc);
+            Assert.True(utcNow >= wakeTimeUtc, $"[{nameof(utcNow)}={utcNow}] is not >= [{nameof(wakeTimeUtc)}={wakeTimeUtc}]");
 
             // Verify that scheduling a sleep time in the past is
             // essentially a NOP.
@@ -344,7 +344,7 @@ namespace TestCadence
 
             await stub.SleepUntilUtcAsync(startUtcNow - TimeSpan.FromDays(1));
 
-            Assert.True(NeonHelper.IsWithin(DateTime.UtcNow, startUtcNow, CadenceTestHelper.TimeFudge));
+            Assert.True(DateTime.UtcNow >= startUtcNow + TimeSpan.FromHours(1));
         }
 
         //---------------------------------------------------------------------

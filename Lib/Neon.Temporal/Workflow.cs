@@ -1242,7 +1242,7 @@ namespace Neon.Temporal
         /// <summary>
         /// Pauses the workflow until at least the specified time (UTC).
         /// </summary>
-        /// <param name="time">The wake time.</param>
+        /// <param name="wakeTimeUtc">The wake time (UTC).</param>
         /// <returns>The tracking <see cref="Task"/></returns>
         /// <exception cref="ObjectDisposedException">Thrown if the associated Temporal client is disposed.</exception>
         /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
@@ -1254,7 +1254,7 @@ namespace Neon.Temporal
         /// depend on time resolutions less than around 10 seconds.
         /// </note>
         /// </remarks>
-        public async Task SleepUntilUtcAsync(DateTime time)
+        public async Task SleepUntilUtcAsync(DateTime wakeTimeUtc)
         {
             await SyncContext.ClearAsync;
             Client.EnsureNotDisposed();
@@ -1263,9 +1263,9 @@ namespace Neon.Temporal
 
             var utcNow = await UtcNowAsync();
 
-            if (time > utcNow)
+            if (wakeTimeUtc > utcNow)
             {
-                await SleepAsync(time - utcNow);
+                await SleepAsync(wakeTimeUtc - utcNow);
             }
         }
 

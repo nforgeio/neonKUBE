@@ -113,10 +113,5 @@ namespace TestTemporal
         /// Identifies the test clients.
         /// </summary>
         public const string ClientIdentity = "unit-test";
-
-        /// <summary>
-        /// Used to grant a bit of time measurement deviance for unit tests.
-        /// </summary>
-        public static readonly TimeSpan TimeFudge = TimeSpan.FromMilliseconds(250);
     }
 }
