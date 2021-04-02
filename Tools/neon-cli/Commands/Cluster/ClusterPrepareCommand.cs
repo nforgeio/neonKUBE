@@ -223,7 +223,7 @@ Server Requirements:
             if (controller.Run())
             {
                 Console.WriteLine();
-                Console.WriteLine(" Cluster is prepared.");
+                Console.WriteLine($" [{clusterDefinition.Name}] cluster is prepared.");
                 Console.WriteLine();
                 Program.Exit(0);
             }

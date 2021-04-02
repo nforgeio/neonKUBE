@@ -196,7 +196,7 @@ OPTIONS:
             if (controller.Run())
             {
                 Console.WriteLine();
-                Console.WriteLine(" Cluster is ready.");
+                Console.WriteLine($" [{clusterDefinition.Name}] cluster is ready.");
                 Console.WriteLine();
                 Program.Exit(0);
             }
