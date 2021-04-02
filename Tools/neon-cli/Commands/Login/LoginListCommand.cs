@@ -105,7 +105,7 @@ USAGE:
 
             if (logins.Count == 0)
             {
-                Console.Error.WriteLine("*** No neonKUBE contexts.");
+                Console.Error.WriteLine("*** No neonKUBE logins.");
             }
             else
             {
