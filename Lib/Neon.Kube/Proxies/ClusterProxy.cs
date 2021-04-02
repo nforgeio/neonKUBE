@@ -183,21 +183,6 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Optionally specifies the line written as the first line of log files.
-        /// </summary>
-        public string LogBeginMarker { get; set; }
-
-        /// <summary>
-        /// Optionally specifies the line written as the last line of log files when the operation succeeded.
-        /// </summary>
-        public string LogEndMarker { get; set; }
-
-        /// <summary>
-        /// Optionally specifies the line written as the last line of log files when the operation failed.
-        /// </summary>
-        public string LogFailedMarker { get; set; }
-
-        /// <summary>
         /// Releases all associated resources.
         /// </summary>
         /// <param name="disposing">Pass <c>true</c> if we're disposing, <c>false</c> if we're finalizing.</param>
@@ -212,10 +197,7 @@ namespace Neon.Kube
         /// <summary>
         /// Returns the cluster name.
         /// </summary>
-        public string Name
-        {
-            get { return Definition.Name; }
-        }
+        public string Name => Definition.Name;
 
         /// <summary>
         /// The associated <see cref="IHostingManager"/> or <c>null</c>.

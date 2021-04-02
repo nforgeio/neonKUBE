@@ -223,14 +223,14 @@ Server Requirements:
             if (controller.Run())
             {
                 Console.WriteLine();
-                Console.WriteLine("Cluster is prepared.");
+                Console.WriteLine(" Cluster is prepared.");
                 Console.WriteLine();
                 Program.Exit(0);
             }
             else
             {
                 Console.WriteLine();
-                Console.WriteLine("*** ERROR: One or more configuration steps failed.");
+                Console.WriteLine(" *** ERROR: One or more configuration steps failed.");
                 Console.WriteLine();
                 Program.Exit(1);
             }

@@ -1162,10 +1162,10 @@ rm -rf linux-amd64
 
                     foreach (var imageFolder in setupImageFolders)
                     {
-                        var imageName = Path.GetFileName(imageFolder);
+                        var imageName   = Path.GetFileName(imageFolder);
                         var versionPath = Path.Combine(imageFolder, ".version");
-                        var importPath = Path.Combine(imageFolder, ".import");
-                        var targetTag = (string)null;
+                        var importPath  = Path.Combine(imageFolder, ".import");
+                        var targetTag   = (string)null;
 
                         if (File.Exists(versionPath))
                         {
@@ -1314,7 +1314,7 @@ echo ""deb https://apt.kubernetes.io/ kubernetes-xenial main"" > /etc/apt/source
 {KubeNodeFolders.Bin}/safe-apt-get install -yq kubeadm={KubeVersions.KubeAdminPackageVersion}
 {KubeNodeFolders.Bin}/safe-apt-get install -yq kubectl={KubeVersions.KubeCtlPackageVersion}
 
-# Prevent the package manager from automatically these components.
+# Prevent the package manager these components from starting automatically.
 
 set +e      # Don't exit if the next command fails
 apt-mark hold kubeadm kubectl kubelet
@@ -1326,7 +1326,7 @@ mkdir -p /etc/cni/net.d
 
 echo KUBELET_EXTRA_ARGS=--network-plugin=cni --cni-bin-dir=/opt/cni/bin --cni-conf-dir=/etc/cni/net.d --feature-gates=\""AllAlpha=false,RunAsGroup=true\"" --container-runtime=remote --cgroup-driver=systemd --container-runtime-endpoint='unix:///var/run/crio/crio.sock' --runtime-request-timeout=5m > /etc/default/kubelet
 
-# Stop and disable [kubelet] for now.  We'll enable this during cluster setup.
+# Stop and disable [kubelet] for now.  We'll enable this later during cluster setup.
 
 systemctl daemon-reload
 systemctl stop kubelet

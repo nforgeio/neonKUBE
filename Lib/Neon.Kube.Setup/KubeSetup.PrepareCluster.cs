@@ -70,6 +70,7 @@ namespace Neon.Kube
         /// Package cache servers are deployed to the masters by default.
         /// </note>
         /// </param>
+
         /// <param name="unredacted">Optionally indicates that sensitive information <b>won't be redacted</b> from the setup logs (typically used when debugging).</param>
         /// <param name="debugMode">Optionally indicates that the cluster will be prepared in debug mode.</param>
         /// <param name="baseImageName">Optionally specifies the base image name to use for debug mode.</param>
@@ -78,7 +79,7 @@ namespace Neon.Kube
         public static ISetupController CreateClusterPrepareController(
             ClusterDefinition           clusterDefinition, 
             string                      stateFolder, 
-            int                         maxParallel           = 500, 
+            int                         maxParallel           = 500,
             IEnumerable<IPEndPoint>     packageCacheEndpoints = null,
             bool                        unredacted            = false, 
             bool                        debugMode             = false, 
@@ -129,7 +130,7 @@ namespace Neon.Kube
 
             // Configure the setup controller.
 
-            var controller = new SetupController<NodeDefinition>($"Preparing [{cluster.Definition.Name}] cluster nodes", cluster.Nodes)
+            var controller = new SetupController<NodeDefinition>($"Prepare [{cluster.Definition.Name}] cluster infrastructure", cluster.Nodes)
             {
                 MaxParallel     = maxParallel,
                 LogBeginMarker  = "# CLUSTER-BEGIN-PREPARE ##########################################################",
@@ -153,7 +154,7 @@ namespace Neon.Kube
             // Otherwise, we'll write (or overwrite) the context file with a fresh context.
 
             var clusterLoginPath = KubeHelper.GetClusterLoginPath((KubeContextName)$"{KubeConst.RootUser}@{clusterDefinition.Name}");
-            var clusterLogin = ClusterLogin.Load(clusterLoginPath);
+            var clusterLogin     = ClusterLogin.Load(clusterLoginPath);
 
             if (clusterLogin == null || !clusterLogin.SetupDetails.SetupPending)
             {
@@ -169,8 +170,10 @@ namespace Neon.Kube
 
             // Configure the setup controller state.
 
+            controller.Add(KubeSetupProperty.ReleaseMode, KubeHelper.IsRelease);
             controller.Add(KubeSetupProperty.DebugMode, debugMode);
             controller.Add(KubeSetupProperty.BaseImageName, baseImageName);
+            controller.Add(KubeSetupProperty.MaintainerMode, !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("NC_ROOT")));
             controller.Add(KubeSetupProperty.ClusterProxy, cluster);
             controller.Add(KubeSetupProperty.ClusterLogin, clusterLogin);
             controller.Add(KubeSetupProperty.HostingManager, hostingManager);

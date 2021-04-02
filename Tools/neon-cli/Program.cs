@@ -548,28 +548,6 @@ You can disable the use of this encrypted folder by specifying
         public static bool Debug { get; set; }
 
         /// <summary>
-        /// Creates a <see cref="NodeSshProxy{TMetadata}"/> for the specified host and server name,
-        /// configuring logging and the credentials as specified by the global command
-        /// line options.
-        /// </summary>
-        /// <param name="name">The node name.</param>
-        /// <param name="address">The node's private IP address.</param>
-        /// <param name="appendToLog">
-        /// Pass <c>true</c> to append to an existing log file (or create one if necessary)
-        /// or <c>false</c> to replace any existing log file with a new one.
-        /// </param>
-        /// 
-        /// <typeparam name="TMetadata">Defines the metadata type the command wishes to associate with the server.</typeparam>
-        /// <returns>The <see cref="NodeSshProxy{TMetadata}"/>.</returns>
-        public static NodeSshProxy<TMetadata> CreateNodeProxy<TMetadata>(string name, IPAddress address, bool appendToLog)
-            where TMetadata : class
-        {
-            // $todo(jefflill): DELETE THIS METHOD!
-
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
         /// Presents the user with a yes/no question and waits for a response.
         /// </summary>
         /// <param name="prompt">The question prompt.</param>

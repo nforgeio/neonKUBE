@@ -476,7 +476,7 @@ namespace Neon.Kube
 
             try
             {
-                cluster?.LogLine(cluster.LogBeginMarker);
+                cluster?.LogLine(LogBeginMarker);
 
                 // We're going to time how long this takes.
 
@@ -515,7 +515,7 @@ namespace Neon.Kube
 
                     if (isFaulted)
                     {
-                        cluster?.LogLine(cluster.LogFailedMarker);
+                        cluster?.LogLine(LogFailedMarker);
 
                         return false;
                     }
@@ -525,7 +525,7 @@ namespace Neon.Kube
                         node.Status = "[x] READY";
                     }
 
-                    cluster?.LogLine(cluster.LogEndMarker);
+                    cluster?.LogLine(LogEndMarker);
 
                     return true;
                 }

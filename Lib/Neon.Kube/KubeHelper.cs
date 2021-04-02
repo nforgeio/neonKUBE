@@ -62,27 +62,27 @@ namespace Neon.Kube
     /// </summary>
     public static class KubeHelper
     {
-        private static INeonLogger log = LogManager.Default.GetLogger(typeof(KubeHelper));
-        private static string orgKUBECONFIG;
-        private static string testFolder;
-        private static KubeConfig cachedConfig;
-        private static KubeConfigContext cachedContext;
-        private static string cachedNeonKubeUserFolder;
-        private static string cachedKubeUserFolder;
-        private static string cachedRunFolder;
-        private static string cachedLogFolder;
-        private static string cachedTempFolder;
-        private static string cachedLoginsFolder;
-        private static string cachedPasswordsFolder;
-        private static string cachedCacheFolder;
-        private static string cachedDesktopFolder;
-        private static string cachedDesktopWsl2Folder;
-        private static KubeClientConfig cachedClientConfig;
-        private static X509Certificate2 cachedClusterCertificate;
-        private static string cachedProgramFolder;
-        private static string cachedPwshPath;
-        private static IStaticDirectory cachedResources;
-        private static string cachedNodeImageFolder;
+        private static INeonLogger          log = LogManager.Default.GetLogger(typeof(KubeHelper));
+        private static string               orgKUBECONFIG;
+        private static string               testFolder;
+        private static KubeConfig           cachedConfig;
+        private static KubeConfigContext    cachedContext;
+        private static string               cachedNeonKubeUserFolder;
+        private static string               cachedKubeUserFolder;
+        private static string               cachedRunFolder;
+        private static string               cachedLogFolder;
+        private static string               cachedTempFolder;
+        private static string               cachedLoginsFolder;
+        private static string               cachedPasswordsFolder;
+        private static string               cachedCacheFolder;
+        private static string               cachedDesktopFolder;
+        private static string               cachedDesktopWsl2Folder;
+        private static KubeClientConfig     cachedClientConfig;
+        private static X509Certificate2     cachedClusterCertificate;
+        private static string               cachedProgramFolder;
+        private static string               cachedPwshPath;
+        private static IStaticDirectory     cachedResources;
+        private static string               cachedNodeImageFolder;
 
         /// <summary>
         /// CURL command common options.
@@ -940,6 +940,14 @@ namespace Neon.Kube
                 return cachedPwshPath = "pwsh.exe";
             }
         }
+
+        /// <summary>
+        /// Returns <c>true</c> if the current assembly was built from the production <b>PROD</b> 
+        /// source code branch.
+        /// </summary>
+#pragma warning disable 0436
+        public static bool IsRelease => ThisAssembly.Git.Branch.StartsWith("release-", StringComparison.InvariantCultureIgnoreCase);
+#pragma warning restore 0436
 
         /// <summary>
         /// Loads or reloads the Kubernetes configuration.
