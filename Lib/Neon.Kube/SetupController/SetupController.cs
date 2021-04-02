@@ -21,12 +21,14 @@ using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Collections;
 using Neon.Common;
+using Neon.Net;
 using Neon.SSH;
 
 namespace Neon.Kube
@@ -47,28 +49,20 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Private types
 
-        private enum StepStatus
-        {
-            None,
-            Running,
-            Done,
-            Failed
-        }
-
         private class Step
         {
             public int                                                          Number;
             public string                                                       Label;
-            public bool                                                         Quiet;
+            public bool                                                         IsQuiet;
             public Action<ISetupController>                                     SyncGlobalAction;
             public Func<ISetupController, Task>                                 AsyncGlobalAction;
             public Action<ISetupController, NodeSshProxy<NodeMetadata>>         SyncNodeAction;
             public Func<ISetupController, NodeSshProxy<NodeMetadata>, Task>     AsyncNodeAction;
             public Func<ISetupController, NodeSshProxy<NodeMetadata>, bool>     Predicate;
-            public StepStatus                                                   Status;
+            public SetupStepState                                               Status;
             public int                                                          ParallelLimit;
             public bool                                                         WasExecuted;
-            public TimeSpan                                                     ElapsedTime;
+            public TimeSpan                                                     RunTime;
         }
 
         //---------------------------------------------------------------------
@@ -76,15 +70,12 @@ namespace Neon.Kube
 
         private const int UnlimitedParallel = 500;  // Treat this as "unlimited"
 
-        private string                              operationTitle;
-        private string                              operationStatus;
+        private List<IDisposable>                   disposables = new List<IDisposable>();
+        private string                              globalStatus;
         private List<NodeSshProxy<NodeMetadata>>    nodes;
         private List<Step>                          steps;
         private Step                                currentStep;
-        private bool                                error;
-        private bool                                hasNodeSteps;
-        private StringBuilder                       sbDisplay;
-        private string                              previousDisplay;
+        private bool                                isFaulted;
 
         /// <summary>
         /// Constructor.
@@ -115,59 +106,26 @@ namespace Neon.Kube
                 title += name;
             }
 
-            this.operationTitle  = title;
-            this.operationStatus = string.Empty;
-            this.nodes           = nodes.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase).ToList();
-            this.steps           = new List<Step>();
-            this.sbDisplay       = new StringBuilder();
-            this.previousDisplay = string.Empty;
+            this.OperationTitle = title;
+            this.nodes          = nodes.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase).ToList();
+            this.steps          = new List<Step>();
         }
 
-        /// <summary>
-        /// Specifies whether the class should print setup status to the console.
-        /// This defaults to <c>false</c>.
-        /// </summary>
-        public bool ShowStatus { get; set; } = false;
+        /// <inheritdoc/>
+        public void AddDisposable(IDisposable disposable)
+        {
+            Covenant.Requires<ArgumentNullException>(disposable != null, nameof(disposable));
 
-        /// <summary>
-        /// Specifies whether that node status will be displayed.  This
-        /// defaults to <c>true</c>.
-        ///</summary>
-        public bool ShowNodeStatus { get; set; } = true;
+            disposables.Add(disposable);
+        }
 
-        /// <summary>
-        /// Raises when progress/error messages are received from setup steps.
-        /// </summary>
-        public event SetupProgressDelegate ProgressEvent;
-
-        /// <summary>
-        /// Specifies the maximum number of setup steps to be displayed.
-        /// This defaults to <b>5</b>.  You can set <b>0</b> to allow an 
-        /// unlimited number of steps may be displayed.
-        /// </summary>
-        public int MaxDisplayedSteps { get; set; } = 5;
-
-        /// <summary>
-        /// The maximum number of nodes that will execute setup steps in parallel.  This
-        /// defaults to effectively unconstrained.
-        /// </summary>
-        public int MaxParallel { get; set; } = int.MaxValue;
-
-        /// <summary>
-        /// Returns the number of setup steps.
-        /// </summary>
-        public int StepCount => steps.Count;
-
-        /// <summary>
-        /// Optionally displays the elapsed time for each step as well as the overall
-        /// operation when setup completes (or fails).
-        /// </summary>
-        public bool ShowElapsed { get; set; } = false;
-
-        /// <summary>
-        /// Returns the time spent performing setup after setup has completed (or failed).
-        /// </summary>
-        public TimeSpan ElapsedTime { get; private set; }
+        /// <inheritdoc/>
+        public IEnumerable<NodeLog> GetNodeLogs()
+        {
+            return nodes
+                .OrderBy(node => node.Name, StringComparer.InvariantCultureIgnoreCase)
+                .Select(node => node.GetNodeLog());
+        }
 
         /// <summary>
         /// Sets the <see cref="LinuxSshProxy.DefaultRunOptions"/> property for
@@ -185,7 +143,7 @@ namespace Neon.Kube
         /// <summary>
         /// Adds a synchronous global configuration step.
         /// </summary>
-        /// <param name="stepLabel">Brief step summary.</param>
+        /// <param name="stepLabel">Specifies the step label.</param>
         /// <param name="action">The synchronous global action to be performed.</param>
         /// <param name="quiet">Optionally specifies that the step is not to be reported in the progress.</param>
         /// <param name="position">
@@ -204,16 +162,16 @@ namespace Neon.Kube
                 new Step()
                 {
                     Label            = stepLabel,
-                    Quiet            = quiet,
+                    IsQuiet            = quiet,
                     SyncGlobalAction = action,
-                    Predicate        = (state, node) => true
+                    Predicate        = (controller, node) => true
                 });
         }
 
         /// <summary>
         /// Adds an asynchronous global configuration step.
         /// </summary>
-        /// <param name="stepLabel">Brief step summary.</param>
+        /// <param name="stepLabel">Specifies the step label.</param>
         /// <param name="action">The asynchronous global action to be performed.</param>
         /// <param name="quiet">Optionally specifies that the step is not to be reported in the progress.</param>
         /// <param name="position">
@@ -232,16 +190,86 @@ namespace Neon.Kube
                 new Step()
                 {
                     Label             = stepLabel,
-                    Quiet             = quiet,
+                    IsQuiet             = quiet,
                     AsyncGlobalAction = action,
-                    Predicate         = (state, node) => true,
+                    Predicate         = (controller, node) => true,
+                });
+        }
+
+        /// <summary>
+        /// Adds a global step that scans for existing machines that conflict with any of
+        /// the IP addressess assigned to the cluster.  This is used by some hosting managers
+        /// to ensure that we're not conficting with and exising cluster or other assets
+        /// deployed on the LAN.
+        /// </summary>
+        /// <param name="stepLabel">Optionally specifies the step label.</param>
+        public void AddCheckForIpConflcits(string stepLabel = "scan for IP address conflicts")
+        {
+            AddGlobalStep(stepLabel,
+                controller =>
+                {
+                    var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+                    var pingOptions   = new PingOptions(ttl: 32, dontFragment: true);
+                    var pingTimeout   = TimeSpan.FromSeconds(2);
+                    var pingConflicts = new List<NodeDefinition>();
+                    var pingAttempts  = 2;
+
+                    // I'm going to use up to 20 threads at a time here for simplicity
+                    // rather then doing this as async operations.
+
+                    var parallelOptions = new ParallelOptions()
+                    {
+                        MaxDegreeOfParallelism = 20
+                    };
+
+                    Parallel.ForEach(cluster.Definition.NodeDefinitions.Values, parallelOptions,
+                        node =>
+                        {
+                            using (var pinger = new Pinger())
+                            {
+                                // We're going to try pinging up to [pingAttempts] times for each node
+                                // just in case the network is sketchy and we're losing reply packets.
+
+                                for (int i = 0; i < pingAttempts; i++)
+                                {
+                                    var reply = pinger.SendPingAsync(node.Address, (int)pingTimeout.TotalMilliseconds).Result;
+
+                                    if (reply.Status == IPStatus.Success)
+                                    {
+                                        lock (pingConflicts)
+                                        {
+                                            pingConflicts.Add(node);
+                                        }
+
+                                        break;
+                                    }
+                                }
+                            }
+                        });
+
+                    if (pingConflicts.Count > 0)
+                    {
+                        var sb = new StringBuilder();
+
+                        using (var writer = new StringWriter(sb))
+                        {
+                            writer.WriteLine($"Cannot provision the cluster because [{pingConflicts.Count}] other machines conflict with the following cluster nodes:");
+                            
+                            foreach (var node in pingConflicts.OrderBy(n => NetHelper.AddressToUint(NetHelper.ParseIPv4Address(n.Address))))
+                            {
+                                writer.WriteLine($"{node.Address, 16}:    {node.Name}");
+                            }
+                        }
+
+                        LogError(sb.ToString());
+                    }
                 });
         }
 
         /// <summary>
         /// Adds a synchronous global step that waits for all nodes to be online.
         /// </summary>
-        /// <param name="stepLabel">Brief step summary.</param>
+        /// <param name="stepLabel">Optionally specifies the step label.</param>
         /// <param name="status">The optional node status.</param>
         /// <param name="nodePredicate">
         /// Optional predicate used to select the nodes that participate in the step
@@ -271,7 +299,7 @@ namespace Neon.Kube
             }
 
             AddNodeStep(stepLabel,
-                (state, node) =>
+                (controller, node) =>
                 {
                     node.Status = status ?? "connecting...";
                     node.WaitForBoot(timeout: timeout);
@@ -286,7 +314,7 @@ namespace Neon.Kube
         /// <summary>
         /// Adds a synchronous global step that waits for a specified period of time.
         /// </summary>
-        /// <param name="stepLabel">Brief step summary.</param>
+        /// <param name="stepLabel">Specifies the step label.</param>
         /// <param name="delay">The amount of time to wait.</param>
         /// <param name="status">The optional node status.</param>
         /// <param name="nodePredicate">
@@ -307,7 +335,7 @@ namespace Neon.Kube
             int                                                         position      = -1)
         {
             AddNodeStep(stepLabel,
-                (state, node) =>
+                (controller, node) =>
                 {
                     node.Status = status ?? $"delay: [{delay.TotalSeconds}] seconds";
                     Thread.Sleep(delay);
@@ -322,7 +350,7 @@ namespace Neon.Kube
         /// <summary>
         /// Appends a synchronous node configuration step.
         /// </summary>
-        /// <param name="stepLabel">Brief step summary.</param>
+        /// <param name="stepLabel">Specifies the step label.</param>
         /// <param name="nodeAction">
         /// The action to be performed on each node.  Two parameters will be passed
         /// to this action: the node's <see cref="NodeSshProxy{T}"/> and a <see cref="TimeSpan"/>
@@ -355,8 +383,8 @@ namespace Neon.Kube
             int                                                         position        = -1,
             int                                                         parallelLimit   = 0)
         {
-            nodeAction    = nodeAction ?? new Action<ISetupController, NodeSshProxy<NodeMetadata>>((state, node) => { });
-            nodePredicate = nodePredicate ?? new Func<ISetupController, NodeSshProxy<NodeMetadata>, bool>((state, node) => true);
+            nodeAction    = nodeAction ?? new Action<ISetupController, NodeSshProxy<NodeMetadata>>((controller, node) => { });
+            nodePredicate = nodePredicate ?? new Func<ISetupController, NodeSshProxy<NodeMetadata>, bool>((controller, node) => true);
 
             if (position < 0)
             {
@@ -366,7 +394,7 @@ namespace Neon.Kube
             var step = new Step()
             {
                 Label          = stepLabel,
-                Quiet          = quiet,
+                IsQuiet          = quiet,
                 SyncNodeAction = nodeAction,
                 Predicate      = nodePredicate,
                 ParallelLimit  = noParallelLimit ? UnlimitedParallel : 0
@@ -383,7 +411,7 @@ namespace Neon.Kube
         /// <summary>
         /// Appends an asynchronous node configuration step.
         /// </summary>
-        /// <param name="stepLabel">Brief step summary.</param>
+        /// <param name="stepLabel">Specifies the step label.</param>
         /// <param name="nodeAction">
         /// The action to be performed on each node.  Two parameters will be passed
         /// to this action: the node's <see cref="NodeSshProxy{T}"/> and a <see cref="TimeSpan"/>
@@ -416,8 +444,8 @@ namespace Neon.Kube
             int                                                         position        = -1,
             int                                                         parallelLimit   = 0)
         {
-            nodeAction    = nodeAction ?? new Func<ISetupController, NodeSshProxy<NodeMetadata>, Task>((state, node) => { return Task.CompletedTask; });
-            nodePredicate = nodePredicate ?? new Func<ISetupController, NodeSshProxy<NodeMetadata>, bool>((state, node) => true);
+            nodeAction    = nodeAction ?? new Func<ISetupController, NodeSshProxy<NodeMetadata>, Task>((controller, node) => { return Task.CompletedTask; });
+            nodePredicate = nodePredicate ?? new Func<ISetupController, NodeSshProxy<NodeMetadata>, bool>((controller, node) => true);
 
             if (position < 0)
             {
@@ -427,7 +455,7 @@ namespace Neon.Kube
             var step = new Step()
             {
                 Label           = stepLabel,
-                Quiet           = quiet,
+                IsQuiet         = quiet,
                 AsyncNodeAction = nodeAction,
                 Predicate       = nodePredicate,
                 ParallelLimit   = noParallelLimit ? UnlimitedParallel : 0
@@ -441,120 +469,97 @@ namespace Neon.Kube
             steps.Insert(position, step);
         }
 
-        /// <summary>
-        /// Performs the operation steps in the order they were added.
-        /// </summary>
-        /// <param name="leaveNodesConnected">Pass <c>true</c> leave the node proxies connected.</param>
-        /// <returns><c>true</c> if all steps completed successfully.</returns>
-        public bool Run(bool leaveNodesConnected = false)
+        /// <inheritdoc/>
+        public bool Run(ISetupController reportingController = null, bool leaveNodesConnected = false)
         {
-            var stopWatch = new Stopwatch();
-
-            stopWatch.Start();
-
-            // Number the steps.  Note that quiet steps don't 
-            // get their own step number.
-
-            var position = 1;
-
-            foreach (var step in steps)
-            {
-                if (step.Quiet)
-                {
-                    step.Number = position;
-                }
-                else
-                {
-                    step.Number = position++;
-                }
-            }
-
-            // We don't display node status if there aren't any node specific steps.
-
-            hasNodeSteps = steps.Exists(s => s.SyncNodeAction != null || s.AsyncNodeAction != null);
+            var cluster = Get<ClusterProxy>(KubeSetupProperty.ClusterProxy, null);
 
             try
             {
+                cluster?.LogLine(LogBeginMarker);
+
+                // We're going to time how long this takes.
+
+                var stopWatch = new Stopwatch();
+
+                stopWatch.Start();
+
+                // Number the steps.  Note that quiet steps don't 
+                // get their own step number.
+
+                var position = 1;
+
                 foreach (var step in steps)
                 {
-                    currentStep = step;
+                    if (step.IsQuiet)
+                    {
+                        step.Number = position;
+                    }
+                    else
+                    {
+                        step.Number = position++;
+                    }
+                }
 
-                    try
+                // We don't display node status if there aren't any node specific steps.
+
+                try
+                {
+                    foreach (var step in steps)
                     {
                         if (!PerformStep(step))
                         {
                             break;
                         }
                     }
-                    finally
+
+                    if (isFaulted)
                     {
-                        currentStep = null;
+                        cluster?.LogLine(LogFailedMarker);
+
+                        return false;
                     }
-                }
-
-                if (error)
-                {
-                    return false;
-                }
-
-                foreach (var node in nodes)
-                {
-                    node.Status = "[x] READY";
-                }
-
-                DisplayStatus();
-                return true;
-            }
-            finally
-            {
-                ElapsedTime = stopWatch.Elapsed;
-
-                if (!leaveNodesConnected)
-                {
-                    // Disconnect all of the nodes.
 
                     foreach (var node in nodes)
                     {
-                        node.Disconnect();
+                        node.Status = "[x] READY";
+                    }
+
+                    cluster?.LogLine(LogEndMarker);
+
+                    return true;
+                }
+                finally
+                {
+                    Runtime = stopWatch.Elapsed;
+
+                    if (!leaveNodesConnected)
+                    {
+                        // Disconnect all of the nodes.
+
+                        foreach (var node in nodes)
+                        {
+                            node.Disconnect();
+                        }
                     }
                 }
+            }
+            finally
+            {
+                // Dispose any disposables.
 
-                Console.WriteLine();    // Add an extra line after the status to look nice.
-
-                if (ShowElapsed)
+                foreach (var disposable in disposables)
                 {
-                    var totalLabel    = "Total Setup Time";
-                    var maxLabelWidth = steps.Max(step => step.Label.Length);
+                    disposable.Dispose();
+                }
 
-                    if (maxLabelWidth < totalLabel.Length)
-                    {
-                        maxLabelWidth = totalLabel.Length;
-                    }
+                // Raise one more status changed an wait for a bit so any
+                // listening UI can display the status.
 
-                    Console.WriteLine("Elapsed Step Timing");
-                    Console.WriteLine("-------------------");
-
-                    var filler = string.Empty;
-
-                    foreach (var step in steps)
-                    {
-                        filler = new string(' ', maxLabelWidth - step.Label.Length);
-
-                        if (step.WasExecuted)
-                        {
-                            Console.WriteLine($"{step.Label}:    {filler}{step.ElapsedTime} ({step.ElapsedTime.TotalSeconds} sec)");
-                        }
-                        else
-                        {
-                            Console.WriteLine($"{step.Label}:    {filler}* NOT EXECUTED");
-                        }
-                    }
-
-                    filler = new string(' ', maxLabelWidth - totalLabel.Length);
-
-                    Console.WriteLine(new string('-', totalLabel.Length + 1));
-                    Console.WriteLine($"{totalLabel}:    {filler}{ElapsedTime} ({ElapsedTime.TotalSeconds} sec)");
-                    Console.WriteLine();
+                if (StatusChangedEvent != null)
+                {
+                    StatusChangedEvent.Invoke(new SetupClusterStatus(this));
+                    Thread.Sleep(TimeSpan.FromSeconds(0.5));
                 }
             }
         }
@@ -565,7 +570,7 @@ namespace Neon.Kube
         /// <param name="status">The optional operation status text.</param>
         public void SetGlobalStepStatus(string status = null)
         {
-            operationStatus = status ?? string.Empty;
+            globalStatus = status ?? string.Empty;
         }
 
         /// <summary>
@@ -600,12 +605,12 @@ namespace Neon.Kube
 
             try
             {
-                if (error)
+                if (isFaulted)
                 {
                     return false;
                 }
 
-                step.Status      = StepStatus.Running;
+                step.Status      = SetupStepState.Running;
                 step.WasExecuted = true;
 
                 var stepNodes        = nodes.Where(node => step.Predicate(this, node));
@@ -630,8 +635,6 @@ namespace Neon.Kube
                     }
                 }
 
-                DisplayStatus(stepNodeNamesSet);
-
                 var parallelOptions = new ParallelOptions()
                 {
                     MaxDegreeOfParallelism = step.ParallelLimit > 0 ? step.ParallelLimit : MaxParallel
@@ -640,6 +643,8 @@ namespace Neon.Kube
                 NeonHelper.ThreadRun(
                     () =>
                     {
+                        currentStep = step;
+
                         if (step.SyncNodeAction != null)
                         {
                             // Execute the step on the selected nodes.
@@ -788,288 +793,50 @@ namespace Neon.Kube
                         }
                     });
 
+                // The setup steps are executing above in one or more threads and we're
+                // going to loop here to raise [StatusEvent] when we detect a change.
+
+                var lastJson = (string)null;
+
                 while (true)
                 {
-                    DisplayStatus(stepNodeNamesSet);
+                    var status  = new SetupClusterStatus(this);
+                    var newJson = NeonHelper.JsonSerialize(status);
+
+                    if (lastJson == null || lastJson != newJson)
+                    {
+                        StatusChangedEvent?.Invoke(status);
+                        lastJson = newJson;
+                    }
 
                     if (stepNodes.Count(n => !n.IsReady) == 0)
                     {
-                        DisplayStatus(stepNodeNamesSet);
+                        // Looks like we're done.
+
                         break;
                     }
 
                     Thread.Sleep(TimeSpan.FromMilliseconds(100));
                 }
 
-                error = error || stepNodes.FirstOrDefault(n => n.IsFaulted) != null;
+                isFaulted = isFaulted || stepNodes.FirstOrDefault(n => n.IsFaulted) != null;
 
-                if (error)
+                if (isFaulted)
                 {
-                    step.Status = StepStatus.Failed;
+                    step.Status = SetupStepState.Failed;
 
                     return false;
                 }
                 else
                 {
-                    step.Status = StepStatus.Done;
+                    step.Status = SetupStepState.Done;
 
                     return true;
                 }
             }
             finally
             {
-                step.ElapsedTime = stopWatch.Elapsed;
-            }
-        }
-
-        /// <summary>
-        /// Returns the current status for a node.
-        /// </summary>
-        /// <param name="stepNodeNamesSet">The set of node names participating in the current step.</param>
-        /// <param name="node">The node being queried.</param>
-        /// <returns>The status prefix.</returns>
-        private string GetStatus(HashSet<string> stepNodeNamesSet, NodeSshProxy<NodeMetadata> node)
-        {
-            if (stepNodeNamesSet != null && !stepNodeNamesSet.Contains(node.Name))
-            {
-                return "  -";
-            }
-            else
-            {
-                // We mark completed steps with a "[x] " or "[!] " prefix and
-                // indent non-completed steps status with four blanks.
-
-                if (node.Status.StartsWith("[x] ") || node.Status.StartsWith("[!] "))
-                {
-                    return node.Status;
-                }
-                else
-                {
-                    return "    " + node.Status;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Formats a step index into a form suitable for display.
-        /// </summary>
-        /// <param name="stepNumber">The step index.</param>
-        /// <returns>The formatted step number.</returns>
-        private string FormatStepNumber(int stepNumber)
-        {
-            int     stepCount = steps.Count();
-            string  number;
-
-            if (stepCount < 10)
-            {
-                number = $"{stepNumber,1}";
-            }
-            else if (stepCount < 100)
-            {
-                number = $"{stepNumber,2}";
-            }
-            else
-            {
-                number = stepNumber.ToString();
-            }
-
-            return $"{number}. ";
-        }
-
-        /// <summary>
-        /// Displays the current operation status on the <see cref="Console"/>.
-        /// </summary>
-        /// <param name="stepNodeNamesSet">
-        /// The set of node names that participating in the current step or
-        /// <c>null</c> if all nodes are included.
-        /// </param>
-        private void DisplayStatus(HashSet<string> stepNodeNamesSet = null)
-        {
-            if (!ShowStatus || steps.Count == 0)
-            {
-                return;
-            }
-
-            var maxStepLabelWidth = steps.Max(n => n.Label.Length);
-            var maxNodeNameWidth  = nodes.Max(n => n.Name.Length);
-            var maxHostNameWidth  = 0;
-            
-            if (typeof(NodeMetadata).Implements<IXenClient>())
-            {
-                maxHostNameWidth = nodes.Max(n => (n.Metadata as IXenClient).Name.Length);
-            }
-
-            sbDisplay.Clear();
-
-            sbDisplay.AppendLine();
-            sbDisplay.AppendLine($" {operationTitle}");
-
-            var displaySteps     = steps.Where(s => !s.Quiet);
-            var showStepProgress = false;
-
-            if (MaxDisplayedSteps > 0 && MaxDisplayedSteps < displaySteps.Count())
-            {
-                // Limit the display steps to just those around the currently
-                // executing step.
-
-                var displayStepsCount = displaySteps.Count();
-                var runningStep       = steps.FirstOrDefault(s => s.Status == StepStatus.Running);
-
-                if (runningStep != null)
-                {
-                    showStepProgress = true;
-
-                    if (runningStep.Number <= 1)
-                    {
-                        displaySteps = displaySteps.Where(s => s.Number <= MaxDisplayedSteps);
-                    }
-                    else if (runningStep.Number >= displayStepsCount - MaxDisplayedSteps + 1)
-                    {
-                        displaySteps = displaySteps.Where(s => s.Number >= displayStepsCount - MaxDisplayedSteps + 1);
-                    }
-                    else
-                    {
-                        var firstDisplayedNumber = runningStep.Number - MaxDisplayedSteps / 2;
-                        var lastDisplayedNumber  = firstDisplayedNumber + MaxDisplayedSteps - 1;
-
-                        displaySteps = displaySteps.Where(s => firstDisplayedNumber <= s.Number && s.Number <= lastDisplayedNumber);
-                    }
-                }
-            }
-
-            sbDisplay.AppendLine();
-
-            if (showStepProgress)
-            {
-                var width     = maxStepLabelWidth + "[x] DONE".Length + 2;
-                var stepCount = steps.Count(s => !s.Quiet);
-                var progress  = new string('-', Math.Max(0, (int)(width * ((currentStep.Number - 1.0) / stepCount)) - 1));
-
-                if (progress.Length > 0)
-                {
-                    progress += ">";
-                }
-
-                if (progress.Length < width)
-                {
-                    progress += new string(' ', width - progress.Length);
-                }
-
-                sbDisplay.AppendLine($" Steps: [{progress}]");
-                sbDisplay.AppendLine();
-            }
-            else
-            {
-                sbDisplay.AppendLine(" Steps:");
-            }
-
-            foreach (var step in displaySteps)
-            {
-                switch (step.Status)
-                {
-                    case StepStatus.None:
-
-                        sbDisplay.AppendLine($"     {FormatStepNumber(step.Number)}{step.Label}");
-                        break;
-
-                    case StepStatus.Running:
-
-                        sbDisplay.AppendLine($" --> {FormatStepNumber(step.Number)}{step.Label}");
-                        break;
-
-                    case StepStatus.Done:
-
-                        sbDisplay.AppendLine($"     {FormatStepNumber(step.Number)}{step.Label}{new string(' ', maxStepLabelWidth - step.Label.Length)}   [x] DONE");
-                        break;
-
-                    case StepStatus.Failed:
-
-                        sbDisplay.AppendLine($"     {FormatStepNumber(step.Number)}{step.Label}{new string(' ', maxStepLabelWidth - step.Label.Length)}   [!] FAIL"); ;
-                        break;
-                }
-            }
-
-            if (hasNodeSteps && ShowNodeStatus)
-            {
-                // $hack(jefflill):
-                //
-                // I'm hardcoding the status display here for two scenarios:
-                //
-                //      1. Configuring cluster nodes with [NodeDefinition] metadata which.
-                //      2. Provisioning cluster nodes on XenServer and remote Hyper-V hosts.
-                //
-                // It would be more flexible to implement some kind of callback or virtual
-                // method to handle this.
-
-                if (typeof(NodeMetadata) == typeof(NodeDefinition))
-                {
-                    // Configuring cluster nodes with [NodeDefinition] metadata which.
-
-                    if (nodes.First().Metadata != null)
-                    {
-                        if (nodes.Exists(n => (n.Metadata as NodeDefinition).IsMaster))
-                        {
-                            sbDisplay.AppendLine();
-                            sbDisplay.AppendLine(" Masters:");
-
-                            foreach (var node in nodes.Where(n => (n.Metadata as NodeDefinition).IsMaster))
-                            {
-                                sbDisplay.AppendLine($"    {node.Name}{new string(' ', maxNodeNameWidth - node.Name.Length)}   {GetStatus(stepNodeNamesSet, node)}");
-                            }
-                        }
-
-                        if (nodes.Exists(n => (n.Metadata as NodeDefinition).IsWorker))
-                        {
-                            sbDisplay.AppendLine();
-                            sbDisplay.AppendLine(" Workers:");
-
-                            foreach (var node in nodes.Where(n => (n.Metadata as NodeDefinition).IsWorker))
-                            {
-                                sbDisplay.AppendLine($"    {node.Name}{new string(' ', maxNodeNameWidth - node.Name.Length)}   {GetStatus(stepNodeNamesSet, node)}");
-                            }
-                        }
-                    }
-                    else
-                    {
-                        sbDisplay.AppendLine();
-                        sbDisplay.AppendLine(" Nodes:");
-
-                        foreach (var node in nodes)
-                        {
-                            sbDisplay.AppendLine($"    {node.Name}{new string(' ', maxNodeNameWidth - node.Name.Length)}   {GetStatus(stepNodeNamesSet, node)}");
-                        }
-                    }
-                }
-                else if (typeof(NodeMetadata).Implements<IXenClient>())
-                {
-                    // Provisioning cluster nodes on XenServer hosts.
-
-                    sbDisplay.AppendLine();
-                    sbDisplay.AppendLine(" Hypervisor Hosts:");
-
-                    foreach (var node in nodes.OrderBy(n => (n.Metadata as IXenClient).Name, StringComparer.InvariantCultureIgnoreCase))
-                    {
-                        var xenHost = node.Metadata as IXenClient;
-
-                        sbDisplay.AppendLine($"    {xenHost.Name}{new string(' ', maxHostNameWidth - xenHost.Name.Length)}: {GetStatus(stepNodeNamesSet, node)}");
-                    }
-                }
-            }
-
-            if (!string.IsNullOrEmpty(operationStatus))
-            {
-                sbDisplay.AppendLine();
-                sbDisplay.AppendLine($"*** {operationStatus}");
-            }
-
-            var newDisplay = sbDisplay.ToString();
-
-            if (newDisplay != previousDisplay)
-            {
-                Console.Clear();
-                Console.Write(newDisplay);
-
-                previousDisplay = newDisplay;
+                step.RunTime = stopWatch.Elapsed;
             }
         }
 
@@ -1078,7 +845,7 @@ namespace Neon.Kube
         /// </summary>
         public void ThrowOnError()
         {
-            if (error)
+            if (isFaulted)
             {
                 throw new KubeException($"[{nodes.Count(n => n.IsFaulted)}] nodes are faulted.");
             }
@@ -1106,6 +873,21 @@ namespace Neon.Kube
         // this will be set as the node status text.  The Error() methods do the same
         // thing for error messages while also ensuring that setup terminates after the
         // current step completes.
+
+        /// <inheritdoc/>
+        public string LogBeginMarker { get; set; }
+
+        /// <inheritdoc/>
+        public string LogEndMarker { get; set; }
+
+        /// <inheritdoc/>
+        public string LogFailedMarker { get; set; }
+
+        /// <inheritdoc/>
+        public event SetupStatusChangedDelegate StatusChangedEvent;
+
+        /// <inheritdoc/>
+        public event SetupProgressDelegate ProgressEvent;
 
         /// <inheritdoc/>
         public void LogProgress(string message)
@@ -1187,7 +969,8 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(message), nameof(message));
 
-            this.error = true;
+            this.isFaulted = true;
+            this.LastError = message;
 
             if (ProgressEvent != null)
             {
@@ -1219,6 +1002,84 @@ namespace Neon.Kube
                         IsError = true
                     });
             }
+        }
+
+        /// <inheritdoc/>
+        public bool IsFaulted => isFaulted || nodes.Any(node => node.IsFaulted);
+
+        /// <inheritdoc/>
+        public string LastError { get; private set; }
+
+        /// <inheritdoc/>
+        public bool HasNodeSteps => steps.Any(step => step.AsyncNodeAction != null || step.SyncNodeAction != null);
+
+        /// <inheritdoc/>
+        public Type NodeMetadataType => typeof(NodeMetadata);
+
+        /// <inheritdoc/>
+        public HashSet<string> GetStepNodeNames(object internalStep)
+        {
+            Covenant.Requires<ArgumentNullException>(internalStep != null, nameof(internalStep));
+
+            var nodeSet   = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+            var step      = (Step)internalStep;
+            var stepNodes = nodes.Where(node => step.Predicate(this, node));
+
+            foreach (var node in stepNodes)
+            {
+                nodeSet.Add(node.Name);
+            }
+
+            return nodeSet;
+        }
+
+        /// <inheritdoc/>
+        public string GlobalStatus => globalStatus;
+
+        /// <inheritdoc/>
+        public string OperationTitle { get; private set; }
+
+        /// <inheritdoc/>
+        public bool ShowStatus { get; set; } = false;
+
+        /// <inheritdoc/>
+        public bool ShowNodeStatus { get; set; } = true;
+
+        /// <inheritdoc/>
+        public int MaxDisplayedSteps { get; set; } = 5;
+
+        /// <inheritdoc/>
+        public int MaxParallel { get; set; } = int.MaxValue;
+
+        /// <inheritdoc/>
+        public int StepCount => steps.Count;
+
+        /// <inheritdoc/>
+        public int CurrentStepNumber
+        {
+            get
+            {
+                if (currentStep == null || currentStep.Number == 0)
+                {
+                    return -1;
+                }
+                else
+                {
+                    return currentStep.Number;
+                }
+            }
+        }
+
+        /// <inheritdoc/>
+        public TimeSpan Runtime { get; private set; }
+
+        /// <inheritdoc/>
+        public bool ShowRuntime { get; set; } = false;
+
+        /// <inheritdoc/>
+        public IEnumerable<SetupStepStatus> GetStepStatus()
+        {
+            return steps.Select(step => new SetupStepStatus(step.Number, step.Label, step.Status, step.RunTime, step));
         }
     }
 }

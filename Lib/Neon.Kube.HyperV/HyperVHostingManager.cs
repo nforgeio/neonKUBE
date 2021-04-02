@@ -69,11 +69,11 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Instance members
 
-        private ClusterProxy        cluster;
-        private ISetupController    controller;
-        private string              driveTemplatePath;
-        private string              vmDriveFolder;
-        private string              switchName;
+        private ClusterProxy                    cluster;
+        private SetupController<NodeDefinition> controller;
+        private string                          driveTemplatePath;
+        private string                          vmDriveFolder;
+        private string                          switchName;
 
         /// <summary>
         /// Creates an instance that is only capable of validating the hosting
@@ -95,6 +95,8 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
 
+            var clusterLogin = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
+
             cluster.HostingManager = this;
 
             this.cluster = cluster;
@@ -113,6 +115,9 @@ namespace Neon.Kube
         public override HostingEnvironment HostingEnvironment => HostingEnvironment.HyperV;
 
         /// <inheritdoc/>
+        public override bool RequiresNodeAddressCheck => true;
+
+        /// <inheritdoc/>
         public override void Validate(ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
@@ -122,16 +127,13 @@ namespace Neon.Kube
         public override bool RequiresAdminPrivileges => false;
 
         /// <inheritdoc/>
-        public override async Task<bool> ProvisionAsync(ISetupController controller, string secureSshPassword, string orgSshPassword = null)
+        public override void AddProvisioningSteps(SetupController<NodeDefinition> controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secureSshPassword), nameof(secureSshPassword));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(orgSshPassword), nameof(orgSshPassword));
             Covenant.Assert(cluster != null, $"[{nameof(HyperVHostingManager)}] was created with the wrong constructor.");
 
             this.controller = controller;
 
-            await Task.CompletedTask;
             throw new NotImplementedException("$todo(jefflill): Implement this.");
         }
 

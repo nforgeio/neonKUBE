@@ -114,10 +114,10 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override bool IsProvisionNOP => false;
+        public override HostingEnvironment HostingEnvironment => HostingEnvironment.HyperVLocal;
 
         /// <inheritdoc/>
-        public override HostingEnvironment HostingEnvironment => HostingEnvironment.HyperVLocal;
+        public override bool RequiresNodeAddressCheck => true;
 
         /// <inheritdoc/>
         public override void Validate(ClusterDefinition clusterDefinition)
@@ -126,22 +126,15 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override async Task<bool> ProvisionAsync(ISetupController controller, string secureSshPassword, string orgSshPassword = null)
+        public override void AddProvisioningSteps(SetupController<NodeDefinition> controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secureSshPassword), nameof(secureSshPassword));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(orgSshPassword), nameof(orgSshPassword));
             Covenant.Assert(cluster != null, $"[{nameof(HyperVLocalHostingManager)}] was created with the wrong constructor.");
 
-            this.controller        = (SetupController<NodeDefinition>)controller;
-            this.secureSshPassword = secureSshPassword;
+            var clusterLogin = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
 
-            if (IsProvisionNOP)
-            {
-                // There's nothing to do here.
-
-                return true;
-            }
+            this.controller        = controller;
+            this.secureSshPassword = clusterLogin.SshPassword;
 
             // We'll call this to be consistent with the cloud hosting managers even though
             // the upstream on-premise router currently needs to be configured manually.
@@ -164,29 +157,16 @@ namespace Neon.Kube
                 node.Labels.StorageSize     = ByteUnits.ToGiB(node.Vm.GetMemory(cluster.Definition));
             }
 
-            // Perform the provisioning operations.
+            // Add the provisioning steps to the controller.
 
-            this.controller = new SetupController<NodeDefinition>($"Provisioning [{cluster.Definition.Name}] cluster", cluster.Nodes)
-            {
-                ShowStatus  = this.ShowStatus,
-                MaxParallel = 1     // We're only going to provision one VM at a time on a local Hyper-V instance.
-            };
+            controller.MaxParallel = 1; // We're only going to provision one VM at a time on the local Hyper-V.
 
-            this.controller.AddGlobalStep("prepare hyper-v", controller => PrepareHyperV());
-            this.controller.AddNodeStep("create virtual machines", (controller, node) => ProvisionVM(node));
-            this.controller.AddGlobalStep(string.Empty, controller => Finish(), quiet: true);
-
-            if (!this.controller.Run())
-            {
-                Console.Error.WriteLine("*** ERROR: One or more configuration steps failed.");
-                return await Task.FromResult(false);
-            }
-
-            return await Task.FromResult(true);
+            controller.AddGlobalStep("prepare hyper-v", controller => PrepareHyperV());
+            controller.AddNodeStep("create virtual machines", (controller, node) => ProvisionVM(node));
         }
 
         /// <inheritdoc/>
-        public override void AddPostPrepareSteps(SetupController<NodeDefinition> setupController)
+        public override void AddPostProvisioningSteps(SetupController<NodeDefinition> controller)
         {
             // We need to add any required OpenEBS cStor disks after the node has been otherwise
             // prepared.  We need to do this here because if we created the data and OpenEBS disks
@@ -196,7 +176,7 @@ namespace Neon.Kube
             // At this point, the data disk should be partitioned, formatted, and mounted so
             // the OpenEBS disk will be easy to identify as the only unpartitioned disk.
 
-            setupController.AddNodeStep("openebs",
+            controller.AddNodeStep("openebs",
                 (state, node) =>
                 {
                     using (var hyperv = new HyperVClient())

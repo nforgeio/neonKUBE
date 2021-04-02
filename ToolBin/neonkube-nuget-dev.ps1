@@ -42,12 +42,7 @@ if (!(Test-Path env:NC_USER))
 
 # This needs to run with elevated privileges.
 
-if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))
-{
-    # Relaunch as an elevated process:
-    Start-Process powershell.exe "-file",('"{0}"' -f $MyInvocation.MyCommand.Path) -Verb RunAs
-    exit
-}
+RequestAdminPermissions
 
 # Retrieve any necessary credentials.
 
@@ -201,6 +196,7 @@ SetVersion Neon.Kube.Google         $kubeVersion
 SetVersion Neon.Kube.Hosting        $kubeVersion
 SetVersion Neon.Kube.HyperV         $kubeVersion
 SetVersion Neon.Kube.HyperVLocal    $kubeVersion
+SetVersion Neon.Kube.Setup          $kubeVersion
 SetVersion Neon.Kube.Services       $kubeVersion
 SetVersion Neon.Kube.XenServer      $kubeVersion
 SetVersion Neon.Kube.Xunit          $kubeVersion
@@ -239,6 +235,7 @@ Publish Neon.Kube.Google            $kubeVersion
 Publish Neon.Kube.Hosting           $kubeVersion
 Publish Neon.Kube.HyperV            $kubeVersion
 Publish Neon.Kube.HyperVLocal       $kubeVersion
+Publish Neon.Kube.Setup             $kubeVersion
 Publish Neon.Kube.Services          $kubeVersion
 Publish Neon.Kube.XenServer         $kubeVersion
 Publish Neon.Kube.Xunit             $kubeVersion
@@ -277,6 +274,7 @@ RestoreVersion Neon.Kube.Google
 RestoreVersion Neon.Kube.Hosting
 RestoreVersion Neon.Kube.HyperV
 RestoreVersion Neon.Kube.HyperVLocal
+RestoreVersion Neon.Kube.Setup
 RestoreVersion Neon.Kube.Services
 RestoreVersion Neon.Kube.XenServer
 RestoreVersion Neon.Kube.Xunit

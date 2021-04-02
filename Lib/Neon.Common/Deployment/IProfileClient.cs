@@ -51,6 +51,17 @@ namespace Neon.Deployment
     /// checks can be distracting.  Custom implementation can choose to follow this pattern or
     /// just treat both types of secret the same.
     /// </para>
+    /// <para>
+    /// You can also obtain a specific property from a secret password or value by using this syntax:
+    /// </para>
+    /// <example>
+    /// SECRETNAME[PROPERTY]
+    /// </example>
+    /// <para>
+    /// This is useful for obtaining both the username and password from a login, or all of the different
+    /// properties from a credit card, etc.  This blurs the difference between secret passwords and secret
+    /// values a bit but we're going to retain both concepts anyway.
+    /// </para>
     /// </item>
     /// <item>
     /// <para>

@@ -29,8 +29,10 @@ using System.Net.Http;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Security;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.Security.Principal;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -164,7 +166,7 @@ namespace Neon.Kube
 
             ClearCachedItems();
 
-            testFolder    = folder;
+            testFolder = folder;
             orgKUBECONFIG = Environment.GetEnvironmentVariable("KUBECONFIG");
 
             Environment.SetEnvironmentVariable("KUBECONFIG", Path.Combine(testFolder, ".kube", "config"));
@@ -220,10 +222,10 @@ namespace Neon.Kube
         internal static string ReadFileTextWithRetry(string path)
         {
             var retry = new LinearRetryPolicy(typeof(IOException), maxAttempts: 10, retryInterval: TimeSpan.FromMilliseconds(200));
-            var text = string.Empty;
+            var text  = string.Empty;
 
             retry.Invoke(
-                () => 
+                () =>
                 {
                     text = File.ReadAllText(path);
                 });
@@ -272,6 +274,7 @@ namespace Neon.Kube
                 try
                 {
                     cachedClientConfig = NeonHelper.JsonDeserialize<KubeClientConfig>(ReadFileTextWithRetry(clientStatePath));
+
                     ClientConfig.Validate();
                 }
                 catch
@@ -351,15 +354,6 @@ namespace Neon.Kube
 
                 // throw new NotImplementedException();
             }
-        }
-
-        /// <summary>
-        /// Returns <c>true</c> if the current application is running in the special 
-        /// <b>neon-cli</b> container as a shimmed application.
-        /// </summary>
-        public static bool InToolContainer
-        {
-            get { return Environment.GetEnvironmentVariable("NEON_TOOL_CONTAINER") == "1"; }
         }
 
         /// <summary>
@@ -473,25 +467,9 @@ namespace Neon.Kube
         /// <summary>
         /// Returns the path the folder holding the user specific Kubernetes files.
         /// </summary>
-        /// <param name="ignoreNeonToolContainerVar">
-        /// Optionally ignore the presence of a <b>NEON_TOOL_CONTAINER</b> environment 
-        /// variable.  Defaults to <c>false</c>.
-        /// </param>
         /// <returns>The folder path.</returns>
-        /// <remarks>
-        /// The actual path return depends on the presence of the <b>NEON_TOOL_CONTAINER</b>
-        /// environment variable.  <b>NEON_TOOL_CONTAINER=1</b> then we're running in a 
-        /// shimmed Docker container and we'll expect the cluster login information to be mounted
-        /// at <b>/neonkube</b>.  Otherwise, we'll return a suitable path within the 
-        /// current user's home directory.
-        /// </remarks>
-        public static string GetNeonKubeUserFolder(bool ignoreNeonToolContainerVar = false)
+        public static string GetNeonKubeUserFolder()
         {
-            if (!ignoreNeonToolContainerVar && InToolContainer)
-            {
-                return "/neonkube";
-            }
-
             if (cachedNeonKubeUserFolder != null)
             {
                 return cachedNeonKubeUserFolder;
@@ -541,25 +519,9 @@ namespace Neon.Kube
         /// <summary>
         /// Returns the path the folder holding the user specific Kubernetes configuration files.
         /// </summary>
-        /// <param name="ignoreNeonToolContainerVar">
-        /// Optionally ignore the presence of a <b>NEON_TOOL_CONTAINER</b> environment 
-        /// variable.  Defaults to <c>false</c>.
-        /// </param>
         /// <returns>The folder path.</returns>
-        /// <remarks>
-        /// The actual path return depends on the presence of the <b>NEON_TOOL_CONTAINER</b>
-        /// environment variable.  <b>NEON_TOOL_CONTAINER=1</b> then we're running in a 
-        /// shimmed Docker container and we'll expect the cluster login information to be mounted
-        /// at <b>/$HOME/.kube</b>.  Otherwise, we'll return a suitable path within the 
-        /// current user's home directory.
-        /// </remarks>
-        public static string GetKubeUserFolder(bool ignoreNeonToolContainerVar = false)
+        public static string GetKubeUserFolder()
         {
-            if (!ignoreNeonToolContainerVar && InToolContainer)
-            {
-                return $"/{Environment.GetEnvironmentVariable("HOME")}/.kube";
-            }
-
             if (cachedKubeUserFolder != null)
             {
                 return cachedKubeUserFolder;
@@ -980,6 +942,14 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Returns <c>true</c> if the current assembly was built from the production <b>PROD</b> 
+        /// source code branch.
+        /// </summary>
+#pragma warning disable 0436
+        public static bool IsRelease => ThisAssembly.Git.Branch.StartsWith("release-", StringComparison.InvariantCultureIgnoreCase);
+#pragma warning restore 0436
+
+        /// <summary>
         /// Loads or reloads the Kubernetes configuration.
         /// </summary>
         /// <returns>The <see cref="Config"/>.</returns>
@@ -1045,7 +1015,7 @@ namespace Neon.Kube
         {
             if (contextName == null)
             {
-                cachedContext         = null;
+                cachedContext = null;
                 Config.CurrentContext = null;
             }
             else
@@ -1199,7 +1169,7 @@ namespace Neon.Kube
             int         validDays    = 365000,
             Wildcard    wildcard     = Wildcard.None,
             string      issuedBy     = null,
-            string      issuedTo     = null, 
+            string      issuedTo     = null,
             string      friendlyName = null)
         {
             Covenant.Requires<ArgumentException>(!string.IsNullOrEmpty(hostname), nameof(hostname));
@@ -1245,19 +1215,16 @@ namespace Neon.Kube
                 var request = new CertificateRequest(distinguishedName, rsa, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
                 request.CertificateExtensions.Add(
-                    new X509KeyUsageExtension(X509KeyUsageFlags.KeyEncipherment 
-                    | X509KeyUsageFlags.CrlSign | X509KeyUsageFlags.KeyCertSign 
+                    new X509KeyUsageExtension(X509KeyUsageFlags.KeyEncipherment
+                    | X509KeyUsageFlags.CrlSign | X509KeyUsageFlags.KeyCertSign
                     | X509KeyUsageFlags.DigitalSignature, true));
 
-                request.CertificateExtensions.Add(
-                        new X509BasicConstraintsExtension(true, false, 0, true));
-
-                request.CertificateExtensions.Add(
-                        new X509SubjectKeyIdentifierExtension());
+                request.CertificateExtensions.Add(new X509BasicConstraintsExtension(true, false, 0, true));
+                request.CertificateExtensions.Add(new X509SubjectKeyIdentifierExtension());
 
                 request.CertificateExtensions.Add(sanBuilder.Build());
 
-                var certificate          = request.CreateSelfSigned(new DateTimeOffset(DateTime.UtcNow.AddDays(-1)), new DateTimeOffset(DateTime.UtcNow.AddDays(validDays)));
+                var certificate = request.CreateSelfSigned(new DateTimeOffset(DateTime.UtcNow.AddDays(-1)), new DateTimeOffset(DateTime.UtcNow.AddDays(validDays)));
                 certificate.FriendlyName = friendlyName;
 
                 return certificate;
@@ -1305,7 +1272,7 @@ namespace Neon.Kube
         {
             var hostPlatform      = KubeHelper.HostPlatform;
             var cachedKubeCtlPath = KubeHelper.GetCachedComponentPath(hostPlatform, "kubectl", KubeVersions.KubernetesVersion);
-            var targetPath        = Path.Combine(KubeHelper.ProgramFolder);
+            var targetPath        =  Path.Combine(KubeHelper.ProgramFolder);
 
             switch (hostPlatform)
             {
@@ -1509,13 +1476,13 @@ namespace Neon.Kube
         /// <returns>The <see cref="ExecuteResponse"/>.</returns>
         public static void PortForward(string serviceName, int remotePort, int localPort, string @namespace, Process process)
         {
-            Task.Run(() => NeonHelper.ExecuteAsync("kubectl", 
+            Task.Run(() => NeonHelper.ExecuteAsync("kubectl",
                 args: new string[]
                 {
-                    "--namespace", @namespace, 
+                    "--namespace", @namespace,
                     "port-forward",
-                    $"svc/{serviceName}", 
-                    $"{localPort}:{remotePort}" 
+                    $"svc/{serviceName}",
+                    $"{localPort}:{remotePort}"
                 },
                 process: process));
         }
@@ -1531,13 +1498,13 @@ namespace Neon.Kube
         public static async Task<string> ExecuteInPod(IKubernetes client, V1Pod pod, string @namespace, string[] command)
         {
             var webSocket = await client.WebSocketNamespacedPodExecAsync(pod.Metadata.Name, @namespace, command, pod.Spec.Containers[0].Name);
-            var demux     = new StreamDemuxer(webSocket);
+            var demux = new StreamDemuxer(webSocket);
 
             demux.Start();
 
-            var buff   = new byte[4096];
+            var buff = new byte[4096];
             var stream = demux.GetStream(1, 1);
-            var read   = stream.Read(buff, 0, 4096);
+            var read = stream.Read(buff, 0, 4096);
 
             return Encoding.Default.GetString(buff.Where(b => b != 0).ToArray());
         }
@@ -1760,9 +1727,9 @@ public class ISOFile
         /// </para>
         /// </remarks>
         public static TempFile CreateNeonInitIso(
-            ClusterDefinition       clusterDefinition,
-            NodeDefinition          nodeDefinition,
-            string                  securePassword = null)
+            ClusterDefinition clusterDefinition,
+            NodeDefinition nodeDefinition,
+            string securePassword = null)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
             Covenant.Requires<ArgumentNullException>(nodeDefinition != null, nameof(nodeDefinition));
@@ -1810,11 +1777,11 @@ public class ISOFile
         /// </para>
         /// </remarks>
         public static TempFile CreateNeonInitIso(
-            string                  address,
-            string                  subnet,
-            string                  gateway,
-            IEnumerable<string>     nameServers,
-            string                  securePassword = null)
+            string              address,
+            string              subnet,
+            string              gateway,
+            IEnumerable<string> nameServers,
+            string              securePassword = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(address), nameof(address));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(subnet), nameof(subnet));
@@ -2040,7 +2007,7 @@ exit 0
                     throw new KubeException("Cannot generate SSH key:\r\n\r\n" + result.AllText);
                 }
 
-                var publicPUB      = File.ReadAllText(Path.Combine(tempFolder.Path, "key.pub"));
+                var publicPUB = File.ReadAllText(Path.Combine(tempFolder.Path, "key.pub"));
                 var privateOpenSSH = File.ReadAllText(Path.Combine(tempFolder.Path, "key"));
 
                 //-------------------------------------------------------------
@@ -2390,5 +2357,58 @@ ClientAliveInterval 30
 ClientAliveCountMax 20
 TCPKeepAlive yes
 ";
+
+        /// <summary>
+        /// Verifies that the current user has administrator privileges.
+        /// </summary>
+        /// <param name="message">Optional message.</param>
+        /// <exception cref="SecurityException">Thrown when the user does not have administrator privileges.</exception>
+        public static void VerifyAdminPrivileges(string message = null)
+        {
+            if (NeonHelper.IsWindows)
+            {
+                var principal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
+
+                if (!principal.IsInRole(WindowsBuiltInRole.Administrator))
+                {
+                    throw new SecurityException(message ?? "Admin privileges are required.");
+                }
+            }
+            else if (NeonHelper.IsOSX)
+            {
+                throw new NotImplementedException();
+            }
+            else if (NeonHelper.IsLinux)
+            {
+                throw new NotImplementedException();
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        /// <summary>
+        /// Ensures that the current process has enhanced admin privileges.
+        /// </summary>
+        /// <exception cref="KubeException">Thrown when enhanced privileges are not available.</exception>
+        public static void EnsureAdminPrivileges()
+        {
+            if (NeonHelper.IsWindows)
+            {
+                var principal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
+
+                if (!principal.IsInRole(WindowsBuiltInRole.Administrator))
+                {
+                    throw new KubeException("Enhanced admin privileges are required but are not assigned.");
+                }
+            }
+            else if (NeonHelper.IsOSX)
+            {
+                // $todo(jefflill): Implement this?
+
+                throw new NotImplementedException();
+            }
+        }
     }
 }

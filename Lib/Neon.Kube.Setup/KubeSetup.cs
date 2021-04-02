@@ -15,18 +15,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using ICSharpCode.SharpZipLib.Zip;
-using k8s;
-using k8s.Models;
-using Microsoft.Rest;
-using Neon.Collections;
-using Neon.Common;
-using Neon.Cryptography;
-using Neon.IO;
-using Neon.Retry;
-using Neon.SSH;
-using Neon.Tasks;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
@@ -39,6 +27,20 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+
+using ICSharpCode.SharpZipLib.Zip;
+using k8s;
+using k8s.Models;
+using Microsoft.Rest;
+
+using Neon.Collections;
+using Neon.Common;
+using Neon.Cryptography;
+using Neon.IO;
+using Neon.Retry;
+using Neon.SSH;
+using Neon.Tasks;
+using Newtonsoft.Json.Linq;
 
 namespace Neon.Kube
 {
@@ -95,67 +97,6 @@ namespace Neon.Kube
         private static readonly TimeSpan    clusterOpRetryInterval  = TimeSpan.FromSeconds(10);
 
         //---------------------------------------------------------------------
-        // These string constants are used to persist state in [SetupControllers].
-
-        /// <summary>
-        /// <para>
-        /// Property name for accessing a <c>bool</c> that indicates that we're running cluster prepare/setup in <b>debug mode</b>.
-        /// In debug mode, setup works like it did in the past, where we deployed the base node image first and then 
-        /// configured the node from that, rather than starting with the node image with assets already prepositioned.
-        /// </para>
-        /// <para>
-        /// This mode is useful when debugging cluster setup or adding new features.
-        /// </para>
-        /// </summary>
-        public const string DebugModeProperty = "debug-setup";
-
-        /// <summary>
-        /// <para>
-        /// Property name for accessing a <c>bool</c> that indicates that we're running cluster prepare/setup in <b>release mode</b>.
-        /// </para>
-        /// </summary>
-        public const string ReleaseModeProperty = "release-setup";
-
-        /// <summary>
-        /// <para>
-        /// Property name for accessing a <c>bool</c> that indicates that we're running cluster prepare/setup in <b>maintainer mode</b>.
-        /// </para>
-        /// </summary>
-        public const string MaintainerModeProperty = "maintainer-setup";
-
-        /// <summary>
-        /// Property name for a <c>bool</c> that identifies the base image name to be used for preparing
-        /// a cluster in <b>debug mode</b>.  This is the name of the base image file as persisted to our
-        /// public S3 bucket.  This will not be set for cluster setup.
-        /// </summary>
-        public const string BaseImageNameProperty = "base-image-name";
-
-        /// <summary>
-        /// Property name for determining the current hosting environment: <see cref="HostingEnvironment"/>,
-        /// </summary>
-        public const string HostingEnvironmentProperty = "hosting-environment";
-
-        /// <summary>
-        /// Property name for accessing the <see cref="SetupController{NodeMetadata}"/>'s <see cref="ClusterProxy"/> property.
-        /// </summary>
-        public const string ClusterProxyProperty = "cluster-proxy";
-
-        /// <summary>
-        /// Property name for accessing the <see cref="SetupController{NodeMetadata}"/>'s <see cref="ClusterLogin"/> property.
-        /// </summary>
-        public const string ClusterLoginProperty = "cluster-login";
-
-        /// <summary>
-        /// Property name for accessing the <see cref="SetupController{NodeMetadata}"/>'s <see cref="IHostingManager"/> property.
-        /// </summary>
-        public const string HostingManagerProperty = "hosting-manager";
-
-        /// <summary>
-        /// Property name for accessing the <see cref="SetupController{NodeMetadata}"/>'s <see cref="Kubernetes"/> client property.
-        /// </summary>
-        public const string K8sClientProperty = "k8sclient";
-
-        //---------------------------------------------------------------------
         // Implementation
 
         /// <summary>
@@ -173,7 +114,7 @@ namespace Neon.Kube
 
             try
             {
-                return controller.Get<IKubernetes>(K8sClientProperty);
+                return controller.Get<IKubernetes>(KubeSetupProperty.K8sClient);
             }
             catch (Exception e)
             {
@@ -232,7 +173,7 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
-            var cluster           = controller.Get<ClusterProxy>(KubeSetup.ClusterProxyProperty);
+            var cluster           = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var master            = cluster.FirstMaster;
             var hostPlatform      = KubeHelper.HostPlatform;
             var cachedKubeCtlPath = KubeHelper.GetCachedComponentPath(hostPlatform, "kubectl", KubeVersions.KubernetesVersion);
@@ -373,12 +314,12 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Connects to a Kubernetes cluster if it already exists.  This sets the <see cref="K8sClientProperty"/>
+        /// Connects to a Kubernetes cluster if it already exists.  This sets the <see cref="KubeSetupProperty.K8sClient"/>
         /// property in the setup controller state when Kubernetes is running and a connection has not already 
         /// been established.
         /// </para>
         /// <note>
-        /// The <see cref="K8sClientProperty"/> will not be set when Kubernetes has not been started, so 
+        /// The <see cref="KubeSetupProperty.K8sClient"/> will not be set when Kubernetes has not been started, so 
         /// <see cref="ObjectDictionary.Get{TValue}(string)"/> calls for this property will fail when the
         /// cluster has not been connected yet, which will be useful for debugging setup steps that require
         /// a connection but this hasn't happened yet.
@@ -389,12 +330,12 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
-            if (controller.ContainsKey(K8sClientProperty))
+            if (controller.ContainsKey(KubeSetupProperty.K8sClient))
             {
                 return;     // Already connected
             }
 
-            var cluster    = controller.Get<ClusterProxy>(ClusterProxyProperty);
+            var cluster    = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var configFile = Environment.GetEnvironmentVariable("KUBECONFIG").Split(';').Where(s => s.Contains("config")).FirstOrDefault();
 
             if (!string.IsNullOrEmpty(configFile) && File.Exists(configFile))
@@ -442,7 +383,7 @@ namespace Neon.Kube
                         maxRetryInterval:     TimeSpan.FromSeconds(5),
                         timeout:              TimeSpan.FromSeconds(120));
 
-                controller.Add(K8sClientProperty, k8sClient);
+                controller.Add(KubeSetupProperty.K8sClient, k8sClient);
             }
         }
     }

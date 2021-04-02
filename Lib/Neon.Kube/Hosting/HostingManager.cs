@@ -69,12 +69,6 @@ namespace Neon.Kube
         public abstract void Dispose(bool disposing);
 
         /// <summary>
-        /// Specifies whether the class should print setup status to the console.
-        /// This defaults to <c>false</c>.
-        /// </summary>
-        public bool ShowStatus { get; set; } = false;
-
-        /// <summary>
         /// The maximum number of nodes that will execute provisioning steps in parallel.  This
         /// defaults to <b>5</b>.
         /// </summary>
@@ -87,9 +81,6 @@ namespace Neon.Kube
         public double WaitSeconds { get; set; } = 0.0;
 
         /// <inheritdoc/>
-        public virtual bool IsProvisionNOP => false;
-
-        /// <inheritdoc/>
         public abstract HostingEnvironment HostingEnvironment { get; }
 
         /// <inheritdoc/>
@@ -99,13 +90,16 @@ namespace Neon.Kube
         public virtual bool RequiresAdminPrivileges => true;
 
         /// <inheritdoc/>
+        public virtual bool RequiresNodeAddressCheck => false;
+
+        /// <inheritdoc/>
         public virtual bool GenerateSecurePassword => true;
 
         /// <inheritdoc/>
-        public abstract Task<bool> ProvisionAsync(ISetupController controller, string secureSshPassword, string orgSshPassword = null);
+        public abstract void AddProvisioningSteps(SetupController<NodeDefinition> controller);
 
         /// <inheritdoc/>
-        public virtual void AddPostPrepareSteps(SetupController<NodeDefinition> setupController)
+        public virtual void AddPostProvisioningSteps(SetupController<NodeDefinition> setupController)
         {
         }
 

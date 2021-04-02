@@ -1,6 +1,6 @@
 #Requires -Version 7.0
 #------------------------------------------------------------------------------
-# FILE:         profile-client.ps1
+# FILE:         deployment.ps1
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 #
@@ -125,5 +125,3 @@ function ClearAwsCliCredentials
     $env:AWS_ACCESS_KEY_ID     = $null
     $env:AWS_SECRET_ACCESS_KEY = $null
 }
-
-

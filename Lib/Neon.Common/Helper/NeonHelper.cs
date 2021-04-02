@@ -43,6 +43,26 @@ namespace Neon.Common
     public static partial class NeonHelper
     {
         /// <summary>
+        /// Identifies the production neonLIBRARY container image registry.  This is a public
+        /// registry that holds non-cluster setup related images.
+        /// </summary>
+        public const string NeonLibraryProdRegistry = "ghcr.io/neonrelease";
+
+        /// <summary>
+        /// Identifies the development neonLIBRARY container image registry.  This is a public
+        /// registry that holds non-cluster setup related images during development between
+        /// releases.
+        /// </summary>
+        public const string NeonLibraryDevRegistry = "ghcr.io/neonrelease-dev";
+
+        /// <summary>
+        /// Returns the appropriate public container neonLIBRARY registry to be used for the git 
+        /// branch the assembly was built from.  This returns <see cref="NeonLibraryProdRegistry"/> for
+        /// release branches and <see cref="NeonLibraryDevRegistry"/> for all other branches.
+        /// </summary>
+        public static string NeonLibraryBranchRegistry => ThisAssembly.Git.Branch.StartsWith("release-", StringComparison.InvariantCultureIgnoreCase) ? NeonLibraryProdRegistry : NeonLibraryDevRegistry;
+
+        /// <summary>
         /// Used for thread synchronization.
         /// </summary>
         private static object syncRoot = new object();
@@ -245,25 +265,5 @@ namespace Neon.Common
                 }
             }
         }
-
-        /// <summary>
-        /// Identifies the production neonLIBRARY container image registry.  This is a public
-        /// registry that holds non-cluster setup related images.
-        /// </summary>
-        public const string NeonLibraryProdRegistry = "ghcr.io/neonrelease";
-
-        /// <summary>
-        /// Identifies the development neonLIBRARY container image registry.  This is a public
-        /// registry that holds non-cluster setup related images during development between
-        /// releases.
-        /// </summary>
-        public const string NeonLibraryDevRegistry = "ghcr.io/neonrelease-dev";
-
-        /// <summary>
-        /// Returns the appropriate public container neonLIBRARY registry to be used for the git 
-        /// branch the assembly was built from.  This returns <see cref="NeonLibraryProdRegistry"/> for
-        /// release branches and <see cref="NeonLibraryDevRegistry"/> for all other branches.
-        /// </summary>
-        public static string NeonLibraryBranchRegistry => ThisAssembly.Git.Branch.StartsWith("release-", StringComparison.InvariantCultureIgnoreCase) ? NeonLibraryProdRegistry : NeonLibraryDevRegistry;
     }
 }

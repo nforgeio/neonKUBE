@@ -172,7 +172,6 @@ namespace Neon.Kube
 
             this.Nodes       = nodes;
             this.FirstMaster = Nodes.Where(n => n.Metadata.IsMaster).OrderBy(n => n.Name).First();
-
         }
 
         /// <summary>
@@ -198,10 +197,7 @@ namespace Neon.Kube
         /// <summary>
         /// Returns the cluster name.
         /// </summary>
-        public string Name
-        {
-            get { return Definition.Name; }
-        }
+        public string Name => Definition.Name;
 
         /// <summary>
         /// The associated <see cref="IHostingManager"/> or <c>null</c>.
@@ -346,61 +342,6 @@ namespace Neon.Kube
             // Return the node that is assigned the reachable address.
 
             return Nodes.Where(n => n.Address.ToString() == reachableHost.Host).First();
-        }
-
-        /// <summary>
-        /// Performs cluster configuration steps.
-        /// </summary>
-        /// <param name="steps">The configuration steps.</param>
-        public void Configure(ConfigStepList steps)
-        {
-            Covenant.Requires<ArgumentNullException>(steps != null, nameof(steps));
-
-            foreach (var step in steps)
-            {
-                step.Run(this);
-            }
-        }
-
-        /// <summary>
-        /// Returns steps that upload a text file to a set of cluster nodes.
-        /// </summary>
-        /// <param name="nodes">The cluster nodes to receive the upload.</param>
-        /// <param name="path">The target path on the Linux node.</param>
-        /// <param name="text">The input text.</param>
-        /// <param name="tabStop">Optionally expands TABs into spaces when non-zero.</param>
-        /// <param name="outputEncoding">Optionally specifies the output text encoding (defaults to UTF-8).</param>
-        /// <param name="permissions">Optionally specifies target file permissions (must be <c>chmod</c> compatible).</param>
-        /// <returns>The steps.</returns>
-        public IEnumerable<ConfigStep> GetFileUploadSteps(IEnumerable<NodeSshProxy<NodeDefinition>> nodes, string path, string text, int tabStop = 0, Encoding outputEncoding = null, string permissions = null)
-        {
-            Covenant.Requires<ArgumentNullException>(nodes != null, nameof(nodes));
-
-            var steps = new ConfigStepList();
-
-            foreach (var node in nodes)
-            {
-                steps.Add(UploadStep.Text(node.Name, path, text, tabStop, outputEncoding, permissions));
-            }
-
-            return steps;
-        }
-
-        /// <summary>
-        /// Returns steps that upload a text file to a cluster node.
-        /// </summary>
-        /// <param name="node">The cluster node to receive the upload.</param>
-        /// <param name="path">The target path on the Linux node.</param>
-        /// <param name="text">The input text.</param>
-        /// <param name="tabStop">Optionally expands TABs into spaces when non-zero.</param>
-        /// <param name="outputEncoding">Optionally specifies the output text encoding (defaults to UTF-8).</param>
-        /// <param name="permissions">Optionally specifies target file permissions (must be <c>chmod</c> compatible).</param>
-        /// <returns>The steps.</returns>
-        public IEnumerable<ConfigStep> GetFileUploadSteps(NodeSshProxy<NodeDefinition> node, string path, string text, int tabStop = 0, Encoding outputEncoding = null, string permissions = null)
-        {
-            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
-
-            return GetFileUploadSteps(new List<NodeSshProxy<NodeDefinition>>() { node }, path, text, tabStop, outputEncoding, permissions);
         }
 
         /// <summary>

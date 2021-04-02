@@ -28,6 +28,20 @@ cd $env:NF_ROOT/Powershell
 
 . ./error-handling.ps1
 . ./git.ps1
-. ./profile-client.ps1
+. ./deployment.ps1
 
 cd $includeOrgDir
+
+#------------------------------------------------------------------------------
+# Requests that the user elevate the script permission if the current process
+# isn't already running with elevated permissions.
+
+function RequestAdminPermissions
+{
+    if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))
+    {
+        # Relaunch as an elevated process:
+        Start-Process powershell.exe "-file",('"{0}"' -f $MyInvocation.MyCommand.Path) -Verb RunAs
+        exit
+    }
+}

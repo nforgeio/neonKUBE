@@ -44,7 +44,7 @@ namespace TestTemporal
 {
     public partial class Test_EndToEnd
     {
-        [SlowFact]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Base_Ping()
         {
@@ -71,7 +71,7 @@ namespace TestTemporal
             Console.WriteLine($"Transactions/sec: {tps}");
         }
 
-        [SlowFact]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public void Base_PingAttack()
         {

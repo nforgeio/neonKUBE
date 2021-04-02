@@ -87,17 +87,6 @@ OPTIONS:
 
                           NOTE: This mode is not supported for cloud and
                                 bare-metal environments.
-
-    --base-image-name   - Specifies the base image name to use when operating
-                          in [--debug] mode.  This will be the name of the base
-                          image file as published to our public S3 bucket for
-                          the target hosting manager.  Examples:
-
-                                Hyper-V:   ubuntu-20.04.1.hyperv.vhdx
-                                WSL2:      ubuntu-20.04.20210206.wsl2.tar
-                                XenServer: ubuntu-20.04.1.xenserver.xva
-
-                          NOTE: This is required for [--debug]
 ";
         private const string        logBeginMarker  = "# CLUSTER-BEGIN-SETUP ############################################################";
         private const string        logEndMarker    = "# CLUSTER-END-SETUP-SUCCESS ######################################################";
@@ -105,14 +94,12 @@ OPTIONS:
 
         private KubeConfigContext   kubeContext;
         private ClusterLogin        clusterLogin;
-        private ClusterProxy        cluster;
-        private HostingManager      hostingManager; 
 
         /// <inheritdoc/>
         public override string[] Words => new string[] { "cluster", "setup" };
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions => new string[] { "--unredacted", "--force", "--upload-charts", "--debug", "--base-image-name" };
+        public override string[] ExtendedOptions => new string[] { "--unredacted", "--force", "--upload-charts", "--debug" };
 
         /// <inheritdoc/>
         public override void Help()
@@ -131,6 +118,7 @@ OPTIONS:
 
             var contextName   = KubeContextName.Parse(commandLine.Arguments[0]);
             var kubeCluster   = KubeHelper.Config.GetCluster(contextName.Cluster);
+            var unredacted    = commandLine.HasOption("--unredacted");
             var debug         = commandLine.HasOption("--debug");
             var uploadCharts  = commandLine.HasOption("--upload-charts") || debug;
 
@@ -187,180 +175,38 @@ OPTIONS:
 
             KubeHelper.InitContext(kubeContext);
 
-            // Initialize the cluster proxy and the hbosting manager.
+            // Create and run the cluster prepare setup controller.
 
-            cluster = new ClusterProxy(kubeContext, Program.CreateNodeProxy<NodeDefinition>, appendToLog: true, defaultRunOptions: RunOptions.LogOutput | RunOptions.FaultOnError);
+            var clusterDefinition = clusterLogin.ClusterDefinition;
 
-            hostingManager = new HostingManagerFactory(() => HostingLoader.Initialize()).GetManager(cluster, Program.LogPath);
+            var controller = KubeSetup.CreateClusterSetupController(
+                clusterDefinition,
+                KubeHelper.LogFolder,
+                maxParallel:    Program.MaxParallel,
+                unredacted:     unredacted,
+                debugMode:      debug,
+                uploadCharts:   uploadCharts);
 
-            if (hostingManager == null)
-            {
-                Console.Error.WriteLine($"*** ERROR: No hosting manager for the [{cluster.Definition.Hosting.Environment}] environment could be located.");
-                Program.Exit(1);
-            }
-
-#if ENTERPRISE
-            if (hostingManager.HostingEnvironment == HostingEnvironment.Wsl2)
-            {
-                var wsl2Proxy = new Wsl2Proxy(KubeConst.Wsl2MainDistroName, KubeConst.SysAdminUser);
-                
-                cluster.FirstMaster.Address = IPAddress.Parse(wsl2Proxy.Address);
-            }
-#endif
-
-            // Update the cluster node SSH credentials to use the secure password.
-
-            var sshCredentials = SshCredentials.FromUserPassword(KubeConst.SysAdminUser, clusterLogin.SshPassword);
-
-            foreach (var node in cluster.Nodes)
-            {
-                node.UpdateCredentials(sshCredentials);
-            }
-
-            // Configure global options.
-
-            if (commandLine.HasOption("--unredacted"))
-            {
-                cluster.SecureRunOptions = RunOptions.None;
-            }
-
-            // Perform the setup operations.
-
-            var controller =
-                new SetupController<NodeDefinition>(new string[] { "cluster", "setup", $"[{cluster.Name}]" }, cluster.Nodes)
+            controller.StatusChangedEvent +=
+                status =>
                 {
-                    ShowStatus  = !Program.Quiet,
-                    MaxParallel = Program.MaxParallel,
-                    ShowElapsed = true
+                    status.WriteToConsole();
                 };
 
-            // Configure the setup controller state.
-
-            controller.Add(KubeSetup.DebugModeProperty, debug);
-            controller.Add(KubeSetup.ReleaseModeProperty, Program.IsRelease);
-            controller.Add(KubeSetup.MaintainerModeProperty, !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("NC_ROOT")));
-            controller.Add(KubeSetup.ClusterProxyProperty, cluster);
-            controller.Add(KubeSetup.ClusterLoginProperty, clusterLogin);
-            controller.Add(KubeSetup.HostingManagerProperty, hostingManager);
-            controller.Add(KubeSetup.HostingEnvironmentProperty, hostingManager.HostingEnvironment);
-
-            // Configure the setup steps.
-
-            controller.AddGlobalStep("download binaries", async controller => await KubeSetup.InstallWorkstationBinariesAsync(controller));
-            controller.AddWaitUntilOnlineStep("connect");
-            controller.AddNodeStep("verify OS", (controller, node) => node.VerifyNodeOS());
-
-            // $todo(jefflill): We don't support Linux distribution upgrades yet.
-            controller.AddNodeStep("node basics", (controller, node) => node.BaseInitialize(controller, upgradeLinux: false));
-
-            controller.AddNodeStep("setup NTP", (controller, node) => node.SetupConfigureNtp(controller));
-
-            // Write the operation begin marker to all cluster node logs.
-
-            cluster.LogLine(logBeginMarker);
-
-            // Perform common configuration for the bootstrap node first.
-            // We need to do this so the the package cache will be running
-            // when the remaining nodes are configured.
-
-            var configureFirstMasterStepLabel = cluster.Definition.Masters.Count() > 1 ? "setup first master" : "setup master";
-
-            controller.AddNodeStep(configureFirstMasterStepLabel,
-                (controller, node) =>
-                {
-                    node.SetupNode(controller);
-                    //node.InvokeIdempotent("setup/setup-node-restart", () => node.Reboot(wait: true));
-                },
-                (controller, node) => node == cluster.FirstMaster);
-
-            // Perform common configuration for the remaining nodes (if any).
-
-            if (cluster.Definition.Nodes.Count() > 1)
+            if (controller.Run())
             {
-                controller.AddNodeStep("setup other nodes",
-                    (controller, node) =>
-                    {
-                        node.SetupNode(controller);
-                        node.InvokeIdempotent("setup/setup-node-restart", () => node.Reboot(wait: true));
-                    },
-                    (controller, node) => node != cluster.FirstMaster);
+                Console.WriteLine();
+                Console.WriteLine($" [{clusterDefinition.Name}] cluster is ready.");
+                Console.WriteLine();
+                Program.Exit(0);
             }
-
-            if (commandLine.HasOption("--debug"))
+            else
             {
-                controller.AddNodeStep("load images", (controller, node) => node.NodeLoadImagesAsync(controller, downloadParallel: 5, loadParallel: 3));
-            }
-
-            controller.AddNodeStep("install helm",
-                (controller, node) =>
-                {
-                    node.NodeInstallHelm(controller);
-                });
-
-            if (commandLine.HasOption("--upload-charts") || debug)
-            {
-                controller.AddNodeStep("upload Helm charts",
-                    (controller, node) =>
-                    {
-                        cluster.FirstMaster.SudoCommand($"rm -rf {KubeNodeFolders.Helm}/*");
-                        cluster.FirstMaster.NodeInstallHelmArchive(controller);
-
-                        var zipPath = LinuxPath.Combine(KubeNodeFolders.Helm, "charts.zip");
-
-                        cluster.FirstMaster.SudoCommand($"unzip {zipPath} -d {KubeNodeFolders.Helm}");
-                        cluster.FirstMaster.SudoCommand($"rm -f {zipPath}");
-                    },
-                    (controller, node) => node == cluster.FirstMaster);
-            }
-
-            //-----------------------------------------------------------------
-            // Cluster setup.
-
-            controller.AddGlobalStep("setup cluster", controller => KubeSetup.SetupClusterAsync(controller));
-
-            //-----------------------------------------------------------------
-            // Verify the cluster.
-
-            controller.AddNodeStep("check masters",
-                (controller, node) =>
-                {
-                    KubeDiagnostics.CheckMaster(node, cluster.Definition);
-                },
-                (controller, node) => node.Metadata.IsMaster);
-
-            if (cluster.Workers.Count() > 0)
-            {
-                controller.AddNodeStep("check workers",
-                    (controller, node) =>
-                    {
-                        KubeDiagnostics.CheckWorker(node, cluster.Definition);
-                    },
-                    (controller, node) => node.Metadata.IsWorker);
-            }
-
-            // Start setup.
-
-            if (!controller.Run())
-            {
-                // Write the operation end/failed marker to all cluster node logs.
-
-                cluster.LogLine(logFailedMarker);
-
-                Console.Error.WriteLine("*** ERROR: One or more configuration steps failed.");
+                Console.WriteLine();
+                Console.WriteLine(" *** ERROR: One or more configuration steps failed.");
+                Console.WriteLine();
                 Program.Exit(1);
             }
-
-            // Indicate that setup is complete.
-
-            clusterLogin.ClusterDefinition.ClearSetupState();
-            clusterLogin.SetupDetails.SetupPending = false;
-            clusterLogin.Save();
-
-            // Write the operation end marker to all cluster node logs.
-
-            cluster.LogLine(logEndMarker);
-
-            Console.WriteLine();
 
             await Task.CompletedTask;
         }

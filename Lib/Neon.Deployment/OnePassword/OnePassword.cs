@@ -218,13 +218,28 @@ namespace Neon.Deployment
         /// Returns a named password from the current user's standard 1Password 
         /// vault like [user-sally] by default or a custom named vault.
         /// </summary>
-        /// <param name="name">The password name.</param>
+        /// <param name="name">The password name with optional property.</param>
         /// <param name="vault">Optionally specifies a specific vault.</param>
         /// <returns>The requested password (from the password's [password] field).</returns>
         /// <exception cref="OnePasswordException">Thrown for 1Password related problems.</exception>
+        /// <remarks>
+        /// <para>
+        /// The <paramref name="name"/> parameter may optionally specify the desired
+        /// 1Password property to override the default <b>"password"</b> for this
+        /// method.  Properties are specified like:
+        /// </para>
+        /// <example>
+        /// SECRETNAME[PROPERTY]
+        /// </example>
+        /// </remarks>
         public static string GetSecretPassword(string name, string vault = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+
+            var parsedName = ProfileServer.ParseSecretName(name);
+            var property   = parsedName.Property;
+
+            name = parsedName.Name;
 
             var retrying = false;
 
@@ -241,7 +256,7 @@ retry:          var response = NeonHelper.ExecuteCapture("op",
                         "--session", sessionToken,
                         "get", "item", name,
                         "--vault", vault,
-                        "--fields", "password"
+                        "--fields", property ?? "password"
                     });
 
                 switch (GetStatus(response))
@@ -275,13 +290,28 @@ retry:          var response = NeonHelper.ExecuteCapture("op",
         /// Returns a named value from the current user's standard 1Password 
         /// vault like [user-sally] by default or a custom named vault.
         /// </summary>
-        /// <param name="name">The password name.</param>
+        /// <param name="name">The password name with optional property.</param>
         /// <param name="vault">Optionally specifies a specific vault.</param>
         /// <returns>The requested value (from the password's [value] field).</returns>
         /// <exception cref="OnePasswordException">Thrown for 1Password related problems.</exception>
+        /// <remarks>
+        /// <para>
+        /// The <paramref name="name"/> parameter may optionally specify the desired
+        /// 1Password property to override the default <b>"value"</b> for this
+        /// method.  Properties are specified like:
+        /// </para>
+        /// <example>
+        /// SECRETNAME[PROPERTY]
+        /// </example>
+        /// </remarks>
         public static string GetSecretValue(string name, string vault = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+
+            var parsedName = ProfileServer.ParseSecretName(name);
+            var property   = parsedName.Property;
+
+            name = parsedName.Name;
 
             var retrying = false;
 
@@ -298,7 +328,7 @@ retry:          var response = NeonHelper.ExecuteCapture("op",
                         "--session", sessionToken,
                         "get", "item", name,
                         "--vault", vault,
-                        "--fields", "value"
+                        "--fields", property ?? "value"
                     });
 
                 switch (GetStatus(response))

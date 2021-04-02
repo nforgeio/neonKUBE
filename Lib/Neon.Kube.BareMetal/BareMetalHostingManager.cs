@@ -70,10 +70,7 @@ namespace Neon.Kube
         // Instance members
 
         private ClusterProxy                    cluster;
-        private ISetupController                controller;
-        private string                          orgSshPassword;
-        private string                          secureSshPassword;
-        private Dictionary<string, string>      nodeToPassword;
+        private SetupController<NodeDefinition> controller;
 
         /// <summary>
         /// Creates an instance that is only capable of validating the hosting
@@ -98,8 +95,7 @@ namespace Neon.Kube
 
             cluster.HostingManager = this;
 
-            this.cluster        = cluster;
-            this.nodeToPassword = new Dictionary<string, string>();
+            this.cluster = cluster;
         }
 
         /// <inheritdoc/>
@@ -112,10 +108,10 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override bool IsProvisionNOP => false;
+        public override HostingEnvironment HostingEnvironment => HostingEnvironment.BareMetal;
 
         /// <inheritdoc/>
-        public override HostingEnvironment HostingEnvironment => HostingEnvironment.BareMetal;
+        public override bool RequiresNodeAddressCheck => true;
 
         /// <inheritdoc/>
         public override void Validate(ClusterDefinition clusterDefinition)
@@ -127,197 +123,18 @@ namespace Neon.Kube
         public override bool GenerateSecurePassword => true;
 
         /// <inheritdoc/>
-        public override async Task<bool> ProvisionAsync(ISetupController controller, string secureSshPassword, string orgSshPassword = null)
+        public override void AddProvisioningSteps(SetupController<NodeDefinition> controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secureSshPassword), nameof(secureSshPassword));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(orgSshPassword), nameof(orgSshPassword));
             Covenant.Assert(cluster != null, $"[{nameof(BareMetalHostingManager)}] was created with the wrong constructor.");
 
-            this.controller        = controller;
-            this.secureSshPassword = secureSshPassword;
-            this.orgSshPassword    = orgSshPassword;
+            this.controller = controller;
 
-            //-----------------------------------------------------------------
-            // Ensure that we can connect to all machines specified for cluster nodes.  This
-            // ensures that the machines are running and that their network settings and
-            // credentials are configured correctly.
-            //
-            // Then scan the cluster nodes for unpartitioned block devices and mark those nodes
-            // to host an OpenEBS cStor.  Note that at least one machine in the cluster must
-            // have an unpartitioned block device.
-
-            var checkErrors = new List<Tuple<string, string>>();    // (nodeName, errorMessage)
-
-            using (var pinger = new Pinger())
-            {
-                var checkController = new SetupController<NodeDefinition>($"Provisioning [{cluster.Definition.Name}] cluster", cluster.Nodes)
-                {
-                    ShowStatus = this.ShowStatus
-                };
-
-                checkController.AddNodeStep("machine online status",
-                    (state, node) =>
-                    {
-                        const int maxAttempts = 5;
-
-                        var timeout = TimeSpan.FromSeconds(2);
-                        var replied = false;
-
-                        node.Status = "pinging";
-
-                        for (int i = 0; i < maxAttempts; i++)
-                        {
-                            var reply = pinger.SendPingAsync(node.Address, (int)timeout.TotalMilliseconds).Result;
-
-                            if (reply.Status == IPStatus.Success)
-                            {
-                                replied = true;
-                                break;
-                            }
-                        }
-
-                        if (replied)
-                        {
-                            node.Status = "online";
-                        }
-                        else
-                        {
-                            var errorMessage = $"Node machine is not online.  It didn't respond to pings.";
-
-                            node.Status = "**ERROR: offline";
-
-                            lock (checkErrors)
-                            {
-                                checkErrors.Add(new Tuple<string, string>(node.Name, errorMessage));
-                            }
-
-                            throw new KubeException(errorMessage);
-                        }
-                    });
-
-                checkController.AddNodeStep("connect machines",
-                    (state, node) =>
-                    {
-                        node.Status = "connecting...";
-
-                        try
-                        {
-                            node.Connect();
-                        }
-                        catch (SshAuthenticationException)
-                        {
-                            node.Status = "**ERROR: authentication failed";
-
-                            lock (checkErrors)
-                            {
-                                checkErrors.Add(new Tuple<string, string>(node.Name, $"Authentication failed.  Verify the [{KubeConst.SysAdminUser}] user credentials."));
-                            }
-
-                            throw;
-                        }
-                        catch (SshConnectionException)
-                        {
-                            node.Status = "**ERROR: connect failed";
-
-                            lock (checkErrors)
-                            {
-                                checkErrors.Add(new Tuple<string, string>(node.Name, "Connection failed.  Verify the network configuration and that OpenSSH is running."));
-                            }
-
-                            throw;
-                        }
-                        catch (Exception e)
-                        {
-                            node.Status = $"**ERROR: unexpected exception: [{e.GetType().FullName}]";
-
-                            lock (checkErrors)
-                            {
-                                checkErrors.Add(new Tuple<string, string>(node.Name, $"**Unexpected exception: [{e.GetType().FullName}]"));
-                            }
-                            throw;
-                        }
-                    });
-
-                var openEbsNodeCount = 0;
-
-                checkController.AddNodeStep("OpenEBS block device scan",
-                    (state, node) =>
-                    {
-                        // NOTE: Nodes should still be connected from the last step.
-
-                        var unpartitonedDisks = node.ListDisks()
-                            .Where(disk => disk.Value.Partitions.Count == 0)
-                            .Select(disk => disk.Value.DiskName);
-
-                        if (unpartitonedDisks.Count() > 0)
-                        {
-                            node.Metadata.OpenEBS = true;
-
-                            Interlocked.Increment(ref openEbsNodeCount);
-                        }
-                    });
-
-                if (!checkController.Run())
-                {
-                    Console.WriteLine();
-                    Console.WriteLine();
-                    Console.WriteLine("One or more of the cluster machines are not ready for provisioning:");
-                    Console.WriteLine();
-
-                    var maxNameChars = checkErrors.Max(error => error.Item1.Length);
-
-                    foreach (var error in checkErrors.OrderBy(error => error.Item1.ToUpperInvariant()))
-                    {
-                        var rightFill = new string(' ', maxNameChars - error.Item1.Length);
-
-                        Console.Error.WriteLine($"{error.Item1}: {rightFill}{error.Item2}");
-                    }
-
-                    return false;
-                }
-
-                if (openEbsNodeCount == 0)
-                {
-                    Console.WriteLine();
-                    Console.WriteLine();
-                    Console.WriteLine("ERROR: neonKUBE requires at least one node with an unpartitioned block device");
-                    Console.WriteLine("       for the OpenEBS.  Please add a hard drive to at least one machines.");
-
-                    return false;
-                }
-            }
-
-            //-----------------------------------------------------------------
-            // Perform the provisioning operations.
-
-            var setupController = new SetupController<NodeDefinition>($"Provisioning [{cluster.Definition.Name}] cluster", cluster.Nodes)
-            {
-                ShowStatus  = this.ShowStatus,
-                MaxParallel = this.MaxParallel
-            };
-
-            setupController.AddNodeStep("connect nodes", (state, node) => Connect(node));
-            setupController.AddNodeStep("verify operating system", (state, node) => node.VerifyNodeOS());
-
-            if (secureSshPassword != orgSshPassword)
-            {
-                setupController.AddNodeStep("secure node passwords", (state, node) => SetSecurePassword(node));
-            }
-
-            setupController.AddNodeStep("detect node labels", (state, node) => DetectLabels(node));
-
-            if (!setupController.Run())
-            {
-                Console.Error.WriteLine("*** ERROR: One or more configuration steps failed.");
-                return await Task.FromResult(false);
-            }
-
-            return await Task.FromResult(true);
+            throw new NotImplementedException();
         }
 
         /// <inheritdoc/>
-        public override void AddPostPrepareSteps(SetupController<NodeDefinition> setupController)
+        public override void AddPostProvisioningSteps(SetupController<NodeDefinition> setupController)
         {
         }
 
@@ -325,82 +142,6 @@ namespace Neon.Kube
         public override (string Address, int Port) GetSshEndpoint(string nodeName)
         {
             return (Address: cluster.GetNode(nodeName).Address.ToString(), Port: NetworkPorts.SSH);
-        }
-
-        /// <summary>
-        /// Connects the proxy to the node.
-        /// </summary>
-        /// <param name="node">The target node.</param>
-        private void Connect(NodeSshProxy<NodeDefinition> node)
-        {
-            // We'll start by using the insecure credentials to connect to the node.
-            // It is possible though that a first provisiong run failed the first time
-            // and was partially completed with some node passwords being changed to
-            // the secure password and with other nodes still having the insecure
-            // default password.
-            //
-            // We don't want to make the operator have to go back and reset the secure
-            // passwords on those nodes, so we'll try the secure password if the insecure
-            // one fails.
-            //
-            // Note that we're going to use the [nodeToPassword] dictionary to record
-            // the password for the node (by name) so that this will be available when
-            // we'll need to pass it to [KubeHelper.InitializeNode()].
-
-            try
-            {
-                node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, orgSshPassword));
-                node.Connect();
-
-                lock (nodeToPassword)
-                {
-                    nodeToPassword[node.Name] = orgSshPassword;
-                }
-            }
-            catch (SshProxyException)
-            {
-                // Fall back to the original password if it is different from the secure one,
-                // otherwise rethrow the error.
-
-                if (orgSshPassword == secureSshPassword)
-                {
-                    throw;
-                }
-
-                node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, secureSshPassword));
-                node.Connect();
-
-                lock (nodeToPassword)
-                {
-                    nodeToPassword[node.Name] = secureSshPassword;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Changes the password for the [sysadmin] account on the node to the new
-        /// secure password and reconnects the node using the new password.
-        /// </summary>
-        /// <param name="node">The target node.</param>
-        private void SetSecurePassword(NodeSshProxy<NodeDefinition> node)
-        {
-            node.Status = "setting secure password";
-
-            var script =
-$@"
-echo '{KubeConst.SysAdminUser}:{secureSshPassword}' | chpasswd
-";
-            var response = node.SudoCommand(CommandBundle.FromScript(script));
-
-            if (response.ExitCode != 0)
-            {
-                throw new KubeException($"*** ERROR: Unable to set the strong SSH password [exitcode={response.ExitCode}].");
-            }
-
-            // Update the node credentials and then reconnect. 
-
-            node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, secureSshPassword));
-            node.Connect();
         }
 
         /// <summary>

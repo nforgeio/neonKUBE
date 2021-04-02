@@ -91,6 +91,8 @@ namespace Neon.Kube
         private static readonly Regex idempotentRegex = new Regex(@"[a-z0-9\.-/]+", RegexOptions.IgnoreCase);
 
         private ClusterProxy    cluster;
+        private StringBuilder   internalLogBuilder;
+        private TextWriter      internalLogWriter;
 
         /// <summary>
         /// Constructs a <see cref="LinuxSshProxy{TMetadata}"/>.
@@ -109,6 +111,13 @@ namespace Neon.Kube
             // Append the neonKUBE cluster binary folder to the remote path.
 
             RemotePath += $":{KubeNodeFolders.Bin}";
+
+            // We're going to maintain an internal log writer as well as the external writer
+            // so that we'll always have easy access to the log even when the external writer
+            // is disabled.
+
+            internalLogBuilder = new StringBuilder();
+            internalLogWriter  = new StringWriter(internalLogBuilder);
         }
 
         /// <summary>
@@ -510,7 +519,7 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
 
-            var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetup.HostingEnvironmentProperty);
+            var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
 
             controller.LogProgress(this, verb: "clean", message: "file system");
 
@@ -593,6 +602,39 @@ rm -rf /var/lib/dhcp/*
                     SudoCommand($"{KubeNodeFolders.Bin}/safe-apt-get clean -yq");
                     SudoCommand("rm -rf /var/lib/apt/lists");
                 });
+        }
+
+        //---------------------------------------------------------------------
+        // Override the base log related methods and write to the internal logs
+        // as well.
+
+        /// <summary>
+        /// Returns the current log for the node.
+        /// </summary>
+        /// <returns>A <see cref="NodeLog"/>.</returns>
+        public NodeLog GetNodeLog()
+        {
+            return new NodeLog(Name, internalLogBuilder.ToString());
+        }
+
+        /// <inheritdoc/>
+        public override void Log(string text)
+        {
+            base.Log(text);
+            internalLogWriter.Write(text);
+        }
+
+        /// <inheritdoc/>
+        public override void LogLine(string text)
+        {
+            base.LogLine(text);
+            internalLogWriter.WriteLine(text);
+        }
+
+        /// <inheritdoc/>
+        public override void LogFlush()
+        {
+            base.LogFlush();
         }
     }
 }

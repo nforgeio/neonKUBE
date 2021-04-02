@@ -95,18 +95,20 @@ namespace Neon.Deployment
                 "s3", "cp", sourcePath, targetUri
             };
 
-            var sbMetadata = new StringBuilder();
-
             if (gzip)
             {
-                sbMetadata.AppendWithSeparator("content-encoding=gzip", ",");
+                args.Add("--content-encoding");
+                args.Add("gzip");
             }
+
+            var sbMetadata = new StringBuilder();
 
             if (metadata != null && metadata.Contains('='))
             {
                 foreach (var item in metadata.Split(',', StringSplitOptions.RemoveEmptyEntries))
                 {
                     // Strip off the [x-amz-meta-] prefix from the name, if present.
+                    // Otherwise, the AWS-CLI will add the prefix again, duplicating it.
 
                     const string customPrefix = "x-amz-meta-";
 

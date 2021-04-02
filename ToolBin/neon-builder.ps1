@@ -75,10 +75,27 @@ function PublishCore
 
     [System.IO.Directory]::CreateDirectory($nfBuild)
 
-    # Build the [pubcore] arguments:
+    # Set the [pubcore] arguments (note that we need to handle apps targeting different versions of .NET):
 
     $projectPath = [System.IO.Path]::Combine($nfRoot, $projectPath)
-    $targetPath  = [System.IO.Path]::Combine($nfRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "netcoreapp3.1", "$targetName.dll")
+
+    $targetPath = [System.IO.Path]::Combine($ncRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "net5.0-windows", "$targetName.dll")
+    
+    if (!(Test-Path $targetPath))
+    {
+        $targetPath = [System.IO.Path]::Combine($ncRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "net5.0", "$targetName.dll")
+
+        if (!(Test-Path $targetPath))
+        {
+            $targetPath = [System.IO.Path]::Combine($ncRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "netcoreapp3.1", "$targetName.dll")
+
+            if (!(Test-Path $targetPath))
+            {
+                Write-Error "Cannot locate publish folder for: $projectPath"
+                Exit 1
+            }
+        }
+    }
 
     # Publish the binaries.
 

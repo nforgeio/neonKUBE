@@ -54,8 +54,8 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// The port where the Cadence client is listening for proxy messages
-        /// send by the <b>cadence-proxy</b>.
+        /// The port where the Cadence client is listening for messages
+        /// sent by the <b>cadence-proxy</b>.
         /// </summary>
         public int LibraryPort
         {

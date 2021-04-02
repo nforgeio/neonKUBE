@@ -481,7 +481,7 @@ ff02::2         ip6-allrouters
 
             var nodeDefinition    = NeonHelper.CastTo<NodeDefinition>(Metadata);
             var clusterDefinition = Cluster.Definition;
-            var hostingManager    = controller.Get<IHostingManager>(KubeSetup.HostingManagerProperty);
+            var hostingManager    = controller.Get<IHostingManager>(KubeSetupProperty.HostingManager);
 
             InvokeIdempotent("setup/package-caching",
                 () =>
@@ -598,7 +598,7 @@ EOF
 
             var nodeDefinition    = NeonHelper.CastTo<NodeDefinition>(Metadata);
             var clusterDefinition = Cluster.Definition;
-            var hostingManager    = controller.Get<IHostingManager>(KubeSetup.HostingManagerProperty);
+            var hostingManager    = controller.Get<IHostingManager>(KubeSetupProperty.HostingManager);
 
             InvokeIdempotent("setup/common",
                 () =>
