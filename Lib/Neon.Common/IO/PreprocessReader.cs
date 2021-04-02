@@ -204,6 +204,15 @@ namespace Neon.IO
     ///     to secrets in <i>vaults</i>.  You'll need the password name and optionally, its location when
     ///     referencing a password value.
     ///     </para>
+    ///     <para>
+    ///     You may also request a specific secret property using an array syntax like:
+    ///     </para>
+    ///     <example>
+    ///     SECRETNAME[PROPERTY]
+    ///     </example>
+    ///     <para>
+    ///     Doing this overrides the default <b>password</b> property.
+    ///     </para>
     ///     </description>
     /// </item>
     /// <item>
@@ -218,6 +227,15 @@ namespace Neon.IO
     ///     Secret values are named by a string and are often persisted to a named location.  1Password stores
     ///     to secrets in <i>vaults</i>.  You'll need the value name and optionally, its location when
     ///     referencing a password value.
+    ///     </para>
+    ///     <para>
+    ///     You may also request a specific secret property using an array syntax like:
+    ///     </para>
+    ///     <example>
+    ///     SECRETNAME[PROPERTY]
+    ///     </example>
+    ///     <para>
+    ///     Doing this overrides the default <b>value</b> property.
     ///     </para>
     ///     </description>
     /// </item>
