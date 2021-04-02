@@ -234,7 +234,6 @@ namespace Neon.Kube
             xenController.AddNodeStep("verify readiness", (controller, node) => VerifyReady(node));
             xenController.AddNodeStep("virtual machine template", (controller, node) => CheckVmTemplate(node));
             xenController.AddNodeStep("create virtual machines", (controller, node) => ProvisionVM(node));
-            xenController.AddGlobalStep(string.Empty, controller => Finish(), quiet: true);
 
             controller.AddGlobalStep("prepare: cluster infrastructure",
                 controller =>
@@ -590,13 +589,6 @@ namespace Neon.Kube
                     }
                 }
             }
-        }
-
-        /// <summary>
-        /// Perform any necessary global post Hyper-V provisioning steps.
-        /// </summary>
-        private void Finish()
-        {
         }
 
         /// <inheritdoc/>

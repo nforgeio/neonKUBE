@@ -157,12 +157,9 @@ namespace Neon.Kube
                 node.Labels.StorageSize     = ByteUnits.ToGiB(node.Vm.GetMemory(cluster.Definition));
             }
 
-            // Perform the provisioning operations.
+            // Add the provisioning steps to the controller.
 
-            this.controller = new SetupController<NodeDefinition>($"Provisioning [{cluster.Definition.Name}] cluster", cluster.Nodes)
-            {
-                MaxParallel = 1     // We're only going to provision one VM at a time on a local Hyper-V instance.
-            };
+            controller.MaxParallel = 1; // We're only going to provision one VM at a time on the local Hyper-V.
 
             controller.AddGlobalStep("prepare hyper-v", controller => PrepareHyperV());
             controller.AddNodeStep("create virtual machines", (controller, node) => ProvisionVM(node));
