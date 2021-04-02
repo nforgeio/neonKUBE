@@ -79,6 +79,9 @@ namespace TestDeployment
 
             Assert.Equal("testproperty]", ProfileServer.ParseSecretName("testproperty]").Name);
             Assert.Null(ProfileServer.ParseSecretName("testproperty]").Property);
+
+            Assert.Equal("test", ProfileServer.ParseSecretName("test[]").Name);
+            Assert.Null(ProfileServer.ParseSecretName("test[]").Property);
         }
     }
 }

@@ -154,7 +154,17 @@ namespace Neon.Deployment
 
             if (pLeftBracket != -1 && pRightBracket != -1)
             {
-                return (Name: secretName.Substring(0, pLeftBracket), Property: secretName.Substring(pLeftBracket + 1, pRightBracket - pLeftBracket - 1));
+                var name     = secretName.Substring(0, pLeftBracket);
+                var property = secretName.Substring(pLeftBracket + 1, pRightBracket - pLeftBracket - 1);
+
+                if (property == string.Empty)
+                {
+                    return (Name: name, Property: null);
+                }
+                else
+                {
+                    return (Name: name, Property: property);
+                }
             }
             else
             {
