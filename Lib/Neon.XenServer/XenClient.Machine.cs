@@ -199,6 +199,7 @@ namespace Neon.XenServer
 
                 client.SafeInvoke("vm-param-set",
                     $"uuid={vmUuid}",
+                    $"platform:cores-per-socket=1",
                     $"VCPUs-at-startup={processors}",
                     $"VCPUs-max={processors}");
 
@@ -208,10 +209,10 @@ namespace Neon.XenServer
                 //
                 // If the XenServer host is not HA enabled, we're going to configure
                 // the VM to start automatically when the host machine boots.  We're
-                // going to list the XenServer pool to obtain its UUID and then inspect
+                // going to list the XenServer pools to obtain the UUID and then inspect
                 // its parameters to determine whether HA is enabled.  We're going to
                 // assume that any single XenServer host can only be a member of a
-                // single pool (which makes sense).
+                // single pool.
                 //
                 // Note that the pool list will look like:
                 //

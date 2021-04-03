@@ -204,17 +204,13 @@ namespace Neon.Kube
         /// <summary>
         /// Performs the setup operation steps in the in the order they were added to the controller.
         /// </summary>
-        /// <param name="reportingController">
-        /// Optionally forward status updates to this controller.  This is useful when implementing
-        /// sub-controllers but is a bit of a hack.
-        /// </param>
         /// <param name="leaveNodesConnected">Optionally leave the node proxies connected after setup completed.</param>
         /// <returns><c>true</c> if all steps completed successfully.</returns>
-        bool Run(ISetupController reportingController = null, bool leaveNodesConnected = false);
+        bool Run(bool leaveNodesConnected = false);
 
         /// <summary>
         /// Adds an <see cref="IDisposable"/> instance to the controller so that they
-        /// can be properly disposed when <see cref="Run(ISetupController, bool)"/> exits.
+        /// can be properly disposed when <see cref="Run(bool)"/> exits.
         /// </summary>
         /// <param name="disposable"></param>
         void AddDisposable(IDisposable disposable);
@@ -253,5 +249,18 @@ namespace Neon.Kube
         /// </summary>
         /// <returns>The step status items.</returns>
         IEnumerable<SetupStepStatus> GetStepStatus();
+
+        /// <summary>
+        /// Returns the status for any nodes being managed by the controller.
+        /// </summary>
+        /// <returns>The status information for any nodes.</returns>
+        IEnumerable<SetupNodeStatus> GetNodeStatus();
+
+        /// <summary>
+        /// Returns the status for any VM host machines being managed by executing
+        /// subcontroller steps.
+        /// </summary>
+        /// <returns>The status information for any host nodes.</returns>
+        IEnumerable<SetupNodeStatus> GetHostStatus();
     }
 }

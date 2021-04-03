@@ -230,26 +230,12 @@ namespace Neon.Kube
                 MaxParallel = this.MaxParallel
             };
 
-            // Copy the parent controller properties into the sub-controller.
-
-            foreach (var property in controller)
-            {
-                xenController.Add(property.Key, property.Value);
-            }
-
             xenController.AddWaitUntilOnlineStep();
             xenController.AddNodeStep("verify readiness", (controller, node) => VerifyReady(node));
             xenController.AddNodeStep("virtual machine template", (controller, node) => CheckVmTemplate(node));
             xenController.AddNodeStep("create virtual machines", (controller, node) => ProvisionVM(node));
 
-            controller.AddGlobalStep("create node VMs",
-                controller =>
-                {
-                    if (!xenController.Run(controller))
-                    {
-                        controller.LogError("Node provisioning failed.");
-                    }
-                });
+            controller.AddControllerStep(xenController);
         }
 
         /// <inheritdoc/>

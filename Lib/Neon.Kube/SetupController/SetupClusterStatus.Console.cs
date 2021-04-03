@@ -48,7 +48,7 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="stepNodeNames">The set of node names participating in the current step.</param>
         /// <param name="node">The node being queried.</param>
-        /// <returns>The status prefix.</returns>
+        /// <returns>The status.</returns>
         private string GetStatus(HashSet<string> stepNodeNames, SetupNodeStatus node)
         {
             if (stepNodeNames != null && !stepNodeNames.Contains(node.Name))
@@ -68,6 +68,26 @@ namespace Neon.Kube
                 {
                     return "    " + node.Status;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Returns the current status for a host.
+        /// </summary>
+        /// <param name="host">The node being queried.</param>
+        /// <returns>The status.</returns>
+        private string GetHostStatus(SetupNodeStatus host)
+        {
+            // We mark completed steps with a "[x] " or "[!] " prefix and
+            // indent non-completed steps status with four blanks.
+
+            if (host.Status.StartsWith("[x] ") || host.Status.StartsWith("[!] "))
+            {
+                return host.Status;
+            }
+            else
+            {
+                return "    " + host.Status;
             }
         }
 
@@ -102,7 +122,8 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="maxDisplayedSteps">The maximum number of steps to be displayed.  This <b>defaults to 5</b>.</param>
         /// <param name="showNodeStatus">Controls whether individual node status is displayed.  This defaults to <c>true</c>.</param>
-        public void WriteToConsole(int maxDisplayedSteps = 5, bool showNodeStatus = true)
+        /// <param name="showRuntime">Controls whether step runtime is displayed after all steps have completed.  This defaults to <c>true</c>.</param>
+        public void WriteToConsole(int maxDisplayedSteps = 5, bool showNodeStatus = true, bool showRuntime = true)
         {
             Covenant.Requires<ArgumentException>(maxDisplayedSteps > 0, nameof(maxDisplayedSteps));
 
@@ -114,7 +135,6 @@ namespace Neon.Kube
             var sbDisplay         = new StringBuilder();
             var maxStepLabelWidth = Steps.Max(n => n.Label.Length);
             var maxNodeNameWidth  = Nodes.Max(n => n.Name.Length);
-            var maxHostNameWidth  = 0;
 
             sbDisplay.Clear();
 
@@ -207,6 +227,27 @@ namespace Neon.Kube
                 }
             }
 
+            //-----------------------------------------------------------------
+            // Display the host status
+
+            var hosts = controller.GetHostStatus();
+
+            if (showNodeStatus && !hosts.IsEmpty())
+            {
+                var maxHostNameWidth = hosts.Max(status => status.Name.Length);
+
+                sbDisplay.AppendLine();
+                sbDisplay.AppendLine(" Hosts:");
+
+                foreach (var host in hosts)
+                {
+                    sbDisplay.AppendLine($"    {host.Name}{new string(' ', maxHostNameWidth - host.Name.Length)}   {GetHostStatus(host)}");
+                }
+            }
+
+            //-----------------------------------------------------------------
+            // Display the node status
+
             if (controller.HasNodeSteps && showNodeStatus && CurrentStep != null)
             {
                 // $hack(jefflill):
@@ -268,20 +309,6 @@ namespace Neon.Kube
                         }
                     }
                 }
-                else if (controller.NodeMetadataType.Implements<IXenClient>())
-                {
-                    // Provisioning cluster nodes on XenServer hosts.
-
-                    sbDisplay.AppendLine();
-                    sbDisplay.AppendLine(" Hypervisor Hosts:");
-
-                    foreach (var node in Nodes.OrderBy(n => (n.Metadata as IXenClient).Name, StringComparer.InvariantCultureIgnoreCase))
-                    {
-                        var xenHost = node.Metadata as IXenClient;
-
-                        sbDisplay.AppendLine($"    {xenHost.Name}{new string(' ', maxHostNameWidth - xenHost.Name.Length)}: {GetStatus(stepNodeNamesSet, node)}");
-                    }
-                }
             }
 
             if (!string.IsNullOrEmpty(GlobalStatus))
@@ -294,7 +321,7 @@ namespace Neon.Kube
 
             // Display the elapsed time for the steps after they all have been executed.
 
-            if (controller.ShowRuntime && !Steps.Any(step => step.State == SetupStepState.Pending || step.State == SetupStepState.Running))
+            if (showRuntime && !Steps.Any(step => step.State == SetupStepState.Pending || step.State == SetupStepState.Running))
             {
                 var totalLabel    = "Total Setup Time";
                 var maxLabelWidth = Steps.Max(step => step.Label.Length);

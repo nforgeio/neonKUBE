@@ -54,6 +54,8 @@ namespace Neon.Kube
             public int                                                          Number;
             public string                                                       Label;
             public bool                                                         IsQuiet;
+            public ISetupController                                             SubController;
+            public object                                                       ParentStep;
             public Action<ISetupController>                                     SyncGlobalAction;
             public Func<ISetupController, Task>                                 AsyncGlobalAction;
             public Action<ISetupController, NodeSshProxy<NodeMetadata>>         SyncNodeAction;
@@ -71,6 +73,7 @@ namespace Neon.Kube
         private const int UnlimitedParallel = 500;  // Treat this as "unlimited"
 
         private List<IDisposable>                   disposables = new List<IDisposable>();
+        private ISetupController                    parent      = null;
         private string                              globalStatus;
         private List<NodeSshProxy<NodeMetadata>>    nodes;
         private List<Step>                          steps;
@@ -110,7 +113,6 @@ namespace Neon.Kube
             this.nodes          = nodes.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase).ToList();
             this.steps          = new List<Step>();
         }
-
         /// <inheritdoc/>
         public void AddDisposable(IDisposable disposable)
         {
@@ -146,26 +148,33 @@ namespace Neon.Kube
         /// <param name="stepLabel">Specifies the step label.</param>
         /// <param name="action">The synchronous global action to be performed.</param>
         /// <param name="quiet">Optionally specifies that the step is not to be reported in the progress.</param>
+        /// <param name="subController">Optionally specifies the related subcontroller.</param>
         /// <param name="position">
         /// The optional zero-based index of the position where the step is
         /// to be inserted into the step list.
         /// </param>
-        public void AddGlobalStep(string stepLabel, Action<ISetupController> action, bool quiet = false, int position = -1)
+        /// <returns><b>INTERNAL USE ONLY:</b> The new internal step as an <see cref="object"/>.</returns>
+        public object AddGlobalStep(string stepLabel, Action<ISetupController> action, bool quiet = false, ISetupController subController = null, int position = -1)
         {
+            Covenant.Requires<InvalidOperationException>(parent == null, "This controller is already a subcontroller.  You no longer add steps.");
+
             if (position < 0)
             {
                 position = steps.Count;
             }
 
-            steps.Insert(
-                position,
-                new Step()
-                {
-                    Label            = stepLabel,
-                    IsQuiet            = quiet,
-                    SyncGlobalAction = action,
-                    Predicate        = (controller, node) => true
-                });
+            var step = new Step()
+            {
+                Label            = stepLabel,
+                IsQuiet          = quiet,
+                SyncGlobalAction = action,
+                Predicate        = (controller, node) => true,
+                SubController    = subController
+            };
+
+            steps.Insert(position, step);
+
+            return step;
         }
 
         /// <summary>
@@ -174,26 +183,112 @@ namespace Neon.Kube
         /// <param name="stepLabel">Specifies the step label.</param>
         /// <param name="action">The asynchronous global action to be performed.</param>
         /// <param name="quiet">Optionally specifies that the step is not to be reported in the progress.</param>
+        /// <param name="subController">Optionally specifies the related subcontroller.</param>
         /// <param name="position">
         /// The optional zero-based index of the position where the step is
         /// to be inserted into the step list.
         /// </param>
-        public void AddGlobalStep(string stepLabel, Func<ISetupController, Task> action, bool quiet = false, int position = -1)
+        /// <returns><b>INTERNAL USE ONLY:</b> The new internal step as an <see cref="object"/>.</returns>
+        public object AddGlobalStep(string stepLabel, Func<ISetupController, Task> action, bool quiet = false, ISetupController subController = null, int position = -1)
         {
+            Covenant.Requires<InvalidOperationException>(parent == null, "This controller is already a subcontroller.  You no longer add steps.");
+
             if (position < 0)
             {
                 position = steps.Count;
             }
 
-            steps.Insert(
-                position,
-                new Step()
+            var step = new Step()
+            {
+                Label             = stepLabel,
+                IsQuiet           = quiet,
+                AsyncGlobalAction = action,
+                Predicate         = (controller, node) => true,
+                SubController     = subController
+            };
+
+            steps.Insert(position, step);
+
+            return step;
+        }
+
+        /// <summary>
+        /// Adds the steps from a subcontroller to the current controller.
+        /// </summary>
+        /// <typeparam name="ServerMetadata">Specifies the type of the subcontroller's node metadata.</typeparam>
+        /// <param name="subController">The subcontroller.</param>
+        /// <remarks>
+        /// <para>
+        /// This is useful for situations where an operation requires interactions 
+        /// with machines that are not cluster nodes.  Currently, we're using this
+        /// for connecting to XenServers to provision cluster nodes there before
+        /// moving on to preparing the cluster nodes and configuring the cluster.
+        /// </para>
+        /// <note>
+        /// This method copies the state from this controller (the parent) to
+        /// the subcontroller before executing the first subcontroller step.
+        /// </note>
+        /// <note>
+        /// Subcontroller steps may only be added to the parent level.  You may
+        /// not nest these any deeper than that.
+        /// </note>
+        /// </remarks>
+        public void AddControllerStep<ServerMetadata>(SetupController<ServerMetadata> subController)
+            where ServerMetadata : class
+        {
+            Covenant.Requires<ArgumentNullException>(subController != null, nameof(subController));
+            Covenant.Requires<InvalidOperationException>(subController.parent == null, "The subcontroller is already a step of a parent controller.");
+            Covenant.Requires<InvalidOperationException>(this.parent == null, "Cannot nest subcontroller steps more than one level deep.");
+
+            subController.parent = this;
+
+            // Add a hidden step that copies the parent state to the subcontroller.
+
+            AddGlobalStep("copy controller state",
+                controller =>
                 {
-                    Label             = stepLabel,
-                    IsQuiet             = quiet,
-                    AsyncGlobalAction = action,
-                    Predicate         = (controller, node) => true,
-                });
+                    subController.Clear();
+
+                    foreach (var item in controller)
+                    {
+                        subController.Add(item.Key, item.Value);
+                    }
+                },
+                quiet: true);
+
+            // We're going to append a global step to the parent controller for each
+            // step from the subcontroller and then forward the executions to the
+            // subcontroller.
+
+            foreach (var substep in subController.steps)
+            {
+                var parentStep = AddGlobalStep(substep.Label,
+                    controller =>
+                    {
+                        // We're going to forward state from the substep to the
+                        // parent manually here.
+
+                        var parentStep = (Step)substep.ParentStep;
+
+                        try
+                        {
+                            subController.ExecuteStep(substep);
+                        }
+                        finally
+                        {
+                            // We need to bubble up any subcontroller node faults.
+
+                            this.isFaulted = this.isFaulted || subController.nodes.Any(node => node.IsFaulted);
+
+                            parentStep.Status  = substep.Status;
+                            parentStep.RunTime = substep.RunTime;
+                        }
+                    },
+                    quiet: substep.IsQuiet,
+                    subController: subController);
+
+                substep.ParentStep = parentStep;
+            }
         }
 
         /// <summary>
@@ -203,9 +298,12 @@ namespace Neon.Kube
         /// deployed on the LAN.
         /// </summary>
         /// <param name="stepLabel">Optionally specifies the step label.</param>
-        public void AddCheckForIpConflcits(string stepLabel = "scan for IP address conflicts")
+        /// <returns><b>INTERNAL USE ONLY:</b> The new internal step as an <see cref="object"/>.</returns>
+        public object AddCheckForIpConflcits(string stepLabel = "scan for IP address conflicts")
         {
-            AddGlobalStep(stepLabel,
+            Covenant.Requires<InvalidOperationException>(parent == null, "This controller is already a subcontroller.  You no longer add steps.");
+
+            return AddGlobalStep(stepLabel,
                 controller =>
                 {
                     var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
@@ -281,7 +379,8 @@ namespace Neon.Kube
         /// The optional zero-based index of the position where the step is
         /// to be inserted into the step list.
         /// </param>
-        public void AddWaitUntilOnlineStep(
+        /// <returns><b>INTERNAL USE ONLY:</b> The new internal step as an <see cref="object"/>.</returns>
+        public object AddWaitUntilOnlineStep(
             string                                                      stepLabel     = "connect", 
             string                                                      status        = null, 
             Func<ISetupController, NodeSshProxy<NodeMetadata>, bool>    nodePredicate = null, 
@@ -289,6 +388,8 @@ namespace Neon.Kube
             TimeSpan?                                                   timeout       = null, 
             int                                                         position      = -1)
         {
+            Covenant.Requires<InvalidOperationException>(parent == null, "This controller is already a subcontroller.  You no longer add steps.");
+
             if (timeout == null)
             {
                 timeout = TimeSpan.FromMinutes(10);
@@ -298,7 +399,7 @@ namespace Neon.Kube
                 position = steps.Count;
             }
 
-            AddNodeStep(stepLabel,
+            return AddNodeStep(stepLabel,
                 (controller, node) =>
                 {
                     node.Status = status ?? "connecting...";
@@ -326,7 +427,8 @@ namespace Neon.Kube
         /// The optional zero-based index of the position where the step is
         /// to be inserted into the step list.
         /// </param>
-        public void AddDelayStep(
+        /// <returns><b>INTERNAL USE ONLY:</b> The new internal step as an <see cref="object"/>.</returns>
+        public object AddDelayStep(
             string                                                      stepLabel, 
             TimeSpan                                                    delay, 
             string                                                      status        = null,
@@ -334,7 +436,9 @@ namespace Neon.Kube
             bool                                                        quiet         = false, 
             int                                                         position      = -1)
         {
-            AddNodeStep(stepLabel,
+            Covenant.Requires<InvalidOperationException>(parent == null, "This controller is already a subcontroller.  You no longer add steps.");
+
+            return AddNodeStep(stepLabel,
                 (controller, node) =>
                 {
                     node.Status = status ?? $"delay: [{delay.TotalSeconds}] seconds";
@@ -374,7 +478,8 @@ namespace Neon.Kube
         /// Optionally specifies the maximum number of operations to be performed
         /// in parallel for this step, overriding the controller default.
         /// </param>
-        public void AddNodeStep(
+        /// <returns><b>INTERNAL USE ONLY:</b> The new internal step as an <see cref="object"/>.</returns>
+        public object AddNodeStep(
             string stepLabel,
             Action<ISetupController, NodeSshProxy<NodeMetadata>>        nodeAction,
             Func<ISetupController, NodeSshProxy<NodeMetadata>, bool>    nodePredicate   = null,
@@ -383,6 +488,8 @@ namespace Neon.Kube
             int                                                         position        = -1,
             int                                                         parallelLimit   = 0)
         {
+            Covenant.Requires<InvalidOperationException>(parent == null, "This controller is already a subcontroller.  You no longer add steps.");
+
             nodeAction    = nodeAction ?? new Action<ISetupController, NodeSshProxy<NodeMetadata>>((controller, node) => { });
             nodePredicate = nodePredicate ?? new Func<ISetupController, NodeSshProxy<NodeMetadata>, bool>((controller, node) => true);
 
@@ -394,7 +501,7 @@ namespace Neon.Kube
             var step = new Step()
             {
                 Label          = stepLabel,
-                IsQuiet          = quiet,
+                IsQuiet        = quiet,
                 SyncNodeAction = nodeAction,
                 Predicate      = nodePredicate,
                 ParallelLimit  = noParallelLimit ? UnlimitedParallel : 0
@@ -406,6 +513,8 @@ namespace Neon.Kube
             }
 
             steps.Insert(position, step);
+
+            return step;
         }
 
         /// <summary>
@@ -435,7 +544,8 @@ namespace Neon.Kube
         /// Optionally specifies the maximum number of operations to be performed
         /// in parallel for this step, overriding the controller default.
         /// </param>
-        public void AddNodeStep(
+        /// <returns><b>INTERNAL USE ONLY:</b> The new internal step as an <see cref="object"/>.</returns>
+        public object AddNodeStep(
             string stepLabel,
             Func<ISetupController, NodeSshProxy<NodeMetadata>, Task>    nodeAction,
             Func<ISetupController, NodeSshProxy<NodeMetadata>, bool>    nodePredicate   = null,
@@ -444,6 +554,8 @@ namespace Neon.Kube
             int                                                         position        = -1,
             int                                                         parallelLimit   = 0)
         {
+            Covenant.Requires<InvalidOperationException>(parent == null, "This controller is already a subcontroller.  You no longer add steps.");
+
             nodeAction    = nodeAction ?? new Func<ISetupController, NodeSshProxy<NodeMetadata>, Task>((controller, node) => { return Task.CompletedTask; });
             nodePredicate = nodePredicate ?? new Func<ISetupController, NodeSshProxy<NodeMetadata>, bool>((controller, node) => true);
 
@@ -467,101 +579,8 @@ namespace Neon.Kube
             }
 
             steps.Insert(position, step);
-        }
 
-        /// <inheritdoc/>
-        public bool Run(ISetupController reportingController = null, bool leaveNodesConnected = false)
-        {
-            var cluster = Get<ClusterProxy>(KubeSetupProperty.ClusterProxy, null);
-
-            try
-            {
-                cluster?.LogLine(LogBeginMarker);
-
-                // We're going to time how long this takes.
-
-                var stopWatch = new Stopwatch();
-
-                stopWatch.Start();
-
-                // Number the steps.  Note that quiet steps don't 
-                // get their own step number.
-
-                var position = 1;
-
-                foreach (var step in steps)
-                {
-                    if (step.IsQuiet)
-                    {
-                        step.Number = position;
-                    }
-                    else
-                    {
-                        step.Number = position++;
-                    }
-                }
-
-                // We don't display node status if there aren't any node specific steps.
-
-                try
-                {
-                    foreach (var step in steps)
-                    {
-                        if (!PerformStep(step))
-                        {
-                            break;
-                        }
-                    }
-
-                    if (isFaulted)
-                    {
-                        cluster?.LogLine(LogFailedMarker);
-
-                        return false;
-                    }
-
-                    foreach (var node in nodes)
-                    {
-                        node.Status = "[x] READY";
-                    }
-
-                    cluster?.LogLine(LogEndMarker);
-
-                    return true;
-                }
-                finally
-                {
-                    Runtime = stopWatch.Elapsed;
-
-                    if (!leaveNodesConnected)
-                    {
-                        // Disconnect all of the nodes.
-
-                        foreach (var node in nodes)
-                        {
-                            node.Disconnect();
-                        }
-                    }
-                }
-            }
-            finally
-            {
-                // Dispose any disposables.
-
-                foreach (var disposable in disposables)
-                {
-                    disposable.Dispose();
-                }
-
-                // Raise one more status changed an wait for a bit so any
-                // listening UI can display the status.
-
-                if (StatusChangedEvent != null)
-                {
-                    StatusChangedEvent.Invoke(new SetupClusterStatus(this));
-                    Thread.Sleep(TimeSpan.FromSeconds(0.5));
-                }
-            }
+            return step;
         }
 
         /// <summary>
@@ -597,7 +616,7 @@ namespace Neon.Kube
         /// This method does nothing if a previous step failed.
         /// </note>
         /// </remarks>
-        private bool PerformStep(Step step)
+        private bool ExecuteStep(Step step)
         {
             var stopWatch = new Stopwatch();
 
@@ -1083,6 +1102,123 @@ namespace Neon.Kube
         public IEnumerable<SetupStepStatus> GetStepStatus()
         {
             return steps.Select(step => new SetupStepStatus(step.Number, step.Label, step.Status, step.RunTime, step));
+        }
+
+        /// <inheritdoc/>
+        public bool Run(bool leaveNodesConnected = false)
+        {
+            var cluster = Get<ClusterProxy>(KubeSetupProperty.ClusterProxy, null);
+
+            try
+            {
+                cluster?.LogLine(LogBeginMarker);
+
+                // We're going to time how long this takes.
+
+                var stopWatch = new Stopwatch();
+
+                stopWatch.Start();
+
+                // Number the steps.  Note that quiet steps don't 
+                // get their own step number.
+
+                var position = 1;
+
+                foreach (var step in steps)
+                {
+                    if (step.IsQuiet)
+                    {
+                        step.Number = 0;
+                    }
+                    else
+                    {
+                        step.Number = position++;
+                    }
+                }
+
+                // We don't display node status if there aren't any node specific steps.
+
+                try
+                {
+                    foreach (var step in steps)
+                    {
+                        if (!ExecuteStep(step))
+                        {
+                            break;
+                        }
+                    }
+
+                    if (isFaulted)
+                    {
+                        cluster?.LogLine(LogFailedMarker);
+
+                        return false;
+                    }
+
+                    foreach (var node in nodes)
+                    {
+                        node.Status = "[x] READY";
+                    }
+
+                    cluster?.LogLine(LogEndMarker);
+
+                    return true;
+                }
+                finally
+                {
+                    Runtime = stopWatch.Elapsed;
+
+                    if (!leaveNodesConnected)
+                    {
+                        // Disconnect all of the nodes.
+
+                        foreach (var node in nodes)
+                        {
+                            node.Disconnect();
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                // Dispose any disposables.
+
+                foreach (var disposable in disposables)
+                {
+                    disposable.Dispose();
+                }
+
+                // Raise one more status changed an wait for a bit so any
+                // listening UI can display the status.
+
+                if (StatusChangedEvent != null)
+                {
+                    StatusChangedEvent.Invoke(new SetupClusterStatus(this));
+                    Thread.Sleep(TimeSpan.FromSeconds(0.5));
+                }
+            }
+        }
+
+        /// <inheritdoc/>
+        public IEnumerable<SetupNodeStatus> GetNodeStatus()
+        {
+            return nodes
+                .OrderBy(node => node.Name, StringComparer.InvariantCultureIgnoreCase)
+                .Select(node => new SetupNodeStatus(node.Name, node.Status, node))
+                .ToArray();
+        }
+
+        /// <inheritdoc/>
+        public IEnumerable<SetupNodeStatus> GetHostStatus()
+        {
+            var currentStep = this.currentStep;
+
+            if (currentStep?.SubController == null)
+            {
+                return Array.Empty<SetupNodeStatus>();
+            }
+
+            return currentStep.SubController.GetNodeStatus();
         }
     }
 }
