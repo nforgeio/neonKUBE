@@ -158,9 +158,10 @@ namespace Neon.Kube
 
             if (showStepProgress)
             {
-                var width     = maxStepLabelWidth + "[x] DONE".Length + 2;
-                var stepCount = Steps.Count(s => !s.IsQuiet);
-                var progress  = new string('-', Math.Max(0, (int)(width * ((CurrentStep.Number - 1.0) / stepCount)) - 1));
+                var width      = maxStepLabelWidth + "[x] DONE".Length + 2;
+                var stepCount  = Steps.Count(s => !s.IsQuiet);
+                var stepNumber = CurrentStep == null ? 0 : CurrentStep.Number;
+                var progress   = new string('-', Math.Max(0, (int)(width * ((stepNumber - 1.0) / stepCount)) - 1));
 
                 if (progress.Length > 0)
                 {
@@ -206,7 +207,7 @@ namespace Neon.Kube
                 }
             }
 
-            if (controller.HasNodeSteps && showNodeStatus)
+            if (controller.HasNodeSteps && showNodeStatus && CurrentStep != null)
             {
                 // $hack(jefflill):
                 //

@@ -229,7 +229,7 @@ namespace Neon.Kube
             // Cluster setup.
 
             controller.AddGlobalStep("configure cluster", controller => KubeSetup.SetupClusterAsync(controller));
-            controller.AddGlobalStep("persisting state",
+            controller.AddGlobalStep("persist state",
                 controller =>
                 {
                     // Indicate that setup is complete.

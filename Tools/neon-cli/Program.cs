@@ -29,11 +29,11 @@ using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
 
-using Newtonsoft.Json;
 using Microsoft.Extensions.DependencyInjection;
 
 using Neon;
 using Neon.Common;
+using Neon.Deployment;
 using Neon.Diagnostics;
 using Neon.Kube;
 using Neon.Kube.Xunit;
@@ -164,6 +164,10 @@ You can disable the use of this encrypted folder by specifying
             NeonHelper.ServiceContainer.AddSingleton<IEnterpriseHostingLoader>(new EnterpriseHostingLoader());
             NeonHelper.ServiceContainer.AddSingleton<IEnterpriseHelper>(new EnterpriseHelper());
 #endif
+            // Register a [ProfileClient] so commands will be able to pick
+            // up secrets and profile information from [neon-assistant].
+
+            NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new ProfileClient());
 
             // Process the command line.
 

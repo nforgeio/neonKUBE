@@ -796,10 +796,13 @@ namespace Neon.Kube
                 // The setup steps are executing above in one or more threads and we're
                 // going to loop here to raise [StatusEvent] when we detect a change.
 
-                var lastJson = (string)null;
+                var statusInterval = TimeSpan.FromMilliseconds(100);
+                var lastJson       = (string)null;
 
                 while (true)
                 {
+                    Covenant.Assert(ContainsKey(KubeSetupProperty.ClusterLogin), $"Setup controller is missing the required [{nameof(KubeSetupProperty.ClusterLogin)}] property.");
+
                     var status  = new SetupClusterStatus(this);
                     var newJson = NeonHelper.JsonSerialize(status);
 
@@ -816,7 +819,7 @@ namespace Neon.Kube
                         break;
                     }
 
-                    Thread.Sleep(TimeSpan.FromMilliseconds(100));
+                    Thread.Sleep(statusInterval);
                 }
 
                 isFaulted = isFaulted || stepNodes.FirstOrDefault(n => n.IsFaulted) != null;

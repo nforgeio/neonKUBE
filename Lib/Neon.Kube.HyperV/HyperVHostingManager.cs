@@ -95,8 +95,6 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
 
-            var clusterLogin = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
-
             cluster.HostingManager = this;
 
             this.cluster = cluster;
