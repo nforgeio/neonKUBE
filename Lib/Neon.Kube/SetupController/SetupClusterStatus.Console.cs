@@ -317,9 +317,9 @@ namespace Neon.Kube
                 sbDisplay.AppendLine($"*** {GlobalStatus}");
             }
 
-            Console.WriteLine();
+            sbDisplay.AppendLine();
 
-            // Display the elapsed time for the steps after they all have been executed.
+            // Display the runtime for the steps after they all have been executed.
 
             if (showRuntime && !Steps.Any(step => step.State == SetupStepState.Pending || step.State == SetupStepState.Running))
             {
@@ -331,8 +331,8 @@ namespace Neon.Kube
                     maxLabelWidth = totalLabel.Length;
                 }
 
-                Console.WriteLine("Elapsed Step Timing");
-                Console.WriteLine("-------------------");
+                sbDisplay.AppendLine("Elapsed Step Timing");
+                sbDisplay.AppendLine("-------------------");
 
                 var filler = string.Empty;
 
@@ -342,19 +342,19 @@ namespace Neon.Kube
 
                     if (step.State == SetupStepState.Done || step.State == SetupStepState.Failed)
                     {
-                        Console.WriteLine($"{step.Label}:    {filler}{step.Runtime} ({step.Runtime.TotalSeconds} sec)");
+                        sbDisplay.AppendLine($"{step.Label}:    {filler}{step.Runtime} ({step.Runtime.TotalSeconds} sec)");
                     }
                     else
                     {
-                        Console.WriteLine($"{step.Label}:    {filler}* NOT EXECUTED");
+                        sbDisplay.AppendLine($"{step.Label}:    {filler}* NOT EXECUTED");
                     }
                 }
 
                 filler = new string(' ', maxLabelWidth - totalLabel.Length);
 
-                Console.WriteLine(new string('-', totalLabel.Length + 1));
-                Console.WriteLine($"{totalLabel}:    {filler}{controller.Runtime} ({controller.Runtime.TotalSeconds} sec)");
-                Console.WriteLine();
+                sbDisplay.AppendLine(new string('-', totalLabel.Length + 1));
+                sbDisplay.AppendLine($"{totalLabel}:    {filler}{controller.Runtime} ({controller.Runtime.TotalSeconds} sec)");
+                sbDisplay.AppendLine();
             }
 
             Console.Clear();
