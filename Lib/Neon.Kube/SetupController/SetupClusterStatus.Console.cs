@@ -133,15 +133,15 @@ namespace Neon.Kube
             }
 
             var sbDisplay         = new StringBuilder();
-            var maxStepLabelWidth = Steps.Max(n => n.Label.Length);
-            var maxNodeNameWidth  = Nodes.Max(n => n.Name.Length);
+            var maxStepLabelWidth = Steps.Max(step => step.Label.Length);
+            var maxNodeNameWidth  = Nodes.Max(step => step.Name.Length);
 
             sbDisplay.Clear();
 
             sbDisplay.AppendLine();
             sbDisplay.AppendLine($" {controller.OperationTitle}");
 
-            var displaySteps     = Steps.Where(s => !s.IsQuiet);
+            var displaySteps     = Steps.Where(step => !step.IsQuiet);
             var showStepProgress = false;
 
             if (maxDisplayedSteps > 0 && maxDisplayedSteps < displaySteps.Count())

@@ -151,7 +151,7 @@ namespace Neon.Cadence
                 throw new ActivityWorkerStartedException();
             }
 
-            foreach (var type in assembly.GetTypes().Where(t => t.IsClass))
+            foreach (var type in assembly.GetTypes().Where(type => type.IsClass))
             {
                 var activityAttribute = type.GetCustomAttribute<ActivityAttribute>();
 

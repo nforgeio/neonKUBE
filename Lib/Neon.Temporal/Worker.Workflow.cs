@@ -235,7 +235,7 @@ namespace Neon.Temporal
 
             lock (registeredWorkflowTypes)
             {
-                foreach (var workflowType in assembly.GetTypes().Where(t => t.IsClass))
+                foreach (var workflowType in assembly.GetTypes().Where(type => type.IsClass))
                 {
                     var workflowAttribute = workflowType.GetCustomAttribute<WorkflowAttribute>();
 

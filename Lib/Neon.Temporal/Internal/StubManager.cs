@@ -842,7 +842,7 @@ namespace Neon.Temporal.Internal
 
             // Generate the workflow entry point methods.
 
-            foreach (var details in methodSignatureToDetails.Values.Where(d => d.Kind == WorkflowMethodKind.Workflow))
+            foreach (var details in methodSignatureToDetails.Values.Where(details => details.Kind == WorkflowMethodKind.Workflow))
             {
                 var resultType = TemporalHelper.TypeToCSharp(details.ReturnType);
                 var parameters = details.Method.GetParameters();
@@ -978,7 +978,7 @@ namespace Neon.Temporal.Internal
             // between external and child workflows as well as for fire-and-forget vs.
             // synchronous.
 
-            foreach (var details in methodSignatureToDetails.Values.Where(d => d.Kind == WorkflowMethodKind.Signal))
+            foreach (var details in methodSignatureToDetails.Values.Where(details => details.Kind == WorkflowMethodKind.Signal))
             {
                 var sbParams        = new StringBuilder();
                 var signalAttribute = details.SignalMethodAttribute;
@@ -1067,7 +1067,7 @@ namespace Neon.Temporal.Internal
 
             // Generate the workflow query methods.
 
-            foreach (var details in methodSignatureToDetails.Values.Where(d => d.Kind == WorkflowMethodKind.Query))
+            foreach (var details in methodSignatureToDetails.Values.Where(details => details.Kind == WorkflowMethodKind.Query))
             {
                 var resultType = TemporalHelper.TypeToCSharp(details.ReturnType);
                 var sbParams   = new StringBuilder();

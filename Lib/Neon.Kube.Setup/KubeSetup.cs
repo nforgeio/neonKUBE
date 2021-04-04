@@ -148,15 +148,15 @@ namespace Neon.Kube
 
             var taints = new List<V1Taint>();
 
-            foreach (var n in (await GetK8sClient(controller).ListNodeAsync()).Items.Where(n => n.Metadata.Labels.Any(l => l.Key == labelKey && l.Value == labelValue)))
+            foreach (var node in (await GetK8sClient(controller).ListNodeAsync()).Items.Where(node => node.Metadata.Labels.Any(label => label.Key == labelKey && label.Value == labelValue)))
             {
-                if (n.Spec.Taints?.Count() > 0)
+                if (node.Spec.Taints?.Count() > 0)
                 {
-                    foreach (var t in n.Spec.Taints)
+                    foreach (var taintList in node.Spec.Taints)
                     {
-                        if (!taints.Any(x => x.Key == t.Key && x.Effect == t.Effect && x.Value == t.Value))
+                        if (!taints.Any(taintList => taintList.Key == taintList.Key && taintList.Effect == taintList.Effect && taintList.Value == taintList.Value))
                         {
-                            taints.Add(t);
+                            taints.Add(taintList);
                         }
                     }
                 }
@@ -336,7 +336,7 @@ namespace Neon.Kube
             }
 
             var cluster    = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var configFile = Environment.GetEnvironmentVariable("KUBECONFIG").Split(';').Where(s => s.Contains("config")).FirstOrDefault();
+            var configFile = Environment.GetEnvironmentVariable("KUBECONFIG").Split(';').Where(variable => variable.Contains("config")).FirstOrDefault();
 
             if (!string.IsNullOrEmpty(configFile) && File.Exists(configFile))
             {

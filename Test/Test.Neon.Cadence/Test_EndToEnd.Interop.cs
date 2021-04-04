@@ -92,7 +92,7 @@ namespace TestCadence
                 // Kill any running [cwf-args.exe] processes.
 
                 foreach (var cwfProcess in Process.GetProcesses()
-                    .Where(p => p.ProcessName.Equals("cwf-args", StringComparison.InvariantCultureIgnoreCase)))
+                    .Where(process => process.ProcessName.Equals("cwf-args", StringComparison.InvariantCultureIgnoreCase)))
                 {
                     cwfProcess.Kill();
                 }

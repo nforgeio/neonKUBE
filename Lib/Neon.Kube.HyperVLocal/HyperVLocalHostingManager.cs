@@ -377,7 +377,7 @@ namespace Neon.Kube
                 controller.SetGlobalStepStatus("Scanning network adapters");
 
                 var switches       = hyperv.ListVmSwitches();
-                var externalSwitch = switches.FirstOrDefault(s => s.Type == VirtualSwitchType.External);
+                var externalSwitch = switches.FirstOrDefault(@switch => @switch.Type == VirtualSwitchType.External);
 
                 if (externalSwitch == null)
                 {

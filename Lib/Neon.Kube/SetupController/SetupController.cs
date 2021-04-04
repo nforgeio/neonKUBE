@@ -353,7 +353,7 @@ namespace Neon.Kube
                         {
                             writer.WriteLine($"Cannot provision the cluster because [{pingConflicts.Count}] other machines conflict with the following cluster nodes:");
                             
-                            foreach (var node in pingConflicts.OrderBy(n => NetHelper.AddressToUint(NetHelper.ParseIPv4Address(n.Address))))
+                            foreach (var node in pingConflicts.OrderBy(node => NetHelper.AddressToUint(NetHelper.ParseIPv4Address(node.Address))))
                             {
                                 writer.WriteLine($"{node.Address, 16}:    {node.Name}");
                             }
@@ -743,8 +743,8 @@ namespace Neon.Kube
                                 if (typeof(NodeMetadata) == typeof(NodeDefinition))
                                 {
                                     var firstMaster = nodes
-                                        .Where(n => (n.Metadata as NodeDefinition).IsMaster)
-                                        .OrderBy(n => n.Name)
+                                        .Where(node => (node.Metadata as NodeDefinition).IsMaster)
+                                        .OrderBy(node => node.Name)
                                         .First();
 
                                     firstMaster.Fault(NeonHelper.ExceptionError(e));
@@ -794,8 +794,8 @@ namespace Neon.Kube
                                 if (typeof(NodeMetadata) == typeof(NodeDefinition))
                                 {
                                     var firstMaster = nodes
-                                        .Where(n => (n.Metadata as NodeDefinition).IsMaster)
-                                        .OrderBy(n => n.Name)
+                                        .Where(node => (node.Metadata as NodeDefinition).IsMaster)
+                                        .OrderBy(node => node.Name)
                                         .First();
 
                                     firstMaster.Fault(NeonHelper.ExceptionError(e));
@@ -831,7 +831,7 @@ namespace Neon.Kube
                         lastJson = newJson;
                     }
 
-                    if (stepNodes.Count(n => !n.IsReady) == 0)
+                    if (stepNodes.Count(node => !node.IsReady) == 0)
                     {
                         // Looks like we're done.
 
@@ -841,7 +841,7 @@ namespace Neon.Kube
                     Thread.Sleep(statusInterval);
                 }
 
-                isFaulted = isFaulted || stepNodes.FirstOrDefault(n => n.IsFaulted) != null;
+                isFaulted = isFaulted || stepNodes.FirstOrDefault(node => node.IsFaulted) != null;
 
                 if (isFaulted)
                 {

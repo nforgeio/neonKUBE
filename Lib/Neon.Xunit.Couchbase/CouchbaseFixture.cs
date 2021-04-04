@@ -472,7 +472,7 @@ namespace Neon.Xunit.Couchbase
 
             var existingIndexes = Bucket.ListIndexesAsync().Result;
 
-            foreach (var index in existingIndexes.Where(i => i.Name != "#primary"))
+            foreach (var index in existingIndexes.Where(index => index.Name != "#primary"))
             {
                 Bucket.QuerySafeAsync<dynamic>($"drop index {CouchbaseHelper.LiteralName(Bucket.Name)}.{CouchbaseHelper.LiteralName(index.Name)} using {index.Type}").Wait();
             }

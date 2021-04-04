@@ -1732,13 +1732,13 @@ namespace Neon.Kube
             // Remove all existing cluster ingress rules.
 
             foreach (var rule in loadBalancer.LoadBalancingRules.Values
-                .Where(r => r.Name.StartsWith(ingressRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
+                .Where(rule => rule.Name.StartsWith(ingressRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
             {
                 loadBalancerUpdater.WithoutLoadBalancingRule(rule.Name);
             }
 
             foreach (var rule in subnetNsg.SecurityRules.Values
-                .Where(r => r.Name.StartsWith(ingressRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
+                .Where(rule => rule.Name.StartsWith(ingressRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
             {
                 subnetNsgUpdater.WithoutRule(rule.Name);
             }
@@ -1747,19 +1747,19 @@ namespace Neon.Kube
             // recreate these as necessary below.
 
             foreach (var probe in loadBalancer.HttpProbes.Values
-                .Where(p => p.Name.StartsWith(ingressRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
+                .Where(probe => probe.Name.StartsWith(ingressRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
             {
                 loadBalancerUpdater.WithoutProbe(probe.Name);
             }
 
             foreach (var probe in loadBalancer.HttpsProbes.Values
-                .Where(p => p.Name.StartsWith(ingressRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
+                .Where(probe => probe.Name.StartsWith(ingressRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
             {
                 loadBalancerUpdater.WithoutProbe(probe.Name);
             }
 
             foreach (var probe in loadBalancer.TcpProbes.Values
-                .Where(p => p.Name.StartsWith(ingressRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
+                .Where(probe => probe.Name.StartsWith(ingressRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
             {
                 loadBalancerUpdater.WithoutProbe(probe.Name);
             }
@@ -1959,13 +1959,13 @@ namespace Neon.Kube
             // Remove all existing load balancer public SSH related NAT rules.
 
             foreach (var rule in loadBalancer.LoadBalancingRules.Values
-                .Where(r => r.Name.StartsWith(publicSshRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
+                .Where(rule => rule.Name.StartsWith(publicSshRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
             {
                 loadBalancerUpdater.WithoutLoadBalancingRule(rule.Name);
             }
 
             foreach (var rule in subnetNsg.SecurityRules.Values
-                .Where(r => r.Name.StartsWith(publicSshRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
+                .Where(rule => rule.Name.StartsWith(publicSshRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
             {
                 subnetNsgUpdater.WithoutRule(rule.Name);
             }
@@ -2142,13 +2142,13 @@ namespace Neon.Kube
             // Remove all existing load balancer public SSH related NAT rules.
 
             foreach (var lbRule in loadBalancer.LoadBalancingRules.Values
-                .Where(r => r.Name.StartsWith(publicSshRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
+                .Where(rule => rule.Name.StartsWith(publicSshRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
             {
                 loadBalancerUpdater.WithoutLoadBalancingRule(lbRule.Name);
             }
 
             foreach (var rule in subnetNsg.SecurityRules.Values
-                .Where(r => r.Name.StartsWith(publicSshRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
+                .Where(rule => rule.Name.StartsWith(publicSshRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
             {
                 subnetNsgUpdater.WithoutRule(rule.Name);
             }

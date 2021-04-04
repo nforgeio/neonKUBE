@@ -261,7 +261,7 @@ namespace Neon.Data
             };
 
             foreach (var property in properties
-                .OrderBy(p => p.Name))
+                .OrderBy(property => property.Name))
             {
                 if (property.GetCustomAttribute(typeof(JsonIgnoreAttribute)) != null)
                 {
@@ -297,7 +297,7 @@ namespace Neon.Data
             var sb = new StringBuilder();
 
             foreach (var property in info.Properties
-                .OrderBy(p => p))
+                .OrderBy(property => property))
             {
                 if (sb.Length > 0)
                 {

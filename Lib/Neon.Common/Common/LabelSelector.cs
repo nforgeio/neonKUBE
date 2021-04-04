@@ -718,7 +718,7 @@ namespace Neon.Common
             {
                 var token = Next();
 
-                if (!expectedTypes.Any(t => t == token.Type))
+                if (!expectedTypes.Any(type => type == token.Type))
                 {
                     var sbExpectedTypes = new StringBuilder();
 
