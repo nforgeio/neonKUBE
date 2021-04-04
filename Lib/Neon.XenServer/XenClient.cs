@@ -511,8 +511,15 @@ namespace Neon.XenServer
 
             // Create the temporary SR subfolder and upload the ISO file.
 
-            tempIso.SrPath  = LinuxPath.Combine("/var/run/sr-mount", Guid.NewGuid().ToString("d"));
+            var srMountPath = "/var/run/sr-mount";
+
+            tempIso.SrPath  = LinuxPath.Combine(srMountPath, Guid.NewGuid().ToString("d"));
             tempIso.IsoName = $"neon-dvd-{Guid.NewGuid().ToString("d")}.iso";
+
+            if (!sftpClient.PathExists(srMountPath))
+            {
+                sftpClient.CreateDirectory(srMountPath);
+            }
 
             if (!sftpClient.PathExists(tempIso.SrPath))
             {

@@ -125,7 +125,7 @@ namespace Neon.Common
             {
                 try
                 {
-                    foreach (var exceptionType in assembly.GetTypes().Where(t => t.Inherits<Exception>()))
+                    foreach (var exceptionType in assembly.GetTypes().Where(type => type.Inherits<Exception>()))
                     {
                         var defaultConstructor      = exceptionType.GetConstructor(Type.EmptyTypes);
                         var messageConstructor      = exceptionType.GetConstructor(new Type[] { typeof(string) });

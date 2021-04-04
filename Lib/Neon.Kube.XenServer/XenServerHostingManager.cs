@@ -118,7 +118,7 @@ namespace Neon.Kube
             this.cluster                = cluster;
             this.cluster.HostingManager = this;
             this.logFolder              = logFolder;
-            this.maxVmNameWidth         = cluster.Definition.Nodes.Max(n => n.Name.Length) + cluster.Definition.Hosting.Vm.GetVmNamePrefix(cluster.Definition).Length;
+            this.maxVmNameWidth         = cluster.Definition.Nodes.Max(node => node.Name.Length) + cluster.Definition.Hosting.Vm.GetVmNamePrefix(cluster.Definition).Length;
         }
 
         /// <inheritdoc/>
@@ -235,14 +235,7 @@ namespace Neon.Kube
             xenController.AddNodeStep("virtual machine template", (controller, node) => CheckVmTemplate(node));
             xenController.AddNodeStep("create virtual machines", (controller, node) => ProvisionVM(node));
 
-            controller.AddGlobalStep("prepare: cluster infrastructure",
-                controller =>
-                {
-                    if (!xenController.Run(controller))
-                    {
-                        controller.LogError("Cluster provisioning failed.");
-                    }
-                });
+            controller.AddControllerStep(xenController);
         }
 
         /// <inheritdoc/>
@@ -312,8 +305,8 @@ namespace Neon.Kube
         {
             var nodeDefinitions = cluster.Definition.NodeDefinitions.Values;
 
-            return cluster.Nodes.Where(n => n.Metadata.Vm.Host.Equals(xenHost.Name, StringComparison.InvariantCultureIgnoreCase))
-                .OrderBy(n => n.Name, StringComparer.CurrentCultureIgnoreCase)
+            return cluster.Nodes.Where(node => node.Metadata.Vm.Host.Equals(xenHost.Name, StringComparison.InvariantCultureIgnoreCase))
+                .OrderBy(node => node.Name, StringComparer.CurrentCultureIgnoreCase)
                 .ToList();
         }
 

@@ -300,7 +300,7 @@ spec:
                 await NeonHelper.WaitAllAsync(tasks);
             }
 
-            if (cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count() >= 3)
+            if (cluster.Definition.Nodes.Where(node => node.Labels.Metrics).Count() >= 3)
             {
                 await InstallEtcdAsync(controller, master);
             }
@@ -578,7 +578,7 @@ kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-k
                     //---------------------------------------------------------
                     // Join the remaining masters to the cluster:
 
-                    foreach (var master in cluster.Masters.Where(m => m != master))
+                    foreach (var master in cluster.Masters.Where(node => node != master))
                     {
                         try
                         {
@@ -1876,7 +1876,7 @@ spec:
 
                             foreach (var n in cluster.Definition.Nodes)
                             {
-                                if (blockDevices.Items.Any(bd => bd.Spec.NodeAttributes.GetValueOrDefault("nodeName") == n.Name))
+                                if (blockDevices.Items.Any(device => device.Spec.NodeAttributes.GetValueOrDefault("nodeName") == n.Name))
                                 {
                                     var pool = new V1CStorPoolSpec()
                                     {
@@ -1902,12 +1902,12 @@ spec:
                                         }
                                     };
 
-                                    foreach (var bd in blockDevices.Items.Where(bd => bd.Spec.NodeAttributes.GetValueOrDefault("nodeName") == n.Name))
+                                    foreach (var device in blockDevices.Items.Where(device => device.Spec.NodeAttributes.GetValueOrDefault("nodeName") == n.Name))
                                     {
                                         pool.DataRaidGroups.FirstOrDefault().BlockDevices.Add(
                                             new V1CStorBlockDeviceRef()
                                             {
-                                                BlockDeviceName = bd.Metadata.Name
+                                                BlockDeviceName = device.Metadata.Name
                                             });
                                     }
 
@@ -1935,7 +1935,7 @@ spec:
 
                         var replicas = 3;
 
-                        if (cluster.Definition.Nodes.Where(n => n.OpenEBS).Count() < 3)
+                        if (cluster.Definition.Nodes.Where(node => node.OpenEBS).Count() < 3)
                         {
                             replicas = 1;
                         }
@@ -2044,9 +2044,9 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync($"setup/storage-class-cstor-{name}",
                 async () =>
                 {
-                    if (master.Cluster.Definition.Nodes.Where(n => n.OpenEBS).Count() < replicaCount)
+                    if (master.Cluster.Definition.Nodes.Where(node => node.OpenEBS).Count() < replicaCount)
                     {
-                        replicaCount = master.Cluster.Definition.Nodes.Where(n => n.OpenEBS).Count();
+                        replicaCount = master.Cluster.Definition.Nodes.Where(node => node.OpenEBS).Count();
                     }
 
                     var storageClass = new V1StorageClass()
@@ -2094,7 +2094,7 @@ $@"- name: StorageType
 
                     var values = new List<KeyValuePair<string, object>>();
 
-                    values.Add(new KeyValuePair<string, object>($"replicas", cluster.Definition.Nodes.Count(n => n.Labels.Metrics == true).ToString()));
+                    values.Add(new KeyValuePair<string, object>($"replicas", cluster.Definition.Nodes.Count(node => node.Labels.Metrics == true).ToString()));
 
                     values.Add(new KeyValuePair<string, object>($"volumeClaimTemplate.resources.requests.storage", "1Gi"));
 
@@ -2240,9 +2240,9 @@ $@"- name: StorageType
                     var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
                     var values  = new List<KeyValuePair<string, object>>();
 
-                    if (cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count() >= 3)
+                    if (cluster.Definition.Nodes.Where(node => node.Labels.Metrics).Count() >= 3)
                     {
-                        values.Add(new KeyValuePair<string, object>($"replicas", Math.Min(3, (cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count()))));
+                        values.Add(new KeyValuePair<string, object>($"replicas", Math.Min(3, (cluster.Definition.Nodes.Where(node => node.Labels.Metrics).Count()))));
                         values.Add(new KeyValuePair<string, object>($"cortexConfig.ingester.lifecycler.ring.kvstore.store", "etcd"));
                         values.Add(new KeyValuePair<string, object>($"cortexConfig.ingester.lifecycler.ring.kvstore.replication_factor", 3));
                     }
@@ -2252,7 +2252,7 @@ $@"- name: StorageType
                         {
                             controller.LogProgress(master, verb: "setup", message: "cortex");
 
-                            if (cluster.Definition.Nodes.Any(n => n.Vm.GetMemory(cluster.Definition) < 4294965097L))
+                            if (cluster.Definition.Nodes.Any(node => node.Vm.GetMemory(cluster.Definition) < 4294965097L))
                             {
                                 values.Add(new KeyValuePair<string, object>($"cortexConfig.ingester.retain_period", $"120s"));
                                 values.Add(new KeyValuePair<string, object>($"cortexConfig.ingester.metadata_retain_period", $"5m"));
@@ -2307,9 +2307,9 @@ $@"- name: StorageType
 
                     values.Add(new KeyValuePair<string, object>("image.organization", KubeConst.NeonContainerRegistery(controller)));
 
-                    if (cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count() >= 3)
+                    if (cluster.Definition.Nodes.Where(node => node.Labels.Metrics).Count() >= 3)
                     {
-                        values.Add(new KeyValuePair<string, object>($"replicas", Math.Min(3, (cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count()))));
+                        values.Add(new KeyValuePair<string, object>($"replicas", Math.Min(3, (cluster.Definition.Nodes.Where(node => node.Labels.Metrics).Count()))));
                         values.Add(new KeyValuePair<string, object>($"config.ingester.lifecycler.ring.kvstore.store", "etcd"));
                         values.Add(new KeyValuePair<string, object>($"config.ingester.lifecycler.ring.kvstore.replication_factor", 3));
                     }
@@ -2356,7 +2356,7 @@ $@"- name: StorageType
 
                     values.Add(new KeyValuePair<string, object>("image.organization", KubeConst.NeonContainerRegistery(controller)));
 
-                    if (cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count() >= 3)
+                    if (cluster.Definition.Nodes.Where(node => node.Labels.Metrics).Count() >= 3)
                     {
                         values.Add(new KeyValuePair<string, object>($"replicas", Math.Min(3, (cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count()))));
                         values.Add(new KeyValuePair<string, object>($"config.ingester.lifecycler.ring.kvstore.store", "etcd"));
@@ -2469,9 +2469,9 @@ $@"- name: StorageType
                             values.Add(new KeyValuePair<string, object>("mcImage.organization", KubeConst.NeonContainerRegistery(controller)));
                             values.Add(new KeyValuePair<string, object>("helmKubectlJqImage.organization", KubeConst.NeonContainerRegistery(controller)));
 
-                            if (cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count() >= 3)
+                            if (cluster.Definition.Nodes.Where(node => node.Labels.Metrics).Count() >= 3)
                             {
-                                var replicas = Math.Min(4, Math.Max(4, cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count() / 4));
+                                var replicas = Math.Min(4, Math.Max(4, cluster.Definition.Nodes.Where(node => node.Labels.Metrics).Count() / 4));
                                 values.Add(new KeyValuePair<string, object>($"replicas", replicas));
                                 values.Add(new KeyValuePair<string, object>($"mode", "distributed"));
                             }
@@ -2602,7 +2602,7 @@ $@"- name: StorageType
                                 return false;
                             }
 
-                            return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
+                            return deployments.Items.All(deployment => deployment.Status.AvailableReplicas == deployment.Spec.Replicas);
                         },
                         timeout:      clusterOpTimeout,
                         pollInterval: clusterOpRetryInterval);
@@ -2877,7 +2877,7 @@ $@"- name: StorageType
                         values.Add(new KeyValuePair<string, object>($"manager.minimumWorkers", "1"));
                     }
 
-                    if (cluster.Definition.Nodes.Where(n => n.Labels.OpenEBS).Count() < 3)
+                    if (cluster.Definition.Nodes.Where(node => node.Labels.OpenEBS).Count() < 3)
                     {
                         values.Add(new KeyValuePair<string, object>($"persistence.replicaCount", "1"));
                     }
@@ -2952,7 +2952,7 @@ $@"- name: StorageType
                             return false;
                         }
 
-                        return deployments.Items.All(d => d.Status.AvailableReplicas == d.Spec.Replicas);
+                        return deployments.Items.All(deployment => deployment.Status.AvailableReplicas == deployment.Spec.Replicas);
                     }
                     catch
                     {
@@ -3005,7 +3005,7 @@ $@"- name: StorageType
                             return false;
                         }
 
-                        return statefulsets.Items.All(s => s.Status.ReadyReplicas == s.Spec.Replicas);
+                        return statefulsets.Items.All(@set => @set.Status.ReadyReplicas == @set.Spec.Replicas);
                     }
                     catch
                     {
@@ -3056,7 +3056,7 @@ $@"- name: StorageType
                             return false;
                         }
 
-                        return daemonsets.Items.All(d => d.Status.NumberAvailable == d.Status.DesiredNumberScheduled);
+                        return daemonsets.Items.All(@set => @set.Status.NumberAvailable == @set.Status.DesiredNumberScheduled);
                     }
                     catch
                     {

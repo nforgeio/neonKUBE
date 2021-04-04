@@ -52,7 +52,7 @@ namespace Neon.Kube
             this.controller      = controller;
             this.cluster         = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             this.GlobalStatus    = controller.GlobalStatus;
-            this.Steps           = controller.GetStepStatus().ToList();
+            this.Steps           = controller.GetStepStatus().Where(step => !step.IsQuiet).ToList();
             this.CurrentStep     = Steps.SingleOrDefault(step => step.Number == controller.CurrentStepNumber);
             this.nameToNodeState = new Dictionary<string, SetupNodeStatus>(StringComparer.OrdinalIgnoreCase);
 
@@ -60,6 +60,8 @@ namespace Neon.Kube
             {
                 nameToNodeState.Add(node.Name, new SetupNodeStatus(node.Name, node.Status, node.NodeDefinition));
             }
+
+            this.Hosts = controller.GetHostStatus();
         }
 
         /// <summary>
@@ -88,6 +90,11 @@ namespace Neon.Kube
         /// Returns the current node setup state.
         /// </summary>
         public IEnumerable<SetupNodeStatus> Nodes => nameToNodeState.Values;
+
+        /// <summary>
+        /// Returns status for any VM hosts.
+        /// </summary>
+        public IEnumerable<SetupNodeStatus> Hosts { get; private set; }
 
         /// <summary>
         /// Returns information about the setup steps in order of execution. 

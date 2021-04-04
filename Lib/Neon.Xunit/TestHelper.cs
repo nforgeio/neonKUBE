@@ -536,7 +536,7 @@ namespace Neon.Xunit
             // Verify that the test class has the required constructor and Run() method.
 
             var testType         = typeof(T);
-            var classFixtureType = testType.GetInterfaces().SingleOrDefault(t => t.Name.StartsWith("IClassFixture"));
+            var classFixtureType = testType.GetInterfaces().SingleOrDefault(type => type.Name.StartsWith("IClassFixture"));
 
             if (classFixtureType == null || classFixtureType.GenericTypeArguments.Length != 1)
             {

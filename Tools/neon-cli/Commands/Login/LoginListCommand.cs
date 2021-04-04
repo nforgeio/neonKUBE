@@ -95,8 +95,8 @@ USAGE:
             var logins  = new List<LoginInfo>();
 
             foreach (var context in KubeHelper.Config.Contexts
-                .Where(c => c.IsNeonKubeContext)
-                .OrderBy(c => c.Name))
+                .Where(context => context.IsNeonKubeContext)
+                .OrderBy(context => context.Name))
             {
                 logins.Add(new LoginInfo(context));
             }
@@ -105,13 +105,13 @@ USAGE:
 
             if (logins.Count == 0)
             {
-                Console.Error.WriteLine("*** No neonKUBE contexts.");
+                Console.Error.WriteLine("*** No neonKUBE logins.");
             }
             else
             {
-                var maxLoginNameWidth = logins.Max(l => l.Name.Length);
+                var maxLoginNameWidth = logins.Max(login => login.Name.Length);
 
-                foreach (var login in logins.OrderBy(c => c.Name))
+                foreach (var login in logins.OrderBy(login => login.Name))
                 {
                     if (current != null && login.Name == current.Name)
                     {

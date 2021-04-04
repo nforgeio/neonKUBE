@@ -233,7 +233,7 @@ namespace Neon.Temporal
 
             lock (registeredActivityTypes)
             {
-                foreach (var activityType in assembly.GetTypes().Where(t => t.IsClass))
+                foreach (var activityType in assembly.GetTypes().Where(type => type.IsClass))
                 {
                     var activityAttribute = activityType.GetCustomAttribute<ActivityAttribute>();
 

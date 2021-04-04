@@ -213,11 +213,11 @@ namespace TestCadence
             // Verify that we listed the default domain as well as the 
             // domains we just registered.
 
-            Assert.Contains(domainPage.Domains, d => d.DomainInfo.Name == client.Settings.DefaultDomain);
+            Assert.Contains(domainPage.Domains, domain => domain.DomainInfo.Name == client.Settings.DefaultDomain);
 
             for (int i = 0; i < testDomainCount; i++)
             {
-                Assert.Contains(domainPage.Domains, d => d.DomainInfo.Name == $"my-domain-{i}");
+                Assert.Contains(domainPage.Domains, domain => domain.DomainInfo.Name == $"my-domain-{i}");
             }
 
             // Verify some of the domain fields for the domains we just registered.
@@ -277,7 +277,7 @@ namespace TestCadence
 
             Assert.NotNull(description);
 
-            var poller = description.Pollers.Single(p => p.Identity == CadenceTestHelper.ClientIdentity);
+            var poller = description.Pollers.Single(poller => poller.Identity == CadenceTestHelper.ClientIdentity);
 
             // We're just going to verify that the poller last access time
             // looks reasonable.  This was way off earlier due to not deserializing

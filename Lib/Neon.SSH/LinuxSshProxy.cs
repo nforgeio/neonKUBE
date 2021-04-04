@@ -966,7 +966,7 @@ rm {HostFolders.Home(Username)}/askpass
             var encryptionName = "aes256-ctr";
 
             foreach (var disabledEncryption in connectionInfo.Encryptions
-                .Where(e => e.Key != encryptionName)
+                .Where(encryption => encryption.Key != encryptionName)
                 .ToList())
             {
                 connectionInfo.Encryptions.Remove(disabledEncryption.Key);

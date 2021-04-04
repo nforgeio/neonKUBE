@@ -350,8 +350,8 @@ namespace Neon.Xunit
                 var groups = new HashSet<int>();
 
                 foreach (var group in fixtureList
-                    .Where(f => f.Group >= 0)
-                    .Select(f => f.Group))
+                    .Where(fixture => fixture.Group >= 0)
+                    .Select(fixture => fixture.Group))
                 {
                     if (!groups.Contains(group))
                     {
@@ -364,9 +364,9 @@ namespace Neon.Xunit
                     var fixtureThreads    = new List<Thread>();
                     var fixtureExceptions = new List<Exception>();
 
-                    foreach (var group in groups.OrderBy(g => g))
+                    foreach (var group in groups.OrderBy(group => group))
                     {
-                        foreach (var subFixture in fixtureList.Where(sf => sf.Group == group))
+                        foreach (var subFixture in fixtureList.Where(fixture => fixture.Group == group))
                         {
                             var thread = new Thread(
                                 new ParameterizedThreadStart(
@@ -452,7 +452,7 @@ namespace Neon.Xunit
         /// </summary>
         public IEnumerable<ITestFixture> Children
         {
-            get { return fixtureList.Select(f => f.Fixture); }
+            get { return fixtureList.Select(fixture => fixture.Fixture); }
         }
 
         /// <summary>
@@ -506,7 +506,7 @@ namespace Neon.Xunit
                 // reversed order from how they were created to avoid any 
                 // dependancy conflicts.
 
-                foreach (var fixture in fixtureList.Select(f => f.Fixture).Reverse<ITestFixture>())
+                foreach (var fixture in fixtureList.Select(fixture => fixture.Fixture).Reverse<ITestFixture>())
                 {
                     fixture.Dispose();
                 }
@@ -520,7 +520,7 @@ namespace Neon.Xunit
         {
             // Reset all of the subfixtures.
 
-            foreach (var fixture in fixtureList.Select(f => f.Fixture).Reverse<ITestFixture>())
+            foreach (var fixture in fixtureList.Select(fixture => fixture.Fixture).Reverse<ITestFixture>())
             {
                 fixture.Reset();
             }

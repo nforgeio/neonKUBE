@@ -66,7 +66,7 @@ namespace NeonClusterManager
                         return false;
                     }
 
-                    return statefulsets.Items.All(p => p.Status.ReadyReplicas == p.Spec.Replicas);
+                    return statefulsets.Items.All(@set => @set.Status.ReadyReplicas == @set.Spec.Replicas);
                 },
                 timeout: TimeSpan.FromMinutes(30),
                 pollInterval: TimeSpan.FromSeconds(10)); 
@@ -80,7 +80,7 @@ namespace NeonClusterManager
                         return false;
                     }
 
-                    return deployments.Items.All(p => p.Status.AvailableReplicas == p.Spec.Replicas);
+                    return deployments.Items.All(deployment => deployment.Status.AvailableReplicas == deployment.Spec.Replicas);
                 },
                 timeout: TimeSpan.FromMinutes(30),
                 pollInterval: TimeSpan.FromSeconds(10));

@@ -115,7 +115,7 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(assembly != null, nameof(assembly));
             EnsureNotDisposed();
 
-            foreach (var type in assembly.GetTypes().Where(t => t.IsClass))
+            foreach (var type in assembly.GetTypes().Where(type => type.IsClass))
             {
                 var workflowAttribute = type.GetCustomAttribute<WorkflowAttribute>();
 

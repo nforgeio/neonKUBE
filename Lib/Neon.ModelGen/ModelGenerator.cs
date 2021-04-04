@@ -288,8 +288,8 @@ namespace Neon.ModelGen
             //         so that we can handle forward declarations.
 
             foreach (var type in assembly.GetTypes()
-                .Where(t => t.IsPublic)
-                .Where(t => t.IsInterface || t.IsEnum))
+                .Where(type => type.IsPublic)
+                .Where(type => type.IsInterface || type.IsEnum))
             {
                 if (Settings.SourceNamespace != null && !type.FullName.StartsWith(Settings.SourceNamespace))
                 {
@@ -316,8 +316,8 @@ namespace Neon.ModelGen
             // Pass 2: Load and normalize the types.
 
             foreach (var type in assembly.GetTypes()
-                .Where(t => t.IsPublic)
-                .Where(t => t.IsInterface || t.IsEnum))
+                .Where(type => type.IsPublic)
+                .Where(type => type.IsInterface || type.IsEnum))
             {
                 if (Settings.SourceNamespace != null && !type.FullName.StartsWith(Settings.SourceNamespace))
                 {
@@ -344,8 +344,8 @@ namespace Neon.ModelGen
             // Pass 3: Scan the service models.
 
             foreach (var type in assembly.GetTypes()
-                .Where(t => t.IsPublic)
-                .Where(t => t.IsInterface || t.IsEnum))
+                .Where(type => type.IsPublic)
+                .Where(type => type.IsInterface || type.IsEnum))
             {
                 if (Settings.SourceNamespace != null && !type.FullName.StartsWith(Settings.SourceNamespace))
                 {
@@ -668,7 +668,7 @@ namespace Neon.ModelGen
                     serviceMethod.Parameters.Add(methodParameter);
                 }
 
-                var asBodyParameterCount = serviceMethod.Parameters.Count(p => p.Pass == Pass.AsBody);
+                var asBodyParameterCount = serviceMethod.Parameters.Count(parameter => parameter.Pass == Pass.AsBody);
 
                 if (asBodyParameterCount > 1)
                 {
@@ -1798,7 +1798,7 @@ namespace Neon.ModelGen
                     //---------------------------------------------------------
                     // Generate the __Load() method.
 
-                    var serializedProperties = dataModel.Properties.Where(p => !p.Ignore);
+                    var serializedProperties = dataModel.Properties.Where(property => !property.Ignore);
 
                     writer.WriteLine();
                     writer.WriteLine($"        /// <summary>");
@@ -1836,7 +1836,7 @@ namespace Neon.ModelGen
                             writer.WriteLine($"            base.__Load(isDerived: true);");
                         }
 
-                        foreach (var property in serializedProperties.OrderBy(p => p.Order))
+                        foreach (var property in serializedProperties.OrderBy(property => property.Order))
                         {
                             writer.WriteLine();
 
@@ -1946,7 +1946,7 @@ namespace Neon.ModelGen
 
                         var propertyIndex = 0;
 
-                        foreach (var property in serializedProperties.OrderBy(p => p.Order))
+                        foreach (var property in serializedProperties.OrderBy(property => property.Order))
                         {
                             if (property.Ignore)
                             {
@@ -2199,7 +2199,7 @@ namespace Neon.ModelGen
                     // Note that we require at least one tagged [HashSource]
                     // property.
 
-                    var hashedProperties = dataModel.SelectProperties(p => p.IsHashSource, includeInherited: true).ToList();
+                    var hashedProperties = dataModel.SelectProperties(property => property.IsHashSource, includeInherited: true).ToList();
 
                     if (hashedProperties.Count == 0)
                     {
@@ -2418,8 +2418,8 @@ namespace Neon.ModelGen
                 }
             }
 
-            var rootClientGroup        = clientGroups.Where(cg => string.IsNullOrEmpty(cg.Key));
-            var nonRootClientGroups    = clientGroups.Where(cg => !string.IsNullOrEmpty(cg.Key));
+            var rootClientGroup        = clientGroups.Where(group => string.IsNullOrEmpty(group.Key));
+            var nonRootClientGroups    = clientGroups.Where(group => !string.IsNullOrEmpty(group.Key));
             var hasNonRootClientGroups = nonRootClientGroups.Any();
 
             // $todo(jefflill):
@@ -2689,7 +2689,7 @@ namespace Neon.ModelGen
             }
 
             var parameters    = serviceMethod.Parameters;
-            var bodyParameter = parameters.FirstOrDefault(p => p.Pass == Pass.AsBody);
+            var bodyParameter = parameters.FirstOrDefault(parameter => parameter.Pass == Pass.AsBody);
 
             //-----------------------------------------------------------------
             // Common code that applies to both of the generated [save] and [unsafe] methods.
@@ -2760,10 +2760,10 @@ namespace Neon.ModelGen
             var sbArgGenerate      = new StringBuilder();   // This holds the code required to generate the arguments.
             var sbArguments        = new StringBuilder();   // This holds the arguments to be passed to the [JsonClient] method.
             var routeParameters    = new List<MethodParameter>();
-            var headerParameters   = parameters.Where(p => p.Pass == Pass.AsHeader);
+            var headerParameters   = parameters.Where(parameter => parameter.Pass == Pass.AsHeader);
             var endpointUriLiteral = $"$\"{ConcatRoutes(serviceMethod.ServiceModel.RouteTemplate, serviceMethod.RouteTemplate)}\"";
 
-            foreach (var routeParameter in parameters.Where(p => p.Pass == Pass.AsRoute))
+            foreach (var routeParameter in parameters.Where(parameter => parameter.Pass == Pass.AsRoute))
             {
                 routeParameters.Add(routeParameter);
             }
@@ -2852,7 +2852,7 @@ namespace Neon.ModelGen
 
             // The query parameters include those that have [Pass.AsQuery].
 
-            var queryParameters = parameters.Where(p => p.Pass == Pass.AsQuery);
+            var queryParameters = parameters.Where(parameter => parameter.Pass == Pass.AsQuery);
 
             // We're ready to generate the method code.
 
@@ -2909,8 +2909,8 @@ namespace Neon.ModelGen
                     sbArgGenerate.AppendLine();
                 }
 
-                var nonOptionalQueryParameters = queryParameters.Where(p => !p.IsOptional);
-                var optionalQueryParameters    = queryParameters.Where(p => p.IsOptional);
+                var nonOptionalQueryParameters = queryParameters.Where(parameter => !parameter.IsOptional);
+                var optionalQueryParameters    = queryParameters.Where(parameter => parameter.IsOptional);
 
                 if (nonOptionalQueryParameters.Count() == 0)
                 {
@@ -2946,8 +2946,8 @@ namespace Neon.ModelGen
                     sbArgGenerate.AppendLine();
                 }
 
-                var nonOptionalHeaderParameters = headerParameters.Where(p => !p.IsOptional);
-                var optionalHeaderParameters    = headerParameters.Where(p => p.IsOptional);
+                var nonOptionalHeaderParameters = headerParameters.Where(parameter => !parameter.IsOptional);
+                var optionalHeaderParameters    = headerParameters.Where(parameter => parameter.IsOptional);
 
                 if (nonOptionalHeaderParameters.Count() == 0)
                 {

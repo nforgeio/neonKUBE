@@ -1185,7 +1185,7 @@ rm -rf linux-amd64
 
                         var sourceImage = $"{registry}/{imageName}:{targetTag}";
 
-                        while (pullImageTasks.Where(t => t.Status < TaskStatus.RanToCompletion).Count() >= downloadParallel)
+                        while (pullImageTasks.Where(task => task.Status < TaskStatus.RanToCompletion).Count() >= downloadParallel)
                         {
                             await Task.Delay(100);
                         }
@@ -1200,7 +1200,7 @@ rm -rf linux-amd64
 
                     foreach (var image in images)
                     {
-                        while (loadImageTasks.Where(t => t.Status < TaskStatus.RanToCompletion).Count() >= loadParallel)
+                        while (loadImageTasks.Where(task => task.Status < TaskStatus.RanToCompletion).Count() >= loadParallel)
                         {
                             await Task.Delay(100);
                         }

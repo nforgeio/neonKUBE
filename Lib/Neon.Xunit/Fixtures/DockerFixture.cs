@@ -1306,7 +1306,7 @@ namespace Neon.Xunit
                 foreach (var stackService in stackDefinition.Services)
                 {
                     var serviceName = stackDefinition.GetServiceName(stackService);
-                    var service     = services.SingleOrDefault(s => s.Name.Equals(serviceName, StringComparison.InvariantCultureIgnoreCase));
+                    var service     = services.SingleOrDefault(service => service.Name.Equals(serviceName, StringComparison.InvariantCultureIgnoreCase));
 
                     if (service != null && service.ReplicasDesired < service.ReplicasDeployed)
                     {
