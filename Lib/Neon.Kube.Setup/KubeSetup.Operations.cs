@@ -60,7 +60,7 @@ namespace Neon.Kube
         /// </para>
         /// </summary>
         /// <param name="controller">The setup controller.</param>
-        public static void ConfigureSetupAdvice(ISetupController controller)
+        public static void CalculateServiceResources(ISetupController controller)
         {
             Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
 

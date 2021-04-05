@@ -165,9 +165,9 @@ namespace Neon.Kube
 
             // Configure the setup steps.
 
-            controller.AddGlobalStep("service requests/limits", KubeSetup.ConfigureSetupAdvice);
+            controller.AddGlobalStep("calculate service resources", KubeSetup.CalculateServiceResources);
             controller.AddGlobalStep("download binaries", async controller => await KubeSetup.InstallWorkstationBinariesAsync(controller));
-            controller.AddWaitUntilOnlineStep("connect");
+            controller.AddWaitUntilOnlineStep("connect nodes");
             controller.AddNodeStep("verify os", (controller, node) => node.VerifyNodeOS());
             controller.AddNodeStep("node basics", (controller, node) => node.BaseInitialize(controller, upgradeLinux: false));  // $todo(jefflill): We don't support Linux distribution upgrades yet.
             controller.AddNodeStep("setup ntp", (controller, node) => node.SetupConfigureNtp(controller));
