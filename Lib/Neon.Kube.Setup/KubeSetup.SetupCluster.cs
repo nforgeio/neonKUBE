@@ -165,6 +165,7 @@ namespace Neon.Kube
 
             // Configure the setup steps.
 
+            controller.AddGlobalStep("service requests/limits", KubeSetup.ConfigureSetupAdvice);
             controller.AddGlobalStep("download binaries", async controller => await KubeSetup.InstallWorkstationBinariesAsync(controller));
             controller.AddWaitUntilOnlineStep("connect");
             controller.AddNodeStep("verify os", (controller, node) => node.VerifyNodeOS());
