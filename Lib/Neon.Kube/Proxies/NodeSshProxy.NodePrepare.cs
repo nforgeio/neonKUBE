@@ -1051,6 +1051,27 @@ cat <<EOF > /etc/crio/crio.conf.d/02-image.conf
 pause_image = ""{KubeConst.NeonContainerRegistery(controller)}/pause:3.2""
 EOF
 
+cat <<EOF > /etc/cni/net.d/100-crio-bridge.conf
+{{
+    ""cniVersion"": ""0.3.1"",
+    ""name"": ""crio"",
+    ""type"": ""bridge"",
+    ""bridge"": ""cni0"",
+    ""isGateway"": true,
+    ""ipMasq"": true,
+    ""hairpinMode"": true,
+    ""ipam"": {{
+                        ""type"": ""host-local"",
+        ""routes"": [
+            {{ ""dst"": ""0.0.0.0/0"" }}
+        ],
+        ""ranges"": [
+            [{{ ""subnet"": ""10.85.0.0/16"" }}]
+        ]
+    }}
+}}
+EOF
+
 # Configure CRI-O to start on boot and then restart it to pick up the new options.
 
 systemctl daemon-reload
@@ -1063,6 +1084,7 @@ set +e      # Don't exit if the next command fails
 apt-mark hold cri-o cri-o-runc
 ";
                     SudoCommand(CommandBundle.FromScript(setupScript), RunOptions.Defaults | RunOptions.FaultOnError);
+
                 });
         }
 
@@ -1295,7 +1317,7 @@ net.ipv6.conf.default.disable_ipv6=1
 net.ipv6.conf.lo.disable_ipv6=1
 EOF
 
-chmod 744 /etc/sysctl.d/990-wsl-no-ipv6 
+chmod 744 /etc/sysctl.d/990-wsl2-no-ipv6
 
 sysctl -p /etc/sysctl.d/990-wsl2-no-ipv6
 ";

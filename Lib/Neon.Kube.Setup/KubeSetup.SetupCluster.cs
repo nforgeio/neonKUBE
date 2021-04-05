@@ -181,10 +181,10 @@ namespace Neon.Kube
                 (controller, node) =>
                 {
                     node.SetupNode(controller);
-                    node.InvokeIdempotent("setup/setup-node-restart", () => node.Reboot(wait: true));
+                    //exitnode.InvokeIdempotent("setup/setup-node-restart", () => node.Reboot(wait: true));
                 },
                 (controller, node) => node == cluster.FirstMaster);
-
+            
             // Perform common configuration for the remaining nodes (if any).
 
             if (cluster.Definition.Nodes.Count() > 1)

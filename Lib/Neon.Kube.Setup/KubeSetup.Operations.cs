@@ -456,19 +456,6 @@ scheduler:
   extraArgs:
     logging-format: json");
 
-//                            if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2)
-//                            {
-//                                clusterConfig.AppendLine($@"
-//etcd:
-//  local:
-//    extraArgs:
-//        listen-peer-urls: https://neon-desktop:2380
-//        listen-client-urls: https://neon-desktop:2379
-//        advertise-client-urls: https://neon-deskt:2379
-//        initial-advertise-peer-urls: https://127.0.0.1:2380
-//        initial-cluster=master-0: https://127.0.0.1:2380");
-//                            }
-
                             clusterConfig.AppendLine($@"
 ---
 apiVersion: kubelet.config.k8s.io/v1beta1
