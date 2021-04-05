@@ -48,6 +48,40 @@ namespace Neon.Kube
     public static partial class KubeSetup
     {
         /// <summary>
+        /// <para>
+        /// Executed very early during cluster setup to determine service/pod requests and
+        /// limits as a <see cref="KubeClusterAdvice"/> instance that will then be made
+        /// available to the subquent setup steps as the <see cref="KubeSetupProperty.ClusterAdvice"/>
+        /// property value.
+        /// </para>
+        /// <para>
+        /// This gives cluster setup a chance to holistically examine the services as well as the
+        /// resources available to the entire cluster to configure these values.
+        /// </para>
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        public static void ConfigureSetupAdvice(ISetupController controller)
+        {
+            Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
+
+            var clusterAdvice = new KubeClusterAdvice();
+
+            //==================================================
+            // $todo(marcusbooyah): INSERT YOUR MAGIC CODE HERE!
+            //==================================================
+
+            // Make the advice available to subsequent setup steps.
+
+            controller.Add(KubeSetupProperty.ClusterAdvice, clusterAdvice);
+
+            // Since advice related classes cannot handle updates performed on multiple threads 
+            // and cluster setup is multi-threaded, we're going to mark the advice as read-only
+            // to prevent any changes in subsequent steps.
+
+            clusterAdvice.IsReadOnly = true;
+        }
+
+        /// <summary>
         /// Configures a local HAProxy container that makes the Kubernetes Etc
         /// cluster highly available.
         /// </summary>

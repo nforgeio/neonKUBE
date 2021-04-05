@@ -83,5 +83,10 @@ namespace Neon.Kube
         /// Property name for accessing the <see cref="SetupController{NodeMetadata}"/>'s <see cref="Kubernetes"/> client property.
         /// </summary>
         public const string K8sClient = "k8sclient";
+
+        /// <summary>
+        /// Property name for accessing the <see cref="SetupController{NodeMetadata}"/>'s <see cref="KubeClusterAdvice"/> client property.
+        /// </summary>
+        public const string ClusterAdvice = "setup-advice";
     }
 }
