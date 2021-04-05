@@ -40,6 +40,9 @@ namespace Neon.Deployment
     /// running on behalf of the current user.
     /// </summary>
     /// <remarks>
+    /// <note>
+    /// This class currently supports only Windows.
+    /// </note>
     /// <para>
     /// This server implements simple string based request response protocol,
     /// where the client writes a line of text with the request and the server
@@ -182,12 +185,18 @@ namespace Neon.Deployment
         private bool                        disposing;
 
         /// <summary>
+        /// <para>
         /// Constructor.
+        /// </para>
+        /// <note>
+        /// <see cref="ProfileServer"/> currently supports only Windows.
+        /// </note>
         /// </summary>
         /// <param name="pipeName">The server named pipe name.  This defaults to <see cref="DeploymentHelper.NeonProfileServicePipe"/>.</param>
         /// <param name="threadCount">Optionally specifies the number of threads to create to handle inbound requests.  This defaults to <b>1</b>.</param>
         public ProfileServer(string pipeName = DeploymentHelper.NeonProfileServicePipe, int threadCount = 1)
         {
+            Covenant.Requires<NotSupportedException>(NeonHelper.IsWindows, $"[{nameof(ProfileServer)}] currently only supports Windows.");
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(pipeName));
             Covenant.Requires<ArgumentException>(threadCount > 0, nameof(threadCount));
 
