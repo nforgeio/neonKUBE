@@ -40,10 +40,10 @@ namespace Neon.Xunit
     /// be used generate output in unit tests that will be included in the captured test log.
     /// </para>
     /// <note>
-    /// Only the <c>WriteLine(...)</c> methods are implemented.
+    /// Only the <c>Write(...)</c> and <c>WriteLine(...)</c> methods are implemented.
     /// </note>
     /// </summary>
-    /// <exception cref="NotImplementedException">Thrown for all methods except for  <c>WriteLine()</c>.</exception>
+    /// <exception cref="NotImplementedException">Thrown for all methods except for <c>Write(...)</c> and <c>WriteLine(...)</c>.</exception>
     /// <remarks>
     /// <para>
     /// To use this class, you'll need to obtain a <see cref="ITestOutputHelper"/> instance from Xunit via 
