@@ -266,6 +266,8 @@ namespace Neon.IO
     /// $&lt;$&lt;$&lt;password:my-password&gt;&gt;&gt;             # password from default source
     /// $&lt;$&lt;$&lt;secret:my-secret;my-vault&gt;&gt;&gt;        # secret from specific source
     /// $&lt;$&lt;$&lt;secret:my-secret&gt;&gt;&gt;                 # secret from default source
+    /// $&lt;$&lt;$&lt;secret:my-secret[username]&gt;&gt;&gt;       # retrieve [username] from secret
+    /// $&lt;$&lt;$&lt;secret:my-secret[password]&gt;&gt;&gt;       # retrieve [password] from secret
     /// $&lt;$&lt;$&lt;profile:my-profile&gt;&gt;&gt;               # profile value
     /// </code>
     /// <para>
