@@ -23,7 +23,7 @@
 ARG         ORGANIZATION
 ARG         BASE_ORGANIZATION
 ARG         CLUSTER_VERSION
-FROM        ${BASE_ORGANIZATION}/aspnet-layer:${CLUSTER_VERSION}
+FROM        mcr.microsoft.com/dotnet/aspnet:3.1
 MAINTAINER  marcus@euarctos.com
 STOPSIGNAL  SIGTERM
 ARG         APPNAME

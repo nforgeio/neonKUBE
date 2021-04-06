@@ -18,9 +18,9 @@
 
 # The test service currently just sleeps forever.
 
-echo "Shhhhh! Sleeping..."
+echo "Shhhhh! The Baby is Sleeping..."
 
 while :
 do
-    sleep 30
+    sleep 15
 done

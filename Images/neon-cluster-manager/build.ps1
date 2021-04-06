@@ -16,9 +16,8 @@ param
 
 Log-ImageBuild $registry $tag
 
-$appname          = "neon-cluster-manager"
-$organization     = KubeBaseRegistryOrg
-$baseOrganization = KubeBaseRegistryOrg
+$appname      = "neon-cluster-manager"
+$organization = KubeSetupRegistryOrg
 
 # Build and publish the app to a local [bin] folder.
 
@@ -34,7 +33,7 @@ Exec { core-layers $appname "$pwd\bin" }
 
 # Build the image.
 
-Exec { docker build -t "${registry}:$tag" --build-arg "BASE_ORGANIZATION=$baseOrganization" --build-arg "CLUSTER_VERSION=neonkube-$neonKUBE_Version" --build-arg "APPNAME=$appname" . }
+Exec { docker build -t "${registry}:$tag" --build-arg "APPNAME=$appname" . }
 
 # Clean up
 

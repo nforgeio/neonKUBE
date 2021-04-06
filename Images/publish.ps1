@@ -127,11 +127,6 @@ if ($other)
 {
     Publish "$image_root\\nats"
     Publish "$image_root\\nats-streaming"
-
-    # See: https://github.com/nforgeio/neonKUBE/issues/1117
-    #
-    # Publish "$image_root\\cadence-dev"
-
     Publish "$image_root\\couchbase-dev"
     Publish "$image_root\\yugabyte"
 }
@@ -142,6 +137,7 @@ if ($test)
     Publish "$image_root\\test-api"
     Publish "$image_root\\test-cadence"
     Publish "$image_root\\test-temporal"
+    Publish "$image_root\\neon-allow-testing"
 }
 
 if ($services)

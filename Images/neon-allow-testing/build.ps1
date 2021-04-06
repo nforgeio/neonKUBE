@@ -16,7 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Builds the test container image.
+# Builds the [neon-allow-testing] container image.
 #
 # USAGE: pwsh -file build.ps1 REGISTRY VERSION TAG
 
@@ -27,28 +27,9 @@ param
 	[parameter(Mandatory=$true,Position=3)][string] $tag
 )
 
-
 Log-ImageBuild $registry $tag
 
-$appname      = "test-api"
-$organization = LibraryRegistryOrg
+# Pull the source image.
 
-# Build and publish the app to a local [bin] folder.
-
-DeleteFolder bin
-
-Exec { mkdir bin }
-Exec { dotnet publish "$nfServices\\$appname\\$appname.csproj" -c Release -o "$pwd\bin" }
-
-# Split the build binaries into [__app] (application) and [__dep] dependency subfolders
-# so we can tune the image layers.
-
-Exec { core-layers $appname "$pwd\bin" }
-
-# Build the image.
-
-Exec { docker build -t "${registry}:$tag" --build-arg "ORGANIZATION=$organization" --build-arg "BASE_ORGANIZATION=$base_organization" --build-arg "CLUSTER_VERSION=neonkube-$neonKUBE_Version" --build-arg "APPNAME=$appname" . }
-
-# Clean up
-
-DeleteFolder bin
+Exec { docker pull alpine:latest }
+Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$version" . }

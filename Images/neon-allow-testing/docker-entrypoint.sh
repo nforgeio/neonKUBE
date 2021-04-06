@@ -1,6 +1,6 @@
-﻿#Requires -Version 7.0
+#!/bin/sh
 #------------------------------------------------------------------------------
-# FILE:         build.ps1
+# FILE:         docker-entrypoint.sh
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2005-2020 by neonFORGE LLC.  All rights reserved.
 #
@@ -16,20 +16,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Builds the test container image.
-#
-# USAGE: pwsh -file build.ps1 REGISTRY VERSION TAG
+# The [neon-kubefixture] service currently just sleeps forever.  It's presence
+# in a cluster indicates to the [Neon.Kube.Xunit.KubernetesFixture] that
+# uniting is allowed in cluster.
 
-param 
-(
-	[parameter(Mandatory=$true,Position=1)][string] $registry,
-	[parameter(Mandatory=$true,Position=2)][string] $version,
-	[parameter(Mandatory=$true,Position=3)][string] $tag
-)
+echo "Shhhhh! The Baby is Sleeping..."
 
-Log-ImageBuild $registry $tag
-
-# Pull the source image.
-
-Exec { docker pull alpine:latest }
-Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$version" . }
+while :
+do
+    sleep 15
+done

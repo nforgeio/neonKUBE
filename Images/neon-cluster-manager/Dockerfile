@@ -14,15 +14,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-# ARGUMENTS:
-#
-#   BASE_ORGANIZATION   - The organization to use for any base images
-#   CLUSTER_VERSION     - The neonKUBE cluster version
 
-ARG         BASE_ORGANIZATION
-ARG         CLUSTER_VERSION
-FROM        ${BASE_ORGANIZATION}/aspnet-layer:3.1.10
+FROM        mcr.microsoft.com/dotnet/aspnet:3.1
 MAINTAINER  marcus@euarctos.com
 STOPSIGNAL  SIGTERM
 ARG         APPNAME
