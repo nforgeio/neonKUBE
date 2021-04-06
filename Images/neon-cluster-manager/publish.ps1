@@ -42,7 +42,7 @@ function Build
 		[switch]$latest = $false
 	)
 
-	$registry    = GetKubeBaseRegistry "neon-cluster-manager"
+	$registry    = GetKubeSetupRegistry "neon-cluster-manager"
 	$tag         = "$version"
 	$tagAsLatest = TagAsLatest
 
