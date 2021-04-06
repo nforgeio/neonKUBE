@@ -232,7 +232,7 @@ namespace Neon.Kube
 
             xenController.AddWaitUntilOnlineStep();
             xenController.AddNodeStep("verify readiness", (controller, node) => VerifyReady(node));
-            xenController.AddNodeStep("virtual machine template", (controller, node) => CheckVmTemplate(node));
+            xenController.AddNodeStep("virtual machine template", (controller, node) => CheckVmTemplate(node), parallelLimit: 1);
             xenController.AddNodeStep("create virtual machines", (controller, node) => ProvisionVM(node));
 
             controller.AddControllerStep(xenController);
