@@ -34,9 +34,18 @@ namespace Neon.XenServer
         internal XenVirtualMachine(IDictionary<string, string> rawProperties)
             : base(rawProperties)
         {
-            this.Uuid       = rawProperties["uuid"];
-            this.NameLabel  = rawProperties["name-label"];
-            this.PowerState = rawProperties["power-state"];
+            if (rawProperties.TryGetValue("uuid", out var uuid))
+            {
+                this.Uuid = uuid;
+            }
+            if (rawProperties.TryGetValue("name-label", out var nameLabel))
+            {
+                this.NameLabel = nameLabel;
+            }
+            if (rawProperties.TryGetValue("power-state", out var powerState))
+            {
+                this.PowerState = powerState;
+            }
 
             // We're only going to explicitly support one network interface,
             // interface 0.  We're going to attempt extracting the IP address
