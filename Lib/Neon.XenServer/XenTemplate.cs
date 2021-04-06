@@ -34,9 +34,18 @@ namespace Neon.XenServer
         internal XenTemplate(IDictionary<string, string> rawProperties)
             : base(rawProperties)
         {
-            this.Uuid            = rawProperties["uuid"];
-            this.NameLabel       = rawProperties["name-label"];
-            this.NameDescription = rawProperties["name-description"];
+            if (rawProperties.TryGetValue("uuid", out var uuid))
+            {
+                this.Uuid = uuid;
+            }
+            if (rawProperties.TryGetValue("name-label", out var nameLabel))
+            {
+                this.NameLabel = nameLabel;
+            }
+            if (rawProperties.TryGetValue("name-description", out var powerState))
+            {
+                this.NameDescription = powerState;
+            }
         }
 
         /// <summary>
