@@ -6,4 +6,8 @@
     <Configurations>Debug;Release;CodeDoc</Configurations>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Folder Include="_common\" />
+  </ItemGroup>
+
 </Project>

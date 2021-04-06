@@ -130,9 +130,3 @@ Go/**/__debug_bin
 /Lib/Neon.ModelGenerator/linux-x64/**
 /Lib/Neon.ModelGenerator/osx-x64/**
 /Lib/Neon.ModelGenerator/win-x64/**
-
-############################
-### Images               ###
-############################
-
-/Images/_common/**
