@@ -160,10 +160,6 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Assert(cluster != null, $"[{nameof(XenServerHostingManager)}] was created with the wrong constructor.");
 
-            var clusterLogin = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
-
-            this.secureSshPassword = clusterLogin.SshPassword;
-
             // We need to ensure that the cluster has at least one ingress node.
 
             KubeHelper.EnsureIngressNodes(cluster.Definition);
@@ -229,6 +225,14 @@ namespace Neon.Kube
             {
                 MaxParallel = this.MaxParallel
             };
+
+            xenController.AddGlobalStep("initializing",
+                controller =>
+                {
+                    var clusterLogin = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
+
+                    this.secureSshPassword = clusterLogin.SshPassword;
+                });
 
             xenController.AddWaitUntilOnlineStep();
             xenController.AddNodeStep("verify readiness", (controller, node) => VerifyReady(node));
