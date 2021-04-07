@@ -120,8 +120,8 @@ namespace Neon.Kube
         /// </para>
         /// <note>
         /// This is necessary because setup is performed on multiple threads and this class
-        /// is not inheritly thread-safe and this also fits with the idea that the logic behind
-        /// this advice is to be 
+        /// is not inheritly thread-safe.  This also fits with the idea that the logic behind
+        /// this advice is to be centralized.
         /// </note>
         /// </summary>
         public bool IsReadOnly { get; internal set; }
