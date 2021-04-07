@@ -375,7 +375,7 @@ namespace Neon.Kube
                 // going to name the file the same as the file name from the URI and also that 
                 // templates are considered to be invariant.
 
-                var driveTemplateUri = new Uri(KubeDownloads.GetNodeImageUri(this.HostingEnvironment, xenController));
+                var driveTemplateUri  = new Uri(KubeDownloads.GetNodeImageUri(this.HostingEnvironment, xenController));
                 var driveTemplateName = driveTemplateUri.Segments.Last();
 
                 driveTemplatePath = Path.Combine(KubeHelper.NodeImageFolder, driveTemplateName);
@@ -452,11 +452,11 @@ namespace Neon.Kube
                             }
 
                         }).Wait();
-
-                    xenController.SetGlobalStepStatus();
-
-                    xenHost.Template.ImportVmTemplate(driveTemplatePath, templateName, cluster.Definition.Hosting.XenServer.StorageRepository);
                 }
+
+                xenController.SetGlobalStepStatus();
+                xenSshProxy.Status = "install: virtual machine template (slow)";
+                xenHost.Template.ImportVmTemplate(driveTemplatePath, templateName, cluster.Definition.Hosting.XenServer.StorageRepository);
             }
         }
 
