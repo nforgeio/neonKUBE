@@ -33,21 +33,20 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Newtonsoft;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using k8s;
+using k8s.Models;
+
+using Microsoft.Extensions.DependencyInjection;
 
 using Neon.Common;
 using Neon.Cryptography;
+using Neon.Deployment;
 using Neon.IO;
 using Neon.Kube;
 using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
 using Neon.Time;
-
-using k8s;
-using k8s.Models;
 
 namespace NeonCli
 {
@@ -115,6 +114,12 @@ OPTIONS:
                 Console.Error.WriteLine("*** ERROR: [sysadmin@CLUSTER-NAME] argument is required.");
                 Program.Exit(1);
             }
+
+            // Cluster prepare/setup uses the [ProfileClient] to retrieve secrets and profile values.
+            // We need to inject an implementation for [PreprocessReader] so it will be able to
+            // perform the lookups.
+
+            NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new ProfileClient());
 
             var contextName   = KubeContextName.Parse(commandLine.Arguments[0]);
             var kubeCluster   = KubeHelper.Config.GetCluster(contextName.Cluster);

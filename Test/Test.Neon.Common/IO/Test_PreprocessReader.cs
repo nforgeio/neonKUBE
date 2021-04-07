@@ -1285,6 +1285,8 @@ line2
                 var source = "TEST = $<<<password:test>>>";
                 var output = new PreprocessReader(source).ReadToEnd().Trim();
 
+                Assert.Equal("TEST = test-password", output);
+
                 source = "TEST = $<<<password:test:vault>>>";
                 output = new PreprocessReader(source).ReadToEnd().Trim();
 
@@ -1295,10 +1297,42 @@ line2
                 //-------------------------------------------------------------
                 // Verify secret values
 
+                source = "TEST = $<<<secret:test>>>";
+                output = new PreprocessReader(source).ReadToEnd().Trim();
+
+                Assert.Equal("TEST = test-secret", output);
+
+                source = "TEST = $<<<secret:test:vault>>>";
+                output = new PreprocessReader(source).ReadToEnd().Trim();
+
+                Assert.Equal("TEST = test-secret-vault", output);
+
+                Assert.Throws<ProfileException>(() => new PreprocessReader("TEST = $<<<secret:missing>>>").ReadToEnd());
+
+                //-------------------------------------------------------------
+                // Verify secret values targeting a specific property.
+
+                source = "TEST = $<<<secret:test[field]>>>";
+                output = new PreprocessReader(source).ReadToEnd().Trim();
+
+                Assert.Equal("TEST = test[field]-secret", output);
+
+                source = "TEST = $<<<secret:test[field]:vault>>>";
+                output = new PreprocessReader(source).ReadToEnd().Trim();
+
+                Assert.Equal("TEST = test[field]-secret-vault", output);
+
+                Assert.Throws<ProfileException>(() => new PreprocessReader("TEST = $<<<secret:missing>>>").ReadToEnd());
+
                 //-------------------------------------------------------------
                 // Verify profile values
 
+                source = "TEST = $<<<profile:test>>>";
+                output = new PreprocessReader(source).ReadToEnd().Trim();
 
+                Assert.Equal("TEST = test-profile", output);
+
+                Assert.Throws<ProfileException>(() => new PreprocessReader("TEST = $<<<profile:missing>>>").ReadToEnd());
             }
             finally
             {

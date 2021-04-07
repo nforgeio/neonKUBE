@@ -256,7 +256,7 @@ namespace Neon.IO
     /// </item>
     /// </list>
     /// <para>
-    /// Secrets and profile values can be referenced by as as <b>$&lt;$lt;&lt;type:name[:source]&gt;&gt;&gt;</b>
+    /// Secrets and profile values can be referenced via <b>$&lt;$lt;&lt;type:name[:source]&gt;&gt;&gt;</b>
     /// where <b>type</b> is one of <b>password</b>, <b>secret</b> (value), or <b>profile</b> and <b>name</b>
     /// identifies the secret or profile value and <b>source</b> optionall specifies the secret source
     /// (this is ignored for profile values).
@@ -318,7 +318,7 @@ namespace Neon.IO
         /// You can set the <see cref="VariableExpansionRegex"/> property to this value to change the
         /// <see cref="PreprocessReader"/> behavior.
         /// </summary>
-        public static Regex AngleVariableExpansionRegex { get; private set; } = new Regex(@"\$<(?<name><{0,2}[a-z0-9_:\.\-]+>{0,2})>", regexIgnoreCaseOptions);
+        public static Regex AngleVariableExpansionRegex { get; private set; } = new Regex(@"\$<(?<name><{0,2}[a-z0-9_:\.\-\[\]]+>{0,2})>", regexIgnoreCaseOptions);
 
         /// <summary>
         /// A variable expansion <see cref="Regex"/> that matches normal variables like <b>${test}</b>, environment 
@@ -326,7 +326,7 @@ namespace Neon.IO
         /// You can set the <see cref="VariableExpansionRegex"/> property to this value to change the
         /// <see cref="PreprocessReader"/> behavior.
         /// </summary>
-        public static Regex CurlyVariableExpansionRegex { get; private set; } = new Regex(@"\$\{(?<name>\{{0,2}[a-z0-9_:\.\-]+\}{0,2})\}", regexIgnoreCaseOptions);
+        public static Regex CurlyVariableExpansionRegex { get; private set; } = new Regex(@"\$\{(?<name>\{{0,2}[a-z0-9_:\.\-\[\]]+\}{0,2})\}", regexIgnoreCaseOptions);
 
         /// <summary>
         /// A variable expansion <see cref="Regex"/> that matches normal variables like <b>${test}</b>, environment 
@@ -334,7 +334,7 @@ namespace Neon.IO
         /// You can set the <see cref="VariableExpansionRegex"/> property to this value to change the
         /// <see cref="PreprocessReader"/> behavior.
         /// </summary>
-        public static Regex ParenVariableExpansionRegex { get; private set; } = new Regex(@"\$\((?<name>\({0,2}[a-z0-9_:\.\-]+\){0,2})\)", regexIgnoreCaseOptions);
+        public static Regex ParenVariableExpansionRegex { get; private set; } = new Regex(@"\$\((?<name>\({0,2}[a-z0-9_:\.\-\[\]]+\){0,2})\)", regexIgnoreCaseOptions);
 
         /// <summary>
         /// The default variable expansion <see cref="Regex"/> that matches normal variables like <b>$&lt;test&gt;</b>, environment

@@ -27,11 +27,12 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Newtonsoft.Json;
+using Microsoft.Extensions.DependencyInjection;
 
 using Neon.Collections;
 using Neon.Common;
 using Neon.Cryptography;
+using Neon.Deployment;
 using Neon.Kube;
 using Neon.Net;
 using Neon.SSH;
@@ -126,6 +127,12 @@ Server Requirements:
                 Help();
                 Program.Exit(0);
             }
+
+            // Cluster prepare/setup uses the [ProfileClient] to retrieve secrets and profile values.
+            // We need to inject an implementation for [PreprocessReader] so it will be able to
+            // perform the lookups.
+
+            NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new ProfileClient());
 
             // Handle the [--remove-templates] option.
 
