@@ -195,13 +195,11 @@ namespace Neon.XenServer
                 var vmInstallResponse = client.SafeInvoke("vm-install", $"template={templateName}", $"new-name-label={name}", srUuidArg);
                 var vmUuid            = vmInstallResponse.OutputText.Trim();
 
-                // Configure processors
+                // Configure the processors.
 
-                client.SafeInvoke("vm-param-set",
-                    $"uuid={vmUuid}",
-                    $"platform:cores-per-socket=1",
-                    $"VCPUs-at-startup={cores}",
-                    $"VCPUs-max={cores}");
+                client.SafeInvoke("vm-param-set", $"uuid={vmUuid}", $"platform:cores-per-socket=1");
+                client.SafeInvoke("vm-param-set", $"uuid={vmUuid}", $"VCPUs-max={cores}");
+                client.SafeInvoke("vm-param-set", $"uuid={vmUuid}", $"VCPUs-at-startup={cores}");
 
                 // Citrix says that VM autostart is not compatible with HA so we don't
                 // want to enable autostart when HA is enabled.  We'll assume that the

@@ -287,8 +287,8 @@ namespace Neon.Kube
         /// </para>
         /// <note>
         /// This is necessary because setup is performed on multiple threads and this class
-        /// is not inheritly thread-safe and this also fits with the idea that the logic behind
-        /// this advice is to be 
+        /// is not inheritly thread-safe.  This also fits with the idea that the logic behind
+        /// this advice is to be centralized.
         /// </note>
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown when attempting to make the instance read/write aftyer being set to read-only.</exception>
@@ -298,7 +298,7 @@ namespace Neon.Kube
 
             set
             {
-                if (value && !isReadOnly)
+                if (!value && isReadOnly)
                 {
                     throw new InvalidOperationException($"[{nameof(KubeClusterAdvice)}] cannot be made read/write after being set to read-only.");
                 }
