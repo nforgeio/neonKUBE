@@ -184,7 +184,7 @@ namespace Neon.Kube
             foreach (var node in cluster.Definition.Nodes)
             {
                 node.Labels.PhysicalMachine = node.Vm.Host;
-                node.Labels.ComputeCores    = node.Vm.GetProcessors(cluster.Definition);
+                node.Labels.ComputeCores    = node.Vm.GetCores(cluster.Definition);
                 node.Labels.ComputeRam      = (int)(node.Vm.GetMemory(cluster.Definition) / ByteUnits.MebiBytes);
                 node.Labels.StorageSize     = ByteUnits.ToGiB(node.Vm.GetOsDisk(cluster.Definition));
             }
@@ -497,14 +497,14 @@ namespace Neon.Kube
             foreach (var node in GetHostedNodes(xenHost))
             {
                 var vmName      = GetVmName(node);
-                var processors  = node.Metadata.Vm.GetProcessors(cluster.Definition);
+                var cores       = node.Metadata.Vm.GetCores(cluster.Definition);
                 var memoryBytes = node.Metadata.Vm.GetMemory(cluster.Definition);
                 var osDiskBytes = node.Metadata.Vm.GetOsDisk(cluster.Definition);
 
                 xenSshProxy.Status = FormatVmStatus(vmName, "create: virtual machine");
 
                 var vm = xenHost.Machine.Create(vmName, $"neonkube-{KubeVersions.NeonKubeVersion}",
-                    processors:                 processors,
+                    cores:                      cores,
                     memoryBytes:                memoryBytes,
                     diskBytes:                  osDiskBytes,
                     snapshot:                   cluster.Definition.Hosting.XenServer.Snapshot,

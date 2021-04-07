@@ -113,12 +113,12 @@ namespace Neon.Kube
         public string OpenEbsDisk { get; set; } = null;
 
         /// <summary>
-        /// Returns the maximum number processors to allocate for this node when
+        /// Returns the maximum number CPU cores to allocate for this node when
         /// hosted on a hypervisor.
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <returns>The number of cores.</returns>
-        public int GetProcessors(ClusterDefinition clusterDefinition)
+        public int GetCores(ClusterDefinition clusterDefinition)
         {
             if (Cores != 0)
             {

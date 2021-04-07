@@ -489,7 +489,7 @@ namespace Neon.Kube
 
                 // Create the virtual machine.
 
-                var processors  = node.Metadata.Vm.GetProcessors(cluster.Definition);
+                var processors  = node.Metadata.Vm.GetCores(cluster.Definition);
                 var memoryBytes = node.Metadata.Vm.GetMemory(cluster.Definition);
                 var osDiskBytes = node.Metadata.Vm.GetOsDisk(cluster.Definition);
 
