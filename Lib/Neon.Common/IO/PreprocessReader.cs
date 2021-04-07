@@ -473,6 +473,18 @@ namespace Neon.IO
         }
 
         /// <summary>
+        /// Configures the reader for parsing YAML by setting the <see cref="StatementMarker"/> to <b>"@"</b>
+        /// and the comment marker to <b>"#"</b>.
+        /// </summary>
+        public void SetYamlMode()
+        {
+            StatementMarker = '@';
+            
+            ClearCommentMarkers();
+            AddCommentMarker("#");
+        }
+
+        /// <summary>
         /// The <see cref="Regex"/> used to match variable expansions.  This defaults
         /// to matching variables of the form: <b>${NAME}</b>.
         /// </summary>

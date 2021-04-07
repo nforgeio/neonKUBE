@@ -84,6 +84,8 @@ namespace Neon.Kube
             {
                 using (var preprocessReader = new PreprocessReader(stringReader))
                 {
+                    preprocessReader.SetYamlMode();
+
                     var clusterDefinition = NeonHelper.YamlDeserialize<ClusterDefinition>(preprocessReader.ReadToEnd(), strict: strict);
 
                     clusterDefinition.Validate();
@@ -125,11 +127,13 @@ namespace Neon.Kube
             {
                 using (var reader = new StreamReader(stream))
                 {
-                    using (var preprocessor = new PreprocessReader(reader))
+                    using (var preprocessReader = new PreprocessReader(reader))
                     {
-                        preprocessor.ProcessStatements = true;
+                        preprocessReader.SetYamlMode();
 
-                        var clusterDefinition = NeonHelper.YamlDeserialize<ClusterDefinition>(preprocessor.ReadToEnd(), strict: strict);
+                        preprocessReader.ProcessStatements = true;
+
+                        var clusterDefinition = NeonHelper.YamlDeserialize<ClusterDefinition>(preprocessReader.ReadToEnd(), strict: strict);
 
                         if (clusterDefinition == null)
                         {
