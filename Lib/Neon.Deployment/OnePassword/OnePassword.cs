@@ -237,7 +237,7 @@ namespace Neon.Deployment
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
             var parsedName = ProfileServer.ParseSecretName(name);
-            var property   = parsedName.Property;
+            var property   = parsedName.Property ?? "password";
 
             name = parsedName.Name;
 
@@ -256,14 +256,21 @@ retry:          var response = NeonHelper.ExecuteCapture("op",
                         "--session", sessionToken,
                         "get", "item", name,
                         "--vault", vault,
-                        "--fields", property ?? "password"
+                        "--fields", property
                     });
 
                 switch (GetStatus(response))
                 {
                     case OnePasswordStatus.OK:
 
-                        return response.OutputText.Trim();
+                        var value = response.OutputText.Trim();
+
+                        if (value == string.Empty)
+                        {
+                            throw new OnePasswordException($"Property [{property}] returned an emoty string.  Does it exist?.");
+                        }
+
+                        return value;
 
                     case OnePasswordStatus.SessionExpired:
 
@@ -309,7 +316,7 @@ retry:          var response = NeonHelper.ExecuteCapture("op",
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
             var parsedName = ProfileServer.ParseSecretName(name);
-            var property   = parsedName.Property;
+            var property   = parsedName.Property ?? "value";
 
             name = parsedName.Name;
 
@@ -328,14 +335,21 @@ retry:          var response = NeonHelper.ExecuteCapture("op",
                         "--session", sessionToken,
                         "get", "item", name,
                         "--vault", vault,
-                        "--fields", property ?? "value"
+                        "--fields", property
                     });
 
                 switch (GetStatus(response))
                 {
                     case OnePasswordStatus.OK:
 
-                        return response.OutputText.Trim();
+                        var value = response.OutputText.Trim();
+
+                        if (value == string.Empty)
+                        {
+                            throw new OnePasswordException($"Property [{property}] returned an emoty string.  Does it exist?.");
+                        }
+
+                        return value;
 
                     case OnePasswordStatus.SessionExpired:
 
