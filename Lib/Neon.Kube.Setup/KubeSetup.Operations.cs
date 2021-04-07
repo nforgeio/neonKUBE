@@ -78,7 +78,7 @@ namespace Neon.Kube
             // and cluster setup is multi-threaded, we're going to mark the advice as read-only
             // to prevent any changes in subsequent steps.
 
-            clusterAdvice.IsReadOnly = true;
+            //clusterAdvice.IsReadOnly = true;
         }
 
         /// <summary>
