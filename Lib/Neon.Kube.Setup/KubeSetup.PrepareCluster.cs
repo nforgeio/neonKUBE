@@ -32,16 +32,18 @@ using System.Threading.Tasks;
 using ICSharpCode.SharpZipLib.Zip;
 using k8s;
 using k8s.Models;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Rest;
+using Newtonsoft.Json.Linq;
 
 using Neon.Collections;
 using Neon.Common;
 using Neon.Cryptography;
+using Neon.Deployment;
 using Neon.IO;
 using Neon.Retry;
 using Neon.SSH;
 using Neon.Tasks;
-using Newtonsoft.Json.Linq;
 
 namespace Neon.Kube
 {
@@ -89,6 +91,12 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(stateFolder != null, nameof(stateFolder));
             Covenant.Requires<ArgumentException>(maxParallel > 0, nameof(maxParallel));
             Covenant.Requires<ArgumentNullException>(!debugMode || !string.IsNullOrEmpty(baseImageName), nameof(baseImageName));
+
+            // Cluster prepare/setup uses the [ProfileClient] to retrieve secrets and profile values.
+            // We need to inject an implementation for [PreprocessReader] so it will be able to
+            // perform the lookups.
+
+            NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new ProfileClient());
 
             // Ensure that the operation state exists.
 
