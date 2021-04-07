@@ -46,13 +46,18 @@ namespace Neon.IO
     /// The processor removes comment lines from the text returned.  A comment line 
     /// starts with zero or more whitespace characters followed by "<b>//</b>".
     /// </para>
+    /// <note>
+    /// Comment lines are indicated by a "<b>//</b>" prefix by default but this can
+    /// be modified via <see cref="ClearCommentMarkers()"/> and <see cref="AddCommentMarker(string)"/>.
+    /// </note>
     /// <para>
     /// The processor implements simple macro definition and conditional statements.
     /// These statements are identifying by a line with the pound sign (<b>#</b>) as
     /// the first non-whitespace character.
     /// </para>
     /// <note>
-    /// The processor statement character can be changed by setting <see cref="StatementMarker"/>.
+    /// The processor statement character defaults to the pound sign (<b>#</b>) but
+    /// can be changed by setting <see cref="StatementMarker"/>.
     /// </note>
     /// <para>
     /// The following processing statements are supported:
@@ -356,6 +361,7 @@ namespace Neon.IO
         private IProfileClient              profileClient          = NeonHelper.ServiceContainer.GetService<IProfileClient>();
         private Dictionary<string, string>  variables              = new Dictionary<string, string>();
         private Regex                       variableExpansionRegex = DefaultVariableExpansionRegex;
+        private List<string>                commentMarkers         = new List<string>() { "//" };
         private string                      indent                 = string.Empty;
         private int                         tabStop                = 0;
         private Stack<State>                stateStack;
@@ -438,6 +444,45 @@ namespace Neon.IO
         /// This defaults to the pound sign (<b>#</b>).
         /// </summary>
         public char StatementMarker { get; set; } = '#';
+
+        /// <summary>
+        /// Clears any comment markers, effectively disabling comment stripping.
+        /// </summary>
+        public void ClearCommentMarkers()
+        {
+            commentMarkers.Clear();
+        }
+
+        /// <summary>
+        /// Appends a comment marker prefix.  This must be a non-empty string including only
+        /// non-whitespace punctuation characters.
+        /// </summary>
+        /// <param name="marker">The comment prefix.</param>
+        public void AddCommentMarker(string marker)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(marker), nameof(marker));
+            Covenant.Requires<ArgumentException>(!marker.Any(ch => char.IsWhiteSpace(ch)), nameof(marker), $"[marker={marker}]: cannot include whitespace.");
+            Covenant.Requires<ArgumentException>(!marker.Any(ch => !char.IsPunctuation(ch)), nameof(marker), $"[marker={marker}]: includes a non-punctuation character.");
+
+            // Add the marker if it's not already present.
+
+            if (!commentMarkers.Exists(m => m == marker))
+            {
+                commentMarkers.Add(marker);
+            }
+        }
+
+        /// <summary>
+        /// Configures the reader for parsing YAML by setting the <see cref="StatementMarker"/> to <b>"@"</b>
+        /// and the comment marker to <b>"#"</b>.
+        /// </summary>
+        public void SetYamlMode()
+        {
+            StatementMarker = '@';
+            
+            ClearCommentMarkers();
+            AddCommentMarker("#");
+        }
 
         /// <summary>
         /// The <see cref="Regex"/> used to match variable expansions.  This defaults
@@ -796,27 +841,17 @@ namespace Neon.IO
         /// <returns><b>true</b> if the line is a comment.</returns>
         private bool IsComment(string line)
         {
-            int i;
+            line = line.TrimStart();
 
-            if (line.Length < 2)
+            foreach (var marker in commentMarkers)
             {
-                return false;
-            }
-
-            for (i = 0; i < line.Length; i++)
-            {
-                if (!char.IsWhiteSpace(line[i]))
+                if (line.StartsWith(marker))
                 {
-                    break;
+                    return true;
                 }
             }
 
-            if (i > line.Length - 2 || line[i] != '/' || line[i + 1] != '/')
-            {
-                return false;
-            }
-
-            return true;
+            return false;
         }
 
         /// <summary>

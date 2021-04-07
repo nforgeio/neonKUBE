@@ -1602,11 +1602,13 @@ spec:
                     using (var preprocessReader =
                         new PreprocessReader(dashboardYaml, variables)
                         {
-                            StripComments = false,
+                            StripComments     = false,
                             ProcessStatements = false
                         }
                     )
                     {
+                        preprocessReader.SetYamlMode();
+
                         dashboardYaml = preprocessReader.ReadToEnd();
                     }
 

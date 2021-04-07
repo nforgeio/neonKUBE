@@ -331,8 +331,10 @@ namespace Neon.Kube
                     maxLabelWidth = totalLabel.Length;
                 }
 
-                sbDisplay.AppendLine("Elapsed Step Timing");
-                sbDisplay.AppendLine("-------------------");
+                sbDisplay.AppendLine();
+                sbDisplay.AppendLine();
+                sbDisplay.AppendLine("Step Runtime");
+                sbDisplay.AppendLine("------------");
 
                 var filler = string.Empty;
 
