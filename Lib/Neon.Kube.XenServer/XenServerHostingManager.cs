@@ -226,7 +226,7 @@ namespace Neon.Kube
                 MaxParallel = this.MaxParallel
             };
 
-            xenController.AddGlobalStep("initializing",
+            xenController.AddGlobalStep("initialize",
                 controller =>
                 {
                     var clusterLogin = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);

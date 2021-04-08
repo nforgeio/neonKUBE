@@ -161,6 +161,14 @@ namespace Neon.Kube
 
             controller.MaxParallel = 1; // We're only going to provision one VM at a time on the local Hyper-V.
 
+            controller.AddGlobalStep("initialize",
+                controller =>
+                {
+                    var clusterLogin = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
+
+                    this.secureSshPassword = clusterLogin.SshPassword;
+                });
+
             controller.AddGlobalStep("prepare hyper-v", controller => PrepareHyperV());
             controller.AddNodeStep("create virtual machines", (controller, node) => ProvisionVM(node));
         }
