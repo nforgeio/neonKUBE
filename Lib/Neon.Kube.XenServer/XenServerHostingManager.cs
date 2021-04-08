@@ -295,6 +295,15 @@ namespace Neon.Kube
                 (state, node) => node.Metadata.OpenEBS);
         }
 
+        /// <inheritdoc/>
+        public override void AddDeprovisoningSteps(SetupController<NodeDefinition> controller)
+        {
+            // Deprovisioning is easy for XenServer.  All we need to do is to turn off
+            // and remove the virtual machines.
+
+            throw new NotImplementedException();
+        }
+
         /// <summary>
         /// Returns the list of <see cref="NodeDefinition"/> instances describing which cluster
         /// nodes are to be hosted by a specific XenServer.

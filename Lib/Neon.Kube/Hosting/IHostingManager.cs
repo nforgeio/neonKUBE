@@ -41,8 +41,20 @@ using Renci.SshNet.Common;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Interface describing the hosting environment managers.
+    /// Interface describing neonKUBE hosting manager implementions for different environments..
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <see cref="IHostingManager"/> implementations are used to provision the infrastructure required
+    /// to deploy a neonKUBE cluster to various environments including on-premise via XenServer or
+    /// Hyper-V hypervisors or to public clouds like AWS, Azure, and Google.  This infrastructure
+    /// includes creating or initializing the servers as well as configuring networking in cloud
+    /// environments.
+    /// </para>
+    /// <para>
+    /// This interface also defines the mechanism for deprovisioning a cluster.
+    /// </para>
+    /// </remarks>
     public interface IHostingManager : IDisposable
     {
         /// <summary>
@@ -88,8 +100,14 @@ namespace Neon.Kube
         /// <summary>
         /// Adds any steps to be performed after the node has been otherwise prepared.
         /// </summary>
-        /// <param name="setupController">The target setup controller.</param>
-        void AddPostProvisioningSteps(SetupController<NodeDefinition> setupController);
+        /// <param name="controller">The target setup controller.</param>
+        void AddPostProvisioningSteps(SetupController<NodeDefinition> controller);
+
+        /// <summary>
+        /// Adds the steps required to deprovision a cluster.
+        /// </summary>
+        /// <param name="controller"></param>
+        void AddDeprovisoningSteps(SetupController<NodeDefinition> controller);
 
         /// <summary>
         /// Returns <c>true</c> if the hosting manage is capable of updating the upstream

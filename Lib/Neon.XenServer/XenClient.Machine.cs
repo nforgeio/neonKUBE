@@ -366,13 +366,20 @@ namespace Neon.XenServer
             /// Shuts down a virtual machine.
             /// </summary>
             /// <param name="virtualMachine">The target virtual machine.</param>
-            /// <param name="force">Optionally forces the virtual machine to shutdown.</param>
+            /// <param name="turnOff">
+            /// <para>
+            /// Optionally just turns the VM off without performing a graceful shutdown first.
+            /// </para>
+            /// <note>
+            /// <b>WARNING!</b> This could result in the loss of unsaved data.
+            /// </note>
+            /// </param>
             /// <exception cref="XenException">Thrown if the operation failed.</exception>
-            public void Shutdown(XenVirtualMachine virtualMachine, bool force = false)
+            public void Shutdown(XenVirtualMachine virtualMachine, bool turnOff = false)
             {
                 Covenant.Requires<ArgumentNullException>(virtualMachine != null, nameof(virtualMachine));
 
-                if (force)
+                if (turnOff)
                 {
                     client.SafeInvoke("vm-shutdown", $"uuid={virtualMachine.Uuid}", "--force");
                 }
@@ -406,14 +413,14 @@ namespace Neon.XenServer
             /// Removes a virtual machine and its drives.
             /// </summary>
             /// <param name="virtualMachine">The target virtual machine.</param>
-            /// <param name="noDriveRemoval">Optionally prevents the VM drives from being removed.</param>
-            public void Remove(XenVirtualMachine virtualMachine, bool noDriveRemoval = false)
+            /// <param name="keepDrives">Optionally retains the VM disks.</param>
+            public void Remove(XenVirtualMachine virtualMachine, bool keepDrives = false)
             {
                 Covenant.Requires<ArgumentNullException>(virtualMachine != null, nameof(virtualMachine));
 
                 client.SafeInvoke("vm-reset-powerstate", $"uuid={virtualMachine.Uuid}", "--force");
 
-                if (noDriveRemoval)
+                if (keepDrives)
                 {
                     client.SafeInvoke("vm-destroy", $"uuid={virtualMachine.Uuid}", "--force");
                 }

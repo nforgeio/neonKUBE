@@ -63,11 +63,11 @@ namespace Neon.Kube
         private bool                appendLog;
 
         /// <summary>
-        /// Constructs a cluster proxy from a cluster login.
+        /// Constructs a cluster proxy for a Kubernetes context.
         /// </summary>
         /// <param name="kubeContext">The cluster context.</param>
         /// <param name="nodeProxyCreator">
-        /// The optional application supplied function that creates a node proxy
+        /// The optional application supplied function that creates a node proxy,
         /// given the node name, public address or FQDN, private address, and
         /// the node definition.
         /// </param>
@@ -172,6 +172,11 @@ namespace Neon.Kube
 
             this.Nodes       = nodes;
             this.FirstMaster = Nodes.Where(n => n.Metadata.IsMaster).OrderBy(n => n.Name).First();
+        }
+
+        public ClusterProxy(bool appendLog)
+        {
+            this.appendLog = appendLog;
         }
 
         /// <summary>

@@ -38,7 +38,7 @@ namespace Neon.Kube
 {
     /// <summary>
     /// Handles the parsing of a Kubernetes context name which by convention
-    /// encodes the user, cluster, and namespace as a string.
+    /// encodes the user, cluster, and optional namespace as a string.
     /// </summary>
     /// <remarks>
     /// <para>

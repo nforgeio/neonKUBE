@@ -92,7 +92,7 @@ OPTIONS:
                                         WSL2:      ubuntu-20.04.20210206.wsl2.tar
                                         XenServer: ubuntu-20.04.1.xenserver.xva
 
-                          NOTE: This is required for [--debug]
+                                  NOTE: This is required for [--debug]
 Server Requirements:
 --------------------
 
@@ -208,7 +208,7 @@ Server Requirements:
                 }
             }
 
-            // Create and run the cluster prepare setup controller.
+            // Create and run the cluster prepare controller.
 
             var clusterDefinition = ClusterDefinition.FromFile(clusterDefPath, strict: true);
 

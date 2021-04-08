@@ -70,8 +70,10 @@ namespace Neon.Kube
         /// Package cache servers are deployed to the masters by default.
         /// </note>
         /// </param>
-
-        /// <param name="unredacted">Optionally indicates that sensitive information <b>won't be redacted</b> from the setup logs (typically used when debugging).</param>
+        /// <param name="unredacted">
+        /// Optionally indicates that sensitive information <b>won't be redacted</b> from the setup logs 
+        /// (typically used when debugging).
+        /// </param>
         /// <param name="debugMode">Optionally indicates that the cluster will be prepared in debug mode.</param>
         /// <param name="baseImageName">Optionally specifies the base image name to use for debug mode.</param>
         /// <returns>The <see cref="ISetupController"/>.</returns>

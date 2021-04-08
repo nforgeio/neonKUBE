@@ -60,7 +60,10 @@ namespace Neon.Kube
         /// Optionally specifies the maximum number of node operations to be performed in parallel.
         /// This <b>defaults to 500</b> which is effectively infinite.
         /// </param>
-        /// <param name="unredacted">Optionally indicates that sensitive information <b>won't be redacted</b> from the setup logs (typically used when debugging).</param>
+        /// <param name="unredacted">
+        /// Optionally indicates that sensitive information <b>won't be redacted</b> from the setup logs 
+        /// (typically used when debugging).
+        /// </param>
         /// <param name="debugMode">Optionally indicates that the cluster will be prepared in debug mode.</param>
         /// <param name="uploadCharts">
         /// <para>

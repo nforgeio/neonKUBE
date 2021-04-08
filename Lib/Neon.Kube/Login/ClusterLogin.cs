@@ -92,7 +92,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// Set to a globally unique ID to identify the cluster.  This defaults to 
-        /// a gewnerated unique value.
+        /// a generated unique value.
         /// </summary>
         [JsonProperty(PropertyName = "ClusterId", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "clusterId", ApplyNamingConventions = false)]

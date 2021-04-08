@@ -180,7 +180,7 @@ OPTIONS:
 
             KubeHelper.InitContext(kubeContext);
 
-            // Create and run the cluster prepare setup controller.
+            // Create and run the cluster setup controller.
 
             var clusterDefinition = clusterLogin.ClusterDefinition;
 

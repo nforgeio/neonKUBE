@@ -99,9 +99,12 @@ namespace Neon.Kube
         public abstract void AddProvisioningSteps(SetupController<NodeDefinition> controller);
 
         /// <inheritdoc/>
-        public virtual void AddPostProvisioningSteps(SetupController<NodeDefinition> setupController)
+        public virtual void AddPostProvisioningSteps(SetupController<NodeDefinition> controller)
         {
         }
+
+        /// <inheritdoc/>
+        public abstract void AddDeprovisoningSteps(SetupController<NodeDefinition> controller);
 
         /// <inheritdoc/>
         public virtual bool CanManageRouter => false;
