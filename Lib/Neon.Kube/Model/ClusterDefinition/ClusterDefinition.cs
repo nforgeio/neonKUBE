@@ -811,9 +811,9 @@ namespace Neon.Kube
                 throw new ClusterDefinitionException($"The [{nameof(ClusterDefinition)}.{nameof(Name)}={Name}] property is not valid.  Only letters, numbers, periods, dashes, and underscores are allowed.");
             }
 
-            if (Name.Length > 20)
+            if (Name.Length > 32)
             {
-                throw new ClusterDefinitionException($"The [{nameof(ClusterDefinition)}.{nameof(Name)}={Name}] has more than 20 characters.  Some hosting environments enforce name length limits so please trim your cluster name.");
+                throw new ClusterDefinitionException($"The [{nameof(ClusterDefinition)}.{nameof(Name)}={Name}] has more than 32 characters.  Some hosting environments enforce name length limits so please trim your cluster name.");
             }
 
             if (Datacenter == null)
@@ -838,7 +838,7 @@ namespace Neon.Kube
             }
             else if (!NeonHelper.IsOdd(masterNodeCount))
             {
-                throw new ClusterDefinitionException($"[{masterNodeCount}] master nodes is not allowed.  Only an off number of master nodes is allowed: [1, 3, or 5]");
+                throw new ClusterDefinitionException($"[{masterNodeCount}] master nodes is not allowed.  Only an odd number of master nodes is allowed: [1, 3, or 5]");
             }
 
             if (!string.IsNullOrEmpty(PackageProxy))
