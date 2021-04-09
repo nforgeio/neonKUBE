@@ -1011,8 +1011,6 @@ curl {KubeHelper.CurlOptions} https://download.opensuse.org/repositories/devel:k
 NEON_REGISTRY={KubeConst.NeonContainerRegistery(controller)}
 
 cat <<EOF > /etc/containers/registries.conf
-unqualified-search-registries = [ ""docker.io"", ""quay.io"", ""registry.access.redhat.com"", ""registry.fedoraproject.org"" ]
-
 [[registry]]
 prefix = ""${{NEON_REGISTRY}}""
 insecure = false
@@ -1071,6 +1069,9 @@ cat <<EOF > /etc/cni/net.d/100-crio-bridge.conf
     }}
 }}
 EOF
+
+# Remove shortnames.
+rm -f /etc/containers/registries.conf.d/000-shortnames.conf
 
 # Configure CRI-O to start on boot and then restart it to pick up the new options.
 
