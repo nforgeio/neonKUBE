@@ -323,7 +323,7 @@ namespace Neon.Kube
 
             if (showRuntime && !Steps.Any(step => step.State == SetupStepState.Pending || step.State == SetupStepState.Running))
             {
-                var totalLabel    = "Total Setup Time";
+                var totalLabel    = " Total Setup Time";
                 var maxLabelWidth = Steps.Max(step => step.Label.Length);
 
                 if (maxLabelWidth < totalLabel.Length)
@@ -333,8 +333,8 @@ namespace Neon.Kube
 
                 sbDisplay.AppendLine();
                 sbDisplay.AppendLine();
-                sbDisplay.AppendLine("Step Runtime");
-                sbDisplay.AppendLine("------------");
+                sbDisplay.AppendLine(" Step Runtime");
+                sbDisplay.AppendLine(" ------------");
 
                 var filler = string.Empty;
 
@@ -344,18 +344,18 @@ namespace Neon.Kube
 
                     if (step.State == SetupStepState.Done || step.State == SetupStepState.Failed)
                     {
-                        sbDisplay.AppendLine($"{step.Label}:    {filler}{step.Runtime} ({step.Runtime.TotalSeconds} sec)");
+                        sbDisplay.AppendLine($" {step.Label}:    {filler}{step.Runtime} ({step.Runtime.TotalSeconds} sec)");
                     }
                     else
                     {
-                        sbDisplay.AppendLine($"{step.Label}:    {filler}* NOT EXECUTED");
+                        sbDisplay.AppendLine($" {step.Label}:    {filler}* NOT EXECUTED");
                     }
                 }
 
                 filler = new string(' ', maxLabelWidth - totalLabel.Length);
 
-                sbDisplay.AppendLine(new string('-', totalLabel.Length + 1));
-                sbDisplay.AppendLine($"{totalLabel}:    {filler}{controller.Runtime} ({controller.Runtime.TotalSeconds} sec)");
+                sbDisplay.AppendLine(" " + new string('-', totalLabel.Length + 1));
+                sbDisplay.AppendLine($" {totalLabel}:    {filler}{controller.Runtime} ({controller.Runtime.TotalSeconds} sec)");
                 sbDisplay.AppendLine();
             }
 

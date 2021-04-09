@@ -838,7 +838,7 @@ namespace Neon.Kube
             }
             else if (!NeonHelper.IsOdd(masterNodeCount))
             {
-                throw new ClusterDefinitionException($"[{masterNodeCount}] master nodes is not allowed.  Only an off number of master nodes is allowed: [1, 3, or 5]");
+                throw new ClusterDefinitionException($"[{masterNodeCount}] master nodes is not allowed.  Only an odd number of master nodes is allowed: [1, 3, or 5]");
             }
 
             if (!string.IsNullOrEmpty(PackageProxy))
