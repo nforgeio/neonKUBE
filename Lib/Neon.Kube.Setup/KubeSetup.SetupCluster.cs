@@ -175,7 +175,7 @@ namespace Neon.Kube
 
             // Configure the setup steps.
 
-            controller.AddGlobalStep("calculate service resources", KubeSetup.CalculateServiceResources);
+            controller.AddGlobalStep("resource requirements", KubeSetup.CalculateResourceRequirements);
             controller.AddGlobalStep("download binaries", async controller => await KubeSetup.InstallWorkstationBinariesAsync(controller));
             controller.AddWaitUntilOnlineStep("connect nodes");
             controller.AddNodeStep("verify os", (controller, node) => node.VerifyNodeOS());
@@ -239,7 +239,7 @@ namespace Neon.Kube
             //-----------------------------------------------------------------
             // Cluster setup.
 
-            controller.AddGlobalStep("configure cluster", controller => KubeSetup.SetupClusterAsync(controller));
+            controller.AddGlobalStep("setup cluster", controller => KubeSetup.SetupClusterAsync(controller));
             controller.AddGlobalStep("persist state",
                 controller =>
                 {

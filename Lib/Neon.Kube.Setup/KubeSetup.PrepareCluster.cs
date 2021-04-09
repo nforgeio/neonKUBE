@@ -321,7 +321,7 @@ namespace Neon.Kube
 
             controller.AddWaitUntilOnlineStep(timeout: TimeSpan.FromMinutes(15));
             controller.AddNodeStep("verify node OS", (state, node) => node.VerifyNodeOS());
-            controller.AddNodeStep("configure node credentials",
+            controller.AddNodeStep("node credentials",
                 (state, node) =>
                 {
                     node.ConfigureSshKey(controller);

@@ -43,15 +43,12 @@ namespace Neon.Common
     public static partial class NeonHelper
     {
         /// <summary>
-        /// Identifies the production neonLIBRARY container image registry.  This is a public
-        /// registry that holds non-cluster setup related images.
+        /// Identifies the production neonLIBRARY container image registry.
         /// </summary>
         public const string NeonLibraryProdRegistry = "ghcr.io/neonrelease";
 
         /// <summary>
-        /// Identifies the development neonLIBRARY container image registry.  This is a public
-        /// registry that holds non-cluster setup related images during development between
-        /// releases.
+        /// Identifies the development neonLIBRARY container image registry.
         /// </summary>
         public const string NeonLibraryDevRegistry = "ghcr.io/neonrelease-dev";
 

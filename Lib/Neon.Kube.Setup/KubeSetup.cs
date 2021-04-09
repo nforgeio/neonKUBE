@@ -369,13 +369,6 @@ namespace Neon.Kube
                                     return true;
                                 }
 
-                                // We also see this sometimes when the API server isn't ready.
-
-                                if (exceptionType == typeof(HttpOperationException) && ((HttpOperationException)exception).Response.StatusCode == HttpStatusCode.Forbidden)
-                                {
-                                    return true;
-                                }
-
                                 return false;
                             },
                         maxAttempts:          int.MaxValue,

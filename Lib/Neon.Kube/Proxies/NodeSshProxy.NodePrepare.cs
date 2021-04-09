@@ -1008,7 +1008,7 @@ curl {KubeHelper.CurlOptions} https://download.opensuse.org/repositories/devel:k
 
 # Generate the CRI-O configurations.
 
-NEON_REGISTRY={KubeConst.NeonContainerRegistery(controller)}
+NEON_REGISTRY={KubeConst.NeonKubeRegistery(controller)}
 
 cat <<EOF > /etc/containers/registries.conf
 unqualified-search-registries = [ ""docker.io"", ""quay.io"", ""registry.access.redhat.com"", ""registry.fedoraproject.org"" ]
@@ -1048,7 +1048,7 @@ EOF
 
 cat <<EOF > /etc/crio/crio.conf.d/02-image.conf
 [crio.image]
-pause_image = ""{KubeConst.NeonContainerRegistery(controller)}/pause:3.2""
+pause_image = ""{KubeConst.NeonKubeRegistery(controller)}/pause:{KubeConst.NeonKubeImageTag}""
 EOF
 
 cat <<EOF > /etc/cni/net.d/100-crio-bridge.conf
