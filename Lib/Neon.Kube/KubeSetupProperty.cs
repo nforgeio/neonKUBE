@@ -88,5 +88,30 @@ namespace Neon.Kube
         /// Property name for accessing the <see cref="SetupController{NodeMetadata}"/>'s <see cref="KubeClusterAdvice"/> client property.
         /// </summary>
         public const string ClusterAdvice = "setup-advice";
+
+        /// <summary>
+        /// <para>
+        /// Property name for accessing the fully qualified path to the local folder where automated 
+        /// cluster deployment operation state will be persisted, such as the Kubernetes config file, 
+        /// neonKUBE cluster login and operation logs will be kept.  Automation folders are created by
+        /// <see cref="KubeHelper.CreateAutomationFolder()"/>.
+        /// </para>
+        /// </summary>
+        /// <remarks>
+        /// <note>
+        /// <para>
+        /// Automation folders are used by the <b>neon cluster prepare/setup</b> commands using the
+        /// <b>--automate</b> option as well as clusters provisioned for unit testing via <b>KubernetesFixture</b>.
+        /// This will be set to <c>null</c> for cluster deployments performed by neonKUBE or <b>neon-cli</b>
+        /// without the <b>--automate</b> option.
+        /// </para>
+        /// <para>
+        /// These folders are used to workaround the neonDESKTOP restrictions that allow neonDESKTOP
+        /// or <b>neon-cli</b> to be logged into a single cluster at a time and also requires that 
+        /// neonDESKTOP be logged out of a cluster before preparing or setting up a new one.
+        /// </para>
+        /// </note>
+        /// </remarks>
+        public const string AutomationFolder = "automation-folder";
     }
 }

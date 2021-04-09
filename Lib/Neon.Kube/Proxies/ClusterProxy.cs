@@ -174,11 +174,6 @@ namespace Neon.Kube
             this.FirstMaster = Nodes.Where(n => n.Metadata.IsMaster).OrderBy(n => n.Name).First();
         }
 
-        public ClusterProxy(bool appendLog)
-        {
-            this.appendLog = appendLog;
-        }
-
         /// <summary>
         /// Releases all resources associated with the instance.
         /// </summary>

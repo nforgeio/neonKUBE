@@ -33,6 +33,7 @@ using Neon.Collections;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Deployment;
+using Neon.IO;
 using Neon.Kube;
 using Neon.Net;
 using Neon.SSH;
@@ -93,6 +94,13 @@ OPTIONS:
                                         XenServer: ubuntu-20.04.1.xenserver.xva
 
                                   NOTE: This is required for [--debug]
+
+    --automate                  - Indicates that the command must not impact neonDESKTOP
+                                  by changing the current login or Kubernetes config or
+                                  other files like cluster deployment logs.  This is
+                                  used for automated deployments that can proceed while
+                                  neonDESKTOP is doing other things.
+
 Server Requirements:
 --------------------
 
@@ -108,7 +116,7 @@ Server Requirements:
         public override string[] Words => new string[] { "cluster", "prepare" };
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions => new string[] { "--package-caches", "--unredacted", "--remove-templates", "--debug", "--base-image-name" };
+        public override string[] ExtendedOptions => new string[] { "--package-caches", "--unredacted", "--remove-templates", "--debug", "--base-image-name", "--automate" };
 
         /// <inheritdoc/>
         public override bool NeedsSshCredentials(CommandLine commandLine) => !commandLine.HasOption("--remove-templates");
@@ -148,6 +156,7 @@ Server Requirements:
 
             var debug         = commandLine.HasOption("--debug");
             var baseImageName = commandLine.GetOption("--base-image-name");
+            var automate      = commandLine.HasOption("--automate");
 
             if (debug && string.IsNullOrEmpty(baseImageName))
             {
@@ -157,7 +166,7 @@ Server Requirements:
 
             // Implement the command.
 
-            if (KubeHelper.CurrentContext != null)
+            if (KubeHelper.CurrentContext != null && !automate)
             {
                 Console.Error.WriteLine("*** ERROR: You are logged into a cluster.  You need to logout before preparing another.");
                 Program.Exit(1);
@@ -169,25 +178,28 @@ Server Requirements:
                 Program.Exit(1);
             }
 
-            var clusterDefPath = commandLine.Arguments[0];
+            // Obtain the cluster definition.
+
+            var clusterDefPath    = commandLine.Arguments[0];
+            var clusterDefinition = (ClusterDefinition)null;
 
             if (clusterDefPath.Equals("WSL2", StringComparison.InvariantCultureIgnoreCase))
             {
                 // This special-case argument indicates that we should use the built-in 
-                // WSL2 cluster definition.  We'll make a copy of this in the user's WSL2
-                // folder if it doesn't already exist.
+                // WSL2 cluster definition.
 
-                var wsl2ClusterDefinitionPath = Path.Combine(KubeHelper.DesktopWsl2Folder, "cluster-definition.yaml");
-
-                if (!File.Exists(wsl2ClusterDefinitionPath))
+                using (var tempFile = new TempFile(KubeHelper.TempFolder))
                 {
-                    File.WriteAllText(wsl2ClusterDefinitionPath, KubeSetup.GetWsl2ClusterDefintion());
+                    File.WriteAllText(tempFile.Path, KubeSetup.GetWsl2ClusterDefintion(), Encoding.UTF8);
+                    clusterDefinition = ClusterDefinition.FromFile(tempFile.Path, strict: true);
                 }
-
-                clusterDefPath = wsl2ClusterDefinitionPath;
             }
+            else
+            {
+                ClusterDefinition.ValidateFile(clusterDefPath, strict: true);
 
-            ClusterDefinition.ValidateFile(clusterDefPath, strict: true);
+                clusterDefinition = ClusterDefinition.FromFile(clusterDefPath, strict: true);
+            }
 
             // Parse any specified package cache endpoints.
 
@@ -210,16 +222,14 @@ Server Requirements:
 
             // Create and run the cluster prepare controller.
 
-            var clusterDefinition = ClusterDefinition.FromFile(clusterDefPath, strict: true);
-
             var controller = KubeSetup.CreateClusterPrepareController(
                 clusterDefinition, 
-                KubeHelper.LogFolder,
-                maxParallel:           Program.MaxParallel,
-                packageCacheEndpoints: packageCacheEndpoints,
-                unredacted:            commandLine.HasOption("--unredacted"),
-                debugMode:             debug,
-                baseImageName:         baseImageName);
+                maxParallel:            Program.MaxParallel,
+                packageCacheEndpoints:  packageCacheEndpoints,
+                unredacted:             commandLine.HasOption("--unredacted"),
+                debugMode:              debug,
+                baseImageName:          baseImageName,
+                automate:               automate);
 
             controller.StatusChangedEvent +=
                 status =>
