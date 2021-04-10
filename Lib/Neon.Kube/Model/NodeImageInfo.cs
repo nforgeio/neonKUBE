@@ -51,12 +51,12 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(targetTag), nameof(targetTag));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(registry), nameof(registry));
 
-            this.Folder = imageFolder;
-            this.Name = imageName;
-            this.TargetTag = targetTag;
+            this.Folder      = imageFolder;
+            this.Name        = imageName;
+            this.TargetTag   = targetTag;
             this.SourceImage = $"{registry}/{imageName}:{targetTag}";
-            this.TargetImage = $"{KubeConst.ClusterRegistryName}/{imageName}:{targetTag}";
-            this.Registry = registry;
+            this.TargetImage = $"{KubeConst.LocalClusterRegistry}/{imageName}:{targetTag}";
+            this.Registry    = registry;
         }
 
         /// <summary>
@@ -78,7 +78,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// Returns the fully qualified name of the image as it will be deployed to a cluster,
-        /// with the registry being set to <see cref="KubeConst.ClusterRegistryName"/> which maps
+        /// with the registry being set to <see cref="KubeConst.LocalClusterRegistry"/> which maps
         /// to the cluster's internal container registry.
         /// </summary>
         public string TargetImage { get; private set; }

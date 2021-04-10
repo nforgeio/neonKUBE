@@ -137,10 +137,10 @@ if ($test)
     Publish "$image_root\\test-api"
     Publish "$image_root\\test-cadence"
     Publish "$image_root\\test-temporal"
-    Publish "$image_root\\neon-allow-testing"
 }
 
 if ($services)
 {
+    Publish "$image_root\\neon-allow-testing"
     Publish "$image_root\\neon-cluster-manager"
 }

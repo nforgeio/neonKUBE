@@ -294,10 +294,9 @@ namespace Neon.Kube
         public const string ClusterNodeDomain = "node.local";
 
         /// <summary>
-        /// Returns a DNS name for the cluster registry that is reachable from
-        /// CRI-O running on the host nodes.
+        /// Hostname used to reference the local Harbor registry within the cluster.
         /// </summary>
-        public const string ClusterRegistryName = "neon-registry." + ClusterNodeDomain;
+        public const string LocalClusterRegistry = "neon-registry.node.local";
 
         /// <summary>
         /// Returns the Harbor Project name.
@@ -325,35 +324,5 @@ namespace Neon.Kube
         /// release branches and <see cref="NeonKubeDevRegistry"/> for all other branches.
         /// </summary>
         public static string NeonKubeBranchRegistry => ThisAssembly.Git.Branch.StartsWith("release-", StringComparison.InvariantCultureIgnoreCase) ? NeonKubeProdRegistry : NeonKubeDevRegistry;
-
-        /// <summary>
-        /// Hostname used to reference the local Harbor registry within the cluster.
-        /// </summary>
-        public const string LocalClusterRegistry = "neon-registry.node.local";
-
-        /// <summary>
-        /// Returns the hostname and path to use for referencing neonKUBE cluster
-        /// container images based on the setup controller state passed.  This will typically 
-        /// return <see cref="LocalClusterRegistry"/> for production and test clusters
-        /// to use the prepackaged container images in the node VM image but when
-        /// we're setting up in <b>debug mode</b> (as defined by the <see cref="KubeSetupProperty.DebugMode"/>
-        /// property in <paramref name="controller"/>) we'll return <see cref="NeonHelper.NeonLibraryBranchRegistry"/>
-        /// instead.
-        /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <returns>The registry to use for pulling neonKUBE cluster containers.</returns>
-        public static string NeonKubeRegistery(ISetupController controller)
-        {
-            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-
-            if (controller.Get<bool>(KubeSetupProperty.DebugMode, false) && !controller.Get<bool>(KubeSetupProperty.MaintainerMode, false))
-            {
-                return KubeConst.;
-            }
-            else
-            {
-                return LocalClusterRegistry;
-            }
-        }
     }
 }

@@ -68,10 +68,10 @@ namespace Neon.Kube
         /// This will be treated as <c>true</c> when <paramref name="debugMode"/> is passed as <c>true</c>.
         /// </note>
         /// </param>
-        /// <paramref name="automate">
+        /// <param name="automate">
         /// Optionally specifies that the operation is to be performed in <b>automation mode</b>, where the
         /// current neonDESKTOP state will not be impacted.
-        /// </paramref>
+        /// </param>
         /// <returns>The <see cref="ISetupController"/>.</returns>
         /// <exception cref="KubeException">Thrown when there's a problem.</exception>
         public static ISetupController CreateClusterSetupController(
