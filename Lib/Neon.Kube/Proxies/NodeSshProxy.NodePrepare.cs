@@ -1008,7 +1008,7 @@ curl {KubeHelper.CurlOptions} https://download.opensuse.org/repositories/devel:k
 
 # Generate the CRI-O configurations.
 
-NEON_REGISTRY={KubeConst.NeonContainerRegistery(controller)}
+NEON_REGISTRY={KubeConst.LocalClusterRegistry}
 
 cat <<EOF > /etc/containers/registries.conf
 [[registry]]
@@ -1018,7 +1018,7 @@ blocked = false
 location = ""${{NEON_REGISTRY}}""
 
 [[registry.mirror]]
-location = ""{KubeConst.ClusterRegistryName}""
+location = ""{KubeConst.LocalClusterRegistry}""
 
 [[registry]]
 prefix = ""docker.io""
@@ -1027,7 +1027,7 @@ blocked = false
 location = ""docker.io""
 
 [[registry.mirror]]
-location = ""{KubeConst.ClusterRegistryName}""
+location = ""{KubeConst.LocalClusterRegistry}""
 
 [[registry]]
 prefix = ""quay.io""
@@ -1036,7 +1036,7 @@ blocked = false
 location = ""quay.io""
 
 [[registry.mirror]]
-location = ""{KubeConst.ClusterRegistryName}""
+location = ""{KubeConst.LocalClusterRegistry}""
 EOF
 
 cat <<EOF > /etc/crio/crio.conf.d/01-cgroup-manager.conf
@@ -1046,7 +1046,7 @@ EOF
 
 cat <<EOF > /etc/crio/crio.conf.d/02-image.conf
 [crio.image]
-pause_image = ""{KubeConst.NeonContainerRegistery(controller)}/pause:3.2""
+pause_image = ""{KubeConst.LocalClusterRegistry}/pause:3.2""
 EOF
 
 cat <<EOF > /etc/cni/net.d/100-crio-bridge.conf
@@ -1059,7 +1059,7 @@ cat <<EOF > /etc/cni/net.d/100-crio-bridge.conf
     ""ipMasq"": true,
     ""hairpinMode"": true,
     ""ipam"": {{
-                        ""type"": ""host-local"",
+        ""type"": ""host-local"",
         ""routes"": [
             {{ ""dst"": ""0.0.0.0/0"" }}
         ],

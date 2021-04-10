@@ -102,7 +102,9 @@ COMMAND SUMMARY:
 
     neon help               COMMAND
     neon cluster prepare    [CLUSTER-DEF]
+    neon cluster remove     [LOGIN-PATH]
     neon cluster setup      [CLUSTER-DEF]
+    neon cluster verify     [CLUSTER-DEF]
     neon generate iso       SOURCE-FOLDER ISO-PATH
     neon login              COMMAND
     neon logout

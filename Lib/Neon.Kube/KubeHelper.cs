@@ -83,6 +83,7 @@ namespace Neon.Kube
         private static string               cachedPwshPath;
         private static IStaticDirectory     cachedResources;
         private static string               cachedNodeImageFolder;
+        private static string               cachedAutomationFolder;
 
         /// <summary>
         /// CURL command common options.
@@ -129,6 +130,7 @@ namespace Neon.Kube
             cachedPwshPath           = null;
             cachedResources          = null;
             cachedNodeImageFolder    = null;
+            cachedAutomationFolder   = null;
         }
 
         /// <summary>
@@ -873,6 +875,82 @@ namespace Neon.Kube
 
                 return cachedNodeImageFolder = path;
             }
+        }
+
+        /// <summary>
+        /// <para>
+        /// Creates an new automation folder named by a UUID for the current user.  
+        /// This is where automated cluster deployment related files such as 
+        /// logins, kubeconfigs, and logs will be persisted for automated cluster
+        /// deployments.
+        /// </para>
+        /// <note>
+        /// The folder will be created if it doesn't already exist.
+        /// </note>
+        /// </summary>
+        /// <returns>The fully qualified path to the new folder.</returns>
+        /// <remarks>
+        /// <para>
+        /// This folder will include a temporary subfolder for each automated
+        /// deployment performed via a <b>neon-cli cluster prepare/setup</b>
+        /// command with the <b>--automated</b> option or via a <b>KubernetesFixture</b>
+        /// that deploys a cluster for unit testing.
+        /// </para>
+        /// <para>
+        /// These folders will be named using a GUID and may include these files/folders:
+        /// </para>
+        /// <list type="table">
+        /// <item>
+        ///     <term><b>log/*.log</b></term>
+        ///     <description>
+        ///     The folder holding the operation log files.
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b>*.login.yaml</b></term>
+        ///     <description>
+        ///     The neonKUBE login for the operation.
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b>config</b></term>
+        ///     <description>
+        ///     The Kubernetes config file for the operation.
+        ///     </description>
+        /// </item>
+        /// </list>
+        /// <remarks>
+        /// <note>
+        /// <para>
+        /// Automation folders are used by the <b>neon cluster prepare/setup</b> commands using the
+        /// <b>--automate</b> option as well as clusters provisioned for unit testing via <b>KubernetesFixture</b>.
+        /// This will be set to <c>null</c> for cluster deployments performed by neonKUBE or <b>neon-cli</b>
+        /// without the <b>--automate</b> option.
+        /// </para>
+        /// <para>
+        /// These folders are used to workaround the neonDESKTOP restrictions that allow neonDESKTOP
+        /// or <b>neon-cli</b> to be logged into a single cluster at a time and also requires that 
+        /// neonDESKTOP be logged out of a cluster before preparing or setting up a new one.
+        /// </para>
+        /// </note>
+        /// </remarks>
+        /// </remarks>
+        public static string CreateAutomationFolder()
+        {
+            if (cachedAutomationFolder == null)
+            {
+                cachedAutomationFolder = Path.Combine(GetNeonKubeUserFolder(), "automation");
+            }
+
+            var subfolder = Path.Combine(cachedAutomationFolder, Guid.NewGuid().ToString("d"));
+
+            Directory.CreateDirectory(subfolder);
+
+            // We're also creating the "log" subfolder.
+
+            Directory.CreateDirectory(Path.Combine(subfolder, "log"));
+
+            return subfolder;
         }
 
         /// <summary>

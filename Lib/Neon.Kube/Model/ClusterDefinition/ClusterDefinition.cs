@@ -222,9 +222,9 @@ namespace Neon.Kube
         /// </para>
         /// <note>
         /// The name may include only letters, numbers, periods, dashes, and underscores and
-        /// may be up to 20 characters long.  Some hosting environments enforce length limits
+        /// may be up to 32 characters long.  Some hosting environments enforce length limits
         /// on resource names that we derive from the cluster name, so please limit your
-        /// cluster name to 20 characters.
+        /// cluster name to 32 characters.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "Name", Required = Required.Always)]

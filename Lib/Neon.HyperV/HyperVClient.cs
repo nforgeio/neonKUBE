@@ -351,10 +351,10 @@ namespace Neon.HyperV
         }
 
         /// <summary>
-        /// Removes a named virtual machine all of its drives.
+        /// Removes a named virtual machine and all of its drives (by default).
         /// </summary>
         /// <param name="machineName">The machine name.</param>
-        /// <param name="keepDrives">Optionally retains the VM drive files.</param>
+        /// <param name="keepDrives">Optionally retains the VM disk files.</param>
         public void RemoveVm(string machineName, bool keepDrives = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName), nameof(machineName));
@@ -471,14 +471,29 @@ namespace Neon.HyperV
         /// Stops the named virtual machine.
         /// </summary>
         /// <param name="machineName">The machine name.</param>
-        public void StopVm(string machineName)
+        /// <param name="turnOff">
+        /// <para>
+        /// Optionally just turns the VM off without performing a graceful shutdown first.
+        /// </para>
+        /// <note>
+        /// <b>WARNING!</b> This could result in the loss of unsaved data.
+        /// </note>
+        /// </param>
+        public void StopVm(string machineName, bool turnOff = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName), nameof(machineName));
             CheckDisposed();
 
             try
             {
-                powershell.Execute($"{hyperVNamespace}Stop-VM -Name \"{machineName}\"");
+                if (turnOff)
+                {
+                    powershell.Execute($"{hyperVNamespace}Stop-VM -Name \"{machineName}\" -TurnOff");
+                }
+                else
+                {
+                    powershell.Execute($"{hyperVNamespace}Stop-VM -Name \"{machineName}\"");
+                }
             }
             catch (Exception e)
             {

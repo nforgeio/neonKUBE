@@ -51,16 +51,14 @@ namespace Neon.Kube
         /// Constructs the <see cref="ISetupController"/> to be used for setting up a cluster.
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
-        /// <param name="stateFolder">
-        /// Specifies the folder where operation state including logs will be written.  This folder 
-        /// will be created if it doesn't already exist and will be cleared before the operation
-        /// starts when it does exist.
-        /// </param>
         /// <param name="maxParallel">
         /// Optionally specifies the maximum number of node operations to be performed in parallel.
         /// This <b>defaults to 500</b> which is effectively infinite.
         /// </param>
-        /// <param name="unredacted">Optionally indicates that sensitive information <b>won't be redacted</b> from the setup logs (typically used when debugging).</param>
+        /// <param name="unredacted">
+        /// Optionally indicates that sensitive information <b>won't be redacted</b> from the setup logs 
+        /// (typically used when debugging).
+        /// </param>
         /// <param name="debugMode">Optionally indicates that the cluster will be prepared in debug mode.</param>
         /// <param name="uploadCharts">
         /// <para>
@@ -70,30 +68,41 @@ namespace Neon.Kube
         /// This will be treated as <c>true</c> when <paramref name="debugMode"/> is passed as <c>true</c>.
         /// </note>
         /// </param>
+        /// <param name="automate">
+        /// Optionally specifies that the operation is to be performed in <b>automation mode</b>, where the
+        /// current neonDESKTOP state will not be impacted.
+        /// </param>
         /// <returns>The <see cref="ISetupController"/>.</returns>
         /// <exception cref="KubeException">Thrown when there's a problem.</exception>
         public static ISetupController CreateClusterSetupController(
             ClusterDefinition   clusterDefinition, 
-            string              stateFolder, 
             int                 maxParallel  = 500, 
             bool                unredacted   = false, 
             bool                debugMode    = false, 
-            bool                uploadCharts = false)
+            bool                uploadCharts = false,
+            bool                automate     = false)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
-            Covenant.Requires<ArgumentNullException>(stateFolder != null, nameof(stateFolder));
             Covenant.Requires<ArgumentException>(maxParallel > 0, nameof(maxParallel));
 
-            // Ensure that the operation state exists.
+            // Create the automation subfolder for the operation if required and determine
+            // where the log files should go.
 
-            Directory.CreateDirectory(stateFolder);
+            var automationFolder = (string)null;
+            var logFolder        = KubeHelper.LogFolder;
+
+            if (automate)
+            {
+                automationFolder = KubeHelper.CreateAutomationFolder();
+                logFolder        = Path.Combine(automationFolder, logFolder);
+            }
 
             // Initialize the cluster proxy.
 
             var cluster = new ClusterProxy(clusterDefinition,
                 (nodeName, nodeAddress, appendToLog) =>
                 {
-                    var logWriter      = new StreamWriter(new FileStream(Path.Combine(stateFolder, $"{nodeName}.log"), FileMode.Create, appendToLog ? FileAccess.Write : FileAccess.ReadWrite));
+                    var logWriter      = new StreamWriter(new FileStream(Path.Combine(logFolder, $"{nodeName}.log"), FileMode.Create, appendToLog ? FileAccess.Write : FileAccess.ReadWrite));
                     var sshCredentials = SshCredentials.FromUserPassword(KubeConst.SysAdminUser, KubeConst.SysAdminPassword);
 
                     return new NodeSshProxy<NodeDefinition>(nodeName, nodeAddress, sshCredentials, logWriter: logWriter);
@@ -116,7 +125,7 @@ namespace Neon.Kube
 
             // Configure the hosting manager.
 
-            var hostingManager = new HostingManagerFactory(() => HostingLoader.Initialize()).GetManager(cluster, stateFolder);
+            var hostingManager = new HostingManagerFactory(() => HostingLoader.Initialize()).GetManager(cluster);
 
             if (hostingManager == null)
             {
@@ -162,10 +171,11 @@ namespace Neon.Kube
             controller.Add(KubeSetupProperty.ClusterLogin, clusterLogin);
             controller.Add(KubeSetupProperty.HostingManager, hostingManager);
             controller.Add(KubeSetupProperty.HostingEnvironment, hostingManager.HostingEnvironment);
+            controller.Add(KubeSetupProperty.AutomationFolder, automationFolder);
 
             // Configure the setup steps.
 
-            controller.AddGlobalStep("calculate service resources", KubeSetup.CalculateServiceResources);
+            controller.AddGlobalStep("resource requirements", KubeSetup.CalculateResourceRequirements);
             controller.AddGlobalStep("download binaries", async controller => await KubeSetup.InstallWorkstationBinariesAsync(controller));
             controller.AddWaitUntilOnlineStep("connect nodes");
             controller.AddNodeStep("verify os", (controller, node) => node.VerifyNodeOS());
@@ -229,7 +239,7 @@ namespace Neon.Kube
             //-----------------------------------------------------------------
             // Cluster setup.
 
-            controller.AddGlobalStep("configure cluster", controller => KubeSetup.SetupClusterAsync(controller));
+            controller.AddGlobalStep("setup cluster", controller => KubeSetup.SetupClusterAsync(controller));
             controller.AddGlobalStep("persist state",
                 controller =>
                 {

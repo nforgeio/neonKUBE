@@ -250,6 +250,12 @@ namespace Neon.Kube
         public const string NeonKubeVersion = "0.1.0-alpha";
 
         /// <summary>
+        /// The container image tag used to reference cluster container images tagged 
+        /// our prefix and the cluster version number.
+        /// </summary>
+        public const string NeonKubeImageTag = "neonkube-" + NeonKubeVersion;
+
+        /// <summary>
         /// Lists thje supported neonKUBE cluster versions.
         /// </summary>
         public static IReadOnlyList<string> SupportedClusterVersions =
@@ -288,10 +294,9 @@ namespace Neon.Kube
         public const string ClusterNodeDomain = "node.local";
 
         /// <summary>
-        /// Returns a DNS name for the cluster registry that is reachable from
-        /// CRI-O running on the host nodes.
+        /// Hostname used to reference the local Harbor registry within the cluster.
         /// </summary>
-        public const string ClusterRegistryName = "neon-registry." + ClusterNodeDomain;
+        public const string LocalClusterRegistry = "neon-registry.node.local";
 
         /// <summary>
         /// Returns the Harbor Project name.
@@ -304,33 +309,20 @@ namespace Neon.Kube
         public const string Wsl2MainDistroName = "neon-desktop";
 
         /// <summary>
-        /// Hostname used to reference the local Harbor registry within the cluster.
+        /// Identifies the production neonKUBE container image registry.
         /// </summary>
-        public const string LocalClusterRegistry = "neon-registry.node.local";
+        public const string NeonKubeProdRegistry = "ghcr.io/neonkube-release";
 
         /// <summary>
-        /// Returns the hostname and path to use for referencing neonKUBE cluster
-        /// container images based on the setup controller state passed.  This will typically 
-        /// return <see cref="LocalClusterRegistry"/> for production and test clusters
-        /// to use the prepackaged container images in the node VM image but when
-        /// we're setting up in <b>debug mode</b> (as defined by the <see cref="KubeSetupProperty.DebugMode"/>
-        /// property in <paramref name="controller"/>, we'll return <see cref="NeonHelper.NeonLibraryBranchRegistry"/>
-        /// instead.
+        /// Identifies the development neonKUBE container image registry.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <returns>The registry to use for pulling neonKUBE cluster containers.</returns>
-        public static string NeonContainerRegistery(ISetupController controller)
-        {
-            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+        public const string NeonKubeDevRegistry = "ghcr.io/neonkube-dev";
 
-            if (controller.Get<bool>(KubeSetupProperty.DebugMode, false) && !controller.Get<bool>(KubeSetupProperty.MaintainerMode, false))
-            {
-                return NeonHelper.NeonLibraryBranchRegistry;
-            }
-            else
-            {
-                return LocalClusterRegistry;
-            }
-        }
+        /// <summary>
+        /// Returns the appropriate public container neonKUBE registry to be used for the git 
+        /// branch the assembly was built from.  This returns <see cref="NeonKubeProdRegistry"/> for
+        /// release branches and <see cref="NeonKubeDevRegistry"/> for all other branches.
+        /// </summary>
+        public static string NeonKubeBranchRegistry => ThisAssembly.Git.Branch.StartsWith("release-", StringComparison.InvariantCultureIgnoreCase) ? NeonKubeProdRegistry : NeonKubeDevRegistry;
     }
 }

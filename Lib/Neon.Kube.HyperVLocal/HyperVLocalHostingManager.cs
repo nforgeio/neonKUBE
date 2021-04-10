@@ -219,6 +219,39 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
+        public override void AddDeprovisoningSteps(SetupController<NodeDefinition> controller)
+        {
+            // Deprovisioning is easy for Hyper-V.  All we need to do is to turn off
+            // and remove the virtual machines.
+
+            controller.AddNodeStep("turn-off virtual machines",
+                (controller, node) =>
+                {
+                    node.Status = "turning off";
+
+                    using (var hyperv = new HyperVClient())
+                    {
+                        var vmName = GetVmName(node.Metadata);
+
+                        hyperv.StopVm(vmName, turnOff: true);
+                    }
+                });
+
+            controller.AddNodeStep("remove virtual machines",
+                (controller, node) =>
+                {
+                    node.Status = "removing";
+
+                    using (var hyperv = new HyperVClient())
+                    {
+                        var vmName = GetVmName(node.Metadata);
+
+                        hyperv.RemoveVm(vmName);
+                    }
+                });
+        }
+
+        /// <inheritdoc/>
         public override (string Address, int Port) GetSshEndpoint(string nodeName)
         {
             return (Address: cluster.GetNode(nodeName).Address.ToString(), Port: NetworkPorts.SSH);

@@ -134,8 +134,9 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override void AddPostProvisioningSteps(SetupController<NodeDefinition> setupController)
+        public override void AddDeprovisoningSteps(SetupController<NodeDefinition> controller)
         {
+            throw new NotImplementedException();
         }
 
         /// <inheritdoc/>

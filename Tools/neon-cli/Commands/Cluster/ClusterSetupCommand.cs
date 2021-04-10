@@ -86,6 +86,12 @@ OPTIONS:
 
                           NOTE: This mode is not supported for cloud and
                                 bare-metal environments.
+
+    --automate          - Indicates that the command must not impact neonDESKTOP
+                          by changing the current login or Kubernetes config or
+                          other files like cluster deployment logs.  This is
+                          used for automated deployments that can proceed while
+                          neonDESKTOP is doing other things.
 ";
         private const string        logBeginMarker  = "# CLUSTER-BEGIN-SETUP ############################################################";
         private const string        logEndMarker    = "# CLUSTER-END-SETUP-SUCCESS ######################################################";
@@ -98,7 +104,7 @@ OPTIONS:
         public override string[] Words => new string[] { "cluster", "setup" };
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions => new string[] { "--unredacted", "--force", "--upload-charts", "--debug" };
+        public override string[] ExtendedOptions => new string[] { "--unredacted", "--force", "--upload-charts", "--debug", "--automate" };
 
         /// <inheritdoc/>
         public override void Help()
@@ -121,11 +127,12 @@ OPTIONS:
 
             NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new ProfileClient());
 
-            var contextName   = KubeContextName.Parse(commandLine.Arguments[0]);
-            var kubeCluster   = KubeHelper.Config.GetCluster(contextName.Cluster);
-            var unredacted    = commandLine.HasOption("--unredacted");
-            var debug         = commandLine.HasOption("--debug");
-            var uploadCharts  = commandLine.HasOption("--upload-charts") || debug;
+            var contextName  = KubeContextName.Parse(commandLine.Arguments[0]);
+            var kubeCluster  = KubeHelper.Config.GetCluster(contextName.Cluster);
+            var unredacted   = commandLine.HasOption("--unredacted");
+            var debug        = commandLine.HasOption("--debug");
+            var uploadCharts = commandLine.HasOption("--upload-charts") || debug;
+            var automate     = commandLine.HasOption("--automate");
 
             clusterLogin = KubeHelper.GetClusterLogin(contextName);
 
@@ -180,17 +187,17 @@ OPTIONS:
 
             KubeHelper.InitContext(kubeContext);
 
-            // Create and run the cluster prepare setup controller.
+            // Create and run the cluster setup controller.
 
             var clusterDefinition = clusterLogin.ClusterDefinition;
 
             var controller = KubeSetup.CreateClusterSetupController(
                 clusterDefinition,
-                KubeHelper.LogFolder,
                 maxParallel:    Program.MaxParallel,
                 unredacted:     unredacted,
                 debugMode:      debug,
-                uploadCharts:   uploadCharts);
+                uploadCharts:   uploadCharts,
+                automate:       automate);
 
             controller.StatusChangedEvent +=
                 status =>
