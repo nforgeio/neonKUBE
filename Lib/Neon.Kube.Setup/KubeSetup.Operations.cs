@@ -922,7 +922,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                     Metadata = new V1ObjectMeta()
                                     {
                                         Name              = "dnsutils",
-                                        NamespaceProperty = "default"
+                                        NamespaceProperty = "neon-system"
                                     },
                                     Spec = new V1PodSpec()
                                     {
@@ -950,7 +950,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     await NeonHelper.WaitForAsync(
                         async () =>
                         {
-                            var result = master.SudoCommand("kubectl exec -i -t dnsutils -- nslookup kubernetes.default", RunOptions.LogOutput);
+                            var result = master.SudoCommand("kubectl exec -t dnsutils -- nslookup kubernetes.default", RunOptions.LogOutput);
 
                             if (result.Success)
                             {
