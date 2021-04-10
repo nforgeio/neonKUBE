@@ -155,7 +155,8 @@ function ClearAwsCliCredentials
 #
 # ARGUMENTS:
 #
-$       
+#       githubPat   - Optionally overrides the default secret name (GITHUB_PAT)
+#       vault       - Optionally overrides the default vault
 
 function GetGitHubCredentials
 {
@@ -169,7 +170,7 @@ function GetGitHubCredentials
 
     $client = GetProfileClient
 
-    $env:GITHUB_PAT = $client.GetSecretPassword($awsAccessKeyId, $vault)
+    $env:GITHUB_PAT = $client.GetSecretPassword($githubPat, $vault)
 }
 
 #------------------------------------------------------------------------------
