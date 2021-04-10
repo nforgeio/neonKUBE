@@ -28,7 +28,13 @@ using Neon.Net;
 namespace Neon.Deployment
 {
     /// <summary>
+    /// <para>
     /// Wraps the AWS-CLI with methods for common operations.
+    /// </para>
+    /// <note>
+    /// The class methods require that the <b>AWS_ACCESS_KEY_ID</b> and <b>AWS_SECRET_ACCESS_KEY</b>
+    /// environment variables be already set with the required AWS credentials.
+    /// </note>
     /// </summary>
     public static class AwsCli
     {

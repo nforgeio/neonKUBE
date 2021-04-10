@@ -872,7 +872,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     await master.InvokeIdempotentAsync("setup/dnsutils",
                         async () =>
                         {
-                            controller.LogProgress(master, verb: "setup", message: "for calico");
+                            controller.LogProgress(master, verb: "setup", message: "dnsutils");
 
                             var pods = await GetK8sClient(controller).CreateNamespacedPodAsync(
                                 new V1Pod()
@@ -903,7 +903,6 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                     }
                                 }, "default");
                         });
-
 
                     await NeonHelper.WaitForAsync(
                         async () =>

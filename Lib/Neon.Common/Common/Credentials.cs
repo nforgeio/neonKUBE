@@ -46,6 +46,52 @@ namespace Neon.Common
     /// </remarks>
     public class Credentials
     {
+        //---------------------------------------------------------------------
+        // Static members
+
+        /// <summary>
+        /// Constructs credentials from a token.
+        /// </summary>
+        /// <param name="token">The token.</param>
+        /// <returns>The <see cref="Credentials"/>.</returns>
+        public static Credentials FromToken(string token)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(token), nameof(token));
+
+            return new Credentials()
+            {
+                Token = token
+            };
+        }
+
+        /// <summary>
+        /// Constructs credentials from a token.
+        /// </summary>
+        /// <param name="username">The username.</param>
+        /// <param name="password">The password.</param>
+        /// <returns>The <see cref="Credentials"/>.</returns>
+        public static Credentials FromUserPassword(string username, string password)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username), nameof(username));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(password), nameof(password));
+
+            return new Credentials()
+            {
+                Username = username,
+                Password = password
+            };
+        }
+
+        //---------------------------------------------------------------------
+        // Instance members
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        public Credentials()
+        {
+        }
+
         /// <summary>
         /// The security token.
         /// </summary>

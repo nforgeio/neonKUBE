@@ -44,6 +44,10 @@ function GetProfileClient
 
 #------------------------------------------------------------------------------
 # Returns the named profile value.
+#
+# ARGUMENTS:
+#
+#       name    - Specifies the profile value name
 
 function GetProfileValue
 {
@@ -59,6 +63,11 @@ function GetProfileValue
 
 #------------------------------------------------------------------------------
 # Returns the named secret password, optionally specifying a non-default vault.
+#
+# ARGUMENTS:
+#
+#       name    - Specifies the secret password name
+#       vault   - Optionally overrides the default vault
 
 function GetSecretPassword
 {
@@ -76,6 +85,11 @@ function GetSecretPassword
 
 #------------------------------------------------------------------------------
 # Returns the named secret value, optionally specifying a non-default vault.
+#
+# ARGUMENTS:
+#
+#       name    - Specifies the secret value name
+#       vault   - Optionally overrides the default vault
 
 function GetSecretValue
 {
@@ -93,10 +107,16 @@ function GetSecretValue
 
 #------------------------------------------------------------------------------
 # Retrieves the AWS access key ID and secret access key from from 1Password 
-# and sets these enviroment variables form use by the AWS-CLI:
+# and sets these enviroment variables for use by the AWS-CLI:
 #
 #       AWS_ACCESS_KEY_ID
 #       AWS_SECRET_ACCESS_KEY
+#
+# ARGUMENTS:
+#
+#       awsAccessKeyId          - Optionally overrides the key ID password name
+#       awsSecretAccessKey      - Optionally overrides the secret key password name
+#       vault                   - Optionally overrides the default vault
 
 function GetAwsCliCredentials
 {
@@ -105,13 +125,15 @@ function GetAwsCliCredentials
         [Parameter(Position=0, Mandatory=0)]
         [string]$awsAccessKeyId = "AWS_ACCESS_KEY_ID",
         [Parameter(Position=1, Mandatory=0)]
-        [string]$awsSecretAccessKey = "AWS_SECRET_ACCESS_KEY"
+        [string]$awsSecretAccessKey = "AWS_SECRET_ACCESS_KEY",
+        [Parameter(Position=2, Mandatory=0)]
+        [string]$vault = $null
     )
 
     $client = GetProfileClient
 
-    $env:AWS_ACCESS_KEY_ID     = $client.GetSecretPassword($awsAccessKeyId)
-    $env:AWS_SECRET_ACCESS_KEY = $client.GetSecretPassword($awsSecretAccessKey)
+    $env:AWS_ACCESS_KEY_ID     = $client.GetSecretPassword($awsAccessKeyId, $vault)
+    $env:AWS_SECRET_ACCESS_KEY = $client.GetSecretPassword($awsSecretAccessKey, $vault)
 }
 
 #------------------------------------------------------------------------------
@@ -124,4 +146,38 @@ function ClearAwsCliCredentials
 {
     $env:AWS_ACCESS_KEY_ID     = $null
     $env:AWS_SECRET_ACCESS_KEY = $null
+}
+
+#------------------------------------------------------------------------------
+# Retrieves the GITHUB_PAT (personal access token) from from 1Password 
+# and sets the GITHUB_PAT environment variable used by the GitHub-CLI
+# as well as the [Neon.Deployment.GitHub] class.
+#
+# ARGUMENTS:
+#
+$       
+
+function GetGitHubCredentials
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=0)]
+        [string]$githubPat = "GITHUB_PAT",
+        [Parameter(Position=1, Mandatory=0)]
+        [string]$vault = $null
+    )
+
+    $client = GetProfileClient
+
+    $env:GITHUB_PAT = $client.GetSecretPassword($awsAccessKeyId, $vault)
+}
+
+#------------------------------------------------------------------------------
+# Removes the GitHub credential environment variables if present:
+#
+#       GITHUB_PAT
+
+function ClearGitHubCredentials
+{
+    $env:GITHUB_PAT = $null
 }
