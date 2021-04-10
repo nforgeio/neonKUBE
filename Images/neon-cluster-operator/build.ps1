@@ -4,7 +4,7 @@
 # CONTRIBUTOR:  Marcus Bowyer
 # COPYRIGHT:    Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 #
-# Builds the Neon [neon-cluster-manager] image.
+# Builds the Neon [neon-cluster-operator] image.
 #
 # USAGE: pwsh -file build.ps1 REGISTRY VERSION TAG
 
@@ -16,7 +16,7 @@ param
 
 Log-ImageBuild $registry $tag
 
-$appname      = "neon-cluster-manager"
+$appname      = "neon-cluster-operator"
 $organization = KubeSetupRegistryOrg
 
 # Build and publish the app to a local [bin] folder.

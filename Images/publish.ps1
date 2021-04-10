@@ -142,5 +142,5 @@ if ($test)
 
 if ($services)
 {
-    Publish "$image_root\\neon-cluster-manager"
+    Publish "$image_root\\neon-cluster-operator"
 }

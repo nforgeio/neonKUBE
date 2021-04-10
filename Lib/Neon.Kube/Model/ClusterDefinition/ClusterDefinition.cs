@@ -419,7 +419,7 @@ namespace Neon.Kube
         /// after cluster setup is complete, so this is a suitable place for storing generated secure credentials.
         /// </para>
         /// <para>
-        /// As a convention, dictionary keys should use a dot notation like <b>neon-cluster-manager.connstring</b>
+        /// As a convention, dictionary keys should use a dot notation like <b>neon-cluster-operator.connstring</b>
         /// to avoid naming conflicts and to make it clear what's what during debugging.
         /// </para>
         /// <note>

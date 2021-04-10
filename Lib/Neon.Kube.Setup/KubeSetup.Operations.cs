@@ -349,7 +349,7 @@ spec:
                 await InstallPrometheusAsync(controller, master);
                 await InstallSystemDbAsync(controller, master);
                 await InstallMinioAsync(controller, master);
-                await InstallClusterManagerAsync(controller, master);
+                await InstallClusterOperatorAsync(controller, master);
                 await InstallContainerRegistryAsync(controller, master);
                 await NeonHelper.WaitAllAsync(await SetupMonitoringAsync(controller));
             }
@@ -363,7 +363,7 @@ spec:
                 await InstallPrometheusAsync(controller, master);
                 await InstallSystemDbAsync(controller, master);
                 await InstallMinioAsync(controller, master);
-                tasks.Add(InstallClusterManagerAsync(controller, master));
+                tasks.Add(InstallClusterOperatorAsync(controller, master));
                 tasks.Add(InstallContainerRegistryAsync(controller, master));
                 tasks.AddRange(await SetupMonitoringAsync(controller));
 
@@ -2794,41 +2794,41 @@ $@"- name: StorageType
         }
 
         /// <summary>
-        /// Installs the Neon Cluster Manager.
+        /// Installs the Neon Cluster Operator.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InstallClusterManagerAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
+        public static async Task InstallClusterOperatorAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
             await SyncContext.ClearAsync;
 
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            await master.InvokeIdempotentAsync("setup/cluster-manager",
+            await master.InvokeIdempotentAsync("setup/cluster-operator",
                 async () =>
                 {
-                    controller.LogProgress(master, verb: "setup", message: "neon-cluster-manager");
+                    controller.LogProgress(master, verb: "setup", message: "neon-cluster-operator");
 
                     var values = new List<KeyValuePair<string, object>>();
                     
                     values.Add(new KeyValuePair<string, object>("image.organization", KubeConst.NeonContainerRegistery(controller)));
 
-                    await master.InstallHelmChartAsync(controller, "neon_cluster_manager", releaseName: "neon-cluster-manager", @namespace: "neon-system", values: values);
+                    await master.InstallHelmChartAsync(controller, "neon_cluster_operator", releaseName: "neon-cluster-operator", @namespace: "neon-system", values: values);
                 });
 
-            await master.InvokeIdempotentAsync("setup/cluster-manager-ready",
+            await master.InvokeIdempotentAsync("setup/cluster-operator-ready",
                 async () =>
                 {
-                    controller.LogProgress(master, verb: "wait", message: "for neon-cluster-manager");
+                    controller.LogProgress(master, verb: "wait", message: "for neon-cluster-operator");
 
-                    await WaitForDeploymentAsync(controller, "neon-system", "neon-cluster-manager");
+                    await WaitForDeploymentAsync(controller, "neon-system", "neon-cluster-operator");
                 });
         }
 
         /// <summary>
-        /// Installs the Neon Cluster Manager.
+        /// Creates required namespaces.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>

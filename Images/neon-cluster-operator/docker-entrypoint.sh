@@ -13,4 +13,4 @@ PATH=${PATH}:/
 
 # Launch the service.
 
-exec neon-cluster-manager
+exec neon-cluster-operator

@@ -23,9 +23,9 @@ namespace Neon.Kube
     public static class NeonServices
     {
         /// <summary>
-        /// Cluster manager operator.
+        /// Cluster operator.
         /// </summary>
-        public const string ClusterManager = "neon-cluster-manager";
+        public const string ClusterOperator = "neon-cluster-operator";
 
         /// <summary>
         /// Elasticsearch.

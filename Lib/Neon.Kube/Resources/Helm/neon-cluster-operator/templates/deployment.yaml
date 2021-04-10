@@ -1,10 +1,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "cluster-manager.fullname" . }}
+  name: {{ include "cluster-operator.fullname" . }}
   labels:
-    app: {{ include "cluster-manager.name" . }}
-    helm.sh/chart: {{ include "cluster-manager.chart" . }}
+    app: {{ include "cluster-operator.name" . }}
+    helm.sh/chart: {{ include "cluster-operator.chart" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     release: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
@@ -12,17 +12,17 @@ spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: {{ include "cluster-manager.name" . }}
+      app: {{ include "cluster-operator.name" . }}
       app.kubernetes.io/instance: {{ .Release.Name }}
   template:
     metadata:
       labels:
-        app: {{ include "cluster-manager.name" . }}
+        app: {{ include "cluster-operator.name" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
       annotations:
         readiness.status.sidecar.istio.io/applicationPorts: ""
     spec:
-      serviceAccount: neon-cluster-manager
+      serviceAccount: neon-cluster-operator
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.organization }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"

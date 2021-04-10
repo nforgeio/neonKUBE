@@ -1,5 +1,5 @@
 ﻿//------------------------------------------------------------------------------
-// FILE:         NeonClusterManager.cs
+// FILE:         NeonClusterOperator.cs
 // CONTRIBUTOR:  Marcus Bowyer
 // COPYRIGHT:    Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 
@@ -28,7 +28,7 @@ using YamlDotNet.RepresentationModel;
 using k8s;
 using k8s.Models;
 
-namespace NeonClusterManager
+namespace NeonClusterOperator
 {
     public partial class Service : NeonService
     {

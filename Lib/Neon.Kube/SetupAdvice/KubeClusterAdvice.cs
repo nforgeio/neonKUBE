@@ -200,9 +200,9 @@ namespace Neon.Kube
         public static string Minio = "minio";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>neon-cluster-manager</b> service.
+        /// Identifies the neonKUBE cluster's <b>neon-cluster-operator</b> service.
         /// </summary>
-        public static string NeonClusterManager = "neon-cluster-manager";
+        public static string NeonClusterOperator = "neon-cluster-operator";
 
         /// <summary>
         /// Identifies the neonKUBE cluster's <b>NFS</b> service.
@@ -264,7 +264,7 @@ namespace Neon.Kube
                 M3DBOperator,
                 MetricsServer,
                 Minio ,
-                NeonClusterManager,
+                NeonClusterOperator,
                 Nfs,
                 OpenEbs,
                 PrometheusOperator,

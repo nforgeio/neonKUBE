@@ -5,11 +5,11 @@
     <OutputType>Exe</OutputType>
     <IsPackable>false</IsPackable>
     <LangVersion>latest</LangVersion>
-    <RootNamespace>NeonClusterManager</RootNamespace>
+    <RootNamespace>NeonClusterOperator</RootNamespace>
     <LangVersion>latest</LangVersion>
     <ServerGarbageCollection>true</ServerGarbageCollection>
     <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
-    <AssemblyName>neon-cluster-manager</AssemblyName>
+    <AssemblyName>neon-cluster-operator</AssemblyName>
     <Configurations>Debug;Release;CodeDoc</Configurations>
   </PropertyGroup>
 

@@ -14,7 +14,7 @@ using Neon.Service;
 using k8s;
 using k8s.Models;
 
-namespace NeonClusterManager
+namespace NeonClusterOperator
 {
     /// <summary>
     /// The Neon cluster initialization operator.
@@ -28,7 +28,7 @@ namespace NeonClusterManager
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task Main(string[] args)
         {
-            await new Service(NeonServices.ClusterManager, serviceMap: NeonServiceMap.Production).RunAsync();
+            await new Service(NeonServices.ClusterOperator, serviceMap: NeonServiceMap.Production).RunAsync();
         }
     }
 }

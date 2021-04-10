@@ -27,7 +27,7 @@ using Npgsql;
 
 using k8s;
 
-namespace NeonClusterManager
+namespace NeonClusterOperator
 {
     public partial class Service : NeonService
     {
