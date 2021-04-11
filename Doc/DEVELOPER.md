@@ -9,7 +9,7 @@ This page describes how to get started with neonKUBE development.
 * Visual Studio 2019 Edition (or better)
 * Visual Studio Code
 
-Note that the build environment currently assumes that only one Windows user will be acting as a developer on any given workstation.  Developers cannot share a machine and Neon only builds on Windows at this time.
+Note that the build environment currently assumes that only one Windows user will be acting as a developer on any given workstation.  Developers cannot share a machine and neonKUBE only builds on Windows at this time.
 
 ## Workstation Configuration
 
@@ -69,7 +69,7 @@ Follow the steps below to configure a development or test workstation:
   * **Close** Visual Studio to install any updates
   * **NOTE:** You need sign into Visual Studio using the **devops@neonforge.com**.  The password for this can be found at 1Password at **user-devops/NEONFORGE_LOGIN**
 
-9. Create a **shortcut** for Visual Studio and configure it to run as **administrator**.  To build and run neonKUBE applications and services, **Visual Studio must be running with elevated privileges**.
+8. Create a **shortcut** for Visual Studio and configure it to run as **administrator**.  To build and run neonKUBE applications and services, **Visual Studio must be running with elevated privileges**.
 
 9. Install some SDKs:
    * Install .NET Core SDK v3.1.403 from [here](https://dotnet.microsoft.com/download/dotnet-core/3.1)
@@ -190,4 +190,3 @@ Follow the steps below to configure a development or test workstation:
 29: *Optional:* Maintainers will need to **AWS client version 2** from: [here](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-windows.html)
 
 30: *Optional:* Maintainers authorized to perform releases will need to follow the README.md instructions in the neonCLOUD repo to configure credentials for the GitHub Releases and the Container Registry.
-
