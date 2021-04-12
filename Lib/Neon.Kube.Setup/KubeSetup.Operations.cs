@@ -1017,6 +1017,23 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                 {
                     controller.LogProgress(master, verb: "deploy", message: "istio");
 
+                    var nodePorts = new StringBuilder();
+                    nodePorts.Append(
+$@"
+          ports:
+");
+
+                    foreach (var rule in master.Cluster.Definition.Network.IngressRules)
+                    {
+                        nodePorts.Append(
+$@"                        
+          - name: {rule.Name}
+            protocol: {rule.Protocol}
+            port: {rule.ExternalPort}
+            targetPort: {rule.TargetPort}
+            nodePort: {rule.NodePort}");
+                    }
+                    
                     var istioScript0 =
 $@"
 tmp=$(mktemp -d /tmp/istioctl.XXXXXX)
@@ -1064,22 +1081,7 @@ spec:
               - path: kind
                 value: DaemonSet
         service:
-          ports:
-          - name: http2
-            protocol: TCP
-            port: 80
-            targetPort: 8080
-            nodePort: 30080
-          - name: https
-            protocol: TCP
-            port: 443
-            targetPort: 8443
-            nodePort: 30443
-          - name: tls
-            protocol: TCP
-            port: 15443
-            targetPort: 15443
-            nodePort: 31922
+{nodePorts}
         resources:
           requests:
             cpu: 10m

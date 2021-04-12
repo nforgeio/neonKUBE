@@ -69,6 +69,14 @@ namespace Neon.Kube
         public int ExternalPort { get; set; }
 
         /// <summary>
+        /// The target ingress port.
+        /// </summary>
+        [JsonProperty(PropertyName = "TargetPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "targetPort", ApplyNamingConventions = false)]
+        [DefaultValue(0)]
+        public int TargetPort { get; set; }
+
+        /// <summary>
         /// The Kubernetes NodePort. This is where the ingress gateway is listening.
         /// </summary>
         [JsonProperty(PropertyName = "NodePort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -182,6 +190,11 @@ namespace Neon.Kube
             if (!NetHelper.IsValidPort(ExternalPort))
             {
                 throw new ClusterDefinitionException($"[{nameof(IngressRule)}.{nameof(ExternalPort)}={ExternalPort}] is not a valid TCP port.");
+            }
+
+            if (!NetHelper.IsValidPort(TargetPort))
+            {
+                throw new ClusterDefinitionException($"[{nameof(IngressRule)}.{nameof(TargetPort)}={TargetPort}] is not a valid TCP port.");
             }
 
             if (!NetHelper.IsValidPort(NodePort))
