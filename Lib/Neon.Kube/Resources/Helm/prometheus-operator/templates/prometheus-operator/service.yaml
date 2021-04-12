@@ -5,7 +5,7 @@ metadata:
   name: {{ template "kube-prometheus-stack.fullname" . }}-operator
   namespace: {{ template "kube-prometheus-stack.namespace" . }}
   labels:
-    app: {{ template "kube-prometheus-stack.name" . }}-operator
+    app: {{ template "kube-prometheus-stack.operator.fullname" . }}
 {{ include "kube-prometheus-stack.labels" . | indent 4 }}
 {{- if .Values.prometheusOperator.service.labels }}
 {{ toYaml .Values.prometheusOperator.service.labels | indent 4 }}
@@ -49,7 +49,7 @@ spec:
     targetPort: https
   {{- end }}
   selector:
-    app: {{ template "kube-prometheus-stack.name" . }}-operator
+    app: {{ template "kube-prometheus-stack.operator.fullname" . }}
     release: {{ $.Release.Name | quote }}
   type: "{{ .Values.prometheusOperator.service.type }}"
 {{- end }}

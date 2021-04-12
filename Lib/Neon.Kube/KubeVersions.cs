@@ -78,6 +78,11 @@ namespace Neon.Kube
         public const string CalicoVersion = "3.16";
 
         /// <summary>
+        /// The version of dnsutils to install.
+        /// </summary>
+        public const string DnsUtilsVersion = "1.3";
+
+        /// <summary>
         /// The version of HaProxy to install.
         /// </summary>
         public const string HaproxyVersion = "1.9.2-alpine";

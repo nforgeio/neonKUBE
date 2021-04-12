@@ -2,7 +2,7 @@ apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
 metadata:
   name: harbor-gateway
-  namespace: istio-system
+  namespace: neon-ingress
 spec:
   selector:
     istio: ingressgateway
@@ -28,7 +28,7 @@ apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
   name: harbor-virtual-service
-  namespace: istio-system
+  namespace: neon-ingress
 spec:
   gateways:
     - harbor-gateway

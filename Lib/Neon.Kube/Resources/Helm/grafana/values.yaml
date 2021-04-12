@@ -325,7 +325,7 @@ datasources:
       type: camptocamp-prometheus-alertmanager-datasource
       access: proxy
       org_id: 1
-      url: http://prometheus-operator-alertmanager.monitoring:9093
+      url: http://prometheus-operator-alertmanager.neon-monitor:9093
       version: 1
       editable: false
       jsonData:

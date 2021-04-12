@@ -40,7 +40,7 @@ items:
       selector:
         app: prometheus
         prometheus: {{ include "kube-prometheus-stack.fullname" $ }}-prometheus
-        statefulset.kubernetes.io/pod-name: prometheus-{{ include "kube-prometheus-stack.fullname" $ }}-prometheus-{{ $i }}
+        statefulset.kubernetes.io/pod-name: {{ include "kube-prometheus-stack.fullname" $ }}-prometheus-{{ $i }}
       type: "{{ $serviceValues.type }}"
 {{- end }}
 {{- end }}

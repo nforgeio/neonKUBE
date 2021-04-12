@@ -125,13 +125,6 @@
     <None Remove="Resources\Helm\etcd-cluster\templates\statefulset.yaml" />
     <None Remove="Resources\Helm\etcd-cluster\templates\_helpers.tpl" />
     <None Remove="Resources\Helm\etcd-cluster\values.yaml" />
-    <None Remove="Resources\Helm\etcd-operator\.helmignore" />
-    <None Remove="Resources\Helm\etcd-operator\Chart.yaml" />
-    <None Remove="Resources\Helm\etcd-operator\templates\cluster-role-binding-template.yaml" />
-    <None Remove="Resources\Helm\etcd-operator\templates\cluster-role-template.yaml" />
-    <None Remove="Resources\Helm\etcd-operator\templates\deployment.yaml" />
-    <None Remove="Resources\Helm\etcd-operator\templates\_helpers.tpl" />
-    <None Remove="Resources\Helm\etcd-operator\values.yaml" />
     <None Remove="Resources\Helm\grafana\.helmignore" />
     <None Remove="Resources\Helm\grafana\Chart.yaml" />
     <None Remove="Resources\Helm\grafana\ci\default-values.yaml" />
@@ -1011,13 +1004,6 @@
     <EmbeddedResource Include="Resources\Helm\etcd-cluster\templates\statefulset.yaml" />
     <EmbeddedResource Include="Resources\Helm\etcd-cluster\templates\_helpers.tpl" />
     <EmbeddedResource Include="Resources\Helm\etcd-cluster\values.yaml" />
-    <EmbeddedResource Include="Resources\Helm\etcd-operator\.helmignore" />
-    <EmbeddedResource Include="Resources\Helm\etcd-operator\Chart.yaml" />
-    <EmbeddedResource Include="Resources\Helm\etcd-operator\templates\cluster-role-binding-template.yaml" />
-    <EmbeddedResource Include="Resources\Helm\etcd-operator\templates\cluster-role-template.yaml" />
-    <EmbeddedResource Include="Resources\Helm\etcd-operator\templates\deployment.yaml" />
-    <EmbeddedResource Include="Resources\Helm\etcd-operator\templates\_helpers.tpl" />
-    <EmbeddedResource Include="Resources\Helm\etcd-operator\values.yaml" />
     <EmbeddedResource Include="Resources\Helm\grafana\.helmignore" />
     <EmbeddedResource Include="Resources\Helm\grafana\Chart.yaml" />
     <EmbeddedResource Include="Resources\Helm\grafana\OWNERS._" />

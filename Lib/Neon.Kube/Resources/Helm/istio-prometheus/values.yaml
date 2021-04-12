@@ -1,9 +1,9 @@
 global:
-  istioNamespace: istio-system
-  configNamespace: istio-system
-  telemetryNamespace: istio-system
-  prometheusNamespace: monitoring
-  policyNamespace: istio-system
+  istioNamespace: neon-ingress
+  configNamespace: neon-ingress
+  telemetryNamespace: neon-ingress
+  prometheusNamespace: neon-monitor
+  policyNamespace: neon-ingress
   
 prometheus:
   # Controls the default scrape interval used in the ServiceMonitors

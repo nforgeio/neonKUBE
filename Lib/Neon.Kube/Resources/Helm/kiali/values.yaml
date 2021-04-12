@@ -53,7 +53,7 @@ cr:
 
   spec:
     version: default
-    istio_namespace: istio-system
+    istio_namespace: neon-ingress
     deployment:
       image_name: neon-registry.node.local/kiali-kiali
       image_version: v1.28.0

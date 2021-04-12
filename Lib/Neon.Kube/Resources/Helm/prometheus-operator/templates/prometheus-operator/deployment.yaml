@@ -3,21 +3,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ template "kube-prometheus-stack.fullname" . }}-operator
+  name: {{ template "kube-prometheus-stack.operator.fullname" . }}
   namespace: {{ template "kube-prometheus-stack.namespace" . }}
   labels:
-    app: {{ template "kube-prometheus-stack.name" . }}-operator
+    app: {{ template "kube-prometheus-stack.operator.fullname" . }}
 {{ include "kube-prometheus-stack.labels" . | indent 4 }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: {{ template "kube-prometheus-stack.name" . }}-operator
+      app: {{ template "kube-prometheus-stack.operator.fullname" . }}
       release: {{ $.Release.Name | quote }}
   template:
     metadata:
       labels:
-        app: {{ template "kube-prometheus-stack.name" . }}-operator
+        app: {{ template "kube-prometheus-stack.operator.fullname" . }}
 {{ include "kube-prometheus-stack.labels" . | indent 8 }}
 {{- if .Values.prometheusOperator.podLabels }}
 {{ toYaml .Values.prometheusOperator.podLabels | indent 8 }}

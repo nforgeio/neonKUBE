@@ -5,7 +5,7 @@ metadata:
   name: {{ template "kube-prometheus-stack.fullname" . }}-operator
   namespace: {{ template "kube-prometheus-stack.namespace" . }}
   labels:
-    app: {{ template "kube-prometheus-stack.name" . }}-operator
+    app: {{ template "kube-prometheus-stack.operator.fullname" . }}
 {{ include "kube-prometheus-stack.labels" . | indent 4 }}
 spec:
   endpoints:
@@ -36,7 +36,7 @@ spec:
 {{- end }}
   selector:
     matchLabels:
-      app: {{ template "kube-prometheus-stack.name" . }}-operator
+      app: {{ template "kube-prometheus-stack.operator.fullname" . }}
       release: {{ $.Release.Name | quote }}
   namespaceSelector:
     matchNames:

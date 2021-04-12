@@ -3359,7 +3359,7 @@ echo $? > {cmdFolder}/exit
         {
             Covenant.Requires<ArgumentNullException>(sbYaml != null, nameof(sbYaml));
 
-            return KubectlApply(sbYaml.ToString());
+            return KubectlApply(sbYaml.ToString(), runOptions);
         }
 
         /// <summary>

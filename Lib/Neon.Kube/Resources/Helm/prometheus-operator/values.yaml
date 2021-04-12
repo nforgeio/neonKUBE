@@ -4,7 +4,7 @@
 
 ## Provide a name in place of kube-prometheus-stack for `app:` labels
 ##
-nameOverride: ""
+nameOverride: "prometheus"
 
 ## Override the deployment namespace
 ##
@@ -16,7 +16,7 @@ kubeTargetVersionOverride: ""
 
 ## Provide a name to substitute for the full names of resources
 ##
-fullnameOverride: ""
+fullnameOverride: "neon-monitor-prometheus"
 
 ## Labels to apply to all resources
 ##

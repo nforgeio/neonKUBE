@@ -40,7 +40,7 @@ items:
       selector:
         app: alertmanager
         alertmanager: {{ template "kube-prometheus-stack.fullname" $ }}-alertmanager
-        statefulset.kubernetes.io/pod-name: alertmanager-{{ include "kube-prometheus-stack.fullname" $ }}-alertmanager-{{ $i }}
+        statefulset.kubernetes.io/pod-name: {{ include "kube-prometheus-stack.fullname" $ }}-alertmanager-{{ $i }}
       type: "{{ $serviceValues.type }}"
 {{- end }}
 {{- end }}

@@ -42,21 +42,6 @@ namespace Neon.Kube
         public const string Default = "default";
 
         /// <summary>
-        /// Hosts the Istio operator.
-        /// </summary>
-        public const string IstioOperator = "istio-operator";
-
-        /// <summary>
-        /// Hosts the remaining Istio components.
-        /// </summary>
-        public const string IstoSystem = "istio-system";
-
-        /// <summary>
-        /// Hosts jobs.
-        /// </summary>
-        public const string Jobs = "jobs";
-
-        /// <summary>
         /// Hosts the Kubernetes dashboard.
         /// </summary>
         public const string KubernetesDashboard = "kubernetes-dashboard";
@@ -72,18 +57,23 @@ namespace Neon.Kube
         public const string KubeSystem = "kube-system";
 
         /// <summary>
+        /// Hosts the remaining Istio components.
+        /// </summary>
+        public const string NeonIngress = "neon-ingress";
+
+        /// <summary>
         /// Hosts cluster monitoring.
         /// </summary>
-        public const string Monitoring = "monitoring";
+        public const string NeonMonitor = "neon-monitor";
+
+        /// <summary>
+        /// Hosts OpenEBS components.
+        /// </summary>
+        public const string NeonStorage = "neon-storage";
 
         /// <summary>
         /// Hosts neonKUBE infrastructure.
         /// </summary>
         public const string NeonSystem = "neon-system";
-
-        /// <summary>
-        /// Hosts OpenEBS components.
-        /// </summary>
-        public const string OpenEBS = "openebs";
     }
 }
