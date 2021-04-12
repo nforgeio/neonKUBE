@@ -1179,7 +1179,7 @@ rm -rf linux-amd64
                         .Select(path => Path.GetFullPath(path))
                         .ToArray();
 
-                    var registry = controller.Get<bool>(KubeSetupProperty.ReleaseMode) ? "ghcr.io/neonrelease" : "ghcr.io/neonrelease-dev";
+                    var registry = controller.Get<bool>(KubeSetupProperty.ReleaseMode) ? "ghcr.io/neonkube" : "ghcr.io/neonkube-dev";
 
                     var pullImageTasks = new List<Task>();
 
