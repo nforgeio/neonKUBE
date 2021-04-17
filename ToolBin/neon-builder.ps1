@@ -154,7 +154,7 @@ if (-not $nobuild)
     "**********************************************************"
     ""
 
-    & "$msbuild" "$nfSolution" $buildConfig -t:Clean -verbosity:normal
+    & "$msbuild" "$nfSolution" $buildConfig -t:Clean -verbosity:minimal
 
     if (-not $?)
     {
@@ -170,7 +170,7 @@ if (-not $nobuild)
     "**********************************************************"
     ""
 
-    & "$msbuild" "$nfSolution" $buildConfig -restore -verbosity:normal
+    & "$msbuild" "$nfSolution" $buildConfig -restore -verbosity:minimal
 
     if (-not $?)
     {
