@@ -658,7 +658,7 @@ service kubelet restart
             string                              chartName,
             string                              releaseName  = null,
             string                              @namespace   = "default",
-            List<KeyValuePair<string, object>>  values       = null)
+            Dictionary<string, object>          values       = null)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(chartName), nameof(chartName));
