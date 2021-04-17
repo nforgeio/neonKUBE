@@ -91,12 +91,9 @@ namespace Neon.Xunit.Cadence
 @"version: '3'
 services:
   cassandra:
-    image: cassandra:3.11
+    image: ghcr.io/neonrelease-dev/cassandra:3.11.10
     ports:
       - 9042:9042
-    environment:
-      - HEAP_NEWSIZE=1M
-      - MAX_HEAP_SIZE=1024M
     deploy:
       resources:
         limits:

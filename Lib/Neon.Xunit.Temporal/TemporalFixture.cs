@@ -75,7 +75,7 @@ namespace Neon.Xunit.Temporal
 
 services:
   cassandra:
-    image: cassandra:3.11
+    image: ghcr.io/neonrelease-dev/cassandra:3.11.10
     environment:
       - HEAP_NEWSIZE=1M
       - MAX_HEAP_SIZE=1000M
