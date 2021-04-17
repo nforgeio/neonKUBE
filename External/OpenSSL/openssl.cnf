@@ -113,7 +113,7 @@ string_mask							= nombstr
 # req_extensions = v3_req # The extensions to add to a certificate request
 
 [ req_distinguished_name ]
-countryName							= Country (code ISO a 2 lettres)
+countryName							= US
 countryName_default					= US
 countryName_min						= 2
 countryName_max						= 2
