@@ -388,25 +388,28 @@ namespace Neon.Kube
 
             // Verify [IngressRules] and also ensure that all rule names are unique.
 
-            IngressRules = IngressRules ?? new List<IngressRule>()
+            if (IngressRules == null || IngressRules?.Count == 0)
             {
-                new IngressRule()
+                IngressRules = new List<IngressRule>()
                 {
-                    Name = "http2",
-                    Protocol = IngressProtocol.Tcp,
-                    ExternalPort = 80,
-                    TargetPort = 8080,
-                    NodePort = 30080
-                },
-                new IngressRule()
-                {
-                    Name = "https",
-                    Protocol = IngressProtocol.Tcp,
-                    ExternalPort = 443,
-                    TargetPort = 8443,
-                    NodePort = 30443
-                }
-            };
+                    new IngressRule()
+                    {
+                        Name = "http2",
+                        Protocol = IngressProtocol.Tcp,
+                        ExternalPort = 80,
+                        TargetPort = 8080,
+                        NodePort = 30080
+                    },
+                    new IngressRule()
+                    {
+                        Name = "https",
+                        Protocol = IngressProtocol.Tcp,
+                        ExternalPort = 443,
+                        TargetPort = 8443,
+                        NodePort = 30443
+                    }
+                };
+            }
 
             var ingressRuleNames = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 
