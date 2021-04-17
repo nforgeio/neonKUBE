@@ -90,7 +90,7 @@ namespace Neon.Kube
         /// <see cref="int"/>: Identifies the property specifying how many pods
         /// should be deployed for the service.
         /// </summary>
-        public const string PodCountProperty = "pod.count";
+        public const string ReplicaCountProperty = "replica.count";
 
         //---------------------------------------------------------------------
         // Instance members
@@ -132,12 +132,30 @@ namespace Neon.Kube
         /// <typeparam name="T">The value type.</typeparam>
         /// <param name="name">The property name.</param>
         /// <returns>The property value or <c>null</c>.</returns>
-        private Nullable<T> GetProperty<T>(string name)
+        public Nullable<T> GetProperty<T>(string name)
             where T : struct
         {
             if (TryGetValue<T>(name, out var value))
             {
                 return value as Nullable<T>;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Returns the property value if present or <c>null</c>.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="name">The property name.</param>
+        /// <returns>The property value or <c>null</c>.</returns>
+        public string GetProperty(string name)
+        {
+            if (TryGetValue(name, out var value))
+            {
+                return value as string;
             }
             else
             {
@@ -213,10 +231,10 @@ namespace Neon.Kube
         /// <summary>
         /// Specifies the number of pods to be seployed for the service or <c>null</c> when this property is not set.
         /// </summary>
-        public int? PodCount
+        public int? ReplicaCount
         {
-            get => GetProperty<int>(PodCountProperty);
-            set => SetProperty<int>(PodCountProperty, value);
+            get => GetProperty<int>(ReplicaCountProperty);
+            set => SetProperty<int>(ReplicaCountProperty, value);
         }
     }
 }
