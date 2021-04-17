@@ -70,7 +70,7 @@ namespace Neon.Kube
         /// <summary>
         /// The version of CRI-O container runtime to be installed.
         /// </summary>
-        public const string CrioVersion = "1.18";
+        public const string CrioVersion = "1.21";
 
         /// <summary>
         /// The version of Calico to install.
