@@ -80,8 +80,7 @@ function PublishCore
     # Set the [pubcore] arguments (note that we need to handle apps targeting different versions of .NET):
 
     $projectPath = [System.IO.Path]::Combine($nfRoot, $projectPath)
-
-    $targetPath = [System.IO.Path]::Combine($ncRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "net5.0-windows", "$targetName.dll")
+    $targetPath  = [System.IO.Path]::Combine($ncRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "net5.0-windows", "$targetName.dll")
     
     if (!(Test-Path $targetPath))
     {
