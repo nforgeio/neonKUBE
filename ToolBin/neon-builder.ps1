@@ -61,6 +61,8 @@ $env:PATH      += ";$nfBuild"
 $libraryVersion = $(& "$nfToolBin\neon-build" read-version "$nfLib\Neon.Common\Build.cs" NeonLibraryVersion)
 ThrowOnExitCode
 
+# Publishes a .NET Core project to the repo's build folder.
+
 function PublishCore
 {
     param (
