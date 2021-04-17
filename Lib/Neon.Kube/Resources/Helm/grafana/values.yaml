@@ -308,7 +308,7 @@ plugins:
 ## Configure grafana datasources
 ## ref: http://docs.grafana.org/administration/provisioning/#datasources
 ##
-prometheusEndpoint: http://neon-metrics-cortex:9009/api/prom
+prometheusEndpoint: http://cortex:9009/api/prom
 datasources:
   datasources.yaml:
     apiVersion: 1
@@ -336,7 +336,7 @@ datasources:
     - name: Loki
       type: loki
       access: proxy
-      url: http://neon-logs-loki:3100
+      url: http://loki:3100
 
 ## Configure notifiers
 ## ref: http://docs.grafana.org/administration/provisioning/#alert-notification-channels
@@ -422,7 +422,7 @@ dashboardsConfigMaps: {}
 grafana.ini:
   database:
     type: postgres
-    host: neon-system-db-citus-postgresql.neon-system.svc.cluster.local
+    host: db-citus-postgresql.neon-system.svc.cluster.local
     name: grafana
     user: grafana
   paths:

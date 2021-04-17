@@ -75,12 +75,12 @@ spec:
           - name: AWS_ACCESS_KEY_ID
             valueFrom:
               secretKeyRef:
-                name: neon-system-minio
+                name: minio
                 key: accesskey
           - name: AWS_SECRET_ACCESS_KEY
             valueFrom:
               secretKeyRef:
-                name: neon-system-minio
+                name: minio
                 key: secretkey
           {{- if has "chartmuseum" .Values.proxy.components }}
           - name: HTTP_PROXY

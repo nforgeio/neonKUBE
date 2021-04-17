@@ -277,7 +277,7 @@ persistence:
       bucket: harbor
       #accesskey: awsaccesskey
       #secretkey: awssecretkey
-      regionendpoint: http://neon-system-minio.neon-system:9000
+      regionendpoint: http://minio.neon-system:9000
       #encrypt: false
       #keyid: mykeyid
       #secure: true
@@ -740,7 +740,7 @@ database:
     effect: "NoExecute"
     affinity: {}
   external:
-    host: "neon-system-db-citus-postgresql.neon-system"
+    host: "db-citus-postgresql.neon-system"
     port: "5432"
     username: "harbor"
     password: "harbor"
@@ -792,7 +792,7 @@ redis:
     # support redis, redis+sentinel
     # addr for redis: <host_redis>:<port_redis>
     # addr for redis+sentinel: <host_sentinel1>:<port_sentinel1>,<host_sentinel2>:<port_sentinel2>,<host_sentinel3>:<port_sentinel3>
-    addr: "neon-system-registry-redis-announce-0:6379"
+    addr: "registry-redis-announce-0:6379"
     # The name of the set of Redis instances to monitor, it must be set to support redis+sentinel
     sentinelMasterSet: ""
     # The "coreDatabaseIndex" must be "0" as the library Harbor

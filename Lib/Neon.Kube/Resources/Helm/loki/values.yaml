@@ -93,7 +93,7 @@ config:
       shared_store: s3
     aws:
       bucketnames: loki
-      endpoint: neon-system-minio.neon-system:9000
+      endpoint: minio.neon-system:9000
       access_key_id: ${ACCESS_KEY_ID}
       secret_access_key: ${SECRET_ACCESS_KEY}
       insecure: true
@@ -274,12 +274,12 @@ env:
   - name: ACCESS_KEY_ID
     valueFrom:
       secretKeyRef:
-        name: neon-system-minio
+        name: minio
         key: accesskey
   - name: SECRET_ACCESS_KEY
     valueFrom:
       secretKeyRef:
-        name: neon-system-minio
+        name: minio
         key: secretkey
 
 # Specify Loki Alerting rules based on this documentation: https://grafana.com/docs/loki/latest/alerting/

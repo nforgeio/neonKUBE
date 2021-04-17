@@ -16,7 +16,7 @@ kubeTargetVersionOverride: ""
 
 ## Provide a name to substitute for the full names of resources
 ##
-fullnameOverride: "neon-monitor-prometheus"
+fullnameOverride: "prometheus"
 
 ## Labels to apply to all resources
 ##

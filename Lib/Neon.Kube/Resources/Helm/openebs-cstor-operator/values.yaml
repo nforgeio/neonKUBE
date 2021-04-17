@@ -127,7 +127,7 @@ csiController:
       repository: k8scsi-csi-attacher
       pullPolicy: IfNotPresent
       # Overrides the image tag whose default is the chart appVersion.
-      tag: v2.0.0
+      tag: v2.2.1
   provisioner:
     name: "csi-provisioner"
     image:
