@@ -209,7 +209,7 @@ if ($tools)
     "Generating OS/X neon-cli SHA512..."
     ""
 
-    & cat "$nfBuild\osx\neon-osx" | openssl dgst -sha512 -binary | xxd -c 1024 > "$nfBuild\osx\neon-osx-$desktopVersion.sha512.txt"
+    & cat "$nfBuild\osx\neon-osx" | openssl dgst -sha512 -binary | neon-build hexdump > "$nfBuild\osx\neon-osx-$desktopVersion.sha512.txt"
 
     if (-not $?)
     {
@@ -265,7 +265,7 @@ if ($codedoc)
     "Generating neon.chm SHA512..."
 	""
 
-    & cat "$nfBuild\neon.chm" | openssl dgst -sha512 -binary | xxd -c 1024 > "$nfBuild\neon.chm.sha512.txt"
+    & cat "$nfBuild\neon.chm" | openssl dgst -sha512 -binary | neon-build hexdump > "$nfBuild\neon.chm.sha512.txt"
 
     # Move the documentation build output.
 	
