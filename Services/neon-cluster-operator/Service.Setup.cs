@@ -31,7 +31,7 @@ namespace NeonClusterOperator
 {
     public partial class Service : NeonService
     {
-        private static string connString = "Host=neon-system-db-citus-postgresql.neon-system;Username=postgres;Password=0987654321;Database=postgres";
+        private static string connString = "Host=db-citus-postgresql.neon-system;Username=postgres;Password=0987654321;Database=postgres";
 
         /// <summary>
         /// Handles setup of neon-system database.
@@ -60,7 +60,7 @@ namespace NeonClusterOperator
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
-                    var statefulsets = await k8s.ListNamespacedStatefulSetAsync("neon-system", labelSelector: "release=neon-system-db");
+                    var statefulsets = await k8s.ListNamespacedStatefulSetAsync("neon-system", labelSelector: "release=db");
                     if (statefulsets == null || statefulsets.Items.Count < 2)
                     {
                         return false;
@@ -74,7 +74,7 @@ namespace NeonClusterOperator
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
-                    var deployments = await k8s.ListNamespacedDeploymentAsync("neon-system", labelSelector: "release=neon-system-db");
+                    var deployments = await k8s.ListNamespacedDeploymentAsync("neon-system", labelSelector: "release=db");
                     if (deployments == null || deployments.Items.Count == 0)
                     {
                         return false;
