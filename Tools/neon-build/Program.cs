@@ -148,6 +148,13 @@ removed.  This allows [dotnet] commands to be executed within the
 context of a Visual Studio build.
 
 Any options and/or arguments are passed thru as-is to [dotnet].
+
+----------------------------------------
+neon-build hexdump
+
+Reads standard input as binary, converts it to hex and writes it to
+standard output as one line.
+
 ";
         private static CommandLine commandLine;
 
@@ -303,6 +310,19 @@ Any options and/or arguments are passed thru as-is to [dotnet].
                     case "dotnet":
 
                         Dotnet(commandLine);
+                        break;
+
+                    case "hexdump":
+
+                        using (var input = Console.OpenStandardInput())
+                        {
+                            var buffer = new byte[1];
+
+                            while (input.Read(buffer, 0, 1) > 0)
+                            {
+                                Console.Write(NeonHelper.ToHex(buffer[0]));
+                            }
+                        }
                         break;
 
                     default:
