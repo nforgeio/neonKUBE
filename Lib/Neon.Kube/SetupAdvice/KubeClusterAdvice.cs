@@ -106,7 +106,7 @@ namespace Neon.Kube
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><see cref="KubeServiceAdvice.PodCount"/></term>
+    ///     <term><see cref="KubeServiceAdvice.ReplicaCount"/></term>
     ///     <description>
     ///     <see cref="int"/>: Identifies the property specifying how many pods
     ///     should be deployed for the service.
@@ -120,14 +120,29 @@ namespace Neon.Kube
         // Static members
 
         /// <summary>
+        /// Identifies the neonKUBE cluster's <b>AlertManager</b> service.
+        /// </summary>
+        public static string AlertManager = "alertmanager";
+
+        /// <summary>
         /// Identifies the neonKUBE cluster's <b>Calico</b> service.
         /// </summary>
         public static string Calico = "calico";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Citus Postres</b> service.
+        /// Identifies the neonKUBE cluster's <b>Citus Postres</b> service manager nodes.
         /// </summary>
-        public static string CitusPostgresSql = "citus-postgressel";
+        public static string CitusPostgresSqlManager = "citus-postgressql-manager";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Citus Postres</b> service master nodes.
+        /// </summary>
+        public static string CitusPostgresSqlMaster = "citus-postgressql-master";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Citus Postres</b> service master nodes.
+        /// </summary>
+        public static string CitusPostgresSqlWorker = "citus-postgressql-worker";
 
         /// <summary>
         /// Identifies the neonKUBE cluster's <b>Cortex</b> service.
@@ -160,14 +175,69 @@ namespace Neon.Kube
         public static string Harbor = "harbor";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>istio-prometheus</b> service.
+        /// Identifies the neonKUBE cluster's <b>Harbor Chartmuseum</b> service.
         /// </summary>
-        public static string IstioPrometheus = "istio-prometheus";
+        public static string HarborChartmuseum = "harbor-chartmuseum";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Jaegar</b> service.
+        /// Identifies the neonKUBE cluster's <b>Harbor Clair</b> service.
         /// </summary>
-        public static string Jaegar = "jaegar";
+        public static string HarborClair = "harbor-clair";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Harbor Core</b> service.
+        /// </summary>
+        public static string HarborCore = "harbor-core";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Harbor Jobservice</b> service.
+        /// </summary>
+        public static string HarborJobservice = "harbor-jobservice";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Harbor Notary Server</b> service.
+        /// </summary>
+        public static string HarborNotaryServer = "harbor-notary-server";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Harbor Notary Signer</b> service.
+        /// </summary>
+        public static string HarborNotarySigner = "harbor-notary-signer";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Harbor Portal</b> service.
+        /// </summary>
+        public static string HarborPortal = "harbor-portal";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Harbor Registry</b> service.
+        /// </summary>
+        public static string HarborRegistry = "harbor-registry";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Harbor Redis</b> service.
+        /// </summary>
+        public static string HarborRedis = "harbor-redis";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Istio Proxy</b> service.
+        /// </summary>
+        public static string IstioProxy = "istio-proxy";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Istio Ingress Gateway</b> service.
+        /// </summary>
+        public static string IstioIngressGateway = "istio-ingressgateway";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Jaeger</b> service.
+        /// </summary>
+        public static string Jaeger = "jaeger";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Kubernetes Dashboard</b> service.
+        /// </summary>
+        public static string KubernetesDashboard = "kubernetes-dashboard";
 
         /// <summary>
         /// Identifies the neonKUBE cluster's <b>Kaili</b> service.
@@ -178,16 +248,6 @@ namespace Neon.Kube
         /// Identifies the neonKUBE cluster's <b>Loki</b> service.
         /// </summary>
         public static string Loki = "loki";
-
-        /// <summary>
-        /// Identifies the neonKUBE cluster's <b>m3db-cluster</b> service.
-        /// </summary>
-        public static string M3DBCluster = "m3db-cluster";
-
-        /// <summary>
-        /// Identifies the neonKUBE cluster's <b>m3db-operator</b> service.
-        /// </summary>
-        public static string M3DBOperator = "m3db-operator";
 
         /// <summary>
         /// Identifies the neonKUBE cluster's <b>Metrics-Server</b> service.
@@ -205,19 +265,74 @@ namespace Neon.Kube
         public static string NeonClusterOperator = "neon-cluster-operator";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>NFS</b> service.
+        /// Identifies the neonKUBE cluster's <b>OpenEBS Admission Server</b> service.
         /// </summary>
-        public static string Nfs = "nfs";
+        public static string OpenEbsAdmissionServer = "openebs-admission-server";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>OpenEBS</b> service.
+        /// Identifies the neonKUBE cluster's <b>OpenEBS API Server</b> service.
         /// </summary>
-        public static string OpenEbs = "openebs";
+        public static string OpenEbsApiServer = "openebs-api-server";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>OpenEBS cStore Operator</b> service.
+        /// Identifies the neonKUBE cluster's <b>OpenEBS cStor Admission Server</b> service.
         /// </summary>
-        public static string OpenEbsCstoreOperator = "openebs-cstor-operator";
+        public static string OpenEbsCstorAdmissionServer = "openebs-cstor-admission-server";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>OpenEBS cStor CSI Controller</b> service.
+        /// </summary>
+        public static string OpenEbsCstorCsiController = "openebs-cstor-csi-controller";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>OpenEBS cStor CSI Node</b> service.
+        /// </summary>
+        public static string OpenEbsCstorCsiNode = "openebs-cstor-csi-node";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>OpenEBS cStor CSPC Operator</b> service.
+        /// </summary>
+        public static string OpenEbsCstorCspcOperator = "openebs-cstor-cspc-operator";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>OpenEBS cStor CVC Operator</b> service.
+        /// </summary>
+        public static string OpenEbsCstorCvcOperator = "openebs-cstor-cvc-operator";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>OpenEBS Local PV Provisioner</b> service.
+        /// </summary>
+        public static string OpenEbsLocalPvProvisioner = "openebs-localpv-provisioner";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>OpenEBS Node Disk Manager Operator</b> service.
+        /// </summary>
+        public static string OpenEbsNdmOperator = "openebs-ndm-operator";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>OpenEBS Node Disk Manager</b> service.
+        /// </summary>
+        public static string OpenEbsNdm = "openebs-ndm";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>OpenEBS API Server</b> service.
+        /// </summary>
+        public static string OpenEbsProvisioner = "openebs-provisioner";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>OpenEBS Snapshot Operator</b> service.
+        /// </summary>
+        public static string OpenEbsSnapshotOperator = "openebs-snapshot-operator";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>OpenEBS Snapshot Webhook</b> service.
+        /// </summary>
+        public static string OpenEbsWebhook = "openebs-webhook";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Prometheus</b> service.
+        /// </summary>
+        public static string Prometheus = "prometheus";
 
         /// <summary>
         /// Identifies the neonKUBE cluster's <b>Prometheus Operator</b> service.
@@ -246,36 +361,6 @@ namespace Neon.Kube
         /// </summary>
         public KubeClusterAdvice()
         {
-            var serviceIdentities = new string[]
-            {
-                Calico,
-                CitusPostgresSql,
-                Cortex,
-                EtcdCluster,
-                EtcdOperator,
-                FluentBit,
-                Grafana,
-                Harbor,
-                IstioPrometheus,
-                Jaegar,
-                Kiali,
-                Loki,
-                M3DBCluster,
-                M3DBOperator,
-                MetricsServer,
-                Minio ,
-                NeonClusterOperator,
-                Nfs,
-                OpenEbs,
-                PrometheusOperator,
-                Promtail,
-                RedisHA
-            };
-
-            foreach (var identity in serviceIdentities)
-            {
-                services.Add(identity, new KubeServiceAdvice(identity));
-            }
         }
 
         /// <summary>
@@ -318,11 +403,24 @@ namespace Neon.Kube
         /// <param name="identity">Identifies the service (one of the constants defined by this class).</param>
         /// <returns>The <see cref="KubeServiceAdvice"/> instance for the service.</returns>
         /// <exception cref="KeyNotFoundException">Thrown when there's no advice for the service.</exception>
-        public KubeServiceAdvice GetServiceAdvise(string identity)
+        public KubeServiceAdvice GetServiceAdvice(string identity)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(identity));
 
             return services[identity];
+        }
+
+        /// <summary>
+        /// Adds the <see cref="KubeServiceAdvice"/> for the specified service.
+        /// </summary>
+        /// <param name="identity">Identifies the service (one of the constants defined by this class).</param>
+        /// <param name="advice">The <see cref="KubeServiceAdvice"/> instance for the service</param>
+        public void AddServiceAdvice(string identity, KubeServiceAdvice advice)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(identity));
+            Covenant.Requires<ArgumentNullException>(advice != null);
+
+            services.Add(identity, advice);
         }
     }
 }
