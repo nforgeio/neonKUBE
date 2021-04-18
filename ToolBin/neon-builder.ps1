@@ -77,7 +77,7 @@ function PublishCore
 
     [System.IO.Directory]::CreateDirectory($nfBuild)
 
-    # Set the [pubcore] arguments (note that we need to handle apps targeting different versions of .NET):
+    # Locate the published output folder (note that we need to handle apps targeting different versions of .NET):
 
     $projectPath = [System.IO.Path]::Combine($nfRoot, $projectPath)
     $targetPath  = [System.IO.Path]::Combine($ncRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "net5.0-windows")
@@ -115,6 +115,11 @@ function PublishCore
 
     [System.IO.Directory]::CreateDirectory($binaryFolder)
     Copy-Item -Path "$targetPath/*" --Destination $binaryFolder -Recurse
+
+    $cmdPath = [System.IO.Path]::Combine($nfBuild, "$targetName.cmd")
+
+    [System.IO.File]::WriteAllText($cmdPath, "@echo off`r`n")
+    [System.IO.File]::AppendAllText($cmdPath, "%~dp0\$targetName\$targetName.exe" %*`r`n")
 }
 
 #------------------------------------------------------------------------------
