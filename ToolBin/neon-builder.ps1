@@ -119,7 +119,7 @@ function PublishCore
     $cmdPath = [System.IO.Path]::Combine($nfBuild, "$targetName.cmd")
 
     [System.IO.File]::WriteAllText($cmdPath, "@echo off`r`n")
-    [System.IO.File]::AppendAllText($cmdPath, "%~dp0\$targetName\$targetName.exe" %*`r`n")
+    [System.IO.File]::AppendAllText($cmdPath, "%~dp0\$targetName\$targetName.exe" `%*`r`n")
 }
 
 #------------------------------------------------------------------------------
