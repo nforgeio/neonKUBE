@@ -61,16 +61,21 @@ $env:PATH      += ";$nfBuild"
 $libraryVersion = $(& "$nfToolBin\neon-build" read-version "$nfLib\Neon.Common\Build.cs" NeonLibraryVersion)
 ThrowOnExitCode
 
+#------------------------------------------------------------------------------
 # Publishes a .NET Core project to the repo's build folder.
+#
+# ARGUMENTS:
+#
+#   $projectPath    - The relative project folder PATH
+#   $targetName     - Name of the target executable
 
 function PublishCore
 {
     param (
         [Parameter(Position=0, Mandatory=1)]
-        [string]$projectPath,           # The relative project folder PATH
-
+        [string]$projectPath,
         [Parameter(Position=1, Mandatory=1)]
-        [string]$targetName             # Name of the target executable
+        [string]$targetName
     )
 
     # Ensure that the NF_BUILD folder exists:
@@ -188,7 +193,7 @@ if (-not $nobuild)
 
 if ($tools)
 {
-    # Publish the Windows .NET Core binaries to the build folder.
+    # Publish the Windows .NET Core tool binaries to the build folder.
 
     PublishCore "Tools\neon-cli\neon-cli.csproj"    "neon"
     PublishCore "Tools\unix-text\unix-text.csproj"  "unix-text"
