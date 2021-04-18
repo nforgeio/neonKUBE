@@ -99,7 +99,7 @@ function PublishCore
     }
 
     # Copy the binary files to a new build folder subdirectory named for the target and
-    # generate the batch file to launch the tool.
+    # generate the batch file to launch the program.
 
     ""
     "**********************************************************"
@@ -108,7 +108,7 @@ function PublishCore
 
     $binaryFolder = [System.IO.Path]::Combine($nfBuild, $targetName)
 
-    if ([System.IO.Directory.Exists($binaryFolder)])
+    if ([System.IO.Directory]::Exists($binaryFolder))
     {
         [System.IO.Directory]::Delete($binaryFolder, $true)
     }
