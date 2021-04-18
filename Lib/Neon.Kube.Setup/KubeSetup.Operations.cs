@@ -2148,8 +2148,8 @@ $@"- name: StorageType
                             WaitForDeploymentAsync(controller, KubeNamespaces.NeonMonitor, "prometheus-operator"),
                             WaitForDeploymentAsync(controller, KubeNamespaces.NeonMonitor, "prometheus-kube-state-metrics"),
                             WaitForDaemonsetAsync(controller, KubeNamespaces.NeonMonitor, "prometheus-node-exporter"),
-                            WaitForStatefulSetAsync(controller, KubeNamespaces.NeonMonitor, "alertmanager-neon-monitor-prometheus"),
-                            WaitForStatefulSetAsync(controller, KubeNamespaces.NeonMonitor, "prometheus-neon-monitor-prometheus")
+                            WaitForStatefulSetAsync(controller, KubeNamespaces.NeonMonitor, "alertmanager-prometheus"),
+                            WaitForStatefulSetAsync(controller, KubeNamespaces.NeonMonitor, "prometheus-prometheus")
                         });
                 });
         }
@@ -2256,8 +2256,8 @@ $@"- name: StorageType
                         values.Add($"config.limits_config.reject_old_samples_max_age", "15m");
                     }
 
-                    values.Add($"resources.requests.memory", ToSiString(advice.PodMemoryRequest.Value));
-                    values.Add($"resources.limits.memory", ToSiString(advice.PodMemoryLimit.Value));
+                    values.Add($"resources.requests.memory", ToSiString(advice.PodMemoryRequest));
+                    values.Add($"resources.limits.memory", ToSiString(advice.PodMemoryLimit));
 
                     await master.InstallHelmChartAsync(controller, "loki", releaseName: "loki", @namespace: KubeNamespaces.NeonMonitor, values: values);
                 });
@@ -2357,8 +2357,11 @@ $@"- name: StorageType
                             values.Add($"prometheusEndpoint", "http://prometheus-operated:9090");
                         }
 
-                        values.Add($"resources.requests.memory", ToSiString(advice.PodMemoryRequest.Value));
-                        values.Add($"resources.limits.memory", ToSiString(advice.PodMemoryLimit.Value));
+                        if (advice.PodMemoryRequest.HasValue && advice.PodMemoryLimit.HasValue)
+                        {
+                            values.Add($"resources.requests.memory", ToSiString(advice.PodMemoryRequest));
+                            values.Add($"resources.limits.memory", ToSiString(advice.PodMemoryLimit));
+                        }
 
                         await master.InstallHelmChartAsync(controller, "grafana", releaseName: "grafana", @namespace: KubeNamespaces.NeonMonitor, values: values);
                     });
@@ -2791,14 +2794,24 @@ $@"- name: StorageType
             {
                 await CreateCstorStorageClass(controller, master, "neon-internal-citus");
             }
-            new ResourceQuantity(managerAdvice.PodMemoryRequest.Value, 0, ResourceQuantity.SuffixFormat.BinarySI).CanonicalizeString();
 
-            values.Add($"manager.resources.requests.memory", ToSiString(managerAdvice.PodMemoryRequest.Value));
-            values.Add($"manager.resources.limits.memory", ToSiString(managerAdvice.PodMemoryLimit.Value));
-            values.Add($"master.resources.requests.memory", ToSiString(masterAdvice.PodMemoryRequest.Value));
-            values.Add($"master.resources.limits.memory", ToSiString(masterAdvice.PodMemoryLimit.Value));
-            values.Add($"worker.resources.requests.memory", ToSiString(workerAdvice.PodMemoryRequest.Value));
-            values.Add($"worker.resources.limits.memory", ToSiString(workerAdvice.PodMemoryLimit.Value));
+            if (managerAdvice.PodMemoryRequest.HasValue && managerAdvice.PodMemoryLimit.HasValue)
+            {
+                values.Add($"manager.resources.requests.memory", ToSiString(managerAdvice.PodMemoryRequest));
+                values.Add($"manager.resources.limits.memory", ToSiString(managerAdvice.PodMemoryLimit));
+            }
+
+            if (masterAdvice.PodMemoryRequest.HasValue && masterAdvice.PodMemoryLimit.HasValue)
+            {
+                values.Add($"master.resources.requests.memory", ToSiString(managerAdvice.PodMemoryRequest));
+                values.Add($"master.resources.limits.memory", ToSiString(managerAdvice.PodMemoryLimit));
+            }
+
+            if (workerAdvice.PodMemoryRequest.HasValue && workerAdvice.PodMemoryLimit.HasValue)
+            {
+                values.Add($"worker.resources.requests.memory", ToSiString(workerAdvice.PodMemoryRequest));
+                values.Add($"worker.resources.limits.memory", ToSiString(workerAdvice.PodMemoryLimit));
+            }
 
             await master.InvokeIdempotentAsync("setup/system-db",
                 async () =>
@@ -3011,6 +3024,11 @@ $@"- name: StorageType
         /// <returns></returns>
         public static string ToSiString(decimal? value)
         {
+            if (!value.HasValue)
+            {
+                return null;
+            }
+
             return new ResourceQuantity(value.GetValueOrDefault(), 0, ResourceQuantity.SuffixFormat.BinarySI).CanonicalizeString();
         }
 
@@ -3021,6 +3039,11 @@ $@"- name: StorageType
         /// <returns></returns>
         public static string ToSiString(double? value)
         {
+            if (!value.HasValue)
+            {
+                return null;
+            }
+
             return new ResourceQuantity((decimal)value.GetValueOrDefault(), 0, ResourceQuantity.SuffixFormat.BinarySI).CanonicalizeString();
         }
 
