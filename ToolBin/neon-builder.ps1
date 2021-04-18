@@ -94,13 +94,8 @@ function PublishCore
 
         if (![System.IO.Directory]::Exists($targetPath))
         {
-            $targetPath = [System.IO.Path]::Combine($nfRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "netcoreapp3.1")
-
-            if (![System.IO.Directory]::Exists($targetPath))
-            {
-                Write-Error "Cannot locate publish folder for: $projectPath"
-                Exit 1
-            }
+            Write-Error "Cannot locate publish folder for: $projectPath"
+            Exit 1
         }
     }
 
