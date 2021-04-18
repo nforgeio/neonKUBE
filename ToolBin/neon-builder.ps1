@@ -193,34 +193,6 @@ if ($tools)
 
     PublishCore "Tools\neon-cli\neon-cli.csproj"    "neon"
     PublishCore "Tools\unix-text\unix-text.csproj"  "unix-text"
-
-    # Hack to publish OS/X version of [neon-cli] to the build folder.
-
-    ""
-    "**********************************************************"
-    "***                   OS/X neon-cli                    ***"
-    "**********************************************************"
-    ""
-
-    cd "$nfTools\neon-cli"
-    dotnet publish -r osx-x64 -c Release /p:PublishSingleFile=true
-    & mkdir "$nfBuild\osx"
-    & cp "$nfTools\neon-cli\bin\Release\netcoreapp3.1\osx-x64\publish\neon" "$nfBuild\osx\neon-osx"
-    cd $nfRoot
-
-    ""
-    "Generating OS/X neon-cli SHA512..."
-    ""
-
-    & cat "$nfBuild\osx\neon-osx" | openssl dgst -sha512 -binary | neon-build hexdump > "$nfBuild\osx\neon-osx-$desktopVersion.sha512.txt"
-
-    if (-not $?)
-    {
-	    ""
-	    "*** OS/X neon-cli: SHA512 failed ***"
-	    ""
-	    exit 1
-    }
  }
 
 # Build the code documentation if requested.
