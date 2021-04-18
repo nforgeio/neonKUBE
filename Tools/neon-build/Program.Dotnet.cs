@@ -27,6 +27,12 @@ namespace NeonBuild
 {
     public static partial class Program
     {
+        /// <summary>
+        /// Executes the <b>dotnet</b> tool passing the <paramref name="commandLine"/> while
+        /// limiting the environment variables passed to the <b>dotnet</b> tool to avoid
+        /// conflicts.
+        /// </summary>
+        /// <param name="commandLine">The command line.</param>
         public static void Dotnet(CommandLine commandLine)
         {
             // It appears that the [dotnet] command and/or [msbuild] configures some environment
