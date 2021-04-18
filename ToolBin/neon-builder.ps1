@@ -98,25 +98,23 @@ function PublishCore
         }
     }
 
-    # Publish the binaries.
+    # Copy the binary files to a new build folder subdirectory named for the target and
+    # generate the batch file to launch the tool.
 
     ""
     "**********************************************************"
     "*** PUBLISH: $targetName"
     "**********************************************************"
-    ""
-    "pubcore ""$projectPath"" ""$targetName"" ""$config"" ""$targetPath"" ""$nfBuild"" win10-x64"
-    ""
 
-    pubcore "$projectPath" "$targetName" "$config" "$targetPath" "$nfBuild" win10-x64
+    $binaryFolder = [System.IO.Path]::Combine($nfBuild, $targetName)
 
-    if (-not $?)
+    if ([System.IO.Directory.Exists($binaryFolder)])
     {
-        ""
-        "*** PUBLICATION FAILED ***"
-        ""
-        exit 1
+        [System.IO.Directory]::Delete($binaryFolder, $true)
     }
+
+    [System.IO.Directory]::CreateDirectory($binaryFolder)
+    Copy-Item -Path "$targetPath/*" --Destination $binaryFolder -Recurse
 }
 
 #------------------------------------------------------------------------------
