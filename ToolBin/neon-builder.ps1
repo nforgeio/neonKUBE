@@ -136,8 +136,7 @@ if ($?)
     exit 1
 }
 
-$originalDir = $pwd
-cd $nfRoot
+Push-Location $nfRoot
 
 # Build the solution.
 
@@ -235,25 +234,21 @@ if ($codedoc)
     $nfDocOutput = "$nfroot\Websites\CodeDoc\bin\CodeDoc"
 
     & cp "$nfDocOutput\neon.chm" "$nfbuild"
+    ThrowOnExitCode
 
     ""
     "Generating neon.chm SHA512..."
 	""
 
     & cat "$nfBuild\neon.chm" | openssl dgst -sha512 -binary | neon-build hexdump > "$nfBuild\neon.chm.sha512.txt"
+    ThrowOnExitCode
 
     # Move the documentation build output.
 	
     & rm -r --force "$nfBuild\codedoc"
+    ThrowOnExitCode
     & mv "$nfDocOutput" "$nfBuild\codedoc"
-
-    if (-not $?)
-    {
-        ""
-        "*** neon.chm: SHA512 failed ***"
-        ""
-        exit 1
-    }
+    ThrowOnExitCode
 
     # Munge the SHFB generated documentation site:
     #
@@ -266,6 +261,7 @@ if ($codedoc)
 	""
 
     & neon-build shfb --gtag="$nfroot\Websites\CodeDoc\gtag.js" --styles="$nfRoot\WebSites\CodeDoc\styles" "$nfRoot\WebSites\CodeDoc" "$nfBuild\codedoc"
+    ThrowOnExitCode
 }
 
-cd $originalDir
+Pop-Location
