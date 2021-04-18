@@ -80,17 +80,17 @@ function PublishCore
     # Set the [pubcore] arguments (note that we need to handle apps targeting different versions of .NET):
 
     $projectPath = [System.IO.Path]::Combine($nfRoot, $projectPath)
-    $targetPath  = [System.IO.Path]::Combine($ncRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "net5.0-windows", "$targetName.dll")
+    $targetPath  = [System.IO.Path]::Combine($ncRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "net5.0-windows")
     
-    if (!(Test-Path $targetPath))
+    if (![System.IO.Directory]::DirectoryExists($targetPath))
     {
-        $targetPath = [System.IO.Path]::Combine($ncRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "net5.0", "$targetName.dll")
+        $targetPath = [System.IO.Path]::Combine($ncRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "net5.0")
 
-        if (!(Test-Path $targetPath))
+        if (![System.IO.Directory]::DirectoryExists($targetPath))
         {
-            $targetPath = [System.IO.Path]::Combine($ncRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "netcoreapp3.1", "$targetName.dll")
+            $targetPath = [System.IO.Path]::Combine($ncRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "netcoreapp3.1")
 
-            if (!(Test-Path $targetPath))
+            if (![System.IO.Directory]::DirectoryExists($targetPath))
             {
                 Write-Error "Cannot locate publish folder for: $projectPath"
                 Exit 1
