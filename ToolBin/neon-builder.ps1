@@ -86,15 +86,15 @@ function PublishCore
     # Locate the published output folder (note that we need to handle apps targeting different versions of .NET):
 
     $projectPath = [System.IO.Path]::Combine($nfRoot, $projectPath)
-    $targetPath  = [System.IO.Path]::Combine($ncRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "net5.0-windows")
+    $targetPath  = [System.IO.Path]::Combine($nfRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "net5.0-windows")
     
     if (![System.IO.Directory]::Exists($targetPath))
     {
-        $targetPath = [System.IO.Path]::Combine($ncRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "net5.0")
+        $targetPath = [System.IO.Path]::Combine($nfRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "net5.0")
 
         if (![System.IO.Directory]::Exists($targetPath))
         {
-            $targetPath = [System.IO.Path]::Combine($ncRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "netcoreapp3.1")
+            $targetPath = [System.IO.Path]::Combine($nfRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "netcoreapp3.1")
 
             if (![System.IO.Directory]::Exists($targetPath))
             {
@@ -120,7 +120,7 @@ function PublishCore
     }
 
     [System.IO.Directory]::CreateDirectory($binaryFolder)
-    Copy-Item -Path "$targetPath/*" --Destination $binaryFolder -Recurse
+    Copy-Item -Path "$targetPath/*" -Destination $binaryFolder -Recurse
 
     $cmdPath = [System.IO.Path]::Combine($nfBuild, "$targetName.cmd")
 
