@@ -19,6 +19,11 @@
             The copyright statement to be included in all assemblies.
             </summary>
         </member>
+        <member name="F:Neon.Build.Trademark">
+            <summary>
+            Trademark statement.
+            </summary>
+        </member>
         <member name="F:Neon.Build.ProductName">
             <summary>
             The product name.
@@ -451,6 +456,44 @@
             </summary>
             <returns>The bitmap string.</returns>
         </member>
+        <member name="T:Neon.Collections.IObjectDictionary">
+            <summary>
+            Describes dictionaries mapping case-sensitive strings to objects along with nice 
+            generic methods that converts item values to specific types.
+            </summary>
+        </member>
+        <member name="M:Neon.Collections.IObjectDictionary.Get``1(System.String)">
+            <summary>
+            Returns the value of an item converted to a specific type.
+            </summary>
+            <typeparam name="TValue">The result type.</typeparam>
+            <param name="key">The key.</param>
+            <returns>The value converted to <typeparamref name="TValue"/>.</returns>
+            <exception cref="T:System.ArgumentNullException">Thrown if key is <c>null</c>.</exception>
+            <exception cref="T:System.Collections.Generic.KeyNotFoundException">Thrown by the getter if the key doesn't exist.</exception>
+            <exception cref="T:System.InvalidCastException">Thrown if the item value cannot be cast into a <typeparamref name="TValue"/>.</exception>
+        </member>
+        <member name="M:Neon.Collections.IObjectDictionary.Get``1(System.String,``0)">
+            <summary>
+            Returns the value of an item converted to a specific type.
+            </summary>
+            <typeparam name="TValue">The result type.</typeparam>
+            <param name="key">The key.</param>
+            <param name="default">Secifies the default value to return if the key doesn't exist.</param>
+            <returns>The value converted to <typeparamref name="TValue"/>.</returns>
+            <exception cref="T:System.ArgumentNullException">Thrown if key is <c>null</c>.</exception>
+            <exception cref="T:System.InvalidCastException">Thrown if the item value cannot be cast into a <typeparamref name="TValue"/>.</exception>
+        </member>
+        <member name="M:Neon.Collections.IObjectDictionary.TryGetValue``1(System.String,``0@)">
+            <summary>
+            Attempts to retrieve a specific value from the dictionary.
+            </summary>
+            <typeparam name="TValue">The result type.</typeparam>
+            <param name="key">The key.</param>
+            <param name="value">Returns as the value when the key exists.</param>
+            <returns><c>true</c> if the key exists and the value was returned.</returns>
+            <exception cref="T:System.ArgumentNullException">Thrown if key is <c>null</c>.</exception>
+        </member>
         <member name="T:Neon.Collections.NamespaceDoc">
             <summary>
             This namespace defines a handful of probably archaic custom collection classes.
@@ -486,25 +529,13 @@
             </summary>
         </member>
         <member name="M:Neon.Collections.ObjectDictionary.Get``1(System.String)">
-            <summary>
-            Returns the value of an item converted to a specific type.
-            </summary>
-            <typeparam name="TValue">The result type.</typeparam>
-            <param name="key">The key.</param>
-            <returns>The value converted to <typeparamref name="TValue"/>.</returns>
-            <exception cref="T:System.ArgumentNullException">Thrown if key is <c>null</c>.</exception>
-            <exception cref="T:System.Collections.Generic.KeyNotFoundException">Thrown by the getter if the key doesn't exist.</exception>
-            <exception cref="T:System.InvalidCastException">Thrown if the item value cannot be cast into a <typeparamref name="TValue"/>.</exception>
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Collections.ObjectDictionary.Get``1(System.String,``0)">
+            <inheritdoc/>
         </member>
         <member name="M:Neon.Collections.ObjectDictionary.TryGetValue``1(System.String,``0@)">
-            <summary>
-            Attempts to retrieve a specific value from the dictionary.
-            </summary>
-            <typeparam name="TValue">The result type.</typeparam>
-            <param name="key">The key.</param>
-            <param name="value">Returns as the value when the key exists.</param>
-            <returns><c>true</c> if the key exists and the value was returned.</returns>
-            <exception cref="T:System.ArgumentNullException">Thrown if key is <c>null</c>.</exception>
+            <inheritdoc/>
         </member>
         <member name="T:Neon.Common.Block">
             <summary>
@@ -588,7 +619,7 @@
             <param name="sourceOffset">Logical offset of the first byte to copy.</param>
             <param name="target">The output byte array.</param>
             <param name="targetOffset">Target offset where the first byte is to be written.</param>
-            <param name="length"></param>
+            <param name="length">The number of bytes to copy.</param>
         </member>
         <member name="M:Neon.Common.Block.CopyFrom(System.Byte[],System.Int32,System.Int32,System.Int32)">
             <summary>
@@ -814,7 +845,7 @@
             <param name="sourceOffset">Logical offset of the first byte to copy.</param>
             <param name="target">The output byte array.</param>
             <param name="targetOffset">Target offset where the first byte is to be written.</param>
-            <param name="length"></param>
+            <param name="length">The number of bytes to copy.</param>
         </member>
         <member name="M:Neon.Common.BlockArray.CopyFrom(System.Byte[],System.Int32,System.Int32,System.Int32)">
             <summary>
@@ -1310,6 +1341,26 @@
             </para>
             </remarks>
         </member>
+        <member name="M:Neon.Common.Credentials.FromToken(System.String)">
+            <summary>
+            Constructs credentials from a token.
+            </summary>
+            <param name="token">The token.</param>
+            <returns>The <see cref="T:Neon.Common.Credentials"/>.</returns>
+        </member>
+        <member name="M:Neon.Common.Credentials.FromUserPassword(System.String,System.String)">
+            <summary>
+            Constructs credentials from a token.
+            </summary>
+            <param name="username">The username.</param>
+            <param name="password">The password.</param>
+            <returns>The <see cref="T:Neon.Common.Credentials"/>.</returns>
+        </member>
+        <member name="M:Neon.Common.Credentials.#ctor">
+            <summary>
+            Constructor.
+            </summary>
+        </member>
         <member name="P:Neon.Common.Credentials.Token">
             <summary>
             The security token.
@@ -1608,7 +1659,7 @@
             <summary>
             Throws a local exception type, including the message passed.
             </summary>
-            <param name="message"></param>
+            <param name="message">The exception message.</param>
         </member>
         <member name="M:Neon.Common.ExceptionResult.#cctor">
             <summary>
@@ -2533,6 +2584,14 @@
         <member name="M:Neon.Common.ServiceContainer.IndexOf(Microsoft.Extensions.DependencyInjection.ServiceDescriptor)">
             <inheritdoc/>
         </member>
+        <member name="M:Neon.Common.ServiceContainer.GetService``1">
+            <summary>
+            This is a convenience generic method that returns the service
+            already cast to requested type.  This only works for reference types.
+            </summary>
+            <typeparam name="TService">Specifies the desired service type.</typeparam>
+            <returns>The service instance if it exists or <c>null</c>.</returns>
+        </member>
         <member name="M:Neon.Common.ServiceContainer.GetService(System.Type)">
             <inheritdoc/>
         </member>
@@ -2584,8 +2643,9 @@
         </member>
         <member name="T:Neon.Common.ExecuteResponse">
             <summary>
-            Holds the process exit code and captured standard output from a process
-            launched by <see cref="M:Neon.Common.NeonHelper.ExecuteCapture(System.String,System.String,System.Nullable{System.TimeSpan},System.Diagnostics.Process,System.String,System.Action{System.String},System.Action{System.String})"/>.
+            Holds the process exit code and captured standard output from a process launched by any of the
+            <see cref="M:Neon.Common.NeonHelper.ExecuteCapture(System.String,System.Object[],System.Nullable{System.TimeSpan},System.Diagnostics.Process,System.String,System.Collections.Generic.Dictionary{System.String,System.String},System.Action{System.String},System.Action{System.String},System.IO.TextReader)"/>
+            related methods.
             </summary>
         </member>
         <member name="M:Neon.Common.ExecuteResponse.#ctor">
@@ -2710,6 +2770,23 @@
             </summary>
             <param name="sourcePath">Path to the (compressed) source file.</param>
             <param name="targetPath">Path to the (uncompressed) target file.</param>
+        </member>
+        <member name="F:Neon.Common.NeonHelper.NeonLibraryProdRegistry">
+            <summary>
+            Identifies the production neonLIBRARY container image registry.
+            </summary>
+        </member>
+        <member name="F:Neon.Common.NeonHelper.NeonLibraryDevRegistry">
+            <summary>
+            Identifies the development neonLIBRARY container image registry.
+            </summary>
+        </member>
+        <member name="P:Neon.Common.NeonHelper.NeonLibraryBranchRegistry">
+            <summary>
+            Returns the appropriate public container neonLIBRARY registry to be used for the git 
+            branch the assembly was built from.  This returns <see cref="F:Neon.Common.NeonHelper.NeonLibraryProdRegistry"/> for
+            release branches and <see cref="F:Neon.Common.NeonHelper.NeonLibraryDevRegistry"/> for all other branches.
+            </summary>
         </member>
         <member name="F:Neon.Common.NeonHelper.syncRoot">
             <summary>
@@ -2846,26 +2923,6 @@
         <member name="P:Neon.Common.NeonHelper.Framework">
             <summary>
             Identifies the .NET framework hosting the current process.
-            </summary>
-        </member>
-        <member name="F:Neon.Common.NeonHelper.NeonLibraryProdRegistry">
-            <summary>
-            Identifies the production neonLIBRARY container image registry.  This is a public
-            registry that holds non-cluster setup related images.
-            </summary>
-        </member>
-        <member name="F:Neon.Common.NeonHelper.NeonLibraryDevRegistry">
-            <summary>
-            Identifies the development neonLIBRARY container image registry.  This is a public
-            registry that holds non-cluster setup related images during development between
-            releases.
-            </summary>
-        </member>
-        <member name="P:Neon.Common.NeonHelper.NeonLibraryBranchRegistry">
-            <summary>
-            Returns the appropriate public container neonLIBRARY registry to be used for the git 
-            branch the assembly was built from.  This returns <see cref="F:Neon.Common.NeonHelper.NeonLibraryProdRegistry"/> for
-            release branches and <see cref="F:Neon.Common.NeonHelper.NeonLibraryDevRegistry"/> for all other branches.
             </summary>
         </member>
         <member name="M:Neon.Common.NeonHelper.EscapeCsv(System.String)">
@@ -3641,7 +3698,7 @@
             Optionally specifies the encoding to use to convert the input to bytes 
             before base64 encoding it.  This defaults to <see cref="P:System.Text.Encoding.UTF8"/>.
             </param>
-            <returns></returns>
+            <returns>The converted base-64 string.</returns>
         </member>
         <member name="M:Neon.Common.NeonHelper.FromBase64(System.String,System.Text.Encoding)">
             <summary>
@@ -3652,7 +3709,7 @@
             Optionally specifies the encoding to use to convert the decoded bytes 
             to the result.  This defaults to <see cref="P:System.Text.Encoding.UTF8"/>.
             </param>
-            <returns></returns>
+            <returns>The converted string.</returns>
         </member>
         <member name="M:Neon.Common.NeonHelper.GetAssemblyFolder(System.Reflection.Assembly)">
             <summary>
@@ -4038,7 +4095,7 @@
             <param name="args">Command line arguments (or <c>null</c>).</param>
             <returns>The <see cref="T:System.Diagnostics.Process"/> information.</returns>
         </member>
-        <member name="M:Neon.Common.NeonHelper.Execute(System.String,System.Object[],System.Nullable{System.TimeSpan},System.Diagnostics.Process,System.String)">
+        <member name="M:Neon.Common.NeonHelper.Execute(System.String,System.Object[],System.Nullable{System.TimeSpan},System.Diagnostics.Process,System.String,System.Collections.Generic.Dictionary{System.String,System.String},System.IO.TextReader)">
             <summary>
             Starts a process with an array of arguments to run an executable file and
             then waits for the process to terminate.
@@ -4050,23 +4107,31 @@
             indefinitely.
             </param>
             <param name="process">
-            The optional <see cref="T:System.Diagnostics.Process"/> instance to use to launch the process.
+            Optional existing <see cref="T:System.Diagnostics.Process"/> instance used to launch the process.
             </param>
             <param name="workingDirectory">
-            The optional working directory to set while executing the program.
+            Optionally specifies the working directory for executing the program.
+            </param>
+            <param name="environmentVariables">
+            Optionally specifies the environment variables to be passed into the process.
+            The new process inherits the current processes variables when this is <c>null</c>.
+            </param>
+            <param name="input">
+            Optionally specifies a <see cref="T:System.IO.TextReader"/> with text to be sent 
+            to the process as input.
             </param>
             <returns>The process exit code.</returns>
             <exception cref="T:System.TimeoutException">Thrown if the process did not exit within the <paramref name="timeout"/> limit.</exception>
             <remarks>
             <note>
-            If <paramref name="timeout"/> is exceeded and execution has not commpleted in time 
+            If <paramref name="timeout"/> is exceeded and execution has not completed in time 
             then a <see cref="T:System.TimeoutException"/> will be thrown and the process will be killed
             if it was created by this method.  Process instances passed via the <paramref name="process"/>
             parameter will not be killed in this case.
             </note>
             </remarks>
         </member>
-        <member name="M:Neon.Common.NeonHelper.Execute(System.String,System.String,System.Nullable{System.TimeSpan},System.Diagnostics.Process,System.String)">
+        <member name="M:Neon.Common.NeonHelper.Execute(System.String,System.String,System.Nullable{System.TimeSpan},System.Diagnostics.Process,System.String,System.Collections.Generic.Dictionary{System.String,System.String},System.IO.TextReader)">
             <summary>
             Starts a process to run an executable file and then waits for the process to terminate.
             </summary>
@@ -4077,23 +4142,31 @@
             indefinitely.
             </param>
             <param name="process">
-            The optional <see cref="T:System.Diagnostics.Process"/> instance to use to launch the process.
+            Optional existing <see cref="T:System.Diagnostics.Process"/> instance used to launch the process.
             </param>
             <param name="workingDirectory">
-            The optional working directory to set while executing the program.
+            Optionally specifies the working directory for executing the program.
+            </param>
+            <param name="environmentVariables">
+            Optionally specifies the environment variables to be passed into the process.
+            The new process inherits the current processes variables when this is <c>null</c>.
+            </param>
+            <param name="input">
+            Optionally specifies a <see cref="T:System.IO.TextReader"/> with text to be sent 
+            to the process as input.
             </param>
             <returns>The process exit code.</returns>
             <exception cref="T:System.TimeoutException">Thrown if the process did not exit within the <paramref name="timeout"/> limit.</exception>
             <remarks>
             <note>
-            If <paramref name="timeout"/> is exceeded and execution has not commpleted in time
+            If <paramref name="timeout"/> is exceeded and execution has not completed in time
             then a <see cref="T:System.TimeoutException"/> will be thrown and the process will be killed
             if it was created by this method.  Process instances passed via the <paramref name="process"/>
             parameter will not be killed in this case.
             </note>
             </remarks>
         </member>
-        <member name="M:Neon.Common.NeonHelper.ExecuteAsync(System.String,System.Object[],System.Nullable{System.TimeSpan},System.Diagnostics.Process,System.String)">
+        <member name="M:Neon.Common.NeonHelper.ExecuteAsync(System.String,System.Object[],System.Nullable{System.TimeSpan},System.Diagnostics.Process,System.String,System.Collections.Generic.Dictionary{System.String,System.String},System.IO.TextReader)">
             <summary>
             Asynchronously starts a process to run an executable file with an array of
             arguments and then and waits for the process to terminate.
@@ -4105,23 +4178,31 @@
             indefinitely.
             </param>
             <param name="process">
-            The optional <see cref="T:System.Diagnostics.Process"/> instance to use to launch the process.
+            Optional existing <see cref="T:System.Diagnostics.Process"/> instance used to launch the process.Optional existing <see cref="T:System.Diagnostics.Process"/> instance used to launch the process.
             </param>
             <param name="workingDirectory">
-            The optional working directory to set while executing the program.
+            Optionally specifies the working directory for executing the program.
+            </param>
+            <param name="environmentVariables">
+            Optionally specifies the environment variables to be passed into the process.
+            The new process inherits the current processes variables when this is <c>null</c>.
+            </param>
+            <param name="input">
+            Optionally specifies a <see cref="T:System.IO.TextReader"/> with text to be sent 
+            to the process as input.
             </param>
             <returns>The process exit code.</returns>
             <exception cref="T:System.TimeoutException">Thrown if the process did not exit within the <paramref name="timeout"/> limit.</exception>
             <remarks>
             <note>
-            If <paramref name="timeout"/> is exceeded and execution has not commpleted in time
+            If <paramref name="timeout"/> is exceeded and execution has not completed in time
             then a <see cref="T:System.TimeoutException"/> will be thrown and the process will be killed
             if it was created by this method.  Process instances passed via the <paramref name="process"/>
             parameter will not be killed in this case.
             </note>
             </remarks>
         </member>
-        <member name="M:Neon.Common.NeonHelper.ExecuteAsync(System.String,System.String,System.Nullable{System.TimeSpan},System.Diagnostics.Process,System.String)">
+        <member name="M:Neon.Common.NeonHelper.ExecuteAsync(System.String,System.String,System.Nullable{System.TimeSpan},System.Diagnostics.Process,System.String,System.Collections.Generic.Dictionary{System.String,System.String},System.IO.TextReader)">
             <summary>
             Asynchronously starts a process to run an executable file and then waits for the process to terminate.
             </summary>
@@ -4132,16 +4213,24 @@
             indefinitely.
             </param>
             <param name="process">
-            The optional <see cref="T:System.Diagnostics.Process"/> instance to use to launch the process.
+            Optional existing <see cref="T:System.Diagnostics.Process"/> instance used to launch the process.
             </param>
             <param name="workingDirectory">
-            The optional working directory to set while executing the program.
+            Optionally specifies the working directory for executing the program.
+            </param>
+            <param name="environmentVariables">
+            Optionally specifies the environment variables to be passed into the process.
+            The new process inherits the current processes variables when this is <c>null</c>.
+            </param>
+            <param name="input">
+            Optionally specifies a <see cref="T:System.IO.TextReader"/> with text to be sent 
+            to the process as input.
             </param>
             <returns>The process exit code.</returns>
             <exception cref="T:System.TimeoutException">Thrown if the process did not exit within the <paramref name="timeout"/> limit.</exception>
             <remarks>
             <note>
-            If <paramref name="timeout"/> is exceeded and execution has not commpleted in time
+            If <paramref name="timeout"/> is exceeded and execution has not completed in time
             then a <see cref="T:System.TimeoutException"/> will be thrown and the process will be killed
             if it was created by this method.  Process instances passed via the <paramref name="process"/>
             parameter will not be killed in this case.
@@ -4153,7 +4242,7 @@
             Used to redirect process output streams.
             </summary>
         </member>
-        <member name="M:Neon.Common.NeonHelper.ExecuteCapture(System.String,System.Object[],System.Nullable{System.TimeSpan},System.Diagnostics.Process,System.String,System.Action{System.String},System.Action{System.String})">
+        <member name="M:Neon.Common.NeonHelper.ExecuteCapture(System.String,System.Object[],System.Nullable{System.TimeSpan},System.Diagnostics.Process,System.String,System.Collections.Generic.Dictionary{System.String,System.String},System.Action{System.String},System.Action{System.String},System.IO.TextReader)">
             <summary>
             Starts a process to run an executable file and then waits for the process to terminate
             while capturing any output written to the standard output and error streams.
@@ -4165,13 +4254,21 @@
             indefinitely.
             </param>
             <param name="process">
-            The optional <see cref="T:System.Diagnostics.Process"/> instance to use to launch the process.
+            Optional existing <see cref="T:System.Diagnostics.Process"/> instance used to launch the process.
             </param>
             <param name="workingDirectory">
-            The optional working directory to set while executing the program.
+            Optionally specifies the working directory for executing the program.
+            </param>
+            <param name="environmentVariables">
+            Optionally specifies the environment variables to be passed into the process.
+            The new process inherits the current processes variables when this is <c>null</c>.
             </param>
             <param name="outputAction">Optional action that will be called when the process outputs some text.</param>
             <param name="errorAction">Optional action that will be called when the process outputs some error text.</param>
+            <param name="input">
+            Optionally specifies a <see cref="T:System.IO.TextReader"/> with text to be sent 
+            to the process as input.
+            </param>
             <returns>
             The <see cref="T:Neon.Common.ExecuteResponse"/> including the process exit code and capture 
             standard output and error streams.
@@ -4179,7 +4276,7 @@
             <exception cref="T:System.TimeoutException">Thrown if the process did not exit within the <paramref name="timeout"/> limit.</exception>
             <remarks>
             <note>
-            If <paramref name="timeout"/> is exceeded and execution has not commpleted in time 
+            If <paramref name="timeout"/> is exceeded and execution has not completed in time 
             then a <see cref="T:System.TimeoutException"/> will be thrown and the process will be killed
             if it was created by this method.  Process instances passed via the <paramref name="process"/>
             parameter will not be killed in this case.
@@ -4192,7 +4289,7 @@
             </para>
             </remarks>
         </member>
-        <member name="M:Neon.Common.NeonHelper.ExecuteCapture(System.String,System.String,System.Nullable{System.TimeSpan},System.Diagnostics.Process,System.String,System.Action{System.String},System.Action{System.String})">
+        <member name="M:Neon.Common.NeonHelper.ExecuteCapture(System.String,System.String,System.Nullable{System.TimeSpan},System.Diagnostics.Process,System.String,System.Collections.Generic.Dictionary{System.String,System.String},System.Action{System.String},System.Action{System.String},System.IO.TextReader)">
             <summary>
             Starts a process to run an executable file and then waits for the process to terminate
             while capturing any output written to the standard output and error streams.
@@ -4204,13 +4301,21 @@
             indefinitely.
             </param>
             <param name="process">
-            The optional <see cref="T:System.Diagnostics.Process"/> instance to use to launch the process.
+            Optional existing <see cref="T:System.Diagnostics.Process"/> instance used to launch the process.
             </param>
             <param name="workingDirectory">
-            The optional working directory to set while executing the program.
+            Optionally specifies the working directory for executing the program.
+            </param>
+            <param name="environmentVariables">
+            Optionally specifies the environment variables to be passed into the process.
+            The new process inherits the current processes variables when this is <c>null</c>.
             </param>
             <param name="outputAction">Optional action that will be called when the process outputs some text.</param>
             <param name="errorAction">Optional action that will be called when the process outputs some error text.</param>
+            <param name="input">
+            Optionally specifies a <see cref="T:System.IO.TextReader"/> with text to be sent 
+            to the process as input.
+            </param>
             <returns>
             The <see cref="T:Neon.Common.ExecuteResponse"/> including the process exit code and capture 
             standard output and error streams.
@@ -4218,7 +4323,7 @@
             <exception cref="T:System.TimeoutException">Thrown if the process did not exit within the <paramref name="timeout"/> limit.</exception>
             <remarks>
             <note>
-            If <paramref name="timeout"/> is exceeded and execution has not commpleted in time 
+            If <paramref name="timeout"/> is exceeded and execution has not completed in time 
             then a <see cref="T:System.TimeoutException"/> will be thrown and the process will be killed
             if it was created by this method.  Process instances passed via the <paramref name="process"/>
             parameter will not be killed in this case.
@@ -4231,7 +4336,7 @@
             </para>
             </remarks>
         </member>
-        <member name="M:Neon.Common.NeonHelper.ExecuteCaptureAsync(System.String,System.Object[],System.String,System.Nullable{System.TimeSpan},System.Diagnostics.Process)">
+        <member name="M:Neon.Common.NeonHelper.ExecuteCaptureAsync(System.String,System.Object[],System.String,System.Collections.Generic.Dictionary{System.String,System.String},System.Nullable{System.TimeSpan},System.Diagnostics.Process,System.IO.TextReader)">
             <summary>
             Asynchronously starts a process to run an executable file and then waits for the process to terminate
             while capturing any output written to the standard output and error streams.
@@ -4243,10 +4348,18 @@
             indefinitely.
             </param>
             <param name="process">
-            The optional <see cref="T:System.Diagnostics.Process"/> instance to use to launch the process.
+            Optional existing <see cref="T:System.Diagnostics.Process"/> instance used to launch the process.
             </param>
             <param name="workingDirectory">
-            The optional working directory to set while executing the program.
+            Optionally specifies the working directory for executing the program.
+            </param>
+            <param name="environmentVariables">
+            Optionally specifies the environment variables to be passed into the process.
+            The new process inherits the current processes variables when this is <c>null</c>.
+            </param>
+            <param name="input">
+            Optionally specifies a <see cref="T:System.IO.TextReader"/> with text to be sent 
+            to the process as input.
             </param>
             <returns>
             The <see cref="T:Neon.Common.ExecuteResponse"/> including the process exit code and capture 
@@ -4255,14 +4368,14 @@
             <exception cref="T:System.TimeoutException">Thrown if the process did not exit within the <paramref name="timeout"/> limit.</exception>
             <remarks>
             <note>
-            If <paramref name="timeout"/> is exceeded and execution has not commpleted in time 
+            If <paramref name="timeout"/> is exceeded and execution has not completed in time 
             then a <see cref="T:System.TimeoutException"/> will be thrown and the process will be killed
             if it was created by this method.  Process instances passed via the <paramref name="process"/>
             parameter will not be killed in this case.
             </note>
             </remarks>
         </member>
-        <member name="M:Neon.Common.NeonHelper.ExecuteCaptureAsync(System.String,System.String,System.Nullable{System.TimeSpan},System.Diagnostics.Process,System.String)">
+        <member name="M:Neon.Common.NeonHelper.ExecuteCaptureAsync(System.String,System.String,System.Nullable{System.TimeSpan},System.Diagnostics.Process,System.String,System.Collections.Generic.Dictionary{System.String,System.String},System.IO.TextReader)">
             <summary>
             Asynchronously starts a process to run an executable file and then waits for the process to terminate
             while capturing any output written to the standard output and error streams.
@@ -4274,10 +4387,18 @@
             indefinitely.
             </param>
             <param name="process">
-            The optional <see cref="T:System.Diagnostics.Process"/> instance to use to launch the process.
+            Optional existing <see cref="T:System.Diagnostics.Process"/> instance used to launch the process.
             </param>
             <param name="workingDirectory">
-            The optional working directory to set while executing the program.
+            Optionally specifies the working directory for executing the program.
+            </param>
+            <param name="environmentVariables">
+            Optionally specifies the environment variables to be passed into the process.
+            The new process inherits the current processes variables when this is <c>null</c>.
+            </param>
+            <param name="input">
+            Optionally specifies a <see cref="T:System.IO.TextReader"/> with text to be sent 
+            to the process as input.
             </param>
             <returns>
             The <see cref="T:Neon.Common.ExecuteResponse"/> including the process exit code and capture 
@@ -4286,7 +4407,7 @@
             <exception cref="T:System.TimeoutException">Thrown if the process did not exit within the <paramref name="timeout"/> limit.</exception>
             <remarks>
             <note>
-            If <paramref name="timeout"/> is exceeded and execution has not commpleted in time 
+            If <paramref name="timeout"/> is exceeded and execution has not completed in time 
             then a <see cref="T:System.TimeoutException"/> will be thrown and the process will be killed
             if it was created by this method.  Process instances passed via the <paramref name="process"/>
             parameter will not be killed in this case.
@@ -4497,15 +4618,6 @@
             Property names are always converted to lower case when converting to YAML.
             </note>
             </remarks>
-        </member>
-        <member name="M:Neon.Common.NeonHelper.SerializeYaml(System.Text.StringBuilder,Newtonsoft.Json.Linq.JToken,System.Int32,System.Boolean)">
-            <summary>
-            
-            </summary>
-            <param name="sbYaml"></param>
-            <param name="jToken"></param>
-            <param name="nesting"></param>
-            <param name="isArrayElement"></param>
         </member>
         <member name="M:Neon.Common.NeonHelper.GetYamlValue(Newtonsoft.Json.Linq.JValue)">
             <summary>
@@ -5032,7 +5144,7 @@
         <member name="T:Neon.Common.NamespaceDoc">
             <summary>
             This namespace includes generally useful types that are consumed by
-            the remaining neonLIBRARY libraries and cal also be useful for
+            the remaining neonLIBRARY libraries and can also be useful for
             end-user applications.
             </summary>
         </member>
@@ -5866,6 +5978,152 @@
             </summary>
             <param name="jObject">The <see cref="T:Newtonsoft.Json.Linq.JObject"/> or <c>null</c>.</param>
             <returns>The cloned instance.</returns>
+        </member>
+        <member name="T:Neon.Deployment.IProfileClient">
+            <summary>
+            <para>
+            Defines the interface for the client used to communicate with the Neon Profile Service
+            or a custom service.  These services provides access to user and workstation specific 
+            settings including secrets and general properties.  This is used for activities such as 
+            CI/CD automation and integration testing.  This solves the following problems:
+            </para>
+            <list type="bullet">
+            <item>
+            <para>
+            Gaining access to secrets.  neonFORGE has standardized on 1Password for password management
+            and the Neon Profile Service abstracts the details of authenticating with 1Password and
+            accessing secrets.
+            </para>
+            <para>
+            This interface supports two kinds of secrets: passwords and values.  These are somewhat 
+            of an artifact of how we implemented this using 1Password.  Secret passwords are values
+            retrieved from a 1Password item's <b>password field</b> and secret values correspond to
+            a 1Password item <b>value field.</b>  We found this distinction useful because 1Password
+            reports when passwords are insecure or duplicated but we have other secrets where these
+            checks can be distracting.  Custom implementation can choose to follow this pattern or
+            just treat both types of secret the same.
+            </para>
+            <para>
+            You can also obtain a specific property from a secret password or value by using this syntax:
+            </para>
+            <example>
+            SECRETNAME[PROPERTY]
+            </example>
+            <para>
+            This is useful for obtaining both the username and password from a login, or all of the different
+            properties from a credit card, etc.  This blurs the difference between secret passwords and secret
+            values a bit but we're going to retain both concepts anyway.
+            </para>
+            </item>
+            <item>
+            <para>
+            Profile values are also supported.  These are non-secret name/value pairs used for describing
+            the local environment as required for CI/CD.  For example, we use this for describing the
+            IP addresses available for deploying a test neonKUBE cluster.  Each developer will often
+            need distict node IP addresses that work on the local LAN and also don't conflict with
+            addresses assigned to other developers.
+            </para>
+            <para>
+            neonFORGE's internal implementation simply persists profile values on the local workstation
+            as a YAML file which is referenced by our profile service.
+            </para>
+            </item>
+            <item>
+            Abstracting access to the user's master password.  neonFORGE has implemented an internal  
+            Windows application that implements a profile service that prompts the developer for their
+            master 1Password, optionally caching it for a period of time so the user won't be prompted
+            as often.  This server also handles profile and secret lookup.
+            </item>
+            </list>
+            </summary>
+            <remarks>
+            <para>
+            The <see cref="T:Neon.Deployment.IProfileClient"/> is used to submit requests to the Neon Assistant
+            application running on the local workstation including retrieving the user's 
+            master 1Password, secrets, as well as user profile values.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:Neon.Deployment.IProfileClient.GetSecretPassword(System.String,System.String,System.String)">
+            <summary>
+            Requests the value of a secret password from 1Password via the assistant.
+            </summary>
+            <param name="name">Specifies the secret name.</param>
+            <param name="vault">Optionally specifies the 1Password vault.  This defaults to the developer's neonFORGE user name as specified by the <c>NC_USER</c> environment variable.</param>
+            <param name="masterPassword">Optionally specifies the master 1Password when it is already known.</param>
+            <returns>The password value.</returns>
+            <exception cref="T:Neon.Deployment.ProfileException">Thrown if the profile server returns an error.</exception>
+        </member>
+        <member name="M:Neon.Deployment.IProfileClient.GetSecretValue(System.String,System.String,System.String)">
+            <summary>
+             Requests the value of a secret value from 1Password via the assistant.
+            </summary>
+            <param name="name">Specifies the secret name.</param>
+            <param name="vault">Optionally specifies the 1Password vault.  This defaults to the developer's neonFORGE user name as specified by the <c>NC_USER</c> environment variable.</param>
+            <param name="masterPassword">Optionally specifies the master 1Password when it is already known.</param>
+            <returns>The password value.</returns>
+            <exception cref="T:Neon.Deployment.ProfileException">Thrown if the profile server returns an error.</exception>
+        </member>
+        <member name="M:Neon.Deployment.IProfileClient.GetProfileValue(System.String)">
+            <summary>
+            Requests a profile value from the assistant.
+            </summary>
+            <param name="name">Identifies the profile value.</param>
+            <returns>The password value.</returns>
+            <exception cref="T:Neon.Deployment.ProfileException">Thrown if the profile server returns an error.</exception>
+        </member>
+        <member name="T:Neon.Deployment.IProfileRequest">
+            <summary>
+            Abstracts Neon Profile Service named pipe command requests.
+            </summary>
+        </member>
+        <member name="P:Neon.Deployment.IProfileRequest.Command">
+            <summary>
+            Returns the command.
+            </summary>
+        </member>
+        <member name="P:Neon.Deployment.IProfileRequest.Args">
+            <summary>
+            Returns the standard command arguments.
+            </summary>
+        </member>
+        <member name="T:Neon.Deployment.IProfileResponse">
+            <summary>
+            Abstracts Neon Profile Service named pipe command responses.
+            </summary>
+        </member>
+        <member name="P:Neon.Deployment.IProfileResponse.Success">
+            <summary>
+            Retrurns <c>true</c> for successful requests, <c>false</c> for failed ones.
+            </summary>
+        </member>
+        <member name="P:Neon.Deployment.IProfileResponse.Value">
+            <summary>
+            Returns the simply response string (for non-JSON responses).
+            </summary>
+        </member>
+        <member name="P:Neon.Deployment.IProfileResponse.JObject">
+            <summary>
+            Returns the <see cref="P:Neon.Deployment.IProfileResponse.JObject"/> for JSON responses.
+            </summary>
+        </member>
+        <member name="P:Neon.Deployment.IProfileResponse.Error">
+            <summary>
+            Returns the error message for failed requests.
+            </summary>
+        </member>
+        <member name="T:Neon.Deployment.ProfileException">
+            <summary>
+            Thrown by <see cref="T:Neon.Deployment.IProfileClient"/> instance when the profile server
+            returned an error.
+            </summary>
+        </member>
+        <member name="M:Neon.Deployment.ProfileException.#ctor(System.String,System.Exception)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="message">The error message.</param>
+            <param name="inner">Optionally specifies an inner exception.</param>
         </member>
         <member name="T:Neon.Diagnostics.AssertException">
             <summary>
@@ -7555,7 +7813,7 @@
             <para>
             This is currently used to emulate a tree of <see cref="T:Neon.IO.IStaticDirectory"/> and 
             <see cref="T:Neon.IO.IStaticFile"/> instances loaded from an assembly's embedded resources
-            via the <see cref="M:System.AssemblyExtensions.GetResourceFileSystem(System.Reflection.Assembly,System.String)"/> 
+            via the <see cref="M:System.Reflection.AssemblyExtensions.GetResourceFileSystem(System.Reflection.Assembly,System.String)"/> 
             extension method.
             </para>
             <note>
@@ -7653,7 +7911,7 @@
             <para>
             This is currently used to emulate a tree of <see cref="T:Neon.IO.IStaticDirectory"/> and 
             <see cref="T:Neon.IO.IStaticFile"/> instances loaded from an assembly's embedded resources
-            via the <see cref="M:System.AssemblyExtensions.GetResourceFileSystem(System.Reflection.Assembly,System.String)"/>
+            via the <see cref="M:System.Reflection.AssemblyExtensions.GetResourceFileSystem(System.Reflection.Assembly,System.String)"/>
             extension method.
             </para>
             <note>
@@ -7701,7 +7959,7 @@
             </note>
             </summary>
             <param name="encoding">Optionally specifies the text encoding.  This defaults to <b>UTF-8</b>,</param>
-            <returns></returns>
+            <returns>The <see cref="T:System.IO.TextReader"/>.</returns>
         </member>
         <member name="M:Neon.IO.IStaticFile.OpenReaderAsync(System.Text.Encoding)">
             <summary>
@@ -7713,7 +7971,7 @@
             </note>
             </summary>
             <param name="encoding">Optionally specifies the text encoding.  This defaults to <b>UTF-8</b>,</param>
-            <returns></returns>
+            <returns>The <see cref="T:System.IO.TextReader"/>.</returns>
         </member>
         <member name="M:Neon.IO.IStaticFile.ReadAllBytes">
             <summary>
@@ -7959,13 +8217,18 @@
             The processor removes comment lines from the text returned.  A comment line 
             starts with zero or more whitespace characters followed by "<b>//</b>".
             </para>
+            <note>
+            Comment lines are indicated by a "<b>//</b>" prefix by default but this can
+            be modified via <see cref="M:Neon.IO.PreprocessReader.ClearCommentMarkers"/> and <see cref="M:Neon.IO.PreprocessReader.AddCommentMarker(System.String)"/>.
+            </note>
             <para>
             The processor implements simple macro definition and conditional statements.
             These statements are identifying by a line with the pound sign (<b>#</b>) as
             the first non-whitespace character.
             </para>
             <note>
-            The processor statement character can be changed by setting <see cref="P:Neon.IO.PreprocessReader.StatementMarker"/>.
+            The processor statement character defaults to the pound sign (<b>#</b>) but
+            can be changed by setting <see cref="P:Neon.IO.PreprocessReader.StatementMarker"/>.
             </note>
             <para>
             The following processing statements are supported:
@@ -8064,7 +8327,7 @@
             These are referenced as <b>$&lt;$lt;name&gt;&gt;</b>.
             </para>
             <note>
-            You may encounter situations where the default was of referencing variables
+            You may encounter situations where the default ways of referencing variables
             conflicts with the syntax of the underlying source text being processed.
             In these cases, you can set <see cref="P:Neon.IO.PreprocessReader.VariableExpansionRegex"/> to 
             <see cref="P:Neon.IO.PreprocessReader.CurlyVariableExpansionRegex"/> or <see cref="P:Neon.IO.PreprocessReader.ParenVariableExpansionRegex"/>
@@ -8097,6 +8360,98 @@
             and <see cref="P:Neon.IO.PreprocessReader.StatementMarker"/>
             properties.
             </para>
+            <para><b>Secret and profile Values</b></para>
+            <para>
+            This class can integrate with a <see cref="T:Neon.Deployment.IProfileClient"/> implementation added to
+            <see cref="F:Neon.Common.NeonHelper.serviceContainer"/>.  This provides a way to abstract access to
+            secrets and profile values from an external source.  Three item types are supported:
+            </para>
+            <list type="table">
+            <item>
+                <term><b>secret-password</b></term>
+                <description>
+                <para>
+                Secret passwords are often protected by a password manager.  neonFORGE has standardized
+                internally on 1Password for example.  Passwords are often required to satisfy complexity
+                and other rules.
+                </para>
+                <para>
+                Passwords are named by a string and are often persisted to a named location.  1Password stores
+                to secrets in <i>vaults</i>.  You'll need the password name and optionally, its location when
+                referencing a password value.
+                </para>
+                <para>
+                You may also request a specific secret property using an array syntax like:
+                </para>
+                <example>
+                SECRETNAME[PROPERTY]
+                </example>
+                <para>
+                Doing this overrides the default <b>password</b> property.
+                </para>
+                </description>
+            </item>
+            <item>
+                <term><b>secret-value</b></term>
+                <description>
+                <para>
+                Secret values are often protected by a password manager.  neonFORGE has standardized
+                internally on 1Password for example.  Secret values are similar to passwords but the
+                typically don't comply with complexity or other requirements.
+                </para>
+                <para>
+                Secret values are named by a string and are often persisted to a named location.  1Password stores
+                to secrets in <i>vaults</i>.  You'll need the value name and optionally, its location when
+                referencing a password value.
+                </para>
+                <para>
+                You may also request a specific secret property using an array syntax like:
+                </para>
+                <example>
+                SECRETNAME[PROPERTY]
+                </example>
+                <para>
+                Doing this overrides the default <b>value</b> property.
+                </para>
+                </description>
+            </item>
+            <item>
+                <term><b>profile-value</b></term>
+                <description>
+                <para>
+                Profile values are string name/value pairs that include non-secret definitions for
+                the user, workstation, or overall environment such as the LAN.  These can come in
+                handy when implementing CI/CD where each server/user can be assigned unique profile
+                values that reference specific test endpoints, etc.  This is quite powerful.
+                </para>
+                <para>
+                Profile values are simply named by a string.  There is currently no concept of a source, 
+                like secrets have.
+                </para>
+                </description>
+            </item>
+            </list>
+            <para>
+            Secrets and profile values can be referenced via <b>$&lt;$lt;&lt;type:name[:source]&gt;&gt;&gt;</b>
+            where <b>type</b> is one of <b>password</b>, <b>secret</b> (value), or <b>profile</b> and <b>name</b>
+            identifies the secret or profile value and <b>source</b> optionall specifies the secret source
+            (this is ignored for profile values).
+            </para>
+            <code>
+            $&lt;$&lt;$&lt;password:my-password;my-vault&gt;&gt;&gt;    # password from specific source
+            $&lt;$&lt;$&lt;password:my-password&gt;&gt;&gt;             # password from default source
+            $&lt;$&lt;$&lt;secret:my-secret;my-vault&gt;&gt;&gt;        # secret from specific source
+            $&lt;$&lt;$&lt;secret:my-secret&gt;&gt;&gt;                 # secret from default source
+            $&lt;$&lt;$&lt;secret:my-secret[username]&gt;&gt;&gt;       # retrieve [username] from secret
+            $&lt;$&lt;$&lt;secret:my-secret[password]&gt;&gt;&gt;       # retrieve [password] from secret
+            $&lt;$&lt;$&lt;profile:my-profile&gt;&gt;&gt;               # profile value
+            </code>
+            <para>
+            This class will throw <see cref="T:Neon.Deployment.ProfileException"/> when it encounters a secret/profile
+            reference and there no injected <see cref="T:Neon.Deployment.IProfileClient"/> implementation or if the implementation
+            has trouble communicating with the profile server.  This class also also throws a 
+            <see cref="T:System.Collections.Generic.KeyNotFoundException"/> when a named secret or profile value doesn't exist.
+            </para>
             </remarks>
             <threadsafety instance="false"/>
         </member>
@@ -8112,27 +8467,34 @@
         </member>
         <member name="P:Neon.IO.PreprocessReader.AngleVariableExpansionRegex">
             <summary>
-            A variable expansion <see cref="T:System.Text.RegularExpressions.Regex"/> that matches normal variables like <b>$&lt;test&gt;</b> and environment
-            variables like <b>&lt;&lt;test&gt;&gt;&gt;</b>.
+            A variable expansion <see cref="T:System.Text.RegularExpressions.Regex"/> that matches normal variables like <b>$&lt;test&gt;</b>, environment
+            variables like <b>&lt;&lt;test&gt;&gt;&gt;</b>, and profile references like <b>&lt;&lt;$lt;secret:my-secret:my-vault&gt;&gt;&gt;&gt;</b>
+            You can set the <see cref="P:Neon.IO.PreprocessReader.VariableExpansionRegex"/> property to this value to change the
+            <see cref="T:Neon.IO.PreprocessReader"/> behavior.
             </summary>
         </member>
         <member name="P:Neon.IO.PreprocessReader.CurlyVariableExpansionRegex">
             <summary>
-            A variable expansion <see cref="T:System.Text.RegularExpressions.Regex"/> that matches normal variables like <b>${test}</b> and environment 
-            variables like <b>${{test}}</b>. You can set the <see cref="P:Neon.IO.PreprocessReader.VariableExpansionRegex"/> property to this value 
-            to change the <see cref="T:Neon.IO.PreprocessReader"/> behavior.
+            A variable expansion <see cref="T:System.Text.RegularExpressions.Regex"/> that matches normal variables like <b>${test}</b>, environment 
+            variables like <b>${{test}}</b> and profile references like <b>${{{secret:my-secret:my-vault}}}</b>. 
+            You can set the <see cref="P:Neon.IO.PreprocessReader.VariableExpansionRegex"/> property to this value to change the
+            <see cref="T:Neon.IO.PreprocessReader"/> behavior.
+            </summary>
+        </member>
+        <member name="P:Neon.IO.PreprocessReader.ParenVariableExpansionRegex">
+            <summary>
+            A variable expansion <see cref="T:System.Text.RegularExpressions.Regex"/> that matches normal variables like <b>${test}</b>, environment 
+            variables like <b>$((test))</b> and profile references like <b>$(((secret:my-secret:my-vault)))</b>. 
+            You can set the <see cref="P:Neon.IO.PreprocessReader.VariableExpansionRegex"/> property to this value to change the
+            <see cref="T:Neon.IO.PreprocessReader"/> behavior.
             </summary>
         </member>
         <member name="P:Neon.IO.PreprocessReader.DefaultVariableExpansionRegex">
             <summary>
-            The default variable expansion <see cref="T:System.Text.RegularExpressions.Regex"/>.  This defaults to <see cref="P:Neon.IO.PreprocessReader.AngleVariableExpansionRegex"/> 
-            that matches normal variables like <b>$&lt;test&gt;</b> and environment variables like <b>$$lt;&lt;test&gt;&gt;</b>.
-            </summary>
-        </member>
-        <member name="P:Neon.IO.PreprocessReader.ParenVariableExpansionRegex">
-            <summary>A alternate variable expansion <see cref="T:System.Text.RegularExpressions.Regex"/> that matches normal variables like <b>$(test)</b>
-            and environment variables like <b>$((test))</b>.. You can set the <see cref="P:Neon.IO.PreprocessReader.VariableExpansionRegex"/> 
-            property to this value to change the <see cref="T:Neon.IO.PreprocessReader"/> behavior.
+            The default variable expansion <see cref="T:System.Text.RegularExpressions.Regex"/> that matches normal variables like <b>$&lt;test&gt;</b>, environment
+            variables like <b>&lt;&lt;test&gt;&gt;&gt;</b>, and profile references like <b>&lt;&lt;$lt;secret:my-secret:my-vault&gt;&gt;&gt;&gt;</b>
+            You can set the <see cref="P:Neon.IO.PreprocessReader.VariableExpansionRegex"/> property to this value to change the
+            <see cref="T:Neon.IO.PreprocessReader"/> behavior.
             </summary>
         </member>
         <member name="P:Neon.IO.PreprocessReader.VariableValidationRegex">
@@ -8183,6 +8545,24 @@
             <summary>
             The leading character used to identify a preprocessing statement.
             This defaults to the pound sign (<b>#</b>).
+            </summary>
+        </member>
+        <member name="M:Neon.IO.PreprocessReader.ClearCommentMarkers">
+            <summary>
+            Clears any comment markers, effectively disabling comment stripping.
+            </summary>
+        </member>
+        <member name="M:Neon.IO.PreprocessReader.AddCommentMarker(System.String)">
+            <summary>
+            Appends a comment marker prefix.  This must be a non-empty string including only
+            non-whitespace punctuation characters.
+            </summary>
+            <param name="marker">The comment prefix.</param>
+        </member>
+        <member name="M:Neon.IO.PreprocessReader.SetYamlMode">
+            <summary>
+            Configures the reader for parsing YAML by setting the <see cref="P:Neon.IO.PreprocessReader.StatementMarker"/> to <b>"@"</b>
+            and the comment marker to <b>"#"</b>.
             </summary>
         </member>
         <member name="P:Neon.IO.PreprocessReader.VariableExpansionRegex">
@@ -8317,7 +8697,7 @@
             <summary>
             Determines whether the line passed is a comment.
             </summary>
-            <param name="line"></param>
+            <param name="line">The text line.</param>
             <returns><b>true</b> if the line is a comment.</returns>
         </member>
         <member name="M:Neon.IO.PreprocessReader.Expand(System.String)">
@@ -8338,7 +8718,7 @@
             <summary>
             Determines whether the line passed is a statement.
             </summary>
-            <param name="line"></param>
+            <param name="line">The text line.</param>
             <returns><b>true</b> if the line is a statement.</returns>
         </member>
         <member name="M:Neon.IO.PreprocessReader.ProcessStatement(System.String)">
@@ -10434,6 +10814,13 @@
             with multiple active connections to different networks.
             </remarks>
         </member>
+        <member name="M:Neon.Net.NetHelper.ToAwsS3Uri(System.String)">
+            <summary>
+            Converts an S3 or standard HTTPS URI into an S3 URI.
+            </summary>
+            <param name="uri">The source URI.</param>
+            <returns>The equivalent S3 URI.</returns>
+        </member>
         <member name="T:Neon.Net.NetworkCidr">
             <summary>
             Describes a IP network subnet using Classless Inter-Domain Routing (CIDR) notation.
@@ -10903,7 +11290,7 @@
             Temporal primary cluster port.
             </summary>
         </member>
-        <member name="F:Neon.Net.NetworkPorts.KubernetesApi">
+        <member name="F:Neon.Net.NetworkPorts.KubernetesApiServer">
             <summary>
             Kubernetes API port.
             </summary>
@@ -10918,10 +11305,30 @@
             The Postgres database port.
             </summary>
         </member>
-        <member name="F:Neon.Net.NetworkPorts.NeonPrometheus">
+        <member name="F:Neon.Net.NetworkPorts.GrafanaDashboard">
+            <summary>
+            Default port for the Grafana dashboard.
+            </summary>
+        </member>
+        <member name="F:Neon.Net.NetworkPorts.NeonPrometheusScrape">
             <summary>
             The standard Prometheus scraping port exposed by Neon related services,
             including custom user services built on <b>Neon.Service</b>.
+            </summary>
+        </member>
+        <member name="F:Neon.Net.NetworkPorts.CortexDashboard">
+            <summary>
+            Default port for the Cortex dashboard.
+            </summary>
+        </member>
+        <member name="F:Neon.Net.NetworkPorts.PrometheusDashboard">
+            <summary>
+            Default port for the Prometheus dashboard.
+            </summary>
+        </member>
+        <member name="M:Neon.Net.NetworkPorts.InitializePortMap">
+            <summary>
+            Initializes the well-known name to port map. 
             </summary>
         </member>
         <member name="M:Neon.Net.NetworkPorts.TryParse(System.String,System.Int32@)">
@@ -10931,7 +11338,7 @@
             </summary>
             <param name="input">The port number or name as as string.</param>
             <param name="port">Receives the parsed port number.</param>
-            <returns><c>true</c> if a port was successfulyy parsed.</returns>
+            <returns><c>true</c> if a port was successfully parsed.</returns>
         </member>
         <member name="T:Neon.Net.Pinger">
             <summary>
@@ -11541,143 +11948,6 @@
         <member name="T:Neon.Service.NamespaceDoc">
             <summary>
             This namespace defines types used to describe an application service.
-            </summary>
-        </member>
-        <member name="T:Neon.Service.NeonServiceMap">
-            <summary>
-            Holds more detailed information describing the Neon cluster services.  This a
-            <see cref="T:Neon.Service.ServiceMap"/> keyed by the service names defined in <see cref="T:Neon.Service.NeonServices"/>
-            and the class also has properties named for each service you can use as a shortcut.
-            </summary>
-            <remarks>
-            <note>
-            The default constructor builds a <see cref="T:Neon.Service.NeonServiceMap"/> for all environments, and clones
-            them for each Dev's workstation in the Neon Office, setting the correct static IP.
-            </note>
-            </remarks>
-        </member>
-        <member name="F:Neon.Service.NeonServiceMap.DefaultEndpointName">
-            <summary>
-            The default service endpoint name.
-            </summary>
-        </member>
-        <member name="F:Neon.Service.NeonServiceMap.serviceMaps">
-            <summary>
-            Returns a dictionary holding all service maps.
-            </summary>
-        </member>
-        <member name="P:Neon.Service.NeonServiceMap.Production">
-            <summary>
-            Returns the Production internal service map.
-            </summary>
-        </member>
-        <member name="M:Neon.Service.NeonServiceMap.GetMapName(System.String)">
-            <summary>
-            Returns the $NAME service map.
-            </summary>
-        </member>
-        <member name="M:Neon.Service.NeonServiceMap.#cctor">
-            <summary>
-            Constructor.
-            </summary>
-        </member>
-        <member name="M:Neon.Service.NeonServiceMap.VerifyInit(Neon.Service.NeonServiceMap)">
-            <summary>
-            Ensure that the service description properties have been initialized
-            for all service endpoints.
-            </summary>
-            <param name="map"></param>
-        </member>
-        <member name="M:Neon.Service.NeonServiceMap.BuildProduction">
-            <summary>
-            Builds the <see cref="T:Neon.Service.NeonServiceMap"/> for internal production services.
-            </summary>
-        </member>
-        <member name="M:Neon.Service.NeonServiceMap.CloneWithNewAdress(Neon.Service.NeonServiceMap,System.String)">
-            <summary>
-            Clones a <see cref="T:Neon.Service.NeonServiceMap"/> and changes the <see cref="P:Neon.Service.ServiceDescription.Address"/> for each of the services.
-            </summary>
-        </member>
-        <member name="M:Neon.Service.NeonServiceMap.AddServiceDescription(System.String,Neon.Service.ServiceEndpoint,System.String)">
-            <summary>
-            Adds a <see cref="T:Neon.Service.ServiceDescription"/> for the named service using
-            default details and specifying an optional network endpoint.
-            </summary>
-            <param name="serviceName">The service name.</param>
-            <param name="endpoint">Optionally specifies a single service endpoint.</param>
-            <param name="namespace">The K8s namespace where the service is deployed.</param>
-            <returns>
-            The <see cref="T:Neon.Service.ServiceDescription"/> so that it can be customized further if necessary.
-            </returns>
-            <remarks>
-            This method also initializes any service endpoint <see cref="P:Neon.Service.ServiceEndpoint.ServiceDescription"/>
-            properties to the service description being created and initializes blank or <c>null</c> endpoint
-            names to <see cref="F:Neon.Service.NeonServiceMap.DefaultEndpointName"/>.
-            </remarks>
-        </member>
-        <member name="M:Neon.Service.NeonServiceMap.AddServiceDescription(System.String,System.Collections.Generic.IEnumerable{Neon.Service.ServiceEndpoint})">
-            <summary>
-            Adds a <see cref="T:Neon.Service.ServiceDescription"/> for the named service using
-            default details with a set of network endpoints.
-            </summary>
-            <param name="serviceName">The service name or <c>null</c>.</param>
-            <param name="endpoints">The service's network endpoints.</param>
-            <returns>
-            The <see cref="T:Neon.Service.ServiceDescription"/> so that it can be customized further if necessary.
-            </returns>
-            <remarks>
-            This method also initializes any service endpoints <see cref="P:Neon.Service.ServiceEndpoint.ServiceDescription"/>
-            properties to the service description being created and initializes blank or <c>null</c> endpoint
-            names to <see cref="F:Neon.Service.NeonServiceMap.DefaultEndpointName"/>.
-            </remarks>
-        </member>
-        <member name="M:Neon.Service.NeonServiceMap.Lookup(System.String)">
-            <summary>
-            Returns the <see cref="T:Neon.Service.ServiceDescription"/> for the given service name.
-            </summary>
-            <param name="serviceName">The service name.</param>
-            <returns>The associated <see cref="T:Neon.Service.ServiceDescription"/>.</returns>
-            <exception cref="T:System.Collections.Generic.KeyNotFoundException">Thrown if thre service map has no description for the service.</exception>
-        </member>
-        <member name="T:Neon.Service.NeonServices">
-            <summary>
-            Defines the Neon service names.  
-            </summary>
-        </member>
-        <member name="F:Neon.Service.NeonServices.ClusterManager">
-            <summary>
-            Cluster manager operator.
-            </summary>
-        </member>
-        <member name="F:Neon.Service.NeonServices.Elasticsearch">
-            <summary>
-            Elasticsearch.
-            </summary>
-        </member>
-        <member name="F:Neon.Service.NeonServices.IdentityService">
-            <summary>
-            Neon identity service, AKA a Secure Token Service (STS).
-            </summary>
-        </member>
-        <member name="F:Neon.Service.NeonServices.IdentityOperator">
-            <summary>
-            Operator that manages the <see cref="F:Neon.Service.NeonServices.IdentityService"/> instances as well as
-            the related database.
-            </summary>
-        </member>
-        <member name="F:Neon.Service.NeonServices.Kibana">
-            <summary>
-            Kibana.
-            </summary>
-        </member>
-        <member name="F:Neon.Service.NeonServices.TestCadence">
-            <summary>
-            Non-production service used to test Cadence running in a Linux container.
-            </summary>
-        </member>
-        <member name="F:Neon.Service.NeonServices.TestTemporal">
-            <summary>
-            Non-production service used to test Temporal running in a Linux container.
             </summary>
         </member>
         <member name="T:Neon.Service.ServiceApiContact">
@@ -12350,7 +12620,7 @@
             <summary>
             Asynchronously invokes the termination handler (if present).
             </summary>
-            <returns></returns>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
         </member>
         <member name="M:Neon.Tasks.AsyncPeriodicTask.OnExceptionAsync(System.Exception)">
             <summary>
@@ -12531,7 +12801,7 @@
             <summary>
             Returns the value from the operation.
             </summary>
-            <returns></returns>
+            <returns>The future.</returns>
         </member>
         <member name="T:Neon.Tasks.NamespaceDoc">
             <summary>
@@ -12801,7 +13071,7 @@
             <summary>
             Handles the timer dispatch.
             </summary>
-            <param name="state"></param>
+            <param name="state">The timer state.</param>
         </member>
         <member name="T:Neon.Time.GoTimeSpan">
             <summary>
@@ -13982,24 +14252,24 @@
             loaded in the <see cref="T:System.AppDomain"/>.  This can be used as a performance
             optimization when you only need to scan user assemblies.
             </summary>
-            <param name="appDomain"></param>
+            <param name="appDomain">The <see cref="T:System.AppDomain"/>.</param>
             <returns>The enumerated assemblies.</returns>
             <remarks>
             We also use this to work around this Visual Studio bug: 
             <a href="https://github.com/nforgeio/neonKUBE/issues/531"/>
             </remarks>
         </member>
-        <member name="T:System.AssemblyExtensions">
+        <member name="T:System.Reflection.AssemblyExtensions">
             <summary>
             Implements custom <see cref="T:System.Reflection.Assembly"/> extension methods.
             </summary>
         </member>
-        <member name="T:System.AssemblyExtensions.StaticResourceDirectory">
+        <member name="T:System.Reflection.AssemblyExtensions.StaticResourceDirectory">
             <summary>
             Used to emulate resource directories.
             </summary>
         </member>
-        <member name="M:System.AssemblyExtensions.StaticResourceDirectory.#ctor(System.AssemblyExtensions.StaticResourceDirectory,System.AssemblyExtensions.StaticResourceDirectory,System.String)">
+        <member name="M:System.Reflection.AssemblyExtensions.StaticResourceDirectory.#ctor(System.Reflection.AssemblyExtensions.StaticResourceDirectory,System.Reflection.AssemblyExtensions.StaticResourceDirectory,System.String)">
             <summary>
             Constructor.
             </summary>
@@ -14007,25 +14277,25 @@
             <param name="parent">The parent directory or <c>null</c> for the root directory.</param>
             <param name="name">The directory name (this must be <c>null</c> for the root directory.</param>
         </member>
-        <member name="M:System.AssemblyExtensions.StaticResourceDirectory.AddDirectory(System.AssemblyExtensions.StaticResourceDirectory)">
+        <member name="M:System.Reflection.AssemblyExtensions.StaticResourceDirectory.AddDirectory(System.Reflection.AssemblyExtensions.StaticResourceDirectory)">
             <summary>
             Adds a subdirectory if it doesn't already exist.
             </summary>
             <param name="directory">The child resource directory.</param>
-            <returns>The existing <see cref="T:System.AssemblyExtensions.StaticResourceDirectory"/> or <paramref name="directory"/> if it was added</returns>
+            <returns>The existing <see cref="T:System.Reflection.AssemblyExtensions.StaticResourceDirectory"/> or <paramref name="directory"/> if it was added</returns>
         </member>
-        <member name="M:System.AssemblyExtensions.StaticResourceDirectory.AddFile(System.AssemblyExtensions.StaticResourceFile)">
+        <member name="M:System.Reflection.AssemblyExtensions.StaticResourceDirectory.AddFile(System.Reflection.AssemblyExtensions.StaticResourceFile)">
             <summary>
             Adds a file.
             </summary>
             <param name="file">The resource file.</param>
         </member>
-        <member name="T:System.AssemblyExtensions.StaticResourceFile">
+        <member name="T:System.Reflection.AssemblyExtensions.StaticResourceFile">
             <summary>
             Wraps an embedded resource so it can be included in a static file system.
             </summary>
         </member>
-        <member name="M:System.AssemblyExtensions.StaticResourceFile.#ctor(System.String,System.Reflection.Assembly,System.String)">
+        <member name="M:System.Reflection.AssemblyExtensions.StaticResourceFile.#ctor(System.String,System.Reflection.Assembly,System.String)">
             <summary>
             Constructor.
             </summary>
@@ -14033,31 +14303,31 @@
             <param name="assembly">The source assembly.</param>
             <param name="resourceName">The full name of the resource within the assembly.</param>
         </member>
-        <member name="M:System.AssemblyExtensions.StaticResourceFile.OpenReader(System.Text.Encoding)">
+        <member name="M:System.Reflection.AssemblyExtensions.StaticResourceFile.OpenReader(System.Text.Encoding)">
             <inheritdoc/>
         </member>
-        <member name="M:System.AssemblyExtensions.StaticResourceFile.OpenReaderAsync(System.Text.Encoding)">
+        <member name="M:System.Reflection.AssemblyExtensions.StaticResourceFile.OpenReaderAsync(System.Text.Encoding)">
             <inheritdoc/>
         </member>
-        <member name="M:System.AssemblyExtensions.StaticResourceFile.OpenStream">
+        <member name="M:System.Reflection.AssemblyExtensions.StaticResourceFile.OpenStream">
             <inheritdoc/>
         </member>
-        <member name="M:System.AssemblyExtensions.StaticResourceFile.OpenStreamAsync">
+        <member name="M:System.Reflection.AssemblyExtensions.StaticResourceFile.OpenStreamAsync">
             <inheritdoc/>
         </member>
-        <member name="M:System.AssemblyExtensions.StaticResourceFile.ReadAllBytes">
+        <member name="M:System.Reflection.AssemblyExtensions.StaticResourceFile.ReadAllBytes">
             <inheritdoc/>
         </member>
-        <member name="M:System.AssemblyExtensions.StaticResourceFile.ReadAllBytesAsync">
+        <member name="M:System.Reflection.AssemblyExtensions.StaticResourceFile.ReadAllBytesAsync">
             <inheritdoc/>
         </member>
-        <member name="M:System.AssemblyExtensions.StaticResourceFile.ReadAllText(System.Text.Encoding)">
+        <member name="M:System.Reflection.AssemblyExtensions.StaticResourceFile.ReadAllText(System.Text.Encoding)">
             <inheritdoc/>
         </member>
-        <member name="M:System.AssemblyExtensions.StaticResourceFile.ReadAllTextAsync(System.Text.Encoding)">
+        <member name="M:System.Reflection.AssemblyExtensions.StaticResourceFile.ReadAllTextAsync(System.Text.Encoding)">
             <inheritdoc/>
         </member>
-        <member name="M:System.AssemblyExtensions.GetResourceFileSystem(System.Reflection.Assembly,System.String)">
+        <member name="M:System.Reflection.AssemblyExtensions.GetResourceFileSystem(System.Reflection.Assembly,System.String)">
             <summary>
             Returns an eumlated static file system that includes some or all of an assembly's
             embedded resources.  This method returns the root <see cref="T:Neon.IO.IStaticDirectory"/>
@@ -14121,7 +14391,7 @@
             company.my-project.resources.samples.sample2.txt
             </code>
             <para>
-            By default, calling <see cref="M:System.AssemblyExtensions.GetResourceFileSystem(System.Reflection.Assembly,System.String)"/> on your project assembly 
+            By default, calling <see cref="M:System.Reflection.AssemblyExtensions.GetResourceFileSystem(System.Reflection.Assembly,System.String)"/> on your project assembly 
             will return a <see cref="T:Neon.IO.IStaticDirectory"/> with a directory structure holding all of the resources.  
             The paths are mapped from the resource names by converting any dots except for the last one into forward
             slashes. 
@@ -14213,6 +14483,20 @@
             schema-1.sql
             </code>
             </remarks>
+        </member>
+        <member name="M:System.Reflection.AssemblyExtensions.GetExtensionMethodsFor(System.Reflection.Assembly,System.Type,System.Boolean)">
+            <summary>
+            <para>
+            Retrieves all of the extensions methods in an assembly targeting a specific type.
+            </para>
+            <note>
+            This doesn't currently support nested or generic target types.
+            </note>
+            </summary>
+            <param name="assembly">The source assembly.</param>
+            <param name="targetType">The type being extended.</param>
+            <param name="allowPrivate">Optionally specifies that only private methods are to be returned as well as public ones.</param>
+            <returns>The extension methods.</returns>
         </member>
         <member name="T:System.EnumExtensions">
             <summary>
@@ -15456,22 +15740,22 @@
             <summary>Branch: master</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commit">
-            <summary>Commit: ea1c0e95d</summary>
+            <summary>Commit: ca61f35da</summary>
         </member>
         <member name="F:ThisAssembly.Git.Sha">
-            <summary>Sha: ea1c0e95dd8ed3a4c68de693464e989925eda165</summary>
+            <summary>Sha: ca61f35da633caf8e76495545f814af6be790258</summary>
         </member>
         <member name="F:ThisAssembly.Git.CommitDate">
-            <summary>Commit date: 2021-02-18T15:25:14-08:00</summary>
+            <summary>Commit date: 2021-04-17T13:46:10-07:00</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commits">
-            <summary>Commits on top of base version: 446</summary>
+            <summary>Commits on top of base version: 94</summary>
         </member>
         <member name="F:ThisAssembly.Git.Tag">
-            <summary>Tag: neonLIBRARY-v2.10.0-446-gea1c0e95d</summary>
+            <summary>Tag: neonLIBRARY-v2.14.0-94-gca61f35da</summary>
         </member>
         <member name="F:ThisAssembly.Git.BaseTag">
-            <summary>Base tag: neonLIBRARY-v2.10.0</summary>
+            <summary>Base tag: neonLIBRARY-v2.14.0</summary>
         </member>
         <member name="T:ThisAssembly.Git.BaseVersion">
             <summary>Provides access to the base version information used to determine the <see cref="T:ThisAssembly.Git.SemVer" />.</summary>      
@@ -15480,7 +15764,7 @@
             <summary>Major: 2</summary>
         </member>
         <member name="F:ThisAssembly.Git.BaseVersion.Minor">
-            <summary>Minor: 10</summary>
+            <summary>Minor: 14</summary>
         </member>
         <member name="F:ThisAssembly.Git.BaseVersion.Patch">
             <summary>Patch: 0</summary>
@@ -15492,10 +15776,10 @@
             <summary>Major: 2</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Minor">
-            <summary>Minor: 10</summary>
+            <summary>Minor: 14</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Patch">
-            <summary>Patch: 446</summary>
+            <summary>Patch: 94</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Label">
             <summary>Label: neonLIBRARY</summary>

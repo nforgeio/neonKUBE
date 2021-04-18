@@ -61,6 +61,8 @@ $env:PATH      += ";$nfBuild"
 $libraryVersion = $(& "$nfToolBin\neon-build" read-version "$nfLib\Neon.Common\Build.cs" NeonLibraryVersion)
 ThrowOnExitCode
 
+# Publishes a .NET Core project to the repo's build folder.
+
 function PublishCore
 {
     param (
@@ -78,8 +80,7 @@ function PublishCore
     # Set the [pubcore] arguments (note that we need to handle apps targeting different versions of .NET):
 
     $projectPath = [System.IO.Path]::Combine($nfRoot, $projectPath)
-
-    $targetPath = [System.IO.Path]::Combine($ncRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "net5.0-windows", "$targetName.dll")
+    $targetPath  = [System.IO.Path]::Combine($ncRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "net5.0-windows", "$targetName.dll")
     
     if (!(Test-Path $targetPath))
     {
@@ -153,7 +154,7 @@ if (-not $nobuild)
     "**********************************************************"
     ""
 
-    & "$msbuild" "$nfSolution" $buildConfig "-t:Clean"
+    & "$msbuild" "$nfSolution" $buildConfig -t:Clean -verbosity:quiet
 
     if (-not $?)
     {
@@ -169,7 +170,7 @@ if (-not $nobuild)
     "**********************************************************"
     ""
 
-    & "$msbuild" "$nfSolution" $buildConfig -restore 
+    & "$msbuild" "$nfSolution" $buildConfig -restore -verbosity:quiet
 
     if (-not $?)
     {
@@ -208,7 +209,7 @@ if ($tools)
     "Generating OS/X neon-cli SHA512..."
     ""
 
-    & cat "$nfBuild\osx\neon-osx" | openssl dgst -sha512 -hex > "$nfBuild\osx\neon-osx-$desktopVersion.sha512.txt"
+    & cat "$nfBuild\osx\neon-osx" | openssl dgst -sha512 -binary | neon-build hexdump > "$nfBuild\osx\neon-osx-$desktopVersion.sha512.txt"
 
     if (-not $?)
     {
@@ -264,7 +265,7 @@ if ($codedoc)
     "Generating neon.chm SHA512..."
 	""
 
-    & cat "$nfBuild\neon.chm" | openssl dgst -sha512 -hex > "$nfBuild\neon.chm.sha512.txt"
+    & cat "$nfBuild\neon.chm" | openssl dgst -sha512 -binary | neon-build hexdump > "$nfBuild\neon.chm.sha512.txt"
 
     # Move the documentation build output.
 	

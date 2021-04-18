@@ -1,9 +1,9 @@
 {
   "runtimeOptions": {
-    "tfm": "net5.0",
+    "tfm": "netcoreapp3.1",
     "framework": {
       "name": "Microsoft.NETCore.App",
-      "version": "5.0.3"
+      "version": "3.1.14"
     },
     "configProperties": {
       "System.GC.Concurrent": true,
