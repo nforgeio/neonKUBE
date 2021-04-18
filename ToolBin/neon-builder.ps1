@@ -157,7 +157,7 @@ if (-not $nobuild)
     "**********************************************************"
     ""
 
-    & "$msbuild" "$nfSolution" $buildConfig -t:Clean -verbosity:quiet
+    & "$msbuild" "$nfSolution" $buildConfig -t:Clean -m -verbosity:quiet
 
     if (-not $?)
     {
@@ -173,7 +173,7 @@ if (-not $nobuild)
     "**********************************************************"
     ""
 
-    & "$msbuild" "$nfSolution" $buildConfig -restore -verbosity:quiet
+    & "$msbuild" "$nfSolution" $buildConfig -restore -m -verbosity:quiet
 
     if (-not $?)
     {
@@ -218,7 +218,7 @@ if ($codedoc)
         exit 1
     }
 
-    & "$msbuild" "$nfSolution" -p:Configuration=CodeDoc -restore
+    & "$msbuild" "$nfSolution" -p:Configuration=CodeDoc -restore -m -verbosity:quiet
 
     if (-not $?)
     {
