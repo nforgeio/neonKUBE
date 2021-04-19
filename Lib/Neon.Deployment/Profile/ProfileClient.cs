@@ -125,7 +125,7 @@ namespace Neon.Deployment
         }
 
         /// <inheritdoc/>
-        public string GetProfileValue(string name)
+        public string GetProfileValue(string name, bool nullOnNotFound = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
@@ -133,7 +133,19 @@ namespace Neon.Deployment
 
             args.Add("name", name);
 
-            return Call(ProfileRequest.Create("GET-PROFILE-VALUE", args)).Value;
+            try
+            {
+                return Call(ProfileRequest.Create("GET-PROFILE-VALUE", args)).Value;
+            }
+            catch (ProfileException e)
+            {
+                if (nullOnNotFound && e.Status == ProfileStatus.NotFound)
+                {
+                    return null;
+                }
+
+                throw;
+            }
         }
 
         /// <inheritdoc/>
