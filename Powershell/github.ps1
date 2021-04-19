@@ -1,6 +1,6 @@
 #Requires -Version 7.0
 #------------------------------------------------------------------------------
-# FILE:         git.ps1
+# FILE:         github.ps1
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 #
@@ -27,23 +27,11 @@
 # After modifying this file, you should take care to push any changes to the
 # other repos where this file is present.
 
-#------------------------------------------------------------------------------
-# Returns the current branch for a git repostory.
+$scriptPath   = $MyInvocation.MyCommand.Path
+$scriptFolder = [System.IO.Path]::GetDirectoryName($scriptPath)
 
-function GitBranch
-{
-    [CmdletBinding()]
-    param (
-        [Parameter(Position=0, Mandatory=1)]
-        [string]$gitRepoPath
-    )
+Push-Location $scriptFolder
 
-    Push-Location
-    Set-Location $gitRepoPath
+. ./github.actions.ps1
 
-    $branch = git rev-parse --abbrev-ref HEAD
-
-    Pop-Location
-
-    return $branch
-}
+Pop-Location
