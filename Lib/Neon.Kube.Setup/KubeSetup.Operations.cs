@@ -658,8 +658,8 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                             "-v=/etc/neonkube/neon-etcd-proxy.cfg:/etc/haproxy/haproxy.cfg",
                                             "--network=host",
                                             "--log-driver=k8s-file",
-                                            $"{KubeConst.LocalClusterRegistry}/haproxy:{KubeConst.NeonKubeImageTag}"
-                                        );
+                                            $"{KubeConst.LocalClusterRegistry}/haproxy:{KubeVersions.HaproxyVersion}",
+                                            RunOptions.FaultOnError);
 
                                         for (int attempt = 0; attempt < maxJoinAttempts; attempt++)
                                         {
