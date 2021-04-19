@@ -38,10 +38,23 @@ namespace Neon.Deployment
         /// Constructor.
         /// </summary>
         /// <param name="message">The error message.</param>
+        /// <param name="status">
+        /// Pass as one of the <see cref="ProfileStatus"/> values indicating the
+        /// reason for the failure.
+        /// </param>
         /// <param name="inner">Optionally specifies an inner exception.</param>
-        public ProfileException(string message, Exception inner = null)
+        public ProfileException(string message, string status, Exception inner = null)
             : base(message, inner)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(status), nameof(status));
+
+            this.Status = status;
         }
+
+        /// <summary>
+        /// Returns one of the <see cref="ProfileStatus"/> values indicating the
+        /// reason for the failure.
+        /// </summary>
+        public string Status { get; private set; }
     }
 }

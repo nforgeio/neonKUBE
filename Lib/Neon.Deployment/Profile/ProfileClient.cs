@@ -95,7 +95,7 @@ namespace Neon.Deployment
                 }
                 catch (TimeoutException e)
                 {
-                    throw new ProfileException("Cannot connect to profile server.  Is [neon-assistant] running?", e);
+                    throw new ProfileException("Cannot connect to profile server.  Is [neon-assistant] running?", ProfileStatus.Timeout, e);
                 }
 
                 var reader = new StreamReader(pipe);
@@ -108,7 +108,7 @@ namespace Neon.Deployment
 
                 if (responseLine == null)
                 {
-                    throw new ProfileException("The profile server did not respond.");
+                    throw new ProfileException("The profile server did not respond.", ProfileStatus.Connect);
                 }
 
                 var response = ProfileResponse.Parse(responseLine);
@@ -117,7 +117,7 @@ namespace Neon.Deployment
 
                 if (!response.Success)
                 {
-                    throw new ProfileException(response.Error);
+                    throw new ProfileException(response.Error, response.Status);
                 }
 
                 return response;
@@ -137,7 +137,7 @@ namespace Neon.Deployment
         }
 
         /// <inheritdoc/>
-        public string GetSecretPassword(string name, string vault = null, string masterPassword = null)
+        public string GetSecretPassword(string name, string vault = null, string masterPassword = null, bool nullOnNotFound = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
@@ -155,11 +155,23 @@ namespace Neon.Deployment
                 args.Add("masterpassword", masterPassword);
             }
 
-            return Call(ProfileRequest.Create("GET-SECRET-PASSWORD", args)).Value;
+            try
+            {
+                return Call(ProfileRequest.Create("GET-SECRET-PASSWORD", args)).Value;
+            }
+            catch (ProfileException e)
+            {
+                if (nullOnNotFound && e.Status == ProfileStatus.NotFound)
+                {
+                    return null;
+                }
+
+                throw;
+            }
         }
 
         /// <inheritdoc/>
-        public string GetSecretValue(string name, string vault = null, string masterPassword = null)
+        public string GetSecretValue(string name, string vault = null, string masterPassword = null, bool nullOnNotFound = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
@@ -177,7 +189,19 @@ namespace Neon.Deployment
                 args.Add("masterpassword", masterPassword);
             }
 
-            return Call(ProfileRequest.Create("GET-SECRET-VALUE", args)).Value;
+            try
+            {
+                return Call(ProfileRequest.Create("GET-SECRET-VALUE", args)).Value;
+            }
+            catch (ProfileException e)
+            {
+                if (nullOnNotFound && e.Status == ProfileStatus.NotFound)
+                {
+                    return null;
+                }
+
+                throw;
+            }
         }
     }
 }
