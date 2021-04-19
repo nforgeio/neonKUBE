@@ -16,6 +16,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+#------------------------------------------------------------------------------
+# IMPORTANT:
+#
+# This file defines GitHub related Powershell functions and is intended for use
+# in GitHub actions and other deployment related scenarios.  This file is intended
+# to be shared/included across multiple GitHub repos and should never include
+# repo-specific code.
+#
+# After modifying this file, you should take care to push any changes to the
+# other repos where this file is present.
+
 # Common error handling settinga
 
 $ErrorActionPreference = "Stop"
@@ -23,14 +34,17 @@ $PSDefaultParameterValues['*:ErrorAction'] = 'Stop'
 
 # Include all of the other global scripts.
 
-$includeOrgDir = $pwd
-cd $env:NF_ROOT/Powershell
+$scriptPath   = $MyInvocation.MyCommand.Path
+$scriptFolder = [System.IO.Path]::GetDirectoryName($scriptPath)
+
+Push-Location $scriptFolder
 
 . ./error-handling.ps1
 . ./git.ps1
 . ./deployment.ps1
+. ./github.ps1
 
-cd $includeOrgDir
+Pop-Location
 
 #------------------------------------------------------------------------------
 # Requests that the user elevate the script permission if the current process

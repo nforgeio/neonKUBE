@@ -75,6 +75,16 @@ namespace Neon.Deployment
         public const string Aborted = "ABORTED";
 
         /// <summary>
+        /// The operation timed-out.
+        /// </summary>
+        public const string Timeout = "TIMEOUT";
+
+        /// <summary>
+        /// The profile or secret reference is malformed.
+        /// </summary>
+        public const string BadReference = "BAD-REFERENCE";
+
+        /// <summary>
         /// An onspecified error occurred.
         /// </summary>
         public const string Other = "OTHER";

@@ -16,6 +16,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+#------------------------------------------------------------------------------
+# IMPORTANT:
+#
+# This file defines GitHub related Powershell functions and is intended for use
+# in GitHub actions and other deployment related scenarios.  This file is intended
+# to be shared/included across multiple GitHub repos and should never include
+# repo-specific code.
+#
+# After modifying this file, you should take care to push any changes to the
+# other repos where this file is present.
+
 # Load these assemblies from the [neon-assistant] installation folder
 # to ensure we'll be compatible.
 
@@ -47,19 +58,24 @@ function GetProfileClient
 #
 # ARGUMENTS:
 #
-#       name    - Specifies the profile value name
+#   name            - Specifies the profile value name
+#   $nullOnNotFound - Optionally specifies that $null should be returned rather 
+#                     than throwing an exception when the profile value does 
+#                     not exist.
 
 function GetProfileValue
 {
     [CmdletBinding()]
     param (
         [Parameter(Position=0, Mandatory=1)]
-        [string]$name
+        [string]$name,
+        [Parameter(Position=1, Mandatory=0)]
+        [bool]$nullOnNotFound = $false
     )
 
     $client = GetProfileClient
 
-    return $client.GetProfileValue($name)
+    return $client.GetProfileValue($name, $nullOnNotFound)
 }
 
 #------------------------------------------------------------------------------
@@ -70,6 +86,8 @@ function GetProfileValue
 #   name            - Specifies the secret password name
 #   vault           - Optionally overrides the default vault
 #   masterPassword  - Optionally specifies the master 1Password (for automation)
+#   $nullOnNotFound - Optionally specifies that $null should be returned rather 
+#                     than throwing an exception when the secret does not exist.
 
 function GetSecretPassword
 {
@@ -80,12 +98,14 @@ function GetSecretPassword
         [Parameter(Position=1, Mandatory=0)]
         [string]$vault = $null,
         [Parameter(Position=2, Mandatory=0)]
-        [string]$masterPassword = $masterPassword
+        [string]$masterPassword = $null,
+        [Parameter(Position=3, Mandatory=0)]
+        [bool]$nullOnNotFound = $false
     )
 
     $client = GetProfileClient
 
-    return $client.GetSecretPassword($name, $vault, $masterPassword)
+    return $client.GetSecretPassword($name, $vault, $masterPassword, $nullOnNotFound)
 }
 
 #------------------------------------------------------------------------------
@@ -96,6 +116,8 @@ function GetSecretPassword
 #   name            - Specifies the secret value name
 #   vault           - Optionally overrides the default vault
 #   masterPassword  - Optionally specifies the master 1Password (for automation)
+#   $nullOnNotFound - Optionally specifies that $null should be returned rather 
+#                     than throwing an exception when the secret does not exist.
 
 function GetSecretValue
 {
@@ -106,12 +128,14 @@ function GetSecretValue
         [Parameter(Position=1, Mandatory=0)]
         [string]$vault = $null,
         [Parameter(Position=2, Mandatory=0)]
-        [string]$masterPassword = $masterPassword
+        [string]$masterPassword = $null,
+        [Parameter(Position=3, Mandatory=0)]
+        [bool]$nullOnNotFound = $false
     )
 
     $client = GetProfileClient
 
-    return $client.GetSecretValue($name, $vault, $masterPassword)
+    return $client.GetSecretValue($name, $vault, $masterPassword, $nullOnNotFound)
 }
 
 #------------------------------------------------------------------------------
@@ -139,7 +163,7 @@ function GetAwsCliCredentials
         [Parameter(Position=1, Mandatory=0)]
         [string]$vault = $null,
         [Parameter(Position=2, Mandatory=0)]
-        [string]$masterPassword = $masterPassword
+        [string]$masterPassword = $null
     )
 
     $client = GetProfileClient
@@ -180,7 +204,7 @@ function GetGitHubCredentials
         [Parameter(Position=1, Mandatory=0)]
         [string]$vault = $null,
         [Parameter(Position=2, Mandatory=0)]
-        [string]$masterPassword = $masterPassword
+        [string]$masterPassword = $null
     )
 
     $client = GetProfileClient

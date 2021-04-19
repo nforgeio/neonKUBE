@@ -61,62 +61,66 @@ $env:PATH      += ";$nfBuild"
 $libraryVersion = $(& "$nfToolBin\neon-build" read-version "$nfLib\Neon.Common\Build.cs" NeonLibraryVersion)
 ThrowOnExitCode
 
+#------------------------------------------------------------------------------
 # Publishes a .NET Core project to the repo's build folder.
+#
+# ARGUMENTS:
+#
+#   $projectPath    - The relative project folder PATH
+#   $targetName     - Name of the target executable
 
 function PublishCore
 {
+    [CmdletBinding()]
     param (
         [Parameter(Position=0, Mandatory=1)]
-        [string]$projectPath,           # The relative project folder PATH
-
+        [string]$projectPath,
         [Parameter(Position=1, Mandatory=1)]
-        [string]$targetName             # Name of the target executable
+        [string]$targetName
     )
 
     # Ensure that the NF_BUILD folder exists:
 
     [System.IO.Directory]::CreateDirectory($nfBuild)
 
-    # Set the [pubcore] arguments (note that we need to handle apps targeting different versions of .NET):
+    # Locate the published output folder (note that we need to handle apps targeting different versions of .NET):
 
     $projectPath = [System.IO.Path]::Combine($nfRoot, $projectPath)
-    $targetPath  = [System.IO.Path]::Combine($ncRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "net5.0-windows", "$targetName.dll")
+    $targetPath  = [System.IO.Path]::Combine($nfRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "net5.0-windows")
     
-    if (!(Test-Path $targetPath))
+    if (![System.IO.Directory]::Exists($targetPath))
     {
-        $targetPath = [System.IO.Path]::Combine($ncRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "net5.0", "$targetName.dll")
+        $targetPath = [System.IO.Path]::Combine($nfRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "net5.0")
 
-        if (!(Test-Path $targetPath))
+        if (![System.IO.Directory]::Exists($targetPath))
         {
-            $targetPath = [System.IO.Path]::Combine($ncRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "netcoreapp3.1", "$targetName.dll")
-
-            if (!(Test-Path $targetPath))
-            {
-                Write-Error "Cannot locate publish folder for: $projectPath"
-                Exit 1
-            }
+            Write-Error "Cannot locate publish folder for: $projectPath"
+            Exit 1
         }
     }
 
-    # Publish the binaries.
+    # Copy the binary files to a new build folder subdirectory named for the target and
+    # generate the batch file to launch the program.
 
     ""
     "**********************************************************"
     "*** PUBLISH: $targetName"
     "**********************************************************"
-    ""
-    "pubcore ""$projectPath"" ""$targetName"" ""$config"" ""$targetPath"" ""$nfBuild"" win10-x64"
-    ""
 
-    pubcore "$projectPath" "$targetName" "$config" "$targetPath" "$nfBuild" win10-x64
+    $binaryFolder = [System.IO.Path]::Combine($nfBuild, $targetName)
 
-    if (-not $?)
+    if ([System.IO.Directory]::Exists($binaryFolder))
     {
-        ""
-        "*** PUBLICATION FAILED ***"
-        ""
-        exit 1
+        [System.IO.Directory]::Delete($binaryFolder, $true)
     }
+
+    [System.IO.Directory]::CreateDirectory($binaryFolder)
+    Copy-Item -Path "$targetPath/*" -Destination $binaryFolder -Recurse
+
+    $cmdPath = [System.IO.Path]::Combine($nfBuild, "$targetName.cmd")
+
+    [System.IO.File]::WriteAllText($cmdPath, "@echo off`r`n")
+    [System.IO.File]::AppendAllText($cmdPath, "%~dp0\$targetName\$targetName.exe %*`r`n")
 }
 
 #------------------------------------------------------------------------------
@@ -132,8 +136,7 @@ if ($?)
     exit 1
 }
 
-$originalDir = $pwd
-cd $nfRoot
+Push-Location $nfRoot
 
 # Build the solution.
 
@@ -154,7 +157,7 @@ if (-not $nobuild)
     "**********************************************************"
     ""
 
-    & "$msbuild" "$nfSolution" $buildConfig -t:Clean -verbosity:quiet
+    & "$msbuild" "$nfSolution" $buildConfig -t:Clean -m -verbosity:quiet
 
     if (-not $?)
     {
@@ -170,7 +173,7 @@ if (-not $nobuild)
     "**********************************************************"
     ""
 
-    & "$msbuild" "$nfSolution" $buildConfig -restore -verbosity:quiet
+    & "$msbuild" "$nfSolution" $buildConfig -restore -m -verbosity:quiet
 
     if (-not $?)
     {
@@ -185,39 +188,10 @@ if (-not $nobuild)
 
 if ($tools)
 {
-    # Publish the Windows .NET Core binaries to the build folder.
+    # Publish the Windows .NET Core tool binaries to the build folder.
 
     PublishCore "Tools\neon-cli\neon-cli.csproj"    "neon"
     PublishCore "Tools\unix-text\unix-text.csproj"  "unix-text"
-    PublishCore "Tools\modelgen\modelgen.csproj"    "modelgen"
-
-    # Hack to publish OS/X version of [neon-cli] to the build folder.
-
-    ""
-    "**********************************************************"
-    "***                   OS/X neon-cli                    ***"
-    "**********************************************************"
-    ""
-
-    cd "$nfTools\neon-cli"
-    dotnet publish -r osx-x64 -c Release /p:PublishSingleFile=true
-    & mkdir "$nfBuild\osx"
-    & cp "$nfTools\neon-cli\bin\Release\netcoreapp3.1\osx-x64\publish\neon" "$nfBuild\osx\neon-osx"
-    cd $nfRoot
-
-    ""
-    "Generating OS/X neon-cli SHA512..."
-    ""
-
-    & cat "$nfBuild\osx\neon-osx" | openssl dgst -sha512 -binary | neon-build hexdump > "$nfBuild\osx\neon-osx-$desktopVersion.sha512.txt"
-
-    if (-not $?)
-    {
-	    ""
-	    "*** OS/X neon-cli: SHA512 failed ***"
-	    ""
-	    exit 1
-    }
  }
 
 # Build the code documentation if requested.
@@ -244,7 +218,7 @@ if ($codedoc)
         exit 1
     }
 
-    & "$msbuild" "$nfSolution" -p:Configuration=CodeDoc -restore
+    & "$msbuild" "$nfSolution" -p:Configuration=CodeDoc -restore -m -verbosity:quiet
 
     if (-not $?)
     {
@@ -260,25 +234,21 @@ if ($codedoc)
     $nfDocOutput = "$nfroot\Websites\CodeDoc\bin\CodeDoc"
 
     & cp "$nfDocOutput\neon.chm" "$nfbuild"
+    ThrowOnExitCode
 
     ""
     "Generating neon.chm SHA512..."
 	""
 
     & cat "$nfBuild\neon.chm" | openssl dgst -sha512 -binary | neon-build hexdump > "$nfBuild\neon.chm.sha512.txt"
+    ThrowOnExitCode
 
     # Move the documentation build output.
 	
     & rm -r --force "$nfBuild\codedoc"
+    ThrowOnExitCode
     & mv "$nfDocOutput" "$nfBuild\codedoc"
-
-    if (-not $?)
-    {
-        ""
-        "*** neon.chm: SHA512 failed ***"
-        ""
-        exit 1
-    }
+    ThrowOnExitCode
 
     # Munge the SHFB generated documentation site:
     #
@@ -291,6 +261,7 @@ if ($codedoc)
 	""
 
     & neon-build shfb --gtag="$nfroot\Websites\CodeDoc\gtag.js" --styles="$nfRoot\WebSites\CodeDoc\styles" "$nfRoot\WebSites\CodeDoc" "$nfBuild\codedoc"
+    ThrowOnExitCode
 }
 
-cd $originalDir
+Pop-Location

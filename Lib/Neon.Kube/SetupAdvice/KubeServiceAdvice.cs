@@ -148,7 +148,6 @@ namespace Neon.Kube
         /// <summary>
         /// Returns the property value if present or <c>null</c>.
         /// </summary>
-        /// <typeparam name="T">The value type.</typeparam>
         /// <param name="name">The property name.</param>
         /// <returns>The property value or <c>null</c>.</returns>
         public string GetProperty(string name)

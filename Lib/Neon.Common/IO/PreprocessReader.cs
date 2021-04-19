@@ -905,7 +905,7 @@ namespace Neon.IO
 
                     if (fields.Length < 2)
                     {
-                        throw new ProfileException($"[{name}] is not a valid profile reference.  Both [type] and [name] are required.");
+                        throw new ProfileException($"[{name}] is not a valid profile reference.  Both [type] and [name] are required.", ProfileStatus.BadReference);
                     }
 
                     switch (fields[0].ToLower())
@@ -914,7 +914,7 @@ namespace Neon.IO
 
                             if (profileClient == null)
                             {
-                                throw new ProfileException($"Cannot lookup the secret password [{name}] because no [{nameof(IProfileClient)}] implementation is available.");
+                                throw new ProfileException($"Cannot lookup the secret password [{name}] because no [{nameof(IProfileClient)}] implementation is available.", ProfileStatus.BadReference);
                             }
 
                             value = profileClient.GetSecretPassword(fields[1], fields.Length >= 3 ? fields[2] : null);
@@ -924,7 +924,7 @@ namespace Neon.IO
 
                             if (profileClient == null)
                             {
-                                throw new ProfileException($"Cannot lookup the secret value [{name}] because no [{nameof(IProfileClient)}] implementation is available.");
+                                throw new ProfileException($"Cannot lookup the secret value [{name}] because no [{nameof(IProfileClient)}] implementation is available.", ProfileStatus.BadReference);
                             }
 
                             value = profileClient.GetSecretValue(fields[1], fields.Length >= 3 ? fields[2] : null);
@@ -934,7 +934,7 @@ namespace Neon.IO
 
                             if (profileClient == null)
                             {
-                                throw new ProfileException($"Cannot lookup the profile value [{name}] because no [{nameof(IProfileClient)}] implementation is available.");
+                                throw new ProfileException($"Cannot lookup the profile value [{name}] because no [{nameof(IProfileClient)}] implementation is available.", ProfileStatus.BadReference);
                             }
 
                             value = profileClient.GetProfileValue(fields[1]);
@@ -942,7 +942,7 @@ namespace Neon.IO
 
                         default:
 
-                            throw new ProfileException($"[{fields[0]}] is not a valid profile type.  Only [password], [secret], and [profile] are supported.");
+                            throw new ProfileException($"[{fields[0]}] is not a valid profile type.  Only [password], [secret], and [profile] are supported.", ProfileStatus.BadReference);
                     }
                 }
                 else if (name.StartsWith("<") && name.EndsWith(">") ||
