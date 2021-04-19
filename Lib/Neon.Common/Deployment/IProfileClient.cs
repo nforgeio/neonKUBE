@@ -119,7 +119,7 @@ namespace Neon.Deployment
         /// Requests a profile value from the assistant.
         /// </summary>
         /// <param name="name">Identifies the profile value.</param>
-        /// <param name="nullOnNotFound">Optionally specifies that <c>null</c> should be returned rather than throwing an exception when the secret does not exist.</param>
+        /// <param name="nullOnNotFound">Optionally specifies that <c>null</c> should be returned rather than throwing an exception when the profile value does not exist.</param>
         /// <returns>The password value.</returns>
         /// <exception cref="ProfileException">Thrown if the profile server returns an error.</exception>
         string GetProfileValue(string name, bool nullOnNotFound = false);
