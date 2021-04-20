@@ -2809,8 +2809,8 @@ $@"- name: StorageType
 
             if (masterAdvice.PodMemoryRequest.HasValue && masterAdvice.PodMemoryLimit.HasValue)
             {
-                values.Add($"master.resources.requests.memory", ToSiString(managerAdvice.PodMemoryRequest));
-                values.Add($"master.resources.limits.memory", ToSiString(managerAdvice.PodMemoryLimit));
+                values.Add($"master.resources.requests.memory", ToSiString(masterAdvice.PodMemoryRequest));
+                values.Add($"master.resources.limits.memory", ToSiString(masterAdvice.PodMemoryLimit));
             }
 
             if (workerAdvice.PodMemoryRequest.HasValue && workerAdvice.PodMemoryLimit.HasValue)

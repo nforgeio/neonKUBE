@@ -146,7 +146,7 @@ namespace Neon.Kube
         {
             var advice = new KubeServiceAdvice(KubeClusterAdvice.CitusPostgresSqlManager);
 
-            advice.ReplicaCount = Math.Max(1, cluster.Definition.Nodes.Where(node => node.Labels.NeonSystemDb).Count() / 5);
+            advice.ReplicaCount = 1;
 
             if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2
                         || cluster.Definition.Nodes.Count() == 1)
@@ -162,7 +162,7 @@ namespace Neon.Kube
         {
             var advice = new KubeServiceAdvice(KubeClusterAdvice.CitusPostgresSqlMaster);
 
-            advice.ReplicaCount = Math.Min(3, (cluster.Definition.Nodes.Where(node => node.Labels.NeonSystemDb).Count()));
+            advice.ReplicaCount = 1;
 
             if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2
                         || cluster.Definition.Nodes.Count() == 1)
