@@ -1074,6 +1074,7 @@ spec:
       logAsJson: true
       imagePullPolicy: IfNotPresent
       proxy:
+        holdApplicationUntilProxyStarts: true
         resources:
           requests:
             cpu: ""{ToSiString(proxyAdvice.PodCpuRequest)}""
@@ -2417,9 +2418,12 @@ $@"- name: StorageType
                             {
                                 values.Add($"mode", "distributed");
                             }
-                            
-                            values.Add($"resources.requests.memory", ToSiString(advice.PodMemoryRequest.Value));
-                            values.Add($"resources.limits.memory", ToSiString(advice.PodMemoryLimit.Value));
+
+                            if (advice.PodMemoryRequest.HasValue && advice.PodMemoryLimit.HasValue)
+                            {
+                                values.Add($"resources.requests.memory", ToSiString(advice.PodMemoryRequest));
+                                values.Add($"resources.limits.memory", ToSiString(advice.PodMemoryLimit));
+                            }
 
                             await master.InstallHelmChartAsync(controller, "minio", releaseName: "minio", @namespace: "neon-system", values: values);
                         });
@@ -2785,6 +2789,8 @@ $@"- name: StorageType
             values.Add($"busybox.image.organization", KubeConst.LocalClusterRegistry);
             values.Add($"prometheus.image.organization", KubeConst.LocalClusterRegistry);
             values.Add($"manager.image.organization", KubeConst.LocalClusterRegistry);
+
+            values.Add($"manager.namespace", KubeNamespaces.NeonSystem);
 
             if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2 || cluster.Definition.Nodes.Count() == 1)
             {
