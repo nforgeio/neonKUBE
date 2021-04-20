@@ -2257,8 +2257,11 @@ $@"- name: StorageType
                         values.Add($"config.limits_config.reject_old_samples_max_age", "15m");
                     }
 
-                    values.Add($"resources.requests.memory", ToSiString(advice.PodMemoryRequest));
-                    values.Add($"resources.limits.memory", ToSiString(advice.PodMemoryLimit));
+                    if (advice.PodMemoryRequest != null && advice.PodMemoryLimit != null)
+                    {
+                        values.Add($"resources.requests.memory", ToSiString(advice.PodMemoryRequest.Value));
+                        values.Add($"resources.limits.memory", ToSiString(advice.PodMemoryLimit.Value));
+                    }
 
                     await master.InstallHelmChartAsync(controller, "loki", releaseName: "loki", @namespace: KubeNamespaces.NeonMonitor, values: values);
                 });
@@ -2303,8 +2306,11 @@ $@"- name: StorageType
                         values.Add($"config.ingester.lifecycler.ring.kvstore.replication_factor", 3);
                     }
 
-                    values.Add($"resources.requests.memory", ToSiString(advice.PodMemoryRequest.Value));
-                    values.Add($"resources.limits.memory", ToSiString(advice.PodMemoryLimit.Value));
+                    if (advice.PodMemoryRequest != null && advice.PodMemoryLimit != null)
+                    {
+                        values.Add($"resources.requests.memory", ToSiString(advice.PodMemoryRequest.Value));
+                        values.Add($"resources.limits.memory", ToSiString(advice.PodMemoryLimit.Value));
+                    }
 
                     await master.InstallHelmChartAsync(controller, "promtail", releaseName: "promtail", @namespace: KubeNamespaces.NeonMonitor, values: values);
                 });
@@ -2794,11 +2800,13 @@ $@"- name: StorageType
 
             if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2 || cluster.Definition.Nodes.Count() == 1)
             {
-                await CreateHostPathStorageClass(controller, master, "neon-internal-citus");
+                await CreateHostPathStorageClass(controller, master, "neon-internal-citus-master");
+                await CreateHostPathStorageClass(controller, master, "neon-internal-citus-worker");
             }
             else
             {
-                await CreateCstorStorageClass(controller, master, "neon-internal-citus");
+                await CreateCstorStorageClass(controller, master, "neon-internal-citus-master", replicaCount: 3);
+                await CreateCstorStorageClass(controller, master, "neon-internal-citus-worker", replicaCount: 1);
             }
 
             if (managerAdvice.PodMemoryRequest.HasValue && managerAdvice.PodMemoryLimit.HasValue)

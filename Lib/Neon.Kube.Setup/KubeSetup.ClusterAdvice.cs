@@ -331,7 +331,7 @@ namespace Neon.Kube
         {
             var advice = new KubeServiceAdvice(KubeClusterAdvice.Loki);
 
-            Math.Min(3, (cluster.Definition.Nodes.Where(node => node.Labels.LogsInternal).Count()));
+            advice.ReplicaCount = Math.Min(3, (cluster.Definition.Nodes.Where(node => node.Labels.LogsInternal).Count()));
 
             if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2
                         || cluster.Definition.Nodes.Count() == 1)
