@@ -87,16 +87,20 @@ namespace Neon.Deployment
         {
             Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
 
+File.AppendAllText(@"C:\Temp\secret.txt", "*** [.net] Call-0");
             using (var pipe = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut))
             {
                 try
                 {
+File.AppendAllText(@"C:\Temp\secret.txt", "*** [.net] Call-1");
                     pipe.Connect((int)connectTimeout.TotalMilliseconds);
+File.AppendAllText(@"C:\Temp\secret.txt", "*** [.net] Call-2");
                 }
                 catch (TimeoutException e)
                 {
                     throw new ProfileException("Cannot connect to profile server.  Is [neon-assistant] running?", ProfileStatus.Timeout, e);
                 }
+File.AppendAllText(@"C:\Temp\secret.txt", "*** [.net] Call-3");
 
                 var reader = new StreamReader(pipe);
                 var writer = new StreamWriter(pipe);
@@ -113,13 +117,17 @@ namespace Neon.Deployment
 
                 var response = ProfileResponse.Parse(responseLine);
 
+File.AppendAllText(@"C:\Temp\secret.txt", "*** [.net] Call-4");
                 pipe.Close();
+File.AppendAllText(@"C:\Temp\secret.txt", "*** [.net] Call-5");
 
                 if (!response.Success)
                 {
+File.AppendAllText(@"C:\Temp\secret.txt", "*** [.net] Call-6");
                     throw new ProfileException(response.Error, response.Status);
                 }
 
+File.AppendAllText(@"C:\Temp\secret.txt", "*** [.net] Call-7");
                 return response;
             }
         }
@@ -187,6 +195,9 @@ namespace Neon.Deployment
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
+// $debug(jefflill): DELETE THESE
+File.AppendAllText(@"C:\Temp\secret.txt", "*** [.net] GetSecretValue-0");
+
             var args = new Dictionary<string, string>();
 
             args.Add("name", name);
@@ -203,6 +214,7 @@ namespace Neon.Deployment
 
             try
             {
+File.AppendAllText(@"C:\Temp\secret.txt", "*** [.net] GetSecretValue-1");
                 return Call(ProfileRequest.Create("GET-SECRET-VALUE", args)).Value;
             }
             catch (ProfileException e)
