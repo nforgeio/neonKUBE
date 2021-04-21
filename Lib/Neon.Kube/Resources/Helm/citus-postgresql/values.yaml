@@ -22,7 +22,6 @@ tolerations:
 ## 
 persistence:
   enabled: true
-  storageClass: "neon-internal-citus"
   accessMode: ReadWriteOnce
 
 ## Citus Worker
@@ -41,11 +40,11 @@ worker:
   #    memory: 1Gi
   persistence:
     size: 5Gi
-    storageClassName: openebs-hostpath
+    storageClassName: neon-internal-citus-worker
 
 ## Citus Master
 master:
-  replicas: 3
+  replicas: 1
   citusType: "citus-master"
   extraConfigs:
   resources: {}
@@ -57,7 +56,7 @@ master:
   #    memory: 1Gi
   persistence:
     size: 5Gi
-    storageClassName: openebs-hostpath
+    storageClassName: neon-internal-citus-master
 
 
 ## Citus Master Service

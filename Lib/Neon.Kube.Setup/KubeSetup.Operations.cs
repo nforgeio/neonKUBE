@@ -658,8 +658,8 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                             "-v=/etc/neonkube/neon-etcd-proxy.cfg:/etc/haproxy/haproxy.cfg",
                                             "--network=host",
                                             "--log-driver=k8s-file",
-                                            $"{KubeConst.LocalClusterRegistry}/haproxy:{KubeConst.NeonKubeImageTag}"
-                                        );
+                                            $"{KubeConst.LocalClusterRegistry}/haproxy:{KubeVersions.HaproxyVersion}",
+                                            RunOptions.FaultOnError);
 
                                         for (int attempt = 0; attempt < maxJoinAttempts; attempt++)
                                         {
@@ -1074,6 +1074,7 @@ spec:
       logAsJson: true
       imagePullPolicy: IfNotPresent
       proxy:
+        holdApplicationUntilProxyStarts: true
         resources:
           requests:
             cpu: ""{ToSiString(proxyAdvice.PodCpuRequest)}""
@@ -2256,8 +2257,11 @@ $@"- name: StorageType
                         values.Add($"config.limits_config.reject_old_samples_max_age", "15m");
                     }
 
-                    values.Add($"resources.requests.memory", ToSiString(advice.PodMemoryRequest));
-                    values.Add($"resources.limits.memory", ToSiString(advice.PodMemoryLimit));
+                    if (advice.PodMemoryRequest != null && advice.PodMemoryLimit != null)
+                    {
+                        values.Add($"resources.requests.memory", ToSiString(advice.PodMemoryRequest.Value));
+                        values.Add($"resources.limits.memory", ToSiString(advice.PodMemoryLimit.Value));
+                    }
 
                     await master.InstallHelmChartAsync(controller, "loki", releaseName: "loki", @namespace: KubeNamespaces.NeonMonitor, values: values);
                 });
@@ -2302,8 +2306,11 @@ $@"- name: StorageType
                         values.Add($"config.ingester.lifecycler.ring.kvstore.replication_factor", 3);
                     }
 
-                    values.Add($"resources.requests.memory", ToSiString(advice.PodMemoryRequest.Value));
-                    values.Add($"resources.limits.memory", ToSiString(advice.PodMemoryLimit.Value));
+                    if (advice.PodMemoryRequest != null && advice.PodMemoryLimit != null)
+                    {
+                        values.Add($"resources.requests.memory", ToSiString(advice.PodMemoryRequest.Value));
+                        values.Add($"resources.limits.memory", ToSiString(advice.PodMemoryLimit.Value));
+                    }
 
                     await master.InstallHelmChartAsync(controller, "promtail", releaseName: "promtail", @namespace: KubeNamespaces.NeonMonitor, values: values);
                 });
@@ -2417,9 +2424,12 @@ $@"- name: StorageType
                             {
                                 values.Add($"mode", "distributed");
                             }
-                            
-                            values.Add($"resources.requests.memory", ToSiString(advice.PodMemoryRequest.Value));
-                            values.Add($"resources.limits.memory", ToSiString(advice.PodMemoryLimit.Value));
+
+                            if (advice.PodMemoryRequest.HasValue && advice.PodMemoryLimit.HasValue)
+                            {
+                                values.Add($"resources.requests.memory", ToSiString(advice.PodMemoryRequest));
+                                values.Add($"resources.limits.memory", ToSiString(advice.PodMemoryLimit));
+                            }
 
                             await master.InstallHelmChartAsync(controller, "minio", releaseName: "minio", @namespace: "neon-system", values: values);
                         });
@@ -2786,13 +2796,17 @@ $@"- name: StorageType
             values.Add($"prometheus.image.organization", KubeConst.LocalClusterRegistry);
             values.Add($"manager.image.organization", KubeConst.LocalClusterRegistry);
 
+            values.Add($"manager.namespace", KubeNamespaces.NeonSystem);
+
             if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2 || cluster.Definition.Nodes.Count() == 1)
             {
-                await CreateHostPathStorageClass(controller, master, "neon-internal-citus");
+                await CreateHostPathStorageClass(controller, master, "neon-internal-citus-master");
+                await CreateHostPathStorageClass(controller, master, "neon-internal-citus-worker");
             }
             else
             {
-                await CreateCstorStorageClass(controller, master, "neon-internal-citus");
+                await CreateCstorStorageClass(controller, master, "neon-internal-citus-master", replicaCount: 3);
+                await CreateCstorStorageClass(controller, master, "neon-internal-citus-worker", replicaCount: 1);
             }
 
             if (managerAdvice.PodMemoryRequest.HasValue && managerAdvice.PodMemoryLimit.HasValue)
@@ -2803,8 +2817,8 @@ $@"- name: StorageType
 
             if (masterAdvice.PodMemoryRequest.HasValue && masterAdvice.PodMemoryLimit.HasValue)
             {
-                values.Add($"master.resources.requests.memory", ToSiString(managerAdvice.PodMemoryRequest));
-                values.Add($"master.resources.limits.memory", ToSiString(managerAdvice.PodMemoryLimit));
+                values.Add($"master.resources.requests.memory", ToSiString(masterAdvice.PodMemoryRequest));
+                values.Add($"master.resources.limits.memory", ToSiString(masterAdvice.PodMemoryLimit));
             }
 
             if (workerAdvice.PodMemoryRequest.HasValue && workerAdvice.PodMemoryLimit.HasValue)

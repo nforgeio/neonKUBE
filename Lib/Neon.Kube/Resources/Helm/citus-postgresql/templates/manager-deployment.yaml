@@ -42,7 +42,7 @@ spec:
         {{ toYaml .Values.manager.resources | nindent 10 }}
         env:
         - name: NAMESPACE
-          value: {{ .Values.manager.namespace }}
+          value: "{{- .Release.Namespace -}}"
         - name: SHORT_URL
           value: "{{ .Values.manager.shortUrl }}"
         - name: WORKER_SERVICE
