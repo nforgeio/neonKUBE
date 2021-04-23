@@ -52,9 +52,9 @@ function Exec
 {
     [CmdletBinding()]
     param (
-        [Parameter(Position=0, Mandatory=1)]
+        [Parameter(Position=0, Mandatory=$true)]
         [scriptblock]$Command,
-        [Parameter(Position=1, Mandatory=0)]
+        [Parameter(Position=1, Mandatory=$false)]
         [string]$ErrorMessage = "*** FAILED: $Command"
     )
     & $Command
@@ -70,7 +70,7 @@ function DeleteFile
 {
     [CmdletBinding()]
     param (
-        [Parameter(Position=0, Mandatory=1)]
+        [Parameter(Position=0, Mandatory=$true)]
         [string]$Path
     )
 
@@ -87,7 +87,7 @@ function DeleteFolder
 {
     [CmdletBinding()]
     param (
-        [Parameter(Position=0, Mandatory=1)]
+        [Parameter(Position=0, Mandatory=$true)]
         [string]$Path
     )
 
@@ -131,9 +131,9 @@ function PushImage
 {
     [CmdletBinding()]
     param (
-        [Parameter(Position=0, Mandatory=1)]
+        [Parameter(Position=0, Mandatory=$true)]
         [string]$image,
-        [Parameter(Position=1, Mandatory=0)]
+        [Parameter(Position=1, Mandatory=$false)]
         [string]$baseTag = $null
     )
 
@@ -500,8 +500,8 @@ function Log-ImageBuild
     [CmdletBinding()]
     param 
 	(
-        [Parameter(Position=0, Mandatory=1)] [string] $registry,
-        [Parameter(Position=1, Mandatory=1)] [string] $tag
+        [Parameter(Position=0, Mandatory=$true)] [string] $registry,
+        [Parameter(Position=1, Mandatory=$true)] [string] $tag
     )
 
 	"   "

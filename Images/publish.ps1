@@ -53,7 +53,7 @@ function Publish
 {
     [CmdletBinding()]
     param (
-        [Parameter(Position=0, Mandatory=1)]
+        [Parameter(Position=0, Mandatory=$true)]
         [string]$Path
     )
 

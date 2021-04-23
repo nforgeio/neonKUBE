@@ -38,9 +38,9 @@ function SetVersion
 {
     [CmdletBinding()]
     param (
-        [Parameter(Position=0, Mandatory=1)]
+        [Parameter(Position=0, Mandatory=$true)]
         [string]$project,
-        [Parameter(Position=1, Mandatory=2)]
+        [Parameter(Position=1, Mandatory=$true)]
         [string]$version
     )
 
@@ -56,9 +56,9 @@ function Publish
 {
     [CmdletBinding()]
     param (
-        [Parameter(Position=0, Mandatory=1)]
+        [Parameter(Position=0, Mandatory=$true)]
         [string]$project,
-        [Parameter(Position=1, Mandatory=2)]
+        [Parameter(Position=1, Mandatory=$true)]
         [string]$version
     )
 
