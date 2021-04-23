@@ -22,7 +22,7 @@
 #
 # ARGUMENTS:
 #
-#   value   - the value being escaped
+#   value   - the string value being escaped
 #
 # RETURNS:
 #
@@ -30,10 +30,10 @@
 
 function Escape-ActionString
 {
-[CmdletBinding()]
+    [CmdletBinding()]
     param (
-        [Parameter(Position=0, Mandatory=1)]
-        [string]$value
+        [Parameter(Position=0, Mandatory=$false)]
+        [string]$value = $null
     )
 
     if ($value -eq $null)
@@ -50,7 +50,7 @@ function Escape-ActionString
 
 #------------------------------------------------------------------------------
 # Writes a line of text (encoded as UTF-8) to the action output.  Use this instead
-# of [Write-Output] because Powershell doesn't default to UTF-8 and it's support
+# of [Write-Output] because Powershell doesn't default to UTF-8 and its support
 # for configuring the output encoding appears to be buggy.
 #
 # ARGUMENTS:
@@ -60,10 +60,11 @@ function Escape-ActionString
 
 function Write-ActionOutput
 {
+    [CmdletBinding()]
     param (
-        [Parameter(Position=0, Mandatory=0)]
+        [Parameter(Position=0, Mandatory=$false)]
         [string]$text = $null,
-        [Parameter(Position=2, Mandatory=0)]
+        [Parameter(Position=1, Mandatory=$false)]
         [string]$color = $null
     )
 
@@ -71,6 +72,8 @@ function Write-ActionOutput
     {
         $text = ""
     }
+
+    $text = Escape-ActionString $text
 
     if (![System.String]::IsNullOrEmpty($text))
     {
@@ -111,24 +114,22 @@ function Write-ActionOutput
 # ARGUMENTS:
 #
 #   name    - the action output name
-#   value   - the value to be set ($null will set empty string)
+#   value   - the value to be set (cannot be $null or empty)
 
 function Set-ActionOutput
 {
     [CmdletBinding()]
     param (
-        [Parameter(Position=0, Mandatory=1)]
+        [Parameter(Position=0, Mandatory=$true)]
         [string]$name,
-        [Parameter(Position=1, Mandatory=1)]
-        [string]$value
+        [Parameter(Position=1, Mandatory=$false)]
+        [string]$value = $null
     )
 
     if ([System.String]::IsNullOrEmpty($name))
     {
         throw "[$name] cannot be null or empty."
     }
-
-    $value = Escape-ActionString $value
 
     Write-ActionOutput "::set-output name=$name::$value"
 }
@@ -149,11 +150,9 @@ function Log-ActionDebugMessage
 {
     [CmdletBinding()]
     param (
-        [Parameter(Position=0, Mandatory=1)]
+        [Parameter(Position=0, Mandatory=$true)]
         [string]$message
     )
-
-    $message = Escape-ActionString $message
 
     Write-ActionOutput "::debug::$message"
 }
@@ -169,11 +168,9 @@ function Log-ActionWarningMessage
 {
     [CmdletBinding()]
     param (
-        [Parameter(Position=0, Mandatory=1)]
+        [Parameter(Position=0, Mandatory=$true)]
         [string]$message
     )
-
-    $message = Escape-ActionString $message
 
     Write-ActionOutput "::warning::$message"
 }
@@ -189,11 +186,9 @@ function Log-ActionErrorMessage
 {
     [CmdletBinding()]
     param (
-        [Parameter(Position=0, Mandatory=1)]
+        [Parameter(Position=0, Mandatory=$true)]
         [string]$message
     )
-
-    $message = Escape-ActionString $message
 
     Write-ActionOutput "::error::$message"
 }
@@ -209,7 +204,7 @@ function Open-ActionOutputGroup
 {
     [CmdletBinding()]
     param (
-        [Parameter(Position=0, Mandatory=1)]
+        [Parameter(Position=0, Mandatory=$true)]
         [string]$groupTitle
     )
 
@@ -232,8 +227,8 @@ function Close-ActionOutputGroup
 #
 #   path        - path to the text file
 #   groupTitle  - optionally specifies the group title
-#   colorMode   - optionally parses to the text file lines and attempts to
-#                 color them when it makes sense.  Pass one of these values:
+#   type        - optionally specifies the log file type fgor colorization.
+#                 Pass one of these values:
 #
 #                     "none" or ""  - disables colorization
 #                     "build-log"   - parses build logs
@@ -246,12 +241,12 @@ function Write-ActionOutputFile
 {
     [CmdletBinding()]
     param (
-        [Parameter(Position=0, Mandatory=1)]
+        [Parameter(Position=0, Mandatory=$true)]
         [string]$path,
-        [Parameter(Position=1, Mandatory=0)]
+        [Parameter(Position=1, Mandatory=$false)]
         [string]$groupTitle = $null,
-        [Parameter(Position=2, Mandatory=0)]
-        [string]$colorMode = $null
+        [Parameter(Position=2, Mandatory=$false)]
+        [string]$type = $null
     )
 
     if (![System.IO.File]::Exists($path))
@@ -276,7 +271,7 @@ function Write-ActionOutputFile
     {
         $color = $null
 
-        Switch ($colorMode)
+        Switch ($type)
         {
             $null
             {
@@ -308,7 +303,7 @@ function Write-ActionOutputFile
 
             default
             {
-                throw "[$colorMode] is not a valid color mode."
+                throw "[$type] is not a supported log file type."
             }
         }
 
@@ -337,15 +332,15 @@ function Set-ActionEnvironmentVariable
 {
     [CmdletBinding()]
     param (
-        [Parameter(Position=0, Mandatory=1)]
+        [Parameter(Position=0, Mandatory=$true)]
         [string]$name,
-        [Parameter(Position=1, Mandatory=1)]
+        [Parameter(Position=1, Mandatory=$true)]
         [string]$value
     )
 
     if ([System.String]::IsNullOrEmpty($name))
     {
-        throw "[$name] cannot be null or empty."
+        throw "[name] cannot be null or empty."
     }
 
     if ($value -eq $null)
@@ -384,17 +379,51 @@ function Add-ActionPath
 {
     [CmdletBinding()]
     param (
-        [Parameter(Position=0, Mandatory=1)]
+        [Parameter(Position=0, Mandatory=$true)]
         [string]$path
     )
 
     if ([System.String]::IsNullOrEmpty($path))
     {
-        throw "[$path] cannot be null or empty."
+        throw "[path] cannot be null or empty."
     }
 
     if (![System.IO.Directory]::DirectoryExists($path))
     {
         throw "[$path] directory does not exist."
     }
+}
+
+#------------------------------------------------------------------------------
+# Retrieves an action input value.
+#
+# ARGUMENTS:
+#
+#   name        - the value name.
+#   required    - optionally indicates that the value is required
+
+function Get-ActionInput
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$name,
+        [Parameter(Position=1, Mandatory=$false)]
+        [bool]$required = $false
+    )
+
+    if ([System.String]::IsNullOrEmpty($name))
+    {
+        throw "[name] cannot be null or empty."
+    }
+
+    $name  = "INPUT_$name"
+    $value = [System.Environment]::GetEnvironmentVariable($name)
+
+    if ($required -and [System.String]::IsNullOrEmpty($value))
+    {
+        throw "[$name] input is required."
+    }
+
+    return $value
 }

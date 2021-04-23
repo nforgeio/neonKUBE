@@ -67,9 +67,9 @@ function GetProfileValue
 {
     [CmdletBinding()]
     param (
-        [Parameter(Position=0, Mandatory=1)]
+        [Parameter(Position=0, Mandatory=$true)]
         [string]$name,
-        [Parameter(Position=1, Mandatory=0)]
+        [Parameter(Position=1, Mandatory=$false)]
         [bool]$nullOnNotFound = $false
     )
 
@@ -93,13 +93,13 @@ function GetSecretPassword
 {
     [CmdletBinding()]
     param (
-        [Parameter(Position=0, Mandatory=1)]
+        [Parameter(Position=0, Mandatory=$true)]
         [string]$name,
-        [Parameter(Position=1, Mandatory=0)]
+        [Parameter(Position=1, Mandatory=$false)]
         [string]$vault = $null,
-        [Parameter(Position=2, Mandatory=0)]
+        [Parameter(Position=2, Mandatory=$false)]
         [string]$masterPassword = $null,
-        [Parameter(Position=3, Mandatory=0)]
+        [Parameter(Position=3, Mandatory=$false)]
         [bool]$nullOnNotFound = $false
     )
 
@@ -123,13 +123,13 @@ function GetSecretValue
 {
     [CmdletBinding()]
     param (
-        [Parameter(Position=0, Mandatory=1)]
+        [Parameter(Position=0, Mandatory=$true)]
         [string]$name,
-        [Parameter(Position=1, Mandatory=0)]
+        [Parameter(Position=1, Mandatory=$false)]
         [string]$vault = $null,
-        [Parameter(Position=2, Mandatory=0)]
+        [Parameter(Position=2, Mandatory=$false)]
         [string]$masterPassword = $null,
-        [Parameter(Position=3, Mandatory=0)]
+        [Parameter(Position=3, Mandatory=$false)]
         [bool]$nullOnNotFound = $false
     )
 
@@ -156,13 +156,13 @@ function GetAwsCliCredentials
 {
     [CmdletBinding()]
     param (
-        [Parameter(Position=0, Mandatory=0)]
+        [Parameter(Position=0, Mandatory=$false)]
         [string]$awsAccessKeyId = "AWS_ACCESS_KEY_ID",
-        [Parameter(Position=1, Mandatory=0)]
+        [Parameter(Position=1, Mandatory=$false)]
         [string]$awsSecretAccessKey = "AWS_SECRET_ACCESS_KEY",
-        [Parameter(Position=1, Mandatory=0)]
+        [Parameter(Position=1, Mandatory=$false)]
         [string]$vault = $null,
-        [Parameter(Position=2, Mandatory=0)]
+        [Parameter(Position=2, Mandatory=$false)]
         [string]$masterPassword = $null
     )
 
@@ -199,11 +199,11 @@ function GetGitHubCredentials
 {
     [CmdletBinding()]
     param (
-        [Parameter(Position=0, Mandatory=0)]
+        [Parameter(Position=0, Mandatory=$false)]
         [string]$name = "GITHUB_PAT",
-        [Parameter(Position=1, Mandatory=0)]
+        [Parameter(Position=1, Mandatory=$false)]
         [string]$vault = $null,
-        [Parameter(Position=2, Mandatory=0)]
+        [Parameter(Position=2, Mandatory=$false)]
         [string]$masterPassword = $null
     )
 
