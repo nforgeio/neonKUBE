@@ -353,6 +353,7 @@ spec:
                                 var fields = cluster.Definition.Kubernetes.ApiLoadBalancer.Split(':');
 
                                 sbCertSANs.AppendLine($"  - \"{fields[0]}\"");
+                                sbCertSANs.AppendLine($"  - \"kubernetes-masters\"");
                             }
 
                             foreach (var node in cluster.Masters)
