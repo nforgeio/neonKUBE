@@ -315,7 +315,7 @@ namespace Neon.Deployment
         /// This must be initalized before calling <see cref="Start()"/>.
         /// </note>
         /// </summary>
-        public Func<string, ProfileHandlerResult> GetProfileValueHandler { get; set; }
+        public Func<ProfileRequest, string, ProfileHandlerResult> GetProfileValueHandler { get; set; }
 
         /// <summary>
         /// <para>
@@ -326,7 +326,7 @@ namespace Neon.Deployment
         /// This must be initalized before calling <see cref="Start()"/>.
         /// </note>
         /// </summary>
-        public Func<string, string, string, ProfileHandlerResult> GetSecretPasswordHandler { get; set; }
+        public Func<ProfileRequest, string, string, string, ProfileHandlerResult> GetSecretPasswordHandler { get; set; }
 
         /// <summary>
         /// <para>
@@ -337,7 +337,7 @@ namespace Neon.Deployment
         /// This must be initalized before calling <see cref="Start()"/>.
         /// </note>
         /// </summary>
-        public Func<string, string, string, ProfileHandlerResult> GetSecretValueHandler { get; set; }
+        public Func<ProfileRequest, string, string, string, ProfileHandlerResult> GetSecretValueHandler { get; set; }
 
         /// <summary>
         /// Handles incoming client connections on a background thread.
@@ -425,44 +425,44 @@ namespace Neon.Deployment
 
                                 if (name == null)
                                 {
-                                    handlerResult = ProfileHandlerResult.CreateError(ProfileStatus.MissingArg, $"GET-PROFILE-VALUE: [name] argument is required.");
+                                    handlerResult = ProfileHandlerResult.CreateError(request, ProfileStatus.MissingArg, $"GET-PROFILE-VALUE: [name] argument is required.");
                                     break;
                                 }
 
-                                handlerResult = GetProfileValueHandler(name);
+                                handlerResult = GetProfileValueHandler(request, name);
                                 break;
 
                             case "GET-SECRET-PASSWORD":
 
                                 if (name == null)
                                 {
-                                    handlerResult = ProfileHandlerResult.CreateError(ProfileStatus.MissingArg, $"GET-SECRET-PASSWORD: [name] argument is required.");
+                                    handlerResult = ProfileHandlerResult.CreateError(request, ProfileStatus.MissingArg, $"GET-SECRET-PASSWORD: [name] argument is required.");
                                     break;
                                 }
 
-                                handlerResult = GetSecretPasswordHandler(name, vault, masterPassword);
+                                handlerResult = GetSecretPasswordHandler(request, name, vault, masterPassword);
                                 break;
 
                             case "GET-SECRET-VALUE":
 
                                 if (name == null)
                                 {
-                                    handlerResult = ProfileHandlerResult.CreateError(ProfileStatus.MissingArg, $"GET-SECRET-VALUE: [name] argument is required.");
+                                    handlerResult = ProfileHandlerResult.CreateError(request, ProfileStatus.MissingArg, $"GET-SECRET-VALUE: [name] argument is required.");
                                     break;
                                 }
 
-                                handlerResult = GetSecretValueHandler(name, vault, masterPassword);
+                                handlerResult = GetSecretValueHandler(request, name, vault, masterPassword);
                                 break;
 
                             default:
 
-                                handlerResult = ProfileHandlerResult.CreateError(ProfileStatus.BadCommand, $"Unexpected command: {request.Command}");
+                                handlerResult = ProfileHandlerResult.CreateError(request, ProfileStatus.BadCommand, $"Unexpected command: {request.Command}");
                                 break;
                         }
                     }
                     catch (Exception e)
                     {
-                        handlerResult = ProfileHandlerResult.CreateError(ProfileStatus.BadCommand, NeonHelper.ExceptionError(e));
+                        handlerResult = ProfileHandlerResult.CreateError(request, ProfileStatus.BadCommand, NeonHelper.ExceptionError(e));
                     }
 
                     writer.WriteLine(handlerResult.ToResponse());

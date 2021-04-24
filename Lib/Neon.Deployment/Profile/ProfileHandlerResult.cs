@@ -58,14 +58,34 @@ namespace Neon.Deployment
         /// <summary>
         /// Constructs an error result.
         /// </summary>
+        /// <param name="request">The profile request.</param>
         /// <param name="status">One of the <see cref="ProfileStatus"/> codes.</param>
         /// <param name="message">The error message.</param>
         /// <returns>The <see cref="ProfileHandlerResult"/>.</returns>
-        public static ProfileHandlerResult CreateError(string status, string message)
+        /// <remarks>
+        /// <note>
+        /// This method will examine the <paramref name="message"/>, looking for
+        /// underlying 1Password errors and will potentially override the
+        /// <paramref name="status"/> passed.
+        /// </note>
+        /// </remarks>
+        public static ProfileHandlerResult CreateError(ProfileRequest request, string status, string message)
         {
+            Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(status), nameof(status));
             Covenant.Requires<ArgumentException>(status != ProfileStatus.OK, nameof(status));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(message));
+
+            // $hack(jefflill): This is a bit fragile.
+
+            if (message.Contains("503"))
+            {
+                status = ProfileStatus.OnePasswordUnavailable;
+            }
+
+            // Add information about the value being requested to the message.
+
+            message = $"[{request}]: $message";
 
             return new ProfileHandlerResult()
             {
