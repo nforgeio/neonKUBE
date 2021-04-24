@@ -58,7 +58,7 @@ namespace Neon.Deployment
         /// <summary>
         /// Constructs an error result.
         /// </summary>
-        /// <param name="request">The profile request.</param>
+        /// <param name="request">Specifies the profile request or <c>null</c> when this isn't relevant.</param>
         /// <param name="status">One of the <see cref="ProfileStatus"/> codes.</param>
         /// <param name="message">The error message.</param>
         /// <returns>The <see cref="ProfileHandlerResult"/>.</returns>
@@ -71,12 +71,11 @@ namespace Neon.Deployment
         /// </remarks>
         public static ProfileHandlerResult CreateError(ProfileRequest request, string status, string message)
         {
-            Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(status), nameof(status));
             Covenant.Requires<ArgumentException>(status != ProfileStatus.OK, nameof(status));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(message));
 
-            // $hack(jefflill): This is a bit fragile.
+            // $hack(jefflill): This is fragile.
 
             if (message.Contains("503"))
             {
@@ -85,7 +84,10 @@ namespace Neon.Deployment
 
             // Add information about the value being requested to the message.
 
-            message = $"[{request}]: $message";
+            if (request != null)
+            {
+                message = $"[{request}]: $message";
+            }
 
             return new ProfileHandlerResult()
             {
