@@ -102,8 +102,7 @@ function PublishCore
 
                 if (!(Test-Path $targetPath))
                 {
-                    Write-Error "Cannot locate publish folder for: $projectPath"
-                    Exit 1
+                    throw "Cannot locate publish folder for: $projectPath"
                 }
             }
         }
