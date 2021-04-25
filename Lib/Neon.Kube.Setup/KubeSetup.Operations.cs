@@ -2040,7 +2040,7 @@ $@"- name: StorageType
                         i++;
                     }
 
-                    await master.InstallHelmChartAsync(controller, "etcd_cluster", releaseName: "neon-etcd", @namespace: "neon-system", values: values);
+                    await master.InstallHelmChartAsync(controller, "etcd_cluster", releaseName: "neon-etcd", @namespace: KubeNamespaces.NeonSystem, values: values);
                 });
 
             await master.InvokeIdempotentAsync("setup/setup/monitoring-etc-ready",
@@ -2432,7 +2432,7 @@ $@"- name: StorageType
                                 values.Add($"resources.limits.memory", ToSiString(advice.PodMemoryLimit));
                             }
 
-                            await master.InstallHelmChartAsync(controller, "minio", releaseName: "minio", @namespace: "neon-system", values: values);
+                            await master.InstallHelmChartAsync(controller, "minio", releaseName: "minio", @namespace: KubeNamespaces.NeonSystem, values: values);
                         });
 
                     await master.InvokeIdempotentAsync("configure/minio-secret",
@@ -2632,7 +2632,7 @@ $@"- name: StorageType
                         i++;
                     }
 
-                    await master.InstallHelmChartAsync(controller, "redis_ha", releaseName: "registry-redis", @namespace: "neon-system", values: values);
+                    await master.InstallHelmChartAsync(controller, "redis_ha", releaseName: "registry-redis", @namespace: KubeNamespaces.NeonSystem, values: values);
                 });
 
             await master.InvokeIdempotentAsync("setup/harbor-redis-ready",
@@ -2677,7 +2677,7 @@ $@"- name: StorageType
                                 redisConnStr += "\\,";
                             }
 
-                            redisConnStr += $"neon-system-registry-redis-announce-{i}:26379";
+                            redisConnStr += $"registry-redis-announce-{i}:26379";
                         }
 
                         values.Add($"redis.external.addr", redisConnStr);
@@ -2693,7 +2693,7 @@ $@"- name: StorageType
                         j++;
                     }
 
-                    await master.InstallHelmChartAsync(controller, "harbor", releaseName: "registry-harbor", @namespace: "neon-system", values: values);
+                    await master.InstallHelmChartAsync(controller, "harbor", releaseName: "registry-harbor", @namespace: KubeNamespaces.NeonSystem, values: values);
                 });
 
             await master.InvokeIdempotentAsync("setup/harbor-ready",
@@ -2740,7 +2740,7 @@ $@"- name: StorageType
                     
                     values.Add("image.organization", KubeConst.LocalClusterRegistry);
 
-                    await master.InstallHelmChartAsync(controller, "neon_cluster_operator", releaseName: "neon-cluster-operator", @namespace: "neon-system", values: values);
+                    await master.InstallHelmChartAsync(controller, "neon_cluster_operator", releaseName: "neon-cluster-operator", @namespace: KubeNamespaces.NeonSystem, values: values);
                 });
 
             await master.InvokeIdempotentAsync("setup/cluster-operator-ready",
@@ -2856,7 +2856,7 @@ $@"- name: StorageType
                         i++;
                     }
 
-                    await master.InstallHelmChartAsync(controller, "citus_postgresql", releaseName: "db", @namespace: "neon-system", values: values);
+                    await master.InstallHelmChartAsync(controller, "citus_postgresql", releaseName: "db", @namespace: KubeNamespaces.NeonSystem, values: values);
                 });
 
             await master.InvokeIdempotentAsync("setup/system-db-ready",
