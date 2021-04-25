@@ -1381,22 +1381,22 @@ line2
             var server   = new ProfileServer(pipeName);
 
             server.GetProfileValueHandler =
-                name =>
+                (request, name) =>
                 {
                     if (name == "missing")
                     {
-                        return ProfileHandlerResult.CreateError(ProfileStatus.NotFound, $"[{name}] variable not found.");
+                        return ProfileHandlerResult.CreateError(request, ProfileStatus.NotFound, $"[{name}] variable not found.");
                     }
 
                     return ProfileHandlerResult.Create($"{name}-profile");
                 };
 
             server.GetSecretPasswordHandler =
-                (name, vault, masterPassword) =>
+                (request, name, vault, masterPassword) =>
                 {
                     if (name == "missing")
                     {
-                        return ProfileHandlerResult.CreateError(ProfileStatus.NotFound, $"[{name}] variable not found.");
+                        return ProfileHandlerResult.CreateError(request, ProfileStatus.NotFound, $"[{name}] variable not found.");
                     }
 
                     if (vault == null)
@@ -1410,11 +1410,11 @@ line2
                 };
 
             server.GetSecretValueHandler =
-                (name, vault, masterPassword) =>
+                (request, name, vault, masterPassword) =>
                 {
                     if (name == "missing")
                     {
-                        return ProfileHandlerResult.CreateError(ProfileStatus.NotFound, $"[{name}] variable not found.");
+                        return ProfileHandlerResult.CreateError(request, ProfileStatus.NotFound, $"[{name}] variable not found.");
                     }
 
                     if (vault == null)

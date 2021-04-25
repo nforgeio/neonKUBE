@@ -73,9 +73,9 @@ function PublishCore
 {
     [CmdletBinding()]
     param (
-        [Parameter(Position=0, Mandatory=1)]
+        [Parameter(Position=0, Mandatory=$true)]
         [string]$projectPath,
-        [Parameter(Position=1, Mandatory=1)]
+        [Parameter(Position=1, Mandatory=$true)]
         [string]$targetName
     )
 
@@ -86,16 +86,25 @@ function PublishCore
     # Locate the published output folder (note that we need to handle apps targeting different versions of .NET):
 
     $projectPath = [System.IO.Path]::Combine($nfRoot, $projectPath)
-    $targetPath  = [System.IO.Path]::Combine($nfRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "net5.0-windows")
+    $targetPath  = [System.IO.Path]::Combine($nfRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "net5.0-windows", "$targetName.dll")
     
-    if (![System.IO.Directory]::Exists($targetPath))
+    if (!(Test-Path $targetPath))
     {
-        $targetPath = [System.IO.Path]::Combine($nfRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "net5.0")
+        $targetPath = [System.IO.Path]::Combine($nfRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "net5.0-windows10.0.17763.0", "$targetName.dll")
 
-        if (![System.IO.Directory]::Exists($targetPath))
+        if (!(Test-Path $targetPath))
         {
-            Write-Error "Cannot locate publish folder for: $projectPath"
-            Exit 1
+            $targetPath = [System.IO.Path]::Combine($nfRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "net5.0", "$targetName.dll")
+
+            if (!(Test-Path $targetPath))
+            {
+                $targetPath = [System.IO.Path]::Combine($nfRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "netcoreapp3.1", "$targetName.dll")
+
+                if (!(Test-Path $targetPath))
+                {
+                    throw "Cannot locate publish folder for: $projectPath"
+                }
+            }
         }
     }
 

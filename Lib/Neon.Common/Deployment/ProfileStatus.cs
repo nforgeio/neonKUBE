@@ -85,6 +85,11 @@ namespace Neon.Deployment
         public const string BadReference = "BAD-REFERENCE";
 
         /// <summary>
+        /// The 1Password backend service is not available.
+        /// </summary>
+        public const string OnePasswordUnavailable = "1PASSWORD-UNAVAILABLE";
+
+        /// <summary>
         /// An onspecified error occurred.
         /// </summary>
         public const string Other = "OTHER";

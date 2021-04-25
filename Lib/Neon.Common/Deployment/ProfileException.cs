@@ -44,7 +44,7 @@ namespace Neon.Deployment
         /// </param>
         /// <param name="inner">Optionally specifies an inner exception.</param>
         public ProfileException(string message, string status, Exception inner = null)
-            : base(message, inner)
+            : base(message + $" [{status}]", inner)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(status), nameof(status));
 

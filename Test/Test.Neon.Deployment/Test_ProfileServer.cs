@@ -65,10 +65,10 @@ namespace TestDeployment
         /// <param name="server">The assistant erver.</param>
         private void SetDefaultHandlers(ProfileServer server)
         {
-            server.GetProfileValueHandler   = name => ProfileHandlerResult.Create($"{name}-profile");
+            server.GetProfileValueHandler = (request, name) => ProfileHandlerResult.Create($"{name}-profile");
 
             server.GetSecretPasswordHandler = 
-                (name, vault, masterPassword) =>
+                (request, name, vault, masterPassword) =>
                 {
                     var sb = new StringBuilder();
 
@@ -90,7 +90,7 @@ namespace TestDeployment
                 };
 
             server.GetSecretValueHandler =
-                (name, vault, masterPassword) =>
+                (request, name, vault, masterPassword) =>
                 {
                     var sb = new StringBuilder();
 
@@ -215,7 +215,7 @@ namespace TestDeployment
             {
                 SetDefaultHandlers(server);
 
-                server.GetProfileValueHandler = name => throw new Exception("test exception");
+                server.GetProfileValueHandler = (request, name) => throw new Exception("test exception");
 
                 server.Start();
 
@@ -266,7 +266,7 @@ namespace TestDeployment
             {
                 SetDefaultHandlers(server);
 
-                server.GetSecretPasswordHandler = (name, value, masterpassword) => throw new Exception("test exception");
+                server.GetSecretPasswordHandler = (request, name, value, masterpassword) => throw new Exception("test exception");
 
                 server.Start();
 
@@ -317,7 +317,7 @@ namespace TestDeployment
             {
                 SetDefaultHandlers(server);
 
-                server.GetSecretValueHandler = (name, value, masterpassword) => throw new Exception("test exception");
+                server.GetSecretValueHandler = (request, name, value, masterpassword) => throw new Exception("test exception");
 
                 server.Start();
 
