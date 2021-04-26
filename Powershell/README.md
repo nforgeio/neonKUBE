@@ -16,6 +16,8 @@ other repos where the file is also present.
 
 **github.ps1:** GitHub related operations
 
+**github.actions.ps1:** GitHub Actions related operations
+
 **one-password.ps1:** 1Password related operations
 
 Note that you can include **includes.ps1** to import all of these files to your script or you can mix-and-match individual files.

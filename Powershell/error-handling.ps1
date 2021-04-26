@@ -19,8 +19,8 @@
 #------------------------------------------------------------------------------
 # Call this after every native command to check for non-zero exit codes.
 
-function ThrowOnExitCode {
-
+function ThrowOnExitCode 
+{
     if ($LastExitCode -ne 0)
     {
         throw "ERROR: exitcode=$LastExitCode"

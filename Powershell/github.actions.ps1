@@ -42,8 +42,8 @@ function Escape-ActionString
     }
 
     $value = $value.Replace("%", "%25")     # We need to escape "%" too
-    $value = $value.Replace("\r", "%0D")
-    $value = $value.Replace("\n", "%0A")
+    $value = $value.Replace("`r", "%0D")
+    $value = $value.Replace("`n", "%0A")
 
     return $value
 }
@@ -158,13 +158,13 @@ function Log-ActionDebugMessage
 }
 
 #------------------------------------------------------------------------------
-# Logs a warning message.
+# Writes a warning message to the action output.
 #
 # ARGUMENTS:
 #
 #   message     - the message
 
-function Log-ActionWarningMessage
+function Write-ActionWarning
 {
     [CmdletBinding()]
     param (
@@ -172,17 +172,17 @@ function Log-ActionWarningMessage
         [string]$message
     )
 
-    Write-ActionOutput "::warning::$message"
+    Write-ActionOutput $message "yellow"
 }
 
 #------------------------------------------------------------------------------
-# Logs an error message.
+# Writes an error message to the action output.
 #
 # ARGUMENTS:
 #
 #   message     - the message
 
-function Log-ActionErrorMessage
+function Write-ActionError
 {
     [CmdletBinding()]
     param (
@@ -190,7 +190,7 @@ function Log-ActionErrorMessage
         [string]$message
     )
 
-    Write-ActionOutput "::error::$message"
+    Write-ActionOutput $message "red"
 }
 
 #------------------------------------------------------------------------------
@@ -217,6 +217,27 @@ function Open-ActionOutputGroup
 function Close-ActionOutputGroup
 {
     Write-ActionOutput "::endgroup::"
+}
+
+#------------------------------------------------------------------------------
+# Writes information about a Powershell action exception to the action output.
+#
+# ARGUMENTS:
+#
+#   error   - The error caught in a catch block via the automatic
+#             [$_] or [$PSItem] variable
+
+function Write-ActionException
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        $error
+    )
+
+    Write-ActionError "EXCEPTION: $error"
+    Write-ActionError "-------------------------------------------"
+    Write-ActionError $error.ScriptStackTrace
 }
 
 #------------------------------------------------------------------------------
@@ -261,10 +282,12 @@ function Write-ActionOutputFile
         Open-ActionOutputGroup $groupTitle
     }
 
+    # Build log error and warning regular expressions:
+
     $buildLogWarningRegex       = New-Object "System.Text.RegularExpressions.Regex" -ArgumentList "\(\d+,\d+.*\)\:\swarning\s"
-    $buildLogErrorRegex         = New-Object "System.Text.RegularExpressions.Regex" -ArgumentList "\(\d+,\d+.*\)\:\serrors\s"
-    $buildLogWarningummaryRegex = New-Object "System.Text.RegularExpressions.Regex" -ArgumentList "^\s\s\s\s\d+[1-9] Warning\(s\}"
-    $buildLogErrorSummaryRegex  = New-Object "System.Text.RegularExpressions.Regex" -ArgumentList "^\s\s\s\s\d+[1-9] Error\(s\}"
+    $buildLogErrorRegex         = New-Object "System.Text.RegularExpressions.Regex" -ArgumentList "\(\d+,\d+.*\)\:\serror\s"
+    $buildLogWarningummaryRegex = New-Object "System.Text.RegularExpressions.Regex" -ArgumentList "^\s\s\s\s\d+[1-9] Warning\(s\)"
+    $buildLogErrorSummaryRegex  = New-Object "System.Text.RegularExpressions.Regex" -ArgumentList "^\s\s\s\s\d+[1-9] Error\(s\)"
     $buildLogSHFBErrorRegex     = New-Object "System.Text.RegularExpressions.Regex" -ArgumentList "^\s*SHFB\s\:\serror"
 
     ForEach ($line in $lines)
@@ -354,13 +377,19 @@ function Set-ActionEnvironmentVariable
 
         $delimiter = "f06bca88-47d6-4971-b1dc-bec88fa4faac"
 
-        Write-ActionOutput "$name<<$delimiter"
-        Write-ActionOutput $value
-        Write-ActionOutput $delimiter
+        [System.IO.File]::AppendAllText($env:GITHUB_ENV,  "$name<<$delimiter`r`n")
+        [System.IO.File]::AppendAllText($env:GITHUB_ENV,  "$value")
+
+        if (!$value.EndsWith("`n"))
+        {
+            [System.IO.File]::AppendAllText($env:GITHUB_ENV,  "`r`n")
+        }
+
+        [System.IO.File]::AppendAllText($env:GITHUB_ENV,  "$delimiter`r`n")
     }
     else
     {
-        Write-ActionOutput "$name=$value"
+        [System.IO.File]::AppendAllText($env:GITHUB_ENV, "$name=$value`r`n")
     }
 }
 

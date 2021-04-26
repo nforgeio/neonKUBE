@@ -134,6 +134,13 @@ function GetSecretValue
     )
 
     $client = GetProfileClient
+[System.IO.File]::AppendAllText("C:\Temp\secret.txt", "--------------------------------" + "`r`n")
+[System.IO.File]::AppendAllText("C:\Temp\secret.txt", "GetSecretValue:0" + "`r`n")
+[System.IO.File]::AppendAllText("C:\Temp\secret.txt", "current user    = [$env:UserName]" + "`r`n")
+[System.IO.File]::AppendAllText("C:\Temp\secret.txt", "name            = [$name]" + "`r`n")
+[System.IO.File]::AppendAllText("C:\Temp\secret.txt", "vault           = [$vault]" + "`r`n")
+[System.IO.File]::AppendAllText("C:\Temp\secret.txt", "masterPassword  = [$masterPassword]" + "`r`n")
+[System.IO.File]::AppendAllText("C:\Temp\secret.txt", "nullOnNotFound  = [$nullOnNotFound]" + "`r`n")
 
     return $client.GetSecretValue($name, $vault, $masterPassword, $nullOnNotFound)
 }
