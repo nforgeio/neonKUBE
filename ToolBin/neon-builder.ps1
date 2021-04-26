@@ -79,6 +79,11 @@ function PublishCore
         [string]$targetName
     )
 
+    ""
+    "**********************************************************"
+    "*** PUBLISH: $targetName"
+    "**********************************************************"
+
     # Ensure that the NF_BUILD folder exists:
 
     [System.IO.Directory]::CreateDirectory($nfBuild)
@@ -86,35 +91,33 @@ function PublishCore
     # Locate the published output folder (note that we need to handle apps targeting different versions of .NET):
 
     $projectPath = [System.IO.Path]::Combine($nfRoot, $projectPath)
-    $targetPath  = [System.IO.Path]::Combine($nfRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "net5.0-windows", "$targetName.dll")
-    
-    if (!(Test-Path $targetPath))
+
+    $potentialTargets = @(
+        $([System.IO.Path]::Combine($nfRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "net5.0-windows", "$targetName.dll")),
+        $([System.IO.Path]::Combine($nfRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "net5.0-windows10.0.17763.0", "$targetName.dll")),
+        $([System.IO.Path]::Combine($nfRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "net5.0", "$targetName.dll")),
+        $([System.IO.Path]::Combine($nfRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "net5.0", "win10-x64", "$targetName.dll")),
+        $([System.IO.Path]::Combine($nfRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "netcoreapp3.1", "$targetName.dll"))
+    )
+
+    $targetPath = $null
+
+    ForEach ($path in $potentialTargets)
     {
-        $targetPath = [System.IO.Path]::Combine($nfRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "net5.0-windows10.0.17763.0", "$targetName.dll")
-
-        if (!(Test-Path $targetPath))
+        if (Test-Path $path)
         {
-            $targetPath = [System.IO.Path]::Combine($nfRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "net5.0", "$targetName.dll")
-
-            if (!(Test-Path $targetPath))
-            {
-                $targetPath = [System.IO.Path]::Combine($nfRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "netcoreapp3.1", "$targetName.dll")
-
-                if (!(Test-Path $targetPath))
-                {
-                    throw "Cannot locate publish folder for: $projectPath"
-                }
-            }
+            $targetPath = $path
+            Break
         }
+    }
+
+    if ([System.String]::IsNullOrEmpty($targetPath))
+    {
+        throw "Cannot locate publish folder for: $projectPath"
     }
 
     # Copy the binary files to a new build folder subdirectory named for the target and
     # generate the batch file to launch the program.
-
-    ""
-    "**********************************************************"
-    "*** PUBLISH: $targetName"
-    "**********************************************************"
 
     $binaryFolder = [System.IO.Path]::Combine($nfBuild, $targetName)
 
@@ -133,144 +136,145 @@ function PublishCore
 }
 
 #------------------------------------------------------------------------------
-
-# We see somewhat random build problems when Visual Studio has the solution open,
-# so have the user close Visual Studio instances first.
-
-Get-Process -Name devenv -ErrorAction SilentlyContinue | Out-Null
-
-if ($?)
-{
-    Write-Error -Message "ERROR: Please close all Visual Studio instances before building."
-    exit 1
-}
+# Perform the operation.
 
 Push-Location $nfRoot
 
-# Build the solution.
-
-if (-not $nobuild)
+try
 {
-    # Clear the NF_BUILD folder and delete any [bin] or [obj] folders
-    # to be really sure we're doing a clean build.  I've run into 
-    # situations where I've upgraded SDKs or Visual Studio and Files
-    # left over from previous builds that caused build trouble.
+    # We see somewhat random build problems when Visual Studio has the solution open,
+    # so have the user close Visual Studio instances first.
 
-    & $nfToolBin\neon-build clean "$nfRoot"
+    Get-Process -Name devenv -ErrorAction SilentlyContinue | Out-Null
 
-    # Clean and build the solution.
-
-    ""
-    "**********************************************************"
-    "***                   CLEAN SOLUTION                   ***"
-    "**********************************************************"
-    ""
-
-    & "$msbuild" "$nfSolution" $buildConfig -t:Clean -m -verbosity:quiet
-
-    if (-not $?)
+    if ($?)
     {
-        ""
-        "*** CLEAN FAILED ***"
-        ""
-        exit 1
+        throw "ERROR: Please close all Visual Studio instances before building."
     }
 
-    ""
-    "**********************************************************"
-    "***                   BUILD SOLUTION                   ***"
-    "**********************************************************"
-    ""
+    # Build the solution.
 
-    & "$msbuild" "$nfSolution" $buildConfig -restore -m -verbosity:quiet
-
-    if (-not $?)
+    if (-not $nobuild)
     {
+        # Clear the NF_BUILD folder and delete any [bin] or [obj] folders
+        # to be really sure we're doing a clean build.  I've run into 
+        # situations where I've upgraded SDKs or Visual Studio and Files
+        # left over from previous builds that caused build trouble.
+
+        & $nfToolBin\neon-build clean "$nfRoot"
+
+        # Clean and build the solution.
+
         ""
-        "*** BUILD FAILED ***"
+        "**********************************************************"
+        "***                   CLEAN SOLUTION                   ***"
+        "**********************************************************"
         ""
-        exit 1
-    }
-}
 
-# Build the Neon tools.
+        & "$msbuild" "$nfSolution" $buildConfig -t:Clean -m -verbosity:quiet
 
-if ($tools)
-{
-    # Publish the Windows .NET Core tool binaries to the build folder.
+        if (-not $?)
+        {
+            throw "ERROR: CLEAN FAILED"
+        }
 
-    PublishCore "Tools\neon-cli\neon-cli.csproj"    "neon"
-    PublishCore "Tools\unix-text\unix-text.csproj"  "unix-text"
- }
-
-# Build the code documentation if requested.
-
-if ($codedoc)
-{
-    ""
-    "**********************************************************"
-    "***                CODE DOCUMENTATION                  ***"
-    "**********************************************************"
-    ""
-
-    # Remove some pesky aliases:
-
-    del alias:rm
-    del alias:cp
-    del alias:mv
-
-    if (-not $?)
-    {
         ""
-        "*** ERROR: Cannot remove: $nfBuild\codedoc"
+        "**********************************************************"
+        "***                   BUILD SOLUTION                   ***"
+        "**********************************************************"
         ""
-        exit 1
+
+        & "$msbuild" "$nfSolution" $buildConfig -restore -m -verbosity:quiet
+
+        if (-not $?)
+        {
+            throw "ERROR: BUILD FAILED"
+        }
     }
 
-    & "$msbuild" "$nfSolution" -p:Configuration=CodeDoc -restore -m -verbosity:quiet
+    # Build the Neon tools.
 
-    if (-not $?)
+    if ($tools)
+    {
+        # Publish the Windows .NET Core tool binaries to the build folder.
+
+        PublishCore "Tools\neon-cli\neon-cli.csproj"    "neon"
+        PublishCore "Tools\unix-text\unix-text.csproj"  "unix-text"
+     }
+
+    # Build the code documentation if requested.
+
+    if ($codedoc)
     {
         ""
-        "*** BUILD FAILED ***"
+        "**********************************************************"
+        "***                CODE DOCUMENTATION                  ***"
+        "**********************************************************"
         ""
-        exit 1
-    }
 
-    # Copy the CHM file to a more convenient place for adding to the GitHub release
-    # and generate the SHA512 for it.
+        # Remove some pesky aliases:
 
-    $nfDocOutput = "$nfroot\Websites\CodeDoc\bin\CodeDoc"
+        del alias:rm
+        del alias:cp
+        del alias:mv
 
-    & cp "$nfDocOutput\neon.chm" "$nfbuild"
-    ThrowOnExitCode
+        if (-not $?)
+        {
+            throw "ERROR: Cannot remove: $nfBuild\codedoc"
+        }
 
-    ""
-    "Generating neon.chm SHA512..."
-	""
+        & "$msbuild" "$nfSolution" -p:Configuration=CodeDoc -restore -m -verbosity:quiet
 
-    & cat "$nfBuild\neon.chm" | openssl dgst -sha512 -binary | neon-build hexdump > "$nfBuild\neon.chm.sha512.txt"
-    ThrowOnExitCode
+        if (-not $?)
+        {
+            throw "ERROR: BUILD FAILED"
+        }
 
-    # Move the documentation build output.
+        # Copy the CHM file to a more convenient place for adding to the GitHub release
+        # and generate the SHA512 for it.
+
+        $nfDocOutput = "$nfroot\Websites\CodeDoc\bin\CodeDoc"
+
+        & cp "$nfDocOutput\neon.chm" "$nfbuild"
+        ThrowOnExitCode
+
+        ""
+        "Generating neon.chm SHA512..."
+	    ""
+
+        & cat "$nfBuild\neon.chm" | openssl dgst -sha512 -binary | neon-build hexdump > "$nfBuild\neon.chm.sha512.txt"
+        ThrowOnExitCode
+
+        # Move the documentation build output.
 	
-    & rm -r --force "$nfBuild\codedoc"
-    ThrowOnExitCode
-    & mv "$nfDocOutput" "$nfBuild\codedoc"
-    ThrowOnExitCode
+        & rm -r --force "$nfBuild\codedoc"
+        ThrowOnExitCode
+        & mv "$nfDocOutput" "$nfBuild\codedoc"
+        ThrowOnExitCode
 
-    # Munge the SHFB generated documentation site:
-    #
-    #   1. Insert the Google Analytics [gtag.js] scripts
-    #   2. Munge and relocate HTML files for better site
-    #      layout and friendlier permalinks.
+        # Munge the SHFB generated documentation site:
+        #
+        #   1. Insert the Google Analytics [gtag.js] scripts
+        #   2. Munge and relocate HTML files for better site
+        #      layout and friendlier permalinks.
 
-    ""
-    "Tweaking Layout and Enabling Google Analytics..."
-	""
+        ""
+        "Tweaking Layout and Enabling Google Analytics..."
+	    ""
 
-    & neon-build shfb --gtag="$nfroot\Websites\CodeDoc\gtag.js" --styles="$nfRoot\WebSites\CodeDoc\styles" "$nfRoot\WebSites\CodeDoc" "$nfBuild\codedoc"
-    ThrowOnExitCode
+        & neon-build shfb --gtag="$nfroot\Websites\CodeDoc\gtag.js" --styles="$nfRoot\WebSites\CodeDoc\styles" "$nfRoot\WebSites\CodeDoc" "$nfBuild\codedoc"
+        ThrowOnExitCode
+    }
 }
+catch
+{
+    $error = $_
 
-Pop-Location
+    Write-Output "EXCEPTION: $error"
+    Write-Output "-------------------------------------------"
+    Write-Output $error.ScriptStackTrace
+}
+finally
+{
+    Pop-Location
+}
