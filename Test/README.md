@@ -1,15 +1,14 @@
-### Testing Solutions
+# Unit Test Automation
 
-This folder includes the various unit testing projects.  Most of these are referenced by the main solution at `$/neonKUBE.sln` and are used for testing during development.  These test projects reference the target Neon libraries directly and do not reference the published nuget packages.  This works well when testing on Windows, but will not work when testing on OS/X because builds are currently supported only on Windows.
+We're automating unit tests using our [nforgeio-actions/test](https://github.com/nforgeio-actions/test) GitHub Action 
+which is then included various GitHub Action workflows.
 
-The **Portable/Portable.sln** solution includes another partial set of test projects that reference the nuget packages and can be run on OS/X or Linux.
+We're also using the [LiquidTestReports.Markdown](https://dev.to/kurtmkurtm/testing-net-core-apps-with-github-actions-3i76)
+test logger to generate nice markdown formatted reports which will be written to the runner's working directory like we do
+for build logs.
 
-**NOTE:** Not all of the existing tests have been added to the **PortableTests.sln** solution.
+## Configuring a new test project
 
-### Projects and Names
+Enabling this for a new test project is easy (just one step):
 
-Projects that end with **.net** target .NET Frametwork, projects that end with **.portable** are the portable tests.  All other projects target .NET Core.
-
-Note that the .NET Core projects hold the actual test source files.  The .NET and portable projects simply reference the .NET Core project source files via links.
-
-**NOTE:** You'll need to manually ensure that you keep the linked source files in sync with the source test projects by adding or removing files as necessary.
+1. Add the **LiquidTestReports.Markdown** nuget package to the test project.
