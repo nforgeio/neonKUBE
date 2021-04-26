@@ -289,7 +289,7 @@ function Write-ActionOutputFile
     $buildLogWarningummaryRegex = New-Object "System.Text.RegularExpressions.Regex" -ArgumentList "^\s\s\s\s\d+[1-9] Warning\(s\)"
     $buildLogErrorSummaryRegex  = New-Object "System.Text.RegularExpressions.Regex" -ArgumentList "^\s\s\s\s\d+[1-9] Error\(s\)"
     $buildLogSHFBErrorRegex     = New-Object "System.Text.RegularExpressions.Regex" -ArgumentList "^\s*SHFB\s\:\serror"
-    $buildLogSHFBWarningRegex   = New-Object "System.Text.RegularExpressions.Regex" -ArgumentList "^\s*SHFB\s\:\warning"
+    $buildLogSHFBWarningRegex   = New-Object "System.Text.RegularExpressions.Regex" -ArgumentList "^\s*SHFB\s\:\swarning"
 
     ForEach ($line in $lines)
     {
