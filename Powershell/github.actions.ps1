@@ -246,13 +246,16 @@ function Write-ActionException
 #
 # ARGUMENTS:
 #
-#   path        - path to the text file
-#   groupTitle  - optionally specifies the group title
-#   type        - optionally specifies the log file type fgor colorization.
-#                 Pass one of these values:
+#   path                - path to the text file
+#   groupTitle          - optionally specifies the group title
+#   type                - optionally specifies the log file type fgor colorization.
+#                         Pass one of these values:
 #
-#                     "none" or ""  - disables colorization
-#                     "build-log"   - parses build logs
+#                           "none" or ""  - disables colorization
+#                           "build-log"   - parses build logs
+#
+#   keepSHFBWarnings    - optionally strips out Sandcastle Help File Builder (SHFB) 
+#                         warnings when identified
 #
 # REMARKS:
 #
@@ -267,7 +270,9 @@ function Write-ActionOutputFile
         [Parameter(Position=1, Mandatory=$false)]
         [string]$groupTitle = $null,
         [Parameter(Position=2, Mandatory=$false)]
-        [string]$type = $null
+        [string]$type = $null,
+        [Parameter(Position=3, Mandatory=$false)]
+        [bool]$keepShfbWarnings = $false
     )
 
     if (![System.IO.File]::Exists($path))
@@ -311,8 +316,17 @@ function Write-ActionOutputFile
 
             "build-log"
             {
-                if ($buildLogWarningRegex.IsMatch($line) -or $buildLogWarningummaryRegex.IsMatch($line) -or $buildLogSHFBWarningRegex.IsMatch($line))
+                if ($buildLogWarningRegex.IsMatch($line) -or $buildLogWarningummaryRegex.IsMatch($line))
                 {
+                    $color = "yellow"
+                }
+                elseif ($buildLogSHFBWarningRegex.IsMatch($line))
+                {
+                    if (!$keepSHFBWarnings)
+                    {
+                        return
+                    }
+
                     $color = "yellow"
                 }
                 elseif ($buildLogErrorRegex.IsMatch($line) -or $buildLogErrorSummaryRegex.IsMatch($line) -or $buildLogSHFBErrorRegex.IsMatch($line))
