@@ -56,7 +56,7 @@
     <KeepLogFile>True</KeepLogFile>
     <DisableCodeBlockComponent>False</DisableCodeBlockComponent>
     <IndentHtml>False</IndentHtml>
-    <BuildAssemblerVerbosity>OnlyWarningsAndErrors</BuildAssemblerVerbosity>
+    <BuildAssemblerVerbosity>OnlyErrors</BuildAssemblerVerbosity>
     <SaveComponentCacheCapacity>100</SaveComponentCacheCapacity>
     <WarnOnMissingSourceContext>False</WarnOnMissingSourceContext>
     <WorkingPath>..\..\Build\codedoc\working\</WorkingPath>

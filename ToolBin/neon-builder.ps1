@@ -249,6 +249,7 @@ try
 	
         & rm -r --force "$nfBuild\codedoc"
         ThrowOnExitCode
+
         & mv "$nfDocOutput" "$nfBuild\codedoc"
         ThrowOnExitCode
 
