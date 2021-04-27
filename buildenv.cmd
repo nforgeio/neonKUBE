@@ -113,6 +113,27 @@ REM Configure the neonKUBE kubeconfig path (as a USER environment variable).
 set KUBECONFIG=%USERPROFILE%\.kube\admin.conf
 reg add HKCU\Environment /v KUBECONFIG /t REG_EXPAND_SZ /d %USERPROFILE%\.kube\config /f > /nul
 
+REM Allow [dotnet.exe] to send and receive network traffic for the domain, public, and private
+REM profiles so that unit tests can run unattended (especially on test runners).
+
+New-NetFirewallRule -DisplayName "dotnet allow TCP-in" `
+                    -Direction Inbound `
+                    -Program "%PROGRAMFILES%\dotnet\dotnet.exe" `
+                    -Action Allow `
+                    -LocalPort 1024-65535 `
+                    -Protocol TCP `
+                    -Profile Any `
+                    -Description "Enable unattended network related unit testing"
+
+New-NetFirewallRule -DisplayName "dotnet allow UDP-in" `
+                    -Direction Inbound `
+                    -Program "%PROGRAMFILES%\dotnet\dotnet.exe" `
+                    -Action Allow `
+                    -LocalPort 1024-65535 `
+                    -Protocol UDP `
+                    -Profile Any `
+                    -Description "Enable unattended network related unit testing"
+
 echo.
 echo ============================================================================================
 echo * Be sure to close and reopen Visual Studio and any command windows to pick up the changes *
