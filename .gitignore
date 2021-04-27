@@ -74,7 +74,7 @@ wwwroot/
 # Custom rules added for this repository.
 ################################################################################
 
-# Build artifacts: 
+# Build/test artifacts: 
 #
 # NOTE: This assumes that we'll never want to commit folders named: [bin] or [obj]
 
@@ -86,6 +86,7 @@ GeneratedModels.cs
 GeneratedEntities.cs
 GeneratedTypes.cs
 GeneratedUxTypes.cs
+/Test/**/TestResults/**
 
 ###################
 ### Go Projects ###
