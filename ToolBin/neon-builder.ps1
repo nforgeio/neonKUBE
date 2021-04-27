@@ -267,12 +267,6 @@ try
         ThrowOnExitCode
     }
 }
-catch
-{
-    Write-Output "EXCEPTION: $_"
-    Write-Output "-------------------------------------------"
-    Write-Output $_.ScriptStackTrace
-}
 finally
 {
     Pop-Location
