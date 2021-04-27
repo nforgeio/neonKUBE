@@ -38,7 +38,7 @@ function Clean-Directory
         [string]$path
     )
 
-    if ([System.String]::IsNullOrEmpty($path) -or ![System.Directory]::Exists($path))
+    if ([System.String]::IsNullOrEmpty($path) -or ![System.IO.Directory]::Exists($path))
     {
         return
     }
