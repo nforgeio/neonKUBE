@@ -269,11 +269,9 @@ try
 }
 catch
 {
-    $error = $_
-
-    Write-Output "EXCEPTION: $error"
+    Write-Output "EXCEPTION: $_"
     Write-Output "-------------------------------------------"
-    Write-Output $error.ScriptStackTrace
+    Write-Output $_.ScriptStackTrace
 }
 finally
 {

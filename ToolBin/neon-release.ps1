@@ -149,7 +149,7 @@ if ($codedoc)
 
     "Commiting local changes..."
     git add --all
-    git commit -m "RELEASE: $libraryVersion"
+    git commit --all --message "RELEASE: $libraryVersion"
 
     "Pushing to origin..."
     git push
