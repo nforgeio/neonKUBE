@@ -385,6 +385,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Powershell", "Powershell", 
 	ProjectSection(SolutionItems) = preProject
 		Powershell\deployment.ps1 = Powershell\deployment.ps1
 		Powershell\error-handling.ps1 = Powershell\error-handling.ps1
+		Powershell\files.ps1 = Powershell\files.ps1
 		Powershell\git.ps1 = Powershell\git.ps1
 		Powershell\github.actions.ps1 = Powershell\github.actions.ps1
 		Powershell\github.ps1 = Powershell\github.ps1

@@ -1,6 +1,6 @@
-﻿#Requires -Version 7.0
+#Requires -Version 7.0
 #------------------------------------------------------------------------------
-# FILE:         includes.ps1
+# FILE:         files.ps1
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 #
@@ -27,36 +27,29 @@
 # After modifying this file, you should take care to push any changes to the
 # other repos where this file is present.
 
-# Common error handling settinga
-
-$ErrorActionPreference = "Stop"
-$PSDefaultParameterValues['*:ErrorAction'] = 'Stop'
-
-# Include all of the other global scripts.
-
-$scriptPath   = $MyInvocation.MyCommand.Path
-$scriptFolder = [System.IO.Path]::GetDirectoryName($scriptPath)
-
-Push-Location $scriptFolder
-
-. ./error-handling.ps1
-. ./files.ps1
-. ./git.ps1
-. ./deployment.ps1
-. ./github.ps1
-
-Pop-Location
-
 #------------------------------------------------------------------------------
-# Requests that the user elevate the script permission if the current process
-# isn't already running with elevated permissions.
+# Recuresively removes the contents of a filesystem directory if it exists.
 
-function RequestAdminPermissions
+function Clean-Directory
 {
-    if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$path
+    )
+
+    if ([System.String]::IsNullOrEmpty($path) -or ![System.Directory]::Exists($path))
     {
-        # Relaunch as an elevated process:
-        Start-Process powershell.exe "-file",('"{0}"' -f $MyInvocation.MyCommand.Path) -Verb RunAs
-        exit
+        return
+    }
+
+    ForEach ($filePath in [System.IO.Directory]::GetFiles($path))
+    {
+        [System.IO.File]::Delete($filePath)
+    }
+
+    ForEach ($folderPath in [System.IO.Directory]::GetDirectories($path))
+    {
+        [System.IO.Directory]::Delete($folderPath, $true)
     }
 }
