@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:        SlowFactAttribute.cs
+// FILE:	    TestTraits.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -17,31 +17,31 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-
-using Xunit;
 
 namespace Neon.Xunit
 {
     /// <summary>
-    /// Inherits from <see cref="FactAttribute"/> and sets <see cref="FactAttribute.Skip"/> when
-    /// the <b>NEON_SKIPSLOWTESTS</b> environment variable is set to "1".
+    /// Identifies the common neonFORGE related test traits.
     /// </summary>
-    public class SlowFactAttribute : FactAttribute
+    public static class TestTraits
     {
         /// <summary>
-        /// Default constructor.
+        /// Identifies the test project.  See <see cref="TestProject"/> for the standard
+        /// project names.
         /// </summary>
-        public SlowFactAttribute()
-            : base()
-        {
-            Skip = Environment.GetEnvironmentVariable("NEON_SKIPSLOWTESTS") == "1" ? "Skipping slow tests bacause environment variable NEON_SKIPSLOWTESTS=1." : null;
-        }
+        public const string Project = "project";
+
+        /// <summary>
+        /// Identifies slow tests.
+        /// </summary>
+        public const string Slow = "slow";
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public const string Unreliable = "unreliable";
     }
 }

@@ -127,7 +127,7 @@ namespace TestTemporal
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
+        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Simultaneous()
         {
             await SyncContext.ClearAsync;
@@ -173,7 +173,7 @@ namespace TestTemporal
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
+        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Connect_Twice()
         {
             await SyncContext.ClearAsync;
@@ -368,7 +368,7 @@ namespace TestTemporal
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
+        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Multiple_TaskQueues()
         {
             await SyncContext.ClearAsync;

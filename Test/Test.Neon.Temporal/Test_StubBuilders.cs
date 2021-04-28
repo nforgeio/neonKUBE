@@ -116,7 +116,7 @@ namespace TestTemporal
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
+        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Prebuild_Stubs()
         {
             // Verify that the stub builder methods don't barf.

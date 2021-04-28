@@ -41,7 +41,7 @@ namespace TestCommon
     public partial class Test_JsonClient
     {
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public async Task PatchAsync()
         {
             // Ensure that PATCH sending and returning an explict types works.
@@ -115,7 +115,7 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public async Task PatchDynamicAsync()
         {
             // Ensure that PATCH sending a dynamic document works.
@@ -172,7 +172,7 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public async Task PatchAsync_NotJson()
         {
             // Ensure that PATCH returning a non-JSON content type returns a NULL document.
@@ -230,7 +230,7 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public async Task PatchAsync_Args()
         {
             // Ensure that PATCH with query arguments work.
@@ -296,7 +296,7 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public async Task PatchAsync_Headers()
         {
             // Ensure that PATCH with query arguments work.
@@ -362,7 +362,7 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public async Task PatchAsync_Dynamic()
         {
             // Ensure that PATCH returning a dynamic works.
@@ -420,7 +420,7 @@ namespace TestCommon
         }
  
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public async Task PatchAsync_Dynamic_NotJson()
         {
             // Ensure that PATCH returning non-JSON returns a NULL dynamic document.
@@ -478,7 +478,7 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public async Task PatchAsync_Error()
         {
             // Ensure that PATCH returning a hard error works.
@@ -508,7 +508,7 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public async Task PatchAsync_Retry()
         {
             // Ensure that PATCH will retry after soft errors.
@@ -564,7 +564,7 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public async Task PatchAsync_NoRetryNull()
         {
             // Ensure that PATCH won't retry if [retryPolicy=NULL]
@@ -611,7 +611,7 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public async Task PatchAsync_NoRetryExplicit()
         {
             // Ensure that PATCH won't retry if [retryPolicy=NoRetryPolicy]
@@ -658,7 +658,7 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public async Task PatchCustomPayloadAsync()
         {
             // Ensure that PATCH uploading a [JsonCustomPayload] works.
@@ -704,7 +704,7 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public async Task PatchAsync_NullPayloadAsync()
         {
             // Ensure that PATCH uploading a NULL payload works.

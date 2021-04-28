@@ -45,7 +45,7 @@ namespace TestCadence
     public partial class Test_EndToEnd
     {
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Base_Ping()
         {
             await SyncContext.ClearAsync;
@@ -72,7 +72,7 @@ namespace TestCadence
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Base_PingAttack()
         {
             // Measure througput with 4 threads hammering the proxy with pings.
@@ -120,7 +120,7 @@ namespace TestCadence
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Base_Domain()
         {
             await SyncContext.ClearAsync;
@@ -175,7 +175,7 @@ namespace TestCadence
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Base_ListDomains()
         {
             await SyncContext.ClearAsync;
@@ -266,7 +266,7 @@ namespace TestCadence
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Base_DescribeTaskList()
         {
             await SyncContext.ClearAsync;
@@ -305,7 +305,7 @@ namespace TestCadence
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Base_DescribeWorkflowExecutionAsync()
         {
             await SyncContext.ClearAsync;
@@ -354,7 +354,7 @@ namespace TestCadence
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Base_ExtractCadenceProxy()
         {
             // Verify that we can extract the [cadence-proxy] binaries.

@@ -35,7 +35,7 @@ namespace TestCommon
     public class Test_JsonExtensions
     {
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public void TryGetValue()
         {
             const string jsonText =

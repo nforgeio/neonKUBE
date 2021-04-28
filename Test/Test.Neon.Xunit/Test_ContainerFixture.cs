@@ -46,7 +46,7 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public void Basic()
         {
             // Verify that we can start a simple container with defaults.

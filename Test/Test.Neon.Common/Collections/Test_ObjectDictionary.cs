@@ -40,7 +40,7 @@ namespace TestCommon
     public class Test_ObjectDictionary
     {
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public void Basic()
         {
             var dictionary = new ObjectDictionary();

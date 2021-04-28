@@ -93,7 +93,7 @@ namespace TestCadence
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Worker()
         {
             await SyncContext.ClearAsync;

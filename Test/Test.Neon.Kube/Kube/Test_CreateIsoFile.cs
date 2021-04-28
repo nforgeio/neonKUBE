@@ -38,7 +38,7 @@ namespace TestKube
     public class Test_CreateIsoFile
     {
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonKube)]
+        [Trait(TestTraits.Project, TestProject.NeonKube)]
         public void CreateIso()
         {
             // Verify that we can create a new ISO file from a folder.

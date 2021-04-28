@@ -40,14 +40,14 @@ namespace TestDeployment
     public partial class Test_ParseSecretNames
     {
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonDeployment)]
+        [Trait(TestTraits.Project, TestProject.NeonDeployment)]
         public void Parse_Null()
         {
             Assert.Throws<ArgumentNullException>(() => ProfileServer.ParseSecretName(null));
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonDeployment)]
+        [Trait(TestTraits.Project, TestProject.NeonDeployment)]
         public void Parse_Empty()
         {
             Assert.Equal(string.Empty, ProfileServer.ParseSecretName(string.Empty).Name);
@@ -55,7 +55,7 @@ namespace TestDeployment
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonDeployment)]
+        [Trait(TestTraits.Project, TestProject.NeonDeployment)]
         public void Parse_NoProperty()
         {
             Assert.Equal("test", ProfileServer.ParseSecretName("test").Name);
@@ -63,7 +63,7 @@ namespace TestDeployment
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonDeployment)]
+        [Trait(TestTraits.Project, TestProject.NeonDeployment)]
         public void Parse_WithProperty()
         {
             Assert.Equal("test", ProfileServer.ParseSecretName("test[property]").Name);
@@ -71,7 +71,7 @@ namespace TestDeployment
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonDeployment)]
+        [Trait(TestTraits.Project, TestProject.NeonDeployment)]
         public void Parse_BadProperty()
         {
             Assert.Equal("test[property", ProfileServer.ParseSecretName("test[property").Name);

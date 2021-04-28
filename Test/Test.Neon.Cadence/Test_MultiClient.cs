@@ -131,7 +131,7 @@ namespace TestCadence
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Simultaneous()
         {
             await SyncContext.ClearAsync;
@@ -169,7 +169,7 @@ namespace TestCadence
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Connect_Twice()
         {
             await SyncContext.ClearAsync;
@@ -362,7 +362,7 @@ namespace TestCadence
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Multiple_TaskLists()
         {
             await SyncContext.ClearAsync;

@@ -54,7 +54,7 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public void Defaults()
         {
             using (var jsonClient = new JsonClient())

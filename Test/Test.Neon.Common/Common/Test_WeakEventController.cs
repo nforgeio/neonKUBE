@@ -78,7 +78,7 @@ namespace TestCommon
         private static bool collected;
         
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public void Basics()
         {
             // Verify that we can:
@@ -110,7 +110,7 @@ namespace TestCommon
         }
 
         [Fact(Skip = "Investigate .NET Core GC Behavior")]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public void VerifyGC()
         {
             // Verify that we can:

@@ -104,7 +104,7 @@ namespace Test.NeonCli
         private string thisAssemblyPath = Assembly.GetExecutingAssembly().Location;
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        [Trait(TestTraits.Project, TestProject.NeonCli)]
         public async Task AllTargets()
         {
             using (var runner = new ProgramRunner())
@@ -129,7 +129,7 @@ namespace Test.NeonCli
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        [Trait(TestTraits.Project, TestProject.NeonCli)]
         public async Task Filter1()
         {
             using (var runner = new ProgramRunner())
@@ -154,7 +154,7 @@ namespace Test.NeonCli
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        [Trait(TestTraits.Project, TestProject.NeonCli)]
         public async Task Filter2()
         {
             using (var runner = new ProgramRunner())
@@ -179,7 +179,7 @@ namespace Test.NeonCli
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        [Trait(TestTraits.Project, TestProject.NeonCli)]
         public async Task FilterClient()
         {
             using (var runner = new ProgramRunner())
@@ -204,7 +204,7 @@ namespace Test.NeonCli
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        [Trait(TestTraits.Project, TestProject.NeonCli)]
         public async Task Filter3AndClient()
         {
             using (var runner = new ProgramRunner())
@@ -229,7 +229,7 @@ namespace Test.NeonCli
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        [Trait(TestTraits.Project, TestProject.NeonCli)]
         public async Task SourceNamespace()
         {
             using (var runner = new ProgramRunner())
@@ -254,7 +254,7 @@ namespace Test.NeonCli
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        [Trait(TestTraits.Project, TestProject.NeonCli)]
         public async Task NoServices()
         {
             using (var runner = new ProgramRunner())

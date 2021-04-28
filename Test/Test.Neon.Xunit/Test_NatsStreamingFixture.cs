@@ -71,14 +71,14 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
+        [Trait(TestTraits.Project, TestProject.NeonXunit)]
         public void Connect()
         {
             Assert.Equal(ConnState.CONNECTED, connection.NATSConnection.State);
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
+        [Trait(TestTraits.Project, TestProject.NeonXunit)]
         public void Subscribe()
         {
             Assert.Equal(ConnState.CONNECTED, connection.NATSConnection.State);
@@ -108,7 +108,7 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
+        [Trait(TestTraits.Project, TestProject.NeonXunit)]
         public void SubscribeOptions()
         {
             Assert.Equal(ConnState.CONNECTED, connection.NATSConnection.State);
@@ -140,7 +140,7 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
+        [Trait(TestTraits.Project, TestProject.NeonXunit)]
         public void SubscribeQGroup()
         {
             Assert.Equal(ConnState.CONNECTED, connection.NATSConnection.State);
@@ -170,7 +170,7 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
+        [Trait(TestTraits.Project, TestProject.NeonXunit)]
         public void SubscribeQGroupOptions()
         {
             Assert.Equal(ConnState.CONNECTED, connection.NATSConnection.State);
@@ -202,7 +202,7 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
+        [Trait(TestTraits.Project, TestProject.NeonXunit)]
         public void Publish()
         {
             Assert.Equal(ConnState.CONNECTED, connection.NATSConnection.State);
@@ -232,7 +232,7 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
+        [Trait(TestTraits.Project, TestProject.NeonXunit)]
         public void PublishHandler()
         {
             Assert.Equal(ConnState.CONNECTED, connection.NATSConnection.State);
@@ -267,7 +267,7 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
+        [Trait(TestTraits.Project, TestProject.NeonXunit)]
         public async Task PublishAsync()
         {
             Assert.Equal(ConnState.CONNECTED, connection.NATSConnection.State);

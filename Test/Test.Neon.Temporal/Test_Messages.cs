@@ -90,7 +90,7 @@ namespace TestTemporal
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
+        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Test_PropertyHelpers()
         {
             // Verify that the property helper methods work as expected.

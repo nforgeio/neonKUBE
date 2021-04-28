@@ -78,7 +78,7 @@ namespace TestModelGen.Couchbase
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonModelGen)]
+        [Trait(TestTraits.Project, TestProject.NeonModelGen)]
         public async Task WriteReadList()
         {
             // Ensure that the database starts out empty.
@@ -222,7 +222,7 @@ namespace TestModelGen.Couchbase
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonModelGen)]
+        [Trait(TestTraits.Project, TestProject.NeonModelGen)]
         public async Task CustomNames()
         {
             // Ensure that the database starts out empty.
@@ -344,7 +344,7 @@ namespace TestModelGen.Couchbase
         }
 
         [Fact(Skip = "TODO: https://github.com/nforgeio/neonKUBE/issues/704")]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonModelGen)]
+        [Trait(TestTraits.Project, TestProject.NeonModelGen)]
         public async Task RoundTrip_Array()
         {
             // Ensure that the database starts out empty.
@@ -411,7 +411,7 @@ namespace TestModelGen.Couchbase
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonModelGen)]
+        [Trait(TestTraits.Project, TestProject.NeonModelGen)]
         public async Task RoundTrip_Object()
         {
             // Ensure that the database starts out empty.
@@ -447,7 +447,7 @@ namespace TestModelGen.Couchbase
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonModelGen)]
+        [Trait(TestTraits.Project, TestProject.NeonModelGen)]
         public async Task Find()
         {
             // Ensure that the database starts out empty.
@@ -492,7 +492,7 @@ namespace TestModelGen.Couchbase
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonModelGen)]
+        [Trait(TestTraits.Project, TestProject.NeonModelGen)]
         public async Task Query()
         {
             // Ensure that the database starts out empty.
@@ -588,7 +588,7 @@ namespace TestModelGen.Couchbase
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonModelGen)]
+        [Trait(TestTraits.Project, TestProject.NeonModelGen)]
         public async Task QueryCustom()
         {
             // Ensure that the database starts out empty.
@@ -684,7 +684,7 @@ namespace TestModelGen.Couchbase
         }
 
         [Fact(Skip = "TODO: https://github.com/nforgeio/neonKUBE/issues/704")]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonModelGen)]
+        [Trait(TestTraits.Project, TestProject.NeonModelGen)]
         public async Task Dont_Persist_O()
         {
             // Ensure that the database starts out empty.

@@ -34,7 +34,7 @@ namespace TestCommon
     public class Test_StringBuilder
     {
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public void AppendLineLinux()
         {
             var sb = new StringBuilder();
@@ -46,7 +46,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public void AppendWithSeparator()
         {
             var sb = new StringBuilder();

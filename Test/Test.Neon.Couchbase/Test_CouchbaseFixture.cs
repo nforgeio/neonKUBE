@@ -66,7 +66,7 @@ namespace TestCouchbase
         /// a very simple operation.
         /// </summary>
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
+        [Trait(TestTraits.Project, TestProject.NeonCouchbase)]
         public async Task Basic()
         {
             couchbase.Clear();
@@ -76,7 +76,7 @@ namespace TestCouchbase
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
+        [Trait(TestTraits.Project, TestProject.NeonCouchbase)]
         public async Task Clear()
         {
             var indexQuery = $"select * from system:indexes where keyspace_id={CouchbaseHelper.Literal(bucket.Name)}";

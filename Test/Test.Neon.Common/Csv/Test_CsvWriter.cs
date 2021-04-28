@@ -30,7 +30,7 @@ namespace TestCommon
     public class Test_CsvWriter
     {
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public void CsvWriter_Basic()
         {
             StringBuilder sb = new StringBuilder();

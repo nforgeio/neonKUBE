@@ -43,7 +43,7 @@ namespace TestCommon
         };
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public void ToMemberString()
         {
             Assert.Equal("Bar", Foo.Bar.ToMemberString());          // [Foo.Bar] doesn't have an [EnumMember] attribute so the enum identifer will be returned.

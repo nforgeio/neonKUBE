@@ -137,7 +137,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public void Defaults()
         {
             var reader = new PreprocessReader(new StreamReader(new MemoryStream()));
@@ -157,14 +157,14 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public async Task Empty()
         {
             await VerifyAsync(string.Empty, string.Empty);
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public async Task NoChange()
         {
             const string input =
@@ -178,7 +178,7 @@ emergency broadcasting system.
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public async Task Comments()
         {
             await VerifyAsync(
@@ -211,7 +211,7 @@ abc
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public void Comments_CustomMarker()
         {
             // Verify that we can handle a custom comment prefix.
@@ -257,7 +257,7 @@ abc
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public void Comments_CustomMarkers()
         {
             // Verify that we can handle multiple custom comment prefixes.
@@ -304,7 +304,7 @@ abc
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public void Comments_NoCustomMarkers()
         {
             // Verify that we can handle no custom comment prefixes.
@@ -349,7 +349,7 @@ abc
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public void Comments_BadMarkers()
         {
             // Verify that we validate reasonable markers.
@@ -367,7 +367,7 @@ abc
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public async Task VariablesDefault()
         {
             await VerifyAsync(
@@ -416,7 +416,7 @@ Hello World! Goodbye!
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public async Task VariablesCurly()
         {
             try
@@ -474,7 +474,7 @@ Hello World! Goodbye!
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public async Task CheckForUndefinedVariables()
         {
             // Verify that we can disable undefined variable checks.
@@ -587,7 +587,7 @@ Hello World! Goodbye!
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public async Task VariablesParen()
         {
             try
@@ -645,7 +645,7 @@ Hello World! Goodbye!
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public async Task Define()
         {
             await VerifyAsync(
@@ -688,7 +688,7 @@ FOOBAR
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public async Task If()
         {
             await VerifyAsync(
@@ -973,7 +973,7 @@ one
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public async Task Switch()
         {
             await VerifyAsync(
@@ -1101,7 +1101,7 @@ E
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public async Task NotImplemented()
         {
             var reader = new PreprocessReader(string.Empty);
@@ -1115,7 +1115,7 @@ E
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public async Task TabStops()
         {
             try
@@ -1170,7 +1170,7 @@ line1
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public async Task DisableStripComments()
         {
             try
@@ -1193,7 +1193,7 @@ line1
 
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public async Task RemoveComments()
         {
             try
@@ -1214,7 +1214,7 @@ line1
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public async Task RemoveBlank()
         {
             try
@@ -1237,7 +1237,7 @@ line1
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public async Task DisableCommands()
         {
             try
@@ -1263,7 +1263,7 @@ line1
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public async Task StatementMarker()
         {
             try
@@ -1295,7 +1295,7 @@ Hello World!
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public async Task Indent()
         {
             try
@@ -1317,7 +1317,7 @@ Test
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public async Task LineEndings()
         {
             const string input =
@@ -1347,7 +1347,7 @@ line3
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public void DisableStatements()
         {
             const string input =
@@ -1369,7 +1369,7 @@ line2
         // .NET Framework.
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public void ProfileReferences()
         {
             // Verify that [IProfileClient] integration works by starting a profile
@@ -1499,7 +1499,7 @@ line2
         }
 #else
         [Fact(Skip = "Not compatible with .NET Framework")]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public void ProfileReferences()
         {
         }

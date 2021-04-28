@@ -90,7 +90,7 @@ namespace TestCadence
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Test_PropertyHelpers()
         {
             // Verify that the property helper methods work as expected.

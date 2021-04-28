@@ -76,21 +76,21 @@ namespace TestYugaByte
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonYugaByte)]
+        [Trait(TestTraits.Project, TestProject.NeonYugaByte)]
         public void Cassandra_Query0()
         {
             Assert.Single(cassandra.Execute("SELECT * from employee"));
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonYugaByte)]
+        [Trait(TestTraits.Project, TestProject.NeonYugaByte)]
         public void Cassandra_Query1()
         {
             Assert.Single(cassandra.Execute("SELECT * from employee"));
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonYugaByte)]
+        [Trait(TestTraits.Project, TestProject.NeonYugaByte)]
         public void Postgres_Query0()
         {
             var query = new NpgsqlCommand("SELECT COUNT(*) FROM employee", postgres);
@@ -98,7 +98,7 @@ namespace TestYugaByte
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonYugaByte)]
+        [Trait(TestTraits.Project, TestProject.NeonYugaByte)]
         public void Postgres_Query1()
         {
             var query = new NpgsqlCommand("SELECT COUNT(*) FROM employee", postgres);

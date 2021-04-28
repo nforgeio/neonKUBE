@@ -139,7 +139,7 @@ namespace TestNeonService
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonKube)]
+        [Trait(TestTraits.Project, TestProject.NeonKube)]
         public async Task Test()
         {
             using (var client = new HttpClient())

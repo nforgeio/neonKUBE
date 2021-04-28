@@ -53,7 +53,7 @@ namespace TestCouchbase
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
+        [Trait(TestTraits.Project, TestProject.NeonCouchbase)]
         public async Task Basic()
         {
             // Basic test to verify that we can put/get/remove a document.
@@ -65,7 +65,7 @@ namespace TestCouchbase
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
+        [Trait(TestTraits.Project, TestProject.NeonCouchbase)]
         public async Task CasTransientDetector()
         {
             // Verify that the CAS transient detector function works.
@@ -98,7 +98,7 @@ namespace TestCouchbase
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
+        [Trait(TestTraits.Project, TestProject.NeonCouchbase)]
         public async Task DurabilityOverrides()
         {
             couchbase.Clear();

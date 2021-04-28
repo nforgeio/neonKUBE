@@ -69,7 +69,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public void Basic()
         {
             count    = 0;
@@ -100,7 +100,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public void Dispose()
         {
             count    = 0;
@@ -117,7 +117,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public void Change()
         {
             // $todo(jefflill): Need to implement this.

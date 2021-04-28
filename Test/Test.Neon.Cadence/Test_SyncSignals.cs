@@ -202,7 +202,7 @@ namespace TestCadence
 
         [Theory]
         [Repeat(testIterations)]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task SyncSignal_WithoutResult(int iteration)
         {
             LogStart(iteration);
@@ -224,7 +224,7 @@ namespace TestCadence
 
         [Theory]
         [Repeat(testIterations)]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task SyncSignalFuture_WithoutResult(int iteration)
         {
             LogStart(iteration);
@@ -247,7 +247,7 @@ namespace TestCadence
 
         [Theory]
         [Repeat(testIterations)]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task SyncSignal_WithoutResult_AndDelay(int iteration)
         {
             LogStart(iteration);
@@ -270,7 +270,7 @@ namespace TestCadence
 
         [Theory]
         [Repeat(testIterations)]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task SyncSignal_WithResult(int iteration)
         {
             LogStart(iteration);
@@ -293,7 +293,7 @@ namespace TestCadence
 
         [Theory]
         [Repeat(testIterations)]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task SyncSignalFuture_WithResult(int iteration)
         {
             LogStart(iteration);
@@ -318,7 +318,7 @@ namespace TestCadence
 
         [Theory]
         [Repeat(testIterations)]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task SyncSignal_WithResult_AndDelay(int iteration)
         {
             LogStart(iteration);
@@ -342,7 +342,7 @@ namespace TestCadence
 
         [Theory]
         [Repeat(testIterations)]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task SyncSignalChild_WithoutResult(int iteration)
         {
             LogStart(iteration);
@@ -358,7 +358,7 @@ namespace TestCadence
 
         [Theory]
         [Repeat(testIterations)]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task SyncSignalChild_WithoutResult_AndDelay(int iteration)
         {
             LogStart(iteration);
@@ -375,7 +375,7 @@ namespace TestCadence
 
         [Theory]
         [Repeat(testIterations)]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task SyncSignalChild_WithResult(int iteration)
         {
             LogStart(iteration);
@@ -391,7 +391,7 @@ namespace TestCadence
 
         [Theory]
         [Repeat(testIterations)]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task SyncSignalChild_WithResult_AndDelay(int iteration)
         {
             LogStart(iteration);
@@ -482,7 +482,7 @@ namespace TestCadence
 
         [Theory]
         [Repeat(testIterations)]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task SyncSignal_Queued_WithoutResult(int iteration)
         {
             LogStart(iteration);
@@ -508,7 +508,7 @@ namespace TestCadence
 
         [Theory]
         [Repeat(testIterations)]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task SyncSignal_Queued_WithResult(int iteration)
         {
             LogStart(iteration);
@@ -611,7 +611,7 @@ namespace TestCadence
         [InlineData(500)]
         [InlineData(1000)]
         [InlineData(2000)]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task SyncSignal_WithActivity(double delayMilliSeconds)
         {
             // Verify that synchronous signals work when the workflow also
@@ -714,7 +714,7 @@ namespace TestCadence
         //[InlineData(2000, 0.0)]
         //[InlineData(4000, 0.0)]
         //[InlineData(8000, 0.0)]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task SyncSignal_Blast(int count, double delaySeconds)
         {
             // Blast a bunch of synchronous signals at a workflow instance

@@ -32,7 +32,7 @@ namespace TestCommon
     public class Test_Stream
     {
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public void Write()
         {
             using (var ms = new MemoryStream())
@@ -56,7 +56,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public async Task WriteAsync()
         {
             using (var ms = new MemoryStream())
@@ -80,7 +80,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public void ReadToEnd()
         {
             using (var ms = new MemoryStream())
@@ -100,7 +100,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public async Task ReadToEndAsync()
         {
             using (var ms = new MemoryStream())

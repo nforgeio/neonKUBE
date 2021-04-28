@@ -99,7 +99,7 @@ namespace TestXunit
         /// Verify that fixtures look OK.
         /// </summary>
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public void Verify()
         {
             // Ensure that the subfixture indexers work.

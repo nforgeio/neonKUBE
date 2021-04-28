@@ -32,7 +32,7 @@ namespace TestCommon
     public class Test_TextReader
     {
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public void Lines_Empty()
         {
             var lines = new List<string>();
@@ -49,7 +49,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public void Lines_OneEmpty()
         {
             var lines = new List<string>();
@@ -67,7 +67,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public void Lines_Multiple()
         {
             var lines = new List<string>();
@@ -97,7 +97,7 @@ done
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public void Lines_MultipleIgnoreBlank()
         {
             var lines = new List<string>();

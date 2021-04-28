@@ -45,7 +45,7 @@ namespace TestTemporal
     public partial class Test_EndToEnd
     {
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
+        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Base_Ping()
         {
             await SyncContext.ClearAsync;
@@ -72,7 +72,7 @@ namespace TestTemporal
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
+        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Base_PingAttack()
         {
             // Measure througput with 4 threads hammering the proxy with pings.
@@ -120,7 +120,7 @@ namespace TestTemporal
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
+        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Base_Namespace()
         {
             await SyncContext.ClearAsync;
@@ -179,7 +179,7 @@ namespace TestTemporal
         }
 
         [Fact_NotImplemented]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
+        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Base_ListNamespaces()
         {
             await SyncContext.ClearAsync;
@@ -270,7 +270,7 @@ namespace TestTemporal
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
+        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Base_DescribeTaskQueue()
         {
             await SyncContext.ClearAsync;
@@ -309,7 +309,7 @@ namespace TestTemporal
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
+        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Base_DescribeWorkflowExecutionAsync()
         {
             await SyncContext.ClearAsync;
@@ -353,7 +353,7 @@ namespace TestTemporal
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
+        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Base_ExtractTemporalProxy()
         {
             // Verify that we can extract the [temporal-proxy] binaries.

@@ -41,7 +41,7 @@ namespace Test.NeonCli
     public class Test_RunCommand
     {
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        [Trait(TestTraits.Project, TestProject.NeonCli)]
         public async Task Run()
         {
             using (var runner = new ProgramRunner())
@@ -63,7 +63,7 @@ namespace Test.NeonCli
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        [Trait(TestTraits.Project, TestProject.NeonCli)]
         public async Task ReadVariables_Decrypted()
         {
             var orgDirectory = Environment.CurrentDirectory;
@@ -130,7 +130,7 @@ TEST_D=D-VALUE
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        [Trait(TestTraits.Project, TestProject.NeonCli)]
         public async Task ReadVariables_Ecrypted()
         {
             var orgDirectory = Environment.CurrentDirectory;
@@ -202,7 +202,7 @@ TEST_D=D-VALUE
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        [Trait(TestTraits.Project, TestProject.NeonCli)]
         public async Task VariableOptions()
         {
             var orgDirectory = Environment.CurrentDirectory;
@@ -245,7 +245,7 @@ TEST_D=D-VALUE
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        [Trait(TestTraits.Project, TestProject.NeonCli)]
         public async Task VariableInjectDecrypted()
         {
             var orgDirectory = Environment.CurrentDirectory;
@@ -303,7 +303,7 @@ $<<TEST_D>>
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        [Trait(TestTraits.Project, TestProject.NeonCli)]
         public async Task VariableInjectEncrypted()
         {
             var orgDirectory = Environment.CurrentDirectory;
@@ -364,7 +364,7 @@ $<<TEST_D>>
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        [Trait(TestTraits.Project, TestProject.NeonCli)]
         public async Task DecryptFile()
         {
             var orgDirectory = Environment.CurrentDirectory;
@@ -433,7 +433,7 @@ $<<TEST_D>>
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        [Trait(TestTraits.Project, TestProject.NeonCli)]
         public async Task StandardFiles()
         {
             // We had a problem with [NeonHelper_Execute] where standard output
@@ -472,7 +472,7 @@ $<<TEST_D>>
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        [Trait(TestTraits.Project, TestProject.NeonCli)]
         public async Task Options()
         {
             var orgDirectory = Environment.CurrentDirectory;

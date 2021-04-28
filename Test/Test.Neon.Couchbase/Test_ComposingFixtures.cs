@@ -119,7 +119,7 @@ namespace TestCouchbase
         /// Verify that the fixtures look OK.
         /// </summary>
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public async Task Verify()
         {
             // Verify AspNetFixture.

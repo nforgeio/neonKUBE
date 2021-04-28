@@ -87,7 +87,7 @@ namespace TestTemporal
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
+        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_ExternalIdNoReuse()
         {
             await SyncContext.ClearAsync;
@@ -133,7 +133,7 @@ namespace TestTemporal
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
+        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_ExternalIdReuseViaSettings()
         {
             await SyncContext.ClearAsync;

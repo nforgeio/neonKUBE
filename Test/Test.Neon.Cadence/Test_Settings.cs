@@ -87,7 +87,7 @@ namespace TestCadence
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_ExternalIdNoReuse()
         {
             await SyncContext.ClearAsync;
@@ -128,7 +128,7 @@ namespace TestCadence
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_ExternalIdReuseViaSettings()
         {
             await SyncContext.ClearAsync;

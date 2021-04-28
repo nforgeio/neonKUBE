@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TestCategory.cs
+// FILE:	    TestProject.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -27,18 +27,8 @@ namespace Neon.Xunit
     /// Defines constants used to help categorize unit tests and avoid
     /// spelling errors and inconsistencies.
     /// </summary>
-    public static class TestCategory
+    public static class TestProject
     {
-        /// <summary>
-        /// Identifies the trait.
-        /// </summary>
-        public const string CategoryTrait = "Category";
-
-        /// <summary>
-        /// Identifies sample tests.
-        /// </summary>
-        public const string Sample = "Sample";
-
         /// <summary>
         /// Identifies <b>Neon.Cadence</b> tests.
         /// </summary>

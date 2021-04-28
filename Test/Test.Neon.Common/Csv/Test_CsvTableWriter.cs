@@ -31,7 +31,7 @@ namespace TestCommon
     public class Test_CsvTableWriter
     {
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public void CsvTableWriter_Basic()
         {
             using (var tempFolder = new TempFolder())
@@ -78,7 +78,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public void CsvTableWriter_NullColumns()
         {
             string path = Path.GetTempFileName();
@@ -122,7 +122,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public void CsvTableWriter_MissingColumns()
         {
             string path = Path.GetTempFileName();
@@ -170,7 +170,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public void CsvTableWriter_BlankRow()
         {
             string path = Path.GetTempFileName();

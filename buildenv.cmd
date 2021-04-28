@@ -44,7 +44,6 @@ set NF_TEMP=C:\Temp
 set NF_ACTIONS_ROOT=%NC_REPOS%\neonCLOUD\Automation\actions
 set NF_CODEDOC=%NF_ROOT%\..\nforgeio.github.io
 set NF_SAMPLES_CADENCE=%NF_ROOT%\..\cadence-samples
-set NEON_SKIPSLOWTESTS=1
 set DOTNETPATH=%WINDIR%\Microsoft.NET\Framework64\v4.0.30319
 set WINSDKPATH=C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.6 Tools\x64
 

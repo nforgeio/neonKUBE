@@ -65,7 +65,7 @@ ask the blind man, he saw it, too.
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
+        [Trait(TestTraits.Project, TestProject.NeonCryptography)]
         public void NoPassword()
         {
             // Verify the proper exception when a named password cannot be found.
@@ -100,7 +100,7 @@ ask the blind man, he saw it, too.
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
+        [Trait(TestTraits.Project, TestProject.NeonCryptography)]
         public void BadPasswordNames()
         {
             // Verify the proper exception when a password name is invalid.
@@ -118,7 +118,7 @@ ask the blind man, he saw it, too.
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
+        [Trait(TestTraits.Project, TestProject.NeonCryptography)]
         public void GoodPasswordNames()
         {
             // Verify valid password names.
@@ -136,7 +136,7 @@ ask the blind man, he saw it, too.
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
+        [Trait(TestTraits.Project, TestProject.NeonCryptography)]
         public void StreamToBytes()
         {
             var vault     = new NeonVault(GetPassword);
@@ -156,7 +156,7 @@ ask the blind man, he saw it, too.
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
+        [Trait(TestTraits.Project, TestProject.NeonCryptography)]
         public void FileToBytes()
         {
             var vault     = new NeonVault(GetPassword);
@@ -180,7 +180,7 @@ ask the blind man, he saw it, too.
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
+        [Trait(TestTraits.Project, TestProject.NeonCryptography)]
         public void StreamToStream()
         {
             var vault = new NeonVault(GetPassword);
@@ -210,7 +210,7 @@ ask the blind man, he saw it, too.
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
+        [Trait(TestTraits.Project, TestProject.NeonCryptography)]
         public void StreamToFile()
         {
             var vault = new NeonVault(GetPassword);
@@ -237,7 +237,7 @@ ask the blind man, he saw it, too.
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
+        [Trait(TestTraits.Project, TestProject.NeonCryptography)]
         public void FileToFile()
         {
             var vault = new NeonVault(GetPassword);
@@ -264,7 +264,7 @@ ask the blind man, he saw it, too.
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
+        [Trait(TestTraits.Project, TestProject.NeonCryptography)]
         public void TamperDetect()
         {
             // Verify that we can detect that the data has been tampered with.
@@ -327,7 +327,7 @@ ask the blind man, he saw it, too.
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
+        [Trait(TestTraits.Project, TestProject.NeonCryptography)]
         public void WrongPassword()
         {
             // Verify that we can detect that the wrong password was used.
@@ -363,7 +363,7 @@ ask the blind man, he saw it, too.
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
+        [Trait(TestTraits.Project, TestProject.NeonCryptography)]
         public void Unencrypted()
         {
             // Verify that "decrypting" an unencrypted file simply copies
@@ -387,7 +387,7 @@ ask the blind man, he saw it, too.
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
+        [Trait(TestTraits.Project, TestProject.NeonCryptography)]
         public void BadHEX()
         {
             var vault = new NeonVault(GetPassword);
@@ -462,7 +462,7 @@ ask the blind man, he saw it, too.
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
+        [Trait(TestTraits.Project, TestProject.NeonCryptography)]
         public void LowercaseHEX()
         {
             // Verify that we can process lower-case HEX digits.
@@ -513,7 +513,7 @@ ask the blind man, he saw it, too.
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
+        [Trait(TestTraits.Project, TestProject.NeonCryptography)]
         public void SwitchLineEndings()
         {
             // Verify that we can still decrypt en encrypted file after 
@@ -586,7 +586,7 @@ ask the blind man, he saw it, too.
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
+        [Trait(TestTraits.Project, TestProject.NeonCryptography)]
         public void BOM()
         {
             // Verify that [NeonVault] can ignore UTF-8 BOM markers.

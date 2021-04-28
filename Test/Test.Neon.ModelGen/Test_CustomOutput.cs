@@ -88,7 +88,7 @@ namespace TestModelGen.CustomOutput
     public class Test_CustomOutput
     {
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonModelGen)]
+        [Trait(TestTraits.Project, TestProject.NeonModelGen)]
         public void AllTargets()
         {
             // Verify that all types are generated when no targets
@@ -116,7 +116,7 @@ namespace TestModelGen.CustomOutput
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonModelGen)]
+        [Trait(TestTraits.Project, TestProject.NeonModelGen)]
         public void Filter1()
         {
             // Verify that only those types tagged with [Target("1")] are generated.
@@ -144,7 +144,7 @@ namespace TestModelGen.CustomOutput
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonModelGen)]
+        [Trait(TestTraits.Project, TestProject.NeonModelGen)]
         public void Filter2()
         {
             // Verify that only those types tagged with [Target("2")] are generated.
@@ -172,7 +172,7 @@ namespace TestModelGen.CustomOutput
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonModelGen)]
+        [Trait(TestTraits.Project, TestProject.NeonModelGen)]
         public void FilterClient()
         {
             // Verify that only those types tagged with [Target("client")] are generated.
@@ -200,7 +200,7 @@ namespace TestModelGen.CustomOutput
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonModelGen)]
+        [Trait(TestTraits.Project, TestProject.NeonModelGen)]
         public void Filter3AndClient()
         {
             // Verify that only those types tagged with [Target("3")] and [Target("client")]
@@ -229,7 +229,7 @@ namespace TestModelGen.CustomOutput
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonModelGen)]
+        [Trait(TestTraits.Project, TestProject.NeonModelGen)]
         public void TargetNamespace()
         {
             // Verify that we can customize the output namespace.
@@ -252,7 +252,7 @@ namespace TestModelGen.CustomOutput
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonModelGen)]
+        [Trait(TestTraits.Project, TestProject.NeonModelGen)]
         public void SourceNamespace()
         {
             // Verify that we can filter by source namespace.
@@ -280,7 +280,7 @@ namespace TestModelGen.CustomOutput
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonModelGen)]
+        [Trait(TestTraits.Project, TestProject.NeonModelGen)]
         public void NoServices()
         {
             // Verify that we can disable service client generation.

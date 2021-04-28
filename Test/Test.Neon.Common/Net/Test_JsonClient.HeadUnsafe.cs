@@ -40,7 +40,7 @@ namespace TestCommon
     public partial class Test_JsonClient
     {
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public async Task HeadUnsafeAsync()
         {
             // Ensure that HEAD returning an explict type works.
@@ -81,7 +81,7 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public async Task HeadUnsafeAsync_NotJson()
         {
             // Ensure that HEAD returning a non-JSON content type returns a NULL document.
@@ -122,7 +122,7 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public async Task HeadUnsafeAsync_Args()
         {
             // Ensure that HEAD with query arguments work.
@@ -170,7 +170,7 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public async Task HeadUnsafeAsync_Headers()
         {
             // Ensure that HEAD with query arguments work.
@@ -218,7 +218,7 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public async Task HeadUnsafeAsync_Dynamic()
         {
             // Ensure that HEAD returning a dynamic works.
@@ -259,7 +259,7 @@ namespace TestCommon
         }
  
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public async Task HeadUnsafeAsync_Dynamic_NotJson()
         {
             // Ensure that HEAD returning non-JSON returns a NULL dynamic document.
@@ -300,7 +300,7 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public async Task HeadUnsafeAsync_Error()
         {
             // Ensure that HEAD returning a hard error works.
@@ -323,7 +323,7 @@ namespace TestCommon
         }
 
         [Fact(Skip = "TODO")]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public async Task HeadUnsafeAsync_Retry()
         {
             // Ensure that HEAD will retry after soft errors.
@@ -334,7 +334,7 @@ namespace TestCommon
         }
 
         [Fact(Skip = "TODO")]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public async Task HeadUnsafeAsync_NoRetryNull()
         {
             // Ensure that HEAD won't retry if [retryPolicy=NULL]
@@ -345,7 +345,7 @@ namespace TestCommon
         }
 
         [Fact(Skip = "TODO")]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public async Task HeadUnsafeAsync_NoRetryExplicit()
         {
             // Ensure that HEAD won't retry if [retryPolicy=NoRetryPolicy]

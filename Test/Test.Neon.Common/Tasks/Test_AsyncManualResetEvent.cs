@@ -37,7 +37,7 @@ namespace TestCommon
         private TimeSpan defaultTimeout = TimeSpan.FromSeconds(15);
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public void Basic()
         {
             bool taskRunning;
@@ -302,7 +302,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public void MultipleThreads()
         {
             // Verify that an event that starts out unsignalled doesn't allow
@@ -423,7 +423,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public void Error()
         {
             AsyncManualResetEvent manualEvent;
