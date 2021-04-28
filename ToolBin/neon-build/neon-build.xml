@@ -34,6 +34,14 @@
             <param name="name">Name of the version constant.</param>
             <returns>The version string.</returns>
         </member>
+        <member name="M:NeonBuild.Program.Dotnet(Neon.Common.CommandLine)">
+            <summary>
+            Executes the <b>dotnet</b> tool passing the <paramref name="commandLine"/> while
+            limiting the environment variables passed to the <b>dotnet</b> tool to avoid
+            conflicts.
+            </summary>
+            <param name="commandLine">The command line.</param>
+        </member>
         <member name="M:NeonBuild.Program.EmbedCheck(Neon.Common.CommandLine)">
             <summary>
             Ensures that all of the files within a specified directory are also 

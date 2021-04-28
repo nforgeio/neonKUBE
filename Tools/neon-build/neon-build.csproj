@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
     <RootNamespace>NeonBuild</RootNamespace>
     <AssemblyName>neon-build</AssemblyName>
     <LangVersion>latest</LangVersion>
@@ -40,6 +40,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Lib\Neon.Common\Neon.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Properties\PublishProfiles\" />
   </ItemGroup>
 
 </Project>

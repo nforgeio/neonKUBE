@@ -6044,31 +6044,34 @@
             </para>
             </remarks>
         </member>
-        <member name="M:Neon.Deployment.IProfileClient.GetSecretPassword(System.String,System.String,System.String)">
+        <member name="M:Neon.Deployment.IProfileClient.GetSecretPassword(System.String,System.String,System.String,System.Boolean)">
             <summary>
             Requests the value of a secret password from 1Password via the assistant.
             </summary>
             <param name="name">Specifies the secret name.</param>
             <param name="vault">Optionally specifies the 1Password vault.  This defaults to the developer's neonFORGE user name as specified by the <c>NC_USER</c> environment variable.</param>
             <param name="masterPassword">Optionally specifies the master 1Password when it is already known.</param>
+            <param name="nullOnNotFound">Optionally specifies that <c>null</c> should be returned rather than throwing an exception when the secret does not exist.</param>
             <returns>The password value.</returns>
             <exception cref="T:Neon.Deployment.ProfileException">Thrown if the profile server returns an error.</exception>
         </member>
-        <member name="M:Neon.Deployment.IProfileClient.GetSecretValue(System.String,System.String,System.String)">
+        <member name="M:Neon.Deployment.IProfileClient.GetSecretValue(System.String,System.String,System.String,System.Boolean)">
             <summary>
              Requests the value of a secret value from 1Password via the assistant.
             </summary>
             <param name="name">Specifies the secret name.</param>
             <param name="vault">Optionally specifies the 1Password vault.  This defaults to the developer's neonFORGE user name as specified by the <c>NC_USER</c> environment variable.</param>
             <param name="masterPassword">Optionally specifies the master 1Password when it is already known.</param>
+            <param name="nullOnNotFound">Optionally specifies that <c>null</c> should be returned rather than throwing an exception when the secret does not exist.</param>
             <returns>The password value.</returns>
             <exception cref="T:Neon.Deployment.ProfileException">Thrown if the profile server returns an error.</exception>
         </member>
-        <member name="M:Neon.Deployment.IProfileClient.GetProfileValue(System.String)">
+        <member name="M:Neon.Deployment.IProfileClient.GetProfileValue(System.String,System.Boolean)">
             <summary>
             Requests a profile value from the assistant.
             </summary>
             <param name="name">Identifies the profile value.</param>
+            <param name="nullOnNotFound">Optionally specifies that <c>null</c> should be returned rather than throwing an exception when the profile value does not exist.</param>
             <returns>The password value.</returns>
             <exception cref="T:Neon.Deployment.ProfileException">Thrown if the profile server returns an error.</exception>
         </member>
@@ -6118,12 +6121,87 @@
             returned an error.
             </summary>
         </member>
-        <member name="M:Neon.Deployment.ProfileException.#ctor(System.String,System.Exception)">
+        <member name="M:Neon.Deployment.ProfileException.#ctor(System.String,System.String,System.Exception)">
             <summary>
             Constructor.
             </summary>
             <param name="message">The error message.</param>
+            <param name="status">
+            Pass as one of the <see cref="T:Neon.Deployment.ProfileStatus"/> values indicating the
+            reason for the failure.
+            </param>
             <param name="inner">Optionally specifies an inner exception.</param>
+        </member>
+        <member name="P:Neon.Deployment.ProfileException.Status">
+            <summary>
+            Returns one of the <see cref="T:Neon.Deployment.ProfileStatus"/> values indicating the
+            reason for the failure.
+            </summary>
+        </member>
+        <member name="T:Neon.Deployment.ProfileStatus">
+            <summary>
+            Enumerates the profile error code strings.
+            </summary>
+        </member>
+        <member name="F:Neon.Deployment.ProfileStatus.OK">
+            <summary>
+            The request completed successfully.
+            </summary>
+        </member>
+        <member name="F:Neon.Deployment.ProfileStatus.Connect">
+            <summary>
+            Unable to establish a connection with to the profile server.
+            </summary>
+        </member>
+        <member name="F:Neon.Deployment.ProfileStatus.NotReady">
+            <summary>
+            The profile server is running but it's not ready to accept requests.
+            </summary>
+        </member>
+        <member name="F:Neon.Deployment.ProfileStatus.BadRequest">
+            <summary>
+            The request is malformed.
+            </summary>
+        </member>
+        <member name="F:Neon.Deployment.ProfileStatus.MissingArg">
+            <summary>
+            The request is missing one or more required arguments.
+            </summary>
+        </member>
+        <member name="F:Neon.Deployment.ProfileStatus.BadCommand">
+            <summary>
+            The request command is unknown.
+            </summary>
+        </member>
+        <member name="F:Neon.Deployment.ProfileStatus.NotFound">
+            <summary>
+            A secret or profile value could not be found.
+            </summary>
+        </member>
+        <member name="F:Neon.Deployment.ProfileStatus.Aborted">
+            <summary>
+            The user aborted the operation.
+            </summary>
+        </member>
+        <member name="F:Neon.Deployment.ProfileStatus.Timeout">
+            <summary>
+            The operation timed-out.
+            </summary>
+        </member>
+        <member name="F:Neon.Deployment.ProfileStatus.BadReference">
+            <summary>
+            The profile or secret reference is malformed.
+            </summary>
+        </member>
+        <member name="F:Neon.Deployment.ProfileStatus.OnePasswordUnavailable">
+            <summary>
+            The 1Password backend service is not available.
+            </summary>
+        </member>
+        <member name="F:Neon.Deployment.ProfileStatus.Other">
+            <summary>
+            An onspecified error occurred.
+            </summary>
         </member>
         <member name="T:Neon.Diagnostics.AssertException">
             <summary>
@@ -15728,10 +15806,10 @@
             <summary>Provides access to the git information for the current assembly.</summary>
         </member>
         <member name="F:ThisAssembly.Git.IsDirty">
-            <summary>IsDirty: true</summary>
+            <summary>IsDirty: false</summary>
         </member>
         <member name="F:ThisAssembly.Git.IsDirtyString">
-            <summary>IsDirtyString: true</summary>
+            <summary>IsDirtyString: false</summary>
         </member>
         <member name="F:ThisAssembly.Git.RepositoryUrl">
             <summary>Repository URL: https://github.com/nforgeio/neonKUBE</summary>
@@ -15740,19 +15818,19 @@
             <summary>Branch: master</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commit">
-            <summary>Commit: ca61f35da</summary>
+            <summary>Commit: dc2b5adaa</summary>
         </member>
         <member name="F:ThisAssembly.Git.Sha">
-            <summary>Sha: ca61f35da633caf8e76495545f814af6be790258</summary>
+            <summary>Sha: dc2b5adaae89a8218876763b38fabaa3257b2880</summary>
         </member>
         <member name="F:ThisAssembly.Git.CommitDate">
-            <summary>Commit date: 2021-04-17T13:46:10-07:00</summary>
+            <summary>Commit date: 2021-04-28T15:13:21-07:00</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commits">
-            <summary>Commits on top of base version: 94</summary>
+            <summary>Commits on top of base version: 170</summary>
         </member>
         <member name="F:ThisAssembly.Git.Tag">
-            <summary>Tag: neonLIBRARY-v2.14.0-94-gca61f35da</summary>
+            <summary>Tag: neonLIBRARY-v2.14.0-170-gdc2b5adaa</summary>
         </member>
         <member name="F:ThisAssembly.Git.BaseTag">
             <summary>Base tag: neonLIBRARY-v2.14.0</summary>
@@ -15779,7 +15857,7 @@
             <summary>Minor: 14</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Patch">
-            <summary>Patch: 94</summary>
+            <summary>Patch: 170</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Label">
             <summary>Label: neonLIBRARY</summary>

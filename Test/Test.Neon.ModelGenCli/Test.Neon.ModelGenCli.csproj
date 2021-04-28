@@ -1,12 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-
+    <TargetFramework>net5.0</TargetFramework>
     <IsPackable>false</IsPackable>
-
     <RootNamespace>Test.ModelGenCli</RootNamespace>
-
+    <LangVersion>latest</LangVersion>
     <Configurations>Debug;Release;CodeDoc</Configurations>
   </PropertyGroup>
 

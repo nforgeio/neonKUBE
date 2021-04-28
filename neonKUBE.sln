@@ -356,7 +356,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-identity-operator", "S
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-identity-service", "Services\neon-identity-service\neon-identity-service.csproj", "{ABAE6A0B-1D89-46F7-8EF5-37AE3656E724}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test_Identity", "Test\Test.Neon.Identity\Test_Identity.csproj", "{7FB300E1-B0DE-4104-8F16-26B4D3547471}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.Identity", "Test\Test.Neon.Identity\Test.Neon.Identity.csproj", "{7FB300E1-B0DE-4104-8F16-26B4D3547471}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "twf-args", "twf-args", "{20FB148A-B72F-439E-B17D-1AA38A0CF975}"
 	ProjectSection(SolutionItems) = preProject
