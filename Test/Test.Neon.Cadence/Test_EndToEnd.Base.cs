@@ -121,6 +121,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTraits.Unreliable, "true")]      // We're seeing server busy errors
         public async Task Base_Domain()
         {
             await SyncContext.ClearAsync;

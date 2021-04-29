@@ -316,6 +316,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTraits.Unreliable, "true")]      // https://github.com/nforgeio/neonKUBE/issues/1166
         public async Task Workflow_SleepUntilUtc()
         {
             await SyncContext.ClearAsync;
@@ -516,11 +517,12 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTraits.Slow, "true")]
         public async Task Workflow_Cron()
         {
             var assembly = Assembly.GetExecutingAssembly();
 
-            // Start a CRON workflow on a 1 minute interval that updates the [cronCalls] list 
+            // Start a CRON workflow on a 1 minute interval that updates the [cronCallist 
             // every time the workflow is invoked.  We'll wait for the first invocation and then
             // wait to verify that we've see at least 3 invocations and that each invocation 
             // propertly incremented the call number.
@@ -4448,7 +4450,7 @@ namespace TestCadence
 
             // Start the [ghcr.io/neonrelease/test-cadence:latest] Docker image locally, having it
             // connect to the local Cadence cluster and then start a bunch of workflows that
-            // will be executed by the container and verify that they completed.
+            // will be executed by the container and then verify that they completed.
 
             // We need a routable IP address for the current machine so we can use it to
             // generate the Cadence URI we'll pass to the [test-cadence] container so it
