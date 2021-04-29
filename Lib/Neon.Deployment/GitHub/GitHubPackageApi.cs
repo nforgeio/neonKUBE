@@ -79,10 +79,10 @@ namespace Neon.Deployment
             jsonClient.DefaultRequestHeaders.Add("User-Agent", "neondevbot");
 
             // Create an AngleSharp client for screen scraping.
-            
+
             // Load default configuration
             var config = Configuration.Default.WithDefaultLoader().WithDefaultCookies();
-            
+
             // Create a new browsing context
             browsingContext = BrowsingContext.New(config);
 
@@ -113,10 +113,27 @@ namespace Neon.Deployment
         /// <param name="packageType">Optionally specifies the package type.  This defaults to <see cref="GitHubPackageType.Container"/>.</param>
         /// <param name="visibility">Optionally specifies the visibility of the package.  This defaults to <see cref="GitHubPackageVisibility.All"/></param>
         /// <returns>The list of package information as a list of <see cref="GitHubPackage"/> instance.</returns>
+        public List<GitHubPackage> List(
+            string organization,
+            string pattern = null,
+            GitHubPackageType packageType = GitHubPackageType.Container,
+            GitHubPackageVisibility visibility = GitHubPackageVisibility.All)
+        {
+            return ListAsync(organization, pattern, packageType, visibility).Result;
+        }
+
+        /// <summary>
+        /// Lists the packages for an organization.
+        /// </summary>
+        /// <param name="organization">The GitHub organization name.</param>
+        /// <param name="pattern">The matching pattern (see <see cref="NeonHelper.FileWildcardRegex(string)"/>).</param>
+        /// <param name="packageType">Optionally specifies the package type.  This defaults to <see cref="GitHubPackageType.Container"/>.</param>
+        /// <param name="visibility">Optionally specifies the visibility of the package.  This defaults to <see cref="GitHubPackageVisibility.All"/></param>
+        /// <returns>The list of package information as a list of <see cref="GitHubPackage"/> instance.</returns>
         public async Task<List<GitHubPackage>> ListAsync(
-            string organization, 
-            string pattern                     = null,
-            GitHubPackageType packageType      = GitHubPackageType.Container,
+            string organization,
+            string pattern = null,
+            GitHubPackageType packageType = GitHubPackageType.Container,
             GitHubPackageVisibility visibility = GitHubPackageVisibility.All)
         {
             var packages = new List<GitHubPackage>();
@@ -181,8 +198,23 @@ namespace Neon.Deployment
         /// <param name="organization">The GitHub organization name.</param>
         /// <param name="nameOrPattern">The package name or matching pattern (see <see cref="NeonHelper.FileWildcardRegex(string)"/>).</param>
         /// <param name="packageType">Optionally specifies the package type.  This defaults to <see cref="GitHubPackageType.Container"/>.</param>
+        public void Delete(
+            string organization,
+            string nameOrPattern,
+            GitHubPackageType packageType = GitHubPackageType.Container)
+        {
+            DeleteAsync(organization, nameOrPattern, packageType).Wait();
+        }
+
+        /// <summary>
+        /// Deletes a specific named package or the packages that match a file pattern using
+        /// <b>"*"</b> and <b>"?"</b> wildcards (see <see cref="NeonHelper.FileWildcardRegex(string)"/>).
+        /// </summary>
+        /// <param name="organization">The GitHub organization name.</param>
+        /// <param name="nameOrPattern">The package name or matching pattern (see <see cref="NeonHelper.FileWildcardRegex(string)"/>).</param>
+        /// <param name="packageType">Optionally specifies the package type.  This defaults to <see cref="GitHubPackageType.Container"/>.</param>
         public async Task DeleteAsync(
-            string organization, 
+            string organization,
             string nameOrPattern,
             GitHubPackageType packageType = GitHubPackageType.Container)
         {
@@ -207,6 +239,23 @@ namespace Neon.Deployment
         /// <param name="nameOrPattern">The package name or matching pattern.</param>
         /// <param name="visibility">The visibility to set the package to.</param>
         /// <param name="packageType">Optionally specifies the package type.  This defaults to <see cref="GitHubPackageType.Container"/>.</param>
+        public void SetVisibility(
+            string organization,
+            string nameOrPattern,
+            GitHubPackageVisibility visibility = GitHubPackageVisibility.All,
+            GitHubPackageType packageType = GitHubPackageType.Container)
+        {
+            SetVisibilityAsync(organization, nameOrPattern, visibility, packageType).Wait();
+        }
+
+        /// <summary>
+        /// Makes public a specific named package or the packages that match a file pattern using
+        /// <b>"*"</b> and <b>"?"</b> wildcards (see <see cref="NeonHelper.FileWildcardRegex(string)"/>).
+        /// </summary>
+        /// <param name="organization">The GitHub organization name.</param>
+        /// <param name="nameOrPattern">The package name or matching pattern.</param>
+        /// <param name="visibility">The visibility to set the package to.</param>
+        /// <param name="packageType">Optionally specifies the package type.  This defaults to <see cref="GitHubPackageType.Container"/>.</param>
         public async Task SetVisibilityAsync(
             string organization,
             string nameOrPattern,
@@ -218,24 +267,29 @@ namespace Neon.Deployment
 
             GitHub.EnsureCredentials();
 
-            var page = await browsingContext.OpenAsync($"https://github.com/orgs/{organization}/packages/container/{nameOrPattern}/settings");
-
-            var form = page.QuerySelector<IHtmlFormElement>("#js-pjax-container > div > div.container-lg.p-responsive.clearfix > div.container-lg.d-flex > div.col-9 > div.Box.Box--danger > ul > li:nth-child(1) > div > details > details-dialog > div.Box-body.overflow-auto > form");
-
-            var selector = form.QuerySelector<IHtmlInputElement>("#visibility_public");
-            selector.IsChecked = visibility == GitHubPackageVisibility.Public;
-
-            selector = form.QuerySelector<IHtmlInputElement>("#visibility_private");
-            selector.IsChecked = visibility == GitHubPackageVisibility.Private;
-
-            selector = form.QuerySelector<IHtmlInputElement>("#visibility_internal");
-            selector.IsChecked = visibility == GitHubPackageVisibility.Internal;
-
-            var resultDocument = await form.SubmitAsync(new { verify = nameOrPattern });
-
-            if (resultDocument.StatusCode != System.Net.HttpStatusCode.OK)
+            var packages = await ListAsync(organization, nameOrPattern, packageType);
+            
+            foreach (var package in packages)
             {
-                throw new Exception($"Failed to make package {visibility}.");
+                var page = await browsingContext.OpenAsync($"https://github.com/orgs/{organization}/packages/container/{package.Name}/settings");
+
+                var form = page.QuerySelector<IHtmlFormElement>("#js-pjax-container > div > div.container-lg.p-responsive.clearfix > div.container-lg.d-flex > div.col-9 > div.Box.Box--danger > ul > li:nth-child(1) > div > details > details-dialog > div.Box-body.overflow-auto > form");
+
+                var selector = form.QuerySelector<IHtmlInputElement>("#visibility_public");
+                selector.IsChecked = visibility == GitHubPackageVisibility.Public;
+
+                selector = form.QuerySelector<IHtmlInputElement>("#visibility_private");
+                selector.IsChecked = visibility == GitHubPackageVisibility.Private;
+
+                selector = form.QuerySelector<IHtmlInputElement>("#visibility_internal");
+                selector.IsChecked = visibility == GitHubPackageVisibility.Internal;
+
+                var resultDocument = await form.SubmitAsync(new { verify = package.Name });
+
+                if (resultDocument.StatusCode != System.Net.HttpStatusCode.OK)
+                {
+                    throw new Exception($"Failed to make package {visibility}.");
+                }
             }
         }
     }
