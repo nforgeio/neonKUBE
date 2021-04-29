@@ -199,7 +199,6 @@ try
         # Publish the Windows .NET Core tool binaries to the build folder.
 
         PublishCore "Tools\neon-cli\neon-cli.csproj"    "neon"
-        PublishCore "Tools\unix-text\unix-text.csproj"  "unix-text"
      }
 
     # Build the code documentation if requested.

@@ -1,6 +1,8 @@
 ﻿# Instructions
 
-You'll need to publish this project as **Release** to the `$\ToolBin\neon-build` directory after making any changes.  I generally, just publish the release to the default folder and then manually copy the files over, deleting the existing ones first.
+You'll need to publish this project as **Release** to the `$\ToolBin\neon-build` directory after making any changes.
+I generally, just publish the release to the default folder and then manually copy the files over, deleting the 
+existing ones first.
 
 Note that there's a bit of a circular reference because:
 
