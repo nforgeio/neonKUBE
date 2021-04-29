@@ -35,12 +35,13 @@ namespace Neon.Xunit
         public const string Project = "project";
 
         /// <summary>
-        /// Identifies slow tests.
+        /// Identifies slow tests by setting this trait's value to <b>"true"</b>.
         /// </summary>
         public const string Slow = "slow";
 
         /// <summary>
-        /// 
+        /// Identifies unreliable tests that are buggy or experience transient problems
+        /// by setting this trait's value to <b>"true"</b>.
         /// </summary>
         public const string Unreliable = "unreliable";
     }
