@@ -20,10 +20,18 @@
 
 # Open Windows Firewall ports required for unit testing.
 
-New-NetFirewallRule -DisplayName "[TEST] allow inbound Cadence/Temporal" `
+New-NetFirewallRule -DisplayName "[TEST] allow inbound Cadence" `
                     -Direction Inbound `
                     -Action Allow `
-                    -LocalPort 7933 `
+                    -LocalPort 7933-7935 `
                     -Protocol TCP `
                     -Profile Any `
-                    -Description "Allow external connections to workflow servers"
+                    -Description "Allow external connections to Cadence servers" | Out-Null
+                     
+New-NetFirewallRule -DisplayName "[TEST] allow inbound Temporal" `
+                    -Direction Inbound `
+                    -Action Allow `
+                    -LocalPort 6933-6935 `
+                    -Protocol TCP `
+                    -Profile Any `
+                    -Description "Allow external connections to Temporal servers" | Out-Null

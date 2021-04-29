@@ -1,4 +1,4 @@
-@echo on
+@echo off
 REM Configures the environment variables required to build neonKUBE projects.
 REM 
 REM 	buildenv [ <source folder> ]
@@ -27,6 +27,10 @@ goto done
 
 :goodPath 
 
+echo.
+echo Configuring...
+echo.
+
 REM Set NF_REPOS to the parent directory holding the neonFORGE repositories.
 
 pushd "%NF_ROOT%\.."
@@ -46,10 +50,6 @@ set NF_CODEDOC=%NF_ROOT%\..\nforgeio.github.io
 set NF_SAMPLES_CADENCE=%NF_ROOT%\..\cadence-samples
 set DOTNETPATH=%WINDIR%\Microsoft.NET\Framework64\v4.0.30319
 set WINSDKPATH=C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.6 Tools\x64
-
-echo.
-echo Persisting state...
-echo.
 
 REM Persist the environment variables.
 
