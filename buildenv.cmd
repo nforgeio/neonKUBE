@@ -1,4 +1,4 @@
-@echo off
+@echo on
 REM Configures the environment variables required to build neonKUBE projects.
 REM 
 REM 	buildenv [ <source folder> ]
@@ -64,7 +64,6 @@ setx NF_TEMP "%NF_TEMP%" /M                                   > nul
 setx NF_ACTIONS_ROOT "%NF_ACTIONS_ROOT%" /M                   > nul
 setx NF_CODEDOC "%NF_CODEDOC%" /M                             > nul
 setx NF_SAMPLES_CADENCE "%NF_SAMPLES_CADENCE%" /M             > nul
-setx NEON_SKIPSLOWTESTS %NEON_SKIPSLOWTESTS% /M               > nul
 setx DOTNET_CLI_TELEMETRY_OPTOUT 1 /M                         > nul
 
 setx DOTNETPATH "%DOTNETPATH%" /M                             > nul
@@ -111,6 +110,10 @@ REM Configure the neonKUBE kubeconfig path (as a USER environment variable).
 
 set KUBECONFIG=%USERPROFILE%\.kube\admin.conf
 reg add HKCU\Environment /v KUBECONFIG /t REG_EXPAND_SZ /d %USERPROFILE%\.kube\config /f > /nul
+
+REM Perform additional implementation in via Powershell.
+
+pwsh -File "%NF_ROOT%\buildenv.ps1"
 
 echo.
 echo ============================================================================================
