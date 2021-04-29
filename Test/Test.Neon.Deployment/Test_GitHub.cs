@@ -55,11 +55,15 @@ namespace TestDeployment
 
             var client = new GitHubPackageApi();
 
-            var packages = await client.List("neonkube-dev");
+            var packages = await client.ListAsync("neonkube-dev");
 
             Assert.NotEmpty(packages);
 
-            packages = await client.List("neonrelease-dev");
+            packages = await client.ListAsync("neonrelease-dev", "test");
+
+            Assert.NotEmpty(packages);
+
+            packages = await client.ListAsync("neonrelease-dev", "test*");
 
             Assert.NotEmpty(packages);
         }
@@ -74,7 +78,7 @@ namespace TestDeployment
 
             await client.SetVisibilityAsync("neonrelease-dev", "test", GitHubPackageVisibility.Public);
 
-            var packages = await client.List("neonrelease-dev", "test", visibility: GitHubPackageVisibility.Public);
+            var packages = await client.ListAsync("neonrelease-dev", "test", visibility: GitHubPackageVisibility.Public);
 
             Assert.Contains(packages, p => p.Name == "test");
         }
@@ -89,7 +93,7 @@ namespace TestDeployment
 
             await client.SetVisibilityAsync("neonrelease-dev", "test", GitHubPackageVisibility.Private);
 
-            var packages = await client.List("neonrelease-dev", "test", visibility: GitHubPackageVisibility.Private);
+            var packages = await client.ListAsync("neonrelease-dev", "test", visibility: GitHubPackageVisibility.Private);
 
             Assert.Contains(packages, p => p.Name == "test");
         }
