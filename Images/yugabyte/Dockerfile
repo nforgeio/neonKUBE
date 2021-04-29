@@ -31,4 +31,3 @@
 ARG         VERSION
 FROM        yugabytedb/yugabyte:${VERSION}
 MAINTAINER  jeff@lilltek.com
-

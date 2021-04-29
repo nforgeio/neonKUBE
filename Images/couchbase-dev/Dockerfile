@@ -26,10 +26,17 @@ FROM        couchbase/server:${VERSION}
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 
+# Environment
+
+ENV TZ=UTC
+ENV DEBIAN_FRONTEND noninteractive
+ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
+
+# Configure
+
 COPY entrypoint.sh      /
 COPY init-cluster.sh    /
 
-RUN chmod 700 /*.sh
-
-# Set timezone to UTC
-ENV TZ=UTC
+RUN chmod 700 /*.sh \
+    && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
+    && sed -i 's!^#precedence ::ffff:0:0/96  10$!precedence ::ffff:0:0/96  100!g' /etc/gai.conf

@@ -20,6 +20,13 @@ $appname      = "test-temporal"
 $organization = LibraryRegistryOrg
 $base_organization = KubeBaseRegistryOrg
 
+# Copy the common scripts.
+
+DeleteFolder _common
+
+mkdir _common
+copy ..\_common\*.* .\_common
+
 # Build and publish the app to a local [bin] folder.
 
 DeleteFolder bin
@@ -39,4 +46,4 @@ Exec { docker build -t "${registry}:$tag" --build-arg "APPNAME=$appname" --build
 # Clean up
 
 DeleteFolder bin
-
+DeleteFolder _common

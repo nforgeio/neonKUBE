@@ -134,7 +134,6 @@ if ($other)
 if ($test)
 {
     Publish "$image_root\\test"
-    Publish "$image_root\\test-api"
     Publish "$image_root\\test-cadence"
     Publish "$image_root\\test-temporal"
 }

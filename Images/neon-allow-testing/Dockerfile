@@ -29,6 +29,15 @@ FROM        alpine:latest
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 
+# Environment
+
+ENV TZ=UTC
+
+# Configure
+
 COPY docker-entrypoint.sh   /
-RUN chmod 777 /docker-entrypoint.sh
+
+RUN chmod 700 /*.sh \
+    && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
 ENTRYPOINT ["/docker-entrypoint.sh"]
