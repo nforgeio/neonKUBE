@@ -30,8 +30,8 @@ using Neon.Net;
 using AngleSharp;
 using AngleSharp.Html.Parser;
 using AngleSharp.Html.Dom;
-using System.Linq;
 using AngleSharp.Dom;
+using System.Text.RegularExpressions;
 
 namespace Neon.Deployment
 {
@@ -113,11 +113,11 @@ namespace Neon.Deployment
         /// <param name="packageType">Optionally specifies the package type.  This defaults to <see cref="GitHubPackageType.Container"/>.</param>
         /// <param name="visibility">Optionally specifies the visibility of the package.  This defaults to <see cref="GitHubPackageVisibility.All"/></param>
         /// <returns>The list of package information as a list of <see cref="GitHubPackage"/> instance.</returns>
-        public async Task<List<GitHubPackage>> List(
+        public async Task<List<GitHubPackage>> ListAsync(
             string organization, 
-            string pattern = null, 
-            string packageType = GitHubPackageType.Container,
-            string visibility = GitHubPackageVisibility.All)
+            string pattern                     = null,
+            GitHubPackageType packageType      = GitHubPackageType.Container,
+            GitHubPackageVisibility visibility = GitHubPackageVisibility.All)
         {
             var packages = new List<GitHubPackage>();
 
@@ -130,17 +130,30 @@ namespace Neon.Deployment
                 return packages;
             }
 
+            Regex regex = null;
+
+            if (!string.IsNullOrEmpty(pattern))
+            {
+                regex = NeonHelper.FileWildcardRegex(pattern);
+            }
+
             var done = false;
 
             while (!done)
             {
                 foreach (var p in packageslist.Children)
                 {
-                    packages.Add(
+                    var name = p.QuerySelector<IHtmlAnchorElement>("div > div.flex-auto > a").Title;
+
+                    if (regex == null || regex.IsMatch(name))
+                    {
+                        packages.Add(
                         new GitHubPackage()
                         {
-                            Name = p.QuerySelector<IHtmlAnchorElement>("div > div.flex-auto > a").Title
+                            Name = name,
+                            Type = packageType
                         });
+                    }
                 }
 
                 var next = document.QuerySelector<IHtmlAnchorElement>("#org-packages > div.paginate-container > div > a.next_page");
@@ -168,15 +181,22 @@ namespace Neon.Deployment
         /// <param name="organization">The GitHub organization name.</param>
         /// <param name="nameOrPattern">The package name or matching pattern (see <see cref="NeonHelper.FileWildcardRegex(string)"/>).</param>
         /// <param name="packageType">Optionally specifies the package type.  This defaults to <see cref="GitHubPackageType.Container"/>.</param>
-        public async Task DeleteAsync(string organization, string nameOrPattern, string packageType = GitHubPackageType.Container)
+        public async Task DeleteAsync(
+            string organization, 
+            string nameOrPattern,
+            GitHubPackageType packageType = GitHubPackageType.Container)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(organization), nameof(organization));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nameOrPattern), nameof(nameOrPattern));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(packageType), nameof(packageType));
 
             GitHub.EnsureCredentials();
 
-            await jsonClient.DeleteAsync($"/orgs/{organization}/packages/{packageType}/{nameOrPattern}");
+            var packages = await ListAsync(organization, nameOrPattern, packageType);
+
+            foreach (var p in packages)
+            {
+                await jsonClient.DeleteAsync($"/orgs/{organization}/packages/{packageType}/{p.Name}");
+            }
         }
 
         /// <summary>
@@ -188,15 +208,13 @@ namespace Neon.Deployment
         /// <param name="visibility">The visibility to set the package to.</param>
         /// <param name="packageType">Optionally specifies the package type.  This defaults to <see cref="GitHubPackageType.Container"/>.</param>
         public async Task SetVisibilityAsync(
-            string organization, 
+            string organization,
             string nameOrPattern,
-            string visibility,
-            string packageType = GitHubPackageType.Container)
+            GitHubPackageVisibility visibility = GitHubPackageVisibility.All,
+            GitHubPackageType packageType = GitHubPackageType.Container)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(organization), nameof(organization));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nameOrPattern), nameof(nameOrPattern));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(visibility), nameof(visibility));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(packageType), nameof(packageType));
 
             GitHub.EnsureCredentials();
 

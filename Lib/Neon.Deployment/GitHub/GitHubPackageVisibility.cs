@@ -18,6 +18,7 @@
 using System;
 using System.Diagnostics.Contracts;
 using System.IO;
+using System.Runtime.Serialization;
 
 using Neon.Common;
 
@@ -26,26 +27,30 @@ namespace Neon.Deployment
     /// <summary>
     /// Enumerates the supported GitHub package visibility types.
     /// </summary>
-    public static class GitHubPackageVisibility
+    public enum GitHubPackageVisibility
     {
         /// <summary>
         /// All packages.
         /// </summary>
-        public const string All = "all";
+        [EnumMember(Value = "all")]
+        All,
 
         /// <summary>
         /// Public packages.
         /// </summary>
-        public const string Public = "public";
+        [EnumMember(Value = "public")]
+        Public,
 
         /// <summary>
         /// Private packages.
         /// </summary>
-        public const string Private = "private";
+        [EnumMember(Value = "private")]
+        Private,
 
         /// <summary>
         /// Internal packages.
         /// </summary>
-        public const string Internal = "internal";
+        [EnumMember(Value = "internal")]
+        Internal
     }
 }

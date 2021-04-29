@@ -18,6 +18,7 @@
 using System;
 using System.Diagnostics.Contracts;
 using System.IO;
+using System.Runtime.Serialization;
 
 using Neon.Common;
 
@@ -26,36 +27,42 @@ namespace Neon.Deployment
     /// <summary>
     /// Enumerates the supported GitHub package types.
     /// </summary>
-    public static class GitHubPackageType
+    public enum GitHubPackageType
     {
         /// <summary>
         /// NPM package.
         /// </summary>
-        public const string Npm = "npm";
+        [EnumMember(Value = "npm")]
+        Npm,
 
         /// <summary>
         /// Maven package.
         /// </summary>
-        public const string Maven = "maven";
+        [EnumMember(Value = "maven")]
+        Maven,
 
         /// <summary>
         /// Ruby Gem.
         /// </summary>
-        public const string RubyGems = "rubygems";
+        [EnumMember(Value = "rubygems")]
+        RubyGems,
 
         /// <summary>
         /// Nuget package.
         /// </summary>
-        public const string Nuget = "nuget";
+        [EnumMember(Value = "nuget")]
+        Nuget,
 
         /// <summary>
         /// Docker package (use <see cref="Container"/> for packages with namespace <b>https://ghcr.io/owner/package-name</b>).
         /// </summary>
-        public const string Docker = "docker";
+        [EnumMember(Value = "docker")]
+        Docker,
 
         /// <summary>
         /// Container image.
         /// </summary>
-        public const string Container = "container";
+        [EnumMember(Value = "container")]
+        Container,
     }
 }
