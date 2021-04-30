@@ -42,7 +42,7 @@ namespace TestCadence
 {
     public partial class Test_Messages
     {
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Test_ActivityRegisterRequest()
         {
@@ -110,7 +110,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Test_ActivityRegisterReply()
         {
@@ -170,7 +170,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Test_ActivityExecuteRequest()
         {
@@ -291,7 +291,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Test_ActivityExecuteReply()
         {
@@ -357,7 +357,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Test_ActivityInvokeRequest()
         {
@@ -425,7 +425,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Test_ActivityInvokeReply()
         {
@@ -497,7 +497,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Test_ActivityGetHeartbeatDetailsRequest()
         {
@@ -551,7 +551,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Test_ActivityGetHeartbeatDetailsReply()
         {
@@ -615,7 +615,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Test_ActivityRecordHeartbeatRequest()
         {
@@ -682,7 +682,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Test_ActivityRecordHeartbeatReply()
         {
@@ -742,7 +742,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Test_ActivityHasHeartbeatDetailsRequest()
         {
@@ -798,7 +798,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Test_ActivityHasHeartbeatDetailsReply()
         {
@@ -864,7 +864,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Test_ActivityStoppingRequest()
         {
@@ -925,7 +925,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Test_ActivityStoppingReply()
         {
@@ -985,7 +985,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Test_ActivityExecuteLocalRequest()
         {
@@ -1065,7 +1065,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Test_ActivityExecuteLocalReply()
         {
@@ -1131,7 +1131,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Test_ActivityInvokeLocalRequest()
         {
@@ -1198,7 +1198,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Test_ActivityInvokeLocalReply()
         {
@@ -1264,7 +1264,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Test_ActivityGetInfoRequest()
         {
@@ -1336,7 +1336,7 @@ namespace TestCadence
             Assert.Equal(expected.WorkflowType.Name , actual.WorkflowType.Name);
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Test_ActivityGetInfoReply()
         {
@@ -1416,7 +1416,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Test_ActivityCompleteRequest()
         {
@@ -1507,7 +1507,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Test_ActivityCompleteReply()
         {
@@ -1567,7 +1567,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Test_ActivityStartRequest()
         {
@@ -1694,7 +1694,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Test_ActivityStartReply()
         {
@@ -1760,7 +1760,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Test_ActivityGetResultRequest()
         {
@@ -1822,7 +1822,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Test_ActivityGetResultReply()
         {
@@ -1894,7 +1894,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Test_ActivityStartLocalRequest()
         {
@@ -1990,7 +1990,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Test_ActivityGetLocalResultReply()
         {
@@ -2062,7 +2062,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Test_ActivityGetLocalResultRequest()
         {
@@ -2124,7 +2124,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Test_ActivityStartLocalReply()
         {

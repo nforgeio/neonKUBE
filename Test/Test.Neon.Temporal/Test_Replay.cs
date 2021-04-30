@@ -579,7 +579,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Nop()
         {
@@ -591,7 +591,7 @@ namespace TestTemporal
             Assert.True(await stub.RunAsync(ReplayTest.Nop));
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task GetVersion()
         {
@@ -603,7 +603,7 @@ namespace TestTemporal
             Assert.True(await stub.RunAsync(ReplayTest.GetVersion));
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task WorkflowExecution()
         {
@@ -615,7 +615,7 @@ namespace TestTemporal
             Assert.True(await stub.RunAsync(ReplayTest.WorkflowExecution));
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task MutableSideEffect()
         {
@@ -627,7 +627,7 @@ namespace TestTemporal
             Assert.True(await stub.RunAsync(ReplayTest.MutableSideEffect));
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task MutableSideEffectGeneric()
         {
@@ -639,7 +639,7 @@ namespace TestTemporal
             Assert.True(await stub.RunAsync(ReplayTest.MutableSideEffectGeneric));
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task SideEffect()
         {
@@ -651,7 +651,7 @@ namespace TestTemporal
             Assert.True(await stub.RunAsync(ReplayTest.SideEffect));
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task SideEffectGeneric()
         {
@@ -663,7 +663,7 @@ namespace TestTemporal
             Assert.True(await stub.RunAsync(ReplayTest.SideEffectGeneric));
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task NewGuid()
         {
@@ -675,7 +675,7 @@ namespace TestTemporal
             Assert.True(await stub.RunAsync(ReplayTest.NewGuid));
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task NextRandomDouble()
         {
@@ -687,7 +687,7 @@ namespace TestTemporal
             Assert.True(await stub.RunAsync(ReplayTest.NextRandomDouble));
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task NextRandom()
         {
@@ -699,7 +699,7 @@ namespace TestTemporal
             Assert.True(await stub.RunAsync(ReplayTest.NextRandom));
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task NextRandomMax()
         {
@@ -711,7 +711,7 @@ namespace TestTemporal
             Assert.True(await stub.RunAsync(ReplayTest.NextRandomMax));
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task NextRandomMinMax()
         {
@@ -723,7 +723,7 @@ namespace TestTemporal
             Assert.True(await stub.RunAsync(ReplayTest.NextRandomMinMax));
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task NextRandomBytes()
         {
@@ -747,7 +747,7 @@ namespace TestTemporal
             Assert.True(await stub.RunAsync(ReplayTest.GetLastCompletionResult));
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task GetIsSetLastCompletionResult()
         {
@@ -759,7 +759,7 @@ namespace TestTemporal
             Assert.True(await stub.RunAsync(ReplayTest.GetIsSetLastCompletionResult));
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task ChildWorkflow()
         {
@@ -771,7 +771,7 @@ namespace TestTemporal
             Assert.True(await stub.RunAsync(ReplayTest.ChildWorkflow));
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Activity()
         {
@@ -783,7 +783,7 @@ namespace TestTemporal
             Assert.True(await stub.RunAsync(ReplayTest.Activity));
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task LocalActivity()
         {

@@ -68,7 +68,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Activity_DuplicateBlankEntrypoint()
         {
@@ -105,7 +105,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Activity_DuplicateEntrypoint()
         {
@@ -127,7 +127,7 @@ namespace TestCadence
         {
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Activity_NoEntrypoint()
         {
@@ -167,7 +167,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Activity_MultipleInterfaces()
         {

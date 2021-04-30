@@ -180,7 +180,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Interop_Workflow_Untyped()
         {
@@ -396,7 +396,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Interop_Activity_Untyped()
         {
@@ -432,7 +432,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Interop_Workflow_StubFullName()
         {
@@ -506,7 +506,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Interop_Activity_StubFullName()
         {

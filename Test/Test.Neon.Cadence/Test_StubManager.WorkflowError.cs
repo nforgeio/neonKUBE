@@ -51,7 +51,7 @@ namespace TestCadence
             Task DoIt();
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Error_WorkflowGenericsNotAllowed()
         {
@@ -66,7 +66,7 @@ namespace TestCadence
         {
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Error_WorkflowNoEntryPoint()
         {
@@ -75,7 +75,7 @@ namespace TestCadence
             Assert.Throws<WorkflowTypeException>(() => StubManager.NewWorkflowStub<IErrorNoEntryPointWorkflow>(client));
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Error_WorkflowNullClient()
         {
@@ -95,7 +95,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Error_WorkflowNotInterface()
         {
@@ -115,7 +115,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Error_WorkflowNotPublic()
         {
@@ -138,7 +138,7 @@ namespace TestCadence
             List<int> EntryPoint();
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Error_WorkflowNonTaskEntryPoint()
         {
@@ -159,7 +159,7 @@ namespace TestCadence
             void Signal();
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Error_WorkflowNonTaskSignal()
         {
@@ -179,7 +179,7 @@ namespace TestCadence
             Task EntryPoint2();
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Error_WorkflowDuplicateDuplicateDefaultEntryPoints()
         {
@@ -200,7 +200,7 @@ namespace TestCadence
             Task EntryPoint2();
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Error_WorkflowDuplicateDuplicateEntryPoints()
         {
@@ -224,7 +224,7 @@ namespace TestCadence
             Task Signal2();
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Error_WorkflowDuplicateSignals()
         {
@@ -244,7 +244,7 @@ namespace TestCadence
             void Query();
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Error_WorkflowNonTaskQuery()
         {
@@ -267,7 +267,7 @@ namespace TestCadence
             Task Query2();
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Error_WorkflowDuplicateQueries()
         {

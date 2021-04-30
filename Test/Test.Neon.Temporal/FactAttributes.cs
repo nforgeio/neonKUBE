@@ -42,7 +42,7 @@ using Xunit;
 
 namespace TestTemporal
 {
-    // These are some temporary [Fact] attributes used to categorize failing 
+    // These are some temporary [Fact(Timeout = TemporalTestHelper.TestTimeout)] attributes used to categorize failing 
     // unit tests while we work through fixing them.  [SlowFact] isn't really 
     // a good attribute for this because we use this to tag slow working tests
     // so we don't run them all of the time.

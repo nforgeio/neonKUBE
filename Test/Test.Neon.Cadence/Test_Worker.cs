@@ -92,7 +92,7 @@ namespace TestCadence
             Task Test();
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Worker()
         {

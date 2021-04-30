@@ -67,7 +67,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+       [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_DuplicateBlankEntrypoint()
         {
@@ -104,7 +104,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+       [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_DuplicateEntrypoint()
         {
@@ -126,7 +126,7 @@ namespace TestCadence
         {
         }
 
-        [Fact]
+       [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_NoEntrypoint()
         {
@@ -170,7 +170,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+       [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_DuplicateSignal()
         {
@@ -214,7 +214,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+       [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_DuplicateQuery()
         {
@@ -254,7 +254,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+       [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_MultipleInterfaces()
         {

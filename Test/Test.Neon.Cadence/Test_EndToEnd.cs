@@ -38,6 +38,7 @@ using Neon.Xunit.Cadence;
 
 using Newtonsoft.Json;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace TestCadence
 {
@@ -64,12 +65,15 @@ namespace TestCadence
         private static readonly TimeSpan allowedVariation = TimeSpan.FromSeconds(10);
         private static readonly TimeSpan workflowTimeout  = TimeSpan.FromSeconds(20);
 
-        private CadenceFixture  fixture;
-        private CadenceClient   client;
-        private HttpClient      proxyClient;
+        private CadenceFixture      fixture;
+        private TestOutputWriter    testWriter;
+        private CadenceClient       client;
+        private HttpClient          proxyClient;
 
-        public Test_EndToEnd(CadenceFixture fixture)
+        public Test_EndToEnd(CadenceFixture fixture, ITestOutputHelper outputHelper)
         {
+            testWriter = new TestOutputWriter(outputHelper);
+
             // Initialize the Cadence fixture.
 
             var settings = new CadenceSettings()

@@ -89,7 +89,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Test_PropertyHelpers()
         {

@@ -44,7 +44,7 @@ namespace TestCadence
 {
     public partial class Test_EndToEnd
     {
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Base_Ping()
         {
@@ -68,10 +68,10 @@ namespace TestCadence
 
             var tps = iterations * (1.0 / stopwatch.Elapsed.TotalSeconds);
 
-            Console.WriteLine($"Transactions/sec: {tps}");
+            testWriter.WriteLine($"Transactions/sec: {tps}");
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Base_PingAttack()
         {
@@ -115,13 +115,13 @@ namespace TestCadence
                 thread.Join();
             }
 
-            Console.WriteLine($"Transactions/sec: {totalTps}");
-            Console.WriteLine($"Latency (average): {1.0 / totalTps}");
+            testWriter.WriteLine($"Transactions/sec: {totalTps}");
+            testWriter.WriteLine($"Latency (average): {1.0 / totalTps}");
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
-        [Trait(TestTraits.Unreliable, "true")]      // We're seeing server busy errors
+        [Trait(TestTraits.Slow, "true")]
         public async Task Base_Domain()
         {
             await SyncContext.ClearAsync;
@@ -154,6 +154,15 @@ namespace TestCadence
             //-----------------------------------------------------------------
             // UpdateDomain:
 
+            // NOTE: Cadence seems to require some time between creating and then updating
+            //       a domain.  We're seeing a:
+            //
+            //          ServiceBusyException("The domain failovers too frequent.")
+            //
+            //       when this happens.  We'll mitigate this by adding a long delay here.
+
+            await Task.Delay(TimeSpan.FromSeconds(60));
+
             var updateDomainRequest = new UpdateDomainRequest();
 
             updateDomainRequest.Options.EmitMetrics    = true;
@@ -175,7 +184,7 @@ namespace TestCadence
             await Assert.ThrowsAsync<EntityNotExistsException>(async () => await client.UpdateDomainAsync("does-not-exist", updateDomainRequest));
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Base_ListDomains()
         {
@@ -266,7 +275,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Base_DescribeTaskList()
         {
@@ -305,7 +314,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Base_DescribeWorkflowExecutionAsync()
         {
@@ -354,7 +363,7 @@ namespace TestCadence
             Assert.True(description.Status.ExecutionTime <= description.Status.CloseTime - description.Status.StartTime);
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Base_ExtractCadenceProxy()
         {

@@ -50,7 +50,7 @@ namespace TestTemporal
             public string Hello { get; set; }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void DataWithGenericType()
         {
@@ -89,7 +89,7 @@ namespace TestTemporal
             Assert.Null(items2[2]);
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void DataWithType()
         {
@@ -128,7 +128,7 @@ namespace TestTemporal
             Assert.Null(items2[2]);
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void RoundTripDataWithGeneric()
         {
@@ -168,7 +168,7 @@ namespace TestTemporal
             Assert.Equal("bar", (string)deserializedBob.__O["foo"]);
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void RoundTripDataWithType()
         {
@@ -241,7 +241,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void DataArray()
         {
@@ -346,7 +346,7 @@ namespace TestTemporal
             Assert.Equal(guid, (Guid)items[8]);
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void SerializeEnum()
         {
@@ -377,7 +377,7 @@ namespace TestTemporal
             Assert.Equal("{\"Gender\":\"Male\"}", json);
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void SerializeFlagsEnum()
         {
@@ -427,7 +427,7 @@ namespace TestTemporal
             Assert.Equal("{\"Gender\":\"male, female\"}", json);
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void SerializeDateTime()
         {

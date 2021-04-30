@@ -42,7 +42,7 @@ namespace TestTemporal
 {
     public partial class Test_Messages
     {
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Test_InitializeRequest()
         {
@@ -116,7 +116,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Test_InitializeReply()
         {
@@ -176,7 +176,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Test_ConnectRequest()
         {
@@ -275,7 +275,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Test_ConnectReply()
         {
@@ -333,7 +333,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Test_NamespaceDescribeRequest()
         {
@@ -395,7 +395,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Test_NamespaceDescribeReply()
         {
@@ -485,7 +485,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Test_NamespaceRegisterRequest()
         {
@@ -565,7 +565,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Test_NamespaceRegisterReply()
         {
@@ -625,7 +625,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Test_NamespaceUpdateRequest()
         {
@@ -717,7 +717,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Test_NamespaceUpdateReply()
         {
@@ -776,7 +776,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Test_TerminateRequest()
         {
@@ -831,7 +831,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Test_TerminateReply()
         {
@@ -891,7 +891,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Test_HeartbeatRequest()
         {
@@ -947,7 +947,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Test_HeartbeatReply()
         {
@@ -1007,7 +1007,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Test_CancelRequest()
         {
@@ -1068,7 +1068,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Test_CancelReply()
         {
@@ -1133,7 +1133,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Test_NewWorkerRequest()
         {
@@ -1204,7 +1204,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Test_NewWorkerReply()
         {
@@ -1265,7 +1265,7 @@ namespace TestTemporal
         }
 
         
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Test_StartWorkerRequest()
         {
@@ -1327,7 +1327,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Test_StartWorkerReply()
         {
@@ -1382,7 +1382,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Test_StopWorkerRequest()
         {
@@ -1444,7 +1444,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Test_StopWorkerReply()
         {
@@ -1499,7 +1499,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Test_PingRequest()
         {
@@ -1555,7 +1555,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Test_PingReply()
         {
@@ -1610,7 +1610,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Test_SetWorkflowCacheSizeRequest()
         {
@@ -1672,7 +1672,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Test_SetWorkflowCacheReply()
         {
@@ -1725,7 +1725,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Test_NamespaceDeprecateRequest()
         {
@@ -1793,7 +1793,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Test_NamespaceDeprecateReply()
         {
@@ -1847,7 +1847,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Test_DisconnectRequest()
         {
@@ -1903,7 +1903,7 @@ namespace TestTemporal
             }
         }
     
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Test_DisconnectReply()
         {
@@ -1958,7 +1958,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Test_LogRequest()
         {
@@ -2038,7 +2038,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Test_LogReply()
         {
@@ -2093,7 +2093,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Test_NamespaceListRequest()
         {
@@ -2380,7 +2380,7 @@ namespace TestTemporal
             Assert.Equal("1111-2222-3333-4444", ns.NamespaceInfo.Id);
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Test_DescribeTaskQueueRequest()
         {
@@ -2448,7 +2448,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Test_DescribeTaskQueueReply()
         {

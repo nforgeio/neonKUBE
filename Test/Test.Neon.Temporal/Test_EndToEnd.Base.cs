@@ -44,7 +44,7 @@ namespace TestTemporal
 {
     public partial class Test_EndToEnd
     {
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Base_Ping()
         {
@@ -68,10 +68,10 @@ namespace TestTemporal
 
             var tps = iterations * (1.0 / stopwatch.Elapsed.TotalSeconds);
 
-            Console.WriteLine($"Transactions/sec: {tps}");
+            testWriter.WriteLine($"Transactions/sec: {tps}");
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Base_PingAttack()
         {
@@ -115,12 +115,13 @@ namespace TestTemporal
                 thread.Join();
             }
 
-            Console.WriteLine($"Transactions/sec: {totalTps}");
-            Console.WriteLine($"Latency (average): {1.0 / totalTps}");
+            testWriter.WriteLine($"Transactions/sec: {totalTps}");
+            testWriter.WriteLine($"Latency (average): {1.0 / totalTps}");
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTraits.Slow, "true")]
         public async Task Base_Namespace()
         {
             await SyncContext.ClearAsync;
@@ -155,6 +156,15 @@ namespace TestTemporal
 
             //-----------------------------------------------------------------
             // UpdateNamespace:
+
+            // NOTE: Temporal seems to require some time between creating and then updating
+            //       a domain.  We're seeing a:
+            //
+            //          ServiceBusyException("The domain failovers too frequent.")
+            //
+            //       when this happens.  We'll mitigate this by adding a long delay here.
+
+            await Task.Delay(TimeSpan.FromSeconds(60));
 
             var updateNamespaceRequest = new UpdateNamespaceRequest();
 
@@ -269,7 +279,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Base_DescribeTaskQueue()
         {
@@ -308,7 +318,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Base_DescribeWorkflowExecutionAsync()
         {
@@ -352,7 +362,7 @@ namespace TestTemporal
             Assert.True(description.WorkflowExecutionInfo.ExecutionTime.Value.Ticks >= (description.WorkflowExecutionInfo.CloseTime - description.WorkflowExecutionInfo.StartTime).Value.Ticks);
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Base_ExtractTemporalProxy()
         {

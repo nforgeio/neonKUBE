@@ -147,7 +147,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task WorkflowStub_Start_Untyped()
         {
@@ -168,7 +168,7 @@ namespace TestCadence
             await Assert.ThrowsAsync<InvalidOperationException>(async () => await stub.StartAsync("Jeff"));
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task WorkflowStub_Execute_Untyped()
         {
@@ -198,7 +198,7 @@ namespace TestCadence
             await Assert.ThrowsAsync<InvalidOperationException>(async () => await stub.StartAsync("Jeff"));
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task WorkflowStub_Attach_Untyped()
         {
@@ -228,7 +228,7 @@ namespace TestCadence
             Assert.Equal("Hello Jeff!", await stub.GetResultAsync<string>());
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task WorkflowStub_Signal_Untyped()
         {

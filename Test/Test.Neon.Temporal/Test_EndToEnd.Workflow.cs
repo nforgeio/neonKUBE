@@ -81,7 +81,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_WithNoResult()
         {
@@ -125,7 +125,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Workflow_GetWorkflowTypeName()
         {
@@ -143,28 +143,28 @@ namespace TestTemporal
             Assert.Throws<ArgumentException>(() => TemporalHelper.GetWorkflowTypeName<IWorkflowWithResult>("does-not-exist"));
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_WithResult()
         {
             await SyncContext.ClearAsync;
 
             // Verify that we can call a simple workflow that accepts a
-            // parameter and results a result.
+            // parameter and returns a result.
 
             var stub = client.NewWorkflowStub<IWorkflowWithResult>();
 
             Assert.Equal("Hello Jeff!", await stub.HelloAsync("Jeff"));
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_WithMemos()
         {
             await SyncContext.ClearAsync;
 
             // Verify that we can call a simple workflow that accepts a
-            // parameter and results a result.
+            // parameter and returns a result.
 
             var options = new StartWorkflowOptions()
             {
@@ -199,7 +199,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_Logger()
         {
@@ -238,7 +238,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_UtcNow()
         {
@@ -280,7 +280,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_Sleep()
         {
@@ -314,7 +314,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_SleepUntilUtc()
         {
@@ -365,7 +365,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_StubExecTwice()
         {
@@ -406,7 +406,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_MultiEntrypoints()
         {
@@ -441,7 +441,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_MultipleStubs()
         {
@@ -514,7 +514,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = 5 * 60000)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         [Trait(TestTraits.Slow, "true")]
         public async Task Workflow_Cron()
@@ -644,7 +644,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_NextRandomDouble()
         {
@@ -705,7 +705,7 @@ namespace TestTemporal
             Assert.True(duplicates <= MaxDuplicateRandomSamples, $"NextRandomDoubleAsync() returned more than {MaxDuplicateRandomSamples} duplicate values out of {RandomSampleCount} generated samples.");
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_NextRandomInt()
         {
@@ -760,7 +760,7 @@ namespace TestTemporal
             Assert.True(duplicates <= MaxDuplicateRandomSamples, $"NextRandomAsync() returned more than {MaxDuplicateRandomSamples} duplicate values out of {RandomSampleCount} generated samples.");
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_NextRandomInt_Max()
         {
@@ -821,7 +821,7 @@ namespace TestTemporal
             Assert.True(duplicates <= MaxDuplicateRandomSamples, $"NextRandomAsync(max) returned more than {MaxDuplicateRandomSamples} duplicate values out of {RandomSampleCount} generated samples.");
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_NextRandomInt_MinMax()
         {
@@ -915,7 +915,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_NextRandomBytes()
         {
@@ -999,7 +999,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_Echo()
         {
@@ -1051,7 +1051,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_SideEffect()
         {
@@ -1093,7 +1093,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_MutableSideEffect()
         {
@@ -1168,7 +1168,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_SignalOnce()
         {
@@ -1186,7 +1186,7 @@ namespace TestTemporal
             Assert.Equal(new List<string>() { "my-signal-1" }, await task);
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_SignalTwice()
         {
@@ -1208,7 +1208,7 @@ namespace TestTemporal
             Assert.Contains("my-signal-2", results);
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_SignalBeforeStart()
         {
@@ -1302,7 +1302,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_QueryOnce()
         {
@@ -1318,7 +1318,7 @@ namespace TestTemporal
             Assert.Equal(new List<string>() { "my-query:1" }, await task);
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_QueryTwice()
         {
@@ -1340,7 +1340,7 @@ namespace TestTemporal
             Assert.Contains("my-query:2", results);
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_QueryNoResult()
         {
@@ -1359,7 +1359,7 @@ namespace TestTemporal
             Assert.Equal(new List<string>() { "my-query:1" }, await task);
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_QueryBeforeStart()
         {
@@ -1392,7 +1392,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_GetVersion()
         {
@@ -1537,7 +1537,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_Complex()
         {
@@ -1961,7 +1961,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_Child()
         {
@@ -1977,7 +1977,7 @@ namespace TestTemporal
             Assert.True(WorkflowChild.WasExecuted);
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_ChildHello()
         {
@@ -2001,7 +2001,7 @@ namespace TestTemporal
             Assert.True(WorkflowChild.WasExecuted);
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_FutureChild_NoArgsOrResult ()
         {
@@ -2021,7 +2021,7 @@ namespace TestTemporal
             Assert.True(WorkflowChild.WasExecuted);
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_FutureChild_ArgsAndResult()
         {
@@ -2037,7 +2037,7 @@ namespace TestTemporal
             Assert.Equal("Hello Jeff!", await stub.FutureHelloChildAsync("Jeff"));
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_ChildActivity()
         {
@@ -2053,7 +2053,7 @@ namespace TestTemporal
             Assert.True(WorkflowChild.WasExecuted);
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_ChildSignal()
         {
@@ -2071,7 +2071,7 @@ namespace TestTemporal
             Assert.Contains("my-signal", WorkflowChild.ReceivedSignals);
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_ChildQuery()
         {
@@ -2087,7 +2087,7 @@ namespace TestTemporal
             Assert.True(pass);
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_ChildNested()
         {
@@ -2103,7 +2103,7 @@ namespace TestTemporal
             Assert.Equal("Hello Jeff!", await stub.NestedHelloChildAsync("Jeff"));
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_FutureActivity_NoArgsResult()
         {
@@ -2117,7 +2117,7 @@ namespace TestTemporal
             Assert.True(await stub.FutureActivity_NoArgsResult());
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_FutureLocalActivity_NoArgsResult()
         {
@@ -2131,7 +2131,7 @@ namespace TestTemporal
             Assert.True(await stub.FutureLocalActivity_NoArgsResult());
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_FutureActivity_ArgsResult()
         {
@@ -2145,7 +2145,7 @@ namespace TestTemporal
             Assert.True(await stub.FutureActivity_ArgsResult());
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_FutureLocalActivity_ArgsResult()
         {
@@ -2159,7 +2159,7 @@ namespace TestTemporal
             Assert.True(await stub.FutureLocalActivity_ArgsResult());
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_ParallelActivity()
         {
@@ -2172,7 +2172,7 @@ namespace TestTemporal
             Assert.True(await stub.ParallelActivity());
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_ParallelLocalActivity()
         {
@@ -2314,7 +2314,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_Parallel()
         {
@@ -2362,7 +2362,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_DifferentNames()
         {
@@ -2482,7 +2482,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_ComplexData()
         {
@@ -2563,7 +2563,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_Info()
         {
@@ -2695,7 +2695,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_ContinueAsNew()
         {
@@ -2709,7 +2709,7 @@ namespace TestTemporal
             Assert.Equal("WF0 says: Hello Jeff!", await stub.HelloAsync("Jeff", 1));
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_ContinueAsNew_Options()
         {
@@ -2729,7 +2729,7 @@ namespace TestTemporal
             Assert.Equal("WF0 says: Hello Jeff!", await stub.HelloNewOptionsAsync("Jeff", 1));
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_ContinueAsNew_Stub()
         {
@@ -2743,7 +2743,7 @@ namespace TestTemporal
             Assert.Equal("WF1 says: Hello Jeff!", await stub.HelloStubAsync("Jeff"));
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_ContinueAsNew_StubOptions()
         {
@@ -2913,7 +2913,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_ExternalWorkflowStub_ById_NoResult()
         {
@@ -2928,7 +2928,7 @@ namespace TestTemporal
             Assert.True(await stub.HelloTestByIdNoResultAsync());
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_ExternalWorkflowStub_ById_WithResult()
         {
@@ -2943,7 +2943,7 @@ namespace TestTemporal
             Assert.True(await stub.HelloTestByIdWithResultAsync());
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_ExternalWorkflowStub_ByExecution_NoResult()
         {
@@ -2958,7 +2958,7 @@ namespace TestTemporal
             Assert.True(await stub.HelloTestByExecutionNoResultAsync());
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_ExternalWorkflowStub_ByExecution_WithResult()
         {
@@ -2973,7 +2973,7 @@ namespace TestTemporal
             Assert.True(await stub.HelloTestByExecutionWithResultAsync());
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         [Trait(TestTraits.Slow, "true")]
         public async Task Workflow_ExternalWaitForLongTime()
@@ -3150,7 +3150,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_ChildGetExecution()
         {
@@ -3166,7 +3166,7 @@ namespace TestTemporal
             Assert.True(await stub.RunAsync());
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_ToUntyped()
         {
@@ -3195,7 +3195,7 @@ namespace TestTemporal
             Assert.NotEmpty(untypedStub.Execution.RunId);
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_FutureChild_WithResult()
         {
@@ -3210,7 +3210,7 @@ namespace TestTemporal
             Assert.True(await stub.ChildStubWithResultAsync());
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_Future_WithResult()
         {
@@ -3224,7 +3224,7 @@ namespace TestTemporal
             Assert.Equal("Hello Jeff!", await future.GetAsync());
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_Future_WithoutResult()
         {
@@ -3365,7 +3365,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_ExternalIdNoReuse()
         {
@@ -3394,7 +3394,7 @@ namespace TestTemporal
             Assert.Equal("Hello Jack!", await stub.HelloAsync("Jill"));
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_ExternalIdReuseViaOptions()
         {
@@ -3422,7 +3422,7 @@ namespace TestTemporal
             Assert.Equal("Hello Jill!", await stub.HelloAsync("Jill"));
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_ExternalIdReuseViaAttribute()
         {
@@ -3462,7 +3462,7 @@ namespace TestTemporal
             Assert.True(await stub.ChildNoReuseAsync());
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_ChildIdReuseViaOptions()
         {
@@ -3475,7 +3475,7 @@ namespace TestTemporal
             Assert.True(await stub.ChildReuseViaOptionsAsync());
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_ChildIdReuseViaAttribute()
         {
@@ -3613,7 +3613,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_UntypedChildFuture_WithNoResult()
         {
@@ -3627,7 +3627,7 @@ namespace TestTemporal
             Assert.True(await stub.WithNoResult() && !WorkflowUntypedChildFuture.Error);
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_UntypedChildFuture_WithResult()
         {
@@ -4005,7 +4005,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_Queue_Single()
         {
@@ -4019,7 +4019,7 @@ namespace TestTemporal
             Assert.Null(await stub.QueueToSelf_Single());
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_Queue_Multiple()
         {
@@ -4034,7 +4034,7 @@ namespace TestTemporal
             Assert.Null(await stub.QueueToSelf_Multiple(0));
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_Queue_Multiple_200()
         {
@@ -4049,7 +4049,7 @@ namespace TestTemporal
             Assert.Null(await stub.QueueToSelf_Multiple(200));
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_Queue_Timeout()
         {
@@ -4062,7 +4062,7 @@ namespace TestTemporal
             Assert.Null(await stub.QueueToSelf_Timeout());
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_Queue_TimeoutWithDequeue()
         {
@@ -4078,7 +4078,7 @@ namespace TestTemporal
             Assert.Null(await future.GetAsync());
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_Queue_Close()
         {
@@ -4092,7 +4092,7 @@ namespace TestTemporal
             Assert.Null(await stub.QueueToSelf_WithClose());
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_Queue_FromSignal_Single()
         {
@@ -4112,7 +4112,7 @@ namespace TestTemporal
             Assert.Contains(received, v => v == "signal: 0");
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_Queue_FromSignal_Multiple()
         {
@@ -4147,7 +4147,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_Queue_CloseViaSignal()
         {
@@ -4184,7 +4184,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_Queue_ItemMax()
         {
@@ -4232,7 +4232,7 @@ namespace TestTemporal
             Assert.Equal("System.NotSupportedException", await stub.QueueToSelf_Bytes(minBad));
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_Queue_Class()
         {
@@ -4254,7 +4254,7 @@ namespace TestTemporal
             Assert.Equal(27, person.Age);
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_Queue_ViaExternalStub_ByExecution()
         {
@@ -4275,7 +4275,7 @@ namespace TestTemporal
             Assert.Contains(received, v => v == "signal: 0");
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_Queue_ViaExternalStub_ByIDs()
         {
@@ -4505,7 +4505,7 @@ namespace TestTemporal
 
         //---------------------------------------------------------------------
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         [Trait(TestTraits.Slow, "true")]
         public async Task Workflow_Container()
@@ -4526,7 +4526,7 @@ namespace TestTemporal
 
             if (ipAddress == null)
             {
-                Assert.True(false, "Cannot complete test without a routable IP address.");
+                Assert.True(false, "This test requires a routable IP address.");
                 return;
             }
 
@@ -4564,7 +4564,7 @@ namespace TestTemporal
                     "run",
                     "--detach", 
                     "--name", "test-temporal",
-                    "--env", $"TEMPORAL_HOSTPORT={ipAddress}:7933",
+                    "--env", $"TEMPORAL_HOSTPORT={ipAddress}:7233",
                     "--env", $"TEMPORAL_NAMESPACE={TemporalFixture.Namespace}",
                     "--env", $"TEMPORAL_TASKQUEUE={taskQueue}",
                     testTemporalImage
@@ -4641,7 +4641,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Workflow_AmbientState()
         {
@@ -4672,7 +4672,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_Nullable()
         {
@@ -4722,7 +4722,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_DefaultNullableArg_External()
         {
@@ -4737,7 +4737,7 @@ namespace TestTemporal
             Assert.Equal(testValue, await stub.TestAsync(testValue));
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_DefaultNullableArg_Child()
         {

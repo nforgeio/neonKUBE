@@ -52,7 +52,7 @@ namespace TestCadence
             Task RunAsync();
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Generate_WorkflowEntryVoidNoArgs()
         {
@@ -70,7 +70,7 @@ namespace TestCadence
             Task RunAsync(string arg1, int arg2);
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Generate_WorkflowEntryVoidWithArgs()
         {
@@ -88,7 +88,7 @@ namespace TestCadence
             Task<int> RunAsync(string arg1, int arg2);
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Generate_WorkflowResultWithArgs()
         {
@@ -97,7 +97,7 @@ namespace TestCadence
             Assert.NotNull(stub);
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Generate_WorkflowResultWithOptions()
         {
@@ -118,7 +118,7 @@ namespace TestCadence
             Task SignalAsync();
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Generate_WorkflowSignalNoArgs()
         {
@@ -139,7 +139,7 @@ namespace TestCadence
             Task SignalAsync(string arg1, int arg2);
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Generate_WorkflowSignalWithArgs()
         {
@@ -160,7 +160,7 @@ namespace TestCadence
             Task QueryAsync();
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Generate_WorkflowQueryVoidNoArgs()
         {
@@ -181,7 +181,7 @@ namespace TestCadence
             Task QueryAsync(string arg1, bool arg2);
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Generate_WorkflowQueryVoidWithArgs()
         {
@@ -202,7 +202,7 @@ namespace TestCadence
             Task<string> QueryAsync(string arg1, bool arg2);
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Generate_WorkflowQueryResultWithArgs()
         {
@@ -244,7 +244,7 @@ namespace TestCadence
             Task<string> SignalAsync(string arg1, string arg2);
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Generate_WorkflowMultiMethods()
         {

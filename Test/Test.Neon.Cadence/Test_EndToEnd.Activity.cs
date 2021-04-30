@@ -86,7 +86,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Activity_WithNoResult()
         {
@@ -143,7 +143,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Activity_WithResult()
         {
@@ -256,7 +256,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Activity_WithError()
         {
@@ -270,7 +270,7 @@ namespace TestCadence
             Assert.Null(await stub.ActivityErrorAsync());
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task ActivityLocal_WithError()
         {
@@ -320,7 +320,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task ActivityLocal_WithResult()
         {
@@ -383,7 +383,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task ActivityLocal_WithoutResult()
         {
@@ -461,7 +461,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task ActivityLocal_WithMultipleMethods()
         {
@@ -532,7 +532,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Activity_WithMultipleMethods()
         {
@@ -587,7 +587,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Activity_Logger()
         {
@@ -649,7 +649,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Activity_MultipleStubs()
         {
@@ -700,7 +700,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Activity_DifferentNames()
         {
@@ -857,7 +857,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Activity_Heartbeat()
         {
@@ -870,7 +870,7 @@ namespace TestCadence
             Assert.Equal(HeartbeatResult.OK, await stub.RunAsync(HeartbeatMode.SendHeartbeat));
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Activity_Heartbeat_WithDefaults()
         {
@@ -883,7 +883,7 @@ namespace TestCadence
             Assert.Equal(HeartbeatResult.OK, await stub.RunAsync(HeartbeatMode.HeartbeatWithDefaults));
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Activity_Heartbeat_WithDetails()
         {
@@ -896,7 +896,7 @@ namespace TestCadence
             Assert.Equal(HeartbeatResult.OK, await stub.RunAsync(HeartbeatMode.HeartbeatWithDetails));
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Activity_Heartbeat_WithInterval()
         {
@@ -959,7 +959,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Activity_Fail()
         {
@@ -1023,7 +1023,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Activity_ComplexData()
         {
@@ -1145,7 +1145,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Activity_External_CompleteByToken()
         {
@@ -1167,7 +1167,7 @@ namespace TestCadence
             Assert.Equal("Hello World!", await task);
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Activity_External_CompleteById()
         {
@@ -1189,7 +1189,7 @@ namespace TestCadence
             Assert.Equal("Hello World!", await task);
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Activity_External_ErrorByToken()
         {
@@ -1222,7 +1222,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Activity_External_ErrorById()
         {
@@ -1256,7 +1256,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Activity_External_HeartbeatTimeout()
         {
@@ -1272,7 +1272,7 @@ namespace TestCadence
             Assert.True(await stub.ActivityHeartbeatTimeoutAsync());
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Activity_External_HeartbeatWithDefaults_ById()
         {
@@ -1305,7 +1305,7 @@ namespace TestCadence
             Assert.Equal("HELLO WORLD!", await task);
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Activity_External_HeartbeatWithDefaults_ByToken()
         {
@@ -1381,7 +1381,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Activity_WithDependency()
         {
@@ -1436,7 +1436,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Activity_Nullable()
         {
@@ -1487,7 +1487,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Activity_DefaultDefaultNullableArg()
         {

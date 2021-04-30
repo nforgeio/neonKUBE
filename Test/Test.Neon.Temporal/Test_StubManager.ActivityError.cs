@@ -52,7 +52,7 @@ namespace TestTemporal
             Task DoIt();
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Error_ActivityGenericsNotAllowed()
         {
@@ -67,7 +67,7 @@ namespace TestTemporal
         {
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Error_ActivityNoEntryPoint()
         {
@@ -76,7 +76,7 @@ namespace TestTemporal
             Assert.Throws<ActivityTypeException>(() => StubManager.NewActivityStub<IErrorNoEntryPointActivity>(client, new DummyWorkflow().Workflow));
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Error_ActivityNullClient()
         {
@@ -96,7 +96,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Error_ActivityNotInterface()
         {
@@ -116,7 +116,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Error_ActivityNotPublic()
         {
@@ -139,7 +139,7 @@ namespace TestTemporal
             List<int> EntryPoint();
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Error_ActivityNonTaskEntryPoint()
         {
@@ -159,7 +159,7 @@ namespace TestTemporal
             Task EntryPoint2();
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Error_ActivityDuplicateDuplicateDefaultEntryPoints()
         {
@@ -180,7 +180,7 @@ namespace TestTemporal
             Task EntryPoint2();
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void Error_ActivityDuplicateDuplicateEntryPoints()
         {

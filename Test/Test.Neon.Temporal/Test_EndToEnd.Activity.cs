@@ -86,7 +86,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Activity_WithNoResult()
         {
@@ -143,7 +143,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Activity_WithResult()
         {
@@ -270,7 +270,7 @@ namespace TestTemporal
             Assert.Null(await stub.ActivityErrorAsync());
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task ActivityLocal_WithError()
         {
@@ -320,7 +320,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task ActivityLocal_WithResult()
         {
@@ -383,7 +383,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task ActivityLocal_WithoutResult()
         {
@@ -461,7 +461,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task ActivityLocal_WithMultipleMethods()
         {
@@ -532,7 +532,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Activity_WithMultipleMethods()
         {
@@ -587,7 +587,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Activity_Logger()
         {
@@ -649,7 +649,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Activity_MultipleStubs()
         {
@@ -700,7 +700,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Activity_DifferentNames()
         {
@@ -857,7 +857,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Activity_Heartbeat()
         {
@@ -870,7 +870,7 @@ namespace TestTemporal
             Assert.Equal(HeartbeatResult.OK, await stub.RunAsync(HeartbeatMode.SendHeartbeat));
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Activity_Heartbeat_WithDefaults()
         {
@@ -883,7 +883,7 @@ namespace TestTemporal
             Assert.Equal(HeartbeatResult.OK, await stub.RunAsync(HeartbeatMode.HeartbeatWithDefaults));
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Activity_Heartbeat_WithDetails()
         {
@@ -896,7 +896,7 @@ namespace TestTemporal
             Assert.Equal(HeartbeatResult.OK, await stub.RunAsync(HeartbeatMode.HeartbeatWithDetails));
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Activity_Heartbeat_WithInterval()
         {
@@ -1023,7 +1023,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Activity_ComplexData()
         {
@@ -1145,7 +1145,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Activity_External_CompleteByToken()
         {
@@ -1167,7 +1167,7 @@ namespace TestTemporal
             Assert.Equal("Hello World!", await task);
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task Activity_External_CompleteById()
         {
@@ -1271,7 +1271,7 @@ namespace TestTemporal
             Assert.True(await stub.ActivityHeartbeatTimeoutAsync());
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Activity_External_HeartbeatWithDefaults_ById()
         {
@@ -1304,7 +1304,7 @@ namespace TestTemporal
             Assert.Equal("HELLO WORLD!", await task);
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Activity_External_HeartbeatWithDefaults_ByToken()
         {
@@ -1380,7 +1380,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Activity_WithDependency()
         {
@@ -1435,7 +1435,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Activity_Nullable()
         {
@@ -1486,7 +1486,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Activity_DefaultNullableArg()
         {

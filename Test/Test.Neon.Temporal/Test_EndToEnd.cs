@@ -38,6 +38,7 @@ using Neon.Xunit.Temporal;
 
 using Newtonsoft.Json;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace TestTemporal
 {
@@ -65,10 +66,13 @@ namespace TestTemporal
         private static readonly TimeSpan workflowTimeout  = TimeSpan.FromSeconds(20);
 
         private TemporalFixture     fixture;
+        private TestOutputWriter    testWriter;
         private TemporalClient      client;
 
-        public Test_EndToEnd(TemporalFixture fixture)
+        public Test_EndToEnd(TemporalFixture fixture, ITestOutputHelper outputHelper)
         {
+            testWriter = new TestOutputWriter(outputHelper);
+
             // Configure a service for activity dependency injection testing if it doesn't
             // already exist.
 

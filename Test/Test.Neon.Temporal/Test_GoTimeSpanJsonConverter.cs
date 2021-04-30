@@ -44,7 +44,7 @@ namespace TestTemporal
 
         private JsonSerializer serializer = new JsonSerializer();
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void ReadTimeSpan()
         {
@@ -90,7 +90,7 @@ namespace TestTemporal
             Assert.ThrowsAny<Exception>(() => serializer.Deserialize<MyData>(CreateReader(json8)));
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void WriteTimeSpan()
         {
@@ -145,7 +145,7 @@ namespace TestTemporal
             Assert.Equal("{\"Value\":0}", json);
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public void TimeSpanToSimpleString()
         {

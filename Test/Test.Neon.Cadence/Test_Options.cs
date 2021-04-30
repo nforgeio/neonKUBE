@@ -767,7 +767,7 @@ namespace TestCadence
         //---------------------------------------------------------------------
         // External workflow tests
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_UseClientSettings()
         {
@@ -799,7 +799,7 @@ namespace TestCadence
                 });
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_UseInterfaceAttributes()
         {
@@ -813,7 +813,7 @@ namespace TestCadence
                 });
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_UseMethodAttributes()
         {
@@ -831,7 +831,7 @@ namespace TestCadence
                 });
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_UseWorkflowOptions()
         {
@@ -860,7 +860,7 @@ namespace TestCadence
                 options: workflowOptions);
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_OtherDomainTaskList()
         {
@@ -879,7 +879,7 @@ namespace TestCadence
         //---------------------------------------------------------------------
         // Child workflow tests
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task ChildWorkflow_UseClientSettings()
         {
@@ -911,7 +911,7 @@ namespace TestCadence
                 });
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task ChildWorkflow_UseParentSettings()
         {
@@ -928,7 +928,7 @@ namespace TestCadence
                 parentTaskList: "test2-tasklist");
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task ChildWorkflow_UseInterfaceAttributes()
         {
@@ -942,7 +942,7 @@ namespace TestCadence
                 });
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task ChildWorkflow_UseMethodAttributes()
         {
@@ -960,7 +960,7 @@ namespace TestCadence
                 });
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task ChildWorkflow_UseWorkflowOptions()
         {
@@ -992,7 +992,7 @@ namespace TestCadence
         //---------------------------------------------------------------------
         // Activity options tests
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Activity_UseClientSettings()
         {
@@ -1022,7 +1022,7 @@ namespace TestCadence
                 });
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Activity_UseParentSettings()
         {
@@ -1039,7 +1039,7 @@ namespace TestCadence
                 parentTaskList: "test2-tasklist");
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Activity_UseInterfaceAttributes()
         {
@@ -1053,7 +1053,7 @@ namespace TestCadence
                 });
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Activity_UseMethodAttributes()
         {
@@ -1071,7 +1071,7 @@ namespace TestCadence
                 });
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Activity_UseWorkflowOptions()
         {
@@ -1144,7 +1144,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task WorkflowWaitForExternalByExecution()
         {
@@ -1163,7 +1163,7 @@ namespace TestCadence
             Assert.Equal("Hello JEFF!", await waitStub.WaitByExecutionAsync(execution));
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task WorkflowWaitForExternalByIds()
         {
@@ -1182,7 +1182,7 @@ namespace TestCadence
             Assert.Equal("Hello JEFF!", await waitStub.WaitByIdsAsync(workflowId: execution.WorkflowId, runId: execution.RunId));
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task WorkflowWaitForExternalByWorkflowId()
         {

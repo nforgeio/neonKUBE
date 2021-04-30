@@ -8,7 +8,7 @@ services:
   temporal:
     image: temporalio/auto-setup:0.21.1
     ports:
-      - "7233:7233"
+      - "7233:7235"
     environment:
       - "CASSANDRA_SEEDS=cassandra"
       - "DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development.yaml"

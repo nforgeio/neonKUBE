@@ -52,7 +52,7 @@ namespace TestCadence
             Task DoIt();
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Error_ActivityGenericsNotAllowed()
         {
@@ -67,7 +67,7 @@ namespace TestCadence
         {
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Error_ActivityNoEntryPoint()
         {
@@ -76,7 +76,7 @@ namespace TestCadence
             Assert.Throws<ActivityTypeException>(() => StubManager.NewActivityStub<IErrorNoEntryPointActivity>(client, new DummyWorkflow().Workflow));
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Error_ActivityNullClient()
         {
@@ -96,7 +96,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Error_ActivityNotInterface()
         {
@@ -116,7 +116,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Error_ActivityNotPublic()
         {
@@ -139,7 +139,7 @@ namespace TestCadence
             List<int> EntryPoint();
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Error_ActivityNonTaskEntryPoint()
         {
@@ -159,7 +159,7 @@ namespace TestCadence
             Task EntryPoint2();
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Error_ActivityDuplicateDuplicateDefaultEntryPoints()
         {
@@ -180,7 +180,7 @@ namespace TestCadence
             Task EntryPoint2();
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Error_ActivityDuplicateDuplicateEntryPoints()
         {

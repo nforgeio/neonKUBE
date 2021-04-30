@@ -582,7 +582,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Nop()
         {
@@ -594,7 +594,7 @@ namespace TestCadence
             Assert.True(await stub.RunAsync(ReplayTest.Nop));
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task GetVersion()
         {
@@ -606,7 +606,7 @@ namespace TestCadence
             Assert.True(await stub.RunAsync(ReplayTest.GetVersion));
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task WorkflowExecution()
         {
@@ -618,7 +618,7 @@ namespace TestCadence
             Assert.True(await stub.RunAsync(ReplayTest.WorkflowExecution));
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task MutableSideEffect()
         {
@@ -630,7 +630,7 @@ namespace TestCadence
             Assert.True(await stub.RunAsync(ReplayTest.MutableSideEffect));
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task MutableSideEffectGeneric()
         {
@@ -642,7 +642,7 @@ namespace TestCadence
             Assert.True(await stub.RunAsync(ReplayTest.MutableSideEffectGeneric));
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task SideEffect()
         {
@@ -654,7 +654,7 @@ namespace TestCadence
             Assert.True(await stub.RunAsync(ReplayTest.SideEffect));
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task SideEffectGeneric()
         {
@@ -666,7 +666,7 @@ namespace TestCadence
             Assert.True(await stub.RunAsync(ReplayTest.SideEffectGeneric));
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task NewGuid()
         {
@@ -678,7 +678,7 @@ namespace TestCadence
             Assert.True(await stub.RunAsync(ReplayTest.NewGuid));
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task NextRandomDouble()
         {
@@ -690,7 +690,7 @@ namespace TestCadence
             Assert.True(await stub.RunAsync(ReplayTest.NextRandomDouble));
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task NextRandom()
         {
@@ -702,7 +702,7 @@ namespace TestCadence
             Assert.True(await stub.RunAsync(ReplayTest.NextRandom));
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task NextRandomMax()
         {
@@ -714,7 +714,7 @@ namespace TestCadence
             Assert.True(await stub.RunAsync(ReplayTest.NextRandomMax));
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task NextRandomMinMax()
         {
@@ -726,7 +726,7 @@ namespace TestCadence
             Assert.True(await stub.RunAsync(ReplayTest.NextRandomMinMax));
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task NextRandomBytes()
         {
@@ -750,7 +750,7 @@ namespace TestCadence
             Assert.True(await stub.RunAsync(ReplayTest.GetLastCompletionResult));
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task GetIsSetLastCompletionResult()
         {
@@ -762,7 +762,7 @@ namespace TestCadence
             Assert.True(await stub.RunAsync(ReplayTest.GetIsSetLastCompletionResult));
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task ChildWorkflow()
         {
@@ -774,7 +774,7 @@ namespace TestCadence
             Assert.True(await stub.RunAsync(ReplayTest.ChildWorkflow));
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Activity()
         {
@@ -786,7 +786,7 @@ namespace TestCadence
             Assert.True(await stub.RunAsync(ReplayTest.Activity));
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task LocalActivity()
         {

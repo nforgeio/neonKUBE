@@ -50,7 +50,7 @@ namespace TestCadence
             public string Hello { get; set; }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void DataWithGenericType()
         {
@@ -89,7 +89,7 @@ namespace TestCadence
             Assert.Null(items2[2]);
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void DataWithType()
         {
@@ -128,7 +128,7 @@ namespace TestCadence
             Assert.Null(items2[2]);
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void RoundTripDataWithGeneric()
         {
@@ -168,7 +168,7 @@ namespace TestCadence
             Assert.Equal("bar", (string)deserializedBob.__O["foo"]);
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void RoundTripDataWithType()
         {
@@ -241,7 +241,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void DataArray()
         {
@@ -346,7 +346,7 @@ namespace TestCadence
             Assert.Equal(guid, (Guid)items[8]);
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void SerializeEnum()
         {
@@ -377,7 +377,7 @@ namespace TestCadence
             Assert.Equal("{\"Gender\":\"Male\"}", json);
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void SerializeFlagsEnum()
         {
@@ -427,7 +427,7 @@ namespace TestCadence
             Assert.Equal("{\"Gender\":\"male, female\"}", json);
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void SerializeDateTime()
         {

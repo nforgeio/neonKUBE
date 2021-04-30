@@ -44,7 +44,7 @@ namespace TestCadence
 {
     /// <summary>
     /// These tests prevent the <see cref="CadenceFixture"/> from establishing a client
-    /// connection and then creates a connection to run a test or two.
+    /// connection and then explicitly establishes a connection to run some tests.
     /// </summary>
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
@@ -108,28 +108,28 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_WithResult1()
         {
             await SyncContext.ClearAsync;
             
             // Verify that we can call a simple workflow that accepts a
-            // parameter and results a result.
+            // parameter and returns a result.
 
             var stub = client.NewWorkflowStub<IWorkflowWithResult>();
 
             Assert.Equal("Hello Jeff!", await stub.HelloAsync("Jeff"));
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_WithResult2()
         {
             await SyncContext.ClearAsync;
 
             // Verify that we can call a simple workflow that accepts a
-            // parameter and results a result.
+            // parameter and returns a result.
 
             var stub = client.NewWorkflowStub<IWorkflowWithResult>();
 

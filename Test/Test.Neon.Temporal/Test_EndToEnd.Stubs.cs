@@ -147,7 +147,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task WorkflowStub_Start_Untyped()
         {
@@ -168,7 +168,7 @@ namespace TestTemporal
             await Assert.ThrowsAsync<InvalidOperationException>(async () => await stub.StartAsync("Jeff"));
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task WorkflowStub_Execute_Untyped()
         {
@@ -199,7 +199,7 @@ namespace TestTemporal
 
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task WorkflowStub_Attach_Untyped()
         {
@@ -229,7 +229,7 @@ namespace TestTemporal
             Assert.Equal("Hello Jeff!", await stub.GetResultAsync<string>());
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task WorkflowStub_Signal_Untyped()
         {
@@ -255,7 +255,7 @@ namespace TestTemporal
             Assert.Contains("my-signal-2", received);
         }
 
-        [Fact]
+        [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonTemporal)]
         public async Task WorkflowStub_Query_Untyped()
         {

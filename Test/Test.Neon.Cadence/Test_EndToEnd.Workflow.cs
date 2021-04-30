@@ -81,7 +81,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_WithNoResult()
         {
@@ -125,7 +125,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public void Workflow_GetWorkflowTypeName()
         {
@@ -143,28 +143,28 @@ namespace TestCadence
             Assert.Throws<ArgumentException>(() => CadenceHelper.GetWorkflowTypeName<IWorkflowWithResult>("does-not-exist"));
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_WithResult()
         {
             await SyncContext.ClearAsync;
 
             // Verify that we can call a simple workflow that accepts a
-            // parameter and results a result.
+            // parameter and returns a result.
 
             var stub = client.NewWorkflowStub<IWorkflowWithResult>();
 
             Assert.Equal("Hello Jeff!", await stub.HelloAsync("Jeff"));
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_WithMemos()
         {
             await SyncContext.ClearAsync;
 
             // Verify that we can call a simple workflow that accepts a
-            // parameter and results a result.
+            // parameter and returns a result.
 
             var options = new WorkflowOptions()
             {
@@ -199,7 +199,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_Logger()
         {
@@ -238,7 +238,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_UtcNow()
         {
@@ -280,7 +280,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_Sleep()
         {
@@ -314,7 +314,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         [Trait(TestTraits.Unreliable, "true")]      // https://github.com/nforgeio/neonKUBE/issues/1166
         public async Task Workflow_SleepUntilUtc()
@@ -366,7 +366,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_StubExecTwice()
         {
@@ -407,7 +407,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_MultiEntrypoints()
         {
@@ -442,7 +442,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_MultipleStubs()
         {
@@ -515,7 +515,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = 5 * 60000)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         [Trait(TestTraits.Slow, "true")]
         public async Task Workflow_Cron()
@@ -645,7 +645,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_NextRandomDouble()
         {
@@ -706,7 +706,7 @@ namespace TestCadence
             Assert.True(duplicates <= MaxDuplicateRandomSamples, $"NextRandomDoubleAsync() returned more than {MaxDuplicateRandomSamples} duplicate values out of {RandomSampleCount} generated samples.");
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_NextRandomInt()
         {
@@ -761,7 +761,7 @@ namespace TestCadence
             Assert.True(duplicates <= MaxDuplicateRandomSamples, $"NextRandomAsync() returned more than {MaxDuplicateRandomSamples} duplicate values out of {RandomSampleCount} generated samples.");
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_NextRandomInt_Max()
         {
@@ -822,7 +822,7 @@ namespace TestCadence
             Assert.True(duplicates <= MaxDuplicateRandomSamples, $"NextRandomAsync(max) returned more than {MaxDuplicateRandomSamples} duplicate values out of {RandomSampleCount} generated samples.");
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_NextRandomInt_MinMax()
         {
@@ -916,7 +916,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_NextRandomBytes()
         {
@@ -1000,7 +1000,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_Echo()
         {
@@ -1052,7 +1052,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_SideEffect()
         {
@@ -1094,7 +1094,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_MutableSideEffect()
         {
@@ -1169,7 +1169,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_SignalOnce()
         {
@@ -1187,7 +1187,7 @@ namespace TestCadence
             Assert.Equal(new List<string>() { "my-signal-1" }, await task);
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_SignalTwice()
         {
@@ -1209,7 +1209,7 @@ namespace TestCadence
             Assert.Contains("my-signal-2", results);
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_SignalBeforeStart()
         {
@@ -1303,7 +1303,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_QueryOnce()
         {
@@ -1319,7 +1319,7 @@ namespace TestCadence
             Assert.Equal(new List<string>() { "my-query:1" }, await task);
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_QueryTwice()
         {
@@ -1341,7 +1341,7 @@ namespace TestCadence
             Assert.Contains("my-query:2", results);
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_QueryNoResult()
         {
@@ -1360,7 +1360,7 @@ namespace TestCadence
             Assert.Equal(new List<string>() { "my-query:1" }, await task);
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_QueryBeforeStart()
         {
@@ -1393,7 +1393,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_GetVersion()
         {
@@ -1538,7 +1538,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_Complex()
         {
@@ -1962,7 +1962,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_Child()
         {
@@ -1978,7 +1978,7 @@ namespace TestCadence
             Assert.True(WorkflowChild.WasExecuted);
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_ChildHello()
         {
@@ -2002,7 +2002,7 @@ namespace TestCadence
             Assert.True(WorkflowChild.WasExecuted);
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_FutureChild_NoArgsOrResult ()
         {
@@ -2022,7 +2022,7 @@ namespace TestCadence
             Assert.True(WorkflowChild.WasExecuted);
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_FutureChild_ArgsAndResult()
         {
@@ -2038,7 +2038,7 @@ namespace TestCadence
             Assert.Equal("Hello Jeff!", await stub.FutureHelloChildAsync("Jeff"));
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_ChildActivity()
         {
@@ -2054,7 +2054,7 @@ namespace TestCadence
             Assert.True(WorkflowChild.WasExecuted);
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_ChildSignal()
         {
@@ -2072,7 +2072,7 @@ namespace TestCadence
             Assert.Contains("my-signal", WorkflowChild.ReceivedSignals);
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_ChildQuery()
         {
@@ -2088,7 +2088,7 @@ namespace TestCadence
             Assert.True(pass);
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_ChildNested()
         {
@@ -2104,7 +2104,7 @@ namespace TestCadence
             Assert.Equal("Hello Jeff!", await stub.NestedHelloChildAsync("Jeff"));
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_FutureActivity_NoArgsResult()
         {
@@ -2118,7 +2118,7 @@ namespace TestCadence
             Assert.True(await stub.FutureActivity_NoArgsResult());
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_FutureLocalActivity_NoArgsResult()
         {
@@ -2132,7 +2132,7 @@ namespace TestCadence
             Assert.True(await stub.FutureLocalActivity_NoArgsResult());
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_FutureActivity_ArgsResult()
         {
@@ -2146,7 +2146,7 @@ namespace TestCadence
             Assert.True(await stub.FutureActivity_ArgsResult());
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_FutureLocalActivity_ArgsResult()
         {
@@ -2160,7 +2160,7 @@ namespace TestCadence
             Assert.True(await stub.FutureLocalActivity_ArgsResult());
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_ParallelActivity()
         {
@@ -2173,7 +2173,7 @@ namespace TestCadence
             Assert.True(await stub.ParallelActivity());
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_ParallelLocalActivity()
         {
@@ -2262,7 +2262,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_Parallel()
         {
@@ -2297,7 +2297,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_DifferentNames()
         {
@@ -2333,7 +2333,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_WithError()
         {
@@ -2373,7 +2373,7 @@ namespace TestCadence
             Task<string> HelloAsync(string name);
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_Unregistered()
         {
@@ -2417,7 +2417,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_ComplexData()
         {
@@ -2498,7 +2498,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_Info()
         {
@@ -2630,7 +2630,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_ContinueAsNew()
         {
@@ -2644,7 +2644,7 @@ namespace TestCadence
             Assert.Equal("WF0 says: Hello Jeff!", await stub.HelloAsync("Jeff", 1));
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_ContinueAsNew_Options()
         {
@@ -2664,7 +2664,7 @@ namespace TestCadence
             Assert.Equal("WF0 says: Hello Jeff!", await stub.HelloNewOptionsAsync("Jeff", 1));
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_ContinueAsNew_Stub()
         {
@@ -2678,7 +2678,7 @@ namespace TestCadence
             Assert.Equal("WF1 says: Hello Jeff!", await stub.HelloStubAsync("Jeff"));
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_ContinueAsNew_StubOptions()
         {
@@ -2848,7 +2848,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_ExternalWorkflowStub_ById_NoResult()
         {
@@ -2863,7 +2863,7 @@ namespace TestCadence
             Assert.True(await stub.HelloTestByIdNoResultAsync());
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_ExternalWorkflowStub_ById_WithResult()
         {
@@ -2878,7 +2878,7 @@ namespace TestCadence
             Assert.True(await stub.HelloTestByIdWithResultAsync());
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_ExternalWorkflowStub_ByExecution_NoResult()
         {
@@ -2893,7 +2893,7 @@ namespace TestCadence
             Assert.True(await stub.HelloTestByExecutionNoResultAsync());
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_ExternalWorkflowStub_ByExecution_WithResult()
         {
@@ -2908,7 +2908,7 @@ namespace TestCadence
             Assert.True(await stub.HelloTestByExecutionWithResultAsync());
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_ExternalWaitForLongTime()
         {
@@ -3084,7 +3084,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_ChildGetExecution()
         {
@@ -3100,7 +3100,7 @@ namespace TestCadence
             Assert.True(await stub.RunAsync());
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_ToUntyped()
         {
@@ -3129,7 +3129,7 @@ namespace TestCadence
             Assert.NotEmpty(untypedStub.Execution.RunId);
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_FutureChild_WithResult()
         {
@@ -3144,7 +3144,7 @@ namespace TestCadence
             Assert.True(await stub.ChildStubWithResultAsync());
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_Future_WithResult()
         {
@@ -3158,7 +3158,7 @@ namespace TestCadence
             Assert.Equal("Hello Jeff!", await future.GetAsync());
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_Future_WithoutResult()
         {
@@ -3299,7 +3299,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_ExternalIdNoReuse()
         {
@@ -3328,7 +3328,7 @@ namespace TestCadence
             Assert.Equal("Hello Jack!", await stub.HelloAsync("Jill"));
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_ExternalIdReuseViaOptions()
         {
@@ -3356,7 +3356,7 @@ namespace TestCadence
             Assert.Equal("Hello Jill!", await stub.HelloAsync("Jill"));
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_ExternalIdReuseViaAttribute()
         {
@@ -3384,7 +3384,7 @@ namespace TestCadence
             Assert.Equal("Hello Jill!", await stub.HelloWithAttributeAsync("Jill"));
         }
         
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_ChildIdNoReuse()
         {
@@ -3397,7 +3397,7 @@ namespace TestCadence
             Assert.True(await stub.ChildNoReuseAsync());
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_ChildIdReuseViaOptions()
         {
@@ -3410,7 +3410,7 @@ namespace TestCadence
             Assert.True(await stub.ChildReuseViaOptionsAsync());
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_ChildIdReuseViaAttribute()
         {
@@ -3548,7 +3548,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_UntypedChildFuture_WithNoResult()
         {
@@ -3562,7 +3562,7 @@ namespace TestCadence
             Assert.True(await stub.WithNoResult() && !WorkflowUntypedChildFuture.Error);
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_UntypedChildFuture_WithResult()
         {
@@ -3940,7 +3940,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_Queue_Single()
         {
@@ -3954,7 +3954,7 @@ namespace TestCadence
             Assert.Null(await stub.QueueToSelf_Single());
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_Queue_Multiple()
         {
@@ -3969,7 +3969,7 @@ namespace TestCadence
             Assert.Null(await stub.QueueToSelf_Multiple(0));
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_Queue_Multiple_200()
         {
@@ -3984,7 +3984,7 @@ namespace TestCadence
             Assert.Null(await stub.QueueToSelf_Multiple(200));
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_Queue_Timeout()
         {
@@ -3997,7 +3997,7 @@ namespace TestCadence
             Assert.Null(await stub.QueueToSelf_Timeout());
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_Queue_TimeoutWithDequeue()
         {
@@ -4013,7 +4013,7 @@ namespace TestCadence
             Assert.Null(await future.GetAsync());
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_Queue_Close()
         {
@@ -4027,7 +4027,7 @@ namespace TestCadence
             Assert.Null(await stub.QueueToSelf_WithClose());
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_Queue_FromSignal_Single()
         {
@@ -4047,7 +4047,7 @@ namespace TestCadence
             Assert.Contains(received, v => v == "signal: 0");
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_Queue_FromSignal_Multiple()
         {
@@ -4082,7 +4082,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_Queue_CloseViaSignal()
         {
@@ -4119,7 +4119,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_Queue_ItemMax()
         {
@@ -4167,7 +4167,7 @@ namespace TestCadence
             Assert.Equal("System.NotSupportedException", await stub.QueueToSelf_Bytes(minBad));
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_Queue_Class()
         {
@@ -4189,7 +4189,7 @@ namespace TestCadence
             Assert.Equal(27, person.Age);
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_Queue_ViaExternalStub_ByExecution()
         {
@@ -4210,7 +4210,7 @@ namespace TestCadence
             Assert.Contains(received, v => v == "signal: 0");
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_Queue_ViaExternalStub_ByIDs()
         {
@@ -4374,7 +4374,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_StartToCloseTimeout()
         {
@@ -4395,7 +4395,7 @@ namespace TestCadence
             await Assert.ThrowsAsync<StartToCloseTimeoutException>(async () => await stub.SleepAsync(sleepTime));
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Activity_StartToCloseTimeout()
         {
@@ -4409,7 +4409,7 @@ namespace TestCadence
             Assert.True(await stub.ActivityTimeout());
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Activity_Heartbeat_Timeout()
         {
@@ -4423,7 +4423,7 @@ namespace TestCadence
             Assert.True(await stub.ActivityHeartbeatTimeoutAsync());
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Activity_DotNetException()
         {
@@ -4440,7 +4440,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_Container()
         {
@@ -4460,7 +4460,7 @@ namespace TestCadence
 
             if (ipAddress == null)
             {
-                Assert.True(false, "Cannot complete test without a routable IP address.");
+                Assert.True(false, "This test requires a routable IP address.");
                 return;
             }
 
@@ -4575,7 +4575,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_AmbientState()
         {
@@ -4606,7 +4606,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_Nullable()
         {
@@ -4656,7 +4656,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_DefaultNullableArg_External()
         {
@@ -4671,7 +4671,7 @@ namespace TestCadence
             Assert.Equal(testValue, await stub.TestAsync(testValue));
         }
 
-        [Fact]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTraits.Project, TestProject.NeonCadence)]
         public async Task Workflow_DefaultNullableArg_Child()
         {

@@ -113,5 +113,10 @@ namespace TestTemporal
         /// Identifies the test clients.
         /// </summary>
         public const string ClientIdentity = "unit-test";
+
+        /// <summary>
+        /// The default maximum time a Temporal test can run before timing out.
+        /// </summary>
+        public const int TestTimeout = 3 * 60000;   // (3 minutes)
     }
 }
