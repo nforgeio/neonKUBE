@@ -170,7 +170,7 @@ Follow the steps below to configure a development or test workstation:
 	
 	  `nuget SetApiKey YOUR-KEY`
 	
-    * **Install:** GitHub CLI (amd64) v1.4.0 or greater from: https://github.com/cli/cli/releases
+    * **Install:** GitHub CLI (amd64) v1.9.2 or greater from: https://github.com/cli/cli/releases
     * **Close:** all Visual Studio instances.
     * **Install:** the HTML Help Compiler by running `$/External/htmlhelp.exe` with the default options.  You can ignore any message about a newer version already being installed.
     * **Unzip:** `$/External/SHFBInstaller_v2020.3.6.0.zip` to a temporary folder and run `SandcastleInstaller.exe`, then:
