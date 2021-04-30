@@ -1,16 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
     <OutputType>Exe</OutputType>
-    <IsPackable>false</IsPackable>
-    <LangVersion>latest</LangVersion>
-    <RootNamespace>NeonClusterOperator</RootNamespace>
-    <LangVersion>latest</LangVersion>
-    <ServerGarbageCollection>true</ServerGarbageCollection>
-    <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
-    <AssemblyName>neon-cluster-operator</AssemblyName>
-    <Configurations>Debug;Release;CodeDoc</Configurations>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <RootNamespace>neon_setup_harbor</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

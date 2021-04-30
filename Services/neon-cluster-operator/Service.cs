@@ -56,7 +56,6 @@ namespace NeonClusterOperator
             // Let KubeService know that we're running.
 
             await SetRunningAsync();
-            await SetupClusterAsync();
 
             // $todo(marcusbooyah):
             // Implement the cluster manager. For now we're just having it sleep/loop
@@ -69,27 +68,6 @@ namespace NeonClusterOperator
             }
 
             //return 0;
-        }
-
-        /// <summary>
-        /// Setus up the cluster.
-        /// </summary>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task SetupClusterAsync()
-        {
-            var isInCluster = KubernetesClientConfiguration.IsInCluster();
-
-            Log.LogInfo(isInCluster ? "Running in Kubernetes Cluster." : "Not running in Kubernetes Cluster.");
-
-            k8s = new Kubernetes(isInCluster ? KubernetesClientConfiguration.InClusterConfig() : KubernetesClientConfiguration.BuildDefaultConfig());
-
-            var tasks = new List<Task>();
-
-            tasks.Add(NeonSystemSetup());
-
-            await NeonHelper.WaitAllAsync(tasks);
-
-            await Task.CompletedTask;
         }
     }
 }

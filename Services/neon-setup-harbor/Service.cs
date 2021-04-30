@@ -1,53 +1,75 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    Service.Setup.cs
-// CONTRIBUTOR: Marcus Bowyer
-// COPYRIGHT:	Copyright (c) 2016-2020 by neonFORGE LLC.  All rights reserved.
+﻿//------------------------------------------------------------------------------
+// FILE:         NeonClusterOperator.cs
+// CONTRIBUTOR:  Marcus Bowyer
+// COPYRIGHT:    Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 
 using System;
 using System.Collections.Generic;
-using System.Dynamic;
-using System.Globalization;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
+using System.Net;
+using System.IO.Compression;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Net.Sockets;
 
 using Neon.Common;
-using Neon.Cryptography;
+using Neon.Data;
 using Neon.Diagnostics;
+using Neon.Kube;
 using Neon.Net;
-using Neon.Retry;
 using Neon.Service;
-using Neon.Tasks;
+
+using Helm.Helm;
+
+using k8s;
+using k8s.Models;
+
+using Newtonsoft.Json;
 
 using Npgsql;
 
-using k8s;
+using YamlDotNet.RepresentationModel;
 
-namespace NeonClusterOperator
+namespace NeonSetupHarbor
 {
     public partial class Service : NeonService
     {
-        private static string connString = "Host=db-citus-postgresql.neon-system;Username=postgres;Password=0987654321;Database=postgres";
+        private static Kubernetes k8s;
 
         /// <summary>
-        /// Handles setup of neon-system database.
+        /// Constructor.
         /// </summary>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task NeonSystemSetup()
+        /// <param name="name">The service name.</param>
+        /// <param name="serviceMap">Optionally specifies the service map.</param>
+        public Service(string name, ServiceMap serviceMap = null)
+            : base(name, serviceMap: serviceMap)
         {
-            await WaitForCitusAsync();
-
-            var tasks = new List<Task>();
-
-            tasks.Add(SetupGrafanaAsync());
-            tasks.Add(SetupHarborAsync());
-
-            await NeonHelper.WaitAllAsync(tasks);
         }
+
+        /// <inheritdoc/>
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+        }
+
+        /// <inheritdoc/>
+        protected async override Task<int> OnRunAsync()
+        {
+            // Let KubeService know that we're running.
+
+
+
+            await SetRunningAsync();
+            await WaitForCitusAsync();
+            await SetupHarborAsync();
+
+            return 0;
+        }
+
+        private static string connString = $"Host=db-citus-postgresql.{KubeNamespaces.NeonSystem};Username=postgres;Password=0987654321;Database=postgres";
 
         /// <summary>
         /// Method to wait for neon-system Citus database to be ready.
@@ -55,12 +77,12 @@ namespace NeonClusterOperator
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task WaitForCitusAsync()
         {
-            Log.LogInfo("[neon-system-db] Waiting for neon-system database to be ready.");
+            Log.LogInfo($"[{KubeNamespaces.NeonSystem}-db] Waiting for {KubeNamespaces.NeonSystem} database to be ready.");
 
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
-                    var statefulsets = await k8s.ListNamespacedStatefulSetAsync("neon-system", labelSelector: "release=db");
+                    var statefulsets = await k8s.ListNamespacedStatefulSetAsync(KubeNamespaces.NeonSystem, labelSelector: "release=db");
                     if (statefulsets == null || statefulsets.Items.Count < 2)
                     {
                         return false;
@@ -69,12 +91,12 @@ namespace NeonClusterOperator
                     return statefulsets.Items.All(@set => @set.Status.ReadyReplicas == @set.Spec.Replicas);
                 },
                 timeout: TimeSpan.FromMinutes(30),
-                pollInterval: TimeSpan.FromSeconds(10)); 
-            
+                pollInterval: TimeSpan.FromSeconds(10));
+
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
-                    var deployments = await k8s.ListNamespacedDeploymentAsync("neon-system", labelSelector: "release=db");
+                    var deployments = await k8s.ListNamespacedDeploymentAsync(KubeNamespaces.NeonSystem, labelSelector: "release=db");
                     if (deployments == null || deployments.Items.Count == 0)
                     {
                         return false;
@@ -85,12 +107,12 @@ namespace NeonClusterOperator
                 timeout: TimeSpan.FromMinutes(30),
                 pollInterval: TimeSpan.FromSeconds(10));
 
-            Log.LogInfo("[neon-system-db] neon-system database is ready.");
+            Log.LogInfo($"[{KubeNamespaces.NeonSystem}-db] {KubeNamespaces.NeonSystem} database is ready.");
         }
 
         private async Task SetupHarborAsync()
         {
-            Log.LogInfo("[neon-system-db] Configuring for Harbor.");
+            Log.LogInfo($"[{KubeNamespaces.NeonSystem}-db] Configuring for Harbor.");
 
             var databases = new string[] { "registry", "clair", "notary_server", "notary_signer" };
 
@@ -99,20 +121,7 @@ namespace NeonClusterOperator
                 await CreateDatabaseAsync(db, "harbor", "harbor");
             }
 
-            Log.LogInfo("[neon-system-db] Finished setup for Harbor.");
-        }
-
-        /// <summary>
-        /// Configure Grafana database.
-        /// </summary>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task SetupGrafanaAsync()
-        {
-            Log.LogInfo("[neon-system-db] Configuring for Grafana.");
-
-            await CreateDatabaseAsync("grafana", "grafana");
-            
-            Log.LogInfo("[neon-system-db] Finished setup for Grafana.");
+            Log.LogInfo($"[{KubeNamespaces.NeonSystem}-db] Finished setup for Harbor.");
         }
 
         /// <summary>
@@ -137,7 +146,7 @@ namespace NeonClusterOperator
                     if (!reader.HasRows)
                     {
                         await conn.CloseAsync();
-                        Log.LogInfo($"[neon-system-db] Creating database '{dbName}'.");
+                        Log.LogInfo($"[{KubeNamespaces.NeonSystem}-db] Creating database '{dbName}'.");
                         dbInitialized = false;
                         await using (var createCmd = new NpgsqlCommand($"CREATE DATABASE {dbName}", conn))
                         {
@@ -148,8 +157,9 @@ namespace NeonClusterOperator
                     }
                 }
 
-                if (conn.State != System.Data.ConnectionState.Open) {
-                    await conn.OpenAsync(); 
+                if (conn.State != System.Data.ConnectionState.Open)
+                {
+                    await conn.OpenAsync();
                 }
 
                 await using (var cmd = new NpgsqlCommand($"SELECT 'exists' FROM pg_roles WHERE rolname='{dbUser}'", conn))
@@ -159,7 +169,7 @@ namespace NeonClusterOperator
                     if (!reader.HasRows)
                     {
                         await conn.CloseAsync();
-                        Log.LogInfo($"[neon-system-db] Creating user '{dbUser}'.");
+                        Log.LogInfo($"[{KubeNamespaces.NeonSystem}-db] Creating user '{dbUser}'.");
                         dbInitialized = false;
 
                         string createCmdString;
@@ -188,7 +198,7 @@ namespace NeonClusterOperator
                         await conn.OpenAsync();
                     }
 
-                    Log.LogInfo($"[neon-system-db] Setting permissions for user '{dbUser}' on database '{dbName}'.");
+                    Log.LogInfo($"[{KubeNamespaces.NeonSystem}-db] Setting permissions for user '{dbUser}' on database '{dbName}'.");
                     await using (var createCmd = new NpgsqlCommand($"GRANT ALL PRIVILEGES ON DATABASE {dbName} TO {dbUser}", conn))
                     {
                         await createCmd.ExecuteNonQueryAsync();

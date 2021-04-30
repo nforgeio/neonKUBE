@@ -142,4 +142,6 @@ if ($services)
 {
     Publish "$image_root\\neon-allow-testing"
     Publish "$image_root\\neon-cluster-operator"
+    #Publish "$image_root\\neon-setup-grafana"
+    #Publish "$image_root\\neon-setup-harbor"
 }

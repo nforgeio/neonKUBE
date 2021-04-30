@@ -43,6 +43,6 @@ namespace Neon.Deployment
         /// <summary>
         /// Returns the package type (one of the <see cref="GitHubPackageType"/> values.
         /// </summary>
-        public string Type { get; internal set; }
+        public GitHubPackageType Type { get; internal set; }
     }
 }
