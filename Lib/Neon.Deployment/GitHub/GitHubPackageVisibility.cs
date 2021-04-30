@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    GitHubPackageType.cs
-// CONTRIBUTOR: Jeff Lill
+// FILE:	    GitHubPackageVisibility.cs
+// CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,44 +25,32 @@ using Neon.Common;
 namespace Neon.Deployment
 {
     /// <summary>
-    /// Enumerates the supported GitHub package types.
+    /// Enumerates the supported GitHub package visibility types.
     /// </summary>
-    public enum GitHubPackageType
+    public enum GitHubPackageVisibility
     {
         /// <summary>
-        /// NPM package.
+        /// All packages.
         /// </summary>
-        [EnumMember(Value = "npm")]
-        Npm,
+        [EnumMember(Value = "all")]
+        All,
 
         /// <summary>
-        /// Maven package.
+        /// Public packages.
         /// </summary>
-        [EnumMember(Value = "maven")]
-        Maven,
+        [EnumMember(Value = "public")]
+        Public,
 
         /// <summary>
-        /// Ruby Gem.
+        /// Private packages.
         /// </summary>
-        [EnumMember(Value = "rubygems")]
-        RubyGems,
+        [EnumMember(Value = "private")]
+        Private,
 
         /// <summary>
-        /// Nuget package.
+        /// Internal packages.
         /// </summary>
-        [EnumMember(Value = "nuget")]
-        Nuget,
-
-        /// <summary>
-        /// Docker package (use <see cref="Container"/> for packages with namespace <b>https://ghcr.io/owner/package-name</b>).
-        /// </summary>
-        [EnumMember(Value = "docker")]
-        Docker,
-
-        /// <summary>
-        /// Container image.
-        /// </summary>
-        [EnumMember(Value = "container")]
-        Container,
+        [EnumMember(Value = "internal")]
+        Internal
     }
 }

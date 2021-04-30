@@ -28,11 +28,6 @@ namespace Neon.Kube
         public const string ClusterOperator = "neon-cluster-operator";
 
         /// <summary>
-        /// Elasticsearch.
-        /// </summary>
-        public const string Elasticsearch = "neon-logs-elasticsearch";
-
-        /// <summary>
         /// Neon identity service, AKA a Secure Token Service (STS).
         /// </summary>
         public const string IdentityService = "neon-identity-service";
@@ -44,9 +39,14 @@ namespace Neon.Kube
         public const string IdentityOperator = "neon-identity-operator";
 
         /// <summary>
-        /// Kibana.
+        /// Service that runs Grafana setup.
         /// </summary>
-        public const string Kibana = "neon-logs-kibana";
+        public const string SetupGrafana = "neon-setup-grafana";
+
+        /// <summary>
+        /// Service that runs Harbor setup.
+        /// </summary>
+        public const string SetupHarbor = "neon-setup-harbor";
 
         /// <summary>
         /// Non-production service used to test Cadence running in a Linux container.
