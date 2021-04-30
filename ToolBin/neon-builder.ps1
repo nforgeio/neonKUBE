@@ -32,7 +32,8 @@ param
 (
     [switch]$tools   = $false,
     [switch]$codedoc = $false,
-    [switch]$all     = $false
+    [switch]$all     = $false,
+    [switch]$debug   = $false   # Optionally specify DEBUG build config
 )
 
 if ($all)
@@ -41,22 +42,30 @@ if ($all)
     $codedoc = $true
 }
 
+if ($debug)
+{
+    $config = "Debug"
+}
+else
+{
+    $config = "Release"
+}
+
 # Import the global project include file.
 
 . $env:NF_ROOT/Powershell/includes.ps1
 
 # Initialize
 
-$msbuild        = "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\amd64\MSBuild.exe"
-$nfRoot         = "$env:NF_ROOT"
-$nfSolution     = "$nfRoot\neonKUBE.sln"
-$nfBuild        = "$env:NF_BUILD"
-$nfLib          = "$nfRoot\Lib"
-$nfTools        = "$nfRoot\Tools"
-$nfToolBin      = "$nfRoot\ToolBin"
-$config         = "Release"
-$buildConfig    = "-p:Configuration=Release"
-$env:PATH      += ";$nfBuild"
+$msbuild     = "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\amd64\MSBuild.exe"
+$nfRoot      = "$env:NF_ROOT"
+$nfSolution  = "$nfRoot\neonKUBE.sln"
+$nfBuild     = "$env:NF_BUILD"
+$nfLib       = "$nfRoot\Lib"
+$nfTools     = "$nfRoot\Tools"
+$nfToolBin   = "$nfRoot\ToolBin"
+$buildConfig = "-p:Configuration=Release"
+$env:PATH   += ";$nfBuild"
 
 $libraryVersion = $(& "$nfToolBin\neon-build" read-version "$nfLib\Neon.Common\Build.cs" NeonLibraryVersion)
 ThrowOnExitCode
