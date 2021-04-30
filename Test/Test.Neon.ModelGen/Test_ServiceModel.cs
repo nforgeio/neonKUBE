@@ -356,7 +356,7 @@ namespace TestModelGen.ServiceModel
     public partial class Test_ServiceModel
     {
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonModelGen)]
+        [Trait(TestTrait.Project, TestProject.NeonModelGen)]
         public void EmptyService()
         {
             // Verify a controller with no methods.
@@ -377,7 +377,7 @@ namespace TestModelGen.ServiceModel
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonModelGen)]
+        [Trait(TestTrait.Project, TestProject.NeonModelGen)]
         public void RenameService()
         {
             // Verify that we can rename a service controller.
@@ -398,7 +398,7 @@ namespace TestModelGen.ServiceModel
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonModelGen)]
+        [Trait(TestTrait.Project, TestProject.NeonModelGen)]
         public async Task VoidService()
         {
             // Verify that we can generate and call a service defined without
@@ -489,7 +489,7 @@ namespace TestModelGen.ServiceModel
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonModelGen)]
+        [Trait(TestTrait.Project, TestProject.NeonModelGen)]
         public async Task MethodService()
         {
             // Verify that the correct HTTP methods are used.
@@ -624,7 +624,7 @@ namespace TestModelGen.ServiceModel
 
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonModelGen)]
+        [Trait(TestTrait.Project, TestProject.NeonModelGen)]
         public async Task UnsafeMethodService()
         {
             // Verify that the correct HTTP methods are used when performing unsafe
@@ -759,7 +759,7 @@ namespace TestModelGen.ServiceModel
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonModelGen)]
+        [Trait(TestTrait.Project, TestProject.NeonModelGen)]
         public async Task ResultsService()
         {
             // Verify that we can parse various types of service results.
@@ -959,7 +959,7 @@ namespace TestModelGen.ServiceModel
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonModelGen)]
+        [Trait(TestTrait.Project, TestProject.NeonModelGen)]
         public async Task RouteService1()
         {
             // Verify that we do URI routing properly.
@@ -1039,7 +1039,7 @@ namespace TestModelGen.ServiceModel
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonModelGen)]
+        [Trait(TestTrait.Project, TestProject.NeonModelGen)]
         public async Task RouteService2()
         {
             // Verify that we do URI routing properly.
@@ -1119,7 +1119,7 @@ namespace TestModelGen.ServiceModel
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonModelGen)]
+        [Trait(TestTrait.Project, TestProject.NeonModelGen)]
         public async Task RouteService3()
         {
             // Verify that we do URI routing properly.
@@ -1199,7 +1199,7 @@ namespace TestModelGen.ServiceModel
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonModelGen)]
+        [Trait(TestTrait.Project, TestProject.NeonModelGen)]
         public async Task SpecialQuery()
         {
             // Verify that we can pass some complex and nullable types as query parameters.
@@ -1555,7 +1555,7 @@ namespace TestModelGen.ServiceModel
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonModelGen)]
+        [Trait(TestTrait.Project, TestProject.NeonModelGen)]
         public async Task FromBody()
         {
             // Verify that we can transmit [FromBody] parameters properly.
@@ -1659,7 +1659,7 @@ namespace TestModelGen.ServiceModel
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonModelGen)]
+        [Trait(TestTrait.Project, TestProject.NeonModelGen)]
         public async Task Composed()
         {
             // Verify that a client composed from multiple service models work.
@@ -1811,7 +1811,7 @@ namespace TestModelGen.ServiceModel
     public partial class Test_ServiceModel
     {
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonModelGen)]
+        [Trait(TestTrait.Project, TestProject.NeonModelGen)]
         public void OptionalParams()
         {
             var settings = new ModelGeneratorSettings()

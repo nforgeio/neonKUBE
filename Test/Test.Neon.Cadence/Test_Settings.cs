@@ -87,7 +87,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public async Task Workflow_ExternalIdNoReuse()
         {
             await SyncContext.ClearAsync;
@@ -128,7 +128,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public async Task Workflow_ExternalIdReuseViaSettings()
         {
             await SyncContext.ClearAsync;

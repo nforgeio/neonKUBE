@@ -109,7 +109,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public async Task Workflow_WithResult1()
         {
             await SyncContext.ClearAsync;
@@ -123,7 +123,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public async Task Workflow_WithResult2()
         {
             await SyncContext.ClearAsync;

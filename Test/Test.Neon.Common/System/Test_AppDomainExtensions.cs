@@ -40,7 +40,7 @@ namespace TestCommon
     public class Test_AppDomainExtensions
     {
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Project, TestProject.NeonCommon)]
         public void GetUserAssemblies()
         {
             // $note(jefflill):

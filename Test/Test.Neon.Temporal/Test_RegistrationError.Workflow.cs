@@ -68,7 +68,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public async Task Workflow_DuplicateBlankEntrypoint()
         {
             // Verify that the client detects workflows that have multiple
@@ -107,7 +107,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public async Task Workflow_DuplicateEntrypoint()
         {
             // Verify that the client detects workflows that have multiple
@@ -131,7 +131,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public async Task Workflow_NoEntrypoint()
         {
             // Verify that the client detects workflows that have no
@@ -177,7 +177,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public async Task Workflow_DuplicateSignal()
         {
             // Verify that the client detects workflows with two signals that
@@ -223,7 +223,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public async Task Workflow_DuplicateQuery()
         {
             // Verify that the client detects workflows with two signals that
@@ -265,7 +265,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public async Task Workflow_MultipleInterfaces()
         {
             // Verify that the client detects workflow implementations

@@ -210,7 +210,7 @@ namespace TestModelGen.DataModel
     public class Test_DataModel
     {
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonModelGen)]
+        [Trait(TestTrait.Project, TestProject.NeonModelGen)]
         public void Empty()
         {
             // Verify that we can generate code for an empty data model.
@@ -254,7 +254,7 @@ namespace TestModelGen.DataModel
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonModelGen)]
+        [Trait(TestTrait.Project, TestProject.NeonModelGen)]
         public void NoSetter()
         {
             // Verify that we can generate code for the [NoSetter] data model.
@@ -288,7 +288,7 @@ namespace TestModelGen.DataModel
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonModelGen)]
+        [Trait(TestTrait.Project, TestProject.NeonModelGen)]
         public void NoGetter()
         {
             // Verify that we can generate code for the [NoGetter] data model.
@@ -322,7 +322,7 @@ namespace TestModelGen.DataModel
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonModelGen)]
+        [Trait(TestTrait.Project, TestProject.NeonModelGen)]
         public void Simple()
         {
             // Verify that we can generate code for a simple data model.
@@ -412,7 +412,7 @@ namespace TestModelGen.DataModel
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonModelGen)]
+        [Trait(TestTrait.Project, TestProject.NeonModelGen)]
         public void BasicTypes()
         {
             // Verify that we can generate code for basic data types.
@@ -483,7 +483,7 @@ namespace TestModelGen.DataModel
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonModelGen)]
+        [Trait(TestTrait.Project, TestProject.NeonModelGen)]
         public void Complex()
         {
             // Verify that we can generate code for complex data types.
@@ -576,7 +576,7 @@ namespace TestModelGen.DataModel
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonModelGen)]
+        [Trait(TestTrait.Project, TestProject.NeonModelGen)]
         public void DefaultValues()
         {
             // Verify that data models with default property values are initialized correctly.
@@ -605,7 +605,7 @@ namespace TestModelGen.DataModel
         }
 
         [Fact(Skip = "Manually testing required")]
-        [Trait(TestTraits.Project, TestProject.NeonModelGen)]
+        [Trait(TestTrait.Project, TestProject.NeonModelGen)]
         public void NullableProperties()
         {
             // NOTE: 
@@ -657,7 +657,7 @@ namespace TestModelGen.DataModel
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonModelGen)]
+        [Trait(TestTrait.Project, TestProject.NeonModelGen)]
         public void CustomPropertyNames()
         {
             // Vertify that [JsonProperty(PropertyName = "xxx")] works.
@@ -689,7 +689,7 @@ namespace TestModelGen.DataModel
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonModelGen)]
+        [Trait(TestTrait.Project, TestProject.NeonModelGen)]
         public void SerializationDefaults()
         {
             // Verify that we honor the [JsonProperty(DefaultValueHandling)] options.
@@ -763,7 +763,7 @@ namespace TestModelGen.DataModel
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonModelGen)]
+        [Trait(TestTrait.Project, TestProject.NeonModelGen)]
         public void EqualsOperator()
         {
             // Verify that the generated binary "==" operator works.
@@ -806,7 +806,7 @@ namespace TestModelGen.DataModel
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonModelGen)]
+        [Trait(TestTrait.Project, TestProject.NeonModelGen)]
         public void NotEqualsOperator()
         {
             // Verify that the generated binary "==" operator works.
@@ -849,7 +849,7 @@ namespace TestModelGen.DataModel
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonModelGen)]
+        [Trait(TestTrait.Project, TestProject.NeonModelGen)]
         public void HashCode()
         {
             // Verify that GetHashCode() works.
@@ -927,7 +927,7 @@ namespace TestModelGen.DataModel
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonModelGen)]
+        [Trait(TestTrait.Project, TestProject.NeonModelGen)]
         public void ReadOnlyCollections()
         {
             // Verify serializing read-only collection properties.
@@ -959,7 +959,7 @@ namespace TestModelGen.DataModel
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonModelGen)]
+        [Trait(TestTrait.Project, TestProject.NeonModelGen)]
         public void ListOfList()
         {
             // Verify serializing a list of lists.

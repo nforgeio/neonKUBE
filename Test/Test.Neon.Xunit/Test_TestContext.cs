@@ -53,7 +53,7 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonXunit)]
+        [Trait(TestTrait.Project, TestProject.NeonXunit)]
         public void LoadSettingsDecrypted()
         {
             // Verify that we can load a decrypted settings file into the
@@ -93,7 +93,7 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonXunit)]
+        [Trait(TestTrait.Project, TestProject.NeonXunit)]
         public void LoadSettingsEncrypted()
         {
             // Verify that we can load an encrypted settings file into the
@@ -142,7 +142,7 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonXunit)]
+        [Trait(TestTrait.Project, TestProject.NeonXunit)]
         public void LoadEnvironmentDecrypted()
         {
             // Verify that we can load a decrypted settings file into the
@@ -194,7 +194,7 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonXunit)]
+        [Trait(TestTrait.Project, TestProject.NeonXunit)]
         public void LoadEnvironmentEncrypted()
         {
             // Verify that we can load an encryoted settings file into the

@@ -99,7 +99,7 @@ namespace TestNeonService
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonKube)]
+        [Trait(TestTrait.Project, TestProject.NeonKube)]
         public async Task Success()
         {
             // Restart the service with with valid environment variables,
@@ -125,7 +125,7 @@ namespace TestNeonService
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonKube)]
+        [Trait(TestTrait.Project, TestProject.NeonKube)]
         public void BadConfig()
         {
             // Restart the service with with a missing configuration

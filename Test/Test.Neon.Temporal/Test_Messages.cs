@@ -90,7 +90,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public void Test_PropertyHelpers()
         {
             // Verify that the property helper methods work as expected.

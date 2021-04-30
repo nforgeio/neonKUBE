@@ -35,7 +35,7 @@ namespace TestCommon
     public class Test_TimeSpan
     {
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Project, TestProject.NeonCommon)]
         public void AdjustToFitDateRange()
         {
             // Verify that we can adjust a timespan such that when

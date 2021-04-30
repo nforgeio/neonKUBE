@@ -122,7 +122,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Project, TestProject.NeonCommon)]
         public void Basic()
         {
             // Verify that an event that starts out unsignalled doesn't allow
@@ -248,7 +248,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Project, TestProject.NeonCommon)]
         public async Task Auto()
         {
             // Verify that auto reset events actually reset automatically.
@@ -287,7 +287,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Project, TestProject.NeonCommon)]
         public void Error()
         {
             AsyncAutoResetEvent autoEvent;

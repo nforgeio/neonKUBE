@@ -188,7 +188,7 @@ namespace TestNeonService
         // Instance members
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonKube)]
+        [Trait(TestTrait.Project, TestProject.NeonKube)]
         public void Run()
         {
             runWasCalled     = false;

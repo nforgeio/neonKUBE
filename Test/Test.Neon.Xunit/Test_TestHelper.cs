@@ -84,7 +84,7 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Project, TestProject.NeonCommon)]
         public void Enumerable_Equivalent()
         {
             TestHelper.AssertEquivalent(new List<string>(), new List<string>());
@@ -99,7 +99,7 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Project, TestProject.NeonCommon)]
         public void Enumerable_NotEquivalent()
         {
             Assert.ThrowsAny<Exception>(() => TestHelper.AssertNotEquivalent(new List<string>(), new List<string>()));
@@ -114,7 +114,7 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Project, TestProject.NeonCommon)]
         public void Enumerable_EquivalentComparer()
         {
             var comparer = new ItemComparer();
@@ -131,7 +131,7 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Project, TestProject.NeonCommon)]
         public void Enumerable_NotEquivalentComparer()
         {
             var comparer = new ItemComparer();
@@ -148,7 +148,7 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Project, TestProject.NeonCommon)]
         public void Collection_Equivalent()
         {
             TestHelper.AssertEquivalent(new Dictionary<string, string>(), new Dictionary<string, string>());
@@ -162,7 +162,7 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Project, TestProject.NeonCommon)]
         public void Collection_NotEquivalent()
         {
             Assert.ThrowsAny<Exception>(() => TestHelper.AssertNotEquivalent(new Dictionary<string, string>(), new Dictionary<string, string>()));
@@ -176,7 +176,7 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Project, TestProject.NeonCommon)]
         public void Collection_EquivalentComparer()
         {
             var comparer = new ItemComparer();
@@ -192,7 +192,7 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Project, TestProject.NeonCommon)]
         public void Collection_NotEquivalentComparer()
         {
             var comparer = new ItemComparer();

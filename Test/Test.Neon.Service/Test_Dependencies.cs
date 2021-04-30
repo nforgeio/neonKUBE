@@ -87,7 +87,7 @@ namespace TestNeonService
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonKube)]
+        [Trait(TestTrait.Project, TestProject.NeonKube)]
         public async Task Wait_Explicit()
         {
             // Verify that a service will honor the wait time specified in code.
@@ -109,7 +109,7 @@ namespace TestNeonService
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonKube)]
+        [Trait(TestTrait.Project, TestProject.NeonKube)]
         public async Task Wait_EnvironmentVar()
         {
             // Verify that a service will honor the wait time specified as
@@ -135,7 +135,7 @@ namespace TestNeonService
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonKube)]
+        [Trait(TestTrait.Project, TestProject.NeonKube)]
         public async Task Wait_BadEnvironmentVar()
         {
             // Verify that a service ignores an invalid environment variable.
@@ -151,7 +151,7 @@ namespace TestNeonService
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonKube)]
+        [Trait(TestTrait.Project, TestProject.NeonKube)]
         public async Task Dependencies_Explicit()
         {
             // Verify that a service will wait for service dependencies for each
@@ -213,7 +213,7 @@ namespace TestNeonService
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonKube)]
+        [Trait(TestTrait.Project, TestProject.NeonKube)]
         public async Task Dependencies_EnvironmentVar()
         {
             // Verify that a service will wait for service dependencies for each
@@ -278,7 +278,7 @@ namespace TestNeonService
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonKube)]
+        [Trait(TestTrait.Project, TestProject.NeonKube)]
         public async Task Dependencies_BadEnvironmentVar()
         {
             // Verify that a service will wait for service dependencies for each
@@ -344,7 +344,7 @@ namespace TestNeonService
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonKube)]
+        [Trait(TestTrait.Project, TestProject.NeonKube)]
         public async Task Dependencies_Timeout_Explicit()
         {
             // Verify that a service will timeout waiting for a service
@@ -367,7 +367,7 @@ namespace TestNeonService
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonKube)]
+        [Trait(TestTrait.Project, TestProject.NeonKube)]
         public async Task Dependencies_Timeout_EnvironmentVar()
         {
             // Verify that a service will timeout waiting for a service
@@ -394,7 +394,7 @@ namespace TestNeonService
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonKube)]
+        [Trait(TestTrait.Project, TestProject.NeonKube)]
         public async Task Dependencies_Timeout_BadEnvironmentVar()
         {
             // Verify that a service will ignore an invalid timeout specified

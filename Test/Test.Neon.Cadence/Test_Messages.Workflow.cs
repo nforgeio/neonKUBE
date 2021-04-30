@@ -43,7 +43,7 @@ namespace TestCadence
     public partial class Test_Messages
     {
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowRegisterRequest()
         {
             WorkflowRegisterRequest message;
@@ -110,7 +110,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowRegisterReply()
         {
             WorkflowRegisterReply message;
@@ -170,7 +170,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowExecuteRequest()
         {
             WorkflowExecuteRequest message;
@@ -260,7 +260,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowExecuteReply()
         {
             WorkflowExecuteReply message;
@@ -330,7 +330,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowInvokeRequest()
         {
             WorkflowInvokeRequest message;
@@ -440,7 +440,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowInvokeReply()
         {
             WorkflowInvokeReply message;
@@ -563,7 +563,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowCancelRequest()
         {
             WorkflowCancelRequest message;
@@ -637,7 +637,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowCancelReply()
         {
             WorkflowCancelReply message;
@@ -697,7 +697,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowTerminateRequest()
         {
             WorkflowTerminateRequest message;
@@ -783,7 +783,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowTerminateReply()
         {
             WorkflowTerminateReply message;
@@ -843,7 +843,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowSignalRequest()
         {
             WorkflowSignalRequest message;
@@ -929,7 +929,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowSignalReply()
         {
             WorkflowSignalReply message;
@@ -989,7 +989,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowSignalWithStartRequest()
         {
             WorkflowSignalWithStartRequest message;
@@ -1091,7 +1091,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowSignalWithStartReply()
         {
             WorkflowSignalWithStartReply message;
@@ -1161,7 +1161,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowQueryRequest()
         {
             WorkflowQueryRequest message;
@@ -1247,7 +1247,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowQueryReply()
         {
             WorkflowQueryReply message;
@@ -1313,7 +1313,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         [Obsolete("This was replaced by a local activity.")]
         public void Test_WorkflowMutableRequest()
         {
@@ -1388,7 +1388,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         [Obsolete("This was replaced by a local activity.")]
         public void Test_WorkflowMutableReply()
         {
@@ -1457,7 +1457,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowDescribeExecutionRequest()
         {
             WorkflowDescribeExecutionRequest message;
@@ -1691,7 +1691,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowDescribeExecutionReply()
         {
             WorkflowDescribeExecutionReply message;
@@ -1755,7 +1755,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowGetResultRequest()
         {
             WorkflowGetResultRequest message;
@@ -1829,7 +1829,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowGetResultReply()
         {
             // In addition to verifying basic serialization for the [WorkflowGetResultReply]
@@ -1908,7 +1908,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowSignalSubscribeRequest()
         {
             WorkflowSignalSubscribeRequest message;
@@ -1970,7 +1970,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowSignalSubscribeReply()
         {
             WorkflowSignalSubscribeReply message;
@@ -2030,7 +2030,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowSignalInvokeRequest()
         {
             WorkflowSignalInvokeRequest message;
@@ -2098,7 +2098,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowSignalInvokeReply()
         {
             WorkflowSignalInvokeReply message;
@@ -2158,7 +2158,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowHasLastResultRequest()
         {
             WorkflowHasLastResultRequest message;
@@ -2214,7 +2214,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowHasLastResultReply()
         {
             WorkflowHasLastResultReply message;
@@ -2280,7 +2280,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowGetLastResultRequest()
         {
             WorkflowGetLastResultRequest message;
@@ -2336,7 +2336,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowGetLastResultReply()
         {
             WorkflowGetLastLastReply message;
@@ -2402,7 +2402,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowDisconnectContextRequest()
         {
             WorkflowDisconnectContextRequest message;
@@ -2458,7 +2458,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowDisconnectContextReply()
         {
             WorkflowDisconnectContextReply message;
@@ -2518,7 +2518,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowGetTimeRequest()
         {
             WorkflowGetTimeRequest message;
@@ -2574,7 +2574,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowGetTimeReply()
         {
             WorkflowGetTimeReply message;
@@ -2640,7 +2640,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowSleepRequest()
         {
             WorkflowSleepRequest message;
@@ -2702,7 +2702,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowSleepReply()
         {
             WorkflowSleepReply message;
@@ -2776,7 +2776,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowExecuteChildRequest()
         {
             WorkflowExecuteChildRequest message;
@@ -2872,7 +2872,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowExecuteChildReply()
         {
             WorkflowExecuteChildReply message;
@@ -2949,7 +2949,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowWaitForChildRequest()
         {
             WorkflowWaitForChildRequest message;
@@ -3011,7 +3011,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowWaitForChildReply()
         {
             WorkflowWaitForChildReply message;
@@ -3077,7 +3077,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowSignalChildRequest()
         {
             WorkflowSignalChildRequest message;
@@ -3151,7 +3151,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowSignalChildReply()
         {
             WorkflowSignalChildReply message;
@@ -3217,7 +3217,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowCancelChildRequest()
         {
             WorkflowCancelChildRequest message;
@@ -3279,7 +3279,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowCancelChildReply()
         {
             WorkflowCancelChildReply message;
@@ -3339,7 +3339,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowSetQueryHandlerRequest()
         {
             WorkflowSetQueryHandlerRequest message;
@@ -3401,7 +3401,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowSetQueryHandlerReply()
         {
             WorkflowSetQueryHandlerReply message;
@@ -3459,7 +3459,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowQueryInvokeRequest()
         {
             WorkflowQueryInvokeRequest message;
@@ -3533,7 +3533,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowQueryInvokeReply()
         {
             WorkflowQueryInvokeReply message;
@@ -3596,7 +3596,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowGetVersionRequest()
         {
             WorkflowGetVersionRequest message;
@@ -3679,7 +3679,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowGetVersionReply()
         {
             WorkflowGetVersionReply message;
@@ -3745,7 +3745,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowFutureReadyRequest()
         {
             WorkflowFutureReadyRequest message;
@@ -3814,7 +3814,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowFutureReadyReply()
         {
             WorkflowFutureReadyReply message;
@@ -3874,7 +3874,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowQueueNewRequest()
         {
             WorkflowQueueNewRequest message;
@@ -3948,7 +3948,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowQueueNewReply()
         {
             WorkflowQueueNewReply message;
@@ -4008,7 +4008,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowQueueWriteRequest()
         {
             WorkflowQueueWriteRequest message;
@@ -4090,7 +4090,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowQueueWriteReply()
         {
             WorkflowQueueWriteReply message;
@@ -4156,7 +4156,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowQueueReadRequest()
         {
             WorkflowQueueReadRequest message;
@@ -4232,7 +4232,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowQueueReadReply()
         {
             WorkflowQueueReadReply message;
@@ -4305,7 +4305,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowQueueCloseRequest()
         {
             WorkflowQueueCloseRequest message;
@@ -4374,7 +4374,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_WorkflowQueueCloseReply()
         {
             WorkflowQueueCloseReply message;

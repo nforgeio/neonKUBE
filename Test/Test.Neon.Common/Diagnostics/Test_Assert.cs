@@ -71,7 +71,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Project, TestProject.NeonCommon)]
         public void Requires()
         {
             // Verify that the Covenant.Requires<T>() optional string

@@ -580,7 +580,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public async Task Nop()
         {
             await SyncContext.ClearAsync;
@@ -592,7 +592,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public async Task GetVersion()
         {
             await SyncContext.ClearAsync;
@@ -604,7 +604,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public async Task WorkflowExecution()
         {
             await SyncContext.ClearAsync;
@@ -616,7 +616,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public async Task MutableSideEffect()
         {
             await SyncContext.ClearAsync;
@@ -628,7 +628,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public async Task MutableSideEffectGeneric()
         {
             await SyncContext.ClearAsync;
@@ -640,7 +640,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public async Task SideEffect()
         {
             await SyncContext.ClearAsync;
@@ -652,7 +652,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public async Task SideEffectGeneric()
         {
             await SyncContext.ClearAsync;
@@ -664,7 +664,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public async Task NewGuid()
         {
             await SyncContext.ClearAsync;
@@ -676,7 +676,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public async Task NextRandomDouble()
         {
             await SyncContext.ClearAsync;
@@ -688,7 +688,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public async Task NextRandom()
         {
             await SyncContext.ClearAsync;
@@ -700,7 +700,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public async Task NextRandomMax()
         {
             await SyncContext.ClearAsync;
@@ -712,7 +712,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public async Task NextRandomMinMax()
         {
             await SyncContext.ClearAsync;
@@ -724,7 +724,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public async Task NextRandomBytes()
         {
             await SyncContext.ClearAsync;
@@ -736,7 +736,7 @@ namespace TestTemporal
         }
 
         [Fact(Skip = "Not Implemented")]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public async Task GetLastCompletionResult()
         {
             await SyncContext.ClearAsync;
@@ -748,7 +748,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public async Task GetIsSetLastCompletionResult()
         {
             await SyncContext.ClearAsync;
@@ -760,7 +760,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public async Task ChildWorkflow()
         {
             await SyncContext.ClearAsync;
@@ -772,7 +772,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public async Task Activity()
         {
             await SyncContext.ClearAsync;
@@ -784,7 +784,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public async Task LocalActivity()
         {
             await SyncContext.ClearAsync;

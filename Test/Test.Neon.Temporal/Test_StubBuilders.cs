@@ -116,7 +116,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public void Prebuild_Stubs()
         {
             // Verify that the stub builder methods don't barf.

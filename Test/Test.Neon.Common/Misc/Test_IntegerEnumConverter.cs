@@ -57,7 +57,7 @@ namespace TestCommon
         private JsonSerializer serializer = new JsonSerializer();
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Project, TestProject.NeonCommon)]
         public void ReadInt()
         {
             var json0 = "{ \"Value\": 0 }";
@@ -78,7 +78,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Project, TestProject.NeonCommon)]
         public void ReadString()
         {
             var json0 = "{ \"Value\": \"Zero\" }";
@@ -99,7 +99,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Project, TestProject.NeonCommon)]
         public void ReadString_Insensitive()
         {
             // Verify that parsing is case insensitive.
@@ -122,7 +122,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Project, TestProject.NeonCommon)]
         public void Write()
         {
             var value  = new MyData() { Value = MyEnum.Two };

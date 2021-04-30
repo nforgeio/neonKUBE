@@ -51,7 +51,7 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Project, TestProject.NeonCommon)]
         public void Verify1()
         {
             // Both state values should be retained across all unit tests.
@@ -61,7 +61,7 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Project, TestProject.NeonCommon)]
         public void Verify2()
         {
             // Both state values should be retained across all unit tests.
@@ -71,7 +71,7 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Project, TestProject.NeonCommon)]
         public void Verify3()
         {
             // Both state values should be retained across all unit tests.

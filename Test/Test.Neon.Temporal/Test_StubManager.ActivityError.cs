@@ -53,7 +53,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public void Error_ActivityGenericsNotAllowed()
         {
             // We don't support activity interfaces with generic parameters.
@@ -68,7 +68,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public void Error_ActivityNoEntryPoint()
         {
             // Activities need to have at least one entry point.
@@ -77,7 +77,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public void Error_ActivityNullClient()
         {
             // A non-NULL client is required.
@@ -97,7 +97,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public void Error_ActivityNotInterface()
         {
             // Only activity interfaces are allowed.
@@ -117,7 +117,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public void Error_ActivityNotPublic()
         {
             // Activity interfaces must be public.
@@ -140,7 +140,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public void Error_ActivityNonTaskEntryPoint()
         {
             // Activity entry points methods need to return a Task.
@@ -160,7 +160,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public void Error_ActivityDuplicateDuplicateDefaultEntryPoints()
         {
             // Verify that we detect duplicate entrypoint methods
@@ -181,7 +181,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public void Error_ActivityDuplicateDuplicateEntryPoints()
         {
             // Verify that we detect duplicate entrypoint methods

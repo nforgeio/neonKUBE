@@ -159,7 +159,7 @@ namespace Test.Neon.Web.ControllerBase
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonWeb)]
+        [Trait(TestTrait.Project, TestProject.NeonWeb)]
         public async Task LogLevels()
         {
             var logManager = LogManager.Default;

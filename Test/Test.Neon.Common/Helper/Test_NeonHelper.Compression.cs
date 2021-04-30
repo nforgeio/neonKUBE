@@ -32,7 +32,7 @@ namespace TestCommon
     public partial class Test_NeonHelper
     {
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Project, TestProject.NeonCommon)]
         public void Compression_Deflate()
         {
             var sb = new StringBuilder();
@@ -82,7 +82,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Project, TestProject.NeonCommon)]
         public void Compression_Gzip()
         {
             var sb = new StringBuilder();
@@ -132,7 +132,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Project, TestProject.NeonCommon)]
         public void Compression_GZip_File()
         {
             using (var tempFolder = new TempFolder())

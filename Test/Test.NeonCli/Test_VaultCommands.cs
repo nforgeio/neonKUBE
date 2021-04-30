@@ -47,7 +47,7 @@ namespace Test.NeonCli
         private const string editedPlainText     = "This is a test of the emergency broadcasting system. This is only a test.";
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCli)]
+        [Trait(TestTrait.Project, TestProject.NeonCli)]
         public async Task Vault()
         {
             using (var runner = new ProgramRunner())
@@ -59,7 +59,7 @@ namespace Test.NeonCli
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCli)]
+        [Trait(TestTrait.Project, TestProject.NeonCli)]
         public async Task VaultCreate()
         {
             using (var manager = new KubeTestManager())
@@ -155,7 +155,7 @@ namespace Test.NeonCli
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCli)]
+        [Trait(TestTrait.Project, TestProject.NeonCli)]
         public async Task VaulteEdit()
         {
             using (var manager = new KubeTestManager())
@@ -226,7 +226,7 @@ namespace Test.NeonCli
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCli)]
+        [Trait(TestTrait.Project, TestProject.NeonCli)]
         public async Task VaultDecrypt()
         {
             using (var manager = new KubeTestManager())
@@ -300,7 +300,7 @@ namespace Test.NeonCli
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCli)]
+        [Trait(TestTrait.Project, TestProject.NeonCli)]
         public async Task VaultEncrypt()
         {
             using (var manager = new KubeTestManager())
@@ -448,7 +448,7 @@ namespace Test.NeonCli
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCli)]
+        [Trait(TestTrait.Project, TestProject.NeonCli)]
         public async Task VaultPasswordName()
         {
             using (var manager = new KubeTestManager())

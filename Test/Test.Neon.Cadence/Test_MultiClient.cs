@@ -131,7 +131,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public async Task Simultaneous()
         {
             await SyncContext.ClearAsync;
@@ -169,7 +169,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public async Task Connect_Twice()
         {
             await SyncContext.ClearAsync;
@@ -362,7 +362,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public async Task Multiple_TaskLists()
         {
             await SyncContext.ClearAsync;

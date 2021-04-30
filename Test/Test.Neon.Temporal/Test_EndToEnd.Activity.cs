@@ -87,7 +87,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public async Task Activity_WithNoResult()
         {
             await SyncContext.ClearAsync;
@@ -144,7 +144,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public async Task Activity_WithResult()
         {
             await SyncContext.ClearAsync;
@@ -257,7 +257,7 @@ namespace TestTemporal
         }
 
         [Fact_Failing_Errors]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public async Task Activity_WithError()
         {
             await SyncContext.ClearAsync;
@@ -271,7 +271,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public async Task ActivityLocal_WithError()
         {
             await SyncContext.ClearAsync;
@@ -321,7 +321,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public async Task ActivityLocal_WithResult()
         {
             await SyncContext.ClearAsync;
@@ -384,7 +384,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public async Task ActivityLocal_WithoutResult()
         {
             await SyncContext.ClearAsync;
@@ -462,7 +462,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public async Task ActivityLocal_WithMultipleMethods()
         {
             await SyncContext.ClearAsync;
@@ -533,7 +533,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public async Task Activity_WithMultipleMethods()
         {
             await SyncContext.ClearAsync;
@@ -588,7 +588,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public async Task Activity_Logger()
         {
             await SyncContext.ClearAsync;
@@ -650,7 +650,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public async Task Activity_MultipleStubs()
         {
             await SyncContext.ClearAsync;
@@ -701,7 +701,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public async Task Activity_DifferentNames()
         {
             await SyncContext.ClearAsync;
@@ -858,7 +858,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public async Task Activity_Heartbeat()
         {
             await SyncContext.ClearAsync;
@@ -871,7 +871,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public async Task Activity_Heartbeat_WithDefaults()
         {
             await SyncContext.ClearAsync;
@@ -884,7 +884,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public async Task Activity_Heartbeat_WithDetails()
         {
             await SyncContext.ClearAsync;
@@ -897,7 +897,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public async Task Activity_Heartbeat_WithInterval()
         {
             await SyncContext.ClearAsync;
@@ -960,7 +960,7 @@ namespace TestTemporal
         }
 
         [Fact_Failing_Errors]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public async Task Activity_Fail()
         {
             await SyncContext.ClearAsync;
@@ -1024,7 +1024,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public async Task Activity_ComplexData()
         {
             await SyncContext.ClearAsync;
@@ -1146,7 +1146,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public async Task Activity_External_CompleteByToken()
         {
             await SyncContext.ClearAsync;
@@ -1168,7 +1168,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public async Task Activity_External_CompleteById()
         {
             await SyncContext.ClearAsync;
@@ -1190,7 +1190,7 @@ namespace TestTemporal
         }
 
         [Fact_Failing_Errors]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public async Task Activity_External_ErrorByToken()
         {
             await SyncContext.ClearAsync;
@@ -1223,7 +1223,7 @@ namespace TestTemporal
         }
 
         [Fact_Failing_Errors]
-        [Trait(TestTraits.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
         public async Task Activity_External_ErrorById()
         {
             await SyncContext.ClearAsync;
@@ -1256,7 +1256,7 @@ namespace TestTemporal
         }
 
         [Fact_Failing_Errors]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public async Task Activity_External_HeartbeatTimeout()
         {
             await SyncContext.ClearAsync;
@@ -1272,7 +1272,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public async Task Activity_External_HeartbeatWithDefaults_ById()
         {
             // Verifies that external heartbeats submitted by ID works.
@@ -1305,7 +1305,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public async Task Activity_External_HeartbeatWithDefaults_ByToken()
         {
             // Verifies that external heartbeats submitted by token works.
@@ -1381,7 +1381,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public async Task Activity_WithDependency()
         {
             await SyncContext.ClearAsync;
@@ -1436,7 +1436,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public async Task Activity_Nullable()
         {
             // Verify that nullable activity arguments and results are serialized properly.
@@ -1487,7 +1487,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public async Task Activity_DefaultNullableArg()
         {
             var testValue = new DateTime(2020, 10, 21);

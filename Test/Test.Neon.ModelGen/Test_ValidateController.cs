@@ -78,7 +78,7 @@ namespace TestModelGen.Validator
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonModelGen)]
+        [Trait(TestTrait.Project, TestProject.NeonModelGen)]
         public void ValidateController0()
         {
             using (var client = new VerifyController0Client())
@@ -199,7 +199,7 @@ namespace TestModelGen.Validator
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonModelGen)]
+        [Trait(TestTrait.Project, TestProject.NeonModelGen)]
         public void ValidateController1()
         {
             using (var client = new VerifyController1Client())

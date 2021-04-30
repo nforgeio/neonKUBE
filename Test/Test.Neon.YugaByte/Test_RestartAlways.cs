@@ -63,7 +63,7 @@ namespace TestYugaByte
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonYugaByte)]
+        [Trait(TestTrait.Project, TestProject.NeonYugaByte)]
         public void Cassandra0()
         {
             cassandra.Execute("CREATE TABLE employee(id int PRIMARY KEY, name varchar, age int, language varchar)");
@@ -72,7 +72,7 @@ namespace TestYugaByte
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonYugaByte)]
+        [Trait(TestTrait.Project, TestProject.NeonYugaByte)]
         public void Cassandra1()
         {
             cassandra.Execute("CREATE TABLE employee(id int PRIMARY KEY, name varchar, age int, language varchar)");
@@ -81,7 +81,7 @@ namespace TestYugaByte
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonYugaByte)]
+        [Trait(TestTrait.Project, TestProject.NeonYugaByte)]
         public void Postgres0()
         {
             NpgsqlCommand command;
@@ -97,7 +97,7 @@ namespace TestYugaByte
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonYugaByte)]
+        [Trait(TestTrait.Project, TestProject.NeonYugaByte)]
         public void Postgres1()
         {
             NpgsqlCommand command;

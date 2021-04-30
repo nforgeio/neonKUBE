@@ -43,7 +43,7 @@ namespace TestCadence
     public partial class Test_Messages
     {
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_ActivityRegisterRequest()
         {
             ActivityRegisterRequest message;
@@ -111,7 +111,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_ActivityRegisterReply()
         {
             ActivityRegisterReply message;
@@ -171,7 +171,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_ActivityExecuteRequest()
         {
             ActivityExecuteRequest message;
@@ -292,7 +292,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_ActivityExecuteReply()
         {
             ActivityExecuteReply message;
@@ -358,7 +358,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_ActivityInvokeRequest()
         {
             ActivityInvokeRequest message;
@@ -426,7 +426,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_ActivityInvokeReply()
         {
             ActivityInvokeReply message;
@@ -498,7 +498,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_ActivityGetHeartbeatDetailsRequest()
         {
             ActivityGetHeartbeatDetailsRequest message;
@@ -552,7 +552,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_ActivityGetHeartbeatDetailsReply()
         {
             ActivityGetHeartbeatDetailsReply message;
@@ -616,7 +616,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_ActivityRecordHeartbeatRequest()
         {
             ActivityRecordHeartbeatRequest message;
@@ -683,7 +683,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_ActivityRecordHeartbeatReply()
         {
             ActivityRecordHeartbeatReply message;
@@ -743,7 +743,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_ActivityHasHeartbeatDetailsRequest()
         {
             ActivityHasHeartbeatDetailsRequest message;
@@ -799,7 +799,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_ActivityHasHeartbeatDetailsReply()
         {
             ActivityHasHeartbeatDetailsReply message;
@@ -865,7 +865,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_ActivityStoppingRequest()
         {
             ActivityStoppingRequest message;
@@ -926,7 +926,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_ActivityStoppingReply()
         {
             ActivityStoppingReply message;
@@ -986,7 +986,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_ActivityExecuteLocalRequest()
         {
             ActivityExecuteLocalRequest message;
@@ -1066,7 +1066,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_ActivityExecuteLocalReply()
         {
             ActivityExecuteLocalReply message;
@@ -1132,7 +1132,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_ActivityInvokeLocalRequest()
         {
             ActivityInvokeLocalRequest message;
@@ -1199,7 +1199,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_ActivityInvokeLocalReply()
         {
             ActivityInvokeLocalReply message;
@@ -1265,7 +1265,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_ActivityGetInfoRequest()
         {
             ActivityGetInfoRequest message;
@@ -1337,7 +1337,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_ActivityGetInfoReply()
         {
             ActivityGetInfoReply message;
@@ -1417,7 +1417,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_ActivityCompleteRequest()
         {
             ActivityCompleteRequest message;
@@ -1508,7 +1508,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_ActivityCompleteReply()
         {
             ActivityCompleteReply message;
@@ -1568,7 +1568,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_ActivityStartRequest()
         {
             ActivityStartRequest message;
@@ -1695,7 +1695,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_ActivityStartReply()
         {
             ActivityStartReply message;
@@ -1761,7 +1761,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_ActivityGetResultRequest()
         {
             ActivityGetResultRequest message;
@@ -1823,7 +1823,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_ActivityGetResultReply()
         {
             ActivityGetResultReply message;
@@ -1895,7 +1895,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_ActivityStartLocalRequest()
         {
             ActivityStartLocalRequest message;
@@ -1991,7 +1991,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_ActivityGetLocalResultReply()
         {
             ActivityGetLocalResultReply message;
@@ -2063,7 +2063,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_ActivityGetLocalResultRequest()
         {
             ActivityGetLocalResultRequest message;
@@ -2125,7 +2125,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public void Test_ActivityStartLocalReply()
         {
             ActivityStartLocalReply message;

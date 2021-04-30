@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TestTraits.cs
+// FILE:	    TestTrait.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -26,7 +26,7 @@ namespace Neon.Xunit
     /// <summary>
     /// Identifies the common neonFORGE related test traits.
     /// </summary>
-    public static class TestTraits
+    public static class TestTrait
     {
         /// <summary>
         /// Identifies the test project.  See <see cref="TestProject"/> for the standard

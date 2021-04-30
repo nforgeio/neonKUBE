@@ -35,7 +35,7 @@ namespace TestCommon
     public partial class Test_Logger
     {
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Project, TestProject.NeonCommon)]
         public void Verify_TestLogger()
         {
             // Verify that we can configure and use the [TestLogger].
@@ -104,7 +104,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Project, TestProject.NeonCommon)]
         public void Verify_TestLogger_Levels()
         {
             // Verify that log level filtering works correctly.

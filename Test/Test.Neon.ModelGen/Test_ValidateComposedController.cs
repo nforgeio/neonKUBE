@@ -112,7 +112,7 @@ namespace TestModelGen.Validator
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonModelGen)]
+        [Trait(TestTrait.Project, TestProject.NeonModelGen)]
         public void ValidateController0()
         {
             using (var client = new ComposedClient())

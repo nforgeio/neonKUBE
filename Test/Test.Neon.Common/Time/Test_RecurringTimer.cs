@@ -36,7 +36,7 @@ namespace TestCommon
     public class Test_RecurringTimer
     {
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Project, TestProject.NeonCommon)]
         public void RecurringTimer_Disabled()
         {
             RecurringTimer timer;
@@ -52,7 +52,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Project, TestProject.NeonCommon)]
         public void RecurringTimer_Hourly()
         {
             RecurringTimer timer;
@@ -78,7 +78,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Project, TestProject.NeonCommon)]
         public void RecurringTimer_Daily()
         {
             RecurringTimer timer;
@@ -104,7 +104,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Project, TestProject.NeonCommon)]
         public void RecurringTimer_Interval()
         {
             RecurringTimer timer;
@@ -124,7 +124,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Project, TestProject.NeonCommon)]
         public async Task RecurringTimer_Async()
         {
             var timer  = new RecurringTimer(RecurringTimerType.Interval, TimeSpan.FromSeconds(1));
@@ -137,7 +137,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Project, TestProject.NeonCommon)]
         public async Task RecurringTimer_Set()
         {
             var timer = new RecurringTimer("Interval:00:00:05");
@@ -156,7 +156,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Project, TestProject.NeonCommon)]
         public void RecurringTimer_Parse()
         {
             RecurringTimer timer;

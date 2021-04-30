@@ -33,7 +33,7 @@ namespace TestCommon
     public class Test_TempFolder
     {
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Project, TestProject.NeonCommon)]
         public void DefaultRoot()
         {
             string testFolderPath;
@@ -56,7 +56,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Project, TestProject.NeonCommon)]
         public void CustomRoot()
         {
             string customRoot = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("d"));
@@ -90,7 +90,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Project, TestProject.NeonCommon)]
         public void CustomParent()
         {
             string customRoot = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("d"));

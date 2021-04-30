@@ -36,7 +36,7 @@ namespace TestDeployment
     public class Test_ProfileMessages
     {
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonDeployment)]
+        [Trait(TestTrait.Project, TestProject.NeonDeployment)]
         public void Request_Create()
         {
             //---------------------------------------------
@@ -82,7 +82,7 @@ namespace TestDeployment
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonDeployment)]
+        [Trait(TestTrait.Project, TestProject.NeonDeployment)]
         public void Request_Parse_NoArgs()
         {
             var request = ProfileRequest.Parse("TEST:");
@@ -93,7 +93,7 @@ namespace TestDeployment
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonDeployment)]
+        [Trait(TestTrait.Project, TestProject.NeonDeployment)]
         public void Request_Parse_WithArgs()
         {
             var request = ProfileRequest.Parse("TEST: arg1=1, arg2=2");
@@ -106,7 +106,7 @@ namespace TestDeployment
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonDeployment)]
+        [Trait(TestTrait.Project, TestProject.NeonDeployment)]
         public void Request_ParseFailure()
         {
             Assert.Throws<ArgumentNullException>(() => ProfileRequest.Parse(null));
@@ -116,7 +116,7 @@ namespace TestDeployment
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonDeployment)]
+        [Trait(TestTrait.Project, TestProject.NeonDeployment)]
         public void Response_Create()
         {
             var response = ProfileResponse.Create("HELLO WORLD!");
@@ -128,7 +128,7 @@ namespace TestDeployment
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonDeployment)]
+        [Trait(TestTrait.Project, TestProject.NeonDeployment)]
         public void Response_CreateJson()
         {
             //---------------------------------------------
@@ -163,7 +163,7 @@ namespace TestDeployment
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonDeployment)]
+        [Trait(TestTrait.Project, TestProject.NeonDeployment)]
         public void Response_CreateError()
         {
             //---------------------------------------------
@@ -188,7 +188,7 @@ namespace TestDeployment
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonDeployment)]
+        [Trait(TestTrait.Project, TestProject.NeonDeployment)]
         public void Response_Parse()
         {
             var response = ProfileResponse.Parse("OK: HELLO WORLD!");
@@ -200,7 +200,7 @@ namespace TestDeployment
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonDeployment)]
+        [Trait(TestTrait.Project, TestProject.NeonDeployment)]
         public void Response_ParseJson()
         {
             var response = ProfileResponse.Parse("OK-JSON: {\"hello\":\"world!\"}");
@@ -214,7 +214,7 @@ namespace TestDeployment
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonDeployment)]
+        [Trait(TestTrait.Project, TestProject.NeonDeployment)]
         public void Response_ParseError()
         {
             var response = ProfileResponse.Parse($"ERROR[{ProfileStatus.BadRequest}]: HELLO WORLD!");
@@ -227,7 +227,7 @@ namespace TestDeployment
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonDeployment)]
+        [Trait(TestTrait.Project, TestProject.NeonDeployment)]
         public void Response_ParseFailure()
         {
             Assert.Throws<ArgumentNullException>(() => ProfileResponse.Parse(null));

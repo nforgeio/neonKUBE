@@ -116,7 +116,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public async Task SyncSignal_StringResultError()
         {
             // Verify that async signals must return a Task.  [ISyncSignalNotTask]
@@ -155,7 +155,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public async Task SyncSignal_VoidResultError()
         {
             // Verify that async signals must return a Task.  [ISyncSignalNotTask]
@@ -195,7 +195,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public async Task AsyncSignal_StringResultError()
         {
             // Verify that synchronous signals must return a Task.  [IAsyncSignalNotTask]
@@ -234,7 +234,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTraits.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Project, TestProject.NeonCadence)]
         public async Task AsyncSignal_VoidResultError()
         {
             // Verify that synchronous signals must return a Task.  [IAsyncSignalNotTask]

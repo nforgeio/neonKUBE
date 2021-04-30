@@ -34,7 +34,7 @@ namespace TestCommon
     public class Test_PolledTimer
     {
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Project, TestProject.NeonCommon)]
         public void Normal()
         {
             PolledTimer timer;
@@ -57,7 +57,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Project, TestProject.NeonCommon)]
         public async Task Async()
         {
             var timer  = new PolledTimer(TimeSpan.FromSeconds(1.0));
@@ -73,7 +73,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Project, TestProject.NeonCommon)]
         public void ResetImmediate()
         {
             PolledTimer timer;
@@ -94,7 +94,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Project, TestProject.NeonCommon)]
         public void AutoReset()
         {
             PolledTimer timer;
@@ -115,7 +115,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Project, TestProject.NeonCommon)]
         public void FireNow()
         {
             PolledTimer timer;
@@ -127,7 +127,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Project, TestProject.NeonCommon)]
         public void Disable()
         {
             PolledTimer timer;

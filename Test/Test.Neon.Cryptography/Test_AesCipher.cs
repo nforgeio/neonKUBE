@@ -37,7 +37,7 @@ namespace TestCryptography
         private int[] sizes = new int[] { 128, 192, 256 };
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCryptography)]
+        [Trait(TestTrait.Project, TestProject.NeonCryptography)]
         public void LowLevel()
         {
             // Encrypt/decrypt using low-level methods to understand how this works.
@@ -90,7 +90,7 @@ namespace TestCryptography
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCryptography)]
+        [Trait(TestTrait.Project, TestProject.NeonCryptography)]
         public void ActuallyEncrypted()
         {
             // Attempt to verify that the encrypted output doesn't actually
@@ -133,7 +133,7 @@ namespace TestCryptography
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCryptography)]
+        [Trait(TestTrait.Project, TestProject.NeonCryptography)]
         public void UniqueKeys()
         {
             const int iterations = 1000;
@@ -161,7 +161,7 @@ namespace TestCryptography
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCryptography)]
+        [Trait(TestTrait.Project, TestProject.NeonCryptography)]
         public void UniqueInstanceKeyIVs()
         {
             const int iterations = 1000;
@@ -186,7 +186,7 @@ namespace TestCryptography
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCryptography)]
+        [Trait(TestTrait.Project, TestProject.NeonCryptography)]
         public void DefaultKeySize()
         {
             // Verify that the default key size is 256 bits.
@@ -198,7 +198,7 @@ namespace TestCryptography
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCryptography)]
+        [Trait(TestTrait.Project, TestProject.NeonCryptography)]
         public void Encrypt_ToBytes()
         {
             // Encrypt a byte array:
@@ -223,7 +223,7 @@ namespace TestCryptography
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCryptography)]
+        [Trait(TestTrait.Project, TestProject.NeonCryptography)]
         public void Encrypt_ToBase64()
         {
             // Encrypt a byte array:
@@ -248,7 +248,7 @@ namespace TestCryptography
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCryptography)]
+        [Trait(TestTrait.Project, TestProject.NeonCryptography)]
         public void Streams()
         {
             // Verify that we can encrypt and decrypt streams.
@@ -304,7 +304,7 @@ namespace TestCryptography
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCryptography)]
+        [Trait(TestTrait.Project, TestProject.NeonCryptography)]
         public void UniqueOutput()
         {
             // Verify that we generate and use a unique IV for
@@ -332,7 +332,7 @@ namespace TestCryptography
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCryptography)]
+        [Trait(TestTrait.Project, TestProject.NeonCryptography)]
         public void BadKeySize()
         {
             // Verify that we throw for an invalid key size.
@@ -358,7 +358,7 @@ namespace TestCryptography
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCryptography)]
+        [Trait(TestTrait.Project, TestProject.NeonCryptography)]
         public void TamperDetection()
         {
             // Tamper with an encrypted payload and verify that this
@@ -393,7 +393,7 @@ namespace TestCryptography
         }
 
         [Fact]
-        [Trait(TestTraits.Project, TestProject.NeonCryptography)]
+        [Trait(TestTrait.Project, TestProject.NeonCryptography)]
         public void Padding()
         {
             // Ensure that [AesCypher] adding the requested random padding.
