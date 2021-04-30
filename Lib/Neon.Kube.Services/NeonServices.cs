@@ -49,12 +49,6 @@ namespace Neon.Kube
         public const string SetupHarbor = "neon-setup-harbor";
 
         /// <summary>
-        /// Operator that manages the <see cref="IdentityService"/> instances as well as
-        /// the related database.
-        /// </summary>
-        public const string IdentityOperator = "neon-identity-operator";
-
-        /// <summary>
         /// Non-production service used to test Cadence running in a Linux container.
         /// </summary>
         public const string TestCadence = "test-cadence";
