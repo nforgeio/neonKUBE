@@ -262,7 +262,7 @@ namespace TestCadence
         {
             await SyncContext.ClearAsync;
 
-            // Verify that an exception thrown by an normal activity can be caught
+            // Verify that an exception thrown by a normal activity can be caught
             // and verified by the parent workflow.
 
             var stub = client.NewWorkflowStub<IActivityWorkflowWithError>();
@@ -276,7 +276,7 @@ namespace TestCadence
         {
             await SyncContext.ClearAsync;
 
-            // Verify that an exception thrown by an normal activity can be caught
+            // Verify that an exception thrown by a normal activity can be caught
             // and verified by the parent workflow.
 
             var stub = client.NewWorkflowStub<IActivityWorkflowWithError>();
