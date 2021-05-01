@@ -25,7 +25,7 @@
 
 # This needs to run with elevated privileges.
 
-RequestAdminPermissions
+Request-AdminPermissions
 
 # Retrieve any necessary credentials.
 

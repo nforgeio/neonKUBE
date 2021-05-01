@@ -1,6 +1,6 @@
 #Requires -Version 7.0
 #------------------------------------------------------------------------------
-# FILE:         files.ps1
+# FILE:         error-handling.ps1
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 #
@@ -27,29 +27,7 @@
 # After modifying this file, you should take care to push any changes to the
 # other repos where this file is present.
 
-#------------------------------------------------------------------------------
-# Recuresively removes the contents of a filesystem directory if it exists.
+# Common error handling settings.
 
-function Clear-Directory
-{
-    [CmdletBinding()]
-    param (
-        [Parameter(Position=0, Mandatory=$true)]
-        [string]$path
-    )
-
-    if ([System.String]::IsNullOrEmpty($path) -or ![System.IO.Directory]::Exists($path))
-    {
-        return
-    }
-
-    ForEach ($filePath in [System.IO.Directory]::GetFiles($path))
-    {
-        [System.IO.File]::Delete($filePath)
-    }
-
-    ForEach ($folderPath in [System.IO.Directory]::GetDirectories($path))
-    {
-        [System.IO.Directory]::Delete($folderPath, $true)
-    }
-}
+$ErrorActionPreference = "Stop"
+$PSDefaultParameterValues['*:ErrorAction'] = 'Stop'

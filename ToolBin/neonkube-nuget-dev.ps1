@@ -42,7 +42,7 @@ if (!(Test-Path env:NC_USER))
 
 # This needs to run with elevated privileges.
 
-RequestAdminPermissions
+Request-AdminPermissions
 
 # Retrieve any necessary credentials.
 

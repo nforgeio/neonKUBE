@@ -27,11 +27,14 @@
 # After modifying this file, you should take care to push any changes to the
 # other repos where this file is present.
 
+Import-Module Microsoft.PowerShell.Utility
+
 $scriptPath   = $MyInvocation.MyCommand.Path
 $scriptFolder = [System.IO.Path]::GetDirectoryName($scriptPath)
 
 Push-Location $scriptFolder
 
+. ./error-handling.ps1
 . ./utility.ps1
 . ./deployment.ps1
 . ./github.actions.ps1
@@ -47,37 +50,6 @@ function ThrowOnExitCode
     {
         throw "ERROR: exitcode=$LastExitCode"
     }
-}
-
-#------------------------------------------------------------------------------
-# Returns the name of the authenticated GitHub user an throws an exception 
-# when there isn't an active login.
-
-function Get-GitHubUser
-{
-    # We're going to query for authentication status and extract
-    # the current user name.  We're expecting that stderr output 
-    # to look  like this:
-    #
-    #   github.com
-    #     x Logged in to github.com as jefflill (C:\Users\devbot.JOBRUNNER\.config\gh/hosts.yml)
-    #     x Git operations for github.com configured to use https protocol.
-    #     x Token: *******************
-
-    ExecuteCapture "gh auth status" -StderrVariable stderr -CheckExitCode
-
-    $posStart  = $stderr.IndexOf("github.com as")
-    $posStart += "github.com as".Length
-    $posEnd    = $stderr.IndexOf("(", $posStart)
-
-    $user = $stderr.Substring($posStart, $posEnd - $posStart).Trim()
-
-    if ([System.String]::IsNullOrEmpty($user))
-    {
-        throw "Unable to parse GitHub user name."
-    }
-
-    return $user
 }
 
 #------------------------------------------------------------------------------
@@ -108,24 +80,65 @@ function Logout-GitHubUser
 }
 
 #------------------------------------------------------------------------------
+# Returns the name of the authenticated GitHub user an throws an exception 
+# when there isn't an active login.
+
+function Get-GitHubUser
+{
+    # We're going to query for authentication status and extract
+    # the current user name.  We're expecting that stderr output 
+    # to look  like this:
+    #
+    #   github.com
+    #     x Logged in to github.com as jefflill (C:\Users\devbot.JOBRUNNER\.config\gh/hosts.yml)
+    #     x Git operations for github.com configured to use https protocol.
+    #     x Token: *******************
+
+    $results   = Invoke-CaptureStreams "gh auth status"
+    $stderr    = $results.stderr
+    $posStart  = $stderr.IndexOf("github.com as")
+    $posStart += "github.com as".Length
+    $posEnd    = $stderr.IndexOf("(", $posStart)
+
+    $user = $stderr.Substring($posStart, $posEnd - $posStart).Trim()
+
+    if ([System.String]::IsNullOrEmpty($user))
+    {
+        throw "Unable to parse GitHub user name."
+    }
+
+    return $user
+}
+
+#------------------------------------------------------------------------------
 # Creates a GitHub issue with the specified title, labels, and body and optionally
-# appends the body to an existing open issue with the same title.
+# appends the body to an existing open issue with the same author, title and 
+# specified label.
 #
 # ARGUMENTS:
 #
 #   repo            - specifies the target GitHub repo like: github.com/nforgeio/neonCLOUD
 #   title           - specifies the issue title
 #   body            - specifies the first issue comment
-#   append          - optionally appends the body to an existing open
-#                     issue with the same title
+#   appendLabel     - optionally enables appending to an existing issue
+#                     (see the remarks for mor details)
 #   assignees       - optionally specifies a list of assignees
 #   labels          - optionally specifies a map of label name/values
 #   masterPassword  - optionally specifies the user's master 1Password
 #
 # REMARKS:
 #
-# This requires that the current user have a GITHUB_PAT available in their
-# 1Password user folder.
+# NOTE: The title and body MAY NOT include DOUBLE QUOTES.
+#
+# NOTE: This requires that the current user have a GITHUB_PAT available in their
+#       1Password user folder.
+#
+# You can use the [appendLabel] parameter to append the body to an existing
+# issue as a new comment.  Pass [appendLabel] as the issue label that will
+# be combined with the current GitHub user and title to look for matching
+# open issues.
+#
+# RETURNS:
 #
 # This function returns the URI to new issues and the URI to the new comment
 # appended to an existing issue.
@@ -141,7 +154,7 @@ function New-GitHubIssue
         [Parameter(Position=2, Mandatory=$true)]
         [string]$body,
         [Parameter(Mandatory=$false)]
-        [bool]$append = $false,
+        [string]$appendLabel = $null,
         [Parameter(Mandatory=$false)]
         $assignees = $null,
         [Parameter(Mandatory=$false)]
@@ -150,82 +163,106 @@ function New-GitHubIssue
         $masterPassword = $null
     )
 
+    if ($title.Contains("`""))
+    {
+        throw "GitHub issue [title] may not include double quotes."
+    }
+
+    if ($body.Contains("`""))
+    {
+        throw "GitHub issue [body] may not include double quotes."
+    }
+
+    $append = ![System.String]::IsNullOrEmpty($appendLabel)
+
     # Log into GitHub and obtain the GitHub user name.
 
-    Login-GitHubUser $GITHUB_PAT
+    Import-GitHubCredentials
+    Login-GitHubUser $env:GITHUB_PAT
     $user = Get-GitHubUser
 
     try
     {
-        # Query for any open issues authored by the authenticated user and
-        # look for the first one that has the same title (if one exists).
-
-        $json = $(& gh --repo $repo issue list --author $user --state open --json title,number --limit 1000)
-        ThrowOnExitCode
-
-        $json = $(& gh --repo $repo issue list --author $user --state open --json title,number --label --limit 1000)
-        ThrowOnExitCode
-
-        $list   = Convert-FromJson $json
-        $number = -1
-
-        ForEach ($issue in $list)
+        if ($append)
         {
-            if ($issue.title -eq $title)
+            # Query for any open issues authored by the authenticated user and
+            # look for the first one that has the same title (if one exists).
+
+            $results = Invoke-CaptureStreams "gh --repo $repo issue list --author $user --state open --label $appendLabel --json title,number --limit 1000"
+            $json    = $results.stdout
+            $list    = ConvertFrom-Json $json
+            $number  = -1
+
+            ForEach ($issue in $list)
             {
-                $number = $issue.number
-                Break
+                if ($issue.title -eq $title)
+                {
+                    $number = $issue.number
+                    Break
+                }
             }
+
+            $append = $number -ne -1
         }
 
-        if ($number -eq -1)
+        if (!$append)
         {
             # Create a new issue.
 
-            $assigneeOption = ""
+            $assigneeValues = ""
 
             ForEach ($assignee in $assignees)
             {
-                if ($assigneeOption.Length -gt 0)
+                if ($assigneeValues.Length -gt 0)
                 {
-                    $assigneeOption += ","
+                    $assigneeValues += ","
                 }
 
-                $assigneeOption += "$assignee"
+                $assigneeValues += "$assignee"
             }
 
-            $labelOption = ""
+            $labelValues = ""
 
             ForEach ($label in $labels)
             {
-                if ($labelOption.Length -gt 0)
+                if ($labelValues.Length -gt 0)
                 {
-                    $labelOption += ","
+                    $labelValues += ","
                 }
 
-                $labelOption += $label
+                $labelValues += $label
             }
 
-            # The last line of the output is the issue link.
+            # The first line of the output is the issue link.
 
-            $output = $(gh --repo $repo issue create --title $title --body $body)
-            ThrowOnExitCode
+            $command = "gh --repo $repo issue create --title `"$title`" --body `"$body`""
 
-            $outputLines = $output.Split([System.Environment]::NewLine)
-            $issueUri    = $outputLines | Select-Object -Last 1
+            if ($assigneeValues.Length -gt 0)
+            {
+                $command += " --assignee $assigneeValues"
+            }
+
+            if ($labelValues.Length -gt 0)
+            {
+                $command += " --label $labelValues"
+            }
+
+            $results     = Invoke-CaptureStreams $command
+            $output      = $results.stdout
+            $outputLines = ToLineArray($output)
+            $issueUri    = $outputLines[0]
 
             return $issueUri
         }
         else
         {
-            # Append to an existing issue.  The last line of the output will be The
+            # Append to an existing issue.  The first line of the output will be The
             # URI to the new comment in the existing issue.
 
-            $output = $(gh --repo $repo issue comment $number --body $body)
-            ThrowOnExitCode
-
-            $outputLines = $output.Split([System.Environment]::NewLine)
-            $commentUri  = $outputLines | Select-Object -Last 1
+            $results     = Invoke-CaptureStreams "gh --repo $repo issue comment $number --body `"$body`""
+            $output      = $results.stdout
+            $outputLines = ToLineArray($output)
+            $commentUri  = $outputLines[0]
 
             return $commentUri
         }
@@ -235,5 +272,3 @@ function New-GitHubIssue
         Logout-GitHubUser
     }
 }
-
-New-GitHubIssue "github.com/nforgeio/neonCLOUD" "Test Issue" "This is a test!"

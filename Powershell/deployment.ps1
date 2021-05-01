@@ -75,7 +75,7 @@ function Get-ProfileValue
 
     $client = Get-ProfileClient
 
-    return $client.Get-ProfileValue($name, $nullOnNotFound)
+    return $client.GetProfileValue($name, $nullOnNotFound)
 }
 
 #------------------------------------------------------------------------------
@@ -105,7 +105,7 @@ function Get-SecretPassword
 
     $client = Get-ProfileClient
 
-    return $client.Get-SecretPassword($name, $vault, $masterPassword, $nullOnNotFound)
+    return $client.GetSecretPassword($name, $vault, $masterPassword, $nullOnNotFound)
 }
 
 #------------------------------------------------------------------------------
@@ -135,7 +135,7 @@ function Get-SecretValue
 
     $client = Get-ProfileClient
 
-    return $client.Get-SecretValue($name, $vault, $masterPassword, $nullOnNotFound)
+    return $client.GetSecretValue($name, $vault, $masterPassword, $nullOnNotFound)
 }
 
 #------------------------------------------------------------------------------
@@ -152,7 +152,7 @@ function Get-SecretValue
 #   vault               - Optionally overrides the default vault
 #   masterPassword      - Optionally specifies the master 1Password (for automation)
 
-function Set-AwsCliCredentials
+function Import-AwsCliCredentials
 {
     [CmdletBinding()]
     param (
@@ -166,10 +166,15 @@ function Set-AwsCliCredentials
         [string]$masterPassword = $null
     )
 
+    if (![System.String]::IsNullOrEmpty($env:AWS_ACCESS_KEY_ID) -and ![System.String]::IsNullOrEmpty($env:AWS_SECRET_ACCESS_KEY))
+    {
+        return  # Already set
+    }
+
     $client = Get-ProfileClient
 
-    $env:AWS_ACCESS_KEY_ID     = $client.Get-SecretPassword($awsAccessKeyId, $vault, $masterPassword)
-    $env:AWS_SECRET_ACCESS_KEY = $client.Get-SecretPassword($awsSecretAccessKey, $vault, $masterPassword)
+    $env:AWS_ACCESS_KEY_ID     = $client.GetSecretPassword($awsAccessKeyId, $vault, $masterPassword)
+    $env:AWS_SECRET_ACCESS_KEY = $client.GetSecretPassword($awsSecretAccessKey, $vault, $masterPassword)
 }
 
 #------------------------------------------------------------------------------
@@ -195,7 +200,7 @@ function Remove-AwsCliCredentials
 #   vault           - Optionally overrides the default vault
 #   masterPassword  - Optionally specifies the master 1Password (for automation)
 
-function Set-GitHubCredentials
+function Import-GitHubCredentials
 {
     [CmdletBinding()]
     param (
@@ -207,9 +212,14 @@ function Set-GitHubCredentials
         [string]$masterPassword = $null
     )
 
+    if (![System.String]::IsNullOrEmpty($env:GITHUB_PAT))
+    {
+        return  # Already set
+    }
+
     $client = Get-ProfileClient
 
-    $env:GITHUB_PAT = $client.Get-SecretPassword($name, $vault, $masterPassword)
+    $env:GITHUB_PAT = $client.GetSecretPassword($name, $vault, $masterPassword)
 }
 
 #------------------------------------------------------------------------------

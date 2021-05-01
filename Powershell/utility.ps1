@@ -17,19 +17,66 @@
 # limitations under the License.
 
 #------------------------------------------------------------------------------
-# Executes a command and optionally captures the stdout and/or stderr outputs
-# as variables as well as returning the exit code as the function result.
+# Requests that the user elevate the script permission if the current process
+# isn't already running with elevated permissions.
+
+function Request-AdminPermissions
+{
+    if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))
+    {
+        # Relaunch as an elevated process:
+        Start-Process powershell.exe "-file",('"{0}"' -f $MyInvocation.MyCommand.Path) -Verb RunAs
+        exit
+    }
+}
+
+#------------------------------------------------------------------------------
+# Escapes any double quote characters in a string by replacing quotes with two
+# double quotes.
+#
+# ARGUMENTS:
+#
+#   text        - the input string
+
+function EscapeDoubleQuotes
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [AllowNull()]
+        [AllowEmptyString()]
+        [string]$text
+    )
+
+    if ([System.String]::IsNullOrEmpty($text))
+    {
+        return $text
+    }
+
+    return $text.Replace("`"", "`"`"")
+}
+
+#------------------------------------------------------------------------------
+# Executes a command and captures the stdout and/or stderr outputs.
 #
 # IMPORTANT: REDIRECTION IN COMMANDS IS NOT SUPPORTED
 #
 # ARGUMENTS:
 #
 #   command         - program to run with any arguments
-#   stdoutVariable  - optional name of the variable to return the stdout
-#   stderrVariable  - optional name of the variable to return the stderr
-#   checkExitCode   - optionally throw and error for non-zero exit codes
+#   noCheckExitCode - optionally disable non-zero exit code checks
+#
+# RETURNS:
+#
+#   A three element hash table with these properties:
+#
+#       exitcode    - the command's integer exit code
+#       stdout      - the captured standard output
+#       stderr      - the captured standard error
 #
 # REMARKS:
+#
+# NOTE: This function checks for non-zero exit codes by default.
 #
 # It's insane that Powershell doesn't have this capability built-in.  
 # It looks likes Invoke-Expression may have implemented this in the past,
@@ -48,18 +95,14 @@
 # and then read and delete those files so the streams can be returned as
 # variables.
 
-function ExecuteCapture
+function Invoke-CaptureStreams
 {
     [CmdletBinding()]
     param (
         [Parameter(Position=0, Mandatory=$true)]
         [string]$command,
         [Parameter(Mandatory=$false)]
-        [string]$stdoutVariable = $null,
-        [Parameter(Mandatory=$false)]
-        [string]$stderrVariable = $null,
-        [Parameter(Mandatory=$false)]
-        [switch]$checkExitCode = $false
+        [switch]$noCheckExitCode = $false
     )
 
     if ([System.String]::IsNullOrEmpty($command))
@@ -73,10 +116,10 @@ function ExecuteCapture
 
     try
     {
-        & cmd /c $command > $stdoutPath 2> $stderrPath
+        & cmd /c "$command > $stdoutPath 2> $stderrPath"
         $exitCode = $LastExitCode
 
-        if ($checkExitCode -and $exitCode -ne 0)
+        if (!$noCheckExitCode -and $exitCode -ne 0)
         {
             throw "ERROR: exitcode=$exitCode"
         }
@@ -96,18 +139,6 @@ function ExecuteCapture
         {
             $stderr = [System.IO.File]::ReadAllText($stderrPath)
         }
-
-        # Set the variables as requested.
-
-        if (![System.String]::IsNullOrEmpty($stdoutVariable))
-        {
-            Set-Variable -Name $stdoutVariable -Value $stdout -Scope global
-        }
-
-        if (![System.String]::IsNullOrEmpty($stderrVariable))
-        {
-            Set-Variable -Name $stderrVariable -Value $stderr -Scope global
-        }
     }
     finally
     {
@@ -122,6 +153,48 @@ function ExecuteCapture
         }
     }
 
-    return $exitCode
+    $results          = @{}
+    $results.exitcode = $exitCode
+    $results.stdout   = $stdout
+    $results.stderr   = $stderr
+
+    return $results
 }
 
+#------------------------------------------------------------------------------
+# Splits a multi-line string into an array of strings, one for each line.
+#
+# ARGUMENTS:
+#
+#   text    - the string to be split
+#
+# RETURNS
+#
+# The line array.
+#
+# REMARKS:
+#
+# NOTE: A one element array with an empty string will be returned for 
+#       $null or empty inputs.
+
+function ToLineArray
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [AllowNull()]
+        [AllowEmptyString()]
+        [string]$text
+    )
+
+    if ([System.String]::IsNullOrEmpty($text))
+    {
+        return @( "" )
+    }
+
+    # Remove any carriage returns and then split on new lines.
+
+    $text = $text.Replace("`r", "")
+
+    return $text.Split("`n")
+}

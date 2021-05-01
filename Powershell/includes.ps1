@@ -27,7 +27,7 @@
 # After modifying this file, you should take care to push any changes to the
 # other repos where this file is present.
 
-# Common error handling settinga
+# Common error handling settings.
 
 $ErrorActionPreference = "Stop"
 $PSDefaultParameterValues['*:ErrorAction'] = 'Stop'
@@ -39,6 +39,7 @@ $scriptFolder = [System.IO.Path]::GetDirectoryName($scriptPath)
 
 Push-Location $scriptFolder
 
+. ./error-handling
 . ./utility.ps1
 . ./files.ps1
 . ./git.ps1
@@ -46,17 +47,3 @@ Push-Location $scriptFolder
 . ./github.ps1
 
 Pop-Location
-
-#------------------------------------------------------------------------------
-# Requests that the user elevate the script permission if the current process
-# isn't already running with elevated permissions.
-
-function RequestAdminPermissions
-{
-    if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))
-    {
-        # Relaunch as an elevated process:
-        Start-Process powershell.exe "-file",('"{0}"' -f $MyInvocation.MyCommand.Path) -Verb RunAs
-        exit
-    }
-}
