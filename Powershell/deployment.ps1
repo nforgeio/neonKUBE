@@ -41,7 +41,7 @@ Add-Type -Path "$env:NEON_ASSISTANT_HOME\Neon.Deployment.dll"
 
 $global:neonProfileClient = $null
 
-function GetProfileClient
+function Get-ProfileClient
 {
     if ($global:neonProfileClient -ne $null)
     {
@@ -63,7 +63,7 @@ function GetProfileClient
 #                     than throwing an exception when the profile value does 
 #                     not exist.
 
-function GetProfileValue
+function Get-ProfileValue
 {
     [CmdletBinding()]
     param (
@@ -73,9 +73,9 @@ function GetProfileValue
         [bool]$nullOnNotFound = $false
     )
 
-    $client = GetProfileClient
+    $client = Get-ProfileClient
 
-    return $client.GetProfileValue($name, $nullOnNotFound)
+    return $client.Get-ProfileValue($name, $nullOnNotFound)
 }
 
 #------------------------------------------------------------------------------
@@ -89,7 +89,7 @@ function GetProfileValue
 #   $nullOnNotFound - Optionally specifies that $null should be returned rather 
 #                     than throwing an exception when the secret does not exist.
 
-function GetSecretPassword
+function Get-SecretPassword
 {
     [CmdletBinding()]
     param (
@@ -103,9 +103,9 @@ function GetSecretPassword
         [bool]$nullOnNotFound = $false
     )
 
-    $client = GetProfileClient
+    $client = Get-ProfileClient
 
-    return $client.GetSecretPassword($name, $vault, $masterPassword, $nullOnNotFound)
+    return $client.Get-SecretPassword($name, $vault, $masterPassword, $nullOnNotFound)
 }
 
 #------------------------------------------------------------------------------
@@ -119,7 +119,7 @@ function GetSecretPassword
 #   $nullOnNotFound - Optionally specifies that $null should be returned rather 
 #                     than throwing an exception when the secret does not exist.
 
-function GetSecretValue
+function Get-SecretValue
 {
     [CmdletBinding()]
     param (
@@ -133,9 +133,9 @@ function GetSecretValue
         [bool]$nullOnNotFound = $false
     )
 
-    $client = GetProfileClient
+    $client = Get-ProfileClient
 
-    return $client.GetSecretValue($name, $vault, $masterPassword, $nullOnNotFound)
+    return $client.Get-SecretValue($name, $vault, $masterPassword, $nullOnNotFound)
 }
 
 #------------------------------------------------------------------------------
@@ -152,7 +152,7 @@ function GetSecretValue
 #   vault               - Optionally overrides the default vault
 #   masterPassword      - Optionally specifies the master 1Password (for automation)
 
-function GetAwsCliCredentials
+function Set-AwsCliCredentials
 {
     [CmdletBinding()]
     param (
@@ -166,10 +166,10 @@ function GetAwsCliCredentials
         [string]$masterPassword = $null
     )
 
-    $client = GetProfileClient
+    $client = Get-ProfileClient
 
-    $env:AWS_ACCESS_KEY_ID     = $client.GetSecretPassword($awsAccessKeyId, $vault, $masterPassword)
-    $env:AWS_SECRET_ACCESS_KEY = $client.GetSecretPassword($awsSecretAccessKey, $vault, $masterPassword)
+    $env:AWS_ACCESS_KEY_ID     = $client.Get-SecretPassword($awsAccessKeyId, $vault, $masterPassword)
+    $env:AWS_SECRET_ACCESS_KEY = $client.Get-SecretPassword($awsSecretAccessKey, $vault, $masterPassword)
 }
 
 #------------------------------------------------------------------------------
@@ -178,7 +178,7 @@ function GetAwsCliCredentials
 #   AWS_ACCESS_KEY_ID
 #   AWS_SECRET_ACCESS_KEY
 
-function ClearAwsCliCredentials
+function Remove-AwsCliCredentials
 {
     $env:AWS_ACCESS_KEY_ID     = $null
     $env:AWS_SECRET_ACCESS_KEY = $null
@@ -195,7 +195,7 @@ function ClearAwsCliCredentials
 #   vault           - Optionally overrides the default vault
 #   masterPassword  - Optionally specifies the master 1Password (for automation)
 
-function GetGitHubCredentials
+function Set-GitHubCredentials
 {
     [CmdletBinding()]
     param (
@@ -207,9 +207,9 @@ function GetGitHubCredentials
         [string]$masterPassword = $null
     )
 
-    $client = GetProfileClient
+    $client = Get-ProfileClient
 
-    $env:GITHUB_PAT = $client.GetSecretPassword($name, $vault, $masterPassword)
+    $env:GITHUB_PAT = $client.Get-SecretPassword($name, $vault, $masterPassword)
 }
 
 #------------------------------------------------------------------------------
@@ -217,7 +217,7 @@ function GetGitHubCredentials
 #
 #   GITHUB_PAT
 
-function ClearGitHubCredentials
+function Remove-GitHubCredentials
 {
     $env:GITHUB_PAT = $null
 }

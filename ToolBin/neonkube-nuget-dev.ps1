@@ -46,8 +46,8 @@ RequestAdminPermissions
 
 # Retrieve any necessary credentials.
 
-$versionerKey  = GetSecretValue "NUGET_VERSIONER_KEY"
-$devFeedApiKey = GetSecretValue "NUGET_DEVFEED_KEY"
+$versionerKey  = Get-SecretValue "NUGET_VERSIONER_KEY"
+$devFeedApiKey = Get-SecretValue "NUGET_DEVFEED_KEY"
 
 #------------------------------------------------------------------------------
 # Sets the package version in the specified project file and makes a backup

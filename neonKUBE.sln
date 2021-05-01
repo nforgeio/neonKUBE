@@ -375,13 +375,13 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Powershell", "Powershell", "{42FB3B73-87D8-41BD-9F4F-FB3A2DC921CF}"
 	ProjectSection(SolutionItems) = preProject
 		Powershell\deployment.ps1 = Powershell\deployment.ps1
-		Powershell\error-handling.ps1 = Powershell\error-handling.ps1
 		Powershell\files.ps1 = Powershell\files.ps1
 		Powershell\git.ps1 = Powershell\git.ps1
 		Powershell\github.actions.ps1 = Powershell\github.actions.ps1
 		Powershell\github.ps1 = Powershell\github.ps1
 		Powershell\includes.ps1 = Powershell\includes.ps1
 		Powershell\README.md = Powershell\README.md
+		Powershell\utility.ps1 = Powershell\utility.ps1
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.ModelGenerator", "Lib\Neon.ModelGenerator\Neon.ModelGenerator.csproj", "{70FC3F3B-A0EF-469C-BCA1-AE656FDC265B}"
@@ -409,7 +409,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-cluster-operator", "Se
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-setup-grafana", "Services\neon-setup-grafana\neon-setup-grafana.csproj", "{E800D359-1A1E-4F6C-A59B-9D3B0EF0AA8E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "neon-setup-harbor", "services\neon-setup-harbor\neon-setup-harbor.csproj", "{1B98E8C4-12B4-4C35-AAC1-31F5ECD73076}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-setup-harbor", "services\neon-setup-harbor\neon-setup-harbor.csproj", "{1B98E8C4-12B4-4C35-AAC1-31F5ECD73076}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

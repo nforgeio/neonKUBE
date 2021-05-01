@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+﻿#Requires -Version 7.0
 #------------------------------------------------------------------------------
 # FILE:         github.ps1
 # CONTRIBUTOR:  Jeff Lill
@@ -32,31 +32,20 @@ $scriptFolder = [System.IO.Path]::GetDirectoryName($scriptPath)
 
 Push-Location $scriptFolder
 
-. ./utility.ps1
-. ./deployment.ps1
 . ./github.actions.ps1
 
 Pop-Location
 
 #------------------------------------------------------------------------------
-# Call this after native commands to check for non-zero exit codes.
-
-function ThrowOnExitCode 
-{
-    if ($LastExitCode -ne 0)
-    {
-        throw "ERROR: exitcode=$LastExitCode"
-    }
-}
-
-#------------------------------------------------------------------------------
+# INTERNAL USE ONLY:
+#
 # Returns the name of the authenticated GitHub user an throws an exception 
 # when there isn't an active login.
 
 function Get-GitHubUser
 {
     # We're going to query for authentication status and extract
-    # the current user name.  We're expecting that stderr output 
+    # the current user name.  We're expecting that status output 
     # to look  like this:
     #
     #   github.com
@@ -64,13 +53,14 @@ function Get-GitHubUser
     #     x Git operations for github.com configured to use https protocol.
     #     x Token: *******************
 
-    ExecuteCapture "gh auth status" -StderrVariable stderr -CheckExitCode
+    $result = $(& gh auth status)
+    ThrowOnExitCode
 
-    $posStart  = $stderr.IndexOf("github.com as")
+    $posStart  = $result.IndexOf("github.com as")
     $posStart += "github.com as".Length
-    $posEnd    = $stderr.IndexOf("(", $posStart)
+    $posEnd    = $result.IndexOf("()", $posStart)
 
-    $user = $stderr.Substring($posStart, $posEnd - $posStart).Trim()
+    $user = $result.Substring($posStart, $posEnd - $posStart).Trim()
 
     if ([System.String]::IsNullOrEmpty($user))
     {
@@ -78,33 +68,6 @@ function Get-GitHubUser
     }
 
     return $user
-}
-
-#------------------------------------------------------------------------------
-# Logs into GitHub using a GITHUB_PAT.
-#
-# ARGUMENTS:
-#
-#   github_pat      - the GITHUB_PAT
-
-function Login-GitHubUser
-{
-    [CmdletBinding()]
-    param (
-        [Parameter(Position=0, Mandatory=$true)]
-        [string]$github_pat
-    )
-
-    $github_pat | gh auth login --with-token
-    ThrowOnExitCode
-}
-
-#------------------------------------------------------------------------------
-# Logs out of GitHub.
-
-function Logout-GitHubUser
-{
-    Write-Output "Y" | gh auth logout --hostname github.com
 }
 
 #------------------------------------------------------------------------------
@@ -147,34 +110,47 @@ function New-GitHubIssue
         [Parameter(Mandatory=$false)]
         $labels = $null,
         [Parameter(Mandatory=$false)]
-        $masterPassword = $null
+        [string]$masterPassword = $null
     )
 
-    # Log into GitHub and obtain the GitHub user name.
+    # Log into GitHub
 
-    Login-GitHubUser $GITHUB_PAT
+    if (![System.String]::IsNullOrEmpty($masterPassword))
+    {
+        $GITHUB_PAT = GetSecretPassword "GITHUB_PAT" -masterPassword $masterPassword
+    }
+    else
+    {
+        $GITHUB_PAT = GetSecretPassword "GITHUB_PAT"
+    }
+
+    $GITHUB_PAT | gh auth login --with-token
+    ThrowOnExitCode
+
     $user = Get-GitHubUser
 
     try
     {
-        # Query for any open issues authored by the authenticated user and
-        # look for the first one that has the same title (if one exists).
-
-        $json = $(& gh --repo $repo issue list --author $user --state open --json title,number --limit 1000)
-        ThrowOnExitCode
-
-        $json = $(& gh --repo $repo issue list --author $user --state open --json title,number --label --limit 1000)
-        ThrowOnExitCode
-
-        $list   = Convert-FromJson $json
         $number = -1
 
-        ForEach ($issue in $list)
+        if ($append)
         {
-            if ($issue.title -eq $title)
+            # Query for any open issues authored by the authenticated user and
+            # look for the first one that has the same title (if one exists).
+
+            $json = $(& gh --repo $repo issue list --author $user --state open --json title,number --label --limit 1000)
+            ThrowOnExitCode
+
+            $list   = Convert-FromJson $json
+            $number = -1
+
+            ForEach ($issue in $list)
             {
-                $number = $issue.number
-                Break
+                if ($issue.title -eq $title)
+                {
+                    $number = $issue.number
+                    Break
+                }
             }
         }
 
@@ -232,8 +208,9 @@ function New-GitHubIssue
     }
     finally
     {
-        Logout-GitHubUser
+        # Log out
+
+        gh auth logout
+        ThrowOnExitCode
     }
 }
-
-New-GitHubIssue "github.com/nforgeio/neonCLOUD" "Test Issue" "This is a test!"

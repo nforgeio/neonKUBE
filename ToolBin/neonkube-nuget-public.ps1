@@ -29,7 +29,7 @@ RequestAdminPermissions
 
 # Retrieve any necessary credentials.
 
-$nugetApiKey = GetSecretPassword "NUGET_PUBLIC_KEY"
+$nugetApiKey = Get-SecretPassword "NUGET_PUBLIC_KEY"
 
 #------------------------------------------------------------------------------
 # Sets the package version in the specified project file.

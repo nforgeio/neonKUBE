@@ -10,7 +10,7 @@ other repos where the file is also present.
 
 **includes.ps1:** This includes all of the other files
 
-**error-handling.ps1:** Common script error handling
+**utility.ps1:** Handy utilities
 
 **git.ps1:** Git related operations
 
@@ -24,9 +24,4 @@ Note that you can include **includes.ps1** to import all of these files to your 
 
 **WARNING:**
 
-You need to manually pull the neonCLOUD repo on any jobrunners after making changes to any of these files:
-```
-deployment.ps1
-github.ps1
-github.actions.ps1
-```
+You need to manually pull the neonCLOUD repo on any jobrunners after making changes to any of these files.
