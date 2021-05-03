@@ -17,6 +17,65 @@
 #       nforgeio/neonKUBE   $/Powershell/github.actions.ps1
 
 #------------------------------------------------------------------------------
+# Returns the URI for the executing workflow.
+#
+# ARGUMENTS:
+#
+#   workflowPath    - The repo relative path to the workflow file, like: 
+#
+#                           .github/workflows/my-workflow.yaml
+#
+#                     This is generally available via:
+#
+#                           ${{ env.workflow-path }}
+#
+# REMARKS:
+#
+# NOTE: This function currently assumes that all workflows are located in
+#       the [$/.github/workflows/] directory in the repo.
+
+function Get-ActionWorkflowUri
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$workflowPath = $null
+    )
+
+    # Convert any backslashes into forward slashes so we don't
+    # break the URI.
+
+    $workflowPath = $workflowPath.Replace("\", "/")
+
+    # Remove any leading forward slash.
+
+    if ($workflowPath[0] -eq "/")
+    {
+        $workflowPath = $workflowPath.Substring(1)
+    }
+
+    # Extract the repo branch from GITHUB_REF. This includes the branch like:
+    #
+    #       refs/heads/master
+    #
+    # We'll extract the branch part after the last "/".
+
+    $githubRef      = $env:GITHUB_REF
+    $lastSlashPos   = $githubRef.LastIndexOf("/")
+    $workflowBranch = $githubRef.Substring($lastSlashPos + 1)
+
+    return "$env:GITHUB_SERVER_URL/$env:GITHUB_REPOSITORY/blob/$workflowBranch/$workflowPath"
+}
+
+#------------------------------------------------------------------------------
+# Returns the URI for the executing workflow run.
+
+function Get-ActionWorkflowRunUri
+{
+    return "$env:GITHUB_SERVER_URL/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID"
+}
+
+#------------------------------------------------------------------------------
 # Escapes a potentially multi-line string such that it can be written to STDOUT
 # and be processed correctly by the jobrunner.
 #

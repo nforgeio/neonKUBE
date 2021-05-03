@@ -63,8 +63,8 @@ function EscapeDoubleQuotes
 #
 # ARGUMENTS:
 #
-#   command         - program to run with any arguments
-#   noCheckExitCode - optionally disable non-zero exit code checks
+#   command     - program to run with any arguments
+#   noCheck     - optionally disable non-zero exit code checks
 #
 # RETURNS:
 #
@@ -102,7 +102,7 @@ function Invoke-CaptureStreams
         [Parameter(Position=0, Mandatory=$true)]
         [string]$command,
         [Parameter(Mandatory=$false)]
-        [switch]$noCheckExitCode = $false
+        [switch]$noCheck = $false
     )
 
     if ([System.String]::IsNullOrEmpty($command))
@@ -116,13 +116,8 @@ function Invoke-CaptureStreams
 
     try
     {
-        & cmd /c "$command > $stdoutPath 2> $stderrPath"
+        & cmd /c "$command > `"$stdoutPath`" 2> `"$stderrPath`""
         $exitCode = $LastExitCode
-
-        if (!$noCheckExitCode -and $exitCode -ne 0)
-        {
-            throw "ERROR: exitcode=$exitCode"
-        }
 
         # Read the output files.
 
@@ -139,6 +134,20 @@ function Invoke-CaptureStreams
         {
             $stderr = [System.IO.File]::ReadAllText($stderrPath)
         }
+
+        $result          = @{}
+        $result.exitcode = $exitCode
+        $result.stdout   = $stdout
+        $result.stderr   = $stderr
+
+        if (!$noCheck -and $exitCode -ne 0)
+        {
+            $exitcode = $result.exitcode
+            $stdout   = $result.stdout
+            $stderr   = $result.stderr
+
+            throw "Invoke-CaptureStreams Failed: [exitcode=$exitCode]`nSTDERR:`n$stderr`nSTDOUT:`n$stdout"
+        }
     }
     finally
     {
@@ -153,12 +162,7 @@ function Invoke-CaptureStreams
         }
     }
 
-    $results          = @{}
-    $results.exitcode = $exitCode
-    $results.stdout   = $stdout
-    $results.stderr   = $stderr
-
-    return $results
+    return $result
 }
 
 #------------------------------------------------------------------------------

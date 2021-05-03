@@ -94,8 +94,8 @@ function Get-GitHubUser
     #     x Git operations for github.com configured to use https protocol.
     #     x Token: *******************
 
-    $results   = Invoke-CaptureStreams "gh auth status"
-    $stderr    = $results.stderr
+    $result    = Invoke-CaptureStreams "gh auth status"
+    $stderr    = $result.stderr
     $posStart  = $stderr.IndexOf("github.com as")
     $posStart += "github.com as".Length
     $posEnd    = $stderr.IndexOf("(", $posStart)
@@ -117,7 +117,7 @@ function Get-GitHubUser
 #
 # ARGUMENTS:
 #
-#   repo            - specifies the target GitHub repo like: github.com/nforgeio/neonCLOUD
+#   repoPath        - specifies the target GitHub repo like: github.com/nforgeio/neonCLOUD
 #   title           - specifies the issue title
 #   body            - specifies the first issue comment
 #   appendLabel     - optionally enables appending to an existing issue
@@ -127,8 +127,6 @@ function Get-GitHubUser
 #   masterPassword  - optionally specifies the user's master 1Password
 #
 # REMARKS:
-#
-# NOTE: The title and body MAY NOT include DOUBLE QUOTES.
 #
 # NOTE: This requires that the current user have a GITHUB_PAT available in their
 #       1Password user folder.
@@ -148,7 +146,7 @@ function New-GitHubIssue
     [CmdletBinding()]
     param (
         [Parameter(Position=0, Mandatory=$true)]
-        [string]$repo,
+        [string]$repoPath,
         [Parameter(Position=1, Mandatory=$true)]
         [string]$title,
         [Parameter(Position=2, Mandatory=$true)]
@@ -163,23 +161,20 @@ function New-GitHubIssue
         $masterPassword = $null
     )
 
-    if ($title.Contains("`""))
-    {
-        throw "GitHub issue [title] may not include double quotes."
-    }
-
-    if ($body.Contains("`""))
-    {
-        throw "GitHub issue [body] may not include double quotes."
-    }
-
-    $append = ![System.String]::IsNullOrEmpty($appendLabel)
+    $repoDetails = Parse-GitHubRepoPath $repoPath
+    $owner       = $repoDetails.owner
+    $repo        = $repoDetails.repo
 
     # Log into GitHub and obtain the GitHub user name.
 
     Import-GitHubCredentials
     Login-GitHubUser $env:GITHUB_PAT
+
     $user = Get-GitHubUser
+
+    # Detect when appending is enabled.
+
+    $append = ![System.String]::IsNullOrEmpty($appendLabel)
 
     try
     {
@@ -188,81 +183,73 @@ function New-GitHubIssue
             # Query for any open issues authored by the authenticated user and
             # look for the first one that has the same title (if one exists).
 
-            $results = Invoke-CaptureStreams "gh --repo $repo issue list --author $user --state open --label $appendLabel --json title,number --limit 1000"
-            $json    = $results.stdout
-            $list    = ConvertFrom-Json $json
-            $number  = -1
+            $result      = Invoke-CaptureStreams "gh --repo $repoPath issue list --author $user --state open --label $appendLabel --json title,number --limit 1000"
+            $json        = $result.stdout
+            $list        = ConvertFrom-Json $json
+            $issueNumber = -1
 
             ForEach ($issue in $list)
             {
                 if ($issue.title -eq $title)
                 {
-                    $number = $issue.number
+                    $issueNumber = $issue.number
                     Break
                 }
             }
 
-            $append = $number -ne -1
+            $append = $issueNumber -ne -1
         }
 
         if (!$append)
         {
+            #------------------------------------------------------------------
             # Create a new issue.
 
-            $assigneeValues = ""
+            $request        = @{}
+            $request.accept = "application/vnd.github.v3+json"
+            $request.owner  = $owner
+            $request.repo   = $repo
+            $request.title  = $title
+            $request.body   = $body
+
+            # Initialize any assignees.
+
+            $request.assignees = @()
 
             ForEach ($assignee in $assignees)
             {
-                if ($assigneeValues.Length -gt 0)
-                {
-                    $assigneeValues += ","
-                }
-
-                $assigneeValues += "$assignee"
+                $request.assignees += $assignee
             }
 
-            $labelValues = ""
+            # Initialize any labels.
+
+            $request.labels = @()
 
             ForEach ($label in $labels)
             {
-                if ($labelValues.Length -gt 0)
-                {
-                    $labelValues += ","
-                }
-
-                $labelValues += $label
+                $request.labels += $label
             }
 
-            # The first line of the output is the issue link.
+            # Use the REST API to create the issue.
 
-            $command = "gh --repo $repo issue create --title `"$title`" --body `"$body`""
+            $result   = Invoke-GitHubApi "/repos/$owner/$repo/issues" "POST" -body $request
+            $issueUri = $result.html_url
 
-            if ($assigneeValues.Length -gt 0)
-            {
-                $command += " --assignee $assigneeValues"
-            }
-
-            if ($labelValues.Length -gt 0)
-            {
-                $command += " --label $labelValues"
-            }
-
-            $results     = Invoke-CaptureStreams $command
-            $output      = $results.stdout
-            $outputLines = ToLineArray($output)
-            $issueUri    = $outputLines[0]
-
-            return $issueUri
+            return "$issueUri"
         }
         else
         {
-            # Append to an existing issue.  The first line of the output will be The
-            # URI to the new comment in the existing issue.
+            # Append a comment to an existing issue.
 
-            $results     = Invoke-CaptureStreams "gh --repo $repo issue comment $number --body `"$body`""
-            $output      = $results.stdout
-            $outputLines = ToLineArray($output)
-            $commentUri  = $outputLines[0]
+            $request              = @{}
+            $request.accept       = "application/vnd.github.v3+json"
+            $request.owner        = $owner
+            $request.repo         = $repo
+            $request.issue_number = $issueNumber
+            $request.body         = $body
+
+            $result     = Invoke-GitHubApi "/repos/$owner/$repo/issues/$issueNumber/comments" "POST" -body $request
+            $commentUri = $result.html_url
 
             return $commentUri
         }
@@ -272,3 +259,110 @@ function New-GitHubIssue
         Logout-GitHubUser
     }
 }
+
+#------------------------------------------------------------------------------
+# Submits a REST API request to the GitHub via the CLI.
+#
+# ARGUMENTS:
+#   
+#   endpoint    - specifies the API endpoint
+#   method      - Specifies the HTTP method (GET, POST, PUT, DELETE,...)
+#   body        - optionally specifies the request body as a hasthtable
+#
+# RETURNS:
+#
+#   The API results as a hash table.
+#
+# REMARKS:
+#
+# NOTE: The GitHub client needs to already be authenticated.
+
+function Invoke-GitHubApi
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$endpoint,
+        [Parameter(Position=1, Mandatory=$true)]
+        [string]$method,
+        [Parameter(Mandatory=$false)]
+        [hashtable]$body = $null
+    )
+
+    # Generate a unique temporary file that will be used to hold the request body.
+
+    if ($null -ne $body)
+    {
+        $bodyGuid = [System.Guid]::NewGuid().ToString("d")
+        $bodyPath = [System.IO.Path]::Combine($env:TMP, "$bodyGuid.github.json")
+    }
+
+    try
+    {
+        # Submit the request.
+
+        $command = "gh api $endpoint --method $method"
+
+        if ($null -ne $body)
+        {
+            $json = $body | ConvertTo-Json
+            [System.IO.File]::WriteAllText($bodyPath, $json)
+
+            $command += " --input `"$bodyPath`""
+        }
+
+        $result = Invoke-CaptureStreams $command -NoCheck
+
+        if ($result.exitCode -ne 0)
+        {
+            $exitcode = $result.exitcode
+            $stdout   = $result.stdout
+            $stderr   = $result.stderr
+
+            throw "Invoke-GitHubApi Failed: [exitcode=$exitCode]`nSTDERR:`n$stderr`nSTDOUT:`n$stdout"
+        }
+
+        return ConvertFrom-Json $result.stdout
+    }
+    finally
+    {
+        if (($null -ne $body) -and [System.IO.File]::Exists($bodyPath))
+        {
+            [System.IO.File]::Delete($bodyPath)
+        }
+    }
+}
+
+#------------------------------------------------------------------------------
+# Parses a repo path into its parts.
+#
+# ARGUMENTS:
+#
+#   repo        - the repo path, like: github.com/nforgeio/neonCLOUD
+#
+# RETURNS:
+#
+#   A hash table with these properties:
+#
+#       server      - the server part (github.com)
+#       owner       - the organization part (nforgeio)
+#       repo        - the repository name (neonCLOUD)
+
+function Parse-GitHubRepoPath
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$repo
+    )
+
+    $parts = $repo.Split("/")
+    
+    $result        = @{}
+    $result.server = $parts[0]
+    $result.owner  = $parts[1]
+    $result.repo   = $parts[2]
+
+    return $result
+}
+
