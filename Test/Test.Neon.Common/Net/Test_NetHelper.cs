@@ -385,7 +385,7 @@ namespace TestCommon
 
         [Fact]
         [Trait(TestTrait.Area, TestArea.NeonCommon)]
-        [Trait(TestTrait.Unreliable, "true")]      // This has never been entirely reliable.
+        [Trait(TestTrait.Unreliable, "1")]      // This has never been entirely reliable.
         public void ModifyLocalHosts_Reliability()
         {
             try

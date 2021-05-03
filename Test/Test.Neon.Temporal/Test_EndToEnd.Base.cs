@@ -121,7 +121,7 @@ namespace TestTemporal
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTrait.Area, TestArea.NeonTemporal)]
-        [Trait(TestTrait.Slow, "true")]
+        [Trait(TestTrait.Slow, "1")]
         public async Task Base_Namespace()
         {
             await SyncContext.ClearAsync;

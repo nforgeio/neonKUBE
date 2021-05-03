@@ -35,14 +35,33 @@ namespace Neon.Xunit
         public const string Area = "area";
 
         /// <summary>
-        /// Identifies slow tests by setting this trait's value to <b>"true"</b>.
+        /// Identifies slow tests by setting this trait's value to <b>"1"</b>.
         /// </summary>
         public const string Slow = "slow";
 
         /// <summary>
-        /// Identifies unreliable tests that are buggy or experience transient problems
-        /// by setting this trait's value to <b>"true"</b>.
+        /// Identifies unreliable tests that fail due to transient environmental
+        /// issues generally out of control of the test case developer by setting
+        /// the value to <b>"1"</b>.
         /// </summary>
         public const string Unreliable = "unreliable";
+
+        /// <summary>
+        /// Identifies test cases that appear to have bugs as opposed to the thing
+        /// being tested having bugs.  Set the value to <b>"1"</b>.
+        /// </summary>
+        public const string Buggy = "buggy";
+
+        /// <summary>
+        /// Identifies test cases that are still under development by setting the\
+        /// value to <b>"1"</b>.
+        /// </summary>
+        public const string Incomplete = "incomplete";
+
+        /// <summary>
+        /// Identifies test cases that are failing and are actively under investigation
+        /// by setting the value to <b>"1"</b>.
+        /// </summary>
+        public const string Investigate = "investigate";
     }
 }

@@ -516,7 +516,7 @@ namespace TestTemporal
 
         [Fact(Timeout = 5 * 60000)]
         [Trait(TestTrait.Area, TestArea.NeonTemporal)]
-        [Trait(TestTrait.Slow, "true")]
+        [Trait(TestTrait.Slow, "1")]
         public async Task Workflow_Cron()
         {
             var assembly = Assembly.GetExecutingAssembly();
@@ -2975,7 +2975,7 @@ namespace TestTemporal
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTrait.Area, TestArea.NeonTemporal)]
-        [Trait(TestTrait.Slow, "true")]
+        [Trait(TestTrait.Slow, "1")]
         public async Task Workflow_ExternalWaitForLongTime()
         {
             await SyncContext.ClearAsync;
@@ -4507,7 +4507,7 @@ namespace TestTemporal
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         [Trait(TestTrait.Area, TestArea.NeonTemporal)]
-        [Trait(TestTrait.Slow, "true")]
+        [Trait(TestTrait.Slow, "1")]
         public async Task Workflow_Container()
         {
             const string taskQueue = "test-temporal-container";

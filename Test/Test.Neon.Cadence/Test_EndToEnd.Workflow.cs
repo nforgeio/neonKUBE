@@ -316,7 +316,7 @@ namespace TestCadence
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTrait.Area, TestArea.NeonCadence)]
-        [Trait(TestTrait.Unreliable, "true")]      // https://github.com/nforgeio/neonKUBE/issues/1166
+        [Trait(TestTrait.Unreliable, "1")]      // https://github.com/nforgeio/neonKUBE/issues/1166
         public async Task Workflow_SleepUntilUtc()
         {
             await SyncContext.ClearAsync;
@@ -517,7 +517,7 @@ namespace TestCadence
 
         [Fact(Timeout = 5 * 60000)]
         [Trait(TestTrait.Area, TestArea.NeonCadence)]
-        [Trait(TestTrait.Slow, "true")]
+        [Trait(TestTrait.Slow, "1")]
         public async Task Workflow_Cron()
         {
             var assembly = Assembly.GetExecutingAssembly();

@@ -121,7 +121,7 @@ namespace TestCadence
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         [Trait(TestTrait.Area, TestArea.NeonCadence)]
-        [Trait(TestTrait.Slow, "true")]
+        [Trait(TestTrait.Slow, "1")]
         public async Task Base_Domain()
         {
             await SyncContext.ClearAsync;
