@@ -29,10 +29,10 @@ namespace Neon.Xunit
     public static class TestTrait
     {
         /// <summary>
-        /// Identifies the test project.  See <see cref="TestProject"/> for the standard
+        /// Identifies the test project.  See <see cref="TestArea"/> for the standard
         /// project names.
         /// </summary>
-        public const string Project = "project";
+        public const string Area = "area";
 
         /// <summary>
         /// Identifies slow tests by setting this trait's value to <b>"true"</b>.

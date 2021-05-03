@@ -46,7 +46,7 @@ namespace Test.NeonCli
     public class Test_PasswordCommands
     {
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCli)]
+        [Trait(TestTrait.Area, TestArea.NeonCli)]
         public async Task Password()
         {
             ExecuteResponse result;
@@ -83,7 +83,7 @@ namespace Test.NeonCli
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCli)]
+        [Trait(TestTrait.Area, TestArea.NeonCli)]
         public async Task PasswordBasics()
         {
             ExecuteResponse result;
@@ -168,7 +168,7 @@ pwd-3
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCli)]
+        [Trait(TestTrait.Area, TestArea.NeonCli)]
         public async Task PasswordSet()
         {
             ExecuteResponse result;
@@ -305,7 +305,7 @@ pwd-3
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCli)]
+        [Trait(TestTrait.Area, TestArea.NeonCli)]
         public async Task PasswordGenerate()
         {
             ExecuteResponse result;
@@ -374,7 +374,7 @@ pwd-3
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCli)]
+        [Trait(TestTrait.Area, TestArea.NeonCli)]
         public async Task PasswordRemove()
         {
             ExecuteResponse result;
@@ -454,7 +454,7 @@ pwd-3
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCli)]
+        [Trait(TestTrait.Area, TestArea.NeonCli)]
         public async Task PasswordList()
         {
             ExecuteResponse result;
@@ -509,7 +509,7 @@ pwd-3
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCli)]
+        [Trait(TestTrait.Area, TestArea.NeonCli)]
         public async Task PasswordImportExport()
         {
             const string zipPassword = "zip-password";

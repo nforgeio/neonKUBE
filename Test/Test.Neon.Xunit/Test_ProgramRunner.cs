@@ -71,7 +71,7 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Execute()
         {
             ExecuteResponse result;
@@ -96,7 +96,7 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Fork()
         {
             using (var runner = new ProgramRunner())

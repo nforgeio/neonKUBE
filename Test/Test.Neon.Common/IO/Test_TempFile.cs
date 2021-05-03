@@ -47,7 +47,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Basic()
         {
             var tempFile = new TempFile();
@@ -70,7 +70,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Unique()
         {
             var tempFile1 = new TempFile();
@@ -80,7 +80,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void DisposeWhenNone()
         {
             var tempFile = new TempFile();
@@ -91,7 +91,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void DisposeWhenLocked()
         {
             var tempFile = new TempFile();
@@ -115,7 +115,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void CustomSuffix()
         {
             var tempFile = new TempFile(suffix: ".txt");
@@ -125,7 +125,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void CustomFolder()
         {
             var tempFile = new TempFile(folder: tempPath);
@@ -135,7 +135,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void CustomFolderAndSuffix()
         {
             var tempFile = new TempFile(suffix: ".txt", folder: tempPath);
@@ -145,7 +145,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void CustomRoot()
         {
             TempFile.Root = tempPath;

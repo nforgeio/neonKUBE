@@ -768,7 +768,7 @@ namespace TestCadence
         // External workflow tests
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public async Task Workflow_UseClientSettings()
         {
             // Verify that the [test1Client] settings are honored for workflows
@@ -800,7 +800,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public async Task Workflow_UseInterfaceAttributes()
         {
             // Verify that workflow interface attributes are honored.
@@ -814,7 +814,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public async Task Workflow_UseMethodAttributes()
         {
             // Verify that workflow interface method attributes are honored.
@@ -832,7 +832,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public async Task Workflow_UseWorkflowOptions()
         {
             // Verify that workflow options are honored.
@@ -861,7 +861,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public async Task Workflow_OtherDomainTaskList()
         {
             // Verify that we can call a workflow whose worker is running in
@@ -880,7 +880,7 @@ namespace TestCadence
         // Child workflow tests
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public async Task ChildWorkflow_UseClientSettings()
         {
             // Verify that the [test1Client] settings are honored for child workflows
@@ -912,7 +912,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public async Task ChildWorkflow_UseParentSettings()
         {
             // Verify that child workflows will default to the parent workflow's
@@ -929,7 +929,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public async Task ChildWorkflow_UseInterfaceAttributes()
         {
             // Verify that workflow interface attributes are honored for child workflows.
@@ -943,7 +943,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public async Task ChildWorkflow_UseMethodAttributes()
         {
             // Verify that workflow interface method attributes are honored for child workflows.
@@ -961,7 +961,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public async Task ChildWorkflow_UseWorkflowOptions()
         {
             // Verify that workflow options are honored for child workflows.
@@ -993,7 +993,7 @@ namespace TestCadence
         // Activity options tests
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public async Task Activity_UseClientSettings()
         {
             // Verify that the [test1Client] settings are honored for child workflows
@@ -1023,7 +1023,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public async Task Activity_UseParentSettings()
         {
             // Verify that activities will default to the parent workflow's
@@ -1040,7 +1040,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public async Task Activity_UseInterfaceAttributes()
         {
             // Verify that activity interface attributes are honored.
@@ -1054,7 +1054,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public async Task Activity_UseMethodAttributes()
         {
             // Verify that activity interface method attributes are honored.
@@ -1072,7 +1072,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public async Task Activity_UseWorkflowOptions()
         {
             // Verify that activity options are honored.
@@ -1145,7 +1145,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public async Task WorkflowWaitForExternalByExecution()
         {
             // Verify that a workflow can wait on an external workflow
@@ -1164,7 +1164,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public async Task WorkflowWaitForExternalByIds()
         {
             // Verify that a workflow can wait on an external workflow
@@ -1183,7 +1183,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public async Task WorkflowWaitForExternalByWorkflowId()
         {
             // Verify that a workflow can wait on an external workflow

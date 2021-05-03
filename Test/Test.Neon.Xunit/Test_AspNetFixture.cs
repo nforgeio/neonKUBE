@@ -98,7 +98,7 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonXunit)]
+        [Trait(TestTrait.Area, TestArea.NeonXunit)]
         public async Task Test()
         {
             // Verify that we can communicate with the service.

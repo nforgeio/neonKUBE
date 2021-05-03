@@ -266,7 +266,7 @@ namespace TestNeonService
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonKube)]
+        [Trait(TestTrait.Area, TestArea.NeonKube)]
         public async Task Disabled()
         {
             // Verify that a service with disabled metrics (the default) does not
@@ -297,7 +297,7 @@ namespace TestNeonService
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonKube)]
+        [Trait(TestTrait.Area, TestArea.NeonKube)]
         public async Task Scrape_Default()
         {
             // Verify that a service with default metric settings actually exposes metrics.
@@ -341,7 +341,7 @@ namespace TestNeonService
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonKube)]
+        [Trait(TestTrait.Area, TestArea.NeonKube)]
         public async Task Scrape_WithPort()
         {
             // Verify that a service with a specified port and default path actually exposes metrics.
@@ -387,7 +387,7 @@ namespace TestNeonService
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonKube)]
+        [Trait(TestTrait.Area, TestArea.NeonKube)]
         public async Task Scrape_WithPath()
         {
             // Verify that a service with the default port and a specific path actually exposes metrics.
@@ -433,7 +433,7 @@ namespace TestNeonService
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonKube)]
+        [Trait(TestTrait.Area, TestArea.NeonKube)]
         public async Task Scrape_WithPortAndPath()
         {
             // Verify that a service with the specific port and path actually exposes metrics.
@@ -481,7 +481,7 @@ namespace TestNeonService
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonKube)]
+        [Trait(TestTrait.Area, TestArea.NeonKube)]
         public async Task Push()
         {
             // Verify that a service can be configured to push metrics to a
@@ -571,7 +571,7 @@ namespace TestNeonService
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonKube)]
+        [Trait(TestTrait.Area, TestArea.NeonKube)]
         public async Task RuntimeMetrics()
         {
             // Verify that we can also expose .NET Runtime exposes metrics via the [GetCollector()] callback.

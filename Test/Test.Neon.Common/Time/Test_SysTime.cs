@@ -51,7 +51,7 @@ namespace TestCommon
 #endif
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Delta()
         {
             DateTime start;
@@ -68,14 +68,14 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Infinite()
         {
             Assert.True(SysTime.Now + SysTime.Infinite >= DateTime.MaxValue - TimeSpan.FromDays(366));
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Resolution()
         {
             Assert.True(SysTime.Resolution > TimeSpan.Zero);

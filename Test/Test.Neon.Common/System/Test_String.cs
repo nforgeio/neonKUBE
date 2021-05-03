@@ -35,7 +35,7 @@ namespace TestCommon
     public class Test_String
     {
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void ToLines()
         {
             Assert.Empty(((string)null).ToLines());

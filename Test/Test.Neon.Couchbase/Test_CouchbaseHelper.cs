@@ -37,7 +37,7 @@ namespace TestCouchbase
     public class Test_CouchbaseHelper
     {
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCouchbase)]
+        [Trait(TestTrait.Area, TestArea.NeonCouchbase)]
         public void Literal_String()
         {
             Assert.Equal("NULL", CouchbaseHelper.Literal(null));
@@ -53,7 +53,7 @@ namespace TestCouchbase
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCouchbase)]
+        [Trait(TestTrait.Area, TestArea.NeonCouchbase)]
         public void Literal_Name()
         {
             Assert.Throws<ArgumentNullException>(() => CouchbaseHelper.LiteralName(null));

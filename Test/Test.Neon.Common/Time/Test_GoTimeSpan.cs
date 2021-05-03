@@ -42,7 +42,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Parse()
         {
             // Verify valid input.
@@ -112,7 +112,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Stringify()
         {
             Assert.Equal("0", GoTimeSpan.Zero.ToString());
@@ -143,7 +143,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Casting()
         {
             TimeSpan ts = GoTimeSpan.FromTimeSpan(TimeSpan.FromHours(10));

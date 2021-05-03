@@ -142,7 +142,7 @@ namespace TestXunit
         /// Verify that the fixtures look OK.
         /// </summary>
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task Verify()
         {
             // Verify AspNetFixture.

@@ -38,7 +38,7 @@ namespace TestDeployment
     public partial class Test_GitHub
     {
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonDeployment)]
+        [Trait(TestTrait.Area, TestArea.NeonDeployment)]
         public void Login()
         {
             // Verify that we can create the client. It will throw an error if there is a 
@@ -48,7 +48,7 @@ namespace TestDeployment
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonDeployment)]
+        [Trait(TestTrait.Area, TestArea.NeonDeployment)]
         public async void ListPackages()
         {
             // Verify that we can get the list of packages.
@@ -69,7 +69,7 @@ namespace TestDeployment
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonDeployment)]
+        [Trait(TestTrait.Area, TestArea.NeonDeployment)]
         public async void MakePublic()
         {
             // Verify that we can make a package public.
@@ -84,7 +84,7 @@ namespace TestDeployment
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonDeployment)]
+        [Trait(TestTrait.Area, TestArea.NeonDeployment)]
         public async void MakePrivate()
         {
             // Verify that we can make a package private.
@@ -99,7 +99,7 @@ namespace TestDeployment
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonDeployment)]
+        [Trait(TestTrait.Area, TestArea.NeonDeployment)]
         public async void Delete()
         {
             var client = new GitHubPackageApi();

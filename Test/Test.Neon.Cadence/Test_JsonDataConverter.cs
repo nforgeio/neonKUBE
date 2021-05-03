@@ -51,7 +51,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void DataWithGenericType()
         {
             // Verify that we can serialize and deserialize various (non-roundtrip) data items
@@ -90,7 +90,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void DataWithType()
         {
             // Verify that we can serialize and deserialize various (non-roundtrip) data items
@@ -129,7 +129,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void RoundTripDataWithGeneric()
         {
             // Verify that we can serialize and deserialize various roundtrip data items
@@ -169,7 +169,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void RoundTripDataWithType()
         {
             // Verify that we can serialize and deserialize various roundtrip data items.
@@ -242,7 +242,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void DataArray()
         {
             // Verify that we can deserialize arrays of data items.
@@ -347,7 +347,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void SerializeEnum()
         {
             // Verify that Enum values serialize correctly.
@@ -378,7 +378,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void SerializeFlagsEnum()
         {
             var             converter = new JsonDataConverter();
@@ -428,7 +428,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void SerializeDateTime()
         {
             // Verify that Enum values with the [Flags] attribute serialize correctly.

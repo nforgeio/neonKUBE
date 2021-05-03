@@ -35,7 +35,7 @@ namespace TestCommon
     public class Test_Pinger
     {
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task Basic()
         {
             using (var pinger = new Pinger())

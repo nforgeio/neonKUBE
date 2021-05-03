@@ -39,7 +39,7 @@ namespace TestCommon
     public class Test_Jwt
     {
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Parse()
         {
             // Verify that we can parse a valid JWT.

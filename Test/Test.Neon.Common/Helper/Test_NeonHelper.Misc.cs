@@ -35,7 +35,7 @@ namespace TestCommon
     public partial class Test_NeonHelper
     {
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void ParseBool()
         {
             Assert.False(NeonHelper.ParseBool("0"));
@@ -69,7 +69,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void TryParseBool()
         {
             bool value;
@@ -125,7 +125,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void ParseNullableBool()
         {
             Assert.False(NeonHelper.ParseNullableBool("0"));
@@ -160,7 +160,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void TryParseNullableBool()
         {
             bool? value;
@@ -219,7 +219,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void WaitAll()
         {
             // Verify NOP when thread is NULL.
@@ -282,7 +282,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Within_DateTime()
         {
             var expected = new DateTime(2020, 12, 4, 10, 58, 0);
@@ -300,7 +300,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Within_DateTimeOffset()
         {
             var expected = new DateTimeOffset(2020, 12, 4, 10, 58, 0, TimeSpan.FromHours(-7));
@@ -318,7 +318,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Base64Encoding()
         {
             var encoded = Convert.ToBase64String(Encoding.UTF8.GetBytes("Hello World!"));

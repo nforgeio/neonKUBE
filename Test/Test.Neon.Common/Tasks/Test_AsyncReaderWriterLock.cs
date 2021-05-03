@@ -39,7 +39,7 @@ namespace TestCommon
         private const int   repeatCount    = 4;
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task Basic()
         {
             var rwLock = (AsyncReaderWriterLock)null;
@@ -73,7 +73,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task ReaderThenWriter()
         {
             // Verify that obtaining a reader lock blocks a writer lock and then
@@ -107,7 +107,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task ReaderThenReader()
         {
             // Verify that obtaining a reader lock does not block
@@ -141,7 +141,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task WriterThenReader()
         {
             // Verify that obtaining a writer lock blocks a reader lock and then
@@ -175,7 +175,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task WriterThenMultipleReaders()
         {
             // Verify that obtaining a writer lock blocks multiple readers and then
@@ -213,7 +213,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task WriterThenMultipleWriters()
         {
             // Verify that obtaining a writer lock blocks multiple writers and then
@@ -258,7 +258,7 @@ namespace TestCommon
         //=====================================================================
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task Basic_Repeat()
         {
             using (var rwLock = new AsyncReaderWriterLock())
@@ -290,7 +290,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task ReaderThenWriter_Repeat()
         {
             // Verify that obtaining a reader lock blocks a writer lock and then
@@ -327,7 +327,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task ReaderThenReader_Repeat()
         {
             // Verify that obtaining a reader lock does not block
@@ -363,7 +363,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task WriterThenReader_Repeat()
         {
             // Verify that obtaining a writer lock blocks a reader lock and then
@@ -399,7 +399,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task WriterThenMultipleReaders_Repeat()
         {
             // Verify that obtaining a writer lock blocks multiple readers and then
@@ -440,7 +440,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task WriterThenMultipleWriters_Repeat()
         {
             // Verify that obtaining a writer lock blocks multiple writers and then
@@ -483,7 +483,7 @@ namespace TestCommon
         //=====================================================================
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task Basic_Delay()
         {
             var rwLock = (AsyncReaderWriterLock)null;
@@ -520,7 +520,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task ReaderThenWriter_Delay()
         {
             // Verify that obtaining a reader lock blocks a writer lock and then
@@ -556,7 +556,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task ReaderThenReader_Delay()
         {
             // Verify that obtaining a reader lock does not block
@@ -591,7 +591,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task WriterThenReader_Delay()
         {
             // Verify that obtaining a writer lock blocks a reader lock and then
@@ -627,7 +627,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task WriterThenMultipleReaders_Delay()
         {
             // Verify that obtaining a writer lock blocks multiple readers and then
@@ -667,7 +667,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task WriterThenMultipleWriters_Delay()
         {
             // Verify that obtaining a writer lock blocks multiple writers and then
@@ -709,7 +709,7 @@ namespace TestCommon
         //=====================================================================
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task Basic_Repeat_Delay()
         {
             using (var rwLock = new AsyncReaderWriterLock())
@@ -745,7 +745,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task ReaderThenWriter_Repeat_Delay()
         {
             // Verify that obtaining a reader lock blocks a writer lock and then
@@ -783,7 +783,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task ReaderThenReader_Repeat_Delay()
         {
             // Verify that obtaining a reader lock does not block
@@ -820,7 +820,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task WriterThenReader_Repeat_Delay()
         {
             // Verify that obtaining a writer lock blocks a reader lock and then
@@ -858,7 +858,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task WriterThenMultipleReaders_Repeat_Delay()
         {
             // Verify that obtaining a writer lock blocks multiple readers and then
@@ -901,7 +901,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task WriterThenMultipleWriters_Repeat_Delay()
         {
             // Verify that obtaining a writer lock blocks multiple writers and then
@@ -946,7 +946,7 @@ namespace TestCommon
         //=====================================================================
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void ReaderWriters()
         {
             // Verify that multiple pending locks work.
@@ -1020,7 +1020,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task MultipleTasks()
         {
             // Verify that we can acquire and release both read and write

@@ -46,7 +46,7 @@ namespace TestCryptography
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCryptography)]
+        [Trait(TestTrait.Area, TestArea.NeonCryptography)]
         public void ComputeMD5()
         {
             var zeroString = new string('0', CryptoHelper.MD5ByteSize * 2);
@@ -121,7 +121,7 @@ namespace TestCryptography
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCryptography)]
+        [Trait(TestTrait.Area, TestArea.NeonCryptography)]
         public void ComputeSHA1()
         {
             var zeroString = new string('0', CryptoHelper.SHA1ByteSize * 2);
@@ -196,7 +196,7 @@ namespace TestCryptography
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCryptography)]
+        [Trait(TestTrait.Area, TestArea.NeonCryptography)]
         public void ComputeSHA256()
         {
             var zeroString = new string('0', CryptoHelper.SHA256ByteSize * 2);
@@ -271,7 +271,7 @@ namespace TestCryptography
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCryptography)]
+        [Trait(TestTrait.Area, TestArea.NeonCryptography)]
         public void ComputeSHA512()
         {
             var zeroString = new string('0', CryptoHelper.SHA512ByteSize * 2);
@@ -346,7 +346,7 @@ namespace TestCryptography
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCryptography)]
+        [Trait(TestTrait.Area, TestArea.NeonCryptography)]
         public void DeriveKeyFromPassword()
         {
             // Verify the argument error cases.

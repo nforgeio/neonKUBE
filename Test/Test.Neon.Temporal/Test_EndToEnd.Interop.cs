@@ -181,7 +181,7 @@ namespace TestTemporal
         //---------------------------------------------------------------------
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public async Task Interop_Workflow_Untyped()
         {
             await SyncContext.ClearAsync;
@@ -397,7 +397,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public async Task Interop_Activity_Untyped()
         {
             await SyncContext.ClearAsync;
@@ -433,7 +433,7 @@ namespace TestTemporal
         //---------------------------------------------------------------------
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public async Task Interop_Workflow_StubFullName()
         {
             await SyncContext.ClearAsync;
@@ -507,7 +507,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonCadence)]
+        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public async Task Interop_Activity_StubFullName()
         {
             await SyncContext.ClearAsync;

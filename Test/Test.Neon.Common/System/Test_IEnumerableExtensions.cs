@@ -40,7 +40,7 @@ namespace TestCommon
     public class Test_IEnumerableExtensions
     {
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void SelectRandom_Single()
         {
             var items = new int[] { 0, 1, 2, 3 };
@@ -67,7 +67,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void SelectRandom_Multiple()
         {
             var items    = new int[] { 0, 1, 2, 3 };
@@ -78,7 +78,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void SelectRandom_Exceptions()
         {
             Assert.Throws<ArgumentNullException>(() => ((IEnumerable<int>)null).SelectRandom());
@@ -91,7 +91,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void IsEmpty()
         {
             // Verify that both reference and value types work.
@@ -104,7 +104,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Predicate()
         {
             // Verify that predicates work.

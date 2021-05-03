@@ -30,7 +30,7 @@ namespace TestCommon
     public class Test_CsvTableReader
     {
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void CsvTableReader_EmptyTable()
         {
             CsvTableReader reader;
@@ -43,7 +43,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void CsvTableReader_NoRows()
         {
             CsvTableReader reader;
@@ -59,7 +59,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void CsvTableReader_Parsing()
         {
             CsvTableReader reader;
@@ -108,7 +108,7 @@ no,10
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void CsvTableReader_DuplicateColumns()
         {
             CsvTableReader reader;
@@ -135,7 +135,7 @@ no,10";
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void CsvTableReader_RowEnumeration()
         {
             CsvTableReader reader;

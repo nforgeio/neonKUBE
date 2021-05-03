@@ -114,7 +114,7 @@ namespace TestDeployment
 
         [Theory]
         [Repeat(repeatCount)]
-        [Trait(TestTrait.Project, TestProject.NeonDeployment)]
+        [Trait(TestTrait.Area, TestArea.NeonDeployment)]
         public void MultipleRequests_Sequential(int repeatCount)
         {
             // Verify that the server is able to handle multiple requests
@@ -142,7 +142,7 @@ namespace TestDeployment
 
         [Theory]
         [Repeat(repeatCount)]
-        [Trait(TestTrait.Project, TestProject.NeonDeployment)]
+        [Trait(TestTrait.Area, TestArea.NeonDeployment)]
         public async Task MultipleRequests_Parallel(int repeatCount)
         {
             // Verify that the server is able to handle multiple requests
@@ -190,7 +190,7 @@ namespace TestDeployment
 
         [Theory]
         [Repeat(repeatCount)]
-        [Trait(TestTrait.Project, TestProject.NeonDeployment)]
+        [Trait(TestTrait.Area, TestArea.NeonDeployment)]
         public void GetProfileValue(int repeatCount)
         {
             var client = new ProfileClient(pipeName);
@@ -206,7 +206,7 @@ namespace TestDeployment
 
         [Theory]
         [Repeat(repeatCount)]
-        [Trait(TestTrait.Project, TestProject.NeonDeployment)]
+        [Trait(TestTrait.Area, TestArea.NeonDeployment)]
         public void GetProfileValue_Exception(int repeatCount)
         {
             var client = new ProfileClient(pipeName);
@@ -225,7 +225,7 @@ namespace TestDeployment
 
         [Theory]
         [Repeat(repeatCount)]
-        [Trait(TestTrait.Project, TestProject.NeonDeployment)]
+        [Trait(TestTrait.Area, TestArea.NeonDeployment)]
         public void GetSecretPassword(int repeatCount)
         {
             var client = new ProfileClient(pipeName);
@@ -241,7 +241,7 @@ namespace TestDeployment
 
         [Theory]
         [Repeat(repeatCount)]
-        [Trait(TestTrait.Project, TestProject.NeonDeployment)]
+        [Trait(TestTrait.Area, TestArea.NeonDeployment)]
         public void GetSecretPassword_UsingMasterPassword(int repeatCount)
         {
             var client = new ProfileClient(pipeName);
@@ -257,7 +257,7 @@ namespace TestDeployment
 
         [Theory]
         [Repeat(repeatCount)]
-        [Trait(TestTrait.Project, TestProject.NeonDeployment)]
+        [Trait(TestTrait.Area, TestArea.NeonDeployment)]
         public void GetSecretPassword_Exception(int repeatCount)
         {
             var client = new ProfileClient(pipeName);
@@ -276,7 +276,7 @@ namespace TestDeployment
 
         [Theory]
         [Repeat(repeatCount)]
-        [Trait(TestTrait.Project, TestProject.NeonDeployment)]
+        [Trait(TestTrait.Area, TestArea.NeonDeployment)]
         public void GetSecretValue(int repeatCount)
         {
             var client = new ProfileClient(pipeName);
@@ -292,7 +292,7 @@ namespace TestDeployment
 
         [Theory]
         [Repeat(repeatCount)]
-        [Trait(TestTrait.Project, TestProject.NeonDeployment)]
+        [Trait(TestTrait.Area, TestArea.NeonDeployment)]
         public void GetSecretValue_UsingMasterPassword(int repeatCount)
         {
             var client = new ProfileClient(pipeName);
@@ -308,7 +308,7 @@ namespace TestDeployment
 
         [Theory]
         [Repeat(repeatCount)]
-        [Trait(TestTrait.Project, TestProject.NeonDeployment)]
+        [Trait(TestTrait.Area, TestArea.NeonDeployment)]
         public void GetSecretValue_Exception(int repeatCount)
         {
             var client = new ProfileClient(pipeName);

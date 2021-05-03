@@ -39,7 +39,7 @@ namespace TestCommon
         private const int repeatCount = 4;
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task Basic()
         {
             // Create a mutex and then several tasks that acquire the mutex for
@@ -96,7 +96,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task Dispose()
         {
             // Create a mutex, acquire it, and then create another task that will

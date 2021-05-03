@@ -34,7 +34,7 @@ namespace TestCommon
     public class Test_Win32
     {
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void GetPhysicallyInstalledSystemMemory()
         {
             Assert.True(Win32.GetPhysicallyInstalledSystemMemory(out var memKB));

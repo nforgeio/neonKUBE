@@ -38,7 +38,7 @@ namespace TestCommon
     public class Test_SystemAssumptions
     {
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void IEnumerabe_ToList()
         {
             // Verify that [IEnumerable.ToList()] on a list actually returns a copy of the list

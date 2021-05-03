@@ -42,7 +42,7 @@ namespace TestDeployment
     {
         //[Fact]
         [Fact(Skip = "This test needs to be run manually.")]
-        [Trait(TestTrait.Project, TestProject.NeonDeployment)]
+        [Trait(TestTrait.Area, TestArea.NeonDeployment)]
         public void Basics()
         {
             // You need to manually configure your 1Password credentials below for this

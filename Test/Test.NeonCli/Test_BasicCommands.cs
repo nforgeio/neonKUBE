@@ -41,7 +41,7 @@ namespace Test.NeonCli
     public class Test_BasicCommands
     {
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCli)]
+        [Trait(TestTrait.Area, TestArea.NeonCli)]
         public async Task Base()
         {
             using (var runner = new ProgramRunner())
@@ -62,7 +62,7 @@ namespace Test.NeonCli
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCli)]
+        [Trait(TestTrait.Area, TestArea.NeonCli)]
         public async Task Version()
         {
             using (var runner = new ProgramRunner())

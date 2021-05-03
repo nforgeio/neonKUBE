@@ -43,7 +43,7 @@ namespace TestTemporal
     public partial class Test_Messages
     {
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowRegisterRequest()
         {
             WorkflowRegisterRequest message;
@@ -117,7 +117,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowRegisterReply()
         {
             WorkflowRegisterReply message;
@@ -177,7 +177,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowExecuteRequest()
         {
             WorkflowExecuteRequest message;
@@ -267,7 +267,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowExecuteReply()
         {
             WorkflowExecuteReply message;
@@ -337,7 +337,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowInvokeRequest()
         {
             WorkflowInvokeRequest message;
@@ -447,7 +447,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowInvokeReply()
         {
             WorkflowInvokeReply message;
@@ -570,7 +570,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowCancelRequest()
         {
             WorkflowCancelRequest message;
@@ -644,7 +644,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowCancelReply()
         {
             WorkflowCancelReply message;
@@ -704,7 +704,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowTerminateRequest()
         {
             WorkflowTerminateRequest message;
@@ -790,7 +790,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowTerminateReply()
         {
             WorkflowTerminateReply message;
@@ -850,7 +850,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowSignalRequest()
         {
             WorkflowSignalRequest message;
@@ -936,7 +936,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowSignalReply()
         {
             WorkflowSignalReply message;
@@ -996,7 +996,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowSignalWithStartRequest()
         {
             WorkflowSignalWithStartRequest message;
@@ -1098,7 +1098,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowSignalWithStartReply()
         {
             WorkflowSignalWithStartReply message;
@@ -1168,7 +1168,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowQueryRequest()
         {
             WorkflowQueryRequest message;
@@ -1254,7 +1254,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowQueryReply()
         {
             WorkflowQueryReply message;
@@ -1320,7 +1320,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         [Obsolete("This was replaced by a local activity.")]
         public void Test_WorkflowMutableRequest()
         {
@@ -1395,7 +1395,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         [Obsolete("This was replaced by a local activity.")]
         public void Test_WorkflowMutableReply()
         {
@@ -1464,7 +1464,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowDescribeExecutionRequest()
         {
             WorkflowDescribeExecutionRequest message;
@@ -1938,7 +1938,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowDescribeExecutionReply()
         {
             WorkflowDescribeExecutionReply message;
@@ -2002,7 +2002,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowGetResultRequest()
         {
             WorkflowGetResultRequest message;
@@ -2076,7 +2076,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowGetResultReply()
         {
             // In addition to verifying basic serialization for the [WorkflowGetResultReply]
@@ -2155,7 +2155,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowSignalSubscribeRequest()
         {
             WorkflowSignalSubscribeRequest message;
@@ -2217,7 +2217,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowSignalSubscribeReply()
         {
             WorkflowSignalSubscribeReply message;
@@ -2277,7 +2277,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowSignalInvokeRequest()
         {
             WorkflowSignalInvokeRequest message;
@@ -2345,7 +2345,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowSignalInvokeReply()
         {
             WorkflowSignalInvokeReply message;
@@ -2405,7 +2405,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowHasLastResultRequest()
         {
             WorkflowHasLastResultRequest message;
@@ -2461,7 +2461,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowHasLastResultReply()
         {
             WorkflowHasLastResultReply message;
@@ -2527,7 +2527,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowGetLastResultRequest()
         {
             WorkflowGetLastResultRequest message;
@@ -2583,7 +2583,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowGetLastResultReply()
         {
             WorkflowGetLastLastReply message;
@@ -2649,7 +2649,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowDisconnectContextRequest()
         {
             WorkflowDisconnectContextRequest message;
@@ -2705,7 +2705,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowDisconnectContextReply()
         {
             WorkflowDisconnectContextReply message;
@@ -2765,7 +2765,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowGetTimeRequest()
         {
             WorkflowGetTimeRequest message;
@@ -2821,7 +2821,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowGetTimeReply()
         {
             WorkflowGetTimeReply message;
@@ -2887,7 +2887,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowSleepRequest()
         {
             WorkflowSleepRequest message;
@@ -2949,7 +2949,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowSleepReply()
         {
             WorkflowSleepReply message;
@@ -3024,7 +3024,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowExecuteChildRequest()
         {
             WorkflowExecuteChildRequest message;
@@ -3115,7 +3115,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowExecuteChildReply()
         {
             WorkflowExecuteChildReply message;
@@ -3192,7 +3192,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowWaitForChildRequest()
         {
             WorkflowWaitForChildRequest message;
@@ -3254,7 +3254,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowWaitForChildReply()
         {
             WorkflowWaitForChildReply message;
@@ -3320,7 +3320,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowSignalChildRequest()
         {
             WorkflowSignalChildRequest message;
@@ -3394,7 +3394,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowSignalChildReply()
         {
             WorkflowSignalChildReply message;
@@ -3460,7 +3460,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowCancelChildRequest()
         {
             WorkflowCancelChildRequest message;
@@ -3522,7 +3522,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowCancelChildReply()
         {
             WorkflowCancelChildReply message;
@@ -3582,7 +3582,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowSetQueryHandlerRequest()
         {
             WorkflowSetQueryHandlerRequest message;
@@ -3644,7 +3644,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowSetQueryHandlerReply()
         {
             WorkflowSetQueryHandlerReply message;
@@ -3702,7 +3702,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowQueryInvokeRequest()
         {
             WorkflowQueryInvokeRequest message;
@@ -3776,7 +3776,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowQueryInvokeReply()
         {
             WorkflowQueryInvokeReply message;
@@ -3839,7 +3839,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowGetVersionRequest()
         {
             WorkflowGetVersionRequest message;
@@ -3922,7 +3922,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowGetVersionReply()
         {
             WorkflowGetVersionReply message;
@@ -3988,7 +3988,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowFutureReadyRequest()
         {
             WorkflowFutureReadyRequest message;
@@ -4057,7 +4057,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowFutureReadyReply()
         {
             WorkflowFutureReadyReply message;
@@ -4117,7 +4117,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowQueueNewRequest()
         {
             WorkflowQueueNewRequest message;
@@ -4191,7 +4191,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowQueueNewReply()
         {
             WorkflowQueueNewReply message;
@@ -4251,7 +4251,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowQueueWriteRequest()
         {
             WorkflowQueueWriteRequest message;
@@ -4333,7 +4333,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowQueueWriteReply()
         {
             WorkflowQueueWriteReply message;
@@ -4399,7 +4399,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowQueueReadRequest()
         {
             WorkflowQueueReadRequest message;
@@ -4475,7 +4475,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowQueueReadReply()
         {
             WorkflowQueueReadReply message;
@@ -4548,7 +4548,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowQueueCloseRequest()
         {
             WorkflowQueueCloseRequest message;
@@ -4617,7 +4617,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowQueueCloseReply()
         {
             WorkflowQueueCloseReply message;

@@ -48,7 +48,7 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void EnvironmentVariables()
         {
             // Set some new environment variables.

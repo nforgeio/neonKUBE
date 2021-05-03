@@ -45,7 +45,7 @@ namespace TestTemporal
         private JsonSerializer serializer = new JsonSerializer();
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void ReadTimeSpan()
         {
             var json0 = "{ \"Value\": 5 }";
@@ -91,7 +91,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void WriteTimeSpan()
         {
             var value  = new MyData() { Value = TimeSpan.FromSeconds(5) };
@@ -146,7 +146,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void TimeSpanToSimpleString()
         {
             var json0 = "{ \"Value\": 5 }";

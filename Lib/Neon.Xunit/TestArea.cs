@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TestProject.cs
+// FILE:	    TestArea.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -24,10 +24,9 @@ using System.Threading.Tasks;
 namespace Neon.Xunit
 {
     /// <summary>
-    /// Defines constants used to help categorize unit tests and avoid
-    /// spelling errors and inconsistencies.
+    /// Defines the neonFORGE related test areas.
     /// </summary>
-    public static class TestProject
+    public static class TestArea
     {
         /// <summary>
         /// Identifies <b>Neon.Cadence</b> tests.

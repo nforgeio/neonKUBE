@@ -180,7 +180,7 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task Verify()
         {
             var couchbaseFixture = (CouchbaseFixture)fixture["couchbase"];

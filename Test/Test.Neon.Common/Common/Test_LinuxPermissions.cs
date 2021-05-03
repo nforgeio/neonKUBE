@@ -33,7 +33,7 @@ namespace TestCommon
     public class Test_LinuxPermissions
     {
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void TryParse()
         {
             LinuxPermissions permissions;
@@ -54,7 +54,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Constructor()
         {
             var permissions = new LinuxPermissions();
@@ -137,7 +137,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Manual()
         {
             var permissions = new LinuxPermissions();
@@ -171,7 +171,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Malformed()
         {
             Assert.Throws<ArgumentNullException>(() => new LinuxPermissions(null));

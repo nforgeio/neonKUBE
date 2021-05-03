@@ -49,7 +49,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void YamlSerialize()
         {
             var before =
@@ -78,7 +78,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void YamlEnumMember()
         {
             // Verify that we recognize [EnumMember] attributes.
@@ -107,7 +107,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void YamlDeserializeUnmatched()
         {
             const string normal =
@@ -140,7 +140,7 @@ unmatched: Hello
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void YamlException()
         {
             // Verify that exception messages explain the issue.
@@ -174,7 +174,7 @@ age: 56
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void YamlNotJson()
         {
             // Verify that we can identify and parse YAML (over JSON).
@@ -202,7 +202,7 @@ age: 56
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void YamlArray()
         {
             // Verify that we can YAML arrays.
@@ -235,7 +235,7 @@ age: 56
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void JsonToYaml_Basic()
         {
             // Verify that we can convert JSON to YAML.
@@ -271,7 +271,7 @@ age: 56
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void JsonToYaml_Values()
         {
             var jsonText = @"
@@ -324,7 +324,7 @@ string-bool-no: 'no'
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void JsonToYaml_Object()
         {
             var jsonText = @"
@@ -353,7 +353,7 @@ nested:
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void JsonToYaml_SimpleArray()
         {
             var jsonText = @"
@@ -376,7 +376,7 @@ nested:
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void JsonToYaml_ObjectsAndArrays()
         {
             var jsonText = @"

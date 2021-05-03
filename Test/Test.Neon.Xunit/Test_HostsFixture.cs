@@ -59,7 +59,7 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Lookup()
         {
             Assert.Equal(new IPAddress[] { IPAddress.Parse("1.2.3.4") }, Dns.GetHostAddresses("www.foo.com"));
@@ -68,7 +68,7 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Reset()
         {
             // Verify that we can reset the hosts.
@@ -88,7 +88,7 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void NoDuplicates()
         {
             // Ensure that duplicate host/IP mappings are iognored and are 

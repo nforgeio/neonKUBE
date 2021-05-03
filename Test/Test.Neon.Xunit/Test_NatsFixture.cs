@@ -73,14 +73,14 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonXunit)]
+        [Trait(TestTrait.Area, TestArea.NeonXunit)]
         public void Connect()
         {
             Assert.Equal(ConnState.CONNECTED, connection.State);
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonXunit)]
+        [Trait(TestTrait.Area, TestArea.NeonXunit)]
         public void Subscribe()
         {
             Assert.Equal(ConnState.CONNECTED, connection.State);
@@ -106,7 +106,7 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonXunit)]
+        [Trait(TestTrait.Area, TestArea.NeonXunit)]
         public void SubscribeQueue()
         {
             Assert.Equal(ConnState.CONNECTED, connection.State);
@@ -132,7 +132,7 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonXunit)]
+        [Trait(TestTrait.Area, TestArea.NeonXunit)]
         public void SubscribeAsync()
         {
             Assert.Equal(ConnState.CONNECTED, connection.State);
@@ -173,7 +173,7 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonXunit)]
+        [Trait(TestTrait.Area, TestArea.NeonXunit)]
         public void SubscribeAsyncHandler()
         {
             Assert.Equal(ConnState.CONNECTED, connection.State);
@@ -216,7 +216,7 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonXunit)]
+        [Trait(TestTrait.Area, TestArea.NeonXunit)]
         public void SubscribeAsyncQueue()
         {
             Assert.Equal(ConnState.CONNECTED, connection.State);
@@ -257,7 +257,7 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonXunit)]
+        [Trait(TestTrait.Area, TestArea.NeonXunit)]
         public void SubscribeAsyncQueueHandler()
         {
             Assert.Equal(ConnState.CONNECTED, connection.State);
@@ -300,7 +300,7 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonXunit)]
+        [Trait(TestTrait.Area, TestArea.NeonXunit)]
         public void Publish()
         {
             Assert.Equal(ConnState.CONNECTED, connection.State);
@@ -326,7 +326,7 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonXunit)]
+        [Trait(TestTrait.Area, TestArea.NeonXunit)]
         public void PublishReply()
         {
             Assert.Equal(ConnState.CONNECTED, connection.State);
@@ -353,7 +353,7 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonXunit)]
+        [Trait(TestTrait.Area, TestArea.NeonXunit)]
         public void Request()
         {
             Assert.Equal(ConnState.CONNECTED, connection.State);
@@ -400,7 +400,7 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonXunit)]
+        [Trait(TestTrait.Area, TestArea.NeonXunit)]
         public void RequestTimeout()
         {
             Assert.Equal(ConnState.CONNECTED, connection.State);
@@ -447,7 +447,7 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonXunit)]
+        [Trait(TestTrait.Area, TestArea.NeonXunit)]
         public async Task RequestAsync()
         {
             Assert.Equal(ConnState.CONNECTED, connection.State);

@@ -37,7 +37,7 @@ namespace TestCommon
         private TimeSpan defaultTimeout = TimeSpan.FromSeconds(15);
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task SimpleAsync()
         {
             // Verify that we can execute a simple periodic task that terminates 
@@ -60,7 +60,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task ExceptionAsync()
         {
             // Verify that the exception callback is called and that
@@ -93,7 +93,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task TerminateViaTaskAsync()
         {
             // Verify that the termination callback is called when the task
@@ -131,7 +131,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task TerminateViaExceptionAsync()
         {
             // Verify that the termination callback is called when the task
@@ -162,7 +162,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task TerminateViaExceptionHandlerAsync()
         {
             // Verify that the termination callback is called when the task
@@ -200,7 +200,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task TerminateViaExternalCancellationAsync()
         {
             // Verify that the termination callback is called when the task

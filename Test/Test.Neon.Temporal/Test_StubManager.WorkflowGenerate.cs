@@ -53,7 +53,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Generate_WorkflowEntryVoidNoArgs()
         {
             var stub = StubManager.NewWorkflowStub<IWorkflowEntryVoidNoArgs>(client);
@@ -71,7 +71,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Generate_WorkflowEntryVoidWithArgs()
         {
             var stub = StubManager.NewWorkflowStub<IWorkflowEntryVoidWithArgs>(client);
@@ -89,7 +89,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Generate_WorkflowResultWithArgs()
         {
             var stub = StubManager.NewWorkflowStub<IWorkflowEntryResultWithArgs>(client);
@@ -98,7 +98,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Generate_WorkflowResultWithOptions()
         {
             var stub = StubManager.NewWorkflowStub<IWorkflowEntryResultWithArgs>(client, options: new StartWorkflowOptions() { TaskQueue = "my-taskqueue", Namespace = "my-namespace" });
@@ -119,7 +119,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Generate_WorkflowSignalNoArgs()
         {
             var stub = StubManager.NewWorkflowStub<IWorkflowSignalNoArgs>(client);
@@ -140,7 +140,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Generate_WorkflowSignalWithArgs()
         {
             var stub = StubManager.NewWorkflowStub<IWorkflowSignalWithArgs>(client);
@@ -161,7 +161,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Generate_WorkflowQueryVoidNoArgs()
         {
             var stub = StubManager.NewWorkflowStub<IWorkflowQueryVoidNoArgs>(client);
@@ -182,7 +182,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Generate_WorkflowQueryVoidWithArgs()
         {
             var stub = StubManager.NewWorkflowStub<IWorkflowQueryVoidWithArgs>(client);
@@ -203,7 +203,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Generate_WorkflowQueryResultWithArgs()
         {
             var stub = StubManager.NewWorkflowStub<IWorkflowQueryResultWithArgs>(client);
@@ -245,7 +245,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Project, TestProject.NeonTemporal)]
+        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Generate_WorkflowMultiMethods()
         {
             var stub = StubManager.NewWorkflowStub<IWorkflowMultiMethods>(client);

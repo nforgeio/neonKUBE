@@ -41,7 +41,7 @@ namespace TestCommon
     public partial class Test_JsonClient
     {
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task OptionsAsync()
         {
             // Ensure that OPTIONS sending and returning an explict types works.
@@ -115,7 +115,7 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task OptionsDynamicAsync()
         {
             // Ensure that OPTIONS sending a dynamic document works.
@@ -172,7 +172,7 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task OptionsAsync_NotJson()
         {
             // Ensure that OPTIONS returning a non-JSON content type returns a NULL document.
@@ -230,7 +230,7 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task OptionsAsync_Args()
         {
             // Ensure that OPTIONS with query arguments work.
@@ -296,7 +296,7 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task OptionsAsync_Headers()
         {
             // Ensure that OPTIONS with query arguments work.
@@ -362,7 +362,7 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task OptionsAsync_Dynamic()
         {
             // Ensure that OPTIONS returning a dynamic works.
@@ -420,7 +420,7 @@ namespace TestCommon
         }
  
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task OptionsAsync_Dynamic_NotJson()
         {
             // Ensure that OPTIONS returning non-JSON returns a NULL dynamic document.
@@ -478,7 +478,7 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task OptionsAsync_Error()
         {
             // Ensure that OPTIONS returning a hard error works.
@@ -508,7 +508,7 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task OptionsAsync_Retry()
         {
             // Ensure that OPTIONS will retry after soft errors.
@@ -564,7 +564,7 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task OptionsAsync_NoRetryNull()
         {
             // Ensure that OPTIONS won't retry if [retryPolicy=NULL]
@@ -611,7 +611,7 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task OptionsAsync_NoRetryExplicit()
         {
             // Ensure that OPTIONS won't retry if [retryPolicy=NoRetryPolicy]
@@ -658,7 +658,7 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task Options_CustomPayloadAsync()
         {
             // Ensure that OPTIONS uploading a [JsonCustomPayload] works.
@@ -704,7 +704,7 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Project, TestProject.NeonCommon)]
+        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task OptionsAsync_NullPayloadAsync()
         {
             // Ensure that OPTIONS uploading a NULL payload works.

@@ -53,7 +53,7 @@ namespace TestIdentity
         }
 
         [Fact]
-        [Trait(TestTrait.Project, TestProject.NeonIdentity)]
+        [Trait(TestTrait.Area, TestArea.NeonIdentity)]
         public async Task CreateDatabase()
         {
             await IdentityHelper.InitializeDatabaseAsync(identityDb.ConnectionString, dbName, stsUser, stsPassword);
