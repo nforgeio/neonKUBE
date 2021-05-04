@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_GitHub.cs
+// FILE:	    Test_Packages.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -36,7 +36,7 @@ namespace TestDeployment
     [Trait(TestTrait.Area, TestArea.NeonDeployment)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
-    public partial class Test_GitHub
+    public partial class Test_Packages
     {
         [Fact]
         public void Login()
