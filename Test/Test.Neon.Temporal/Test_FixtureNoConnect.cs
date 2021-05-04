@@ -46,6 +46,8 @@ namespace TestTemporal
     /// These tests prevent the <see cref="TemporalFixture"/> from establishing a client
     /// connection and then explicitly establishes a connection to run some tests.
     /// </summary>
+    [Trait(TestTrait.Incomplete, "1")]
+    [Trait(TestTrait.Area, TestArea.NeonTemporal)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public partial class Test_FixtureNoConnect : IClassFixture<TemporalFixture>, IDisposable

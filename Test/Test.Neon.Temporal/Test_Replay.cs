@@ -59,6 +59,7 @@ namespace TestTemporal
     // perform the specified operation on the first pass, trigger a replay, and
     // then ensure that the operation returned the same results on the second pass.
 
+    [Trait(TestTrait.Incomplete, "1")]
     [Trait(TestTrait.Area, TestArea.NeonTemporal)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]

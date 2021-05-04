@@ -42,6 +42,7 @@ using Xunit;
 
 namespace TestTemporal
 {
+    [Trait(TestTrait.Incomplete, "1")]
     [Trait(TestTrait.Area, TestArea.NeonTemporal)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
