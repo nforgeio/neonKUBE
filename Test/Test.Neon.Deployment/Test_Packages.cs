@@ -95,7 +95,7 @@ namespace TestDeployment
             Assert.Contains(packages, p => p.Name == "test");
         }
 
-        [Fact]
+        [Fact(Skip = "$todo(marcusbooyah")]
         public async void Delete()
         {
             var client = new GitHubPackageApi();
