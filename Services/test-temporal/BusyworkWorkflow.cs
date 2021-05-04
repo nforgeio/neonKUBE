@@ -22,13 +22,19 @@ namespace TemporalService
     [Workflow(AutoRegister = true)]
     public class BusyworkWorkflow : WorkflowBase, IBusyworkWorkflow
     {
+        private static INeonLogger log = LogManager.Default.GetLogger<BusyworkWorkflow>();
+
         /// <inheritdoc/>
         public async Task<string> DoItAsync(int iterations, TimeSpan sleepInterval, string message)
         {
+            log.LogInfo($"Start: DoItAsync({iterations}, {sleepInterval} \"{message}\")");
+
             for (int i = 0; i < iterations; i++)
             {
                 await Workflow.SleepAsync(sleepInterval);
             }
+
+            log.LogInfo($"Finish: DoItAsync()");
 
             return message;
         }
