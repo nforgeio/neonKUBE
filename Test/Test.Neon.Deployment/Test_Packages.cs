@@ -96,6 +96,7 @@ namespace TestDeployment
         }
 
         [Fact(Skip = "$todo(marcusbooyah")]
+        [Trait(TestTrait.Incomplete, "1")]
         public async void Delete()
         {
             var client = new GitHubPackageApi();
