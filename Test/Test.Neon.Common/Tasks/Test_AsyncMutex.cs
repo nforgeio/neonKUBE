@@ -33,13 +33,13 @@ using Xunit;
 
 namespace TestCommon
 {
+    [Trait(TestTrait.Area, TestArea.NeonCommon)]
     public class Test_AsyncMutex
     {
         private TimeSpan defaultTimeout = TimeSpan.FromSeconds(15);  // Maximum time to wait for a test operation to complete.
         private const int repeatCount = 4;
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task Basic()
         {
             // Create a mutex and then several tasks that acquire the mutex for
@@ -96,7 +96,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task Dispose()
         {
             // Create a mutex, acquire it, and then create another task that will

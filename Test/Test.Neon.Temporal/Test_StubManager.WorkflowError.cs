@@ -52,7 +52,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Error_WorkflowGenericsNotAllowed()
         {
             // We don't support workflow interfaces with generic parameters.
@@ -67,7 +66,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Error_WorkflowNoEntryPoint()
         {
             // Workflows need to have at least one entry point.
@@ -76,7 +74,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Error_WorkflowNullClient()
         {
             // A non-NULL client is required.
@@ -96,7 +93,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Error_WorkflowNotInterface()
         {
             // Only workflow interfaces are allowed.
@@ -116,7 +112,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Error_WorkflowNotPublic()
         {
             // Workflow interfaces must be public.
@@ -139,7 +134,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Error_WorkflowNonTaskEntryPoint()
         {
             // Workflow entry points methods need to return a Task.
@@ -160,7 +154,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Error_WorkflowNonTaskSignal()
         {
             // Workflow signal methods need to return a Task.
@@ -180,7 +173,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Error_WorkflowDuplicateDuplicateDefaultEntryPoints()
         {
             // Verify that we detect duplicate entrypoint methods
@@ -201,7 +193,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Error_WorkflowDuplicateDuplicateEntryPoints()
         {
             // Verify that we detect duplicate entrypoint methods
@@ -225,7 +216,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Error_WorkflowDuplicateSignals()
         {
             // Verify that we detect duplicate signal names.
@@ -245,7 +235,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Error_WorkflowNonTaskQuery()
         {
             // Workflow query methods need to return a Task.
@@ -268,7 +257,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Error_WorkflowDuplicateQueries()
         {
             // Verify that we detect duplicate query names.

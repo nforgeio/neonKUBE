@@ -31,10 +31,10 @@ using Xunit;
 
 namespace TestCommon
 {
+    [Trait(TestTrait.Area, TestArea.NeonCommon)]
     public class Test_Win32
     {
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void GetPhysicallyInstalledSystemMemory()
         {
             Assert.True(Win32.GetPhysicallyInstalledSystemMemory(out var memKB));

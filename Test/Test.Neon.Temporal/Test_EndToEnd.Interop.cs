@@ -181,7 +181,6 @@ namespace TestTemporal
         //---------------------------------------------------------------------
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public async Task Interop_Workflow_Untyped()
         {
             await SyncContext.ClearAsync;

@@ -38,6 +38,7 @@ namespace TestYugaByte
     /// These tests verify that we can connect to via Cassandra and Postgres and also
     /// that <see cref="YugaByteFixture.Restart()"/> actually clears the database.
     /// </summary>
+    [Trait(TestTrait.Area, TestArea.NeonYugaByte)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_RestartAlways : IClassFixture<YugaByteFixture>
@@ -63,7 +64,6 @@ namespace TestYugaByte
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonYugaByte)]
         public void Cassandra0()
         {
             cassandra.Execute("CREATE TABLE employee(id int PRIMARY KEY, name varchar, age int, language varchar)");
@@ -72,7 +72,6 @@ namespace TestYugaByte
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonYugaByte)]
         public void Cassandra1()
         {
             cassandra.Execute("CREATE TABLE employee(id int PRIMARY KEY, name varchar, age int, language varchar)");
@@ -81,7 +80,6 @@ namespace TestYugaByte
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonYugaByte)]
         public void Postgres0()
         {
             NpgsqlCommand command;
@@ -97,7 +95,6 @@ namespace TestYugaByte
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonYugaByte)]
         public void Postgres1()
         {
             NpgsqlCommand command;

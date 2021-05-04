@@ -31,6 +31,7 @@ using Xunit;
 
 namespace TestCommon
 {
+    [Trait(TestTrait.Area, TestArea.NeonCommon)]
     public class Test_RetrySync_ExponentialRetryPolicy
     {
         private class TransientException : Exception
@@ -74,7 +75,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Defaults()
         {
             var policy = new ExponentialRetryPolicy(TransientDetector, sourceModule: "test");
@@ -85,7 +85,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void FailAll()
         {
             var policy = new ExponentialRetryPolicy(TransientDetector);
@@ -107,7 +106,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void FailAll_Result()
         {
             var policy = new ExponentialRetryPolicy(TransientDetector);
@@ -129,7 +127,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void FailImmediate()
         {
             var policy = new ExponentialRetryPolicy(TransientDetector);
@@ -150,7 +147,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void FailImmediate_Result()
         {
             var policy = new ExponentialRetryPolicy(TransientDetector);
@@ -171,7 +167,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void FailDelayed()
         {
             var policy = new ExponentialRetryPolicy(TransientDetector);
@@ -201,7 +196,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void FailDelayed_Result()
         {
             var policy = new ExponentialRetryPolicy(TransientDetector);
@@ -231,7 +225,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void SuccessImmediate()
         {
             var policy  = new ExponentialRetryPolicy(TransientDetector);
@@ -251,7 +244,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void SuccessImmediate_Result()
         {
             var policy = new ExponentialRetryPolicy(TransientDetector);
@@ -270,7 +262,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void SuccessDelayed()
         {
             var policy  = new ExponentialRetryPolicy(TransientDetector);
@@ -296,7 +287,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void SuccessDelayed_Result()
         {
             var policy = new ExponentialRetryPolicy(TransientDetector);
@@ -321,7 +311,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void SuccessDelayedByType()
         {
             var policy  = new ExponentialRetryPolicy(typeof(NotReadyException));
@@ -347,7 +336,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void SuccessDelayedAggregateSingle()
         {
             var policy  = new ExponentialRetryPolicy(typeof(NotReadyException));
@@ -373,7 +361,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void SuccessDelayedAggregateArray()
         {
             var policy  = new ExponentialRetryPolicy(new Type[] { typeof(NotReadyException), typeof(KeyNotFoundException) });
@@ -406,7 +393,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void SuccessCustom()
         {
             var policy  = new ExponentialRetryPolicy(TransientDetector, maxAttempts: 6, initialRetryInterval: TimeSpan.FromSeconds(0.5), maxRetryInterval: TimeSpan.FromSeconds(4));
@@ -436,7 +422,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void SuccessCustom_Result()
         {
             var policy = new ExponentialRetryPolicy(TransientDetector, maxAttempts: 6, initialRetryInterval: TimeSpan.FromSeconds(0.5), maxRetryInterval: TimeSpan.FromSeconds(4));
@@ -465,7 +450,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Timeout()
         {
             var policy = new ExponentialRetryPolicy(TransientDetector, maxAttempts: 6, initialRetryInterval: TimeSpan.FromSeconds(0.5), maxRetryInterval: TimeSpan.FromSeconds(4), timeout: TimeSpan.FromSeconds(1.5));

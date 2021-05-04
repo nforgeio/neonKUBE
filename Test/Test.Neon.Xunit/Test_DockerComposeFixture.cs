@@ -34,6 +34,7 @@ using Xunit;
 
 namespace TestXunit
 {
+    [Trait(TestTrait.Area, TestArea.NeonXunit)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_DockerComposeFixture : IClassFixture<DockerComposeFixture>
@@ -57,7 +58,6 @@ services:
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Basic()
         {
             // All we need to do is verify that the application containers are running
@@ -75,7 +75,6 @@ services:
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Restart()
         {
             // We're going to verify that the application was actually restarted by verifying

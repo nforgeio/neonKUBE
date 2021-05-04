@@ -32,6 +32,7 @@ using Xunit;
 
 namespace TestCommon
 {
+    [Trait(TestTrait.Area, TestArea.NeonCommon)]
     public class Test_LabelSelector
     {
         //---------------------------------------------------------------------
@@ -79,7 +80,6 @@ namespace TestCommon
         // Implementation
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Equal()
         {
             LabelSelector<TestItem> selector;
@@ -149,7 +149,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void NotEqual()
         {
             LabelSelector<TestItem> selector;
@@ -211,7 +210,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Has()
         {
             LabelSelector<TestItem> selector;
@@ -266,7 +264,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void NotHas()
         {
             LabelSelector<TestItem> selector;
@@ -323,7 +320,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void In()
         {
             LabelSelector<TestItem> selector;
@@ -378,7 +374,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void NotIn()
         {
             LabelSelector<TestItem> selector;
@@ -433,7 +428,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Multiple()
         {
             LabelSelector<TestItem> selector;
@@ -461,7 +455,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void CaseInsensitive_Labels()
         {
             LabelSelector<TestItemCaseInsensitive> selector;
@@ -487,7 +480,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void CaseInsensitive_Values()
         {
             LabelSelector<TestItem> selector;
@@ -513,7 +505,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Constraints_Enabled()
         {
             LabelSelector<TestItem> selector;
@@ -574,7 +565,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Constraints_Disabled()
         {
             LabelSelector<TestItem> selector;
@@ -629,7 +619,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Constraints_Explicit()
         {
             // Verify that explicit Kubernetes client label checks work.

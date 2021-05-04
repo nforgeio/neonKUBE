@@ -97,6 +97,7 @@ namespace Test.NeonCli
     /// <summary>
     /// Tests <b>neon generate models</b> commands.
     /// </summary>
+    [Trait(TestTrait.Area, TestArea.NeonModelGen)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_ModelGeneration
@@ -104,7 +105,6 @@ namespace Test.NeonCli
         private string thisAssemblyPath = Assembly.GetExecutingAssembly().Location;
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCli)]
         public async Task AllTargets()
         {
             using (var runner = new ProgramRunner())
@@ -129,7 +129,6 @@ namespace Test.NeonCli
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCli)]
         public async Task Filter1()
         {
             using (var runner = new ProgramRunner())
@@ -154,7 +153,6 @@ namespace Test.NeonCli
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCli)]
         public async Task Filter2()
         {
             using (var runner = new ProgramRunner())
@@ -179,7 +177,6 @@ namespace Test.NeonCli
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCli)]
         public async Task FilterClient()
         {
             using (var runner = new ProgramRunner())
@@ -204,7 +201,6 @@ namespace Test.NeonCli
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCli)]
         public async Task Filter3AndClient()
         {
             using (var runner = new ProgramRunner())
@@ -229,7 +225,6 @@ namespace Test.NeonCli
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCli)]
         public async Task SourceNamespace()
         {
             using (var runner = new ProgramRunner())
@@ -254,7 +249,6 @@ namespace Test.NeonCli
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCli)]
         public async Task NoServices()
         {
             using (var runner = new ProgramRunner())

@@ -41,6 +41,7 @@ using Newtonsoft.Json.Linq;
 
 namespace TestTemporal
 {
+    [Trait(TestTrait.Area, TestArea.NeonTemporal)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public partial class Test_StubManager : IClassFixture<TemporalFixture>, IDisposable

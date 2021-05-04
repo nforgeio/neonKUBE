@@ -29,6 +29,7 @@ using Xunit;
 
 namespace TestCommon
 {
+    [Trait(TestTrait.Area, TestArea.NeonCommon)]
     public partial class Test_ExceptionResult
     {
         public class TestException1 : Exception
@@ -55,7 +56,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void ExceptionResult_NoError()
         {
             // Verify that an exception result with no error doesn't rethrow.
@@ -69,7 +69,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void ExceptionResult_Rethrow()
         {
             // Verify that an exception result with an exception type
@@ -151,7 +150,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void ExceptionResult_CatchAll()
         {
             // Verify that a [CatchAllException] is thrown when a local exception
@@ -177,7 +175,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void ExceptionResult_Serialize()
         {
             // Verify that we serialize an [ExceptionResult].
@@ -196,7 +193,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void ExceptionResultT()
         {
             // Verify that an exception result with no error doesn't rethrow.
@@ -210,7 +206,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void ExceptionResultT_Rethrow()
         {
             // Verify that an exception result with an exception type
@@ -292,7 +287,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void ExceptionResultT_CatchAll()
         {
             // Verify that a [CatchAllException] is thrown when a local exception
@@ -318,7 +312,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void ExceptionResultT_Serialize()
         {
             // Verify that we serialize an [ExceptionResult<T>].

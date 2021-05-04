@@ -40,7 +40,6 @@ namespace TestCommon
     public partial class Test_JsonClient
     {
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task DeletetAsync()
         {
             // Ensure that DELETE returning an explict type works.
@@ -87,7 +86,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task DeleteAsync_NotJson()
         {
             // Ensure that DELETE returning a non-JSON content type returns a NULL document.
@@ -130,7 +128,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task DeleteAsync_Args()
         {
             // Ensure that DELETE with query arguments work.
@@ -181,7 +178,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task DeleteAsync_Headers()
         {
             // Ensure that DELETE with headers work.
@@ -232,7 +228,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task DeleteAsync_Dynamic()
         {
             // Ensure that DELETE returning a dynamic works.
@@ -275,7 +270,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task DeleteAsync_Dynamic_NotJson()
         {
             // Ensure that DELETE returning non-JSON returns a NULL dynamic document.
@@ -318,7 +312,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task DeleteAsync_Error()
         {
             // Ensure that DELETE returning a hard error works.
@@ -341,7 +334,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task DeleteAsync_Retry()
         {
             // Ensure that DELETE will retry after soft errors.
@@ -382,7 +374,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task DeleteAsync_NoRetryNull()
         {
             // Ensure that DELETE won't retry if [retryPolicy=NULL]
@@ -422,7 +413,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task DeleteAsync_NoRetryExplicit()
         {
             // Ensure that DELETE won't retry if [retryPolicy=NoRetryPolicy]

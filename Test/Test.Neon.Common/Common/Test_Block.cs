@@ -29,10 +29,10 @@ using Xunit;
 
 namespace TestCommon
 {
+    [Trait(TestTrait.Area, TestArea.NeonCommon)]
     public class Test_Block
     {
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Construction()
         {
             Block block;
@@ -57,7 +57,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Indexing()
         {
             Block block;
@@ -74,7 +73,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void CopyTo()
         {
             Block block;
@@ -102,7 +100,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void CopyFrom()
         {
             Block block;

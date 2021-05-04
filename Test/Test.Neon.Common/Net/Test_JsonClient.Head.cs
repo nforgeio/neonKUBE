@@ -40,7 +40,6 @@ namespace TestCommon
     public partial class Test_JsonClient
     {
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task HeadAsync()
         {
             // Ensure that HEAD returning an explict type works.
@@ -82,7 +81,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task HeadAsync_NotJson()
         {
             // Ensure that HEAD returning a non-JSON content type returns a NULL document.
@@ -123,7 +121,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task HeadAsync_Args()
         {
             // Ensure that HEAD with query arguments work.
@@ -171,7 +168,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task HeadAsync_Headers()
         {
             // Ensure that HEAD with query arguments work.
@@ -219,7 +215,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task HeadAsync_Dynamic()
         {
             // Ensure that HEAD returning a dynamic works.
@@ -260,7 +255,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task HeadAsync_Dynamic_NotJson()
         {
             // Ensure that HEAD returning non-JSON returns a NULL dynamic document.
@@ -301,7 +295,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task HeadAsync_Error()
         {
             // Ensure that HEAD returning a hard error works.
@@ -324,7 +317,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task HeadAsync_Retry()
         {
             // Ensure that HEAD will retry after soft errors.
@@ -361,7 +353,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task HeadAsync_NoRetryNull()
         {
             // Ensure that HEAD won't retry if [retryPolicy=NULL]
@@ -401,7 +392,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task HeadAsync_NoRetryExplicit()
         {
             // Ensure that HEAD won't retry if [retryPolicy=NoRetryPolicy]

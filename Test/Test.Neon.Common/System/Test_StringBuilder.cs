@@ -31,10 +31,10 @@ using Xunit;
 
 namespace TestCommon
 {
+    [Trait(TestTrait.Area, TestArea.NeonCommon)]
     public class Test_StringBuilder
     {
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void AppendLineLinux()
         {
             var sb = new StringBuilder();
@@ -46,7 +46,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void AppendWithSeparator()
         {
             var sb = new StringBuilder();

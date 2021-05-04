@@ -42,7 +42,6 @@ namespace TestTemporal
     public partial class Test_Messages
     {
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_ProxyMessage()
         {
             // Ensures that we can serialize and deserialize base messages.
@@ -118,7 +117,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_ProxyRequest()
         {
             // Ensures that we can serialize and deserialize request messages.
@@ -169,7 +167,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_ProxyReply()
         {
             // Ensures that we can serialize and deserialize reply messages.
@@ -223,7 +220,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_ActivityRequest()
         {
             // Ensures that we can serialize and deserialize activity request messages.
@@ -277,7 +273,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_ActivityReply()
         {
             // Ensures that we can serialize and deserialize activity reply messages.
@@ -335,7 +330,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowRequest()
         {
             // Ensures that we can serialize and deserialize workflow request messages.
@@ -389,7 +383,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_WorkflowReply()
         {
             // Ensures that we can serialize and deserialize workflow reply messages.

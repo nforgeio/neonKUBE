@@ -41,7 +41,6 @@ namespace TestCommon
     public partial class Test_JsonClient
     {
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task PatchUnsafeAsync()
         {
             // Ensure that PATCH returning an explict type works.
@@ -99,7 +98,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task PatchUnsafeAsync_NotJson()
         {
             // Ensure that PATCH returning a non-JSON content type returns a NULL document.
@@ -157,7 +155,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task PatchUnsafeAsync_Args()
         {
             // Ensure that PATCH with query arguments work.
@@ -223,7 +220,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task PatchUnsafeAsync_Headers()
         {
             // Ensure that PATCH with query arguments work.
@@ -289,7 +285,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task PatchUnsafeAsync_Dynamic()
         {
             // Ensure that PATCH returning a dynamic works.
@@ -346,7 +341,6 @@ namespace TestCommon
         }
  
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task PatchUnsafeAsync_Dynamic_NotJson()
         {
             // Ensure that PATCH returning non-JSON returns a NULL dynamic document.
@@ -403,7 +397,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task PatchUnsafeAsync_Error()
         {
             // Ensure that PATCH returning a hard error works.
@@ -437,7 +430,6 @@ namespace TestCommon
         }
 
         [Fact(Skip = "TODO")]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task PatchUnsafeAsync_Retry()
         {
             // Ensure that PATCH will retry after soft errors.
@@ -448,7 +440,6 @@ namespace TestCommon
         }
 
         [Fact(Skip = "TODO")]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task PatchUnsafeAsync_NoRetryNull()
         {
             // Ensure that PATCH won't retry if [retryPolicy=NULL]
@@ -459,7 +450,6 @@ namespace TestCommon
         }
 
         [Fact(Skip = "TODO")]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task PatchUnsafeAsync_NoRetryExplicit()
         {
             // Ensure that PATCH won't retry if [retryPolicy=NoRetryPolicy]

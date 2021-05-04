@@ -31,6 +31,7 @@ using Xunit;
 
 namespace TestXunit
 {
+    [Trait(TestTrait.Area, TestArea.NeonXunit)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_EnvironmentFixture : IClassFixture<EnvironmentFixture>
@@ -48,7 +49,6 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void EnvironmentVariables()
         {
             // Set some new environment variables.

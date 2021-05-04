@@ -32,10 +32,10 @@ using Xunit;
 
 namespace TestCommon
 {
+    [Trait(TestTrait.Area, TestArea.NeonCommon)]
     public class Test_TimeSpan
     {
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void AdjustToFitDateRange()
         {
             // Verify that we can adjust a timespan such that when

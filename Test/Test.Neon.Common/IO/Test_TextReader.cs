@@ -29,10 +29,10 @@ using Xunit;
 
 namespace TestCommon
 {
+    [Trait(TestTrait.Area, TestArea.NeonCommon)]
     public class Test_TextReader
     {
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Lines_Empty()
         {
             var lines = new List<string>();
@@ -49,7 +49,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Lines_OneEmpty()
         {
             var lines = new List<string>();
@@ -67,7 +66,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Lines_Multiple()
         {
             var lines = new List<string>();
@@ -97,7 +95,6 @@ done
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Lines_MultipleIgnoreBlank()
         {
             var lines = new List<string>();

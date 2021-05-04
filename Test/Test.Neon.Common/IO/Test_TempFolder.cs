@@ -30,10 +30,10 @@ using Xunit;
 
 namespace TestCommon
 {
+    [Trait(TestTrait.Area, TestArea.NeonCommon)]
     public class Test_TempFolder
     {
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void DefaultRoot()
         {
             string testFolderPath;
@@ -56,7 +56,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void CustomRoot()
         {
             string customRoot = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("d"));
@@ -90,7 +89,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void CustomParent()
         {
             string customRoot = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("d"));

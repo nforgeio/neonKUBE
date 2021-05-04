@@ -256,7 +256,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact_Failing_Errors]
+        [Fact]
         [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public async Task Activity_WithError()
         {
@@ -959,7 +959,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact_Failing_Errors]
+        [Fact]
         [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public async Task Activity_Fail()
         {
@@ -1189,7 +1189,7 @@ namespace TestTemporal
             Assert.Equal("Hello World!", await task);
         }
 
-        [Fact_Failing_Errors]
+        [Fact]
         [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public async Task Activity_External_ErrorByToken()
         {
@@ -1222,7 +1222,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact_Failing_Errors]
+        [Fact]
         [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public async Task Activity_External_ErrorById()
         {
@@ -1255,7 +1255,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact_Failing_Errors]
+        [Fact]
         [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public async Task Activity_External_HeartbeatTimeout()
         {

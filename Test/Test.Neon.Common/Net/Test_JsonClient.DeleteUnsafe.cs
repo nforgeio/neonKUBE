@@ -40,7 +40,6 @@ namespace TestCommon
     public partial class Test_JsonClient
     {
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task DeleteUnsafeAsync()
         {
             // Ensure that DELETE returning an explict type works.
@@ -83,7 +82,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task DeleteUnsafeAsync_NotJson()
         {
             // Ensure that DELETE returning a non-JSON content type returns a NULL document.
@@ -126,7 +124,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task DeleteUnsafeAsync_Args()
         {
             // Ensure that DELETE with query arguments work.
@@ -177,7 +174,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task DeleteUnsafeAsync_Headers()
         {
             // Ensure that DELETE with query arguments work.
@@ -228,7 +224,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task DeleteUnsafeAsync_Dynamic()
         {
             // Ensure that DELETE returning a dynamic works.
@@ -271,7 +266,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task DeleteUnsafeAsync_Dynamic_NotJson()
         {
             // Ensure that DELETE returning non-JSON returns a NULL dynamic document.
@@ -314,7 +308,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task DeleteUnsafeAsync_Error()
         {
             // Ensure that DELETE returning a hard error works.
@@ -341,7 +334,6 @@ namespace TestCommon
         }
 
         [Fact(Skip = "TODO")]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task DeleteUnsafeAsync_Retry()
         {
             // Ensure that DELETE will retry after soft errors.
@@ -352,7 +344,6 @@ namespace TestCommon
         }
 
         [Fact(Skip = "TODO")]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task DeleteUnsafeAsync_NoRetryNull()
         {
             // Ensure that DELETE won't retry if [retryPolicy=NULL]
@@ -363,7 +354,6 @@ namespace TestCommon
         }
 
         [Fact(Skip = "TODO")]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task DeleteUnsafeAsync_NoRetryExplicit()
         {
             // Ensure that DELETE won't retry if [retryPolicy=NoRetryPolicy]

@@ -33,6 +33,7 @@ namespace TestXunit
     /// <summary>
     /// Verify the base test fixture implementation.
     /// </summary>
+    [Trait(TestTrait.Area, TestArea.NeonXunit)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_TestFixture : IClassFixture<EnvironmentFixture>
@@ -51,7 +52,6 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Verify1()
         {
             // Both state values should be retained across all unit tests.
@@ -61,7 +61,6 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Verify2()
         {
             // Both state values should be retained across all unit tests.
@@ -71,7 +70,6 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Verify3()
         {
             // Both state values should be retained across all unit tests.

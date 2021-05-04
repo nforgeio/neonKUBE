@@ -2398,7 +2398,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact_Failing_Errors]
+        [Fact]
         [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public async Task Workflow_WithError()
         {
@@ -2438,7 +2438,7 @@ namespace TestTemporal
             Task<string> HelloAsync(string name);
         }
 
-        [Fact_Failing_Errors]
+        [Fact]
         [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public async Task Workflow_Unregistered()
         {
@@ -3449,7 +3449,7 @@ namespace TestTemporal
             Assert.Equal("Hello Jill!", await stub.HelloWithAttributeAsync("Jill"));
         }
 
-        [Fact_Failing_Errors]
+        [Fact]
         [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public async Task Workflow_ChildIdNoReuse()
         {
@@ -4439,8 +4439,7 @@ namespace TestTemporal
             }
         }
 
-        [Fact_Failing_Errors]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
+        [Fact]
         public async Task Workflow_StartToCloseTimeout()
         {
             await SyncContext.ClearAsync;
@@ -4460,7 +4459,7 @@ namespace TestTemporal
             await Assert.ThrowsAsync<StartToCloseTimeoutException>(async () => await stub.SleepAsync(sleepTime));
         }
 
-        [Fact_Failing_Errors]
+        [Fact]
         [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public async Task Activity_StartToCloseTimeout()
         {
@@ -4474,7 +4473,7 @@ namespace TestTemporal
             Assert.True(await stub.ActivityTimeout());
         }
 
-        [Fact_Failing_Errors]
+        [Fact]
         [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public async Task Activity_HeartbeatTimeout()
         {
@@ -4488,7 +4487,7 @@ namespace TestTemporal
             Assert.True(await stub.ActivityHeartbeatTimeoutAsync());
         }
 
-        [Fact_Failing_Errors]
+        [Fact]
         [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public async Task Activity_DotNetException()
         {

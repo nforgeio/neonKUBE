@@ -41,6 +41,7 @@ using Newtonsoft.Json.Linq;
 
 namespace TestTemporal
 {
+    [Trait(TestTrait.Area, TestArea.NeonTemporal)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_JsonDataConverter
@@ -51,7 +52,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void DataWithGenericType()
         {
             // Verify that we can serialize and deserialize various (non-roundtrip) data items
@@ -90,7 +90,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void DataWithType()
         {
             // Verify that we can serialize and deserialize various (non-roundtrip) data items
@@ -129,7 +128,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void RoundTripDataWithGeneric()
         {
             // Verify that we can serialize and deserialize various roundtrip data items
@@ -169,7 +167,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void RoundTripDataWithType()
         {
             // Verify that we can serialize and deserialize various roundtrip data items.
@@ -242,7 +239,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void DataArray()
         {
             // Verify that we can deserialize arrays of data items.
@@ -347,7 +343,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void SerializeEnum()
         {
             // Verify that Enum values serialize correctly.
@@ -378,7 +373,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void SerializeFlagsEnum()
         {
             var             converter = new JsonDataConverter();
@@ -428,7 +422,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void SerializeDateTime()
         {
             // Verify that Enum values with the [Flags] attribute serialize correctly.

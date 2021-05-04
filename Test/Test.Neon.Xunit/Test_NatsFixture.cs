@@ -54,6 +54,7 @@ namespace TestXunit
     /// This class tests both the <see cref="NatsFixture"/> as well as the Neon
     /// NATS extensions.
     /// </summary>
+    [Trait(TestTrait.Area, TestArea.NeonXunit)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_NatsFixture : IClassFixture<NatsFixture>
@@ -73,14 +74,12 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonXunit)]
         public void Connect()
         {
             Assert.Equal(ConnState.CONNECTED, connection.State);
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonXunit)]
         public void Subscribe()
         {
             Assert.Equal(ConnState.CONNECTED, connection.State);
@@ -106,7 +105,6 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonXunit)]
         public void SubscribeQueue()
         {
             Assert.Equal(ConnState.CONNECTED, connection.State);
@@ -132,7 +130,6 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonXunit)]
         public void SubscribeAsync()
         {
             Assert.Equal(ConnState.CONNECTED, connection.State);
@@ -173,7 +170,6 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonXunit)]
         public void SubscribeAsyncHandler()
         {
             Assert.Equal(ConnState.CONNECTED, connection.State);
@@ -216,7 +212,6 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonXunit)]
         public void SubscribeAsyncQueue()
         {
             Assert.Equal(ConnState.CONNECTED, connection.State);
@@ -257,7 +252,6 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonXunit)]
         public void SubscribeAsyncQueueHandler()
         {
             Assert.Equal(ConnState.CONNECTED, connection.State);
@@ -300,7 +294,6 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonXunit)]
         public void Publish()
         {
             Assert.Equal(ConnState.CONNECTED, connection.State);
@@ -326,7 +319,6 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonXunit)]
         public void PublishReply()
         {
             Assert.Equal(ConnState.CONNECTED, connection.State);
@@ -353,7 +345,6 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonXunit)]
         public void Request()
         {
             Assert.Equal(ConnState.CONNECTED, connection.State);
@@ -400,7 +391,6 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonXunit)]
         public void RequestTimeout()
         {
             Assert.Equal(ConnState.CONNECTED, connection.State);
@@ -447,7 +437,6 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonXunit)]
         public async Task RequestAsync()
         {
             Assert.Equal(ConnState.CONNECTED, connection.State);

@@ -39,6 +39,7 @@ namespace TestNeonService
     /// HTTP endpoint and that also exercises environment variable and file based 
     /// configuration.
     /// </summary>
+    [Trait(TestTrait.Area, TestArea.NeonService)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_WebService : IClassFixture<NeonServiceFixture<WebService>>
@@ -88,7 +89,6 @@ namespace TestNeonService
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonKube)]
         public async Task NoConfig()
         {
             // Restart the service without specifying a configuration variable 
@@ -105,7 +105,6 @@ namespace TestNeonService
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonKube)]
         public async Task EnvironmentConfig()
         {
             // Restart the service specifying the configuration via
@@ -124,7 +123,6 @@ namespace TestNeonService
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonKube)]
         public async Task EmulatedFileConfig()
         {
             // Restart the service specifying the configuration via
@@ -143,7 +141,7 @@ namespace TestNeonService
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonKube)]
+
         public async Task PhysicalFileConfig()
         {
             // Restart the service specifying the configuration via
@@ -167,7 +165,6 @@ namespace TestNeonService
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonKube)]
         public async Task EncryptedFileConfig()
         {
             // Restart the service specifying the configuration via
@@ -199,7 +196,6 @@ namespace TestNeonService
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonKube)]
         public async Task EnvironmentFileConfig()
         {
             // Restart the service specifying by loading a file with
@@ -227,7 +223,6 @@ WEB_RESULT=HELLO WORLD!
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonKube)]
         public async Task EncryptedEnvironmentFileConfig()
         {
             // Restart the service specifying by loading an encrypted file with

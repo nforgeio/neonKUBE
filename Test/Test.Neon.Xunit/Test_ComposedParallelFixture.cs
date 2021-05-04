@@ -48,6 +48,7 @@ namespace TestXunit
     /// <summary>
     /// Verify that we can start fixtures in parallel by group.
     /// </summary>
+    [Trait(TestTrait.Area, TestArea.NeonXunit)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_ComposedParallelFixtures : IClassFixture<ComposedFixture>
@@ -180,7 +181,6 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task Verify()
         {
             var couchbaseFixture = (CouchbaseFixture)fixture["couchbase"];

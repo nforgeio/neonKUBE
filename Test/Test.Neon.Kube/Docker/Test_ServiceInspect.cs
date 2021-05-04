@@ -44,6 +44,7 @@ namespace TestKube
     /// Verifies that the <see cref="ServiceDetails"/> class maps correctly to
     /// the service inspection details returned for actual Docker services.
     /// </summary>
+    [Trait(TestTrait.Area, TestArea.Docker)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_ServiceInspect : IClassFixture<DockerFixture>
@@ -87,7 +88,6 @@ namespace TestKube
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonKube)]
         public void Simple()
         {
             // Deploy a very simple service and then verify that the
@@ -193,7 +193,6 @@ namespace TestKube
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonKube)]
         public void Labels()
         {
             // Verify that we can deploy and parse service labels.
@@ -215,7 +214,6 @@ namespace TestKube
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonKube)]
         public void Env()
         {
             // Verify that we can specify environment variables.
@@ -239,7 +237,6 @@ namespace TestKube
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonKube)]
         public void DNSConfig()
         {
             // Verify that we can specify DNS configuration.
@@ -262,7 +259,6 @@ namespace TestKube
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonKube)]
         public void Command()
         {
             // Verify that we can specify the container command and arguments.
@@ -287,7 +283,6 @@ namespace TestKube
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonKube)]
         public void Misc()
         {
             // NOTE:
@@ -331,7 +326,6 @@ namespace TestKube
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonKube)]
         public void Health()
         {
             // Verify that we can customize health checks.
@@ -374,7 +368,6 @@ namespace TestKube
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonKube)]
         public void Secrets()
         {
             // Verify that we can specify service secrets.
@@ -402,7 +395,6 @@ namespace TestKube
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonKube)]
         public void Configs()
         {
             // Verify that we can specify service configs.
@@ -430,7 +422,6 @@ namespace TestKube
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonKube)]
         public void Global()
         {
             // Deploy a service in GLOBAL (not replicated mode) and verify.
@@ -450,7 +441,6 @@ namespace TestKube
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonKube)]
         public void DNSRR()
         {
             // Deploy a service in DNSRR mode and verify.
@@ -470,7 +460,6 @@ namespace TestKube
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonKube)]
         public void Ports()
         {
             // Deploy a service with port mappings and verify.
@@ -524,7 +513,6 @@ namespace TestKube
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonKube)]
         public void Mounts()
         {
             // Deploy a service with various mounts and verify.
@@ -637,7 +625,6 @@ namespace TestKube
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonKube)]
         public void Rollback()
         {
             // $note(jefflill):
@@ -700,14 +687,12 @@ namespace TestKube
         }
 
         [Fact(Skip = "Not supporting SELinux services yet.")]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonKube)]
         public void SELinux()
         {
             // $todo(jefflill): Not supporting SELinux yet.
         }
 
         [Fact(Skip = "Not supporting Windows services yet.")]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonKube)]
         public void Windows()
         {
             // $todo(jefflill):

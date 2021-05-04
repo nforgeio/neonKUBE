@@ -30,10 +30,10 @@ using Xunit;
 
 namespace TestCommon
 {
+    [Trait(TestTrait.Area, TestArea.NeonCommon)]
     public class Test_LinuxPath
     {
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void ChangeExtension()
         {
             Assert.Equal("test.one", LinuxPath.ChangeExtension("test", "one"));
@@ -43,7 +43,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Combine()
         {
             Assert.Equal("/one/two/three.txt", LinuxPath.Combine("/one", "two", "three.txt"));
@@ -51,7 +50,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void GetDirectoryName()
         {
             Assert.Equal("/one/two", LinuxPath.GetDirectoryName("\\one\\two\\three.txt"));
@@ -59,7 +57,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void GetExtension()
         {
             Assert.Equal(".txt", LinuxPath.GetExtension("\\one\\two\\three.txt"));
@@ -67,7 +64,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void GetFileName()
         {
             Assert.Equal("three.txt", LinuxPath.GetFileName("\\one\\two\\three.txt"));
@@ -75,7 +71,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void GetFileNameWithoutExtension()
         {
             Assert.Equal("three", LinuxPath.GetFileNameWithoutExtension("\\one\\two\\three.txt"));
@@ -83,7 +78,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void HasExtension()
         {
             Assert.True(LinuxPath.HasExtension("\\one\\two\\three.txt"));
@@ -94,7 +88,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void IsPathRooted()
         {
             Assert.True(LinuxPath.IsPathRooted("\\one\\two\\three.txt"));

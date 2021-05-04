@@ -29,6 +29,7 @@ using Xunit;
 
 namespace TestCommon
 {
+    [Trait(TestTrait.Area, TestArea.NeonCommon)]
     public class Test_SemanticVersion
     {
         [Fact]

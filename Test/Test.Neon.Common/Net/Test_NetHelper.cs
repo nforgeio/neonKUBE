@@ -30,11 +30,11 @@ using Xunit;
 
 namespace TestCommon
 {
+    [Trait(TestTrait.Area, TestArea.NeonCommon)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_NetHelper
     {
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void AddressEquals()
         {
             Assert.True(NetHelper.AddressEquals(NetHelper.ParseIPv4Address("10.0.0.1"), NetHelper.ParseIPv4Address("10.0.0.1")));
@@ -42,7 +42,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void AddressIncrement()
         {
             Assert.True(NetHelper.AddressEquals(NetHelper.ParseIPv4Address("0.0.0.1"), NetHelper.AddressIncrement(NetHelper.ParseIPv4Address("0.0.0.0"))));
@@ -53,7 +52,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void ParseIPv4()
         {
             Assert.Equal(IPAddress.Parse("1.2.3.4"), NetHelper.ParseIPv4Address("1.2.3.4"));
@@ -69,7 +67,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void TryParseIPv4()
         {
             IPAddress address;
@@ -92,7 +89,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void ParseIPv6()
         {
             Assert.Equal(IPAddress.Parse("2001:0db8:85a3:0000:0000:8a2e:0370:7334"), NetHelper.ParseIPv6Address("2001:0db8:85a3:0000:0000:8a2e:0370:7334"));
@@ -104,7 +100,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void TryParseIPv6()
         {
             IPAddress address;
@@ -121,7 +116,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Conversions()
         {
             Assert.True(NetHelper.AddressEquals(IPAddress.Parse("0.0.0.0"), NetHelper.UintToAddress(0)));
@@ -134,7 +128,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void ModifyLocalHosts_Default()
         {
             try
@@ -169,7 +162,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void ModifyLocalHosts_NonDefault()
         {
             const string marker = "TEST";
@@ -206,7 +198,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void ModifyLocalHosts_Multiple()
         {
             const string section1 = "TEST-1";
@@ -279,7 +270,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void ModifyLocalHosts_Modify()
         {
             try
@@ -384,7 +374,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         [Trait(TestTrait.Unreliable, "1")]      // This has never been entirely reliable.
         public void ModifyLocalHosts_Reliability()
         {
@@ -500,7 +489,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void GetReachableHost()
         {
             //-----------------------------------------------------------------
@@ -566,7 +554,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void GetReachableHosts()
         {
             if (!NeonHelper.IsOSX)
@@ -618,7 +605,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void TryParseIPv4Endpoint()
         {
             IPEndPoint endpoint;
@@ -637,7 +623,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void ParseIPv4Endpoint()
         {
             Assert.Equal(new IPEndPoint(IPAddress.Loopback, 80), NetHelper.ParseIPv4Endpoint("127.0.0.1:80"));
@@ -652,7 +637,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void GetUnusedIpPort()
         {
             // Verify that we can obtain 100 unique ports on [127.0.0.1].
@@ -675,7 +659,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void IsValidHost()
         {
             var longestLabel = new string('a', 61);
@@ -716,7 +699,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void GetNetworkConfiguration()
         {
             var routableAddress = NetHelper.GetRoutableIpAddress();
@@ -743,7 +725,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void ToAwsS3Uri()
         {
             Assert.Equal("s3://bucket/path/to/object", NetHelper.ToAwsS3Uri("s3://bucket/path/to/object"));

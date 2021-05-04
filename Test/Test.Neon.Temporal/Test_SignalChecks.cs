@@ -40,6 +40,7 @@ using Xunit;
 
 namespace TestTemporal
 {
+    [Trait(TestTrait.Area, TestArea.NeonTemporal)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_SignalChecks : IClassFixture<TemporalFixture>, IDisposable

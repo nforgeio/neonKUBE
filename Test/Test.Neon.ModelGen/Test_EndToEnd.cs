@@ -294,6 +294,7 @@ namespace TestModelGen.AspNet
     /// This tests end-to-end integration of generated data models and service clients as well as
     /// their integration with the an MVC based backend service controller.
     /// </summary>
+    [Trait(TestTrait.Area, TestArea.NeonModelGen)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_EndToEnd : IClassFixture<AspNetFixture>
@@ -319,14 +320,12 @@ namespace TestModelGen.AspNet
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonModelGen)]
         public void ValidateController()
         {
             client.ValidateController<TestAspNetFixtureController>();
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonModelGen)]
         public async Task GetString()
         {
             Assert.Equal("Hello World!", await client.GetStringAsync("Hello World!"));
@@ -350,7 +349,6 @@ namespace TestModelGen.AspNet
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonModelGen)]
         public async Task GetBool()
         {
             Assert.True(await client.GetBoolAsync(true));
@@ -358,7 +356,6 @@ namespace TestModelGen.AspNet
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonModelGen)]
         public async Task GetInt()
         {
             Assert.Equal(0, await client.GetIntAsync(0));
@@ -367,7 +364,6 @@ namespace TestModelGen.AspNet
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonModelGen)]
         public async Task GetDouble()
         {
             Assert.Equal(0, await client.GetDoubleAsync(0));
@@ -376,7 +372,6 @@ namespace TestModelGen.AspNet
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonModelGen)]
         public async Task GetTimeSpan()
         {
             Assert.Equal(TimeSpan.Zero, await client.GetTimeSpanAsync(TimeSpan.Zero));
@@ -385,7 +380,6 @@ namespace TestModelGen.AspNet
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonModelGen)]
         public async Task GetVersion()
         {
             var version = new Version(1, 2, 3);
@@ -394,7 +388,6 @@ namespace TestModelGen.AspNet
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonModelGen)]
         public async Task CreatePerson()
         {
             var person = await client.CreatePersonAsync(10, "Jeff", 58, Gender.Male);
@@ -406,7 +399,6 @@ namespace TestModelGen.AspNet
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonModelGen)]
         public async Task CreateNonPersisablePersonAsync()
         {
             var person = await client.CreateNonPersisablePersonAsync(10, "Jill", 50, Gender.Female);
@@ -418,7 +410,6 @@ namespace TestModelGen.AspNet
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonModelGen)]
         public async Task PutPerson()
         {
             var person = new Person()
@@ -438,7 +429,6 @@ namespace TestModelGen.AspNet
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonModelGen)]
         public async Task OptionalParams()
         {
             Assert.Null(await client.GetOptionalStringViaHeader_NullAsync());
@@ -483,7 +473,6 @@ namespace TestModelGen.AspNet
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonModelGen)]
         public async Task GetStringList()
         {
             Assert.Null(await client.GetStringListAsync(null));
@@ -499,7 +488,6 @@ namespace TestModelGen.AspNet
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonModelGen)]
         public async Task GetPersonList()
         {
             Assert.Null(await client.GetPersonListAsync(null));
@@ -529,7 +517,6 @@ namespace TestModelGen.AspNet
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonModelGen)]
         public async Task GetPersonArray()
         {
             Assert.Null(await client.GetPersonArrayAsync(null));
@@ -568,7 +555,6 @@ namespace TestModelGen.AspNet
         //}
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonModelGen)]
         public void RoundTripUnknown()
         {
             // Verify that persisted properties that were unknown
@@ -604,7 +590,6 @@ namespace TestModelGen.AspNet
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonModelGen)]
         public void Derived()
         {
             //-------------------------------------------------------------

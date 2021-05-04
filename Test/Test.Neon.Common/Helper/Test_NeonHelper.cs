@@ -32,10 +32,10 @@ using Xunit;
 
 namespace TestCommon
 {
+    [Trait(TestTrait.Area, TestArea.NeonCommon)]
     public partial class Test_NeonHelper
     {
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Framework()
         {
             var framework = RuntimeInformation.FrameworkDescription;
@@ -75,7 +75,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void ParseCsv()
         {
             string[] fields;
@@ -123,7 +122,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void DoesNotThrow()
         {
             Assert.True(NeonHelper.DoesNotThrow(() => { }));
@@ -135,7 +133,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void ExpandTabs()
         {
             // Test input without line endings.
@@ -219,7 +216,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void SequenceEquals_Enumerable()
         {
             Assert.True(NeonHelper.SequenceEqual((IEnumerable<string>)null, (IEnumerable<string>)null));
@@ -233,7 +229,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void SequenceEquals_Array()
         {
             Assert.True(NeonHelper.SequenceEqual((string[])null, (string[])null));
@@ -247,7 +242,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void SequenceEquals_List()
         {
             Assert.True(NeonHelper.SequenceEqual((List<string>)null, (List<string>)null));
@@ -271,7 +265,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task GetObjectResultAsync()
         {
             // We should see an ArgumentException here because the task doesn't return a result.
@@ -284,7 +277,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Base64UrlEncoding()
         {
             // Verify that known values can be encoded with padding.

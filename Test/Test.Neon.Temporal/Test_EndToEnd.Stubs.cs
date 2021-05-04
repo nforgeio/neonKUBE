@@ -148,7 +148,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public async Task WorkflowStub_Start_Untyped()
         {
             await SyncContext.ClearAsync;
@@ -200,7 +199,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public async Task WorkflowStub_Attach_Untyped()
         {
             await SyncContext.ClearAsync;
@@ -230,7 +228,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public async Task WorkflowStub_Signal_Untyped()
         {
             await SyncContext.ClearAsync;
@@ -256,7 +253,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public async Task WorkflowStub_Query_Untyped()
         {
             await SyncContext.ClearAsync;

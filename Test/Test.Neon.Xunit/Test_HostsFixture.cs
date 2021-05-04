@@ -31,6 +31,7 @@ using Xunit;
 
 namespace TestXunit
 {
+    [Trait(TestTrait.Area, TestArea.NeonXunit)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_HostsFixture : IClassFixture<HostsFixture>
@@ -59,7 +60,6 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Lookup()
         {
             Assert.Equal(new IPAddress[] { IPAddress.Parse("1.2.3.4") }, Dns.GetHostAddresses("www.foo.com"));
@@ -68,7 +68,6 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Reset()
         {
             // Verify that we can reset the hosts.
@@ -88,7 +87,6 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void NoDuplicates()
         {
             // Ensure that duplicate host/IP mappings are iognored and are 

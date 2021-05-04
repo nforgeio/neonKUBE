@@ -43,7 +43,6 @@ namespace TestCadence
     public partial class Test_Messages
     {
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void Test_InitializeRequest()
         {
             InitializeRequest message;
@@ -117,7 +116,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void Test_InitializeReply()
         {
             InitializeReply message;
@@ -177,7 +175,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void Test_ConnectRequest()
         {
             ConnectRequest message;
@@ -274,7 +271,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void Test_ConnectReply()
         {
             ConnectReply message;
@@ -332,7 +328,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void Test_DomainDescribeRequest()
         {
             DomainDescribeRequest message;
@@ -394,7 +389,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void Test_DomainDescribeReply()
         {
             DomainDescribeReply message;
@@ -490,7 +484,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void Test_DomainRegisterRequest()
         {
             DomainRegisterRequest message;
@@ -576,7 +569,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void Test_DomainRegisterReply()
         {
             DomainRegisterReply message;
@@ -636,7 +628,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void Test_DomainUpdateRequest()
         {
             DomainUpdateRequest message;
@@ -722,7 +713,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void Test_DomainUpdateReply()
         {
             DomainUpdateReply message;
@@ -781,7 +771,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void Test_TerminateRequest()
         {
             TerminateRequest message;
@@ -836,7 +825,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void Test_TerminateReply()
         {
             TerminateReply message;
@@ -896,7 +884,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void Test_HeartbeatRequest()
         {
             HeartbeatRequest message;
@@ -952,7 +939,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void Test_HeartbeatReply()
         {
             HeartbeatReply message;
@@ -1012,7 +998,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void Test_CancelRequest()
         {
             CancelRequest message;
@@ -1073,7 +1058,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void Test_CancelReply()
         {
             CancelReply message;
@@ -1138,7 +1122,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void Test_NewWorkerRequest()
         {
             NewWorkerRequest message;
@@ -1216,7 +1199,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void Test_NewWorkerReply()
         {
             NewWorkerReply message;
@@ -1276,7 +1258,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void Test_StopWorkerRequest()
         {
             StopWorkerRequest message;
@@ -1338,7 +1319,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void Test_StopWorkerReply()
         {
             StopWorkerReply message;
@@ -1393,7 +1373,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void Test_PingRequest()
         {
             PingRequest message;
@@ -1449,7 +1428,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void Test_PingReply()
         {
             PingReply message;
@@ -1504,7 +1482,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void Test_SetWorkflowCacheSizeRequest()
         {
             WorkflowSetCacheSizeRequest message;
@@ -1566,7 +1543,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void Test_SetWorkflowCacheReply()
         {
             WorkflowSetCacheSizeReply message;
@@ -1619,7 +1595,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void Test_DomainDeprecateRequest()
         {
             DomainDeprecateRequest message;
@@ -1687,7 +1662,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void Test_DomainDeprecateReply()
         {
             DomainDeprecateReply message;
@@ -1741,7 +1715,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void Test_DisconnectRequest()
         {
             DisconnectRequest message;
@@ -1797,7 +1770,6 @@ namespace TestCadence
         }
     
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void Test_DisconnectReply()
         {
             DisconnectReply message;
@@ -1852,7 +1824,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void Test_LogRequest()
         {
             LogRequest message;
@@ -1932,7 +1903,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void Test_LogReply()
         {
             LogReply message;
@@ -1987,7 +1957,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void Test_DomainListRequest()
         {
             DomainListRequest message;
@@ -2203,7 +2172,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void Test_DomainListReply()
         {
             DomainListReply message;
@@ -2270,7 +2238,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void Test_DescribeTaskListRequest()
         {
             DescribeTaskListRequest message;
@@ -2338,7 +2305,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void Test_DescribeTaskListReply()
         {
             DescribeTaskListReply message;

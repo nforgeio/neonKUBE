@@ -40,7 +40,6 @@ namespace TestCommon
     public partial class Test_JsonClient
     {
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task GetAsync()
         {
             // Ensure that GET returning an explict type works.
@@ -87,7 +86,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task GetAsync_NotJson()
         {
             // Ensure that GET returning a non-JSON content type returns a NULL document.
@@ -130,7 +128,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task GetAsync_Args()
         {
             // Ensure that GET with query arguments work.
@@ -181,7 +178,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task GetAsync_Headers()
         {
             // Ensure that GET with query arguments work.
@@ -232,7 +228,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task GetAsync_Dynamic()
         {
             // Ensure that GET returning a dynamic works.
@@ -275,7 +270,6 @@ namespace TestCommon
         }
  
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task GetAsync_Dynamic_NotJson()
         {
             // Ensure that GET returning non-JSON returns a NULL dynamic document.
@@ -318,7 +312,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task GetAsync_Error()
         {
             // Ensure that GET returning a hard error works.
@@ -341,7 +334,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task GetAsync_Retry()
         {
             // Ensure that GET will retry after soft errors.
@@ -382,7 +374,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task GetAsync_NoRetryNull()
         {
             // Ensure that GET won't retry if [retryPolicy=NULL]
@@ -422,7 +413,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task GetAsync_NoRetryExplicit()
         {
             // Ensure that GET won't retry if [retryPolicy=NoRetryPolicy]

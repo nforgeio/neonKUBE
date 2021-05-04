@@ -30,10 +30,10 @@ using Xunit;
 
 namespace TestCommon
 {
+    [Trait(TestTrait.Area, TestArea.NeonCommon)]
     public class Test_BlockStream
     {
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Basic()
         {
             BlockStream s;
@@ -208,7 +208,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void ReadWriteByte()
         {
             BlockStream s;
@@ -243,7 +242,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void ReadWriteBuffer()
         {
             BlockStream s;
@@ -324,7 +322,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void SetLength()
         {
             BlockStream s;
@@ -356,7 +353,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void SetLength_Modify()
         {
             BlockStream s;
@@ -388,7 +384,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void SetLength_NoModify()
         {
             BlockStream s;
@@ -421,7 +416,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Seek()
         {
             BlockStream s = new BlockStream();
@@ -488,7 +482,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void ToByteArray()
         {
             BlockStream s = new BlockStream();
@@ -498,7 +491,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Append()
         {
             BlockStream s;
@@ -545,7 +537,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void BlockOffset()
         {
             BlockStream s;
@@ -570,7 +561,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void ReadBlocks()
         {
             BlockStream s = new BlockStream(new Block(new byte[] { 0, 1, 2, 3, 4 }), new Block(new byte[] { 5, 6, 7, 8, 9 }));
@@ -598,7 +588,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void ReadWriteBlocks()
         {
             var bs      = new BlockStream();
@@ -637,7 +626,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Exceptions()
         {
             Assert.Throws<ArgumentException>(() => new BlockStream(-10));

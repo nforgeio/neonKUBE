@@ -39,6 +39,7 @@ using Neon.Xunit.Cadence;
 
 namespace TestCadence
 {
+    [Trait(TestTrait.Area, TestArea.NeonCadence)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public partial class Test_Options : IClassFixture<CadenceFixture>, IDisposable

@@ -31,6 +31,7 @@ using Xunit;
 
 namespace TestCommon
 {
+    [Trait(TestTrait.Area, TestArea.NeonCommon)]
     public class Test_RetrySync_LinearRetryPolicy
     {
         private class TransientException : Exception
@@ -65,7 +66,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Defaults()
         {
             var policy = new LinearRetryPolicy(TransientDetector);
@@ -75,7 +75,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void FailAll()
         {
             var policy = new LinearRetryPolicy(TransientDetector);
@@ -97,7 +96,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void FailAll_Result()
         {
             var policy = new LinearRetryPolicy(TransientDetector);
@@ -119,7 +117,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void FailImmediate()
         {
             var policy = new LinearRetryPolicy(TransientDetector);
@@ -140,7 +137,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void FailImmediate_Result()
         {
             var policy = new LinearRetryPolicy(TransientDetector);
@@ -161,7 +157,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void FailDelayed()
         {
             var policy = new LinearRetryPolicy(TransientDetector);
@@ -191,7 +186,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void FailDelayed_Result()
         {
             var policy = new LinearRetryPolicy(TransientDetector);
@@ -221,7 +215,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void SuccessImmediate()
         {
             var policy  = new LinearRetryPolicy(TransientDetector);
@@ -241,7 +234,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void SuccessImmediate_Result()
         {
             var policy = new LinearRetryPolicy(TransientDetector);
@@ -260,7 +252,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void SuccessDelayed()
         {
             var policy  = new LinearRetryPolicy(TransientDetector);
@@ -286,7 +277,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void SuccessDelayed_Result()
         {
             var policy = new LinearRetryPolicy(TransientDetector);
@@ -311,7 +301,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void SuccessDelayedByType()
         {
             var policy  = new LinearRetryPolicy(typeof(NotReadyException));
@@ -337,7 +326,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void SuccessDelayedAggregateSingle()
         {
             var policy  = new LinearRetryPolicy(typeof(NotReadyException));
@@ -363,7 +351,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void SuccessDelayedAggregateArray()
         {
             var policy  = new LinearRetryPolicy(new Type[] { typeof(NotReadyException), typeof(KeyNotFoundException) });
@@ -396,7 +383,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void SuccessCustom()
         {
             var policy  = new LinearRetryPolicy(TransientDetector, maxAttempts: 4, retryInterval: TimeSpan.FromSeconds(2));
@@ -425,7 +411,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void SuccessCustom_Result()
         {
             var policy = new LinearRetryPolicy(TransientDetector, maxAttempts: 4, retryInterval: TimeSpan.FromSeconds(2));
@@ -453,7 +438,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Timeout()
         {
             var policy = new LinearRetryPolicy(TransientDetector, maxAttempts: 6, retryInterval: TimeSpan.FromSeconds(0.5), timeout: TimeSpan.FromSeconds(1.5));

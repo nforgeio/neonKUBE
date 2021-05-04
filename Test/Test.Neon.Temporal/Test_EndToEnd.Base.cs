@@ -45,7 +45,6 @@ namespace TestTemporal
     public partial class Test_EndToEnd
     {
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public async Task Base_Ping()
         {
             await SyncContext.ClearAsync;
@@ -72,7 +71,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Base_PingAttack()
         {
             // Measure througput with 4 threads hammering the proxy with pings.
@@ -120,7 +118,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         [Trait(TestTrait.Slow, "1")]
         public async Task Base_Namespace()
         {
@@ -188,8 +185,7 @@ namespace TestTemporal
             //await Assert.ThrowsAsync<EntityNotExistsException>(async () => await client.UpdateNamespaceAsync("does-not-exist", updateNamespaceRequest));
         }
 
-        [Fact_NotImplemented]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
+        [Fact]
         public async Task Base_ListNamespaces()
         {
             await SyncContext.ClearAsync;
@@ -280,7 +276,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public async Task Base_DescribeTaskQueue()
         {
             await SyncContext.ClearAsync;
@@ -319,7 +314,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public async Task Base_DescribeWorkflowExecutionAsync()
         {
             await SyncContext.ClearAsync;
@@ -363,7 +357,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Base_ExtractTemporalProxy()
         {
             // Verify that we can extract the [temporal-proxy] binaries.

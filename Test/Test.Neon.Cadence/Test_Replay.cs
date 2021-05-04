@@ -58,7 +58,8 @@ namespace TestCadence
     // workflow is being run for the first time or is replaying.  The test will
     // perform the specified operation on the first pass, trigger a replay, and
     // then ensure that the operation returned the same results on the second pass.
-
+    
+    [Trait(TestTrait.Area, TestArea.NeonCadence)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_Replay : IClassFixture<CadenceFixture>, IDisposable

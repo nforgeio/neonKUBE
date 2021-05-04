@@ -108,7 +108,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public async Task Activity_DuplicateEntrypoint()
         {
             // Verify that the client detects workflows that have multiple
@@ -132,7 +131,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public async Task Activity_NoEntrypoint()
         {
             // Verify that the client detects activities that don't
@@ -174,7 +172,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public async Task Activity_MultipleInterfaces()
         {
             // Verify that the client detects activity implementations

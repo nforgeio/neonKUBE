@@ -41,7 +41,6 @@ namespace TestCommon
     public partial class Test_JsonClient
     {
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task OptionsUnsafeAsync()
         {
             // Ensure that OPTIONS returning an explict type works.
@@ -99,7 +98,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task OptionsUnsafeAsync_NotJson()
         {
             // Ensure that OPTIONS returning a non-JSON content type returns a NULL document.
@@ -157,7 +155,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task OptionsUnsafeAsync_Args()
         {
             // Ensure that OPTIONS with query arguments work.
@@ -223,7 +220,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task OptionsUnsafeAsync_Headers()
         {
             // Ensure that OPTIONS with query arguments work.
@@ -289,7 +285,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task OptionsUnsafeAsync_Dynamic()
         {
             // Ensure that OPTIONS returning a dynamic works.
@@ -346,7 +341,6 @@ namespace TestCommon
         }
  
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task OptionsUnsafeAsync_Dynamic_NotJson()
         {
             // Ensure that OPTIONS returning non-JSON returns a NULL dynamic document.
@@ -403,7 +397,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task OptionsUnsafeAsync_Error()
         {
             // Ensure that OPTIONS returning a hard error works.
@@ -437,7 +430,6 @@ namespace TestCommon
         }
 
         [Fact(Skip = "TODO")]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task OptionsUnsafeAsync_Retry()
         {
             // Ensure that OPTIONS will retry after soft errors.
@@ -448,7 +440,6 @@ namespace TestCommon
         }
 
         [Fact(Skip = "TODO")]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task OptionsUnsafeAsync_NoRetryNull()
         {
             // Ensure that OPTIONS won't retry if [retryPolicy=NULL]
@@ -459,7 +450,6 @@ namespace TestCommon
         }
 
         [Fact(Skip = "TODO")]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task OptionsUnsafeAsync_NoRetryExplicit()
         {
             // Ensure that OPTIONS won't retry if [retryPolicy=NoRetryPolicy]

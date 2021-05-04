@@ -33,12 +33,12 @@ using Xunit;
 
 namespace TestKube
 {
+    [Trait(TestTrait.Area, TestArea.NeonKube)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_KubeContextName
     {
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonKube)]
         public void ParseNeonKube()
         {
             // Verify that the neonKUBE components are parsed correctly.
@@ -63,7 +63,6 @@ namespace TestKube
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonKube)]
         public void ParseStandard()
         {
             // Verify that the standard components are parsed correctly (without the "USER@").
@@ -88,7 +87,6 @@ namespace TestKube
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonKube)]
         public void ParseStandard_WithError()
         {
             Assert.Throws<FormatException>(() => KubeContextName.Parse(null));
@@ -105,7 +103,6 @@ namespace TestKube
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonKube)]
         public void ParseNeonKube_WithError()
         {
             Assert.Throws<FormatException>(() => KubeContextName.Parse(null));
@@ -122,7 +119,6 @@ namespace TestKube
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonKube)]
         public void HashCode_NeonKube()
         {
             var hash1 = KubeContextName.Parse("user1@cluster/test").GetHashCode();
@@ -142,7 +138,6 @@ namespace TestKube
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonKube)]
         public void HashCode_Standard()
         {
             var hash1 = KubeContextName.Parse("cluster1/test").GetHashCode();
@@ -157,7 +152,6 @@ namespace TestKube
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonKube)]
         public void Equal_NeonKube()
         {
             Assert.True(KubeContextName.Parse("user@cluster").Equals(KubeContextName.Parse("user@cluster")));
@@ -172,7 +166,6 @@ namespace TestKube
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonKube)]
         public void Equal_Standard()
         {
             Assert.True(KubeContextName.Parse("cluster").Equals(KubeContextName.Parse("cluster")));
@@ -186,7 +179,6 @@ namespace TestKube
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonKube)]
         public void EqualOperator_NeonKube()
         {
             Assert.True(KubeContextName.Parse("user@cluster") == KubeContextName.Parse("user@cluster"));
@@ -202,7 +194,6 @@ namespace TestKube
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonKube)]
         public void EqualOperator_Standard()
         {
             Assert.True(KubeContextName.Parse("cluster") == KubeContextName.Parse("cluster"));
@@ -216,7 +207,6 @@ namespace TestKube
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonKube)]
         public void NotEqualOperator_NeonKube()
         {
             Assert.False(KubeContextName.Parse("user@cluster") != KubeContextName.Parse("user@cluster"));
@@ -231,7 +221,6 @@ namespace TestKube
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonKube)]
         public void Cast_NeonKube()
         {
             // string --> KubeContextName:
@@ -252,7 +241,6 @@ namespace TestKube
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonKube)]
         public void Cast_Standard()
         {
             // string --> KubeContextName:
@@ -273,7 +261,6 @@ namespace TestKube
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonKube)]
         public void ToString_NeonKube()
         {
             Assert.Equal("user@context/namespace", KubeContextName.Parse("user@context/namespace").ToString());
@@ -283,7 +270,6 @@ namespace TestKube
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonKube)]
         public void ToString_Standard()
         {
             Assert.Equal("context/namespace", KubeContextName.Parse("context/namespace").ToString());

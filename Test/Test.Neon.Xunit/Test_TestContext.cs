@@ -34,6 +34,7 @@ using Xunit;
 
 namespace TestXunit
 {
+    [Trait(TestTrait.Area, TestArea.NeonXunit)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_TestContext
@@ -53,7 +54,6 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonXunit)]
         public void LoadSettingsDecrypted()
         {
             // Verify that we can load a decrypted settings file into the
@@ -93,7 +93,6 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonXunit)]
         public void LoadSettingsEncrypted()
         {
             // Verify that we can load an encrypted settings file into the
@@ -142,7 +141,6 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonXunit)]
         public void LoadEnvironmentDecrypted()
         {
             // Verify that we can load a decrypted settings file into the
@@ -194,7 +192,6 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonXunit)]
         public void LoadEnvironmentEncrypted()
         {
             // Verify that we can load an encryoted settings file into the

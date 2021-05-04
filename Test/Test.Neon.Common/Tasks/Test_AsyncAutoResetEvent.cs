@@ -32,6 +32,7 @@ using Xunit;
 
 namespace TestCommon
 {
+    [Trait(TestTrait.Area, TestArea.NeonCommon)]
     public class Test_AsyncAutoResetEvent
     {
         private TimeSpan defaultTimeout = TimeSpan.FromSeconds(15);
@@ -122,7 +123,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Basic()
         {
             // Verify that an event that starts out unsignalled doesn't allow
@@ -248,7 +248,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task Auto()
         {
             // Verify that auto reset events actually reset automatically.
@@ -287,7 +286,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Error()
         {
             AsyncAutoResetEvent autoEvent;

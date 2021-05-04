@@ -32,10 +32,10 @@ using Xunit;
 
 namespace TestCommon
 {
+    [Trait(TestTrait.Area, TestArea.NeonCommon)]
     public class Test_JsonExtensions
     {
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void TryGetValue()
         {
             const string jsonText =

@@ -148,7 +148,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public async Task WorkflowStub_Start_Untyped()
         {
             await SyncContext.ClearAsync;
@@ -169,7 +168,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public async Task WorkflowStub_Execute_Untyped()
         {
             await SyncContext.ClearAsync;
@@ -199,7 +197,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public async Task WorkflowStub_Attach_Untyped()
         {
             await SyncContext.ClearAsync;
@@ -229,7 +226,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public async Task WorkflowStub_Signal_Untyped()
         {
             await SyncContext.ClearAsync;

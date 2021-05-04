@@ -82,6 +82,7 @@ namespace TestCommon
 
     // $todo(jefflill): I'm only testing UTF-8 encoding at this time.
 
+    [Trait(TestTrait.Area, TestArea.NeonCommon)]
     public class Test_StaticFileSystem
     {
         public Test_StaticFileSystem()

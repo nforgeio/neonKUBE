@@ -33,12 +33,12 @@ using Xunit;
 
 namespace TestKube
 {
+    [Trait(TestTrait.Area, TestArea.NeonKube)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_CreateIsoFile
     {
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonKube)]
         public void CreateIso()
         {
             // Verify that we can create a new ISO file from a folder.

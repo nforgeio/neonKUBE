@@ -38,6 +38,7 @@ namespace TestNeonService
     /// <summary>
     /// Tests the <see cref="TestHelper.RunFixture{T}"/> method.
     /// </summary>
+    [Trait(TestTrait.Area, TestArea.NeonService)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_RunFixture
@@ -188,7 +189,6 @@ namespace TestNeonService
         // Instance members
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonKube)]
         public void Run()
         {
             runWasCalled     = false;

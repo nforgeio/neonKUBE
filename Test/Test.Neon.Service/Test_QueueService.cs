@@ -39,6 +39,7 @@ namespace TestNeonService
     /// HTTP endpoint and that also exercises environment variable and file based 
     /// configuration.
     /// </summary>
+    [Trait(TestTrait.Area, TestArea.NeonService)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_QueueService : IClassFixture<ComposedFixture>
@@ -99,7 +100,6 @@ namespace TestNeonService
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonKube)]
         public async Task Success()
         {
             // Restart the service with with valid environment variables,
@@ -125,7 +125,6 @@ namespace TestNeonService
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonKube)]
         public void BadConfig()
         {
             // Restart the service with with a missing configuration

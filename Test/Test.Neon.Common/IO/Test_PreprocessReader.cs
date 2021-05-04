@@ -35,6 +35,7 @@ using Xunit;
 
 namespace TestCommon
 {
+    [Trait(TestTrait.Area, TestArea.NeonCommon)]
     public class Test_PreprocessReader
     {
         private void SetVariables(PreprocessReader reader, KeyValuePair<string, string>[] variables)
@@ -137,7 +138,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Defaults()
         {
             var reader = new PreprocessReader(new StreamReader(new MemoryStream()));
@@ -157,14 +157,12 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task Empty()
         {
             await VerifyAsync(string.Empty, string.Empty);
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task NoChange()
         {
             const string input =
@@ -178,7 +176,6 @@ emergency broadcasting system.
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task Comments()
         {
             await VerifyAsync(
@@ -211,7 +208,6 @@ abc
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Comments_CustomMarker()
         {
             // Verify that we can handle a custom comment prefix.
@@ -257,7 +253,6 @@ abc
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Comments_CustomMarkers()
         {
             // Verify that we can handle multiple custom comment prefixes.
@@ -304,7 +299,6 @@ abc
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Comments_NoCustomMarkers()
         {
             // Verify that we can handle no custom comment prefixes.
@@ -349,7 +343,6 @@ abc
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Comments_BadMarkers()
         {
             // Verify that we validate reasonable markers.
@@ -367,7 +360,6 @@ abc
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task VariablesDefault()
         {
             await VerifyAsync(
@@ -416,7 +408,6 @@ Hello World! Goodbye!
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task VariablesCurly()
         {
             try
@@ -474,7 +465,6 @@ Hello World! Goodbye!
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task CheckForUndefinedVariables()
         {
             // Verify that we can disable undefined variable checks.
@@ -587,7 +577,6 @@ Hello World! Goodbye!
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task VariablesParen()
         {
             try
@@ -645,7 +634,6 @@ Hello World! Goodbye!
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task Define()
         {
             await VerifyAsync(
@@ -688,7 +676,6 @@ FOOBAR
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task If()
         {
             await VerifyAsync(
@@ -973,7 +960,6 @@ one
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task Switch()
         {
             await VerifyAsync(
@@ -1101,7 +1087,6 @@ E
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task NotImplemented()
         {
             var reader = new PreprocessReader(string.Empty);
@@ -1115,7 +1100,6 @@ E
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task TabStops()
         {
             try
@@ -1170,7 +1154,6 @@ line1
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task DisableStripComments()
         {
             try
@@ -1193,7 +1176,6 @@ line1
 
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task RemoveComments()
         {
             try
@@ -1214,7 +1196,6 @@ line1
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task RemoveBlank()
         {
             try
@@ -1237,7 +1218,6 @@ line1
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task DisableCommands()
         {
             try
@@ -1263,7 +1243,6 @@ line1
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task StatementMarker()
         {
             try
@@ -1295,7 +1274,6 @@ Hello World!
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task Indent()
         {
             try
@@ -1317,7 +1295,6 @@ Test
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task LineEndings()
         {
             const string input =
@@ -1347,7 +1324,6 @@ line3
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void DisableStatements()
         {
             const string input =
@@ -1369,7 +1345,6 @@ line2
         // .NET Framework.
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void ProfileReferences()
         {
             // Verify that [IProfileClient] integration works by starting a profile

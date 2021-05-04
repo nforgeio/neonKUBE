@@ -41,7 +41,6 @@ namespace TestCommon
     public partial class Test_JsonClient
     {
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task PutAsync()
         {
             // Ensure that PUT sending and returning an explict type works.
@@ -115,7 +114,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task PutDynamicAsync()
         {
             // Ensure that PUT sending a dynamic document works.
@@ -172,7 +170,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task PutAsync_NotJson()
         {
             // Ensure that PUT returning a non-JSON content type returns a NULL document.
@@ -230,7 +227,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task PutAsync_Args()
         {
             // Ensure that PUT with query arguments work.
@@ -296,7 +292,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task PutAsync_Headers()
         {
             // Ensure that PUT with query arguments work.
@@ -362,7 +357,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task PutAsync_Dynamic()
         {
             // Ensure that PUT returning a dynamic works.
@@ -420,7 +414,6 @@ namespace TestCommon
         }
  
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task PutAsync_Dynamic_NotJson()
         {
             // Ensure that PUT returning non-JSON returns a NULL dynamic document.
@@ -478,7 +471,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task PutAsync_Error()
         {
             // Ensure that PUT returning a hard error works.
@@ -508,7 +500,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task PutAsync_Retry()
         {
             // Ensure that PUT will retry after soft errors.
@@ -564,7 +555,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task PutAsync_NoRetryNull()
         {
             // Ensure that PUT won't retry if [retryPolicy=NULL]
@@ -611,7 +601,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task PutAsync_NoRetryExplicit()
         {
             // Ensure that PUT won't retry if [retryPolicy=NoRetryPolicy]
@@ -658,7 +647,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task PutAsync_NullPayloadAsync()
         {
             // Ensure that POST uploading a NULL payload works.

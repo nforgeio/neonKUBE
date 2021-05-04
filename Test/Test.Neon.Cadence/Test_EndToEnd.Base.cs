@@ -45,7 +45,6 @@ namespace TestCadence
     public partial class Test_EndToEnd
     {
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public async Task Base_Ping()
         {
             await SyncContext.ClearAsync;
@@ -72,7 +71,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void Base_PingAttack()
         {
             // Measure througput with 4 threads hammering the proxy with pings.
@@ -120,7 +118,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         [Trait(TestTrait.Slow, "1")]
         public async Task Base_Domain()
         {
@@ -185,7 +182,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public async Task Base_ListDomains()
         {
             await SyncContext.ClearAsync;
@@ -276,7 +272,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public async Task Base_DescribeTaskList()
         {
             await SyncContext.ClearAsync;
@@ -315,7 +310,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public async Task Base_DescribeWorkflowExecutionAsync()
         {
             await SyncContext.ClearAsync;
@@ -364,7 +358,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void Base_ExtractCadenceProxy()
         {
             // Verify that we can extract the [cadence-proxy] binaries.

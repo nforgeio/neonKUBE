@@ -69,7 +69,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public async Task Activity_DuplicateBlankEntrypoint()
         {
             // Verify that the client detects workflows that have multiple
@@ -106,7 +105,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public async Task Activity_DuplicateEntrypoint()
         {
             // Verify that the client detects workflows that have multiple
@@ -128,7 +126,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public async Task Activity_NoEntrypoint()
         {
             // Verify that the client detects activities that don't
@@ -168,7 +165,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public async Task Activity_MultipleInterfaces()
         {
             // Verify that the client detects activity implementations

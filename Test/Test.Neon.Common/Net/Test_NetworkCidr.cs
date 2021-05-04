@@ -31,10 +31,10 @@ using Xunit;
 
 namespace TestCommon
 {
+    [Trait(TestTrait.Area, TestArea.NeonCommon)]
     public class Test_NetworkCidr
     {
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Parse()
         {
             var cidr = NetworkCidr.Parse("10.1.2.3/8");
@@ -57,7 +57,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void ParseErrors()
         {
             Assert.Throws<ArgumentNullException>(() => NetworkCidr.Parse(null));
@@ -70,7 +69,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void TryParse()
         {
             NetworkCidr cidr;
@@ -95,7 +93,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void TryParseErrors()
         {
             NetworkCidr cidr;
@@ -110,7 +107,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Init()
         {
             var cidr = new NetworkCidr(IPAddress.Parse("10.1.2.3"), 8);
@@ -133,7 +129,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void InitErrors()
         {
             Assert.Throws<ArgumentNullException>(() => new NetworkCidr(null, 8));
@@ -142,7 +137,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Compare()
         {
             Assert.True(NetworkCidr.Parse("10.0.0.1/8") == NetworkCidr.Parse("10.0.0.1/8"));
@@ -169,7 +163,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void ContainsIP()
         {
             Assert.True(NetworkCidr.Parse("10.0.0.0/24").Contains(IPAddress.Parse("10.0.0.0")));
@@ -183,7 +176,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void ContainsSubnet()
         {
             Assert.True(NetworkCidr.Parse("10.0.0.0/24").Contains(NetworkCidr.Parse("10.0.0.0/24")));
@@ -193,7 +185,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void AddressCount()
         {
             Assert.Equal(Math.Pow(2, 32), NetworkCidr.Parse("10.0.0.1/0").AddressCount);
@@ -203,7 +194,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void FirstLastAndNext()
         {
             var subnet = NetworkCidr.Parse("127.0.0.0/24");
@@ -221,7 +211,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Overlaps()
         {
             var subnet = NetworkCidr.Parse("10.0.1.0/24");
@@ -236,7 +225,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void MaskedAddress()
         {
             var subnet = NetworkCidr.Parse("10.0.1.5/24");
@@ -246,7 +234,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Normalize()
         {
             Assert.Equal("10.0.0.0/14", NetworkCidr.Normalize(NetworkCidr.Parse("10.0.0.0/14").ToString()));
@@ -254,7 +241,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void SubnetMask()
         {
             Assert.Equal("1.2.3.4/32", new NetworkCidr(IPAddress.Parse("1.2.3.4"), IPAddress.Parse("255.255.255.255")));

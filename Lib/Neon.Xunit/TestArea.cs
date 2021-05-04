@@ -79,6 +79,11 @@ namespace Neon.Xunit
         public const string NeonDesktop = "neon-desktop";
 
         /// <summary>
+        /// Identifies the <b>Neon.Service</b> tests.
+        /// </summary>
+        public const string NeonService = "Neon.Service";
+
+        /// <summary>
         /// Identifies <b>neon-xunit</b> tests.
         /// </summary>
         public const string NeonXunit = "neon-xunit";

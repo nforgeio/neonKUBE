@@ -36,12 +36,12 @@ using NeonCli;
 
 namespace Test.NeonCli
 {
+    [Trait(TestTrait.Area, TestArea.NeonCli)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_BasicCommands
     {
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCli)]
         public async Task Base()
         {
             using (var runner = new ProgramRunner())
@@ -62,7 +62,6 @@ namespace Test.NeonCli
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCli)]
         public async Task Version()
         {
             using (var runner = new ProgramRunner())

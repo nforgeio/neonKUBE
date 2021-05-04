@@ -29,10 +29,10 @@ using Xunit;
 
 namespace TestCommon
 {
+    [Trait(TestTrait.Area, TestArea.NeonCommon)]
     public class Test_GlobPattern
     {
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Static()
         {
             var glob = GlobPattern.Parse("test.jpg");
@@ -64,7 +64,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Static_RegexMatch()
         {
             var glob = GlobPattern.Parse("test.jpg");
@@ -96,7 +95,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Asterisk()
         {
             var glob = GlobPattern.Parse("test.*");
@@ -110,7 +108,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void DoubleAsterisk()
         {
             var glob = GlobPattern.Parse("/**/test.jpg");
@@ -160,7 +157,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Errors()
         {
             Assert.Throws<ArgumentNullException>(() => GlobPattern.Parse(null));
@@ -170,7 +166,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void TryCreate()
         {
             GlobPattern glob;
@@ -191,7 +186,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Escapes()
         {
             Assert.Equal("^\\?$", GlobPattern.Parse("?").RegexPattern);

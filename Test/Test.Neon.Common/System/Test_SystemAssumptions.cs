@@ -35,10 +35,10 @@ namespace TestCommon
     /// <summary>
     /// This verifies assumptions about the standard .NET class libraries.
     /// </summary>
+    [Trait(TestTrait.Area, TestArea.NeonCommon)]
     public class Test_SystemAssumptions
     {
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void IEnumerabe_ToList()
         {
             // Verify that [IEnumerable.ToList()] on a list actually returns a copy of the list

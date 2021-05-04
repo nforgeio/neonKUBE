@@ -32,10 +32,10 @@ using Xunit;
 
 namespace TestCommon
 {
+    [Trait(TestTrait.Area, TestArea.NeonCommon)]
     public class Test_String
     {
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void ToLines()
         {
             Assert.Empty(((string)null).ToLines());

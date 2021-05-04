@@ -53,6 +53,7 @@ namespace TestModelGen.Validator
     /// This class verifies that <see cref="XunitExtensions.ValidateController{TServiceController}(Neon.Data.IGeneratedServiceClient)"/>
     /// actually works properly for clients that compose multiple controllers.
     /// </summary>
+    [Trait(TestTrait.Area, TestArea.NeonModelGen)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_ValidateComposedController
@@ -112,7 +113,6 @@ namespace TestModelGen.Validator
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonModelGen)]
         public void ValidateController0()
         {
             using (var client = new ComposedClient())

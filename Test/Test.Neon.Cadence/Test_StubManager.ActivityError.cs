@@ -53,7 +53,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void Error_ActivityGenericsNotAllowed()
         {
             // We don't support activity interfaces with generic parameters.
@@ -68,7 +67,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void Error_ActivityNoEntryPoint()
         {
             // Activities need to have at least one entry point.
@@ -77,7 +75,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void Error_ActivityNullClient()
         {
             // A non-NULL client is required.
@@ -97,7 +94,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void Error_ActivityNotInterface()
         {
             // Only activity interfaces are allowed.
@@ -117,7 +113,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void Error_ActivityNotPublic()
         {
             // Activity interfaces must be public.
@@ -140,7 +135,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void Error_ActivityNonTaskEntryPoint()
         {
             // Activity entry points methods need to return a Task.
@@ -160,7 +154,6 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
         public void Error_ActivityDuplicateDuplicateDefaultEntryPoints()
         {
             // Verify that we detect duplicate entrypoint methods
@@ -180,8 +173,7 @@ namespace TestCadence
             Task EntryPoint2();
         }
 
-        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)] 
         public void Error_ActivityDuplicateDuplicateEntryPoints()
         {
             // Verify that we detect duplicate entrypoint methods

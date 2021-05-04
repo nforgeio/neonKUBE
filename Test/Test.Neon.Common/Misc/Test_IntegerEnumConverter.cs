@@ -33,6 +33,7 @@ using Xunit;
 
 namespace TestCommon
 {
+    [Trait(TestTrait.Area, TestArea.NeonCommon)]
     public class Test_IntegerEnumConverter
     {
         //---------------------------------------------------------------------
@@ -57,7 +58,6 @@ namespace TestCommon
         private JsonSerializer serializer = new JsonSerializer();
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void ReadInt()
         {
             var json0 = "{ \"Value\": 0 }";
@@ -99,7 +99,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void ReadString_Insensitive()
         {
             // Verify that parsing is case insensitive.
@@ -122,7 +121,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Write()
         {
             var value  = new MyData() { Value = MyEnum.Two };

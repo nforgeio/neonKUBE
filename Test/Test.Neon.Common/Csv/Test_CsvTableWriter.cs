@@ -28,10 +28,10 @@ using Xunit;
 
 namespace TestCommon
 {
+    [Trait(TestTrait.Area, TestArea.NeonCommon)]
     public class Test_CsvTableWriter
     {
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void CsvTableWriter_Basic()
         {
             using (var tempFolder = new TempFolder())
@@ -78,7 +78,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void CsvTableWriter_NullColumns()
         {
             string path = Path.GetTempFileName();
@@ -122,7 +121,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void CsvTableWriter_MissingColumns()
         {
             string path = Path.GetTempFileName();
@@ -170,7 +168,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void CsvTableWriter_BlankRow()
         {
             string path = Path.GetTempFileName();

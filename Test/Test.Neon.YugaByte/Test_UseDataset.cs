@@ -39,6 +39,7 @@ namespace TestYugaByte
     /// that we can initialize test databases and that the data will be retained across
     /// unit test runs.
     /// </summary>
+    [Trait(TestTrait.Area, TestArea.NeonYugaByte)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_UseDataset : IClassFixture<YugaByteFixture>
@@ -76,21 +77,18 @@ namespace TestYugaByte
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonYugaByte)]
         public void Cassandra_Query0()
         {
             Assert.Single(cassandra.Execute("SELECT * from employee"));
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonYugaByte)]
         public void Cassandra_Query1()
         {
             Assert.Single(cassandra.Execute("SELECT * from employee"));
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonYugaByte)]
         public void Postgres_Query0()
         {
             var query = new NpgsqlCommand("SELECT COUNT(*) FROM employee", postgres);
@@ -98,7 +96,6 @@ namespace TestYugaByte
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonYugaByte)]
         public void Postgres_Query1()
         {
             var query = new NpgsqlCommand("SELECT COUNT(*) FROM employee", postgres);

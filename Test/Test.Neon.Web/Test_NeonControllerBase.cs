@@ -135,6 +135,7 @@ namespace Test.Neon.Web.ControllerBase
     /// <summary>
     /// Basic tests for <see cref="NeonControllerBase"/>.
     /// </summary>
+    [Trait(TestTrait.Area, TestArea.NeonWeb)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_TestControllerBase : IClassFixture<AspNetFixture>
@@ -159,7 +160,6 @@ namespace Test.Neon.Web.ControllerBase
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonWeb)]
         public async Task LogLevels()
         {
             var logManager = LogManager.Default;

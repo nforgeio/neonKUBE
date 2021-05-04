@@ -36,6 +36,7 @@ using Xunit;
 
 namespace TestCommon
 {
+    [Trait(TestTrait.Area, TestArea.NeonCommon)]
     public class Test_GatedTimer
     {
         GatedTimer      timer;
@@ -68,8 +69,7 @@ namespace TestCommon
             }
         }
 
-        [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
+        [Fact]     
         public void Basic()
         {
             count    = 0;
@@ -100,7 +100,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Dispose()
         {
             count    = 0;
@@ -114,13 +113,6 @@ namespace TestCommon
             Thread.Sleep(1000);
             Assert.Equal(1, count);
             Assert.Equal(10, (int)state);
-        }
-
-        [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
-        public void Change()
-        {
-            // $todo(jefflill): Need to implement this.
         }
     }
 }

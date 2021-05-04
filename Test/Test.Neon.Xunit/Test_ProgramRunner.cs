@@ -30,6 +30,7 @@ using Xunit;
 
 namespace TestXunit
 {
+    [Trait(TestTrait.Area, TestArea.NeonXunit)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_ProgramRunner
@@ -71,7 +72,6 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Execute()
         {
             ExecuteResponse result;
@@ -96,7 +96,6 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Fork()
         {
             using (var runner = new ProgramRunner())

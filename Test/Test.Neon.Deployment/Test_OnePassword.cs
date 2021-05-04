@@ -36,13 +36,12 @@ namespace TestDeployment
 {
     // NOTE: These tests need to be run manually.
 
+    [Trait(TestTrait.Area, TestArea.NeonDeployment)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_OnePassword
     {
-        //[Fact]
         [Fact(Skip = "This test needs to be run manually.")]
-        [Trait(TestTrait.Area, TestArea.NeonDeployment)]
         public void Basics()
         {
             // You need to manually configure your 1Password credentials below for this

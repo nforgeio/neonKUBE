@@ -36,6 +36,7 @@ using Xunit;
 
 namespace TestCommon
 {
+    [Trait(TestTrait.Area, TestArea.NeonCommon)]
     public class Test_ByteUnits
     {
         public static decimal Pow(decimal x, uint y)
@@ -56,7 +57,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void ParseBase2()
         {
             // Verify that the units are correct.
@@ -144,7 +144,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void ParseBase10()
         {
             // Verify that the units are correct.

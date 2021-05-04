@@ -42,6 +42,7 @@ using Xunit.Abstractions;
 
 namespace TestCadence
 {
+    [Trait(TestTrait.Area, TestArea.NeonCadence)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public partial class Test_EndToEnd : IClassFixture<CadenceFixture>, IDisposable

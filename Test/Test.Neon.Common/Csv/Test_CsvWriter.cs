@@ -27,10 +27,10 @@ using Xunit;
 
 namespace TestCommon
 {
+    [Trait(TestTrait.Area, TestArea.NeonCommon)]
     public class Test_CsvWriter
     {
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void CsvWriter_Basic()
         {
             StringBuilder sb = new StringBuilder();

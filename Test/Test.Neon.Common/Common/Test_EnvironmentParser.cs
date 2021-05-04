@@ -31,6 +31,7 @@ using Xunit;
 
 namespace TestCommon
 {
+    [Trait(TestTrait.Area, TestArea.NeonCommon)]
     public partial class Test_EnvironmentParser
     {
         private string Var(string name)
@@ -39,7 +40,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void String()
         {
             var parser = new EnvironmentParser();
@@ -55,7 +55,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Integer()
         {
             var parser = new EnvironmentParser();
@@ -72,7 +71,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Double()
         {
             var parser = new EnvironmentParser();
@@ -89,7 +87,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Bool()
         {
             var parser = new EnvironmentParser();
@@ -135,7 +132,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void TimeSpan()
         {
             var parser = new EnvironmentParser();

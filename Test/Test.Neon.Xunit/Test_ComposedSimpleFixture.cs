@@ -33,6 +33,7 @@ namespace TestXunit
     /// <summary>
     /// Verify that a test fixture composed of other fixtures works.
     /// </summary>
+    [Trait(TestTrait.Area, TestArea.NeonXunit)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_ComposedSimpleFixture : IClassFixture<ComposedFixture>
@@ -99,7 +100,6 @@ namespace TestXunit
         /// Verify that fixtures look OK.
         /// </summary>
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Verify()
         {
             // Ensure that the subfixture indexers work.

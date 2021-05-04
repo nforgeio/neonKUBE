@@ -67,8 +67,7 @@ namespace TestCadence
             }
         }
 
-       [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_DuplicateBlankEntrypoint()
         {
             // Verify that the client detects workflows that have multiple
@@ -104,8 +103,7 @@ namespace TestCadence
             }
         }
 
-       [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_DuplicateEntrypoint()
         {
             // Verify that the client detects workflows that have multiple
@@ -126,8 +124,7 @@ namespace TestCadence
         {
         }
 
-       [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_NoEntrypoint()
         {
             // Verify that the client detects workflows that have no
@@ -170,8 +167,7 @@ namespace TestCadence
             }
         }
 
-       [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_DuplicateSignal()
         {
             // Verify that the client detects workflows with two signals that
@@ -214,8 +210,7 @@ namespace TestCadence
             }
         }
 
-       [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_DuplicateQuery()
         {
             // Verify that the client detects workflows with two signals that
@@ -254,8 +249,7 @@ namespace TestCadence
             }
         }
 
-       [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
+        [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_MultipleInterfaces()
         {
             // Verify that the client detects workflow implementations

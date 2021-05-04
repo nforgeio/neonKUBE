@@ -85,10 +85,10 @@ namespace TestCommon
     {
     }
 
+    [Trait(TestTrait.Area, TestArea.NeonCommon)]
     public class Test_ReflectionExtensions
     {
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Type_Implements()
         {
             var fooType         = typeof(Foo);
@@ -119,7 +119,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Type_Inherits()
         {
             var base0Type = typeof(Base0);
@@ -139,7 +138,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Type_Is()
         {
             Assert.True(typeof(Bar).Is<object>());
@@ -174,7 +172,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Method_GetParameterTypes()
         {
             var type       = typeof(MethodTest);

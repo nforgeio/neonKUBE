@@ -33,6 +33,7 @@ using Xunit;
 
 namespace TestCouchbase
 {
+    [Trait(TestTrait.Area, TestArea.NeonCouchbase)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_NeonBucket : IClassFixture<CouchbaseFixture>
@@ -53,7 +54,6 @@ namespace TestCouchbase
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCouchbase)]
         public async Task Basic()
         {
             // Basic test to verify that we can put/get/remove a document.
@@ -65,7 +65,6 @@ namespace TestCouchbase
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCouchbase)]
         public async Task CasTransientDetector()
         {
             // Verify that the CAS transient detector function works.
@@ -98,7 +97,6 @@ namespace TestCouchbase
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCouchbase)]
         public async Task DurabilityOverrides()
         {
             couchbase.Clear();

@@ -44,6 +44,7 @@ using Xunit;
 
 namespace TestXunit
 {
+    [Trait(TestTrait.Area, TestArea.NeonXunit)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_AspNetFixture : IClassFixture<AspNetFixture>
@@ -98,7 +99,6 @@ namespace TestXunit
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonXunit)]
         public async Task Test()
         {
             // Verify that we can communicate with the service.

@@ -38,6 +38,7 @@ using Xunit;
 
 namespace TestTemporal
 {
+    [Trait(TestTrait.Area, TestArea.NeonTemporal)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public sealed partial class Test_Messages : IClassFixture<TemporalFixture>, IDisposable

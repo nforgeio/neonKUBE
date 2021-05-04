@@ -37,6 +37,7 @@ using Xunit;
 
 namespace Test.Neon.Postgres
 {
+    [Trait(TestTrait.Area, TestArea.NeonPostgres)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_Extensions : IClassFixture<YugaByteFixture>
@@ -78,7 +79,6 @@ INSERT INTO enumerate_table (value) values (9);
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonPostgres)]
         public void Enumerate()
         {
             var values = new HashSet<int>();
@@ -98,7 +98,6 @@ INSERT INTO enumerate_table (value) values (9);
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonPostgres)]
         public async Task EnumerateAsync()
         {
             var values = new HashSet<int>();
@@ -118,7 +117,6 @@ INSERT INTO enumerate_table (value) values (9);
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonPostgres)]
         public async Task PrepareCommand_NoArg()
         {
             var preparedCommand = new PreparedCommand(postgres, "SELECT value FROM enumerate_table WHERE value = @value;");
@@ -140,7 +138,6 @@ INSERT INTO enumerate_table (value) values (9);
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonPostgres)]
         public async Task PrepareCommand_Arg()
         {
             var singleParameters = new Dictionary<string, NpgsqlDbType>()

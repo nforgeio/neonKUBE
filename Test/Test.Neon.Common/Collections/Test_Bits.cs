@@ -37,10 +37,10 @@ using Xunit;
 
 namespace TestCommon
 {
+    [Trait(TestTrait.Area, TestArea.NeonCommon)]
     public class Test_Bits
     {
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Bits_Basic()
         {
             Bits b1;
@@ -128,7 +128,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Bits_Not()
         {
             Bits b1;
@@ -144,7 +143,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Bits_Or()
         {
             Bits b1;
@@ -175,7 +173,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Bits_And()
         {
             Bits b1;
@@ -206,7 +203,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Bits_Xor()
         {
             Bits b1;
@@ -237,7 +233,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Bits_EQU()
         {
             Assert.True((Bits)null == (Bits)null);
@@ -250,7 +245,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Bits_NEQ()
         {
             Assert.False((Bits)null != (Bits)null);
@@ -263,7 +257,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Bits_Set()
         {
             var b = new Bits(64);
@@ -279,7 +272,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Bits_Clear()
         {
             var b = new Bits(64);
@@ -297,7 +289,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Bits_ShiftLeft()
         {
             var b = new Bits("001100111001111001111100111111001111111");
@@ -321,7 +312,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Bits_ShiftRight()
         {
             var b = new Bits("001100111001111001111100111111001111111");
@@ -345,7 +335,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Bits_SerializeBytes()
         {
             byte[] input;
@@ -395,7 +384,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Bits_Resize()
         {
             Bits input;

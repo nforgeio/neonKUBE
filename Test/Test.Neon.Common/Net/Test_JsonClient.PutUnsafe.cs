@@ -41,7 +41,6 @@ namespace TestCommon
     public partial class Test_JsonClient
     {
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task PutUnsafeAsync()
         {
             // Ensure that PUT returning an explict type works.
@@ -99,7 +98,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task PutUnsafeAsync_NotJson()
         {
             // Ensure that PUT returning a non-JSON content type returns a NULL document.
@@ -157,7 +155,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task PutUnsafeAsync_Args()
         {
             // Ensure that PUT with query arguments work.
@@ -223,7 +220,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task PutUnsafeAsync_Headers()
         {
             // Ensure that PUT with query arguments work.
@@ -289,7 +285,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task PutUnsafeAsync_Dynamic()
         {
             // Ensure that PUT returning a dynamic works.
@@ -346,7 +341,6 @@ namespace TestCommon
         }
  
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task PutUnsafeAsync_Dynamic_NotJson()
         {
             // Ensure that PUT returning non-JSON returns a NULL dynamic document.
@@ -403,7 +397,6 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task PutUnsafeAsync_Error()
         {
             // Ensure that PUT returning a hard error works.
@@ -437,7 +430,6 @@ namespace TestCommon
         }
 
         [Fact(Skip = "TODO")]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task PutUnsafeAsync_Retry()
         {
             // Ensure that PUT will retry after soft errors.
@@ -448,7 +440,6 @@ namespace TestCommon
         }
 
         [Fact(Skip = "TODO")]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task PutUnsafeAsync_NoRetryNull()
         {
             // Ensure that PUT won't retry if [retryPolicy=NULL]
@@ -459,7 +450,6 @@ namespace TestCommon
         }
 
         [Fact(Skip = "TODO")]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task PutUnsafeAsync_NoRetryExplicit()
         {
             // Ensure that PUT won't retry if [retryPolicy=NoRetryPolicy]

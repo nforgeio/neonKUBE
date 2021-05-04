@@ -31,6 +31,7 @@ using Xunit;
 
 namespace TestCommon
 {
+    [Trait(TestTrait.Area, TestArea.NeonCommon)]
     public class Test_Assert
     {
         public class NoArgsException : Exception
@@ -71,7 +72,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Requires()
         {
             // Verify that the Covenant.Requires<T>() optional string

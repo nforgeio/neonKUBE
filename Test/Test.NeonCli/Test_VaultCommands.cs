@@ -36,6 +36,7 @@ using NeonCli;
 
 namespace Test.NeonCli
 {
+    [Trait(TestTrait.Area, TestArea.NeonCli)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_VaultCommands
@@ -47,7 +48,6 @@ namespace Test.NeonCli
         private const string editedPlainText     = "This is a test of the emergency broadcasting system. This is only a test.";
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCli)]
         public async Task Vault()
         {
             using (var runner = new ProgramRunner())
@@ -59,7 +59,6 @@ namespace Test.NeonCli
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCli)]
         public async Task VaultCreate()
         {
             using (var manager = new KubeTestManager())
@@ -155,7 +154,6 @@ namespace Test.NeonCli
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCli)]
         public async Task VaulteEdit()
         {
             using (var manager = new KubeTestManager())
@@ -226,7 +224,6 @@ namespace Test.NeonCli
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCli)]
         public async Task VaultDecrypt()
         {
             using (var manager = new KubeTestManager())
@@ -300,7 +297,6 @@ namespace Test.NeonCli
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCli)]
         public async Task VaultEncrypt()
         {
             using (var manager = new KubeTestManager())
@@ -448,7 +444,6 @@ namespace Test.NeonCli
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCli)]
         public async Task VaultPasswordName()
         {
             using (var manager = new KubeTestManager())

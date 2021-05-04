@@ -33,6 +33,7 @@ using Xunit;
 
 namespace TestIdentity
 {
+    [Trait(TestTrait.Area, TestArea.NeonIdentity)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_Schema : IClassFixture<YugaByteFixture>
@@ -53,7 +54,6 @@ namespace TestIdentity
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonIdentity)]
         public async Task CreateDatabase()
         {
             await IdentityHelper.InitializeDatabaseAsync(identityDb.ConnectionString, dbName, stsUser, stsPassword);

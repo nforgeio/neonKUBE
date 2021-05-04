@@ -40,6 +40,7 @@ namespace TestCouchbase
     /// <summary>
     /// Verifies basic <see cref="CouchbaseFixture"/> capabilities.
     /// </summary>
+    [Trait(TestTrait.Area, TestArea.NeonCouchbase)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_CouchbaseFixture : IClassFixture<CouchbaseFixture>
@@ -66,7 +67,6 @@ namespace TestCouchbase
         /// a very simple operation.
         /// </summary>
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCouchbase)]
         public async Task Basic()
         {
             couchbase.Clear();
@@ -76,7 +76,6 @@ namespace TestCouchbase
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCouchbase)]
         public async Task Clear()
         {
             var indexQuery = $"select * from system:indexes where keyspace_id={CouchbaseHelper.Literal(bucket.Name)}";

@@ -31,10 +31,10 @@ using Xunit;
 
 namespace TestCommon
 {
+    [Trait(TestTrait.Area, TestArea.NeonCommon)]
     public class Test_PolledTimer
     {
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Normal()
         {
             PolledTimer timer;
@@ -57,7 +57,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task Async()
         {
             var timer  = new PolledTimer(TimeSpan.FromSeconds(1.0));
@@ -73,7 +72,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void ResetImmediate()
         {
             PolledTimer timer;
@@ -94,7 +92,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void AutoReset()
         {
             PolledTimer timer;
@@ -115,7 +112,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void FireNow()
         {
             PolledTimer timer;
@@ -127,7 +123,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Disable()
         {
             PolledTimer timer;

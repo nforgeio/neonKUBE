@@ -61,7 +61,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Generate_ActivityEntryVoidNoArgs()
         {
             Assert.NotNull(StubManager.NewActivityStub<IActivityEntryVoidNoArgs>(client, new DummyWorkflow().Workflow));
@@ -86,7 +85,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Generate_ActivityEntryVoidWithArgs()
         {
             Assert.NotNull(StubManager.NewActivityStub<IActivityEntryVoidWithArgs>(client, new DummyWorkflow().Workflow));
@@ -94,7 +92,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Generate_ActivityEntryVoidWithOptions()
         {
             Assert.NotNull(StubManager.NewActivityStub<IActivityEntryVoidWithArgs>(client, new DummyWorkflow().Workflow, options: new ActivityOptions() { Namespace = "my-namespace" }));
@@ -119,7 +116,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Generate_ActivityResultWithArgs()
         {
             Assert.NotNull(StubManager.NewActivityStub<IActivityEntryResultWithArgs>(client, new DummyWorkflow().Workflow));
@@ -160,7 +156,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Generate_ActivityMultiMethods()
         {
             Assert.NotNull(StubManager.NewActivityStub<IActivityMultiMethods>(client, new DummyWorkflow().Workflow));

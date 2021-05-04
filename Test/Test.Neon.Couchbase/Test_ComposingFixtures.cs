@@ -44,6 +44,7 @@ namespace TestCouchbase
     /// <summary>
     /// Verify that a test fixture composed of Couchbase and other fixtures works.
     /// </summary>
+    [Trait(TestTrait.Area, TestArea.NeonCommon)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_ComposingFixtures : IClassFixture<ComposedFixture>
@@ -119,7 +120,6 @@ namespace TestCouchbase
         /// Verify that the fixtures look OK.
         /// </summary>
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public async Task Verify()
         {
             // Verify AspNetFixture.

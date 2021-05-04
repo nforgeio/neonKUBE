@@ -37,10 +37,10 @@ using Xunit;
 
 namespace TestCommon
 {
+    [Trait(TestTrait.Area, TestArea.NeonCommon)]
     public class Test_AppDomainExtensions
     {
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void GetUserAssemblies()
         {
             // $note(jefflill):

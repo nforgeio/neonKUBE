@@ -46,6 +46,7 @@ namespace TestCadence
     /// These tests prevent the <see cref="CadenceFixture"/> from establishing a client
     /// connection and then explicitly establishes a connection to run some tests.
     /// </summary>
+    [Trait(TestTrait.Area, TestArea.NeonCadence)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public partial class Test_FixtureNoConnect : IClassFixture<CadenceFixture>, IDisposable

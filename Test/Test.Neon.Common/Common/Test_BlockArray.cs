@@ -29,10 +29,10 @@ using Xunit;
 
 namespace TestCommon
 {
+    [Trait(TestTrait.Area, TestArea.NeonCommon)]
     public class Test_BlockArray
     {
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Construction()
         {
             BlockArray blocks;
@@ -57,7 +57,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Indexing()
         {
             BlockArray blocks;
@@ -222,7 +221,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void CopyTo()
         {
             CopyToTest(20, 1, 0);
@@ -309,7 +307,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void CopyFrom()
         {
             CopyFromTest(30, 1, 0);
@@ -328,7 +325,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void ExtendTo()
         {
             BlockArray blocks;
@@ -351,7 +347,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void TruncateTo()
         {
             BlockArray blocks;
@@ -402,7 +397,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void SetExactSize()
         {
             BlockArray blocks;
@@ -450,7 +444,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void AddFromBlockArray()
         {
             BlockArray ba1;
@@ -476,7 +469,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void BlockOffset()
         {
             BlockArray ba;
@@ -493,7 +485,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Reload()
         {
             BlockArray ba;
@@ -525,7 +516,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Extract()
         {
             BlockArray ba;
@@ -580,7 +570,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Clone()
         {
             BlockArray ba;

@@ -38,6 +38,7 @@ using Xunit;
 
 namespace TestCadence
 {
+    [Trait(TestTrait.Area, TestArea.NeonCadence)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public sealed partial class Test_Messages : IClassFixture<CadenceFixture>, IDisposable

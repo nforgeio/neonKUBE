@@ -53,6 +53,7 @@ namespace TestModelGen.Couchbase
         public string Foo { get; set; }
     }
 
+    [Trait(TestTrait.Area, TestArea.NeonModelGen)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_Couchbase : IClassFixture<CouchbaseFixture>
@@ -78,7 +79,6 @@ namespace TestModelGen.Couchbase
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonModelGen)]
         public async Task WriteReadList()
         {
             // Ensure that the database starts out empty.
@@ -222,7 +222,6 @@ namespace TestModelGen.Couchbase
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonModelGen)]
         public async Task CustomNames()
         {
             // Ensure that the database starts out empty.
@@ -344,7 +343,6 @@ namespace TestModelGen.Couchbase
         }
 
         [Fact(Skip = "TODO: https://github.com/nforgeio/neonKUBE/issues/704")]
-        [Trait(TestTrait.Area, TestArea.NeonModelGen)]
         public async Task RoundTrip_Array()
         {
             // Ensure that the database starts out empty.
@@ -411,7 +409,6 @@ namespace TestModelGen.Couchbase
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonModelGen)]
         public async Task RoundTrip_Object()
         {
             // Ensure that the database starts out empty.
@@ -447,7 +444,6 @@ namespace TestModelGen.Couchbase
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonModelGen)]
         public async Task Find()
         {
             // Ensure that the database starts out empty.
@@ -492,7 +488,6 @@ namespace TestModelGen.Couchbase
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonModelGen)]
         public async Task Query()
         {
             // Ensure that the database starts out empty.
@@ -588,7 +583,6 @@ namespace TestModelGen.Couchbase
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonModelGen)]
         public async Task QueryCustom()
         {
             // Ensure that the database starts out empty.
@@ -684,7 +678,6 @@ namespace TestModelGen.Couchbase
         }
 
         [Fact(Skip = "TODO: https://github.com/nforgeio/neonKUBE/issues/704")]
-        [Trait(TestTrait.Area, TestArea.NeonModelGen)]
         public async Task Dont_Persist_O()
         {
             // Ensure that the database starts out empty.

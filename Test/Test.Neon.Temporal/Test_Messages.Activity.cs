@@ -43,7 +43,6 @@ namespace TestTemporal
     public partial class Test_Messages
     {
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_ActivityRegisterRequest()
         {
             ActivityRegisterRequest message;
@@ -117,7 +116,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_ActivityRegisterReply()
         {
             ActivityRegisterReply message;
@@ -177,7 +175,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_ActivityExecuteRequest()
         {
             ActivityExecuteRequest message;
@@ -292,7 +289,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_ActivityExecuteReply()
         {
             ActivityExecuteReply message;
@@ -358,7 +354,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_ActivityInvokeRequest()
         {
             ActivityInvokeRequest message;
@@ -426,7 +421,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_ActivityInvokeReply()
         {
             ActivityInvokeReply message;
@@ -498,7 +492,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_ActivityGetHeartbeatDetailsRequest()
         {
             ActivityGetHeartbeatDetailsRequest message;
@@ -552,7 +545,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_ActivityGetHeartbeatDetailsReply()
         {
             ActivityGetHeartbeatDetailsReply message;
@@ -616,7 +608,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_ActivityRecordHeartbeatRequest()
         {
             ActivityRecordHeartbeatRequest message;
@@ -683,7 +674,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_ActivityRecordHeartbeatReply()
         {
             ActivityRecordHeartbeatReply message;
@@ -743,7 +733,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_ActivityHasHeartbeatDetailsRequest()
         {
             ActivityHasHeartbeatDetailsRequest message;
@@ -799,7 +788,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_ActivityHasHeartbeatDetailsReply()
         {
             ActivityHasHeartbeatDetailsReply message;
@@ -865,7 +853,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_ActivityStoppingRequest()
         {
             ActivityStoppingRequest message;
@@ -926,7 +913,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_ActivityStoppingReply()
         {
             ActivityStoppingReply message;
@@ -986,7 +972,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_ActivityExecuteLocalRequest()
         {
             ActivityExecuteLocalRequest message;
@@ -1070,7 +1055,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_ActivityExecuteLocalReply()
         {
             ActivityExecuteLocalReply message;
@@ -1136,7 +1120,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_ActivityInvokeLocalRequest()
         {
             ActivityInvokeLocalRequest message;
@@ -1203,7 +1186,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_ActivityInvokeLocalReply()
         {
             ActivityInvokeLocalReply message;
@@ -1269,7 +1251,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_ActivityGetInfoRequest()
         {
             ActivityGetInfoRequest message;
@@ -1341,7 +1322,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_ActivityGetInfoReply()
         {
             ActivityGetInfoReply message;
@@ -1421,7 +1401,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_ActivityCompleteRequest()
         {
             ActivityCompleteRequest message;
@@ -1512,7 +1491,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_ActivityCompleteReply()
         {
             ActivityCompleteReply message;
@@ -1572,7 +1550,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_ActivityStartRequest()
         {
             ActivityStartRequest message;
@@ -1693,7 +1670,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_ActivityStartReply()
         {
             ActivityStartReply message;
@@ -1759,7 +1735,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_ActivityGetResultRequest()
         {
             ActivityGetResultRequest message;
@@ -1821,7 +1796,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_ActivityGetResultReply()
         {
             ActivityGetResultReply message;
@@ -1893,7 +1867,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_ActivityStartLocalRequest()
         {
             ActivityStartLocalRequest message;
@@ -1989,7 +1962,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_ActivityGetLocalResultReply()
         {
             ActivityGetLocalResultReply message;
@@ -2061,7 +2033,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_ActivityGetLocalResultRequest()
         {
             ActivityGetLocalResultRequest message;
@@ -2123,7 +2094,6 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
         public void Test_ActivityStartLocalReply()
         {
             ActivityStartLocalReply message;

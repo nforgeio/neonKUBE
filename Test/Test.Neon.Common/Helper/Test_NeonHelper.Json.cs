@@ -36,7 +36,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void JsonSerializeStrict()
         {
             var before = 
@@ -75,7 +74,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void JsonSerializeBytesStrict()
         {
             var before =
@@ -116,7 +114,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void JsonSerializeRelaxed()
         {
             var before =
@@ -150,7 +147,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void JsonSerializeBytesRelaxed()
         {
             var before =
@@ -186,7 +182,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void JsonClone()
         {
             var value = 
@@ -204,7 +199,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void JsonNotYaml()
         {
             // Verify that we can identify and parse JSON (over YAML).
@@ -227,7 +221,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void ExtendedConverters()
         {
             // Verify that the extended type converters work.

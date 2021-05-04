@@ -31,10 +31,10 @@ using Xunit;
 
 namespace TestCommon
 {
+    [Trait(TestTrait.Area, TestArea.NeonCommon)]
     public class Test_Exception
     {
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Contains()
         {
             Assert.False(((Exception)null).Contains<Exception>());
@@ -52,7 +52,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void Find()
         {
             Assert.Null(((Exception)null).Find(typeof(Exception)));
@@ -70,7 +69,6 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
         public void FindGeneric()
         {
             Assert.Null(((Exception)null).Find<Exception>());
