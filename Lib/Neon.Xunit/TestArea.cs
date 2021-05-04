@@ -64,6 +64,11 @@ namespace Neon.Xunit
         public const string NeonKube = "Neon.Kube";
 
         /// <summary>
+        /// Identifies <b>Neon.Cloud</b> tests.
+        /// </summary>
+        public const string NeonCloud = "Neon.Cloud";
+
+        /// <summary>
         /// Identifies <b>Neon.Couchbase</b> tests.
         /// </summary>
         public const string NeonCouchbase = "Neon.Couchbase";
