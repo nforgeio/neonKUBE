@@ -58,7 +58,7 @@ namespace NeonSetupGrafana
         /// <inheritdoc/>
         protected async override Task<int> OnRunAsync()
         {
-            // Let KubeService know that we're running.
+            // Let NeonService know that we're running.
 
             await SetRunningAsync();
             await WaitForCitusAsync();
