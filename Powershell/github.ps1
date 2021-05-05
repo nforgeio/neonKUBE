@@ -117,7 +117,7 @@ function Get-GitHubUser
 #
 # ARGUMENTS:
 #
-#   repoPath        - specifies the target GitHub repo like: github.com/nforgeio/neonCLOUD
+#   repo           - specifies the target GitHub repo like: github.com/nforgeio/neonCLOUD
 #   title           - specifies the issue title
 #   body            - specifies the first issue comment
 #   appendLabel     - optionally enables appending to an existing issue
@@ -146,7 +146,7 @@ function New-GitHubIssue
     [CmdletBinding()]
     param (
         [Parameter(Position=0, Mandatory=$true)]
-        [string]$repoPath,
+        [string]$repo,
         [Parameter(Position=1, Mandatory=$true)]
         [string]$title,
         [Parameter(Position=2, Mandatory=$true)]
@@ -161,7 +161,7 @@ function New-GitHubIssue
         $masterPassword = $null
     )
 
-    $repoDetails = Parse-GitHubRepoPath $repoPath
+    $repoDetails = Parse-GitHubRepoPath $repo
     $owner       = $repoDetails.owner
     $repo        = $repoDetails.repo
 
@@ -183,7 +183,7 @@ function New-GitHubIssue
             # Query for any open issues authored by the authenticated user and
             # look for the first one that has the same title (if one exists).
 
-            $result      = Invoke-CaptureStreams "gh --repo $repoPath issue list --author $user --state open --label $appendLabel --json title,number --limit 1000"
+            $result      = Invoke-CaptureStreams "gh --repo $repo issue list --author $user --state open --label $appendLabel --json title,number --limit 1000"
             $json        = $result.stdout
             $list        = ConvertFrom-Json $json
             $issueNumber = -1
@@ -338,7 +338,7 @@ function Invoke-GitHubApi
 #
 # ARGUMENTS:
 #
-#   repo        - the repo path, like: github.com/nforgeio/neonCLOUD
+#   repo        - the repo path, like: [github.com/]nforgeio/neonCLOUD
 #
 # RETURNS:
 #
@@ -348,7 +348,7 @@ function Invoke-GitHubApi
 #       owner       - the organization part (nforgeio)
 #       repo        - the repository name (neonCLOUD)
 
-function Parse-GitHubRepoPath
+function Parse-GitHubRepo
 {
     [CmdletBinding()]
     param (
@@ -358,11 +358,88 @@ function Parse-GitHubRepoPath
 
     $parts = $repo.Split("/")
     
-    $result        = @{}
-    $result.server = $parts[0]
-    $result.owner  = $parts[1]
-    $result.repo   = $parts[2]
+    $result = @{}
+
+    if ($parse.Length -eq 2)
+    {
+        $result.server = "github.com"
+        $result.owner  = $parts[0]
+        $result.repo   = $parts[1]
+    }
+    else if ($parse.Length -eq 3)
+    {
+        $result.server = $parts[0]
+        $result.owner  = $parts[1]
+        $result.repo   = $parts[2]        
+    }
+    else
+    {
+        throw "Invalid repo path: $repo"
+    }
 
     return $result
+}
+
+#------------------------------------------------------------------------------
+# Starts a GitHub workflow
+#
+# ARGUMENTS:
+#
+#   repo        - the repo path, like: [github.com/]nforgeio/neonCLOUD
+#   workflow    - identifies the target workflow by name
+#   inputsJson  - optionally specifies any inputs as JSON formatted name/value pairs
+
+function Invoke-GitHubWorkflow
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$repo,
+        [Parameter(Position=1, Mandatory=$true)]
+        [string]$workflow,
+        [Parameter(Position=2, Mandatory=$false)]
+        [string]$inputJson
+    )
+
+    # Log into GitHub.
+
+    Import-GitHubCredentials
+    Login-GitHubUser $env:GITHUB_PAT
+
+    try
+    {
+        # Start the target workflow.
+
+        if ([System.String.IsNullOrEmpty($inputJson)])
+        {
+            Invoke-CaptureStreams "gh --repo $repo $workflow"
+        }
+        else
+        {
+            # We need to write the inputs to a temporary file so we can stream
+            # them into the command via STDIN.
+
+            $tempGuid      = [System.Guid]::NewGuid().ToString("d")
+            $tempInputPath = [System.IO.Path]::Combine($env:TMP, "$tempGuid.inputs.json")
+
+            [System.IO.File]::WriteAllText($tempInputPath, $inputJson)
+
+            try
+            {
+                Invoke-CaptureStreams "gh --repo $repo $workflow --json < `"$tempInputPath`""
+            }
+            finally
+            {
+                if [System.IO.File]::Exists($tempInputPath))
+                {
+                    [System.IO.File]::Delete($tempInputPath)
+                }
+            }
+        }
+    }
+    finally
+    {
+        Logout-GitHubUser
+    }
 }
 
