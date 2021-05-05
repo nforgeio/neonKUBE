@@ -37,7 +37,6 @@ Push-Location $scriptFolder
 . ./error-handling.ps1
 . ./utility.ps1
 . ./deployment.ps1
-. ./github.actions.ps1
 
 Pop-Location
 
@@ -185,7 +184,7 @@ function New-GitHubIssue
 
             $result      = Invoke-CaptureStreams "gh --repo $repo issue list --author $user --state open --label $appendLabel --json title,number --limit 1000"
             $json        = $result.stdout
-            $list        = ConvertFrom-Json $json
+            $list        = $(ConvertFrom-Json $json -AsHashTable)
             $issueNumber = -1
 
             ForEach ($issue in $list)
@@ -322,7 +321,7 @@ function Invoke-GitHubApi
             throw "Invoke-GitHubApi Failed: [exitcode=$exitCode]`nSTDERR:`n$stderr`nSTDOUT:`n$stdout"
         }
 
-        return ConvertFrom-Json $result.stdout
+        return $(ConvertFrom-Json $result.stdout -AsHashTable)
     }
     finally
     {
@@ -366,7 +365,7 @@ function Parse-GitHubRepo
         $result.owner  = $parts[0]
         $result.repo   = $parts[1]
     }
-    else if ($parse.Length -eq 3)
+    elseif ($parse.Length -eq 3)
     {
         $result.server = $parts[0]
         $result.owner  = $parts[1]
@@ -380,6 +379,499 @@ function Parse-GitHubRepo
     return $result
 }
 
+#==============================================================================
+# GitHub Action utilities
+#==============================================================================
+
+#------------------------------------------------------------------------------
+# Returns the URI for the executing workflow.
+#
+# REMARKS:
+#
+# This currently assumes that all workflow YAML files are located within
+# [$/.github/worklows/] and that they are named like: *.yaml
+
+function Get-ActionWorkflowUri
+{
+    $workflowFileName = $env:GITHUB_WORKFLOW + ".yaml"
+
+    # Extract the repo branch from GITHUB_REF. This includes the branch like:
+    #
+    #       refs/heads/master
+    #
+    # We'll extract the branch part after the last "/".
+
+    $githubRef      = $env:GITHUB_REF
+    $lastSlashPos   = $githubRef.LastIndexOf("/")
+    $workflowBranch = $githubRef.Substring($lastSlashPos + 1)
+
+    return "$env:GITHUB_SERVER_URL/$env:GITHUB_REPOSITORY/blob/$workflowBranch/.github/workflows/$workflowFileName"
+}
+
+#------------------------------------------------------------------------------
+# Returns the URI for the executing workflow run.
+
+function Get-ActionWorkflowRunUri
+{
+    return "$env:GITHUB_SERVER_URL/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID"
+}
+
+#------------------------------------------------------------------------------
+# Escapes a potentially multi-line string such that it can be written to STDOUT
+# and be processed correctly by the jobrunner.
+#
+# ARGUMENTS:
+#
+#   value   - the string value being escaped
+#
+# RETURNS:
+#
+#  The escaped string
+
+function Escape-ActionString
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$false)]
+        [string]$value = $null
+    )
+
+    if ($value -eq $null)
+    {
+        return ""
+    }
+
+    $value = $value.Replace("%", "%25")     # We need to escape "%" too
+    $value = $value.Replace("`r", "%0D")
+    $value = $value.Replace("`n", "%0A")
+
+    return $value
+}
+
+#------------------------------------------------------------------------------
+# Writes a line of text (encoded as UTF-8) to the action output.  Use this instead
+# of [Write-Output] because Powershell doesn't default to UTF-8 and its support
+# for configuring the output encoding appears to be buggy.
+#
+# ARGUMENTS:
+#
+#   text    - the string being written or $null to write an empty line.
+#   color   - optionally specifies the text color (one of: 'red' or 'yellow')
+
+function Write-ActionOutput
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$false)]
+        [string]$text = $null,
+        [Parameter(Position=1, Mandatory=$false)]
+        [string]$color = $null
+    )
+
+    if ($text -eq $null)
+    {
+        $text = ""
+    }
+
+    $text = Escape-ActionString $text
+
+    if (![System.String]::IsNullOrEmpty($text))
+    {
+        Switch ($color)
+        {
+            "red"
+            {
+                $text = "`u{001b}[31m" + $text + "`u{001b}[0m"
+            }
+
+            "yellow"
+            {
+                $text = "`u{001b}[33m" + $text + "`u{001b}[0m"
+            }
+
+            $null
+            {
+            }
+
+            ""
+            {
+            }
+
+            default
+            {
+                throw "[$color]: is not a supported color."
+            }
+        }
+    }
+
+    [System.Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+    [System.Console]::WriteLine($text)
+}
+
+#------------------------------------------------------------------------------
+# Sets an action output value.
+#
+# ARGUMENTS:
+#
+#   name    - the action output name
+#   value   - the value to be set (cannot be $null or empty)
+
+function Set-ActionOutput
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$name,
+        [Parameter(Position=1, Mandatory=$false)]
+        [string]$value = $null
+    )
+
+    if ([System.String]::IsNullOrEmpty($name))
+    {
+        throw "[$name] cannot be null or empty."
+    }
+
+    Write-ActionOutput "::set-output name=$name::$value"
+}
+
+#------------------------------------------------------------------------------
+# Logs a debug message.  You must create a secret named ACTIONS_STEP_DEBUG with
+# the value true to see the debug messages set by this command in the log. 
+#
+# For more information, see: 
+#
+#   https://docs.github.com/en/actions/managing-workflow-runs/enabling-debug-logging
+#
+# ARGUMENTS:
+#
+#   message     - the message
+
+function Log-ActionDebugMessage
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$message
+    )
+
+    Write-ActionOutput "::debug::$message"
+}
+
+#------------------------------------------------------------------------------
+# Writes a warning message to the action output.
+#
+# ARGUMENTS:
+#
+#   message     - the message
+
+function Write-ActionWarning
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$message
+    )
+
+    Write-ActionOutput $message "yellow"
+}
+
+#------------------------------------------------------------------------------
+# Writes an error message to the action output.
+#
+# ARGUMENTS:
+#
+#   message     - the message
+
+function Write-ActionError
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$message
+    )
+
+    Write-ActionOutput $message "red"
+}
+
+#------------------------------------------------------------------------------
+# Opens an expandable group in the GitHub action output.
+#
+# ARGUMENTS:
+#
+#   groupTitle  - the group title
+
+function Open-ActionOutputGroup
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$groupTitle
+    )
+
+    Write-ActionOutput "::group::$groupTitle"
+}
+
+#------------------------------------------------------------------------------
+# Closes the current expandable group in the GitHub action output.
+
+function Close-ActionOutputGroup
+{
+    Write-ActionOutput "::endgroup::"
+}
+
+#------------------------------------------------------------------------------
+# Writes information about a Powershell action exception to the action output.
+#
+# ARGUMENTS:
+#
+#   error   - The error caught in a catch block via the automatic
+#             [$_] or [$PSItem] variable
+
+function Write-ActionException
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        $error
+    )
+
+    Write-ActionError "EXCEPTION: $error"
+    Write-ActionError "-------------------------------------------"
+    Write-ActionError $error.ScriptStackTrace
+}
+
+#------------------------------------------------------------------------------
+# Writes the contents of a text file to the action output, optionally nested
+# within an action group.
+#
+# ARGUMENTS:
+#
+#   path                - path to the text file
+#   groupTitle          - optionally specifies the group title
+#   type                - optionally specifies the log file type fgor colorization.
+#                         Pass one of these values:
+#
+#                           "none" or ""  - disables colorization
+#                           "build-log"   - parses build logs
+#
+#   keepSHFBWarnings    - optionally strips out Sandcastle Help File Builder (SHFB) 
+#                         warnings when identified
+#
+# REMARKS:
+#
+# NOTE: This function does nothing when the source file doesn't exist.
+
+function Write-ActionOutputFile
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$path,
+        [Parameter(Position=1, Mandatory=$false)]
+        [string]$groupTitle = $null,
+        [Parameter(Position=2, Mandatory=$false)]
+        [string]$type = $null,
+        [Parameter(Position=3, Mandatory=$false)]
+        [bool]$keepShfbWarnings = $false
+    )
+
+    if (![System.IO.File]::Exists($path))
+    {
+        return
+    }
+
+    $lines = [System.IO.File]::ReadAllLines($path)
+
+    if (![System.String]::IsNullOrEmpty($groupTitle))
+    {
+        Open-ActionOutputGroup $groupTitle
+    }
+
+    # Build log error and warning regular expressions:
+
+    $buildLogWarningRegex       = New-Object "System.Text.RegularExpressions.Regex" -ArgumentList "\(\d+,\d+.*\)\:\swarning\s"
+    $buildLogErrorRegex         = New-Object "System.Text.RegularExpressions.Regex" -ArgumentList "\(\d+,\d+.*\)\:\serror\s"
+    $buildLogWarningummaryRegex = New-Object "System.Text.RegularExpressions.Regex" -ArgumentList "^\s\s\s\s\d+[1-9] Warning\(s\)"
+    $buildLogErrorSummaryRegex  = New-Object "System.Text.RegularExpressions.Regex" -ArgumentList "^\s\s\s\s\d+[1-9] Error\(s\)"
+    $buildLogSHFBErrorRegex     = New-Object "System.Text.RegularExpressions.Regex" -ArgumentList "^\s*SHFB\s\:\serror"
+    $buildLogSHFBWarningRegex   = New-Object "System.Text.RegularExpressions.Regex" -ArgumentList "^\s*SHFB\s\:\swarning"
+
+    ForEach ($line in $lines)
+    {
+        $color = $null
+
+        Switch ($type)
+        {
+            $null
+            {
+            }
+
+            ""
+            {
+            }
+
+            "none"
+            {
+            }
+
+            "build-log"
+            {
+                if ($buildLogWarningRegex.IsMatch($line) -or $buildLogWarningummaryRegex.IsMatch($line))
+                {
+                    $color = "yellow"
+                }
+                elseif ($buildLogSHFBWarningRegex.IsMatch($line))
+                {
+                    if (!$keepSHFBWarnings)
+                    {
+                        return
+                    }
+
+                    $color = "yellow"
+                }
+                elseif ($buildLogErrorRegex.IsMatch($line) -or $buildLogErrorSummaryRegex.IsMatch($line) -or $buildLogSHFBErrorRegex.IsMatch($line))
+                {
+                    $color = "red"
+                }
+                elseif ($line.Contains("*** BUILD FAILED ***"))
+                {
+                    $color = "red"
+                }
+            }
+
+            default
+            {
+                throw "[$type] is not a supported log file type."
+            }
+        }
+
+        Write-ActionOutput $line $color
+    }
+
+    if (![System.String]::IsNullOrEmpty($groupTitle))
+    {
+        Close-ActionOutputGroup
+    }
+}
+
+#------------------------------------------------------------------------------
+# Sets a GitHub action environment variable (made available across the current
+# job via the [env] collection).
+#
+# NOTE: The new environment value is not actually available in the action that
+#       sets it but it will be available to all subsequent action executions.
+#
+# ARGUMENTS:
+#
+#   name        - the environment variable name
+#   value       - the value to be set ($null will set empty string)
+
+function Set-ActionEnvironmentVariable
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$name,
+        [Parameter(Position=1, Mandatory=$true)]
+        [string]$value
+    )
+
+    if ([System.String]::IsNullOrEmpty($name))
+    {
+        throw "[name] cannot be null or empty."
+    }
+
+    if ($value -eq $null)
+    {
+        $value = ""
+    }
+
+    if ($value.Contains("\n"))
+    {
+        # Multiline values required special handling.
+
+        $delimiter = "f06bca88-47d6-4971-b1dc-bec88fa4faac"
+
+        [System.IO.File]::AppendAllText($env:GITHUB_ENV,  "$name<<$delimiter`r`n")
+        [System.IO.File]::AppendAllText($env:GITHUB_ENV,  "$value")
+
+        if (!$value.EndsWith("`n"))
+        {
+            [System.IO.File]::AppendAllText($env:GITHUB_ENV,  "`r`n")
+        }
+
+        [System.IO.File]::AppendAllText($env:GITHUB_ENV,  "$delimiter`r`n")
+    }
+    else
+    {
+        [System.IO.File]::AppendAllText($env:GITHUB_ENV, "$name=$value`r`n")
+    }
+}
+
+#------------------------------------------------------------------------------
+# Appends a directory path to the Action $GITHUB_PATH which will make any programs
+# in the directory available for execution.
+#
+# NOTE: The new PATH entry value is not actually available in the action that
+#       sets it but it will be available to all subsequent action executions.
+#
+# ARGUMENTS:
+#
+#   PATH    - the directory to be added to the path.
+
+function Add-ActionPath
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$path
+    )
+
+    if ([System.String]::IsNullOrEmpty($path))
+    {
+        throw "[path] cannot be null or empty."
+    }
+
+    if (![System.IO.Directory]::DirectoryExists($path))
+    {
+        throw "[$path] directory does not exist."
+    }
+}
+
+#------------------------------------------------------------------------------
+# Retrieves an action input value.
+#
+# ARGUMENTS:
+#
+#   name        - the value name.
+#   required    - optionally indicates that the value is required
+
+function Get-ActionInput
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$name,
+        [Parameter(Position=1, Mandatory=$false)]
+        [bool]$required = $false
+    )
+
+    if ([System.String]::IsNullOrEmpty($name))
+    {
+        throw "[name] cannot be null or empty."
+    }
+
+    $name  = "INPUT_$name"
+    $value = [System.Environment]::GetEnvironmentVariable($name)
+
+    if ($required -and [System.String]::IsNullOrEmpty($value))
+    {
+        throw "[$name] input is required."
+    }
+
+    return $value
+}
+
 #------------------------------------------------------------------------------
 # Starts a GitHub workflow
 #
@@ -389,7 +881,7 @@ function Parse-GitHubRepo
 #   workflow    - identifies the target workflow by name
 #   inputsJson  - optionally specifies any inputs as JSON formatted name/value pairs
 
-function Invoke-GitHubWorkflow
+function Invoke-ActionWorkflow
 {
     [CmdletBinding()]
     param (
@@ -410,9 +902,9 @@ function Invoke-GitHubWorkflow
     {
         # Start the target workflow.
 
-        if ([System.String.IsNullOrEmpty($inputJson)])
+        if ([System.String]::IsNullOrEmpty($inputJson))
         {
-            Invoke-CaptureStreams "gh --repo $repo $workflow"
+            Invoke-CaptureStreams "gh --repo $repo workflow run $workflow"
         }
         else
         {
@@ -426,11 +918,11 @@ function Invoke-GitHubWorkflow
 
             try
             {
-                Invoke-CaptureStreams "gh --repo $repo $workflow --json < `"$tempInputPath`""
+                Invoke-CaptureStreams "gh --repo $repo workflow run $workflow --json < `"$tempInputPath`""
             }
             finally
             {
-                if [System.IO.File]::Exists($tempInputPath))
+                if ([System.IO.File]::Exists($tempInputPath))
                 {
                     [System.IO.File]::Delete($tempInputPath)
                 }
@@ -442,4 +934,3 @@ function Invoke-GitHubWorkflow
         Logout-GitHubUser
     }
 }
-
