@@ -1263,7 +1263,7 @@
 
   <Target Name="ModelGen" BeforeTargets="BeforeCompile">
     <Exec Command="$(NF_ROOT)\Tools\prebuilder\bin\$(Configuration)\net5.0\prebuilder generate-kubernetes-with-retry &quot;$(ProjectDir)KubernetesWithRetry.cs&quot; Neon.Kube" />
-    <Exec Command="neon-build embed-check &quot;$(ProjectPath)&quot; &quot;$(ProjectDir)\Resources&quot;" />
+    <Exec Command="neon-build embed-check &quot;$(ProjectPath)&quot; &quot;$(ProjectDir)Resources&quot;" />
   </Target>
 
 </Project>
