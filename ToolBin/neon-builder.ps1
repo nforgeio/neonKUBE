@@ -64,7 +64,7 @@ $nfBuild     = "$env:NF_BUILD"
 $nfLib       = "$nfRoot\Lib"
 $nfTools     = "$nfRoot\Tools"
 $nfToolBin   = "$nfRoot\ToolBin"
-$buildConfig = "-p:Configuration=Release"
+$buildConfig = "-p:Configuration=$config"
 $env:PATH   += ";$nfBuild"
 
 $libraryVersion = $(& "$nfToolBin\neon-build" read-version "$nfLib\Neon.Common\Build.cs" NeonLibraryVersion)
@@ -102,11 +102,11 @@ function PublishCore
     $projectPath = [System.IO.Path]::Combine($nfRoot, $projectPath)
 
     $potentialTargets = @(
-        $([System.IO.Path]::Combine($nfRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "net5.0-windows", "$targetName.dll")),
-        $([System.IO.Path]::Combine($nfRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "net5.0-windows10.0.17763.0", "$targetName.dll")),
-        $([System.IO.Path]::Combine($nfRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "net5.0", "$targetName.dll")),
-        $([System.IO.Path]::Combine($nfRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "net5.0", "win10-x64", "$targetName.dll")),
-        $([System.IO.Path]::Combine($nfRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "netcoreapp3.1", "$targetName.dll"))
+        $([System.IO.Path]::Combine($ncRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "net5.0-windows", "$targetName.dll")),
+        $([System.IO.Path]::Combine($ncRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "net5.0-windows10.0.17763.0", "$targetName.dll")),
+        $([System.IO.Path]::Combine($ncRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "net5.0", "$targetName.dll")),
+        $([System.IO.Path]::Combine($ncRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "net5.0", "win10-x64", "$targetName.dll")),
+        $([System.IO.Path]::Combine($ncRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "netcoreapp3.1", "$targetName.dll"))
     )
 
     $targetPath = $null
