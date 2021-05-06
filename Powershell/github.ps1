@@ -879,6 +879,7 @@ function Get-ActionInput
 #
 #   repo        - the repo path, like: [github.com/]nforgeio/neonCLOUD
 #   workflow    - identifies the target workflow by name
+#   branch      - optionbally specifies the branch or tag that holds the workflow
 #   inputsJson  - optionally specifies any inputs as JSON formatted name/value pairs
 
 function Invoke-ActionWorkflow
@@ -889,8 +890,10 @@ function Invoke-ActionWorkflow
         [string]$repo,
         [Parameter(Position=1, Mandatory=$true)]
         [string]$workflow,
+        [Parameter(Position=1, Mandatory=$false)]
+        [string]$branch = "master",
         [Parameter(Position=2, Mandatory=$false)]
-        [string]$inputJson
+        [string]$inputJson = $null
     )
 
     # Log into GitHub.
@@ -918,7 +921,7 @@ function Invoke-ActionWorkflow
 
             try
             {
-                Invoke-CaptureStreams "gh --repo $repo workflow run $workflow --json < `"$tempInputPath`""
+                Invoke-CaptureStreams "gh --repo $repo workflow run $workflow --ref $branch --json < `"$tempInputPath`""
             }
             finally
             {
