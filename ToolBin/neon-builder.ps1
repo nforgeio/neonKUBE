@@ -113,10 +113,15 @@ function PublishCore
 
     ForEach ($path in $potentialTargets)
     {
-        if (Test-Path $path)
+        if ([System.IO.File]::Exists($path))
         {
             $targetPath = $path
+            Write-ActionOutput("*** Publish target exists: $path")
             Break
+        }
+        else
+        {
+            Write-ActionOutput("*** Publish target does not exist: $path")
         }
     }
 
