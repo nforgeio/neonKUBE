@@ -890,9 +890,9 @@ function Invoke-ActionWorkflow
         [string]$repo,
         [Parameter(Position=1, Mandatory=$true)]
         [string]$workflow,
-        [Parameter(Position=1, Mandatory=$false)]
+        [Parameter(Mandatory=$false)]
         [string]$branch = "master",
-        [Parameter(Position=2, Mandatory=$false)]
+        [Parameter(Mandatory=$false)]
         [string]$inputJson = $null
     )
 

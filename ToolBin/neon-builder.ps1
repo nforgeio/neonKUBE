@@ -116,12 +116,12 @@ function PublishCore
         if ([System.IO.File]::Exists($path))
         {
             $targetPath = $path
-            Write-ActionOutput("*** Publish target exists: $path")
+            Write-ActionOutput("*** Publish target exists at: $path")
             Break
         }
         else
         {
-            Write-ActionOutput("*** Publish target does not exist: $path")
+            Write-ActionOutput("*** Publish target does not exist at: $path")
         }
     }
 
