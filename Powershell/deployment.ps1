@@ -1,4 +1,4 @@
-#Requires -Version 7.0 -RunAsAdministrator -RunAsAdministrator
+#Requires -Version 7.0 -RunAsAdministrator
 #------------------------------------------------------------------------------
 # FILE:         deployment.ps1
 # CONTRIBUTOR:  Jeff Lill
@@ -32,6 +32,7 @@
 
 Add-Type -Path "$env:NEON_ASSISTANT_HOME\Neon.Common.dll"
 Add-Type -Path "$env:NEON_ASSISTANT_HOME\Neon.Deployment.dll"
+Add-Type -Path "$env:NEON_ASSISTANT_HOME\YamlDotNet.dll"
 
 #------------------------------------------------------------------------------
 # Returns a global [Neon.Deployment.ProfileClient] instance creating one if necessary.

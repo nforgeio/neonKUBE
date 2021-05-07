@@ -1,4 +1,4 @@
-#Requires -Version 7.0 -RunAsAdministrator -RunAsAdministrator
+#Requires -Version 7.0 -RunAsAdministrator
 #------------------------------------------------------------------------------
 # FILE:         github.ps1
 # CONTRIBUTOR:  Jeff Lill
@@ -642,7 +642,7 @@ function Write-ActionException
 
     Write-ActionError "EXCEPTION: $error"
     Write-ActionError "-------------------------------------------"
-    Write-ActionError $error.ScriptStackTrace
+    $_.Exception|format-list -force
 }
 
 #------------------------------------------------------------------------------

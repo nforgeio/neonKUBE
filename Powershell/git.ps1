@@ -1,4 +1,4 @@
-#Requires -Version 7.0 -RunAsAdministrator -RunAsAdministrator
+#Requires -Version 7.0 -RunAsAdministrator
 #------------------------------------------------------------------------------
 # FILE:         git.ps1
 # CONTRIBUTOR:  Jeff Lill
