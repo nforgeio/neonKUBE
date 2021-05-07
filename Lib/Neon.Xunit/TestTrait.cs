@@ -39,15 +39,10 @@ namespace Neon.Xunit
         public const string Slow = "slow";
 
         /// <summary>
-        /// Set as the category value to identify unreliable tests that fail due to 
-        /// transient environmental issues generally out of control of the test 
-        /// case developer by setting.
-        /// </summary>
-        public const string Unreliable = "unreliable";
-
-        /// <summary>
         /// Set as the category value to identify test cases that appear to have
-        /// bugs as opposed to the thing being tested having bugs.
+        /// bugs as opposed to the thing being tested having bugs.  This also 
+        /// covers transient environmental issues generally out of control of the
+        /// test case developer.
         /// </summary>
         public const string Buggy = "buggy";
 

@@ -374,7 +374,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Category, TestTrait.Unreliable)]   // This has never been entirely reliable.
+        [Trait(TestTrait.Category, TestTrait.Buggy)]    // This has never been entirely reliable.
         public void ModifyLocalHosts_Reliability()
         {
             try
