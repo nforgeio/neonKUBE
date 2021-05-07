@@ -26,7 +26,7 @@ New-NetFirewallRule -Name "Inbound-Cadence" `
                     -DisplayName "[TEST] allow inbound Cadence" `
                     -Direction Inbound `
                     -Action Allow `
-                    -LocalPort 7933 `
+                    -LocalPort 1024-65535 `
                     -Protocol TCP `
                     -Profile Any `
                     -Description "Allow external connections to Cadence servers" | Out-Null
@@ -37,7 +37,7 @@ New-NetFirewallRule -Name "Inbound-Temporal" `
                     -DisplayName "[TEST] allow inbound Temporal" `
                     -Direction Inbound `
                     -Action Allow `
-                    -LocalPort 7233 `
+                    -LocalPort 7233-65535 `
                     -Protocol TCP `
                     -Profile Any `
                     -Description "Allow external connections to Temporal servers" | Out-Null
