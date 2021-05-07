@@ -30,7 +30,7 @@ using Xunit;
 
 namespace TestCommon
 {
-    [Trait(TestTrait.Area, TestArea.NeonCommon)]
+    [Trait(TestTrait.Category, TestArea.NeonCommon)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_NetHelper
     {
@@ -374,7 +374,7 @@ namespace TestCommon
         }
 
         [Fact]
-        [Trait(TestTrait.Unreliable, "1")]      // This has never been entirely reliable.
+        [Trait(TestTrait.Category, TestTrait.Unreliable)]   // This has never been entirely reliable.
         public void ModifyLocalHosts_Reliability()
         {
             try

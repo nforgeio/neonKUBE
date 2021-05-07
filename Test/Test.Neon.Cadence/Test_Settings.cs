@@ -40,7 +40,7 @@ using Xunit;
 
 namespace TestCadence
 {
-    [Trait(TestTrait.Area, TestArea.NeonCadence)]
+    [Trait(TestTrait.Category, TestArea.NeonCadence)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_Settings : IClassFixture<CadenceFixture>, IDisposable
@@ -88,7 +88,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
+        [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public async Task Workflow_ExternalIdNoReuse()
         {
             await SyncContext.ClearAsync;
@@ -129,7 +129,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
+        [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public async Task Workflow_ExternalIdReuseViaSettings()
         {
             await SyncContext.ClearAsync;

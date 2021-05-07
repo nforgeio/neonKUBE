@@ -40,7 +40,7 @@ using Xunit;
 
 namespace TestCadence
 {
-    [Trait(TestTrait.Area, TestArea.NeonCadence)]
+    [Trait(TestTrait.Category, TestArea.NeonCadence)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_SignalChecks : IClassFixture<CadenceFixture>, IDisposable
@@ -117,7 +117,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
+        [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public async Task SyncSignal_StringResultError()
         {
             // Verify that async signals must return a Task.  [ISyncSignalNotTask]
@@ -156,7 +156,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
+        [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public async Task SyncSignal_VoidResultError()
         {
             // Verify that async signals must return a Task.  [ISyncSignalNotTask]
@@ -196,7 +196,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
+        [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public async Task AsyncSignal_StringResultError()
         {
             // Verify that synchronous signals must return a Task.  [IAsyncSignalNotTask]
@@ -235,7 +235,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
+        [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public async Task AsyncSignal_VoidResultError()
         {
             // Verify that synchronous signals must return a Task.  [IAsyncSignalNotTask]

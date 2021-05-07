@@ -37,7 +37,7 @@ using Xunit;
 
 namespace TestCryptography
 {
-    [Trait(TestTrait.Area, TestArea.NeonCryptography)]
+    [Trait(TestTrait.Category, TestArea.NeonCryptography)]
     public class Test_TlsCertificate
     {
         private const string TestCertPart =

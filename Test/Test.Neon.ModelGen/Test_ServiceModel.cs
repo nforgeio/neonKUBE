@@ -351,7 +351,7 @@ namespace TestModelGen.ServiceModel
     }
 
     [NoCodeGen]
-    [Trait(TestTrait.Area, TestArea.NeonModelGen)]
+    [Trait(TestTrait.Category, TestArea.NeonModelGen)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public partial class Test_ServiceModel

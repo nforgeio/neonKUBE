@@ -36,7 +36,7 @@ using NeonCli;
 
 namespace Test.NeonCli
 {
-    [Trait(TestTrait.Area, TestArea.NeonCli)]
+    [Trait(TestTrait.Category, TestArea.NeonCli)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_RunCommand

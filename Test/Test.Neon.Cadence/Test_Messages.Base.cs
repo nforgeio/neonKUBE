@@ -42,7 +42,7 @@ namespace TestCadence
     public partial class Test_Messages
     {
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
+        [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public void Test_ProxyMessage()
         {
             // Ensures that we can serialize and deserialize base messages.
@@ -115,7 +115,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
+        [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public void Test_ProxyRequest()
         {
             // Ensures that we can serialize and deserialize request messages.
@@ -166,7 +166,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
+        [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public void Test_ProxyReply()
         {
             // Ensures that we can serialize and deserialize reply messages.
@@ -220,7 +220,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
+        [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public void Test_ActivityRequest()
         {
             // Ensures that we can serialize and deserialize activity request messages.
@@ -274,7 +274,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
+        [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public void Test_ActivityReply()
         {
             // Ensures that we can serialize and deserialize activity reply messages.
@@ -332,7 +332,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
+        [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public void Test_WorkflowRequest()
         {
             // Ensures that we can serialize and deserialize workflow request messages.
@@ -386,7 +386,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
+        [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public void Test_WorkflowReply()
         {
             // Ensures that we can serialize and deserialize workflow reply messages.

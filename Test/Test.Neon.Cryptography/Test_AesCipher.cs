@@ -32,7 +32,7 @@ using Xunit;
 
 namespace TestCryptography
 {
-    [Trait(TestTrait.Area, TestArea.NeonCryptography)]
+    [Trait(TestTrait.Category, TestArea.NeonCryptography)]
     public class Test_AesCipher
     {
         private int[] sizes = new int[] { 128, 192, 256 };

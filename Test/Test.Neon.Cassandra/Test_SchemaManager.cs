@@ -36,7 +36,7 @@ using Xunit;
 
 namespace Test.Neon.Cassandra
 {
-    [Trait(TestTrait.Area, TestArea.NeonCassandra)]
+    [Trait(TestTrait.Category, TestArea.NeonCassandra)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_SchemaManager : IClassFixture<YugaByteFixture>

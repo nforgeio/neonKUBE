@@ -32,7 +32,7 @@ using Xunit;
 
 namespace TestCommon
 {
-    [Trait(TestTrait.Area, TestArea.NeonCommon)]
+    [Trait(TestTrait.Category, TestArea.NeonCommon)]
     public class Test_AsyncReaderWriterLock
     {
         private TimeSpan    defaultTimeout = TimeSpan.FromSeconds(15);  // Maximum time to wait for a test operation to complete.

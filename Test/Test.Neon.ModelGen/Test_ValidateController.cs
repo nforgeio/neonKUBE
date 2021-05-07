@@ -53,7 +53,7 @@ namespace TestModelGen.Validator
     /// This class verifies that <see cref="XunitExtensions.ValidateController{TServiceController}(Neon.Data.IGeneratedServiceClient)"/>
     /// actually works properly.
     /// </summary>
-    [Trait(TestTrait.Area, TestArea.NeonModelGen)]
+    [Trait(TestTrait.Category, TestArea.NeonModelGen)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_ValidateController
@@ -79,7 +79,7 @@ namespace TestModelGen.Validator
         }
 
         [Fact]
-        [Trait(TestTrait.Area, TestArea.NeonModelGen)]
+        [Trait(TestTrait.Category, TestArea.NeonModelGen)]
         public void ValidateController0()
         {
             using (var client = new VerifyController0Client())

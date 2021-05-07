@@ -52,7 +52,7 @@ namespace TestXunit
     /// <summary>
     /// This class tests both the <see cref="NatsStreamingFixture"/> as well as the Neon
     /// STAN extensions.
-    [Trait(TestTrait.Area, TestArea.NeonXunit)]
+    [Trait(TestTrait.Category, TestArea.NeonXunit)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_NatsStreamingFixture : IClassFixture<NatsStreamingFixture>

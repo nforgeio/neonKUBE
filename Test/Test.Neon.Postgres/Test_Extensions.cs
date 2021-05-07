@@ -37,7 +37,7 @@ using Xunit;
 
 namespace Test.Neon.Postgres
 {
-    [Trait(TestTrait.Area, TestArea.NeonPostgres)]
+    [Trait(TestTrait.Category, TestArea.NeonPostgres)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_Extensions : IClassFixture<YugaByteFixture>

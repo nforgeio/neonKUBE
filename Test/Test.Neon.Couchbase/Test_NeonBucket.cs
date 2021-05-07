@@ -33,7 +33,7 @@ using Xunit;
 
 namespace TestCouchbase
 {
-    [Trait(TestTrait.Area, TestArea.NeonCouchbase)]
+    [Trait(TestTrait.Category, TestArea.NeonCouchbase)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_NeonBucket : IClassFixture<CouchbaseFixture>

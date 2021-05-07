@@ -33,7 +33,7 @@ using Xunit;
 
 namespace TestIdentity
 {
-    [Trait(TestTrait.Area, TestArea.NeonIdentity)]
+    [Trait(TestTrait.Category, TestArea.NeonIdentity)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_Schema : IClassFixture<YugaByteFixture>

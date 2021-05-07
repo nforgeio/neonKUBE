@@ -33,7 +33,7 @@ using Xunit;
 
 namespace TestKube
 {
-    [Trait(TestTrait.Area, TestArea.NeonKube)]
+    [Trait(TestTrait.Category, TestArea.NeonKube)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_KubeContextName

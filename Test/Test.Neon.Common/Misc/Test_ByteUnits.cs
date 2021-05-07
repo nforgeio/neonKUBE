@@ -36,7 +36,7 @@ using Xunit;
 
 namespace TestCommon
 {
-    [Trait(TestTrait.Area, TestArea.NeonCommon)]
+    [Trait(TestTrait.Category, TestArea.NeonCommon)]
     public class Test_ByteUnits
     {
         public static decimal Pow(decimal x, uint y)

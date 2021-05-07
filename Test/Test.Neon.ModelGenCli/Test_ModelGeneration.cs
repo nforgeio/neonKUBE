@@ -97,7 +97,7 @@ namespace Test.NeonCli
     /// <summary>
     /// Tests <b>neon generate models</b> commands.
     /// </summary>
-    [Trait(TestTrait.Area, TestArea.NeonModelGen)]
+    [Trait(TestTrait.Category, TestArea.NeonModelGen)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_ModelGeneration

@@ -40,8 +40,8 @@ using Xunit;
 
 namespace TestTemporal
 {
-    [Trait(TestTrait.Incomplete, "1")]
-    [Trait(TestTrait.Area, TestArea.NeonTemporal)]
+    [Trait(TestTrait.Category, TestTrait.Incomplete)]
+    [Trait(TestTrait.Category, TestArea.NeonTemporal)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_MultiClient : IClassFixture<TemporalFixture>
@@ -129,7 +129,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
+        [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Simultaneous()
         {
             await SyncContext.ClearAsync;
@@ -175,7 +175,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
+        [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Connect_Twice()
         {
             await SyncContext.ClearAsync;
@@ -370,7 +370,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
+        [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Multiple_TaskQueues()
         {
             await SyncContext.ClearAsync;

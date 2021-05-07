@@ -36,7 +36,7 @@ namespace TestDeployment
 {
     // NOTE: These tests need to be run manually.
 
-    [Trait(TestTrait.Area, TestArea.NeonDeployment)]
+    [Trait(TestTrait.Category, TestArea.NeonDeployment)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_OnePassword

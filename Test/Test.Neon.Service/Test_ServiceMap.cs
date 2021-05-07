@@ -40,7 +40,7 @@ namespace TestNeonService
     /// uses a <see cref="ServiceMap"/> to lookup up the endpoint of another
     /// service and submit an HTTP request to it.
     /// </summary>
-    [Trait(TestTrait.Area, TestArea.NeonService)]
+    [Trait(TestTrait.Category, TestArea.NeonService)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_ServiceMap : IClassFixture<ComposedFixture>

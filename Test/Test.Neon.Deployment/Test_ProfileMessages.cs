@@ -33,7 +33,7 @@ using Neon.Xunit;
 
 namespace TestDeployment
 {
-    [Trait(TestTrait.Area, TestArea.NeonDeployment)]
+    [Trait(TestTrait.Category, TestArea.NeonDeployment)]
     public class Test_ProfileMessages
     {
         [Fact]

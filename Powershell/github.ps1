@@ -122,7 +122,7 @@ function Get-GitHubUser
 #   appendLabel     - optionally enables appending to an existing issue
 #                     (see the remarks for mor details)
 #   assignees       - optionally specifies a list of assignees
-#   labels          - optionally specifies a map of label name/values
+#   labels          - optionally specifies a hash table of label nameS
 #   masterPassword  - optionally specifies the user's master 1Password
 #
 # REMARKS:
@@ -162,7 +162,7 @@ function New-GitHubIssue
 
     $repoDetails = Parse-GitHubRepo $repo
     $owner       = $repoDetails.owner
-    $repo        = $repoDetails.repo
+    $repoName    = $repoDetails.repoName
 
     # Log into GitHub and obtain the GitHub user name.
 
@@ -231,7 +231,7 @@ function New-GitHubIssue
 
             # Use the REST API to create the issue.
 
-            $result   = Invoke-GitHubApi "/repos/$owner/$repo/issues" "POST" -body $request
+            $result   = Invoke-GitHubApi "/repos/$owner/$repoName/issues" "POST" -body $request
             $issueUri = $result.html_url
 
             return "$issueUri"
@@ -247,7 +247,7 @@ function New-GitHubIssue
             $request.issue_number = $issueNumber
             $request.body         = $body
 
-            $result     = Invoke-GitHubApi "/repos/$owner/$repo/issues/$issueNumber/comments" "POST" -body $request
+            $result     = Invoke-GitHubApi "/repos/$owner/$repoName/issues/$issueNumber/comments" "POST" -body $request
             $commentUri = $result.html_url
 
             return $commentUri
@@ -345,7 +345,7 @@ function Invoke-GitHubApi
 #
 #       server      - the server part (github.com)
 #       owner       - the organization part (nforgeio)
-#       repo        - the repository name (neonCLOUD)
+#       repoName    - the repository name (neonCLOUD)
 
 function Parse-GitHubRepo
 {
@@ -359,21 +359,26 @@ function Parse-GitHubRepo
     
     $result = @{}
 
-    if ($parse.Length -eq 2)
+    switch ($parts.Length)
     {
-        $result.server = "github.com"
-        $result.owner  = $parts[0]
-        $result.repo   = $parts[1]
-    }
-    elseif ($parse.Length -eq 3)
-    {
-        $result.server = $parts[0]
-        $result.owner  = $parts[1]
-        $result.repo   = $parts[2]        
-    }
-    else
-    {
-        throw "Invalid repo path: $repo"
+        2
+        {
+            $result.server   = "github.com"
+            $result.owner    = $parts[0]
+            $result.repoName = $parts[1]
+        }
+
+        3
+        {
+            $result.server   = $parts[0]
+            $result.owner    = $parts[1]
+            $result.repoName = $parts[2]        
+        }
+
+        default
+        {
+            throw "Invalid repo path: $repo"
+        }
     }
 
     return $result

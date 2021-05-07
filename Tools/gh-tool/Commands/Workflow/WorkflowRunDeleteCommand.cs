@@ -21,6 +21,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -30,8 +31,6 @@ using Newtonsoft.Json;
 
 using Neon.Common;
 
-using Octokit;
-
 namespace GHTool
 {
     /// <summary>
@@ -40,6 +39,20 @@ namespace GHTool
     [Command]
     public class WorkflowRunDeleteCommand : CommandBase
     {
+        //---------------------------------------------------------------------
+        // Private types
+
+        /// <summary>
+        /// Holds important state from a workflow run.
+        /// </summary>
+        private class RunInfo
+        {
+
+        }
+
+        //---------------------------------------------------------------------
+        // Implementation
+
         private const string usage = @"
 Deletes 
 
@@ -103,10 +116,15 @@ ARGUMENTS:
             var workflowName = nameArg;
             var age          = Math.Max(int.Parse(ageArg), 0);
 
-            var client = new GitHubClient(Program.ProductHeader)
+            // $todo(jefflill):
+            //
+            // Octokit for .NET doesn't support any action APIs yet so we'll do 
+            // this the hard way.
+
+            using (var client = new HttpClient())
             {
-                Credentials = Program.GitHubCredentials
-            };
+                // List all of the workflow runs for the repo, paging to get all of them.
+            }
         }
     }
 }

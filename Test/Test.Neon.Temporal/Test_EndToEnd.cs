@@ -42,8 +42,8 @@ using Xunit.Abstractions;
 
 namespace TestTemporal
 {
-    [Trait(TestTrait.Incomplete, "1")]
-    [Trait(TestTrait.Area, TestArea.NeonTemporal)]
+    [Trait(TestTrait.Category, TestTrait.Incomplete)]
+    [Trait(TestTrait.Category, TestArea.NeonTemporal)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public partial class Test_EndToEnd : IClassFixture<TemporalFixture>

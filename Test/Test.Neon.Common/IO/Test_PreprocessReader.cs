@@ -35,7 +35,7 @@ using Xunit;
 
 namespace TestCommon
 {
-    [Trait(TestTrait.Area, TestArea.NeonCommon)]
+    [Trait(TestTrait.Category, TestArea.NeonCommon)]
     public class Test_PreprocessReader
     {
         private void SetVariables(PreprocessReader reader, KeyValuePair<string, string>[] variables)

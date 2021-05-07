@@ -39,7 +39,7 @@ namespace TestYugaByte
     /// that we can initialize test databases and that the data will be retained across
     /// unit test runs.
     /// </summary>
-    [Trait(TestTrait.Area, TestArea.NeonYugaByte)]
+    [Trait(TestTrait.Category, TestArea.NeonYugaByte)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_UseDataset : IClassFixture<YugaByteFixture>

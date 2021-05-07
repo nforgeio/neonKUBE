@@ -83,7 +83,7 @@ namespace TestModelGen.CustomOutput
     }
 
     [NoCodeGen]
-    [Trait(TestTrait.Area, TestArea.NeonModelGen)]
+    [Trait(TestTrait.Category, TestArea.NeonModelGen)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_CustomOutput

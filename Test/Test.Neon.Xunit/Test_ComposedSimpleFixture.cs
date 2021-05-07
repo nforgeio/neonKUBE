@@ -33,7 +33,7 @@ namespace TestXunit
     /// <summary>
     /// Verify that a test fixture composed of other fixtures works.
     /// </summary>
-    [Trait(TestTrait.Area, TestArea.NeonXunit)]
+    [Trait(TestTrait.Category, TestArea.NeonXunit)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_ComposedSimpleFixture : IClassFixture<ComposedFixture>

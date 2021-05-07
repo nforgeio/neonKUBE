@@ -69,7 +69,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
+        [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Activity_DuplicateBlankEntrypoint()
         {
             // Verify that the client detects workflows that have multiple

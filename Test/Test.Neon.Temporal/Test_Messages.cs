@@ -38,8 +38,8 @@ using Xunit;
 
 namespace TestTemporal
 {
-    [Trait(TestTrait.Incomplete, "1")]
-    [Trait(TestTrait.Area, TestArea.NeonTemporal)]
+    [Trait(TestTrait.Category, TestTrait.Incomplete)]
+    [Trait(TestTrait.Category, TestArea.NeonTemporal)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public sealed partial class Test_Messages : IClassFixture<TemporalFixture>, IDisposable
@@ -92,7 +92,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
+        [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public void Test_PropertyHelpers()
         {
             // Verify that the property helper methods work as expected.

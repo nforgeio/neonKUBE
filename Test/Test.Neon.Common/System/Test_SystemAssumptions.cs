@@ -35,7 +35,7 @@ namespace TestCommon
     /// <summary>
     /// This verifies assumptions about the standard .NET class libraries.
     /// </summary>
-    [Trait(TestTrait.Area, TestArea.NeonCommon)]
+    [Trait(TestTrait.Category, TestArea.NeonCommon)]
     public class Test_SystemAssumptions
     {
         [Fact]

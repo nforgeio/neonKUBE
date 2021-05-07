@@ -44,7 +44,7 @@ namespace TestCouchbase
     /// <summary>
     /// Verify that a test fixture composed of Couchbase and other fixtures works.
     /// </summary>
-    [Trait(TestTrait.Area, TestArea.NeonCommon)]
+    [Trait(TestTrait.Category, TestArea.NeonCommon)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_ComposingFixtures : IClassFixture<ComposedFixture>

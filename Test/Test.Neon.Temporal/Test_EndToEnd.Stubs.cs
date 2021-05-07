@@ -168,7 +168,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
+        [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public async Task WorkflowStub_Execute_Untyped()
         {
             await SyncContext.ClearAsync;

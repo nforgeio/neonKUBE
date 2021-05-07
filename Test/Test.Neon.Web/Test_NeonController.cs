@@ -135,7 +135,7 @@ namespace Test.Neon.Web.Controller
     /// <summary>
     /// Basic tests for <see cref="NeonControllerBase"/>.
     /// </summary>
-    [Trait(TestTrait.Area, TestArea.NeonWeb)]
+    [Trait(TestTrait.Category, TestArea.NeonWeb)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_TestControllerBase : IClassFixture<AspNetFixture>

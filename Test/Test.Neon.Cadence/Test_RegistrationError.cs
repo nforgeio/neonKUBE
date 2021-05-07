@@ -39,7 +39,7 @@ using Xunit;
 
 namespace TestCadence
 {
-    [Trait(TestTrait.Area, TestArea.NeonCadence)]
+    [Trait(TestTrait.Category, TestArea.NeonCadence)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public partial class Test_RegistrationError : IClassFixture<CadenceFixture>, IDisposable

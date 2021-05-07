@@ -32,7 +32,7 @@ using Xunit;
 
 namespace TestCryptography
 {
-    [Trait(TestTrait.Area, TestArea.NeonCryptography)]
+    [Trait(TestTrait.Category, TestArea.NeonCryptography)]
     public class Test_CryptoHelper
     {
         private string hashInputString1 = "how now brown cow. how now brown cow. how now brown cow. how now brown cow. how now brown cow. how now brown cow.";

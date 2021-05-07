@@ -39,8 +39,8 @@ using Neon.Xunit.Temporal;
 
 namespace TestTemporal
 {
-    [Trait(TestTrait.Incomplete, "1")]
-    [Trait(TestTrait.Area, TestArea.NeonTemporal)]
+    [Trait(TestTrait.Category, TestTrait.Incomplete)]
+    [Trait(TestTrait.Category, TestArea.NeonTemporal)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public partial class Test_Options : IClassFixture<TemporalFixture>, IDisposable
@@ -778,7 +778,7 @@ namespace TestTemporal
         // External workflow tests
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
+        [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_UseClientSettings()
         {
             // Verify that the [test1Client] settings are honored for workflows
@@ -810,7 +810,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
+        [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_UseInterfaceAttributes()
         {
             // Verify that workflow interface attributes are honored.
@@ -824,7 +824,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
+        [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_UseMethodAttributes()
         {
             // Verify that workflow interface method attributes are honored.
@@ -842,7 +842,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
+        [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_UseWorkflowOptions()
         {
             // Verify that workflow options are honored.
@@ -871,7 +871,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
+        [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_OtherNamespaceTaskQueue()
         {
             // Verify that we can call a workflow whose worker is running in
@@ -890,7 +890,7 @@ namespace TestTemporal
         // Child workflow tests
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
+        [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task ChildWorkflow_UseClientSettings()
         {
             // Verify that the [test1Client] settings are honored for child workflows
@@ -922,7 +922,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
+        [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task ChildWorkflow_UseParentSettings()
         {
             // Verify that child workflows will default to the parent workflow's
@@ -939,7 +939,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
+        [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task ChildWorkflow_UseInterfaceAttributes()
         {
             // Verify that workflow interface attributes are honored for child workflows.
@@ -953,7 +953,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
+        [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task ChildWorkflow_UseMethodAttributes()
         {
             // Verify that workflow interface method attributes are honored for child workflows.
@@ -971,7 +971,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
+        [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task ChildWorkflow_UseWorkflowOptions()
         {
             // Verify that workflow options are honored for child workflows.
@@ -1003,7 +1003,7 @@ namespace TestTemporal
         // Activity options tests
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
+        [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Activity_UseClientSettings()
         {
             // Verify that the [test1Client] settings are honored for child workflows
@@ -1033,7 +1033,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
+        [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Activity_UseParentSettings()
         {
             // Verify that activities will default to the parent workflow's
@@ -1050,7 +1050,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
+        [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Activity_UseInterfaceAttributes()
         {
             // Verify that activity interface attributes are honored.
@@ -1064,7 +1064,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
+        [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Activity_UseMethodAttributes()
         {
             // Verify that activity interface method attributes are honored.
@@ -1082,7 +1082,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
+        [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Activity_UseWorkflowOptions()
         {
             // Verify that activity options are honored.
@@ -1155,7 +1155,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
+        [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task WorkflowWaitForExternalByExecution()
         {
             // Verify that a workflow can wait on an external workflow
@@ -1174,7 +1174,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
+        [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task WorkflowWaitForExternalByIds()
         {
             // Verify that a workflow can wait on an external workflow
@@ -1193,7 +1193,7 @@ namespace TestTemporal
         }
 
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonTemporal)]
+        [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task WorkflowWaitForExternalByWorkflowId()
         {
             // Verify that a workflow can wait on an external workflow

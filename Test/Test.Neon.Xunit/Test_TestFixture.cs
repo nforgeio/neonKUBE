@@ -33,7 +33,7 @@ namespace TestXunit
     /// <summary>
     /// Verify the base test fixture implementation.
     /// </summary>
-    [Trait(TestTrait.Area, TestArea.NeonXunit)]
+    [Trait(TestTrait.Category, TestArea.NeonXunit)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_TestFixture : IClassFixture<EnvironmentFixture>

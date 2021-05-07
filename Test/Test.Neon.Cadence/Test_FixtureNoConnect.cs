@@ -46,7 +46,7 @@ namespace TestCadence
     /// These tests prevent the <see cref="CadenceFixture"/> from establishing a client
     /// connection and then explicitly establishes a connection to run some tests.
     /// </summary>
-    [Trait(TestTrait.Area, TestArea.NeonCadence)]
+    [Trait(TestTrait.Category, TestArea.NeonCadence)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public partial class Test_FixtureNoConnect : IClassFixture<CadenceFixture>, IDisposable
@@ -110,7 +110,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
+        [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public async Task Workflow_WithResult1()
         {
             await SyncContext.ClearAsync;
@@ -124,7 +124,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
+        [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public async Task Workflow_WithResult2()
         {
             await SyncContext.ClearAsync;

@@ -39,7 +39,7 @@ namespace TestNeonService
     /// HTTP endpoint and that also exercises environment variable and file based 
     /// configuration.
     /// </summary>
-    [Trait(TestTrait.Area, TestArea.NeonService)]
+    [Trait(TestTrait.Category, TestArea.NeonService)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_ComplexService : IClassFixture<NeonServiceFixture<ComplexService>>

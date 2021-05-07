@@ -38,7 +38,7 @@ using Xunit;
 
 namespace TestCadence
 {
-    [Trait(TestTrait.Area, TestArea.NeonCadence)]
+    [Trait(TestTrait.Category, TestArea.NeonCadence)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public sealed partial class Test_Messages : IClassFixture<CadenceFixture>, IDisposable
@@ -91,7 +91,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
-        [Trait(TestTrait.Area, TestArea.NeonCadence)]
+        [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public void Test_PropertyHelpers()
         {
             // Verify that the property helper methods work as expected.

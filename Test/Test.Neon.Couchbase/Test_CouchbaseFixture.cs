@@ -40,7 +40,7 @@ namespace TestCouchbase
     /// <summary>
     /// Verifies basic <see cref="CouchbaseFixture"/> capabilities.
     /// </summary>
-    [Trait(TestTrait.Area, TestArea.NeonCouchbase)]
+    [Trait(TestTrait.Category, TestArea.NeonCouchbase)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_CouchbaseFixture : IClassFixture<CouchbaseFixture>

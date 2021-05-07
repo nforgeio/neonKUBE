@@ -36,7 +36,7 @@ using Xunit;
 
 namespace TestCommon
 {
-    [Trait(TestTrait.Area, TestArea.NeonCommon)]
+    [Trait(TestTrait.Category, TestArea.NeonCommon)]
     public partial class Test_JsonClient
     {
         private readonly string baseUri = $"http://127.0.0.1:{NetHelper.GetUnusedIpPort(IPAddress.Loopback)}/";
@@ -55,7 +55,7 @@ namespace TestCommon
         }
 
         [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestTrait.Area, TestArea.NeonCommon)]
+        [Trait(TestTrait.Category, TestArea.NeonCommon)]
         public void Defaults()
         {
             using (var jsonClient = new JsonClient())

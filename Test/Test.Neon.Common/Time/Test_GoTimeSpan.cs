@@ -31,7 +31,7 @@ using Xunit;
 
 namespace TestCommon
 {
-    [Trait(TestTrait.Area, TestArea.NeonCommon)]
+    [Trait(TestTrait.Category, TestArea.NeonCommon)]
     public class Test_GoTimeSpan
     {
         private bool AreClose(double v1, double v2)

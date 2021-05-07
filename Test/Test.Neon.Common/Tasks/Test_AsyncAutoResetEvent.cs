@@ -32,7 +32,7 @@ using Xunit;
 
 namespace TestCommon
 {
-    [Trait(TestTrait.Area, TestArea.NeonCommon)]
+    [Trait(TestTrait.Category, TestArea.NeonCommon)]
     public class Test_AsyncAutoResetEvent
     {
         private TimeSpan defaultTimeout = TimeSpan.FromSeconds(15);

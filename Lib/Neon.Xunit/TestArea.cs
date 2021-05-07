@@ -24,7 +24,9 @@ using System.Threading.Tasks;
 namespace Neon.Xunit
 {
     /// <summary>
-    /// Defines the neonFORGE related test areas.
+    /// Defines the neonFORGE related test areas.  These currently map to 
+    /// neonFORGE related projects.  Use these in <c>[Trait(TestTrait.Category, ...)]</c>
+    /// attributes tagging your test methods.
     /// </summary>
     public static class TestArea
     {

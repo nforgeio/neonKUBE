@@ -35,7 +35,7 @@ using Neon.Xunit;
 
 namespace TestDeployment
 {
-    [Trait(TestTrait.Area, TestArea.NeonDeployment)]
+    [Trait(TestTrait.Category, TestArea.NeonDeployment)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public partial class Test_ProfileServer

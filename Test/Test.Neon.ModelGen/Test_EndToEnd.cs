@@ -294,7 +294,7 @@ namespace TestModelGen.AspNet
     /// This tests end-to-end integration of generated data models and service clients as well as
     /// their integration with the an MVC based backend service controller.
     /// </summary>
-    [Trait(TestTrait.Area, TestArea.NeonModelGen)]
+    [Trait(TestTrait.Category, TestArea.NeonModelGen)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_EndToEnd : IClassFixture<AspNetFixture>
