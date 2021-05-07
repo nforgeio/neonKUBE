@@ -56,7 +56,8 @@ ARGUMENTS:
     WORKFLOW-NAME   - target workflow name
 
     AGE-IN-DAYS     - optionally specifies the minimum age for runs
-                      to be deleted in days (default: 0)
+                      to be deleted in days.  This defaults to 0 which
+                      deletes all runs.
 ";
 
         /// <inheritdoc/>
@@ -109,5 +110,3 @@ ARGUMENTS:
         }
     }
 }
-
-TEMPORARY BUILD ERROR
