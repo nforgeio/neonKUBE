@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.0 -RunAsAdministrator -RunAsAdministrator
 #------------------------------------------------------------------------------
 # FILE:         files.ps1
 # CONTRIBUTOR:  Jeff Lill

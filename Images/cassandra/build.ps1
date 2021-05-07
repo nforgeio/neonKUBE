@@ -1,4 +1,4 @@
-﻿#Requires -Version 7.0
+﻿#Requires -Version 7.0 -RunAsAdministrator
 #------------------------------------------------------------------------------
 # FILE:         build.ps1
 # CONTRIBUTOR:  Marcus Bowyer
