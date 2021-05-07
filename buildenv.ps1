@@ -16,8 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Additional environment initialization.
-
+#------------------------------------------------------------------------------
 # Open Windows Firewall ports required for unit testing.
 
 Remove-NetFirewallRule -Name "Inbound-Cadence" -EA Silent | Out-Null
@@ -41,3 +40,8 @@ New-NetFirewallRule -Name "Inbound-Temporal" `
                     -Protocol TCP `
                     -Profile Any `
                     -Description "Allow external connections to Temporal servers" | Out-Null
+
+#------------------------------------------------------------------------------
+# Installl additional Powershell modules.
+
+Install-Module powershell-yaml -Force
