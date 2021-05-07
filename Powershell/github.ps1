@@ -160,7 +160,7 @@ function New-GitHubIssue
         $masterPassword = $null
     )
 
-    $repoDetails = Parse-GitHubRepoPath $repo
+    $repoDetails = Parse-GitHubRepo $repo
     $owner       = $repoDetails.owner
     $repo        = $repoDetails.repo
 

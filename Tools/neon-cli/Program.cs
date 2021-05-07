@@ -256,8 +256,7 @@ You can disable the use of this encrypted folder by specifying
                     }
 
                     CommandLine = CommandLine.Shift(1);
-
-                    command = GetCommand(CommandLine, commands);
+                    command     = GetCommand(CommandLine, commands);
 
                     if (command == null)
                     {

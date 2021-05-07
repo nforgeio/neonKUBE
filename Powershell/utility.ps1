@@ -202,3 +202,33 @@ function ToLineArray
 
     return $text.Split("`n")
 }
+
+#------------------------------------------------------------------------------
+# Appends a line of text to [C:\Temp\log.txt] as a very simple logging mechanism
+# to be used while debugging Powershell scripts, specifically GitHub Actions.
+#
+# ARGUMENTS:
+#
+#   text        - the text to be appended
+
+function Log-DebugLine
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [AllowNull()]
+        [AllowEmptyString()]
+        [string]$text
+    )
+
+    $folder = "C:\Temp"
+
+    if (![System.IO.Directory]::Exists($folder))
+    {
+        [System.IO.Directory]::CreateDirectory($folder)
+    }
+
+    $path = [System.IO.Path]::Combine($folder, "log.txt")
+
+    [System.IO.File]::AppendAllText($path, $text + "`r`n")
+}
