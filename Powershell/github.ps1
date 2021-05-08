@@ -642,7 +642,7 @@ function Write-ActionException
 
     Write-ActionError "EXCEPTION: $error"
     Write-ActionError "-------------------------------------------"
-    $_.Exception|format-list -force
+    $_.Exception | Format-List -force
 }
 
 #------------------------------------------------------------------------------

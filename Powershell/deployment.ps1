@@ -30,9 +30,19 @@
 # Load these assemblies from the [neon-assistant] installation folder
 # to ensure we'll be compatible.
 
-Add-Type -Path "$env:NEON_ASSISTANT_HOME\Neon.Common.dll"
-Add-Type -Path "$env:NEON_ASSISTANT_HOME\Neon.Deployment.dll"
-Add-Type -Path "$env:NEON_ASSISTANT_HOME\YamlDotNet.dll"
+$scriptPath   = $MyInvocation.MyCommand.Path
+$scriptFolder = [System.IO.Path]::GetDirectoryName($scriptPath)
+
+Push-Location $scriptFolder
+
+. ./error-handling.ps1
+. ./utility.ps1
+
+Pop-Location
+
+Load-Assembly "$env:NEON_ASSISTANT_HOME\YamlDotNet.dll"
+Load-Assembly "$env:NEON_ASSISTANT_HOME\Neon.Common.dll"
+Load-Assembly "$env:NEON_ASSISTANT_HOME\Neon.Deployment.dll"
 
 #------------------------------------------------------------------------------
 # Returns a global [Neon.Deployment.ProfileClient] instance creating one if necessary.

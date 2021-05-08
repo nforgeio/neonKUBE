@@ -31,6 +31,71 @@ function Request-AdminPermissions
 }
 
 #------------------------------------------------------------------------------
+# Loads an assembly file into the current appdomain, if it's not already loaded.
+#
+# ARGUMENTS:
+#
+#   path        - path to the assembly FILE
+
+function Load-Assembly
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$path
+    )
+
+    try
+    {
+        $path = [System.IO.Path]::GetFullPath($path)
+
+        # We're going to maintain a list of the assembly files that we've
+        # loaded in a global variable so we can avoid loading the same
+        # assembly multiple times.
+
+        if ($null -eq $global:__LOADED_ASSEMBLIES)
+        {
+            $global:__LOADED_ASSEMBLIES = @{}
+        }
+
+        if ($global:__LOADED_ASSEMBLIES.ContainsKey($path))
+        {
+            return;     # Assembly is already loaded.
+        }
+
+        $global:__LOADED_ASSEMBLIES[$path] = "loaded"
+
+        Add-Type -Path $path
+    }
+    catch
+    {
+        Write-Exception $_
+        throw
+    }
+}
+
+#------------------------------------------------------------------------------
+# Writes information about a Powershell action exception to the output.
+#
+# ARGUMENTS:
+#
+#   error   - The error caught in a catch block via the automatic
+#             [$_] or [$PSItem] variable
+
+function Write-Exception
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        $error
+    )
+
+    Write-Error "EXCEPTION: $error"
+    Write-Error "-------------------------------------------"
+    $_.Exception | Format-List -force
+}
+
+#------------------------------------------------------------------------------
 # Escapes any double quote characters in a string by replacing quotes with two
 # double quotes.
 #
@@ -231,4 +296,66 @@ function Log-DebugLine
     $path = [System.IO.Path]::Combine($folder, "log.txt")
 
     [System.IO.File]::AppendAllText($path, $text + "`r`n")
+}
+
+#------------------------------------------------------------------------------
+# Converts YAML text into a hash table.
+#
+# ARGUMENTS:
+#
+#   yaml        - the YAML text
+#
+# RETURNS
+#
+#   The parsed hash table.
+#
+# REMARKS:
+#
+# WRNING! This is currently just hacked together and supports only one nesting
+# level of object properties.  Arrays are not supported either.
+
+function ConvertFrom-Yaml
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$yaml
+    )
+
+    Load-Assembly "$env:NEON_ASSISTANT_HOME\YamlDotNet.dll"
+
+    $deserializer = $(New-Object "YamlDotNet.Serialization.DeserializerBuilder").Build()
+    $reader       = New-Object "System.IO.StringReader" -ArgumentList $yaml 
+    
+    return $deserializer.Deserialize($reader)
+}
+
+#------------------------------------------------------------------------------
+# Converts a hash table into YAML.
+#
+# ARGUMENTS:
+#
+#   table   - the hash table
+#
+# RETURNS
+#
+#   The YAML text.
+#
+# REMARKS:
+#
+# WARNING! This has never been tested.
+
+function ConvertTo-Yaml
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$table
+    )
+
+    Load-Assembly "$env:NEON_ASSISTANT_HOME\YamlDotNet.dll"
+
+    $serializer = $(New-Object "YamlDotNet.Serialization.SerializerBuilder").Build()
+
+    return $serializer.Serialize($table)
 }
