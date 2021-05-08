@@ -18,18 +18,22 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 using Newtonsoft;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 using Neon.Common;
+using Neon.Deployment;
 
 namespace GHTool
 {
@@ -47,7 +51,25 @@ namespace GHTool
         /// </summary>
         private class RunInfo
         {
+            /// <summary>
+            /// The run ID.
+            /// </summary>
+            public long Id { get; set; }
 
+            /// <summary>
+            /// The workflow name.
+            /// </summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// The status.
+            /// </summary>
+            public string Status { get; set; }
+
+            /// <summary>
+            /// The time (UTC) when the run was last updated.
+            /// </summary>
+            public DateTime UpdatedAtUtc { get; set; }
         }
 
         //---------------------------------------------------------------------
@@ -58,7 +80,7 @@ Deletes
 
 USAGE:
 
-    neon workflow-run delete REPO WORKFLOW-NAME [AGE-IN-DAYS]
+    neon workflow run delete REPO WORKFLOW-NAME [--age=AGE-IN-DAYS]
 
 ARGUMENTS:
 
@@ -66,11 +88,11 @@ ARGUMENTS:
 
                         [SERVER]/OWNER/REPO
 
-    WORKFLOW-NAME   - target workflow name
+    WORKFLOW-NAME   - optional target workflow name
 
-    AGE-IN-DAYS     - optionally specifies the minimum age for runs
-                      to be deleted in days.  This defaults to 0 which
-                      deletes all runs.
+    AGE-IN-DAYS     - optional the minimum age for runs to be 
+                      deleted, in days.  This defaults to 0 
+                      which deletes all runs.
 ";
 
         /// <inheritdoc/>
@@ -91,9 +113,9 @@ ARGUMENTS:
                 return;
             }
 
-            var repoArg = commandLine.Arguments.ElementAt(0);
-            var nameArg = commandLine.Arguments.ElementAt(1);
-            var ageArg  = commandLine.Arguments.ElementAt(2);
+            var repoArg = commandLine.Arguments.ElementAtOrDefault(0);
+            var nameArg = commandLine.Arguments.ElementAtOrDefault(1);
+            var ageArg  = commandLine.GetOption("--age", "0");
 
             if (string.IsNullOrEmpty(repoArg))
             {
@@ -101,29 +123,76 @@ ARGUMENTS:
                 Program.Exit(1);
             }
 
-            if (string.IsNullOrEmpty(nameArg))
-            {
-                Console.Error.WriteLine("*** ERROR: [WORKFLOW-NAME] argument is required.");
-                Program.Exit(1);
-            }
-
-            if (string.IsNullOrEmpty(ageArg))
-            {
-                ageArg = "0";
-            }
-
             var repoPath      = GitHubRepoPath.Parse(repoArg);
             var workflowName = nameArg;
-            var age          = Math.Max(int.Parse(ageArg), 0);
-
-            // $todo(jefflill):
-            //
-            // Octokit for .NET doesn't support any action APIs yet so we'll do 
-            // this the hard way.
+            var maxAge          = TimeSpan.FromDays(Math.Max(int.Parse(ageArg), 0));
 
             using (var client = new HttpClient())
             {
+                client.BaseAddress                         = new Uri("https://api.github.com");
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Program.GitHubPAT);
+
+                client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("neonforge.com", "0"));
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
                 // List all of the workflow runs for the repo, paging to get all of them.
+                //
+                //      https://docs.github.com/en/rest/reference/actions#list-workflow-runs-for-a-repository
+
+                var runs = new List<RunInfo>();
+                var page = 1;
+
+                while (true)
+                {
+                    var request  = new HttpRequestMessage(HttpMethod.Get, $"/repos/{repoPath.Owner}/{repoPath.Repo}/actions/runs?page={page}");
+                    var response = await client.SendAsync(request);
+
+                    response.EnsureSuccessStatusCode();
+
+                    var json   = await response.Content.ReadAsStringAsync();
+                    var result = JsonConvert.DeserializeObject<dynamic>(json);
+
+                    var workflowRuns = result.workflow_runs;
+
+                    if (workflowRuns.Count == 0)
+                    {
+                        // We've seen all of the runs.
+
+                        break;
+                    }
+
+                    foreach (var run in workflowRuns)
+                    {
+                        runs.Add(
+                            new RunInfo()
+                            {
+                                Id           = run.id,
+                                Name         = run.name,
+                                Status       = run.status,
+                                UpdatedAtUtc = run.updated_at
+                            });
+                    }
+
+                    page++;
+                    break;
+                }
+
+                // $todo(jefflill):
+                //
+                // I'm just going to delete all of the runs older than minimum for now.
+                // We'll come back later and filter by workflow name.
+                //
+                //      https://docs.github.com/en/rest/reference/actions#delete-a-workflow-run
+
+                var minDate = DateTime.UtcNow - maxAge;
+
+                foreach (var run in runs.Where(run => run.UpdatedAtUtc <= minDate))
+                {
+                    var request  = new HttpRequestMessage(HttpMethod.Delete, $"/repos/{repoPath.Owner}/{repoPath.Repo}/actions/runs/{run.Id}");
+                    var response = await client.SendAsync(request);
+
+                    response.EnsureSuccessStatusCode();
+                }
             }
         }
     }

@@ -32,8 +32,6 @@ using System.Threading.Tasks;
 using Neon.Common;
 using Neon.Deployment;
 
-using Octokit;
-
 namespace GHTool
 {
     /// <summary>
@@ -273,26 +271,20 @@ COMMANDS:
         public static CommandLine CommandLine { get; private set; }
 
         /// <summary>
-        /// Product header used by Octokit to identify us to GutHub.
+        /// Returns the current user's GITHUB_PAT token.
         /// </summary>
-        public static readonly ProductHeaderValue ProductHeader = new ProductHeaderValue("github.com/nforgeio: devops@neonforge.com");
-
-        /// <summary>
-        /// Returns the current user's credentials from constructed from their
-        /// GitHub PAT token, requesting that from neon-assistant when necessary.
-        /// </summary>
-        public static Octokit.Credentials GitHubCredentials
+        public static string GitHubPAT
         {
             get
             {
                 if (!string.IsNullOrEmpty(cachedGithubToken))
                 {
-                    return new Octokit.Credentials(cachedGithubToken);
+                    return cachedGithubToken;
                 }
 
                 var profileClient = new ProfileClient();
-                
-                return new Octokit.Credentials(cachedGithubToken = profileClient.GetSecretPassword("GITHUB_PAT"));
+
+                return cachedGithubToken = profileClient.GetSecretPassword("GITHUB_PAT");
             }
         }
     }
