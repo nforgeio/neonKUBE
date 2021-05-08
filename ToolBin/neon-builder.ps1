@@ -176,6 +176,7 @@ try
         # left over from previous builds that caused build trouble.
 
         & $nfToolBin\neon-build clean "$nfRoot"
+        ThrowOnExitCode
 
         # Clean and build the solution.
 
