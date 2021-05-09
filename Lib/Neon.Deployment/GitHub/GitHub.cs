@@ -84,7 +84,7 @@ namespace Neon.Deployment
         }
 
         /// <summary>
-        /// Returns the API class for managing GitHub package.
+        /// Returns the API class for managing GitHub packages.
         /// </summary>
         public static GitHubPackageApi Packages { get; private set; } = new GitHubPackageApi();
     }
