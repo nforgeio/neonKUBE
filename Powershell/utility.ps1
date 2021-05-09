@@ -130,6 +130,7 @@ function EscapeDoubleQuotes
 #
 #   command     - program to run with any arguments
 #   noCheck     - optionally disable non-zero exit code checks
+#   interleave  - optionally combines the STDERR into STDOUT
 #
 # RETURNS:
 #
@@ -167,7 +168,9 @@ function Invoke-CaptureStreams
         [Parameter(Position=0, Mandatory=$true)]
         [string]$command,
         [Parameter(Mandatory=$false)]
-        [switch]$noCheck = $false
+        [switch]$noCheck = $false,
+        [Parameter(Mandatory=$false)]
+        [switch]$interleave = $false
     )
 
     if ([System.String]::IsNullOrEmpty($command))
@@ -181,7 +184,15 @@ function Invoke-CaptureStreams
 
     try
     {
-        & cmd /c "$command > `"$stdoutPath`" 2> `"$stderrPath`""
+        if ($interleave)
+        {
+            & cmd /c "$command > `"$stdoutPath`" 2>&1"
+        }
+        else
+        {
+            & cmd /c "$command > `"$stdoutPath`" 2> `"$stderrPath`""
+        }
+
         $exitCode = $LastExitCode
 
         # Read the output files.
@@ -195,9 +206,12 @@ function Invoke-CaptureStreams
 
         $stderr = ""
 
-        if ([System.IO.File]::Exists($stderrPath))
+        if (!$interleave)
         {
-            $stderr = [System.IO.File]::ReadAllText($stderrPath)
+            if ([System.IO.File]::Exists($stderrPath))
+            {
+                $stderr = [System.IO.File]::ReadAllText($stderrPath)
+            }
         }
 
         $result          = @{}
@@ -358,4 +372,75 @@ function ConvertTo-Yaml
     $serializer = $(New-Object "YamlDotNet.Serialization.SerializerBuilder").Build()
 
     return $serializer.Serialize($table)
+}
+
+#------------------------------------------------------------------------------
+# Logs into Docker using the named credentials from the current user's 1Password
+# user folder.
+#
+# ARGUMENTS:
+#
+#   server              - the server endpoint, typically one of:
+#
+#       docker.io
+#       ghcr.io
+#
+#   loginCredentials    - Identifies the 1Password login to use, typically one of:
+#
+#       GITHUB_PAT   * recommended for GitHub package operations
+#       GITHUB_LOGIN
+#       DOCKER_LOGIN
+
+function Login-Docker
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$server,
+        [Parameter(Position=1, Mandatory=$true)]
+        [string]$loginCredentials
+    )
+
+    $username = $(Get-SecretValue "$loginCredentials[username]")
+    $password = $(Get-SecretValue "$loginCredentials[password]")
+    
+    Write-Output $password | docker login $server -u $username --password-stdin
+
+    $exitCode = $LastExitCode
+
+    if ($exitCode -ne 0)
+    {
+        throw "Docker login failed: server=[$server] username=[$username]"
+    }
+}
+
+#------------------------------------------------------------------------------
+# Logs out of Docker, optionally logging out of a specific server.
+#
+# ARGUMENTS:
+#
+#   server      - optionally specifies the server to log out from, typically
+#                 one of:
+#
+#       docker.io
+#       ghcr.io
+
+function Logout-Docker
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$false)]
+        [string]$server = $null
+    )
+
+    if (![System.String]::IsNullOrEmpty($server))
+    {
+        docker logout $server
+    }
+    else
+    {
+        docker logout
+    }
+
+    # $hack(jefflill): Do we care about checking the exit code here?
 }

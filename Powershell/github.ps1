@@ -878,6 +878,75 @@ function Get-ActionInput
 }
 
 #------------------------------------------------------------------------------
+# Retrieves an action input boolean value where "true" values return$ true and
+# anything else returns $false.
+#
+# ARGUMENTS:
+#
+#   name        - the value name.
+#   required    - optionally indicates that the value is required
+
+function Get-ActionInputBool
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$name,
+        [Parameter(Position=1, Mandatory=$false)]
+        [bool]$required = $false
+    )
+
+    if ([System.String]::IsNullOrEmpty($name))
+    {
+        throw "[name] cannot be null or empty."
+    }
+
+    $name  = "INPUT_$name"
+    $value = [System.Environment]::GetEnvironmentVariable($name)
+
+    if ($required -and [System.String]::IsNullOrEmpty($value))
+    {
+        throw "[$name] input is required."
+    }
+
+    return $value -eq "true"
+}
+
+#------------------------------------------------------------------------------
+# Retrieves an action input 32-bit integer value.
+#
+# ARGUMENTS:
+#
+#   name        - the value name.
+#   required    - optionally indicates that the value is required
+
+function Get-ActionInputInt32
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$name,
+        [Parameter(Position=1, Mandatory=$false)]
+        [bool]$required = $false
+    )
+
+    if ([System.String]::IsNullOrEmpty($name))
+    {
+        throw "[name] cannot be null or empty."
+    }
+
+    $name  = "INPUT_$name"
+    $value = [System.Environment]::GetEnvironmentVariable($name)
+
+    if ($required -and [System.String]::IsNullOrEmpty($value))
+    {
+        throw "[$name] input is required."
+    }
+
+    return [System.Int32]::Parse($value)
+}
+
+#------------------------------------------------------------------------------
 # Starts a GitHub workflow
 #
 # ARGUMENTS:

@@ -50,18 +50,18 @@ Load-Assembly "$env:NEON_ASSISTANT_HOME\Neon.Deployment.dll"
 # secret passwords, secret values, as well as profile values.  The client is thread-safe,
 # can be used multiple times, and does not need to be disposed.
 
-$global:neonProfileClient = $null
+$global:__neonProfileClient = $null
 
 function Get-ProfileClient
 {
-    if ($global:neonProfileClient -ne $null)
+    if ($null -ne $global:__neonProfileClient)
     {
-        return $global:neonProfileClient
+        return $global:__neonProfileClient
     }
 
-    $global:neonProfileClient = New-Object "Neon.Deployment.ProfileClient"
+    $global:__neonProfileClient = New-Object "Neon.Deployment.ProfileClient"
 
-    return $global:neonProfileClient
+    return $global:__neonProfileClient
 }
 
 #------------------------------------------------------------------------------
@@ -241,4 +241,57 @@ function Import-GitHubCredentials
 function Remove-GitHubCredentials
 {
     $env:GITHUB_PAT = $null
+}
+
+#------------------------------------------------------------------------------
+# Deletes a GitHub container image, optionally using filesystem-style wildcards
+# "*" and "?".  This uses the current user's GITHUB_PAT as credentials.
+#
+# ARGUMENTS:
+#
+#   organization    - specifies the GitHib organization hosting the registry
+#   name            - the container image name (with optional wildcards)
+
+function Remove-GitHub-Container
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$organization,
+        [Parameter(Position=1, Mandatory=$true)]
+        [string]$nameOrPattern
+    )
+
+    $github = New-Object "Neon.Deployment.GitHub"
+    $github.Packages.Delete($organization, $nameOrPattern, [Neon.Deployment.GitHubPackageType]::Container)    
+}
+
+#------------------------------------------------------------------------------
+# Changes a GitHub container image visibility, optionally using filesystem-style
+# wildcards "*" and "?".  This uses the current user's GITHUB_PAT as credentials.
+#
+# ARGUMENTS:
+#
+#   organization    - specifies the GitHib organization hosting the registry
+#   name            - the container image name (with optional wildcards)
+#   visibility      - the new visibility, one of:
+#
+#                           all, public, private, or internal
+
+function Set-GitHub-Container-Visibility
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$organization,
+        [Parameter(Position=1, Mandatory=$true)]
+        [string]$nameOrPattern,
+        [Parameter(Position=2, Mandatory=$true)]
+        [string]$visibility
+    )
+
+    $visibility = [Neon.Deployment.GitHubPackageVisibility]$visibility
+    $github     = New-Object "Neon.Deployment.GitHub"
+
+    $github.Packages.SetVisibility($organization, $nameOrPattern, $visibility, [Neon.Deployment.GitHubPackageType]::Container)
 }
