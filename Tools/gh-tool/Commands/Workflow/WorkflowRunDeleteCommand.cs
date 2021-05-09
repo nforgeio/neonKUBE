@@ -34,6 +34,7 @@ using Newtonsoft.Json.Linq;
 
 using Neon.Common;
 using Neon.Deployment;
+using Neon.Retry;
 
 namespace GHTool
 {
@@ -129,11 +130,13 @@ ARGUMENTS:
 
             using (var client = new HttpClient())
             {
+                var retry = new ExponentialRetryPolicy(TransientDetector.NetworkOrHttp, 5);
+
                 client.BaseAddress                         = new Uri("https://api.github.com");
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Program.GitHubPAT);
 
                 client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("neonforge.com", "0"));
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github.v3+json"));
 
                 // List all of the workflow runs for the repo, paging to get all of them.
                 //
@@ -144,8 +147,13 @@ ARGUMENTS:
 
                 while (true)
                 {
-                    var request  = new HttpRequestMessage(HttpMethod.Get, $"/repos/{repoPath.Owner}/{repoPath.Repo}/actions/runs?page={page}");
-                    var response = await client.SendAsync(request);
+                    var response = await retry.InvokeAsync(
+                        async () =>
+                        {
+                            var request = new HttpRequestMessage(HttpMethod.Get, $"/repos/{repoPath.Owner}/{repoPath.Repo}/actions/runs?page={page}");
+
+                            return await client.SendAsync(request);
+                        });
 
                     response.EnsureSuccessStatusCode();
 
@@ -173,25 +181,51 @@ ARGUMENTS:
                             });
                     }
 
+                    Console.WriteLine($"page: {page}");
                     page++;
-                    break;
                 }
 
                 // $todo(jefflill):
                 //
-                // I'm just going to delete all of the runs older than minimum for now.
+                // I'm just going to delete all of the runs older than the minimum for now.
                 // We'll come back later and filter by workflow name.
                 //
                 //      https://docs.github.com/en/rest/reference/actions#delete-a-workflow-run
 
-                var minDate = DateTime.UtcNow - maxAge;
+                var minDate     = DateTime.UtcNow - maxAge;
+                var deleteCount = 0;
 
-                foreach (var run in runs.Where(run => run.UpdatedAtUtc <= minDate))
+                foreach (var run in runs.Where(run => run.UpdatedAtUtc <= minDate && run.Status == "completed"))
                 {
-                    var request  = new HttpRequestMessage(HttpMethod.Delete, $"/repos/{repoPath.Owner}/{repoPath.Repo}/actions/runs/{run.Id}");
-                    var response = await client.SendAsync(request);
+                    var response = await retry.InvokeAsync(
+                        async () =>
+                        {
+                            var request = new HttpRequestMessage(HttpMethod.Delete, $"/repos/{repoPath.Owner}/{repoPath.Repo}/actions/runs/{run.Id}");
 
-                    response.EnsureSuccessStatusCode();
+                            return await client.SendAsync(request);
+                        });
+
+                    // We're also seeing some 500s but I'm not sure why.  We'll ignore these
+                    // for now.
+
+                    if (response.StatusCode == HttpStatusCode.InternalServerError)
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(2));  // Pause in case this is a rate-limit thing
+                        continue;
+                    }
+
+                    // We're seeing 403s for some runs, so we'll ignore those.
+
+                    if (response.StatusCode != HttpStatusCode.Forbidden)
+                    {
+                        response.EnsureSuccessStatusCode();
+                    }
+
+                    deleteCount++;
+                    if (deleteCount % 30 == 0)
+                    {
+                        Console.WriteLine($"deleted: {deleteCount}");
+                    }
                 }
             }
         }
