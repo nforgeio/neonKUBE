@@ -36,7 +36,7 @@ namespace Neon.Deployment
         private readonly string             pipeName;
         private readonly TimeSpan           connectTimeout;
         private bool                        cacheEnabled;
-        private object                      syncLock     = new object;
+        private object                      syncLock     = new object();
         private Dictionary<string, string>  profileCache = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
         private Dictionary<string, string>  secretCache  = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
 

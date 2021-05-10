@@ -29,20 +29,20 @@ namespace Neon.Deployment
     public class GitHubPackage
     {
         /// <summary>
-        /// Internal constructor.
+        /// Default constructor.
         /// </summary>
-        internal GitHubPackage()
+        public GitHubPackage()
         {
         }
 
         /// <summary>
         /// Returns the package name.
         /// </summary>
-        public string Name { get; internal set; }
+        public string Name { get; set; }
 
         /// <summary>
         /// Returns the package type (one of the <see cref="GitHubPackageType"/> values.
         /// </summary>
-        public GitHubPackageType Type { get; internal set; }
+        public GitHubPackageType Type { get; set; }
     }
 }

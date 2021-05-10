@@ -43,6 +43,7 @@ Pop-Location
 Load-Assembly "$env:NEON_ASSISTANT_HOME\YamlDotNet.dll"
 Load-Assembly "$env:NEON_ASSISTANT_HOME\Neon.Common.dll"
 Load-Assembly "$env:NEON_ASSISTANT_HOME\Neon.Deployment.dll"
+Load-Assembly "$env:NEON_ASSISTANT_HOME\System.Text.Encoding.CodePages"
 
 #------------------------------------------------------------------------------
 # Returns a global [Neon.Deployment.ProfileClient] instance creating one if necessary.
@@ -291,7 +292,6 @@ function Set-GitHub-Container-Visibility
     )
 
     $visibility = [Neon.Deployment.GitHubPackageVisibility]$visibility
-    $github     = New-Object "Neon.Deployment.GitHub"
 
-    $github.Packages.SetVisibility($organization, $nameOrPattern, $visibility, [Neon.Deployment.GitHubPackageType]::Container)
+    [Neon.Deployment.GitHub]::Packages.SetVisibility($organization, $nameOrPattern, $visibility, [Neon.Deployment.GitHubPackageType]::Container)
 }

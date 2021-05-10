@@ -21,88 +21,33 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
 
 using Neon.Common;
 using Neon.Net;
 
-using AngleSharp;
-using AngleSharp.Html.Parser;
-using AngleSharp.Html.Dom;
-using AngleSharp.Dom;
-using System.Text.RegularExpressions;
-
 namespace Neon.Deployment
 {
     //-------------------------------------------------------------------------
-    // IMPLEMENTATION NOTE:
+    // $hack(jefflill):
     //
-    // GitHub Packages is still in beta at the time this class was created and
-    // there doesn't appear to be an REST API wrapper class available at this
-    // time, so we're going to create our own here.
+    // This API is actually implemented with neon-assistant right now due to
+    // problems loading the AngleSharp assembly into Powershell.  We'll be 
+    // sending commands via the profile client.
     //
-    // Here's the REST API documentation:
-    //
-    //      https://docs.github.com/en/rest/reference/packages
-    //
-    // Unfortunately, this looks like it's only partially implemented.  We need
-    // to be able to list packages, make them public, and delete them.  Only
-    // delete appears to be supported right now.
+    // We'll replace this once GitHub as a fully functional REST API for this.
 
     /// <summary>
     /// Implments GitHub packages operations.
     /// </summary>
     public class GitHubPackageApi
     {
-        private const string githubRestUri = "https://api.github.com/";
-
-        private JsonClient          jsonClient;
-        private IBrowsingContext    browsingContext;
-
-        /// <summary>
-        /// Internal constructor.
-        /// </summary>
         internal GitHubPackageApi()
         {
             GitHub.GetCredentials();
             GitHub.EnsureCredentials();
-
-            // Create json client for interacting with the GitHub API.
-            jsonClient = new JsonClient()
-            {
-                BaseAddress = new Uri(githubRestUri),
-            };
-
-            jsonClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("token", GitHub.PersonalAccessToken);
-            jsonClient.DefaultRequestHeaders.Add("User-Agent", "neondevbot");
-
-            // Create an AngleSharp client for screen scraping.
-
-            // Load default configuration
-
-            var config = Configuration.Default.WithDefaultLoader().WithDefaultCookies();
-
-            // Create a new browsing context
-
-            browsingContext = BrowsingContext.New(config);
-
-            Login();
-        }
-
-        /// <summary>
-        /// Logs in to GitHub.
-        /// </summary>
-        private void Login()
-        {
-            var document       = browsingContext.OpenAsync("https://github.com/login").Result;
-            var form           = browsingContext.Active.QuerySelector<IHtmlFormElement>("#login > div.auth-form-body.mt-3 > form");
-            var resultDocument = form.SubmitAsync(new { login = GitHub.UserCredentials.Username, password = GitHub.UserCredentials.Password }).Result;
-
-            if (resultDocument.StatusCode != System.Net.HttpStatusCode.OK)
-            {
-                throw new Exception("Login failed");
-            }
         }
 
         /// <summary>
@@ -119,7 +64,7 @@ namespace Neon.Deployment
             GitHubPackageType       packageType = GitHubPackageType.Container,
             GitHubPackageVisibility visibility  = GitHubPackageVisibility.All)
         {
-            return ListAsync(organization, pattern, packageType, visibility).Result;
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -136,59 +81,7 @@ namespace Neon.Deployment
             GitHubPackageType       packageType = GitHubPackageType.Container,
             GitHubPackageVisibility visibility  = GitHubPackageVisibility.All)
         {
-            var packages = new List<GitHubPackage>();
-
-            var document = await browsingContext.OpenAsync($"https://github.com/orgs/{organization}/packages?type={packageType}&q={pattern}&visibility={visibility}");
-
-            var packageslist = document.QuerySelector<IHtmlUnorderedListElement>("#org-packages > div.Box > ul");
-
-            if (packageslist == null || packageslist.Children.Count() == 0)
-            {
-                return packages;
-            }
-
-            Regex regex = null;
-
-            if (!string.IsNullOrEmpty(pattern))
-            {
-                regex = NeonHelper.FileWildcardRegex(pattern);
-            }
-
-            var done = false;
-
-            while (!done)
-            {
-                foreach (var p in packageslist.Children)
-                {
-                    var name = p.QuerySelector<IHtmlAnchorElement>("div > div.flex-auto > a").Title;
-
-                    if (regex == null || regex.IsMatch(name))
-                    {
-                        packages.Add(
-                        new GitHubPackage()
-                        {
-                            Name = name,
-                            Type = packageType
-                        });
-                    }
-                }
-
-                var next = document.QuerySelector<IHtmlAnchorElement>("#org-packages > div.paginate-container > div > a.next_page");
-
-                if (next != null
-                    && !next.ClassList.Contains("disabled"))
-                {
-                    document = await next.NavigateAsync();
-
-                    packageslist = document.QuerySelector<IHtmlUnorderedListElement>("#org-packages > div.Box > ul");
-                }
-                else
-                {
-                    done = true;
-                }
-            }
-
-            return packages;
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -218,17 +111,7 @@ namespace Neon.Deployment
             string              nameOrPattern,
             GitHubPackageType   packageType = GitHubPackageType.Container)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(organization), nameof(organization));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nameOrPattern), nameof(nameOrPattern));
-
-            GitHub.EnsureCredentials();
-
-            var packages = await ListAsync(organization, nameOrPattern, packageType);
-
-            foreach (var p in packages)
-            {
-                await jsonClient.DeleteAsync($"/orgs/{organization}/packages/{packageType}/{p.Name}");
-            }
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -262,35 +145,7 @@ namespace Neon.Deployment
             GitHubPackageVisibility visibility = GitHubPackageVisibility.All,
             GitHubPackageType       packageType = GitHubPackageType.Container)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(organization), nameof(organization));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nameOrPattern), nameof(nameOrPattern));
-
-            GitHub.EnsureCredentials();
-
-            var packages = await ListAsync(organization, nameOrPattern, packageType);
-            
-            foreach (var package in packages)
-            {
-                var page = await browsingContext.OpenAsync($"https://github.com/orgs/{organization}/packages/container/{package.Name}/settings");
-
-                var form = page.QuerySelector<IHtmlFormElement>("#js-pjax-container > div > div.container-lg.p-responsive.clearfix > div.container-lg.d-flex > div.col-9 > div.Box.Box--danger > ul > li:nth-child(1) > div > details > details-dialog > div.Box-body.overflow-auto > form");
-
-                var selector = form.QuerySelector<IHtmlInputElement>("#visibility_public");
-                selector.IsChecked = visibility == GitHubPackageVisibility.Public;
-
-                selector = form.QuerySelector<IHtmlInputElement>("#visibility_private");
-                selector.IsChecked = visibility == GitHubPackageVisibility.Private;
-
-                selector = form.QuerySelector<IHtmlInputElement>("#visibility_internal");
-                selector.IsChecked = visibility == GitHubPackageVisibility.Internal;
-
-                var resultDocument = await form.SubmitAsync(new { verify = package.Name });
-
-                if (resultDocument.StatusCode != System.Net.HttpStatusCode.OK)
-                {
-                    throw new Exception($"Failed to make package [{package.Name}] visibility to [{visibility}].");
-                }
-            }
+            throw new NotImplementedException();
         }
     }
 }
