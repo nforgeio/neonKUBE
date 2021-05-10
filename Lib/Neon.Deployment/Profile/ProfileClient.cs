@@ -33,8 +33,12 @@ namespace Neon.Deployment
     /// <inheritdoc/>
     public partial class ProfileClient : IProfileClient
     {
-        private readonly string     pipeName;
-        private readonly TimeSpan   connectTimeout;
+        private readonly string             pipeName;
+        private readonly TimeSpan           connectTimeout;
+        private bool                        cacheEnabled;
+        private object                      syncLock     = new object;
+        private Dictionary<string, string>  profileCache = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+        private Dictionary<string, string>  secretCache  = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
 
         /// <summary>
         /// <para>
@@ -75,6 +79,26 @@ namespace Neon.Deployment
             }
 
             this.connectTimeout = connectTimeout;
+        }
+
+        /// <inheritdoc/>
+        public bool CacheEnabled
+        {
+            get => cacheEnabled;
+
+            set
+            {
+                if (!value)
+                {
+                    lock (syncLock)
+                    {
+                        profileCache.Clear();
+                        secretCache.Clear();
+                    }
+                }
+
+                cacheEnabled = value;
+            }
         }
 
         /// <summary>
@@ -129,13 +153,34 @@ namespace Neon.Deployment
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
+            if (CacheEnabled)
+            {
+                lock (syncLock)
+                {
+                    if (profileCache.TryGetValue(name, out var value))
+                    {
+                        return value;
+                    }
+                }
+            }
+
             var args = new Dictionary<string, string>();
 
             args.Add("name", name);
 
             try
             {
-                return Call(ProfileRequest.Create("GET-PROFILE-VALUE", args)).Value;
+                var value = Call(ProfileRequest.Create("GET-PROFILE-VALUE", args)).Value;
+
+                if (cacheEnabled)
+                {
+                    lock (syncLock)
+                    {
+                        profileCache[name] = value;
+                    }
+                }
+
+                return value;
             }
             catch (ProfileException e)
             {
@@ -153,6 +198,19 @@ namespace Neon.Deployment
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
+            var cacheKey = $"{vault}::{name}[password]";
+
+            if (CacheEnabled)
+            {
+                lock (syncLock)
+                {
+                    if (secretCache.TryGetValue(cacheKey, out var value))
+                    {
+                        return value;
+                    }
+                }
+            }
+
             var args = new Dictionary<string, string>();
 
             args.Add("name", name);
@@ -169,7 +227,17 @@ namespace Neon.Deployment
 
             try
             {
-                return Call(ProfileRequest.Create("GET-SECRET-PASSWORD", args)).Value;
+                var value = Call(ProfileRequest.Create("GET-SECRET-PASSWORD", args)).Value;
+
+                if (CacheEnabled)
+                {
+                    lock (syncLock)
+                    {
+                        secretCache[cacheKey] = value;
+                    }
+                }
+
+                return value;
             }
             catch (ProfileException e)
             {
@@ -213,6 +281,16 @@ namespace Neon.Deployment
                 }
 
                 throw;
+            }
+        }
+
+        /// <inheritdoc/>
+        public void ClearCache()
+        {
+            lock (syncLock)
+            {
+                profileCache.Clear();
+                secretCache.Clear();
             }
         }
     }

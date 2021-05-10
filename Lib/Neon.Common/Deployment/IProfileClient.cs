@@ -83,6 +83,18 @@ namespace Neon.Deployment
     /// as often.  This server also handles profile and secret lookup.
     /// </item>
     /// </list>
+    /// <b>Caching:</b>
+    /// <para>
+    /// <see cref="IProfileClient"/> implementations should implement caching of secret and profile
+    /// values and should enable this by default.  Callers can disable caching by setting <see cref="CacheEnabled"/>
+    /// to <c>false</c> and the cached can be cleared via <see cref="ClearCache()"/>
+    /// </para>
+    /// <para>
+    /// The <b>Neon.Deployment.ProfileClient</b> implementation communicates with the <b>neon-assistant</b>
+    /// to retrieve profile values and secrets.  <b>neon-assistant</b> manages profile values directly but
+    /// communicates with 1Password.com to obtain secrets, which can take a second or two.  Caching will
+    /// improve performance and also take some load off of 1Password. 
+    /// </para>
     /// </summary>
     /// <remarks>
     /// <para>
@@ -93,6 +105,12 @@ namespace Neon.Deployment
     /// </remarks>
     public interface IProfileClient
     {
+        /// <summary>
+        /// Controls whether the client caches secrets and profile values.  This should
+        /// enabled by default by all implementations.
+        /// </summary>
+        bool CacheEnabled { get; set; }
+
         /// <summary>
         /// Requests the value of a secret password from 1Password via the assistant.
         /// </summary>
@@ -123,5 +141,10 @@ namespace Neon.Deployment
         /// <returns>The password value.</returns>
         /// <exception cref="ProfileException">Thrown if the profile server returns an error.</exception>
         string GetProfileValue(string name, bool nullOnNotFound = false);
+
+        /// <summary>
+        /// Clears any cached values.
+        /// </summary>
+        void ClearCache();
     }
 }
