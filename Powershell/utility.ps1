@@ -422,16 +422,27 @@ function Login-Docker
 #   server      - optionally specifies the server to log out from, typically
 #                 one of:
 #
-#       docker.io
-#       ghcr.io
+#                       docker.io
+#                       ghcr.io
+#
+#   CIOnly      - optionally logs out only when the current script is running
+#                 a CI job.  This is nice to avoit logging develepers out on
+#                 their own workstations when runing local CI tests.
 
 function Logout-Docker
 {
     [CmdletBinding()]
     param (
         [Parameter(Position=0, Mandatory=$false)]
-        [string]$server = $null
+        [string]$server = $null,
+        [Parameter(Position=1, Mandatory=$false)]
+        [switch]$CIOnly = $false
     )
+
+    if ($CIOnly -and $env:CI -eq "true")
+    {
+        return;
+    }
 
     if (![System.String]::IsNullOrEmpty($server))
     {

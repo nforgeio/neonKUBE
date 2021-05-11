@@ -27,9 +27,6 @@
 # After modifying this file, you should take care to push any changes to the
 # other repos where this file is present.
 
-# Load these assemblies from the [neon-assistant] installation folder
-# to ensure we'll be compatible.
-
 $scriptPath   = $MyInvocation.MyCommand.Path
 $scriptFolder = [System.IO.Path]::GetDirectoryName($scriptPath)
 
@@ -39,6 +36,9 @@ Push-Location $scriptFolder
 . ./utility.ps1
 
 Pop-Location
+
+# Load these assemblies from the [neon-assistant] installation folder
+# to ensure we'll be compatible.
 
 Load-Assembly "$env:NEON_ASSISTANT_HOME\YamlDotNet.dll"
 Load-Assembly "$env:NEON_ASSISTANT_HOME\Neon.Common.dll"
@@ -292,5 +292,5 @@ function Set-GitHub-Container-Visibility
 
     $visibility = [Neon.Deployment.GitHubPackageVisibility]$visibility
 
-    [Neon.Deployment.GitHub]::Packages.SetVisibility($organization, $nameOrPattern, $visibility, [Neon.Deployment.GitHubPackageType]::Container)
+    [Neon.Deployment.GitHub]::Packages.SetVisibility($organization, $nameOrPattern, [Neon.Deployment.GitHubPackageType]::Container, $visibility)
 }
