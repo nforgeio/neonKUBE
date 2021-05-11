@@ -44,12 +44,12 @@ namespace Neon.Deployment
         /// <summary>
         /// Returns the GitHub PAT (personal access token) or <c>null</c>.
         /// </summary>
-        internal static string PersonalAccessToken { get; private set; }
+        internal static string GitHubPat { get; private set; }
 
         /// <summary>
         /// Returns the GitHub user credentials or <c>null</c>.
         /// </summary>
-        internal static Credentials UserCredentials { get; private set; }
+        internal static Credentials Credentials { get; private set; }
 
         /// <summary>
         /// Retrieves the necessary credentials from 1Password and caches them.
@@ -58,8 +58,8 @@ namespace Neon.Deployment
         {
             var profile = new ProfileClient();
 
-            PersonalAccessToken = profile.GetSecretPassword("GITHUB_PAT");
-            UserCredentials     = Credentials.FromUserPassword(profile.GetSecretPassword("GITHUB_LOGIN[username]"), profile.GetSecretPassword("GITHUB_LOGIN[password]"));
+            GitHubPat   = profile.GetSecretPassword("GITHUB_PAT");
+            Credentials = Credentials.FromUserPassword(profile.GetSecretPassword("GITHUB_LOGIN[username]"), profile.GetSecretPassword("GITHUB_LOGIN[password]"));
         }
 
         /// <summary>
@@ -67,8 +67,8 @@ namespace Neon.Deployment
         /// </summary>
         public static void ClearCredentials()
         {
-            PersonalAccessToken = null;
-            UserCredentials     = null;
+            GitHubPat   = null;
+            Credentials = null;
         }
 
         /// <summary>
@@ -77,7 +77,7 @@ namespace Neon.Deployment
         /// <exception cref="SecurityException">Thrown when the credentials are not available.</exception>
         internal static void EnsureCredentials()
         {
-            if (string.IsNullOrEmpty(PersonalAccessToken) || UserCredentials == null)
+            if (string.IsNullOrEmpty(GitHubPat) || Credentials == null)
             {
                 throw new SecurityException("GitHub PAT and/or user credentials are not loaded.");
             }

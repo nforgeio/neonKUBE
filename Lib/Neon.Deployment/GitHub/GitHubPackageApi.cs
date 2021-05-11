@@ -37,13 +37,33 @@ namespace Neon.Deployment
     // problems loading the AngleSharp assembly into Powershell.  We'll be 
     // sending commands via the profile client.
     //
-    // We'll replace this once GitHub as a fully functional REST API for this.
+    // The operation to performed will be specified as the [operation] argument.
+    // These are the supported operations (corresponding to the methods below):
+    //
+    // Package-List(pat, username, password, organization, nameOrPattern, packageType, visibility)
+    //
+    //      Lists packages returning a JSON array of property objects
+    //
+    // Package-Delete(pat, username, password, organization, nameOrPattern, packageType)
+    //
+    //      Deletes packages
+    //
+    // Package-SetVisibility(pat, username, password, organization, nameOrPattern, packageType, visibility)
+    //
+    //      Changes the visibility of packages
+    //
+    // NOTE: We pass the GITHUB PAT as well as the username/password credentials
+    //       along with each call.
+    //
+    // We'll replace this hack once GitHub as a fully functional REST API for this.
 
     /// <summary>
     /// Implments GitHub packages operations.
     /// </summary>
     public class GitHubPackageApi
     {
+        private ProfileClient   profileClient = new ProfileClient();
+
         internal GitHubPackageApi()
         {
             GitHub.GetCredentials();
@@ -54,34 +74,49 @@ namespace Neon.Deployment
         /// Lists the packages for an organization.
         /// </summary>
         /// <param name="organization">The GitHub organization name.</param>
-        /// <param name="pattern">The matching pattern (see <see cref="NeonHelper.FileWildcardRegex(string)"/>).</param>
+        /// <param name="nameOrPattern">The matching pattern (see <see cref="NeonHelper.FileWildcardRegex(string)"/>).</param>
         /// <param name="packageType">Optionally specifies the package type.  This defaults to <see cref="GitHubPackageType.Container"/>.</param>
         /// <param name="visibility">Optionally specifies the visibility of the package.  This defaults to <see cref="GitHubPackageVisibility.All"/></param>
         /// <returns>The list of package information as a list of <see cref="GitHubPackage"/> instance.</returns>
         public List<GitHubPackage> List(
             string                  organization,
-            string                  pattern     = null,
-            GitHubPackageType       packageType = GitHubPackageType.Container,
-            GitHubPackageVisibility visibility  = GitHubPackageVisibility.All)
+            string                  nameOrPattern = null,
+            GitHubPackageType       packageType   = GitHubPackageType.Container,
+            GitHubPackageVisibility visibility    = GitHubPackageVisibility.All)
         {
-            throw new NotImplementedException();
+            return ListAsync(organization, nameOrPattern, packageType, visibility).Result;
         }
 
         /// <summary>
         /// Lists the packages for an organization.
         /// </summary>
         /// <param name="organization">The GitHub organization name.</param>
-        /// <param name="pattern">The matching pattern (see <see cref="NeonHelper.FileWildcardRegex(string)"/>).</param>
+        /// <param name="nameOrPattern">The matching pattern (see <see cref="NeonHelper.FileWildcardRegex(string)"/>).</param>
         /// <param name="packageType">Optionally specifies the package type.  This defaults to <see cref="GitHubPackageType.Container"/>.</param>
         /// <param name="visibility">Optionally specifies the visibility of the package.  This defaults to <see cref="GitHubPackageVisibility.All"/></param>
         /// <returns>The list of package information as a list of <see cref="GitHubPackage"/> instance.</returns>
         public async Task<List<GitHubPackage>> ListAsync(
             string                  organization,
-            string                  pattern     = null,
-            GitHubPackageType       packageType = GitHubPackageType.Container,
-            GitHubPackageVisibility visibility  = GitHubPackageVisibility.All)
+            string                  nameOrPattern = null,
+            GitHubPackageType       packageType   = GitHubPackageType.Container,
+            GitHubPackageVisibility visibility    = GitHubPackageVisibility.All)
         {
-            throw new NotImplementedException();
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(organization), nameof(organization));
+
+            var args = new Dictionary<string, string>();
+
+            args["operation"]     = "Package-List";
+            args["pat"]           = GitHub.GitHubPat;
+            args["username"]      = GitHub.Credentials.Username;
+            args["password"]      = GitHub.Credentials.Password;
+            args["organization"]  = organization;
+            args["nameOrPattern"] = nameOrPattern ?? "*";
+            args["packageType"]   = packageType.ToMemberString();
+            args["visibility"]    = visibility.ToMemberString();
+
+            var result = profileClient.Call(args);
+
+            return await Task.FromResult(NeonHelper.JsonDeserialize<List<GitHubPackage>>(result));
         }
 
         /// <summary>
@@ -111,7 +146,22 @@ namespace Neon.Deployment
             string              nameOrPattern,
             GitHubPackageType   packageType = GitHubPackageType.Container)
         {
-            throw new NotImplementedException();
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(organization), nameof(organization));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nameOrPattern), nameof(nameOrPattern));
+
+            var args = new Dictionary<string, string>();
+
+            args["operation"]     = "Package-Delete";
+            args["pat"]           = GitHub.GitHubPat;
+            args["username"]      = GitHub.Credentials.Username;
+            args["password"]      = GitHub.Credentials.Password;
+            args["organization"]  = organization;
+            args["nameOrPattern"] = nameOrPattern ?? "*";
+            args["packageType"]   = packageType.ToMemberString();
+
+            profileClient.Call(args);
+
+            await Task.CompletedTask;
         }
 
         /// <summary>
@@ -125,10 +175,10 @@ namespace Neon.Deployment
         public void SetVisibility(
             string                  organization,
             string                  nameOrPattern,
-            GitHubPackageVisibility visibility  = GitHubPackageVisibility.All,
-            GitHubPackageType       packageType = GitHubPackageType.Container)
+            GitHubPackageType       packageType = GitHubPackageType.Container,
+            GitHubPackageVisibility visibility  = GitHubPackageVisibility.All)
         {
-            SetVisibilityAsync(organization, nameOrPattern, visibility, packageType).Wait();
+            SetVisibilityAsync(organization, nameOrPattern, packageType, visibility).Wait();
         }
 
         /// <summary>
@@ -137,15 +187,31 @@ namespace Neon.Deployment
         /// </summary>
         /// <param name="organization">The GitHub organization name.</param>
         /// <param name="nameOrPattern">The package name or matching pattern.</param>
-        /// <param name="visibility">The visibility to set the package to.</param>
         /// <param name="packageType">Optionally specifies the package type.  This defaults to <see cref="GitHubPackageType.Container"/>.</param>
+        /// <param name="visibility">The visibility to set the package to.</param>
         public async Task SetVisibilityAsync(
             string                  organization,
             string                  nameOrPattern,
-            GitHubPackageVisibility visibility = GitHubPackageVisibility.All,
-            GitHubPackageType       packageType = GitHubPackageType.Container)
+            GitHubPackageType       packageType = GitHubPackageType.Container,
+            GitHubPackageVisibility visibility  = GitHubPackageVisibility.All)
         {
-            throw new NotImplementedException();
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(organization), nameof(organization));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nameOrPattern), nameof(nameOrPattern));
+
+            var args = new Dictionary<string, string>();
+
+            args["operation"]     = "Package-SetVisibility";
+            args["pat"]           = GitHub.GitHubPat;
+            args["username"]      = GitHub.Credentials.Username;
+            args["password"]      = GitHub.Credentials.Password;
+            args["organization"]  = organization;
+            args["nameOrPattern"] = nameOrPattern ?? "*";
+            args["packageType"]   = packageType.ToMemberString();
+            args["visibility"]    = visibility.ToMemberString();
+
+            profileClient.Call(args);
+
+            await Task.CompletedTask;
         }
     }
 }

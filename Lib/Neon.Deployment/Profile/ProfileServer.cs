@@ -66,7 +66,7 @@ namespace Neon.Deployment
     /// <para>
     /// where the "OK:" and "OK-JSON:" prefixes indicate that the operation succeeded.
     /// Some operations like password or value lookups simply return the request result
-    /// as the string after the prefix.  Future) operations may return a JSON result.
+    /// as the string after the prefix.  Future operations may return a JSON result.
     /// </para>
     /// <para>
     /// The <b>ERROR[STATUS]:</b> prefix indicates an error occured.  <b>STATUS</b> identifies
@@ -116,6 +116,19 @@ namespace Neon.Deployment
     ///     <para>
     ///     This requests a profile value the user's local profile by <c>NAME</c>.
     ///     he value is returned as the response.
+    ///     </para>
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><b>CALL</b></term>
+    ///     <description>
+    ///     <para>
+    ///     This submits an arbitrary operation to the server, passing arguments and
+    ///     returning a result string.  We're using this to workaround some limitations
+    ///     with the GHCR REST API by locating the implementation in neon-assistant.
+    ///     </para>
+    ///     <para>
+    ///     We may use this in the future for other neon-assistant interactions.
     ///     </para>
     ///     </description>
     /// </item>
@@ -309,7 +322,7 @@ namespace Neon.Deployment
 
         /// <summary>
         /// <para>
-        /// Callback to retrieve a profile value.  The parameters is the profile value name.
+        /// Callback that retrieves a profile value.  The parameters is the profile value name.
         /// </para>
         /// <note>
         /// This must be initalized before calling <see cref="Start()"/>.
@@ -319,7 +332,7 @@ namespace Neon.Deployment
 
         /// <summary>
         /// <para>
-        /// Callback to retrieve a secret password.  The parameters are the secret name
+        /// Callback that retrieves a secret password.  The parameters are the secret name
         /// optional vault and master password.
         /// </para>
         /// <note>
@@ -330,7 +343,7 @@ namespace Neon.Deployment
 
         /// <summary>
         /// <para>
-        /// Callback to retrieve a secret value.  The parameters are the secret name
+        /// Callback that retrieves a secret value.  The parameters are the secret name
         /// optional vault, and master password.
         /// </para>
         /// <note>
@@ -338,6 +351,16 @@ namespace Neon.Deployment
         /// </note>
         /// </summary>
         public Func<ProfileRequest, string, string, string, ProfileHandlerResult> GetSecretValueHandler { get; set; }
+
+        /// <summary>
+        /// <para>
+        /// Callback that performs an arbitrary operation.
+        /// </para>
+        /// <note>
+        /// This must be initalized before calling <see cref="Start()"/>.
+        /// </note>
+        /// </summary>
+        public Func<ProfileRequest, ProfileHandlerResult> CallHandler { get; set; }
 
         /// <summary>
         /// Handles incoming client connections on a background thread.
@@ -452,6 +475,18 @@ namespace Neon.Deployment
                                 }
 
                                 handlerResult = GetSecretValueHandler(request, name, vault, masterPassword);
+                                break;
+
+                            case "CALL":
+
+                                if (CallHandler == null)
+                                {
+                                    handlerResult = ProfileHandlerResult.CreateError(request, ProfileStatus.BadCommand, $"Server has no call handler.");
+                                }
+                                else
+                                {
+                                    handlerResult = CallHandler(request);
+                                }
                                 break;
 
                             default:

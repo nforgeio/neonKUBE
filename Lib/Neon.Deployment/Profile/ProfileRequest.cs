@@ -41,17 +41,61 @@ namespace Neon.Deployment
         /// <summary>
         /// Creates a command with optional arguments.
         /// </summary>
-        /// <param name="command">The command name.</param>
+        /// <param name="command">
+        /// <para>
+        /// The command name.
+        /// </para>
+        /// <note>
+        /// Argument names and values may not include commas.
+        /// </note>
+        /// </param>
         /// <param name="args">The optional arguments.</param>
         /// <returns>The <see cref="ProfileRequest"/>.</returns>
         public static ProfileRequest Create(string command, Dictionary<string, string> args = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(command), nameof(command));
 
+            args = args ?? new Dictionary<string, string>();
+
+            // $note(jefflill):
+            //
+            // We need to enforce some somewhat arbitrary restrictions on the command
+            // and arguments because I didn't encode theses as JSON and its not possible
+            // to use the new [IProfileClient.Call()] to pass values that might not fit
+            // into our original message format.
+
+            if (command.Contains(':'))
+            {
+                throw new ArgumentException($"Command [{command}] may not include a ':'.");
+            }
+
+            foreach (var item in args)
+            {
+                if (item.Key == null)
+                {
+                    throw new ArgumentNullException("NULL argument names are not allowed.");
+                }
+
+                if (item.Value == null)
+                {
+                    throw new ArgumentNullException($"Argument [{item.Key}] has a NULL value.");
+                }
+
+                if (item.Key.Contains('='))
+                {
+                    throw new ArgumentException($"Argument name [{item.Key}] is invalid because it includes a '='.");
+                }
+
+                if (item.Value.Contains(','))
+                {
+                    throw new ArgumentException($"Argument [{item.Key}={item.Value}] is invalid because the value includes a comma.");
+                }
+            }
+
             return new ProfileRequest()
             {
                 Command = command,
-                Args    = args ?? new Dictionary<string, string>()
+                Args    = args
             };
         }
 

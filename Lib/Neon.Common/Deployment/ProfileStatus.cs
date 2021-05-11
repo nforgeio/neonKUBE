@@ -90,6 +90,11 @@ namespace Neon.Deployment
         public const string OnePasswordUnavailable = "1PASSWORD-UNAVAILABLE";
 
         /// <summary>
+        /// An arbitrary call to the profile server failed.
+        /// </summary>
+        public const string CallError = "CALL-ERROR";
+
+        /// <summary>
         /// An onspecified error occurred.
         /// </summary>
         public const string Other = "OTHER";

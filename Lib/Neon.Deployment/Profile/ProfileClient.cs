@@ -293,5 +293,13 @@ namespace Neon.Deployment
                 secretCache.Clear();
             }
         }
+
+        /// <inheritdoc/>
+        public string Call(Dictionary<string, string> args)
+        {
+            Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
+
+            return Call(ProfileRequest.Create("CALL", args)).Value;
+        }
     }
 }

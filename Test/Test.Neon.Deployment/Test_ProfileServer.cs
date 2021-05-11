@@ -111,6 +111,14 @@ namespace TestDeployment
 
                     return ProfileHandlerResult.Create(sb.ToString());
                 };
+
+            server.CallHandler =
+                request =>
+                {
+                    // We're just going to echo the value of the "command" argument.
+
+                    return ProfileHandlerResult.Create(request.Args["command"]);
+                };
         }
 
         [Theory]
@@ -137,6 +145,12 @@ namespace TestDeployment
                 Assert.Equal("seven-profile", client.GetProfileValue("seven"));
                 Assert.Equal("eight-profile", client.GetProfileValue("eight"));
                 Assert.Equal("nine-profile", client.GetProfileValue("nine"));
+
+                var callArgs = new Dictionary<string, string>();
+
+                callArgs["command"] = "Hello World!";
+
+                Assert.Equal("Hello World!", client.Call(callArgs));
             }
         }
 

@@ -33,27 +33,21 @@ using Neon.Xunit;
 
 namespace TestDeployment
 {
+    // IMPORTANT NOTE!:
+    // ----------------
+    // These unit tests require that [neon-assistant] be running.
+
     [Trait(TestTrait.Category, TestArea.NeonDeployment)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public partial class Test_Packages
     {
         [Fact]
-        public void Login()
-        {
-            // Verify that we can create the client. It will throw an error if there is a 
-            // problem logging in.
-
-            var client = new GitHubPackageApi();
-        }
-
-        [Fact]
         public async void ListPackages()
         {
             // Verify that we can get the list of packages.
 
-            var client = new GitHubPackageApi();
-
+            var client   = new GitHubPackageApi();
             var packages = await client.ListAsync("neonkube-dev");
 
             Assert.NotEmpty(packages);
@@ -74,7 +68,7 @@ namespace TestDeployment
 
             var client = new GitHubPackageApi();
 
-            await client.SetVisibilityAsync("neonrelease-dev", "test", GitHubPackageVisibility.Public);
+            await client.SetVisibilityAsync("neonrelease-dev", "test", visibility: GitHubPackageVisibility.Public);
 
             var packages = await client.ListAsync("neonrelease-dev", "test", visibility: GitHubPackageVisibility.Public);
 
@@ -88,7 +82,7 @@ namespace TestDeployment
 
             var client = new GitHubPackageApi();
 
-            await client.SetVisibilityAsync("neonrelease-dev", "test", GitHubPackageVisibility.Private);
+            await client.SetVisibilityAsync("neonrelease-dev", "test", visibility: GitHubPackageVisibility.Private);
 
             var packages = await client.ListAsync("neonrelease-dev", "test", visibility: GitHubPackageVisibility.Private);
 
@@ -102,6 +96,7 @@ namespace TestDeployment
             var client = new GitHubPackageApi();
 
             //await client.DeleteAsync("neonrelease-dev", "test");
+            await Task.CompletedTask;
         }
     }
 }

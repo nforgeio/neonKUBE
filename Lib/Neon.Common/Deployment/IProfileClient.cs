@@ -30,7 +30,7 @@ namespace Neon.Deployment
 {
     /// <summary>
     /// <para>
-    /// Defines the interface for the client used to communicate with the Neon Profile Service
+    /// Defines the interface for the client used to communicate with the Neon Assistant
     /// or a custom service.  These services provides access to user and workstation specific 
     /// settings including secrets and general properties.  This is used for activities such as 
     /// CI/CD automation and integration testing.  This solves the following problems:
@@ -146,5 +146,19 @@ namespace Neon.Deployment
         /// Clears any cached values.
         /// </summary>
         void ClearCache();
+
+        /// <summary>
+        /// <para>
+        /// Submits a low-level request to the profile provider, passing a command and optional arguments.
+        /// This is temporarily used by the <c>Neon.Deployment.GitHub</c> APIs to workaround the lack of
+        /// a complete REST API for GHCR.
+        /// </para>
+        /// <note>
+        /// Implementation of this is optional and you may throw a <see cref="NotImplementedException"/>.
+        /// </note>
+        /// </summary>
+        /// <param name="args">The request arguments.</param>
+        /// <returns>The command result.</returns>
+        string Call(Dictionary<string, string> args);
     }
 }
