@@ -86,7 +86,24 @@ namespace Neon.Deployment
 
             if (request != null)
             {
-                message = $"[{request}]: $message";
+                // $hack(jefflill):
+                //
+                // Replace any potential secret values with "***" to avoid having these
+                // end up in test or other logs.
+
+                const string redacted = "***";
+
+                if (request.Args.ContainsKey("pat"))
+                {
+                    request.Args["pat"] = redacted;
+                }
+
+                if (request.Args.ContainsKey("password"))
+                {
+                    request.Args["password"] = redacted;
+                }
+
+                message = $"[{request}]: {message}";
             }
 
             return new ProfileHandlerResult()
