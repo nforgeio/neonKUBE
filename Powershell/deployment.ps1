@@ -43,7 +43,6 @@ Pop-Location
 Load-Assembly "$env:NEON_ASSISTANT_HOME\YamlDotNet.dll"
 Load-Assembly "$env:NEON_ASSISTANT_HOME\Neon.Common.dll"
 Load-Assembly "$env:NEON_ASSISTANT_HOME\Neon.Deployment.dll"
-Load-Assembly "$env:NEON_ASSISTANT_HOME\System.Text.Encoding.CodePages"
 
 #------------------------------------------------------------------------------
 # Returns a global [Neon.Deployment.ProfileClient] instance creating one if necessary.
