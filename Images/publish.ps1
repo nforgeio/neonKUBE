@@ -57,7 +57,7 @@ function Publish
         [string]$Path
     )
 
-    cd "$Path"
+    Set-Location "$Path"
 
     if ($allVersions)
     {
