@@ -262,8 +262,7 @@ function Remove-GitHub-Container
         [string]$nameOrPattern
     )
 
-    $github = New-Object "Neon.Deployment.GitHub"
-    $github.Packages.Delete($organization, $nameOrPattern, [Neon.Deployment.GitHubPackageType]::Container)    
+    [Neon.Deployment.GitHub]::Packages.Delete($organization, $nameOrPattern, [Neon.Deployment.GitHubPackageType]::Container)    
 }
 
 #------------------------------------------------------------------------------
