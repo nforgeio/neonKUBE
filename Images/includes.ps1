@@ -180,7 +180,7 @@ function PushImage
 		# there.  Perhaps this is something we could do after implementing [neon-cli]
 		# registry commands.
 
-		docker push "$Image" | Tee-Object -Variable pushOutput
+		docker push "$Image" --quiet | Tee-Object -Variable pushOutput
 
 		$exitCode = $LastExitCode
 
