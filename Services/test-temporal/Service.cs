@@ -81,6 +81,7 @@ namespace TemporalService
             Log.LogInfo("Connecting to Temporal.");
 
             settings.Namespace = @namespace;
+            settings.TaskQueue = taskQueue;
 
             using (var client = await TemporalClient.ConnectAsync(settings))
             {
