@@ -225,7 +225,7 @@ function Invoke-CaptureStreams
             $stdout   = $result.stdout
             $stderr   = $result.stderr
 
-            throw "Invoke-CaptureStreams Failed: [exitcode=$exitCode]`nSTDERR:`n$stderr`nSTDOUT:`n$stdout"
+            throw "Invoke-CaptureStreams Failed: [exitcode=$exitCode]`r`nSTDERR:`n$stderr`r`nSTDOUT:`r`n$stdout"
         }
     }
     finally

@@ -460,8 +460,9 @@ function Escape-ActionString
 #
 # ARGUMENTS:
 #
-#   text    - the string being written or $null to write an empty line.
-#   color   - optionally specifies the text color (one of: 'red' or 'yellow')
+#   text        - the string being written or $null to write an empty line.
+#   color       - optionally specifies the text color (one of: 'red' or 'yellow')
+#   noEscape    - optional skip escaping the output string
 
 function Write-ActionOutput
 {
@@ -470,7 +471,9 @@ function Write-ActionOutput
         [Parameter(Position=0, Mandatory=$false)]
         [string]$text = $null,
         [Parameter(Position=1, Mandatory=$false)]
-        [string]$color = $null
+        [string]$color = $null,
+        [Parameter(Position=2, Mandatory=$false)]
+        [switch]$noEscape = $false
     )
 
     if ($text -eq $null)
@@ -478,7 +481,10 @@ function Write-ActionOutput
         $text = ""
     }
 
-    $text = Escape-ActionString $text
+    if (!$noEscape)
+    {
+        $text = Escape-ActionString $text
+    }
 
     if (![System.String]::IsNullOrEmpty($text))
     {
@@ -586,16 +592,19 @@ function Write-ActionWarning
 # ARGUMENTS:
 #
 #   message     - the message
+#   noEscape    - optionally skips escaping the output
 
 function Write-ActionError
 {
     [CmdletBinding()]
     param (
         [Parameter(Position=0, Mandatory=$true)]
-        [string]$message
+        [string]$message,
+        [Parameter(Position=2, Mandatory=$false)]
+        [switch]$noEscape = $false
     )
 
-    Write-ActionOutput $message "red"
+    Write-ActionOutput $message "red" -noEscape:$noEscape
 }
 
 #------------------------------------------------------------------------------
@@ -640,7 +649,7 @@ function Write-ActionException
         $error
     )
 
-    Write-ActionError "EXCEPTION: $error"
+    Write-ActionError "EXCEPTION: $error" -noEscape:$true
     Write-ActionError "-------------------------------------------"
     $_.Exception | Format-List -force
 }
