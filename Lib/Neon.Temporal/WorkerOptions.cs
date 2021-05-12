@@ -96,17 +96,24 @@ namespace Neon.Temporal
         public double TaskQueueActivitiesPerSecond { get; set; } = 100000;
 
         /// <summary>
+        /// Optionally sets the maximum number of goroutines that will concurrently poll the
+        /// temporal-server to retrieve activity tasks. Changing this value will affect the
+        /// rate at which the worker is able to consume tasks from a task queue. Defaults to <b>2</b>.
+        /// </summary>
+        public int MaxConcurrentActivityTaskPollers { get; set; } = 2;
+
+        /// <summary>
         /// Optionally sets the maximum concurrent decision task executions this worker can have.
         /// The zero value of this uses the default value.  This defaults to <b>100,000</b>.
         /// </summary>
-        public int MaxConcurrentDecisionTaskExecutionSize { get; set; } = 100000;
+        public int MaxConcurrentWorkflowTaskExecutionSize { get; set; } = 100000;
 
         /// <summary>
-        /// Optionally stes the rate limiting on number of decision tasks that can be executed per
-        /// second per worker. This can be used to limit resources used by the worker.
-        /// The zero value of this uses the default value.  This defaults to <b>1000</b>.
+        /// Optionally sets the maximum number of goroutines that will concurrently poll the
+        /// temporal-server to retrieve workflow tasks. Changing this value will affect the
+        /// rate at which the worker is able to consume tasks from a task queue. Defaults to <b>2</b>.
         /// </summary>
-        public double WorkerDecisionTasksPerSecond { get; set; } = 1000;
+        public int MaxConcurrentWorkflowTaskPollers { get; set; } = 2;
 
         /// <summary>
         /// Optionally enables logging in replay.  This defaults to <c>false</c>.
@@ -117,44 +124,6 @@ namespace Neon.Temporal
         /// This is only useful for debugging purpose.
         /// </remarks>
         public bool EnableLoggingInReplay { get; set; } = false;
-
-        /// <summary>
-        /// Optionally disable workflow processing on the worker.  This defaults to <c>false</c>.
-        /// </summary>
-        public bool DisableWorkflowWorker { get; set; } = false;
-
-        /// <summary>
-        /// Optionally disable activity processing on the worker.  This defaults to <c>false</c>.
-        /// </summary>
-        public bool DisableActivityWorker { get; set; } = false;
-
-        /// <summary>
-        /// Returns the worker mode.
-        /// </summary>
-        internal WorkerMode Mode
-        {
-            get
-            {
-                if (DisableActivityWorker && DisableWorkflowWorker)
-                {
-                    throw new InvalidOperationException("A Temporal worker cannot disable both activity and workflow processing.");
-                }
-                else if (!DisableActivityWorker && !DisableWorkflowWorker)
-                {
-                    return WorkerMode.Both;
-                }
-                else if (!DisableActivityWorker)
-                {
-                    return WorkerMode.Activity;
-                }
-                else if (!DisableWorkflowWorker)
-                {
-                    return WorkerMode.Workflow;
-                }
-
-                throw new NotImplementedException();
-            }
-        }
 
         /// <summary>
         /// Optionally disables sticky execution.  This defaults to <c>false</c>.
