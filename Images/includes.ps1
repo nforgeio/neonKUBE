@@ -186,7 +186,7 @@ function PushImage
 
 [System.IO.File]::AppendAllText("C:\Temp\log.txt", "PUBLISH-IMAGE: 3`r`n")
 		docker push "$Image" | Tee-Object -Variable pushOutput
-[System.IO.File]::AppendAllText("C:\Temp\log.txt", "PUBLISH-IMAGE: 4`r`n")
+[System.IO.File]::AppendAllText("C:\Temp\log.txt", "PUBLISH-IMAGE: 4: PUSH-OUTPUT $pushOutput`r`n")
 
 		$exitCode = $LastExitCode
 [System.IO.File]::AppendAllText("C:\Temp\log.txt", "PUBLISH-IMAGE: 4A: EXITCODE=$exitCode`r`n")
