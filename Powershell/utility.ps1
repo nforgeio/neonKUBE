@@ -199,7 +199,6 @@ try
         $exitCode = $LastExitCode
 Log-DebugLine "InvokeCapture-3:"
 
-
         # Read the output files.
 
         $stdout = ""
@@ -237,7 +236,7 @@ Log-DebugLine "InvokeCapture-6:"
         Write-Host "-------------------------------------------"
         Write-Host $result.stderr
         Write-Host "-------------------------------------------"
-        "Invoke-CaptureStreams Failed: [exitcode=$exitCode]`r`nSTDERR:`n$stderr`r`nSTDOUT:`r`n$stdout"
+Log-DebugLine "InvokeCapture-6A:"
 
         if (!$noCheck -and $exitCode -ne 0)
         {
