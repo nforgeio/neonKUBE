@@ -140,7 +140,11 @@ function Write-Stdout
         [string]$text
     )
 
-    [Systen.Console]::WriteLine($text)
+    # $debug(jefflill)
+
+    # [Systen.Console]::WriteLine($text)
+
+    Log-DebugLine $text
 }
 
 #------------------------------------------------------------------------------
@@ -162,7 +166,11 @@ function Write-Stderr
         [string]$text
     )
 
-    [Systen.Console.Error]::WriteLine($text)
+    # $debug(jefflill)
+
+    # [Systen.Console.Error]::WriteLine($text)
+
+    Log-DebugLine $text
 }
 
 #------------------------------------------------------------------------------
