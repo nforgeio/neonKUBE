@@ -178,11 +178,11 @@ function PushImage
 		$result   = Invoke-CaptureStreams "docker push $image" -interleave
 		$exitCode = $result.exitcode
 
-		Write-Output $result.stdout
+		Write-Host $result.stdout
 
 		if ($pushOutput.Contains("blob upload unknown"))
 		{
-			Write-Output "*** PUSH: BLOB UPLOAD UNKNOWN"
+			Write-Host "*** PUSH: BLOB UPLOAD UNKNOWN"
 			$exitCode = 100
 		}
 
@@ -206,7 +206,7 @@ function PushImage
 			return
 		}
 		
-		Write-Output "*** PUSH: EXITCODE=$exitCode"
+		Write-Host "*** PUSH: EXITCODE=$exitCode"
 		sleep 15
 	}
 
