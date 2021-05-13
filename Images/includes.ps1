@@ -179,6 +179,12 @@ function PushImage
 		$exitCode = $result.exitcode
 
 		Write-Host $result.stdout
+Log-DebugLine "*** EXITCODE: $exitCode"
+Log-DebugLine "------------------------------"
+Log-DebugLine $result.stdout
+Log-DebugLine "------------------------------"
+Log-DebugLine $result.stderr
+Log-DebugLine "------------------------------"
 
 		if ($pushOutput.Contains("blob upload unknown"))
 		{
