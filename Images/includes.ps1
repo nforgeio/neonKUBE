@@ -189,6 +189,7 @@ function PushImage
 [System.IO.File]::AppendAllText("C:\Temp\log.txt", "PUBLISH-IMAGE: 4`r`n")
 
 		$exitCode = $LastExitCode
+[System.IO.File]::AppendAllText("C:\Temp\log.txt", "PUBLISH-IMAGE: 4A: EXITCODE=$exitCode`r`n")
 
 		if ($pushOutput -match 'blob upload unknown')
 		{
