@@ -227,6 +227,18 @@ Log-DebugLine "InvokeCapture-5:"
         $result.stderr   = $stderr
 Log-DebugLine "InvokeCapture-6:"
 
+        Write-Host "COMMAND: $command"
+        Write-Host "EXITCODE: $result.exitcode"
+        Write-Host "STDOUT:"
+        Write-Host "-------------------------------------------"
+        Write-Host $result.stdout
+        Write-Host "-------------------------------------------"
+        Write-Host "STDERR:"
+        Write-Host "-------------------------------------------"
+        Write-Host $result.stderr
+        Write-Host "-------------------------------------------"
+        "Invoke-CaptureStreams Failed: [exitcode=$exitCode]`r`nSTDERR:`n$stderr`r`nSTDOUT:`r`n$stdout"
+
         if (!$noCheck -and $exitCode -ne 0)
         {
 Log-DebugLine "InvokeCapture-7:"
