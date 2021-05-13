@@ -42,19 +42,27 @@ function Build
 		[switch]$latest = $false
 	)
 
+[System.IO.File]::AppendAllText("C:\Temp\log.txt", "Publish: 0`r`n")
+
 	$registry    = GetLibraryRegistry "nats"
 	$tag         = $version
 	$tagAsLatest = TagAsLatest
 
 	# Build and publish the images.
 
+[System.IO.File]::AppendAllText("C:\Temp\log.txt", "Publish: 1`r`n")
 	. ./build.ps1 -registry $registry -version $version -tag $tag
+[System.IO.File]::AppendAllText("C:\Temp\log.txt", "Publish: 2`r`n")
     PushImage "${registry}:$tag"
+[System.IO.File]::AppendAllText("C:\Temp\log.txt", "Publish: 3`r`n")
 
 	if ($latest -and $tagAsLatest)
 	{
+[System.IO.File]::AppendAllText("C:\Temp\log.txt", "Publish: 4`r`n")
 		Exec { docker tag "${registry}:$tag" "${registry}:latest" }
+[System.IO.File]::AppendAllText("C:\Temp\log.txt", "Publish: 5`r`n")
 		PushImage "${registry}:latest"
+[System.IO.File]::AppendAllText("C:\Temp\log.txt", "Publish: 6`r`n")
 	}
 }
 
