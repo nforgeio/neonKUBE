@@ -32,9 +32,10 @@ Log-ImageBuild $registry $tag
 docker pull nats:$version-linux
 ThrowOnExitCode
 
-Write-Output "****************************"
-Get-Location
-Write-Output "****************************"
+Write-Output "****************************`r`n"
+$dir = Get-Location
+Write-Output "$dir`r`n"
+Write-Output "****************************`r`n"
 
 docker build -t "${registry}:$tag" --build-arg "VERSION=$version" .
 ThrowOnExitCode
