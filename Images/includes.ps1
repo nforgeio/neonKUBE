@@ -179,7 +179,7 @@ Log-DebugLine "PushImage-3:"
 		#
 		# and then retry if we see this.
 
-		$result   = Invoke-CaptureStreams "docker push $image" -interleave
+		$result   = Invoke-CaptureStreams "docker push $image" -interleave -noCheck
 		$exitCode = $result.exitcode
 Log-DebugLine "PushImage-4:"
 
