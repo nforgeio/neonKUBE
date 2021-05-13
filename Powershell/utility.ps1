@@ -382,8 +382,8 @@ function ConvertTo-Yaml
 #
 #   server              - the server endpoint, typically one of:
 #
-#       docker.io
 #       ghcr.io
+#       docker.io
 #
 #   loginCredentials    - Identifies the 1Password login to use, typically one of:
 #
@@ -398,11 +398,11 @@ function Login-Docker
         [Parameter(Position=0, Mandatory=$true)]
         [string]$server,
         [Parameter(Position=1, Mandatory=$true)]
-        [string]$loginCredentials
+        [string]$credentials
     )
 
-    $username = $(Get-SecretValue "$loginCredentials[username]")
-    $password = $(Get-SecretValue "$loginCredentials[password]")
+    $username = $(Get-SecretValue "$credentials[username]")
+    $password = $(Get-SecretValue "$credentials[password]")
     
     Write-Output $password | docker login $server -u $username --password-stdin
 
