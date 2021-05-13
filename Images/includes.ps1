@@ -46,24 +46,6 @@ ThrowOnExitCode
 $neonKUBE_Tag = "neonkube-" + $neonKUBE_Version
 
 #------------------------------------------------------------------------------
-# Executes a command, throwing an exception for non-zero error codes.
-
-function Exec
-{
-    [CmdletBinding()]
-    param (
-        [Parameter(Position=0, Mandatory=$true)]
-        [scriptblock]$Command,
-        [Parameter(Position=1, Mandatory=$false)]
-        [string]$ErrorMessage = "*** FAILED: $Command"
-    )
-    & $Command
-    if ($LastExitCode -ne 0) {
-        throw "Exec: $ErrorMessage"
-    }
-}
-
-#------------------------------------------------------------------------------
 # Deletes a file if it exists.
 
 function DeleteFile
