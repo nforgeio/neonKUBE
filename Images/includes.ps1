@@ -133,7 +133,7 @@ Log-DebugLine "PushImage-1:"
 Log-DebugLine "PushImage-2:"
 		if ($attempt -gt 0)
 		{
-			Write-Host "*** PUSH: RETRYING"
+			Write-Stdout "*** PUSH: RETRYING"
 		}
 Log-DebugLine "PushImage-3:"
 
@@ -165,7 +165,7 @@ Log-DebugLine "PushImage-3:"
 		$exitCode = $result.exitcode
 Log-DebugLine "PushImage-4:"
 
-		Write-Host $result.stdout
+		Write-Stdout $result.stdout
 Log-DebugLine "*** EXITCODE: $exitCode"
 Log-DebugLine "------------------------------"
 Log-DebugLine $result.stdout
@@ -175,7 +175,7 @@ Log-DebugLine "------------------------------"
 
 		if ($pushOutput.Contains("blob upload unknown"))
 		{
-			Write-Host "*** PUSH: BLOB UPLOAD UNKNOWN"
+			Write-Stdout "*** PUSH: BLOB UPLOAD UNKNOWN"
 			$exitCode = 100
 		}
 
@@ -199,7 +199,7 @@ Log-DebugLine "------------------------------"
 			return
 		}
 		
-		Write-Host "*** PUSH: EXITCODE=$exitCode"
+		Write-Stdout "*** PUSH: EXITCODE=$exitCode"
 		sleep 15
 	}
 

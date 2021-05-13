@@ -90,9 +90,9 @@ function Write-Exception
         $error
     )
 
-    Write-Host "EXCEPTION: $error"
-    Write-Host "-------------------------------------------"
-    Write-Host $($_.Exception | Format-List -force)
+    Write-Stdout "EXCEPTION: $error"
+    Write-Stdout "-------------------------------------------"
+    Write-Stdout $($_.Exception | Format-List -force)
 }
 
 #------------------------------------------------------------------------------
@@ -119,6 +119,50 @@ function EscapeDoubleQuotes
     }
 
     return $text.Replace("`"", "`"`"")
+}
+
+#------------------------------------------------------------------------------
+# Writes a line of text to STDOUT to avoid any of Powershell's pipeline semantics.
+# This is useful for situations where commands fail but nothing gets written to
+# a redirected log file.
+#
+# ARGUMENTS:
+#
+#   text        - optionally specifies the line of text to be written
+
+function Write-Stdout
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [AllowNull()]
+        [AllowEmptyString()]
+        [string]$text
+    )
+
+    [Systen.Console]::WriteLine($text)
+}
+
+#------------------------------------------------------------------------------
+# Writes a line of text to STDERR to avoid any of Powershell's pipeline semantics.
+# This is useful for situations where commands fail but nothing gets written to
+# a redirected log file.
+#
+# ARGUMENTS:
+#
+#   text        - optionally specifies the line of text to be written
+
+function Write-Stderr
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [AllowNull()]
+        [AllowEmptyString()]
+        [string]$text
+    )
+
+    [Systen.Console.Error]::WriteLine($text)
 }
 
 #------------------------------------------------------------------------------
@@ -226,16 +270,16 @@ Log-DebugLine "InvokeCapture-5:"
         $result.stderr   = $stderr
 Log-DebugLine "InvokeCapture-6:"
 
-        Write-Host "COMMAND: $command"
-        Write-Host "EXITCODE: $result.exitcode"
-        Write-Host "STDOUT:"
-        Write-Host "-------------------------------------------"
-        Write-Host $result.stdout
-        Write-Host "-------------------------------------------"
-        Write-Host "STDERR:"
-        Write-Host "-------------------------------------------"
-        Write-Host $result.stderr
-        Write-Host "-------------------------------------------"
+        Write-Stdout "COMMAND: $command"
+        Write-Stdout "EXITCODE: $result.exitcode"
+        Write-Stdout "STDOUT:"
+        Write-Stdout "-------------------------------------------"
+        Write-Stdout $result.stdout
+        Write-Stdout "-------------------------------------------"
+        Write-Stdout "STDERR:"
+        Write-Stdout "-------------------------------------------"
+        Write-Stdout $result.stderr
+        Write-Stdout "-------------------------------------------"
 Log-DebugLine "InvokeCapture-6A:"
 
         if (!$noCheck -and $exitCode -ne 0)
