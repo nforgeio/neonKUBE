@@ -118,9 +118,7 @@ if (-not $noprune)
 
 if ($base)
 {
-    # Base images:
-
-    # Its lonely here!
+    # Base images: it's lonely here!
 }
 
 if ($other)
@@ -141,9 +139,7 @@ if ($test)
 if ($services)
 {
     Publish "$image_root\\neon-allow-testing"
-    
-    # $todo(marcusbooyah): Fix these builds
-    #Publish "$image_root\\neon-cluster-operator"
-    #Publish "$image_root\\neon-setup-grafana"
-    #Publish "$image_root\\neon-setup-harbor"
+    Publish "$image_root\\neon-cluster-operator"
+    Publish "$image_root\\neon-setup-grafana"
+    Publish "$image_root\\neon-setup-harbor"
 }
