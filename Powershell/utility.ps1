@@ -173,16 +173,19 @@ function Invoke-CaptureStreams
         [switch]$interleave = $false
     )
 
+Log-DebugLine "InvokeCapture-0:"
     if ([System.String]::IsNullOrEmpty($command))
     {
         throw "Invalid command."
     }
+Log-DebugLine "InvokeCapture-1:"
 
     $guid       = [System.Guid]::NewGuid().ToString("d")
     $stdoutPath = [System.IO.Path]::Combine($env:TMP, "$guid.stdout")
     $stderrPath = [System.IO.Path]::Combine($env:TMP, "$guid.stderr")
 
-    try
+Log-DebugLine "InvokeCapture-2:"
+try
     {
         if ($interleave)
         {
@@ -194,6 +197,8 @@ function Invoke-CaptureStreams
         }
 
         $exitCode = $LastExitCode
+Log-DebugLine "InvokeCapture-3:"
+
 
         # Read the output files.
 
@@ -203,6 +208,7 @@ function Invoke-CaptureStreams
         {
             $stdout = [System.IO.File]::ReadAllText($stdoutPath)
         }
+Log-DebugLine "InvokeCapture-4:"
 
         $stderr = ""
 
@@ -213,14 +219,17 @@ function Invoke-CaptureStreams
                 $stderr = [System.IO.File]::ReadAllText($stderrPath)
             }
         }
+Log-DebugLine "InvokeCapture-5:"
 
         $result          = @{}
         $result.exitcode = $exitCode
         $result.stdout   = $stdout
         $result.stderr   = $stderr
+Log-DebugLine "InvokeCapture-6:"
 
         if (!$noCheck -and $exitCode -ne 0)
         {
+Log-DebugLine "InvokeCapture-7:"
             $exitcode = $result.exitcode
             $stdout   = $result.stdout
             $stderr   = $result.stderr
@@ -230,16 +239,20 @@ function Invoke-CaptureStreams
     }
     finally
     {
+Log-DebugLine "InvokeCapture-8:"
         if ([System.IO.File]::Exists($stdoutPath))
         {
             [System.IO.File]::Delete($stdoutPath)
         }
+Log-DebugLine "InvokeCapture-9:"
 
         if ([System.IO.File]::Exists($stderrPath))
         {
             [System.IO.File]::Delete($stderrPath)
         }
+Log-DebugLine "InvokeCapture-10:"
     }
+Log-DebugLine "InvokeCapture-11:"
 
     return $result
 }
