@@ -41,7 +41,7 @@ Exec { dotnet publish "$nfServices\\$appname\\$appname.csproj" -c Release -o "$p
 Exec { core-layers $appname "$pwd\bin" }
 
 # Build the image.
-Write-Output $base_organization
+
 Exec { docker build -t "${registry}:$tag" --build-arg "APPNAME=$appname" --build-arg "ORGANIZATION=$organization" --build-arg "BASE_ORGANIZATION=$base_organization" --build-arg "CLUSTER_VERSION=neonkube-$neonKUBE_Version" --build-arg "BRANCH=$branch" . }
 
 # Clean up
