@@ -136,20 +136,24 @@ function PushImage
         [Parameter(Position=1, Mandatory=$false)]
         [string]$baseTag = $null
     )
+[System.IO.File]::AppendAllText("C:\Temp\log.txt", "PUBLISH-IMAGE: ****************************`r`n")
 
 	if ($noImagePush)
 	{
 		return
 	}
+[System.IO.File]::AppendAllText("C:\Temp\log.txt", "PUBLISH-IMAGE: 0`r`n")
 
 	$maxAttempts = 5
 
 	for ($attempt=0; $attempt -lt $maxAttempts; $attempt++)
 	{
+[System.IO.File]::AppendAllText("C:\Temp\log.txt", "PUBLISH-IMAGE: 1`r`n")
 		if ($attempt -gt 0)
 		{
 			"*** PUSH: RETRYING"
 		}
+[System.IO.File]::AppendAllText("C:\Temp\log.txt", "PUBLISH-IMAGE: 2`r`n")
 
 		# $hack(jefflill):
 		#
@@ -180,33 +184,43 @@ function PushImage
 		# there.  Perhaps this is something we could do after implementing [neon-cli]
 		# registry commands.
 
+[System.IO.File]::AppendAllText("C:\Temp\log.txt", "PUBLISH-IMAGE: 3`r`n")
 		docker push "$Image" | Tee-Object -Variable pushOutput
+[System.IO.File]::AppendAllText("C:\Temp\log.txt", "PUBLISH-IMAGE: 4`r`n")
 
 		$exitCode = $LastExitCode
 
 		if ($pushOutput -match 'blob upload unknown')
 		{
+[System.IO.File]::AppendAllText("C:\Temp\log.txt", "PUBLISH-IMAGE: 5`r`n")
 			"*** PUSH: BLOB UPLOAD UNKNOWN"
 			$exitCode = 100
 		}
+[System.IO.File]::AppendAllText("C:\Temp\log.txt", "PUBLISH-IMAGE: 6`r`n")
 
 		if ($exitCode -eq 0)
 		{
+[System.IO.File]::AppendAllText("C:\Temp\log.txt", "PUBLISH-IMAGE: 7`r`n")
 			# Add the base version tag if requested.  I don't believe it'll
 			# be necessary to retry this operation.
 
 			if (![System.String]::IsNullOrEmpty($baseTag))
 			{
+[System.IO.File]::AppendAllText("C:\Temp\log.txt", "PUBLISH-IMAGE: 8`r`n")
 				# Strip the tag off the image passed.
 
 				$fields    = $image -split ':'
 				$baseImage = $fields[0] + ":" + $baseTag
 
 				"tag image: $image --> $baseImage"
+[System.IO.File]::AppendAllText("C:\Temp\log.txt", "PUBLISH-IMAGE: 9`r`n")
 				docker tag "$image" "$baseImage"
+[System.IO.File]::AppendAllText("C:\Temp\log.txt", "PUBLISH-IMAGE: 10`r`n")
 				ThrowOnExitCode
+[System.IO.File]::AppendAllText("C:\Temp\log.txt", "PUBLISH-IMAGE: 11`r`n")
 			}
 
+[System.IO.File]::AppendAllText("C:\Temp\log.txt", "PUBLISH-IMAGE: ****************************`r`n")
 			return
 		}
 		
@@ -215,6 +229,7 @@ function PushImage
 		sleep 15
 	}
 
+[System.IO.File]::AppendAllText("C:\Temp\log.txt", "PUBLISH-IMAGE-ERROR: ****************************`r`n")
 	throw "[docker push $Image] failed after [$maxAttempts] attempts."
 }
 
