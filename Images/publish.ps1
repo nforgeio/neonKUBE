@@ -123,8 +123,11 @@ if ($base)
 
 if ($other)
 {
+[System.IO.File]::AppendAllText("C:\Temp\log.txt", "PUBLISH: NATS ****************************`r`n")
     Publish "$image_root\\nats"
+[System.IO.File]::AppendAllText("C:\Temp\log.txt", "PUBLISH: NATS-STREAMING ******************`r`n")
     Publish "$image_root\\nats-streaming"
+[System.IO.File]::AppendAllText("C:\Temp\log.txt", "PUBLISH: couchbase-dev *******************`r`n")
     Publish "$image_root\\couchbase-dev"
     Publish "$image_root\\yugabyte"
 }
