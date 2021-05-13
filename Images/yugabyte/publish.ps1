@@ -53,7 +53,9 @@ function Build
 
 	if ($latest -and $tagAsLatest)
 	{
-		Exec { docker tag "${registry}:$tag" "${registry}:latest" }
+		docker tag "${registry}:$tag" "${registry}:latest" 
+		ThrowOnExitCode
+
 		PushImage "${registry}:latest"
 	}
 }
