@@ -29,8 +29,8 @@ param
 
 Log-ImageBuild $registry $tag
 
-# Pull the source image.
+docker pull cassandra:$version
+ThrowOnExitCode
 
-Exec { docker pull cassandra:$version }
-
-Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$version" . }
+docker build -t "${registry}:$tag" --build-arg "VERSION=$version" .
+ThrowOnExitCode

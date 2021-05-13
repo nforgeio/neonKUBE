@@ -29,10 +29,10 @@ param
 
 Log-ImageBuild $registry $tag
 
-# Pull the source image.
-
-Exec { docker pull yugabytedb/yugabyte:$yugabyteVersion }
+docker pull yugabytedb/yugabyte:$yugabyteVersion
+ThrowOnExitCode
 
 # Build the image.
 
-Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$yugabyteVersion" . }
+docker build -t "${registry}:$tag" --build-arg "VERSION=$yugabyteVersion" .
+ThrowOnExitCode

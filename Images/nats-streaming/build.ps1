@@ -29,8 +29,8 @@ param
 
 Log-ImageBuild $registry $tag
 
-# Pull the source image.
+docker pull nats-streaming:$version-linux
+ThrowOnExitCode
 
-Exec { docker pull nats-streaming:$version-linux }
-
-Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$version" . }
+docker build -t "${registry}:$tag" --build-arg "VERSION=$version" .
+ThrowOnExitCode
