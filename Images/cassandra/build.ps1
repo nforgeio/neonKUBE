@@ -32,5 +32,5 @@ Log-ImageBuild $registry $tag
 docker pull cassandra:$version
 ThrowOnExitCode
 
-docker build -t "${registry}:$tag" --build-arg "VERSION=$version" .
+docker build -t ${registry}:$tag --build-arg VERSION=$version .
 ThrowOnExitCode

@@ -32,5 +32,5 @@ Log-ImageBuild $registry $tag
 docker pull alpine:latest
 ThrowOnExitCode
 
-docker build -t "${registry}:$tag" --build-arg "VERSION=$version" .
+docker build -t ${registry}:$tag --build-arg VERSION=$version .
 ThrowOnExitCode

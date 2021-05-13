@@ -38,7 +38,7 @@ $dir = Get-Location
 
 docker build -t ${registry}:$tag --build-arg VERSION=$version .
 
-[System.IO.File]::AppendAllText("C:\Temp\log.txt", "*** 1: $lastExitCode`r`n")
+[System.IO.File]::AppendAllText("C:\Temp\log.txt", "*** 1: exit-code: $lastExitCode`r`n")
 
 ThrowOnExitCode
 
