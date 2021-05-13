@@ -90,9 +90,9 @@ function Write-Exception
         $error
     )
 
-    Write-Error "EXCEPTION: $error"
-    Write-Error "-------------------------------------------"
-    $_.Exception | Format-List -force
+    Write-Host "EXCEPTION: $error"
+    Write-Host "-------------------------------------------"
+    Write-Host $($_.Exception | Format-List -force)
 }
 
 #------------------------------------------------------------------------------
