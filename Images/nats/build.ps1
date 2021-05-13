@@ -32,15 +32,16 @@ Log-ImageBuild $registry $tag
 docker pull nats:$version-linux
 ThrowOnExitCode
 
-Write-Output "****************************`r`n"
+[System.IO.File]::AppendAllText("C:\Temp\log.txt", "****************************`r`n")
 $dir = Get-Location
-Write-Output "$dir`r`n"
-Write-Output "docker build -t ${registry}:$tag --build-arg VERSION=$version .`r`n"
+[System.IO.File]::AppendAllText("C:\Temp\log.txt", "*** 0: dir: $dir`r`n")
 
-& docker build -t "${registry}:$tag" --build-arg "VERSION=$version" .
+docker build -t ${registry}:$tag --build-arg VERSION=$version .
 
-Write-Output "*** 0:`r`n"
+[System.IO.File]::AppendAllText("C:\Temp\log.txt", "*** 1: $lastExitCode`r`n")
 
 ThrowOnExitCode
 
-Write-Output "****************************`r`n"
+[System.IO.File]::AppendAllText("C:\Temp\log.txt", "*** 2: `r`n")
+
+[System.IO.File]::AppendAllText("C:\Temp\log.txt", "****************************`r`n")
