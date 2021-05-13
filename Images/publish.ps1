@@ -144,6 +144,8 @@ try
 }
 catch
 {
+Log-DebugLine "*** Exception:"
+Log-DebugLine $($_.Exception | Format-List -force)
     Write-Exception $_
     throw
 }
