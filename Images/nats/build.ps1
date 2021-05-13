@@ -35,7 +35,7 @@ ThrowOnExitCode
 Write-Output "****************************`r`n"
 $dir = Get-Location
 Write-Output "$dir`r`n"
-Write0Output "docker build -t "${registry}:$tag" --build-arg "VERSION=$version" .`r`n"
+Write-Output "docker build -t "${registry}:$tag" --build-arg "VERSION=$version" .`r`n"
 Write-Output "****************************`r`n"
 
 docker build -t "${registry}:$tag" --build-arg "VERSION=$version" .
