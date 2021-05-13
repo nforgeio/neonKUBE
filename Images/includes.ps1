@@ -136,20 +136,24 @@ function PushImage
         [Parameter(Position=1, Mandatory=$false)]
         [string]$baseTag = $null
     )
+Log-DebugLine "PushImage-0:"
 
 	if ($noImagePush)
 	{
 		return
 	}
+Log-DebugLine "PushImage-1:"
 
 	$maxAttempts = 5
 
 	for ($attempt=0; $attempt -lt $maxAttempts; $attempt++)
 	{
+Log-DebugLine "PushImage-2:"
 		if ($attempt -gt 0)
 		{
-			"*** PUSH: RETRYING"
+			Write-Host "*** PUSH: RETRYING"
 		}
+Log-DebugLine "PushImage-3:"
 
 		# $hack(jefflill):
 		#
@@ -177,6 +181,7 @@ function PushImage
 
 		$result   = Invoke-CaptureStreams "docker push $image" -interleave
 		$exitCode = $result.exitcode
+Log-DebugLine "PushImage-4:"
 
 		Write-Host $result.stdout
 Log-DebugLine "*** EXITCODE: $exitCode"
