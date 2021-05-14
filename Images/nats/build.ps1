@@ -29,8 +29,13 @@ param
 
 Log-ImageBuild $registry $tag
 
+Log-DebugLine "*** BUILD-0:"
 docker pull nats:$version-linux
+Log-DebugLine "*** BUILD-0:"
 ThrowOnExitCode
 
+Log-DebugLine "*** BUILD-0:"
 docker build -t ${registry}:$tag --build-arg VERSION=$version .
+Log-DebugLine "*** BUILD-0:"
 ThrowOnExitCode
+Log-DebugLine "*** BUILD-0:"
