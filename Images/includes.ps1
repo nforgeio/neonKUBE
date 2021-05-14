@@ -172,20 +172,24 @@ Log-DebugLine $result.stdout
 Log-DebugLine "------------------------------"
 Log-DebugLine $result.stderr
 Log-DebugLine "------------------------------"
+Log-DebugLine "PushImage-5:"
 
 		if ($pushOutput.Contains("blob upload unknown"))
 		{
 			Write-Stdout "*** PUSH: BLOB UPLOAD UNKNOWN"
 			$exitCode = 100
 		}
+Log-DebugLine "PushImage-6:"
 
 		if ($exitCode -eq 0)
 		{
+Log-DebugLine "PushImage-7:"
 			# Add the base version tag if requested.  I don't believe it'll
 			# be necessary to retry this operation.
 
 			if (![System.String]::IsNullOrEmpty($baseTag))
 			{
+Log-DebugLine "PushImage-8:"
 				# Strip the tag off the image passed.
 
 				$fields    = $image -split ':'
@@ -194,8 +198,10 @@ Log-DebugLine "------------------------------"
 				"tag image: $image --> $baseImage"
 				docker tag "$image" "$baseImage"
 				ThrowOnExitCode
+Log-DebugLine "PushImage-9:"
 			}
 
+Log-DebugLine "PushImage-10:"
 			return
 		}
 		
