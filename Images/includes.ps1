@@ -169,7 +169,7 @@ Log-DebugLine "PushImage-4:"
 Log-DebugLine "*** EXITCODE: $exitCode"
 Log-DebugLine "------------------------------"
 Log-DebugLine $result.stdout
-Log-DebugLine "------------------------------"debuggi
+Log-DebugLine "------------------------------"
 Log-DebugLine $result.stderr
 Log-DebugLine "------------------------------"
 Log-DebugLine "PushImage-5:"
