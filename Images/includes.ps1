@@ -118,24 +118,20 @@ function PushImage
         [Parameter(Position=1, Mandatory=$false)]
         [string]$baseTag = $null
     )
-Log-DebugLine "PushImage-0:"
 
 	if ($noImagePush)
 	{
 		return
 	}
-Log-DebugLine "PushImage-1:"
 
 	$maxAttempts = 5
 
 	for ($attempt=0; $attempt -lt $maxAttempts; $attempt++)
 	{
-Log-DebugLine "PushImage-2:"
 		if ($attempt -gt 0)
 		{
-			Write-Stdout "*** PUSH: RETRYING"
+			Write-Output "*** PUSH: RETRYING"
 		}
-Log-DebugLine "PushImage-3:"
 
 		# $hack(jefflill):
 		#
@@ -163,34 +159,20 @@ Log-DebugLine "PushImage-3:"
 
 		$result   = Invoke-CaptureStreams "docker push $image" -interleave -noCheck
 		$exitCode = $result.exitcode
-Log-DebugLine "PushImage-4:"
-
-		Write-Stdout $result.stdout
-Log-DebugLine "*** EXITCODE: $exitCode"
-Log-DebugLine "------------------------------"
-Log-DebugLine $result.stdout
-Log-DebugLine "------------------------------"
-Log-DebugLine $result.stderr
-Log-DebugLine "------------------------------"
-Log-DebugLine "PushImage-5:"
 
 		if ($result.allText.Contains("blob upload unknown"))
 		{
-Log-DebugLine "PushImage-5A:"
-			Write-Stdout "*** PUSH: BLOB UPLOAD UNKNOWN"
+			Write-Output "*** PUSH: BLOB UPLOAD UNKNOWN"
 			$exitCode = 100
 		}
-Log-DebugLine "PushImage-6:"
 
 		if ($exitCode -eq 0)
 		{
-Log-DebugLine "PushImage-7:"
 			# Add the base version tag if requested.  I don't believe it'll
 			# be necessary to retry this operation.
 
 			if (![System.String]::IsNullOrEmpty($baseTag))
 			{
-Log-DebugLine "PushImage-8:"
 				# Strip the tag off the image passed.
 
 				$fields    = $image -split ':'
@@ -199,14 +181,12 @@ Log-DebugLine "PushImage-8:"
 				"tag image: $image --> $baseImage"
 				docker tag "$image" "$baseImage"
 				ThrowOnExitCode
-Log-DebugLine "PushImage-9:"
 			}
 
-Log-DebugLine "PushImage-10:"
 			return
 		}
 		
-		Write-Stdout "*** PUSH: EXITCODE=$exitCode"
+		Write-Output "*** PUSH: EXITCODE=$exitCode"
 		sleep 15
 	}
 

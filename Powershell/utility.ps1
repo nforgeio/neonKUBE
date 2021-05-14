@@ -90,9 +90,9 @@ function Write-Exception
         $error
     )
 
-    Write-Stdout "EXCEPTION: $error"
-    Write-Stdout "-------------------------------------------"
-    Write-Stdout $($_.Exception | Format-List -force)
+    Write-Output "EXCEPTION: $error"
+    Write-Output "-------------------------------------------"
+    Write-Output $($error.Exception | Format-List -force)
 }
 
 #------------------------------------------------------------------------------
@@ -119,58 +119,6 @@ function EscapeDoubleQuotes
     }
 
     return $text.Replace("`"", "`"`"")
-}
-
-#------------------------------------------------------------------------------
-# Writes a line of text to STDOUT to avoid any of Powershell's pipeline semantics.
-# This is useful for situations where commands fail but nothing gets written to
-# a redirected log file.
-#
-# ARGUMENTS:
-#
-#   text        - optionally specifies the line of text to be written
-
-function Write-Stdout
-{
-    [CmdletBinding()]
-    param (
-        [Parameter(Position=0, Mandatory=$true)]
-        [AllowNull()]
-        [AllowEmptyString()]
-        [string]$text
-    )
-
-    # $debug(jefflill)
-
-    # [Systen.Console]::WriteLine($text)
-
-    Log-DebugLine $text
-}
-
-#------------------------------------------------------------------------------
-# Writes a line of text to STDERR to avoid any of Powershell's pipeline semantics.
-# This is useful for situations where commands fail but nothing gets written to
-# a redirected log file.
-#
-# ARGUMENTS:
-#
-#   text        - optionally specifies the line of text to be written
-
-function Write-Stderr
-{
-    [CmdletBinding()]
-    param (
-        [Parameter(Position=0, Mandatory=$true)]
-        [AllowNull()]
-        [AllowEmptyString()]
-        [string]$text
-    )
-
-    # $debug(jefflill)
-
-    # [Systen.Console.Error]::WriteLine($text)
-
-    Log-DebugLine $text
 }
 
 #------------------------------------------------------------------------------
@@ -226,19 +174,16 @@ function Invoke-CaptureStreams
         [switch]$interleave = $false
     )
 
-Log-DebugLine "InvokeCapture-0:"
     if ([System.String]::IsNullOrEmpty($command))
     {
         throw "Invalid command."
     }
-Log-DebugLine "InvokeCapture-1:"
 
     $guid       = [System.Guid]::NewGuid().ToString("d")
     $stdoutPath = [System.IO.Path]::Combine($env:TMP, "$guid.stdout")
     $stderrPath = [System.IO.Path]::Combine($env:TMP, "$guid.stderr")
 
-Log-DebugLine "InvokeCapture-2:"
-try
+    try
     {
         if ($interleave)
         {
@@ -250,7 +195,6 @@ try
         }
 
         $exitCode = $LastExitCode
-Log-DebugLine "InvokeCapture-3:"
 
         # Read the output files.
 
@@ -260,7 +204,6 @@ Log-DebugLine "InvokeCapture-3:"
         {
             $stdout = [System.IO.File]::ReadAllText($stdoutPath)
         }
-Log-DebugLine "InvokeCapture-4:"
 
         $stderr = ""
 
@@ -271,30 +214,15 @@ Log-DebugLine "InvokeCapture-4:"
                 $stderr = [System.IO.File]::ReadAllText($stderrPath)
             }
         }
-Log-DebugLine "InvokeCapture-5:"
 
         $result          = @{}
         $result.exitcode = $exitCode
         $result.stdout   = $stdout
         $result.stderr   = $stderr
         $result.alltext  = "$stdout`r`n$stderr"
-Log-DebugLine "InvokeCapture-6:"
-
-        Write-Stdout "COMMAND: $command"
-        Write-Stdout "EXITCODE: $result.exitcode"
-        Write-Stdout "STDOUT:"
-        Write-Stdout "-------------------------------------------"
-        Write-Stdout $result.stdout
-        Write-Stdout "-------------------------------------------"
-        Write-Stdout "STDERR:"
-        Write-Stdout "-------------------------------------------"
-        Write-Stdout $result.stderr
-        Write-Stdout "-------------------------------------------"
-Log-DebugLine "InvokeCapture-6A:"
 
         if (!$noCheck -and $exitCode -ne 0)
         {
-Log-DebugLine "InvokeCapture-7:"
             $exitcode = $result.exitcode
             $stdout   = $result.stdout
             $stderr   = $result.stderr
@@ -304,20 +232,16 @@ Log-DebugLine "InvokeCapture-7:"
     }
     finally
     {
-Log-DebugLine "InvokeCapture-8:"
         if ([System.IO.File]::Exists($stdoutPath))
         {
             [System.IO.File]::Delete($stdoutPath)
         }
-Log-DebugLine "InvokeCapture-9:"
 
         if ([System.IO.File]::Exists($stderrPath))
         {
             [System.IO.File]::Delete($stderrPath)
         }
-Log-DebugLine "InvokeCapture-10:"
     }
-Log-DebugLine "InvokeCapture-11:"
 
     return $result
 }
