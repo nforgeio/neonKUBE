@@ -491,10 +491,10 @@ function Log-ImageBuild
 
 unix-text --recursive $image_root\Dockerfile 
 unix-text --recursive $image_root\*.sh 
-unix-text --recursive .\*.cfg 
-unix-text --recursive .\*.js 
-unix-text --recursive .\*.conf 
-unix-text --recursive .\*.md 
-unix-text --recursive .\*.json 
-unix-text --recursive .\*.rb 
-unix-text --recursive .\*.py 
+unix-text --recursive $image_root\*.cfg 
+unix-text --recursive $image_root\*.js 
+unix-text --recursive $image_root*.conf 
+unix-text --recursive $image_root\*.md 
+unix-text --recursive $image_root\*.json 
+unix-text --recursive $image_root\*.rb 
+unix-text --recursive $image_root\*.py 
