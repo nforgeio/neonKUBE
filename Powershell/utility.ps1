@@ -145,6 +145,8 @@ function EscapeDoubleQuotes
 #   command     - program to run with any arguments
 #   noCheck     - optionally disable non-zero exit code checks
 #   interleave  - optionally combines the STDERR into STDOUT
+#   noOutput    - optionally disables writing STDOUT and STDERR
+#                 to the output
 #
 # RETURNS:
 #
@@ -185,7 +187,9 @@ function Invoke-CaptureStreams
         [Parameter(Mandatory=$false)]
         [switch]$noCheck = $false,
         [Parameter(Mandatory=$false)]
-        [switch]$interleave = $false
+        [switch]$interleave = $false,
+        [Parameter(Mandatory=$false)]
+        [switch]$noOutput = $false
     )
 
     if ([System.String]::IsNullOrEmpty($command))
@@ -234,6 +238,18 @@ function Invoke-CaptureStreams
         $result.stdout   = $stdout
         $result.stderr   = $stderr
         $result.alltext  = "$stdout`r`n$stderr"
+
+        if (!$noOutput)
+        {
+            if ($interleave)
+            {
+                Write-Output $result.stdout
+            }
+            else
+            {
+                Write-Output $result.alltext
+            }
+        }
 
         if (!$noCheck -and $exitCode -ne 0)
         {
