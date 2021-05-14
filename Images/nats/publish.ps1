@@ -76,3 +76,4 @@ if ($allVersions)
 }
 
 Build "1.4.1" -latest
+Log-DebugLine "*** PUBLISH-9:"

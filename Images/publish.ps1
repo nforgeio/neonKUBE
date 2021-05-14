@@ -119,27 +119,42 @@ try
         # Base images: it's lonely here!
     }
 
+Log-DebugLine "*** ROOT-PUBLISH: 0"
     if ($other)
     {
+Log-DebugLine "*** ROOT-PUBLISH: 1"
         Publish "$image_root\\nats"
+Log-DebugLine "*** ROOT-PUBLISH: 2"
         Publish "$image_root\\nats-streaming"
+Log-DebugLine "*** ROOT-PUBLISH: 3"
         Publish "$image_root\\couchbase-dev"
+Log-DebugLine "*** ROOT-PUBLISH: 4"
         Publish "$image_root\\yugabyte"
+Log-DebugLine "*** ROOT-PUBLISH: 5"
     }
 
     if ($test)
     {
+Log-DebugLine "*** ROOT-PUBLISH: 6"
         Publish "$image_root\\test"
+Log-DebugLine "*** ROOT-PUBLISH: 7"
         Publish "$image_root\\test-cadence"
+Log-DebugLine "*** ROOT-PUBLISH: 8"
         Publish "$image_root\\test-temporal"
+Log-DebugLine "*** ROOT-PUBLISH: 9"
     }
 
     if ($services)
     {
+Log-DebugLine "*** ROOT-PUBLISH: 10"
         Publish "$image_root\\neon-allow-testing"
+Log-DebugLine "*** ROOT-PUBLISH: 11"
         Publish "$image_root\\neon-cluster-operator"
+Log-DebugLine "*** ROOT-PUBLISH: 12"
         Publish "$image_root\\neon-setup-grafana"
+Log-DebugLine "*** ROOT-PUBLISH: 13"
         Publish "$image_root\\neon-setup-harbor"
+Log-DebugLine "*** ROOT-PUBLISH: 14"
     }
 }
 catch
