@@ -27,10 +27,16 @@ param
 	[parameter(Mandatory=$true,Position=3)][string] $tag
 )
 
+Log-DebugLine "*** BUILD-0:"
 Log-ImageBuild $registry $tag
+Log-DebugLine "*** BUILD-1:"
 
 docker pull nats-streaming:$version-linux
+Log-DebugLine "*** BUILD-2:"
 ThrowOnExitCode
+Log-DebugLine "*** BUILD-3:"
 
 docker build -t ${registry}:$tag --build-arg VERSION=$version .
+Log-DebugLine "*** BUILD-4:"
 ThrowOnExitCode
+Log-DebugLine "*** BUILD-5:"
