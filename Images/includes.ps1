@@ -169,13 +169,14 @@ Log-DebugLine "PushImage-4:"
 Log-DebugLine "*** EXITCODE: $exitCode"
 Log-DebugLine "------------------------------"
 Log-DebugLine $result.stdout
-Log-DebugLine "------------------------------"
+Log-DebugLine "------------------------------"debuggi
 Log-DebugLine $result.stderr
 Log-DebugLine "------------------------------"
 Log-DebugLine "PushImage-5:"
 
-		if ($pushOutput.Contains("blob upload unknown"))
+		if ($result.allText.Contains("blob upload unknown"))
 		{
+Log-DebugLine "PushImage-5A:"
 			Write-Stdout "*** PUSH: BLOB UPLOAD UNKNOWN"
 			$exitCode = 100
 		}

@@ -191,6 +191,7 @@ function Write-Stderr
 #       exitcode    - the command's integer exit code
 #       stdout      - the captured standard output
 #       stderr      - the captured standard error
+#       alltext     - combined standard input and output
 #
 # REMARKS:
 #
@@ -276,6 +277,7 @@ Log-DebugLine "InvokeCapture-5:"
         $result.exitcode = $exitCode
         $result.stdout   = $stdout
         $result.stderr   = $stderr
+        $result.alltext  = "$stdout`r`n$stderr"
 Log-DebugLine "InvokeCapture-6:"
 
         Write-Stdout "COMMAND: $command"
