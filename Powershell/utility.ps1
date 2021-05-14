@@ -31,6 +31,20 @@ function Request-AdminPermissions
 }
 
 #------------------------------------------------------------------------------
+# Determines whether the current script is running as part of CI or other automation.
+#
+# RETURNS:
+#
+# $true when running under CI
+
+function IsCI
+{
+    # This is set by GutHub runners.
+
+    return $env:CI -eq "true"
+}
+
+#------------------------------------------------------------------------------
 # Loads an assembly file into the current appdomain, if it's not already loaded.
 #
 # ARGUMENTS:
