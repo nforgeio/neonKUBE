@@ -490,28 +490,11 @@ function Log-ImageBuild
 # converting CRLF line endings to LF and replacing TABs with spaces.
 
 unix-text --recursive $image_root\Dockerfile 
-ThrowOnExitCode
-
 unix-text --recursive $image_root\*.sh 
-ThrowOnExitCode
-
 unix-text --recursive .\*.cfg 
-ThrowOnExitCode
-
 unix-text --recursive .\*.js 
-ThrowOnExitCode
-
 unix-text --recursive .\*.conf 
-ThrowOnExitCode
-
 unix-text --recursive .\*.md 
-ThrowOnExitCode
-
 unix-text --recursive .\*.json 
-ThrowOnExitCode
-
 unix-text --recursive .\*.rb 
-ThrowOnExitCode
-
 unix-text --recursive .\*.py 
-ThrowOnExitCode
