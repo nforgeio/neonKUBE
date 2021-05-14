@@ -227,11 +227,13 @@ function Invoke-CaptureStreams
             $stdout   = $result.stdout
             $stderr   = $result.stderr
 
-            throw "Invoke-CaptureStreams Failed: [exitcode=$exitCode]`r`nSTDERR:`n$stderr`r`nSTDOUT:`r`n$stdout"
+            throw "Invoke-CaptureStreams Failed: $command`r`n[exitcode=$exitCode]`r`nSTDERR:`n$stderr`r`nSTDOUT:`r`n$stdout"
         }
     }
     finally
     {
+        # Delete the temporary output files
+
         if ([System.IO.File]::Exists($stdoutPath))
         {
             [System.IO.File]::Delete($stdoutPath)
