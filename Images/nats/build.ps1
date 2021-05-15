@@ -30,12 +30,12 @@ param
 Log-ImageBuild $registry $tag
 
 Log-DebugLine "*** BUILD-0:"
-docker pull nats:$version-linux
+Invoke-CaptureStreams "docker pull nats:$version-linux"
 Log-DebugLine "*** BUILD-1:"
 ThrowOnExitCode
 
 Log-DebugLine "*** BUILD-2:"
-& docker build -t ${registry}:$tag --build-arg VERSION=$version .
+Invoke-CaptureStreams "docker build -t ${registry}:$tag --build-arg VERSION=$version ."
 Log-DebugLine "*** BUILD-3:"
 ThrowOnExitCode
 Log-DebugLine "*** BUILD-4:"

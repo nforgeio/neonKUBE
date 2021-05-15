@@ -241,6 +241,8 @@ function Invoke-CaptureStreams
 
         if (!$noOutput)
         {
+            Write-Output "RUN: $command"
+
             if ($interleave)
             {
                 Write-Output $result.stdout
@@ -257,7 +259,7 @@ function Invoke-CaptureStreams
             $stdout   = $result.stdout
             $stderr   = $result.stderr
 
-            throw "Invoke-CaptureStreams Failed: $command`r`n[exitcode=$exitCode]`r`nSTDERR:`n$stderr`r`nSTDOUT:`r`n$stdout"
+            throw "FAILED: $command`r`n[exitcode=$exitCode]`r`nSTDERR:`n$stderr`r`nSTDOUT:`r`n$stdout"
         }
     }
     finally
