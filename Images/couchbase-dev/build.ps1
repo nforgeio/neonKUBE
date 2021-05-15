@@ -29,8 +29,5 @@ param
 
 Log-ImageBuild $registry $tag
 
-docker pull couchbase/server:$version
-ThrowOnExitCode
-
-docker build -t ${registry}:$tag --build-arg VERSION=$version .
-ThrowOnExitCode
+Invoke-CaptureStreams "docker pull couchbase/server:$version" -interleave
+Invoke-CaptureStreams "docker build -t $registry:$tag --build-arg VERSION=$version ." -interleave

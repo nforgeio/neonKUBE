@@ -44,8 +44,7 @@ ThrowOnExitCode
 
 # Build the image.
 
-docker build -t "${registry}:$tag" --build-arg "APPNAME=$appname" .
-ThrowOnExitCode
+Invoke-CaptureStreams "docker build -t $registry:$tag --build-arg `"APPNAME=$appname`" ." -interleave
 
 # Clean up
 

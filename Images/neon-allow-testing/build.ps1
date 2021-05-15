@@ -29,8 +29,6 @@ param
 
 Log-ImageBuild $registry $tag
 
-docker pull alpine:latest
-ThrowOnExitCode
+Invoke-CaptureStreams "docker pull alpine:latest" -interleave
+Invoke-CaptureStreams "docker build -t $registry:$tag --build-arg VERSION=$version ." -interleave
 
-docker build -t ${registry}:$tag --build-arg VERSION=$version .
-ThrowOnExitCode

@@ -179,8 +179,7 @@ function PushImage
 				$baseImage = $fields[0] + ":" + $baseTag
 
 				"tag image: $image --> $baseImage"
-				docker tag "$image" "$baseImage"
-				ThrowOnExitCode
+				Invoke-CaptureStreams "docker tag $image $baseImage" -interleave
 			}
 
 			return

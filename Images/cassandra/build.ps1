@@ -29,8 +29,5 @@ param
 
 Log-ImageBuild $registry $tag
 
-docker pull cassandra:$version
-ThrowOnExitCode
-
-docker build -t ${registry}:$tag --build-arg VERSION=$version .
-ThrowOnExitCode
+Invoke-CaptureStreams "docker pull cassandra:$version" -interleave
+Invoke-CaptureStreams "docker build -t $registry:$tag --build-arg VERSION=$version ." -interleave

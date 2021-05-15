@@ -106,7 +106,7 @@ try
 
     if (-not $noprune)
     {
-        docker system prune -af
+        Invoke-CaptureStreams "docker system prune -af" -interleave
     }
 
     # NOTE: 

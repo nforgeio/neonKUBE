@@ -52,18 +52,17 @@ Log-DebugLine "*** PUBLISH-1:"
 
 	. ./build.ps1 -registry $registry -version $version -tag $tag
 Log-DebugLine "*** PUBLISH-2:"
-    PushImage "${registry}:$tag"
+    PushImage $registry:$tag
 Log-DebugLine "*** PUBLISH-3:"
 
 	if ($latest -and $tagAsLatest)
 	{
 Log-DebugLine "*** PUBLISH-4:"
-		docker tag "${registry}:$tag" "${registry}:latest"
+		Invoke-CaptureStreams "docker tag $registry:latest" -interleave
 Log-DebugLine "*** PUBLISH-5:"
-		ThrowOnExitCode
 Log-DebugLine "*** PUBLISH-6:"
 
-		PushImage "${registry}:latest"
+		PushImage $registry:latest
 Log-DebugLine "*** PUBLISH-7:"
 	}
 Log-DebugLine "*** PUBLISH-8:"

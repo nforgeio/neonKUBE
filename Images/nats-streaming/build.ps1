@@ -31,12 +31,10 @@ Log-DebugLine "*** BUILD-0:"
 Log-ImageBuild $registry $tag
 Log-DebugLine "*** BUILD-1:"
 
-docker pull nats-streaming:$version-linux
+Invoke-CaptureStreams "docker pull nats-streaming:$version-linux" -interleave
 Log-DebugLine "*** BUILD-2:"
-ThrowOnExitCode
 Log-DebugLine "*** BUILD-3:"
 
-docker build -t ${registry}:$tag --build-arg VERSION=$version .
+Invoke-CaptureStreams "docker build -t $registry:$tag --build-arg VERSION=$version ." -interleave
 Log-DebugLine "*** BUILD-4:"
-ThrowOnExitCode
 Log-DebugLine "*** BUILD-5:"
