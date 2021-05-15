@@ -35,6 +35,6 @@ Invoke-CaptureStreams "docker pull nats-streaming:$version-linux" -interleave
 Log-DebugLine "*** BUILD-2:"
 Log-DebugLine "*** BUILD-3:"
 
-Invoke-CaptureStreams "docker build -t $registry:$tag --build-arg VERSION=$version ." -interleave
+Invoke-CaptureStreams "docker build -t ${registry}:${tag} --build-arg VERSION=$version ." -interleave
 Log-DebugLine "*** BUILD-4:"
 Log-DebugLine "*** BUILD-5:"
