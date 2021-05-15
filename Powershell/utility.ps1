@@ -268,6 +268,7 @@ function Invoke-CaptureStreams
         {
             Write-Stdout "-----------------------------------------------------------"
             Write-Stdout "RUN: $command"
+            Write-Stdout
 
             if ($interleave)
             {

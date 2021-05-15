@@ -58,7 +58,7 @@ Log-DebugLine "*** PUBLISH-3:"
 	if ($latest -and $tagAsLatest)
 	{
 Log-DebugLine "*** PUBLISH-4:"
-		Invoke-CaptureStreams "docker tag ${registry}:latest" -interleave
+		Invoke-CaptureStreams "docker tag ${registry}:${tag} ${registry}:latest" -interleave
 Log-DebugLine "*** PUBLISH-5:"
 Log-DebugLine "*** PUBLISH-6:"
 
