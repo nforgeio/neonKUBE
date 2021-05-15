@@ -104,9 +104,9 @@ function Write-Exception
         $error
     )
 
-    Write-Output "EXCEPTION: $error"
-    Write-Output "-------------------------------------------"
-    Write-Output $($error.Exception | Format-List -force)
+    Write-Information "EXCEPTION: $error"
+    Write-Information "-------------------------------------------"
+    Write-Information $($error.Exception | Format-List -force)
 }
 
 #------------------------------------------------------------------------------
@@ -241,15 +241,15 @@ function Invoke-CaptureStreams
 
         if (!$noOutput)
         {
-            Write-Output "RUN: $command"
+            Write-Information "RUN: $command"
 
             if ($interleave)
             {
-                Write-Output $result.stdout
+                Write-Information $result.stdout
             }
             else
             {
-                Write-Output $result.alltext
+                Write-Information $result.alltext
             }
         }
 
@@ -346,7 +346,7 @@ function Log-DebugLine
     $path = [System.IO.Path]::Combine($folder, "log.txt")
 
     [System.IO.File]::AppendAllText($path, $text + "`r`n")
-    Write-Output $text + ">>>"
+    Write-Information $text + ">>>"
 }
 
 #------------------------------------------------------------------------------
@@ -441,7 +441,7 @@ function Login-Docker
     $username = $(Get-SecretValue "$credentials[username]")
     $password = $(Get-SecretValue "$credentials[password]")
     
-    Write-Output $password | docker login $server -u $username --password-stdin
+    Write-Information $password | docker login $server -u $username --password-stdin
 
     $exitCode = $LastExitCode
 
