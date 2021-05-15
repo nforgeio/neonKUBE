@@ -194,7 +194,7 @@ function Invoke-CaptureStreams
 
     if ([System.String]::IsNullOrEmpty($command))
     {
-        throw "Invalid command."
+        throw "Empty command."
     }
 
     $guid       = [System.Guid]::NewGuid().ToString("d")
@@ -346,7 +346,7 @@ function Log-DebugLine
     $path = [System.IO.Path]::Combine($folder, "log.txt")
 
     [System.IO.File]::AppendAllText($path, $text + "`r`n")
-    Write-Information $text + ">>>"
+    # Write-Information $text + ">>>"
 }
 
 #------------------------------------------------------------------------------
