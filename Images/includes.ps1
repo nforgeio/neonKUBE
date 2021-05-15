@@ -130,7 +130,7 @@ function PushImage
 	{
 		if ($attempt -gt 0)
 		{
-			Write-Information "*** PUSH: RETRYING"
+			Write-Stdout "*** PUSH: RETRYING"
 		}
 
 		# $hack(jefflill):
@@ -162,7 +162,7 @@ function PushImage
 
 		if ($result.allText.Contains("blob upload unknown"))
 		{
-			Write-Information "*** PUSH: BLOB UPLOAD UNKNOWN"
+			Write-Stdout "*** PUSH: BLOB UPLOAD UNKNOWN"
 			$exitCode = 100
 		}
 
@@ -186,7 +186,7 @@ function PushImage
 			return
 		}
 		
-		Write-Information "*** PUSH: EXITCODE=$exitCode"
+		Write-Stdout "*** PUSH: EXITCODE=$exitCode"
 		sleep 15
 	}
 

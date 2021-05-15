@@ -89,6 +89,31 @@ function Load-Assembly
 }
 
 #------------------------------------------------------------------------------
+# Writes text to standard output using Write-Information as a bit of a hack.
+# 
+# ARGUMENTS:
+#
+#   text    - optionally passes the line of text to Write
+#
+# REMARKS:
+#
+# We're using this to workaround the fact that Write-Output doesn't do what
+# non-Powershell developers might expect, especially when called within
+# functions where Write-Output actually adds to the result retuned by the
+# function due to Powershell structured streams.
+
+function Write-Stdout
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$false)]
+        [string]$text
+    )
+
+    Write-Information $text -InformationAction Continue
+}
+
+#------------------------------------------------------------------------------
 # Writes information about a Powershell action exception to the output.
 #
 # ARGUMENTS:
@@ -104,9 +129,9 @@ function Write-Exception
         $error
     )
 
-    Write-Information "EXCEPTION: $error"
-    Write-Information "-------------------------------------------"
-    Write-Information $($error.Exception | Format-List -force)
+    Write-Stdout "EXCEPTION: $error"
+    Write-Stdout "-------------------------------------------"
+    Write-Stdout $($error.Exception | Format-List -force)
 }
 
 #------------------------------------------------------------------------------
@@ -241,15 +266,15 @@ function Invoke-CaptureStreams
 
         if (!$noOutput)
         {
-            Write-Information "RUN: $command"
+            Write-Stdout "RUN: $command"
 
             if ($interleave)
             {
-                Write-Information $result.stdout
+                Write-Stdout $result.stdout
             }
             else
             {
-                Write-Information $result.alltext
+                Write-Stdout $result.alltext
             }
         }
 
@@ -346,7 +371,7 @@ function Log-DebugLine
     $path = [System.IO.Path]::Combine($folder, "log.txt")
 
     [System.IO.File]::AppendAllText($path, $text + "`r`n")
-    # Write-Information $text + ">>>"
+    Write-Stdout "$text >>>"
 }
 
 #------------------------------------------------------------------------------
@@ -441,7 +466,7 @@ function Login-Docker
     $username = $(Get-SecretValue "$credentials[username]")
     $password = $(Get-SecretValue "$credentials[password]")
     
-    Write-Information $password | docker login $server -u $username --password-stdin
+    Write-Output $password | docker login $server -u $username --password-stdin
 
     $exitCode = $LastExitCode
 

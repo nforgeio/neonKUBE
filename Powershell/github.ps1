@@ -75,7 +75,7 @@ function Login-GitHubUser
 
 function Logout-GitHubUser
 {
-    Write-Information "Y" | gh auth logout --hostname github.com
+    Write-Output "Y" | gh auth logout --hostname github.com
 }
 
 #------------------------------------------------------------------------------
