@@ -35,7 +35,7 @@ Log-DebugLine "*** BUILD-1:"
 ThrowOnExitCode
 
 Log-DebugLine "*** BUILD-2:"
-docker build -t ${registry}:$tag --build-arg VERSION=$version .
+& docker build -t ${registry}:$tag --build-arg VERSION=$version .
 Log-DebugLine "*** BUILD-3:"
 ThrowOnExitCode
 Log-DebugLine "*** BUILD-4:"
