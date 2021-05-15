@@ -49,11 +49,11 @@ function Build
 	# Build and publish the images.
 
 	. ./build.ps1 -registry $registry -version $version -tag $tag
-    PushImage $registry:$tag
+    PushImage "$registry:$tag"
 
 	if ($latest)
 	{
-		Invoke-CaptureStreams "docker tag $registry:$tag $registry:latest" -interleave
+		Invoke-CaptureStreams "docker tag $registry:$tag $registry:latest"
 		PushImage $registry:latest
 	}
 }

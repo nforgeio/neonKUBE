@@ -52,7 +52,7 @@ Log-DebugLine "*** PUBLISH-1:"
 
 	. ./build.ps1 -registry $registry -version $version -tag $tag
 Log-DebugLine "*** PUBLISH-2:"
-    PushImage $registry:$tag
+    PushImage "$registry:$tag"
 Log-DebugLine "*** PUBLISH-3:"
 
 	if ($latest -and $tagAsLatest)
@@ -62,7 +62,7 @@ Log-DebugLine "*** PUBLISH-4:"
 Log-DebugLine "*** PUBLISH-5:"
 Log-DebugLine "*** PUBLISH-6:"
 
-		PushImage $registry:latest
+		PushImage "$registry:latest"
 Log-DebugLine "*** PUBLISH-7:"
 	}
 Log-DebugLine "*** PUBLISH-8:"

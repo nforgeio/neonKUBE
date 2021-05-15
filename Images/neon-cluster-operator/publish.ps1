@@ -49,7 +49,7 @@ function Build
 	# Build and publish the images.
 
 	. ./build.ps1 -registry $registry -tag $tag
-    PushImage $registry:$tag
+    PushImage "$registry:$tag"
 
 	if ($latest -and $tagAsLatest)
 	{
