@@ -344,6 +344,7 @@ function Log-DebugLine
     $path = [System.IO.Path]::Combine($folder, "log.txt")
 
     [System.IO.File]::AppendAllText($path, $text + "`r`n")
+    Write-Output $text + ">>>"
 }
 
 #------------------------------------------------------------------------------
