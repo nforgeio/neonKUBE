@@ -29,12 +29,6 @@ param
 
 Log-ImageBuild $registry $tag
 
-Log-DebugLine "*** BUILD-0:"
 Invoke-CaptureStreams "docker pull nats:$version-linux" -interleave
-Log-DebugLine "*** BUILD-1:"
-
-Log-DebugLine "*** BUILD-2:"
 Invoke-CaptureStreams "docker build -t ${registry}:${tag} --build-arg VERSION=$version ." -interleave
-Log-DebugLine "*** BUILD-3:"
-Log-DebugLine "*** BUILD-4:"
 

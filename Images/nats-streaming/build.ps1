@@ -27,14 +27,7 @@ param
 	[parameter(Mandatory=$true,Position=3)][string] $tag
 )
 
-Log-DebugLine "*** BUILD-0:"
 Log-ImageBuild $registry $tag
-Log-DebugLine "*** BUILD-1:"
 
 Invoke-CaptureStreams "docker pull nats-streaming:$version-linux" -interleave
-Log-DebugLine "*** BUILD-2:"
-Log-DebugLine "*** BUILD-3:"
-
 Invoke-CaptureStreams "docker build -t ${registry}:${tag} --build-arg VERSION=$version ." -interleave
-Log-DebugLine "*** BUILD-4:"
-Log-DebugLine "*** BUILD-5:"

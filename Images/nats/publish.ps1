@@ -41,31 +41,21 @@ function Build
 		[parameter(Mandatory=$true, Position=1)][string] $version,
 		[switch]$latest = $false
 	)
-Log-DebugLine "*** PUBLISH-0:"
 
 	$registry    = GetLibraryRegistry "nats"
 	$tag         = $version
 	$tagAsLatest = TagAsLatest
 
-Log-DebugLine "*** PUBLISH-1:"
 	# Build and publish the images.
 
 	. ./build.ps1 -registry $registry -version $version -tag $tag
-Log-DebugLine "*** PUBLISH-2:"
     PushImage "${registry}:${tag}"
-Log-DebugLine "*** PUBLISH-3:"
 
 	if ($latest -and $tagAsLatest)
 	{
-Log-DebugLine "*** PUBLISH-4:"
 		Invoke-CaptureStreams "docker tag ${registry}:${tag} ${registry}:latest" -interleave
-Log-DebugLine "*** PUBLISH-5:"
-Log-DebugLine "*** PUBLISH-6:"
-
 		PushImage "${registry}:latest"
-Log-DebugLine "*** PUBLISH-7:"
 	}
-Log-DebugLine "*** PUBLISH-8:"
 }
 
 $noImagePush = $nopush
@@ -75,4 +65,3 @@ if ($allVersions)
 }
 
 Build "1.4.1" -latest
-Log-DebugLine "*** PUBLISH-9:"
