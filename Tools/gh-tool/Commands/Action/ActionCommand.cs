@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowCommand.cs
+// FILE:	    ActionCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -33,17 +33,17 @@ using Neon.Common;
 namespace GHTool
 {
     /// <summary>
-    /// Implements the <b>workflow</b> command.
+    /// Implements the <b>action</b> command.
     /// </summary>
     [Command]
-    public class WorkflowCommand : CommandBase
+    public class ActionCommand : CommandBase
     {
         private const string usage = @"
 Commands to manage GitHub Action workflows.
 
 USAGE:
 
-    neon workflow run delete REPO WORKFLOW-NAME [AGE-IN-DAYS]
+    neon action run delete REPO WORKFLOW-NAME [AGE-IN-DAYS]
 ";
 
         /// <inheritdoc/>
