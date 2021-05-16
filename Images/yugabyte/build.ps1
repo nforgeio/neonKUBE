@@ -29,8 +29,8 @@ param
 
 Log-ImageBuild $registry $tag
 
-Invoke-CaptureStreams "docker pull yugabytedb/yugabyte:$yugabyteVersion" -interleave
+$result = Invoke-CaptureStreams "docker pull yugabytedb/yugabyte:$yugabyteVersion" -interleave
 
 # Build the image.
 
-Invoke-CaptureStreams "docker build -t ${registry}:${tag} --build-arg `"VERSION=$yugabyteVersion`" ." -interleave
+$result = Invoke-CaptureStreams "docker build -t ${registry}:${tag} --build-arg `"VERSION=$yugabyteVersion`" ." -interleave

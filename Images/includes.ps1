@@ -178,8 +178,8 @@ function PushImage
 				$fields    = $image -split ':'
 				$baseImage = $fields[0] + ":" + $baseTag
 
-				"tag image: $image --> $baseImage"
-				Invoke-CaptureStreams "docker tag $image $baseImage" -interleave
+				Write-Stdout "tag image: $image --> $baseImage"
+				$result = Invoke-CaptureStreams "docker tag $image $baseImage" -interleave
 			}
 
 			return

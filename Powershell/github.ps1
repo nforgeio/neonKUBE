@@ -990,7 +990,7 @@ function Invoke-ActionWorkflow
 
         if ([System.String]::IsNullOrEmpty($inputJson))
         {
-            Invoke-CaptureStreams "gh --repo $repo workflow run $workflow"
+            $result = Invoke-CaptureStreams "gh --repo $repo workflow run $workflow"
         }
         else
         {
@@ -1004,7 +1004,7 @@ function Invoke-ActionWorkflow
 
             try
             {
-                Invoke-CaptureStreams "gh --repo $repo workflow run $workflow --ref $branch --json < `"$tempInputPath`""
+                $result = Invoke-CaptureStreams "gh --repo $repo workflow run $workflow --ref $branch --json < `"$tempInputPath`""
             }
             finally
             {

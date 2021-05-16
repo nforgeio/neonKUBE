@@ -45,8 +45,7 @@ ThrowOnExitCode
 
 # Build the image.
 
-Invoke-CaptureStreams "docker build -t ${registry}:${tag} --build-arg `"APPNAME=$appname`" --build-arg `"ORGANIZATION=$organization`" --build-arg `"BASE_ORGANIZATION=$base_organization`" --build-arg `"CLUSTER_VERSION=neonkube-$neonKUBE_Version`" ." -interleave
-ThrowOnExitCode
+$result = Invoke-CaptureStreams "docker build -t ${registry}:${tag} --build-arg `"APPNAME=$appname`" --build-arg `"ORGANIZATION=$organization`" --build-arg `"BASE_ORGANIZATION=$base_organization`" --build-arg `"CLUSTER_VERSION=neonkube-$neonKUBE_Version`" ." -interleave
 
 # Clean up
 

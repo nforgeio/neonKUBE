@@ -266,7 +266,6 @@ function Invoke-CaptureStreams
 
         if (!$noOutput)
         {
-            Write-Stdout "-----------------------------------------------------------"
             Write-Stdout "RUN: $command"
             Write-Stdout
 
