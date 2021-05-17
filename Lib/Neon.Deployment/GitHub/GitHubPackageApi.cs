@@ -58,12 +58,15 @@ namespace Neon.Deployment
     // We'll replace this hack once GitHub as a fully functional REST API for this.
 
     /// <summary>
-    /// Implments GitHub packages operations.
+    /// Implements GitHub Packages operations.
     /// </summary>
     public class GitHubPackageApi
     {
         private ProfileClient   profileClient = new ProfileClient();
 
+        /// <summary>
+        /// Internal constructor.
+        /// </summary>
         internal GitHubPackageApi()
         {
             GitHub.GetCredentials();
@@ -106,7 +109,7 @@ namespace Neon.Deployment
             var args = new Dictionary<string, string>();
 
             args["operation"]     = "Package-List";
-            args["pat"]           = GitHub.GitHubPat;
+            args["pat"]           = GitHub.AccessToken;
             args["username"]      = GitHub.Credentials.Username;
             args["password"]      = GitHub.Credentials.Password;
             args["organization"]  = organization;
@@ -152,7 +155,7 @@ namespace Neon.Deployment
             var args = new Dictionary<string, string>();
 
             args["operation"]     = "Package-Delete";
-            args["pat"]           = GitHub.GitHubPat;
+            args["pat"]           = GitHub.AccessToken;
             args["username"]      = GitHub.Credentials.Username;
             args["password"]      = GitHub.Credentials.Password;
             args["organization"]  = organization;
@@ -201,7 +204,7 @@ namespace Neon.Deployment
             var args = new Dictionary<string, string>();
 
             args["operation"]     = "Package-SetVisibility";
-            args["pat"]           = GitHub.GitHubPat;
+            args["pat"]           = GitHub.AccessToken;
             args["username"]      = GitHub.Credentials.Username;
             args["password"]      = GitHub.Credentials.Password;
             args["organization"]  = organization;

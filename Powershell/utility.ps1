@@ -519,3 +519,20 @@ function Logout-Docker
 
     # $hack(jefflill): Do we care about checking the exit code here?
 }
+
+#------------------------------------------------------------------------------
+# Checks to see of any Visual Studio instances are running and throws an exception
+# when there are instances.  We see somewhat random build problems when Visual
+# Studio has the solution open so we generally call this in build scripts to
+# avoid problems.
+
+function Ensure-VisualStudioNotRunning
+{
+    Get-Process -Name devenv -ErrorAction SilentlyContinue | Out-Null
+
+    if ($?)
+    {
+        throw "ERROR: Please close all Visual Studio instances before building."
+    }
+
+}

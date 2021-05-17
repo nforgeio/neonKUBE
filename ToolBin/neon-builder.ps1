@@ -159,12 +159,7 @@ try
     # We see somewhat random build problems when Visual Studio has the solution open,
     # so have the user close Visual Studio instances first.
 
-    Get-Process -Name devenv -ErrorAction SilentlyContinue | Out-Null
-
-    if ($?)
-    {
-        throw "ERROR: Please close all Visual Studio instances before building."
-    }
+    Ensure-VisualStudioNotRunning
 
     # Build the solution.
 
