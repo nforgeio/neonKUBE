@@ -53,7 +53,7 @@ function Publish
         [string]$Path
     )
 
-    Set-Location "$Path"
+    Push-Location "$Path"
 
     if ($allVersions)
     {
@@ -77,6 +77,8 @@ function Publish
             ./publish.ps1
         }
     }
+
+    Pop-Location
 }
 
 try
