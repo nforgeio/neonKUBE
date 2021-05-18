@@ -55,30 +55,35 @@ function Publish
 
     Push-Cwd "$Path"
 
-    if ($allVersions)
+    try
     {
-        if ($nopush)
+        if ($allVersions)
         {
-            ./publish.ps1 -all -nopush
+            if ($nopush)
+            {
+                ./publish.ps1 -all -nopush
+            }
+            else
+            {
+                ./publish.ps1 -all
+            }
         }
         else
         {
-            ./publish.ps1 -all
+            if ($nopush)
+            {
+                ./publish.ps1 -nopush
+            }
+            else
+            {
+                ./publish.ps1
+            }
         }
     }
-    else
+    finally
     {
-        if ($nopush)
-        {
-            ./publish.ps1 -nopush
-        }
-        else
-        {
-            ./publish.ps1
-        }
+        Pop-Cwd
     }
-
-    Pop-Cwd
 }
 
 try
