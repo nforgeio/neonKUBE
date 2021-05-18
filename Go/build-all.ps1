@@ -25,7 +25,6 @@
 #                             either "Debug" or "Release".  This defaults
 #                             to "Debug".
 
-
 param 
 (
     [parameter(Mandatory=$false)][string] $buildConfig = "Debug"
@@ -33,7 +32,7 @@ param
 
 # Import the global solution include file.
 
-. $env:NF_ROOT/Powershell/includes.ps1\
+. $env:NF_ROOT/Powershell/includes.ps1
 
 # Perform the build
 
