@@ -1,3 +1,4 @@
+#Requires -Version 7.0 -RunAsAdministrator
 #------------------------------------------------------------------------------
 # FILE:         build-temporal-proxy.ps1
 # CONTRIBUTOR:  John C Burns
