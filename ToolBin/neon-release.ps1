@@ -37,7 +37,7 @@ if ($all)
     $codedoc = $true
 }
 
-# Import the global project include file.
+# Import the global solution include file.
 
 . $env:NF_ROOT/Powershell/includes.ps1
 

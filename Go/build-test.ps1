@@ -20,13 +20,17 @@
 #
 # USAGE: pwsh -file build-test.ps1
 
+# Import the global solution include file.
+
+. $env:NF_ROOT/Powershell/includes.ps1
+
 $env:GO111MODULE = "on"
 $projectPath     = "$env:NF_ROOT\Go\test"
 $buildPath       = "$env:NF_BUILD\go-test"
 $logPath         = "$buildPath\build.log"
-$orgDirectory    = Get-Location
+$orgDirectory    = Get-Cwd
 
-Set-Location $projectPath
+Set-Cwd $projectPath
 
 # Ensure that the build output folder exist.
 
@@ -49,13 +53,13 @@ if (!(test-path $outputPath))
 
 # Common Cadence client configuration
 
-Set-Location "$projectPath\cadence"
+Set-Cwd "$projectPath\cadence"
 cp config.yaml "$outputPath\config.yaml"
 
 #----------------------------------------------------------
 # cwf-args
 
-Set-Location "$projectPath\cadence\cwf-args"
+Set-Cwd "$projectPath\cadence\cwf-args"
 
 echo "Building cwf-args" > "$logPath"
 
@@ -69,13 +73,13 @@ $exitCode = $lastExitCode
 if ($exitCode -ne 0)
 {
     Write-Error "*** ERROR: [go-test] WINDOWS build failed.  Check build logs: $logPath"
-    Set-Location $orgDirectory
+    Set-Cwd $orgDirectory
     exit $exitCode
 }
 
 echo "Build success" >> "$logPath" 2>&1
 
-Set-Location $orgDirectory
+Set-Cwd $orgDirectory
 
 #==============================================================================
 # BUILD TEMPORAL TESTS
@@ -93,13 +97,13 @@ if (!(test-path $outputPath))
 
 # Common Cadence client configuration
 
-Set-Location "$projectPath\temporal"
+Set-Cwd "$projectPath\temporal"
 cp config.yaml "$outputPath\config.yaml"
 
 #----------------------------------------------------------
 # cwf-args
 
-Set-Location "$projectPath\temporal\twf-args"
+Set-Cwd "$projectPath\temporal\twf-args"
 
 echo "Building twf-args" > "$logPath"
 
@@ -113,19 +117,10 @@ $exitCode = $lastExitCode
 if ($exitCode -ne 0)
 {
     Write-Error "*** ERROR: [go-test] WINDOWS build failed.  Check build logs: $logPath"
-    Set-Location $orgDirectory
+    Set-Cwd $orgDirectory
     exit $exitCode
 }
 
 echo "Build success" >> "$logPath" 2>&1
 
-Set-Location $orgDirectory
-
-
-#-----------------------------------------------------------
-# Misc repo config code: (archiving this just in case)
-#
-# set GO111MODULE=on
-# go get go.uber.org/cadence
-# go build -o C:\src\neonKUBE\Build\go-test\cadence\cwf-args.exe .
-# cp config.yaml C:\src\neonKUBE\Build\go-test\cadence\config.yaml
+Set-Cwd $orgDirectory

@@ -19,7 +19,7 @@
 # Publishes RELEASE builds of the NeonForge Nuget packages to the
 # local file system and public Nuget.org repositories.
 
-# Import the global project include file.
+# Import the global solution include file.
 
 . $env:NF_ROOT/Powershell/includes.ps1
 

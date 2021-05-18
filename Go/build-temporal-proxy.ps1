@@ -20,13 +20,17 @@
 #
 # USAGE: pwsh -file build-temporal-proxy.ps1
 
+# Import the global solution include file.
+
+. $env:NF_ROOT/Powershell/includes.ps1
+
 $env:GOPATH   = "$env:NF_ROOT\Go"
 $buildPath    = "$env:NF_BUILD"
 $projectPath  = "$env:GOPATH\src\temporal-proxy"
 $logPath      = "$buildPath\build-temporal-proxy.log"
 $orgDirectory = Get-Location
 
-Set-Location "$projectpath\cmd\temporalproxy"
+Set-Cwd "$projectpath\cmd\temporalproxy"
 
 # Ensure that the build output folder exists.
 if (!(test-path $buildPath))
@@ -35,7 +39,7 @@ if (!(test-path $buildPath))
 }
 
 # Change to project path
-Set-Location $projectPath
+Set-Cwd $projectPath
 
 # Build the WINDOWS binary
 $env:GOOS	= "windows"
@@ -47,7 +51,7 @@ $exitCode = $lastExitCode
 if ($exitCode -ne 0)
 {
     Write-Error "*** ERROR[0]: [temporal-proxy] WINDOWS build failed.  Check build logs: $logPath"
-    Set-Location $orgDirectory
+    Set-Cwd $orgDirectory
     exit $exitCode
 }
 
@@ -61,7 +65,7 @@ $exitCode = $lastExitCode
 if ($exitCode -ne 0)
 {
     Write-Error "*** ERROR[1]: [temporal-proxy] LINUX build failed.  Check build logs: $logPath"
-    Set-Location $orgDirectory
+    Set-Cwd $orgDirectory
     exit $exitCode
 }
 
@@ -75,7 +79,7 @@ $exitCode = $lastExitCode
 if ($exitCode -ne 0)
 {
     Write-Error "*** ERROR[2]: [temporal-proxy] OSX build failed.  Check build logs: $logPath"
-    Set-Location $orgDirectory
+    Set-Cwd $orgDirectory
     exit $exitCode
 }
 
@@ -87,4 +91,4 @@ neon-build gzip "$buildPath\temporal-proxy.osx"     "$neonTemporalResourceFolder
 neon-build gzip "$buildPath\temporal-proxy.win.exe" "$neonTemporalResourceFolder\temporal-proxy.win.exe.gz" > "$logPath" 2>&1
 
 # Return to the original directory
-Set-Location $orgDirectory
+Set-Cwd $orgDirectory

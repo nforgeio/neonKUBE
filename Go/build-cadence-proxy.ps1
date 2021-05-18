@@ -20,6 +20,10 @@
 #
 # USAGE: pwsh -file build-cadence-proxy.ps1
 
+# Import the global solution include file.
+
+. $env:NF_ROOT/Powershell/includes.ps1
+
 $env:GOPATH  = "$env:NF_ROOT\Go"
 $buildPath   = "$env:NF_BUILD"
 $projectPath = "$env:GOPATH\src\github.com\cadence-proxy"
@@ -34,7 +38,7 @@ if (!(test-path $buildPath))
 }
 
 # Change to project path
-Set-Location $projectPath
+Push-Cwd $projectPath
 
 # Build the WINDOWS binary
 $env:GOOS	= "windows"
