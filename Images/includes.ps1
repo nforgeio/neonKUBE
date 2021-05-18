@@ -30,10 +30,10 @@
 # Important source code paths.
 
 $NF_ROOT     = $env:NF_ROOT
-$nfImages   = "$NF_ROOT\\Images"
-$nfLib      = "$NF_ROOT\\Lib"
-$nfServices = "$NF_ROOT\\Services"
-$nfTools    = "$NF_ROOT\\Tools"
+$nfImages   = "$NF_ROOT\Images"
+$nfLib      = "$NF_ROOT\Lib"
+$nfServices = "$NF_ROOT\Services"
+$nfTools    = "$NF_ROOT\Tools"
 
 #------------------------------------------------------------------------------
 # Global constants.

@@ -123,25 +123,25 @@ try
 
     if ($other)
     {
-        Publish "$image_root\\nats"
-        Publish "$image_root\\nats-streaming"
-        Publish "$image_root\\couchbase-dev"
-        Publish "$image_root\\yugabyte"
+        Publish "$image_root\nats"
+        Publish "$image_root\nats-streaming"
+        Publish "$image_root\couchbase-dev"
+        Publish "$image_root\yugabyte"
     }
 
     if ($test)
     {
-        Publish "$image_root\\test"
-        Publish "$image_root\\test-cadence"
-        Publish "$image_root\\test-temporal"
+        Publish "$image_root\test"
+        Publish "$image_root\test-cadence"
+        Publish "$image_root\test-temporal"
     }
 
     if ($services)
     {
-        Publish "$image_root\\neon-allow-testing"
-        Publish "$image_root\\neon-cluster-operator"
-        Publish "$image_root\\neon-setup-grafana"
-        Publish "$image_root\\neon-setup-harbor"
+        Publish "$image_root\neon-allow-testing"
+        Publish "$image_root\neon-cluster-operator"
+        Publish "$image_root\neon-setup-grafana"
+        Publish "$image_root\neon-setup-harbor"
     }
 }
 catch

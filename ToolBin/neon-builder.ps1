@@ -276,6 +276,11 @@ try
         ThrowOnExitCode
     }
 }
+catch
+{
+    Write-ActionException $_
+    exit 1
+}
 finally
 {
     Pop-Cwd

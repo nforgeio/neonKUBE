@@ -35,7 +35,7 @@ DeleteFolder bin
 mkdir bin
 ThrowOnExitCode
 
-dotnet publish "$nfServices\\$appname\\$appname.csproj" -c Release -o "$pwd\bin" 
+dotnet publish "$nfServices\$appname\$appname.csproj" -c Release -o "$pwd\bin" 
 ThrowOnExitCode
 
 # Split the build binaries into [__app] (application) and [__dep] dependency subfolders
