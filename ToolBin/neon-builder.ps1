@@ -36,6 +36,12 @@ param
     [switch]$debug   = $false   # Optionally specify DEBUG build config
 )
 
+# Import the global solution include file.
+
+. $env:NF_ROOT/Powershell/includes.ps1
+
+# Initialize
+
 if ($all)
 {
     $tools   = $true
@@ -50,12 +56,6 @@ else
 {
     $config = "Release"
 }
-
-# Import the global solution include file.
-
-. $env:NF_ROOT/Powershell/includes.ps1
-
-# Initialize
 
 $msbuild     = "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\amd64\MSBuild.exe"
 $nfRoot      = "$env:NF_ROOT"
