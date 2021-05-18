@@ -37,6 +37,9 @@ $PSDefaultParameterValues['*:ErrorAction'] = 'Stop'
 $scriptPath   = $MyInvocation.MyCommand.Path
 $scriptFolder = [System.IO.Path]::GetDirectoryName($scriptPath)
 
+# We need to use Push/Pop-Location here because the Push/Pop-Cwd functions
+# haven't been defined yet.
+
 Push-Cwd $scriptFolder
 
 . ./error-handling
@@ -47,3 +50,7 @@ Push-Cwd $scriptFolder
 . ./github.ps1
 
 Pop-Cwd
+
+# Ensure that the process and runspace current directories are aligned.
+
+Get-Cwd

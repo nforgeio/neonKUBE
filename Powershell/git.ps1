@@ -38,7 +38,7 @@ function GitBranch
         [string]$gitRepoPath
     )
 
-    Push-Cwd
+    Push-Location
     Set-Cwd $gitRepoPath
 
     $branch = git rev-parse --abbrev-ref HEAD
