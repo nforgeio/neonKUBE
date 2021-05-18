@@ -53,7 +53,7 @@ function Publish
         [string]$Path
     )
 
-    Push-Location "$Path"
+    Push-Cwd "$Path"
 
     if ($allVersions)
     {
@@ -78,7 +78,7 @@ function Publish
         }
     }
 
-    Pop-Location
+    Pop-Cwd
 }
 
 try

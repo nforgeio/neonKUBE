@@ -534,5 +534,91 @@ function Ensure-VisualStudioNotRunning
     {
         throw "ERROR: Please close all Visual Studio instances before building."
     }
+}
 
+#==============================================================================
+# Location vs. Cwd (current working directory)
+#
+# The standard Set-Location, Push-Location, Pop-Location cmdlets don't really
+# work like you'd expect for a normal scripting language.  Changing the current
+# directory via these doesn't actually change the .NET (process) working directory:
+# [Environment.CurrentDirectory].
+#
+# This is documented but is yet another unexpected Powershell quirk.  The
+# rationale is that Powershell implements parallel processing via runspaces
+# which seems to combine features of threads and processes.
+#
+# Our scripts are currently single threaded and since we're referencing .NET
+# directly in a lot of our scripts (because we know .NET and the library classes
+# seem to be a lot more predictable than the equivalent cmdlets), we're going to
+# use the functions below to ensure that the current Powershell and .NET
+# directories stay aligned.
+#
+# ==============================================================
+# WARNING! THESE FUNCTIONS WILL NOT WORK WITH MULTIPLE RUNSPACES
+# ==============================================================
+#
+# https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.management/pop-location?view=powershell-7.1
+
+#------------------------------------------------------------------------------
+# Returns the current directory, ensuring that the process directory matches the
+# Powershell directory.
+#
+# RETURNS:
+#
+# The current directory.
+
+function Get-Cwd
+{
+    $cwd                                   = Get-Location
+    [System.Environment]::CurrentDirectory = $cwd
+
+    return $cwd
+}
+
+#------------------------------------------------------------------------------
+# Sets the current directory.
+#
+# ARGUMENTS:
+#
+#   path        - the new directory path
+
+function Set-Cwd
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$path
+    )
+
+    Set-Location $path
+    [System.Environment]::CurrentDirectory = $path
+}
+
+#------------------------------------------------------------------------------
+# Pushes the current directory onto an internal stack and sets a new current directory.
+#
+# ARGUMENTS:
+#
+#   path        - the new directory path
+
+function Push-Cwd
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$path
+    )
+
+    Push-Location $path
+    [System.Environment]::CurrentDirectory = $path
+}
+
+#------------------------------------------------------------------------------
+# Restores the current directory from an internal stack.
+
+function Pop-Cwd
+{
+    Pop-Location
+    [System.Environment]::CurrentDirectory = Get-Location
 }

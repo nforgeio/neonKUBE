@@ -37,7 +37,7 @@ $PSDefaultParameterValues['*:ErrorAction'] = 'Stop'
 $scriptPath   = $MyInvocation.MyCommand.Path
 $scriptFolder = [System.IO.Path]::GetDirectoryName($scriptPath)
 
-Push-Location $scriptFolder
+Push-Cwd $scriptFolder
 
 . ./error-handling
 . ./utility.ps1
@@ -46,4 +46,4 @@ Push-Location $scriptFolder
 . ./deployment.ps1
 . ./github.ps1
 
-Pop-Location
+Pop-Cwd

@@ -152,7 +152,7 @@ function PublishCore
 #------------------------------------------------------------------------------
 # Perform the operation.
 
-Push-Location $nfRoot
+Push-Cwd $nfRoot
 
 try
 {
@@ -278,5 +278,5 @@ try
 }
 finally
 {
-    Pop-Location
+    Pop-Cwd
 }
