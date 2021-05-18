@@ -41,8 +41,8 @@ $env:NF_GOROOT = "$env:NF_ROOT\Go"
 
 Push-Cwd $env:NF_GOROOT
 
-. ./build-cadence-proxy.ps1 -buildConfig $buildConfig
-. ./build-temporal-proxy.ps1 -buildConfig $buildConfig
-. ./build-test.ps1
+Start-Process -FilePath pwsh.exe -ArgumentList "./build-cadence-proxy.ps1", "-buildConfig $buildConfig" -Wait -NoNewWindow
+Start-Process -FilePath pwsh.exe -ArgumentList "./build-temporal-proxy.ps1", "-buildConfig $buildConfig" -Wait -NoNewWindow
+Start-Process -FilePath pwsh.exe -ArgumentList "./build-test.ps1" -Wait -NoNewWindow
 
 Pop-Cwd
