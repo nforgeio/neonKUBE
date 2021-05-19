@@ -137,7 +137,11 @@ namespace TestTemporal
             // We're going to establish two simultaneous client connections, 
             // register a workflow on each, and then verify that these workflows work.
 
-            using (var client1 = await TemporalClient.ConnectAsync(fixture.Settings))
+            var client1Settings = fixture.Settings.Clone();
+
+            client1Settings.TaskQueue = "taskqueue-1";
+
+            using (var client1 = await TemporalClient.ConnectAsync(client1Settings))
             {
                 var worker1 = await client1.NewWorkerAsync();
 
@@ -148,11 +152,11 @@ namespace TestTemporal
 
                 client2Settings.TaskQueue = "taskqueue-2";
 
-                using (var client2 = await TemporalClient.ConnectAsync(fixture.Settings))
+                using (var client2 = await TemporalClient.ConnectAsync(client2Settings))
                 {
-                    var worker2 = await client1.NewWorkerAsync();
+                    var worker2 = await client2.NewWorkerAsync();
 
-                    await worker2.RegisterWorkflowAsync<WorkflowWithResult1>();
+                    await worker2.RegisterWorkflowAsync<WorkflowWithResult2>();
                     await worker2.StartAsync();
 
                     var options1 = new StartWorkflowOptions()
@@ -183,7 +187,13 @@ namespace TestTemporal
             // We're going to establish two successive client connections
             // and verify that these work.
 
-            using (var client = await TemporalClient.ConnectAsync(fixture.Settings))
+            var settings1 = fixture.Settings.Clone();
+            var settings2 = fixture.Settings.Clone();
+
+            settings1.TaskQueue = "taskqueue-3";
+            settings2.TaskQueue = "taskqueue-4";
+
+            using (var client = await TemporalClient.ConnectAsync(settings1))
             {
                 using (var worker = await client.NewWorkerAsync())
                 {
@@ -196,7 +206,7 @@ namespace TestTemporal
                 }
             }
 
-            using (var client = await TemporalClient.ConnectAsync(fixture.Settings))
+            using (var client = await TemporalClient.ConnectAsync(settings2))
             {
                 using (var worker = await client.NewWorkerAsync())
                 {
@@ -407,9 +417,9 @@ namespace TestTemporal
 
                 // Initialize the worker clients.
 
-                clients.Add(workerClient1 = await TemporalClient.ConnectAsync(fixture.Settings));
-                clients.Add(workerClient2 = await TemporalClient.ConnectAsync(fixture.Settings));
-                clients.Add(workerClient3 = await TemporalClient.ConnectAsync(fixture.Settings));
+                clients.Add(workerClient1 = await TemporalClient.ConnectAsync(settings1));
+                clients.Add(workerClient2 = await TemporalClient.ConnectAsync(settings2));
+                clients.Add(workerClient3 = await TemporalClient.ConnectAsync(settings3));
 
                 // Initialize and start the workers.
 
@@ -419,13 +429,13 @@ namespace TestTemporal
                 await worker1.RegisterWorkflowAsync<WorkflowWorker1>();
                 await worker1.StartAsync();
 
-                var worker2 = await workerClient1.NewWorkerAsync();
+                var worker2 = await workerClient2.NewWorkerAsync();
 
                 await worker2.RegisterActivityAsync<ActivityWorker2>();
                 await worker2.RegisterWorkflowAsync<WorkflowWorker2>();
                 await worker2.StartAsync();
 
-                var worker3 = await workerClient1.NewWorkerAsync();
+                var worker3 = await workerClient3.NewWorkerAsync();
 
                 await worker3.RegisterActivityAsync<ActivityWorker3>();
                 await worker3.RegisterWorkflowAsync<WorkflowWorker3>();
