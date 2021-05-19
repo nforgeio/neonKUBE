@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"go.temporal.io/api/enums/v1"
+	"go.temporal.io/api/serviceerror"
 	"go.temporal.io/api/workflowservice/v1"
 	"go.temporal.io/sdk/activity"
 	"go.temporal.io/sdk/client"
@@ -357,7 +358,11 @@ func (helper *Helper) DescribeNamespace(ctx context.Context, namespace string) (
 func (helper *Helper) RegisterNamespace(ctx context.Context, request *workflowservice.RegisterNamespaceRequest) error {
 	err := helper.NamespaceClient.Register(ctx, request)
 	if err != nil {
-		return err
+		if _, ok := err.(*serviceerror.NamespaceAlreadyExists); !ok {
+			return err
+		}
+
+		helper.Logger.Debug("namespace already exists", zap.String("Namespace", request.GetName()))
 	}
 
 	helper.Logger.Info("namespace successfully registered", zap.String("Namespace Name", request.GetName()))
