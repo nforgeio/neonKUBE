@@ -89,7 +89,7 @@ function Load-Assembly
 }
 
 #------------------------------------------------------------------------------
-# Writes text to standard output using Write-Information as a bit of a hack.
+# Writes text to standard output using [Console.WriteLine] as a bit of a hack.
 # 
 # ARGUMENTS:
 #
@@ -110,7 +110,7 @@ function Write-Stdout
         [string]$text
     )
 
-    Write-Information $text -InformationAction Continue
+    [System.Console]::WriteLine($text)
 }
 
 #------------------------------------------------------------------------------
