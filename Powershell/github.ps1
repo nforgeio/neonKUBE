@@ -32,13 +32,13 @@ Import-Module Microsoft.PowerShell.Utility
 $scriptPath   = $MyInvocation.MyCommand.Path
 $scriptFolder = [System.IO.Path]::GetDirectoryName($scriptPath)
 
-Push-Location $scriptFolder
+Push-Cwd $scriptFolder
 
 . ./error-handling.ps1
 . ./utility.ps1
 . ./deployment.ps1
 
-Pop-Location
+Pop-Cwd
 
 #------------------------------------------------------------------------------
 # Call this after native commands to check for non-zero exit codes.
@@ -93,7 +93,7 @@ function Get-GitHubUser
     #     x Git operations for github.com configured to use https protocol.
     #     x Token: *******************
 
-    $result    = Invoke-CaptureStreams "gh auth status"
+    $result    = $result = Invoke-CaptureStreams "gh auth status"
     $stderr    = $result.stderr
     $posStart  = $stderr.IndexOf("github.com as")
     $posStart += "github.com as".Length
@@ -182,7 +182,7 @@ function New-GitHubIssue
             # Query for any open issues authored by the authenticated user and
             # look for the first one that has the same title (if one exists).
 
-            $result      = Invoke-CaptureStreams "gh --repo $repo issue list --author $user --state open --label $appendLabel --json title,number --limit 1000"
+            $result      = $result = Invoke-CaptureStreams "gh --repo $repo issue list --author $user --state open --label $appendLabel --json title,number --limit 1000"
             $json        = $result.stdout
             $list        = $(ConvertFrom-Json $json -AsHashTable)
             $issueNumber = -1
@@ -460,8 +460,9 @@ function Escape-ActionString
 #
 # ARGUMENTS:
 #
-#   text    - the string being written or $null to write an empty line.
-#   color   - optionally specifies the text color (one of: 'red' or 'yellow')
+#   text        - the string being written or $null to write an empty line.
+#   color       - optionally specifies the text color (one of: 'red' or 'yellow')
+#   noEscape    - optional skip escaping the output string
 
 function Write-ActionOutput
 {
@@ -470,7 +471,9 @@ function Write-ActionOutput
         [Parameter(Position=0, Mandatory=$false)]
         [string]$text = $null,
         [Parameter(Position=1, Mandatory=$false)]
-        [string]$color = $null
+        [string]$color = $null,
+        [Parameter(Position=2, Mandatory=$false)]
+        [switch]$noEscape = $false
     )
 
     if ($text -eq $null)
@@ -478,7 +481,10 @@ function Write-ActionOutput
         $text = ""
     }
 
-    $text = Escape-ActionString $text
+    if (!$noEscape)
+    {
+        $text = Escape-ActionString $text
+    }
 
     if (![System.String]::IsNullOrEmpty($text))
     {
@@ -586,16 +592,19 @@ function Write-ActionWarning
 # ARGUMENTS:
 #
 #   message     - the message
+#   noEscape    - optionally skips escaping the output
 
 function Write-ActionError
 {
     [CmdletBinding()]
     param (
         [Parameter(Position=0, Mandatory=$true)]
-        [string]$message
+        [string]$message,
+        [Parameter(Position=2, Mandatory=$false)]
+        [switch]$noEscape = $false
     )
 
-    Write-ActionOutput $message "red"
+    Write-ActionOutput $message "red" -noEscape:$noEscape
 }
 
 #------------------------------------------------------------------------------
@@ -640,9 +649,9 @@ function Write-ActionException
         $error
     )
 
-    Write-ActionError "EXCEPTION: $error"
+    Write-ActionError "EXCEPTION: $error" -noEscape:$true
     Write-ActionError "-------------------------------------------"
-    $_.Exception | Format-List -force
+    $error_.Exception | Format-List -force
 }
 
 #------------------------------------------------------------------------------
@@ -981,7 +990,7 @@ function Invoke-ActionWorkflow
 
         if ([System.String]::IsNullOrEmpty($inputJson))
         {
-            Invoke-CaptureStreams "gh --repo $repo workflow run $workflow"
+            $result = Invoke-CaptureStreams "gh --repo $repo workflow run $workflow"
         }
         else
         {
@@ -995,7 +1004,7 @@ function Invoke-ActionWorkflow
 
             try
             {
-                Invoke-CaptureStreams "gh --repo $repo workflow run $workflow --ref $branch --json < `"$tempInputPath`""
+                $result = Invoke-CaptureStreams "gh --repo $repo workflow run $workflow --ref $branch --json < `"$tempInputPath`""
             }
             finally
             {

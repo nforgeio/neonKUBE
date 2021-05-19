@@ -147,5 +147,21 @@ namespace Neon.Deployment
 
             ExecuteSafe(args.ToArray());
         }
+
+        /// <summary>
+        /// Downloads a file from S3.
+        /// </summary>
+        /// <param name="sourceUri">
+        /// The source S3 URI.  This may be either an <b>s3://...</b> or 
+        /// <b>https://...</b> URI that references to an S3 bucket.=
+        /// </param>
+        /// <param name="targetPath">The target file path.</param>
+        public static void S3Download(string sourceUri, string targetPath)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(sourceUri), nameof(sourceUri));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(targetPath), nameof(targetPath));
+
+            ExecuteSafe("s3", "cp", NetHelper.ToAwsS3Uri(sourceUri), targetPath);
+        }
     }
 }

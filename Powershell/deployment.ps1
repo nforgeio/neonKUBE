@@ -30,12 +30,12 @@
 $scriptPath   = $MyInvocation.MyCommand.Path
 $scriptFolder = [System.IO.Path]::GetDirectoryName($scriptPath)
 
-Push-Location $scriptFolder
+Push-Cwd $scriptFolder
 
 . ./error-handling.ps1
 . ./utility.ps1
 
-Pop-Location
+Pop-Cwd
 
 # Load these assemblies from the [neon-assistant] installation folder
 # to ensure we'll be compatible.
@@ -262,8 +262,7 @@ function Remove-GitHub-Container
         [string]$nameOrPattern
     )
 
-    $github = New-Object "Neon.Deployment.GitHub"
-    $github.Packages.Delete($organization, $nameOrPattern, [Neon.Deployment.GitHubPackageType]::Container)    
+    [Neon.Deployment.GitHub]::Packages.Delete($organization, $nameOrPattern, [Neon.Deployment.GitHubPackageType]::Container)    
 }
 
 #------------------------------------------------------------------------------

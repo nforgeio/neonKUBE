@@ -30,7 +30,7 @@ param
 
 #----------------------------------------------------------
 # Global Includes
-$image_root = "$env:NF_ROOT\\Images"
+$image_root = "$env:NF_ROOT\Images"
 . $image_root/includes.ps1
 #----------------------------------------------------------
 
@@ -49,12 +49,12 @@ function Build
 	# Build and publish the images.
 
 	. ./build.ps1 -registry $registry -version $version -tag $tag
-    PushImage "${registry}:$tag"
+    PushImage "${registry}:${tag}"
 
 	if ($latest)
 	{
-		Exec { docker tag "${registry}:$tag" "${registry}:latest" }
-		PushImage "${registry}:latest"
+		$result = Invoke-CaptureStreams "docker tag ${registry}:${tag} ${registry}:latest" -interleave
+		PushImage ${registry}:latest
 	}
 }
 

@@ -81,6 +81,8 @@ Follow the steps below to configure a development or test workstation:
 
     * You'll need to create a DockerHub account if you don't already have one.
 
+    * **IMPORTANT!** BuildKit causes random problems so be sure to disable it by setting **buildkit=false** in **Docker/Settings/Docker Engine**
+
 12. **Clone** the [https://github.com/nforgeio/neonKUBE](https://github.com/nforgeio/neonKUBE) repository to your workstation:
 
     * **IMPORTANT:** All neonFORGE related repositories must be cloned within the same parent directory and their folder names cannot be changed.

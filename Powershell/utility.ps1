@@ -25,9 +25,23 @@ function Request-AdminPermissions
     if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))
     {
         # Relaunch as an elevated process:
-        Start-Process powershell.exe "-file",('"{0}"' -f $MyInvocation.MyCommand.Path) -Verb RunAs
+        Start-Process pwsh.exe "-file",('"{0}"' -f $MyInvocation.MyCommand.Path) -Verb RunAs
         exit
     }
+}
+
+#------------------------------------------------------------------------------
+# Determines whether the current script is running as part of CI or other automation.
+#
+# RETURNS:
+#
+# $true when running under CI
+
+function IsCI
+{
+    # This is set by GutHub runners.
+
+    return $env:CI -eq "true"
 }
 
 #------------------------------------------------------------------------------
@@ -75,6 +89,31 @@ function Load-Assembly
 }
 
 #------------------------------------------------------------------------------
+# Writes text to standard output using [Console.WriteLine] as a bit of a hack.
+# 
+# ARGUMENTS:
+#
+#   text    - optionally passes the line of text to Write
+#
+# REMARKS:
+#
+# We're using this to workaround the fact that Write-Output doesn't do what
+# non-Powershell developers might expect, especially when called within
+# functions where Write-Output actually adds to the result retuned by the
+# function due to Powershell structured streams.
+
+function Write-Stdout
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$false)]
+        [string]$text
+    )
+
+    [System.Console]::WriteLine($text)
+}
+
+#------------------------------------------------------------------------------
 # Writes information about a Powershell action exception to the output.
 #
 # ARGUMENTS:
@@ -90,9 +129,9 @@ function Write-Exception
         $error
     )
 
-    Write-Error "EXCEPTION: $error"
-    Write-Error "-------------------------------------------"
-    $_.Exception | Format-List -force
+    Write-Stdout "EXCEPTION: $error"
+    Write-Stdout "-------------------------------------------"
+    Write-Stdout $($error.Exception | Format-List -force)
 }
 
 #------------------------------------------------------------------------------
@@ -131,6 +170,8 @@ function EscapeDoubleQuotes
 #   command     - program to run with any arguments
 #   noCheck     - optionally disable non-zero exit code checks
 #   interleave  - optionally combines the STDERR into STDOUT
+#   noOutput    - optionally disables writing STDOUT and STDERR
+#                 to the output
 #
 # RETURNS:
 #
@@ -139,6 +180,7 @@ function EscapeDoubleQuotes
 #       exitcode    - the command's integer exit code
 #       stdout      - the captured standard output
 #       stderr      - the captured standard error
+#       alltext     - combined standard input and output
 #
 # REMARKS:
 #
@@ -170,12 +212,14 @@ function Invoke-CaptureStreams
         [Parameter(Mandatory=$false)]
         [switch]$noCheck = $false,
         [Parameter(Mandatory=$false)]
-        [switch]$interleave = $false
+        [switch]$interleave = $false,
+        [Parameter(Mandatory=$false)]
+        [switch]$noOutput = $false
     )
 
     if ([System.String]::IsNullOrEmpty($command))
     {
-        throw "Invalid command."
+        throw "Empty command."
     }
 
     $guid       = [System.Guid]::NewGuid().ToString("d")
@@ -218,6 +262,23 @@ function Invoke-CaptureStreams
         $result.exitcode = $exitCode
         $result.stdout   = $stdout
         $result.stderr   = $stderr
+        $result.alltext  = "$stdout`r`n$stderr"
+
+        if (!$noOutput)
+        {
+            Write-Stdout
+            Write-Stdout "RUN: $command"
+            Write-Stdout
+
+            if ($interleave)
+            {
+                Write-Stdout $result.stdout
+            }
+            else
+            {
+                Write-Stdout $result.alltext
+            }
+        }
 
         if (!$noCheck -and $exitCode -ne 0)
         {
@@ -225,11 +286,13 @@ function Invoke-CaptureStreams
             $stdout   = $result.stdout
             $stderr   = $result.stderr
 
-            throw "Invoke-CaptureStreams Failed: [exitcode=$exitCode]`nSTDERR:`n$stderr`nSTDOUT:`n$stdout"
+            throw "FAILED: $command`r`n[exitcode=$exitCode]`r`nSTDERR:`n$stderr`r`nSTDOUT:`r`n$stdout"
         }
     }
     finally
     {
+        # Delete the temporary output files
+
         if ([System.IO.File]::Exists($stdoutPath))
         {
             [System.IO.File]::Delete($stdoutPath)
@@ -310,6 +373,7 @@ function Log-DebugLine
     $path = [System.IO.Path]::Combine($folder, "log.txt")
 
     [System.IO.File]::AppendAllText($path, $text + "`r`n")
+    Write-Stdout "$text >>>"
 }
 
 #------------------------------------------------------------------------------
@@ -382,8 +446,8 @@ function ConvertTo-Yaml
 #
 #   server              - the server endpoint, typically one of:
 #
-#       docker.io
 #       ghcr.io
+#       docker.io
 #
 #   loginCredentials    - Identifies the 1Password login to use, typically one of:
 #
@@ -398,11 +462,11 @@ function Login-Docker
         [Parameter(Position=0, Mandatory=$true)]
         [string]$server,
         [Parameter(Position=1, Mandatory=$true)]
-        [string]$loginCredentials
+        [string]$credentials
     )
 
-    $username = $(Get-SecretValue "$loginCredentials[username]")
-    $password = $(Get-SecretValue "$loginCredentials[password]")
+    $username = $(Get-SecretValue "$credentials[username]")
+    $password = $(Get-SecretValue "$credentials[password]")
     
     Write-Output $password | docker login $server -u $username --password-stdin
 
@@ -454,4 +518,107 @@ function Logout-Docker
     }
 
     # $hack(jefflill): Do we care about checking the exit code here?
+}
+
+#------------------------------------------------------------------------------
+# Checks to see of any Visual Studio instances are running and throws an exception
+# when there are instances.  We see somewhat random build problems when Visual
+# Studio has the solution open so we generally call this in build scripts to
+# avoid problems.
+
+function Ensure-VisualStudioNotRunning
+{
+    Get-Process -Name devenv -ErrorAction SilentlyContinue | Out-Null
+
+    if ($?)
+    {
+        throw "ERROR: Please close all Visual Studio instances before building."
+    }
+}
+
+#==============================================================================
+# Location vs. Cwd (current working directory)
+#
+# The standard Set-Location, Push-Location, Pop-Location cmdlets don't really
+# work like you'd expect for a normal scripting language.  Changing the current
+# directory via these doesn't actually change the .NET (process) working directory:
+# [Environment.CurrentDirectory].
+#
+# This is documented but is yet another unexpected Powershell quirk.  The
+# rationale is that Powershell implements parallel processing via runspaces
+# which seems to combine features of threads and processes.
+#
+# Our scripts are currently single threaded and since we're referencing .NET
+# directly in a lot of our scripts (because we know .NET and the library classes
+# seem to be a lot more predictable than the equivalent cmdlets), we're going to
+# use the functions below to ensure that the current Powershell and .NET
+# directories stay aligned.
+#
+# ==============================================================
+# WARNING! THESE FUNCTIONS WILL NOT WORK WITH MULTIPLE RUNSPACES
+# ==============================================================
+#
+# https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.management/pop-location?view=powershell-7.1
+
+#------------------------------------------------------------------------------
+# Returns the current directory, ensuring that the process directory matches the
+# Powershell directory.
+#
+# RETURNS:
+#
+# The current directory.
+
+function Get-Cwd
+{
+    $cwd                                   = Get-Location
+    [System.Environment]::CurrentDirectory = $cwd
+
+    return $cwd
+}
+
+#------------------------------------------------------------------------------
+# Sets the current directory.
+#
+# ARGUMENTS:
+#
+#   path        - the new directory path
+
+function Set-Cwd
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$path
+    )
+
+    Set-Location $path
+    [System.Environment]::CurrentDirectory = $path
+}
+
+#------------------------------------------------------------------------------
+# Pushes the current directory onto an internal stack and sets a new current directory.
+#
+# ARGUMENTS:
+#
+#   path        - the new directory path
+
+function Push-Cwd
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$path
+    )
+
+    Push-Location $path
+    [System.Environment]::CurrentDirectory = $path
+}
+
+#------------------------------------------------------------------------------
+# Restores the current directory from an internal stack.
+
+function Pop-Cwd
+{
+    Pop-Location
+    [System.Environment]::CurrentDirectory = Get-Location
 }

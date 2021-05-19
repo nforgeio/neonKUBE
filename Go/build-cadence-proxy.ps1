@@ -1,3 +1,4 @@
+#Requires -Version 7.0 -RunAsAdministrator
 #------------------------------------------------------------------------------
 # FILE:         build-cadence-proxy.ps1
 # CONTRIBUTOR:  John C Burns
@@ -20,13 +21,16 @@
 #
 # USAGE: pwsh -file build-cadence-proxy.ps1
 
-$env:GOPATH   = "$env:NF_ROOT\Go"
-$buildPath    = "$env:NF_BUILD"
-$projectPath  = "$env:GOPATH\src\github.com\cadence-proxy"
-$logPath      = "$buildPath\build-cadence-proxy.log"
-$orgDirectory = Get-Location
+# Import the global solution include file.
 
-Set-Location "$projectpath\cmd\cadenceproxy"
+. $env:NF_ROOT/Powershell/includes.ps1
+
+$env:GOPATH  = "$env:NF_ROOT\Go"
+$buildPath   = "$env:NF_BUILD"
+$projectPath = "$env:GOPATH\src\github.com\cadence-proxy"
+$logPath     = "$buildPath\build-cadence-proxy.log"
+
+Push-Cwd "$projectpath\cmd\cadenceproxy"
 
 # Ensure that the build output folder exists.
 if (!(test-path $buildPath))
@@ -35,7 +39,7 @@ if (!(test-path $buildPath))
 }
 
 # Change to project path
-Set-Location $projectPath
+Push-Cwd $projectPath
 
 # Build the WINDOWS binary
 $env:GOOS	= "windows"
@@ -47,7 +51,7 @@ $exitCode = $lastExitCode
 if ($exitCode -ne 0)
 {
     Write-Error "*** ERROR[0]: [cadence-proxy] WINDOWS build failed.  Check build logs: $logPath"
-    Set-Location $orgDirectory
+    Pop-Cwd
     exit $exitCode
 }
 
@@ -61,7 +65,7 @@ $exitCode = $lastExitCode
 if ($exitCode -ne 0)
 {
     Write-Error "*** ERROR[1]: [cadence-proxy] LINUX build failed.  Check build logs: $logPath"
-    Set-Location $orgDirectory
+    Pop-Cwd
     exit $exitCode
 }
 
@@ -75,7 +79,7 @@ $exitCode = $lastExitCode
 if ($exitCode -ne 0)
 {
     Write-Error "*** ERROR[2]: [cadence-proxy] OSX build failed.  Check build logs: $logPath"
-    Set-Location $orgDirectory
+    Pop-Cwd
     exit $exitCode
 }
 
@@ -86,5 +90,4 @@ neon-build gzip "$buildPath\cadence-proxy.linux"   "$neonCadenceResourceFolder\c
 neon-build gzip "$buildPath\cadence-proxy.osx"     "$neonCadenceResourceFolder\cadence-proxy.osx.gz"     > "$logPath" 2>&1
 neon-build gzip "$buildPath\cadence-proxy.win.exe" "$neonCadenceResourceFolder\cadence-proxy.win.exe.gz" > "$logPath" 2>&1
 
-# Return to the original directory
-Set-Location $orgDirectory
+Pop-Cwd

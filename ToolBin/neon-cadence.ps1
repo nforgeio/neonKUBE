@@ -51,7 +51,7 @@ param
     [string] $branch
 )
 
-# Import the global project include file.
+# Import the global solution include file.
 
 . $env:NF_ROOT/Powershell/includes.ps1
 
@@ -67,9 +67,7 @@ if (!(Test-Path "$nfRepos/neon-cadence/.git/index"))
     exit 1
 }
 
-$orgDirectory = Get-Location
-
-Set-Location "$nfRepos\neon-cadence"
+Push-Cwd "$nfRepos\neon-cadence"
 
 switch ($command)
 {
@@ -93,9 +91,10 @@ switch ($command)
     default
     {
         Write-Error -Message "Unknown command: ${command}"
-        Set-Location $orgDirectory
+        Pop-Cwd
         exit 1
     }
 }
 
-Set-Location $orgDirectory
+Pop-Cwd
+

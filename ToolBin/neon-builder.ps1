@@ -36,6 +36,12 @@ param
     [switch]$debug   = $false   # Optionally specify DEBUG build config
 )
 
+# Import the global solution include file.
+
+. $env:NF_ROOT/Powershell/includes.ps1
+
+# Initialize
+
 if ($all)
 {
     $tools   = $true
@@ -50,12 +56,6 @@ else
 {
     $config = "Release"
 }
-
-# Import the global project include file.
-
-. $env:NF_ROOT/Powershell/includes.ps1
-
-# Initialize
 
 $msbuild     = "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\amd64\MSBuild.exe"
 $nfRoot      = "$env:NF_ROOT"
@@ -152,19 +152,14 @@ function PublishCore
 #------------------------------------------------------------------------------
 # Perform the operation.
 
-Push-Location $nfRoot
+Push-Cwd $nfRoot
 
 try
 {
     # We see somewhat random build problems when Visual Studio has the solution open,
     # so have the user close Visual Studio instances first.
 
-    Get-Process -Name devenv -ErrorAction SilentlyContinue | Out-Null
-
-    if ($?)
-    {
-        throw "ERROR: Please close all Visual Studio instances before building."
-    }
+    Ensure-VisualStudioNotRunning
 
     # Build the solution.
 
@@ -281,7 +276,12 @@ try
         ThrowOnExitCode
     }
 }
+catch
+{
+    Write-ActionException $_
+    exit 1
+}
 finally
 {
-    Pop-Location
+    Pop-Cwd
 }

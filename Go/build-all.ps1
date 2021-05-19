@@ -1,3 +1,4 @@
+#Requires -Version 7.0 -RunAsAdministrator
 #------------------------------------------------------------------------------
 # FILE:         build-all.ps1
 # CONTRIBUTOR:  John C Burns
@@ -30,14 +31,18 @@ param
     [parameter(Mandatory=$false)][string] $buildConfig = "Debug"
 )
 
-$orgDirectory = Get-Location
+# Import the global solution include file.
+
+. $env:NF_ROOT/Powershell/includes.ps1
+
+# Perform the build
 
 $env:NF_GOROOT = "$env:NF_ROOT\Go"
 
-Set-Location $env:NF_GOROOT
+Push-Cwd $env:NF_GOROOT
 
-Start-Process -FilePath powershell.exe -ArgumentList "./build-cadence-proxy.ps1", "-buildConfig $buildConfig" -Wait -NoNewWindow
-Start-Process -FilePath powershell.exe -ArgumentList "./build-temporal-proxy.ps1", "-buildConfig $buildConfig" -Wait -NoNewWindow
-Start-Process -FilePath powershell.exe -ArgumentList "./build-test.ps1" -Wait -NoNewWindow
+Start-Process -FilePath pwsh.exe -ArgumentList "./build-cadence-proxy.ps1", "-buildConfig $buildConfig" -Wait -NoNewWindow
+Start-Process -FilePath pwsh.exe -ArgumentList "./build-temporal-proxy.ps1", "-buildConfig $buildConfig" -Wait -NoNewWindow
+Start-Process -FilePath pwsh.exe -ArgumentList "./build-test.ps1" -Wait -NoNewWindow
 
-Set-Location $orgDirectory
+Pop-Cwd

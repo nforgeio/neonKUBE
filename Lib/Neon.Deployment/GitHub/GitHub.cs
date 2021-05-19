@@ -44,7 +44,7 @@ namespace Neon.Deployment
         /// <summary>
         /// Returns the GitHub PAT (personal access token) or <c>null</c>.
         /// </summary>
-        internal static string GitHubPat { get; private set; }
+        internal static string AccessToken { get; private set; }
 
         /// <summary>
         /// Returns the GitHub user credentials or <c>null</c>.
@@ -58,7 +58,7 @@ namespace Neon.Deployment
         {
             var profile = new ProfileClient();
 
-            GitHubPat   = profile.GetSecretPassword("GITHUB_PAT");
+            AccessToken   = profile.GetSecretPassword("GITHUB_PAT");
             Credentials = Credentials.FromUserPassword(profile.GetSecretPassword("GITHUB_LOGIN[username]"), profile.GetSecretPassword("GITHUB_LOGIN[password]"));
         }
 
@@ -67,7 +67,7 @@ namespace Neon.Deployment
         /// </summary>
         public static void ClearCredentials()
         {
-            GitHubPat   = null;
+            AccessToken   = null;
             Credentials = null;
         }
 
@@ -77,7 +77,7 @@ namespace Neon.Deployment
         /// <exception cref="SecurityException">Thrown when the credentials are not available.</exception>
         internal static void EnsureCredentials()
         {
-            if (string.IsNullOrEmpty(GitHubPat) || Credentials == null)
+            if (string.IsNullOrEmpty(AccessToken) || Credentials == null)
             {
                 throw new SecurityException("GitHub PAT and/or user credentials are not loaded.");
             }
@@ -87,5 +87,10 @@ namespace Neon.Deployment
         /// Returns the API class for managing GitHub packages.
         /// </summary>
         public static GitHubPackageApi Packages { get; private set; } = new GitHubPackageApi();
+
+        /// <summary>
+        /// Returns the API class for managing GitHub Actions.
+        /// </summary>
+        public static GitHubActionsApi Actions { get; private set; } = new GitHubActionsApi();
     }
 }

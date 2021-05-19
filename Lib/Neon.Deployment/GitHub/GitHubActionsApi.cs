@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowRunDeleteCommand.cs
+// FILE:	    GitHubActionsApi.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -36,13 +36,12 @@ using Neon.Common;
 using Neon.Deployment;
 using Neon.Retry;
 
-namespace GHTool
+namespace Neon.Deployment
 {
     /// <summary>
-    /// Implements the <b>workflow</b> command.
+    /// Implements GitHub Actions operations.
     /// </summary>
-    [Command]
-    public class WorkflowRunDeleteCommand : CommandBase
+    public class GitHubActionsApi
     {
         //---------------------------------------------------------------------
         // Private types
@@ -76,64 +75,67 @@ namespace GHTool
         //---------------------------------------------------------------------
         // Implementation
 
-        private const string usage = @"
-Deletes 
-
-USAGE:
-
-    neon workflow run delete REPO WORKFLOW-NAME [--age=AGE-IN-DAYS]
-
-ARGUMENTS:
-
-    REPO            - target repository, like: 
-
-                        [SERVER]/OWNER/REPO
-
-    WORKFLOW-NAME   - optional target workflow name
-
-    AGE-IN-DAYS     - optional the minimum age for runs to be 
-                      deleted, in days.  This defaults to 0 
-                      which deletes all runs.
-";
-
-        /// <inheritdoc/>
-        public override string[] Words => new string[] { "workflow", "run", "delete" };
-
-        /// <inheritdoc/>
-        public override void Help()
+        /// <summary>
+        /// Internal constructor.
+        /// </summary>
+        internal GitHubActionsApi()
         {
-            Console.WriteLine(usage);
+            GitHub.GetCredentials();
+            GitHub.EnsureCredentials();
         }
 
-        /// <inheritdoc/>
-        public override async Task RunAsync(CommandLine commandLine)
+        /// <summary>
+        /// <para>
+        /// Deletes workflow runs from a GitHub repo.
+        /// </para>
+        /// <note>
+        /// Only completed runs will be deleted.
+        /// </note>
+        /// </summary>
+        /// <param name="repo">Identifies the target repository.</param>
+        /// <param name="workflowName">
+        /// Optionally specifies the workflow whose runs are to be deleted otherwise
+        /// runs from all workflows in the repo will be deleted.
+        /// </param>
+        /// <param name="maxAge">
+        /// Optionally specifies the age at which workflow runs are to be deleted.  
+        /// This defaults to deleting all runs.
+        /// </param>
+        /// <returns>The number of runs deleted.</returns>
+        public int DeleteRuns(string repo, string workflowName = null, TimeSpan maxAge = default)
         {
-            if (commandLine.HasHelpOption)
-            {
-                Help();
-                return;
-            }
+            return DeleteRunsAsync(repo, workflowName, maxAge).Result;
+        }
 
-            var repoArg = commandLine.Arguments.ElementAtOrDefault(0);
-            var nameArg = commandLine.Arguments.ElementAtOrDefault(1);
-            var ageArg  = commandLine.GetOption("--age", "0");
-
-            if (string.IsNullOrEmpty(repoArg))
-            {
-                Console.Error.WriteLine("*** ERROR: [REPO] argument is required.");
-                Program.Exit(1);
-            }
-
-            var repoPath      = GitHubRepoPath.Parse(repoArg);
-            var workflowName = nameArg;
-            var maxAge          = TimeSpan.FromDays(Math.Max(int.Parse(ageArg), 0));
+        /// <summary>
+        /// <para>
+        /// Deletes workflow runs from a GitHub repo.
+        /// </para>
+        /// <note>
+        /// Only completed runs will be deleted.
+        /// </note>
+        /// </summary>
+        /// <param name="repo">Identifies the target repository.</param>
+        /// <param name="workflowName">
+        /// Optionally specifies the workflow whose runs are to be deleted otherwise
+        /// runs from all workflows in the repo will be deleted.
+        /// </param>
+        /// <param name="maxAge">
+        /// Optionally specifies the age at which workflow runs are to be deleted.  
+        /// This defaults to deleting all runs.
+        /// </param>
+        /// <returns>The number of runs deleted.</returns>
+        public async Task<int> DeleteRunsAsync(string repo, string workflowName = null, TimeSpan maxAge = default)
+        {
+            var repoPath    = GitHubRepoPath.Parse(repo);
+            var deleteCount = 0;
 
             using (var client = new HttpClient())
             {
                 var retry = new ExponentialRetryPolicy(TransientDetector.NetworkOrHttp, 5);
 
                 client.BaseAddress                         = new Uri("https://api.github.com");
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Program.GitHubPAT);
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", GitHub.AccessToken);
 
                 client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("neonforge.com", "0"));
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github.v3+json"));
@@ -157,7 +159,7 @@ ARGUMENTS:
 
                     response.EnsureSuccessStatusCode();
 
-                    var json   = await response.Content.ReadAsStringAsync();
+                    var json   = response.Content.ReadAsStringAsync().Result;
                     var result = JsonConvert.DeserializeObject<dynamic>(json);
 
                     var workflowRuns = result.workflow_runs;
@@ -181,21 +183,22 @@ ARGUMENTS:
                             });
                     }
 
-                    Console.WriteLine($"page: {page}");
                     page++;
                 }
 
-                // $todo(jefflill):
-                //
-                // I'm just going to delete all of the runs older than the minimum for now.
-                // We'll come back later and filter by workflow name.
+                // Here's the reference for deleting runs:
                 //
                 //      https://docs.github.com/en/rest/reference/actions#delete-a-workflow-run
 
-                var minDate     = DateTime.UtcNow - maxAge;
-                var deleteCount = 0;
+                var minDate      = DateTime.UtcNow - maxAge;
+                var selectedRuns = runs.Where(run => run.UpdatedAtUtc <= minDate && run.Status == "completed");
 
-                foreach (var run in runs.Where(run => run.UpdatedAtUtc <= minDate && run.Status == "completed"))
+                if (!string.IsNullOrEmpty(workflowName))
+                {
+                    selectedRuns = selectedRuns.Where(run => run.Name.Equals(workflowName, StringComparison.InvariantCultureIgnoreCase));
+                }
+
+                foreach (var run in selectedRuns)
                 {
                     var response = await retry.InvokeAsync(
                         async () =>
@@ -210,11 +213,11 @@ ARGUMENTS:
 
                     if (response.StatusCode == HttpStatusCode.InternalServerError)
                     {
-                        await Task.Delay(TimeSpan.FromSeconds(2));  // Pause in case this is a rate-limit thing
+                        Task.Delay(TimeSpan.FromSeconds(2)).Wait();     // Pause in case this is a rate-limit thing
                         continue;
                     }
 
-                    // We're seeing 403s for some runs, so we'll ignore those.
+                    // We're seeing 403s for some runs, so we'll ignore those too.
 
                     if (response.StatusCode != HttpStatusCode.Forbidden)
                     {
@@ -222,12 +225,10 @@ ARGUMENTS:
                     }
 
                     deleteCount++;
-                    if (deleteCount % 30 == 0)
-                    {
-                        Console.WriteLine($"deleted: {deleteCount}");
-                    }
                 }
             }
+
+            return deleteCount;
         }
     }
 }

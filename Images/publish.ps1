@@ -38,13 +38,9 @@ param
 
 #----------------------------------------------------------
 # Global includes
-$image_root = "$env:NF_ROOT\\Images"
+$image_root = [System.IO.Path]::Combine($env:NF_ROOT, "Images")
 . $image_root/includes.ps1
 #----------------------------------------------------------
-
-# Retrieve any necessary credentials.
-
-# $todo(jefflill): Need to load the GITHUB PAT
 
 # Take care to ensure that you order the image builds such that
 # dependant images are built before any dependancies.
@@ -57,93 +53,104 @@ function Publish
         [string]$Path
     )
 
-    cd "$Path"
+    Push-Cwd "$Path"
 
-    if ($allVersions)
+    try
     {
-        if ($nopush)
+        if ($allVersions)
         {
-            ./publish.ps1 -all -nopush
+            if ($nopush)
+            {
+                ./publish.ps1 -all -nopush
+            }
+            else
+            {
+                ./publish.ps1 -all
+            }
         }
         else
         {
-            ./publish.ps1 -all
+            if ($nopush)
+            {
+                ./publish.ps1 -nopush
+            }
+            else
+            {
+                ./publish.ps1
+            }
         }
     }
-    else
+    finally
     {
-        if ($nopush)
-        {
-            ./publish.ps1 -nopush
-        }
-        else
-        {
-            ./publish.ps1
-        }
+        Pop-Cwd
     }
 }
 
-# Handle the command line arguments.
-
-if ($all)
+try
 {
-    $base     = $true
-    $test     = $true
-    $other    = $true
-    $services = $true
+    # Handle the command line arguments.
+
+    if ($all)
+    {
+        $base     = $true
+        $test     = $true
+        $other    = $true
+        $services = $true
+    }
+    elseif ((-not $base) -and (-not $test) -and (-not $other) -and (-not $services))
+    {
+        # Build everything but base images by default.
+
+        $base     = $false
+        $test     = $true
+        $other    = $true
+        $services = $true
+    }
+
+    # Purge any local Docker images as well as the image build cache.
+    # This also purges everything else Docker as a side effect.  We
+    # need to do this to ensure that we get a clean build.
+
+    if (-not $noprune)
+    {
+        $result = Invoke-CaptureStreams "docker system prune -af" -interleave
+    }
+
+    # NOTE: 
+    #
+    # The build order below is important since later images
+    # may depend on earlier ones.
+
+    if ($base)
+    {
+        # Base images: it's lonely here!
+    }
+
+    if ($other)
+    {
+        Publish "$image_root\nats"
+        Publish "$image_root\nats-streaming"
+        Publish "$image_root\couchbase-dev"
+        Publish "$image_root\yugabyte"
+    }
+
+    if ($test)
+    {
+        Publish "$image_root\test"
+        Publish "$image_root\test-cadence"
+        Publish "$image_root\test-temporal"
+    }
+
+    if ($services)
+    {
+        Publish "$image_root\neon-allow-testing"
+        Publish "$image_root\neon-cluster-operator"
+        Publish "$image_root\neon-setup-grafana"
+        Publish "$image_root\neon-setup-harbor"
+    }
 }
-elseif ((-not $base) -and (-not $test) -and (-not $other) -and (-not $services))
+catch
 {
-    # Build everything but base images by default.
-
-    $base     = $false
-    $test     = $true
-    $other    = $true
-    $services = $true
-}
-
-# Purge any local Docker images as well as the image build cache.
-# This also purges everything else Docker as a side effect.  We
-# need to do this to ensure that we get a clean build.
-
-if (-not $noprune)
-{
-    docker system prune -af
-}
-
-# NOTE: 
-#
-# The build order below is important since later images
-# may depend on earlier ones.
-
-if ($base)
-{
-    # Base images:
-
-    # Its lonely here!
-}
-
-if ($other)
-{
-    Publish "$image_root\\nats"
-    Publish "$image_root\\nats-streaming"
-    Publish "$image_root\\couchbase-dev"
-    Publish "$image_root\\yugabyte"
-}
-
-if ($test)
-{
-    Publish "$image_root\\test"
-    Publish "$image_root\\test-cadence"
-    Publish "$image_root\\test-temporal"
-}
-
-if ($services)
-{
-    Publish "$image_root\\neon-allow-testing"
-    
-    # $todo(marcusbooyah): Fix these builds
-    #Publish "$image_root\\neon-cluster-operator"
-    #Publish "$image_root\\neon-setup-grafana"
-    #Publish "$image_root\\neon-setup-harbor"
+    Write-Exception $_
+    throw
 }

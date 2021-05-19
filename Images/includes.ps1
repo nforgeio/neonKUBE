@@ -22,7 +22,7 @@
 #
 # NOTE: This is script works only for maintainers with proper credentials.
 
-# Import the global project include file.
+# Import the global solution include file.
 
 . $env:NF_ROOT/Powershell/includes.ps1
 
@@ -30,10 +30,10 @@
 # Important source code paths.
 
 $NF_ROOT     = $env:NF_ROOT
-$nfImages   = "$NF_ROOT\\Images"
-$nfLib      = "$NF_ROOT\\Lib"
-$nfServices = "$NF_ROOT\\Services"
-$nfTools    = "$NF_ROOT\\Tools"
+$nfImages   = "$NF_ROOT\Images"
+$nfLib      = "$NF_ROOT\Lib"
+$nfServices = "$NF_ROOT\Services"
+$nfTools    = "$NF_ROOT\Tools"
 
 #------------------------------------------------------------------------------
 # Global constants.
@@ -44,24 +44,6 @@ $neonKUBE_Version = $(& "$NF_ROOT\ToolBin\neon-build" read-version "$nfLib\Neon.
 ThrowOnExitCode
 
 $neonKUBE_Tag = "neonkube-" + $neonKUBE_Version
-
-#------------------------------------------------------------------------------
-# Executes a command, throwing an exception for non-zero error codes.
-
-function Exec
-{
-    [CmdletBinding()]
-    param (
-        [Parameter(Position=0, Mandatory=$true)]
-        [scriptblock]$Command,
-        [Parameter(Position=1, Mandatory=$false)]
-        [string]$ErrorMessage = "*** FAILED: $Command"
-    )
-    & $Command
-    if ($LastExitCode -ne 0) {
-        throw "Exec: $ErrorMessage"
-    }
-}
 
 #------------------------------------------------------------------------------
 # Deletes a file if it exists.
@@ -148,7 +130,7 @@ function PushImage
 	{
 		if ($attempt -gt 0)
 		{
-			"*** PUSH: RETRYING"
+			Write-Stdout "*** PUSH: RETRYING"
 		}
 
 		# $hack(jefflill):
@@ -174,19 +156,13 @@ function PushImage
 		#		"blob upload unknown"
 		#
 		# and then retry if we see this.
-		#
-		# An alternative (and cleaner) approach would be to actually examine the
-		# repository as it appears in the remote registry to look for problems
-		# there.  Perhaps this is something we could do after implementing [neon-cli]
-		# registry commands.
 
-		docker push "$Image" --quiet | Tee-Object -Variable pushOutput
+		$result   = Invoke-CaptureStreams "docker push $image" -interleave -noCheck
+		$exitCode = $result.exitcode
 
-		$exitCode = $LastExitCode
-
-		if ($pushOutput -match 'blob upload unknown')
+		if ($result.allText.Contains("blob upload unknown"))
 		{
-			"*** PUSH: BLOB UPLOAD UNKNOWN"
+			Write-Stdout "*** PUSH: BLOB UPLOAD UNKNOWN"
 			$exitCode = 100
 		}
 
@@ -202,16 +178,14 @@ function PushImage
 				$fields    = $image -split ':'
 				$baseImage = $fields[0] + ":" + $baseTag
 
-				"tag image: $image --> $baseImage"
-				docker tag "$image" "$baseImage"
-				ThrowOnExitCode
+				Write-Stdout "tag image: $image --> $baseImage"
+				$result = Invoke-CaptureStreams "docker tag $image $baseImage" -interleave
 			}
 
 			return
 		}
 		
-		"*** PUSH: EXITCODE=$exitCode"
-
+		Write-Stdout "*** PUSH: EXITCODE=$exitCode"
 		sleep 15
 	}
 
@@ -514,12 +488,12 @@ function Log-ImageBuild
 # Makes any text files that will be included in Docker images Linux safe, by
 # converting CRLF line endings to LF and replacing TABs with spaces.
 
-exec { unix-text --recursive $image_root\Dockerfile }
-exec { unix-text --recursive $image_root\*.sh }
-exec { unix-text --recursive .\*.cfg }
-exec { unix-text --recursive .\*.js }
-exec { unix-text --recursive .\*.conf }
-exec { unix-text --recursive .\*.md }
-exec { unix-text --recursive .\*.json }
-exec { unix-text --recursive .\*.rb }
-exec { unix-text --recursive .\*.py }
+unix-text --recursive $image_root\Dockerfile 
+unix-text --recursive $image_root\*.sh 
+unix-text --recursive $image_root\*.cfg 
+unix-text --recursive $image_root\*.js 
+unix-text --recursive $image_root*.conf 
+unix-text --recursive $image_root\*.md 
+unix-text --recursive $image_root\*.json 
+unix-text --recursive $image_root\*.rb 
+unix-text --recursive $image_root\*.py 

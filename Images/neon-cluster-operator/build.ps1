@@ -30,17 +30,21 @@ copy ..\_common\*.* .\_common
 
 DeleteFolder bin
 
-Exec { mkdir bin }
-Exec { dotnet publish "$nfServices\\$appname\\$appname.csproj" -c Release -o "$pwd\bin" }
+mkdir bin
+ThrowOnExitCode
+
+dotnet publish "$nfServices\$appname\$appname.csproj" -c Release -o "$pwd\bin"
+ThrowOnExitCode
 
 # Split the build binaries into [__app] (application) and [__dep] dependency subfolders
 # so we can tune the image layers.
 
-Exec { core-layers $appname "$pwd\bin" }
+core-layers $appname "$pwd\bin"
+ThrowOnExitCode
 
 # Build the image.
 
-Exec { docker build -t "${registry}:$tag" --build-arg "APPNAME=$appname" . }
+$result = Invoke-CaptureStreams "docker build -t ${registry}:${tag} --build-arg `"APPNAME=$appname`" ." -interleave
 
 # Clean up
 
