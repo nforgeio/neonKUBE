@@ -95,7 +95,7 @@ function PublishCore
 
     # Ensure that the NF_BUILD folder exists:
 
-    [System.IO.Directory]::CreateDirectory($nfBuild)
+    [System.IO.Directory]::CreateDirectory($nfBuild) | Out-Null
 
     # Locate the published output folder (note that we need to handle apps targeting different versions of .NET):
 
@@ -130,6 +130,8 @@ function PublishCore
         throw "Cannot locate publish folder for: $projectPath"
     }
 
+    $targetFolder = [System.IO.Path]::GetDirectoryName($targetPath)
+
     # Copy the binary files to a new build folder subdirectory named for the target and
     # generate the batch file to launch the program.
 
@@ -140,8 +142,8 @@ function PublishCore
         [System.IO.Directory]::Delete($binaryFolder, $true)
     }
 
-    [System.IO.Directory]::CreateDirectory($binaryFolder)
-    Copy-Item -Path "$targetPath/*" -Destination $binaryFolder -Recurse
+    [System.IO.Directory]::CreateDirectory($binaryFolder) | Out-Null
+    Copy-Item -Path "$targetFolder/*" -Destination $binaryFolder -Recurse
 
     $cmdPath = [System.IO.Path]::Combine($nfBuild, "$targetName.cmd")
 

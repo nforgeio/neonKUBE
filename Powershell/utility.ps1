@@ -367,7 +367,7 @@ function Log-DebugLine
 
     if (![System.IO.Directory]::Exists($folder))
     {
-        [System.IO.Directory]::CreateDirectory($folder)
+        [System.IO.Directory]::CreateDirectory($folder) | Out-Null
     }
 
     $path = [System.IO.Path]::Combine($folder, "log.txt")
