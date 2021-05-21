@@ -129,9 +129,9 @@ function Write-Exception
         $error
     )
 
-    Write-Info "EXCEPTION: $error"
-    Write-Info "-------------------------------------------"
-    Write-Info $($error.Exception | Format-List -force)
+    Write-Output "EXCEPTION: $error"
+    Write-Output "-------------------------------------------"
+    Write-Output $($error.Exception | Format-List -force)
 }
 
 #------------------------------------------------------------------------------
