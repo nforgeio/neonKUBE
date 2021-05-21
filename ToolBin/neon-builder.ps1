@@ -154,7 +154,7 @@ function PublishCore
 #------------------------------------------------------------------------------
 # Perform the operation.
 
-Push-Cwd $nfRoot
+Push-Cwd $nfRoot | Out-Null
 
 try
 {
@@ -285,5 +285,5 @@ catch
 }
 finally
 {
-    Pop-Cwd
+    Pop-Cwd | Out-Null
 }

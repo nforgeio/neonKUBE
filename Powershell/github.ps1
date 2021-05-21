@@ -32,13 +32,13 @@ Import-Module Microsoft.PowerShell.Utility
 $scriptPath   = $MyInvocation.MyCommand.Path
 $scriptFolder = [System.IO.Path]::GetDirectoryName($scriptPath)
 
-Push-Cwd $scriptFolder
+Push-Location $scriptFolder | Out-Null
 
 . ./error-handling.ps1
 . ./utility.ps1
 . ./deployment.ps1
 
-Pop-Cwd
+Pop-Location | Out-Null
 
 #------------------------------------------------------------------------------
 # Call this after native commands to check for non-zero exit codes.

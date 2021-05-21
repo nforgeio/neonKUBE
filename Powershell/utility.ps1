@@ -89,7 +89,7 @@ function Load-Assembly
 }
 
 #------------------------------------------------------------------------------
-# Writes text to standard output using [Console.WriteLine] as a bit of a hack.
+# Writes text to the verbose output stream using Write-Information.
 # 
 # ARGUMENTS:
 #
@@ -99,10 +99,10 @@ function Load-Assembly
 #
 # We're using this to workaround the fact that Write-Output doesn't do what
 # non-Powershell developers might expect, especially when called within
-# functions where Write-Output actually adds to the result retuned by the
-# function due to Powershell structured streams.
+# functions where Write-Output actually adds to the result returned by the
+# function due to how Powershell structures streams.
 
-function Write-Stdout
+function Write-Info
 {
     [CmdletBinding()]
     param (
@@ -110,7 +110,7 @@ function Write-Stdout
         [string]$text
     )
 
-    [System.Console]::WriteLine($text)
+    Write-Information -InformationAction Continue $text
 }
 
 #------------------------------------------------------------------------------
@@ -129,9 +129,9 @@ function Write-Exception
         $error
     )
 
-    Write-Stdout "EXCEPTION: $error"
-    Write-Stdout "-------------------------------------------"
-    Write-Stdout $($error.Exception | Format-List -force)
+    Write-Info "EXCEPTION: $error"
+    Write-Info "-------------------------------------------"
+    Write-Info $($error.Exception | Format-List -force)
 }
 
 #------------------------------------------------------------------------------
@@ -266,17 +266,17 @@ function Invoke-CaptureStreams
 
         if (!$noOutput)
         {
-            Write-Stdout
-            Write-Stdout "RUN: $command"
-            Write-Stdout
+            Write-Info
+            Write-Info "RUN: $command"
+            Write-Info
 
             if ($interleave)
             {
-                Write-Stdout $result.stdout
+                Write-Info $result.stdout
             }
             else
             {
-                Write-Stdout $result.alltext
+                Write-Info $result.alltext
             }
         }
 
@@ -346,8 +346,9 @@ function ToLineArray
 }
 
 #------------------------------------------------------------------------------
-# Appends a line of text to [C:\Temp\log.txt] as a very simple logging mechanism
-# to be used while debugging Powershell scripts, specifically GitHub Actions.
+# Appends a line of text to [C:\Temp\log.txt] as well as [Write-Info] as a very
+# simple logging mechanism to be used while debugging Powershell scripts, 
+# specifically GitHub Actions.
 #
 # ARGUMENTS:
 #
@@ -373,7 +374,7 @@ function Log-DebugLine
     $path = [System.IO.Path]::Combine($folder, "log.txt")
 
     [System.IO.File]::AppendAllText($path, $text + "`r`n")
-    Write-Stdout "$text >>>"
+    Write-Info "$text >>>"
 }
 
 #------------------------------------------------------------------------------
@@ -610,7 +611,7 @@ function Push-Cwd
         [string]$path
     )
 
-    Push-Location $path
+    Push-Location $path | Out-Null
     [System.Environment]::CurrentDirectory = $path
 }
 
@@ -619,6 +620,6 @@ function Push-Cwd
 
 function Pop-Cwd
 {
-    Pop-Location
+    Pop-Location | Out-Null
     [System.Environment]::CurrentDirectory = Get-Location
 }

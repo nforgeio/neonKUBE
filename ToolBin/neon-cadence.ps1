@@ -67,7 +67,7 @@ if (!(Test-Path "$nfRepos/neon-cadence/.git/index"))
     exit 1
 }
 
-Push-Cwd "$nfRepos\neon-cadence"
+Push-Cwd "$nfRepos\neon-cadence" | Out-Null
 
 switch ($command)
 {
@@ -91,10 +91,10 @@ switch ($command)
     default
     {
         Write-Error -Message "Unknown command: ${command}"
-        Pop-Cwd
+        Pop-Cwd | Out-Null
         exit 1
     }
 }
 
-Pop-Cwd
+Pop-Cwd | Out-Null
 

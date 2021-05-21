@@ -30,7 +30,7 @@ $buildPath   = "$env:NF_BUILD"
 $projectPath = "$env:GOPATH\src\github.com\cadence-proxy"
 $logPath     = "$buildPath\build-cadence-proxy.log"
 
-Push-Cwd "$projectpath\cmd\cadenceproxy"
+Push-Cwd "$projectpath\cmd\cadenceproxy" | Out-Null
 
 # Ensure that the build output folder exists.
 if (!(test-path $buildPath))
@@ -39,7 +39,7 @@ if (!(test-path $buildPath))
 }
 
 # Change to project path
-Push-Cwd $projectPath
+Push-Cwd $projectPath | Out-Null
 
 # Build the WINDOWS binary
 $env:GOOS	= "windows"
@@ -51,7 +51,7 @@ $exitCode = $lastExitCode
 if ($exitCode -ne 0)
 {
     Write-Error "*** ERROR[0]: [cadence-proxy] WINDOWS build failed.  Check build logs: $logPath"
-    Pop-Cwd
+    Pop-Cwd | Out-Null
     exit $exitCode
 }
 
@@ -65,7 +65,7 @@ $exitCode = $lastExitCode
 if ($exitCode -ne 0)
 {
     Write-Error "*** ERROR[1]: [cadence-proxy] LINUX build failed.  Check build logs: $logPath"
-    Pop-Cwd
+    Pop-Cwd | Out-Null
     exit $exitCode
 }
 
@@ -79,7 +79,7 @@ $exitCode = $lastExitCode
 if ($exitCode -ne 0)
 {
     Write-Error "*** ERROR[2]: [cadence-proxy] OSX build failed.  Check build logs: $logPath"
-    Pop-Cwd
+    Pop-Cwd | Out-Null
     exit $exitCode
 }
 
@@ -90,4 +90,4 @@ neon-build gzip "$buildPath\cadence-proxy.linux"   "$neonCadenceResourceFolder\c
 neon-build gzip "$buildPath\cadence-proxy.osx"     "$neonCadenceResourceFolder\cadence-proxy.osx.gz"     > "$logPath" 2>&1
 neon-build gzip "$buildPath\cadence-proxy.win.exe" "$neonCadenceResourceFolder\cadence-proxy.win.exe.gz" > "$logPath" 2>&1
 
-Pop-Cwd
+Pop-Cwd | Out-Null

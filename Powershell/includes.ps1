@@ -40,7 +40,7 @@ $scriptFolder = [System.IO.Path]::GetDirectoryName($scriptPath)
 # We need to use Push/Pop-Location here because the Push/Pop-Cwd functions
 # haven't been defined yet.
 
-Push-Location $scriptFolder
+Push-Location $scriptFolder | Out-Null
 
 . ./error-handling
 . ./utility.ps1
@@ -49,7 +49,7 @@ Push-Location $scriptFolder
 . ./deployment.ps1
 . ./github.ps1
 
-Pop-Location
+Pop-Location | Out-Null
 
 # Ensure that the process and runspace current directories are aligned.
 

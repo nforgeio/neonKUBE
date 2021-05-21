@@ -39,10 +39,10 @@ param
 
 $env:NF_GOROOT = "$env:NF_ROOT\Go"
 
-Push-Cwd $env:NF_GOROOT
+Push-Cwd $env:NF_GOROOT | Out-Null
 
 Start-Process -FilePath pwsh.exe -ArgumentList "./build-cadence-proxy.ps1", "-buildConfig $buildConfig" -Wait -NoNewWindow
 Start-Process -FilePath pwsh.exe -ArgumentList "./build-temporal-proxy.ps1", "-buildConfig $buildConfig" -Wait -NoNewWindow
 Start-Process -FilePath pwsh.exe -ArgumentList "./build-test.ps1" -Wait -NoNewWindow
 
-Pop-Cwd
+Pop-Cwd | Out-Null

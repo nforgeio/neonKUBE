@@ -53,7 +53,7 @@ function Publish
         [string]$Path
     )
 
-    Push-Cwd "$Path"
+    Push-Cwd "$Path" | Out-Null
 
     try
     {
@@ -82,7 +82,7 @@ function Publish
     }
     finally
     {
-        Pop-Cwd
+        Pop-Cwd | Out-Null
     }
 }
 

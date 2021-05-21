@@ -30,12 +30,12 @@
 $scriptPath   = $MyInvocation.MyCommand.Path
 $scriptFolder = [System.IO.Path]::GetDirectoryName($scriptPath)
 
-Push-Cwd $scriptFolder
+Push-Location $scriptFolder | Out-Null
 
 . ./error-handling.ps1
 . ./utility.ps1
 
-Pop-Cwd
+Pop-Location | Out-Null
 
 # Load these assemblies from the [neon-assistant] installation folder
 # to ensure we'll be compatible.

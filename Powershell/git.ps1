@@ -38,12 +38,12 @@ function GitBranch
         [string]$gitRepoPath
     )
 
-    Push-Location
+    Push-Location | Out-Null
     Set-Cwd $gitRepoPath
 
     $branch = git rev-parse --abbrev-ref HEAD
 
-    Pop-Cwd
+    Pop-Location | Out-Null
 
     return $branch
 }
