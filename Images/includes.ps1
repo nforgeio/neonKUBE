@@ -482,7 +482,7 @@ function Log-ImageBuild
 
 	Write-Output " "
 	Write-Output "==============================================================================="
-	Write-Output "* $image"
+	Write-Output "* Building $image"
 	Write-Output "==============================================================================="
 }
 
