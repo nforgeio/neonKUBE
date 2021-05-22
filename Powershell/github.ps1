@@ -515,8 +515,7 @@ function Write-ActionOutput
         }
     }
 
-    [System.Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-    [System.Console]::WriteLine($text)
+    Write-Output $text
 }
 
 #------------------------------------------------------------------------------
@@ -651,7 +650,7 @@ function Write-ActionException
 
     Write-ActionError "EXCEPTION: $error" -noEscape:$true
     Write-ActionError "-------------------------------------------"
-    $error_.Exception | Format-List -force
+    Write-ActionError $($error_.Exception | Format-List -force)
 }
 
 #------------------------------------------------------------------------------
