@@ -29,5 +29,5 @@ param
 
 Log-ImageBuild $registry $tag
 
-$result = Invoke-CaptureStreams "docker pull alpine:latest" -interleave
+Pull-DockerImage "alpine:latest"
 $result = Invoke-CaptureStreams "docker build -t ${registry}:${tag} --build-arg VERSION=$version ." -interleave

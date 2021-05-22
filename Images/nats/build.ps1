@@ -29,6 +29,6 @@ param
 
 Log-ImageBuild $registry $tag
 
-$result = Invoke-CaptureStreams "docker pull nats:$version-linux" -interleave
+Pull-DockerImage "nats:$version-linux"
 $result = Invoke-CaptureStreams "docker build -t ${registry}:${tag} --build-arg VERSION=$version ." -interleave
 

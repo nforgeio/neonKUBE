@@ -235,7 +235,7 @@ function Pull-DockerImage
 		# messages in the output.  This appears to be transient because pulling again seems
 		# to work.  I've seen some folks report this as being cause by networking issues.
 
-		$result   = $result = Invoke-CaptureStreams "docker pull $imageRef" -interleave -noCheck
+		$result   = Pull-DockerImage "$imageRef" -interleave -noCheck
 		$exitCode = $result.exitcode
 
 		if ($result.allText.Contains("error pulling image configuration"))

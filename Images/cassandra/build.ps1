@@ -29,5 +29,5 @@ param
 
 Log-ImageBuild $registry $tag
 
-$result = Invoke-CaptureStreams "docker pull cassandra:$version" -interleave
+Pull-DockerImage "cassandra:$version"
 $result = Invoke-CaptureStreams "docker build -t ${registry}:${tag} --build-arg VERSION=$version ." -interleave
