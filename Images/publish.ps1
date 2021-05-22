@@ -111,7 +111,7 @@ try
     # This also purges everything else Docker as a side effect.  We
     # need to do this to ensure that we get a clean build.
 
-    if (-not $noprune)
+    if (!$noprune)
     {
         $result = Invoke-CaptureStreams "docker system prune -af" -interleave
     }
@@ -147,6 +147,18 @@ try
         Publish "$image_root\neon-cluster-operator"
         Publish "$image_root\neon-setup-grafana"
         Publish "$image_root\neon-setup-harbor"
+    }
+
+    # Purge any local Docker images as well as the image build cache.
+    # This also purges everything else Docker as a side effect.
+    #
+    # We're doing this to ensure that Docker is reset to its default
+    # state after building images.  This is especially important for
+    # GihHub job runners.
+
+    if (!$noprune)
+    {
+        $result = Invoke-CaptureStreams "docker system prune -af" -interleave
     }
 }
 catch
