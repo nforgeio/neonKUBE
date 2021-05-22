@@ -228,6 +228,13 @@ function Invoke-CaptureStreams
 
     try
     {
+        if (!$noOutput)
+        {
+            Write-Info
+            Write-Info "RUN: $command"
+            Write-Info
+        }
+
         if ($interleave)
         {
             & cmd /c "$command > `"$stdoutPath`" 2>&1"
@@ -266,10 +273,6 @@ function Invoke-CaptureStreams
 
         if (!$noOutput)
         {
-            Write-Info
-            Write-Info "RUN: $command"
-            Write-Info
-
             if ($interleave)
             {
                 Write-Info $result.stdout

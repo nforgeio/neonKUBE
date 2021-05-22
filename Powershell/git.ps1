@@ -29,6 +29,14 @@
 
 #------------------------------------------------------------------------------
 # Returns the current branch for a git repostory.
+#
+# ARGUMENTS:
+#
+#   gitRepoPath     - path to the local Git repository
+#
+# RETURNS:
+# 
+#   The current branch
 
 function GitBranch
 {
@@ -38,7 +46,7 @@ function GitBranch
         [string]$gitRepoPath
     )
 
-    Push-Cwd | Out-Null
+    Push-Cwd $gitRepoPath | Out-Null
 
     $branch = git rev-parse --abbrev-ref HEAD
 
