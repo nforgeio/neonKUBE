@@ -106,10 +106,12 @@ function DeleteFolder
 # registries directly.  When running in non-debug mode, cluster setup uses The
 # packages already prepositioned in the node image and those were already tagged
 # with the original base tag during node image creation.
+#
+# NOTE: This function attempts to workaround what appears to be transient issues.
 
 $noImagePush = $false
 
-function PushImage
+function Push-DockerImage
 {
     [CmdletBinding()]
     param (
@@ -130,12 +132,12 @@ function PushImage
 	{
 		if ($attempt -gt 0)
 		{
-			Write-Stdout "*** PUSH: RETRYING"
+			Write-Info "*** PUSH: RETRYING"
 		}
 
 		# $hack(jefflill):
 		#
-		# I'm seeing [docker push ...] write "blob upload unknown" messages to the
+		# I'm seeing [docker push ...] with "blob upload unknown" messages in the
 		# output and then it appears that the image manifest gets uploaded with no
 		# layers.  The Docker Hub dashboard reports comppressed size as 0 for the
 		# image/tag.  This appears to be transient because publishing again seems
@@ -157,17 +159,17 @@ function PushImage
 		#
 		# and then retry if we see this.
 
-		$result   = Invoke-CaptureStreams "docker push $image" -interleave -noCheck
+		$result   = $result = Invoke-CaptureStreams "docker push $image" -interleave -noCheck
 		$exitCode = $result.exitcode
 
 		if ($result.allText.Contains("blob upload unknown"))
 		{
-			Write-Stdout "*** PUSH: BLOB UPLOAD UNKNOWN"
+			Write-Info "*** PUSH: BLOB UPLOAD UNKNOWN"
 			$exitCode = 100
 		}
 
 		if ($exitCode -eq 0)
-		{
+		{																																		  
 			# Add the base version tag if requested.  I don't believe it'll
 			# be necessary to retry this operation.
 
@@ -178,18 +180,80 @@ function PushImage
 				$fields    = $image -split ':'
 				$baseImage = $fields[0] + ":" + $baseTag
 
-				Write-Stdout "tag image: $image --> $baseImage"
+				Write-Info "tag image: $image --> $baseImage"
 				$result = Invoke-CaptureStreams "docker tag $image $baseImage" -interleave
 			}
 
 			return
 		}
 		
-		Write-Stdout "*** PUSH: EXITCODE=$exitCode"
+		Write-Info "*** PUSH: EXITCODE=$exitCode"
 		sleep 15
 	}
 
-	throw "[docker push $Image] failed after [$maxAttempts] attempts."
+	throw "[docker push $image] failed after [$maxAttempts] attempts."
+}
+
+#------------------------------------------------------------------------------
+# Pulls a Docker image.
+#
+# ARGUMENTS:
+#
+#	imageRef	- the image reference
+#
+# REMARKS:
+#
+# NOTE: This function attempts to workaround what appears to be transient issues.
+
+function Pull-DockerImage
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$image,
+        [Parameter(Position=1, Mandatory=$false)]
+        [string]$baseTag = $null
+    )
+
+	if ($noImagePush)
+	{
+		return
+	}
+
+	$maxAttempts = 5
+
+	for ($attempt=0; $attempt -lt $maxAttempts; $attempt++)
+	{
+		if ($attempt -gt 0)
+		{
+			Write-Info "*** PULL: RETRYING"
+		}
+
+		# $hack(jefflill):
+		#
+		# I'm seeing [docker pull ...] with "error pulling image configuration... EOF" 
+		# messages in the output.  This appears to be transient because pulling again seems
+		# to work.  I've seen some folks report this as being cause by networking issues.
+
+		$result   = $result = Invoke-CaptureStreams "docker pull $imageRef" -interleave -noCheck
+		$exitCode = $result.exitcode
+
+		if ($result.allText.Contains("error pulling image configuration"))
+		{
+			Write-Info "*** PULL: error pulling image configuration"
+			$exitCode = 100
+		}
+
+		if ($exitCode -eq 0)
+		{																																		  
+			return
+		}
+		
+		Write-Info "*** PULL: EXITCODE=$exitCode"
+		sleep 15
+	}
+
+	throw "[docker pull $imageRef] failed after [$maxAttempts] attempts."
 }
 
 #------------------------------------------------------------------------------

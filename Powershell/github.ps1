@@ -603,7 +603,7 @@ function Write-ActionError
         [switch]$noEscape = $false
     )
 
-    Write-ActionOutput $message "red" -noEscape:$noEscape
+    Write-Output $message 
 }
 
 #------------------------------------------------------------------------------
