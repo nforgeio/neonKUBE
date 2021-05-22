@@ -53,4 +53,4 @@ Pop-Location | Out-Null
 
 # Ensure that the process and runspace current directories are aligned.
 
-Get-Cwd
+Get-Cwd | Out-Null
