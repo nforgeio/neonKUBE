@@ -88,6 +88,7 @@ function Publish
 
 # Load the library and neonKUBE versions.
 
+$msbuild         = "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\amd64\MSBuild.exe"
 $nfRoot          = "$env:NF_ROOT"
 $nfSolution      = "$nfRoot\neonKUBE.sln"
 $nfBuild         = "$env:NF_BUILD"
@@ -96,6 +97,22 @@ $nfTools         = "$nfRoot\Tools"
 $nfToolBin       = "$nfRoot\ToolBin"
 $libraryVersion  = $(& "$nfToolBin\neon-build" read-version "$nfLib/Neon.Common/Build.cs" NeonLibraryVersion)
 $neonkubeVersion = $(& "$nfToolBin\neon-build" read-version "$nfLib/Neon.Common/Build.cs" NeonKubeVersion)
+
+# We need to do a release solution build to ensure that any tools or other
+# dependencies are built before we build and publish the individual packages.
+
+Write-Output ""
+Write-Output "*******************************************************************************"
+Write-Output "***                            BUILD SOLUTION                               ***"
+Write-Output "*******************************************************************************"
+Write-Output ""
+
+& "$msbuild" "$nfSolution" -p:Configuration=Release -restore -m -verbosity:quiet
+
+if (-not $?)
+{
+    throw "ERROR: BUILD FAILED"
+}
 
 # Update the project versions.
 

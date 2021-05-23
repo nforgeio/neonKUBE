@@ -119,11 +119,31 @@ function Publish
 
     $projectPath = [io.path]::combine($env:NF_ROOT, "Lib", "$project", "$project" + ".csproj")
 
-    dotnet pack $projectPath  -c Debug -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg -o "$env:NF_BUILD\nuget"
+    dotnet pack $projectPath -c Release -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg -o "$env:NF_BUILD\nuget"
     ThrowOnExitCode
 
     nuget push -Source $env:NC_NUGET_DEVFEED -ApiKey $devFeedApiKey "$env:NF_BUILD\nuget\$project.$version.nupkg"
     ThrowOnExitCode
+}
+
+# We need to do a release solution build to ensure that any tools or other
+# dependencies are built before we build and publish the individual packages.
+
+Write-Output ""
+Write-Output "*******************************************************************************"
+Write-Output "***                            BUILD SOLUTION                               ***"
+Write-Output "*******************************************************************************"
+Write-Output ""
+
+$msbuild     = "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\amd64\MSBuild.exe"
+$nfRoot      = "$env:NF_ROOT"
+$nfSolution  = "$nfRoot\neonKUBE.sln"
+
+& "$msbuild" "$nfSolution" -p:Configuration=Release -restore -m -verbosity:quiet
+
+if (-not $?)
+{
+    throw "ERROR: BUILD FAILED"
 }
 
 # We're going to call the neonCLOUD nuget versioner service to atomically increment the 
