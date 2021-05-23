@@ -115,9 +115,9 @@ REM Perform additional implementation in via Powershell.
 
 pwsh -File "%NF_ROOT%\buildenv.ps1"
 
+:done
 echo.
 echo ============================================================================================
 echo * Be sure to close and reopen Visual Studio and any command windows to pick up the changes *
 echo ============================================================================================
 pause
-:done
