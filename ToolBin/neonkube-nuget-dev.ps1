@@ -49,6 +49,10 @@ Request-AdminPermissions
 $versionerKey  = Get-SecretValue "NUGET_VERSIONER_KEY"
 $devFeedApiKey = Get-SecretValue "NUGET_DEVFEED_KEY"
 
+# We're going to build the Debug configuration so debugging will be easier.
+
+$config = "Debug"
+
 #------------------------------------------------------------------------------
 # Sets the package version in the specified project file and makes a backup
 # of the original project file named [$project.bak].
@@ -119,15 +123,15 @@ function Publish
 
     $projectPath = [io.path]::combine($env:NF_ROOT, "Lib", "$project", "$project" + ".csproj")
 
-    dotnet pack $projectPath -c Release -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg -o "$env:NF_BUILD\nuget"
+    dotnet pack $projectPath -c $config -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg -o "$env:NF_BUILD\nuget"
     ThrowOnExitCode
 
     nuget push -Source $env:NC_NUGET_DEVFEED -ApiKey $devFeedApiKey "$env:NF_BUILD\nuget\$project.$version.nupkg"
     ThrowOnExitCode
 }
 
-# We need to do a release solution build to ensure that any tools or other
-# dependencies are built before we build and publish the individual packages.
+# We need to do a  solution build to ensure that any tools or other dependencies 
+# are built before we build and publish the individual packages.
 
 Write-Output ""
 Write-Output "*******************************************************************************"
@@ -139,7 +143,7 @@ $msbuild     = "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MS
 $nfRoot      = "$env:NF_ROOT"
 $nfSolution  = "$nfRoot\neonKUBE.sln"
 
-& "$msbuild" "$nfSolution" -p:Configuration=Release -restore -m -verbosity:quiet
+& "$msbuild" "$nfSolution" -p:Configuration=$config -restore -m -verbosity:quiet
 
 if (-not $?)
 {
