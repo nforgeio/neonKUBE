@@ -375,7 +375,7 @@ namespace Neon.HyperV
             {
                 // Enable nested virtualization for the VM.
 
-                powershell.Execute($"{hyperVNamespace}Set-VMProcessor -ExposeVirtualizationExtensions $true");
+                powershell.Execute($"{hyperVNamespace}Set-VMProcessor -VMName \"{machineName}\" -ExposeVirtualizationExtensions $true");
 
                 // Enable MAC address spoofing for the VMs network adapter.
 
