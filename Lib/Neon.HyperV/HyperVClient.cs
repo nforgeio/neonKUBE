@@ -186,7 +186,7 @@ namespace Neon.HyperV
         /// HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Virtual Machine\Auto\OSName
         /// </example>
         /// </remarks>
-        public bool IsNestedVirtualization => Registry.GetValue(@"Computer\HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Virtual Machine\Auto", "OSName", null) != null;
+        public bool IsNestedVirtualization => Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Virtual Machine\Auto", "OSName", null) != null;
 
         /// <summary>
         /// Creates a virtual machine. 
