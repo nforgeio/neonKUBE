@@ -379,7 +379,7 @@ namespace Neon.HyperV
 
                 // Enable MAC address spoofing for the VMs network adapter.
 
-                powershell.Execute($"{hyperVNamespace}Get-VMNetworkAdapter -VMName \"{machineName}\" | {hyperVNamespace}Set-VMNetworkAdapter -MacAddressSpoofing On");
+                powershell.Execute($"{hyperVNamespace}Set-VMNetworkAdapter -VMName \"{machineName}\" -MacAddressSpoofing On");
             }
         }
 
