@@ -29,6 +29,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Microsoft.Win32;
+
 using Neon.Common;
 using Neon.Windows;
 
@@ -170,6 +172,21 @@ namespace Neon.HyperV
 
             return vm;
         }
+
+        /// <summary>
+        /// Determines whether the current machine is already running as a Hyper-V
+        /// virtual machine and that any Hyper-V VMs deployed on this machine can
+        /// be considered to be nested.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// We use the presence of this registry value to detect VM nesting:
+        /// </para>
+        /// <example>
+        /// HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Virtual Machine\Auto\OSName
+        /// </example>
+        /// </remarks>
+        public bool IsNestedVirtualization => Registry.GetValue(@"Computer\HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Virtual Machine\Auto", "OSName", null) != null;
 
         /// <summary>
         /// Creates a virtual machine. 
@@ -335,7 +352,8 @@ namespace Neon.HyperV
             }
 
             // Windows 10 releases since the August 2017 Creators Update enable automatic
-            // virtual drive checkpointing (which is annoying).
+            // virtual drive checkpointing (which is annoying).  We're going to disable this
+            // by default.
 
             if (!checkpointDrives)
             {
@@ -347,6 +365,21 @@ namespace Neon.HyperV
                 {
                     throw new HyperVException(e.Message, e);
                 }
+            }
+
+            // We need to do some extra configuration for nested virtual machines:
+            //
+            //      https://docs.microsoft.com/en-us/virtualization/hyper-v-on-windows/user-guide/nested-virtualization
+
+            if (IsNestedVirtualization)
+            {
+                // Enable nested virtualization for the VM.
+
+                powershell.Execute($"{hyperVNamespace}Set-VMProcessor -ExposeVirtualizationExtensions $true");
+
+                // Enable MAC address spoofing for the VMs network adapter.
+
+                powershell.Execute($"{hyperVNamespace}Get-VMNetworkAdapter -VMName \"{machineName}\" | {hyperVNamespace}Set-VMNetworkAdapter -MacAddressSpoofing On");
             }
         }
 
