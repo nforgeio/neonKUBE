@@ -379,6 +379,7 @@ File.AppendAllText(@"C:\Temp\log.txt", "*** GetSecretValue-6:" + Environment.New
 
                     default:
 
+File.AppendAllText(@"C:\Temp\log.txt", $"*** GetSecretValue-7: STATUS: {GetStatus(response)}" + Environment.NewLine);
                         throw new OnePasswordException(response.AllText);
                 }
             }
