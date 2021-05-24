@@ -737,8 +737,6 @@ function Pull-DockerImage
 
 function Ensure-VisualStudioNotRunning
 {
-    return                                                                          # <-- $debug(jefflill): DELETE THIS!
-
     Get-Process -Name devenv -ErrorAction SilentlyContinue | Out-Null
 
     if ($?)
