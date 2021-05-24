@@ -89,7 +89,7 @@ function Load-Assembly
 }
 
 #------------------------------------------------------------------------------
-# Writes text to the verbose output stream (#6) using Write-Information.
+# Writes text to the verbose output stream (#4) using Write-Information.
 # 
 # ARGUMENTS:
 #
@@ -247,7 +247,7 @@ function Invoke-CaptureStreams
         }
         else
         {
-            & cmd /c "$command > `"$stdoutPath`" 2> `"$stderrPath`""
+            & cmd /c "$command > `"$stdoutPath`" 2> `"$stderrPath`"" 6>&2
         }
 
         $exitCode = $LastExitCode
