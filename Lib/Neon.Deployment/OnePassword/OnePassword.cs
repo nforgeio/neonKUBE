@@ -177,6 +177,7 @@ namespace Neon.Deployment
                 OnePassword.masterPassword = masterPassword;
 
                 var input = new StringReader(masterPassword);
+File.AppendAllText(@"C:\Temp\log.txt", $"*** SignIn-0: MASTER-PASSWORD: {masterPassword}" + Environment.NewLine);
 
                 var response = NeonHelper.ExecuteCapture("op",
                     new string[]
@@ -188,13 +189,16 @@ namespace Neon.Deployment
                     },
                     input: input);
 
+File.AppendAllText(@"C:\Temp\log.txt", $"*** SignIn-1: EXITCODE: {response.ExitCode}" + Environment.NewLine);
                 if (response.ExitCode != 0)
                 {
                     Signout();
                     throw new OnePasswordException(response.AllText);
                 }
 
+File.AppendAllText(@"C:\Temp\log.txt", $"*** SignIn-2: TOKEN: {response.OutputText.Trim()}" + Environment.NewLine);
                 SetSessionToken(response.OutputText.Trim());
+File.AppendAllText(@"C:\Temp\log.txt", $"*** SignIn-3:" + Environment.NewLine);
             }
         }
 
@@ -267,7 +271,7 @@ retry:          var response = NeonHelper.ExecuteCapture("op",
 
                         if (value == string.Empty)
                         {
-                            throw new OnePasswordException($"Property [{property}] returned an emoty string.  Does it exist?.");
+                            throw new OnePasswordException($"Property [{property}] returned an empty string.  Does it exist?.");
                         }
 
                         return value;
@@ -315,6 +319,7 @@ retry:          var response = NeonHelper.ExecuteCapture("op",
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
+File.AppendAllText(@"C:\Temp\log.txt", "*** GetSecretValue-0:" + Environment.NewLine);  // <-- $debug(jefflill): DELETE THESE!
             var parsedName = ProfileServer.ParseSecretName(name);
             var property   = parsedName.Property ?? "value";
 
@@ -327,6 +332,7 @@ retry:          var response = NeonHelper.ExecuteCapture("op",
                 EnsureSignedIn();
 
                 vault = GetVault(vault);
+File.AppendAllText(@"C:\Temp\log.txt", $"*** GetSecretValue-2: TOKEN: {sessionToken}" + Environment.NewLine);
 
 retry:          var response = NeonHelper.ExecuteCapture("op",
                     new string[]
@@ -337,6 +343,9 @@ retry:          var response = NeonHelper.ExecuteCapture("op",
                         "--vault", vault,
                         "--fields", property
                     });
+File.AppendAllText(@"C:\Temp\log.txt", "*** GetSecretValue-3: RESPONSE:" + Environment.NewLine);
+File.AppendAllText(@"C:\Temp\log.txt", $"EXITCODE: {response.ExitCode}" + Environment.NewLine);
+File.AppendAllText(@"C:\Temp\log.txt", $"TEXT: {response.AllText}" + Environment.NewLine);
 
                 switch (GetStatus(response))
                 {
@@ -346,21 +355,24 @@ retry:          var response = NeonHelper.ExecuteCapture("op",
 
                         if (value == string.Empty)
                         {
-                            throw new OnePasswordException($"Property [{property}] returned an emoty string.  Does it exist?.");
+                            throw new OnePasswordException($"Property [{property}] returned an empty string.  Does it exist?.");
                         }
 
                         return value;
 
                     case OnePasswordStatus.SessionExpired:
 
+File.AppendAllText(@"C:\Temp\log.txt", "*** GetSecretValue-4:" + Environment.NewLine);
                         if (retrying)
                         {
                             throw new OnePasswordException(response.AllText);
                         }
+File.AppendAllText(@"C:\Temp\log.txt", "*** GetSecretValue-5:" + Environment.NewLine);
 
                         // Obtain a fresh session token and retry the operation.
 
                         Signin(account, masterPassword, defaultVault);
+File.AppendAllText(@"C:\Temp\log.txt", "*** GetSecretValue-6:" + Environment.NewLine);
 
                         retrying = true;
                         goto retry;
