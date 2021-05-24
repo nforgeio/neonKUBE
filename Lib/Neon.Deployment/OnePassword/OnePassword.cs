@@ -345,7 +345,7 @@ retry:          var response = NeonHelper.ExecuteCapture("op",
                     });
 File.AppendAllText(@"C:\Temp\log.txt", "*** GetSecretValue-3: RESPONSE:" + Environment.NewLine);
 File.AppendAllText(@"C:\Temp\log.txt", $"EXITCODE: {response.ExitCode}" + Environment.NewLine);
-File.AppendAllText(@"C:\Temp\log.txt", $"TEXT: {response.AllText}" + Environment.NewLine);
+File.AppendAllText(@"C:\Temp\log.txt", $"ALLTEXT: {response.AllText}" + Environment.NewLine);
 
                 switch (GetStatus(response))
                 {
@@ -449,7 +449,7 @@ File.AppendAllText(@"C:\Temp\log.txt", "*** GetSecretValue-6:" + Environment.New
             }
             else
             {
-                if (response.AllText.Contains("session expired") || response.AllText.Contains("you are not currently signed in"))
+                if (response.AllText.Contains("session expired") || response.AllText.Contains("You are not currently signed in"))
                 {
                     return OnePasswordStatus.SessionExpired;
                 }
