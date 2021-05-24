@@ -137,7 +137,17 @@ function Write-Exception
         $error
     )
 
-    Write-Exception $error
+    Write-Info "EXCEPTION: $error"
+    Write-Info "-------------------------------------------"
+    Write-Info "SCRIPT STACK TRACE"
+    Write-Info "------------------"
+    Write-Info $("`r`n" + $error.ScriptStackTrace)
+
+    if (![System.String]::IsNullOrEmpty($error.StackTrace))
+    {
+        Write-Info ".NET STACK TRACE"
+        Write-Info $("`r`n" + $error.StackTrace)
+    }
 }
 
 #------------------------------------------------------------------------------
