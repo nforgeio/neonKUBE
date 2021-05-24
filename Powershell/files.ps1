@@ -29,27 +29,74 @@
 
 #------------------------------------------------------------------------------
 # Recuresively removes the contents of a filesystem directory if it exists.
+#
+# ARGUMENTS:
+#
+#   path            - path to the directory being cleared
+#   ignoreErrors    - optionally ignore any errors
+#
+# REMARKS:
+#
+# Pass [ignoreErrors=$true] when there's a possibility some of the files
+# or subdirectories may be locked or restricted but the operation should
+# continue and delete what it can.
 
 function Clear-Directory
 {
     [CmdletBinding()]
     param (
         [Parameter(Position=0, Mandatory=$true)]
-        [string]$path
+        [string]$path,
+        [Parameter(Position=1, Mandatory=$false)]
+        [switch]$ignoreErrors = $false
     )
 
-    if ([System.String]::IsNullOrEmpty($path) -or ![System.IO.Directory]::Exists($path))
+    if ($ignoreErrors)
     {
-        return
-    }
+        if ([System.String]::IsNullOrEmpty($path) -or ![System.IO.Directory]::Exists($path))
+        {
+            return
+        }
 
-    ForEach ($filePath in [System.IO.Directory]::GetFiles($path))
-    {
-        [System.IO.File]::Delete($filePath)
-    }
+        ForEach ($filePath in [System.IO.Directory]::GetFiles($path))
+        {
+            try
+            {
+                [System.IO.File]::Delete($filePath)
+            }
+            catch
+            {
+                # Ignoring this
+            }
+        }
 
-    ForEach ($folderPath in [System.IO.Directory]::GetDirectories($path))
+        ForEach ($folderPath in [System.IO.Directory]::GetDirectories($path))
+        {
+            try
+            {
+                [System.IO.Directory]::Delete($folderPath, $true)
+            }
+            catch
+            {
+                # Ignoring this
+            }
+        }
+    }
+    else
     {
-        [System.IO.Directory]::Delete($folderPath, $true)
+        if ([System.String]::IsNullOrEmpty($path) -or ![System.IO.Directory]::Exists($path))
+        {
+            return
+        }
+
+        ForEach ($filePath in [System.IO.Directory]::GetFiles($path))
+        {
+            [System.IO.File]::Delete($filePath)
+        }
+
+        ForEach ($folderPath in [System.IO.Directory]::GetDirectories($path))
+        {
+            [System.IO.Directory]::Delete($folderPath, $true)
+        }
     }
 }
