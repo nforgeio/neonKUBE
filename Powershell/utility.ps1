@@ -247,7 +247,7 @@ function Invoke-CaptureStreams
         }
         else
         {
-            & cmd /c "$command > `"$stdoutPath`" 2> `"$stderrPath`"" 6>&2
+            & cmd /c "$command > `"$stdoutPath`" 2> `"$stderrPath`""
         }
 
         $exitCode = $LastExitCode
