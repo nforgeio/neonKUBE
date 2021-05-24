@@ -437,7 +437,7 @@ retry:          var response = NeonHelper.ExecuteCapture("op",
             }
             else
             {
-                if (response.AllText.Contains("session expired"))
+                if (response.AllText.Contains("session expired") || response.AllText.Contains("you are not currently signed in"))
                 {
                     return OnePasswordStatus.SessionExpired;
                 }
