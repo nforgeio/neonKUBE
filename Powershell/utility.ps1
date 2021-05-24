@@ -89,7 +89,7 @@ function Load-Assembly
 }
 
 #------------------------------------------------------------------------------
-# Writes text to the verbose output stream using Write-Information.
+# Writes text to the verbose output stream (#6) using Write-Information.
 # 
 # ARGUMENTS:
 #
@@ -101,6 +101,14 @@ function Load-Assembly
 # non-Powershell developers might expect, especially when called within
 # functions where Write-Output actually adds to the result returned by the
 # function due to how Powershell structures streams.
+#
+# This is typically used for writting error information so it can be logged.
+# Write-Error doesn't seem to do what we want here since it doesn't accept
+# a string argument.  When redirecting a script's output, you should use
+# the special "*>" redirector operator to redirect all streams to the log
+# file, like:
+#
+#       pwsh -f myscript.ps1 *> mylog.txt
 
 function Write-Info
 {
@@ -110,7 +118,7 @@ function Write-Info
         [string]$text
     )
 
-    Write-Information -InformationAction Continue $text
+    Write-Verbose $text -Verbose
 }
 
 #------------------------------------------------------------------------------
@@ -129,9 +137,7 @@ function Write-Exception
         $error
     )
 
-    Write-Output "EXCEPTION: $error"
-    Write-Output "-------------------------------------------"
-    $error.Exception | Format-List -force
+    Write-Exception $error
 }
 
 #------------------------------------------------------------------------------
@@ -237,7 +243,7 @@ function Invoke-CaptureStreams
 
         if ($interleave)
         {
-            & cmd /c "$command > `"$stdoutPath`" 2>&1"
+            & cmd /c "$command > `"$stdoutPath`" *>&1"
         }
         else
         {

@@ -67,7 +67,7 @@ echo "Building cwf-args" > "$logPath"
 $env:GOOS   = "windows"
 $env:GOARCH = "amd64"
 
-go build -o "$outputPath\cwf-args.exe" . >> "$logPath" 2>&1
+go build -o "$outputPath\cwf-args.exe" . *>> "$logPath"
 
 $exitCode = $lastExitCode
 
@@ -78,7 +78,7 @@ if ($exitCode -ne 0)
     exit $exitCode
 }
 
-echo "Build success" >> "$logPath" 2>&1
+echo "Build success" *>> "$logPath"
 
 Set-Cwd $orgDirectory
 
@@ -111,7 +111,7 @@ echo "Building twf-args" > "$logPath"
 $env:GOOS   = "windows"
 $env:GOARCH = "amd64"
 
-go build -o "$outputPath\twf-args.exe" . >> "$logPath" 2>&1
+go build -o "$outputPath\twf-args.exe" . *>> "$logPath"
 
 $exitCode = $lastExitCode
 
@@ -122,6 +122,6 @@ if ($exitCode -ne 0)
     exit $exitCode
 }
 
-echo "Build success" >> "$logPath" 2>&1
+echo "Build success" *>> "$logPath"
 
 Set-Cwd $orgDirectory
