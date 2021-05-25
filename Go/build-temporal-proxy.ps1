@@ -45,7 +45,7 @@ Set-Cwd $projectPath
 # Build the WINDOWS binary
 $env:GOOS	= "windows"
 $env:GOARCH = "amd64"
-go build -i -mod=vendor -ldflags="-w -s" -v -o $buildPath\temporal-proxy.win.exe cmd\temporalproxy\main.go 6>&1 > "$logPath"
+go build -i -mod=vendor -ldflags="-w -s" -v -o $buildPath\temporal-proxy.win.exe cmd\temporalproxy\main.go 6>&1 2>&1 > "$logPath"
 
 $exitCode = $lastExitCode
 
@@ -59,7 +59,7 @@ if ($exitCode -ne 0)
 # Build the LINUX binary
 $env:GOOS   = "linux"
 $env:GOARCH = "amd64"
-go build -i -mod=vendor -ldflags="-w -s" -v -o $buildPath\temporal-proxy.linux cmd\temporalproxy\main.go 6>&1 > "$logPath"
+go build -i -mod=vendor -ldflags="-w -s" -v -o $buildPath\temporal-proxy.linux cmd\temporalproxy\main.go 6>&1 2>&1 > "$logPath"
 
 $exitCode = $lastExitCode
 
@@ -73,7 +73,7 @@ if ($exitCode -ne 0)
 # Build the OSX binary
 $env:GOOS   = "darwin"
 $env:GOARCH = "amd64"
-go build -i -mod=vendor -ldflags="-w -s" -v -o $buildPath\temporal-proxy.osx cmd\temporalproxy\main.go 6>&1 > "$logPath"
+go build -i -mod=vendor -ldflags="-w -s" -v -o $buildPath\temporal-proxy.osx cmd\temporalproxy\main.go 6>&1 2>&1 > "$logPath"
 
 $exitCode = $lastExitCode
 
@@ -87,9 +87,9 @@ if ($exitCode -ne 0)
 # Compress the binaries to the [Neon.Temporal] project where they'll
 # be embedded as binary resources.
 $neonTemporalResourceFolder = "$env:NF_ROOT\Lib\Neon.Temporal\Resources"
-neon-build gzip "$buildPath\temporal-proxy.linux"   "$neonTemporalResourceFolder\temporal-proxy.linux.gz"   6>&1 > "$logPath"
-neon-build gzip "$buildPath\temporal-proxy.osx"     "$neonTemporalResourceFolder\temporal-proxy.osx.gz"     6>&1 > "$logPath"
-neon-build gzip "$buildPath\temporal-proxy.win.exe" "$neonTemporalResourceFolder\temporal-proxy.win.exe.gz" 6>&1 > "$logPath"
+neon-build gzip "$buildPath\temporal-proxy.linux"   "$neonTemporalResourceFolder\temporal-proxy.linux.gz"   6>&1 2>&1 > "$logPath"
+neon-build gzip "$buildPath\temporal-proxy.osx"     "$neonTemporalResourceFolder\temporal-proxy.osx.gz"     6>&1 2>&1 > "$logPath"
+neon-build gzip "$buildPath\temporal-proxy.win.exe" "$neonTemporalResourceFolder\temporal-proxy.win.exe.gz" 6>&1 2>&1 > "$logPath"
 
 # Return to the original directory
 Set-Cwd $orgDirectory

@@ -110,8 +110,8 @@ function Load-Assembly
 #
 # Redirect stream #6 explicily instead:
 #
-#       pwsh -f myscript1.ps1 6>&1  > mylog.txt
-#       pwsh -f myscript2.ps1 6>&1 >> mylog.txt
+#       pwsh -f myscript1.ps1 6>&1 2>&1  > mylog.txt
+#       pwsh -f myscript2.ps1 6>&1 2>&1 >> mylog.txt
 
 function Write-Info
 {

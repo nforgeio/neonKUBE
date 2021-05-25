@@ -44,7 +44,7 @@ Push-Cwd $projectPath | Out-Null
 # Build the WINDOWS binary
 $env:GOOS	= "windows"
 $env:GOARCH = "amd64"
-go build -i -mod=vendor -ldflags="-w -s" -v -o $buildPath\cadence-proxy.win.exe cmd\cadenceproxy\main.go 6>&1 > "$logPath"
+go build -i -mod=vendor -ldflags="-w -s" -v -o $buildPath\cadence-proxy.win.exe cmd\cadenceproxy\main.go 6>&1 2>&1 > "$logPath"
 
 $exitCode = $lastExitCode
 
@@ -58,7 +58,7 @@ if ($exitCode -ne 0)
 # Build the LINUX binary
 $env:GOOS   = "linux"
 $env:GOARCH = "amd64"
-go build -i -mod=vendor -ldflags="-w -s" -v -o $buildPath\cadence-proxy.linux cmd\cadenceproxy\main.go 6>&1 > "$logPath"
+go build -i -mod=vendor -ldflags="-w -s" -v -o $buildPath\cadence-proxy.linux cmd\cadenceproxy\main.go 6>&1 2>&1 > "$logPath"
 
 $exitCode = $lastExitCode
 
@@ -72,7 +72,7 @@ if ($exitCode -ne 0)
 # Build the OSX binary
 $env:GOOS   = "darwin"
 $env:GOARCH = "amd64"
-go build -i -mod=vendor -ldflags="-w -s" -v -o $buildPath\cadence-proxy.osx cmd\cadenceproxy\main.go 6>&1 > "$logPath"
+go build -i -mod=vendor -ldflags="-w -s" -v -o $buildPath\cadence-proxy.osx cmd\cadenceproxy\main.go 6>&1 2>&1 > "$logPath"
 
 $exitCode = $lastExitCode
 
@@ -86,8 +86,8 @@ if ($exitCode -ne 0)
 # Compress the binaries to the [Neon.Cadence] project where they'll
 # be embedded as binary resources.
 $neonCadenceResourceFolder = "$env:NF_ROOT\Lib\Neon.Cadence\Resources"
-neon-build gzip "$buildPath\cadence-proxy.linux"   "$neonCadenceResourceFolder\cadence-proxy.linux.gz"   6>&1 > "$logPath"
-neon-build gzip "$buildPath\cadence-proxy.osx"     "$neonCadenceResourceFolder\cadence-proxy.osx.gz"     6>&1 > "$logPath"
-neon-build gzip "$buildPath\cadence-proxy.win.exe" "$neonCadenceResourceFolder\cadence-proxy.win.exe.gz" 6>&1 > "$logPath"
+neon-build gzip "$buildPath\cadence-proxy.linux"   "$neonCadenceResourceFolder\cadence-proxy.linux.gz"   6>&1 2>&1 > "$logPath"
+neon-build gzip "$buildPath\cadence-proxy.osx"     "$neonCadenceResourceFolder\cadence-proxy.osx.gz"     6>&1 2>&1 > "$logPath"
+neon-build gzip "$buildPath\cadence-proxy.win.exe" "$neonCadenceResourceFolder\cadence-proxy.win.exe.gz" 6>&1 2>&1 > "$logPath"
 
 Pop-Cwd | Out-Null
