@@ -71,10 +71,10 @@ Remove-Item "$target" -ErrorAction Ignore
 
 7z a -tzip -r -mmt4 -mx9 -bsp1 "$target" "$nfRoot"
 
-" "
-"**************************"
-"*** ARCHIVING COMPLETE ***"
-"**************************"
-" "
-"OUTPUT: $target"
-" "
+Write-Info " "
+Write-Info "**************************"
+Write-Info "*** ARCHIVING COMPLETE ***"
+Write-Info "**************************"
+Write-Info " "
+Write-Info "OUTPUT: $target"
+Write-Info " "
