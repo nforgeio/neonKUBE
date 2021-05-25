@@ -177,7 +177,6 @@ namespace Neon.Deployment
                 OnePassword.masterPassword = masterPassword;
 
                 var input = new StringReader(masterPassword);
-File.AppendAllText(@"C:\Temp\log.txt", $"*** SignIn-0: MASTER-PASSWORD: {masterPassword}" + Environment.NewLine);
 
                 var response = NeonHelper.ExecuteCapture("op",
                     new string[]
@@ -189,16 +188,13 @@ File.AppendAllText(@"C:\Temp\log.txt", $"*** SignIn-0: MASTER-PASSWORD: {masterP
                     },
                     input: input);
 
-File.AppendAllText(@"C:\Temp\log.txt", $"*** SignIn-1: EXITCODE: {response.ExitCode}" + Environment.NewLine);
                 if (response.ExitCode != 0)
                 {
                     Signout();
                     throw new OnePasswordException(response.AllText);
                 }
 
-File.AppendAllText(@"C:\Temp\log.txt", $"*** SignIn-2: TOKEN: {response.OutputText.Trim()}" + Environment.NewLine);
                 SetSessionToken(response.OutputText.Trim());
-File.AppendAllText(@"C:\Temp\log.txt", $"*** SignIn-3:" + Environment.NewLine);
             }
         }
 
@@ -319,7 +315,6 @@ retry:          var response = NeonHelper.ExecuteCapture("op",
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
-File.AppendAllText(@"C:\Temp\log.txt", "*** GetSecretValue-0:" + Environment.NewLine);  // <-- $debug(jefflill): DELETE THESE!
             var parsedName = ProfileServer.ParseSecretName(name);
             var property   = parsedName.Property ?? "value";
 
@@ -332,7 +327,6 @@ File.AppendAllText(@"C:\Temp\log.txt", "*** GetSecretValue-0:" + Environment.New
                 EnsureSignedIn();
 
                 vault = GetVault(vault);
-File.AppendAllText(@"C:\Temp\log.txt", $"*** GetSecretValue-2: TOKEN: {sessionToken}" + Environment.NewLine);
 
 retry:          var response = NeonHelper.ExecuteCapture("op",
                     new string[]
@@ -343,9 +337,6 @@ retry:          var response = NeonHelper.ExecuteCapture("op",
                         "--vault", vault,
                         "--fields", property
                     });
-File.AppendAllText(@"C:\Temp\log.txt", "*** GetSecretValue-3: RESPONSE:" + Environment.NewLine);
-File.AppendAllText(@"C:\Temp\log.txt", $"EXITCODE: {response.ExitCode}" + Environment.NewLine);
-File.AppendAllText(@"C:\Temp\log.txt", $"ALLTEXT: {response.AllText}" + Environment.NewLine);
 
                 switch (GetStatus(response))
                 {
@@ -362,24 +353,20 @@ File.AppendAllText(@"C:\Temp\log.txt", $"ALLTEXT: {response.AllText}" + Environm
 
                     case OnePasswordStatus.SessionExpired:
 
-File.AppendAllText(@"C:\Temp\log.txt", "*** GetSecretValue-4:" + Environment.NewLine);
                         if (retrying)
                         {
                             throw new OnePasswordException(response.AllText);
                         }
-File.AppendAllText(@"C:\Temp\log.txt", "*** GetSecretValue-5:" + Environment.NewLine);
 
                         // Obtain a fresh session token and retry the operation.
 
                         Signin(account, masterPassword, defaultVault);
-File.AppendAllText(@"C:\Temp\log.txt", "*** GetSecretValue-6:" + Environment.NewLine);
 
                         retrying = true;
                         goto retry;
 
                     default:
 
-File.AppendAllText(@"C:\Temp\log.txt", $"*** GetSecretValue-7: STATUS: {GetStatus(response)}" + Environment.NewLine);
                         throw new OnePasswordException(response.AllText);
                 }
             }
