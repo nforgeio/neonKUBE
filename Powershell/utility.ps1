@@ -104,11 +104,14 @@ function Load-Assembly
 #
 # This is typically used for writting error information so it can be logged.
 # Write-Error doesn't seem to do what we want here since it doesn't accept
-# a string argument.  When redirecting a script's output, you should use
-# the special "*>" redirector operator to redirect all streams to the log
-# file, like:
+# a string argument.  When redirecting a script's output, you SHOULD NOT USE
+# the special "*>" or "*>>" redirector operators to redirect all streams to 
+# the log.  This doesn't seem to work and results in handle redirection errors.
 #
-#       pwsh -f myscript.ps1 *> mylog.txt
+# Redirect stream #6 explicily instead:
+#
+#       pwsh -f myscript1.ps1 6>&1  > mylog.txt
+#       pwsh -f myscript2.ps1 6>&1 >> mylog.txt
 
 function Write-Info
 {
