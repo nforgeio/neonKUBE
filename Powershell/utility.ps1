@@ -89,7 +89,7 @@ function Load-Assembly
 }
 
 #------------------------------------------------------------------------------
-# Writes text to the verbose output stream (#4) using Write-Information.
+# Writes text to the verbose output stream (#6) using Write-Information.
 # 
 # ARGUMENTS:
 #
@@ -254,7 +254,7 @@ function Invoke-CaptureStreams
 
         if ($interleave)
         {
-            & cmd /c "$command  2>&1 > `"$stdoutPath`""
+            & cmd /c "$command 6>&1 2>&1 > `"$stdoutPath`""
         }
         else
         {
