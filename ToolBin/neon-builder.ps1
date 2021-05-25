@@ -163,6 +163,10 @@ try
 
     Ensure-VisualStudioNotRunning
 
+    # Ensure that all of the referenced nuget packages are restored.
+
+    dotnet restore
+
     # Build the solution.
 
     if (-not $nobuild)
