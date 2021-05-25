@@ -533,6 +533,7 @@ function Set-ActionOutput
         [Parameter(Position=0, Mandatory=$true)]
         [string]$name,
         [Parameter(Position=1, Mandatory=$false)]
+        [AllowEmptyString()]
         [string]$value = $null
     )
 
@@ -561,6 +562,7 @@ function Log-ActionDebugMessage
     [CmdletBinding()]
     param (
         [Parameter(Position=0, Mandatory=$true)]
+        [AllowEmptyString()]
         [string]$message
     )
 
@@ -579,6 +581,7 @@ function Write-ActionWarning
     [CmdletBinding()]
     param (
         [Parameter(Position=0, Mandatory=$true)]
+        [AllowEmptyString()]
         [string]$message
     )
 
@@ -598,6 +601,7 @@ function Write-ActionError
     [CmdletBinding()]
     param (
         [Parameter(Position=0, Mandatory=$true)]
+        [AllowEmptyString()]
         [string]$message,
         [Parameter(Position=2, Mandatory=$false)]
         [switch]$noEscape = $false
@@ -648,9 +652,7 @@ function Write-ActionException
         $error
     )
 
-    Write-Info "EXCEPTION: $error"
-    Write-Info "-------------------------------------------"
-    Write-Info $($error_.Exception | Format-List -force)
+    Write-Exception $error
 }
 
 #------------------------------------------------------------------------------

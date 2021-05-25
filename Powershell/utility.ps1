@@ -115,6 +115,7 @@ function Write-Info
     [CmdletBinding()]
     param (
         [Parameter(Position=0, Mandatory=$false)]
+        [AllowEmptyString()]
         [string]$text
     )
 
