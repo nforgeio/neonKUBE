@@ -89,43 +89,6 @@ function Load-Assembly
 }
 
 #------------------------------------------------------------------------------
-# Writes text to the verbose output stream (#6) using Write-Information.
-# 
-# ARGUMENTS:
-#
-#   text    - optionally passes the line of text to Write
-#
-# REMARKS:
-#
-# We're using this to workaround the fact that Write-Output doesn't do what
-# non-Powershell developers might expect, especially when called within
-# functions where Write-Output actually adds to the result returned by the
-# function due to how Powershell structures streams.
-#
-# This is typically used for writting error information so it can be logged.
-# Write-Error doesn't seem to do what we want here since it doesn't accept
-# a string argument.  When redirecting a script's output, you SHOULD NOT USE
-# the special "*>" or "*>>" redirector operators to redirect all streams to 
-# the log.  This doesn't seem to work and results in handle redirection errors.
-#
-# Redirect stream #6 explicily instead:
-#
-#       pwsh -f myscript1.ps1 6>&1 2>&1  > mylog.txt
-#       pwsh -f myscript2.ps1 6>&1 2>&1 >> mylog.txt
-
-function Write-Info
-{
-    [CmdletBinding()]
-    param (
-        [Parameter(Position=0, Mandatory=$false)]
-        [AllowEmptyString()]
-        [string]$text
-    )
-
-    Write-Verbose $text -Verbose
-}
-
-#------------------------------------------------------------------------------
 # Writes information about a Powershell action exception to the output.
 #
 # ARGUMENTS:
@@ -141,16 +104,16 @@ function Write-Exception
         $error
     )
 
-    Write-Info "EXCEPTION: $error"
-    Write-Info "-------------------------------------------"
-    Write-Info "SCRIPT STACK TRACE"
-    Write-Info "------------------"
-    Write-Info $("`r`n" + $error.ScriptStackTrace)
+    Write-Host "EXCEPTION: $error"
+    Write-Host "-------------------------------------------"
+    Write-Host "SCRIPT STACK TRACE"
+    Write-Host "------------------"
+    Write-Host $("`r`n" + $error.ScriptStackTrace)
 
     if (![System.String]::IsNullOrEmpty($error.StackTrace))
     {
-        Write-Info ".NET STACK TRACE"
-        Write-Info $("`r`n" + $error.StackTrace)
+        Write-Host ".NET STACK TRACE"
+        Write-Host $("`r`n" + $error.StackTrace)
     }
 }
 
@@ -250,9 +213,9 @@ function Invoke-CaptureStreams
     {
         if (!$noOutput)
         {
-            Write-Info
-            Write-Info "RUN: $command"
-            Write-Info
+            Write-Host
+            Write-Host "RUN: $command"
+            Write-Host
         }
 
         if ($interleave)
@@ -295,11 +258,11 @@ function Invoke-CaptureStreams
         {
             if ($interleave)
             {
-                Write-Info $result.stdout
+                Write-Host $result.stdout
             }
             else
             {
-                Write-Info $result.alltext
+                Write-Host $result.alltext
             }
         }
 
@@ -369,7 +332,7 @@ function ToLineArray
 }
 
 #------------------------------------------------------------------------------
-# Appends a line of text to [C:\Temp\log.txt] as well as [Write-Info] as a very
+# Appends a line of text to [C:\Temp\log.txt] as well as [Write-Host] as a very
 # simple logging mechanism to be used while debugging Powershell scripts, 
 # specifically GitHub Actions.
 #
@@ -397,7 +360,7 @@ function Log-DebugLine
     $path = [System.IO.Path]::Combine($folder, "log.txt")
 
     [System.IO.File]::AppendAllText($path, $text + "`r`n")
-    Write-Info "$text >>>"
+    Write-Host "$text >>>"
 }
 
 #------------------------------------------------------------------------------
@@ -614,7 +577,7 @@ function Push-DockerImage
 	{
 		if ($attempt -gt 0)
 		{
-			Write-Info "*** PUSH: RETRYING"
+			Write-Host "*** PUSH: RETRYING"
 		}
 
 		# $hack(jefflill):
@@ -646,7 +609,7 @@ function Push-DockerImage
 
 		if ($result.allText.Contains("blob upload unknown"))
 		{
-			Write-Info "*** PUSH: BLOB UPLOAD UNKNOWN"
+			Write-Host "*** PUSH: BLOB UPLOAD UNKNOWN"
 			$exitCode = 100
 		}
 
@@ -662,14 +625,14 @@ function Push-DockerImage
 				$fields    = $image -split ':'
 				$baseImage = $fields[0] + ":" + $baseTag
 
-				Write-Info "tag image: $image --> $baseImage"
+				Write-Host "tag image: $image --> $baseImage"
 				$result = Invoke-CaptureStreams "docker tag $image $baseImage" -interleave
 			}
 
 			return
 		}
 		
-		Write-Info "*** PUSH: EXITCODE=$exitCode"
+		Write-Host "*** PUSH: EXITCODE=$exitCode"
 		Start-Sleep 15
 	}
 
@@ -703,7 +666,7 @@ function Pull-DockerImage
 	{
 		if ($attempt -gt 0)
 		{
-			Write-Info "*** PULL: RETRYING"
+			Write-Host "*** PULL: RETRYING"
 		}
 
 		# $hack(jefflill):
@@ -717,7 +680,7 @@ function Pull-DockerImage
 
 		if ($result.allText.Contains("error pulling image configuration"))
 		{
-			Write-Info "*** PULL: error pulling image configuration"
+			Write-Host "*** PULL: error pulling image configuration"
 			$exitCode = 100
 		}
 
@@ -726,7 +689,7 @@ function Pull-DockerImage
 			return
 		}
 		
-		Write-Info "*** PULL: EXITCODE=$exitCode"
+		Write-Host "*** PULL: EXITCODE=$exitCode"
 		Start-Sleep 15
 	}
 

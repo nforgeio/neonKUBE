@@ -60,11 +60,11 @@ $originalDir      = $pwd
 
 if ($codedoc)
 {
-    Write-Info ""
-    Write-Info "**********************************************************"
-    Write-Info "***                 CODE DOCUMENTATION                 ***"
-    Write-Info "**********************************************************"
-    Write-Info ""
+    Write-Host ""
+    Write-Host "**********************************************************"
+    Write-Host "***                 CODE DOCUMENTATION                 ***"
+    Write-Host "**********************************************************"
+    Write-Host ""
 
     cd $nfCodeDoc
 

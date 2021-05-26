@@ -133,11 +133,11 @@ function Publish
 # We need to do a  solution build to ensure that any tools or other dependencies 
 # are built before we build and publish the individual packages.
 
-Write-Info  ""
-Write-Info  "*******************************************************************************"
-Write-Info  "***                            BUILD SOLUTION                               ***"
-Write-Info  "*******************************************************************************"
-Write-Info  ""
+Write-Host  ""
+Write-Host  "*******************************************************************************"
+Write-Host  "***                            BUILD SOLUTION                               ***"
+Write-Host  "*******************************************************************************"
+Write-Host  ""
 
 $msbuild     = "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\amd64\MSBuild.exe"
 $nfRoot      = "$env:NF_ROOT"
