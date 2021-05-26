@@ -154,7 +154,7 @@ try
     #
     # We're doing this to ensure that Docker is reset to its default
     # state after building images.  This is especially important for
-    # GihHub job runners.
+    # GitHub runners.
 
     if (!$noprune)
     {

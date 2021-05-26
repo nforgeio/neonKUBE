@@ -423,7 +423,7 @@ function Get-ActionWorkflowRunUri
 
 #------------------------------------------------------------------------------
 # Escapes a potentially multi-line string such that it can be written to STDOUT
-# and be processed correctly by the jobrunner.
+# and be processed correctly by the GitHub runner.
 #
 # ARGUMENTS:
 #
