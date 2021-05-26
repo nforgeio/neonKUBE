@@ -2693,6 +2693,11 @@ echo $? > {cmdFolder}/exit
 
                         var message = redact ? "**REDACTED COMMAND**" : bashCommand;
 
+                        if (!redact)
+                        {
+                            message = $"{message}\r\n{response.AllText}";
+                        }
+
                         throw new RemoteCommandException($"[exitcode={response.ExitCode}]: {message}");
                     }
                 }
