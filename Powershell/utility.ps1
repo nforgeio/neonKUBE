@@ -107,13 +107,12 @@ function Write-Exception
     Write-Host "EXCEPTION: $error"
     Write-Host "-------------------------------------------"
     Write-Host "SCRIPT STACK TRACE"
-    Write-Host "------------------"
-    Write-Host $("`r`n" + $error.ScriptStackTrace)
+    Write-Host $error.ScriptStackTrace
 
     if (![System.String]::IsNullOrEmpty($error.StackTrace))
     {
         Write-Host ".NET STACK TRACE"
-        Write-Host $("`r`n" + $error.StackTrace)
+        Write-Host $error.StackTrace
     }
 }
 
