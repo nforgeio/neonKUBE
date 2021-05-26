@@ -72,6 +72,7 @@ namespace Neon.Kube
 
         private const int UnlimitedParallel = 500;  // Treat this as "unlimited"
 
+        private object                              syncLock    = new object();
         private List<IDisposable>                   disposables = new List<IDisposable>();
         private ISetupController                    parent      = null;
         private string                              globalStatus;
@@ -921,11 +922,14 @@ namespace Neon.Kube
 
             if (ProgressEvent != null)
             {
-                ProgressEvent.Invoke(
-                    new SetupProgressMessage()
-                    {
-                        Message = message
-                    });
+                lock (syncLock)
+                {
+                    ProgressEvent.Invoke(
+                        new SetupProgressMessage()
+                        {
+                            Message = message
+                        });
+                }
             }
         }
 
@@ -937,12 +941,15 @@ namespace Neon.Kube
 
             if (ProgressEvent != null)
             {
-                ProgressEvent.Invoke(
-                    new SetupProgressMessage()
-                    {
-                        Verb    = verb,
-                        Message = message
-                    });
+                lock (syncLock)
+                {
+                    ProgressEvent.Invoke(
+                        new SetupProgressMessage()
+                        {
+                            Verb    = verb,
+                            Message = message
+                        });
+                }
             }
         }
 
@@ -956,12 +963,15 @@ namespace Neon.Kube
 
             if (ProgressEvent != null)
             {
-                ProgressEvent.Invoke(
-                    new SetupProgressMessage()
-                    {
-                        Node    = node,
-                        Message = message
-                    });
+                lock (syncLock)
+                {
+                    ProgressEvent.Invoke(
+                        new SetupProgressMessage()
+                        {
+                            Node    = node,
+                            Message = message
+                        });
+                }
             }
         }
 
@@ -976,13 +986,16 @@ namespace Neon.Kube
 
             if (ProgressEvent != null)
             {
-                ProgressEvent.Invoke(
-                    new SetupProgressMessage()
-                    {
-                        Node    = node,
-                        Verb    = verb,
-                        Message = message
-                    });
+                lock (syncLock)
+                {
+                    ProgressEvent.Invoke(
+                        new SetupProgressMessage()
+                        {
+                            Node    = node,
+                            Verb    = verb,
+                            Message = message
+                        });
+                }
             }
         }
 
@@ -996,12 +1009,15 @@ namespace Neon.Kube
 
             if (ProgressEvent != null)
             {
-                ProgressEvent.Invoke(
-                    new SetupProgressMessage()
-                    {
-                        Message = message,
-                        IsError = true
-                    });
+                lock (syncLock)
+                {
+                    ProgressEvent.Invoke(
+                        new SetupProgressMessage()
+                        {
+                            Message = message,
+                            IsError = true
+                        });
+                }
             }
         }
 
@@ -1016,13 +1032,16 @@ namespace Neon.Kube
 
             if (ProgressEvent != null)
             {
-                ProgressEvent.Invoke(
-                    new SetupProgressMessage()
-                    {
-                        Node    = node,
-                        Message = message,
-                        IsError = true
-                    });
+                lock (syncLock)
+                {
+                    ProgressEvent.Invoke(
+                        new SetupProgressMessage()
+                        {
+                            Node    = node,
+                            Message = message,
+                            IsError = true
+                        });
+                }
             }
         }
 
