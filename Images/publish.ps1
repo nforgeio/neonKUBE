@@ -53,6 +53,8 @@ function Publish
         [string]$Path
     )
 
+    Log-ImageBuild $([System.File.Path]::GetFileName($path))
+
     Push-Cwd "$Path" | Out-Null
 
     try
