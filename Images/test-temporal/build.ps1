@@ -14,8 +14,6 @@ param
 	[parameter(Mandatory=$True,Position=2)][string] $tag
 )
 
-Log-ImageBuild $registry $tag
-
 $appname      = "test-temporal"
 $organization = LibraryRegistryOrg
 $base_organization = KubeBaseRegistryOrg

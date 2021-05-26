@@ -24,7 +24,7 @@
 
 param 
 (
-	  [switch]$allVersions = $false,
+	[switch]$allVersions = $false,
     [switch]$nopush = $false
 )
 
@@ -45,6 +45,8 @@ function Build
 	$registry    = GetLibraryRegistry "test-cadence"
 	$tag         = $version
 	$tagAsLatest = TagAsLatest
+
+	Log-ImageBuild $registry $tag
 
 	# Build and publish the images.
 

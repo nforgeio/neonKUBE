@@ -27,8 +27,6 @@ param
 	[parameter(Mandatory=$true,Position=3)][string] $tag
 )
 
-Log-ImageBuild $registry $tag
-
 Pull-DockerImage "yugabytedb/yugabyte:$yugabyteVersion"
 
 # Build the image.

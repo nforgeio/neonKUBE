@@ -46,6 +46,8 @@ function Build
 	$tag         = $yugabyteVersion
 	$tagAsLatest = TagAsLatest
 
+	Log-ImageBuild $registry $tag
+
 	# Build and publish the images.
 
 	. ./build.ps1 -registry $registry -yugabyteVersion $yugabyteVersion -tag $tag

@@ -46,6 +46,8 @@ function Build
 	$tag         = $version
 	$tagAsLatest = TagAsLatest
 
+	Log-ImageBuild $registry $tag
+
 	# Build and publish the images.
 
 	. ./build.ps1 -registry $registry -version $version -tag $tag
