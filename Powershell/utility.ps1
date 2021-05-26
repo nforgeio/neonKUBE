@@ -101,18 +101,18 @@ function Write-Exception
     [CmdletBinding()]
     param (
         [Parameter(Position=0, Mandatory=$true)]
-        $error
+        $exception
     )
 
-    Write-Host "EXCEPTION: $error"
+    Write-Host "EXCEPTION: $exception"
     Write-Host "-------------------------------------------"
     Write-Host "SCRIPT STACK TRACE"
-    Write-Host $error.ScriptStackTrace
+    Write-Host $exception.ScriptStackTrace
 
-    if (![System.String]::IsNullOrEmpty($error.StackTrace))
+    if (![System.String]::IsNullOrEmpty($exception.StackTrace))
     {
         Write-Host ".NET STACK TRACE"
-        Write-Host $error.StackTrace
+        Write-Host $exception.StackTrace
     }
 }
 
