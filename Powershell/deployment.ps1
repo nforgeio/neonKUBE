@@ -318,9 +318,9 @@ function Remove-XenServerVMs
         [Parameter(Position=0, Mandatory=$true)]
         [string]$addressOrFQDN,
         [Parameter(Position=1, Mandatory=$true)]
-        [string]$username
+        [string]$username,
         [Parameter(Position=2, Mandatory=$true)]
-        [string]$password
+        [string]$password,
         [Parameter(Position=3, Mandatory=$true)]
         [string]$nameOrPattern
     )
