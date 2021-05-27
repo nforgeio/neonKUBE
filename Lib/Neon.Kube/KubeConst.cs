@@ -306,7 +306,7 @@ namespace Neon.Kube
         /// <summary>
         /// Identifies the main WSL2 distro hosting neonDESKTOP.
         /// </summary>
-        public const string NeonDesktopWsl2DistroName = "neon-desktop";
+        public const string NeonDesktopWsl2Distro = "neon-desktop";
 
         /// <summary>
         /// Identifies the production neonKUBE container image registry.
