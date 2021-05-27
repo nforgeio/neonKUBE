@@ -293,3 +293,37 @@ function Set-GitHub-Container-Visibility
 
     [Neon.Deployment.GitHub]::Packages.SetVisibility($organization, $nameOrPattern, [Neon.Deployment.GitHubPackageType]::Container, $visibility)
 }
+
+#------------------------------------------------------------------------------
+# Connects to a XenServer/XCP-ng host and removes any VMs matching the name or file
+# wildcard pattern, forceably shutting the VMs down when necessary.  Note that the
+# VM's drives will also be removed.
+#
+# ARGUMENTS:
+#
+#   addressOrFQDN   - the IP address or fully qualified domain name for the 
+#                     target XenServer-XCP-ng host machine
+#
+#   username        - the username for the host (generally [root])
+#
+#   password        - the user password
+#
+#   nameOrPattern   - the name of a specific VM to be deleted or a pattern including
+#                     [*] and/or [?] wildcards to match the names of VMs to be deleted
+
+function Remove-XenServerVMs
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$addressOrFQDN,
+        [Parameter(Position=1, Mandatory=$true)]
+        [string]$username
+        [Parameter(Position=2, Mandatory=$true)]
+        [string]$password
+        [Parameter(Position=3, Mandatory=$true)]
+        [string]$nameOrPattern
+    )
+
+    [Neon.Deployment.XenServer]::RemoveVMs($addressOrFQDN, $username, $password, $nameOrPattern)
+}

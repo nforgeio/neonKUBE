@@ -34,18 +34,20 @@ namespace Neon.Deployment
         /// wildcard pattern, forceably shutting the VMs down when necessary.  Note that the
         /// VM's drives will also be removed.
         /// </summary>
-        /// <param name="hostAddress">IP address or hostname for the XenServer host machine.</param>
-        /// <param name="password">The host password for username: [root]</param>
-        /// <param name="nameOrPattern">The VM name or pattern including '*' or '?' wildcards.</param>
-        public static void RemoveVMs(string hostAddress, string password, string nameOrPattern)
+        /// <param name="addressOrFQDN">Specifies the IP address or hostname for the target XenServer host machine.</param>
+        /// <param name="username">Specifies the username to be used to connect to the host.</param>
+        /// <param name="password">Specifies the host password.</param>
+        /// <param name="nameOrPattern">Specifies the VM name or pattern including '*' or '?' wildcards to be used to remove VMs.</param>
+        public static void RemoveVMs(string addressOrFQDN, string username, string password, string nameOrPattern)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hostAddress), nameof(hostAddress));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(addressOrFQDN), nameof(addressOrFQDN));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username), nameof(username));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(password), nameof(password));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nameOrPattern), nameof(nameOrPattern));
 
             var nameRegEx = NeonHelper.FileWildcardRegex(nameOrPattern);
 
-            using (var client = new XenClient(hostAddress, "root", password))
+            using (var client = new XenClient(addressOrFQDN, username, password))
             {
                 foreach (var vm in client.Machine.List()
                     .Where(vm => nameRegEx.IsMatch(vm.NameLabel)))
