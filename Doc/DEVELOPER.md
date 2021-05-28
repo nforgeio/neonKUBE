@@ -69,23 +69,23 @@ Follow the steps below to configure a development or test workstation:
   * Click **Install** (and take a coffee break)
   * Apply any pending **Visual Studio updates**
   * **Close** Visual Studio to install any updates
-  * **NOTE:** You need sign into Visual Studio using the **devops@neonforge.com**.  The password for this can be found at 1Password at **user-devops/NEONFORGE_LOGIN**
+  * **NOTE:** You need sign into Visual Studio using a Windows account (like **sally@neonforge.com** for internal developers)
 
 9. Create a **shortcut** for Visual Studio and configure it to run as **administrator**.  To build and run neonKUBE applications and services, **Visual Studio must be running with elevated privileges**.
 
 10. Install some SDKs:
-   * Install .NET Core SDK v3.1.403 from [here](https://dotnet.microsoft.com/download/dotnet-core/3.1)
+
+   * Install **.NET Core SDK v3.1.403** from [here](https://dotnet.microsoft.com/download/dotnet-core/3.1)
    * Install **.NET Framework 4.8 Developer Pack** from [here](https://dotnet.microsoft.com/download/thank-you/net48-developer-pack)
 
 11. Install **Docker for Windows (Stable)** from [here](http://hub.docker.com)
 
     * You'll need to create a DockerHub account if you don't already have one.
-
     * **IMPORTANT!** BuildKit causes random problems so be sure to disable it by setting **buildkit=false** in **Docker/Settings/Docker Engine**
 
 12. **Clone** the [https://github.com/nforgeio/neonKUBE](https://github.com/nforgeio/neonKUBE) repository to your workstation:
 
-    * **IMPORTANT:** All neonFORGE related repositories must be cloned within the same parent directory and their folder names cannot be changed.
+    * **IMPORTANT:** All neonFORGE related repositories must be cloned within the same parent directory and their folder names must be the same as the repo names.
     * Create an individual GitHub account [here](https://github.com/join?source=header-home) if you don't already have one
     * Go to [GitHub](http://github.com) and log into your account
     * Go to the neonKUBE [repository](https://github.com/nforgeio/neonKUBE).
@@ -105,7 +105,7 @@ Follow the steps below to configure a development or test workstation:
     * **Right-click** on **buildenv.cmd** and then **Run as adminstrator**
     * Press ENTER to close the CMD window when the script is finished
   
-15. **Clone** the other neonFORGE repos to the same directory as **neonKUBE** without changing their folder names:
+15. **Clone** the other neonFORGE repos to the same parent directory as **neonKUBE** without changing their folder names:
 
     * [https://github.com/nforgeio/temporal-samples](https://github.com/nforgeio/temporal-samples)
     * [https://github.com/nforgeio/cadence-samples](https://github.com/nforgeio/cadence-samples)
@@ -129,6 +129,19 @@ Follow the steps below to configure a development or test workstation:
 
 16. **Close** any running instances of **Visual Studio**
 
+17. Enable **WSL2**:
+
+    * Open a **pwsh** console **as administrator** and execute these commands:
+    ```
+    dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
+    dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
+    ```
+
+    * Close that console and open another **as administrator** and execute this:
+    ```
+    wsl --set-default-version 2
+    ```
+
 17. Install **7-Zip (32-bit)** (using the Windows *.msi* installer) from [here](http://www.7-zip.org/download.html)
 
 18. Install **Cygwin - setup-x86-64.exe** (all packages and default path) from: [here](https://www.cygwin.com/setup-x86_64.exe)
@@ -143,6 +156,7 @@ Follow the steps below to configure a development or test workstation:
       ![WinSCP Hidden Files](Images/Developer/WinSCPHiddenFiles.png?raw=true)
 
 20. Install Visual Studio Code and GO (needed for the Cadence and Temporal proxy builds):
+
     * Install **Visual Studio Code** from [here](https://code.visualstudio.com/download)
     * Install **go1.13.windows-amd64.msi** or later for Windows from: [here](https://golang.org/dl/)
 
@@ -170,6 +184,7 @@ Follow the steps below to configure a development or test workstation:
 26. *Optional*: Maintainers who will be publishing releases will need to:
 
     * **Download:** the latest recommended (at least **v5.8.0**) **nuget.exe** from [here](https://www.nuget.org/downloads) and put this somewhere in your `PATH`
+
     * Obtain a nuget API key from a maintainer and install the key on your workstation via:
 	
 	  `nuget SetApiKey YOUR-KEY`
