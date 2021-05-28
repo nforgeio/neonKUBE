@@ -144,9 +144,9 @@ Follow the steps below to configure a development or test workstation:
 
 17. Install **7-Zip (32-bit)** (using the Windows *.msi* installer) from [here](http://www.7-zip.org/download.html)
 
-18. Install **Cygwin - setup-x86-64.exe** (all packages and default path) from: [here](https://www.cygwin.com/setup-x86_64.exe)
+19. Install **Cygwin - setup-x86-64.exe** (all packages and default path) from: [here](https://www.cygwin.com/setup-x86_64.exe)
 
-19. Many server components are deployed to Linux, so you’ll need terminal and file management programs.  We’re currently standardizing on **PuTTY** for the terminal and **WinSCP** for file transfer. install both programs to their default directories:
+20. Many server components are deployed to Linux, so you’ll need terminal and file management programs.  We’re currently standardizing on **PuTTY** for the terminal and **WinSCP** for file transfer. install both programs to their default directories:
 
     * Install **WinSCP** from [here](http://winscp.net/eng/download.php) (I typically use the "Explorer" interface)
     * Install **PuTTY** from [here](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html)
@@ -155,22 +155,22 @@ Follow the steps below to configure a development or test workstation:
     
       ![WinSCP Hidden Files](Images/Developer/WinSCPHiddenFiles.png?raw=true)
 
-20. Install Visual Studio Code and GO (needed for the Cadence and Temporal proxy builds):
+21. Install Visual Studio Code and GO (needed for the Cadence and Temporal proxy builds):
 
     * Install **Visual Studio Code** from [here](https://code.visualstudio.com/download)
     * Install **go1.13.windows-amd64.msi** or later for Windows from: [here](https://golang.org/dl/)
 
-21. Confirm that the solution builds:
+22. Confirm that the solution builds:
 
     * Restart **Visual Studio** as **administrator** (to pick up the new environment variables)
     * Open **$/neonKUBE.sln** (where **$** is the repo root directory)
     * Select **Build/Rebuild** Solution
 
-22. *Optional*: Install **Notepad++** from [here](https://notepad-plus-plus.org/download)
+23. *Optional*: Install **Notepad++** from [here](https://notepad-plus-plus.org/download)
 
-23. *Optional*: Install **Postman** REST API tool from [here](https://www.getpostman.com/postman)
+24. *Optional*: Install **Postman** REST API tool from [here](https://www.getpostman.com/postman)
 
-24. *Optional*: Install **Cmdr/Mini** command shell:
+25. *Optional*: Install **Cmdr/Mini** command shell:
 
   * **IMPORTANT: Don't install the Full version** to avoid installing Linux command line tools that might conflict with the Cygwin tools installed earlier.
   * Download the ZIP archive from: [here](http://cmder.net/)
@@ -179,9 +179,9 @@ Follow the steps below to configure a development or test workstation:
   * Consider removing the alias definitions in `$\vendor\user_aliases.cmd.default` file so that commands like `ls` will work properly.  I deleted all lines beneath the first `@echo off`.
   * Run Cmdr to complete the installation.
 
-25. *Optional*: Install the latest version of **XCP-ng Center** from [here](https://github.com/xcp-ng/xenadmin/releases) if you'll need to manage Virtual Machines hosted on XCP-ng.
+26. *Optional*: Install the latest version of **XCP-ng Center** from [here](https://github.com/xcp-ng/xenadmin/releases) if you'll need to manage Virtual Machines hosted on XCP-ng.
 
-26. *Optional*: Maintainers who will be publishing releases will need to:
+27. *Optional*: Maintainers who will be publishing releases will need to:
 
     * **Download:** the latest recommended (at least **v5.8.0**) **nuget.exe** from [here](https://www.nuget.org/downloads) and put this somewhere in your `PATH`
 
@@ -202,10 +202,10 @@ Follow the steps below to configure a development or test workstation:
       * Click **Next** until you get to the last page.
       * Click **Close** to close the SHFB installer.
 
-27. *Optional*: Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
+28. *Optional*: Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
 
-28. *Optional*: Maintainers will need to install then **GitHub CLI** from here: https://cli.github.com/
+29. *Optional*: Maintainers will need to install then **GitHub CLI** from here: https://cli.github.com/
 
-29: *Optional:* Maintainers will need to **AWS client version 2** from: [here](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-windows.html)
+30: *Optional:* Maintainers will need to **AWS client version 2** from: [here](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-windows.html)
 
-30: *Optional:* Maintainers authorized to perform releases will need to follow the README.md instructions in the neonCLOUD repo to configure credentials for the GitHub Releases and the Container Registry.
+31: *Optional:* Maintainers authorized to perform releases will need to follow the README.md instructions in the neonCLOUD repo to configure credentials for the GitHub Releases and the Container Registry.
