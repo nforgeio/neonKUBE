@@ -49,7 +49,7 @@ Deletes
 
 USAGE:
 
-    neon action run delete REPO [WORKFLOW-NAME] [--age=AGE-IN-DAYS]
+    neon action run delete REPO [WORKFLOW-NAME] [--max-age-days=AGE]
 
 ARGUMENTS:
 
@@ -59,8 +59,8 @@ ARGUMENTS:
 
     WORKFLOW-NAME   - optional target workflow name
 
-    AGE-IN-DAYS     - optional the minimum age for runs to be 
-                      deleted, in days.  This defaults to 0 
+    AGE             - optionally specifies the maximum age for runs
+                      to be  retained in days.  This defaults to 0 
                       which deletes all runs.
 ";
 
@@ -68,7 +68,7 @@ ARGUMENTS:
         public override string[] Words => new string[] { "action", "run", "delete" };
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions => new string[] { "--age-in-days" };
+        public override string[] ExtendedOptions => new string[] { "--max-age-days" };
 
         /// <inheritdoc/>
         public override void Help()
@@ -87,7 +87,7 @@ ARGUMENTS:
 
             var repoArg = commandLine.Arguments.ElementAtOrDefault(0);
             var nameArg = commandLine.Arguments.ElementAtOrDefault(1);
-            var ageArg  = commandLine.GetOption("--age-in-days", "0");
+            var ageArg  = commandLine.GetOption("--max-age-days", "0");
 
             if (string.IsNullOrEmpty(repoArg))
             {

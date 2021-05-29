@@ -15879,19 +15879,19 @@
             <summary>Branch: master</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commit">
-            <summary>Commit: 992273f94</summary>
+            <summary>Commit: 8baec1e26</summary>
         </member>
         <member name="F:ThisAssembly.Git.Sha">
-            <summary>Sha: 992273f94e9b2fffb7866c9edf645a2a8cda27af</summary>
+            <summary>Sha: 8baec1e2620cbcbd3c88e167b3bbbafe9c654ff7</summary>
         </member>
         <member name="F:ThisAssembly.Git.CommitDate">
-            <summary>Commit date: 2021-05-29T13:00:46-07:00</summary>
+            <summary>Commit date: 2021-05-29T13:10:54-07:00</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commits">
-            <summary>Commits on top of base version: 411</summary>
+            <summary>Commits on top of base version: 412</summary>
         </member>
         <member name="F:ThisAssembly.Git.Tag">
-            <summary>Tag: neonLIBRARY-v2.14.0-411-g992273f94</summary>
+            <summary>Tag: neonLIBRARY-v2.14.0-412-g8baec1e26</summary>
         </member>
         <member name="F:ThisAssembly.Git.BaseTag">
             <summary>Base tag: neonLIBRARY-v2.14.0</summary>
@@ -15918,7 +15918,7 @@
             <summary>Minor: 14</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Patch">
-            <summary>Patch: 411</summary>
+            <summary>Patch: 412</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Label">
             <summary>Label: neonLIBRARY</summary>

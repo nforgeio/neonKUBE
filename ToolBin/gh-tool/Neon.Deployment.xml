@@ -221,8 +221,8 @@
             runs from all workflows in the repo will be deleted.
             </param>
             <param name="maxAge">
-            Optionally specifies the age at which workflow runs are to be deleted.  
-            This defaults to deleting all runs.
+            Optionally specifies the maximum age for retained workflow runs.  This
+            defaults to <see cref="F:System.TimeSpan.Zero"/> which deletes all runs.
             </param>
             <returns>The number of runs deleted.</returns>
         </member>

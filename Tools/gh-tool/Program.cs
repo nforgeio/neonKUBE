@@ -57,7 +57,7 @@ USAGE:
 
 COMMANDS:
 
-    gh-tool action run delete REPO [WORKFLOW-NAME] [--age=AGE-IN-DAYS]
+    gh-tool action run delete REPO [WORKFLOW-NAME] [--max-age-days=AGE]
 ";
             try
             {

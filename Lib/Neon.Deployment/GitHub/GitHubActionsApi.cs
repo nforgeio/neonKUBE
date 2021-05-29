@@ -121,8 +121,8 @@ namespace Neon.Deployment
         /// runs from all workflows in the repo will be deleted.
         /// </param>
         /// <param name="maxAge">
-        /// Optionally specifies the age at which workflow runs are to be deleted.  
-        /// This defaults to deleting all runs.
+        /// Optionally specifies the maximum age for retained workflow runs.  This
+        /// defaults to <see cref="TimeSpan.Zero"/> which deletes all runs.
         /// </param>
         /// <returns>The number of runs deleted.</returns>
         public async Task<int> DeleteRunsAsync(string repo, string workflowName = null, TimeSpan maxAge = default)
@@ -154,7 +154,17 @@ namespace Neon.Deployment
                         {
                             var request = new HttpRequestMessage(HttpMethod.Get, $"/repos/{repoPath.Owner}/{repoPath.Repo}/actions/runs?page={page}");
 
-                            return await client.SendAsync(request);
+                            // We're seeing some 502 Bad Gateway responses from GHCR.io.  We're going to
+                            // treat these as transients.
+
+                            var response = await client.SendAsync(request);
+
+                            if (response.StatusCode == HttpStatusCode.BadGateway)
+                            {
+                                throw new TransientException("503 (Bad Gateway)");
+                            }
+
+                            return response;
                         });
 
                     response.EnsureSuccessStatusCode();
@@ -191,7 +201,7 @@ namespace Neon.Deployment
                 //      https://docs.github.com/en/rest/reference/actions#delete-a-workflow-run
 
                 var minDate      = DateTime.UtcNow - maxAge;
-                var selectedRuns = runs.Where(run => run.UpdatedAtUtc <= minDate && run.Status == "completed");
+                var selectedRuns = runs.Where(run => run.UpdatedAtUtc < minDate && run.Status == "completed");
 
                 if (!string.IsNullOrEmpty(workflowName))
                 {
