@@ -198,32 +198,23 @@ namespace Neon.Deployment
             GitHubPackageType       packageType = GitHubPackageType.Container,
             GitHubPackageVisibility visibility  = GitHubPackageVisibility.All)
         {
-            // $debug(jefflill): REMOVE THE TRY/CATCH
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(organization), nameof(organization));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nameOrPattern), nameof(nameOrPattern));
 
-            try
-            {
-                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(organization), nameof(organization));
-                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nameOrPattern), nameof(nameOrPattern));
+            var args = new Dictionary<string, string>();
 
-                var args = new Dictionary<string, string>();
+            args["operation"]     = "Package-SetVisibility";
+            args["pat"]           = GitHub.AccessToken;
+            args["username"]      = GitHub.Credentials.Username;
+            args["password"]      = GitHub.Credentials.Password;
+            args["organization"]  = organization;
+            args["nameOrPattern"] = nameOrPattern ?? "*";
+            args["packageType"]   = packageType.ToMemberString();
+            args["visibility"]    = visibility.ToMemberString();
 
-                args["operation"] = "Package-SetVisibility";
-                args["pat"] = GitHub.AccessToken;
-                args["username"] = GitHub.Credentials.Username;
-                args["password"] = GitHub.Credentials.Password;
-                args["organization"] = organization;
-                args["nameOrPattern"] = nameOrPattern ?? "*";
-                args["packageType"] = packageType.ToMemberString();
-                args["visibility"] = visibility.ToMemberString();
+            profileClient.Call(args);
 
-                profileClient.Call(args);
-
-                await Task.CompletedTask;
-            }
-            catch (Exception e)
-            {
-                File.AppendAllText(@"C:\Temp\log.txt", e.StackTrace + "\r\n");
-            }
+            await Task.CompletedTask;
         }
     }
 }
