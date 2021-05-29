@@ -216,7 +216,6 @@ try
         # Publish the Windows .NET Core tool binaries to the build folder.
 
         PublishCore "Tools\neon-cli\neon-cli.csproj"           "neon"
-        PublishCore "Tools\gh-tool\gh-tool.csproj"             "gh-tool"
         PublishCore "Tools\neon-modelgen\neon-modelgen.csproj" "neon-modelgen"
      }
 

@@ -68,6 +68,9 @@ ARGUMENTS:
         public override string[] Words => new string[] { "action", "run", "delete" };
 
         /// <inheritdoc/>
+        public override string[] ExtendedOptions => new string[] { "--age-in-days" };
+
+        /// <inheritdoc/>
         public override void Help()
         {
             Console.WriteLine(usage);
@@ -84,7 +87,7 @@ ARGUMENTS:
 
             var repoArg = commandLine.Arguments.ElementAtOrDefault(0);
             var nameArg = commandLine.Arguments.ElementAtOrDefault(1);
-            var ageArg  = commandLine.GetOption("--age", "0");
+            var ageArg  = commandLine.GetOption("--age-in-days", "0");
 
             if (string.IsNullOrEmpty(repoArg))
             {

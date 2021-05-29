@@ -2925,6 +2925,25 @@
             Identifies the .NET framework hosting the current process.
             </summary>
         </member>
+        <member name="P:Neon.Common.NeonHelper.DebugLogPath">
+            <summary>
+            <para>
+            The fully qualified path to the file where the simple <see cref="M:Neon.Common.NeonHelper.LogDebug(System.String)"/>
+            method will write debug lines.  This defaults to <b>debug-log.txt</b> within the
+            current user's home folder.
+            </para>
+            <para>
+            You may change this to a different location.
+            </para>
+            </summary>
+        </member>
+        <member name="M:Neon.Common.NeonHelper.LogDebug(System.String)">
+            <summary>
+            Appends a line of text to the file at <see cref="P:Neon.Common.NeonHelper.DebugLogPath"/>.  This is intended for
+            low-level debugging when normal logging via <see cref="T:Neon.Diagnostics.LogManager"/> isn't suitable.
+            </summary>
+            <param name="line">Optionally specifies the line of text.</param>
+        </member>
         <member name="M:Neon.Common.NeonHelper.EscapeCsv(System.String)">
             <summary>
             Escapes a string passed so that is suitable for writing to
@@ -15848,10 +15867,10 @@
             <summary>Provides access to the git information for the current assembly.</summary>
         </member>
         <member name="F:ThisAssembly.Git.IsDirty">
-            <summary>IsDirty: false</summary>
+            <summary>IsDirty: true</summary>
         </member>
         <member name="F:ThisAssembly.Git.IsDirtyString">
-            <summary>IsDirtyString: false</summary>
+            <summary>IsDirtyString: true</summary>
         </member>
         <member name="F:ThisAssembly.Git.RepositoryUrl">
             <summary>Repository URL: https://github.com/nforgeio/neonKUBE</summary>
@@ -15860,19 +15879,19 @@
             <summary>Branch: master</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commit">
-            <summary>Commit: aad0e85e9</summary>
+            <summary>Commit: 992273f94</summary>
         </member>
         <member name="F:ThisAssembly.Git.Sha">
-            <summary>Sha: aad0e85e98b5493fcd5fb971c268b9a5346e6531</summary>
+            <summary>Sha: 992273f94e9b2fffb7866c9edf645a2a8cda27af</summary>
         </member>
         <member name="F:ThisAssembly.Git.CommitDate">
-            <summary>Commit date: 2021-05-24T16:25:28-07:00</summary>
+            <summary>Commit date: 2021-05-29T13:00:46-07:00</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commits">
-            <summary>Commits on top of base version: 368</summary>
+            <summary>Commits on top of base version: 411</summary>
         </member>
         <member name="F:ThisAssembly.Git.Tag">
-            <summary>Tag: neonLIBRARY-v2.14.0-368-gaad0e85e9</summary>
+            <summary>Tag: neonLIBRARY-v2.14.0-411-g992273f94</summary>
         </member>
         <member name="F:ThisAssembly.Git.BaseTag">
             <summary>Base tag: neonLIBRARY-v2.14.0</summary>
@@ -15899,7 +15918,7 @@
             <summary>Minor: 14</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Patch">
-            <summary>Patch: 368</summary>
+            <summary>Patch: 411</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Label">
             <summary>Label: neonLIBRARY</summary>

@@ -1044,5 +1044,21 @@
             </summary>
             <param name="pipeIndexObject">Passes as the index into the [pipes] array this thread will use for its server side pipe.</param>
         </member>
+        <member name="T:Neon.Deployment.XenServer">
+            <summary>
+            XenServer/XCP-ng related deployment utilities.
+            </summary>
+        </member>
+        <member name="M:Neon.Deployment.XenServer.RemoveVMs(System.String,System.String,System.String,System.String)">
+            <summary>
+            Connects to a XenServer/XCP-ng host and removes any VMs matching the name or file
+            wildcard pattern, forceably shutting the VMs down when necessary.  Note that the
+            VM's drives will also be removed.
+            </summary>
+            <param name="addressOrFQDN">Specifies the IP address or hostname for the target XenServer host machine.</param>
+            <param name="username">Specifies the username to be used to connect to the host.</param>
+            <param name="password">Specifies the host password.</param>
+            <param name="nameOrPattern">Specifies the VM name or pattern including '*' or '?' wildcards to be used to remove VMs.</param>
+        </member>
     </members>
 </doc>
