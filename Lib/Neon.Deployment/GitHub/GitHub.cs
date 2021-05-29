@@ -58,7 +58,7 @@ namespace Neon.Deployment
         {
             var profile = new ProfileClient();
 
-            AccessToken   = profile.GetSecretPassword("GITHUB_PAT");
+            AccessToken = profile.GetSecretPassword("GITHUB_PAT");
             Credentials = Credentials.FromUserPassword(profile.GetSecretPassword("GITHUB_LOGIN[username]"), profile.GetSecretPassword("GITHUB_LOGIN[password]"));
         }
 
@@ -67,7 +67,7 @@ namespace Neon.Deployment
         /// </summary>
         public static void ClearCredentials()
         {
-            AccessToken   = null;
+            AccessToken = null;
             Credentials = null;
         }
 
