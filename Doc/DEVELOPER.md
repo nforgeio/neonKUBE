@@ -78,12 +78,25 @@ Follow the steps below to configure a development or test workstation:
    * Install **.NET Core SDK v3.1.403** from [here](https://dotnet.microsoft.com/download/dotnet-core/3.1)
    * Install **.NET Framework 4.8 Developer Pack** from [here](https://dotnet.microsoft.com/download/thank-you/net48-developer-pack)
 
-11. Install **Docker for Windows (Stable)** from [here](http://hub.docker.com)
+11. Enable **WSL2**:
+
+    * Open a **pwsh** console **as administrator** and execute these commands:
+    ```
+    dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
+    dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
+    ```
+
+    * Close that console and open another **as administrator** and execute this:
+    ```
+    wsl --set-default-version 2
+    ```
+
+12. Install **Docker for Windows (Stable)** from [here](http://hub.docker.com)
 
     * You'll need to create a DockerHub account if you don't already have one.
     * **IMPORTANT!** BuildKit causes random problems so be sure to disable it by setting **buildkit=false** in **Docker/Settings/Docker Engine**
 
-12. **Clone** the [https://github.com/nforgeio/neonKUBE](https://github.com/nforgeio/neonKUBE) repository to your workstation:
+13. **Clone** the [https://github.com/nforgeio/neonKUBE](https://github.com/nforgeio/neonKUBE) repository to your workstation:
 
     * **IMPORTANT:** All neonFORGE related repositories must be cloned within the same parent directory and their folder names must be the same as the repo names.
     * Create an individual GitHub account [here](https://github.com/join?source=header-home) if you don't already have one
@@ -94,18 +107,18 @@ Follow the steps below to configure a development or test workstation:
     * Choose or enter the directory where the repository will be cloned.  This defaults to a user specific folder.  I typically change this to a global folder (like **C:\src**) to keep the file paths short.
     * Click **Clone**
 
-13. Disable **Python Import Warnings** via **Tools/Options: by unchecking this**
+14. Disable **Python Import Warnings** via **Tools/Options: by unchecking this**
 
    ![System Tray](Images/Developer/PythonImports.png?raw=true)
   
-14. Configure the build **environment variables**:
+15. Configure the build **environment variables**:
 
     * Open **File Explorer**
     * Navigate to the directory holding the cloned repository
     * **Right-click** on **buildenv.cmd** and then **Run as adminstrator**
     * Press ENTER to close the CMD window when the script is finished
   
-15. **Clone** the other neonFORGE repos to the same parent directory as **neonKUBE** without changing their folder names:
+16. **Clone** the other neonFORGE repos to the same parent directory as **neonKUBE** without changing their folder names:
 
     * [https://github.com/nforgeio/temporal-samples](https://github.com/nforgeio/temporal-samples)
     * [https://github.com/nforgeio/cadence-samples](https://github.com/nforgeio/cadence-samples)
@@ -127,22 +140,9 @@ Follow the steps below to configure a development or test workstation:
     git clone https://github.com/nforgeio/temporal-samples.git
     ```
 
-16. **Close** any running instances of **Visual Studio**
+17. **Close** any running instances of **Visual Studio**
 
-17. Enable **WSL2**:
-
-    * Open a **pwsh** console **as administrator** and execute these commands:
-    ```
-    dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
-    dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
-    ```
-
-    * Close that console and open another **as administrator** and execute this:
-    ```
-    wsl --set-default-version 2
-    ```
-
-17. Install **7-Zip (32-bit)** (using the Windows *.msi* installer) from [here](http://www.7-zip.org/download.html)
+18. Install **7-Zip (32-bit)** (using the Windows *.msi* installer) from [here](http://www.7-zip.org/download.html)
 
 19. Install **Cygwin - setup-x86-64.exe** (all packages and default path) from: [here](https://www.cygwin.com/setup-x86_64.exe)
 
