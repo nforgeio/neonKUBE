@@ -55,7 +55,7 @@ Follow the steps below to configure a development or test workstation:
 
 5. Uninstall **Powershell 6x** if installed.
 
-6. Install the latest **32-bit** production release of PowerShell 7 from [here](https://github.com/PowerShell/PowerShell/releases) (`PowerShell-#.#.#-win.x86.msi`)
+6. Install the latest **64-bit** production release of PowerShell 7 from [here](https://github.com/PowerShell/PowerShell/releases) (`PowerShell-#.#.#-win.x64.msi`)
 
 7. Enable PowerShell script execution via (in a CMD window as administrator):
     ```
@@ -82,9 +82,11 @@ Follow the steps below to configure a development or test workstation:
 
     * Open a **pwsh** console **as administrator** and execute these commands:
     ```
-    dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
     dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
+    dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
     ```
+
+    * Install the Microsoft [WSL2 Linux kernel update package for x64 machines](https://wslstorestorage.blob.core.windows.net/wslblob/wsl_update_x64.msi)
 
     * Close that console and open another **as administrator** and execute this:
     ```
