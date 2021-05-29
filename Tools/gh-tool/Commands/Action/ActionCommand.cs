@@ -43,7 +43,7 @@ Commands to manage GitHub Action workflows.
 
 USAGE:
 
-    neon action run delete REPO WORKFLOW-NAME [AGE-IN-DAYS]
+    neon action run delete REPO [WORKFLOW-NAME] [AGE-IN-DAYS]
 ";
 
         /// <inheritdoc/>

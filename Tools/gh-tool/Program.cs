@@ -57,7 +57,7 @@ USAGE:
 
 COMMANDS:
 
-    gh-tool workflow run delete
+    gh-tool workflow run delete REPO [WORKFLOW-NAME] [--age=AGE-IN-DAYS]
 ";
             try
             {
