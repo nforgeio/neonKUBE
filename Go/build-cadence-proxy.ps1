@@ -30,7 +30,7 @@ $buildPath   = "$env:NF_BUILD"
 $projectPath = "$env:GOPATH\src\github.com\cadence-proxy"
 $logPath     = "$buildPath\build-cadence-proxy.log"
 
-Push-Cwd "$projectpath\cmd\cadenceproxy" | Out-Null
+Set-Cwd "$projectpath\cmd\cadenceproxy" | Out-Null
 
 # Ensure that the build output folder exists.
 if (!(test-path $buildPath))
@@ -38,8 +38,7 @@ if (!(test-path $buildPath))
     New-Item -ItemType Directory -Force -Path $buildPath
 }
 
-# Change to project path
-Push-Cwd $projectPath | Out-Null
+Set-Cwd $projectPath | Out-Null
 
 # Build the WINDOWS binary
 $env:GOOS	= "windows"
