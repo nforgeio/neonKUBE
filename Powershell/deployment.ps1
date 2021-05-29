@@ -262,7 +262,7 @@ function Remove-GitHub-Container
         [string]$nameOrPattern
     )
 
-    [Neon.Deployment.GitHub]::Packages.Delete($organization, $nameOrPattern, [Neon.Deployment.GitHubPackageType]::Container)    
+    [Neon.Deployment.GitHub]::Packages.Delete($organization, $nameOrPattern, "container")    
 }
 
 #------------------------------------------------------------------------------
@@ -291,7 +291,7 @@ function Set-GitHub-Container-Visibility
 
     $visibility = [Neon.Deployment.GitHubPackageVisibility]$visibility
 
-    [Neon.Deployment.GitHub]::Packages.SetVisibility($organization, $nameOrPattern, [Neon.Deployment.GitHubPackageType]::Container, $visibility)
+    [Neon.Deployment.GitHub]::Packages.SetVisibility($organization, $nameOrPattern, "container", $visibility)
 }
 
 #------------------------------------------------------------------------------
