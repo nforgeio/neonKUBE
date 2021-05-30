@@ -72,11 +72,11 @@ namespace Neon.Common
 
                 if (ErrorText.Trim().Length > 0)
                 {
-                    throw new ExecuteException(ExitCode, ErrorText);
+                    throw new ExecuteException(this, ErrorText);
                 }
                 else
                 {
-                    throw new ExecuteException(ExitCode, OutputText);
+                    throw new ExecuteException(this, OutputText);
                 }
             }
 

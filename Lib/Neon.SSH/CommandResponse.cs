@@ -179,7 +179,7 @@ namespace Neon.SSH
         {
             if (!Success)
             {
-                throw new ExecuteException(ExitCode, ErrorSummary);
+                throw new ExecuteException(ExitCode, ErrorSummary, OutputText, ErrorText);
             }
         }
     }
