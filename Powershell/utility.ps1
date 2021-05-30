@@ -97,17 +97,17 @@ function Load-Assembly
 #
 # ARGUMENTS:
 #
-#   text    - optionally specifies the line of text
+#   message     - optionally specifies the line of text
 
 function Write-Info
 {
     [CmdletBinding()]
     param (
         [Parameter(Position=0, Mandatory=$false)]
-        [string]$text = $null
+        [string]$message = $null
     )
 
-    [Console]::Error.WriteLine($text)
+    [Console]::Error.WriteLine($message)
 }
 
 #------------------------------------------------------------------------------
