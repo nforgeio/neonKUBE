@@ -89,7 +89,7 @@ function Load-Assembly
 }
 
 #------------------------------------------------------------------------------
-# Writes a line of text as informational output.  This is output to STDERR as
+# Writes a line of text as informational output.  This is output to STDOUT as
 # hack so we can capture these lines via redirection.  We originally used 
 # Write-Host for this which writes to the information stream #6 but we were
 # unable to redirect stream #6 in Invoke-CaptureStreams via CMD.EXE so we're
@@ -107,7 +107,7 @@ function Write-Info
         [string]$message = $null
     )
 
-    [Console]::Error.WriteLine($message)
+    [Console]::WriteLine($message)
 }
 
 #------------------------------------------------------------------------------
@@ -126,7 +126,7 @@ function Write-Exception
         $exception
     )
 
-    Write-Info "EXCEPTION: $exception"
+    Write-Info "EXCEPTION: $exception.Message"
     Write-Info "-------------------------------------------"
     Write-Info "SCRIPT STACK TRACE"
     Write-Info $exception.ScriptStackTrace
