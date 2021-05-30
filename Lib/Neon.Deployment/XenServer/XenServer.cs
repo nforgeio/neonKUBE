@@ -30,6 +30,28 @@ namespace Neon.Deployment
     public static class XenServer
     {
         /// <summary>
+        /// Determines whether a specific XenServer/XCP-ng host machine is running by logging into it.
+        /// </summary>
+        /// <param name="addressOrFQDN">Specifies the IP address or hostname for the target XenServer host machine.</param>
+        /// <param name="username">Specifies the username to be used to connect to the host.</param>
+        /// <param name="password">Specifies the host password.</param>
+        /// <returns><c>true</c> if the host machine is running.</returns>
+        public static bool IsRunning(string addressOrFQDN, string username, string password)
+        {
+            try
+            {
+                using (var client = new XenClient(addressOrFQDN, username, password))
+                {
+                    return true;
+                }
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Connects to a XenServer/XCP-ng host and removes any VMs matching the name or file
         /// wildcard pattern, forceably shutting the VMs down when necessary.  Note that the
         /// VM's drives will also be removed.
