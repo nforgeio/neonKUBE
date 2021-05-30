@@ -107,7 +107,7 @@ function Write-Info
         [string]$text = $null
     )
 
-    Write-Error $text
+    [Console]::Error.WriteLine($text)
 }
 
 #------------------------------------------------------------------------------
