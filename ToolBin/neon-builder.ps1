@@ -88,11 +88,11 @@ function PublishCore
         [string]$targetName
     )
 
-    Write-Host ""
-    Write-Host "**************************************************************************"
-    Write-Host "*** PUBLISH: $targetName"
-    Write-Host "**************************************************************************"
-    Write-Host ""
+    Write-Info ""
+    Write-Info "**************************************************************************"
+    Write-Info "*** PUBLISH: $targetName"
+    Write-Info "**************************************************************************"
+    Write-Info ""
 
     # Ensure that the NF_BUILD folder exists:
 
@@ -182,11 +182,11 @@ try
 
         # Clean and build the solution.
 
-        Write-Host ""
-        Write-Host "**********************************************************************"
-        Write-Host "***                         CLEAN SOLUTION                         ***"
-        Write-Host "**********************************************************************"
-        Write-Host ""
+        Write-Info ""
+        Write-Info "**********************************************************************"
+        Write-Info "***                         CLEAN SOLUTION                         ***"
+        Write-Info "**********************************************************************"
+        Write-Info ""
 
         & "$msbuild" "$nfSolution" $buildConfig -t:Clean -m -verbosity:quiet
 
@@ -195,11 +195,11 @@ try
             throw "ERROR: CLEAN FAILED"
         }
 
-        Write-Host ""
-        Write-Host "**********************************************************************"
-        Write-Host "***                         BUILD SOLUTION                         ***"
-        Write-Host "**********************************************************************"
-        Write-Host ""
+        Write-Info ""
+        Write-Info "**********************************************************************"
+        Write-Info "***                         BUILD SOLUTION                         ***"
+        Write-Info "**********************************************************************"
+        Write-Info ""
 
         & "$msbuild" "$nfSolution" $buildConfig -restore -m -verbosity:quiet
 
@@ -223,11 +223,11 @@ try
 
     if ($codedoc)
     {
-        Write-Host ""
-        Write-Host "**********************************************************************"
-        Write-Host "***                      CODE DOCUMENTATION                        ***"
-        Write-Host "**********************************************************************"
-        Write-Host ""
+        Write-Info ""
+        Write-Info "**********************************************************************"
+        Write-Info "***                      CODE DOCUMENTATION                        ***"
+        Write-Info "**********************************************************************"
+        Write-Info ""
 
         # Remove some pesky aliases:
 

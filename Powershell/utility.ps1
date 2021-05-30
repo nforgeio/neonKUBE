@@ -89,6 +89,28 @@ function Load-Assembly
 }
 
 #------------------------------------------------------------------------------
+# Writes a line of text as informational output.  This is output to STDERR as
+# hack so we can capture these lines via redirection.  We originally used 
+# Write-Host for this which writes to the information stream #6 but we were
+# unable to redirect stream #6 in Invoke-CaptureStreams via CMD.EXE so we're
+# writing to STDOUT instead.
+#
+# ARGUMENTS:
+#
+#   text    - optionally specifies the line of text
+
+function Write-Info
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$false)]
+        [string]$text = $null
+    )
+
+    Write-Error $text
+}
+
+#------------------------------------------------------------------------------
 # Writes information about a Powershell action exception to the output.
 #
 # ARGUMENTS:
@@ -104,15 +126,15 @@ function Write-Exception
         $exception
     )
 
-    Write-Host "EXCEPTION: $exception"
-    Write-Host "-------------------------------------------"
-    Write-Host "SCRIPT STACK TRACE"
-    Write-Host $exception.ScriptStackTrace
+    Write-Info "EXCEPTION: $exception"
+    Write-Info "-------------------------------------------"
+    Write-Info "SCRIPT STACK TRACE"
+    Write-Info $exception.ScriptStackTrace
 
     if (![System.String]::IsNullOrEmpty($exception.StackTrace))
     {
-        Write-Host ".NET STACK TRACE"
-        Write-Host $exception.StackTrace
+        Write-Info ".NET STACK TRACE"
+        Write-Info $exception.StackTrace
     }
 }
 
@@ -212,9 +234,9 @@ function Invoke-CaptureStreams
     {
         if (!$noOutput)
         {
-            Write-Host
-            Write-Host "RUN: $command"
-            Write-Host
+            Write-Info
+            Write-Info "RUN: $command"
+            Write-Info
         }
 
         if ($interleave)
@@ -257,11 +279,11 @@ function Invoke-CaptureStreams
         {
             if ($interleave)
             {
-                Write-Host $result.stdout
+                Write-Info $result.stdout
             }
             else
             {
-                Write-Host $result.alltext
+                Write-Info $result.alltext
             }
         }
 
@@ -331,7 +353,7 @@ function ToLineArray
 }
 
 #------------------------------------------------------------------------------
-# Appends a line of text to [C:\Temp\log.txt] as well as [Write-Host] as a very
+# Appends a line of text to [C:\Temp\log.txt] as well as [Write-Info] as a very
 # simple logging mechanism to be used while debugging Powershell scripts, 
 # specifically GitHub Actions.
 #
@@ -359,7 +381,7 @@ function Log-DebugLine
     $path = [System.IO.Path]::Combine($folder, "log.txt")
 
     [System.IO.File]::AppendAllText($path, $text + "`r`n")
-    Write-Host "$text >>>"
+    Write-Info "$text >>>"
 }
 
 #------------------------------------------------------------------------------
@@ -576,7 +598,7 @@ function Push-DockerImage
 	{
 		if ($attempt -gt 0)
 		{
-			Write-Host "*** PUSH: RETRYING"
+			Write-Info "*** PUSH: RETRYING"
 		}
 
 		# $hack(jefflill):
@@ -608,7 +630,7 @@ function Push-DockerImage
 
 		if ($result.allText.Contains("blob upload unknown"))
 		{
-			Write-Host "*** PUSH: BLOB UPLOAD UNKNOWN"
+			Write-Info "*** PUSH: BLOB UPLOAD UNKNOWN"
 			$exitCode = 100
 		}
 
@@ -624,14 +646,14 @@ function Push-DockerImage
 				$fields    = $image -split ':'
 				$baseImage = $fields[0] + ":" + $baseTag
 
-				Write-Host "tag image: $image --> $baseImage"
+				Write-Info "tag image: $image --> $baseImage"
 				$result = Invoke-CaptureStreams "docker tag $image $baseImage" -interleave
 			}
 
 			return
 		}
 		
-		Write-Host "*** PUSH: EXITCODE=$exitCode"
+		Write-Info "*** PUSH: EXITCODE=$exitCode"
 		Start-Sleep 15
 	}
 
@@ -665,7 +687,7 @@ function Pull-DockerImage
 	{
 		if ($attempt -gt 0)
 		{
-			Write-Host "*** PULL: RETRYING"
+			Write-Info "*** PULL: RETRYING"
 		}
 
 		# $hack(jefflill):
@@ -679,7 +701,7 @@ function Pull-DockerImage
 
 		if ($result.allText.Contains("error pulling image configuration"))
 		{
-			Write-Host "*** PULL: error pulling image configuration"
+			Write-Info "*** PULL: error pulling image configuration"
 			$exitCode = 100
 		}
 
@@ -688,7 +710,7 @@ function Pull-DockerImage
 			return
 		}
 		
-		Write-Host "*** PULL: EXITCODE=$exitCode"
+		Write-Info "*** PULL: EXITCODE=$exitCode"
 		Start-Sleep 15
 	}
 
