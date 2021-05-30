@@ -241,11 +241,11 @@ function Invoke-CaptureStreams
 
         if ($interleave)
         {
-            & cmd /c "$command 6>&1 2>&1 > `"$stdoutPath`""
+            & cmd /c "$command 2>&1 > `"$stdoutPath`""
         }
         else
         {
-            & cmd /c "$command 6>&1 > `"$stdoutPath`" 2> `"$stderrPath`""
+            & cmd /c "$command > `"$stdoutPath`" 2> `"$stderrPath`""
         }
 
         $exitCode = $LastExitCode
