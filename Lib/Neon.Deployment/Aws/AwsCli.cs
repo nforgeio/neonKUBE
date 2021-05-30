@@ -50,6 +50,13 @@ namespace Neon.Deployment
         {
             if (e is ExecuteException executeException)
             {
+                Console.Error.WriteLine($"FAIL: exitcode={executeException.ExitCode}");
+                Console.Error.WriteLine("---------------------------------------");
+                Console.Error.WriteLine("STDOUT:");
+                Console.Error.WriteLine(executeException.OutputText);
+                Console.Error.WriteLine("STDERR:");
+                Console.Error.WriteLine(executeException.ErrorText);
+
                 // $todo(jefflill):
                 //
                 // It would be nice to identify authentication errors because those
