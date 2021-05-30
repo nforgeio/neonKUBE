@@ -295,6 +295,38 @@ function Set-GitHub-Container-Visibility
 }
 
 #------------------------------------------------------------------------------
+# Determines whether a XenServer/XCP-ng host machine is running by connecting
+# to it.
+#
+# ARGUMENTS:
+# 
+#   addressOrFQDN   - the IP address or fully qualified domain name for the 
+#                     target XenServer-XCP-ng host machine
+#
+#   username        - the username for the host (generally [root])
+#
+#   password        - the user password
+#
+# RETURNS:
+#
+#   $true when the host machine is running.
+
+function Check-XenServer
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$addressOrFQDN,
+        [Parameter(Position=1, Mandatory=$true)]
+        [string]$username,
+        [Parameter(Position=2, Mandatory=$true)]
+        [string]$password
+    )
+
+    return [Neon.Deployment.XenServer]::IsRunning($addressOrFQDN, $username, $password)
+}
+
+#------------------------------------------------------------------------------
 # Connects to a XenServer/XCP-ng host and removes any VMs matching the name or file
 # wildcard pattern, forceably shutting the VMs down when necessary.  Note that the
 # VM's drives will also be removed.
