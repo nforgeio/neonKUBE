@@ -24,6 +24,7 @@ using System.Threading.Tasks;
 
 using Neon.Common;
 using Neon.Net;
+using Neon.Retry;
 
 namespace Neon.Deployment
 {
@@ -38,6 +39,29 @@ namespace Neon.Deployment
     /// </summary>
     public static class AwsCli
     {
+        private static IRetryPolicy s3Retry = new ExponentialRetryPolicy(IsS3Transient, maxAttempts: 5, initialRetryInterval: TimeSpan.FromSeconds(15), maxRetryInterval: TimeSpan.FromMinutes(5));
+
+        /// <summary>
+        /// Used to detect transient exceptions.
+        /// </summary>
+        /// <param name="e">The potential transient exceptiopn.</param>
+        /// <returns><c>true</c> when the exception is transient.</returns>
+        private static bool IsS3Transient(Exception e)
+        {
+            if (e is ExecuteException executeException)
+            {
+                // $todo(jefflill):
+                //
+                // It would be nice to identify authentication errors because those
+                // won't be transient.  I'm hoping one of the output streams will
+                // have enough information to determine this.
+
+                return executeException.ExitCode == 1;
+            }
+
+            return false;
+        }
+
         /// <summary>
         /// Executes an AWS-CLI command.
         /// </summary>
@@ -145,7 +169,9 @@ namespace Neon.Deployment
                 args.Add(sbMetadata.ToString());
             }
 
-            ExecuteSafe(args.ToArray());
+            args.Add("--debug");
+
+            s3Retry.Invoke(() => ExecuteSafe(args.ToArray()));
         }
 
         /// <summary>
@@ -161,7 +187,7 @@ namespace Neon.Deployment
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(sourceUri), nameof(sourceUri));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(targetPath), nameof(targetPath));
 
-            ExecuteSafe("s3", "cp", NetHelper.ToAwsS3Uri(sourceUri), targetPath);
+            s3Retry.Invoke(() => ExecuteSafe("s3", "cp", "--debug", NetHelper.ToAwsS3Uri(sourceUri), targetPath));
         }
     }
 }
