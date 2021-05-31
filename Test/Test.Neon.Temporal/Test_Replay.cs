@@ -63,6 +63,7 @@ namespace TestTemporal
     [Trait(TestTrait.Category, TestArea.NeonTemporal)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
+    [Trait(TestTrait.Category, TestTrait.Investigate)]  // https://github.com/nforgeio/neonKUBE/issues/1200
     public class Test_Replay : IClassFixture<TemporalFixture>
     {
         private const int maxWaitSeconds = 5;

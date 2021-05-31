@@ -30,6 +30,7 @@ namespace MyTests
         }
     }
 
+    [Trait(TestTrait.Category, TestTrait.Slow)]     // https://github.com/nforgeio/neonKUBE/issues/1200
     public class TemporalTests : IClassFixture<TemporalFixture>
     {
         private TemporalFixture     fixture;
