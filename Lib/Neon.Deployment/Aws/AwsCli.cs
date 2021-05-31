@@ -76,7 +76,30 @@ namespace Neon.Deployment
         /// <returns>The <see cref="ExecuteResponse"/> with the exit status and command output.</returns>
         public static ExecuteResponse Execute(params string[] args)
         {
-            return NeonHelper.ExecuteCapture("aws.exe", args ?? Array.Empty<object>());
+            args = args ?? Array.Empty<string>();
+
+            // It looks like we're getting throttled by AWS when uploading very
+            // large (~4GB) files to S3 so we're going to add command line options
+            // to allow the CLI to wait longer for connections and read bytes and
+            // we're also going to configure adaptive retry mode via environment
+            // variables.
+
+            var argsCopy = new List<string>();
+
+            foreach (var arg in args)
+            {
+                argsCopy.Add(arg);
+            }
+
+            argsCopy.Add("--cli-cli-read-timeout"); argsCopy.Add("300");
+            argsCopy.Add("--cli-connect-timeout");  argsCopy.Add("300");
+
+            var environment = new Dictionary<string, string>();
+
+            environment.Add("AWS_RETRY_MODE", "adaptive");
+            environment.Add("AWS_MAX_ATTEMPTS", "5");
+
+            return NeonHelper.ExecuteCapture("aws.exe", argsCopy.ToArray(), environmentVariables: environment);
         }
 
         /// <summary>
@@ -87,6 +110,21 @@ namespace Neon.Deployment
         public static void ExecuteSafe(params string[] args)
         {
             Execute(args).EnsureSuccess();
+        }
+
+        /// <summary>
+        /// Used to add the <b>--debug</b> option to the AWS CLI command line arguments
+        /// when debugging.
+        /// </summary>
+        /// <param name="args">The argument list.</param>
+        /// <returns>The argument list with the debug option, when enabled.</returns>
+        private static List<string> AddDebugOption(List<string> args)
+        {
+            Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
+
+            // args.Add("--debug");
+
+            return args;
         }
 
         /// <summary>
@@ -176,7 +214,7 @@ namespace Neon.Deployment
                 args.Add(sbMetadata.ToString());
             }
 
-            args.Add("--debug");
+            AddDebugOption(args);
 
             s3Retry.Invoke(() => ExecuteSafe(args.ToArray()));
         }
@@ -194,7 +232,7 @@ namespace Neon.Deployment
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(sourceUri), nameof(sourceUri));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(targetPath), nameof(targetPath));
 
-            s3Retry.Invoke(() => ExecuteSafe("s3", "cp", "--debug", NetHelper.ToAwsS3Uri(sourceUri), targetPath));
+            s3Retry.Invoke(() => ExecuteSafe("s3", "cp", NetHelper.ToAwsS3Uri(sourceUri), targetPath));
         }
     }
 }
