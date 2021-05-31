@@ -126,7 +126,7 @@ function Write-Exception
         $exception
     )
 
-    Write-Info "EXCEPTION: $exception.Message"
+    Write-Info "EXCEPTION: $exception"
     Write-Info "-------------------------------------------"
     Write-Info "SCRIPT STACK TRACE"
     Write-Info $exception.ScriptStackTrace
