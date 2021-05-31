@@ -19,27 +19,16 @@
 #------------------------------------------------------------------------------
 # Open Windows Firewall ports required for unit testing.
 
-Remove-NetFirewallRule -Name "Inbound-Cadence" -EA Silent | Out-Null
+Remove-NetFirewallRule -Name "Inbound-UnitTesting" -EA Silent | Out-Null
 
-New-NetFirewallRule -Name "Inbound-Cadence" `
-                    -DisplayName "[TEST] allow inbound Cadence" `
+New-NetFirewallRule -Name "Inbound-UnitTesting" `
+                    -DisplayName "[TEST] allow inbound TCP ports 1024-65535" `
                     -Direction Inbound `
                     -Action Allow `
                     -LocalPort 1024-65535 `
                     -Protocol TCP `
                     -Profile Any `
-                    -Description "Allow external connections to Cadence servers" | Out-Null
-
-Remove-NetFirewallRule -Name "Inbound-Temporal" -EA Silent | Out-Null
-
-New-NetFirewallRule -Name "Inbound-Temporal" `
-                    -DisplayName "[TEST] allow inbound Temporal" `
-                    -Direction Inbound `
-                    -Action Allow `
-                    -LocalPort 7233-65535 `
-                    -Protocol TCP `
-                    -Profile Any `
-                    -Description "Allow external connections to Temporal servers" | Out-Null
+                    -Description "Open ports for unit testing" | Out-Null
 
 #------------------------------------------------------------------------------
 # Installl additional Powershell modules.
