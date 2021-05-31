@@ -241,7 +241,7 @@ function Invoke-CaptureStreams
 
         if ($interleave)
         {
-            & cmd /c "$command 2>&1 > `"$stdoutPath`""
+            & cmd /c "$command > `"$stdoutPath`" 2>&1"
         }
         else
         {
