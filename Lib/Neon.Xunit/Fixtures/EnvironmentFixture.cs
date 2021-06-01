@@ -32,7 +32,7 @@ using Neon.Retry;
 namespace Neon.Xunit
 {
     /// <summary>
-    /// Used to manage environment variables and files for unit tests.
+    /// Used to save environment variables before unit tests run and then restore them afterwards.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -58,8 +58,20 @@ namespace Neon.Xunit
     /// and then define your test classes like:
     /// </para>
     /// <code language="csharp">
-    /// public class MyTests
+    /// public class MyTests : IClassFixture&lt;EnvironmentFixture&gt;
     /// {
+    ///     private EnvironmentFixture fixture;
+    ///     
+    ///     public MyTests()
+    ///     {
+    ///         this.fixture = fixture;
+    /// 
+    ///         if (fixture.Start() == TestFixtureStatus.AlreadyRunning)
+    ///         {
+    ///             fixture.Restore();
+    ///         }
+    ///     }
+    ///     
     ///     [Collection(TestCollection.NonParallel)]
     ///     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     ///     [Fact]
@@ -128,7 +140,7 @@ namespace Neon.Xunit
         {
             lock (syncLock)
             {
-                // Remove all environment variables.
+                // Remove all existing environment variables.
 
                 foreach (DictionaryEntry variable in Environment.GetEnvironmentVariables())
                 {

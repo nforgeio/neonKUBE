@@ -57,7 +57,7 @@ namespace Neon.Xunit
     /// and then define your test classes like:
     /// </para>
     /// <code language="csharp">
-    /// public class MyTests
+    /// public class MyTests : IClassFixture&lt;DockerFixture&gt;, IDisposable
     /// {
     ///     [Collection(TestCollection.NonParallel)]
     ///     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
