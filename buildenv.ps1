@@ -19,18 +19,35 @@
 #------------------------------------------------------------------------------
 # Open Windows Firewall ports required for unit testing.
 
+# Remove unnecessary rules.
+
 Remove-NetFirewallRule -Name "Inbound-UnitTesting" -EA Silent | Out-Null
 
-New-NetFirewallRule -Name "Inbound-UnitTesting" `
-                    -DisplayName "[TEST] allow inbound TCP ports 1024-65535" `
+# Add update current rules.
+
+Remove-NetFirewallRule -Name "Inbound-UnitTesting-TCP" -EA Silent | Out-Null
+
+New-NetFirewallRule -Name "Inbound-UnitTesting-TCP" `
+                    -DisplayName "[TEST] allow inbound TCP ports 1-65535" `
                     -Direction Inbound `
                     -Action Allow `
-                    -LocalPort 1024-65535 `
+                    -LocalPort 1-65535 `
                     -Protocol TCP `
                     -Profile Any `
-                    -Description "Open ports for unit testing" | Out-Null
+                    -Description "Open TCP ports for unit testing" | Out-Null
+
+Remove-NetFirewallRule -Name "Inbound-UnitTesting-UDP" -EA Silent | Out-Null
+
+New-NetFirewallRule -Name "Inbound-UnitTesting-UDP" `
+                    -DisplayName "[TEST] allow inbound UDP ports 1-65535" `
+                    -Direction Inbound `
+                    -Action Allow `
+                    -LocalPort 1-65535 `
+                    -Protocol UDP `
+                    -Profile Any `
+                    -Description "Open UDP ports for unit testing" | Out-Null
 
 #------------------------------------------------------------------------------
-# Installl additional Powershell modules.
+# Install additional Powershell modules.
 
 Install-Module powershell-yaml -Force

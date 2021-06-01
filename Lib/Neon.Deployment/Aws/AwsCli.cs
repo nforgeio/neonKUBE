@@ -272,3 +272,10 @@ namespace Neon.Deployment
         }
     }
 }
+
+// $debug(jefflill):
+//
+// This is a temporary compiler error used to verify that the nforgeio-actions/teams-build-notification
+// handles GitHub issue creation correctly.
+
+COMPILER ERROR!
