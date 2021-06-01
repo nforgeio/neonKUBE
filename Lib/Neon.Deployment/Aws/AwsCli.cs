@@ -16,6 +16,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
@@ -74,7 +75,7 @@ namespace Neon.Deployment
         /// </summary>
         /// <param name="args">The command and arguments.</param>
         /// <returns>The <see cref="ExecuteResponse"/> with the exit status and command output.</returns>
-        public static ExecuteResponse Execute(params string[] args)
+        private static ExecuteResponse Execute(params string[] args)
         {
             args = args ?? Array.Empty<string>();
 
@@ -91,13 +92,24 @@ namespace Neon.Deployment
                 argsCopy.Add(arg);
             }
 
-            argsCopy.Add("--cli-cli-read-timeout"); argsCopy.Add("300");
-            argsCopy.Add("--cli-connect-timeout");  argsCopy.Add("300");
+            argsCopy.Add("--cli-read-timeout"); argsCopy.Add("120");
+            argsCopy.Add("--cli-connect-timeout");  argsCopy.Add("120");
+
+            // Copy the current environment variables into a new dictionary.
 
             var environment = new Dictionary<string, string>();
 
-            environment.Add("AWS_RETRY_MODE", "adaptive");
-            environment.Add("AWS_MAX_ATTEMPTS", "5");
+            foreach (DictionaryEntry variable in Environment.GetEnvironmentVariables())
+            {
+                environment[(string)variable.Key] = (string)variable.Value;
+            }
+
+            // Configure the AWS retry mode.
+
+            environment["AWS_RETRY_MODE"]   = "adaptive";
+            environment["AWS_MAX_ATTEMPTS"] = "5";
+
+            // Execute the command
 
             return NeonHelper.ExecuteCapture("aws.exe", argsCopy.ToArray(), environmentVariables: environment);
         }
@@ -125,6 +137,30 @@ namespace Neon.Deployment
             // args.Add("--debug");
 
             return args;
+        }
+
+        /// <summary>
+        /// Sets the AWS credential environment variables by loading them from 1Password.
+        /// </summary>
+        /// <param name="awsAccessKeyId">Optionally overrides the AWS access key ID 1Password secret name.</param>
+        /// <param name="awsSecretAccessKey">Optionally overrides the AWS access key 1Password secret name.</param>
+        /// <param name="vault">Optionally overrides the current user's 1Password vault.</param>
+        /// <param name="masterPassword">Optionally specifies the master 1Password.</param>
+        public static void SetCredentials(string awsAccessKeyId = "AWS_ACCESS_KEY_ID", string awsSecretAccessKey = "AWS_SECRET_ACCESS_KEY", string vault = null, string masterPassword = null)
+        {
+            var profileClient = new ProfileClient();
+
+            Environment.SetEnvironmentVariable("AWS_ACCESS_KEY_ID", profileClient.GetSecretPassword(awsAccessKeyId, vault, masterPassword));
+            Environment.SetEnvironmentVariable("AWS_SECRET_ACCESS_KEY", profileClient.GetSecretPassword(awsSecretAccessKey, vault, masterPassword));
+        }
+
+        /// <summary>
+        /// Removes the AWS credential environment variables.
+        /// </summary>
+        public static void RemoveCredentials()
+        {
+            Environment.SetEnvironmentVariable("AWS_ACCESS_KEY_ID", null);
+            Environment.SetEnvironmentVariable("AWS_SECRET_ACCESS_KEY", null);
         }
 
         /// <summary>
