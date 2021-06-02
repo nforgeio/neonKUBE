@@ -1339,7 +1339,7 @@ line2
             }
         }
 
-#if !NETFRAMEWORK
+#if NET50
         // The [Neon.Deployment] library targets .NET Standard 2.1 to gain access to
         // Windows Compatability named pipe APIs and is not compatible with 
         // .NET Framework.
@@ -1474,7 +1474,6 @@ line2
         }
 #else
         [Fact(Skip = "Not compatible with .NET Framework")]
-        [Trait(TestTraits.Project, TestProject.NeonCommon)]
         public void ProfileReferences()
         {
         }

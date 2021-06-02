@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFrameworks>net48; netcoreapp3.1; net5.0</TargetFrameworks>
     <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
     <IsPackable>false</IsPackable>
     <LangVersion>latest</LangVersion>
@@ -47,8 +47,8 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="LiquidTestReports.Markdown" Version="1.1.1-beta" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="3.1.13" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="5.0.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.10.0" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
       <PrivateAssets>all</PrivateAssets>
@@ -71,8 +71,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Lib\Neon.Common\Neon.Common.csproj" />
-    <ProjectReference Include="..\..\Lib\Neon.Deployment\Neon.Deployment.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Xunit\Neon.Xunit.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net50'">
+    <ProjectReference Include="..\..\Lib\Neon.Deployment\Neon.Deployment.csproj" />
   </ItemGroup>
 
 </Project>
