@@ -39,7 +39,7 @@
     <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
     <PackageReference Include="System.Security.Principal.Windows" Version="5.0.0" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
-    <PackageReference Include="YamlDotNet" Version="10.1.0" />
+    <PackageReference Include="YamlDotNet" Version="11.1.1" />
   </ItemGroup>
 
   <ItemGroup>

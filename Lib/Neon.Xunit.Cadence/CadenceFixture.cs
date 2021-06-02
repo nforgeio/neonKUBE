@@ -70,7 +70,7 @@ namespace Neon.Xunit.Cadence
     /// are not true.
     /// </para>
     /// <para>
-    /// See <see cref="Start(CadenceSettings, string, string, string, LogLevel, bool, bool, string, bool, bool)"/>
+    /// See <see cref="Start(CadenceSettings, string, string, string, LogLevel, bool, bool, bool, bool)"/>
     /// for more information about how this works.
     /// </para>
     /// <note>
@@ -151,7 +151,7 @@ services:
         /// to call this in your test class constructor instead of <see cref="ITestFixture.Start(Action)"/>.
         /// </para>
         /// <note>
-        /// You'll need to call <see cref="StartAsComposed(CadenceSettings, string, string, string, LogLevel, bool, bool, string, bool, bool)"/>
+        /// You'll need to call <see cref="StartAsComposed(CadenceSettings, string, string, string, LogLevel, bool, bool, bool, bool)"/>
         /// instead when this fixture is being added to a <see cref="ComposedFixture"/>.
         /// </note>
         /// </summary>

@@ -65,7 +65,7 @@
   <ItemGroup>
     <PackageReference Include="IdentityServer4" Version="4.1.1" />
     <PackageReference Include="IdentityServer4.Storage" Version="4.1.1" />
-    <PackageReference Include="Npgsql" Version="5.0.0" />
+    <PackageReference Include="Npgsql" Version="5.0.5" />
   </ItemGroup>
 
   <ItemGroup>
