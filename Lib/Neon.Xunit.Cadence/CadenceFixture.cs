@@ -181,11 +181,6 @@ services:
         /// Optionally indicates that the container should remain running after the fixture is disposed.
         /// This is handy for using the Temporal web UI for port mortems after tests have completed.
         /// </param>
-        /// <param name="hostInterface">
-        /// Optionally specifies the host interface where the container public ports will be
-        /// published.  This defaults to <see cref="ContainerFixture.DefaultHostInterface"/>
-        /// but may be customized.  This needs to be an IPv4 address.
-        /// </param>
         /// <param name="noClient">
         /// Optionally disables establishing a client connection when <c>true</c>
         /// is passed.  The <see cref="Client"/> and <see cref="HttpClient"/> properties
@@ -222,7 +217,6 @@ services:
             LogLevel            logLevel      = LogLevel.None,
             bool                reconnect     = false,
             bool                keepRunning   = false,
-            string              hostInterface = null,
             bool                noClient      = false,
             bool                noReset       = false)
         {
@@ -239,7 +233,6 @@ services:
                         logLevel:        logLevel,
                         reconnect:       reconnect,
                         keepRunning:     keepRunning, 
-                        hostInterface:   hostInterface,
                         noClient:        noClient, 
                         noReset:         noReset);
                 });
@@ -274,11 +267,6 @@ services:
         /// Optionally indicates that the container should remain running after the fixture is disposed.
         /// This is handy for using the Temporal web UI for port mortems after tests have completed.
         /// </param>
-        /// <param name="hostInterface">
-        /// Optionally specifies the host interface where the container public ports will be
-        /// published.  This defaults to <see cref="ContainerFixture.DefaultHostInterface"/>
-        /// but may be customized.  This needs to be an IPv4 address.
-        /// </param>
         /// <param name="noClient">
         /// Optionally disables establishing a client connection when <c>true</c>
         /// is passed.  The <see cref="Client"/> and <see cref="HttpClient"/> properties
@@ -304,7 +292,6 @@ services:
             LogLevel            logLevel      = LogLevel.None,
             bool                reconnect     = false,
             bool                keepRunning   = false,
-            string              hostInterface = null,
             bool                noClient      = false,
             bool                noReset       = false)
         {
@@ -330,18 +317,6 @@ services:
                         "temporal-dev_temporal-web_1",
                         "temporal-dev_temporal_1"
                     } });
-
-
-                // Select the network interface where Cadence will listen.
-
-                if (string.IsNullOrEmpty(hostInterface))
-                {
-                    hostInterface = ContainerFixture.DefaultHostInterface;
-                }
-                else
-                {
-                    Covenant.Requires<ArgumentException>(NetHelper.TryParseIPv4Address(hostInterface, out var address) && address.AddressFamily == AddressFamily.InterNetwork, nameof(hostInterface), $"[{hostInterface}] is not a valid IPv4 address.");
-                }
 
                 // Reset CadenceClient to its initial state.
 
