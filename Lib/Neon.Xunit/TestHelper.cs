@@ -647,11 +647,11 @@ namespace Neon.Xunit
 
             // Make sure we're not in Swarm mode
 
-            NeonHelper.ExecuteCapture("docker", new object[] { "swarm", "leave", "--force" }).EnsureSuccess();
+            NeonHelper.ExecuteCapture(NeonHelper.DockerCli, new object[] { "swarm", "leave", "--force" }).EnsureSuccess();
 
             // Remove all containers
 
-            var result = NeonHelper.ExecuteCapture("docker", new object[] { "pa", "--all", "--quiet" });
+            var result = NeonHelper.ExecuteCapture(NeonHelper.DockerCli, new object[] { "pa", "--all", "--quiet" });
 
             result.EnsureSuccess();
 
@@ -664,13 +664,13 @@ namespace Neon.Xunit
                         continue;
                     }
 
-                    NeonHelper.ExecuteCapture("docker", new object[] { "rm", line, "--force" }).EnsureSuccess();
+                    NeonHelper.ExecuteCapture(NeonHelper.DockerCli, new object[] { "rm", line, "--force" }).EnsureSuccess();
                 }
             }
 
             // Remove all volumes
 
-            result = NeonHelper.ExecuteCapture("docker", new object[] { "volume", "ls", "--format", "{{ .Name }}" });
+            result = NeonHelper.ExecuteCapture(NeonHelper.DockerCli, new object[] { "volume", "ls", "--format", "{{ .Name }}" });
 
             result.EnsureSuccess();
 
@@ -683,7 +683,7 @@ namespace Neon.Xunit
                         continue;
                     }
 
-                    NeonHelper.ExecuteCapture("docker", new object[] { "volume", "rm", line.Trim(), "--force" }).EnsureSuccess();
+                    NeonHelper.ExecuteCapture(NeonHelper.DockerCli, new object[] { "volume", "rm", line.Trim(), "--force" }).EnsureSuccess();
                 }
             }
         }
