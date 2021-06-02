@@ -32,9 +32,15 @@ using Neon.Retry;
 namespace Neon.Xunit
 {
     /// <summary>
+    /// <para>
     /// Used to run a <b>docker-compose</b> application on the current machine as a test 
     /// fixture while tests are being performed and then deletes the applicatiuon when 
     /// the fixture is disposed.
+    /// </para>
+    /// <note>
+    /// The <see cref="DockerComposeFixture"/> and <see cref="DockerFixture"/> fixtures are
+    /// not compatible with each other.  You may only use one of these at a time.
+    /// </note>
     /// </summary>
     /// <remarks>
     /// <note>
@@ -284,6 +290,12 @@ namespace Neon.Xunit
             this.composeFile          = composeFile;
             this.keepOpen             = keepOpen;
             this.customContainerNames = customContainerNames;
+
+            // Docker compose is not compatible with Docker Swarm, so we're going to 
+            // execute a command to leave the swarm.  We're not going to check the 
+            // exit code to ignore the error when Docker isn't in swarm mode.
+
+            NeonHelper.Execute(NeonHelper.DockerComposeCli, new string[] { "swarm", "leave", "--force" });
 
             StartApplication();
         }

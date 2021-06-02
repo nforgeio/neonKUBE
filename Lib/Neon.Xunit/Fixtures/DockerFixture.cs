@@ -36,7 +36,13 @@ using Neon.IO;
 namespace Neon.Xunit
 {
     /// <summary>
+    /// <para>
     /// An Xunit test fixture used to manage a local Docker daemon within unit tests.
+    /// </para>
+    /// <note>
+    /// The <see cref="DockerComposeFixture"/> and <see cref="DockerFixture"/> fixtures are
+    /// not compatible with each other.  You may only use one of these at a time.
+    /// </note>
     /// </summary>
     /// <remarks>
     /// <note>
