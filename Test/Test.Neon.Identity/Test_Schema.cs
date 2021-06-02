@@ -47,6 +47,8 @@ namespace TestIdentity
 
         public Test_Schema(YugaByteFixture fixture)
         {
+            TestHelper.ResetDocker(this.GetType());
+
             fixture.Start();
 
             this.fixture    = fixture;

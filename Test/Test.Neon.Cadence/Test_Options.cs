@@ -100,6 +100,8 @@ namespace TestCadence
 
         public Test_Options(CadenceFixture fixture)
         {
+            TestHelper.ResetDocker(this.GetType());
+
             fixtureSettings = new CadenceSettings()
             {
                 DefaultDomain          = CadenceFixture.DefaultDomain,

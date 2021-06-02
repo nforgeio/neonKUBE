@@ -46,6 +46,8 @@ namespace TestCouchbase
 
         public Test_NeonBucket(CouchbaseFixture couchbase)
         {
+            TestHelper.ResetDocker(this.GetType());
+
             this.couchbase = couchbase;
 
             couchbase.Start();

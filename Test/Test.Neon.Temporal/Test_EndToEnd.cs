@@ -74,6 +74,8 @@ namespace TestTemporal
 
         public Test_EndToEnd(TemporalFixture fixture, ITestOutputHelper outputHelper)
         {
+            TestHelper.ResetDocker(this.GetType());
+
             testWriter = new TestOutputWriter(outputHelper);
 
             // Configure a service for activity dependency injection testing if it doesn't

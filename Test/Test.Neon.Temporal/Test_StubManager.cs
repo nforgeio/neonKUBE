@@ -82,6 +82,8 @@ namespace TestTemporal
 
         public Test_StubManager(TemporalFixture fixture)
         {
+            TestHelper.ResetDocker(this.GetType());
+
             var settings = new TemporalSettings()
             {
                 Namespace      = TemporalFixture.Namespace,
