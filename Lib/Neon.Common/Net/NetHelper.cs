@@ -282,7 +282,7 @@ namespace Neon.Net
         /// <summary>
         /// <para>
         /// Used to temporarily modify the <b>hosts</b> file used by the DNS resolver
-        /// for debugging or other purposes.
+        /// for testing, debugging or other purposes.
         /// </para>
         /// <note>
         /// <b>WARNING:</b> Modifying the <b>hosts</b> file will impact all processes
@@ -387,7 +387,6 @@ namespace Neon.Net
             //      https://github.com/nforgeio/neonKUBE/issues/271
 
             var updateHost    = section != null ? $"{section.ToLowerInvariant()}.neonforge-marker" : $"H-{Guid.NewGuid().ToString("d")}.neonforge-marker";
-            var addressBytes  = NeonHelper.GetCryptoRandomBytes(4);
             var updateAddress = GetRandomAddress();
             var lines         = new List<string>();
             var existingHosts = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
@@ -630,9 +629,12 @@ namespace Neon.Net
                                 throw new NotReadyException($"[{updateHost}] lookup is returning [{addresses.Length}] results.  There should be [0].");
                             }
                         }
-
                     });
             }
+
+            // $hack(jefflill): Wait a bit longer just to be safe.
+
+            Thread.Sleep(TimeSpan.FromSeconds(2));
 #endif
         }
 
