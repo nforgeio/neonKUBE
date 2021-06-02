@@ -928,7 +928,6 @@ namespace Neon.Common
             return await Task.Run(() => ExecuteCapture(path, args, timeout, process, workingDirectory, environmentVariables, input: input));
         }
 
-#if NETSTANDARD2_0
         /// <summary>
         /// Starts a process for an <see cref="Assembly" /> by calling the assembly's <b>main()</b>
         /// entry point method. 
@@ -954,7 +953,6 @@ namespace Neon.Common
 
             return Process.Start(NeonHelper.StripFileScheme(path), args != null ? args : string.Empty);
         }
-#endif
 
         /// <summary>
         /// Launches the default browser to display the specified URI.

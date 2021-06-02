@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net48; netcoreapp3.1; net5.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <OutputType>Library</OutputType>
     <RootNamespace>Neon.Couchbase</RootNamespace>
     <Authors>neonFORGE Team</Authors>
@@ -27,7 +27,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DefineConstants>TRACE;DEBUG;NETSTANDARD2_0</DefineConstants>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
     <DocumentationFile>bin\Debug\Neon.Couchbase.xml</DocumentationFile>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <WarningsAsErrors>NU1605</WarningsAsErrors>
@@ -35,7 +35,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DefineConstants>TRACE;DEBUG;RELEASE;NETSTANDARD2_0</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;RELEASE</DefineConstants>
     <DocumentationFile>bin\Release\Neon.Couchbase.xml</DocumentationFile>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <WarningsAsErrors>NU1605</WarningsAsErrors>
@@ -43,7 +43,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CodeDoc|AnyCPU'">
-    <DefineConstants>TRACE;DEBUG;RELEASE;NETSTANDARD2_0</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;RELEASE</DefineConstants>
     <DocumentationFile>bin\Release\Neon.Couchbase.xml</DocumentationFile>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <WarningsAsErrors>NU1605</WarningsAsErrors>
