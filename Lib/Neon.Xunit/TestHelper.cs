@@ -645,7 +645,7 @@ namespace Neon.Xunit
 
             previousTestClass = testClass;
 
-            // Make sure we're not in Swarm mode.  Note we're not checking the erro code here
+            // Make sure we're not in Swarm mode.  Note we're not checking the error code here
             // because it returns an error when Docker isn't in swarm mode.
 
             NeonHelper.ExecuteCapture(NeonHelper.DockerCli, new object[] { "swarm", "leave", "--force" });
