@@ -101,6 +101,8 @@ namespace TestTemporal
 
         public Test_Options(TemporalFixture fixture)
         {
+            TestHelper.ResetDocker(this.GetType());
+
             fixtureSettings = new TemporalSettings()
             {
                 Namespace              = TemporalFixture.Namespace,

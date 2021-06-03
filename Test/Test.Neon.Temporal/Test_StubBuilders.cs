@@ -73,6 +73,8 @@ namespace TestTemporal
 
         public Test_StubBuilders(TemporalFixture fixture)
         {
+            TestHelper.ResetDocker(this.GetType());
+
             // Initialize the Cadence fixture.
 
             var settings = new TemporalSettings()

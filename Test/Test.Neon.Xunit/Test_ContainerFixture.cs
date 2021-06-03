@@ -41,6 +41,8 @@ namespace TestXunit
 
         public Test_ContainerFixture(ContainerFixture fixture)
         {
+            TestHelper.ResetDocker(this.GetType());
+
             this.fixture = fixture;
 
             fixture.Start("neon-unit-test-container", $"{NeonHelper.NeonLibraryBranchRegistry}/test:latest");

@@ -611,5 +611,82 @@ namespace Neon.Xunit
                 }
             }
         }
+
+        // Use by [ResetDocker()] to determine when we've started running tests from
+        // a new test class so the method will know when to actually reset Docker state.
+
+        private static Type previousTestClass = null;
+
+        /// <summary>
+        /// Resets Docker state by removing all containers, volumes, networks and
+        /// optionally the Docker image cache.  This is useful ensuring that Docker
+        /// is in a known state.  This also disables <b>swarm mode</b>.
+        /// </summary>
+        /// <param name="testClass">Specifies the current test class or pass <c>null</c> to force the reset).</param>
+        /// <param name="pruneImages">Optionally prunes the Docker image cache.</param>
+        /// <remarks>
+        /// <para>
+        /// This method works by comparing the <paramref name="testClass"/> passed
+        /// with any previous test class passed.  The method only resets the Docker
+        /// state when the test class changes.  This prevents Docker from being reset
+        /// when every test in the same class runs (which will probably break tests).
+        /// </para>
+        /// <note>
+        /// This does not support different test classes that use Docker running in
+        /// parallel.
+        /// </note>
+        /// </remarks>
+        public static void ResetDocker(Type testClass, bool pruneImages = false)
+        {
+            if (testClass != null && testClass == previousTestClass)
+            {
+                return;
+            }
+
+            previousTestClass = testClass;
+
+            // Make sure we're not in Swarm mode.  Note we're not checking the error code here
+            // because it returns an error when Docker isn't in swarm mode.
+
+            NeonHelper.ExecuteCapture(NeonHelper.DockerCli, new object[] { "swarm", "leave", "--force" });
+
+            // Remove all containers
+
+            var result = NeonHelper.ExecuteCapture(NeonHelper.DockerCli, new object[] { "ps", "--all", "--quiet" });
+
+            result.EnsureSuccess();
+
+            using (var reader = new StringReader(result.OutputText))
+            {
+                foreach (var line in reader.Lines())
+                {
+                    if (string.IsNullOrEmpty(line))
+                    {
+                        continue;
+                    }
+
+                    NeonHelper.ExecuteCapture(NeonHelper.DockerCli, new object[] { "rm", line, "--force" }).EnsureSuccess();
+                }
+            }
+
+            // Remove all volumes
+
+            result = NeonHelper.ExecuteCapture(NeonHelper.DockerCli, new object[] { "volume", "ls", "--format", "{{ .Name }}" });
+
+            result.EnsureSuccess();
+
+            using (var reader = new StringReader(result.OutputText))
+            {
+                foreach (var line in reader.Lines())
+                {
+                    if (string.IsNullOrEmpty(line))
+                    {
+                        continue;
+                    }
+
+                    NeonHelper.ExecuteCapture(NeonHelper.DockerCli, new object[] { "volume", "rm", line.Trim(), "--force" }).EnsureSuccess();
+                }
+            }
+        }
     }
 }

@@ -24,7 +24,7 @@
     <PackageReference Include="Neon.Common" Version="10000.0.9-local" />
     <PackageReference Include="Neon.Postgres" Version="10000.0.9-local" />
     <PackageReference Include="Neon.Service" Version="10000.0.9-local" />
-    <PackageReference Include="Npgsql" Version="5.0.0" />
+    <PackageReference Include="Npgsql" Version="5.0.5" />
   </ItemGroup>
 
   <ItemGroup>

@@ -38,6 +38,7 @@ namespace TestDeployment
     // These unit tests require that [neon-assistant] be running.
 
     [Trait(TestTrait.Category, TestArea.NeonDeployment)]
+    [Trait(TestTrait.Category, TestTrait.Investigate)]      // https://github.com/nforgeio/neonCLOUD/issues/149
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public partial class Test_Packages

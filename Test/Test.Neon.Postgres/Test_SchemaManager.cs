@@ -55,6 +55,8 @@ namespace Test.Neon.Postgres
 
         public Test_SchemaManager(YugaByteFixture fixture)
         {
+            TestHelper.ResetDocker(this.GetType());
+
             // We're not going to restart YugaByte for every unit test because
             // that's too slow.  Instead, each test will work with unique database
             // names.

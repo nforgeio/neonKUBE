@@ -87,6 +87,8 @@ namespace TestCouchbase
 
         public Test_ComposingFixtures(ComposedFixture composedFixture)
         {
+            TestHelper.ResetDocker(this.GetType());
+
             this.composedFixture = composedFixture;
 
             composedFixture.Start(

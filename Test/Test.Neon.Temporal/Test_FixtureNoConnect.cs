@@ -58,6 +58,8 @@ namespace TestTemporal
 
         public Test_FixtureNoConnect(TemporalFixture fixture)
         {
+            TestHelper.ResetDocker(this.GetType());
+
             var settings = new TemporalSettings()
             {
                 Namespace              = TemporalFixture.Namespace,

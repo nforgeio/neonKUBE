@@ -66,6 +66,8 @@ namespace TestTemporal
 
         public Test_Messages(TemporalFixture fixture)
         {
+            TestHelper.ResetDocker(this.GetType());
+
             var settings = new TemporalSettings()
             {
                 Namespace              = TemporalFixture.Namespace,

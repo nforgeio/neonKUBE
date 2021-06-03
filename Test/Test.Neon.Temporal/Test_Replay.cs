@@ -76,6 +76,8 @@ namespace TestTemporal
 
         public Test_Replay(TemporalFixture fixture)
         {
+            TestHelper.ResetDocker(this.GetType());
+
             var settings = new TemporalSettings()
             {
                 Namespace              = TemporalFixture.Namespace,

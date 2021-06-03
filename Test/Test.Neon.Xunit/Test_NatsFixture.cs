@@ -64,6 +64,8 @@ namespace TestXunit
 
         public Test_NatsFixture(NatsFixture fixture)
         {
+            TestHelper.ResetDocker(this.GetType());
+
             if (fixture.Start() == TestFixtureStatus.AlreadyRunning)
             {
                 fixture.Restart();

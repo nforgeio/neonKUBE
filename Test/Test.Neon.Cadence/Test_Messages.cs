@@ -65,6 +65,8 @@ namespace TestCadence
 
         public Test_Messages(CadenceFixture fixture)
         {
+            TestHelper.ResetDocker(this.GetType());
+
             var settings = new CadenceSettings()
             {
                 DefaultDomain          = CadenceFixture.DefaultDomain,

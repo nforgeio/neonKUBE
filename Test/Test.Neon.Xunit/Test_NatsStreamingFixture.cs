@@ -62,6 +62,8 @@ namespace TestXunit
 
         public Test_NatsStreamingFixture(NatsStreamingFixture fixture)
         {
+            TestHelper.ResetDocker(this.GetType());
+
             if (fixture.Start() == TestFixtureStatus.AlreadyRunning)
             {
                 fixture.Restart();

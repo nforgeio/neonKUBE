@@ -51,6 +51,8 @@ namespace TestCouchbase
 
         public Test_CouchbaseFixture(CouchbaseFixture couchbase)
         {
+            TestHelper.ResetDocker(this.GetType());
+
             this.couchbase = couchbase;
 
             couchbase.Start();

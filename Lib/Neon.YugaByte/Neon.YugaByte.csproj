@@ -47,7 +47,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Npgsql" Version="5.0.0" />
+    <PackageReference Include="Npgsql" Version="5.0.5" />
     <PackageReference Include="YugaByteCassandraCSharpDriver" Version="3.7.1" />
   </ItemGroup>
 

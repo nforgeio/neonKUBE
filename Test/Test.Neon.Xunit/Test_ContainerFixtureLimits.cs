@@ -41,6 +41,8 @@ namespace TestXunit
 
         public Test_ContainerFixtureLimits(ContainerFixture fixture)
         {
+            TestHelper.ResetDocker(this.GetType());
+
             this.fixture = fixture;
 
             var limits = new ContainerLimits()
@@ -53,7 +55,7 @@ namespace TestXunit
                 OomKillDisable    = true
             };
 
-            fixture.Start("neon-unit-test-containerr", $"{NeonHelper.NeonLibraryBranchRegistry}/test:latest", limits: limits);
+            fixture.Start("neon-unit-test-container", $"{NeonHelper.NeonLibraryBranchRegistry}/test:latest", limits: limits);
         }
 
         [Fact]

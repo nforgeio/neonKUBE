@@ -51,6 +51,8 @@ namespace TestCadence
 
         public Test_RegistrationError(CadenceFixture fixture)
         {
+            TestHelper.ResetDocker(this.GetType());
+
             var settings = new CadenceSettings()
             {
                 DefaultDomain          = CadenceFixture.DefaultDomain,
