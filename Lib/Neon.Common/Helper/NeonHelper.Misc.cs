@@ -1988,8 +1988,8 @@ namespace Neon.Common
                     var potentialPaths =
                         new string[]
                         {
-                            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), $@"Docker\Docker\resources\bin\docker.exe"),
-                            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), $@"DockerDesktop\version-bin\docker.exe")
+                            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), @"Docker\Docker\resources\bin\docker.exe"),
+                            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), @"DockerDesktop\version-bin\docker.exe")
                         };
 
                     foreach (var path in potentialPaths)
