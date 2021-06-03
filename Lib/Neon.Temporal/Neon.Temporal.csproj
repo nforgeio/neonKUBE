@@ -25,7 +25,7 @@
     <PreserveCompilationContext>true</PreserveCompilationContext>
     <Configurations>Debug;Release;CodeDoc</Configurations>
     <PackageIcon>nuget-icon.png</PackageIcon>
-    <PackageTags>temporal cadence workflow agent</PackageTags>
+    <PackageTags>temporal workflow client</PackageTags>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

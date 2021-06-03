@@ -87,18 +87,21 @@ namespace Microsoft.Net.Http.Client
 
         public static T GetProperty<T>(this HttpRequestMessage request, string key)
         {
-            object obj;
-            if (request.Properties.TryGetValue(key, out obj))
+#pragma warning disable CS0618
+            if (request.Properties.TryGetValue(key, out var obj))
             {
                 return (T)obj;
             }
+#pragma warning restore CS0618
 
             return default(T);
         }
 
         public static void SetProperty<T>(this HttpRequestMessage request, string key, T value)
         {
+#pragma warning disable CS0618
             request.Properties[key] = value;
+#pragma warning restore CS0618
         }
     }
 }

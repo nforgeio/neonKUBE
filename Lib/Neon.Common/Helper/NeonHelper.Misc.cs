@@ -1413,10 +1413,10 @@ namespace Neon.Common
             // stripping off the file URI scheme if present and the
             // assembly's file name.
 
-            string path;
-            int pos;
+            string  path;
+            int     pos;
 
-            path = NeonHelper.StripFileScheme(assembly.CodeBase);
+            path = NeonHelper.StripFileScheme(assembly.Location);
 
             pos = path.LastIndexOfAny(new char[] { '/', '\\' });
             if (pos == -1)
@@ -1436,7 +1436,7 @@ namespace Neon.Common
             // stripping off the file URI scheme if present and the
             // assembly's file name.
 
-            return NeonHelper.StripFileScheme(assembly.CodeBase);
+            return NeonHelper.StripFileScheme(assembly.Location);
         }
 
         /// <summary>

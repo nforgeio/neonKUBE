@@ -944,7 +944,7 @@ namespace Neon.Common
         /// </remarks>
         public static Process StartProcess(Assembly assembly, string args)
         {
-            string path = assembly.CodeBase;
+            string path = assembly.Location;
 
             if (!path.StartsWith("file://"))
             {
