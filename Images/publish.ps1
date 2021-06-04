@@ -32,8 +32,7 @@ param
     [switch]$nopush      = $false,      # Don't push to the registry
     [switch]$noprune     = $false,      # Don't prune the local Docker cache
     [switch]$allVersions = $false,      # Rebuild all image versions
-    [switch]$rel         = $false,      # Override current branch and publish to: ghcr.io/neonrelease
-    [switch]$dev         = $false       # Override current branch and publish to: ghcr.io/neonrelease-dev
+
 )
 
 #----------------------------------------------------------
