@@ -632,8 +632,7 @@ namespace Neon.Xunit
         /// when every test in the same class runs (which will probably break tests).
         /// </para>
         /// <note>
-        /// This does not support different test classes that use Docker running in
-        /// parallel.
+        /// This does not support multiple test classes peformaing parallel Docker operations.
         /// </note>
         /// </remarks>
         public static void ResetDocker(Type testClass, bool pruneImages = false)
@@ -658,14 +657,14 @@ namespace Neon.Xunit
 
             using (var reader = new StringReader(result.OutputText))
             {
-                foreach (var line in reader.Lines())
+                foreach (var name in reader.Lines())
                 {
-                    if (string.IsNullOrEmpty(line))
+                    if (string.IsNullOrEmpty(name))
                     {
                         continue;
                     }
 
-                    NeonHelper.ExecuteCapture(NeonHelper.DockerCli, new object[] { "rm", line, "--force" }).EnsureSuccess();
+                    NeonHelper.ExecuteCapture(NeonHelper.DockerCli, new object[] { "rm", name, "--force" }).EnsureSuccess();
                 }
             }
 
@@ -677,14 +676,44 @@ namespace Neon.Xunit
 
             using (var reader = new StringReader(result.OutputText))
             {
-                foreach (var line in reader.Lines())
+                foreach (var name in reader.Lines())
                 {
-                    if (string.IsNullOrEmpty(line))
+                    if (string.IsNullOrEmpty(name))
                     {
                         continue;
                     }
 
-                    NeonHelper.ExecuteCapture(NeonHelper.DockerCli, new object[] { "volume", "rm", line.Trim(), "--force" }).EnsureSuccess();
+                    NeonHelper.ExecuteCapture(NeonHelper.DockerCli, new object[] { "volume", "rm", name.Trim(), "--force" }).EnsureSuccess();
+                }
+            }
+
+            // Remove all the networks.  Note that some of these like [bridge], [host], and [null] are
+            // built-in and cannot be deleted.
+
+            result = NeonHelper.ExecuteCapture(NeonHelper.DockerCli, new object[] { "volume", "ls", "--format", "{{ .Name }}" });
+
+            result.EnsureSuccess();
+
+            using (var reader = new StringReader(result.OutputText))
+            {
+                foreach (var name in reader.Lines())
+                {
+                    switch (name)
+                    {
+                        case "":
+                        case "bridge":
+                        case "host":
+                        case "null":
+
+                            // These networks cannot be deleted
+
+                            break;
+
+                        default:
+
+                            NeonHelper.ExecuteCapture(NeonHelper.DockerCli, new object[] { "network", "rm", name.Trim(), "--force" }).EnsureSuccess();
+                            break;
+                    }
                 }
             }
         }
