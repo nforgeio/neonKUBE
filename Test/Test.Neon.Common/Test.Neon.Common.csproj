@@ -29,6 +29,14 @@
     <NoWarn></NoWarn>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net48|AnyCPU'">
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net48|AnyCPU'">
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+
   <ItemGroup>
     <None Remove="IORes\Resources\Folder1\Folder3\TextFile5.txt" />
     <None Remove="IORes\Resources\Folder1\TextFile3.txt" />
@@ -39,6 +47,13 @@
     <None Remove="IORes\Resources\Folder8\Test._" />
     <None Remove="IORes\Resources\TextFile1.txt" />
     <None Remove="IORes\Resources\TextFile2.txt" />
+    <None Remove="xunit.runner.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="xunit.runner.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
@@ -74,7 +89,7 @@
     <ProjectReference Include="..\..\Lib\Neon.Xunit\Neon.Xunit.csproj" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net50'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net5.0'">
     <ProjectReference Include="..\..\Lib\Neon.Deployment\Neon.Deployment.csproj" />
   </ItemGroup>
 

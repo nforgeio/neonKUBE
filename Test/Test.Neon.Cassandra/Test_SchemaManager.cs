@@ -54,6 +54,8 @@ namespace Test.Neon.Cassandra
 
         public Test_SchemaManager(YugaByteFixture fixture)
         {
+            TestHelper.ResetDocker(this.GetType());
+
             // We're not going to restart YugaByte for every unit test because
             // that's too slow.  Instead, each test will work with unique keyspace
             // names.
@@ -86,10 +88,10 @@ namespace Test.Neon.Cassandra
 
             for (int i = 0; i < scripts.Length; i++)
             {
-                await File.WriteAllTextAsync(Path.Combine(tempFolder.Path, $"schema-{i}.script"), scripts[i]);
+                File.WriteAllText(Path.Combine(tempFolder.Path, $"schema-{i}.script"), scripts[i]);
             }
 
-            return tempFolder;
+            return await Task.FromResult(tempFolder);
         }
 
         /// <summary>
@@ -106,10 +108,10 @@ namespace Test.Neon.Cassandra
             {
                 var version = i.ToString("000#");
 
-                await File.WriteAllTextAsync(Path.Combine(tempFolder.Path, $"schema-{version}.script"), scripts[i]);
+                File.WriteAllText(Path.Combine(tempFolder.Path, $"schema-{version}.script"), scripts[i]);
             }
 
-            return tempFolder;
+            return await Task.FromResult(tempFolder);
         }
 
         /// <summary>
@@ -168,8 +170,8 @@ namespace Test.Neon.Cassandra
 
             using (var tempFolder = new TempFolder())
             {
-                await File.WriteAllTextAsync(Path.Combine(tempFolder.Path, "schema-1.script"), string.Empty);
-                await File.WriteAllTextAsync(Path.Combine(tempFolder.Path, "schema-2.script"), string.Empty);
+                File.WriteAllText(Path.Combine(tempFolder.Path, "schema-1.script"), string.Empty);
+                File.WriteAllText(Path.Combine(tempFolder.Path, "schema-2.script"), string.Empty);
 
                 Assert.Throws<FileNotFoundException>(
                     () =>
@@ -179,6 +181,8 @@ namespace Test.Neon.Cassandra
                         }
                     });
             }
+
+            await Task.CompletedTask;
         }
 
         [Fact]

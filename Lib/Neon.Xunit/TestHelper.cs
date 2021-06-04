@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Common;
@@ -39,35 +40,6 @@ namespace Neon.Xunit
     /// </summary>
     public static class TestHelper
     {
-        /// <summary>
-        /// Creates and optionally populates a temporary test folder with test files.
-        /// </summary>
-        /// <param name="files">
-        /// The files to be created.  The first item in each tuple entry will be 
-        /// the local file name and the second the contents of the file.
-        /// </param>
-        /// <returns>The <see cref="TempFolder"/>.</returns>
-        /// <remarks>
-        /// <note>
-        /// Ensure that the <see cref="TempFolder"/> returned is disposed so it and
-        /// any files within will be deleted.
-        /// </note>
-        /// </remarks>
-        public static TempFolder CreateTestFolder(params Tuple<string, string>[] files)
-        {
-            var folder = new TempFolder();
-
-            if (files != null)
-            {
-                foreach (var file in files)
-                {
-                    File.WriteAllText(Path.Combine(folder.Path, file.Item1), file.Item2 ?? string.Empty);
-                }
-            }
-
-            return folder;
-        }
-
         /// <summary>
         /// Creates and populates a temporary test folder with a test file.
         /// </summary>
@@ -632,7 +604,7 @@ namespace Neon.Xunit
         /// when every test in the same class runs (which will probably break tests).
         /// </para>
         /// <note>
-        /// This does not support multiple test classes peformaing parallel Docker operations.
+        /// This does not support multiple test classes performing parallel Docker operations.
         /// </note>
         /// </remarks>
         public static void ResetDocker(Type testClass, bool pruneImages = false)

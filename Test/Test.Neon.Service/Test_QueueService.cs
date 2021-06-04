@@ -50,7 +50,7 @@ namespace TestNeonService
 
         public Test_QueueService(ComposedFixture fixture)
         {
-            TestHelper.ResetDocker(this.GetType());
+            TestHelper.ResetDocker(null);   // Reset Docker for every test
 
             this.composedFixture = fixture;
 

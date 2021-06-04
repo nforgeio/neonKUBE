@@ -89,10 +89,10 @@ namespace Test.Neon.Postgres
 
             for (int i = 0; i < scripts.Length; i++)
             {
-                await File.WriteAllTextAsync(Path.Combine(tempFolder.Path, $"schema-{i}.script"), scripts[i]);
+                File.WriteAllText(Path.Combine(tempFolder.Path, $"schema-{i}.script"), scripts[i]);
             }
 
-            return tempFolder;
+            return await Task.FromResult(tempFolder);
         }
 
         /// <summary>
@@ -109,10 +109,10 @@ namespace Test.Neon.Postgres
             {
                 var version = i.ToString("000#");
 
-                await File.WriteAllTextAsync(Path.Combine(tempFolder.Path, $"schema-{version}.script"), scripts[i]);
+                File.WriteAllText(Path.Combine(tempFolder.Path, $"schema-{version}.script"), scripts[i]);
             }
 
-            return tempFolder;
+            return await Task.FromResult(tempFolder);
         }
 
         [Fact]
@@ -144,8 +144,8 @@ namespace Test.Neon.Postgres
 
             using (var tempFolder = new TempFolder())
             {
-                await File.WriteAllTextAsync(Path.Combine(tempFolder.Path, "schema-1.script"), string.Empty);
-                await File.WriteAllTextAsync(Path.Combine(tempFolder.Path, "schema-2.script"), string.Empty);
+                File.WriteAllText(Path.Combine(tempFolder.Path, "schema-1.script"), string.Empty);
+                File.WriteAllText(Path.Combine(tempFolder.Path, "schema-2.script"), string.Empty);
 
                 Assert.Throws<FileNotFoundException>(
                     () =>
@@ -154,6 +154,8 @@ namespace Test.Neon.Postgres
                         {
                         }
                     });
+
+                await Task.CompletedTask;
             }
         }
 

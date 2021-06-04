@@ -42,7 +42,7 @@ namespace Neon.Xunit.Temporal
     /// are not true.
     /// </para>
     /// <para>
-    /// See <see cref="Start(TemporalSettings, string, string, string, LogLevel, bool, bool, bool, bool)"/>
+    /// See <see cref="Start(TemporalSettings, string, string, string, Neon.Diagnostics.LogLevel, bool, bool, bool, bool)"/>
     /// for more information about how this works.
     /// </para>
     /// <note>
@@ -125,7 +125,7 @@ services:
         /// to call this in your test class constructor instead of <see cref="ITestFixture.Start(Action)"/>.
         /// </para>
         /// <note>
-        /// You'll need to call <see cref="StartAsComposed(TemporalSettings, string, string, string, LogLevel, bool, bool, bool, bool)"/>
+        /// You'll need to call <see cref="StartAsComposed(TemporalSettings, string, string, string, Neon.Diagnostics.LogLevel, bool, bool, bool, bool)"/>
         /// instead when this fixture is being added to a <see cref="ComposedFixture"/>.
         /// </note>
         /// </summary>
@@ -145,7 +145,7 @@ services:
         /// </para>
         /// </param>
         /// <param name="defaultNamespace">Optionally specifies the default namespace for the fixture's client.  This defaults to <b>test-namespace</b>.</param>
-        /// <param name="logLevel">Specifies the Temporal log level.  This defaults to <see cref="LogLevel.None"/>.</param>
+        /// <param name="logLevel">Specifies the Temporal log level.  This defaults to <see cref="Neon.Diagnostics.LogLevel.None"/>.</param>
         /// <param name="reconnect">
         /// Optionally specifies that a new Temporal connection <b>should</b> be established for each
         /// unit test case.  By default, the same connection will be reused which will save about a 
@@ -231,7 +231,7 @@ services:
         /// </para>
         /// </param>
         /// <param name="defaultNamespace">Optionally specifies the default namespace for the fixture's client.  This defaults to <b>test-namespace</b>.</param>
-        /// <param name="logLevel">Specifies the Temporal log level.  This defaults to <see cref="LogLevel.None"/>.</param>
+        /// <param name="logLevel">Specifies the Temporal log level.  This defaults to <see cref="Neon.Diagnostics.LogLevel.None"/>.</param>
         /// <param name="reconnect">
         /// Optionally specifies that a new Temporal connection <b>should</b> be established for each
         /// unit test case.  By default, the same connection will be reused which will save about a 
