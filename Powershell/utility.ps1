@@ -115,7 +115,7 @@ function Write-Info
 #
 # ARGUMENTS:
 #
-#   error   - The error caught in a catch block via the automatic
+#   err     - The error caught in a catch block via the automatic
 #             [$_] or [$PSItem] variable
 
 function Write-Exception
@@ -123,19 +123,30 @@ function Write-Exception
     [CmdletBinding()]
     param (
         [Parameter(Position=0, Mandatory=$true)]
-        $exception
+        $err
     )
 
-    Write-Info "EXCEPTION: $exception"
-    Write-Info "-------------------------------------------"
+    $exception  = $err.Exception
+    $info       = $err.InvocationInfo
+    $scriptName = $info.ScriptName
+    $scriptLine = $info.ScriptLineNumber
+
+    Write-Info ""
+    Write-Info "***************************************************************************"
+    Write-Info "EXCEPTION:   $err"
+    Write-Info "SCRIPT NAME: $scriptName"
+    Write-Info "SCRIPT LINE: $scriptLine"
     Write-Info "SCRIPT STACK TRACE"
-    Write-Info $exception.ScriptStackTrace
+    Write-Info "------------------"
+    Write-Info $err.ScriptStackTrace
 
     if (![System.String]::IsNullOrEmpty($exception.StackTrace))
     {
         Write-Info ".NET STACK TRACE"
+        Write-Info "----------------"
         Write-Info $exception.StackTrace
     }
+    Write-Info "***************************************************************************"
 }
 
 #------------------------------------------------------------------------------
