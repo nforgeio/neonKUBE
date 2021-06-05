@@ -45,6 +45,8 @@ namespace HelloWorld_MultiStep
             message.Body = messageText;
 
             smtp.Send(message);
+
+            await Task.CompletedTask;
         }
     }
 

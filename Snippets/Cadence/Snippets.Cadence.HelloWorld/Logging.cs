@@ -64,6 +64,8 @@
                 message.Body = messageText;
 
                 smtp.Send(message);
+
+                await Task.CompletedTask;
             }
             catch (Exception e)
             {
