@@ -31,8 +31,7 @@ param
     [switch]$services    = $false,      # Rebuild all cluster service images
     [switch]$nopush      = $false,      # Don't push to the registry
     [switch]$noprune     = $false,      # Don't prune the local Docker cache
-    [switch]$allVersions = $false,      # Rebuild all image versions
-
+    [switch]$allVersions = $false       # Rebuild all image versions
 )
 
 #----------------------------------------------------------
