@@ -1367,7 +1367,9 @@ namespace Neon.Kube
                     {
                         // The [KUBECONFIG] environment variable doesn't exist so we'll set it.
 
+#pragma warning disable CA1416
                         Registry.SetValue(@"HKEY_CURRENT_USER\Environment", "KUBECONFIG", KubeConfigPath, RegistryValueKind.ExpandString);
+#pragma warning restore CA1416
                         Environment.SetEnvironmentVariable("KUBECONFIG", KubeConfigPath);
                     }
                     else
@@ -1397,7 +1399,9 @@ namespace Neon.Kube
 
                         if (newKubeConfigVar != kubeConfigVar)
                         {
+#pragma warning disable CA1416
                             Registry.SetValue(@"HKEY_CURRENT_USER\Environment", "KUBECONFIG", newKubeConfigVar, RegistryValueKind.ExpandString);
+#pragma warning restore CA1416
                             Environment.SetEnvironmentVariable("KUBECONFIG", newKubeConfigVar);
                         }
                     }
@@ -2445,12 +2449,14 @@ TCPKeepAlive yes
         {
             if (NeonHelper.IsWindows)
             {
+#pragma warning disable CA1416
                 var principal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
 
                 if (!principal.IsInRole(WindowsBuiltInRole.Administrator))
                 {
                     throw new SecurityException(message ?? "Admin privileges are required.");
                 }
+#pragma warning restore CA1416
             }
             else if (NeonHelper.IsOSX)
             {
@@ -2474,12 +2480,14 @@ TCPKeepAlive yes
         {
             if (NeonHelper.IsWindows)
             {
+#pragma warning disable CA1416
                 var principal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
 
                 if (!principal.IsInRole(WindowsBuiltInRole.Administrator))
                 {
                     throw new KubeException("Enhanced admin privileges are required but are not assigned.");
                 }
+#pragma warning restore CA1416
             }
             else if (NeonHelper.IsOSX)
             {
