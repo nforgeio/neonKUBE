@@ -319,7 +319,7 @@ namespace Neon.Postgres
     ///     <item>
     ///     You'll be using the <see cref="SchemaManager.SchemaManager(NpgsqlConnection, string, IStaticDirectory, Dictionary{string, string})"/>
     ///     override constructor and you'll be passing an <see cref="IStaticDirectory"/> that emulates a read-only file system
-    ///     constructed from embedded resources.  You'll need to call <see cref="AssemblyExtensions.GetResourceFileSystem(Assembly, string)"/>
+    ///     constructed from embedded resources.  You'll need to call <see cref="NeonAssemblyExtensions.GetResourceFileSystem(Assembly, string)"/>
     ///     to obtain this directory, passing a string identifying resource name prefix that identifies your virtual folder.
     ///     </item>
     /// </list>
@@ -423,7 +423,7 @@ namespace Neon.Postgres
         /// superuser or a user with the <b>CREATEDB</b> privilege and must not reference a specific database.
         /// </param>
         /// <param name="databaseName">The database name to be used.</param>
-        /// <param name="schemaDirectory">The embedded resource directory returned by a call to <see cref="AssemblyExtensions.GetResourceFileSystem(Assembly, string)"/>.</param>
+        /// <param name="schemaDirectory">The embedded resource directory returned by a call to <see cref="NeonAssemblyExtensions.GetResourceFileSystem(Assembly, string)"/>.</param>
         /// <param name="variables">Optionally specifies script variables.</param>
         /// <exception cref="FileNotFoundException">
         /// Thrown if there's no directory at <see cref="scriptFolder"/> or when there's no

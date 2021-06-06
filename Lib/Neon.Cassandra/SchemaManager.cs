@@ -319,7 +319,7 @@ namespace Neon.Cassandra
     ///     <item>
     ///     You'll be using the <see cref="SchemaManager.SchemaManager(ISession, string, IStaticDirectory, Dictionary{string, string})"/>
     ///     override constructor and you'll be passing an <see cref="IStaticDirectory"/> that emulates a read-only file system
-    ///     constructed from embedded resources.  You'll need to call <see cref="AssemblyExtensions.GetResourceFileSystem(Assembly, string)"/>
+    ///     constructed from embedded resources.  You'll need to call <see cref="NeonAssemblyExtensions.GetResourceFileSystem(Assembly, string)"/>
     ///     to obtain this directory, passing a string identifying resource name prefix that identifies your virtual folder.
     ///     </item>
     /// </list>
@@ -416,7 +416,7 @@ namespace Neon.Cassandra
         /// for a Postgres superuser or a user with global <b>CREATE</b> permission.
         /// </param>
         /// <param name="keyspace">The keyspace name to be used.</param>
-        /// <param name="schemaDirectory">The embedded resource directory returned by a call to <see cref="AssemblyExtensions.GetResourceFileSystem(Assembly, string)"/>.</param>
+        /// <param name="schemaDirectory">The embedded resource directory returned by a call to <see cref="NeonAssemblyExtensions.GetResourceFileSystem(Assembly, string)"/>.</param>
         /// <param name="variables">Optionally specifies script variables.</param>
         /// <exception cref="FileNotFoundException">
         /// Thrown if there's no directory at <see cref="scriptFolder"/> or when there's no

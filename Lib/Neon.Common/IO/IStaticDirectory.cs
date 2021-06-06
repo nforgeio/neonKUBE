@@ -36,7 +36,7 @@ namespace Neon.IO
     /// <para>
     /// This is currently used to emulate a tree of <see cref="IStaticDirectory"/> and 
     /// <see cref="IStaticFile"/> instances loaded from an assembly's embedded resources
-    /// via the <see cref="AssemblyExtensions.GetResourceFileSystem(Assembly, string)"/> 
+    /// via the <see cref="NeonAssemblyExtensions.GetResourceFileSystem(Assembly, string)"/> 
     /// extension method.
     /// </para>
     /// <note>

@@ -127,6 +127,7 @@ function Write-Exception
     )
 
     $exception  = $err.Exception
+    $message    = $exception.Message
     $info       = $err.InvocationInfo
     $scriptName = $info.ScriptName
     $scriptLine = $info.ScriptLineNumber
@@ -134,6 +135,7 @@ function Write-Exception
     Write-Info ""
     Write-Info "***************************************************************************"
     Write-Info "EXCEPTION:   $err"
+    Write-Info "MESSAGE:     $message"
     Write-Info "SCRIPT NAME: $scriptName"
     Write-Info "SCRIPT LINE: $scriptLine"
     Write-Info "SCRIPT STACK TRACE"
@@ -639,11 +641,28 @@ function Push-DockerImage
 		$result   = $result = Invoke-CaptureStreams "docker push $image" -interleave -noCheck
 		$exitCode = $result.exitcode
 
-		if ($result.allText.Contains("blob upload unknown"))
-		{
-			Write-Info "*** PUSH: BLOB UPLOAD UNKNOWN"
-			$exitCode = 100
-		}
+        if ($exitcode -ne 0)
+        {
+		    if ($result.allText.Contains("blob upload unknown"))
+		    {
+			    Write-Info "*** PUSH: BLOB UPLOAD UNKNOWN"
+			    $exitCode = 100
+		    }
+            else
+            {
+                Write-Info " "
+                Write-Info "*******************************************************************************"
+                Write-Info "ERROR:    [docker push $image] failed"
+                Write-Info "EXITCODE: $exitcode"
+                Write-Info "OUTPUT:"
+                Write-Info "-------"
+                Write-Info $result.stdout
+                Write-Info "*******************************************************************************"
+                Write-Info " "
+
+                throw "[docker push $image] failed."
+            }
+        }
 
 		if ($exitCode -eq 0)
 		{																																		  

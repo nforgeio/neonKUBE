@@ -1057,7 +1057,7 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// Converts a Neon <see cref="LogLevel"/> value into a <b>cadence-proxy</b> compatible
+        /// Converts a Neon <see cref="Neon.Diagnostics.LogLevel"/> value into a <b>cadence-proxy</b> compatible
         /// log level string.
         /// </summary>
         /// <param name="logLevel">The input log level.</param>

@@ -23,8 +23,12 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 
+#if NETFRAMEWORK
+using System.Web;
+#else
 using Microsoft.AspNetCore.Http;
-
+#endif
+ 
 using Neon.Common;
 using Neon.Temporal;
 using Neon.Temporal.Internal;
@@ -43,7 +47,7 @@ namespace Neon.Temporal
         /// <typeparam name="TRequest">The request message type.</typeparam>
         /// <param name="client">The HTTP client.</param>
         /// <param name="request">The message to be sent.</param>
-        /// <returns>The <see cref="HttpResponse"/>.</returns>
+        /// <returns>The <see cref="HttpResponseMessage"/>.</returns>
         public static async Task<HttpResponseMessage> SendRequestAsync<TRequest>(this HttpClient client, TRequest request)
             where TRequest : ProxyRequest
         {
@@ -91,7 +95,7 @@ namespace Neon.Temporal
         /// <param name="client">The HTTP client.</param>
         /// <param name="request">The request being responsed to.</param>
         /// <param name="reply">The reply message.</param>
-        /// <returns>The <see cref="HttpResponse"/>.</returns>
+        /// <returns>The <see cref="HttpResponseMessage"/>.</returns>
         public static async Task<HttpResponseMessage> SendReplyAsync<TRequest, TReply>(this HttpClient client, TRequest request, TReply reply)
             where TRequest : ProxyRequest
             where TReply : ProxyReply
