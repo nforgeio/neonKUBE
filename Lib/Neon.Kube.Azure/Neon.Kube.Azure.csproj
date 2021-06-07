@@ -23,7 +23,26 @@
     <PackageIcon>nuget-icon.png</PackageIcon>
     <PackageTags>kubernetes</PackageTags>
     <RootNamespace>Neon.Kube</RootNamespace>
-    <DocumentationFile>$(OutDir)Neon.Kube.Azure.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)'=='netcoreapp3.1'">
+    <DocumentationFile>bin/codedoc.netcoreapp31.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
+    <DocumentationFile>bin/codedoc.netstandard20.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.1'">
+    <DocumentationFile>bin/codedoc.netstandard21.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)'=='net48'">
+    <DocumentationFile>bin/codedoc.net48.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)'=='net50'">
+    <DocumentationFile>bin/codedoc.net50.xml</DocumentationFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

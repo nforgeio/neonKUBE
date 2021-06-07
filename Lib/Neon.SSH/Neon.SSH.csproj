@@ -24,7 +24,26 @@ NOTE: This package has been tested against remote machines running Ubuntu 18.04+
     <FileVersion>0.0.0.0</FileVersion>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Configurations>Debug;Release;CodeDoc</Configurations>
-    <DocumentationFile>$(OutDir)Neon.SSH.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)'=='netcoreapp3.1'">
+    <DocumentationFile>bin/codedoc.netcoreapp31.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
+    <DocumentationFile>bin/codedoc.netstandard20.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.1'">
+    <DocumentationFile>bin/codedoc.netstandard21.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)'=='net48'">
+    <DocumentationFile>bin/codedoc.net48.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)'=='net50'">
+    <DocumentationFile>bin/codedoc.net50.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

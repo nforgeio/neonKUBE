@@ -15887,10 +15887,10 @@
             <summary>Provides access to the git information for the current assembly.</summary>
         </member>
         <member name="F:ThisAssembly.Git.IsDirty">
-            <summary>IsDirty: false</summary>
+            <summary>IsDirty: true</summary>
         </member>
         <member name="F:ThisAssembly.Git.IsDirtyString">
-            <summary>IsDirtyString: false</summary>
+            <summary>IsDirtyString: true</summary>
         </member>
         <member name="F:ThisAssembly.Git.RepositoryUrl">
             <summary>Repository URL: https://github.com/nforgeio/neonKUBE</summary>
@@ -15899,19 +15899,19 @@
             <summary>Branch: master</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commit">
-            <summary>Commit: dbb7cb91c</summary>
+            <summary>Commit: 796677986</summary>
         </member>
         <member name="F:ThisAssembly.Git.Sha">
-            <summary>Sha: dbb7cb91c6fb7433366d16854981ba58100b3fc2</summary>
+            <summary>Sha: 7966779865d02521aa790bfde449bbc2879d58da</summary>
         </member>
         <member name="F:ThisAssembly.Git.CommitDate">
-            <summary>Commit date: 2021-06-06T23:09:36-07:00</summary>
+            <summary>Commit date: 2021-06-06T23:31:57-07:00</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commits">
-            <summary>Commits on top of base version: 471</summary>
+            <summary>Commits on top of base version: 472</summary>
         </member>
         <member name="F:ThisAssembly.Git.Tag">
-            <summary>Tag: neonLIBRARY-v2.14.0-471-gdbb7cb91c</summary>
+            <summary>Tag: neonLIBRARY-v2.14.0-472-g796677986</summary>
         </member>
         <member name="F:ThisAssembly.Git.BaseTag">
             <summary>Base tag: neonLIBRARY-v2.14.0</summary>
@@ -15938,7 +15938,7 @@
             <summary>Minor: 14</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Patch">
-            <summary>Patch: 471</summary>
+            <summary>Patch: 472</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Label">
             <summary>Label: neonLIBRARY</summary>

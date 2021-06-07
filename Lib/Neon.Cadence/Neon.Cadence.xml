@@ -1523,6 +1523,13 @@
             Returns the URI where the server is listening.
             </summary>
         </member>
+        <member name="T:Neon.Cadence.CadenceClient.HttpServer.Startup">
+            <summary>
+            Configures the <b>cadence-client</b> connection's web server used to 
+            receive messages from the <b>cadence-proxy</b> when serving via
+            Kestrel on .NET Core.
+            </summary>
+        </member>
         <member name="M:Neon.Cadence.CadenceClient.HttpServer.#ctor(System.Net.IPAddress,Neon.Cadence.CadenceSettings)">
             <summary>
             Constructor.
@@ -1619,9 +1626,9 @@
             </note>
             </remarks>
         </member>
-        <member name="M:Neon.Cadence.CadenceClient.OnListenerRequestAsync(Microsoft.Net.Http.Server.RequestContext)">
+        <member name="M:Neon.Cadence.CadenceClient.OnKestralRequestAsync(Microsoft.AspNetCore.Http.HttpContext)">
             <summary>
-            Called when an HTTP request is received by the integrated WebListener
+            Called when an HTTP request is received by the integrated Kestrel web server 
             (presumably sent by the associated <b>cadence-proxy</b> process).
             </summary>
             <param name="context">The request context.</param>
