@@ -276,13 +276,13 @@ function Log-ImageBuild
 
 	Write-Info " "
 	Write-Info "==============================================================================="
-	Write-Info "* Building $image"
+	Write-Info "* Building: $image"
 	Write-Info "==============================================================================="
 	Write-Info " "
 }
 
 #------------------------------------------------------------------------------
-# Makes any text files that will be included in Docker images Linux safe, by
+# Makes any text files that will be included in Docker images Linux safe by
 # converting CRLF line endings to LF and replacing TABs with spaces.
 
 unix-text --recursive $image_root\Dockerfile 

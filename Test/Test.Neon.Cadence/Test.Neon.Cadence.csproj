@@ -8,6 +8,7 @@
     <RootNamespace>TestCadence</RootNamespace>
     <AssemblyName>Test.Neon.Cadence</AssemblyName>
     <Configurations>Debug;Release;CodeDoc</Configurations>
+    <EnableDefaultContentItems>false</EnableDefaultContentItems>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -46,7 +47,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-
+  
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="3.0.3">
       <PrivateAssets>all</PrivateAssets>
