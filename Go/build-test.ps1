@@ -1,4 +1,4 @@
-#Requires -Version 7.0 -RunAsAdministrator
+#Requires -Version 7.1.3 -RunAsAdministrator
 #------------------------------------------------------------------------------
 # FILE:         build-test.ps1
 # CONTRIBUTOR:  John C Burns

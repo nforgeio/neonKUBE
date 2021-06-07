@@ -1,4 +1,4 @@
-#Requires -Version 7.0 -RunAsAdministrator
+#Requires -Version 7.1.3 -RunAsAdministrator
 #------------------------------------------------------------------------------
 # FILE:         error-handling.ps1
 # CONTRIBUTOR:  Jeff Lill

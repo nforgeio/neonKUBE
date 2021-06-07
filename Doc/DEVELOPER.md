@@ -55,7 +55,7 @@ Follow the steps below to configure a development or test workstation:
 
 5. Uninstall **Powershell 6x** if installed.
 
-6. Install the latest **64-bit** production release of PowerShell 7 from [here](https://github.com/PowerShell/PowerShell/releases) (`PowerShell-#.#.#-win.x64.msi`)
+6. Install the latest **64-bit** production release of PowerShell 7.1.3 (or greater) from [here](https://github.com/PowerShell/PowerShell/releases) (`PowerShell-#.#.#-win.x64.msi`)
 
 7. Enable PowerShell script execution via (in a CMD window as administrator):
     ```
