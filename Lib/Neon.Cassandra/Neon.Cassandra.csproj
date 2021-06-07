@@ -21,19 +21,11 @@
     <FileVersion>0.0.0.0</FileVersion>
     <Configurations>Debug;Release;CodeDoc</Configurations>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <DocumentationFile>$(OutDir)Neon.Cassandra.xml</DocumentationFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DocumentationFile>bin\Debug\Neon.Cassandra.xml</DocumentationFile>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DocumentationFile>bin\Release\Neon.Cassandra.xml</DocumentationFile>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CodeDoc|AnyCPU'">
-    <DocumentationFile>bin\Release\Neon.Cassandra.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

@@ -20,19 +20,11 @@
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
     <Configurations>Debug;Release;CodeDoc</Configurations>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <DocumentationFile>$(OutDir)Neon.Identity.xml</DocumentationFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <DocumentationFile>bin\Debug\Neon.Identity.xml</DocumentationFile>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CodeDoc|AnyCPU'">
-    <DocumentationFile>bin\CodeDoc\Neon.Identity.xml</DocumentationFile>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DocumentationFile>bin\Release\Neon.Identity.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

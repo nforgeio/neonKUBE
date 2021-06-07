@@ -1,0 +1,300 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Neon.Xunit.Couchbase</name>
+    </assembly>
+    <members>
+        <member name="T:Neon.Xunit.Couchbase.CouchbaseFixture">
+            <summary>
+            Used to run the Docker <b>couchbase-dev</b> container on the current 
+            machine as a test fixture while tests are being performed and then 
+            deletes the container when the fixture is disposed.
+            </summary>
+            <remarks>
+            <note>
+            <para>
+            <b>IMPORTANT:</b> The base Neon <see cref="T:Neon.Xunit.TestFixture"/> implementation <b>DOES NOT</b>
+            support parallel test execution because fixtures may impact global machine state
+            like starting a Docker container, modifying the local DNS <b>hosts</b> file, or 
+            configuring a test database.
+            </para>
+            <para>
+            You should explicitly disable parallel execution in all test assemblies that
+            rely on test fixtures by adding a C# file called <c>AssemblyInfo.cs</c> with:
+            </para>
+            <code language="csharp">
+            [assembly: CollectionBehavior(DisableTestParallelization = true, MaxParallelThreads = 1)]
+            </code>
+            <para>
+            and then define your test classes like:
+            </para>
+            <code language="csharp">
+            public class MyTests
+            {
+                [Collection(TestCollection.NonParallel)]
+                [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
+                [Fact]
+                public void Test()
+                {
+                }
+            }
+            </code>
+            </note>
+            <para>
+            This fixture assumes that Couchbase is not currently running on the
+            local workstation or as a container named <b>cb-test</b>.
+            You may see port conflict errors if either of these conditions
+            are not true.
+            </para>
+            <para>
+            A somewhat safer but slower alternative, is to use the <see cref="T:Neon.Xunit.DockerFixture"/>
+            instead and add <see cref="T:Neon.Xunit.Couchbase.CouchbaseFixture"/> as a subfixture.  The 
+            advantage is that <see cref="T:Neon.Xunit.DockerFixture"/> will ensure that all
+            (potentially conflicting) containers are removed before the Couchbase
+            fixture is started.
+            </para>
+            <note>
+            This fixture calls <see cref="M:Neon.Data.RoundtripDataHelper.PersistableInitialize"/> to ensure
+            that any type filters for generated <see cref="T:Neon.Data.IPersistableType"/> classes are automatically
+            registered with <b>Linq2Couchbase</b>.
+            </note>
+            </remarks>
+            <threadsafety instance="true"/>
+        </member>
+        <member name="M:Neon.Xunit.Couchbase.CouchbaseFixture.#ctor">
+            <summary>
+            Constructs the fixture.
+            </summary>
+        </member>
+        <member name="M:Neon.Xunit.Couchbase.CouchbaseFixture.Start(Neon.Data.CouchbaseSettings,System.String,System.String,System.String[],System.String,System.String,System.Boolean,System.String,Neon.Xunit.ContainerLimits)">
+            <summary>
+            <para>
+            Starts a Couchbase container if it's not already running.  You'll generally want
+            to call this in your test class constructor instead of <see cref="M:Neon.Xunit.ITestFixture.Start(System.Action)"/>.
+            </para>
+            <note>
+            You'll need to call <see cref="M:Neon.Xunit.Couchbase.CouchbaseFixture.StartAsComposed(Neon.Data.CouchbaseSettings,System.String,System.String,System.String[],System.String,System.String,System.Boolean,System.String,Neon.Xunit.ContainerLimits)"/>
+            instead when this fixture is being added to a <see cref="T:Neon.Xunit.ComposedFixture"/>.
+            </note>
+            </summary>
+            <param name="settings">Optional Couchbase settings.</param>
+            <param name="image">
+            Optionally specifies the Couchbase container image.  This defaults to 
+            <b>ghcr.io/neonrelease/couchbase-dev:latest</b> or <b>ghcr.io/neonrelease-dev/couchbase-dev:latest</b>
+            depending on whether the assembly was built from a git release branch or not.
+            </param>
+            <param name="name">Optionally specifies the Couchbase container name (defaults to <c>cb-test</c>).</param>
+            <param name="env">Optional environment variables to be passed to the Couchbase container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
+            <param name="username">Optional Couchbase username (defaults to <b>Administrator</b>).</param>
+            <param name="password">Optional Couchbase password (defaults to <b>password</b>).</param>
+            <param name="noPrimary">Optionally disable creation of the primary bucket index.</param>
+            <param name="hostInterface">
+            Optionally specifies the host interface where the container public ports will be
+            published.  This defaults to <see cref="P:Neon.Xunit.ContainerFixture.DefaultHostInterface"/>
+            but may be customized.  This needs to be an IPv4 address.
+            </param>
+            <param name="limits">
+            Optionally specifies the Docker container limits to use for hosting Couchbase.  Note that
+            this method will use reasonable default limits when this is <c>null</c>.
+            </param>
+            <returns>
+            <see cref="F:Neon.Xunit.TestFixtureStatus.Started"/> if the fixture wasn't previously started and
+            this method call started it or <see cref="F:Neon.Xunit.TestFixtureStatus.AlreadyRunning"/> if the 
+            fixture was already running.
+            </returns>
+            <remarks>
+            <note>
+            Some of the <paramref name="settings"/> properties will be ignored including 
+            <see cref="P:Neon.Data.CouchbaseSettings.Servers"/>.  This will be replaced by the local
+            endpoint for the Couchbase container.  Also, the fixture will connect to the 
+            <b>test</b> bucket by default (unless another is specified).
+            </note>
+            <para>
+            This method creates a primary index by default because it's very common for 
+            unit tests to require a primary index. You can avoid creating a primary index 
+            by passing <paramref name="noPrimary"/><c>=true</c>.
+            </para>
+            <para>
+            There are three basic patterns for using this fixture.
+            </para>
+            <list type="table">
+            <item>
+            <term><b>initialize once</b></term>
+            <description>
+            <para>
+            The basic idea here is to have your test class initialize Couchbase
+            once within the test class constructor inside of the initialize action
+            with common state that all of the tests can access.
+            </para>
+            <para>
+            This will be quite a bit faster than reconfiguring Couchbase at the
+            beginning of every test and can work well for many situations.
+            </para>
+            </description>
+            </item>
+            <item>
+            <term><b>initialize every test</b></term>
+            <description>
+            For scenarios where Couchbase must be cleared before every test,
+            you can use the <see cref="M:Neon.Xunit.Couchbase.CouchbaseFixture.Clear"/> method to reset its
+            state within each test method, populate the database as necessary,
+            and then perform your tests.
+            </description>
+            </item>
+            <item>
+            <term><b>docker integrated</b></term>
+            <description>
+            The <see cref="T:Neon.Xunit.Couchbase.CouchbaseFixture"/> can also be added to the <see cref="T:Neon.Xunit.DockerFixture"/>
+            and used within a swarm.  This is useful for testing multiple services and
+            also has the advantage of ensure that swarm/node state is fully reset
+            before the database container is started.
+            </description>
+            </item>
+            </list>
+            </remarks>
+        </member>
+        <member name="M:Neon.Xunit.Couchbase.CouchbaseFixture.StartAsComposed(Neon.Data.CouchbaseSettings,System.String,System.String,System.String[],System.String,System.String,System.Boolean,System.String,Neon.Xunit.ContainerLimits)">
+            <summary>
+            Used to start the fixture within a <see cref="T:Neon.Xunit.ComposedFixture"/>.
+            </summary>
+            <param name="settings">Optional Couchbase settings.</param>
+            <param name="image">
+            Optionally specifies the Couchbase container image.  This defaults to 
+            <b>ghcr.io/neonrelease/couchbase-dev:latest</b> or <b>ghcr.io/neonrelease-dev/couchbase-dev:latest</b>
+            depending on whether the assembly was built from a git release branch or not.
+            </param>
+            <param name="name">Optionally specifies the Couchbase container name (defaults to <c>cb-test</c>).</param>
+            <param name="env">Optional environment variables to be passed to the Couchbase container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
+            <param name="username">Optional Couchbase username (defaults to <b>Administrator</b>).</param>
+            <param name="password">Optional Couchbase password (defaults to <b>password</b>).</param>
+            <param name="noPrimary">Optionally disable creation of thea primary bucket index.</param>
+            <param name="hostInterface">
+            Optionally specifies the host interface where the container public ports will be
+            published.  This defaults to <see cref="P:Neon.Xunit.ContainerFixture.DefaultHostInterface"/>
+            but may be customized.  This needs to be an IPv4 address.
+            </param>
+            <param name="limits">
+            Optionally specifies the Docker container limits to use for hosting Couchbase.  Note that
+            this method will use reasonably small default limits when this is <c>null</c>.
+            </param>
+        </member>
+        <member name="P:Neon.Xunit.Couchbase.CouchbaseFixture.Bucket">
+            <summary>
+            Returns the Couchbase <see cref="P:Neon.Xunit.Couchbase.CouchbaseFixture.Bucket"/> to be used to interact with Couchbase.
+            </summary>
+        </member>
+        <member name="P:Neon.Xunit.Couchbase.CouchbaseFixture.Settings">
+            <summary>
+            Returns the <see cref="T:Neon.Data.CouchbaseSettings"/> used to connect to the bucket.
+            </summary>
+        </member>
+        <member name="P:Neon.Xunit.Couchbase.CouchbaseFixture.Username">
+            <summary>
+            Returns the Couchbase username.
+            </summary>
+        </member>
+        <member name="P:Neon.Xunit.Couchbase.CouchbaseFixture.Password">
+            <summary>
+            Returns the Couchbase password.
+            </summary>
+        </member>
+        <member name="P:Neon.Xunit.Couchbase.CouchbaseFixture.jsonClient">
+            <summary>
+            Returns the JsonClient.
+            </summary>
+        </member>
+        <member name="M:Neon.Xunit.Couchbase.CouchbaseFixture.ConnectBucket">
+            <summary>
+            Establishes the bucket connection and waits until the Couchbase container is ready
+            to start handling requests.
+            </summary>
+        </member>
+        <member name="M:Neon.Xunit.Couchbase.CouchbaseFixture.Clear">
+            <summary>
+            Removes all data and indexes from the database bucket and then recreates the
+            primary index if an index was specified when the fixture was started.
+            </summary>
+        </member>
+        <member name="M:Neon.Xunit.Couchbase.CouchbaseFixture.Reset">
+            <summary>
+            This method completely resets the fixture by removing the Couchbase 
+            container from Docker.  Use <see cref="M:Neon.Xunit.Couchbase.CouchbaseFixture.Clear"/> if you just want to 
+            clear the database.
+            </summary>
+        </member>
+        <member name="T:Neon.Xunit.Couchbase.NamespaceDoc">
+            <summary>
+            This namespace includes a Couchbase Xunit test fixture.
+            </summary>
+        </member>
+        <member name="T:ThisAssembly">
+            <summary>Provides access to the current assembly information.</summary>
+        </member>
+        <member name="T:ThisAssembly.Git">
+            <summary>Provides access to the git information for the current assembly.</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.IsDirty">
+            <summary>IsDirty: false</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.IsDirtyString">
+            <summary>IsDirtyString: false</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.RepositoryUrl">
+            <summary>Repository URL: https://github.com/nforgeio/neonKUBE</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.Branch">
+            <summary>Branch: master</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.Commit">
+            <summary>Commit: dbb7cb91c</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.Sha">
+            <summary>Sha: dbb7cb91c6fb7433366d16854981ba58100b3fc2</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.CommitDate">
+            <summary>Commit date: 2021-06-06T23:09:36-07:00</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.Commits">
+            <summary>Commits on top of base version: 471</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.Tag">
+            <summary>Tag: neonLIBRARY-v2.14.0-471-gdbb7cb91c</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.BaseTag">
+            <summary>Base tag: neonLIBRARY-v2.14.0</summary>
+        </member>
+        <member name="T:ThisAssembly.Git.BaseVersion">
+            <summary>Provides access to the base version information used to determine the <see cref="T:ThisAssembly.Git.SemVer" />.</summary>      
+        </member>
+        <member name="F:ThisAssembly.Git.BaseVersion.Major">
+            <summary>Major: 2</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.BaseVersion.Minor">
+            <summary>Minor: 14</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.BaseVersion.Patch">
+            <summary>Patch: 0</summary>
+        </member>
+        <member name="T:ThisAssembly.Git.SemVer">
+            <summary>Provides access to SemVer information for the current assembly.</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.SemVer.Major">
+            <summary>Major: 2</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.SemVer.Minor">
+            <summary>Minor: 14</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.SemVer.Patch">
+            <summary>Patch: 471</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.SemVer.Label">
+            <summary>Label: neonLIBRARY</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.SemVer.DashLabel">
+            <summary>Label with dash prefix: -neonLIBRARY</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.SemVer.Source">
+            <summary>Source: Tag</summary>
+        </member>
+    </members>
+</doc>

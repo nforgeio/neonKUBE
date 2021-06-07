@@ -24,18 +24,7 @@ NOTE: This package has been tested against remote machines running Ubuntu 18.04+
     <FileVersion>0.0.0.0</FileVersion>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Configurations>Debug;Release;CodeDoc</Configurations>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DocumentationFile>bin\Debug\Neon.SSH.xml</DocumentationFile>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DocumentationFile>bin\Release\Neon.SSH\Neon.SSH.xml</DocumentationFile>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CodeDoc|AnyCPU'">
-    <DocumentationFile>bin\Release\Neon.SSH\Neon.SSH.xml</DocumentationFile>
+    <DocumentationFile>$(OutDir)Neon.SSH.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

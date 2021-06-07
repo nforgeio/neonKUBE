@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Neon.Kube.BareMetal</name>
+    </assembly>
+    <members>
+        <member name="T:Neon.Kube.BareMetalHostingManager">
+            <summary>
+            Manages cluster provisioning directly on (mostly) bare manually provisioned machines or virtual machines.
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.BareMetalHostingManager.Load">
+            <summary>
+            Ensures that the assembly hosting this hosting manager is loaded.
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.BareMetalHostingManager.#ctor">
+            <summary>
+            Creates an instance that is only capable of validating the hosting
+            related options in the cluster definition.
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.BareMetalHostingManager.#ctor(Neon.Kube.ClusterProxy,System.String)">
+            <summary>
+            Creates an instance that is capable of provisioning a cluster on manually provisioned
+            servers or virtual machines.
+            </summary>
+            <param name="cluster">The cluster being managed.</param>
+            <param name="logFolder">
+            The folder where log files are to be written, otherwise or <c>null</c> or 
+            empty if logging is disabled.
+            </param>
+        </member>
+        <member name="M:Neon.Kube.BareMetalHostingManager.Dispose(System.Boolean)">
+            <inheritdoc/>
+        </member>
+        <member name="P:Neon.Kube.BareMetalHostingManager.HostingEnvironment">
+            <inheritdoc/>
+        </member>
+        <member name="P:Neon.Kube.BareMetalHostingManager.RequiresNodeAddressCheck">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Kube.BareMetalHostingManager.Validate(Neon.Kube.ClusterDefinition)">
+            <inheritdoc/>
+        </member>
+        <member name="P:Neon.Kube.BareMetalHostingManager.GenerateSecurePassword">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Kube.BareMetalHostingManager.AddProvisioningSteps(Neon.Kube.SetupController{Neon.Kube.NodeDefinition})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Kube.BareMetalHostingManager.AddDeprovisoningSteps(Neon.Kube.SetupController{Neon.Kube.NodeDefinition})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Kube.BareMetalHostingManager.GetSshEndpoint(System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Kube.BareMetalHostingManager.DetectLabels(Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition})">
+            <summary>
+            Inspects the node to determine physical machine capabilities like
+            processor count, RAM, and primary disk capacity and then sets the
+            corresponding node labels in the cluster definition.
+            </summary>
+            <param name="node">The target node.</param>
+        </member>
+        <member name="M:Neon.Kube.BareMetalHostingManager.GetDataDisk(Neon.SSH.LinuxSshProxy)">
+            <inheritdoc/>
+        </member>
+    </members>
+</doc>

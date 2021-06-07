@@ -1,0 +1,258 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Neon.Identity</name>
+    </assembly>
+    <members>
+        <member name="T:Neon.Identity.IdentityHelper">
+            <summary>
+            Implements utility methods for managing the identity database.  These are
+            called internally by the <b>neon-identity-operator</b> in production but
+            may also be called by unit tests to initialize the database before starting
+            composed <b>neon-identity-service</b> instances.
+            </summary>
+        </member>
+        <member name="M:Neon.Identity.IdentityHelper.InitializeDatabaseAsync(System.String,System.String,System.String,System.String)">
+            <summary>
+            Creates the identity database if it doesn't already exist and then
+            ensures that its schema is up to date.
+            </summary>
+            <param name="connectionString">
+            The connection string for the master database.  The user must have privileges 
+            required to create the database and the identity service user.
+            </param>
+            <param name="databaseName">
+            Specifies the identity database name.  This must satisfy standard SQL restrictions
+            without quoting. 
+            </param>
+            <param name="userName">Specifies the name of the user for the identity service.</param>
+            <param name="password">The user password.</param>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+            <exception cref="T:Neon.Postgres.SchemaManagerException">Thrown if the database initialization failed.</exception>
+        </member>
+        <member name="T:Neon.Identity.ClientStore">
+            <summary>
+            Implements the identity <b>Client Store</b> persistence to a Postgres database.
+            </summary>
+        </member>
+        <member name="T:Neon.Identity.ClientStore.QueryClientCommand">
+            <summary>
+            Queries for a client by <b>ClientId</b>.
+            </summary>
+        </member>
+        <member name="M:Neon.Identity.ClientStore.QueryClientCommand.#ctor(Npgsql.NpgsqlConnection)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="connection">The database connection.</param>
+        </member>
+        <member name="M:Neon.Identity.ClientStore.QueryClientCommand.FindClientByIdAsync(System.String)">
+            <summary>
+            Returns direct properties for the identified client.
+            </summary>
+            <param name="clientId">The target client ID.</param>
+            <returns>The <see cref="T:IdentityServer4.Models.Client"/> or <c>null</c>.</returns>
+        </member>
+        <member name="M:Neon.Identity.ClientStore.#ctor(Npgsql.NpgsqlConnection)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="connection">The open database connection.</param>
+        </member>
+        <member name="M:Neon.Identity.ClientStore.FindClientByIdAsync(System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Neon.Identity.ClientStore.UpsertClientCommand">
+            <summary>
+            Inserts or updates a client.
+            </summary>
+        </member>
+        <member name="M:Neon.Identity.ClientStore.UpsertClientCommand.#ctor(Npgsql.NpgsqlConnection)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="connection">The database connection.</param>
+        </member>
+        <member name="M:Neon.Identity.ClientStore.UpsertClientCommand.UpsertClientAsync(IdentityServer4.Models.Client)">
+            <summary>
+            Upserts a client.
+            </summary>
+            <param name="client">The client being upserted.</param>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
+        <member name="T:Neon.Identity.ClientStore.RemoveClientCommand">
+            <summary>
+            Removes a client from the database if it exists.
+            </summary>
+        </member>
+        <member name="M:Neon.Identity.ClientStore.RemoveClientCommand.#ctor(Npgsql.NpgsqlConnection)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="connection">The database connection.</param>
+        </member>
+        <member name="M:Neon.Identity.ClientStore.RemoveClientCommand.RemoveClientAsync(System.String)">
+            <summary>
+            Removes a client by ID.
+            </summary>
+            <param name="clientId">The ID of the client being deleted.</param>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
+        <member name="T:Neon.Identity.ClientStore.ListClientsCommand">
+            <summary>
+            Lists all clients from the database.
+            </summary>
+        </member>
+        <member name="M:Neon.Identity.ClientStore.ListClientsCommand.#ctor(Npgsql.NpgsqlConnection)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="connection">The database connection.</param>
+        </member>
+        <member name="M:Neon.Identity.ClientStore.ListClientsCommand.ListClientsAsync">
+            <summary>
+            Lists all clients.
+            </summary>
+            <returns>The list of clients.</returns>
+        </member>
+        <member name="M:Neon.Identity.ClientStore.UpsertClientAsync(IdentityServer4.Models.Client)">
+            <inheritdoc/>/>
+        </member>
+        <member name="M:Neon.Identity.ClientStore.SyncClients(System.Collections.Generic.IEnumerable{IdentityServer4.Models.Client})">
+            <inheritdoc/>/>
+        </member>
+        <member name="M:Neon.Identity.ClientStore.RemoveClient(IdentityServer4.Models.Client)">
+            <inheritdoc/>/>
+        </member>
+        <member name="M:Neon.Identity.ClientStore.RemoveClient(System.String)">
+            <inheritdoc/>/>
+        </member>
+        <member name="T:Neon.Identity.CorsPolicyService">
+            <summary>
+            Implements the identity <b>CORS Policy Service</b> persistence to a Postgres database.
+            </summary>
+        </member>
+        <member name="M:Neon.Identity.CorsPolicyService.#ctor(Npgsql.NpgsqlConnection)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="connection">The open database connection.</param>
+        </member>
+        <member name="M:Neon.Identity.CorsPolicyService.IsOriginAllowedAsync(System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Neon.Identity.DeviceFlowStore">
+            <summary>
+            Implements the identity <b>Device Flow Store</b> persistence to a Postgres database.
+            </summary>
+        </member>
+        <member name="M:Neon.Identity.DeviceFlowStore.#ctor(Npgsql.NpgsqlConnection)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="connection">The open database connection.</param>
+        </member>
+        <member name="M:Neon.Identity.DeviceFlowStore.FindByDeviceCodeAsync(System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Identity.DeviceFlowStore.FindByUserCodeAsync(System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Identity.DeviceFlowStore.RemoveByDeviceCodeAsync(System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Identity.DeviceFlowStore.StoreDeviceAuthorizationAsync(System.String,System.String,IdentityServer4.Models.DeviceCode)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Identity.DeviceFlowStore.UpdateByUserCodeAsync(System.String,IdentityServer4.Models.DeviceCode)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Neon.Identity.IClientStoreExtensions">
+            <summary>
+            Defines additional client store operations.
+            </summary>
+        </member>
+        <member name="M:Neon.Identity.IClientStoreExtensions.UpsertClientAsync(IdentityServer4.Models.Client)">
+            <summary>
+            Upserts a client to the database.
+            </summary>
+            <param name="client">The client.</param>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
+        <member name="M:Neon.Identity.IClientStoreExtensions.SyncClients(System.Collections.Generic.IEnumerable{IdentityServer4.Models.Client})">
+            <summary>
+            Updates the set of clients in the database by upserting and clients
+            passed and removing any clients that are in the database but are
+            not in the list.
+            </summary>
+            <param name="clients">The clients expected in the database.</param>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
+        <member name="M:Neon.Identity.IClientStoreExtensions.RemoveClient(IdentityServer4.Models.Client)">
+            <summary>
+            Removes a client from the database if present.
+            </summary>
+            <param name="client">The client to be removed.</param>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
+        <member name="M:Neon.Identity.IClientStoreExtensions.RemoveClient(System.String)">
+            <summary>
+            Removes a client from the database by ID if present.
+            </summary>
+            <param name="cliendId">The ID of the client to be removed.</param>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
+        <member name="T:Neon.Identity.PersistedGrantStore">
+            <summary>
+            Implements the identity <b>Persisted Grant Store</b> persistence to a Postgres database.
+            </summary>
+        </member>
+        <member name="M:Neon.Identity.PersistedGrantStore.#ctor(Npgsql.NpgsqlConnection)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="connection">The open database connection.</param>
+        </member>
+        <member name="M:Neon.Identity.PersistedGrantStore.GetAllAsync(IdentityServer4.Stores.PersistedGrantFilter)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Identity.PersistedGrantStore.GetAsync(System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Identity.PersistedGrantStore.RemoveAllAsync(IdentityServer4.Stores.PersistedGrantFilter)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Identity.PersistedGrantStore.RemoveAsync(System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Identity.PersistedGrantStore.StoreAsync(IdentityServer4.Models.PersistedGrant)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Neon.Identity.ResourceStore">
+            <summary>
+            Implements the identity <b>Resource Store</b> persistence to a Postgres database.
+            </summary>
+        </member>
+        <member name="M:Neon.Identity.ResourceStore.#ctor(Npgsql.NpgsqlConnection)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="connection">The open database connection.</param>
+        </member>
+        <member name="M:Neon.Identity.ResourceStore.FindApiResourcesByNameAsync(System.Collections.Generic.IEnumerable{System.String})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Identity.ResourceStore.FindApiResourcesByScopeNameAsync(System.Collections.Generic.IEnumerable{System.String})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Identity.ResourceStore.FindApiScopesByNameAsync(System.Collections.Generic.IEnumerable{System.String})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Identity.ResourceStore.FindIdentityResourcesByScopeNameAsync(System.Collections.Generic.IEnumerable{System.String})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Identity.ResourceStore.GetAllResourcesAsync">
+            <inheritdoc/>
+        </member>
+    </members>
+</doc>

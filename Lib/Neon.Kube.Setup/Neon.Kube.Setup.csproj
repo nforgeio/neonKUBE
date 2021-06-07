@@ -25,18 +25,7 @@
     <PackageIcon>nuget-icon.png</PackageIcon>
     <PackageTags>kubernetes</PackageTags>
     <NoDefaultExcludes>true</NoDefaultExcludes>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DocumentationFile>bin\Debug\Neon.Kube.Setup.xml</DocumentationFile>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DocumentationFile>bin\Release\Neon.Kube.Setup.xml</DocumentationFile>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CodeDoc|AnyCPU'">
-    <DocumentationFile>bin\CodeDoc\Neon.Kube.Setup.xml</DocumentationFile>
+    <DocumentationFile>$(OutDir)Neon.Kube.Setup.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

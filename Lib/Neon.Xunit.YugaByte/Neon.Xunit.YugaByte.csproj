@@ -21,18 +21,7 @@
     <Authors>neonFORGE Team</Authors>
     <Configurations>Debug;Release;CodeDoc</Configurations>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DocumentationFile>bin\Debug\Neon.Xunit.YugaByte.xml</DocumentationFile>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DocumentationFile>bin\Release\Neon.Xunit.YugaByte.xml</DocumentationFile>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CodeDoc|AnyCPU'">
-    <DocumentationFile>bin\Release\Neon.Xunit.YugaByte.xml</DocumentationFile>
+    <DocumentationFile>$(OutDir)Neon.Xunit.YugaByte.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

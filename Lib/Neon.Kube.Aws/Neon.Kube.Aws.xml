@@ -1,0 +1,772 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Neon.Kube.Aws</name>
+    </assembly>
+    <members>
+        <member name="T:Neon.Kube.AwsHostingManager">
+            <summary>
+            Manages cluster provisioning on Amazon Web Services.
+            </summary>
+        </member>
+        <member name="T:Neon.Kube.AwsHostingManager.AwsInstance">
+            <summary>
+            Relates cluster node information to an AWS VM instance.
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.AwsInstance.#ctor(Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition},Neon.Kube.AwsHostingManager)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="node">The associated node proxy.</param>
+            <param name="hostingManager">The parent hosting manager.</param>
+        </member>
+        <member name="P:Neon.Kube.AwsHostingManager.AwsInstance.Node">
+            <summary>
+            Returns the associated node proxy.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.AwsHostingManager.AwsInstance.Metadata">
+            <summary>
+            Returns the node metadata (AKA its definition).
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.AwsHostingManager.AwsInstance.Name">
+            <summary>
+            Returns the name of the node as defined in the cluster definition.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.AwsHostingManager.AwsInstance.InstanceId">
+            <summary>
+            Returns the AWS instance ID.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.AwsHostingManager.AwsInstance.Instance">
+            <summary>
+            Returns AWS instance information for the node.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.AwsHostingManager.AwsInstance.InstanceName">
+            <summary>
+            Returns the name of the AWS instance VM for this node.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.AwsHostingManager.AwsInstance.Address">
+            <summary>
+            Returns the IP address of the node.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.AwsHostingManager.AwsInstance.IsMaster">
+            <summary>
+            Returns <c>true</c> if the node is a master.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.AwsHostingManager.AwsInstance.IsWorker">
+            <summary>
+            Returns <c>true</c> if the node is a worker.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.AwsHostingManager.AwsInstance.ExternalSshPort">
+            <summary>
+            The external SSH port assigned to the instance.  This port is
+            allocated from the range of external SSH ports configured for
+            the cluster and is persisted as tag for each AWS instance.
+            </summary>
+        </member>
+        <member name="T:Neon.Kube.AwsHostingManager.NetworkOperations">
+            <summary>
+            Flags used to control how the cluster network is updated.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.AwsHostingManager.NetworkOperations.InternetRouting">
+            <summary>
+            Update the cluster's ingress/egress rules.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.AwsHostingManager.NetworkOperations.EnableSsh">
+            <summary>
+            Enable external SSH to the cluster nodes.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.AwsHostingManager.NetworkOperations.DisableSsh">
+            <summary>
+            Disable external SSH to the cluster nodes.
+            </summary>
+        </member>
+        <member name="T:Neon.Kube.AwsHostingManager.AwsUbuntuImage">
+            <summary>
+            Describes an Ubuntu ami from the AWS Marketplace.
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.AwsUbuntuImage.#ctor(System.String,System.String,System.String,System.Boolean)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="clusterVersion">Specifies the neonKUBE cluster version.</param>
+            <param name="ubuntuVersion">Specifies the Ubuntu image version.</param>
+            <param name="ubuntuBuild">Specifies the Ubuntu build.</param>
+            <param name="isPrepared">
+            Pass <c>true</c> for Ubuntu images that have already seen basic
+            preparation for inclusion into a neonKUBE cluster, or <c>false</c>
+            for unmodified base Ubuntu images.
+            </param>
+        </member>
+        <member name="P:Neon.Kube.AwsHostingManager.AwsUbuntuImage.ClusterVersion">
+            <summary>
+            Returns the neonKUBE cluster version.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.AwsHostingManager.AwsUbuntuImage.UbuntuVersion">
+            <summary>
+            Returns the Ubuntu version deployed by the image.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.AwsHostingManager.AwsUbuntuImage.UbuntuBuild">
+            <summary>
+            Returns the Ubuntu build version.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.AwsHostingManager.AwsUbuntuImage.IsPrepared">
+            <summary>
+            Returns <c>true</c> for Ubuntu images that have already seen basic
+            preparation for inclusion into a neonKUBE cluster.  This will be
+            <c>false</c> for unmodified base Ubuntu images.
+            </summary>
+        </member>
+        <member name="T:Neon.Kube.AwsHostingManager.Tag`1">
+            <summary>
+            <para>
+            Abstracts the multiple AWS tag implementations into a single common
+            implementation.
+            </para>
+            <para>
+            Unforuntately, AWS defines multiple <c>Tag</c> classes within their
+            various "Model" assemblies.  This makes it hard to implement common
+            resource tagging code.
+            </para>
+            <para>
+            We're going to handle this by implementing our own command tag class
+            that is parameterized by the desired AWS tag type.  This code assumes
+            that all of the AWS tag implementations have a public default constructor
+            as well as read/write Key/Value string properties.
+            </para>
+            </summary>
+            <typeparam name="T">The desired AWS tag type.</typeparam>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.Tag`1.#ctor(System.String,System.String)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="key">Specifies the tag key.</param>
+            <param name="value">Optionally specifies the tag value.</param>
+        </member>
+        <member name="P:Neon.Kube.AwsHostingManager.Tag`1.Key">
+            <summary>
+            Returns the tag's key.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.AwsHostingManager.Tag`1.Value">
+            <summary>
+            Returns the tag's value.
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.Tag`1.ToAws">
+            <summary>
+            Converts the tag into the AWS tag type <typeparamref name="T"/>.
+            </summary>
+            <returns>The AWS tag.</returns>
+        </member>
+        <member name="T:Neon.Kube.AwsHostingManager.InstanceStatusCodes">
+            <summary>
+            Enumerates the possible AWS instance status codes.  AWS doesn't seem
+            to define an enumeration for this so we'll roll our own.  Note that
+            the high byte of the 16-bit status code returned by the AWS API is
+            for internal AWS use only and must be cleared before comparing the
+            status to one of these values.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.AwsHostingManager.InstanceStatusCodes.Pending">
+            <summary>
+            The instance is provisioning or starting.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.AwsHostingManager.InstanceStatusCodes.Running">
+            <summary>
+            The instance is running.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.AwsHostingManager.InstanceStatusCodes.ShuttingDown">
+            <summary>
+            The instance is shutting down.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.AwsHostingManager.InstanceStatusCodes.Terminated">
+            <summary>
+            The instance has been terminated.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.AwsHostingManager.InstanceStatusCodes.Stopping">
+            <summary>
+            The instance is stopping.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.AwsHostingManager.InstanceStatusCodes.Stopped">
+            <summary>
+            The instance has been stopped.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.AwsHostingManager.canonicalOwnerId">
+            <summary>
+            Specifies the ID to use when querying for Canonical images 
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.AwsHostingManager.nameTagKey">
+            <summary>
+            AWS generic name tag.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.AwsHostingManager.neonTagKeyPrefix">
+            <summary>
+            The (namespace) prefix used for neonKUBE related Azure resource tags.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.AwsHostingManager.neonClusterTagKey">
+            <summary>
+            Used to tag resources with the cluster name.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.AwsHostingManager.neonEnvironmentTagKey">
+            <summary>
+            Used to tag resources with the cluster environment.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.AwsHostingManager.neonNodeNameTagKey">
+            <summary>
+            Used to tag instances resources with the cluster node name.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.AwsHostingManager.neonNodeSshTagKey">
+            <summary>
+            Used to tag VM instances resources with the external SSH port to be used to 
+            establish a SSH connection to the instance.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.AwsHostingManager.neonNodeUserDataTagKey">
+            <summary>
+            Used to tag VM instances with an indication that the user-data passed
+            on create has already been cleared.  This data includes the secure SSH
+            password and we don't want to leave it around because it can be retrieved
+            via the AWS portal.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.AwsHostingManager.neonVpcSshEnabledTagKey">
+            <summary>
+            Used to tag VPC instances with a boolean indicating whether external
+            SSH access to the cluster is currently enabled or disabled.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.AwsHostingManager.denyAllAclRuleNumber">
+            <summary>
+            The default deny everything network ACL rule number.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.AwsHostingManager.firstInternalAclRuleNumber">
+            <summary>
+            The first network ACL rule number for internal rules.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.AwsHostingManager.firstSshAclRuleNumber">
+            <summary>
+            The first network ACL rule numberm for temporary SSH rules.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.AwsHostingManager.firstIngressAclRuleNumber">
+            <summary>
+            The network ACL rule number for ingress rules.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.AwsHostingManager.firstEgressAclRuleNumber">
+            <summary>
+            The network ACL rule number for egress rules.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.AwsHostingManager.ubuntuImages">
+            <summary>
+            Returns the list of supported Ubuntu images from the AWS Marketplace.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.AwsHostingManager.osDeviceName">
+            <summary>
+            Identifies the instance VM block device for the OS disk. 
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.AwsHostingManager.dataDeviceName">
+            <summary>
+            Identifies the instance VM block device for the data disk. 
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.AwsHostingManager.openEBSDeviceName">
+            <summary>
+            Identifies the target VM block device for the OpenEBS cStor disk. 
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.AwsHostingManager.operationTimeout">
+            <summary>
+            Some AWS operations (like creating a NAT gateway or waiting for a load balancer
+            target group to initialize and transition to healthy) can take a very long time 
+            to complete.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.AwsHostingManager.operationPollInternal">
+            <summary>
+            Polling interval for slow operations.
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.#cctor">
+            <summary>
+            Static constructor.
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.Load">
+            <summary>
+            Ensures that the assembly hosting this hosting manager is loaded.
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.ToElbProtocol(Neon.Kube.IngressProtocol)">
+            <summary>
+            Converts an <see cref="T:Neon.Kube.IngressProtocol"/> value into a <see cref="T:Amazon.ElasticLoadBalancingV2.ProtocolEnum"/>.
+            </summary>
+            <param name="protocol">The ingress protocol.</param>
+            <returns>The corresponding <see cref="T:Amazon.ElasticLoadBalancingV2.ProtocolEnum"/>.</returns>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.ToEc2VolumeType(Neon.Kube.AwsVolumeType)">
+            <summary>
+            Converts an <see cref="T:Neon.Kube.AwsVolumeType"/> into an <see cref="T:Amazon.EC2.VolumeType"/>.
+            </summary>
+            <param name="volumeType">The input type.</param>
+            <returns>The corresponding <see cref="T:Amazon.EC2.VolumeType"/>.</returns>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.GetLoadBalancerName(System.String,System.String)">
+            <summary>
+            Constructs a name suitable for a load balancer or load balancer related resource
+            by combining the cluster name with the resource name.
+            </summary>
+            <param name="clusterName">The cluster name.</param>
+            <param name="resourceName">The resource name.</param>
+            <returns>The composed resource name.</returns>
+            <remarks>
+            <para>
+            AWS Elastic Load Balancers and Target Groups need to have unique names for the
+            account and region where the cluster is deployed.  These names are in addition
+            to and independent of any name specified by the the resource tags.
+            </para>
+            <para>
+            AWS places additional constraints on these unique names: only alphanumeric and
+            dash characters are allowed and names may be up to 32 characters long.
+            </para>
+            <para>
+            The problem is that neonKUBE cluster names may also include periods and underscores.
+            This method converts any periods and underscores in the cluster name into dashes,
+            appends the <paramref name="resourceName"/> with a leading dash and ensures that
+            the combined name includes 32 characters or fewer.
+            </para>
+            <para>
+            AWS also doesn't allow load balancer names to start with "internal-".  We're going
+            to change this prefix to "x-internal-" in this case.
+            </para>
+            <note>
+            <para>
+            It's possible but very unlikely for a user to try to deploy two clusters to the
+            same region who's cluster names differ only by a period and underscore.  For example
+            <b>my.cluster</b> and <b>my_cluster</b>.  The period and underscore will bot be 
+            converted to a dash which means that both clusters will try to provision ELB
+            resources with the same <b>my-cluster</b> name prefix.  The second cluster deployment
+            will fail with resource name conflicts.
+            </para>
+            <para>
+            We're not going to worry about this.
+            </para>
+            </note>
+            </remarks>
+        </member>
+        <member name="F:Neon.Kube.AwsHostingManager.nameToTargetGroup">
+            <summary>
+            Table mapping a ELB target group name to the group.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.AwsHostingManager.nodeNameToAwsInstance">
+            <summary>
+            Table mapping a cluster node name to its AWS VM instance information.
+            Note that <see cref="F:Neon.Kube.AwsHostingManager.nodeNameToAwsInstance"/> and <see cref="F:Neon.Kube.AwsHostingManager.instanceNameToAwsInstance"/>
+            both refer to the same <see cref="T:Neon.Kube.AwsHostingManager.AwsInstance"/> so a change to one value
+            will be reflected in the other table.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.AwsHostingManager.instanceNameToAwsInstance">
+            <summary>
+            Table mapping a cluster AWS instance name to its AWS VM instance information.
+            Note that <see cref="F:Neon.Kube.AwsHostingManager.nodeNameToAwsInstance"/> and <see cref="F:Neon.Kube.AwsHostingManager.instanceNameToAwsInstance"/>
+            both refer to the same <see cref="T:Neon.Kube.AwsHostingManager.AwsInstance"/> so a change to one value
+            will be reflected in the other table.
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.#ctor">
+            <summary>
+            Creates an instance that is only capable of validating the hosting
+            related options in the cluster definition.
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.#ctor(Neon.Kube.ClusterProxy,System.String)">
+            <summary>
+            Creates an instance that is capable of provisioning a cluster on AWS.
+            </summary>
+            <param name="cluster">The cluster being managed.</param>
+            <param name="logFolder">
+            The folder where log files are to be written, otherwise or <c>null</c> or 
+            empty if logging is disabled.
+            </param>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.Dispose(System.Boolean)">
+            <inheritdoc/>
+        </member>
+        <member name="P:Neon.Kube.AwsHostingManager.isConnected">
+            <summary>
+            Indicates when an AWS connection is established.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.AwsHostingManager.Nodes">
+            <summary>
+            Enumerates the cluster nodes in no particular order.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.AwsHostingManager.SortedNodes">
+            <summary>
+            Enumerates the cluster nodes in ascending order by name.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.AwsHostingManager.MasterNodes">
+            <summary>
+            Enumerates the cluster master nodes in no particular order.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.AwsHostingManager.SortedMasterNodes">
+            <summary>
+            Enumerates the cluster master nodes in ascending order by name.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.AwsHostingManager.WorkerNodes">
+            <summary>
+            Enumerates the cluster worker nodes in no particular order.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.AwsHostingManager.SorteWorkerNodes">
+            <summary>
+            Enumerates the cluster worker nodes in ascending order by name.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.AwsHostingManager.SortedMasterThenWorkerNodes">
+            <summary>
+            Enumerates the cluster worker nodes in ascending order by name followed by the sorted worker nodes.
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.GetResourceName(System.String)">
+            <summary>
+            <para>
+            Returns the name to use for a cluster related resource based on the standard AWS resource type
+            suffix, the cluster name and the base resource name.  This is based on AWS tagging
+            best practices:
+            </para>
+            <para>
+            <a href="https://docs.aws.amazon.com/general/latest/gr/aws_tagging.html">AWS Tagging Best Practices</a>
+            </para>
+            </summary>
+            <param name="resourceName">The base resource name.</param>
+            <returns>The fully quallified resource name.</returns>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.GetTags``1(System.String,Neon.Kube.ResourceTag[])">
+            <summary>
+            Creates the tags for a resource including the resource name, 
+            additional cluster details, any custom user resource tags, as well as any 
+            optional tags passed.
+            </summary>
+            <typeparam name="T">Specifies the desired AWS tag type.</typeparam>
+            <param name="name">The resource name.</param>
+            <param name="tags">Any optional tags.</param>
+            <returns>The tag list.</returns>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.GetTagSpecifications(System.String,Amazon.EC2.ResourceType,Neon.Kube.ResourceTag[])">
+            <summary>
+            Creates a tag specification for an EC2 resource including the resource name, 
+            additional cluster details, any custom user resource tags, as well as any 
+            optional tags passed.
+            </summary>
+            <param name="name">The resource name.</param>
+            <param name="resourceType">The fully qualified resource type.</param>
+            <param name="tags">Any optional tags.</param>
+            <returns>The <see cref="T:Amazon.EC2.Model.TagSpecification"/> list with a single element.</returns>
+        </member>
+        <member name="P:Neon.Kube.AwsHostingManager.HostingEnvironment">
+            <inheritdoc/>
+        </member>
+        <member name="P:Neon.Kube.AwsHostingManager.RequiresNodeAddressCheck">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.Validate(Neon.Kube.ClusterDefinition)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.AddProvisioningSteps(Neon.Kube.SetupController{Neon.Kube.NodeDefinition})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.AddPostProvisioningSteps(Neon.Kube.SetupController{Neon.Kube.NodeDefinition})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.AddDeprovisoningSteps(Neon.Kube.SetupController{Neon.Kube.NodeDefinition})">
+            <inheritdoc/>
+        </member>
+        <member name="P:Neon.Kube.AwsHostingManager.CanManageRouter">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.UpdateInternetRoutingAsync">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.EnableInternetSshAsync">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.DisableInternetSshAsync">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.GetSshEndpoint(System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.GetDataDisk(Neon.SSH.LinuxSshProxy)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.ConnectAwsAsync(Neon.Kube.ISetupController)">
+            <summary>
+            <para>
+            Establishes the necessary client connection to AWS and validates the credentials,
+            when a connection has not been established yet.
+            </para>
+            <note>
+            The current state of the deployed resources will always be loaded by this method,
+            even if an connection has already been established.
+            </note>
+            </summary>
+            <param name="controller">The setup controller.</param>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.GetResourcesAsync">
+            <summary>
+            Loads information about cluster related resources already provisioned to AWS.
+            </summary>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.GetLoadBalancerAsync">
+            <summary>
+            Attempts to locate the cluster load balancer.
+            </summary>
+            <returns>The load balancer or <c>null</c>.</returns>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.GetInternetGatewayAsync">
+            <summary>
+            Returns the internet gateway.
+            </summary>
+            <returns>The internet gateway or <c>null</c>.</returns>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.GetNatGatewayAsync">
+            <summary>
+            Returns the NAT gateway.
+            </summary>
+            <returns>The internet gateway or <c>null</c>.</returns>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.LoadElbTargetGroupsAsync">
+            <summary>
+            Loads information about any load balancer target groups into
+            <see cref="F:Neon.Kube.AwsHostingManager.nameToTargetGroup"/>.
+            </summary>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.GetNetworkAclAsync(System.String)">
+            <summary>
+            Returns the <see cref="T:Amazon.EC2.Model.NetworkAcl"/> with the specified ID.
+            </summary>
+            <param name="networkAclId">The target network ACL ID.</param>
+            <returns>The <see cref="T:Amazon.EC2.Model.NetworkAcl"/>.</returns>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.GetVpcNetworkAclAsync(Amazon.EC2.Model.Vpc)">
+            <summary>
+            Returns the VPC's network ACL.
+            </summary>
+            <param name="vpc">The VPC.</param>
+            <returns>The network ACL.</returns>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.VerifyRegionAndInstanceTypesAsync(Neon.Kube.ISetupController)">
+            <summary>
+            <para>
+            Verifies that the requested AWS region and availability mzone exists and supports 
+            the requested VM sizes.  We'll also verify that the requested VMs have the minimum 
+            required number or cores and RAM.
+            </para>
+            <para>
+            This also updates the node labels to match the capabilities of their VMs.
+            </para>
+            </summary>
+            <param name="controller">The setup controller.</param>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.LocateAmiAsync(Neon.Kube.ISetupController)">
+            <summary>
+            Locates tha AMI to use for provisioning the nodes in the target region.
+            </summary>
+            <param name="controller">The setup controller.</param>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
+        <member name="P:Neon.Kube.AwsHostingManager.ResourceGroupQuery">
+            <summary>
+            Returns the cluster's resource group query JSON.
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.ValidateResourceGroupQuery(Amazon.ResourceGroups.Model.GroupQuery)">
+            <summary>
+            Ensures that the resource group query was created exclusively for cluster.
+            </summary>
+            <param name="groupQuery">The resource group Query.</param>
+            <exception cref="T:Neon.Kube.KubeException">Thrown if the resource group is not valid.</exception>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.CreateResourceGroupAsync(Neon.Kube.ISetupController)">
+            <summary>
+            <para>
+            Creates the resource group for the cluster if it doesn't already exist. The resource
+            group query will look for resources tagged with:
+            </para>
+            <code>
+            NEON:Cluster == CLUSTER_NAME
+            </code>
+            <para>
+            This method will fail if the resource group already exists and was not created for the
+            cluster being deployed.
+            </para>
+            </summary>
+            <param name="controller">The setup controller.</param>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.ConfigurePlacementGroupAsync(Neon.Kube.ISetupController)">
+            <summary>
+            Creates the the master and worker placement groups used to provision the cluster node instances.
+            </summary>
+            <param name="controller">The setup controller.</param>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.GetElasticIpAsync(System.String)">
+            <summary>
+            Returns the cluster's elastic IP address.
+            </summary>
+            <param name="addressName">The address name.</param>
+            <returns>The elastic IP address or <c>null</c> if it doesn't exist.</returns>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.CreateAddressesAsync(Neon.Kube.ISetupController)">
+            <summary>
+            Creates the ingress and egress elastic IP addresses for the cluster if they don't already exist.
+            </summary>
+            <param name="controller">The setup controller.</param>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.CreateEgressAddressAsync">
+            <summary>
+            Creates the egress elastic IP address for the cluster if it doesn't already exist.
+            </summary>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.AssignExternalSshPorts(Neon.Kube.ISetupController)">
+            <summary>
+            Assigns external SSH ports to AWS instance records that don't already have one.  Note
+            that we're not actually going to write the instance tags here; we'll do that when we
+            actually create any new instances.
+            </summary>
+            <param name="controller">The setup controller.</param>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.ConfigureNetworkAsync(Neon.Kube.ISetupController)">
+            <summary>
+            Configures the cluster networking components including the VPC, subnet, internet gateway
+            security group and network ACLs.
+            </summary>
+            <param name="controller">The setup controller.</param>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.ConfigureLoadBalancerAsync(Neon.Kube.ISetupController)">
+            <summary>
+            Configures the load balancer.
+            </summary>
+            <param name="controller">The setup controller.</param>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.ImportKeyPairAsync(Neon.Kube.ISetupController)">
+            <summary>
+            Imports the SSH key pair we'll use for the node security.
+            </summary>
+            <param name="controller">The setup controller.</param>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.WaitForSshTargetAsync(Neon.Kube.ISetupController,Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition})">
+            <summary>
+            Waits for the load balancer SSH target group for the node to become healthy.
+            </summary>
+            <param name="controller">The setup controller.</param>
+            <param name="node">The target node.</param>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.CreateNodeInstanceAsync(Neon.Kube.ISetupController,Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition})">
+            <summary>
+            Creates the AWS instance for a node.
+            </summary>
+            <param name="controller">The setup controller.</param>
+            <param name="node">The target node.</param>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.GetTargetGroupName(System.String,Neon.Kube.IngressRuleTarget,Neon.Kube.IngressProtocol,System.Int32)">
+            <summary>
+            Constructs a target group name by appending the protocol, port and target group type 
+            to the base cluster name passed.
+            </summary>
+            <param name="clusterName">The cluster name.</param>
+            <param name="ingressTarget">The neonKUBE target group type.</param>
+            <param name="protocol">The ingress protocol.</param>
+            <param name="port">The ingress port.</param>
+            <returns>The fully qualified target group name.</returns>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.GetTargetGroupType(Amazon.ElasticLoadBalancingV2.Model.TargetGroup)">
+            <summary>
+            Parses the target group name to determine the target group type.
+            </summary>
+            <param name="targetGroup">The target group.</param>
+            <returns>The target group's <see cref="T:Neon.Kube.IngressRuleTarget"/>.</returns>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.UpdateNetworkAsync(Neon.Kube.AwsHostingManager.NetworkOperations)">
+            <summary>
+            Updates the load balancer and related security rules based on the operation flags passed.
+            </summary>
+            <param name="operations">Flags that control how the load balancer and related security rules are updated.</param>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.UpdateIngressEgressRulesAsync">
+            <summary>
+            Updates the load balancer and network ACLs to match the current cluster definition.
+            This also ensures that some nodes are marked for ingress when the cluster has one or more
+            ingress rules and that nodes marked for ingress are in the load balancer's backend pool.
+            </summary>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.AddSshListenersAsync">
+            <summary>
+            Enables external SSH node access by adding the listeners to the load balancer.
+            </summary>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
+        <member name="M:Neon.Kube.AwsHostingManager.RemoveSshListenersAsync">
+            <summary>
+            Disables external SSH node access by removing the SSH listeners from the load balancer.
+            </summary>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
+    </members>
+</doc>
