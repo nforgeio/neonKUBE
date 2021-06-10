@@ -49,8 +49,7 @@ set NF_ACTIONS_ROOT=%NC_REPOS%\neonCLOUD\Automation\actions
 set NF_CODEDOC=%NF_ROOT%\..\nforgeio.github.io
 set NF_SAMPLES_CADENCE=%NF_ROOT%\..\cadence-samples
 set DOTNETPATH=%WINDIR%\Microsoft.NET\Framework64\v4.0.30319
-set WINSDKPATH=C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.6 Tools\x64
-set DEVENVPATH=C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\amd64\MSBuild.exe
+set MSBUILDPATH=C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\amd64\MSBuild.exe
 
 REM Persist the environment variables.
 
@@ -65,9 +64,10 @@ setx NF_TEMP "%NF_TEMP%" /M                                   > nul
 setx NF_ACTIONS_ROOT "%NF_ACTIONS_ROOT%" /M                   > nul
 setx NF_CODEDOC "%NF_CODEDOC%" /M                             > nul
 setx NF_SAMPLES_CADENCE "%NF_SAMPLES_CADENCE%" /M             > nul
-setx DOTNET_CLI_TELEMETRY_OPTOUT 1 /M                         > nul
 
 setx DOTNETPATH "%DOTNETPATH%" /M                             > nul
+setx MSBUILDPATH "%MSBUILDPATH%" /M                           > nul
+setx DOTNET_CLI_TELEMETRY_OPTOUT 1 /M                         > nul
 setx DEV_WORKSTATION 1 /M                                     > nul
 setx OPENSSL_CONF "%NF_ROOT%\External\OpenSSL\openssl.cnf" /M > nul
 

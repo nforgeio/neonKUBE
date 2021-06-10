@@ -139,7 +139,7 @@ Write-Info  "***                            BUILD SOLUTION                      
 Write-Info  "*******************************************************************************"
 Write-Info  ""
 
-$msbuild     = "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\amd64\MSBuild.exe"
+$msbuild     = $env:MSBUILDPATH
 $nfRoot      = "$env:NF_ROOT"
 $nfSolution  = "$nfRoot\neonKUBE.sln"
 
