@@ -1,0 +1,816 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Neon.Nats</name>
+    </assembly>
+    <members>
+        <member name="T:NATS.Client.AsyncSubscription`1">
+            <summary>
+            Implements an <see cref="T:NATS.Client.ISyncSubscription"/> for typed messages.
+            </summary>
+            <typeparam name="TMessage">The message type.</typeparam>
+        </member>
+        <member name="M:NATS.Client.AsyncSubscription`1.#ctor(NATS.Client.IAsyncSubscription)">
+            <summary>
+            Internal constructor.
+            </summary>
+            <param name="subscription">The underlying non-generic subscription returned by NATS.</param>
+        </member>
+        <member name="P:NATS.Client.AsyncSubscription`1.Subject">
+            <inheritdoc/>
+        </member>
+        <member name="P:NATS.Client.AsyncSubscription`1.Queue">
+            <inheritdoc/>
+        </member>
+        <member name="P:NATS.Client.AsyncSubscription`1.Connection">
+            <inheritdoc/>
+        </member>
+        <member name="P:NATS.Client.AsyncSubscription`1.IsValid">
+            <inheritdoc/>
+        </member>
+        <member name="P:NATS.Client.AsyncSubscription`1.QueuedMessageCount">
+            <inheritdoc/>
+        </member>
+        <member name="P:NATS.Client.AsyncSubscription`1.PendingByteLimit">
+            <inheritdoc/>
+        </member>
+        <member name="P:NATS.Client.AsyncSubscription`1.PendingMessageLimit">
+            <inheritdoc/>
+        </member>
+        <member name="P:NATS.Client.AsyncSubscription`1.PendingBytes">
+            <inheritdoc/>
+        </member>
+        <member name="P:NATS.Client.AsyncSubscription`1.PendingMessages">
+            <inheritdoc/>
+        </member>
+        <member name="P:NATS.Client.AsyncSubscription`1.MaxPendingBytes">
+            <inheritdoc/>
+        </member>
+        <member name="P:NATS.Client.AsyncSubscription`1.MaxPendingMessages">
+            <inheritdoc/>
+        </member>
+        <member name="P:NATS.Client.AsyncSubscription`1.Delivered">
+            <inheritdoc/>
+        </member>
+        <member name="P:NATS.Client.AsyncSubscription`1.Dropped">
+            <inheritdoc/>
+        </member>
+        <member name="E:NATS.Client.AsyncSubscription`1.RoundtripMessageHandler">
+            <inheritdoc/>
+        </member>
+        <member name="E:NATS.Client.AsyncSubscription`1.MessageHandler">
+            <summary>
+            Raised when low-level messages are received.  Most application should probably
+            listen for deserialized messages on <see cref="E:NATS.Client.AsyncSubscription`1.RoundtripMessageHandler"/>.
+            </summary>
+        </member>
+        <member name="M:NATS.Client.AsyncSubscription`1.AutoUnsubscribe(System.Int32)">
+            <inheritdoc/>
+        </member>
+        <member name="M:NATS.Client.AsyncSubscription`1.ClearMaxPending">
+            <inheritdoc/>
+        </member>
+        <member name="M:NATS.Client.AsyncSubscription`1.Dispose">
+            <inheritdoc/>
+        </member>
+        <member name="M:NATS.Client.AsyncSubscription`1.Drain">
+            <inheritdoc/>
+        </member>
+        <member name="M:NATS.Client.AsyncSubscription`1.Drain(System.Int32)">
+            <inheritdoc/>
+        </member>
+        <member name="M:NATS.Client.AsyncSubscription`1.DrainAsync">
+            <inheritdoc/>
+        </member>
+        <member name="M:NATS.Client.AsyncSubscription`1.DrainAsync(System.Int32)">
+            <inheritdoc/>
+        </member>
+        <member name="M:NATS.Client.AsyncSubscription`1.GetMaxPending(System.Int64@,System.Int64@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:NATS.Client.AsyncSubscription`1.GetPending(System.Int64@,System.Int64@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:NATS.Client.AsyncSubscription`1.SetPendingLimits(System.Int64,System.Int64)">
+            <inheritdoc/>
+        </member>
+        <member name="M:NATS.Client.AsyncSubscription`1.Start">
+            <inheritdoc/>
+        </member>
+        <member name="M:NATS.Client.AsyncSubscription`1.Unsubscribe">
+            <inheritdoc/>
+        </member>
+        <member name="T:NATS.Client.IAsyncSubscription`1">
+            <summary>
+            Implements an <see cref="T:NATS.Client.ISyncSubscription"/> for typed messages.
+            </summary>
+            <typeparam name="TMessage">The message type.</typeparam>
+        </member>
+        <member name="E:NATS.Client.IAsyncSubscription`1.RoundtripMessageHandler">
+            <summary>
+            Raised when a deserialized <see cref="T:Neon.Data.IRoundtripData"/> message is received.
+            </summary>
+        </member>
+        <member name="T:NATS.Client.ISyncSubscription`1">
+            <summary>
+            Implements an <see cref="T:NATS.Client.ISyncSubscription"/> for typed messages.
+            </summary>
+            <typeparam name="TMessage">The message type.</typeparam>
+        </member>
+        <member name="M:NATS.Client.ISyncSubscription`1.NextMessage">
+            <summary>
+            Returns the next <see cref="T:NATS.Client.Msg`1"/> available to a synchronous
+            subscriber, blocking until one is available.
+            </summary>
+            <returns>The next <see cref="T:NATS.Client.Msg`1"/> available to a subscriber.</returns>
+        </member>
+        <member name="M:NATS.Client.ISyncSubscription`1.NextMessage(System.Int32)">
+            <summary>
+            Returns the next <see cref="T:NATS.Client.Msg`1"/> available to a synchronous
+            subscriber, or block up to a given timeout until the next one is available.
+            </summary>
+            <param name="timeout">The amount of time, in milliseconds, to wait for
+            the next message.</param>
+            <returns>The next <see cref="T:NATS.Client.Msg`1"/> available to a subscriber.</returns>
+        </member>
+        <member name="T:NATS.Client.Msg`1">
+            <summary>
+            A NATS message encapsulating a subject, optional reply
+            payload, and subscription information, sent or received by the client
+            application.
+            </summary>
+            <typeparam name="TMessage">The request message type.</typeparam>
+        </member>
+        <member name="M:NATS.Client.Msg`1.#ctor">
+            <summary>
+            Default constructor.
+            </summary>
+        </member>
+        <member name="M:NATS.Client.Msg`1.#ctor(System.String,System.String,`0)">
+            <summary>
+            Initializes a new instance of the <see cref="T:NATS.Client.Msg"/> class with a subject, reply, and data.
+            </summary>
+            <param name="subject">Subject of the message.</param>
+            <param name="reply">A reply subject, or <c>null</c>.</param>
+            <param name="data">The message payload or <c>null</c>.</param>
+        </member>
+        <member name="M:NATS.Client.Msg`1.#ctor(System.String,`0)">
+            <summary>
+            Initializes a new instance of the <see cref="T:NATS.Client.Msg"/> class with a subject and data.
+            </summary>
+            <param name="subject">Subject of the message.</param>
+            <param name="data">The message payload or <c>null</c>.</param>
+        </member>
+        <member name="M:NATS.Client.Msg`1.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:NATS.Client.Msg"/> class with a subject and no data.
+            </summary>
+            <param name="subject">Subject of the message.</param>
+        </member>
+        <member name="M:NATS.Client.Msg`1.#ctor(NATS.Client.Msg)">
+            <summary>
+            Constructs an instance from a low-level <see cref="T:NATS.Client.Msg"/>.
+            </summary>
+            <param name="msg">The low-level message.</param>
+        </member>
+        <member name="P:NATS.Client.Msg`1.Subject">
+            <summary>
+            Gets or sets the subject.
+            </summary>
+        </member>
+        <member name="P:NATS.Client.Msg`1.Reply">
+            <summary>
+            Gets or sets the reply subject.
+            </summary>
+        </member>
+        <member name="P:NATS.Client.Msg`1.Data">
+            <summary>
+            Gets or sets the payload of the message.
+            </summary>
+        </member>
+        <member name="P:NATS.Client.Msg`1.ArrivalSubscription">
+            <summary>
+            Returns the <see cref="T:NATS.Client.ISubscription"/> which received the message.
+            </summary>
+        </member>
+        <member name="M:NATS.Client.Msg`1.ToBaseMsg">
+            <summary>
+            Converts the instance into a basic <see cref="T:NATS.Client.Msg"/>.
+            </summary>
+            <returns>The <see cref="T:NATS.Client.Msg"/>.</returns>
+        </member>
+        <member name="M:NATS.Client.Msg`1.ToString">
+            <summary>
+            Generates a string representation of the messages.
+            </summary>
+            <returns>A string representation of the messages.</returns>
+        </member>
+        <member name="T:NATS.Client.MsgHandlerEventArgs`1">
+            <summary>
+            Asynchronous message handler event arguments for typed messages.
+            </summary>
+            <typeparam name="TMessage">The message type.</typeparam>
+        </member>
+        <member name="M:NATS.Client.MsgHandlerEventArgs`1.#ctor(NATS.Client.Msg)">
+            <summary>
+            Constructs an instance from a low-level message.
+            </summary>
+            <param name="msg">The low-level message.</param>
+        </member>
+        <member name="P:NATS.Client.MsgHandlerEventArgs`1.Message">
+            <summary>
+            Returns the received message.
+            </summary>
+        </member>
+        <member name="T:NATS.Client.NamespaceDoc">
+            <summary>
+            This namespace extends the standard NATS messaging types.
+            </summary>
+        </member>
+        <member name="T:NATS.Client.NatsExtensions">
+            <summary>
+            Implements handy NATS extension methods.
+            </summary>
+        </member>
+        <member name="M:NATS.Client.NatsExtensions.Publish(NATS.Client.IConnection,System.String,Neon.Data.IRoundtripData)">
+            <summary>
+            Publishes an <see cref="T:Neon.Data.IRoundtripData"/> instance to the given <paramref name="subject"/>.
+            </summary>
+            <param name="connection">The connection.</param>
+            <param name="subject">The subject used to publish <paramref name="data"/>.</param>
+            <param name="data">The data to be published to the NATS.</param>
+            <remarks>
+            <para>
+            NATS implements a publish-subscribe message distribution model. NATS publish subscribe is a
+            one-to-many communication. A publisher sends a message on a subject. Any active subscriber listening
+            on that subject receives the message. Subscribers can register interest in wildcard subjects.
+            </para>
+            <para>
+            In the basic NATS platfrom, if a subscriber is not listening on the subject (no subject match),
+            or is not acive when the message is sent, the message is not recieved. NATS is a fire-and-forget
+            messaging system. If you need higher levels of service, you can either use NATS Streaming, or build the
+            additional reliability into your client(s) yourself.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:NATS.Client.NatsExtensions.Publish(NATS.Client.IConnection,System.String,System.String,Neon.Data.IRoundtripData)">
+            <summary>
+            Publishes an <see cref="T:Neon.Data.IRoundtripData"/> instance to the given <paramref name="subject"/>.
+            </summary>
+            <param name="connection">The connection.</param>
+            <param name="subject">The subject used to publish <paramref name="data"/>.</param>
+            <param name="reply">An optional reply subject.</param>
+            <param name="data">The data to be published to the NATS.</param>
+            <seealso cref="M:NATS.Client.IConnection.Publish(System.String,System.Byte[])"/>
+        </member>
+        <member name="M:NATS.Client.NatsExtensions.Request``2(NATS.Client.IConnection,System.String,``0,System.Int32)">
+            <summary>
+            Sends a request payload and returns the response <see cref="T:NATS.Client.Msg"/>, or throws
+            <see cref="T:NATS.Client.NATSTimeoutException"/> if the <paramref name="timeout"/> expires.
+            </summary>
+            <typeparam name="TRequest">Specifies the request type.</typeparam>
+            <typeparam name="TResponse">Specifies the response type.</typeparam>
+            <param name="connection">The connection.</param>
+            <param name="subject">The subject used to publish <paramref name="data"/>.</param>
+            <param name="data">The data to be published to the NATS.</param>
+            <param name="timeout">The number of milliseconds to wait.</param>
+            <returns>A <see cref="T:NATS.Client.Msg"/> with the response from the NATS server.</returns>
+            <remarks>
+            <typeparamref name="TRequest">The request message type.</typeparamref>
+            <typeparamref name="TResponse">The response message type.</typeparamref>
+            This method will create an unique inbox for this request, sharing a single
+            subscription for all replies to this <see cref="T:NATS.Client.IConnection"/> instance. However, if 
+            <see cref="P:NATS.Client.Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription. 
+            The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
+            </remarks>
+            <seealso cref="M:NATS.Client.IConnection.Request(System.String,System.Byte[])"/>
+        </member>
+        <member name="M:NATS.Client.NatsExtensions.Request``2(NATS.Client.IConnection,System.String,``0)">
+            <summary>
+            Sends a request payload and returns the response <see cref="T:NATS.Client.Msg"/>.
+            </summary>
+            <typeparam name="TRequest">Specifies the request type.</typeparam>
+            <typeparam name="TResponse">Specifies the response type.</typeparam>
+            <param name="connection">The connection.</param>
+            <param name="subject">The subject used to publish <paramref name="data"/>.</param>
+            <param name="data">The data to be published to the NATS.</param>
+            <returns>A <see cref="T:NATS.Client.Msg"/> with the response from the NATS server.</returns>
+            <remarks>
+            <para>
+            NATS supports two flavors of request-reply messaging: point-to-point or one-to-many. Point-to-point
+            involves the fastest or first to respond. In a one-to-many exchange, you set a limit on the number of 
+            responses the requestor may receive and instead must use a subscription (<see cref="M:NATS.Client.ISubscription.AutoUnsubscribe(System.Int32)"/>).
+            In a request-response exchange, publish request operation publishes a message with a reply subject expecting
+            a response on that reply subject.
+            </para>
+            <para>
+            This method will create an unique inbox for this request, sharing a single
+            subscription for all replies to this <see cref="T:NATS.Client.IConnection"/> instance. However, if 
+            <see cref="P:NATS.Client.Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription. 
+            The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:NATS.Client.NatsExtensions.RequestAsync``2(NATS.Client.IConnection,System.String,``0,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Asynchronously sends a request payload and returns the response <see cref="T:NATS.Client.Msg"/>.
+            </summary>
+            <typeparam name="TRequest">Specifies the request type.</typeparam>
+            <typeparam name="TResponse">Specifies the response type.</typeparam>
+            <param name="connection">The connection.</param>
+            <param name="subject">The subject used to publish <paramref name="data"/>.</param>
+            <param name="data">The data to be published to the NATS.</param>
+            <param name="timeout">Optional timeout in milliseconds.</param>
+            <param name="token">Optional cancellation token.</param>
+            <returns>A <see cref="T:NATS.Client.Msg"/> with the response from the NATS server.</returns>
+            <remarks>
+            <para>
+            NATS supports two flavors of request-reply messaging: point-to-point or one-to-many. Point-to-point
+            involves the fastest or first to respond. In a one-to-many exchange, you set a limit on the number of 
+            responses the requestor may receive and instead must use a subscription (<see cref="M:NATS.Client.ISubscription.AutoUnsubscribe(System.Int32)"/>).
+            In a request-response exchange, publish request operation publishes a message with a reply subject expecting
+            a response on that reply subject.
+            </para>
+            <para>
+            This method will create an unique inbox for this request, sharing a single
+            subscription for all replies to this <see cref="T:NATS.Client.IConnection"/> instance. However, if 
+            <see cref="P:NATS.Client.Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription. 
+            The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:NATS.Client.NatsExtensions.SubscribeSync``1(NATS.Client.IConnection,System.String)">
+            <summary>
+            Expresses interest in the given <paramref name="subject"/> to the NATS Server.
+            </summary>
+            <typeparam name="TMessage">Specifies the message type.</typeparam>
+            <param name="connection">The connection.</param>
+            <param name="subject">The subject on which to listen for messages.</param>
+            <returns>
+            An <see cref="T:NATS.Client.ISyncSubscription"/> to use to read any messages received
+            from the NATS Server on the given <paramref name="subject"/>.
+            </returns>
+            <seealso cref="P:NATS.Client.ISubscription.Subject"/>
+        </member>
+        <member name="M:NATS.Client.NatsExtensions.SubscribeAsync``1(NATS.Client.IConnection,System.String)">
+            <summary>
+            Expresses interest in the given <paramref name="subject"/> to the NATS Server.
+            </summary>
+            <typeparam name="TMessage">Specifies the message type.</typeparam>
+            <param name="connection">The connection.</param>
+            <param name="subject">The subject on which to listen for messages.</param>
+            <returns>An <see cref="T:NATS.Client.IAsyncSubscription"/> to use to read any messages received
+            from the NATS Server on the given <paramref name="subject"/>.
+            </returns>
+            <remarks>
+            The <see cref="T:NATS.Client.IAsyncSubscription"/> returned will not start receiving messages until
+            <see cref="M:NATS.Client.IAsyncSubscription.Start"/> is called.
+            </remarks>
+            <seealso cref="P:NATS.Client.ISubscription.Subject"/>
+        </member>
+        <member name="M:NATS.Client.NatsExtensions.SubscribeAsync``1(NATS.Client.IConnection,System.String,System.EventHandler{NATS.Client.MsgHandlerEventArgs{``0}})">
+            <summary>
+            Expresses interest in the given <paramref name="subject"/> to the NATS Server, and begins delivering
+            messages to the given event handler.
+            </summary>
+            <typeparam name="TMessage">Specifies the message type.</typeparam>
+            <param name="connection">The connection.</param>
+            <param name="subject">The subject on which to listen for messages.</param>
+            <param name="handler">
+            The <see cref="T:System.EventHandler`1"/> invoked when messages are received 
+            on the returned <see cref="T:NATS.Client.IAsyncSubscription"/>.
+            </param>
+            <returns>
+            An <see cref="T:NATS.Client.IAsyncSubscription"/> to use to read any messages received
+            from the NATS Server on the given <paramref name="subject"/>.
+            </returns>
+            <remarks>
+            The <see cref="T:NATS.Client.IAsyncSubscription"/> returned will start delivering messages
+            to the event handler as soon as they are received. The caller does not have to invoke
+            <see cref="M:NATS.Client.IAsyncSubscription.Start"/>.
+            </remarks>
+            <seealso cref="P:NATS.Client.ISubscription.Subject"/>
+        </member>
+        <member name="M:NATS.Client.NatsExtensions.SubscribeSync``1(NATS.Client.IConnection,System.String,System.String)">
+            <summary>
+            Creates a synchronous queue subscriber on the given <paramref name="subject"/>.
+            </summary>
+            <typeparam name="TMessage">Specifies the message type.</typeparam>
+            <param name="connection">The connection.</param>
+            <param name="subject">The subject on which to listen for messages.</param>
+            <param name="queue">The name of the queue group in which to participate.</param>
+            <returns>
+            An <see cref="T:NATS.Client.ISyncSubscription"/> to use to read any messages received
+            from the NATS Server on the given <paramref name="subject"/>, as part of 
+            the given queue group.
+            </returns>
+            <remarks>
+            All subscribers with the same queue name will form the queue group and
+            only one member of the group will be selected to receive any given message
+            synchronously.
+            </remarks>
+            <seealso cref="P:NATS.Client.ISubscription.Subject"/>
+            <seealso cref="P:NATS.Client.ISubscription.Queue"/>
+        </member>
+        <member name="M:NATS.Client.NatsExtensions.SubscribeAsync``1(NATS.Client.IConnection,System.String,System.String)">
+            <summary>
+            Creates an asynchronous queue subscriber on the given <paramref name="subject"/>.
+            </summary>
+            <param name="connection">The connection.</param>
+            <param name="subject">
+            The subject on which to listen for messages.
+            </param>
+            <param name="queue">The name of the queue group in which to participate.</param>
+            <returns>
+            An <see cref="T:NATS.Client.IAsyncSubscription"/> to use to read any messages received
+            from the NATS Server on the given <paramref name="subject"/>.
+            </returns>
+            <remarks>
+            <para>
+            All subscribers with the same queue name will form the queue group and
+            only one member of the group will be selected to receive any given message.
+            </para>
+            <para>
+            The <see cref="T:NATS.Client.IAsyncSubscription"/> returned will not start receiving messages until
+            <see cref="M:NATS.Client.IAsyncSubscription.Start"/> is called.
+            </para>
+            </remarks>
+            <seealso cref="P:NATS.Client.ISubscription.Subject"/>
+            <seealso cref="P:NATS.Client.ISubscription.Queue"/>
+        </member>
+        <member name="M:NATS.Client.NatsExtensions.SubscribeAsync``1(NATS.Client.IConnection,System.String,System.String,System.EventHandler{NATS.Client.MsgHandlerEventArgs{``0}})">
+            <summary>
+            Creates an asynchronous queue subscriber on the given <paramref name="subject"/>, and begins delivering
+            messages to the given event handler.
+            </summary>
+            <param name="connection">The connection.</param>
+            <param name="subject">The subject on which to listen for messages.</param>
+            <param name="queue">The name of the queue group in which to participate.</param>
+            <param name="handler">
+            The <see cref="T:System.EventHandler`1"/> invoked when messages are received 
+            on the returned <see cref="T:NATS.Client.IAsyncSubscription"/>.
+            </param>
+            <returns>
+            An <see cref="T:NATS.Client.IAsyncSubscription"/> to use to read any messages received
+            from the NATS Server on the given <paramref name="subject"/>.
+            </returns>
+            <remarks>
+            <para>
+            All subscribers with the same queue name will form the queue group and
+            only one member of the group will be selected to receive any given message.
+            </para>
+            <para>
+            The <see cref="T:NATS.Client.IAsyncSubscription"/> returned will start delivering messages
+            to the event handler as soon as they are received. The caller does not have to invoke
+            <see cref="M:NATS.Client.IAsyncSubscription.Start"/>.
+            </para>
+            </remarks>
+            <seealso cref="P:NATS.Client.ISubscription.Subject"/>
+            <seealso cref="P:NATS.Client.ISubscription.Queue"/>
+        </member>
+        <member name="T:NATS.Client.SyncSubscription`1">
+            <summary>
+            Implements an <see cref="T:NATS.Client.ISyncSubscription"/> for typed messages.
+            </summary>
+            <typeparam name="TMessage">The message type.</typeparam>
+        </member>
+        <member name="M:NATS.Client.SyncSubscription`1.#ctor(NATS.Client.ISyncSubscription)">
+            <summary>
+            Constructs a typed synchronous subscription wrapping a lower level subscription.
+            </summary>
+            <param name="subscription">The underlying non-generic subscription returned by NATS.</param>
+        </member>
+        <member name="P:NATS.Client.SyncSubscription`1.Subject">
+            <inheritdoc/>
+        </member>
+        <member name="P:NATS.Client.SyncSubscription`1.Queue">
+            <inheritdoc/>
+        </member>
+        <member name="P:NATS.Client.SyncSubscription`1.Connection">
+            <inheritdoc/>
+        </member>
+        <member name="P:NATS.Client.SyncSubscription`1.IsValid">
+            <inheritdoc/>
+        </member>
+        <member name="P:NATS.Client.SyncSubscription`1.QueuedMessageCount">
+            <inheritdoc/>
+        </member>
+        <member name="P:NATS.Client.SyncSubscription`1.PendingByteLimit">
+            <inheritdoc/>
+        </member>
+        <member name="P:NATS.Client.SyncSubscription`1.PendingMessageLimit">
+            <inheritdoc/>
+        </member>
+        <member name="P:NATS.Client.SyncSubscription`1.PendingBytes">
+            <inheritdoc/>
+        </member>
+        <member name="P:NATS.Client.SyncSubscription`1.PendingMessages">
+            <inheritdoc/>
+        </member>
+        <member name="P:NATS.Client.SyncSubscription`1.MaxPendingBytes">
+            <inheritdoc/>
+        </member>
+        <member name="P:NATS.Client.SyncSubscription`1.MaxPendingMessages">
+            <inheritdoc/>
+        </member>
+        <member name="P:NATS.Client.SyncSubscription`1.Delivered">
+            <inheritdoc/>
+        </member>
+        <member name="P:NATS.Client.SyncSubscription`1.Dropped">
+            <inheritdoc/>
+        </member>
+        <member name="M:NATS.Client.SyncSubscription`1.AutoUnsubscribe(System.Int32)">
+            <inheritdoc/>
+        </member>
+        <member name="M:NATS.Client.SyncSubscription`1.ClearMaxPending">
+            <inheritdoc/>
+        </member>
+        <member name="M:NATS.Client.SyncSubscription`1.Dispose">
+            <inheritdoc/>
+        </member>
+        <member name="M:NATS.Client.SyncSubscription`1.GetMaxPending(System.Int64@,System.Int64@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:NATS.Client.SyncSubscription`1.GetPending(System.Int64@,System.Int64@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:NATS.Client.SyncSubscription`1.SetPendingLimits(System.Int64,System.Int64)">
+            <inheritdoc/>
+        </member>
+        <member name="M:NATS.Client.SyncSubscription`1.Unsubscribe">
+            <inheritdoc/>
+        </member>
+        <member name="M:NATS.Client.SyncSubscription`1.NextMessage">
+            <inheritdoc/>
+        </member>
+        <member name="M:NATS.Client.SyncSubscription`1.NextMessage(System.Int32)">
+            <inheritdoc/>
+        </member>
+        <member name="M:NATS.Client.SyncSubscription`1.Drain">
+            <inheritdoc/>
+        </member>
+        <member name="M:NATS.Client.SyncSubscription`1.Drain(System.Int32)">
+            <inheritdoc/>
+        </member>
+        <member name="M:NATS.Client.SyncSubscription`1.DrainAsync">
+            <inheritdoc/>
+        </member>
+        <member name="M:NATS.Client.SyncSubscription`1.DrainAsync(System.Int32)">
+            <inheritdoc/>
+        </member>
+        <member name="T:NATS.Client.StanMsg`1">
+            <summary>
+            A NATS message encapsulating a subject, optional reply
+            payload, and subscription information, sent or received by the client
+            application.
+            </summary>
+            <typeparam name="TMessage">The request message type.</typeparam>
+        </member>
+        <member name="M:NATS.Client.StanMsg`1.#ctor(STAN.Client.MsgProto,System.Object)">
+            <summary>
+            Internal constructor.
+            </summary>
+            <param name="proto">The message including protocol information.</param>
+            <param name="subscription">The subscription.</param>
+        </member>
+        <member name="P:NATS.Client.StanMsg`1.Time">
+            <summary>
+            Returns the message time stamp as Unix nanotime.
+            </summary>
+        </member>
+        <member name="P:NATS.Client.StanMsg`1.TimeStamp">
+            <summary>
+            Returns the message time stamp as a <see cref="T:System.DateTime"/> (UTC).
+            </summary>
+        </member>
+        <member name="M:NATS.Client.StanMsg`1.Ack">
+            <summary>
+            Acknowledge a message.
+            </summary>
+        </member>
+        <member name="P:NATS.Client.StanMsg`1.Sequence">
+            <summary>
+            Gets the sequence number of a message.
+            </summary>
+        </member>
+        <member name="P:NATS.Client.StanMsg`1.Subject">
+            <summary>
+            Gets the subject of the message.
+            </summary>
+        </member>
+        <member name="P:NATS.Client.StanMsg`1.Data">
+            <summary>
+            Returns the message payload.
+            </summary>
+        </member>
+        <member name="P:NATS.Client.StanMsg`1.Redelivered">
+            <summary>
+            The redelivered property if true if this message has been redelivered, false otherwise.
+            </summary>
+        </member>
+        <member name="P:NATS.Client.StanMsg`1.Subscription">
+            <summary>
+            Gets the subscription this message was received from.
+            </summary>
+        </member>
+        <member name="T:STAN.Client.NamespaceDoc">
+            <summary>
+            This namespace extends the standard NATS streaming client.
+            </summary>
+        </member>
+        <member name="T:STAN.Client.StanExtensions">
+            <summary>
+            Implements handy STAN extension methods.
+            </summary>
+        </member>
+        <member name="M:STAN.Client.StanExtensions.#cctor">
+            <summary>
+            Private constructor.
+            </summary>
+        </member>
+        <member name="M:STAN.Client.StanExtensions.GetProto(STAN.Client.StanMsg)">
+            <summary>
+            Returns the <c>internal</c> <see cref="T:STAN.Client.MsgProto"/> from a <see cref="T:STAN.Client.StanMsg"/>.
+            </summary>
+            <param name="message">The message.</param>
+            <returns>The <see cref="T:STAN.Client.MsgProto"/>.</returns>
+        </member>
+        <member name="M:STAN.Client.StanExtensions.GetSubscription(STAN.Client.StanMsg)">
+            <summary>
+            Returns the <c>private</c> <see cref="T:STAN.Client.AsyncSubscription"/> from a <see cref="T:STAN.Client.StanMsg"/>.
+            </summary>
+            <param name="message">The message.</param>
+            <returns>The <see cref="T:STAN.Client.AsyncSubscription"/>.</returns>
+            <remarks>
+            <note>
+            We need to return the <c>STAN.Client.AsyncScription</c> as the <see cref="T:System.Object"/>
+            type because it it defined as internal (grrrr....).
+            </note>
+            </remarks>
+        </member>
+        <member name="M:STAN.Client.StanExtensions.ToHandler``1(STAN.Client.StanMsg)">
+            <summary>
+            Converts a base <see cref="T:STAN.Client.StanMsg"/> into a <see cref="T:STAN.Client.StanMsgHandlerArgs`1"/>
+            for the message.
+            </summary>
+            <typeparam name="TMessage">The message type.</typeparam>
+            <param name="message">The base message.</param>
+            <returns>The new <see cref="T:NATS.Client.StanMsg`1"/></returns>
+        </member>
+        <member name="M:STAN.Client.StanExtensions.Publish``1(STAN.Client.IStanConnection,System.String,``0)">
+            <summary>
+            Publish publishes the data argument to the given subject. The data
+            argument is left untouched and needs to be correctly interpreted on
+            the receiver.  This API is synchronous and waits for the acknowledgement
+            or error from the NATS streaming server.
+            </summary>
+            <typeparam name="TMessage">The message type.</typeparam>
+            <param name="connection">The conmnection.</param>
+            <param name="subject">Subject to publish the message to.</param>
+            <param name="data">Message payload.</param>
+            <exception cref="T:STAN.Client.StanException">When an error occurs locally or on the NATS streaming server.</exception>
+        </member>
+        <member name="M:STAN.Client.StanExtensions.Publish``1(STAN.Client.IStanConnection,System.String,``0,System.EventHandler{STAN.Client.StanAckHandlerArgs})">
+            <summary>
+            Publish publishes the data argument to the given subject. The data
+            argument is left untouched and needs to be correctly interpreted on
+            the receiver.  This API is asynchronous and handles the acknowledgement
+            or error from the NATS streaming server in the provided handler.  An exception is thrown when
+            an error occurs during the send, the handler will process acknowledgments and errors.
+            </summary>
+            <typeparam name="TMessage">The message type.</typeparam>
+            <param name="connection">The conmnection.</param>
+            <param name="subject">Subject to publish the message to.</param>
+            <param name="data">Message payload.</param>
+            <param name="handler">Event handler to process message acknowledgements.</param>
+            <returns>The GUID of the published message.</returns>
+            <exception cref="T:STAN.Client.StanException">Thrown when an error occurs publishing the message.</exception>
+        </member>
+        <member name="M:STAN.Client.StanExtensions.PublishAsync``1(STAN.Client.IStanConnection,System.String,``0)">
+            <summary>
+            Publish publishes the data argument to the given subject. The data
+            argument is left untouched and needs to be correctly interpreted on
+            the receiver.  This API is asynchronous and handles the acknowledgement
+            or error from the NATS streaming server in the provided handler.  An exception is thrown when
+            an error occurs during the send, the handler will process acknowledgments and errors.
+            </summary>
+            <typeparam name="TMessage">The message type.</typeparam>
+            <param name="connection">The conmnection.</param>
+            <param name="subject">Subject to publish the message to.</param>
+            <param name="data">The data being published.</param>
+            <returns>The task object representing the asynchronous operation, containing the guid.</returns>
+        </member>
+        <member name="M:STAN.Client.StanExtensions.Subscribe``1(STAN.Client.IStanConnection,System.String,System.EventHandler{STAN.Client.StanMsgHandlerArgs{``0}})">
+            <summary>
+            Subscribe will create an Asynchronous Subscriber with
+            interest in a given subject, assign the handler, and immediately
+            start receiving messages.  The subscriber will default options.
+            </summary>
+            <typeparam name="TMessage">The message type.</typeparam>
+            <param name="connection">The conmnection.</param>
+            <param name="subject">Subject of interest.</param>
+            <param name="handler">A message handler to process messages.</param>
+            <returns>A new Subscription</returns>
+            <exception cref="T:STAN.Client.StanException">An error occured creating the subscriber.</exception>
+        </member>
+        <member name="M:STAN.Client.StanExtensions.Subscribe``1(STAN.Client.IStanConnection,System.String,STAN.Client.StanSubscriptionOptions,System.EventHandler{STAN.Client.StanMsgHandlerArgs{``0}})">
+            <summary>
+            Subscribe will create an Asynchronous subscriber with
+            interest in a given subject, assign the handler, and immediately
+            start receiving messages.
+            </summary>
+            <typeparam name="TMessage">The message type.</typeparam>
+            <param name="connection">The conmnection.</param>
+            <param name="subject">Subject of interest.</param>
+            <param name="options">SubscriptionOptions used to create the subscriber.</param>
+            <param name="handler">A message handler to process messages.</param>
+            <returns>A new subscription.</returns>
+            <exception cref="T:STAN.Client.StanException">An error occured creating the subscriber.</exception>
+        </member>
+        <member name="M:STAN.Client.StanExtensions.Subscribe``1(STAN.Client.IStanConnection,System.String,System.String,System.EventHandler{STAN.Client.StanMsgHandlerArgs{``0}})">
+            <summary>
+            Subscribe will create an Asynchronous Subscriber with
+            interest in a given subject, assign the handler, and immediately
+            start receiving messages.  The subscriber will use default 
+            subscriber options.
+            </summary>
+            <typeparam name="TMessage">The message type.</typeparam>
+            <param name="connection">The conmnection.</param>
+            <param name="subject">Subject of interest.</param>
+            <param name="qgroup">Name of the queue group.</param>
+            <param name="handler">A message handler to process messages.</param>
+            <returns>A new subscription.</returns>
+        </member>
+        <member name="M:STAN.Client.StanExtensions.Subscribe``1(STAN.Client.IStanConnection,System.String,System.String,STAN.Client.StanSubscriptionOptions,System.EventHandler{STAN.Client.StanMsgHandlerArgs{``0}})">
+            <summary>
+            Subscribe will create an Asynchronous Subscriber with
+            interest in a given subject, assign the handler, and immediately
+            start receiving messages.
+            </summary>
+            <typeparam name="TMessage">The message type.</typeparam>
+            <param name="connection">The conmnection.</param>
+            <param name="subject">Subject of interest.</param>
+            <param name="qgroup">Name of the queue group.</param>
+            <param name="options">SubscriptionOptions used to create the subscriber.</param>
+            <param name="handler">A message handler to process messages.</param>
+            <returns>A new subscription.</returns>
+        </member>
+        <member name="T:STAN.Client.StanHelper">
+            <summary>
+            Internal helper methods.
+            </summary>
+        </member>
+        <member name="M:STAN.Client.StanHelper.#cctor">
+            <summary>
+            Static constructor.
+            </summary>
+        </member>
+        <member name="M:STAN.Client.StanHelper.NewStanBadSubscriptionException">
+            <summary>
+            Uses reflection to create an instance of <see cref="T:STAN.Client.StanBadSubscriptionException"/>
+            using the <c>internal</c> constructor.
+            </summary>
+            <returns>A new <see cref="T:STAN.Client.StanBadSubscriptionException"/>.</returns>
+        </member>
+        <member name="M:STAN.Client.StanHelper.NewStanMsg(STAN.Client.MsgProto,System.Object)">
+            <summary>
+            Uses reflection to to construct a new <see cref="T:STAN.Client.StanMsg"/>.
+            </summary>
+            <param name="proto">The message including protocol information.</param>
+            <param name="sub">The subscription.</param>
+        </member>
+        <member name="M:STAN.Client.StanHelper.ManualAck(System.Object,STAN.Client.StanMsg)">
+            <summary>
+            Uses reflection to call the <c>internal IAsyncSubscription.manualAck(StanMsg)</c> method.
+            </summary>
+            <param name="subscription">The subscription.</param>
+            <param name="msg">The message being acknowledged.</param>
+        </member>
+        <member name="T:STAN.Client.StanMsgHandlerArgs`1">
+            <summary>
+            Message handler arguments for typed messages.
+            </summary>
+            <typeparam name="TMessage">The message type.</typeparam>
+        </member>
+        <member name="M:STAN.Client.StanMsgHandlerArgs`1.#ctor(STAN.Client.MsgProto,System.Object)">
+            <summary>
+            Constructs an instance from a low-level message and subscription.
+            </summary>
+            <param name="proto">The message including protocol information.</param>
+            <param name="subscription">
+            <para>
+            The subscription.
+            </para>
+            <note>
+            This needs to be passed as an <see cref="T:System.Object"/> because 
+            <c>STAN.Client.AsyncSubscription</c> is defined as <c>internal</c>.
+            </note>
+            </param>
+        </member>
+        <member name="P:STAN.Client.StanMsgHandlerArgs`1.Msg">
+            <summary>
+            Returns the received message.
+            </summary>
+        </member>
+    </members>
+</doc>

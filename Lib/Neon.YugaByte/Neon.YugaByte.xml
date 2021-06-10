@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Neon.YugaByte</name>
+    </assembly>
+    <members>
+        <member name="T:Neon.Xunit.YugaByte.NamespaceDoc">
+            <summary>
+            This namespace includes the YugaByte database Xunit test fixture.
+            </summary>
+        </member>
+        <member name="T:Neon.YugaByte.YugaByteHelper">
+            <summary>
+            Implements YugaByte related utilities.
+            </summary>
+        </member>
+    </members>
+</doc>

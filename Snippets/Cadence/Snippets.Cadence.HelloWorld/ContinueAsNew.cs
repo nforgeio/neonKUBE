@@ -38,7 +38,7 @@ namespace HelloWorld_ContinueAsNew_1
         {
             // Pretend that we're getting this from a database.
 
-            return new CustomerInfo()
+            var customer = new CustomerInfo()
             {
                 Id                   = id,
                 Email                = "jeff@my-company.com",
@@ -46,16 +46,22 @@ namespace HelloWorld_ContinueAsNew_1
                 WelcomeSent          = false,
                 LastMarketingPingUtc = null
             };
+
+            return await Task.FromResult(customer);
         }
 
         public async Task UpdateCustomerInfo(CustomerInfo customer)
         {
             // Pretend that we're persisting the customer to a database.
+
+            await Task.CompletedTask;
         }
 
         public async Task SendEmail(string email, string message)
         {
             // Pretend that we're sending an email here.
+
+            await Task.CompletedTask;
         }
     }
 
@@ -130,7 +136,7 @@ namespace HelloWorld_ContinueAsNew_2
         {
             // Pretend that we're getting this from a database.
 
-            return new CustomerInfo()
+            var customer = new CustomerInfo()
             {
                 Id                   = id,
                 Email                = "jeff@my-company.com",
@@ -138,16 +144,22 @@ namespace HelloWorld_ContinueAsNew_2
                 WelcomeSent          = false,
                 LastMarketingPingUtc = null
             };
+
+            return await Task.FromResult(customer);
         }
 
         public async Task UpdateCustomerInfo(CustomerInfo customer)
         {
             // Pretend that we're persisting the customer to a database.
+
+            await Task.CompletedTask;
         }
 
         public async Task SendEmail(string email, string message)
         {
             // Pretend that we're sending an email here.
+
+            await Task.CompletedTask;
         }
     }
 

@@ -50,6 +50,8 @@ namespace TestNeonService
 
         public Test_QueueService(ComposedFixture fixture)
         {
+            TestHelper.ResetDocker(null);   // Reset Docker for every test
+
             this.composedFixture = fixture;
 
             composedFixture.Start(
@@ -67,7 +69,7 @@ namespace TestNeonService
             this.natsFixture         = (NatsFixture)composedFixture["nats"];
             this.queueServiceFixture = (NeonServiceFixture<QueueService>)composedFixture["queue-service"];
         }
-
+        
         /// <summary>
         /// Returns the service map.
         /// </summary>

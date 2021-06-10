@@ -192,7 +192,7 @@ namespace Neon.Service
     /// Each <see cref="NeonService"/> instance maintains its own <see cref="LogManager"/>
     /// instance with the a default logger created at <see cref="Log"/>.  The log manager
     /// is initialized using the <b>LOG_LEVEL</b> environment variable value which defaults
-    /// to <b>info</b> when not present.  <see cref="LogLevel"/> for the possible values.
+    /// to <b>info</b> when not present.  <see cref="Neon.Diagnostics.LogLevel"/> for the possible values.
     /// </para>
     /// <para>
     /// Note that the <see cref="Neon.Diagnostics.LogManager.Default"/> log manager will

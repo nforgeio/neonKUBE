@@ -1,0 +1,1293 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Neon.Postgres</name>
+    </assembly>
+    <members>
+        <member name="T:Neon.Postgres.ConnectionExtensions">
+            <summary>
+            Extends <see cref="T:Npgsql.NpgsqlConnection"/> with useful methods.
+            </summary>
+        </member>
+        <member name="M:Neon.Postgres.ConnectionExtensions.OpenDatabase(Npgsql.NpgsqlConnection,System.String)">
+            <summary>
+            Clones an existing database connection by retaining all connection settings except that
+            the new connection will be opened to target a new database.
+            </summary>
+            <param name="connection">The existing connection.</param>
+            <param name="database">The target database for the new connection.</param>
+            <returns>The new <see cref="T:Npgsql.NpgsqlConnection"/>.</returns>
+        </member>
+        <member name="M:Neon.Postgres.ConnectionExtensions.OpenDatabaseAsync(Npgsql.NpgsqlConnection,System.String)">
+            <summary>
+            Asynchronously clones an existing database connection by retaining all connection settings except
+            that the connection will be opened to target a new database.
+            </summary>
+            <param name="connection">The existing connection.</param>
+            <param name="database">The target database for the new connection.</param>
+            <returns>The new <see cref="T:Npgsql.NpgsqlConnection"/>.</returns>
+        </member>
+        <member name="M:Neon.Postgres.ConnectionExtensions.ExecuteNonQuery(Npgsql.NpgsqlConnection,System.String,Npgsql.NpgsqlTransaction)">
+            <summary>
+            Executes a SQL command that does not perform a query.
+            </summary>
+            <param name="connection">The database connection.</param>
+            <param name="cmdText">The SQL command.</param>
+            <param name="transaction">Optionally specifies the transaction.</param>
+            <returns>The number of rows impacted.</returns>
+            <remarks>
+            <note>
+            Although this method is convienent, consider explictly creating and
+            preparing <see cref="T:Npgsql.NpgsqlCommand"/> for frequently executed commands
+            for better performance.
+            </note>
+            </remarks>
+        </member>
+        <member name="M:Neon.Postgres.ConnectionExtensions.ExecuteNonQueryAsync(Npgsql.NpgsqlConnection,System.String,System.Threading.CancellationToken,Npgsql.NpgsqlTransaction)">
+            <summary>
+            Asynchronously executes a SQL command that does not perform a query.
+            </summary>
+            <param name="connection">The database connection.</param>
+            <param name="cmdText">The SQL command.</param>
+            <param name="cancellationToken">Optional cancellation token.</param>
+            <param name="transaction">Optionally specifies the transaction.</param>
+            <returns>The number of rows impacted.</returns>
+            <remarks>
+            <note>
+            Although this method is convienent, consider explictly creating and
+            preparing <see cref="T:Npgsql.NpgsqlCommand"/> for frequently executed commands
+            for better performance.
+            </note>
+            </remarks>
+        </member>
+        <member name="M:Neon.Postgres.ConnectionExtensions.ExecuteScalar(Npgsql.NpgsqlConnection,System.String,Npgsql.NpgsqlTransaction)">
+            <summary>
+            Executes a SQL query and returns the first column from the
+            first row returned.  All other rows and columns will be ignored.
+            </summary>
+            <param name="connection">The database connection.</param>
+            <param name="cmdText">The SQL command.</param>
+            <param name="transaction">Optionally specifies the transaction.</param>
+            <returns>The value of the first column on the first row returned by the command.</returns>
+            <remarks>
+            <note>
+            Although this method is convenient, consider explictly creating and
+            preparing <see cref="T:Npgsql.NpgsqlCommand"/> for frequently executed commands
+            for better performance.
+            </note>
+            </remarks>
+        </member>
+        <member name="M:Neon.Postgres.ConnectionExtensions.ExecuteScalarAsync(Npgsql.NpgsqlConnection,System.String,System.Threading.CancellationToken,Npgsql.NpgsqlTransaction)">
+            <summary>
+            Asynchronously executes a SQL query and returns the first column from the
+            first row returned.  All other rows and columns will be ignored.
+            </summary>
+            <param name="connection">The database connection.</param>
+            <param name="cmdText">The SQL command.</param>
+            <param name="cancellationToken">Optional cancellation token.</param>
+            <param name="transaction">Optionally specifies the transaction.</param>
+            <returns>The value of the first column on the first row returned by the command.</returns>
+            <remarks>
+            <note>
+            Although this method is convenient, consider explictly creating and
+            preparing <see cref="T:Npgsql.NpgsqlCommand"/> for frequently executed commands
+            for better performance.
+            </note>
+            </remarks>
+        </member>
+        <member name="M:Neon.Postgres.ConnectionExtensions.ExecuteReader(Npgsql.NpgsqlConnection,System.String,System.Data.CommandBehavior,Npgsql.NpgsqlTransaction)">
+            <summary>
+            Executes a SQL query and returns the data reader to be used to process the results.
+            </summary>
+            <param name="connection">The database connection.</param>
+            <param name="cmdText">The SQL command.</param>
+            <param name="behavior">Optionally specifies the command behavior.</param>
+            <param name="transaction">Optionally specifies the transaction.</param>
+            <returns>The <see cref="T:Npgsql.NpgsqlDataReader"/>.</returns>
+            <remarks>
+            <note>
+            Although this method is convenient, consider explictly creating and
+            preparing <see cref="T:Npgsql.NpgsqlCommand"/> for frequently executed commands
+            for better performance.
+            </note>
+            </remarks>
+        </member>
+        <member name="M:Neon.Postgres.ConnectionExtensions.ExecuteReaderAsync(Npgsql.NpgsqlConnection,System.String,System.Data.CommandBehavior,System.Threading.CancellationToken,Npgsql.NpgsqlTransaction)">
+            <summary>
+            Asynchronously executes a SQL query and returns the data reader to
+            be used to process the results.
+            </summary>
+            <param name="connection">The database connection.</param>
+            <param name="cmdText">The SQL command.</param>
+            <param name="behavior">Optionally specifies the command behavior.</param>
+            <param name="cancellationToken">Optional cancellation token.</param>
+            <param name="transaction">Optionally specifies the transaction.</param>
+            <returns>The <see cref="T:Npgsql.NpgsqlDataReader"/>.</returns>
+            <remarks>
+            <note>
+            Although this method is convenient, consider explictly creating and
+            preparing <see cref="T:Npgsql.NpgsqlCommand"/> for frequently executed commands
+            for better performance.
+            </note>
+            </remarks>
+        </member>
+        <member name="M:Neon.Postgres.ConnectionExtensions.SplitBatch(System.String)">
+            <summary>
+            Splits a batch of SQL commands potentially separated by <b>go</b> lines
+            into the distinct commands.
+            </summary>
+            <param name="batchText">The command batch.</param>
+            <returns>The list of SQL commands from the batch.</returns>
+        </member>
+        <member name="M:Neon.Postgres.ConnectionExtensions.ExecuteBatch(Npgsql.NpgsqlConnection,System.String,Npgsql.NpgsqlTransaction)">
+            <summary>
+            Executes a batch of SQL commands saeparated by lines including <b>go</b>
+            separators.  This works like Microsoft SQL server related tools.
+            </summary>
+            <param name="connection">The database connection.</param>
+            <param name="batchText">The SQL commands possibly separated by <b>go</b> lines.</param>
+            <param name="transaction">Optionally specifies the transaction.</param>
+            <remarks>
+            <para>
+            It's often necessary to execute a sequence of SQL commands that depend on
+            each other.  One example is a command that creates a table followed by 
+            commands that write rows.  You might think that you could achieve this
+            by executing the following as one command:
+            </para>
+            <code language="sql">
+            CREATE TABLE my_table (name text);
+            INSERT INTO my_table (name) values ('Jack');
+            INSERT INTO my_table (name) values ('Jill');
+            </code>
+            <para>
+            but this won't actually work because the database generates a query plan
+            for the entire command and when it does this and sees the inserts into
+            [my_table] but the table doesn't actually exist at the time the query
+            plan is being created.  So the command will fail.
+            </para>
+            <para>
+            What you really need to do is create the table first as a separate
+            command and then do the inserts as one or more subsequent commands.
+            This is not terribly convenient so we've introduced the concept of
+            a batch of commands via this method.  Here's what this would look like:
+            </para>
+            <code language="sql">
+            CREATE TABLE my_table (name text);
+            go
+            INSERT INTO my_table (name) values ('Jack');
+            INSERT INTO my_table (name) values ('Jill');
+            </code>
+            <para>
+            See how the <b>go</b> line separates the table creation from the inserts.
+            This method will split the <paramref name="batchText"/> into separate
+            commands on any <b>go</b> lines and then execute these commands in order.
+            </para>
+            <note>
+            <b>go</b> is case insensitive and any leading or trailing space on the
+            line will be ignored.
+            </note>
+            </remarks>
+        </member>
+        <member name="M:Neon.Postgres.ConnectionExtensions.ExecuteBatchAsync(Npgsql.NpgsqlConnection,System.String,System.Threading.CancellationToken,Npgsql.NpgsqlTransaction)">
+            <summary>
+            Asynchronously a batch of SQL commands saeparated by lines including <b>go</b>
+            separators.  This works like Microsoft SQL server related tools.a
+            </summary>
+            <param name="connection">The database connection.</param>
+            <param name="batchText">The SQL commands possibly separated by <b>go</b> lines.</param>
+            <param name="cancellationToken">Optional cancellation token.</param>
+            <param name="transaction">Optionally specifies the transaction.</param>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+            <remarks>
+            <para>
+            It's often necessary to execute a sequence of SQL commands that depend on
+            each other.  One example is a command that creates a table followed by 
+            commands that write rows.  You might think that you could achieve this
+            by executing the following as one command:
+            </para>
+            <code language="sql">
+            CREATE TABLE my_table (name text);
+            INSERT INTO my_table (name) values ('Jack');
+            INSERT INTO my_table (name) values ('Jill');
+            </code>
+            <para>
+            but this won't actually work because the database generates a query plan
+            for the entire command and when it does this and sees the inserts into
+            [my_table] but the table doesn't actually exist at the time the query
+            plan is being created.  So the command will fail.
+            </para>
+            <para>
+            What you really need to do is create the table first as a separate
+            command and then do the inserts as one or more subsequent commands.
+            This is not terribly convenient so we've introduced the concept of
+            a batch of commands via this method.  Here's what this would look like:
+            </para>
+            <code language="sql">
+            CREATE TABLE my_table (name text);
+            go
+            INSERT INTO my_table (name) values ('Jack');
+            INSERT INTO my_table (name) values ('Jill');
+            </code>
+            <para>
+            See how the <b>go</b> line separates the table creation from the inserts.
+            This method will split the <paramref name="batchText"/> into separate
+            commands on any <b>go</b> lines and then execute these commands in order.
+            </para>
+            <note>
+            <b>go</b> is case insensitive and any leading or trailing space on the
+            line will be ignored.
+            </note>
+            </remarks>
+        </member>
+        <member name="T:Neon.Postgres.DatabaseStatus">
+            <summary>
+            Holds information about a database's schema as returned by <see cref="M:Neon.Postgres.SchemaManager.GetStatusAsync"/>.
+            </summary>
+        </member>
+        <member name="M:Neon.Postgres.DatabaseStatus.#ctor">
+            <summary>
+            Constructor.
+            </summary>
+        </member>
+        <member name="P:Neon.Postgres.DatabaseStatus.SchemaStatus">
+            <summary>
+            Returns an indication of whether the database exisis and has schema information.
+            </summary>
+        </member>
+        <member name="P:Neon.Postgres.DatabaseStatus.Version">
+            <summary>
+            Returns the database's current schema version or <b>-1</b> when the
+            database doesn't exist or have a DBINFO table.
+            </summary>
+        </member>
+        <member name="P:Neon.Postgres.DatabaseStatus.MaxVersion">
+            <summary>
+            Returns the maximum known schema version as determined by the available
+            schema scripts.
+            </summary>
+        </member>
+        <member name="P:Neon.Postgres.DatabaseStatus.IsCurrent">
+            <summary>
+            Returns <c>true</c> when the database has schema information and the current version
+            is the same as the most recent schema script.
+            </summary>
+        </member>
+        <member name="P:Neon.Postgres.DatabaseStatus.Updater">
+            <summary>
+            Identifes the updater claiming to be currently upgrading the database when
+            <see cref="P:Neon.Postgres.DatabaseStatus.SchemaStatus"/><c>=</c><see cref="F:Neon.Postgres.SchemaStatus.Updating"/>.
+            </summary>
+        </member>
+        <member name="P:Neon.Postgres.DatabaseStatus.Error">
+            <summary>
+            Returns the error from a previous upgrade attempt when 
+            <see cref="P:Neon.Postgres.DatabaseStatus.SchemaStatus"/><c>=</c><see cref="F:Neon.Postgres.SchemaStatus.UpgradeError"/>.
+            </summary>
+        </member>
+        <member name="P:Neon.Postgres.DatabaseStatus.VersionToScript">
+            <summary>
+            Returns a dictionary that maps a schema version to the script to be used
+            to upgrade the database to that version.
+            </summary>
+        </member>
+        <member name="T:Neon.Postgres.NamespaceDoc">
+            <summary>
+            This namespace includes Postgres related extensions and utilities.
+            </summary>
+            <remarks>
+            <para>
+            <see cref="T:Neon.Postgres.ConnectionExtensions"/> extends <see cref="T:Npgsql.NpgsqlConnection"/> with
+            <list type="table">
+                <item>
+                    <term><see cref="M:Neon.Postgres.ConnectionExtensions.OpenDatabase(Npgsql.NpgsqlConnection,System.String)"/></term>
+                    <description>
+                    Clones the current connection and then connection to a new database
+                    </description>
+                </item>
+                <item>
+                    <term><see cref="M:Neon.Postgres.ConnectionExtensions.ExecuteNonQuery(Npgsql.NpgsqlConnection,System.String,Npgsql.NpgsqlTransaction)"/></term>
+                    <description>
+                    A shortcut for executing a non-query directly on a connection without
+                    having to create a <see cref="T:Npgsql.NpgsqlCommand"/> first.
+                    </description>
+                </item>
+                <item>
+                    <term><see cref="M:Neon.Postgres.ConnectionExtensions.ExecuteScalar(Npgsql.NpgsqlConnection,System.String,Npgsql.NpgsqlTransaction)"/></term>
+                    <description>
+                    A shortcut for executing a scalar query directly on a connection without
+                    having to create a <see cref="T:Npgsql.NpgsqlCommand"/> first.
+                    </description>
+                </item>
+                <item>
+                    <term><see cref="M:Neon.Postgres.ConnectionExtensions.ExecuteReader(Npgsql.NpgsqlConnection,System.String,System.Data.CommandBehavior,Npgsql.NpgsqlTransaction)"/></term>
+                    <description>
+                    A shortcut for executing a query directly on a connection without
+                    having to create a <see cref="T:Npgsql.NpgsqlCommand"/> first.
+                    </description>
+                </item>
+                <item>
+                    <term><see cref="M:Neon.Postgres.ConnectionExtensions.ExecuteReaderAsync(Npgsql.NpgsqlConnection,System.String,System.Data.CommandBehavior,System.Threading.CancellationToken,Npgsql.NpgsqlTransaction)"/></term>
+                    <description>
+                    A shortcut for asynchronously executing a query directly on a connection without
+                    having to create a <see cref="T:Npgsql.NpgsqlCommand"/> first.  This method calls an
+                    action for each row returned by the query.
+                    </description>
+                </item>
+                <item>
+                    <term><see cref="M:Neon.Postgres.ConnectionExtensions.ExecuteBatch(Npgsql.NpgsqlConnection,System.String,Npgsql.NpgsqlTransaction)"/></term>
+                    <description>
+                    Executes a batch of SQL commands separated by <b>go</b> lines.  This allows you to have
+                    a single script to do things like creating a table and then initializing it.  This is a
+                    convenience that is similar to how some Microsoft SQL Server tooling works.
+                    </description>
+                </item>
+            </list>
+            </para>
+            <para>
+            Asynchronous versions of these methods are also available.
+            </para>
+            <para>
+            <see cref="T:Neon.Postgres.SchemaManager"/> is designed to help manage initial database deployment as well as
+            subsequent updates as your database schema changes over time.
+            </para>
+            <para>
+            <see cref="T:Neon.Postgres.ReaderExtensions"/> extends the <see cref="T:Npgsql.NpgsqlDataReader"/> class by adding
+            methods to enumerate results using C# <c>foreach</c> as well as methods to fetch nullable 
+            column values.
+            </para>
+            </remarks>
+        </member>
+        <member name="T:Neon.Postgres.PreparedCommand">
+            <summary>
+            Simplifies prepared Postgres command usage by combining the prepared command
+            and its usage into a single type.  It's also often useful to create derived
+            custom types from this that handle the parameter definitions and subsitutions
+            and perhaps precompute result column indexes to help abstract these details
+            from the calling program.
+            </summary>
+            <remarks>
+            <para>
+            You can use this class directly in your code like: 
+            </para>
+            <code language="c#">
+            var parameters = new Dictionary&lt;string, NpgsqlDbType>()&gt; 
+                {
+                    { "name", NpgsqlDbType.Text }
+                };
+                
+            var preparedCommand = new PreparedCommand(connection, "SELECT Name, Age, Email FROM People WHERE Name = @name", parameters);
+            
+            foreach (var name in new string[] { "jack", "jill", "john", "jane" })
+            {
+                var queryCommand = preparedCommand.Clone();
+                
+                queryCommand.Parameters["name"].Value = name;
+                
+                foreach (var row in queryCommand.ExecuteReader().ToEnumerable())
+                {
+                    Console.WriteLine($"Name: {row.GetString("Name")} Age: {row.GetInt32("Age"} Email: {row.GetString("Email")}");
+                }
+            }
+            </code>
+            <para>
+            In this example, we first created the prepared command that performs a query passing a 
+            person's name as the parameter.   Note that we had to create a dictionary defining the 
+            parameter name and type.  The below, we looped for perform four queries by cloning 
+            the prepared command, setting the parameter values and then executing the command.
+            </para>
+            <para>
+            Note how we used methods like <c>row.GetString("Name")</c> to access individual columns.
+            This works and is convenient but will be somewhat inefficient because the method will need 
+            to map the column name into the corresponding column index.  We could have specified 
+            column indexes here, but that's starting to be fragile and could break if we inserted
+            or removed result columns.  Even using names can be fragile since column names can
+            be altered over time.
+            </para>
+            <para>
+            We recommend writing custom classes that inherit from <see cref="T:Neon.Postgres.PreparedCommand"/> to
+            help abstract these things efficiently and without needing to use ORM frameworks like
+            Entity Framework, NHibernate, and Dapper which tend to be inefficient and somewhat
+            cumbersome to setup.  Here's an example of a class that wraps a prepared statement
+            to implement the query from the example above:
+            </para>
+            <code language="c#">
+            public class QueryPeopleByName : PreparedCommand
+            {
+                private const string query = "SELECT Name, Age, Email FROM People WHERE Name = @name";
+                
+                public const int NameIndex  = 0;
+                public const int AgeIndex   = 1;
+                public const int EmailIndex = 2;
+                
+                private static readonly Dictionary&lt;string, NpgsqlDbType&gt; paramDefinitions =
+                    new Dictionary&lt;string, NpgsqlDbType&gt;()
+                    {
+                        { "name", NpgsqlDbType.Text }
+                    };
+                
+                public QueryPeopleByName(NpgsqlConnection connection)
+                    : base(connection, query, paramDefinitions)
+                {
+                    var queryCommand = queryPeopleByName.Clone();
+                
+                    queryCommand.Parameters["name"] = name;
+                    
+                    return qiery
+                }
+                
+                public ReaderEnumerator GetPeople(string name)
+                {
+                    var queryCommand = queryPeopleByName.Clone();
+                
+                    queryCommand.Parameters["name"].Value = name;
+                    
+                    return queryCommand.ExecuteReader().ToEnumerable()
+                }
+            }
+            
+            ...
+            
+            var queryPeopleByName = new QueryPeopleByName(connection);
+            
+            foreach (var name in new string[] { "jack", "jill", "john", "jane" })
+            {
+                foreach (var row in queryCommand.ExecuteReader().ToEnumerable())
+                {
+                    Console.WriteLine($"Name: {row.GetString(QueryPeopleByName.NameIndex)} Age: {row.GetInt32(QueryPeopleByName.AgeIndex} Email: {row.GetString(QueryPeopleByName.EmailIndex)}");
+                }
+            }
+            </code>
+            <para>
+            The example above abstracted the query SQL, the parameter subsitution, as well as the result 
+            column indexes to make this a little less fragile and easier to modify when necessary.  You can 
+            extend this coding pattern by having your class handle conversion of the query result to nice
+            .NET model objects:
+            </para>
+            <code language="c#">
+            public class Person
+            {
+                public string Name { get; set; }
+                public int Age { get; set; }
+                public string Email { get; set; }
+            }
+            
+            public class QueryPeopleByName : PreparedCommand
+            {
+                private const string query = "SELECT Name, Age, Email FROM People WHERE Name = @name";
+                
+                private const int NameIndex  = 0;
+                private const int AgeIndex   = 1;
+                private const int EmailIndex = 2;
+                
+                private static readonly Dictionary&lt;string, NpgsqlDbType&gt; paramDefinitions =
+                    new Dictionary&lt;string, NpgsqlDbType&gt;()
+                    {
+                        { "name", NpgsqlDbType.Text }
+                    };
+                
+                public QueryPeopleByName(NpgsqlConnection connection)
+                    : base(connection, query, paramDefinitions)
+                {
+                    var queryCommand = queryPeopleByName.Clone();
+                
+                    queryCommand.Parameters["name"] = name;
+                    
+                    return qiery
+                }
+                
+                public IEnumerable&lt;Person&gt; GetPeople(string name)
+                {
+                    var queryCommand = queryPeopleByName.Clone();
+                
+                    queryCommand.Parameters["name"] = name;
+                    
+                    foreach (var row in queryCommand.ExecuteReader().ToEnumerable())
+                    {
+                        yield return new Person()
+                        {
+                            Name  = row.GetString(NameIndex),
+                            Age   = row.GetInt32(RowIndex),
+                            Email = row.GetString(EmailIndex);
+                        };
+                    }
+                }
+            }
+            
+            ...
+            
+            var queryPeopleByName = new QueryPeopleByName(connection);
+            
+            foreach (var name in new string[] { "jack", "jill", "john", "jane" })
+            {
+                foreach (var person in queryCommand.GetProple(name))
+                {
+                    Console.WriteLine($"Name: {person.Name} Age: {person.Age} Email: {person.Email}");
+                }
+            }
+            </code>
+            <para>
+            This final example abstracted the parameter name and type as well as converted
+            the query result to compile-time <c>Person</c> object instances.  These patterns
+            can provide a nice way to get some of the advantages of an ORM without extra
+            runtime overhead.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:Neon.Postgres.PreparedCommand.#ctor(Npgsql.NpgsqlConnection,System.String,System.Collections.Generic.Dictionary{System.String,NpgsqlTypes.NpgsqlDbType},System.Boolean)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="connection">The open Postgres connection.</param>
+            <param name="sqlText">The command SQL.</param>
+            <param name="paramDefinitions">
+            <para>
+            Optional parameter name and type definitions.
+            </para>
+            <note>
+            Not all possible parameter types are supported by the common ones are at this time.
+            </note>
+            </param>
+            <param name="prepareNow">
+            Optionally specifies that the command is to be prepared immediately rather than
+            waiting for it's first execution (the default).
+            </param>
+        </member>
+        <member name="M:Neon.Postgres.PreparedCommand.Clone(Npgsql.NpgsqlTransaction)">
+            <summary>
+            Prepares the underlying command if it hasn't already been prepared and
+            then creates a clone of the command that can be executed after parameter
+            values are set when necessary.
+            </summary>
+            <param name="transaction">Optional transaction.</param>
+        </member>
+        <member name="P:Neon.Postgres.PreparedCommand.CommandText">
+            <summary>
+            Returns the command text.
+            </summary>
+        </member>
+        <member name="P:Neon.Postgres.PreparedCommand.Parameters">
+            <summary>
+            <para>
+            Returns the command parameters.
+            </para>
+            <note>
+            The collection returned should be considered tob <b>read-only</b> and
+            must not be modified.
+            </note>
+            </summary>
+        </member>
+        <member name="P:Neon.Postgres.PreparedCommand.CommandTimeout">
+            <summary>
+            The command timeout in seconds.  This defaults to <b>30 seconds</b>.
+            </summary>
+        </member>
+        <member name="T:Neon.Postgres.ReaderAsyncEnumerator">
+            <summary>
+            Returned by <see cref="M:Neon.Postgres.ReaderExtensions.ToAsyncEnumerable(Npgsql.NpgsqlDataReader)"/> making
+            it possible to asynchronously enumerate the reader rows via the C# <c>await foreach</c> 
+            statement or the equivalent for other .NET languages.
+            </summary>
+        </member>
+        <member name="M:Neon.Postgres.ReaderAsyncEnumerator.#ctor(Npgsql.NpgsqlDataReader)">
+            <summary>
+            Internal constructor.
+            </summary>
+            <param name="reader">The reader we'll be enumerating.</param>
+        </member>
+        <member name="M:Neon.Postgres.ReaderAsyncEnumerator.GetAsyncEnumerator(System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Neon.Postgres.ReaderEnumerator">
+            <summary>
+            Returned by <see cref="M:Neon.Postgres.ReaderExtensions.ToEnumerable(Npgsql.NpgsqlDataReader)"/> making
+            it possible to synchronously enumerate the reader rows via the C# <c>foreach</c> 
+            statement or the equivalent for other .NET languages.
+            </summary>
+        </member>
+        <member name="M:Neon.Postgres.ReaderEnumerator.#ctor(Npgsql.NpgsqlDataReader)">
+            <summary>
+            Internal constructor.
+            </summary>
+            <param name="reader">The reader we'll be enumerating.</param>
+        </member>
+        <member name="M:Neon.Postgres.ReaderEnumerator.GetEnumerator">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Postgres.ReaderEnumerator.System#Collections#IEnumerable#GetEnumerator">
+            <inheritdoc/>
+        </member>
+        <member name="T:Neon.Postgres.ReaderExtensions">
+            <summary>
+            Extends <see cref="T:Npgsql.NpgsqlDataReader"/> with useful methods.
+            </summary>
+        </member>
+        <member name="M:Neon.Postgres.ReaderExtensions.ToEnumerable(Npgsql.NpgsqlDataReader)">
+            <summary>
+            Returns an enumerator suitable for enumerating database results synchronously.
+            </summary>
+            <param name="reader">The data reader.</param>
+            <returns>The <see cref="T:Neon.Postgres.ReaderEnumerator"/>.</returns>
+            <remarks>
+            <para>
+            This method provides a clean way to enumerate database results using 
+            the C# <c>foreach</c> statement or the equivalent in of the .NET languages.
+            Here's an example:
+            </para>
+            <code language="c#">
+            using (var reader = postgres.ExecuteReader("SELECT value FROM enumerate_table;"))
+            {
+                foreach (var row in reader.ToEnumerable())
+                {
+                    values.Add(row.GetInt32(0));
+                }
+            }
+            </code>
+            </remarks>
+        </member>
+        <member name="M:Neon.Postgres.ReaderExtensions.ToAsyncEnumerable(Npgsql.NpgsqlDataReader)">
+            <summary>
+            Returns an enumerator suitable for enumerating database results asynchronously.
+            </summary>
+            <param name="reader">The data reader.</param>
+            <returns>The <see cref="T:Neon.Postgres.ReaderAsyncEnumerator"/>.</returns>
+            <remarks>
+            <para>
+            This method provides a clean way to asynchronousl  enumerate database results 
+            using  the C# <c>await nforeach</c> statement or the equivalent in of the .NET 
+            languages.  Here's an example:
+            </para>
+            <code language="c#">
+            using (var reader = await postgres.ExecuteReaderAsync("SELECT value FROM enumerate_table;"))
+            {
+                await foreach (var row in reader.ToAsyncEnumerable())
+                {
+                    values.Add(row.GetInt32(0));
+                }
+            }
+            </code>
+            </remarks>
+        </member>
+        <member name="M:Neon.Postgres.ReaderExtensions.GetNullableString(Npgsql.NpgsqlDataReader,System.Int32)">
+            <summary>
+            Returns the column value as a string.  Unlike <see cref="M:Npgsql.NpgsqlDataReader.GetStream(System.Int32)"/>,
+            this method can handle <c>null</c> column values.
+            </summary>
+            <param name="reader">The data reader.</param>
+            <param name="ordinal">The zero-based column position.</param>
+            <returns>The column string or <c>null</c>.</returns>
+        </member>
+        <member name="M:Neon.Postgres.ReaderExtensions.GetNullableBoolean(Npgsql.NpgsqlDataReader,System.Int32)">
+            <summary>
+            Returns the column value as a nullable boolean.
+            </summary>
+            <param name="reader">The data reader.</param>
+            <param name="ordinal">The zero-based column position.</param>
+            <returns>The nullable column value.</returns>
+        </member>
+        <member name="M:Neon.Postgres.ReaderExtensions.GetNullableByte(Npgsql.NpgsqlDataReader,System.Int32)">
+            <summary>
+            Returns the column value as a nullable byte.
+            </summary>
+            <param name="reader">The data reader.</param>
+            <param name="ordinal">The zero-based column position.</param>
+            <returns>The nullable column value.</returns>
+        </member>
+        <member name="M:Neon.Postgres.ReaderExtensions.GetNullableChar(Npgsql.NpgsqlDataReader,System.Int32)">
+            <summary>
+            Returns the column value as a nullable character.
+            </summary>
+            <param name="reader">The data reader.</param>
+            <param name="ordinal">The zero-based column position.</param>
+            <returns>The nullable column value.</returns>
+        </member>
+        <member name="M:Neon.Postgres.ReaderExtensions.GetNullableDate(Npgsql.NpgsqlDataReader,System.Int32)">
+            <summary>
+            Returns the column value as a nullable <see cref="T:NpgsqlTypes.NpgsqlDate"/>.
+            </summary>
+            <param name="reader">The data reader.</param>
+            <param name="ordinal">The zero-based column position.</param>
+            <returns>The nullable column value.</returns>
+        </member>
+        <member name="M:Neon.Postgres.ReaderExtensions.GetNullableDateTime(Npgsql.NpgsqlDataReader,System.Int32)">
+            <summary>
+            Returns the column value as a nullable <see cref="T:System.DateTime"/>.
+            </summary>
+            <param name="reader">The data reader.</param>
+            <param name="ordinal">The zero-based column position.</param>
+            <returns>The nullable column value.</returns>
+        </member>
+        <member name="M:Neon.Postgres.ReaderExtensions.GetNullableDecimal(Npgsql.NpgsqlDataReader,System.Int32)">
+            <summary>
+            Returns the column value as a nullable <see cref="T:System.Decimal"/>.
+            </summary>
+            <param name="reader">The data reader.</param>
+            <param name="ordinal">The zero-based column position.</param>
+            <returns>The nullable column value.</returns>
+        </member>
+        <member name="M:Neon.Postgres.ReaderExtensions.GetNullableDouble(Npgsql.NpgsqlDataReader,System.Int32)">
+            <summary>
+            Returns the column value as a nullable <see cref="T:System.Double"/>.
+            </summary>
+            <param name="reader">The data reader.</param>
+            <param name="ordinal">The zero-based column position.</param>
+            <returns>The nullable column value.</returns>
+        </member>
+        <member name="M:Neon.Postgres.ReaderExtensions.GetNullableFloat(Npgsql.NpgsqlDataReader,System.Int32)">
+            <summary>
+            Returns the column value as a nullable <see cref="T:System.Single"/>.
+            </summary>
+            <param name="reader">The data reader.</param>
+            <param name="ordinal">The zero-based column position.</param>
+            <returns>The nullable column value.</returns>
+        </member>
+        <member name="M:Neon.Postgres.ReaderExtensions.GetNullableGuid(Npgsql.NpgsqlDataReader,System.Int32)">
+            <summary>
+            Returns the column value as a nullable <see cref="T:System.Guid"/>.
+            </summary>
+            <param name="reader">The data reader.</param>
+            <param name="ordinal">The zero-based column position.</param>
+            <returns>The nullable column value.</returns>
+        </member>
+        <member name="M:Neon.Postgres.ReaderExtensions.GetNullableInt16(Npgsql.NpgsqlDataReader,System.Int32)">
+            <summary>
+            Returns the column value as a nullable <see cref="T:System.Int16"/>.
+            </summary>
+            <param name="reader">The data reader.</param>
+            <param name="ordinal">The zero-based column position.</param>
+            <returns>The nullable column value.</returns>
+        </member>
+        <member name="M:Neon.Postgres.ReaderExtensions.GetNullableInt32(Npgsql.NpgsqlDataReader,System.Int32)">
+            <summary>
+            Returns the column value as a nullable <see cref="T:System.Int32"/>.
+            </summary>
+            <param name="reader">The data reader.</param>
+            <param name="ordinal">The zero-based column position.</param>
+            <returns>The nullable column value.</returns>
+        </member>
+        <member name="M:Neon.Postgres.ReaderExtensions.GetNullableInt64(Npgsql.NpgsqlDataReader,System.Int32)">
+            <summary>
+            Returns the column value as a nullable <see cref="T:System.Int64"/>.
+            </summary>
+            <param name="reader">The data reader.</param>
+            <param name="ordinal">The zero-based column position.</param>
+            <returns>The nullable column value.</returns>
+        </member>
+        <member name="M:Neon.Postgres.ReaderExtensions.GetNullableInterval(Npgsql.NpgsqlDataReader,System.Int32)">
+            <summary>
+            Returns the column value as a nullable <see cref="T:NpgsqlTypes.NpgsqlTimeSpan"/>.
+            </summary>
+            <param name="reader">The data reader.</param>
+            <param name="ordinal">The zero-based column position.</param>
+            <returns>The nullable column value.</returns>
+        </member>
+        <member name="M:Neon.Postgres.ReaderExtensions.GetNullableTimeSpan(Npgsql.NpgsqlDataReader,System.Int32)">
+            <summary>
+            Returns the column value as a nullable <see cref="T:System.TimeSpan"/>.
+            </summary>
+            <param name="reader">The data reader.</param>
+            <param name="ordinal">The zero-based column position.</param>
+            <returns>The nullable column value.</returns>
+        </member>
+        <member name="M:Neon.Postgres.ReaderExtensions.GetNullableTimeStamp(Npgsql.NpgsqlDataReader,System.Int32)">
+            <summary>
+            Returns the column value as a nullable <see cref="T:System.TimeSpan"/>.
+            </summary>
+            <param name="reader">The data reader.</param>
+            <param name="ordinal">The zero-based column position.</param>
+            <returns>The nullable column value.</returns>
+        </member>
+        <member name="T:Neon.Postgres.SchemaManager">
+            <summary>
+            Manages the initial creation and schema updates for a Postgres database.
+            </summary>
+            <remarks>
+            <para>
+            This class uses some simple conventions to make it easy to upgrade a database
+            schema over time as the data model evolves.  This uses the concept of schema
+            version numbers.  A schema version is simply an integer value where the version 
+            will be <b>0</b> when a database is initially created and then the version is
+            incremented by one whenever the database schema is updated.
+            </para>
+            <para>
+            This class uses a reserved table named <see cref="F:Neon.Postgres.SchemaManager.DbInfoTableName"/> that is used to keep
+            track of the current schema version.  This table will have a single row with these
+            columns:
+            </para>
+            <list type="table">
+                <item>
+                    <term><b>Version:integer</b></term>
+                    <description>
+                    The integer database schema version.  This will be set to <b>0</b> when
+                    the database is first created and will be incremented for each subsequent
+                    update.
+                    </description>
+                </item>
+                <item>
+                    <term><b>Updater:text</b></term>
+                    <description>
+                    Used by multiple service instances to coordinate which one actually handles 
+                    the update.  This will be `NULL` when the database isn't being updated and
+                    will be set to a string identifying the entity currently updating the database.
+                    This string can be anything from a GUID, container ID, hostname, or whatever.
+                    </description>
+                </item>
+                <item>
+                    <term><b>UpdateStartUtc:timestamp</b></term>
+                    <description>
+                    Time (UTC) when the most recent update was started.
+                    </description>
+                </item>
+                <item>
+                    <term><b>UpdateFinishUtc:timestamp</b></term>
+                    <description>
+                    Time (UTC) when the most recent update was completed.  This will be `NULL`
+                    while an update is in progress.
+                    </description>
+                </item>
+            </list>
+            <para>
+            You'll be authoring Postgres SQL script files to create the initial database 
+            as well as to upgrade the database for each subsequent schema change.  By convention,
+            this class assumes that the SQL scripts for each database will be saved to separate
+            folders with each script file named like: <b>schema-#.script</b> where <b>#</b> is the
+            schema version the script will upgrade the database to, with <b>schema-0.script</b>
+            being the script that creates the database as <b>Version 0</b>.  So your script
+            folder will look something like:
+            </para>
+            <code>
+            schema-0000.script      &lt;-- database created as v0
+            schema-0001.script      &lt;-- upgrades from v0 to v1
+            schema-0002.script      &lt;-- upgrades from v1 to v2
+            schema-0003.script      &lt;-- upgrades from v2 to v3
+            schema-0004.script      &lt;-- upgrades from v3 to v4
+            ...
+            schema-####.script
+            </code>
+            <note>
+            This method parses the version number in the file names after the dash so it's perfectly
+            OK to include leading zero digits there (like we did in the example above).  We actually
+            recommend this so that your schema files can be sorted nicely by version when listed by
+            the file system.
+            </note>
+            <para>
+            Each script file is responsible for upgrading the database from the previous version
+            to the next.  This class will help manage the upgrade process by deciding which scripts
+            need to be executed based on the <see cref="F:Neon.Postgres.SchemaManager.DbInfoTableName"/> table and then executing
+            the required scripts.
+            </para>
+            <para>
+            To use, construct an instance via <see cref="T:Neon.Postgres.SchemaManager"/>, passing a database connection
+            for the Postgres superuser or a user with the <b>CREATEDB</b> privilege.  You'll also need
+            to pass the database name and the path to the file system folder holding the script files.
+            </para>
+            <para>
+            Then call <see cref="M:Neon.Postgres.SchemaManager.CreateDatabaseAsync"/> to create the database if it doesn't already
+            exist; this uses the connection passed to the constructor.  Then call 
+            <see cref="M:Neon.Postgres.SchemaManager.UpgradeDatabaseAsync(System.String,System.Int32,System.Boolean,System.Action{System.Boolean,System.Int32})"/> to apply
+            any necessary updates; this uses a new connection to the target database using the
+            credentials from the original database connection.
+            </para>
+            <para>
+            You may optionally pass a string to <see cref="M:Neon.Postgres.SchemaManager.UpgradeDatabaseAsync(System.String,System.Int32,System.Boolean,System.Action{System.Boolean,System.Int32})"/>
+            that identifies the entity performing the upgrade.  This could be an application name,
+            the name of the host the updater is running on, the username of the person performing
+            the upgrade etc.  This method uses this to try to prevent multiple updgrade from happening
+            in parallel on the same database (which would be bad) and the updater string can be used
+            to help identify who else is updating the database.  This parameter defaults to a GUID.
+            </para>
+            <para>
+            Most applications will include at least two scripts when they get started with <b>schema-0.script</b>
+            creating the database and <b>schema-1.script</b> creating the tables, views, data types, 
+            stored procedures, etc.
+            </para>
+            <para><b>SQL COMMAND BATCHES</b></para>
+            <para>
+            It's often necessary to execute a sequence of SQL commands that depend on
+            each other.  One example is a command that creates a table followed by 
+            commands that write rows.  You might think that you could achieve this
+            by executing the following as one command:
+            </para>
+            <code language="sql">
+            CREATE TABLE my_table (name text);
+            INSERT INTO my_table (name) values ('Jack');
+            INSERT INTO my_table (name) values ('Jill');
+            </code>
+            <para>
+            But, this won't actually work because the database generates a query plan
+            for the entire command and when it does this and sees the inserts into
+            [my_table] but the table doesn't actually exist at the time the query
+            plan is being created.  So the command will fail.
+            </para>
+            <para>
+            What you really need to do is create the table first as a separate
+            command and then do the inserts as one or more subsequent commands.
+            This is not terribly convenient so we've introduced the concept of
+            a batch of commands.  Here's what this would look like:
+            </para>
+            <code language="sql">
+            CREATE TABLE my_table (name text);
+            GO
+            INSERT INTO my_table (name) values ('Jack');
+            INSERT INTO my_table (name) values ('Jill');
+            </code>
+            <para>
+            See how the <b>GO</b> line separates the table creation from the inserts.
+            This method will split the script files into separate commands on any <b>GO</b> 
+            lines and then execute these commands in order.
+            </para>
+            <note>
+            <para>
+            <b>GO</b> is case insensitive and any leading or trailing space on the
+            line will be ignored.
+            </para>
+            <para>
+            Batch commands are implemented by <see cref="M:Neon.Postgres.ConnectionExtensions.ExecuteBatch(Npgsql.NpgsqlConnection,System.String,Npgsql.NpgsqlTransaction)"/>
+            and an asynchonous alternative.
+            </para>
+            </note>
+            <para><b>SCRIPT VARIABLES</b></para>
+            <para>
+            Your schema scripts may include variables of the form <b>${NAME}</b> where <b>NAME</b> is the
+            case sensitive variable name.  The variable references will be replaced by the variable's
+            value when the variable is defined, otherwise the variable reference will be left in place.
+            </para>
+            <para>
+            The <b>${database}</b> variable is reserved and will be replaced by the name of the database being managed.
+            You can specify your own variables by passing a dictionary to the constructor.  This can be 
+            useful for specifying things like password, replication factors, etc.
+            </para>
+            <para><b>UPGRADE STRATEGIES</b></para>
+            <para>
+            The current implementation assumes that applications using the database are offline or can
+            work properly with both the new and old schema.  Here are some siggestions for managing
+            updates:
+            </para>
+            <list type="bullet">
+                <item>
+                Use YugaByte snapshots to backup the keyspace.
+                </item>
+                <item>
+                Effectively take the keyspace offline during the upgrade by revoking all rights
+                to all users besides the current one and the superuser before upgrading and then
+                restoring these rights afterwards.
+                </item>
+                <item>
+                For services and keyspaces deployed to Kubernetes, we recommend that you handle keyspace
+                schema updates via a custom Kubernetes operator which would stop any services using the
+                keyspace, apply the schema update, and then restart the services, potentially  upgrading 
+                them as well.  You could embed the schema scripts in the operator itself so upgrading the
+                keyspace (and application) would be as simple as upgrading the operator.
+                </item>
+            </list>
+            <para><b>HANDLING UPGRADE ERRORS</b></para>
+            <para>
+            It's possible for a database upgrade to fail.  Addressing upgrade failures will generally
+            require manual intervention.  You should start out by looking at the <b>version and </b><b>error</b>
+            columns in the <see cref="F:Neon.Postgres.SchemaManager.DbInfoTableName"/> in your database to diagnose what happened.
+            <b>version</b> indicates the schema version before the update script was executed but that
+            it's possible that the update script was paratially completed which means that the database
+            may be in a state between the old and update schema version.
+            </para>
+            <para>
+            Here are the underlying causes for upgrade errors:
+            </para>
+            <list type="table">
+                <item>
+                    <term><b>hardware/cluster</b></term>
+                    <description>
+                    <para>
+                    The database cluster or the hardware/platform it's running is having problems
+                    that prevent the updates from being applied.
+                    </para>
+                    <para>
+                    The <b>error</b> column will describe the error.
+                    </para>
+                    </description>
+                </item>
+                <item>
+                    <term><b>script errors</b></term>
+                    <description>
+                    <para>
+                    Your upgrade scripts have syntax errors or are otherwise invalid.
+                    </para>
+                    <para>
+                    The <b>error</b> column will describe the error.
+                    </para>
+                    </description>
+                </item>
+                <item>
+                    <term><b>updater conflict</b></term>
+                    <description>
+                    <para>
+                    Another updater is currently running or terminated for some reason 
+                    before completing the update.
+                    </para>
+                    <para>
+                    The <b>updater</b> column will identify the updater instance that is currently 
+                    updating the database or that failed prematurely.
+                    </para>
+                    </description>
+                </item>
+            </list>
+            <para>
+            For <b>updater conflicts</b>, you'll need to determine whether the identified
+            updater is still running or whether it has failed.  Simply wait for the other
+            updater to finish if it's still running, otherwise you have a failure and will
+            need to follow these recomendations to manually mitigate the situation:
+            </para>
+            <list type="table">
+                <item>
+                    <term><b>Manual Rollback</b></term>
+                    <description>
+                    It's possible that some but not all of the commands in your update script have 
+                    completed.  Depending on the upgrade details, you may want to manually undo any 
+                    of the statements that completed to get the database back to its state before
+                    the the update started and then call <see cref="M:Neon.Postgres.SchemaManager.UpgradeDatabaseAsync(System.String,System.Int32,System.Boolean,System.Action{System.Boolean,System.Int32})"/>
+                    with <c>force: true</c>.
+                    </description>
+                </item>
+                <item>
+                    <term><b>Manual Upgrade</b></term>
+                    <description>
+                    As an alternative to <b>Manual Rollback</b>, you could simply execute the remaining
+                    update commands manually and then updating the <see cref="F:Neon.Postgres.SchemaManager.DbInfoTableName"/> by setting
+                    <b>version</b> to the new version number and setting the <b>updater</b> and <b>error</b>
+                    fields to <c>NULL</c>.
+                    </description>
+                </item>
+                <item>
+                    <term><b>Script Corrections</b></term>
+                    <description>
+                    Be sure to correct any problems with your upgrade script, even if your are
+                    going to manually complete the upgrade so that upgrades will work for new
+                    database instances.
+                    </description>
+                </item>
+            </list>
+            <para><b>SCRIPTS AS EMBEDDED RESOURCES</b></para>
+            <para>
+            In addition to reading SQL scripts as standard files, the <see cref="T:Neon.Postgres.SchemaManager"/> can
+            also read scripts from embedded resources.  This is an easy and clean way to include these
+            scripts in a program or library.  Here's what you need to do:
+            </para>
+            <list type="number">
+                <item>
+                Create a folder in your project to hold your SQL script files.
+                </item>
+                <item>
+                Add your scripts to the new folder, saving them with **UTF-8 encoding**.
+                </item>
+                <item>
+                Select your script files in the <b>Solution Explorer</b> and then left-click
+                on them and select **Properties**.  Set **Build Action** to **Embedded resource**.
+                </item>
+                <item>
+                You'll be using the <see cref="M:Neon.Postgres.SchemaManager.#ctor(Npgsql.NpgsqlConnection,System.String,Neon.IO.IStaticDirectory,System.Collections.Generic.Dictionary{System.String,System.String})"/>
+                override constructor and you'll be passing an <see cref="T:Neon.IO.IStaticDirectory"/> that emulates a read-only file system
+                constructed from embedded resources.  You'll need to call <see cref="M:System.Reflection.NeonAssemblyExtensions.GetResourceFileSystem(System.Reflection.Assembly,System.String)"/>
+                to obtain this directory, passing a string identifying resource name prefix that identifies your virtual folder.
+                </item>
+            </list>
+            </remarks>
+        </member>
+        <member name="F:Neon.Postgres.SchemaManager.DbInfoTableName">
+            <summary>
+            The name of the database information table.
+            </summary>
+        </member>
+        <member name="M:Neon.Postgres.SchemaManager.#ctor(Npgsql.NpgsqlConnection,System.String,System.String,System.Collections.Generic.Dictionary{System.String,System.String})">
+            <summary>
+            Constructs an instance that loads scripts from files.
+            </summary>
+            <param name="masterConnection">
+            The master database connection to be used for creating the target database.  This connection must have been made for a Postgres
+            superuser or a user with the <b>CREATEDB</b> privilege and must not reference a specific database.
+            </param>
+            <param name="databaseName">The database name to be used.</param>
+            <param name="schemaFolder">The path to the file system folder holding the database schema scripts.</param>
+            <param name="variables">Optionally specifies script variables.</param>
+            <exception cref="T:System.IO.FileNotFoundException">
+            Thrown if there's no directory at <see cref="F:Neon.Postgres.SchemaManager.scriptFolder"/> or when there's no
+            <b>schema-0.script</b> file in the directory.
+            </exception>
+        </member>
+        <member name="M:Neon.Postgres.SchemaManager.#ctor(Npgsql.NpgsqlConnection,System.String,Neon.IO.IStaticDirectory,System.Collections.Generic.Dictionary{System.String,System.String})">
+            <summary>
+            Constructs an instance that loads scripts from embedded resources.
+            </summary>
+            <param name="masterConnection">
+            The master database connection to be used for creating the target database.  This connection must have been made for a Postgres
+            superuser or a user with the <b>CREATEDB</b> privilege and must not reference a specific database.
+            </param>
+            <param name="databaseName">The database name to be used.</param>
+            <param name="schemaDirectory">The embedded resource directory returned by a call to <see cref="M:System.Reflection.NeonAssemblyExtensions.GetResourceFileSystem(System.Reflection.Assembly,System.String)"/>.</param>
+            <param name="variables">Optionally specifies script variables.</param>
+            <exception cref="T:System.IO.FileNotFoundException">
+            Thrown if there's no directory at <see cref="F:Neon.Postgres.SchemaManager.scriptFolder"/> or when there's no
+            <b>schema-0.script</b> file in the directory.
+            </exception>
+        </member>
+        <member name="M:Neon.Postgres.SchemaManager.Finalize">
+            <summary>
+            Finalizer.
+            </summary>
+        </member>
+        <member name="M:Neon.Postgres.SchemaManager.Dispose">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Postgres.SchemaManager.Dispose(System.Boolean)">
+            <summary>
+            Handles the actual disposal.
+            </summary>
+            <param name="disposing"><b>true</b> if we're disposing, <c>false</c> for finalizing.</param>
+        </member>
+        <member name="M:Neon.Postgres.SchemaManager.LoadScript(System.String)">
+            <summary>
+            Reads the script text from a file path, replacing any variable references with the
+            variable's value.
+            </summary>
+            <param name="scriptPath">The script file path.</param>
+            <returns>The processed script text.</returns>
+        </member>
+        <member name="M:Neon.Postgres.SchemaManager.LoadScript(Neon.IO.IStaticFile)">
+            <summary>
+            Reads the script text from an embedded resource file, replacing any variable references with the
+            variable's value.
+            </summary>
+            <param name="scriptFile">The embedded resurce script file.</param>
+            <returns>The processed script text.</returns>
+        </member>
+        <member name="P:Neon.Postgres.SchemaManager.TargetConnection">
+            <summary>
+            Returns a connection to the target database if the database exists.
+            </summary>
+            <exception cref="T:Neon.Postgres.SchemaManagerException">Thrown when the database doesn't exist.</exception>
+        </member>
+        <member name="M:Neon.Postgres.SchemaManager.CreateDatabaseAsync">
+            <summary>
+            Creates the database using the <b>schema-0.script</b> file from the script folder.  This also
+            creates the <see cref="F:Neon.Postgres.SchemaManager.DbInfoTableName"/> table adds a row setting the Version to 0.
+            </summary>
+            <returns><c>true</c> if the database was created or <c>false</c> if it already exists.</returns>
+            <exception cref="T:System.IO.FileNotFoundException">Thrown if the <b>schema-0.script</b> file does not exist in the script folder.</exception>
+            <exception cref="T:Neon.Postgres.SchemaManagerException">
+            Thrown if the database already exists but does not include the <see cref="F:Neon.Postgres.SchemaManager.DbInfoTableName"/>
+            table or if that table doesn't have exactly one row or the version there is
+            not positive.
+            </exception>
+        </member>
+        <member name="M:Neon.Postgres.SchemaManager.GetStatusAsync">
+            <summary>
+            Returns information about the database schema status and schema scripts.
+            </summary>
+            <returns>The <see cref="T:Neon.Postgres.DatabaseStatus"/>.</returns>
+            <exception cref="T:Neon.Postgres.SchemaManagerException">Thrown when the database has an invalid <see cref="F:Neon.Postgres.SchemaManager.DbInfoTableName"/> table.</exception>
+        </member>
+        <member name="M:Neon.Postgres.SchemaManager.UpgradeDatabaseAsync(System.String,System.Int32,System.Boolean,System.Action{System.Boolean,System.Int32})">
+            <summary>
+            Upgrades the database by applying any upgrade scripts from the current database
+            version to the latest update script found in the script folder or optionally when
+            the database version equals <paramref name="stopVersion"/>.
+            </summary>
+            <param name="updaterIdentity">
+            <para>
+            Optionally specifies the identity of the entity performing the update.  This may be the
+            username of the person doing this or something identifying the service instance for
+            more automated scenarios.  This service identity could be a hostname, container ID,
+            or something else that makes sense.  This is used to ensure that only a single entity
+            can update the database.
+            </para>
+            <para>
+            This defaults to a generated GUID.
+            </para>
+            </param>
+            <param name="stopVersion">Optionally specifies the latest database update to apply.</param>
+            <param name="force">
+            <para>
+            Optionally specifies that any indication that another updater is in the process of
+            updating the database will be ignored and that any pewnding updates will proceed.
+            This may be necessary after a previous update failed.
+            </para>
+            <note>
+            <b>WARNING:</b> You should take care to ensure that the other potential updater is
+            not actually performing an update.  This may also means that the previous update
+            was only partially completed which could require manual intervention.
+            </note>
+            </param>
+            <param name="updateAction">
+            Optional action that will be called before each update is applied and then afterwards.
+            The <c>bool</c> argument will be <c>false</c> before the update is applied and <c>true</c>
+            afterwards.  The <c>int</c> argument is the schema version being applied.
+            </param>
+            <returns>The version of the database after the upgrade.</returns>
+            <exception cref="T:Neon.Postgres.SchemaManagerException">
+            Thrown if the database doesn't exist or does not include the
+            <see cref="F:Neon.Postgres.SchemaManager.DbInfoTableName"/> table or if it invalid.
+            </exception>
+            <exception cref="T:System.IO.FileNotFoundException">
+            Thrown if the <b>schema-0.script</b> file does not exist or when there are
+            any missing script files (e.g. gaps in the sequence of files) or there
+            are scripts with unexpected file names.
+            </exception>
+            <exception cref="T:Neon.Postgres.SchemaManagerException">
+            Thrown when another entity currently is in the process of updating the
+            database schema.
+            </exception>
+            <remarks>
+            <note>
+            <b>IMPORTANT:</b> This method does not perform the schema updates within a transaction
+            because that will be impractical for large databases and also due to limitations of
+            YugaByte Postgres.  This means that you'll need to take care to ensure that your
+            schema scripts are well tested and bulletproof and you should also consider backing
+            up your database to be very safe.
+            </note>
+            </remarks>
+        </member>
+        <member name="T:Neon.Postgres.SchemaManagerException">
+            <summary>
+            Thrown by <see cref="T:Neon.Postgres.SchemaManager"/> when a problem is detected.
+            </summary>
+        </member>
+        <member name="M:Neon.Postgres.SchemaManagerException.#ctor(System.String)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="message">Optionally specifies the nexception message.</param>
+        </member>
+        <member name="T:Neon.Postgres.SchemaStatus">
+            <summary>
+            Enumerates the possible database states as returned by <see cref="M:Neon.Postgres.SchemaManager.GetStatusAsync"/>.
+            </summary>
+        </member>
+        <member name="F:Neon.Postgres.SchemaStatus.NotFound">
+            <summary>
+            The database doesn't exist.
+            </summary>
+        </member>
+        <member name="F:Neon.Postgres.SchemaStatus.ExistsNoSchema">
+            <summary>
+            The database exists but has no <see cref="F:Neon.Postgres.SchemaManager.DbInfoTableName"/> table 
+            with any schema information.
+            </summary>
+        </member>
+        <member name="F:Neon.Postgres.SchemaStatus.ExistsWithSchema">
+            <summary>
+            The database exists with schema information.
+            </summary>
+        </member>
+        <member name="F:Neon.Postgres.SchemaStatus.Updating">
+            <summary>
+            Another updater is currently updating the database or has failed before
+            completing the update.
+            </summary>
+        </member>
+        <member name="F:Neon.Postgres.SchemaStatus.UpgradeError">
+            <summary>
+            An error occured during the previous update indicating that the database
+            schema may have been partially updated.  It's likely that manual intervention
+            may be necessary to rollback to the previous schema version or manually
+            apply the remaining updates.
+            </summary>
+        </member>
+    </members>
+</doc>

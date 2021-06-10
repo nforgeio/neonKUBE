@@ -55,7 +55,7 @@ Follow the steps below to configure a development or test workstation:
 
 5. Uninstall **Powershell 6x** if installed.
 
-6. Install the latest **64-bit** production release of PowerShell 7 from [here](https://github.com/PowerShell/PowerShell/releases) (`PowerShell-#.#.#-win.x64.msi`)
+6. Install the latest **64-bit** production release of PowerShell 7.1.3 (or greater) from [here](https://github.com/PowerShell/PowerShell/releases) (`PowerShell-#.#.#-win.x64.msi`)
 
 7. Enable PowerShell script execution via (in a CMD window as administrator):
     ```
@@ -75,7 +75,8 @@ Follow the steps below to configure a development or test workstation:
 
 10. Install some SDKs:
 
-   * Install **.NET Core SDK v3.1.403** from [here](https://dotnet.microsoft.com/download/dotnet-core/3.1)
+   * Install **.NET Core SDK 3.1.409** from [here](https://dotnet.microsoft.com/download/dotnet-core/3.1)
+   * Install **.NET 5.0 SDK 5.0.300** from [here](https://dotnet.microsoft.com/download/dotnet/5.0)
    * Install **.NET Framework 4.8 Developer Pack** from [here](https://dotnet.microsoft.com/download/thank-you/net48-developer-pack)
 
 11. Enable **WSL2**:

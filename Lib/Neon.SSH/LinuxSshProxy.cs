@@ -362,7 +362,7 @@ namespace Neon.SSH
             if (!thread.Join(timeout))
             {
                 //LogLine($"*** DEADLOCK BREAK: {actionName}");
-                thread.Abort();
+                //thread.Abort();
                 //LogLine($"*** DEADLOCK BREAK COMPLETE: {actionName}");
             }
         }

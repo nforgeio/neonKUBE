@@ -1,4 +1,4 @@
-﻿#Requires -Version 7.0 -RunAsAdministrator
+﻿#Requires -Version 7.1.3 -RunAsAdministrator
 #------------------------------------------------------------------------------
 # FILE:         includes.ps1
 # CONTRIBUTOR:  Jeff Lill
@@ -103,7 +103,7 @@ function IsRelease
 {
     $branch = GitBranch $env:NF_ROOT
 
-	return $rel -or ($branch -like "release-*")
+	return ($branch -like "release-*")
 }
 
 #------------------------------------------------------------------------------
@@ -118,7 +118,7 @@ function TagAsLatest
 {
 	$branch = GitBranch $env:NF_ROOT
 
-	return $rel -or ($branch -like "release-*") -or ($branch -eq "master")
+	return ($branch -like "release-*") -or ($branch -eq "master")
 }
 
 #------------------------------------------------------------------------------
@@ -126,9 +126,6 @@ function TagAsLatest
 # registry for the current git branch by default such that when the current branch
 # name starts with "release-" the image will be pushed to "ghcr.io/neonrelease/"
 # otherwise it will be pushed to "ghcr.io/neonrelease-dev/".
-#
-# This default behavior can be overridden by setting the [$rel] or [$dev] Variable
-# to $true.  These are generally passed as arguments to the root publish script.
 
 function GetLibraryRegistry($image)
 {
@@ -142,22 +139,6 @@ function GetLibraryRegistry($image)
 
 function LibraryRegistryOrg
 {
-	if ($dev -and $rel)
-	{
-		'ERROR: $dev and $rel cannot both be $true.'
-		exit 1
-	}
-
-	if ($dev)
-	{
-		return "ghcr.io/neonrelease-dev"
-	}
-	
-	if ($rel)
-	{
-		return "ghcr.io/neonrelease"
-	}
-
 	if (IsRelease)
 	{
 		return "ghcr.io/neonrelease"
@@ -174,9 +155,6 @@ function LibraryRegistryOrg
 # name starts with "release-" the image will be pushed to "ghcr.io/neonrelease/"
 # otherwise it will be pushed to "ghcr.io/neonrelease-dev/".  The MAIN registry
 # holds the neonKUBE images tagged by cluster version.
-#
-# This default behavior can be overridden by setting the [$rel] or [$dev] Variable
-# to $true.  These are generally passed as arguments to the root publish script.
 
 function GetKubeSetupRegistry($image)
 {
@@ -190,22 +168,6 @@ function GetKubeSetupRegistry($image)
 
 function KubeSetupRegistryOrg
 {
-	if ($dev -and $rel)
-	{
-		'ERROR: $dev and $rel cannot both be $true.'
-		exit 1
-	}
-
-	if ($dev)
-	{
-		return "ghcr.io/neonkube"
-	}
-	
-	if ($rel)
-	{
-		return "ghcr.io/neonkube-dev"
-	}
-
 	if (IsRelease)
 	{
 		return "ghcr.io/neonkube"
@@ -222,9 +184,6 @@ function KubeSetupRegistryOrg
 # name starts with "release-" the image will be pushed to "ghcr.io/neonrelease/"
 # otherwise it will be pushed to "ghcr.io/neonrelease-dev/".  The BASE registry
 # holds the neonKUBE base images tagged with the component version.
-#
-# This default behavior can be overridden by setting the [$rel] or [$dev] Variable
-# to $true.  These are generally passed as arguments to the root publish script.
 
 function GetKubeBaseRegistry($image)
 {
@@ -238,22 +197,6 @@ function GetKubeBaseRegistry($image)
 
 function KubeBaseRegistryOrg
 {
-	if ($dev -and $rel)
-	{
-		'ERROR: $dev and $rel cannot both be $true.'
-		exit 1
-	}
-
-	if ($dev)
-	{
-		return "ghcr.io/neonkube-base"
-	}
-	
-	if ($rel)
-	{
-		return "ghcr.io/neonkube-base-dev"
-	}
-
 	if (IsRelease)
 	{
 		return "ghcr.io/neonkube-base"
@@ -269,9 +212,6 @@ function KubeBaseRegistryOrg
 # registry for the current git branch by default such that when the current branch
 # name starts with "release-" the image will be pushed to "ghcr.io/neonrelease/"
 # otherwise it will be pushed to "ghcr.io/neonrelease-dev/".
-#
-# This default behavior can be overridden by setting the [$rel] or [$dev] Variable
-# to $true.  These are generally passed as arguments to the root publish script.
 
 function GetNeonCloudRegistry($image)
 {
@@ -285,22 +225,6 @@ function GetNeonCloudRegistry($image)
 
 function NeonCloudRegistryOrg
 {
-	if ($dev -and $rel)
-	{
-		'ERROR: $dev and $rel cannot both be $true.'
-		exit 1
-	}
-
-	if ($dev)
-	{
-		return "ghcr.io/neonrelease"
-	}
-	
-	if ($rel)
-	{
-		return "ghcr.io/neonrelease-dev"
-	}
-
 	if (IsRelease)
 	{
 		return "ghcr.io/neonrelease"
@@ -352,12 +276,13 @@ function Log-ImageBuild
 
 	Write-Info " "
 	Write-Info "==============================================================================="
-	Write-Info "* Building $image"
+	Write-Info "* Building: $image"
 	Write-Info "==============================================================================="
+	Write-Info " "
 }
 
 #------------------------------------------------------------------------------
-# Makes any text files that will be included in Docker images Linux safe, by
+# Makes any text files that will be included in Docker images Linux safe by
 # converting CRLF line endings to LF and replacing TABs with spaces.
 
 unix-text --recursive $image_root\Dockerfile 

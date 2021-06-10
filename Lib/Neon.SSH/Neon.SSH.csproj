@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>net5.0; netcoreapp3.1; netstandard2.0; net48</TargetFrameworks>
     <OutputType>Library</OutputType>
     <LangVersion>latest</LangVersion>
     <Version>2.14.0</Version>
@@ -26,16 +26,24 @@ NOTE: This package has been tested against remote machines running Ubuntu 18.04+
     <Configurations>Debug;Release;CodeDoc</Configurations>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DocumentationFile>bin\Debug\Neon.SSH.xml</DocumentationFile>
+  <PropertyGroup Condition="'$(TargetFramework)'=='netcoreapp3.1'">
+    <DocumentationFile>bin/codedoc.netcoreapp31.xml</DocumentationFile>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DocumentationFile>bin\Release\Neon.SSH\Neon.SSH.xml</DocumentationFile>
+  <PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
+    <DocumentationFile>bin/codedoc.netstandard20.xml</DocumentationFile>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CodeDoc|AnyCPU'">
-    <DocumentationFile>bin\Release\Neon.SSH\Neon.SSH.xml</DocumentationFile>
+  <PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.1'">
+    <DocumentationFile>bin/codedoc.netstandard21.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)'=='net48'">
+    <DocumentationFile>bin/codedoc.net48.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)'=='net50'">
+    <DocumentationFile>bin/codedoc.net50.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,4 +1,4 @@
-#Requires -Version 7.0 -RunAsAdministrator
+#Requires -Version 7.1.3 -RunAsAdministrator
 #------------------------------------------------------------------------------
 # FILE:         neon-builder.ps1
 # CONTRIBUTOR:  Jeff Lill
@@ -57,8 +57,8 @@ else
     $config = "Release"
 }
 
-$msbuild     = "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\amd64\MSBuild.exe"
-$nfRoot      = "$env:NF_ROOT"
+$msbuild     = $env:MSBUILDPATH
+$nfRoot      = $env:NF_ROOT
 $nfSolution  = "$nfRoot\neonKUBE.sln"
 $nfBuild     = "$env:NF_BUILD"
 $nfLib       = "$nfRoot\Lib"

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    AssemblyExtensions.cs
+// FILE:	    NeonAssemblyExtensions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -34,7 +34,7 @@ namespace System.Reflection
     /// <summary>
     /// Implements custom <see cref="Assembly"/> extension methods.
     /// </summary>
-    public static class AssemblyExtensions
+    public static class NeonAssemblyExtensions
     {
         //---------------------------------------------------------------------
         // Private types
@@ -240,7 +240,7 @@ namespace System.Reflection
         /// company.my-project.resources.samples.sample2.txt
         /// </code>
         /// <para>
-        /// By default, calling <see cref="AssemblyExtensions.GetResourceFileSystem(Assembly, string)"/> on your project assembly 
+        /// By default, calling <see cref="NeonAssemblyExtensions.GetResourceFileSystem(Assembly, string)"/> on your project assembly 
         /// will return a <see cref="IStaticDirectory"/> with a directory structure holding all of the resources.  
         /// The paths are mapped from the resource names by converting any dots except for the last one into forward
         /// slashes. 

@@ -112,7 +112,7 @@ namespace TestNeonService
             // Connect to NATS.
 
             var connectionFactory = new ConnectionFactory();
-            var natOptions = ConnectionFactory.GetDefaultOptions();
+            var natOptions        = ConnectionFactory.GetDefaultOptions();
 
             natOptions.Servers = new string[] { natsServerUri };
 

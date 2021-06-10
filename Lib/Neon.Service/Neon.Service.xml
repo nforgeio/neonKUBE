@@ -1,0 +1,1178 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Neon.Service</name>
+    </assembly>
+    <members>
+        <member name="T:Neon.Service.MetricsMode">
+            <summary>
+            Used control how or whether a <see cref="T:Neon.Service.NeonService"/>  publishes Prometheus metrics.
+            </summary>
+        </member>
+        <member name="F:Neon.Service.MetricsMode.Disabled">
+            <summary>
+            Metrics publishing is disabled.
+            </summary>
+        </member>
+        <member name="F:Neon.Service.MetricsMode.Scrape">
+            <summary>
+            Metrics will be scraped by Prometheus.
+            </summary>
+        </member>
+        <member name="F:Neon.Service.MetricsMode.ScrapeIgnoreErrors">
+            <summary>
+            <para>
+            Metrics will scraped by Prometheus but any port conflicts or any endpoint
+            registration errors thrown by <b>HttpListener</b> on Windows will be ignored.
+            </para>
+            <note>
+            This mode is really intended for test environments where these errors aren't
+            relevent.  We don't recommend this for production deployments.
+            </note>
+            </summary>
+        </member>
+        <member name="F:Neon.Service.MetricsMode.Push">
+            <summary>
+            Metrics will be pushed to a Prometheus <b>Pushgateway</b>.
+            </summary>
+        </member>
+        <member name="T:Neon.Service.MetricsOptions">
+            <summary>
+            Specifies options for a <see cref="T:Neon.Service.NeonService"/>.  This is initialized to reasonable defaults.
+            </summary>
+            <remarks>
+            <para>
+            These options allow developers to customize some service behaviors.  This is
+            is exposed as the <see cref="P:Neon.Service.NeonService.MetricsOptions"/> property and is initialized
+            to reasonable default values.  Developers may modify these options as desired 
+            before calling <see cref="M:Neon.Service.NeonService.RunAsync(System.Boolean)"/> to start their service.
+            </para>
+            <para>
+            Prometheus metrics capturing is disabled by default.  You can change this by 
+            setting <see cref="P:Neon.Service.MetricsOptions.Mode"/> to <see cref="F:Neon.Service.MetricsMode.Scrape"/>, <see cref="F:Neon.Service.MetricsMode.ScrapeIgnoreErrors"/>,
+            or <see cref="F:Neon.Service.MetricsMode.Push"/>.  The two scrape modes expect that Prometheus will
+            be perodically reading metrics from the service via the HTTP endpoint specified
+            by <see cref="P:Neon.Service.MetricsOptions.Port"/> and <see cref="P:Neon.Service.MetricsOptions.Path"/>.
+            </para>
+            <note>
+            The <see cref="F:Neon.Service.MetricsMode.ScrapeIgnoreErrors"/> mode is somewhat specialized and is
+            intended for testing environments and is not recommended for production.
+            </note>
+            <note>
+            <para>
+            Built-in Prometheus scraping support is limited to HTTP and not HTTPS and no authentication
+            is enforced.  Pushgateway support can use HTTPS as well as HTTP, but we don't support
+            authentication.  
+            </para>
+            <para>
+            For more complex scenarios, just leave <see cref="P:Neon.Service.MetricsOptions.Mode"/><c>==</c><see cref="F:Neon.Service.MetricsMode.Disabled"/>
+            and configure <b>prometheus-net</b> yourself before calling <see cref="M:Neon.Service.NeonService.RunAsync(System.Boolean)"/>.  We're
+            trying to address 80% scenarios to reduce a bit of service related boilerplate code but <b>prometheus-net</b>
+            is quite easy to configure.
+            </para>
+            </note>
+            <note>
+            For ASPNET applications, we recommend that you leave metrics collection disabled here and 
+            configure middleware to handle the metrics; this will automatically much more detailed web
+            related metrics.  You can use the standard <b>prometheus-net</b> middleware builder extension.
+            </note>
+            </remarks>
+        </member>
+        <member name="P:Neon.Service.MetricsOptions.Mode">
+            <summary>
+            Enables Prometheus and controls how metrics are published.
+            </summary>
+        </member>
+        <member name="P:Neon.Service.MetricsOptions.Port">
+            <summary>
+            Specifies the TCP port for the local HTTP listener that exposes metrics
+            for scraping by Prometheus.
+            </summary>
+        </member>
+        <member name="P:Neon.Service.MetricsOptions.Path">
+            <summary>
+            Specifies the URL path for the local HTTP listener that exposes metrics
+            for scraping by Prometheus.
+            </summary>
+        </member>
+        <member name="P:Neon.Service.MetricsOptions.PushUrl">
+            <summary>
+            Specifies the target Prometheus Pushgateway for <see cref="F:Neon.Service.MetricsMode.Push"/> mode.
+            </summary>
+        </member>
+        <member name="P:Neon.Service.MetricsOptions.PushInterval">
+            <summary>
+            Specifies how often metrics will be pushed to the target Prometheus Pushgateway for 
+            <see cref="F:Neon.Service.MetricsMode.Push"/> mode.  This defaults to <b>5 seconds</b>.
+            </summary>
+        </member>
+        <member name="P:Neon.Service.MetricsOptions.PushLabels">
+            <summary>
+            Optionally specifies additional labels to be identify the source for <see cref="F:Neon.Service.MetricsMode.Push"/> mode.
+            </summary>
+        </member>
+        <member name="P:Neon.Service.MetricsOptions.GetCollector">
+            <summary>
+            Optionally configures a callback that can return an additional metrics collector for the service.
+            </summary>
+        </member>
+        <member name="M:Neon.Service.MetricsOptions.Validate">
+            <summary>
+            Validates the options.
+            </summary>
+            <exception cref="T:System.ArgumentException">Thrown for any errors.</exception>
+        </member>
+        <member name="T:Neon.Service.NamespaceDoc">
+            <summary>
+            This namespace includes types that implement much of the boilerplate code for a service 
+            application suitable for deploying as a Docker container, a Kubernetes pod, or just a 
+            stand alone service.
+            </summary>
+        </member>
+        <member name="T:Neon.Service.NeonService">
+            <summary>
+            Handy base class for application services.  This class handles process termination signals when
+            running on Linux, OS/X, and similar environments and also provides some features to help you run
+            unit tests on your service.
+            </summary>
+            <remarks>
+            <para>
+            Basing your service implementations on the <see cref="N:Neon.Service"/> class will
+            make them easier to test via integration with the <b>ServiceFixture</b> from
+            the <b>Neon.Xunit</b> library by providing some useful abstractions over 
+            service configuration, startup and shutdown including a <see cref="T:Neon.Service.ProcessTerminator"/>
+            to handle termination signals from Linux or Kubernetes.
+            </para>
+            <para>
+            This class is pretty easy to use.  Simply derive your service class from <see cref="T:Neon.Service.NeonService"/>
+            and implement the <see cref="M:Neon.Service.NeonService.OnRunAsync"/> method.  <see cref="M:Neon.Service.NeonService.OnRunAsync"/> will be called when 
+            your service is started.  This is where you'll implement your service.  You should perform any
+            initialization and then call <see cref="M:Neon.Service.NeonService.SetRunningAsync"/> to indicate that the service is ready for
+            business.
+            </para>
+            <note>
+            Note that calling <see cref="M:Neon.Service.NeonService.SetRunningAsync"/> after your service has initialized is important
+            because the <b>NeonServiceFixture</b> won't allow tests to proceed until the service
+            indicates that it's ready.  This is necessary to avoid unit test race conditions.
+            </note>
+            <para>
+            Note that your <see cref="M:Neon.Service.NeonService.OnRunAsync"/> method should generally not return until the 
+            <see cref="P:Neon.Service.NeonService.Terminator"/> signals it to stop.  Alternatively, you can throw a <see cref="T:Neon.Common.ProgramExitException"/>
+            with an optional process exit code to proactively exit your service.
+            </para>
+            <note>
+            All services should properly handle <see cref="P:Neon.Service.NeonService.Terminator"/> stop signals so services deployed as
+            containers will stop promptly and cleanly (this also applies to services running in unit tests).  
+            Your terminate handler method must return within a set period of time (30 seconds by default) 
+            to avoid killed by by Docker or Kubernetes.  This is probably the trickiest thing you'll need to implement.
+            For asynchronous service implementations, you consider passing the <see cref="P:Neon.Service.ProcessTerminator.CancellationToken"/>
+            to all async method calls.
+            </note>
+            <note>
+            This class uses the <b>DEV_WORKSTATION</b> environment variable to determine whether
+            the service is running in test mode or not.  This variable will typically be defined
+            on developer workstations as well as CI/CD machines.  This variable must never be
+            defined for production environments.  You can use the <see cref="P:Neon.Service.NeonService.InProduction"/>
+            or <see cref="P:Neon.Service.NeonService.InDevelopment"/> properties to check this.
+            </note>
+            <code source="..\..\Snippets\Snippets.NeonService\Program-Basic.cs" language="c#" title="Simple example showing a basic service implementation:"/>
+            <para><b>CONFIGURATION</b></para>
+            <para>
+            Services are generally configured using environment variables and/or configuration
+            files.  In production, environment variables will actually come from the environment
+            after having been initialized by the container image or passed by Kubernetes when
+            starting the service container.  Environment variables are retrieved by name
+            (case sensitive).
+            </para>
+            <para>
+            Configuration files work the same way.  They are either present in the service 
+            container image or mounted to the container as a secret or config file by Kubernetes. 
+            Configuration files are specified by their path (case sensitive) within the
+            running container.
+            </para>
+            <para>
+            This class provides some abstractions for managing environment variables and 
+            configuration files so that services running in production or as a unit test
+            can configure themselves using the same code for both environments. 
+            </para>
+            <para>
+            Services should use the <see cref="M:Neon.Service.NeonService.GetEnvironmentVariable(System.String,System.String)"/> method to 
+            retrieve important environment variables rather than using <see cref="M:System.Environment.GetEnvironmentVariable(System.String)"/>.
+            In production, this simply returns the variable directly from the current process.
+            For tests, the environment variable will be returned from a local dictionary
+            that was expicitly initialized by calls to <see cref="M:Neon.Service.NeonService.SetEnvironmentVariable(System.String,System.String)"/>.
+            This local dictionary allows the testing of multiple services at the same
+            time with each being presented their own environment variables.
+            </para>
+            <para>
+            You may also use the <see cref="M:Neon.Service.NeonService.LoadEnvironmentVariables(System.String,System.Func{System.String,System.String})"/>
+            methods to load environment variables from a text file (potentially encrypted via
+            <see cref="T:Neon.Cryptography.NeonVault"/>).  This will typically be done only for unit tests.
+            </para>
+            <para>
+            Configuration files work similarily.  You'll use <see cref="M:Neon.Service.NeonService.GetConfigFilePath(System.String)"/>
+            to map a logical file path to a physical path.  The logical file path is typically
+            specified as the path where the configuration file will be located in production.
+            This can be any valid path with in a running production container and since we're
+            currently Linux centric, will typically be a Linux file path like <c>/etc/MYSERVICE.yaml</c>
+            or <c>/etc/MYSERVICE/config.yaml</c>.
+            </para>
+            <para>
+            For production, <see cref="M:Neon.Service.NeonService.GetConfigFilePath(System.String)"/> will simply return the file
+            path passed so that the configuration file located there will referenced.  For
+            testing, <see cref="M:Neon.Service.NeonService.GetConfigFilePath(System.String)"/> will return the path specified by
+            an earlier call to <see cref="M:Neon.Service.NeonService.SetConfigFilePath(System.String,System.String,System.Func{System.String,System.String})"/> or to a
+            temporary file initialized by previous calls to <see cref="M:Neon.Service.NeonService.SetConfigFile(System.String,System.String,System.Boolean)"/>
+            or <see cref="M:Neon.Service.NeonService.SetConfigFile(System.String,System.Byte[])"/>.  This indirection provides a 
+            consistent way to run services in production as well as in tests, including tests
+            running multiple services simultaneously.
+            </para>
+            <para><b>DISPOSE IMPLEMENTATION</b></para>
+            <para>
+            All services, especially those that create unmanaged resources like ASP.NET services,
+            sockets, NATS clients, HTTP clients, thread etc. should override and implement 
+            <see cref="M:Neon.Service.NeonService.Dispose(System.Boolean)"/>  to ensure that any of these resources are proactively 
+            disposed.  Your method should call the base class version of the method first before 
+            disposing these resources.
+            </para>
+            <code language="C#">
+            protected override Dispose(bool disposing)
+            {
+                base.Dispose(disposing);
+                
+                if (appHost != null)
+                {
+                    appHost.Dispose();
+                    appHost = null;
+                }
+            }
+            </code>
+            <para>
+            The <b>disposing</b> parameter is passed as <c>true</c> when the base <see cref="M:Neon.Service.NeonService.Dispose"/>
+            method was called or <c>false</c> if the garbage collector is finalizing the instance
+            before discarding it.  The difference is subtle and most services can safely ignore
+            this parameter (other than passing it through to the base <see cref="M:Neon.Service.NeonService.Dispose(System.Boolean)"/>
+            method).
+            </para>
+            <para>
+            In the example above, the service implements an ASP.NET web service where <c>appHost</c>
+            was initialized as the <c>IWebHost</c> actually implementing the web service.  The code
+            ensures that the <c>appHost</c> isn't already disposed before disposing it.  This will
+            stop the web service and release the underlying listening socket.  You'll want to do
+            something like this for any other unmanaged resources your service might hold.
+            </para>
+            <note>
+            <para>
+            It's very important that you take care to dispose things like running web services and
+            listening sockets within your <see cref="M:Neon.Service.NeonService.Dispose(System.Boolean)"/> method.  You also need to
+            ensure that any threads you've created are terminated.  This means that you'll need
+            a way to signal threads to exit and then wait for them to actually exit.
+            </para>
+            <para>
+            This is important when testing your services with a unit testing framework like
+            Xunit because frameworks like this run all tests within the same Test Runner
+            process and leaving something like a listening socket open on a port (say port 80)
+            may prevent a subsequent test from running successfully due to it not being able 
+            to open its listening socket on port 80. 
+            </para>
+            </note>
+            <para><b>LOGGING</b></para>
+            <para>
+            Each <see cref="T:Neon.Service.NeonService"/> instance maintains its own <see cref="P:Neon.Service.NeonService.LogManager"/>
+            instance with the a default logger created at <see cref="P:Neon.Service.NeonService.Log"/>.  The log manager
+            is initialized using the <b>LOG_LEVEL</b> environment variable value which defaults
+            to <b>info</b> when not present.  <see cref="T:Neon.Diagnostics.LogLevel"/> for the possible values.
+            </para>
+            <para>
+            Note that the <see cref="P:Neon.Diagnostics.LogManager.Default"/> log manager will
+            also be initialized with the log level when the service is running in a production
+            environment so that logging in production works completely as expected.
+            </para>
+            <para>
+            For development environments, the <see cref="P:Neon.Diagnostics.LogManager.Default"/>
+            instance's log level will not be modified.  This means that loggers created from
+            <see cref="P:Neon.Diagnostics.LogManager.Default"/> may not use the same log
+            level as the service itself.  This means that library classes that create their
+            own loggers won't honor the service log level.  This is an unfortunate consequence
+            of running emulated services in the same process.
+            </para>
+            <para>
+            There are two ways to mitigate this.  First, any source code defined within the 
+            service project should be designed to create loggers from the service's <see cref="P:Neon.Service.NeonService.LogManager"/>
+            rather than using the global one.  Second, you can configure your unit test to
+            set the desired log level like:
+            </para>
+            <code language="C#">
+            LogManager.Default.SetLogLevel(LogLevel.Debug));
+            </code>
+            <note>
+            Setting the global default log level like this will impact loggers created for all
+            emulated services, but this shouldn't be a problem for more situations.
+            </note>
+            <para><b>HEALTH PROBES</b></para>
+            <para>
+            Hosting environments such as Kubernetes will often require service instances
+            to be able to report their health via health probes.  These probes are typically
+            implemented as a script that is called periodically by the hosting environment
+            with the script return code indicating the service instance health.
+            </para>
+            <para>
+            The <see cref="T:Neon.Service.NeonService"/> class supports this by optionally
+            writing a text file with various strings indicating the health status.  This file
+            will consist of a single line of text <b>without line ending characters</b>.  You'll
+            need to specify the fully qualified path to this file as an optional parameter to the 
+            <see cref="T:Neon.Service.NeonService"/> constructor.
+            </para>
+            <para><b>SERVICE DEPENDENCIES</b></para>
+            <para>
+            Services often depend on other services to function, such as a database, rest API, etc.
+            <see cref="T:Neon.Service.NeonService"/> provides an easy to use integrated way to wait for other
+            services to initialize themselves and become ready before your service will be allowed
+            to start.  This is a great way to avoid a blizzard of service failures and restarts
+            when starting a collection of related services on a platform like Kubernetes.
+            </para>
+            <para>
+            You can use the <see cref="P:Neon.Service.NeonService.Dependencies"/> property to control this in code via the
+            <see cref="T:Neon.Service.ServiceDependencies"/> class or configure this via environment variables: 
+            </para>
+            <code>
+            NEON_SERVICE_DEPENDENCIES_URIS=http://foo.com;tcp://10.0.0.55:1234
+            NEON_SERVICE_DEPENDENCIES_TIMEOUT_SECONDS=30
+            NEON_SERVICE_DEPENDENCIES_WAIT_SECONDS=5
+            </code>
+            <para>
+            The basic idea is that the <see cref="M:Neon.Service.NeonService.RunAsync(System.Boolean)"/> call to start your service will
+            need to successfully to establish socket connections to any service dependecy URIs 
+            before your <see cref="M:Neon.Service.NeonService.OnRunAsync"/> method will be called.  Your service will be
+            terminated if any of the services cannot be reached after the specified timeout.
+            </para>
+            <para>
+            You can also specity an additional time to wait after all services are available
+            to give them a chance to perform additional internal initialization.
+            </para>
+            <code source="..\..\Snippets\Snippets.NeonService\Program-Dependencies.cs" language="c#" title="Waiting for service dependencies:"/>
+            <para><b>PROMETHEUS METRICS</b></para>
+            <para>
+            <see cref="T:Neon.Service.NeonService"/> can enable services to publish Prometheus metrics with a
+            single line of code; simply set <see cref="P:Neon.Service.NeonService.MetricsOptions"/>.<see cref="P:Neon.Service.MetricsOptions.Mode"/> to
+            <see cref="F:Neon.Service.MetricsMode.Scrape"/> before calling <see cref="M:Neon.Service.NeonService.RunAsync(System.Boolean)"/>.  This configures
+            your service to publish metrics via HTTP via <b>http://0.0.0.0:</b><see cref="F:Neon.Net.NetworkPorts.NeonPrometheusScrape"/><b>/metrics/</b>.
+            We've resistered port <see cref="F:Neon.Net.NetworkPorts.NeonPrometheusScrape"/> with Prometheus as a standard port
+            to be used for micro services running in Kubernetes or on other container platforms to make it 
+            easy configure scraping for a cluster.
+            </para>
+            <para>
+            You can also configure a custom port and path or configure metrics push to a Prometheus
+            Pushgateway using other <see cref="P:Neon.Service.NeonService.MetricsOptions"/> properties.  You can also fully customize
+            your Prometheus configuration by leaving this disabled in <see cref="P:Neon.Service.NeonService.MetricsOptions"/>
+            and setting things up using the standard <b>prometheus-net</b> mechanisms before calling
+            <see cref="M:Neon.Service.NeonService.RunAsync(System.Boolean)"/>.
+            </para>
+            <code source="..\..\Snippets\Snippets.NeonService\Program-Dependencies.cs" language="c#" title="Waiting for service dependencies:"/>
+            <para><b>NETCORE Runtime METRICS</b></para>
+            <para>
+            We highly recommend that you also enable .NET Runtime related metrics for services targeting
+            .NET Core 2.2 or greater.
+            </para>
+            <note>
+            Although the .NET Core 2.2+ runtimes are supported, the runtime apparently has some issues that
+            may prevent this from working properly, so that's not recommended.  Note that there's currently
+            no support for any .NET Framework runtime.
+            </note>
+            <para>
+            Adding support for this is easy, simply add a reference to the <a href="https://www.nuget.org/packages/prometheus-net.DotNetRuntime">prometheus-net.DotNetRuntime</a>
+            package to your service project and then assign a function callback to <see cref="P:Neon.Service.MetricsOptions.GetCollector"/>
+            that configures runtime metrics collection, like:
+            </para>
+            <code source="..\..\Snippets\Snippets.NeonService\Program-Metrics.cs" language="c#" title="Service metrics example:"/>
+            <para>
+            You can also customize the the runtime metrics emitted like this:
+            </para>
+            <code source="..\..\Snippets\Snippets.NeonService\Program-RuntimeMetrics.cs" language="c#" title="Service and .NET Runtime metrics:"/>
+            <para><b>SERVICE: FULL MEAL DEAL!</b></para>
+            <para>
+            Here's a reasonable template you can use to begin implementing your service projects with 
+            all features enabled:
+            </para>
+            <code source="..\..\Snippets\Snippets.NeonService\Program-FullMealDeal.cs" language="c#" title="Full Neon.Service template:"/>
+            </remarks>
+        </member>
+        <member name="T:Neon.Service.NeonService.FileInfo">
+            <summary>
+            Holds information about configuration files.
+            </summary>
+        </member>
+        <member name="P:Neon.Service.NeonService.FileInfo.PhysicalPath">
+            <summary>
+            The physical path to the configuration file.
+            </summary>
+        </member>
+        <member name="P:Neon.Service.NeonService.FileInfo.Data">
+            <summary>
+            The file data as bytes or as a string encoded as UTF-8 encode bytes.
+            </summary>
+        </member>
+        <member name="P:Neon.Service.NeonService.FileInfo.TempFile">
+            <summary>
+            Set if the physical file is temporary.
+            </summary>
+        </member>
+        <member name="M:Neon.Service.NeonService.FileInfo.Dispose">
+            <summary>
+            Dispose the file.
+            </summary>
+        </member>
+        <member name="F:Neon.Service.NeonService.GlobalLogging">
+            <summary>
+            This controls whether any <see cref="T:Neon.Service.NeonService"/> instances will use the global
+            <see cref="P:Neon.Diagnostics.LogManager.Default"/> log manager for logging or maintain its own
+            log manager.  This defaults to <c>true</c> which will be appropriate for most
+            production situations.  It may be useful to disable this for some unit tests.
+            </summary>
+        </member>
+        <member name="P:Neon.Service.NeonService.IsTestMode">
+            <summary>
+            Returns <c>true</c> if the service is running in test mode.
+            </summary>
+        </member>
+        <member name="M:Neon.Service.NeonService.GetNeonKubeUserFolder">
+            <summary>
+            Returns the path the folder holding user-specific Kubernetes files.
+            </summary>
+            <returns>The folder path.</returns>
+        </member>
+        <member name="P:Neon.Service.NeonService.PasswordsFolder">
+            <summary>
+            Returns path to the folder holding the encryption passwords.
+            </summary>
+            <returns>The folder path.</returns>
+        </member>
+        <member name="M:Neon.Service.NeonService.LookupPassword(System.String)">
+            <summary>
+            Looks up a password given its name.
+            </summary>
+            <param name="passwordName">The password name.</param>
+            <returns>The password value.</returns>
+            <exception cref="T:System.Collections.Generic.KeyNotFoundException">Thrown if the password doesn't exist.</exception>
+        </member>
+        <member name="M:Neon.Service.NeonService.#ctor(System.String,System.String,System.String,Neon.Service.ServiceMap)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="name">The name of this service within <see cref="P:Neon.Service.NeonService.ServiceMap"/>.</param>
+            <param name="version">
+            Optionally specifies the version of your service formatted as a valid <see cref="T:Neon.Common.SemanticVersion"/>.
+            This will default to <b>"unknown"</b> when not set or when the value passed is invalid.
+            </param>
+            <param name="statusFilePath">
+            Optionally specifies the path where the service will update its status (for external health probes).
+            See the class documentation for more information <see cref="N:Neon.Service"/>.
+            </param>
+            <param name="serviceMap">
+            Optionally specifies a service map describing this service and potentially other services.
+            Service maps can be used to run services locally on developer workstations via <b>Neon.Xunit.NeonServiceFixture</b>
+            or other means to avoid port conflicts or to emulate a cluster of services without Kubernetes
+            or containers.  This is a somewhat advanced topic that needs documentation.
+            </param>
+            <exception cref="T:System.Collections.Generic.KeyNotFoundException">
+            Thrown if there is no service description for <paramref name="name"/>
+            within the <see cref="P:Neon.Service.NeonService.ServiceMap"/>.
+            </exception>
+        </member>
+        <member name="P:Neon.Service.NeonService.Dependencies">
+            <summary>
+            Used to specify other services that must be reachable via the network before a
+            <see cref="T:Neon.Service.NeonService"/> will be allowed to start.  This is exposed via the
+            <see cref="P:Neon.Service.NeonService.Dependencies"/> where these values can be configured in
+            code before <see cref="M:Neon.Service.NeonService.RunAsync(System.Boolean)"/> is called or they can
+            also be configured via environment variables as described in <see cref="T:Neon.Service.ServiceDependencies"/>.
+            </summary>
+        </member>
+        <member name="M:Neon.Service.NeonService.Finalize">
+            <summary>
+            Finalizer.
+            </summary>
+        </member>
+        <member name="M:Neon.Service.NeonService.Dispose">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Service.NeonService.Dispose(System.Boolean)">
+            <summary>
+            Releases all associated resources.
+            </summary>
+            <param name="disposing">Pass <c>true</c> if we're disposing, <c>false</c> if we're finalizing.</param>
+        </member>
+        <member name="P:Neon.Service.NeonService.InProduction">
+            <summary>
+            Returns <c>true</c> when the service is running in production,
+            when the <b>DEV_WORKSTATION</b> environment variable is
+            <b>not defined</b>.  The <c>NeonServiceFixure</c> will set this
+            to <c>true</c> explicitly as well.
+            </summary>
+        </member>
+        <member name="P:Neon.Service.NeonService.InDevelopment">
+            <summary>
+            Returns <c>true</c> when the service is running in development
+            or test mode, when the <b>DEV_WORKSTATION</b> environment variable 
+            is <b>defined</b>.
+            </summary>
+        </member>
+        <member name="P:Neon.Service.NeonService.Name">
+            <summary>
+            Returns the service name.
+            </summary>
+        </member>
+        <member name="P:Neon.Service.NeonService.ServiceMap">
+            <summary>
+            Returns the service map (if any).
+            </summary>
+        </member>
+        <member name="P:Neon.Service.NeonService.Description">
+            <summary>
+            Returns the service description for this service (if any).
+            </summary>
+        </member>
+        <member name="P:Neon.Service.NeonService.GitVersion">
+            <summary>
+            Returns GIT branch and commit the service was built from as
+            well as an optional indication the the build branch had 
+            uncomitted changes (e.g. was dirty).
+            </summary>
+        </member>
+        <member name="P:Neon.Service.NeonService.Endpoints">
+            <summary>
+            Returns the dictionary mapping case sensitive service endpoint names to endpoint information.
+            </summary>
+        </member>
+        <member name="P:Neon.Service.NeonService.BaseUri">
+            <summary>
+            <para>
+            For services with exactly one network endpoint, this returns the base
+            URI to be used to access the service.
+            </para>
+            <note>
+            This will throw a <see cref="T:System.InvalidOperationException"/> if the service
+            defines no endpoints or has multiple endpoints.
+            </note>
+            </summary>
+            <exception cref="T:System.InvalidOperationException">
+            Thrown when the service does not define exactly one endpoint or <see cref="P:Neon.Service.NeonService.Description"/> is not set.
+            </exception>
+        </member>
+        <member name="P:Neon.Service.NeonService.MetricsOptions">
+            <summary>
+            <para>
+            Prometheus metrics options.  To enable metrics collection for non-ASPNET applications,
+            we recommend that you simply set <see cref="P:Neon.Service.MetricsOptions.Mode"/><c>==</c><see cref="F:Neon.Service.MetricsMode.Scrape"/>
+            before calling <see cref="M:Neon.Service.NeonService.OnRunAsync"/>.
+            </para>
+            <para>
+            See <see cref="P:Neon.Service.NeonService.MetricsOptions"/> for more details.
+            </para>
+            </summary>
+        </member>
+        <member name="P:Neon.Service.NeonService.LogManager">
+            <summary>
+            Returns the service's log manager.
+            </summary>
+        </member>
+        <member name="P:Neon.Service.NeonService.Log">
+            <summary>
+            Returns the service's default logger.
+            </summary>
+        </member>
+        <member name="P:Neon.Service.NeonService.Terminator">
+            <summary>
+            Returns the service's <see cref="T:Neon.Service.ProcessTerminator"/>.  This can be used
+            to handle termination signals.
+            </summary>
+        </member>
+        <member name="P:Neon.Service.NeonService.Arguments">
+            <summary>
+            Returns the list of command line arguments passed to the service.  This
+            defaults to an empty list.
+            </summary>
+        </member>
+        <member name="P:Neon.Service.NeonService.Status">
+            <summary>
+            Returns the service current running status.
+            </summary>
+        </member>
+        <member name="M:Neon.Service.NeonService.SetStatusAsync(Neon.Service.NeonServiceStatus)">
+            <summary>
+            Updates the service status.  This is typically called internally by this
+            class but service code may set this to <see cref="F:Neon.Service.NeonServiceStatus.Unhealthy"/>
+            when there's a problem and back to <see cref="F:Neon.Service.NeonServiceStatus.Running"/>
+            when the service is healthy again.
+            </summary>
+            <param name="status">The new status.</param>
+        </member>
+        <member name="P:Neon.Service.NeonService.ExitCode">
+            <summary>
+            Returns the exit code returned by the service.
+            </summary>
+        </member>
+        <member name="P:Neon.Service.NeonService.ExitException">
+            <summary>
+            Returns any abnormal exception thrown by the derived <see cref="M:Neon.Service.NeonService.OnRunAsync"/> method.
+            </summary>
+        </member>
+        <member name="M:Neon.Service.NeonService.SetArguments(System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+            Initializes <see cref="P:Neon.Service.NeonService.Arguments"/> with the command line arguments passed.
+            </summary>
+            <param name="args">The arguments.</param>
+            <returns>The service instance so developers can chain fluent style calls.</returns>
+        </member>
+        <member name="M:Neon.Service.NeonService.SetRunningAsync">
+            <summary>
+            Called by <see cref="M:Neon.Service.NeonService.OnRunAsync"/> implementation after they've completed any
+            initialization and are ready for traffic.  This sets <see cref="P:Neon.Service.NeonService.Status"/> to
+            <see cref="F:Neon.Service.NeonServiceStatus.Running"/>.
+            </summary>
+        </member>
+        <member name="M:Neon.Service.NeonService.RunAsync(System.Boolean)">
+            <summary>
+            Starts the service if it's not already running.  This will call <see cref="M:Neon.Service.NeonService.OnRunAsync"/>,
+            which is your code that actually implements the service.  Note that any service dependencies
+            specified by <see cref="P:Neon.Service.NeonService.Dependencies"/> will be verified as ready before <see cref="M:Neon.Service.NeonService.OnRunAsync"/>
+            will be called.
+            </summary>
+            <param name="disableProcessExit">
+            Optionally specifies that the hosting process should not be terminated 
+            when the service exists.  This is typically used for testing or debugging.
+            This defaults to <c>false</c>.
+            </param>
+            <remarks>
+            <note>
+            For production, this method will not return until the service is expicitly 
+            stopped via a call to <see cref="M:Neon.Service.NeonService.Stop"/> or the <see cref="P:Neon.Service.NeonService.Terminator"/> 
+            handles a stop signal.  For test environments, this method will call
+            <see cref="M:Neon.Service.NeonService.OnRunAsync"/> on a new thread and returns immediately while the
+            service continues to run in parallel.
+            </note>
+            <para>
+            Service implementations must honor <see cref="P:Neon.Service.NeonService.Terminator"/> termination
+            signals by exiting the <see cref="M:Neon.Service.NeonService.OnRunAsync"/> method reasonably quickly (within
+            30 seconds by default) when these occur.  They can do this by passing 
+            <see cref="P:Neon.Service.ProcessTerminator.CancellationToken"/> for <c>async</c> calls
+            and then catching the <see cref="T:System.Threading.Tasks.TaskCanceledException"/> and returning
+            from <see cref="M:Neon.Service.NeonService.OnRunAsync"/>.
+            </para>
+            <para>
+            Another technique for synchronous code is to explicitly check the 
+            <see cref="P:Neon.Service.ProcessTerminator.CancellationToken"/> token's  
+            <see cref="P:System.Threading.CancellationToken.IsCancellationRequested"/> property and 
+            return from your <see cref="M:Neon.Service.NeonService.OnRunAsync"/> method when this is <c>true</c>.
+            You'll need to perform this check frequently so you may need
+            to use timeouts to prevent blocking code from blocking for too long.
+            </para>
+            </remarks>
+            <returns>The service exit code.</returns>
+            <remarks>
+            <note>
+            It is not possible to restart a service after it's been stopped.
+            </note>
+            </remarks>
+        </member>
+        <member name="M:Neon.Service.NeonService.Stop">
+            <summary>
+            <para>
+            Stops the service if it's not already stopped.  This is intended to be called by
+            external things like unit test fixtures and is not intended to be called by the
+            service itself.
+            </para>
+            </summary>
+            <exception cref="T:System.TimeoutException">
+            Thrown if the service did not exit gracefully in time before it would have 
+            been killed (e.g. by Kubernetes or Docker).
+            </exception>
+            <remarks>
+            <note>
+            It is not possible to restart a service after it's been stopped.
+            </note>
+            <para>
+            This is intended for internal use or managing unit test execution and is not intended 
+            for use by the service to stop itself.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:Neon.Service.NeonService.Exit(System.Int32)">
+            <summary>
+            Used by services to stop themselves, specifying an optional process exit code.
+            </summary>
+            <param name="exitCode">The optional exit code (defaults to <b>0</b>).</param>
+            <remarks>
+            This works by setting <see cref="P:Neon.Service.NeonService.ExitCode"/> if <paramref name="exitCode"/> is non-zero,
+            signalling process termination on another thread and then throwing a <see cref="T:Neon.Common.ProgramExitException"/> 
+            on the current thread.  This will generally cause the current thread or task to terminate
+            immediately and any other properly implemented threads and tasks to terminate gracefully
+            when they receive the termination signal.
+            </remarks>
+        </member>
+        <member name="M:Neon.Service.NeonService.OnRunAsync">
+            <summary>
+            Called to actually implement the service.
+            </summary>
+            <returns>The the progam exit code.</returns>
+            <remarks>
+            <para>
+            Services should perform any required initialization and then they must call <see cref="M:Neon.Service.NeonService.SetRunningAsync"/>
+            to indicate that the service should transition into the <see cref="F:Neon.Service.NeonServiceStatus.Running"/>
+            state.  This is very important because the service test fixture requires the service to be
+            in the running state before it allows tests to proceed.  This is necessary to avoid unit test 
+            race conditions.
+            </para>
+            <para>
+            This method should return the program exit code or throw a <see cref="T:Neon.Common.ProgramExitException"/>
+            to exit with the program exit code.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:Neon.Service.NeonService.LoadEnvironmentVariables(System.String,System.Func{System.String,System.String})">
+            <summary>
+            <para>
+            Loads environment variables formatted as <c>NAME=VALUE</c> from a text file as service
+            environment variables.  The file will be decrypted using <see cref="T:Neon.Cryptography.NeonVault"/> if necessary.
+            </para>
+            <note>
+            Blank lines and lines beginning with '#' will be ignored.
+            </note>
+            </summary>
+            <param name="path">The input file path.</param>
+            <param name="passwordProvider">
+            Optionally specifies the password provider function to be used to locate the
+            password required to decrypt the source file when necessary.  The password will 
+            use a default password provider <paramref name="passwordProvider"/> is <c>null</c>.
+            See the remarks below.
+            </param>
+            <exception cref="T:System.IO.FileNotFoundException">Thrown if the file doesn't exist.</exception>
+            <exception cref="T:System.FormatException">Thrown for file formatting problems.</exception>
+            <remarks>
+            <para>
+            The default password provider assumes that you have neonDESKTOP installed and may be
+            specifying passwords in the `~/.neonkube/passwords` folder (relative to the current
+            user's home directory).  This will be harmless if you don't have neonDESKTOP installed;
+            it just probably won't find any passwords.
+            </para>
+            <para>
+            Implement a custom password provider function if you need something different.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:Neon.Service.NeonService.SetEnvironmentVariable(System.String,System.String)">
+            <summary>
+            Sets or deletes a service environment variable.
+            </summary>
+            <param name="name">The variable name (case sensitive).</param>
+            <param name="value">The variable value or <c>null</c> to remove the variable.</param>
+            <returns>The service instance so developers can chain fluent style calls.</returns>
+            <remarks>
+            <note>
+            Environment variable names are to be considered to be case sensitive since
+            this is how Linux treats them and it's very common to be deploying services
+            to Linux.
+            </note>
+            </remarks>
+        </member>
+        <member name="M:Neon.Service.NeonService.GetEnvironmentVariable(System.String,System.String)">
+            <summary>
+            Returns the value of an environment variable.
+            </summary>
+            <param name="name">The environment variable name (case sensitive).</param>
+            <param name="def">The value to be returned when the environment variable doesn't exist (defaults to <c>null</c>).</param>
+            <returns>The variable value or <paramref name="def"/> if the variable doesn't exist.</returns>
+        </member>
+        <member name="M:Neon.Service.NeonService.SetConfigFilePath(System.String,System.String,System.Func{System.String,System.String})">
+            <summary>
+            Maps a logical configuration file path to an actual file on the
+            local machine.  This is used for unit testing to map a file on
+            the local workstation to the path where the service expects the
+            find to be.
+            </summary>
+            <param name="logicalPath">The logical file path (typically expressed as a Linux path).</param>
+            <param name="physicalPath">The physical path to the file on the local workstation.</param>
+            <param name="passwordProvider">
+            Optionally specifies the password provider function to be used to locate the
+            password required to decrypt the source file when necessary.  The password will 
+            use a default password provider <paramref name="passwordProvider"/> is <c>null</c>.
+            See the remarks below.
+            </param>
+            <returns>The service instance so developers can chain fluent style calls.</returns>
+            <exception cref="T:System.IO.FileNotFoundException">Thrown if there's no file at <paramref name="physicalPath"/>.</exception>
+            <remarks>
+            <para>
+            The default password provider assumes that you have neonDESKTOP installed and may be
+            specifying passwords in the `~/.neonkube/passwords` folder (relative to the current
+            user's home directory).  This will be harmless if you don't have neonDESKTOP installed;
+            it just probably won't find any passwords.
+            </para>
+            <para>
+            Implement a custom password provider function if you need something different.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:Neon.Service.NeonService.SetConfigFile(System.String,System.String,System.Boolean)">
+            <summary>
+            Maps a logical configuration file path to a temporary file holding the
+            string contents passed encoded as UTF-8.  This is typically used for
+            initializing confguration files for unit testing.
+            </summary>
+            <param name="logicalPath">The logical file path (typically expressed as a Linux path).</param>
+            <param name="contents">The content string.</param>
+            <param name="linuxLineEndings">
+            Optionally convert any Windows style line endings (CRLF) into Linux 
+            style endings (LF).  This defaults to <c>false</c>.
+            </param>
+            <returns>The service instance so developers can chain fluent style calls.</returns>
+        </member>
+        <member name="M:Neon.Service.NeonService.SetConfigFile(System.String,System.Byte[])">
+            <summary>
+            Maps a logical configuration file path to a temporary file holding the
+            byte contents passed.  This is typically used initializing confguration
+            files for unit testing.
+            </summary>
+            <param name="logicalPath">The logical file path (typically expressed as a Linux path).</param>
+            <param name="contents">The content bytes.</param>
+            <returns>The service instance so developers can chain fluent style calls.</returns>
+        </member>
+        <member name="M:Neon.Service.NeonService.GetConfigFilePath(System.String)">
+            <summary>
+            Returns the physical path for the confguration file whose logical path is specified.
+            </summary>
+            <param name="logicalPath">The logical file path (typically expressed as a Linux path).</param>
+            <returns>The physical path for the configuration file or <c>null</c> if the logical file path is not present.</returns>
+            <remarks>
+            <note>
+            This method does not verify that the physical file actually exists.
+            </note>
+            </remarks>
+        </member>
+        <member name="T:Neon.Service.NeonServiceStatus">
+            <summary>
+            Enumerates the possible <see cref="T:Neon.Service.NeonService"/> running states.
+            </summary>
+        </member>
+        <member name="F:Neon.Service.NeonServiceStatus.NotStarted">
+            <summary>
+            The service has not been started.
+            </summary>
+        </member>
+        <member name="F:Neon.Service.NeonServiceStatus.Starting">
+            <summary>
+            The service is in the process of starting but is not yet 
+            fully initialized.
+            </summary>
+        </member>
+        <member name="F:Neon.Service.NeonServiceStatus.Running">
+            <summary>
+            The service is running and ready for traffic.
+            </summary>
+        </member>
+        <member name="F:Neon.Service.NeonServiceStatus.Unhealthy">
+            <summary>
+            The service is running but is not healthy.
+            </summary>
+        </member>
+        <member name="F:Neon.Service.NeonServiceStatus.Terminated">
+            <summary>
+            The service has terminated.
+            </summary>
+        </member>
+        <member name="T:Neon.Service.ProcessTerminator">
+            <summary>
+            Gracefully handles SIGTERM signals sent to a process to terminate itself.
+            </summary>
+            <remarks>
+            <para>
+            This class listens for a termination signal and then gives the process some time
+            to gracefully save state.  The termination timeout defaults to 10 seconds but
+            a custom value may be passed to the constructor.
+            </para>
+            <note>
+            The parent process or operating system typically enforces its own maximum
+            timeout, so your process may still be killed before your timeout is reached.
+            </note>
+            <para>
+            This class provides two ways for the application to reach to a termination
+            signal.  Programs using the async/await pattern can monitor the <see cref="T:System.Threading.CancellationToken"/>
+            returned by the <see cref="P:Neon.Service.ProcessTerminator.CancellationToken"/> property.
+            </para>
+            <para>
+            Applications may also use <see cref="M:Neon.Service.ProcessTerminator.AddHandler(System.Action)"/> to add one more more
+            methods that will be called when a termination signal is received.  Each handler
+            will be called in parallel on its own thread.
+            </para>
+            <para>
+            Finally, you map pass one or more <see cref="T:System.IDisposable"/> instances to <see cref="M:Neon.Service.ProcessTerminator.AddDisposable(System.IDisposable)"/>.
+            <see cref="M:System.IDisposable.Dispose"/> will be called for each of these in parallel
+            on its own thread.  This can be a handy way of hooking <see cref="T:Neon.Tasks.AsyncPeriodicTask"/>
+            instances and other structures into a <see cref="T:Neon.Service.ProcessTerminator"/>.
+            </para>
+            <para>
+            Applications should call <see cref="M:Neon.Service.ProcessTerminator.ReadyToExit"/> when they have gracefully stopped
+            any activities and saved state so that the process will be terminated immediately.
+            Otherwise, the process will be terminated when the parent process' timeout
+            is finally exceeded.
+            </para>
+            <para>
+            Applications can also call <see cref="M:Neon.Service.ProcessTerminator.Exit(System.Int32)"/> to proactively signal that
+            the process should terminate gracefully.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:Neon.Service.ProcessTerminator.#ctor(Neon.Diagnostics.INeonLogger,System.TimeSpan)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="log">The optional <see cref="T:Neon.Diagnostics.INeonLogger"/> used for logging.</param>
+            <param name="timeout">The optional termination timeout (defaults to 10 seconds).</param>
+        </member>
+        <member name="P:Neon.Service.ProcessTerminator.Timeout">
+            <summary>
+            Returns the termination timeout.
+            </summary>
+        </member>
+        <member name="M:Neon.Service.ProcessTerminator.AddHandler(System.Action)">
+            <summary>
+            Adds a termination handler.
+            </summary>
+            <param name="handler">The handler callback.</param>
+        </member>
+        <member name="M:Neon.Service.ProcessTerminator.AddDisposable(System.IDisposable)">
+            <summary>
+            Adds a <see cref="T:System.IDisposable"/> instance that will be disposed when the
+            process is being terminated.  This can be a handy way to hook <see cref="T:Neon.Tasks.AsyncPeriodicTask"/>
+            and other components into a <see cref="T:Neon.Service.ProcessTerminator"/>.
+            </summary>
+            <param name="disposable"></param>
+        </member>
+        <member name="P:Neon.Service.ProcessTerminator.CancellationTokenSource">
+            <summary>
+            Returns the <see cref="P:Neon.Service.ProcessTerminator.CancellationTokenSource"/> that can be used to
+            cancel any outstanding operations before terminating a process.
+            </summary>
+        </member>
+        <member name="P:Neon.Service.ProcessTerminator.CancellationToken">
+            <summary>
+            Returns the <see cref="P:Neon.Service.ProcessTerminator.CancellationToken"/> that will be cancelled when a
+            termination signal is received or <see cref="M:Neon.Service.ProcessTerminator.Exit(System.Int32)"/> is called explicitly.
+            </summary>
+        </member>
+        <member name="P:Neon.Service.ProcessTerminator.TerminateNow">
+            <summary>
+            Returns <c>true</c> when the application has been signalled to terminate.
+            </summary>
+        </member>
+        <member name="P:Neon.Service.ProcessTerminator.DisableProcessExit">
+            <summary>
+            Optionally indicates that the terminator should not actually terminate
+            the hosting process.  This is typically enabled for testing or debugging.
+            </summary>
+        </member>
+        <member name="M:Neon.Service.ProcessTerminator.ReadyToExit">
+            <summary>
+            Indicates that the application has gracefully stopped and is 
+            ready to be terminated.
+            </summary>
+        </member>
+        <member name="M:Neon.Service.ProcessTerminator.Signal">
+            <summary>
+            Emulates a signal instructing the service to close.  This will typically be used
+            for unit testing services.
+            </summary>
+            <exception cref="T:System.TimeoutException">
+            Thrown if the service did not exit gracefully in time before it would have 
+            been killed (e.g. by Kubernetes or Docker).
+            </exception>
+        </member>
+        <member name="P:Neon.Service.ProcessTerminator.StopEvent">
+            <summary>
+            Returns the <see cref="T:Neon.Tasks.AsyncManualResetEvent"/> that will be raised when
+            the service is being stopped.
+            </summary>
+        </member>
+        <member name="M:Neon.Service.ProcessTerminator.ExitInternal(System.Int32,System.Boolean)">
+            <summary>
+            Cleanly terminates the current process (for internal use).
+            </summary>
+            <param name="exitCode">Optional process exit code (defaults to <b>0</b>).</param>
+            <param name="explicitTermination">Optionally indicates that termination is not due to receiving an external signal.</param>
+        </member>
+        <member name="M:Neon.Service.ProcessTerminator.Exit(System.Int32)">
+            <summary>
+            Cleanly terminates the current process.
+            </summary>
+            <param name="exitCode">Optional process exit code (defaults to <b>0</b>).</param>
+        </member>
+        <member name="T:Neon.Service.ServiceDependencies">
+            <summary>
+            Used to specify other services that must be reachable via the network before a
+            <see cref="T:Neon.Service.NeonService"/> will be allowed to start.  This is exposed via the
+            <see cref="P:Neon.Service.NeonService.Dependencies"/> where these values can be configured in
+            code before <see cref="M:Neon.Service.NeonService.RunAsync(System.Boolean)"/> is called or they can
+            also be configured via environment variables as described in the remarks.
+            </summary>
+            <remarks>
+            <para>
+            This class will be initialized using the following environment variables when
+            present:
+            </para>
+            <code>
+            NEON_SERVICE_DEPENDENCIES_URIS=http://foo.com;tcp://10.0.0.55:1234
+            NEON_SERVICE_DEPENDENCIES_DISABLE_DNS_CHECK=false
+            NEON_SERVICE_DEPENDENCIES_TIMEOUT_SECONDS=30
+            NEON_SERVICE_DEPENDENCIES_WAIT_SECONDS=5
+            </code>
+            <para>
+            Where you can specify multiple dependency URIs separated by semicolons <b>(;)</b>
+            and the timeout and wait times as seconds.
+            </para>
+            <note>
+            Only HTTP, HTTPS, and TCP URIs are supported.
+            </note>
+            <para>
+            We also verify that your service is able to perform DNS queries by default by
+            performing a DNS name lookup for <see cref="F:Neon.Service.ServiceDependencies.DnsCheckHostName"/> (<b>net-check.neoncloud.io</b>).
+            It doesn't matter that this host name is actually registered or that you're cluster has 
+            Internet access.  We're just looking for any response from the upstream DNS server
+            to determine whether the service has and network connectivity.
+            </para>
+            <para>
+            You can disable this by setting <see cref="P:Neon.Service.ServiceDependencies.DisableDnsCheck"/><b>true</b> or
+            the <c>NEON_SERVICE_DEPENDENCIES_DISABLE_DNS_CHECK</c> environment variable to
+            <c>false</c>.
+            </para>
+            </remarks>
+        </member>
+        <member name="F:Neon.Service.ServiceDependencies.DnsCheckHostName">
+            <summary>
+            The host name used for the DNS availablity check.  It doesn't matter that this
+            host name is actually registered or that you're cluster has Internet access.
+            We're just looking for any response from the upstream DNS server.
+            </summary>
+        </member>
+        <member name="M:Neon.Service.ServiceDependencies.#ctor">
+            <summary>
+            Constructor.
+            </summary>
+        </member>
+        <member name="P:Neon.Service.ServiceDependencies.Uris">
+            <summary>
+            Specifies the URIs for external services that must be reachable via the network
+            before your service will be allowed to start.  Only HTTP, HTTPS, and TCP URIs
+            are supported.  Any URIs found in the <c>NEON_SERVICE_DEPENDENCIES_URIS</c>
+            environment variables will be added to this list.
+            </summary>
+        </member>
+        <member name="P:Neon.Service.ServiceDependencies.DisableDnsCheck">
+            <summary>
+            Use this to disable the DNS availablity check for your service.
+            </summary>
+            <remarks>
+            <para>
+            We also verify that your service is able to perform DNS queries by default by
+            performing a DNS name lookup for <see cref="F:Neon.Service.ServiceDependencies.DnsCheckHostName"/> (<b>net-check.neoncloud.io</b>).
+            It doesn't matter that this host name is actually registered or that you're cluster has 
+            Internet access.  We're just looking for any response from the upstream DNS server
+            to determine whether the service has and network connectivity.
+            </para>
+            <para>
+            You can disable this by setting <see cref="P:Neon.Service.ServiceDependencies.DisableDnsCheck"/><b>true</b> or
+            the <c>NEON_SERVICE_DEPENDENCIES_DISABLE_DNS_CHECK</c> environment variable to
+            <c>false</c>.
+            </para>
+            </remarks>
+        </member>
+        <member name="P:Neon.Service.ServiceDependencies.Timeout">
+            <summary>
+            The maximum time to wait for the services specified by <see cref="P:Neon.Service.ServiceDependencies.Uris"/> to
+            be reachable.  You service will be terminated if this is exceeded.  This
+            defaults to <b>120 seconds</b> or the <c>NEON_SERVICE_DEPENDENCIES_TIMEOUT_SECONDS</c>
+            environment variable.
+            </summary>
+        </member>
+        <member name="P:Neon.Service.ServiceDependencies.TestTimeout">
+            <summary>
+            Used in internal unit tests to override <see cref="P:Neon.Service.ServiceDependencies.Timeout"/> so tests won't have
+            to wait so long for things to timeout.
+            </summary>
+        </member>
+        <member name="P:Neon.Service.ServiceDependencies.Wait">
+            <summary>
+            Additional time to wait after the services specified by <see cref="P:Neon.Service.ServiceDependencies.Uris"/> are
+            ready before the service will be started.  This defaults to <b>0 seconds</b>
+            or the <c>NEON_SERVICE_DEPENDENCIES_WAIT_SECONDS</c> environment variable.
+            </summary>
+        </member>
+        <member name="T:ThisAssembly">
+            <summary>Provides access to the current assembly information.</summary>
+        </member>
+        <member name="T:ThisAssembly.Git">
+            <summary>Provides access to the git information for the current assembly.</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.IsDirty">
+            <summary>IsDirty: true</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.IsDirtyString">
+            <summary>IsDirtyString: true</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.RepositoryUrl">
+            <summary>Repository URL: https://github.com/nforgeio/neonKUBE</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.Branch">
+            <summary>Branch: master</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.Commit">
+            <summary>Commit: 796677986</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.Sha">
+            <summary>Sha: 7966779865d02521aa790bfde449bbc2879d58da</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.CommitDate">
+            <summary>Commit date: 2021-06-06T23:31:57-07:00</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.Commits">
+            <summary>Commits on top of base version: 472</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.Tag">
+            <summary>Tag: neonLIBRARY-v2.14.0-472-g796677986</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.BaseTag">
+            <summary>Base tag: neonLIBRARY-v2.14.0</summary>
+        </member>
+        <member name="T:ThisAssembly.Git.BaseVersion">
+            <summary>Provides access to the base version information used to determine the <see cref="T:ThisAssembly.Git.SemVer" />.</summary>      
+        </member>
+        <member name="F:ThisAssembly.Git.BaseVersion.Major">
+            <summary>Major: 2</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.BaseVersion.Minor">
+            <summary>Minor: 14</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.BaseVersion.Patch">
+            <summary>Patch: 0</summary>
+        </member>
+        <member name="T:ThisAssembly.Git.SemVer">
+            <summary>Provides access to SemVer information for the current assembly.</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.SemVer.Major">
+            <summary>Major: 2</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.SemVer.Minor">
+            <summary>Minor: 14</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.SemVer.Patch">
+            <summary>Patch: 472</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.SemVer.Label">
+            <summary>Label: neonLIBRARY</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.SemVer.DashLabel">
+            <summary>Label with dash prefix: -neonLIBRARY</summary>
+        </member>
+        <member name="F:ThisAssembly.Git.SemVer.Source">
+            <summary>Source: Tag</summary>
+        </member>
+    </members>
+</doc>

@@ -810,9 +810,9 @@ namespace Neon.Temporal
 
         /// <summary>
         /// Optionally specifies the logging level for the associated <b>temporal-proxy</b>.
-        /// This defaults to <see cref="LogLevel.None"/> which will be appropriate for most
-        /// production situations.  You may wish to set this to <see cref="LogLevel.Info"/>
-        /// or <see cref="LogLevel.Debug"/> while debugging.
+        /// This defaults to <see cref="Neon.Diagnostics.LogLevel.None"/> which will be appropriate for most
+        /// production situations.  You may wish to set this to <see cref="Neon.Diagnostics.LogLevel.Info"/>
+        /// or <see cref="Neon.Diagnostics.LogLevel.Debug"/> while debugging.
         /// </summary>
         [JsonProperty(PropertyName = "LogLevel", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "logLevel", ApplyNamingConventions = false)]

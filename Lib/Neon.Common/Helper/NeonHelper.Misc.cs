@@ -1413,10 +1413,10 @@ namespace Neon.Common
             // stripping off the file URI scheme if present and the
             // assembly's file name.
 
-            string path;
-            int pos;
+            string  path;
+            int     pos;
 
-            path = NeonHelper.StripFileScheme(assembly.CodeBase);
+            path = NeonHelper.StripFileScheme(assembly.Location);
 
             pos = path.LastIndexOfAny(new char[] { '/', '\\' });
             if (pos == -1)
@@ -1436,7 +1436,7 @@ namespace Neon.Common
             // stripping off the file URI scheme if present and the
             // assembly's file name.
 
-            return NeonHelper.StripFileScheme(assembly.CodeBase);
+            return NeonHelper.StripFileScheme(assembly.Location);
         }
 
         /// <summary>
@@ -1963,32 +1963,49 @@ namespace Neon.Common
             return converters;
         }
 
-        private static string dockerCli        = null;
-        private static string dockerComposeCli = null;
+        private static string dockerCliPath     = null;
+        private static string dockerComposePath = null;
 
         /// <summary>
         /// Returns the name of the Docker CLI execuable for the current platform.  This will
-        /// be <b>docker.exe</b> on Windows and just <b>docker</b> on Linux and OS/x.
+        /// be the fully qualified pathj to <b>docker.exe</b> on Windows and just <b>docker</b>
+        /// on Linux and OS/X.
         /// </summary>
         public static string DockerCli
         {
             get
             {
-                if (dockerCli != null)
+                if (dockerCliPath != null)
                 {
-                    return dockerCli;
+                    return dockerCliPath;
                 }
 
                 if (IsWindows)
                 {
-                    dockerCli = "docker.exe";
+                    // Docker Desktop has installed the CLI binary at different locations over time.  We'll
+                    // probe the most recent locations first.
+
+                    var potentialPaths =
+                        new string[]
+                        {
+                            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), @"Docker\Docker\resources\bin\docker.exe"),
+                            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), @"DockerDesktop\version-bin\docker.exe")
+                        };
+
+                    foreach (var path in potentialPaths)
+                    {
+                        if (File.Exists(path))
+                        {
+                            return dockerCliPath = path;
+                        }
+                    }
+
+                    throw new Exception("Cannot locate the docker CLI.");
                 }
                 else
                 {
-                    dockerCli = "docker";
+                    return dockerCliPath = "docker";
                 }
-
-                return dockerCli;
             }
         }
 
@@ -2000,21 +2017,21 @@ namespace Neon.Common
         {
             get
             {
-                if (dockerComposeCli != null)
+                if (dockerComposePath != null)
                 {
-                    return dockerComposeCli;
+                    return dockerComposePath;
                 }
 
                 if (IsWindows)
                 {
-                    dockerComposeCli = "docker-compose.exe";
+                    dockerComposePath = "docker-compose.exe";
                 }
                 else
                 {
-                    dockerComposeCli = "docker-compose";
+                    dockerComposePath = "docker-compose";
                 }
 
-                return dockerComposeCli;
+                return dockerComposePath;
             }
         }
 

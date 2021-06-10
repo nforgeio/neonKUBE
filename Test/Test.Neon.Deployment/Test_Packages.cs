@@ -38,11 +38,12 @@ namespace TestDeployment
     // These unit tests require that [neon-assistant] be running.
 
     [Trait(TestTrait.Category, TestArea.NeonDeployment)]
+    [Trait(TestTrait.Category, TestTrait.Investigate)]      // https://github.com/nforgeio/neonCLOUD/issues/149
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public partial class Test_Packages
     {
-        [Fact]
+        [Fact(Skip = "Must be run manually")]
         public async void ListPackages()
         {
             // Verify that we can get the list of packages.
@@ -61,7 +62,7 @@ namespace TestDeployment
             Assert.NotEmpty(packages);
         }
 
-        [Fact]
+        [Fact(Skip = "Must be run manually")]
         public async void MakePublic()
         {
             // Verify that we can make a package public.
@@ -75,7 +76,7 @@ namespace TestDeployment
             Assert.Contains(packages, p => p.Name == "test");
         }
 
-        [Fact]
+        [Fact(Skip = "Must be run manually")]
         public async void MakePrivate()
         {
             // Verify that we can make a package private.

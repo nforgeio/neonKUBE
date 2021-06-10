@@ -38,6 +38,8 @@ namespace MyTests
 
         public TemporalTests(TemporalFixture fixture)
         {
+            TestHelper.ResetDocker(this.GetType());
+
             var settings = new TemporalSettings()
             {
                 Namespace       = "test-domain",

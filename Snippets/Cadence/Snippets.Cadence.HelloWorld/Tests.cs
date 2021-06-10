@@ -38,6 +38,8 @@ namespace MyTests
 
         public CadenceTests(CadenceFixture fixture)
         {
+            TestHelper.ResetDocker(this.GetType());
+
             var settings = new CadenceSettings()
             {
                 DefaultDomain = "test-domain",

@@ -1344,42 +1344,5 @@ subjectAltName         = @alt_names
 
             return Convert.FromBase64String(sb.ToString());
         }
-
-        /// <summary>
-        /// Reads a RSA key from the <see cref="KeyPem"/>.
-        /// </summary>
-        /// <returns>The RSA key (or <c>null</c>).</returns>
-        private RSA ParseRSAKeyPem()
-        {
-            if (string.IsNullOrEmpty(KeyPem))
-            {
-                return null;
-            }
-
-            var bytes = ExtractPemBytes(KeyPem);
-
-            // $todo(jefflill):
-            //
-            // Hopefully we we'll be able to use the standard library once
-            // .NET Standard 2.1 is released.
-
-            // Parse the raw bytes.  This article describes what we're doing:
-            //
-            //      https://tools.ietf.org/html/rfc5208
-
-            try
-            {
-                if (PKCS8.GetType(bytes) != PKCS8.KeyInfo.PrivateKey)
-                {
-                    throw new CryptographicException("Expecting an unencrypted private RSA key.");
-                }
-            }
-            catch
-            {
-                throw new CryptographicException("Expecting a private RSA key.");
-            }
-
-            return PKCS8.PrivateKeyInfo.DecodeRSA(bytes);
-        }
     }
 }

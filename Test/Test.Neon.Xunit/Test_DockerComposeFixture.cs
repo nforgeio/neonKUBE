@@ -52,6 +52,8 @@ services:
 
         public Test_DockerComposeFixture(DockerComposeFixture fixture)
         {
+            TestHelper.ResetDocker(this.GetType());
+
             this.fixture = fixture;
 
             fixture.Start("neon-unit-test-stack", alpineDefinition);

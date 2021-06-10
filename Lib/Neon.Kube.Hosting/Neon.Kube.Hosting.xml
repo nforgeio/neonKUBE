@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Neon.Kube.Hosting</name>
+    </assembly>
+    <members>
+        <member name="T:Neon.Kube.HostingLoader">
+            <summary>
+            Cluster hosting utilities.
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.HostingLoader.Initialize">
+            <summary>
+            <para>
+            Loads the known cluster hosting manager assemblies so they'll be available
+            to <see cref="M:Neon.Kube.HostingManagerFactory.GetManager(Neon.Kube.ClusterProxy,System.String)"/>, 
+            and <see cref="M:Neon.Kube.HostingManager.Validate(Neon.Kube.ClusterDefinition)"/> when
+            they are called.
+            </para>
+            <note>
+            It is safe to call this multiple times because any calls after the first
+            will be ignored.
+            </note>
+            </summary>
+            <exception cref="T:Neon.Kube.KubeException">Thrown if multiple managers implement support for the same hosting environment.</exception>
+        </member>
+        <member name="P:Neon.Kube.HostingLoader.IsIntialized">
+            <summary>
+            Returns <c>true</c> when the loader has already been initialized.
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.HostingLoader.IsCloudEnvironment(Neon.Kube.HostingEnvironment)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Kube.HostingLoader.GetManager(Neon.Kube.HostingEnvironment)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Kube.HostingLoader.GetManager(Neon.Kube.ClusterProxy,System.String)">
+            <inheritdoc/>
+        </member>
+    </members>
+</doc>

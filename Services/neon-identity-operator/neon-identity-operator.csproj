@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
     <OutputType>Exe</OutputType>
     <RootNamespace>NeonIdentityOperator</RootNamespace>
     <Configurations>Debug;Release;CodeDoc</Configurations>
@@ -24,7 +24,7 @@
     <PackageReference Include="Neon.Common" Version="10000.0.9-local" />
     <PackageReference Include="Neon.Postgres" Version="10000.0.9-local" />
     <PackageReference Include="Neon.Service" Version="10000.0.9-local" />
-    <PackageReference Include="Npgsql" Version="5.0.0" />
+    <PackageReference Include="Npgsql" Version="5.0.5" />
   </ItemGroup>
 
   <ItemGroup>

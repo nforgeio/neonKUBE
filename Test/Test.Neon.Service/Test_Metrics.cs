@@ -607,9 +607,9 @@ namespace TestNeonService
 
                 // Verify some .NET Runtime metrics
 
-                Assert.True(metrics.ContainsKey(@"dotnet_jit_method_seconds_total{dynamic=""false""}"));
-                Assert.True(metrics.ContainsKey(@"dotnet_gc_cpu_ratio"));
-                Assert.True(metrics.ContainsKey(@"dotnet_jit_cpu_ratio"));
+                Assert.True(metrics.ContainsKey("process_private_memory_bytes"));
+                Assert.True(metrics.ContainsKey("dotnet_exceptions_total"));
+                Assert.True(metrics.ContainsKey("dotnet_threadpool_num_threads"));
             }
 
             // Tell the service it can exit.

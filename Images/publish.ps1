@@ -1,4 +1,4 @@
-﻿#Requires -Version 7.0 -RunAsAdministrator
+﻿#Requires -Version 7.1.3 -RunAsAdministrator
 #------------------------------------------------------------------------------
 # FILE:         publish.ps1
 # CONTRIBUTOR:  Jeff Lill
@@ -31,9 +31,7 @@ param
     [switch]$services    = $false,      # Rebuild all cluster service images
     [switch]$nopush      = $false,      # Don't push to the registry
     [switch]$noprune     = $false,      # Don't prune the local Docker cache
-    [switch]$allVersions = $false,      # Rebuild all image versions
-    [switch]$rel         = $false,      # Override current branch and publish to: ghcr.io/neonrelease
-    [switch]$dev         = $false       # Override current branch and publish to: ghcr.io/neonrelease-dev
+    [switch]$allVersions = $false       # Rebuild all image versions
 )
 
 #----------------------------------------------------------

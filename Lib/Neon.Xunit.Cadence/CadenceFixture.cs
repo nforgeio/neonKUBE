@@ -70,7 +70,7 @@ namespace Neon.Xunit.Cadence
     /// are not true.
     /// </para>
     /// <para>
-    /// See <see cref="Start(CadenceSettings, string, string, string, LogLevel, bool, bool, string, bool, bool)"/>
+    /// See <see cref="Start(CadenceSettings, string, string, string, Neon.Diagnostics.LogLevel, bool, bool, bool, bool)"/>
     /// for more information about how this works.
     /// </para>
     /// <note>
@@ -151,7 +151,7 @@ services:
         /// to call this in your test class constructor instead of <see cref="ITestFixture.Start(Action)"/>.
         /// </para>
         /// <note>
-        /// You'll need to call <see cref="StartAsComposed(CadenceSettings, string, string, string, LogLevel, bool, bool, string, bool, bool)"/>
+        /// You'll need to call <see cref="StartAsComposed(CadenceSettings, string, string, string, Neon.Diagnostics.LogLevel, bool, bool, bool, bool)"/>
         /// instead when this fixture is being added to a <see cref="ComposedFixture"/>.
         /// </note>
         /// </summary>
@@ -171,7 +171,7 @@ services:
         /// </para>
         /// </param>
         /// <param name="defaultDomain">Optionally specifies the default domain for the fixture's client.  This defaults to <b>test-domain</b>.</param>
-        /// <param name="logLevel">Specifies the Cadence log level.  This defaults to <see cref="LogLevel.None"/>.</param>
+        /// <param name="logLevel">Specifies the Cadence log level.  This defaults to <see cref="Neon.Diagnostics.LogLevel.None"/>.</param>
         /// <param name="reconnect">
         /// Optionally specifies that a new Cadence connection <b>should</b> be established for each
         /// unit test case.  By default, the same connection will be reused which will save about a 
@@ -180,11 +180,6 @@ services:
         /// <param name="keepRunning">
         /// Optionally indicates that the container should remain running after the fixture is disposed.
         /// This is handy for using the Temporal web UI for port mortems after tests have completed.
-        /// </param>
-        /// <param name="hostInterface">
-        /// Optionally specifies the host interface where the container public ports will be
-        /// published.  This defaults to <see cref="ContainerFixture.DefaultHostInterface"/>
-        /// but may be customized.  This needs to be an IPv4 address.
         /// </param>
         /// <param name="noClient">
         /// Optionally disables establishing a client connection when <c>true</c>
@@ -222,7 +217,6 @@ services:
             LogLevel            logLevel      = LogLevel.None,
             bool                reconnect     = false,
             bool                keepRunning   = false,
-            string              hostInterface = null,
             bool                noClient      = false,
             bool                noReset       = false)
         {
@@ -239,7 +233,6 @@ services:
                         logLevel:        logLevel,
                         reconnect:       reconnect,
                         keepRunning:     keepRunning, 
-                        hostInterface:   hostInterface,
                         noClient:        noClient, 
                         noReset:         noReset);
                 });
@@ -264,7 +257,7 @@ services:
         /// </para>
         /// </param>
         /// <param name="defaultDomain">Optionally specifies the default domain for the fixture's client.  This defaults to <b>test-domain</b>.</param>
-        /// <param name="logLevel">Specifies the Cadence log level.  This defaults to <see cref="LogLevel.None"/>.</param>
+        /// <param name="logLevel">Specifies the Cadence log level.  This defaults to <see cref="Neon.Diagnostics.LogLevel.None"/>.</param>
         /// <param name="reconnect">
         /// Optionally specifies that a new Cadence connection <b>should</b> be established for each
         /// unit test case.  By default, the same connection will be reused which will save about a 
@@ -273,11 +266,6 @@ services:
         /// <param name="keepRunning">
         /// Optionally indicates that the container should remain running after the fixture is disposed.
         /// This is handy for using the Temporal web UI for port mortems after tests have completed.
-        /// </param>
-        /// <param name="hostInterface">
-        /// Optionally specifies the host interface where the container public ports will be
-        /// published.  This defaults to <see cref="ContainerFixture.DefaultHostInterface"/>
-        /// but may be customized.  This needs to be an IPv4 address.
         /// </param>
         /// <param name="noClient">
         /// Optionally disables establishing a client connection when <c>true</c>
@@ -304,7 +292,6 @@ services:
             LogLevel            logLevel      = LogLevel.None,
             bool                reconnect     = false,
             bool                keepRunning   = false,
-            string              hostInterface = null,
             bool                noClient      = false,
             bool                noReset       = false)
         {
@@ -330,18 +317,6 @@ services:
                         "temporal-dev_temporal-web_1",
                         "temporal-dev_temporal_1"
                     } });
-
-
-                // Select the network interface where Cadence will listen.
-
-                if (string.IsNullOrEmpty(hostInterface))
-                {
-                    hostInterface = ContainerFixture.DefaultHostInterface;
-                }
-                else
-                {
-                    Covenant.Requires<ArgumentException>(NetHelper.TryParseIPv4Address(hostInterface, out var address) && address.AddressFamily == AddressFamily.InterNetwork, nameof(hostInterface), $"[{hostInterface}] is not a valid IPv4 address.");
-                }
 
                 // Reset CadenceClient to its initial state.
 
@@ -395,7 +370,7 @@ services:
 
                 if (!noClient)
                 {
-                    // Establish the Cadence connection.
+                    // Establish the Cadence connection *via the cadence proxy).
 
                     Client = CadenceClient.ConnectAsync(settings).Result;
 

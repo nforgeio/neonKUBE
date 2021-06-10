@@ -1,0 +1,1102 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Neon.Deployment</name>
+    </assembly>
+    <members>
+        <member name="T:Neon.Deployment.AwsCli">
+            <summary>
+            <para>
+            Wraps the AWS-CLI with methods for common operations.
+            </para>
+            <note>
+            The class methods require that the <b>AWS_ACCESS_KEY_ID</b> and <b>AWS_SECRET_ACCESS_KEY</b>
+            environment variables be already set with the required AWS credentials.
+            </note>
+            </summary>
+        </member>
+        <member name="M:Neon.Deployment.AwsCli.IsS3Transient(System.Exception)">
+            <summary>
+            Used to detect transient exceptions.
+            </summary>
+            <param name="e">The potential transient exceptiopn.</param>
+            <returns><c>true</c> when the exception is transient.</returns>
+        </member>
+        <member name="M:Neon.Deployment.AwsCli.Execute(System.String[])">
+            <summary>
+            Executes an AWS-CLI command.
+            </summary>
+            <param name="args">The command and arguments.</param>
+            <returns>The <see cref="T:Neon.Common.ExecuteResponse"/> with the exit status and command output.</returns>
+        </member>
+        <member name="M:Neon.Deployment.AwsCli.ExecuteSafe(System.String[])">
+            <summary>
+            Executes an AWS-CLI command, ensuring that it completed without error.
+            </summary>
+            <param name="args">The command and arguments.</param>
+            <exception cref="T:Neon.Common.ExecuteException">Thrown for command errors.</exception>
+        </member>
+        <member name="M:Neon.Deployment.AwsCli.AddDebugOption(System.Collections.Generic.List{System.String})">
+            <summary>
+            Used to add the <b>--debug</b> option to the AWS CLI command line arguments
+            when debugging.
+            </summary>
+            <param name="args">The argument list.</param>
+            <returns>The argument list with the debug option, when enabled.</returns>
+        </member>
+        <member name="M:Neon.Deployment.AwsCli.SetCredentials(System.String,System.String,System.String,System.String)">
+            <summary>
+            Sets the AWS credential environment variables by loading them from 1Password.
+            </summary>
+            <param name="awsAccessKeyId">Optionally overrides the AWS access key ID 1Password secret name.</param>
+            <param name="awsSecretAccessKey">Optionally overrides the AWS access key 1Password secret name.</param>
+            <param name="vault">Optionally overrides the current user's 1Password vault.</param>
+            <param name="masterPassword">Optionally specifies the master 1Password.</param>
+        </member>
+        <member name="M:Neon.Deployment.AwsCli.RemoveCredentials">
+            <summary>
+            Removes the AWS credential environment variables.
+            </summary>
+        </member>
+        <member name="M:Neon.Deployment.AwsCli.S3Upload(System.String,System.String,System.Boolean,System.String)">
+            <summary>
+            Uploads a file from the local workstation to S3.
+            </summary>
+            <param name="sourcePath">The source file path.</param>
+            <param name="targetUri">
+            The target S3 URI.  This may be either an <b>s3://...</b> or 
+            <b>https://...</b> URI that references to an S3 bucket.=
+            </param>
+            <param name="metadata">
+            <para>
+            Optionally specifies HTTP metadata headers to be returned when the object
+            is downloaded from S3.  This formatted as as comma separated a list of 
+            key/value pairs like:
+            </para>
+            <example>
+            Content-Type=text,app-version=1.0.0
+            </example>
+            <note>
+            <para>
+            AWS supports <b>system</b> as well as <b>custom</b> headers.  System headers
+            include standard HTTP headers such as <b>Content-Type</b> and <b>Content-Encoding</b>.
+            Custom headers are required to include the <b>x-amz-meta-</b> prefix.
+            </para>
+            <para>
+            You don't need to specify the <b>x-amz-meta-</b> prefix for setting custom 
+            headers; the AWS-CLI detects custom header names and adds the prefix automatically. 
+            This method will strip the prefix if present before calling the AWS-CLI to ensure 
+            the prefix doesn't end up being duplicated.
+            </para>
+            </note>
+            </param>
+            <param name="gzip">Optionally indicates that the target content encoding should be set to <b>gzip</b>.</param>
+        </member>
+        <member name="M:Neon.Deployment.AwsCli.S3Download(System.String,System.String)">
+            <summary>
+            Downloads a file from S3.
+            </summary>
+            <param name="sourceUri">
+            The source S3 URI.  This may be either an <b>s3://...</b> or 
+            <b>https://...</b> URI that references to an S3 bucket.=
+            </param>
+            <param name="targetPath">The target file path.</param>
+        </member>
+        <member name="T:Neon.Deployment.DeploymentException">
+            <summary>
+            Thrown for deployement related problems.
+            </summary>
+        </member>
+        <member name="M:Neon.Deployment.DeploymentException.#ctor(System.String,System.Exception)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="message">The exception message.</param>
+            <param name="innerException">Optionally specifies an inner exception.</param>
+        </member>
+        <member name="T:Neon.Deployment.DeploymentHelper">
+            <summary>
+            Deployment related defintions and utilities.
+            </summary>
+        </member>
+        <member name="F:Neon.Deployment.DeploymentHelper.NeonProfileServicePipe">
+            <summary>
+            Identifies the named pipe used to communicate with the Neon profile
+            service running on the local workstation to query for user profile
+            information as well as secrets.
+            </summary>
+        </member>
+        <member name="T:Neon.Deployment.GitHub">
+            <summary>
+            Implements common GitHub operations via the GitHub REST API.
+            </summary>
+            <remarks>
+            <para>
+            To use this class, first call <see cref="M:Neon.Deployment.GitHub.GetCredentials"/> to load the necessary
+            credentials from 1Password and the call the desired APIs.  When you're done, it's
+            a good practice to call <see cref="M:Neon.Deployment.GitHub.ClearCredentials"/>.
+            </para>
+            <note>
+            This class currently requires that the <b>GITHUB_PAT</b> (personal access token) 
+            and <b>GITHUB_LOGIN</b> variables be available via 1Password for the current user.
+            We need <b>GITHUB_LOGIN</b> right now so we can login and screen-scrap the GitHub
+            website for package operations that don't have REST endpoints yet.
+            </note>
+            </remarks>
+        </member>
+        <member name="P:Neon.Deployment.GitHub.AccessToken">
+            <summary>
+            Returns the GitHub PAT (personal access token) or <c>null</c>.
+            </summary>
+        </member>
+        <member name="P:Neon.Deployment.GitHub.Credentials">
+            <summary>
+            Returns the GitHub user credentials or <c>null</c>.
+            </summary>
+        </member>
+        <member name="M:Neon.Deployment.GitHub.GetCredentials">
+            <summary>
+            Retrieves the necessary credentials from 1Password and caches them.
+            </summary>
+        </member>
+        <member name="M:Neon.Deployment.GitHub.ClearCredentials">
+            <summary>
+            Clears any cached credentials.
+            </summary>
+        </member>
+        <member name="M:Neon.Deployment.GitHub.EnsureCredentials">
+            <summary>
+            Ensures that the necessary credentials are loaded.
+            </summary>
+            <exception cref="T:System.Security.SecurityException">Thrown when the credentials are not available.</exception>
+        </member>
+        <member name="P:Neon.Deployment.GitHub.Packages">
+            <summary>
+            Returns the API class for managing GitHub packages.
+            </summary>
+        </member>
+        <member name="P:Neon.Deployment.GitHub.Actions">
+            <summary>
+            Returns the API class for managing GitHub Actions.
+            </summary>
+        </member>
+        <member name="T:Neon.Deployment.GitHubActionsApi">
+            <summary>
+            Implements GitHub Actions operations.
+            </summary>
+        </member>
+        <member name="T:Neon.Deployment.GitHubActionsApi.RunInfo">
+            <summary>
+            Holds important state from a workflow run.
+            </summary>
+        </member>
+        <member name="P:Neon.Deployment.GitHubActionsApi.RunInfo.Id">
+            <summary>
+            The run ID.
+            </summary>
+        </member>
+        <member name="P:Neon.Deployment.GitHubActionsApi.RunInfo.Name">
+            <summary>
+            The workflow name.
+            </summary>
+        </member>
+        <member name="P:Neon.Deployment.GitHubActionsApi.RunInfo.Status">
+            <summary>
+            The status.
+            </summary>
+        </member>
+        <member name="P:Neon.Deployment.GitHubActionsApi.RunInfo.UpdatedAtUtc">
+            <summary>
+            The time (UTC) when the run was last updated.
+            </summary>
+        </member>
+        <member name="M:Neon.Deployment.GitHubActionsApi.#ctor">
+            <summary>
+            Internal constructor.
+            </summary>
+        </member>
+        <member name="M:Neon.Deployment.GitHubActionsApi.DeleteRuns(System.String,System.String,System.TimeSpan)">
+            <summary>
+            <para>
+            Deletes workflow runs from a GitHub repo.
+            </para>
+            <note>
+            Only completed runs will be deleted.
+            </note>
+            </summary>
+            <param name="repo">Identifies the target repository.</param>
+            <param name="workflowName">
+            Optionally specifies the workflow whose runs are to be deleted otherwise
+            runs from all workflows in the repo will be deleted.
+            </param>
+            <param name="maxAge">
+            Optionally specifies the age at which workflow runs are to be deleted.  
+            This defaults to deleting all runs.
+            </param>
+            <returns>The number of runs deleted.</returns>
+        </member>
+        <member name="M:Neon.Deployment.GitHubActionsApi.DeleteRunsAsync(System.String,System.String,System.TimeSpan)">
+            <summary>
+            <para>
+            Deletes workflow runs from a GitHub repo.
+            </para>
+            <note>
+            Only completed runs will be deleted.
+            </note>
+            </summary>
+            <param name="repo">Identifies the target repository.</param>
+            <param name="workflowName">
+            Optionally specifies the workflow whose runs are to be deleted otherwise
+            runs from all workflows in the repo will be deleted.
+            </param>
+            <param name="maxAge">
+            Optionally specifies the maximum age for retained workflow runs.  This
+            defaults to <see cref="F:System.TimeSpan.Zero"/> which deletes all runs.
+            </param>
+            <returns>The number of runs deleted.</returns>
+        </member>
+        <member name="T:Neon.Deployment.GitHubPackage">
+            <summary>
+            Describes a GitHub package.
+            </summary>
+        </member>
+        <member name="M:Neon.Deployment.GitHubPackage.#ctor">
+            <summary>
+            Default constructor.
+            </summary>
+        </member>
+        <member name="P:Neon.Deployment.GitHubPackage.Name">
+            <summary>
+            Returns the package name.
+            </summary>
+        </member>
+        <member name="P:Neon.Deployment.GitHubPackage.Type">
+            <summary>
+            Returns the package type (one of the <see cref="T:Neon.Deployment.GitHubPackageType"/> values.
+            </summary>
+        </member>
+        <member name="T:Neon.Deployment.GitHubPackageApi">
+            <summary>
+            Implements GitHub Packages operations.
+            </summary>
+        </member>
+        <member name="M:Neon.Deployment.GitHubPackageApi.#ctor">
+            <summary>
+            Internal constructor.
+            </summary>
+        </member>
+        <member name="M:Neon.Deployment.GitHubPackageApi.List(System.String,System.String,Neon.Deployment.GitHubPackageType,Neon.Deployment.GitHubPackageVisibility)">
+            <summary>
+            Lists the packages for an organization.
+            </summary>
+            <param name="organization">The GitHub organization name.</param>
+            <param name="nameOrPattern">The matching pattern (see <see cref="M:Neon.Common.NeonHelper.FileWildcardRegex(System.String)"/>).</param>
+            <param name="packageType">Optionally specifies the package type.  This defaults to <see cref="F:Neon.Deployment.GitHubPackageType.Container"/>.</param>
+            <param name="visibility">Optionally specifies the visibility of the package.  This defaults to <see cref="F:Neon.Deployment.GitHubPackageVisibility.All"/></param>
+            <returns>The list of package information as a list of <see cref="T:Neon.Deployment.GitHubPackage"/> instance.</returns>
+        </member>
+        <member name="M:Neon.Deployment.GitHubPackageApi.ListAsync(System.String,System.String,Neon.Deployment.GitHubPackageType,Neon.Deployment.GitHubPackageVisibility)">
+            <summary>
+            Lists the packages for an organization.
+            </summary>
+            <param name="organization">The GitHub organization name.</param>
+            <param name="nameOrPattern">The matching pattern (see <see cref="M:Neon.Common.NeonHelper.FileWildcardRegex(System.String)"/>).</param>
+            <param name="packageType">Optionally specifies the package type.  This defaults to <see cref="F:Neon.Deployment.GitHubPackageType.Container"/>.</param>
+            <param name="visibility">Optionally specifies the visibility of the package.  This defaults to <see cref="F:Neon.Deployment.GitHubPackageVisibility.All"/></param>
+            <returns>The list of package information as a list of <see cref="T:Neon.Deployment.GitHubPackage"/> instance.</returns>
+        </member>
+        <member name="M:Neon.Deployment.GitHubPackageApi.Delete(System.String,System.String,Neon.Deployment.GitHubPackageType)">
+            <summary>
+            Deletes a specific named package or the packages that match a file pattern using
+            <b>"*"</b> and <b>"?"</b> wildcards (see <see cref="M:Neon.Common.NeonHelper.FileWildcardRegex(System.String)"/>).
+            </summary>
+            <param name="organization">The GitHub organization name.</param>
+            <param name="nameOrPattern">The package name or matching pattern (see <see cref="M:Neon.Common.NeonHelper.FileWildcardRegex(System.String)"/>).</param>
+            <param name="packageType">Optionally specifies the package type.  This defaults to <see cref="F:Neon.Deployment.GitHubPackageType.Container"/>.</param>
+        </member>
+        <member name="M:Neon.Deployment.GitHubPackageApi.DeleteAsync(System.String,System.String,Neon.Deployment.GitHubPackageType)">
+            <summary>
+            Deletes a specific named package or the packages that match a file pattern using
+            <b>"*"</b> and <b>"?"</b> wildcards (see <see cref="M:Neon.Common.NeonHelper.FileWildcardRegex(System.String)"/>).
+            </summary>
+            <param name="organization">The GitHub organization name.</param>
+            <param name="nameOrPattern">The package name or matching pattern (see <see cref="M:Neon.Common.NeonHelper.FileWildcardRegex(System.String)"/>).</param>
+            <param name="packageType">Optionally specifies the package type.  This defaults to <see cref="F:Neon.Deployment.GitHubPackageType.Container"/>.</param>
+        </member>
+        <member name="M:Neon.Deployment.GitHubPackageApi.SetVisibility(System.String,System.String,Neon.Deployment.GitHubPackageType,Neon.Deployment.GitHubPackageVisibility)">
+            <summary>
+            Makes public a specific named package or the packages that match a file pattern using
+            <b>"*"</b> and <b>"?"</b> wildcards (see <see cref="M:Neon.Common.NeonHelper.FileWildcardRegex(System.String)"/>).
+            </summary>
+            <param name="organization">The GitHub organization name.</param>
+            <param name="nameOrPattern">The package name or matching pattern.</param>
+            <param name="visibility">The new package visibility.</param>
+            <param name="packageType">Optionally specifies the package type.  This defaults to <see cref="F:Neon.Deployment.GitHubPackageType.Container"/>.</param>
+        </member>
+        <member name="M:Neon.Deployment.GitHubPackageApi.SetVisibilityAsync(System.String,System.String,Neon.Deployment.GitHubPackageType,Neon.Deployment.GitHubPackageVisibility)">
+            <summary>
+            Makes public a specific named package or the packages that match a file pattern using
+            <b>"*"</b> and <b>"?"</b> wildcards (see <see cref="M:Neon.Common.NeonHelper.FileWildcardRegex(System.String)"/>).
+            </summary>
+            <param name="organization">The GitHub organization name.</param>
+            <param name="nameOrPattern">The package name or matching pattern.</param>
+            <param name="packageType">Optionally specifies the package type.  This defaults to <see cref="F:Neon.Deployment.GitHubPackageType.Container"/>.</param>
+            <param name="visibility">The visibility to set the package to.</param>
+        </member>
+        <member name="T:Neon.Deployment.GitHubPackageType">
+            <summary>
+            Enumerates the supported GitHub package types.
+            </summary>
+        </member>
+        <member name="F:Neon.Deployment.GitHubPackageType.Npm">
+            <summary>
+            NPM package.
+            </summary>
+        </member>
+        <member name="F:Neon.Deployment.GitHubPackageType.Maven">
+            <summary>
+            Maven package.
+            </summary>
+        </member>
+        <member name="F:Neon.Deployment.GitHubPackageType.RubyGems">
+            <summary>
+            Ruby Gem.
+            </summary>
+        </member>
+        <member name="F:Neon.Deployment.GitHubPackageType.Nuget">
+            <summary>
+            Nuget package.
+            </summary>
+        </member>
+        <member name="F:Neon.Deployment.GitHubPackageType.Docker">
+            <summary>
+            Docker package (use <see cref="F:Neon.Deployment.GitHubPackageType.Container"/> for packages with namespace <b>https://ghcr.io/owner/package-name</b>).
+            </summary>
+        </member>
+        <member name="F:Neon.Deployment.GitHubPackageType.Container">
+            <summary>
+            Container image.
+            </summary>
+        </member>
+        <member name="T:Neon.Deployment.GitHubPackageVisibility">
+            <summary>
+            Enumerates the supported GitHub package visibility types.
+            </summary>
+        </member>
+        <member name="F:Neon.Deployment.GitHubPackageVisibility.All">
+            <summary>
+            All packages.
+            </summary>
+        </member>
+        <member name="F:Neon.Deployment.GitHubPackageVisibility.Public">
+            <summary>
+            Public packages.
+            </summary>
+        </member>
+        <member name="F:Neon.Deployment.GitHubPackageVisibility.Private">
+            <summary>
+            Private packages.
+            </summary>
+        </member>
+        <member name="F:Neon.Deployment.GitHubPackageVisibility.Internal">
+            <summary>
+            Internal packages.
+            </summary>
+        </member>
+        <member name="T:Neon.Deployment.GitHubRepoPath">
+            <summary>
+            Abstracts GitHub repo paths like: <b>github.com/owner/repo</b> or <b>github.com/owner/repo</b>,
+            where <b>github.com</b> is the implied server.
+            </summary>
+        </member>
+        <member name="M:Neon.Deployment.GitHubRepoPath.Parse(System.String)">
+            <summary>
+            Parses a GitHub repository path.
+            </summary>
+            <param name="path">The path, like: <b>[SERVER]/OWNER/REPO</b></param>
+            <returns>The parsed <see cref="T:Neon.Deployment.GitHubRepoPath"/>.</returns>
+            <exception cref="T:System.FormatException">Thrown when the input is invalid.</exception>
+            <remarks>
+            <note>
+            <b>github.com</b> will be assumed when no server is specified.
+            </note>
+            </remarks>
+        </member>
+        <member name="M:Neon.Deployment.GitHubRepoPath.#ctor">
+            <summary>
+            Static constructor.
+            </summary>
+        </member>
+        <member name="P:Neon.Deployment.GitHubRepoPath.Server">
+            <summary>
+            Returns the <b>server</b> part of the path.
+            </summary>
+        </member>
+        <member name="P:Neon.Deployment.GitHubRepoPath.Owner">
+            <summary>
+            Returns the <b>owner</b> part of the path.
+            </summary>
+        </member>
+        <member name="P:Neon.Deployment.GitHubRepoPath.Repo">
+            <summary>
+            Returns the <b>repo</b> part of the path.
+            </summary>
+        </member>
+        <member name="M:Neon.Deployment.GitHubRepoPath.ToString">
+            <inheritdoc/>
+        </member>
+        <member name="T:Neon.Deployment.NamespaceDoc">
+            <summary>
+            <para>
+            The <b>Neon.Deployment</b> library includes utility classes for managing deployments
+            for CI/CD.
+            </para>
+            <note>
+            These classes are not entirely general purpose at this point.  neonFORGE maintainers are
+            currently using this for CI/CD for opensource and private neonFORGE related projects.
+            We may make these more generic in the future.
+            </note>
+            </summary>
+        </member>
+        <member name="T:Neon.Deployment.OnePassword">
+            <summary>
+            Wraps the 1Password CLI.
+            </summary>
+            <remarks>
+            </remarks>
+        </member>
+        <member name="T:Neon.Deployment.OnePassword.OnePasswordStatus">
+            <summary>
+            Unfortunately, the 1Password CLI doesn't appear to return specific
+            exit codes detailing the for specific error yet.  We're going to 
+            hack this by examining the response text.
+            </summary>
+        </member>
+        <member name="F:Neon.Deployment.OnePassword.OnePasswordStatus.OK">
+            <summary>
+            The operation was successful.
+            </summary>
+        </member>
+        <member name="F:Neon.Deployment.OnePassword.OnePasswordStatus.SessionExpired">
+            <summary>
+            The session token has expired.
+            </summary>
+        </member>
+        <member name="F:Neon.Deployment.OnePassword.OnePasswordStatus.Other">
+            <summary>
+            Unspecified error.
+            </summary>
+        </member>
+        <member name="P:Neon.Deployment.OnePassword.Signedin">
+            <summary>
+            Returns <c>true</c> if the class is signed-in.
+            </summary>
+        </member>
+        <member name="M:Neon.Deployment.OnePassword.Configure(System.String,System.String,System.String,System.String,System.String)">
+            <summary>
+            Configures and signs into 1Password for the first time on a machine.  This
+            must be called once before <see cref="M:Neon.Deployment.OnePassword.Signin(System.String,System.String,System.String)"/> will
+            work.
+            </summary>
+            <param name="signinAddress">Specifies the 1Password signin address.</param>
+            <param name="account">Specifies the 1Password shorthand name to use for the account (e.g. "sally@neonforge.com").</param>
+            <param name="secretKey">The 1Password secret key for the account.</param>
+            <param name="masterPassword">Specified the master 1Password.</param>
+            <param name="defaultVault">Specifies the default 1Password vault.</param>
+            <remarks>
+            <para>
+            Typically, you'll first call <see cref="M:Neon.Deployment.OnePassword.Configure(System.String,System.String,System.String,System.String,System.String)"/> once
+            for a workstation to configure the signin address and 1Password secret key during manual
+            configuration.  The account shorthand name used for that operation can then be used thereafter
+            for calls to <see cref="M:Neon.Deployment.OnePassword.Signin(System.String,System.String,System.String)"/> which don't require the additional 
+            information.
+            </para>
+            <para>
+            This two-stage process enhances security because both the master password and secret
+            key are required to authenticate and the only time the secret key will need to be
+            presented for the full login which will typically done manually once.  1Password
+            securely stores the secret key on the workstation and it will never need to be present
+            as plaintext again on the machine.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:Neon.Deployment.OnePassword.Signin(System.String,System.String,System.String)">
+            <summary>
+            Signs into 1Password using just the account, master password, and default vault.  You'll
+            typically call this rather than <see cref="M:Neon.Deployment.OnePassword.Configure(System.String,System.String,System.String,System.String,System.String)"/>
+            which also requires the signin address as well as the secret key.
+            </summary>
+            <param name="account">The account's shorthand name (e.g. (e.g. "sally@neonforge.com").</param>
+            <param name="masterPassword">The master password.</param>
+            <param name="defaultVault">The default vault.</param>
+            <remarks>
+            <para>
+            Typically, you'll first call <see cref="M:Neon.Deployment.OnePassword.Configure(System.String,System.String,System.String,System.String,System.String)"/> once
+            for a workstation to configure the signin address and 1Password secret key during manual
+            configuration.  The account shorthand name used for that operation can then be used thereafter
+            for calls to this method which don't require the additional information.
+            </para>
+            <para>
+            This two-stage process enhances security because both the master password and secret
+            key are required to authenticate and the only time the secret key will need to be
+            presented for the full login which will typically done manually once.  1Password
+            securely stores the secret key on the workstation and it will never need to be present
+            as plaintext again on the machine.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:Neon.Deployment.OnePassword.Signout">
+            <summary>
+            Signs out.
+            </summary>
+        </member>
+        <member name="M:Neon.Deployment.OnePassword.GetSecretPassword(System.String,System.String)">
+            <summary>
+            Returns a named password from the current user's standard 1Password 
+            vault like [user-sally] by default or a custom named vault.
+            </summary>
+            <param name="name">The password name with optional property.</param>
+            <param name="vault">Optionally specifies a specific vault.</param>
+            <returns>The requested password (from the password's [password] field).</returns>
+            <exception cref="T:Neon.Deployment.OnePasswordException">Thrown for 1Password related problems.</exception>
+            <remarks>
+            <para>
+            The <paramref name="name"/> parameter may optionally specify the desired
+            1Password property to override the default <b>"password"</b> for this
+            method.  Properties are specified like:
+            </para>
+            <example>
+            SECRETNAME[PROPERTY]
+            </example>
+            </remarks>
+        </member>
+        <member name="M:Neon.Deployment.OnePassword.GetSecretValue(System.String,System.String)">
+            <summary>
+            Returns a named value from the current user's standard 1Password 
+            vault like [user-sally] by default or a custom named vault.
+            </summary>
+            <param name="name">The password name with optional property.</param>
+            <param name="vault">Optionally specifies a specific vault.</param>
+            <returns>The requested value (from the password's [value] field).</returns>
+            <exception cref="T:Neon.Deployment.OnePasswordException">Thrown for 1Password related problems.</exception>
+            <remarks>
+            <para>
+            The <paramref name="name"/> parameter may optionally specify the desired
+            1Password property to override the default <b>"value"</b> for this
+            method.  Properties are specified like:
+            </para>
+            <example>
+            SECRETNAME[PROPERTY]
+            </example>
+            </remarks>
+        </member>
+        <member name="M:Neon.Deployment.OnePassword.SetSessionToken(System.String)">
+            <summary>
+            Updates the session token.
+            </summary>
+            <param name="sessionToken">The new session token or <c>null</c>.</param>
+        </member>
+        <member name="M:Neon.Deployment.OnePassword.EnsureSignedIn">
+            <summary>
+            Ensures that we're signed into 1Password.
+            </summary>
+            <exception cref="T:Neon.Deployment.OnePasswordException">Thrown if we're not signed in.</exception>
+        </member>
+        <member name="M:Neon.Deployment.OnePassword.GetVault(System.String)">
+            <summary>
+            Returns the target vault name.
+            </summary>
+            <param name="vault">Optionally specifies a specific vault.</param>
+            <returns>The target vault name.</returns>
+            <exception cref="T:Neon.Deployment.OnePasswordException">Thrown for 1Password related problems.</exception>
+        </member>
+        <member name="M:Neon.Deployment.OnePassword.GetStatus(Neon.Common.ExecuteResponse)">
+            <summary>
+            Returns a <see cref="T:Neon.Deployment.OnePassword.OnePasswordStatus"/> corresponding to a 1Password CLI response.
+            </summary>
+            <param name="response">The 1Password CLI response.</param>
+            <returns>The status code.</returns>
+        </member>
+        <member name="T:Neon.Deployment.OnePasswordException">
+            <summary>
+            Thrown by the <see cref="T:Neon.Deployment.OnePassword"/> for errors.
+            </summary>
+        </member>
+        <member name="M:Neon.Deployment.OnePasswordException.#ctor(System.String,System.Exception)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="message">Optionally specifies the exception message.</param>
+            <param name="innerException">Optionally specifies an inner exception.</param>
+        </member>
+        <member name="T:Neon.Deployment.ProfileClient">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Deployment.ProfileClient.GetAwsCredentials(System.String,System.String)">
+            <summary>
+            <para>
+            Retrieves the AWS access key ID and secret access key from 1Password 
+            and sets these enviroment variables for use by the AWS-CLI:
+            </para>
+            <list type="bullet">
+                <item><c>AWS_ACCESS_KEY_ID</c></item>
+                <item><c>AWS_SECRET_ACCESS_KEY</c></item>
+            </list>
+            </summary>
+            <param name="awsAccessKeyId">Optionally specfies a custom name for the AWS <b>access key ID</b> secret.</param>
+            <param name="awsSecretAccessKey">Optionally specfies a custom name for the AWS <b>access key</b> secret.</param>
+        </member>
+        <member name="M:Neon.Deployment.ProfileClient.ClearAwsCredentials">
+            <summary>
+            <para>
+            Removes the AWS-CLI credential environment variables if present:
+            </para>
+            <list type="bullet">
+                <item><c>AWS_ACCESS_KEY_ID</c></item>
+                <item><c>AWS_SECRET_ACCESS_KEY</c></item>
+            </list>
+            </summary>
+        </member>
+        <member name="M:Neon.Deployment.ProfileClient.#ctor">
+            <summary>
+            <para>
+            Constructs a profile client with default parameters.  This is suitable for 
+            constructing from Powershell scripts.
+            </para>
+            <note>
+            <see cref="T:Neon.Deployment.ProfileClient"/> currently supports only Windows.
+            </note>
+            </summary>
+            <exception cref="T:System.NotSupportedException">Thrown when not running on Windows.</exception>
+        </member>
+        <member name="M:Neon.Deployment.ProfileClient.#ctor(System.String,System.TimeSpan)">
+            <summary>
+            <para>
+            Constructor with optional client timeout.
+            </para>
+            <note>
+            <see cref="T:Neon.Deployment.ProfileClient"/> currently supports only Windows.
+            </note>
+            </summary>
+            <param name="pipeName">Specifies the server pipe name.</param>
+            <param name="connectTimeout">Optionally specifies the connection timeout.  This defaults to <b>10 seconds</b>.</param>
+            <exception cref="T:System.NotSupportedException">Thrown when not running on Windows.</exception>
+        </member>
+        <member name="P:Neon.Deployment.ProfileClient.CacheEnabled">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Deployment.ProfileClient.Call(Neon.Deployment.IProfileRequest)">
+            <summary>
+            Submits a request to the profile server and returns the response.
+            </summary>
+            <param name="request">The request.</param>
+            <returns>The response.</returns>
+            <exception cref="T:Neon.Deployment.ProfileException">Thrown if the profile server returns an error.</exception>
+        </member>
+        <member name="M:Neon.Deployment.ProfileClient.GetProfileValue(System.String,System.Boolean)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Deployment.ProfileClient.GetSecretPassword(System.String,System.String,System.String,System.Boolean)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Deployment.ProfileClient.GetSecretValue(System.String,System.String,System.String,System.Boolean)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Deployment.ProfileClient.ClearCache">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Deployment.ProfileClient.Call(System.Collections.Generic.Dictionary{System.String,System.String})">
+            <inheritdoc/>
+        </member>
+        <member name="T:Neon.Deployment.ProfileHandlerResult">
+            <summary>
+            Describes the results returned by <see cref="T:Neon.Deployment.ProfileServer"/> handlers.
+            </summary>
+        </member>
+        <member name="M:Neon.Deployment.ProfileHandlerResult.Create(System.String)">
+            <summary>
+            Constructs a handler value result.
+            </summary>
+            <param name="value">The handler result.</param>
+            <returns>The <see cref="T:Neon.Deployment.ProfileHandlerResult"/>.</returns>
+        </member>
+        <member name="M:Neon.Deployment.ProfileHandlerResult.CreateError(Neon.Deployment.ProfileRequest,System.String,System.String)">
+            <summary>
+            Constructs an error result.
+            </summary>
+            <param name="request">Specifies the profile request or <c>null</c> when this isn't relevant.</param>
+            <param name="status">One of the <see cref="T:Neon.Deployment.ProfileStatus"/> codes.</param>
+            <param name="message">The error message.</param>
+            <returns>The <see cref="T:Neon.Deployment.ProfileHandlerResult"/>.</returns>
+            <remarks>
+            <note>
+            This method will examine the <paramref name="message"/>, looking for
+            underlying 1Password errors and will potentially override the
+            <paramref name="status"/> passed.
+            </note>
+            </remarks>
+        </member>
+        <member name="M:Neon.Deployment.ProfileHandlerResult.#ctor">
+            <summary>
+            Private constructor.
+            </summary>
+        </member>
+        <member name="P:Neon.Deployment.ProfileHandlerResult.Value">
+            <summary>
+            Specifies the value returned by the handler.
+            </summary>
+        </member>
+        <member name="P:Neon.Deployment.ProfileHandlerResult.Error">
+            <summary>
+            Returns a human readable error message.
+            </summary>
+        </member>
+        <member name="P:Neon.Deployment.ProfileHandlerResult.Status">
+            <summary>
+            Specifies one of the <see cref="T:Neon.Deployment.ProfileStatus"/> values.  This defaults
+            to <see cref="F:Neon.Deployment.ProfileStatus.OK"/>.
+            </summary>
+        </member>
+        <member name="M:Neon.Deployment.ProfileHandlerResult.ToResponse">
+            <summary>
+            Convertes the handler response into a <see cref="T:Neon.Deployment.ProfileResponse"/>.
+            </summary>
+            <returns>The <see cref="T:Neon.Deployment.ProfileResponse"/>.</returns>
+        </member>
+        <member name="T:Neon.Deployment.ProfileRequest">
+            <summary>
+            Abstracts Neon Profile Service named pipe command requests.
+            </summary>
+        </member>
+        <member name="M:Neon.Deployment.ProfileRequest.Create(System.String,System.Collections.Generic.Dictionary{System.String,System.String})">
+            <summary>
+            Creates a command with optional arguments.
+            </summary>
+            <param name="command">
+            <para>
+            The command name.
+            </para>
+            <note>
+            Argument names and values may not include commas.
+            </note>
+            </param>
+            <param name="args">The optional arguments.</param>
+            <returns>The <see cref="T:Neon.Deployment.ProfileRequest"/>.</returns>
+        </member>
+        <member name="M:Neon.Deployment.ProfileRequest.Parse(System.String)">
+            <summary>
+            Parses a request from a line of text read from the named pipe.
+            </summary>
+            <param name="commandLine">The command line.</param>
+            <returns>The <see cref="T:Neon.Deployment.ProfileRequest"/>.</returns>
+            <exception cref="T:System.FormatException">Thrown for invalid command lines.</exception>
+        </member>
+        <member name="M:Neon.Deployment.ProfileRequest.#ctor">
+            <summary>
+            Private constructor.
+            </summary>
+        </member>
+        <member name="P:Neon.Deployment.ProfileRequest.Command">
+            <summary>
+            Returns the command.
+            </summary>
+        </member>
+        <member name="P:Neon.Deployment.ProfileRequest.Args">
+            <summary>
+            Returns the standard command arguments.
+            </summary>
+        </member>
+        <member name="M:Neon.Deployment.ProfileRequest.ToString">
+            <inheritdoc/>
+        </member>
+        <member name="T:Neon.Deployment.ProfileResponse">
+            <summary>
+            Abstracts Neon Profile Service named pipe command responses.
+            </summary>
+        </member>
+        <member name="M:Neon.Deployment.ProfileResponse.Create(System.String)">
+            <summary>
+            Creates a successful command response with with a simple string value.
+            </summary>
+            <param name="value">The optional command arguments.</param>
+            <returns>The <see cref="T:Neon.Deployment.ProfileResponse"/>.</returns>
+        </member>
+        <member name="M:Neon.Deployment.ProfileResponse.Create(Newtonsoft.Json.Linq.JObject)">
+            <summary>
+            Creates a successful command response with with a JSON value.
+            </summary>
+            <param name="jObject">The JSON value.</param>
+            <returns>The <see cref="T:Neon.Deployment.ProfileResponse"/>.</returns>
+        </member>
+        <member name="M:Neon.Deployment.ProfileResponse.CreateError(System.String,System.String)">
+            <summary>
+            Creates a failed command response with an error message.
+            </summary>
+            <param name="status">The status code (one of the <see cref="T:Neon.Deployment.ProfileStatus"/> values).</param>
+            <param name="message">The error message.</param>
+            <returns>The <see cref="T:Neon.Deployment.ProfileResponse"/>.</returns>
+        </member>
+        <member name="M:Neon.Deployment.ProfileResponse.Parse(System.String)">
+            <summary>
+            Parses a request from a line of text read from the named pipe.
+            </summary>
+            <param name="responseLine">The response line.</param>
+            <returns>The <see cref="T:Neon.Deployment.ProfileResponse"/>.</returns>
+            <exception cref="T:System.FormatException">Thrown for invalid response lines.</exception>
+        </member>
+        <member name="M:Neon.Deployment.ProfileResponse.#ctor">
+            <summary>
+            Private constructor.
+            </summary>
+        </member>
+        <member name="P:Neon.Deployment.ProfileResponse.Success">
+            <summary>
+            Returns <c>true</c> for successful requests, <c>false</c> for failed ones.
+            </summary>
+        </member>
+        <member name="P:Neon.Deployment.ProfileResponse.Status">
+            <summary>
+            One of the <see cref="T:Neon.Deployment.ProfileStatus"/> values.  This
+            defaults to <see cref="F:Neon.Deployment.ProfileStatus.OK"/>.
+            </summary>
+        </member>
+        <member name="P:Neon.Deployment.ProfileResponse.Value">
+            <summary>
+            Returns the simply response string (for non-JSON responses).
+            </summary>
+        </member>
+        <member name="P:Neon.Deployment.ProfileResponse.JObject">
+            <summary>
+            Returns the <see cref="P:Neon.Deployment.ProfileResponse.JObject"/> for JSON responses.
+            </summary>
+        </member>
+        <member name="P:Neon.Deployment.ProfileResponse.Error">
+            <summary>
+            Returns the error message for failed requests.
+            </summary>
+        </member>
+        <member name="M:Neon.Deployment.ProfileResponse.ToString">
+            <inheritdoc/>
+        </member>
+        <member name="T:Neon.Deployment.ProfileServer">
+            <summary>
+            Implements a named-pipe based server that will be used to receive
+            requests from <see cref="T:Neon.Deployment.ProfileClient"/>.  This server listens
+            on a named pipe and only allows connections from other processes 
+            running on behalf of the current user.
+            </summary>
+            <remarks>
+            <note>
+            This class currently supports only Windows.
+            </note>
+            <para>
+            This server implements simple string based request response protocol,
+            where the client writes a line of text with the request and the server
+            sends a line of text as the response.  Only one request/response per
+            client pipe connection is allowed.  Requests are formatted like:
+            </para>
+            <example>
+            <b>COMMAND:</b> [ ARG1=VALUE1, ARG2=VALUE2,... ]
+            </example>
+            <para>
+            where <b>COMMAND</b> is one of the values below with one or more comma
+            separated arguments formatted as name/value pairs.  Response lines are
+            formatted like:
+            </para>
+            <example>
+            <b>OK:</b>
+            <b>OK: RESULT</b>
+            <b>OK-JSON: JSON</b>
+            <b>ERROR: MESSAGE</b>
+            </example>
+            <para>
+            where the "OK:" and "OK-JSON:" prefixes indicate that the operation succeeded.
+            Some operations like password or value lookups simply return the request result
+            as the string after the prefix.  Future operations may return a JSON result.
+            </para>
+            <para>
+            The <b>ERROR[STATUS]:</b> prefix indicates an error occured.  <b>STATUS</b> identifies
+            the specific error and the response will typically include an message describing
+            what happened.  The supported status codes are defined by <see cref="T:Neon.Deployment.ProfileStatus"/>.
+            </para>
+            <para>
+            Here are the supported commands:
+            </para>
+            <list type="table">
+            <item>
+                <term><b>GET-SECRET-PASSWORD</b></term>
+                <description>
+                <para><c>(name, [vault], [masterpassword])</c></para>
+                <para>
+                This requests a password from 1Password by <b>name</b> and <b>vault</b>, which
+                is optional and defaults to the user name as defined by the <b>userVault</b>
+                Neon Assistant setting.  The password is returned as the response.
+                </para>
+                <para>
+                <b>masterpassword</b> is optional.  This is passed in circumstances where the
+                caller already knows the master password, such as for fully automated
+                CI/CD operations.
+                </para>
+                </description>
+            </item>
+            <item>
+                <term><b>GET-SECRET-VALUE</b></term>
+                <description>
+                <para><c>(name, [vault], [masterpassword])</c></para>
+                <para>
+                This requests a secret value from 1Password by <b>name</b> and <b>vault</b>, which
+                is optional and defaults to the user name as defined by the <b>userVault</b>
+                Neon Assistant setting.  The value is returned as the response.
+                </para>
+                <para>
+                <b>masterpassword</b> is optional.  This is passed in circumstances where the
+                caller already knows the master password, such as for fully automated
+                CI/CD operations.
+                </para>
+                </description>
+            </item>
+            <item>
+                <term><b>GET-PROFILE-VALUE</b></term>
+                <description>
+                <para><c>(name)</c></para>
+                <para>
+                This requests a profile value the user's local profile by <c>NAME</c>.
+                he value is returned as the response.
+                </para>
+                </description>
+            </item>
+            <item>
+                <term><b>CALL</b></term>
+                <description>
+                <para>
+                This submits an arbitrary operation to the server, passing arguments and
+                returning a result string.  We're using this to workaround some limitations
+                with the GHCR REST API by locating the implementation in neon-assistant.
+                </para>
+                <para>
+                We may use this in the future for other neon-assistant interactions.
+                </para>
+                </description>
+            </item>
+            </list>
+            </remarks>
+        </member>
+        <member name="M:Neon.Deployment.ProfileServer.ParseSecretName(System.String)">
+            <summary>
+            <para>
+            Parses a secret name by extracting the <b>name</b> and <b>property</b>
+            components.  secret names can be formatted like: <b>NAME</b> or <b>NAME[PROPERTY]</b>.
+            </para>
+            <note>
+            When the property syntax passed is malformed, we're just going to return the
+            entire input string as the name rather than throwing an exception here.  This
+            will probably result in a failed lookup which will be reported to the user who
+            will have a good chance then of figuring out what happened.
+            </note>
+            </summary>
+            <param name="secretName">The secret name.</param>
+            <returns>An anonymous structure including the name and property (if specified).</returns>
+        </member>
+        <member name="M:Neon.Deployment.ProfileServer.#ctor(System.String,System.Int32)">
+            <summary>
+            <para>
+            Constructor.
+            </para>
+            <note>
+            <see cref="T:Neon.Deployment.ProfileServer"/> currently supports only Windows.
+            </note>
+            </summary>
+            <param name="pipeName">The server named pipe name.  This defaults to <see cref="F:Neon.Deployment.DeploymentHelper.NeonProfileServicePipe"/>.</param>
+            <param name="threadCount">Optionally specifies the number of threads to create to handle inbound requests.  This defaults to <b>1</b>.</param>
+        </member>
+        <member name="M:Neon.Deployment.ProfileServer.Start">
+            <summary>
+            Starts the server.  You should call this after configuring the handler callbacks.
+            </summary>
+            <exception cref="T:System.InvalidOperationException">Thrown if any of the handlers are not initialized.</exception>
+        </member>
+        <member name="M:Neon.Deployment.ProfileServer.Dispose">
+            <inheritdoc/>
+        </member>
+        <member name="P:Neon.Deployment.ProfileServer.GetIsReady">
+            <summary>
+            Optional callback used to determine whether the profile server implementation
+            is ready for requests.  The handler returns <c>null</c> when ready or the
+            a <see cref="T:Neon.Deployment.ProfileHandlerResult"/> error to be returned to the caller.
+            </summary>
+        </member>
+        <member name="P:Neon.Deployment.ProfileServer.GetProfileValueHandler">
+            <summary>
+            <para>
+            Callback that retrieves a profile value.  The parameters is the profile value name.
+            </para>
+            <note>
+            This must be initalized before calling <see cref="M:Neon.Deployment.ProfileServer.Start"/>.
+            </note>
+            </summary>
+        </member>
+        <member name="P:Neon.Deployment.ProfileServer.GetSecretPasswordHandler">
+            <summary>
+            <para>
+            Callback that retrieves a secret password.  The parameters are the secret name
+            optional vault and master password.
+            </para>
+            <note>
+            This must be initalized before calling <see cref="M:Neon.Deployment.ProfileServer.Start"/>.
+            </note>
+            </summary>
+        </member>
+        <member name="P:Neon.Deployment.ProfileServer.GetSecretValueHandler">
+            <summary>
+            <para>
+            Callback that retrieves a secret value.  The parameters are the secret name
+            optional vault, and master password.
+            </para>
+            <note>
+            This must be initalized before calling <see cref="M:Neon.Deployment.ProfileServer.Start"/>.
+            </note>
+            </summary>
+        </member>
+        <member name="P:Neon.Deployment.ProfileServer.CallHandler">
+            <summary>
+            <para>
+            Callback that performs an arbitrary operation.
+            </para>
+            <note>
+            This must be initalized before calling <see cref="M:Neon.Deployment.ProfileServer.Start"/>.
+            </note>
+            </summary>
+        </member>
+        <member name="M:Neon.Deployment.ProfileServer.ServerThread(System.Object)">
+            <summary>
+            Handles incoming client connections on a background thread.
+            </summary>
+            <param name="pipeIndexObject">Passes as the index into the [pipes] array this thread will use for its server side pipe.</param>
+        </member>
+        <member name="T:Neon.Deployment.XenServer">
+            <summary>
+            XenServer/XCP-ng related deployment utilities.
+            </summary>
+        </member>
+        <member name="M:Neon.Deployment.XenServer.IsRunning(System.String,System.String,System.String)">
+            <summary>
+            Determines whether a specific XenServer/XCP-ng host machine is running by logging into it.
+            </summary>
+            <param name="addressOrFQDN">Specifies the IP address or hostname for the target XenServer host machine.</param>
+            <param name="username">Specifies the username to be used to connect to the host.</param>
+            <param name="password">Specifies the host password.</param>
+            <returns><c>true</c> if the host machine is running.</returns>
+        </member>
+        <member name="M:Neon.Deployment.XenServer.RemoveVMs(System.String,System.String,System.String,System.String)">
+            <summary>
+            Connects to a XenServer/XCP-ng host and removes any VMs matching the name or file
+            wildcard pattern, forceably shutting the VMs down when necessary.  Note that the
+            VM's drives will also be removed.
+            </summary>
+            <param name="addressOrFQDN">Specifies the IP address or hostname for the target XenServer host machine.</param>
+            <param name="username">Specifies the username to be used to connect to the host.</param>
+            <param name="password">Specifies the host password.</param>
+            <param name="nameOrPattern">Specifies the VM name or pattern including '*' or '?' wildcards to be used to remove VMs.</param>
+        </member>
+    </members>
+</doc>

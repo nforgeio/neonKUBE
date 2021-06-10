@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Common;
@@ -39,35 +40,6 @@ namespace Neon.Xunit
     /// </summary>
     public static class TestHelper
     {
-        /// <summary>
-        /// Creates and optionally populates a temporary test folder with test files.
-        /// </summary>
-        /// <param name="files">
-        /// The files to be created.  The first item in each tuple entry will be 
-        /// the local file name and the second the contents of the file.
-        /// </param>
-        /// <returns>The <see cref="TempFolder"/>.</returns>
-        /// <remarks>
-        /// <note>
-        /// Ensure that the <see cref="TempFolder"/> returned is disposed so it and
-        /// any files within will be deleted.
-        /// </note>
-        /// </remarks>
-        public static TempFolder CreateTestFolder(params Tuple<string, string>[] files)
-        {
-            var folder = new TempFolder();
-
-            if (files != null)
-            {
-                foreach (var file in files)
-                {
-                    File.WriteAllText(Path.Combine(folder.Path, file.Item1), file.Item2 ?? string.Empty);
-                }
-            }
-
-            return folder;
-        }
-
         /// <summary>
         /// Creates and populates a temporary test folder with a test file.
         /// </summary>
@@ -608,6 +580,112 @@ namespace Neon.Xunit
                 if (testDisposable != null)
                 {
                     testDisposable.Dispose();
+                }
+            }
+        }
+
+        // Use by [ResetDocker()] to determine when we've started running tests from
+        // a new test class so the method will know when to actually reset Docker state.
+
+        private static Type previousTestClass = null;
+
+        /// <summary>
+        /// Resets Docker state by removing all containers, volumes, networks and
+        /// optionally the Docker image cache.  This is useful ensuring that Docker
+        /// is in a known state.  This also disables <b>swarm mode</b>.
+        /// </summary>
+        /// <param name="testClass">Specifies the current test class or pass <c>null</c> to force the reset).</param>
+        /// <param name="pruneImages">Optionally prunes the Docker image cache.</param>
+        /// <remarks>
+        /// <para>
+        /// This method works by comparing the <paramref name="testClass"/> passed
+        /// with any previous test class passed.  The method only resets the Docker
+        /// state when the test class changes.  This prevents Docker from being reset
+        /// when every test in the same class runs (which will probably break tests).
+        /// </para>
+        /// <note>
+        /// This does not support multiple test classes performing parallel Docker operations.
+        /// </note>
+        /// </remarks>
+        public static void ResetDocker(Type testClass, bool pruneImages = false)
+        {
+            if (testClass != null && testClass == previousTestClass)
+            {
+                return;
+            }
+
+            previousTestClass = testClass;
+
+            // Make sure we're not in Swarm mode.  Note we're not checking the error code here
+            // because it returns an error when Docker isn't in swarm mode.
+
+            NeonHelper.ExecuteCapture(NeonHelper.DockerCli, new object[] { "swarm", "leave", "--force" });
+
+            // Remove all containers
+
+            var result = NeonHelper.ExecuteCapture(NeonHelper.DockerCli, new object[] { "ps", "--all", "--quiet" });
+
+            result.EnsureSuccess();
+
+            using (var reader = new StringReader(result.OutputText))
+            {
+                foreach (var name in reader.Lines())
+                {
+                    if (string.IsNullOrEmpty(name))
+                    {
+                        continue;
+                    }
+
+                    NeonHelper.ExecuteCapture(NeonHelper.DockerCli, new object[] { "rm", name, "--force" }).EnsureSuccess();
+                }
+            }
+
+            // Remove all volumes
+
+            result = NeonHelper.ExecuteCapture(NeonHelper.DockerCli, new object[] { "volume", "ls", "--format", "{{ .Name }}" });
+
+            result.EnsureSuccess();
+
+            using (var reader = new StringReader(result.OutputText))
+            {
+                foreach (var name in reader.Lines())
+                {
+                    if (string.IsNullOrEmpty(name))
+                    {
+                        continue;
+                    }
+
+                    NeonHelper.ExecuteCapture(NeonHelper.DockerCli, new object[] { "volume", "rm", name.Trim(), "--force" }).EnsureSuccess();
+                }
+            }
+
+            // Remove all the networks.  Note that some of these like [bridge], [host], and [null] are
+            // built-in and cannot be deleted.
+
+            result = NeonHelper.ExecuteCapture(NeonHelper.DockerCli, new object[] { "volume", "ls", "--format", "{{ .Name }}" });
+
+            result.EnsureSuccess();
+
+            using (var reader = new StringReader(result.OutputText))
+            {
+                foreach (var name in reader.Lines())
+                {
+                    switch (name)
+                    {
+                        case "":
+                        case "bridge":
+                        case "host":
+                        case "null":
+
+                            // These networks cannot be deleted
+
+                            break;
+
+                        default:
+
+                            NeonHelper.ExecuteCapture(NeonHelper.DockerCli, new object[] { "network", "rm", name.Trim(), "--force" }).EnsureSuccess();
+                            break;
+                    }
                 }
             }
         }

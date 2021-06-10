@@ -186,7 +186,9 @@ namespace Neon.HyperV
         /// HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Virtual Machine\Auto\OSName
         /// </example>
         /// </remarks>
+#pragma warning disable CA1416
         public bool IsNestedVirtualization => Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Virtual Machine\Auto", "OSName", null) != null;
+#pragma warning restore CA1416
 
         /// <summary>
         /// Creates a virtual machine. 

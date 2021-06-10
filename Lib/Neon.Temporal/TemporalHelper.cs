@@ -1023,7 +1023,7 @@ namespace Neon.Temporal.Internal
         }
 
         /// <summary>
-        /// Converts a Neon <see cref="LogLevel"/> value into a <b>temporal-proxy</b> compatible
+        /// Converts a Neon <see cref="Neon.Diagnostics.LogLevel"/> value into a <b>temporal-proxy</b> compatible
         /// log level string.
         /// </summary>
         /// <param name="logLevel">The input log level.</param>

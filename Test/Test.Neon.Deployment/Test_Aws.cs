@@ -60,7 +60,7 @@ namespace TestDeployment
             }
         }
 
-        [Fact]
+        [Fact(Skip = "Must be run manually")]
         public void S3UploadDownload()
         {
             using (var tempUploadFile = new TempFile())

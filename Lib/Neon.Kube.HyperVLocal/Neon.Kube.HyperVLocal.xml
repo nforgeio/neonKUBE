@@ -1,0 +1,99 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Neon.Kube.HyperVLocal</name>
+    </assembly>
+    <members>
+        <member name="T:Neon.Kube.HyperVLocalHostingManager">
+            <summary>
+            Manages cluster provisioning on the local workstation using Microsoft Hyper-V virtual machines.
+            This is typically used for development and test purposes.
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.HyperVLocalHostingManager.Load">
+            <summary>
+            Ensures that the assembly hosting this hosting manager is loaded.
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.HyperVLocalHostingManager.#ctor">
+            <summary>
+            Creates an instance that is only capable of validating the hosting
+            related options in the cluster definition.
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.HyperVLocalHostingManager.#ctor(Neon.Kube.ClusterProxy,System.String)">
+            <summary>
+            Creates an instance that is capable of provisioning a cluster on the local machine using Hyper-V.
+            </summary>
+            <param name="cluster">The cluster being managed.
+            </param>
+            <param name="logFolder">
+            The folder where log files are to be written, otherwise or <c>null</c> or 
+            empty if logging is disabled.
+            </param>
+        </member>
+        <member name="M:Neon.Kube.HyperVLocalHostingManager.Dispose(System.Boolean)">
+            <inheritdoc/>
+        </member>
+        <member name="P:Neon.Kube.HyperVLocalHostingManager.HostingEnvironment">
+            <inheritdoc/>
+        </member>
+        <member name="P:Neon.Kube.HyperVLocalHostingManager.RequiresNodeAddressCheck">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Kube.HyperVLocalHostingManager.Validate(Neon.Kube.ClusterDefinition)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Kube.HyperVLocalHostingManager.AddProvisioningSteps(Neon.Kube.SetupController{Neon.Kube.NodeDefinition})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Kube.HyperVLocalHostingManager.AddPostProvisioningSteps(Neon.Kube.SetupController{Neon.Kube.NodeDefinition})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Kube.HyperVLocalHostingManager.AddDeprovisoningSteps(Neon.Kube.SetupController{Neon.Kube.NodeDefinition})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Kube.HyperVLocalHostingManager.GetSshEndpoint(System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="P:Neon.Kube.HyperVLocalHostingManager.RequiresAdminPrivileges">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Kube.HyperVLocalHostingManager.GetDataDisk(Neon.SSH.LinuxSshProxy)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Kube.HyperVLocalHostingManager.GetVmName(Neon.Kube.NodeDefinition)">
+            <summary>
+            Returns the name to use for naming the virtual machine hosting the node.
+            </summary>
+            <param name="node">The target node.</param>
+            <returns>The virtual machine name.</returns>
+        </member>
+        <member name="M:Neon.Kube.HyperVLocalHostingManager.ExtractNodeName(System.String)">
+            <summary>
+            Attempts to extract the cluster node name from a virtual machine name.
+            </summary>
+            <param name="machineName">The virtual machine name.</param>
+            <returns>
+            The extracted node name if the virtual machine belongs to this 
+            cluster or else the empty string.
+            </returns>
+        </member>
+        <member name="M:Neon.Kube.HyperVLocalHostingManager.PrepareHyperV">
+            <summary>
+            Performs any required Hyper-V initialization before cluster nodes can be provisioned.
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.HyperVLocalHostingManager.ProvisionVM(Neon.Kube.NodeSshProxy{Neon.Kube.NodeDefinition})">
+            <summary>
+            Creates a Hyper-V virtual machine for a cluster node.
+            </summary>
+            <param name="node">The target node.</param>
+        </member>
+        <member name="M:Neon.Kube.HyperVLocalHostingManager.Finish">
+            <summary>
+            Perform any necessary global post Hyper-V provisioning steps.
+            </summary>
+        </member>
+    </members>
+</doc>
