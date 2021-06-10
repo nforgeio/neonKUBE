@@ -109,16 +109,6 @@ namespace Neon.Kube
 
         /// <summary>
         /// The local network port used for proxying requests to
-        /// the Kibanarnetes dashboard for the current cluster.  This 
-        /// defaults to <see cref="KubeConst.KibanaDashboardProxyPort"/>.
-        /// </summary>
-        [JsonProperty(PropertyName = "KibanaDashboardProxyPort", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "KibanaDashboardProxyPort", ApplyNamingConventions = false)]
-        [DefaultValue(KubeConst.KibanaDashboardProxyPort)]
-        public int KibanaDashboardProxyPort { get; set; } = KubeConst.KibanaDashboardProxyPort;
-
-        /// <summary>
-        /// The local network port used for proxying requests to
         /// the Prometheusrnetes dashboard for the current cluster.  This 
         /// defaults to <see cref="KubeConst.PrometheusDashboardProxyPort"/>.
         /// </summary>

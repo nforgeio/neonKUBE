@@ -1,0 +1,30 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: {{ .Values.cr.name }}-nodeport
+  {{- if .Values.watchNamespace }}
+  namespace: {{ .Values.watchNamespace }}
+  {{- else if .Values.cr.namespace }}
+  namespace: {{ .Values.cr.namespace }}
+  {{- end }}
+  labels:
+    app: {{ .Values.cr.name }}
+    app.kubernetes.io/name: {{ .Values.cr.name }}
+    app.kubernetes.io/part-of: {{ .Values.cr.name }}
+    app.kubernetes.io/version: {{ .Values.cr.spec.deployment.image_version }}
+    version: {{ .Values.cr.spec.deployment.image_version }}
+  annotations:
+    kiali.io/api-spec: 'https://kiali.io/api'
+    kiali.io/api-type: rest
+spec:
+  ports:
+    - name: http
+      protocol: TCP
+      port: 20001
+      targetPort: 20001
+      nodePort: 30007
+  selector:
+    app: {{ .Values.cr.name }}
+    version: {{ .Values.cr.spec.deployment.image_version }}
+  type: NodePort
+  sessionAffinity: ClientIP

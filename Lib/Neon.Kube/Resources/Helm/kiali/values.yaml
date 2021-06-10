@@ -59,6 +59,7 @@ cr:
       image_version: v1.28.0
       accessible_namespaces:
       - '**'
+      service_type: "ClusterIP"
     external_services:
       grafana:
         enabled: true
