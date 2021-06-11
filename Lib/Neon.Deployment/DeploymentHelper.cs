@@ -25,6 +25,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using Neon.Common;
+using Neon.IO;
 
 namespace Neon.Deployment
 {
@@ -39,5 +40,29 @@ namespace Neon.Deployment
         /// information as well as secrets.
         /// </summary>
         public const string NeonProfileServicePipe = "neon-profile-service";
+
+        /// <summary>
+        /// Clears the Powershell command history.  It's possible that scripts and
+        /// GitHub workflow runs may leave sensitive information in the command
+        /// history which could become a security vunerability.
+        /// </summary>
+        public static void ClearPowershellHistory()
+        {
+            // Inspired by:
+            //
+            //      https://www.shellhacks.com/clear-history-powershell/
+
+            using (var tempFile = new TempFile(suffix: ".ps1"))
+            {
+                File.WriteAllText(tempFile.Path, "Remove-Item (Get-PSReadlineOption).HistorySavePath");
+                
+                var exitCode = NeonHelper.ExecuteShell($"pwsh -f \"{tempFile.Path}\"");
+
+                if (exitCode != 0)
+                {
+                    throw new ExecuteException(exitCode, "Command failed.");
+                }
+            }
+        }
     }
 }
