@@ -22,7 +22,7 @@ spec:
       protocol: TCP
       port: 20001
       targetPort: 20001
-      nodePort: 30007
+      nodePort: 30005
   selector:
     app: {{ .Values.cr.name }}
     version: {{ .Values.cr.spec.deployment.image_version }}
