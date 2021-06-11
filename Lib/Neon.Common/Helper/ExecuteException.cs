@@ -61,9 +61,9 @@ namespace Neon.Common
         /// </summary>
         /// <param name="exitCode">The program exit code.</param>
         /// <param name="message">The error message.</param>
-        /// <param name="outputText">The program standard output text.</param>
-        /// <param name="errorText">The program standard error text.</param>
-        public ExecuteException(int exitCode, string message, string outputText, string errorText)
+        /// <param name="outputText">Optionally specifies the program standard output text.</param>
+        /// <param name="errorText">Optionally specifies the program standard error text.</param>
+        public ExecuteException(int exitCode, string message, string outputText = null, string errorText = null)
             : base(message)
         {
             this.ExitCode   = exitCode;
