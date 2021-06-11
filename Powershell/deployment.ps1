@@ -359,3 +359,13 @@ function Remove-XenServerVMs
 
     [Neon.Deployment.XenServer]::RemoveVMs($addressOrFQDN, $username, $password, $nameOrPattern)
 }
+
+#------------------------------------------------------------------------------
+# Removes the Powershell command history on the current machine.  This is useful
+# for ensuring the sensitive information like credentials that leak into the
+# history can be removed.
+
+function Clear-PowershellHistory
+{
+    [Neon.Deployment.DeploymentHelper]::ClearPowershellHistory()
+}
