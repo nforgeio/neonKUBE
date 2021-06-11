@@ -22,7 +22,7 @@ if not [%1]==[] set NF_ROOT=%1
 
 if exist %NF_ROOT%\neonKUBE.sln goto goodPath
 echo The [%NF_ROOT%\neonKUBE.sln] file does not exist.  Please pass the path
-echo to the Neon solution folder.
+echo to the neonKUBE solution folder.
 goto done
 
 :goodPath 
