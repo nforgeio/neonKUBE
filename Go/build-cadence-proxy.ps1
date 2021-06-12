@@ -34,44 +34,60 @@ Push-Cwd "$projectpath\cmd\cadenceproxy" | Out-Null
 
 try
 {
-    # Ensure that the build output folder exists.
-    if (!(test-path $buildPath))
+    # Ensure that the build output folder exists and remove any existing log file.
+
+    [System.IO.Directory]::CreateDirectory($buildPath);
+
+    if ([System.IO.File]::Exists($logPath))
     {
-        New-Item -ItemType Directory -Force -Path $buildPath
+        [System.IO.File]::Delete($logPath)
     }
+
+    # Change to project path
 
     Set-Cwd $projectPath | Out-Null
 
-    # Build the WINDOWS binary
+    Write-Output " "                                                                               >> $logPath 2>&1
+    Write-Output "*******************************************************************************" >> $logPath 2>&1
+    Write-Output "*                            WINDOWS CADENCE-PROXY                            *" >> $logPath 2>&1
+    Write-Output "*******************************************************************************" >> $logPath 2>&1
+    Write-Output " "                                                                               >> $logPath 2>&1
 
     $env:GOOS	= "windows"
     $env:GOARCH = "amd64"
 
-    go build -i -mod=vendor -ldflags="-w -s" -v -o $buildPath\cadence-proxy.win.exe cmd\cadenceproxy\main.go > "$logPath" 2>&1
+    go build -i -mod=vendor -ldflags="-w -s" -v -o $buildPath\cadence-proxy.win.exe cmd\cadenceproxy\main.go >> "$logPath" 2>&1
 
     $exitCode = $lastExitCode
 
     if ($exitCode -ne 0)
     {
-        Write-Error "*** ERROR[0]: [cadence-proxy] WINDOWS build failed.  Check build logs: $logPath"
-        exit $exitCode
+        throw "*** ERROR[exitcode=$exitCode]: [cadence-proxy] WINDOWS build failed.  Check build logs: $logPath"
     }
 
-    # Build the LINUX binary
+    Write-Output " "                                                                               >> $logPath 2>&1
+    Write-Output "*******************************************************************************" >> $logPath 2>&1
+    Write-Output "*                             LINUX CADENCE-PROXY                             *" >> $logPath 2>&1
+    Write-Output "*******************************************************************************" >> $logPath 2>&1
+    Write-Output " "                                                                               >> $logPath 2>&1
 
     $env:GOOS   = "linux"
     $env:GOARCH = "amd64"
+
     go build -i -mod=vendor -ldflags="-w -s" -v -o $buildPath\cadence-proxy.linux cmd\cadenceproxy\main.go >> "$logPath" 2>&1
 
     $exitCode = $lastExitCode
 
     if ($exitCode -ne 0)
     {
-        Write-Error "*** ERROR[1]: [cadence-proxy] LINUX build failed.  Check build logs: $logPath"
-        exit $exitCode
+        throw "*** ERROR[exitcode=$exitCode]: [cadence-proxy] LINUX build failed.  Check build logs: $logPath"
     }
 
-    # Build the OSX binary
+    Write-Output " "                                                                               >> $logPath 2>&1
+    Write-Output "*******************************************************************************" >> $logPath 2>&1
+    Write-Output "*                             OS/X CADENCE-PROXY                              *" >> $logPath 2>&1
+    Write-Output "*******************************************************************************" >> $logPath 2>&1
+    Write-Output " "                                                                               >> $logPath 2>&1
 
     $env:GOOS   = "darwin"
     $env:GOARCH = "amd64"
@@ -82,9 +98,14 @@ try
 
     if ($exitCode -ne 0)
     {
-        Write-Error "*** ERROR[2]: [cadence-proxy] OSX build failed.  Check build logs: $logPath"
-        exit $exitCode
+        throw "*** ERROR[exitcode=$exitCode]: [cadence-proxy] OSX build failed.  Check build logs: $logPath"
     }
+
+    Write-Output " "                                                                               >> $logPath 2>&1
+    Write-Output "*******************************************************************************" >> $logPath 2>&1
+    Write-Output "*                      COMPRESSING CADENCE-PROXY BINARIES                     *" >> $logPath 2>&1
+    Write-Output "*******************************************************************************" >> $logPath 2>&1
+    Write-Output " "                                                                               >> $logPath 2>&1
 
     # Compress the binaries to the [Neon.Cadence] project where they'll
     # be embedded as binary resources.
