@@ -29,7 +29,7 @@ namespace Neon.Deployment
         /// </summary>
         /// <param name="message">The exception message.</param>
         /// <param name="innerException">Optionally specifies an inner exception.</param>
-        public DeploymentException(string message, Exception innerException)
+        public DeploymentException(string message, Exception innerException = null)
            : base(message, innerException)
         {
         }
