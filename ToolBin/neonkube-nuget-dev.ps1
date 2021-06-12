@@ -46,8 +46,8 @@ Request-AdminPermissions
 
 # Retrieve any necessary credentials.
 
-$versionerKey  = Get-SecretValue "NUGET_VERSIONER_KEY"
-$devFeedApiKey = Get-SecretValue "NUGET_DEVFEED_KEY"
+$versionerKey  = Get-SecretValue "NUGET_VERSIONER_KEY" "group-devops"
+$devFeedApiKey = Get-SecretValue "NUGET_DEVFEED_KEY"   "group-devops"
 
 # We're going to build the Debug configuration so debugging will be easier.
 
