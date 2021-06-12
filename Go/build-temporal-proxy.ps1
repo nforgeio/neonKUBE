@@ -29,67 +29,98 @@ $env:GOPATH   = "$env:NF_ROOT\Go"
 $buildPath    = "$env:NF_BUILD"
 $projectPath  = "$env:GOPATH\src\temporal-proxy"
 $logPath      = "$buildPath\build-temporal-proxy.log"
-$orgDirectory = Get-Location
 
-Set-Cwd "$projectpath\cmd\temporalproxy"
+Push-Cwd "$projectpath\cmd\temporalproxy" | Out-Null
 
-# Ensure that the build output folder exists.
-if (!(test-path $buildPath))
+try
 {
-    New-Item -ItemType Directory -Force -Path $buildPath
+    # Ensure that the build output folder exists and remove any existing log file.
+
+    [System.IO.Directory]::CreateDirectory($buildPath);
+
+    if ([System.IO.File]::Exists($logPath))
+    {
+        [System.IO.File]::Delete($logPath)
+    }
+
+    # Change to project path
+
+    Set-Cwd $projectPath
+
+    Write-Output " "                                                                               >> $logPath 2>&1
+    Write-Output "*******************************************************************************" >> $logPath 2>&1
+    Write-Output "*                            WINDOWS CADENCE-PROXY                            *" >> $logPath 2>&1
+    Write-Output "*******************************************************************************" >> $logPath 2>&1
+    Write-Output " "                                                                               >> $logPath 2>&1
+
+    $env:GOOS	= "windows"
+    $env:GOARCH = "amd64"
+
+    go build -i -mod=vendor -ldflags="-w -s" -v -o $buildPath\temporal-proxy.win.exe cmd\temporalproxy\main.go >> "$logPath" 2>&1
+
+    $exitCode = $lastExitCode
+
+    if ($exitCode -ne 0)
+    {
+        throw "*** ERROR[exitcode=$exitCode]: [temporal-proxy] WINDOWS build failed.  Check build logs: $logPath"
+    }
+
+    Write-Output " "                                                                               >> $logPath 2>&1
+    Write-Output "*******************************************************************************" >> $logPath 2>&1
+    Write-Output "*                             LINUX CADENCE-PROXY                             *" >> $logPath 2>&1
+    Write-Output "*******************************************************************************" >> $logPath 2>&1
+    Write-Output " "                                                                               >> $logPath 2>&1
+
+    $env:GOOS   = "linux"
+    $env:GOARCH = "amd64"
+
+    go build -i -mod=vendor -ldflags="-w -s" -v -o $buildPath\temporal-proxy.linux cmd\temporalproxy\main.go >> "$logPath" 2>&1
+
+    $exitCode = $lastExitCode
+
+    if ($exitCode -ne 0)
+    {
+        throw "*** ERROR[exitcode=$exitCode]: [temporal-proxy] LINUX build failed.  Check build logs: $logPath"
+    }
+
+    Write-Output " "                                                                               >> $logPath 2>&1
+    Write-Output "*******************************************************************************" >> $logPath 2>&1
+    Write-Output "*                             OS/X CADENCE-PROXY                              *" >> $logPath 2>&1
+    Write-Output "*******************************************************************************" >> $logPath 2>&1
+    Write-Output " "                                                                               >> $logPath 2>&1
+
+    $env:GOOS   = "darwin"
+    $env:GOARCH = "amd64"
+
+    go build -i -mod=vendor -ldflags="-w -s" -v -o $buildPath\temporal-proxy.osx cmd\temporalproxy\main.go >> "$logPath" 2>&1
+
+    $exitCode = $lastExitCode
+
+    if ($exitCode -ne 0)
+    {
+        throw "*** ERROR[exitcode=$exitCode]: [temporal-proxy] OSX build failed.  Check build logs: $logPath"
+    }
+
+    Write-Output " "                                                                               >> $logPath 2>&1
+    Write-Output "*******************************************************************************" >> $logPath 2>&1
+    Write-Output "*                      COMPRESSING CADENCE-PROXY BINARIES                     *" >> $logPath 2>&1
+    Write-Output "*******************************************************************************" >> $logPath 2>&1
+    Write-Output " "                                                                               >> $logPath 2>&1
+
+    # Compress the binaries to the [Neon.Temporal] project where they'll
+    # be embedded as binary resources.
+
+    $neonTemporalResourceFolder = "$env:NF_ROOT\Lib\Neon.Temporal\Resources"
+
+    neon-build gzip "$buildPath\temporal-proxy.linux"   "$neonTemporalResourceFolder\temporal-proxy.linux.gz"   >> "$logPath" 2>&1
+    neon-build gzip "$buildPath\temporal-proxy.osx"     "$neonTemporalResourceFolder\temporal-proxy.osx.gz"     >> "$logPath" 2>&1
+    neon-build gzip "$buildPath\temporal-proxy.win.exe" "$neonTemporalResourceFolder\temporal-proxy.win.exe.gz" >> "$logPath" 2>&1
 }
-
-# Change to project path
-Set-Cwd $projectPath
-
-# Build the WINDOWS binary
-$env:GOOS	= "windows"
-$env:GOARCH = "amd64"
-go build -i -mod=vendor -ldflags="-w -s" -v -o $buildPath\temporal-proxy.win.exe cmd\temporalproxy\main.go > "$logPath" 2>&1
-
-$exitCode = $lastExitCode
-
-if ($exitCode -ne 0)
+catch
 {
-    Write-Error "*** ERROR[0]: [temporal-proxy] WINDOWS build failed.  Check build logs: $logPath"
-    Set-Cwd $orgDirectory
-    exit $exitCode
+    Write-Exception $_
 }
-
-# Build the LINUX binary
-$env:GOOS   = "linux"
-$env:GOARCH = "amd64"
-go build -i -mod=vendor -ldflags="-w -s" -v -o $buildPath\temporal-proxy.linux cmd\temporalproxy\main.go >> "$logPath" 2>&1
-
-$exitCode = $lastExitCode
-
-if ($exitCode -ne 0)
+finally
 {
-    Write-Error "*** ERROR[1]: [temporal-proxy] LINUX build failed.  Check build logs: $logPath"
-    Set-Cwd $orgDirectory
-    exit $exitCode
+    Pop-Cwd | Out-Null
 }
-
-# Build the OSX binary
-$env:GOOS   = "darwin"
-$env:GOARCH = "amd64"
-go build -i -mod=vendor -ldflags="-w -s" -v -o $buildPath\temporal-proxy.osx cmd\temporalproxy\main.go >> "$logPath" 2>&1
-
-$exitCode = $lastExitCode
-
-if ($exitCode -ne 0)
-{
-    Write-Error "*** ERROR[2]: [temporal-proxy] OSX build failed.  Check build logs: $logPath"
-    Set-Cwd $orgDirectory
-    exit $exitCode
-}
-
-# Compress the binaries to the [Neon.Temporal] project where they'll
-# be embedded as binary resources.
-$neonTemporalResourceFolder = "$env:NF_ROOT\Lib\Neon.Temporal\Resources"
-neon-build gzip "$buildPath\temporal-proxy.linux"   "$neonTemporalResourceFolder\temporal-proxy.linux.gz"   >> "$logPath" 2>&1
-neon-build gzip "$buildPath\temporal-proxy.osx"     "$neonTemporalResourceFolder\temporal-proxy.osx.gz"     >> "$logPath" 2>&1
-neon-build gzip "$buildPath\temporal-proxy.win.exe" "$neonTemporalResourceFolder\temporal-proxy.win.exe.gz" >> "$logPath" 2>&1
-
-# Return to the original directory
-Set-Cwd $orgDirectory
