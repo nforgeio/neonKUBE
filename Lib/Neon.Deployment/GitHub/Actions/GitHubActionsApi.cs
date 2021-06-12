@@ -80,8 +80,6 @@ namespace Neon.Deployment
         /// </summary>
         internal GitHubActionsApi()
         {
-            GitHub.GetCredentials();
-            GitHub.EnsureCredentials();
         }
 
         /// <summary>
@@ -127,6 +125,8 @@ namespace Neon.Deployment
         /// <returns>The number of runs deleted.</returns>
         public async Task<int> DeleteRunsAsync(string repo, string workflowName = null, TimeSpan maxAge = default)
         {
+            GitHub.GetCredentials();
+
             var repoPath    = GitHubRepoPath.Parse(repo);
             var deleteCount = 0;
 

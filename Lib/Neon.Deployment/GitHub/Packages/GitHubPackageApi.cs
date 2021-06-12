@@ -69,8 +69,6 @@ namespace Neon.Deployment
         /// </summary>
         internal GitHubPackageApi()
         {
-            GitHub.GetCredentials();
-            GitHub.EnsureCredentials();
         }
 
         /// <summary>
@@ -105,6 +103,8 @@ namespace Neon.Deployment
             GitHubPackageVisibility visibility    = GitHubPackageVisibility.All)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(organization), nameof(organization));
+
+            GitHub.GetCredentials();
 
             var args = new Dictionary<string, string>();
 
@@ -151,6 +151,8 @@ namespace Neon.Deployment
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(organization), nameof(organization));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nameOrPattern), nameof(nameOrPattern));
+
+            GitHub.GetCredentials();
 
             var args = new Dictionary<string, string>();
 
@@ -200,6 +202,8 @@ namespace Neon.Deployment
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(organization), nameof(organization));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nameOrPattern), nameof(nameOrPattern));
+
+            GitHub.GetCredentials();
 
             var args = new Dictionary<string, string>();
 

@@ -26,28 +26,39 @@
 #                             either "Debug" or "Release".  This defaults
 #                             to "Debug".
 
-param 
-(
-    [parameter(Mandatory=$false)][string] $buildConfig = "Debug"
-)
+# param 
+# (
+#     [parameter(Mandatory=$false)][string] $buildConfig = "Debug"
+# )
+
+$buildConfig = "Debug"
+
+$env:NF_GOROOT = "$env:NF_ROOT\Go"
 
 # Import the global solution include file.
 
 . $env:NF_ROOT/Powershell/includes.ps1
 
-# Perform the build
-
-$env:NF_GOROOT = "$env:NF_ROOT\Go"
-
 Push-Cwd $env:NF_GOROOT | Out-Null
 
-& pwsh -file ./build-cadence-proxy.ps1 -buildConfig $buildConfig
-ThrowOnExitCode
+try
+{
+    # Perform the build
 
-& pwsh -file ./build-temporal-proxy.ps1 -buildConfig $buildConfig
-ThrowOnExitCode
+    & pwsh -file ./build-cadence-proxy.ps1 -buildConfig $buildConfig
+    ThrowOnExitCode
 
-& pwsh ./build-test.ps1
-ThrowOnExitCode
+    & pwsh -file ./build-temporal-proxy.ps1 -buildConfig $buildConfig
+    ThrowOnExitCode
 
-Pop-Cwd | Out-Null
+    & pwsh ./build-test.ps1
+    ThrowOnExitCode
+}
+catch
+{
+    Write-Exception $_
+}
+finally
+{
+    Pop-Cwd | Out-Null
+}
