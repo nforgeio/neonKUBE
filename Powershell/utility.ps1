@@ -31,6 +31,17 @@ function Request-AdminPermissions
 }
 
 #------------------------------------------------------------------------------
+# Call this after native commands to check for non-zero exit codes.
+
+function ThrowOnExitCode 
+{
+    if ($LastExitCode -ne 0)
+    {
+        throw "ERROR: exitcode=$LastExitCode"
+    }
+}
+
+#------------------------------------------------------------------------------
 # Determines whether the current script is running as part of CI or other automation.
 #
 # RETURNS:

@@ -36,6 +36,13 @@ namespace Neon.Deployment
     /// <summary>
     /// Used to publish and manage GitHub releases.
     /// </summary>
+    /// <remarks>
+    /// <note>
+    /// This API doesn't currently support modifying assets of
+    /// of published releases although GitHub does support this.
+    /// We may add this functionality in the future.
+    /// </note>
+    /// </remarks>
     public class GitHubReleaseApi
     {
         /// <summary>
@@ -49,11 +56,11 @@ namespace Neon.Deployment
         /// Creates a GitHub release.
         /// </summary>
         /// <param name="repo">Identifies the target repo.</param>
-        /// <param name="tagName">Specifies the name of the tag the release will reference.</param>
+        /// <param name="tagName">Specifies the tag to be referenced by the release.</param>
         /// <param name="releaseName">Optionally specifies the release name (defaults to <paramref name="tagName"/>).</param>
-        /// <param name="body">Optionally specifies the release notes (markdown formatted).</param>
-        /// <param name="isDraft">Optionally indicates that this is a draft release.</param>
-        /// <param name="isPrerelease">Optionally indicates that the release is not production ready.</param>
+        /// <param name="body">Optionally specifies the markdown formatted release notes.</param>
+        /// <param name="draft">Optionally indicates that the release won't be published immediately.</param>
+        /// <param name="prerelease">Optionally indicates that the release is not production ready.</param>
         /// <param name="branch">Optionally identifies the branch to be tagged.  This defaults to <b>master</b> or <b>main</b> when either of those branches are already present.</param>
         /// <returns>The newly created <see cref="Release"/>.</returns>
         /// <remarks>
@@ -63,7 +70,7 @@ namespace Neon.Deployment
         /// target repo and before creating the release.
         /// </para>
         /// </remarks>
-        public Release Create(string repo, string tagName, string releaseName = null, string body = null, bool isDraft = false, bool isPrerelease = false, string branch = null)
+        public Release Create(string repo, string tagName, string releaseName = null, string body = null, bool draft = false, bool prerelease = false, string branch = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(repo), nameof(repo));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(tagName), nameof(tagName));
@@ -116,8 +123,8 @@ namespace Neon.Deployment
             var release = new NewRelease(tagName)
             {
                 Name       = releaseName,
-                Draft      = isDraft,
-                Prerelease = isPrerelease,
+                Draft      = draft,
+                Prerelease = prerelease,
                 Body       = body
             };
 
@@ -125,12 +132,34 @@ namespace Neon.Deployment
         }
 
         /// <summary>
-        /// Updates a release.
+        /// Updates a GitHub release.
         /// </summary>
         /// <param name="repo">Identifies the target repository.</param>
-        /// <param name="release">The target release.</param>
-        /// <param name="releaseUpdate">The updated release release.</param>
+        /// <param name="release">Specifies the release being updated.</param>
+        /// <param name="releaseUpdate">Specifies the revisions.</param>
         /// <returns>The updated release.</returns>
+        /// <remarks>
+        /// <para>
+        /// To update a release, you'll first need to:
+        /// </para>
+        /// <list type="number">
+        /// <item>
+        /// Obtain a <see cref="Release"/> referencing the target release returned from 
+        /// <see cref="Create(string, string, string, string, bool, bool, string)"/>
+        /// or by listing or getting releases.
+        /// </item>
+        /// <item>
+        /// Obtain a <see cref="ReleaseUpdate"/> by calling <see cref="Release.ToUpdate"/>.
+        /// </item>
+        /// <item>
+        /// Make your changes to the release update.
+        /// </item>
+        /// <item>
+        /// Call <see cref="Update(string, Release, ReleaseUpdate)"/>, passing the 
+        /// original release along with the update.
+        /// </item>
+        /// </list>
+        /// </remarks>
         public Release Update(string repo, Release release, ReleaseUpdate releaseUpdate)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(repo), nameof(repo));
@@ -158,10 +187,10 @@ namespace Neon.Deployment
         }
 
         /// <summary>
-        /// Returns information about a specific repo release.
+        /// Retrieves a specific GitHub release.
         /// </summary>
         /// <param name="repo">Identifies the target repository.</param>
-        /// <param name="tagName">The tag name for the release.</param>
+        /// <param name="tagName">Specifies the tag for the target release.</param>
         /// <returns>The release information or <c>null</c> when the requested release doesn't exist.</returns>
         public Release Get(string repo, string tagName)
         {
@@ -187,13 +216,12 @@ namespace Neon.Deployment
         }
 
         /// <summary>
-        /// Uploads an asset file to a GitHub release.  Any existing artifiact with same name will be replaced.
+        /// Uploads an asset file to a GitHub release.  Any existing asset with same name will be replaced.
         /// </summary>
         /// <param name="repo">Identifies the target repository.</param>
         /// <param name="release">The target release.</param>
         /// <param name="assetPath">Path to the source asset file.</param>
         /// <param name="assetName">Optionally specifies the file name to assign to the asset.  This defaults to the file name in <paramref name="assetPath"/>.</param>
-        /// <param name="displayLabel">Optionally specifies the display label.</param>
         /// <param name="contentType">Optionally specifies the asset's <b>Content-Type</b>.  This defaults to: <b> application/octet-stream</b></param>
         /// <returns>The new <see cref="ReleaseAsset"/>.</returns>
         /// <exception cref="NotSupportedException">Thrown when the releas has already been published.</exception>
@@ -202,7 +230,7 @@ namespace Neon.Deployment
         /// The current implementation only works for unpublished releases where <c>Draft=true</c>.
         /// </note>
         /// </remarks>
-        public ReleaseAsset UploadAsset(string repo, Release release, string assetPath, string assetName = null, string displayLabel = null, string contentType = "application/octet-stream")
+        public ReleaseAsset UploadAsset(string repo, Release release, string assetPath, string assetName = null, string contentType = "application/octet-stream")
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(repo), nameof(repo));
             Covenant.Requires<ArgumentNullException>(release != null, nameof(release));
@@ -235,16 +263,15 @@ namespace Neon.Deployment
         }
 
         /// <summary>
-        /// Uploads an asset stream to a GitHub release.  Any existing artifiact with same name will be replaced.
+        /// Uploads an asset stream to a GitHub release.  Any existing asset with same name will be replaced.
         /// </summary>
         /// <param name="repo">Identifies the target repository.</param>
         /// <param name="release">The target release.</param>
         /// <param name="assetStream">The asset source stream.</param>
         /// <param name="assetName">Specifies the file name to assign to the asset.</param>
-        /// <param name="displayLabel">Optionally specifies the display label.</param>
         /// <param name="contentType">Optionally specifies the asset's <b>Content-Type</b>.  This defaults to: <b> application/octet-stream</b></param>
         /// <returns>The new <see cref="ReleaseAsset"/>.</returns>
-        public ReleaseAsset UploadAsset(string repo, Release release, Stream assetStream, string assetName, string displayLabel = null, string contentType = "application/octet-stream")
+        public ReleaseAsset UploadAsset(string repo, Release release, Stream assetStream, string assetName, string contentType = "application/octet-stream")
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(repo), nameof(repo));
             Covenant.Requires<ArgumentNullException>(release != null, nameof(release));
@@ -265,12 +292,12 @@ namespace Neon.Deployment
         }
 
         /// <summary>
-        /// Returns the URI that can be used to download a release asset.
+        /// Returns the URI that can be used to download a GitHub release asset.
         /// </summary>
         /// <param name="release">The target release.</param>
         /// <param name="asset">The target asset.</param>
         /// <returns>The asset URI.</returns>
-        public string GetAssetDownloadUri(Release release, ReleaseAsset asset)
+        public string GetAssetUri(Release release, ReleaseAsset asset)
         {
             Covenant.Requires<ArgumentNullException>(release != null, nameof(release));
             Covenant.Requires<ArgumentNullException>(asset != null, nameof(asset));
@@ -286,28 +313,24 @@ namespace Neon.Deployment
         }
 
         /// <summary>
-        /// Deletes a specific repo release.
+        /// Deletes a GitHub release.
         /// </summary>
         /// <param name="repo">Identifies the target repository.</param>
-        /// <param name="tagName">The target release tag name.</param>
+        /// <param name="release">The target release.</param>
         /// <remarks>
         /// <note>
         /// This fails silently if the release doesn't exist.
         /// </note>
         /// </remarks>
-        public void Remove(string repo, string tagName)
+        public void Remove(string repo, Release release)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(repo), nameof(repo));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(tagName), nameof(tagName));
+            Covenant.Requires<ArgumentNullException>(release != null, nameof(release));
 
             var repoPath = GitHubRepoPath.Parse(repo);
             var client   = GitHub.CreateGitHubClient(repo);
-            var release  = Get(repo, tagName);
 
-            if (release != null)
-            {
-                client.Repository.Release.Delete(repoPath.Owner, repoPath.Repo, release.Id).Wait();
-            }
+            client.Repository.Release.Delete(repoPath.Owner, repoPath.Repo, release.Id).Wait();
         }
     }
 }

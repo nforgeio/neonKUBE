@@ -63,7 +63,7 @@ namespace TestDeployment
 
                 // Create a draft release:
 
-                var release = GitHub.Release.Create(repo, tagName, body: "Hello World!", isDraft: true, isPrerelease: true);
+                var release = GitHub.Release.Create(repo, tagName, body: "Hello World!", draft: true, prerelease: true);
 
                 Assert.Equal("Hello World!", release.Body);
                 Assert.True(release.Draft);
@@ -109,14 +109,14 @@ namespace TestDeployment
                 Assert.NotNull(fetchedRelease);
                 Assert.False(fetchedRelease.Draft);
 
-                var assertUri = GitHub.Release.GetAssetDownloadUri(release, asset);
+                var assertUri = GitHub.Release.GetAssetUri(release, asset);
                 var assetText = httpClient.GetAsync(assertUri).Result.Content.ReadAsStringAsync().Result;
 
                 Assert.Equal("test asset contents", assetText);
 
                 // Delete the release:
 
-                GitHub.Release.Remove(repo, tagName);
+                GitHub.Release.Remove(repo, release);
 
                 // List all releases to ensure that the new release is no longer present:
 
@@ -154,7 +154,7 @@ namespace TestDeployment
 
                 // Create a draft release:
 
-                var release = GitHub.Release.Create(repo, tagName, body: "Hello World!", isDraft: true, isPrerelease: true);
+                var release = GitHub.Release.Create(repo, tagName, body: "Hello World!", draft: true, prerelease: true);
 
                 Assert.Equal("Hello World!", release.Body);
                 Assert.True(release.Draft);
@@ -201,14 +201,14 @@ namespace TestDeployment
                 Assert.NotNull(fetchedRelease);
                 Assert.False(fetchedRelease.Draft);
 
-                var assertUri = GitHub.Release.GetAssetDownloadUri(release, asset);
+                var assertUri = GitHub.Release.GetAssetUri(release, asset);
                 var assetText = httpClient.GetAsync(assertUri).Result.Content.ReadAsStringAsync().Result;
 
                 Assert.Equal("test asset contents", assetText);
 
                 // Delete the release:
 
-                GitHub.Release.Remove(repo, tagName);
+                GitHub.Release.Remove(repo, release);
 
                 // List all releases to ensure that the new release is no longer present:
 
@@ -280,7 +280,7 @@ namespace TestDeployment
 
                 // Delete the release:
 
-                GitHub.Release.Remove(repo, tagName);
+                GitHub.Release.Remove(repo, release);
 
                 // List all releases to ensure that the new release is no longer present:
 

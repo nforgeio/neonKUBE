@@ -41,17 +41,6 @@ Push-Location $scriptFolder | Out-Null
 Pop-Location | Out-Null
 
 #------------------------------------------------------------------------------
-# Call this after native commands to check for non-zero exit codes.
-
-function ThrowOnExitCode 
-{
-    if ($LastExitCode -ne 0)
-    {
-        throw "ERROR: exitcode=$LastExitCode"
-    }
-}
-
-#------------------------------------------------------------------------------
 # Logs into GitHub using a GITHUB_PAT.
 #
 # ARGUMENTS:
@@ -385,7 +374,7 @@ function Parse-GitHubRepo
 }
 
 #==============================================================================
-# GitHub Action utilities
+# GitHub Action utilities                                                     #
 #==============================================================================
 
 #------------------------------------------------------------------------------
@@ -1020,4 +1009,249 @@ function Invoke-ActionWorkflow
     {
         Logout-GitHubUser
     }
+}
+
+#==============================================================================
+# GitHub Release utilities                                                    #
+#==============================================================================
+
+#------------------------------------------------------------------------------
+# Creates a new GitHub release.
+#
+# ARGUMENTS:
+#
+#   repo        - Identifies the target repo (like: "OWNER/REPO" or "github.com/OWNER/REPO")
+#   tagName     - Specifies the tag to be referenced by the release
+#   releaseName - Optionally specifies the release name (defaults to [tagName])
+#   body        - Optionally specifies the markdown formatted release notes
+#   draft       - Optionally indicates that the release won't be published immediately
+#   prerelease  - Optionally indicates that the release is not production ready
+#   branch      - Optionally identifies the branch to be tagged.  This defaults to [master] 
+#                 or [main] when either of those branches are already present
+#
+# RETURNS:
+#
+#   The [Octokit.Release] object.
+
+function New-GitHubRelease
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$repo,
+        [Parameter(Position=1, Mandatory=$true)]
+        [string]$tagName,
+        [Parameter(Mandatory=$false)]
+        [string]$releaseName = $null,
+        [Parameter(Mandatory=$false)]
+        [string]$body = $null,
+        [Parameter(Mandatory=$false)]
+        [switch]$draft = $false,
+        [Parameter(Mandatory=$false)]
+        [switch]$prerelease = $false,
+        [Parameter(Mandatory=$false)]
+        [string]$branch = $null
+    )
+
+    return [Neon.Deployment.GitHub]::Release.Create($repo, $tagName, $releaseName, $body, $draft, $prerelease, $branch)
+}
+
+#------------------------------------------------------------------------------
+# Updates a GitHub release.
+#
+# ARGUMENTS:
+#
+#   repo            - Identifies the target repo (like: "OWNER/REPO" or "github.com/OWNER/REPO")
+#   release         - Specifies the [Octokit.Release] being modified
+#   releaseUpdate   - Specifies the [Octokit.ReleaseUpdate] with the revisions
+#
+# RETURNS:
+#
+#   The updated [Octokit.Release] object.
+
+function Update-GitHubRelease
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$repo,
+        [Parameter(Position=1, Mandatory=$true)]
+        [object]$release,
+        [Parameter(Position=2, Mandatory=$true)]
+        [object]$releaseUpdate
+    )
+
+    return [Neon.Deployment.GitHub]::Release.Update($repo, $release, $releaseUpdate)
+}
+
+#------------------------------------------------------------------------------
+# Lists the releases for a GitHub repo.
+#
+# ARGUMENTS:
+#
+#   repo        - Identifies the target repo (like: "OWNER/REPO" or "github.com/OWNER/REPO")
+#
+# RETURNS:
+#
+#   A list of [Octokit.Release] instances.
+
+function Get-GitHubReleases
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$repo
+    )
+
+    return [Neon.Deployment.GitHub]::Release.List($repo)
+}
+
+#------------------------------------------------------------------------------
+# Obtains a specific for a GitHub repo release.
+#
+# ARGUMENTS:
+#
+#   repo        - Identifies the target repo (like: "OWNER/REPO" or "github.com/OWNER/REPO")
+#   tagName     - Identifies the release by its assocated tag
+#
+# RETURNS:
+#
+#   The requested [Octokit.Release] or $null when the release doesn't exist.
+
+function Get-GitHubRelease
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$repo,
+        [Parameter(Position=1, Mandatory=$true)]
+        [string]$tagName
+    )
+
+    return [Neon.Deployment.GitHub]::Release.Get($repo, $tagName)
+}
+
+#------------------------------------------------------------------------------
+# Uploads an asset file to a GitHub release.  Any existing asset with same
+# name will be replaced.
+#
+# ARGUMENTS:
+#
+#   repo            - Identifies the target repo (like: "OWNER/REPO" or "github.com/OWNER/REPO")
+#   release         - Specifies the target release [Octokit:Release]
+#   assetPath       - Path to the source asset file
+#   assetName       - Optionally specifies the file name to assign to the asset.
+#                     This defaults to the file name from [assetPath] 
+#   contentType     - Optionally specifies the asset's Content-Type
+#
+# RETURNS:
+#
+#   The new [Octokit.ReleaseAsset] object.
+
+function New-GitHubReleaseAssetFromFile
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$repo,
+        [Parameter(Position=1, Mandatory=$true)]
+        [object]$release,
+        [Parameter(Position=2, Mandatory=$true)]
+        [string]$assetPath,
+        [Parameter(Mandatory=$false)]
+        [string]$assetName = $null,
+        [Parameter(Mandatory=$false)]
+        [string]$contentType = $null
+    )
+
+    return [Neon.Deployment.GitHub]::Release.UploadAsset($repo, $release, $assetPath, $assetName, $contentType)
+}
+
+#------------------------------------------------------------------------------
+# Uploads asset data from a stream to a GitHub release.  Any existing asset 
+# with same name will be replaced.
+#
+# ARGUMENTS:
+#
+#   repo            - Identifies the target repo (like: "OWNER/REPO" or "github.com/OWNER/REPO")
+#   release         - Specifies the target release [Octokit:Release]
+#   assetStream     - The [System.IO.Stream] holding the asset data
+#   assetName       - Optionally specifies the file name to assign to the asset.
+#                     This defaults to the file name from [assetPath] 
+#   contentType     - Optionally specifies the asset's Content-Type
+#
+# RETURNS:
+#
+#   The new [Octokit.ReleaseAsset] object.
+
+function New-GitHubReleaseAssetFromStream
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$repo,
+        [Parameter(Position=1, Mandatory=$true)]
+        [object]$release,
+        [Parameter(Position=2, Mandatory=$true)]
+        [object]$assetStream,
+        [Parameter(Mandatory=$false)]
+        [string]$assetName = $null,
+        [Parameter(Mandatory=$false)]
+        [string]$contentType = $null
+    )
+
+    return [Neon.Deployment.GitHub]::Release.UploadAsset($repo, $release, $assetStream, $assetName, $contentType)
+}
+
+#------------------------------------------------------------------------------
+# Obtains the URI to be used to download an asset from a GitHub release.
+#
+# ARGUMENTS:
+#
+#   repo        - Identifies the target repo (like: "OWNER/REPO" or "github.com/OWNER/REPO")
+#   release     - Specifies the target release [Octokit:Release]
+#   asset       - Identifies the target release asset [OctoKit.ReleaseAsset]
+#
+# RETURNS:
+#
+#   The asset's download URI.
+
+function Get-GitHubReleaseAssetUri
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$repo,
+        [Parameter(Position=1, Mandatory=$true)]
+        [object]$release,
+        [Parameter(Position=2, Mandatory=$true)]
+        [object]$asset
+    )
+
+    return [Neon.Deployment.GitHub]::Release.GetAssetUri($repo, $release, $asset)
+}
+
+#------------------------------------------------------------------------------
+# Deletes a GitHub release.
+#
+# ARGUMENTS:
+#
+#   repo        - Identifies the target repo (like: "OWNER/REPO" or "github.com/OWNER/REPO")
+#   release     - Specifies the target release [Octokit:Release]
+#
+# REMARKS:
+#
+#   This fails silently when the target release doesn't exist.
+
+function Remove-GitHubRelease
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$repo,
+        [Parameter(Position=1, Mandatory=$true)]
+        [object]$release
+    )
+
+    return [Neon.Deployment.GitHub]::Release.Remove($repo, $release)
 }
