@@ -223,5 +223,77 @@ namespace TestDeployment
                 Assert.Null(fetchedRelease);
             }
         }
+
+        [Fact]
+        public void EndToEnd_WithDefaults()
+        {
+            const string repo = "neon-test/github-automation";
+
+            var tagName = Guid.NewGuid().ToString("d");
+
+            using (var httpClient = new HttpClient())
+            {
+                // This test exercises the GitHub Release API like we did above
+                // but using default properties and arguments.
+
+                // Create a draft release:
+
+                var release = GitHub.Release.Create(repo, tagName);
+
+                Assert.Null(release.Body);
+                Assert.False(release.Draft);
+                Assert.False(release.Prerelease);
+                Assert.Empty(release.Assets);
+                Assert.NotNull(release.PublishedAt);
+
+                // List all releases to ensure that new releaase is included:
+
+                var releaseList = GitHub.Release.List(repo);
+
+                Assert.NotNull(releaseList.SingleOrDefault(r => r.Id == release.Id));
+
+                // Adding an asset for published releases should fail:
+
+                Assert.Throws<NotSupportedException>(
+                    () =>
+                    {
+                        ReleaseAsset asset;
+
+                        using (var tempFile = new TempFile())
+                        {
+                            File.WriteAllText(tempFile.Path, "test asset contents");
+
+                            asset = GitHub.Release.UploadAsset(repo, release, tempFile.Path, "test-asset.dat");
+
+                            Assert.Equal("test-asset.dat", asset.Name);
+                            Assert.Equal("application/octet-stream", asset.ContentType);
+                        }
+                    });
+
+                // Fetch the new release:
+
+                var fetchedRelease = GitHub.Release.Get(repo, release.TagName);
+
+                Assert.NotNull(fetchedRelease);
+                Assert.False(fetchedRelease.Draft);
+                Assert.False(fetchedRelease.Prerelease);
+
+                // Delete the release:
+
+                GitHub.Release.Remove(repo, tagName);
+
+                // List all releases to ensure that the new release is no longer present:
+
+                releaseList = GitHub.Release.List(repo);
+
+                Assert.Null(releaseList.SingleOrDefault(r => r.Id == release.Id));
+
+                // Fetch the release to verify that it's no longer present:
+
+                fetchedRelease = GitHub.Release.Get(repo, release.TagName);
+
+                Assert.Null(fetchedRelease);
+            }
+        }
     }
 }

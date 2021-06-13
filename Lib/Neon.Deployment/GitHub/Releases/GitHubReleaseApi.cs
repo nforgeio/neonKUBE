@@ -196,11 +196,22 @@ namespace Neon.Deployment
         /// <param name="displayLabel">Optionally specifies the display label.</param>
         /// <param name="contentType">Optionally specifies the asset's <b>Content-Type</b>.  This defaults to: <b> application/octet-stream</b></param>
         /// <returns>The new <see cref="ReleaseAsset"/>.</returns>
+        /// <exception cref="NotSupportedException">Thrown when the releas has already been published.</exception>
+        /// <remarks>
+        /// <note>
+        /// The current implementation only works for unpublished releases where <c>Draft=true</c>.
+        /// </note>
+        /// </remarks>
         public ReleaseAsset UploadAsset(string repo, Release release, string assetPath, string assetName = null, string displayLabel = null, string contentType = "application/octet-stream")
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(repo), nameof(repo));
             Covenant.Requires<ArgumentNullException>(release != null, nameof(release));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(assetPath), nameof(assetPath));
+
+            if (!release.Draft)
+            {
+                throw new NotSupportedException("Cannut upload asset to already published release.");
+            }
 
             var repoPath = GitHubRepoPath.Parse(repo);
             var client   = GitHub.CreateGitHubClient(repo);
