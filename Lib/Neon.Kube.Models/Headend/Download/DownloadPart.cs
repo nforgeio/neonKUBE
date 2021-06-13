@@ -55,7 +55,7 @@ namespace Neon.Kube.Models.Headend
         public string Uri { get; set; }
 
         /// <summary>
-        /// Actual size of the part in bytes after downloading and potentially decompressed. 
+        /// Actual size of the part in bytes after being downloaded and potentially decompressed. 
         /// </summary>
         [JsonProperty(PropertyName = "Size")]
         public long Size { get; set; }
