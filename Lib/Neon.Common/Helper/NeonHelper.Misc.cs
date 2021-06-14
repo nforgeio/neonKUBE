@@ -2092,5 +2092,93 @@ namespace Neon.Common
         {
             return (TResult)value;
         }
+
+        /// <summary>
+        /// Computes the <see cref="int"/> number of partitions that would be required to divide a
+        /// set of items where the number of items in each partition is limited.
+        /// </summary>
+        /// <param name="itemCount">The number of items to be partitioned.</param>
+        /// <param name="partitionSize">The maximim number of items in any partition.</param>
+        /// <returns>The number of partitions required.</returns>
+        public static int PartitionCount(int itemCount, int partitionSize)
+        {
+            Covenant.Requires<ArgumentException>(itemCount >= 0, nameof(itemCount));
+            Covenant.Requires<ArgumentException>(partitionSize > 0, nameof(partitionSize));
+
+            var partitions = itemCount / partitionSize;
+
+            if (itemCount % partitionSize != 0)
+            {
+                partitions++;
+            }
+
+            return partitions;
+        }
+
+        /// <summary>
+        /// Computes the <see cref="uint"/> number of partitions that would be required to divide a
+        /// set of items where the number of items in each partition is limited.
+        /// </summary>
+        /// <param name="itemCount">The number of items to be partitioned.</param>
+        /// <param name="partitionSize">The maximim number of items in any partition.</param>
+        /// <returns>The number of partitions required.</returns>
+        public static uint PartitionCount(uint itemCount, uint partitionSize)
+        {
+            Covenant.Requires<ArgumentException>(itemCount >= 0, nameof(itemCount));
+            Covenant.Requires<ArgumentException>(partitionSize > 0, nameof(partitionSize));
+
+            var partitions = itemCount / partitionSize;
+
+            if (itemCount % partitionSize != 0)
+            {
+                partitions++;
+            }
+
+            return partitions;
+        }
+
+        /// <summary>
+        /// Computes the <see cref="long"/> number of partitions that would be required to divide a
+        /// set of items where the number of items in each partition is limited.
+        /// </summary>
+        /// <param name="itemCount">The number of items to be partitioned.</param>
+        /// <param name="partitionSize">The maximim number of items in any partition.</param>
+        /// <returns>The number of partitions required.</returns>
+        public static long PartitionCount(long itemCount, long partitionSize)
+        {
+            Covenant.Requires<ArgumentException>(itemCount >= 0, nameof(itemCount));
+            Covenant.Requires<ArgumentException>(partitionSize > 0, nameof(partitionSize));
+
+            var partitions = itemCount / partitionSize;
+
+            if (itemCount % partitionSize != 0)
+            {
+                partitions++;
+            }
+
+            return partitions;
+        }
+
+        /// <summary>
+        /// Computes the <see cref="ulong"/> number of partitions that would be required to divide a
+        /// set of items where the number of items in each partition is limited.
+        /// </summary>
+        /// <param name="itemCount">The number of items to be partitioned.</param>
+        /// <param name="partitionSize">The maximim number of items in any partition.</param>
+        /// <returns>The number of partitions required.</returns>
+        public static ulong PartitionCount(ulong itemCount, ulong partitionSize)
+        {
+            Covenant.Requires<ArgumentException>(itemCount >= 0, nameof(itemCount));
+            Covenant.Requires<ArgumentException>(partitionSize > 0, nameof(partitionSize));
+
+            var partitions = itemCount / partitionSize;
+
+            if (itemCount % partitionSize != 0)
+            {
+                partitions++;
+            }
+
+            return partitions;
+        }
     }
 }

@@ -321,5 +321,75 @@ namespace TestCommon
 
             Assert.Equal("Hello World!", NeonHelper.FromBase64(encoded));
         }
+
+        [Fact]
+        public void PartitionCount_Int()
+        {
+            Assert.Equal((int)0, NeonHelper.PartitionCount((int)0, (int)1));
+            Assert.Equal((int)1, NeonHelper.PartitionCount((int)1, (int)1));
+            Assert.Equal((int)2, NeonHelper.PartitionCount((int)2, (int)1));
+
+            Assert.Equal((int)1, NeonHelper.PartitionCount((int)1, (int)2));
+            Assert.Equal((int)1, NeonHelper.PartitionCount((int)2, (int)2));
+            Assert.Equal((int)2, NeonHelper.PartitionCount((int)3, (int)2));
+            Assert.Equal((int)2, NeonHelper.PartitionCount((int)4, (int)2));
+
+            // Errors
+
+            Assert.Throws<ArgumentException>(() => NeonHelper.PartitionCount((int)-1, (int)1));
+            Assert.Throws<ArgumentException>(() => NeonHelper.PartitionCount((int)1, (int)0));
+        }
+
+        [Fact]
+        public void PartitionCount_UInt()
+        {
+            Assert.Equal((uint)0, NeonHelper.PartitionCount((uint)0, (uint)1));
+            Assert.Equal((uint)1, NeonHelper.PartitionCount((uint)1, (uint)1));
+            Assert.Equal((uint)2, NeonHelper.PartitionCount((uint)2, (uint)1));
+
+            Assert.Equal((uint)1, NeonHelper.PartitionCount((uint)1, (uint)2));
+            Assert.Equal((uint)1, NeonHelper.PartitionCount((uint)2, (uint)2));
+            Assert.Equal((uint)2, NeonHelper.PartitionCount((uint)3, (uint)2));
+            Assert.Equal((uint)2, NeonHelper.PartitionCount((uint)4, (uint)2));
+
+            // Errors
+
+            Assert.Throws<ArgumentException>(() => NeonHelper.PartitionCount((uint)1, (uint)0));
+        }
+
+        [Fact]
+        public void PartitionCount_Long()
+        {
+            Assert.Equal((long)0, NeonHelper.PartitionCount((long)0, (long)1));
+            Assert.Equal((long)1, NeonHelper.PartitionCount((long)1, (long)1));
+            Assert.Equal((long)2, NeonHelper.PartitionCount((long)2, (long)1));
+
+            Assert.Equal((long)1, NeonHelper.PartitionCount((long)1, (long)2));
+            Assert.Equal((long)1, NeonHelper.PartitionCount((long)2, (long)2));
+            Assert.Equal((long)2, NeonHelper.PartitionCount((long)3, (long)2));
+            Assert.Equal((long)2, NeonHelper.PartitionCount((long)4, (long)2));
+
+            // Errors
+
+            Assert.Throws<ArgumentException>(() => NeonHelper.PartitionCount((long)-1, (long)1));
+            Assert.Throws<ArgumentException>(() => NeonHelper.PartitionCount((long)1, (long)0));
+        }
+
+        [Fact]
+        public void PartitionCount_ULong()
+        {
+            Assert.Equal((ulong)0, NeonHelper.PartitionCount((ulong)0, (ulong)1));
+            Assert.Equal((ulong)1, NeonHelper.PartitionCount((ulong)1, (ulong)1));
+            Assert.Equal((ulong)2, NeonHelper.PartitionCount((ulong)2, (ulong)1));
+
+            Assert.Equal((ulong)1, NeonHelper.PartitionCount((ulong)1, (ulong)2));
+            Assert.Equal((ulong)1, NeonHelper.PartitionCount((ulong)2, (ulong)2));
+            Assert.Equal((ulong)2, NeonHelper.PartitionCount((ulong)3, (ulong)2));
+            Assert.Equal((ulong)2, NeonHelper.PartitionCount((ulong)4, (ulong)2));
+
+            // Errors
+
+            Assert.Throws<ArgumentException>(() => NeonHelper.PartitionCount((ulong)1, (ulong)0));
+        }
     }
 }
