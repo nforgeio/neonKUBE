@@ -295,5 +295,51 @@ namespace TestDeployment
                 Assert.Null(fetchedRelease);
             }
         }
+
+        [Fact]
+        public void Delete_Draft()
+        {
+            // Verify that we can list and delete draft releases.
+
+            const string repo = "neon-test/github-automation";
+
+            var tagName = Guid.NewGuid().ToString("d");
+
+            using (var httpClient = new HttpClient())
+            {
+                // Create a draft release:
+
+                var release = GitHub.Release.Create(repo, tagName);
+
+                Assert.Null(release.Body);
+                Assert.False(release.Draft);
+                Assert.False(release.Prerelease);
+                Assert.Empty(release.Assets);
+                Assert.NotNull(release.PublishedAt);
+
+                // List all releases to ensure that new release is included:
+
+                var releaseList = GitHub.Release.List(repo);
+
+                Assert.NotNull(releaseList.SingleOrDefault(r => r.Id == release.Id));
+
+                // Also confirm that we can fetch the draft release.
+
+                release = GitHub.Release.Get(repo, release.TagName);
+
+                Assert.NotNull(release);
+
+                // Delete the draft release.
+
+                GitHub.Release.Remove(repo, release);
+
+                // Confirm that the release is gone.
+
+                releaseList = GitHub.Release.List(repo);
+
+                Assert.Null(releaseList.SingleOrDefault(r => r.Id == release.Id));
+                Assert.Null(GitHub.Release.Get(repo, release.TagName));
+            }
+        }
     }
 }
