@@ -53,6 +53,6 @@ namespace Neon.Kube.Models.Headend
         /// The download parts.
         /// </summary>
         [JsonProperty(PropertyName = "Parts")]
-        public List<DownloadPart> Parts { get; set; }
+        public List<DownloadPart> Parts { get; set; } = new List<DownloadPart>();
     }
 }

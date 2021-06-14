@@ -95,6 +95,16 @@ namespace Neon.Kube
         public const string NeonPublicBucketUri = "https://neon-public.s3-us-west-2.amazonaws.com";
 
         /// <summary>
+        /// The GitHub repository path where public node images will be published.
+        /// </summary>
+        public const string PublicNodeImageRepo = "nforgeio/neonKUBE-images";
+
+        /// <summary>
+        /// The GitHub repository path where pre-release node images will be published.
+        /// </summary>
+        public const string PrivateNodeImagesRepo = "nforgeio/neonKUBE-images-dev";
+
+        /// <summary>
         /// <para>
         /// Returns the HTTPS URI to be used for downloading the prepared neonKUBE virtual machine image 
         /// for the current neonKUBE cluster version.
