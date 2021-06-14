@@ -41,11 +41,11 @@ namespace TestDeployment
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public partial class Test_GitHubReleases
     {
+        const string repo = "neon-test/github-automation";
+
         [Fact]
         public void EndToEnd_WithFileAsset()
         {
-            const string repo = "neon-test/github-automation";
-
             var tagName = Guid.NewGuid().ToString("d");
 
             using (var httpClient = new HttpClient())
@@ -135,8 +135,6 @@ namespace TestDeployment
         [Fact]
         public void EndToEnd_WithStreamAsset()
         {
-            const string repo = "neon-test/github-automation";
-
             var tagName = Guid.NewGuid().ToString("d");
 
             using (var httpClient = new HttpClient())
@@ -227,8 +225,6 @@ namespace TestDeployment
         [Fact]
         public void EndToEnd_WithDefaults()
         {
-            const string repo = "neon-test/github-automation";
-
             var tagName = Guid.NewGuid().ToString("d");
 
             using (var httpClient = new HttpClient())
@@ -301,8 +297,6 @@ namespace TestDeployment
         {
             // Verify that we can list and delete draft releases.
 
-            const string repo = "neon-test/github-automation";
-
             var tagName = Guid.NewGuid().ToString("d");
 
             using (var httpClient = new HttpClient())
@@ -339,6 +333,57 @@ namespace TestDeployment
 
                 Assert.Null(releaseList.SingleOrDefault(r => r.Id == release.Id));
                 Assert.Null(GitHub.Release.Get(repo, release.TagName));
+            }
+        }
+
+        [Fact]
+        public void Find()
+        {
+            // Create a couple releases one draft and the other published and then
+            // verify that Find() works with different predicates.
+
+            // Verify that we can list and delete draft releases.
+
+            var tagName1 = Guid.NewGuid().ToString("d");
+            var tagName2 = Guid.NewGuid().ToString("d");
+
+            using (var httpClient = new HttpClient())
+            {
+                // Create the draft release:
+
+                var release1 = GitHub.Release.Create(repo, tagName1, draft: true);
+
+                Assert.Null(release1.Body);
+                Assert.True(release1.Draft);
+                Assert.False(release1.Prerelease);
+                Assert.Empty(release1.Assets);
+                Assert.Null(release1.PublishedAt);
+
+                // Create the published release:
+
+                var release2 = GitHub.Release.Create(repo, tagName2, draft: false);
+
+                Assert.Null(release2.Body);
+                Assert.False(release2.Draft);
+                Assert.False(release2.Prerelease);
+                Assert.Empty(release2.Assets);
+                Assert.NotNull(release2.PublishedAt);
+
+                // Exercise Find()
+
+                Assert.Empty(GitHub.Release.Find(repo, release => release.Name == null));
+
+                var match = GitHub.Release.Find(repo, release => release.Draft).SingleOrDefault(release => release.TagName == tagName1);
+
+                Assert.NotNull(match);
+                Assert.Equal(tagName1, match.TagName);
+                Assert.True(match.Draft);
+
+                match = GitHub.Release.Find(repo, release => !release.Draft).SingleOrDefault(release => release.TagName == tagName2);
+
+                Assert.NotNull(match);
+                Assert.Equal(tagName2, match.TagName);
+                Assert.False(match.Draft);
             }
         }
     }

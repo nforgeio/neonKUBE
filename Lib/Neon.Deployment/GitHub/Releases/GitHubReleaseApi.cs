@@ -216,6 +216,23 @@ namespace Neon.Deployment
         }
 
         /// <summary>
+        /// Returns the releases that satisfies a predicate.
+        /// </summary>
+        /// <param name="repo">Identifies the target repository.</param>
+        /// <param name="predicate">The predicate.</param>
+        /// <returns>The list of matching releases.</returns>
+        public List<Release> Find(string repo, Func<Release, bool> predicate)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(repo), nameof(repo));
+            Covenant.Requires<ArgumentNullException>(predicate != null, nameof(predicate));
+
+            var repoPath = GitHubRepoPath.Parse(repo);
+            var client   = GitHub.CreateGitHubClient(repo);
+
+            return List(repo).Where(predicate).ToList();
+        }
+
+        /// <summary>
         /// Uploads an asset file to a GitHub release.  Any existing asset with same name will be replaced.
         /// </summary>
         /// <param name="repo">Identifies the target repository.</param>
