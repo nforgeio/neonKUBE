@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_Releases.cs
+// FILE:	    Test_GitHubReleases.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -39,7 +39,7 @@ namespace TestDeployment
     [Trait(TestTrait.Category, TestArea.NeonDeployment)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
-    public partial class Test_Releases
+    public partial class Test_GitHubReleases
     {
         [Fact]
         public void EndToEnd_WithFileAsset()
@@ -55,7 +55,7 @@ namespace TestDeployment
                 //      1. Create a draft release
                 //      2. Add an asset
                 //      3. Publish the release (by setting draft=false)
-                //      4. List all releases to ensure that new releaase is included
+                //      4. List all releases to ensure that new release is included
                 //      5. Fetch the new release and verify the asset
                 //      6. Delete the release
                 //      7. List all releases to ensure that the new release is no longer present
@@ -96,7 +96,7 @@ namespace TestDeployment
                 Assert.False(release.Draft);
                 Assert.NotNull(release.PublishedAt);
 
-                // List all releases to ensure that new releaase is included:
+                // List all releases to ensure that new release is included:
 
                 var releaseList = GitHub.Release.List(repo);
 
@@ -146,7 +146,7 @@ namespace TestDeployment
                 //      1. Create a draft release
                 //      2. Add an asset
                 //      3. Publish the release (by setting draft=false)
-                //      4. List all releases to ensure that new releaase is included
+                //      4. List all releases to ensure that new release is included
                 //      5. Fetch the new release and verify the asset
                 //      6. Delete the release
                 //      7. List all releases to ensure that the new release is no longer present
@@ -188,7 +188,7 @@ namespace TestDeployment
                 Assert.False(release.Draft);
                 Assert.NotNull(release.PublishedAt);
 
-                // List all releases to ensure that new releaase is included:
+                // List all releases to ensure that new release is included:
 
                 var releaseList = GitHub.Release.List(repo);
 
@@ -246,7 +246,7 @@ namespace TestDeployment
                 Assert.Empty(release.Assets);
                 Assert.NotNull(release.PublishedAt);
 
-                // List all releases to ensure that new releaase is included:
+                // List all releases to ensure that new release is included:
 
                 var releaseList = GitHub.Release.List(repo);
 

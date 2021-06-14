@@ -292,7 +292,12 @@ namespace Neon.Deployment
         }
 
         /// <summary>
+        /// <para>
         /// Returns the URI that can be used to download a GitHub release asset.
+        /// </para>
+        /// <note>
+        /// This works only for published releases.
+        /// </note>
         /// </summary>
         /// <param name="release">The target release.</param>
         /// <param name="asset">The target asset.</param>

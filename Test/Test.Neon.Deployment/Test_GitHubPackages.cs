@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_Packages.cs
+// FILE:	    Test_GitHubPackages.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -41,7 +41,7 @@ namespace TestDeployment
     [Trait(TestTrait.Category, TestTrait.Investigate)]      // https://github.com/nforgeio/neonCLOUD/issues/149
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
-    public partial class Test_Packages
+    public partial class Test_GitHubPackages
     {
         [Fact(Skip = "Must be run manually")]
         public async void ListPackages()
