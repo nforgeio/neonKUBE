@@ -58,7 +58,7 @@ namespace Neon.Deployment
         /// </summary>
         public static void GetCredentials()
         {
-            if (AccessToken != null)
+            if (AccessToken == null)
             {
                 var profile = new ProfileClient();
 
@@ -89,7 +89,7 @@ namespace Neon.Deployment
         /// <summary>
         /// Returns the API class for managing GitHub releases.
         /// </summary>
-        public static GitHubReleasesApi Releases { get; private set; } = new GitHubReleasesApi();
+        public static GitHubReleaseApi Release { get; private set; } = new GitHubReleaseApi();
 
         /// <summary>
         /// Creates a REST client that can be used manage GitHub.
