@@ -74,5 +74,15 @@ namespace Neon.Kube
         /// The node port exposed by the Prometheus dashboard service.
         /// </summary>
         public const int PrometheusDashboard = 30007;
+
+        /// <summary>
+        /// The node port exposed by the Istio Ingress HTTP service.
+        /// </summary>
+        public const int IstioIngressHttp = 30080;
+
+        /// <summary>
+        /// The node port exposed by the Istio Ingress HTTPS service.
+        /// </summary>
+        public const int IstioIngressHttps = 30443;
     }
 }
