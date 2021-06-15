@@ -1501,7 +1501,7 @@ prometheus:
     ## Port to expose on each node
     ## Only used if service.type is 'NodePort'
     ##
-    nodePort: 30090
+    nodePort: 30007
 
     ## Loadbalancer IP
     ## Only use if service.type is "loadbalancer"
@@ -1509,7 +1509,7 @@ prometheus:
     loadBalancerSourceRanges: []
     ## Service type
     ##
-    type: ClusterIP
+    type: NodePort
 
     sessionAffinity: ""
 
@@ -1958,12 +1958,12 @@ prometheus:
     ## ref: https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#remotereadspec
     remoteRead:
     - readRecent: true
-      url: http://neon-metrics-cortex:9009/api/prom/remote_read
+      url: http://cortex:9009/api/prom/remote_read
 
     ## The remote_write spec configuration for Prometheus.
     ## ref: https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#remotewritespec
     remoteWrite:
-    - url: http://neon-metrics-cortex:9009/api/prom/push
+    - url: http://cortex:9009/api/prom/push
 
     ## Enable/Disable Grafana dashboards provisioning for prometheus remote write feature
     remoteWriteDashboards: false

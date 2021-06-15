@@ -966,7 +966,8 @@ namespace Neon.Common
             {
                 var processStart = new ProcessStartInfo(uri)
                 {
-                    CreateNoWindow = true
+                    CreateNoWindow = true,
+                    UseShellExecute = true
                 };
 
                 Process.Start(processStart);

@@ -121,7 +121,7 @@ backend harbor_backend_http
             {
                 sbHaProxyConfig.Append(
 $@"
-    server {master.Name}         {master.Address}:30080");
+    server {master.Name}         {master.Address}:{KubeNodePorts.IstioIngressHttp}");
             }
 
             sbHaProxyConfig.Append(
@@ -134,7 +134,7 @@ backend harbor_backend
             {
                 sbHaProxyConfig.Append(
 $@"
-    server {master.Name}         {master.Address}:30443");
+    server {master.Name}         {master.Address}:{KubeNodePorts.IstioIngressHttps}");
             }
 
             node.UploadText(" /etc/neonkube/neon-etcd-proxy.cfg", sbHaProxyConfig);

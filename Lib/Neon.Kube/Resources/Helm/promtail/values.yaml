@@ -219,7 +219,7 @@ config:
   # -- The Loki address to post logs to.
   # Must be reference in `config.file` to configure `client.url`.
   # See default config in `values.yaml`
-  lokiAddress: http://neon-logs-loki:3100/loki/api/v1/push
+  lokiAddress: http://loki:3100/loki/api/v1/push
   # -- A section of reusable snippets that can be reference in `config.file`.
   # Custom snippets may be added in order to reduce redundancy.
   # This is especially helpful when multiple `kubernetes_sd_configs` are use which usually have large parts in common.

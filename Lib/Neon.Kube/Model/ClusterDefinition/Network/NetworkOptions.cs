@@ -398,7 +398,7 @@ namespace Neon.Kube
                         Protocol = IngressProtocol.Tcp,
                         ExternalPort = 80,
                         TargetPort = 8080,
-                        NodePort = 30080
+                        NodePort = KubeNodePorts.IstioIngressHttp
                     },
                     new IngressRule()
                     {
@@ -406,7 +406,7 @@ namespace Neon.Kube
                         Protocol = IngressProtocol.Tcp,
                         ExternalPort = 443,
                         TargetPort = 8443,
-                        NodePort = 30443
+                        NodePort = KubeNodePorts.IstioIngressHttps
                     }
                 };
             }

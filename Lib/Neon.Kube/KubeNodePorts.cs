@@ -45,14 +45,44 @@ namespace Neon.Kube
         /// </summary>
         public const int KubeLastNodePort = 32767;
 
-        // $todo(jefflill):
-        //
-        // Remove the [KubeDashboard] definition after we implement
-        // the neonKUBE gateway.
-
         /// <summary>
         /// The node port exposed by the Kubernetes dashboard service.
         /// </summary>
         public const int KubeDashboard = KubeFirstNodePort;
+
+        /// <summary>
+        /// The node port exposed by the Grafana dashboard service.
+        /// </summary>
+        public const int GrafanaDashboard = 30001;
+
+        /// <summary>
+        /// The node port exposed by the Harbor dashboard service.
+        /// </summary>
+        public const int HarborDashboard = 30002;
+
+        /// <summary>
+        /// The node port exposed by the Harbor dashboard service.
+        /// </summary>
+        public const int KialiDashboard = 30005;
+
+        /// <summary>
+        /// The node port exposed by the Minio dashboard service.
+        /// </summary>
+        public const int MinioDashboard = 30006;
+
+        /// <summary>
+        /// The node port exposed by the Prometheus dashboard service.
+        /// </summary>
+        public const int PrometheusDashboard = 30007;
+
+        /// <summary>
+        /// The node port exposed by the Istio Ingress HTTP service.
+        /// </summary>
+        public const int IstioIngressHttp = 30080;
+
+        /// <summary>
+        /// The node port exposed by the Istio Ingress HTTPS service.
+        /// </summary>
+        public const int IstioIngressHttps = 30443;
     }
 }

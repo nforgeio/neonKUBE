@@ -196,7 +196,11 @@ csiNode:
   # we need to change the kubelet directory to `/var/snap/microk8s/common/var/lib/kubelet/`
   kubeletDir: "/var/lib/kubelet/"
   nodeSelector: {}
-  tolerations: []
+  tolerations:
+    - operator: Exists
+      effect: NoSchedule
+    - operator: Exists
+      effect: NoExecute
   securityContext: {}
 
 csiDriver:

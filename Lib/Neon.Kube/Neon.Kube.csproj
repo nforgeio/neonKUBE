@@ -82,6 +82,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="Resources\Helm\kiali\templates\service-nodeport.yaml" />
     <None Remove="Resources\Helm\metrics-server\Chart.yaml" />
     <None Remove="Resources\Helm\metrics-server\README.md" />
     <None Remove="Resources\Helm\metrics-server\templates\apiService.yaml" />
@@ -675,6 +676,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Resources\Helm\kiali\templates\service-nodeport.yaml" />
     <EmbeddedResource Include="Resources\Helm\metrics-server\Chart.yaml" />
     <EmbeddedResource Include="Resources\Helm\metrics-server\README.md" />
     <EmbeddedResource Include="Resources\Helm\metrics-server\templates\service.yaml" />
