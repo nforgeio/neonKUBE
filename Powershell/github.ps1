@@ -849,6 +849,7 @@ function Add-ActionPath
 #
 #   name        - the value name.
 #   required    - optionally indicates that the value is required
+#   default     - optionally specifies the default value
 
 function Get-ActionInput
 {
@@ -857,7 +858,9 @@ function Get-ActionInput
         [Parameter(Position=0, Mandatory=$true)]
         [string]$name,
         [Parameter(Position=1, Mandatory=$false)]
-        [bool]$required = $false
+        [bool]$required = $false,
+        [Parameter(Position=2, Mandatory=$false)]
+        [string]$default = $null
     )
 
     if ([System.String]::IsNullOrEmpty($name))
@@ -868,9 +871,16 @@ function Get-ActionInput
     $name  = "INPUT_$name"
     $value = [System.Environment]::GetEnvironmentVariable($name)
 
-    if ($required -and [System.String]::IsNullOrEmpty($value))
+    if ([System.String]::IsNullOrEmpty($value))
     {
-        throw "[$name] input is required."
+        if (!$required)
+        {
+            return $default
+        }
+        else
+        {
+            throw "[$name] input is required."
+        }
     }
 
     return $value
@@ -884,6 +894,7 @@ function Get-ActionInput
 #
 #   name        - the value name.
 #   required    - optionally indicates that the value is required
+#   default     - optionally specifies the default value
 
 function Get-ActionInputBool
 {
@@ -892,7 +903,9 @@ function Get-ActionInputBool
         [Parameter(Position=0, Mandatory=$true)]
         [string]$name,
         [Parameter(Position=1, Mandatory=$false)]
-        [bool]$required = $false
+        [bool]$required = $false,
+        [Parameter(Position=2, Mandatory=$false)]
+        [bool]$default = $false
     )
 
     if ([System.String]::IsNullOrEmpty($name))
@@ -903,9 +916,16 @@ function Get-ActionInputBool
     $name  = "INPUT_$name"
     $value = [System.Environment]::GetEnvironmentVariable($name)
 
-    if ($required -and [System.String]::IsNullOrEmpty($value))
+    if ([System.String]::IsNullOrEmpty($value))
     {
-        throw "[$name] input is required."
+        if (!$required)
+        {
+            return $default
+        }
+        else
+        {
+            throw "[$name] input is required."
+        }
     }
 
     return $value -eq "true"
@@ -918,6 +938,7 @@ function Get-ActionInputBool
 #
 #   name        - the value name.
 #   required    - optionally indicates that the value is required
+#   default     - optionally specifies the default value
 
 function Get-ActionInputInt32
 {
@@ -926,7 +947,9 @@ function Get-ActionInputInt32
         [Parameter(Position=0, Mandatory=$true)]
         [string]$name,
         [Parameter(Position=1, Mandatory=$false)]
-        [bool]$required = $false
+        [bool]$required = $false,
+        [Parameter(Position=2, Mandatory=$false)]
+        [int]$default = 0
     )
 
     if ([System.String]::IsNullOrEmpty($name))
@@ -937,9 +960,16 @@ function Get-ActionInputInt32
     $name  = "INPUT_$name"
     $value = [System.Environment]::GetEnvironmentVariable($name)
 
-    if ($required -and [System.String]::IsNullOrEmpty($value))
+    if ([System.String]::IsNullOrEmpty($value))
     {
-        throw "[$name] input is required."
+        if (!$required)
+        {
+            return $default
+        }
+        else
+        {
+            throw "[$name] input is required."
+        }
     }
 
     return [System.Int32]::Parse($value)
