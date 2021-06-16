@@ -61,11 +61,11 @@ namespace Neon.Kube.Models.Headend
         public long Size { get; set; }
 
         /// <summary>
-        /// The download size of the the part.  This may differ from <see cref="Size"/> if the 
-        /// part is being downloaded with <b>Content-Encoding: gzip</b> or <b>deflate</b>.
+        /// The content-length of the the part.  This may differ from <see cref="Size"/> if the 
+        /// part has an encoding like <b>Content-Encoding: gzip</b> or <b>deflate</b>.
         /// </summary>
-        [JsonProperty(PropertyName = "DownloadSize")]
-        public long DownloadSize { get; set; }
+        [JsonProperty(PropertyName = "ContentLength")]
+        public long ContentLength { get; set; }
 
         /// <summary>
         /// Optionally set to the MD5 hash of the part data (without any compression).

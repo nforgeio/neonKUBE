@@ -50,6 +50,12 @@ namespace Neon.Kube.Models.Headend
         public string Version { get; set; }
 
         /// <summary>
+        /// The MD5 hash for the entire download.
+        /// </summary>
+        [JsonProperty(PropertyName = "Md5")]
+        public string Md5 { get; set; }
+
+        /// <summary>
         /// The download parts.
         /// </summary>
         [JsonProperty(PropertyName = "Parts")]
