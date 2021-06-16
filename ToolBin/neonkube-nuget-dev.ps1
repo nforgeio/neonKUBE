@@ -17,7 +17,7 @@
 # limitations under the License.
 
 # Publishes DEBUG builds of the NeonForge Nuget packages to the repo
-# at http://nuget-dev.neoncloud.io so intermediate builds can be shared 
+# at https://nuget-dev.neoncloud.io so intermediate builds can be shared 
 # by maintainers.
 #
 # NOTE: This is script works only for maintainers with proper credentials.
