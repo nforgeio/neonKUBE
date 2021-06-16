@@ -514,6 +514,12 @@ function Login-Docker
         [string]$credentials
     )
 
+    # Logout if we are already logged in (for CI/CD)
+
+    Logout-Docker $server -CIOnly
+
+    # Login
+
     $username = $(Get-SecretValue "$credentials[username]")
     $password = $(Get-SecretValue "$credentials[password]")
     
@@ -539,8 +545,8 @@ function Login-Docker
 #                       ghcr.io
 #
 #   CIOnly      - optionally logs out only when the current script is running
-#                 a CI job.  This is nice to avoit logging develepers out on
-#                 their own workstations when runing local CI tests.
+#                 a CI job.  This is nice to avoid logging develepers out on
+#                 their own workstations when running local CI tests.
 
 function Logout-Docker
 {
