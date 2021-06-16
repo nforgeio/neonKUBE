@@ -188,7 +188,7 @@ try
         Write-Info "**********************************************************************"
         Write-Info ""
 
-        & $msbuild $nfSolution $buildConfig -t:Clean -m -verbosity:quiet
+        & "$msbuild" "$nfSolution" $buildConfig -t:Clean -m -verbosity:quiet
 
         if (-not $?)
         {
@@ -201,7 +201,7 @@ try
         Write-Info "**********************************************************************"
         Write-Info ""
 
-        & $msbuild $nfSolution $buildConfig -restore -m -verbosity:quiet
+        & "$msbuild" "$nfSolution" $buildConfig -restore -m -verbosity:quiet
 
         if (-not $?)
         {
