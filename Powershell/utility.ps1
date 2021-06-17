@@ -191,7 +191,7 @@ function EscapeDoubleQuotes
 #------------------------------------------------------------------------------
 # Executes a command and captures the stdout and/or stderr outputs.
 #
-# IMPORTANT: REDIRECTION IN COMMANDS IS NOT SUPPORTED
+# IMPORTANT: REDIRECTION BY COMMANDS IS NOT SUPPORTED!
 #
 # ARGUMENTS:
 #
