@@ -72,7 +72,7 @@ namespace Neon.Deployment
             using (var client = new XenClient(addressOrFQDN, username, password))
             {
                 foreach (var vm in client.Machine.List()
-                    .Where(vm => nameRegEx.IsMatch(vm.NameLabel)))
+                    .Where(vm => !string.IsNullOrEmpty(vm.NameLabel) && nameRegEx.IsMatch(vm.NameLabel)))
                 {
                     if (vm.IsRunning)
                     {
