@@ -203,7 +203,7 @@ function EscapeDoubleQuotes
 #
 # RETURNS:
 #
-#   A three element hash table with these properties:
+#   A three element hashtable with these properties:
 #
 #       exitcode    - the command's integer exit code
 #       stdout      - the captured standard output
@@ -409,7 +409,7 @@ function Log-DebugLine
 }
 
 #------------------------------------------------------------------------------
-# Converts YAML text into a hash table.
+# Converts YAML text into a hashtable.
 #
 # ARGUMENTS:
 #
@@ -417,7 +417,7 @@ function Log-DebugLine
 #
 # RETURNS
 #
-#   The parsed hash table.
+#   The parsed hashtable.
 #
 # REMARKS:
 #
@@ -441,11 +441,11 @@ function ConvertFrom-Yaml
 }
 
 #------------------------------------------------------------------------------
-# Converts a hash table into YAML.
+# Converts a hashtable into YAML.
 #
 # ARGUMENTS:
 #
-#   table   - the hash table
+#   table   - the hashtable
 #
 # RETURNS
 #
