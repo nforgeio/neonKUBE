@@ -143,6 +143,16 @@ function Write-Exception
     $scriptName = $info.ScriptName
     $scriptLine = $info.ScriptLineNumber
 
+    # $hack(jefflill): 
+    #
+    # Powershell stream redirection seems very inconsistent so we're going to write
+    # the exception information out as Info (to STDOUT) as well as to the standard 
+    # Powershell output stream in the hope that at least one of these will make it
+    # into redirected log files.
+
+    #--------------------------------------------------------------------------
+    # Write as INFO
+
     Write-Info ""
     Write-Info "***************************************************************************"
     Write-Info "EXCEPTION:   $err"
@@ -160,6 +170,27 @@ function Write-Exception
         Write-Info $exception.StackTrace
     }
     Write-Info "***************************************************************************"
+
+    #--------------------------------------------------------------------------
+    # Write as OUTPUT
+
+    Write-Output ""
+    Write-Output "***************************************************************************"
+    Write-Output "EXCEPTION:   $err"
+    Write-Output "MESSAGE:     $message"
+    Write-Output "SCRIPT NAME: $scriptName"
+    Write-Output "SCRIPT LINE: $scriptLine"
+    Write-Output "SCRIPT STACK TRACE"
+    Write-Output "------------------"
+    Write-Output $err.ScriptStackTrace
+
+    if (![System.String]::IsNullOrEmpty($exception.StackTrace))
+    {
+        Write-Output ".NET STACK TRACE"
+        Write-Output "----------------"
+        Write-Output $exception.StackTrace
+    }
+    Write-Output "***************************************************************************"
 }
 
 #------------------------------------------------------------------------------
