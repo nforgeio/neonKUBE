@@ -43,14 +43,24 @@ namespace Neon.XenServer
             /// </summary>
             /// <returns>The list of virtual machines.</returns>
             /// <exception cref="XenException">Thrown if the operation failed.</exception>
+            /// <remarks>
+            /// <note>
+            /// Only virtual machines with names will be returned.
+            /// </note>
+            /// </remarks>
             public List<XenVirtualMachine> List()
             {
                 var response = client.SafeInvokeItems("vm-list", "params=all");
                 var vms      = new List<XenVirtualMachine>();
 
-                foreach (var result in response.Items)
+                foreach (var vmProperties in response.Items)
                 {
-                    vms.Add(new XenVirtualMachine(result));
+                    if (!vmProperties.TryGetValue("name-label", out var nameLabel))
+                    {
+                        continue;
+                    }
+
+                    vms.Add(new XenVirtualMachine(vmProperties));
                 }
 
                 return vms;
