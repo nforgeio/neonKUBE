@@ -45,7 +45,9 @@ namespace Neon.XenServer
             /// <exception cref="XenException">Thrown if the operation failed.</exception>
             /// <remarks>
             /// <note>
-            /// Only virtual machines with names will be returned.
+            /// Only virtual machines with names will be returned with the 
+            /// assumption that unnamed VMs are XenServer infrastructure
+            /// related.
             /// </note>
             /// </remarks>
             public List<XenVirtualMachine> List()
