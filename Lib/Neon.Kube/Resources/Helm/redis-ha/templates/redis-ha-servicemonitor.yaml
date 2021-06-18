@@ -2,8 +2,9 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-{{- if .Values.exporter.serviceMonitor.labels }}
   labels:
+    instance: neon-monitor
+{{- if .Values.exporter.serviceMonitor.labels }}
 {{ toYaml .Values.exporter.serviceMonitor.labels | indent 4}}
 {{- end }}
   name: {{ template "redis-ha.fullname" . }}

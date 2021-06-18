@@ -2,8 +2,10 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
+  labels:
+    instance: neon-monitor
 {{- with .Values.haproxy.metrics.serviceMonitor.labels }}
-  labels: {{ toYaml . | nindent 4}}
+  {{ toYaml . | nindent 4}}
 {{- end }}
   name: {{ template "redis-ha.fullname" . }}-haproxy
   namespace: {{ .Release.Namespace }}

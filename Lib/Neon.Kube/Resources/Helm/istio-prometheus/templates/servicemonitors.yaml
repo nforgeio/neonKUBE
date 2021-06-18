@@ -4,6 +4,7 @@ metadata:
   name: istio-mesh-monitor
   namespace: {{ .Release.Namespace }}
   labels:
+    instance: neon-monitor
     monitoring: istio-mesh
     release: {{ .Release.Name }}
 spec:
@@ -23,6 +24,7 @@ metadata:
   name: istio-component-monitor
   namespace: {{ .Release.Namespace }}
   labels:
+    instance: neon-monitor
     monitoring: istio-components
     release: {{ .Release.Name }}
 spec:
@@ -43,6 +45,7 @@ metadata:
   name: envoy-stats-monitor
   namespace: {{ .Release.Namespace }}
   labels:
+    instance: neon-monitor
     monitoring: istio-proxies
     release: {{ .Release.Name }}
 spec:
@@ -75,6 +78,7 @@ metadata:
   name: kubernetes-pods-monitor
   namespace: {{ .Release.Namespace }}
   labels:
+    instance: neon-monitor
     monitoring: kube-pods
     release: {{ .Release.Name }}
 spec:
@@ -121,6 +125,7 @@ metadata:
   name: kubernetes-pods-secure-monitor
   namespace: {{ .Release.Namespace }}
   labels:
+    instance: neon-monitor
     monitoring: kube-pods-secure
     release: {{ .Release.Name }}
 spec:
@@ -178,6 +183,7 @@ metadata:
   name: kubernetes-services-monitor
   namespace: {{ .Release.Namespace }}
   labels:
+    instance: neon-monitor
     monitoring: kube-services
     release: {{ .Release.Name }}
 spec:
@@ -224,6 +230,7 @@ metadata:
   name: kubernetes-services-secure-monitor
   namespace: {{ .Release.Namespace }}
   labels:
+    instance: neon-monitor
     monitoring: kube-services-secure
     release: {{ .Release.Name }}
 spec:
@@ -281,6 +288,7 @@ metadata:
   name: kubelet
   namespace: {{ .Release.Namespace }}
   labels:
+    instance: neon-monitor
     monitoring: kubelet-monitor
     release: {{ .Release.Name }}
 spec:

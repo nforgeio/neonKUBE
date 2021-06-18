@@ -5,6 +5,7 @@ metadata:
   name: {{ template "kube-prometheus-stack.fullname" . }}-prometheus
   namespace: {{ template "kube-prometheus-stack.namespace" . }}
   labels:
+    instance: neon-monitor
     app: {{ template "kube-prometheus-stack.name" . }}-prometheus
 {{ include "kube-prometheus-stack.labels" . | indent 4 }}
 spec:
