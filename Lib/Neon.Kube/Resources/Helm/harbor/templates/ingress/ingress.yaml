@@ -1,28 +1,4 @@
-apiVersion: networking.istio.io/v1alpha3
-kind: Gateway
-metadata:
-  name: harbor-gateway
-  namespace: neon-ingress
-spec:
-  selector:
-    istio: ingressgateway
-  servers:
-    - hosts:
-        - {{ .Values.expose.ingress.hosts.core }}
-      port:
-        name: http-harbor
-        number: 8080
-        protocol: HTTP
-    - hosts:
-        - {{ .Values.expose.ingress.hosts.core }}
-        - {{ .Values.expose.ingress.hosts.notary }}
-      port:
-        name: https-harbor
-        number: 8443
-        protocol: HTTPS
-      tls:
-        credentialName: "{{ template "harbor.ingress" . }}"
-        mode: SIMPLE
+
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService

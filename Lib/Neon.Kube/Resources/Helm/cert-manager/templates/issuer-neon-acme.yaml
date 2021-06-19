@@ -18,3 +18,25 @@ metadata:
 spec:
   ca:
     secretName: neon-acme-ca
+---
+apiVersion: cert-manager.io/v1alpha2
+kind: ClusterIssuer
+metadata:
+  name: neon-acme
+spec:
+  acme:
+    email: acme@neonforge.com
+    preferredChain: ''
+    privateKeySecretRef:
+      name: issuer-account-key
+    server: 'https://acme-v02.api.letsencrypt.org/directory'
+    solvers:
+      - dns01:
+          webhook:
+            config:
+              Registrar: route53
+            groupName: acme.neoncloud.io
+            solverName: neon-dns01-solver
+        selector:
+          dnsZones:
+            - neoncluster.io

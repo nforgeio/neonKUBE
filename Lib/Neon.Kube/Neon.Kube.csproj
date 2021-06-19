@@ -82,6 +82,29 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="Resources\Helm\cert-manager\.helmignore" />
+    <None Remove="Resources\Helm\cert-manager\Chart.yaml" />
+    <None Remove="Resources\Helm\cert-manager\crds\certificate-request.yaml" />
+    <None Remove="Resources\Helm\cert-manager\crds\certificate.yaml" />
+    <None Remove="Resources\Helm\cert-manager\crds\challenge.yaml" />
+    <None Remove="Resources\Helm\cert-manager\crds\cluster-issuer.yaml" />
+    <None Remove="Resources\Helm\cert-manager\crds\issuer.yaml" />
+    <None Remove="Resources\Helm\cert-manager\crds\order.yaml" />
+    <None Remove="Resources\Helm\cert-manager\templates\certificate-cluster.yaml" />
+    <None Remove="Resources\Helm\cert-manager\templates\certificate-neon-acme.yaml" />
+    <None Remove="Resources\Helm\cert-manager\templates\deployment-cm-ca-injector.yaml" />
+    <None Remove="Resources\Helm\cert-manager\templates\deployment-cm-webhook.yaml" />
+    <None Remove="Resources\Helm\cert-manager\templates\deployment-cm.yaml" />
+    <None Remove="Resources\Helm\cert-manager\templates\deployment-neon-acme.yaml" />
+    <None Remove="Resources\Helm\cert-manager\templates\gateway-cluster.yaml" />
+    <None Remove="Resources\Helm\cert-manager\templates\issuer-neon-acme.yaml" />
+    <None Remove="Resources\Helm\cert-manager\templates\rbac-neon-acme.yaml" />
+    <None Remove="Resources\Helm\cert-manager\templates\rbac.yaml" />
+    <None Remove="Resources\Helm\cert-manager\templates\service-cm-webhook.yaml" />
+    <None Remove="Resources\Helm\cert-manager\templates\service-cm.yaml" />
+    <None Remove="Resources\Helm\cert-manager\templates\service-neon-acme.yaml" />
+    <None Remove="Resources\Helm\cert-manager\templates\webhookconfiguration.yaml" />
+    <None Remove="Resources\Helm\cert-manager\values.yaml" />
     <None Remove="Resources\Helm\kiali\templates\service-nodeport.yaml" />
     <None Remove="Resources\Helm\metrics-server\Chart.yaml" />
     <None Remove="Resources\Helm\metrics-server\README.md" />
@@ -676,6 +699,32 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Resources\Helm\cert-manager\.helmignore" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Helm\cert-manager\Chart.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\crds\certificate-request.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\crds\certificate.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\crds\challenge.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\crds\cluster-issuer.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\crds\issuer.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\crds\order.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\certificate-cluster.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\certificate-neon-acme.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\deployment-cm-ca-injector.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\deployment-cm-webhook.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\deployment-cm.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\deployment-neon-acme.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\gateway-cluster.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\issuer-neon-acme.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\rbac-neon-acme.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\rbac.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\service-cm-webhook.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\service-cm.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\service-neon-acme.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\webhookconfiguration.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\values.yaml" />
     <EmbeddedResource Include="Resources\Helm\kiali\templates\service-nodeport.yaml" />
     <EmbeddedResource Include="Resources\Helm\metrics-server\Chart.yaml" />
     <EmbeddedResource Include="Resources\Helm\metrics-server\README.md" />
