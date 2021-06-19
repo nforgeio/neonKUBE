@@ -38,7 +38,7 @@ namespace Neon.Kube.Models.Headend
         }
 
         /// <summary>
-        /// Identifies the download by name.
+        /// Identifies the download file name.
         /// </summary>
         [JsonProperty(PropertyName = "Name")]
         public string Name { get; set; }
@@ -48,6 +48,18 @@ namespace Neon.Kube.Models.Headend
         /// </summary>
         [JsonProperty(PropertyName = "Version")]
         public string Version { get; set; }
+
+        /// <summary>
+        /// The overall size of the download.
+        /// </summary>
+        [JsonProperty(PropertyName = "Size")]
+        public long Size { get; set; }
+
+        /// <summary>
+        /// The MD5 hash for the entire download.
+        /// </summary>
+        [JsonProperty(PropertyName = "Md5")]
+        public string Md5 { get; set; }
 
         /// <summary>
         /// The download parts.

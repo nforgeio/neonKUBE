@@ -62,8 +62,9 @@ ARGUMENTS:
 OPTIONS:
 
     --package-caches=HOST:PORT  - Optionally specifies one or more APT Package cache
-                                  servers by hostname and port.  Specify multiple
-                                  servers by separating the endpoints with spaces.
+                                  servers by hostname and port for use by the new cluster. 
+                                  Specify multiple servers by separating the endpoints 
+                                  with spaces.
 
     --unredacted                - Runs commands with potential secrets without 
                                   redacting logs.  This is useful for debugging 

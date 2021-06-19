@@ -50,6 +50,7 @@ using Neon.Cryptography;
 using Neon.Data;
 using Neon.Diagnostics;
 using Neon.IO;
+using Neon.Kube.Models.Headend;
 using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;

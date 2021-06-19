@@ -67,12 +67,12 @@ namespace Neon.Deployment
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(password), nameof(password));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nameOrPattern), nameof(nameOrPattern));
 
-            var nameRegEx = NeonHelper.FileWildcardRegex(nameOrPattern);
+            var nameRegex = NeonHelper.FileWildcardRegex(nameOrPattern);
 
             using (var client = new XenClient(addressOrFQDN, username, password))
             {
                 foreach (var vm in client.Machine.List()
-                    .Where(vm => nameRegEx.IsMatch(vm.NameLabel)))
+                    .Where(vm => nameRegex.IsMatch(vm.NameLabel)))
                 {
                     if (vm.IsRunning)
                     {
