@@ -2500,7 +2500,7 @@ TCPKeepAlive yes
         }
 
         /// <summary>
-        /// Downloads a single part node image from a URI to a local folder.
+        /// Downloads a single part node image from a URI or a multi-part download to a local folder.
         /// </summary>
         /// <param name="imageUri">The node image URI.</param>
         /// <param name="imagePath">The target local image file path.</param>
@@ -2508,16 +2508,12 @@ TCPKeepAlive yes
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <remarks>
         /// <para>
-        /// This checks to see if the target file already exists and doesn't download
-        /// the file if it does.
+        /// This supports source URIs referencing a single node image file as well
+        /// as URIs referencing a multi-part <see cref="Download"/> serialized as 
+        /// JSON and with the <see cref="DeploymentHelper.DownloadContentType"/>
+        /// Content-Type.
         /// </para>
-        /// <note>
-        /// This method is being depreicated in favor of <see cref="DownloadNodeImageAsync(Download, string, Action{int})"/>
-        /// which is more reslient in the face of download failures.  This method does no verification
-        /// of the download.
-        /// </note>
         /// </remarks>
-        [Obsolete("Depreciated in favor of: DownloadNodeImageAsync(string, Download, Action<int>()")]
         public async static Task DownloadNodeImageAsync(string imageUri, string imagePath, Action<int> progressAction = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(imageUri), nameof(imageUri));
@@ -2525,81 +2521,90 @@ TCPKeepAlive yes
 
             Directory.CreateDirectory(Path.GetDirectoryName(imagePath));
 
-            if (File.Exists(imagePath))
+            using (var client = new HttpClient())
             {
-                return;
-            }
+                // Execute a HEAD request on the source URI to obtain the content type.  We'll
+                // use this to decide whether to download a single or multi-part file.
 
-            Task.Run(
-                async () =>
+                var request  = new HttpRequestMessage(HttpMethod.Head, imageUri);
+                var response = await client.SendAsync(request);
+
+                response.EnsureSuccessStatusCode();
+
+                if (string.Equals(response.Content.Headers.ContentType.MediaType, StringComparer.InvariantCultureIgnoreCase))
                 {
-                    using (var client = new HttpClient())
+                    // Multi-part download.
+
+                    await DownloadNodeImageAsync(imageUri, imagePath, progressAction);
+                    return;
+                }
+
+                // Download the single part file.
+
+                if (File.Exists(imagePath))
+                {
+                    return;
+                }
+
+                response = await client.GetAsync(imageUri, HttpCompletionOption.ResponseHeadersRead);
+
+                response.EnsureSuccessStatusCode();
+
+                var contentLength   = response.Content.Headers.ContentLength;
+                var contentEncoding = response.Content.Headers.ContentEncoding.SingleOrDefault();
+
+                if (string.IsNullOrEmpty(contentEncoding) || !contentEncoding.Equals("gzip", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    throw new KubeException($"[{imageUri}] has unsupported [Content-Encoding={contentEncoding}].  Expecting [gzip]");
+                }
+
+                try
+                {
+                    progressAction?.Invoke(0);
+
+                    using (var fileStream = new FileStream(imagePath, FileMode.Create, FileAccess.ReadWrite))
                     {
-                        // Download the file.
-
-                        var response = await client.GetAsync(imageUri, HttpCompletionOption.ResponseHeadersRead);
-
-                        response.EnsureSuccessStatusCode();
-
-                        var contentLength   = response.Content.Headers.ContentLength;
-                        var contentEncoding = response.Content.Headers.ContentEncoding.SingleOrDefault();
-
-                        if (string.IsNullOrEmpty(contentEncoding) || !contentEncoding.Equals("gzip", StringComparison.InvariantCultureIgnoreCase))
+                        using (var downloadStream = await response.Content.ReadAsStreamAsync())
                         {
-                            throw new KubeException($"[{imageUri}] has unsupported [Content-Encoding={contentEncoding}].  Expecting [gzip]");
-                        }
+                            var buffer = new byte[64 * 1024];
+                            int cb;
 
-                        try
-                        {
-                            progressAction?.Invoke(0);
-
-                            using (var fileStream = new FileStream(imagePath, FileMode.Create, FileAccess.ReadWrite))
+                            while (true)
                             {
-                                using (var downloadStream = await response.Content.ReadAsStreamAsync())
+                                cb = await downloadStream.ReadAsync(buffer, 0, buffer.Length);
+
+                                if (cb == 0)
                                 {
-                                    var buffer = new byte[64 * 1024];
-                                    int cb;
+                                    break;
+                                }
 
-                                    while (true)
-                                    {
-                                        cb = await downloadStream.ReadAsync(buffer, 0, buffer.Length);
+                                await fileStream.WriteAsync(buffer, 0, cb);
 
-                                        if (cb == 0)
-                                        {
-                                            break;
-                                        }
+                                if (contentLength.HasValue)
+                                {
+                                    var percentComplete = (int)(((double)fileStream.Length / (double)contentLength) * 100.0);
 
-                                        await fileStream.WriteAsync(buffer, 0, cb);
-
-                                        if (contentLength.HasValue)
-                                        {
-                                            var percentComplete = (int)(((double)fileStream.Length / (double)contentLength) * 100.0);
-
-                                            progressAction?.Invoke(percentComplete);
-                                        }
-                                    }
+                                    progressAction?.Invoke(percentComplete);
                                 }
                             }
-
-                            progressAction?.Invoke(100);
-                        }
-                        catch
-                        {
-                            // Ensure that the template file is are deleted if there were any
-                            // errors to help avoid using a corrupted template.
-
-                            if (File.Exists(imagePath))
-                            {
-                                File.Delete(imagePath);
-                            }
-
-                            throw;
                         }
                     }
 
-                }).Wait();
+                    progressAction?.Invoke(100);
+                }
+                catch
+                {
+                    // Ensure that the template file is are deleted if there were any
+                    // errors to help avoid using a corrupted template.
 
-            await Task.CompletedTask;
+                    if (File.Exists(imagePath))
+                    {
+                        File.Delete(imagePath);
+                    }
+
+                    throw;
+                }
+            }
         }
 
         /// <summary>
