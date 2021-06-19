@@ -194,7 +194,7 @@ function Publish
     }
 }
 
-# We need to do a  solution build to ensure that any tools or other dependencies 
+# We need to do a solution build to ensure that any tools or other dependencies 
 # are built before we build and publish the individual packages.
 
 Write-Info  ""
