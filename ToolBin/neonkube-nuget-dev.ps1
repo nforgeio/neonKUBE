@@ -189,7 +189,7 @@ function Publish
     }
     else
     {
-        nuget push -Source $env:NC_NUGET_DEVFEED -ApiKey $devFeedApiKey "$env:NF_BUILD\nuget\$project.$version.nupkg" -Timeout 600
+        nuget push -Source $env:NC_NUGET_DEVFEED -ApiKey $devFeedApiKey "$env:NF_BUILD\nuget\$project.$version.nupkg" -SkipDuplicate -Timeout 600
         ThrowOnExitCode
     }
 }
