@@ -5,6 +5,7 @@ metadata:
   name: {{ template "kube-state-metrics.fullname" . }}
   namespace: {{ template "kube-state-metrics.namespace" . }}
   labels:
+    instance: neon-monitor
     app.kubernetes.io/name: {{ template "kube-state-metrics.name" . }}
     helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
     app.kubernetes.io/instance: "{{ .Release.Name }}"
