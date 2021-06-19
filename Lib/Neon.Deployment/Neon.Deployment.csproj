@@ -53,6 +53,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
+    <ProjectReference Include="..\Neon.Kube.Models\Neon.Kube.Models.csproj" />
     <ProjectReference Include="..\Neon.XenServer\Neon.XenServer.csproj" />
   </ItemGroup>
 

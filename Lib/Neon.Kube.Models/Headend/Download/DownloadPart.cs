@@ -61,13 +61,6 @@ namespace Neon.Kube.Models.Headend
         public long Size { get; set; }
 
         /// <summary>
-        /// The content-length of the the part.  This may differ from <see cref="Size"/> if the 
-        /// part has an encoding like <b>Content-Encoding: gzip</b> or <b>deflate</b>.
-        /// </summary>
-        [JsonProperty(PropertyName = "ContentLength")]
-        public long ContentLength { get; set; }
-
-        /// <summary>
         /// Optionally set to the MD5 hash of the part data (without any compression).
         /// </summary>
         [JsonProperty(PropertyName = "Md5")]
