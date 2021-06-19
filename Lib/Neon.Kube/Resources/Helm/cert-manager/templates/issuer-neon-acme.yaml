@@ -1,0 +1,20 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: neon-acme-selfsign
+  namespace: neon-ingress
+  labels:
+    app: neon-acme
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: neon-acme-ca
+  namespace: neon-ingress
+  labels:
+    app: neon-acme
+spec:
+  ca:
+    secretName: neon-acme-ca
