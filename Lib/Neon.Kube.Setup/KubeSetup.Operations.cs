@@ -806,7 +806,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                     }
 
-                    await master.InstallHelmChartAsync(controller, "calico", releaseName: "calico", @namespace: "kube-system", values: values);
+                    await master.InstallHelmChartAsync(controller, "calico", releaseName: "calico", @namespace: KubeNamespaces.KubeSystem, values: values);
 
                     // Wait for Calico and CoreDNS pods to report that they're running.
                     // We're going to wait a maximum of 300 seconds.
@@ -957,7 +957,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         i++;
                     }
 
-                    await master.InstallHelmChartAsync(controller, "metrics_server", releaseName: "metrics-server", @namespace: "kube-system", values: values);
+                    await master.InstallHelmChartAsync(controller, "metrics_server", releaseName: "metrics-server", @namespace: KubeNamespaces.KubeSystem, values: values);
                 });
 
             await master.InvokeIdempotentAsync("setup/kubernetes-metrics-server-ready",
@@ -1004,7 +1004,7 @@ $@"
             targetPort: {rule.TargetPort}
             nodePort: {rule.NodePort}");
                     }
-                    
+
                     var istioScript0 =
 $@"
 tmp=$(mktemp -d /tmp/istioctl.XXXXXX)
@@ -1122,6 +1122,43 @@ kubectl apply -f istio-cni.yaml
 ";
                     master.SudoCommand(CommandBundle.FromScript(istioScript0), RunOptions.FaultOnError);
                     await Task.CompletedTask;
+                });
+        }
+
+        /// <summary>
+        /// Installs Cert Manager.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        /// <param name="master">The master node where the operation will be performed.</param>
+        public static async Task InstallCertManagerAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
+        {
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
+
+            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var ingressAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.IstioIngressGateway);
+            var proxyAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.IstioProxy);
+
+            await master.InvokeIdempotentAsync("setup/cert-manager",
+                async () =>
+                {
+                    controller.LogProgress(master, verb: "deploy", message: "cert-manager");
+                    
+                    var values = new Dictionary<string, object>();
+
+                    values.Add("image.organization", KubeConst.LocalClusterRegistry);
+
+                    int i = 0;
+                    foreach (var t in await GetTaintsAsync(controller, NodeLabels.LabelIngress, "true"))
+                    {
+                        values.Add($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}");
+                        values.Add($"tolerations[{i}].effect", t.Effect);
+                        values.Add($"tolerations[{i}].operator", "Exists");
+                        i++;
+                    }
+
+                    await master.InstallHelmChartAsync(controller, "cert_manager", releaseName: "cert-manager", @namespace: KubeNamespaces.NeonIngress, values: values);
+
                 });
         }
 
