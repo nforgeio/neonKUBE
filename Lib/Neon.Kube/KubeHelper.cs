@@ -623,7 +623,7 @@ namespace Neon.Kube
                     return cachedTempFolder;
                 }
 
-                var path = Path.Combine(GetNeonKubeUserFolder(), "temp");
+                var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "neonFORGE", "neonKUBE", "temp");
 
                 Directory.CreateDirectory(path);
 
@@ -871,7 +871,7 @@ namespace Neon.Kube
                     return cachedNodeImageFolder;
                 }
 
-                var path = Path.Combine(GetNeonKubeUserFolder(), "node-images");
+                var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "neonFORGE", "neonKUBE", "node-images");
 
                 Directory.CreateDirectory(path);
 
