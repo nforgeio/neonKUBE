@@ -871,7 +871,7 @@ namespace Neon.Kube
                     return cachedNodeImageFolder;
                 }
 
-                var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "neonFORGE", "neonKUBE", "node-images");
+                var path = Path.Combine(GetNeonKubeUserFolder(), "node-images");
 
                 Directory.CreateDirectory(path);
 
