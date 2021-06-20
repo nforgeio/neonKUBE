@@ -194,9 +194,9 @@ try
         # Clean and build the solution.
 
         Write-Info ""
-        Write-Info "**********************************************************************"
-        Write-Info "***                         CLEAN SOLUTION                         ***"
-        Write-Info "**********************************************************************"
+        Write-Info "*******************************************************************************"
+        Write-Info "***                           CLEAN SOLUTION                                ***"
+        Write-Info "*******************************************************************************"
         Write-Info ""
 
         & "$msbuild" "$nfSolution" $buildConfig -t:Clean -m -verbosity:quiet
@@ -207,9 +207,22 @@ try
         }
 
         Write-Info ""
-        Write-Info "**********************************************************************"
-        Write-Info "***                         BUILD SOLUTION                         ***"
-        Write-Info "**********************************************************************"
+        Write-Info "*******************************************************************************"
+        Write-Info "***                           RESTORE PACKAGES                              ***"
+        Write-Info "*******************************************************************************"
+        Write-Info ""
+
+        & "$msbuild" "$nfSolution" -t:restore -verbosity:quiet
+
+        if (-not $?)
+        {
+            throw "ERROR: RESTORE FAILED"
+        }
+
+        Write-Info ""
+        Write-Info "*******************************************************************************"
+        Write-Info "***                           BUILD SOLUTION                                ***"
+        Write-Info "*******************************************************************************"
         Write-Info ""
 
         & "$msbuild" "$nfSolution" $buildConfig -restore -m -verbosity:quiet
