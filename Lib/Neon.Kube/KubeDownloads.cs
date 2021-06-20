@@ -106,7 +106,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Returns the HTTPS URI to be used for downloading the prepared neonKUBE virtual machine image 
+        /// Returns the default URI to be used for downloading the prepared neonKUBE virtual machine image 
         /// for the current neonKUBE cluster version.
         /// </para>
         /// <note>
@@ -118,18 +118,14 @@ namespace Neon.Kube
         /// </note>
         /// </summary>
         /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
-        /// <param name="controller">The setup controller.</param>
+        /// <param name="setupDebugMode">Optionally indicates that we'll be provisioning in debug mode.</param>
+        /// <param name="baseImageName">Specifies the base image name when <paramref name="setupDebugMode"/><c>==true</c></param>
         /// <returns>The download URI or <c>null</c>.</returns>
-        public static string GetNodeImageUri(HostingEnvironment hostingEnvironment, ISetupController controller)
+        public static string GetDefaultNodeImageUri(HostingEnvironment hostingEnvironment, bool setupDebugMode = false, string baseImageName = null)
         {
-            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-
-            var setupDebugMode = controller.Get<bool>(KubeSetupProperty.DebugMode, false);
-            var baseImageName  = controller.Get<string>(KubeSetupProperty.BaseImageName, null);
-
             if (setupDebugMode && string.IsNullOrEmpty(baseImageName))
             {
-                throw new NotSupportedException($"[{nameof(controller)}] must include [{KubeSetupProperty.BaseImageName}] when [{KubeSetupProperty.DebugMode}=true].");
+                throw new NotSupportedException($"[{KubeSetupProperty.BaseImageName}] must be passed when [{nameof(setupDebugMode)}=true].");
             }
 
             var imageType = setupDebugMode ? "base" : "node";
@@ -149,7 +145,7 @@ namespace Neon.Kube
                         throw new NotSupportedException("Cluster setup debug mode is not supported for cloud environments.");
                     }
 
-                    return null;
+                    throw new NotImplementedException($"Node images are not implemented for the [{hostingEnvironment}] environment.");
 
                 case HostingEnvironment.HyperV:
                 case HostingEnvironment.HyperVLocal:
@@ -187,7 +183,7 @@ namespace Neon.Kube
 
                 default:
 
-                    throw new NotImplementedException();
+                    throw new NotImplementedException($"Node images are not implemented for the [{hostingEnvironment}] environment.");
             }
         }
     }

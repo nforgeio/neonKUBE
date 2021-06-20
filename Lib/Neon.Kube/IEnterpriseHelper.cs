@@ -64,9 +64,10 @@ namespace Neon.Kube
         /// within a cluster procy.
         /// </summary>
         /// <param name="cluster">The cluster proxy,</param>
+        /// <param name="nodeImageUri">The node image URI.</param>
         /// <param name="logFolder">Optionally specifies the log folder where the hosting manager will log progress.</param>
         /// <returns>The hosting manager for the environment.</returns>
         /// <exception cref="KubeException">Thrown if the environment is not implemented by an enterprise hosting manager.</exception>
-        HostingManager GetHostingManager(ClusterProxy cluster, string logFolder = null);
+        HostingManager GetHostingManager(ClusterProxy cluster, string nodeImageUri, string logFolder = null);
     }
 }

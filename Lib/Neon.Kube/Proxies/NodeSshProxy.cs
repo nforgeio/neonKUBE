@@ -492,8 +492,8 @@ namespace Neon.Kube
         /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
         public void UpdateLinux(HostingEnvironment hostingEnvironment)
         {
-            SudoCommand("apt-get update -yq", RunOptions.Defaults | RunOptions.FaultOnError);
-            SudoCommand("apt-get dist-upgrade -yq", RunOptions.Defaults | RunOptions.FaultOnError);
+            SudoCommand("safe-apt-get update -yq", RunOptions.Defaults | RunOptions.FaultOnError);
+            SudoCommand("safe-apt-get dist-upgrade -yq", RunOptions.Defaults | RunOptions.FaultOnError);
         }
 
         /// <summary>
@@ -504,8 +504,8 @@ namespace Neon.Kube
         {
             // $todo(jefflill): We haven't actually tested this yet.
 
-            SudoCommand("apt-get update -yq", RunOptions.Defaults | RunOptions.FaultOnError);
-            SudoCommand("apt-get dist-upgrade -yq", RunOptions.Defaults | RunOptions.FaultOnError);
+            SudoCommand("safe-apt-get update -yq", RunOptions.Defaults | RunOptions.FaultOnError);
+            SudoCommand("safe-apt-get dist-upgrade -yq", RunOptions.Defaults | RunOptions.FaultOnError);
             SudoCommand("do-release-upgrade --mode server", RunOptions.Defaults | RunOptions.FaultOnError);
         }
 
@@ -547,7 +547,7 @@ namespace Neon.Kube
             var cleanScript =
 $@"#!/bin/bash
 cloud-init clean
-apt-get clean
+safe-apt-get clean
 rm -rf /var/lib/apt/lists
 rm -rf /var/lib/dhcp/*
 {cleanCommand}

@@ -61,6 +61,12 @@ ARGUMENTS:
 
 OPTIONS:
 
+    --node-image-uri            - Overrides the default node image URI.  This can
+                                  reference a single-part gzip encoded image or
+                                  multi-part download metadata.
+
+                                  This is ignored for [--debug] mode.
+
     --package-caches=HOST:PORT  - Optionally specifies one or more APT Package cache
                                   servers by hostname and port for use by the new cluster. 
                                   Specify multiple servers by separating the endpoints 
@@ -117,7 +123,7 @@ Server Requirements:
         public override string[] Words => new string[] { "cluster", "prepare" };
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions => new string[] { "--package-caches", "--unredacted", "--remove-templates", "--debug", "--base-image-name", "--automate" };
+        public override string[] ExtendedOptions => new string[] { "--node-image-uri", "--package-caches", "--unredacted", "--remove-templates", "--debug", "--base-image-name", "--automate" };
 
         /// <inheritdoc/>
         public override bool NeedsSshCredentials(CommandLine commandLine) => !commandLine.HasOption("--remove-templates");
@@ -154,7 +160,8 @@ Server Requirements:
                     File.Delete(fileName);
                 }
             }
-
+           
+            var nodeImageUri  = commandLine.GetOption("--node-image-uri");
             var debug         = commandLine.HasOption("--debug");
             var baseImageName = commandLine.GetOption("--base-image-name");
             var automate      = commandLine.HasOption("--automate");
@@ -202,6 +209,13 @@ Server Requirements:
                 clusterDefinition = ClusterDefinition.FromFile(clusterDefPath, strict: true);
             }
 
+            // Use the default node image for the hosting environment unless [--node-image-uri] was specified.
+
+            if (string.IsNullOrEmpty(nodeImageUri))
+            {
+                nodeImageUri = KubeDownloads.GetDefaultNodeImageUri(clusterDefinition.Hosting.Environment);
+            }
+
             // Parse any specified package cache endpoints.
 
             var packageCaches         = commandLine.GetOption("--package-caches", null);
@@ -225,6 +239,7 @@ Server Requirements:
 
             var controller = KubeSetup.CreateClusterPrepareController(
                 clusterDefinition, 
+                nodeImageUri,
                 maxParallel:            Program.MaxParallel,
                 packageCacheEndpoints:  packageCacheEndpoints,
                 unredacted:             commandLine.HasOption("--unredacted"),

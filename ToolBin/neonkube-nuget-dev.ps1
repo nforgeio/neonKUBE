@@ -172,9 +172,16 @@ function Publish
         [string]$version
     )
 
+    $localIndicator = ""
+
+    if ($local)
+    {
+        $localIndicator = " (local)"
+    }
+
     ""
     "==============================================================================="
-    "* Publishing: ${project}:${version}"
+    "* Publishing: ${project}:${version}${localIndicator}"
     "==============================================================================="
 
     $projectPath = [io.path]::combine($env:NF_ROOT, "Lib", "$project", "$project" + ".csproj")

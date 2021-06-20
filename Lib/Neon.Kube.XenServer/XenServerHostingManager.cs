@@ -88,6 +88,7 @@ namespace Neon.Kube
         // Instance members
 
         private ClusterProxy                cluster;
+        private string                      nodeImageUri;
         private SetupController<XenClient>  xenController;
         private string                      driveTemplatePath;
         private string                      logFolder;
@@ -107,15 +108,17 @@ namespace Neon.Kube
         /// Creates an instance that is capable of provisioning a cluster on XenServer/XCP-ng servers.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
+        /// <param name="nodeImageUri">Optionally specifies the node image URI when preparing clusters.</param>
         /// <param name="logFolder">
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
-        public XenServerHostingManager(ClusterProxy cluster, string logFolder = null)
+        public XenServerHostingManager(ClusterProxy cluster, string nodeImageUri = null, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
 
             this.cluster                = cluster;
+            this.nodeImageUri           = nodeImageUri;
             this.cluster.HostingManager = this;
             this.logFolder              = logFolder;
             this.maxVmNameWidth         = cluster.Definition.Nodes.Max(node => node.Name.Length) + cluster.Definition.Hosting.Vm.GetVmNamePrefix(cluster.Definition).Length;
@@ -374,9 +377,13 @@ namespace Neon.Kube
         /// <param name="xenSshProxy">The XenServer SSH proxy.</param>
         private async Task CheckVmTemplateAsync(NodeSshProxy<XenClient> xenSshProxy)
         {
+            if (string.IsNullOrEmpty(nodeImageUri))
+            {
+                throw new InvalidOperationException($"[{nameof(nodeImageUri)}] was not passed to the hosting manager's constructor which is required for preparing a cluster.");
+            }
+
             var xenHost      = xenSshProxy.Metadata;
             var templateName = $"neonkube-{KubeVersions.NeonKubeVersion}";
-            var nodeImageUri = KubeDownloads.GetNodeImageUri(this.HostingEnvironment, xenController);
 
             xenSshProxy.Status = "check: template";
 
@@ -384,7 +391,7 @@ namespace Neon.Kube
             {
                 xenSshProxy.Status = "download: vm template (slow)";
 
-                var driveTemplateUri  = new Uri(KubeDownloads.GetNodeImageUri(this.HostingEnvironment, xenController));
+                var driveTemplateUri  = new Uri(KubeDownloads.GetDefaultNodeImageUri(this.HostingEnvironment));
                 var driveTemplateName = driveTemplateUri.Segments.Last();
 
                 driveTemplatePath = Path.Combine(KubeHelper.NodeImageFolder, driveTemplateName);

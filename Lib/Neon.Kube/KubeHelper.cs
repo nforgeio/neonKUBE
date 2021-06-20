@@ -336,20 +336,29 @@ namespace Neon.Kube
             if (NeonHelper.IsWindows)
             {
                 var userFolderPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                var neonFolderPath = GetNeonKubeUserFolder();
 
                 var sensitiveFolders = new string[]
                 {
                     Path.Combine(userFolderPath, ".kube"),
-                    Path.Combine(userFolderPath, ".neonkube"),
-                    Path.Combine(userFolderPath, "OpenVPN")
+                    Path.Combine(neonFolderPath, "logins"),
+                    Path.Combine(neonFolderPath, "log")
                 };
 
                 foreach (var sensitiveFolder in sensitiveFolders)
                 {
-                    if (Directory.Exists(sensitiveFolder))
-                    {
-                        NeonHelper.EncryptFile(sensitiveFolder);
-                    }
+                    Directory.CreateDirectory(sensitiveFolder);
+                }
+
+                // We used to encrypt the entire [.neonkube] folder but that caused problems
+                // with WSL2, so we're going to decrypt the folder before encrypting special
+                // subfolders.
+
+                NeonHelper.DecryptFile(neonFolderPath);
+
+                foreach (var sensitiveFolder in sensitiveFolders)
+                {
+                    NeonHelper.EncryptFile(sensitiveFolder);
                 }
             }
             else
@@ -611,8 +620,7 @@ namespace Neon.Kube
         /// <returns>The folder path.</returns>
         /// <remarks>
         /// This folder will exist on developer/operator workstations that have used the <b>neon-cli</b>
-        /// to deploy and manage clusters.  The client will use this to store temporary files that may
-        /// include sensitive information because these folders are encrypted on disk.
+        /// to deploy and manage clusters.
         /// </remarks>
         public static string TempFolder
         {
@@ -871,7 +879,7 @@ namespace Neon.Kube
                     return cachedNodeImageFolder;
                 }
 
-                var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.p), "neonFORGE", "neonKUBE", "node-images");
+                var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "neonFORGE", "neonKUBE", "node-images");
 
                 Directory.CreateDirectory(path);
 
