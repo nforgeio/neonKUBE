@@ -10,7 +10,7 @@ spec:
   duration: 43800h # 5y
   issuerRef:
     name: neon-acme-selfsign
-  commonName: "ca.neon-acme.cert-manager"
+  commonName: "ca.neon-acme.neon-ingress"
   isCA: true
 ---
 # Finally, generate a serving certificate for the webhook to use
@@ -28,6 +28,6 @@ spec:
     name: neon-acme-ca
   dnsNames:
   - neon-acme
-  - neon-acme.cert-manager
-  - neon-acme.cert-manager.svc
-  - neon-acme.cert-manager.svc.cluster.local
+  - neon-acme.neon-ingress
+  - neon-acme.neon-ingress.svc
+  - neon-acme.neon-ingress.svc.cluster.local

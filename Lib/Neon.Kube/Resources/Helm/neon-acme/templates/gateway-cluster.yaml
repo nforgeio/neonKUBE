@@ -9,7 +9,7 @@ spec:
   servers:
     - hosts:
         - {{ .Values.clusterDomain }}
-        - *.{{ .Values.clusterDomain }}
+        - "*.{{ .Values.clusterDomain }}"
       port:
         name: http-neoncluster
         number: 8080
@@ -18,7 +18,7 @@ spec:
         httpsRedirect: true
     - hosts:
         - {{ .Values.clusterDomain }}
-        - *.{{ .Values.clusterDomain }}
+        - "*.{{ .Values.clusterDomain }}"
       port:
         name: https-neoncluster
         number: 8443

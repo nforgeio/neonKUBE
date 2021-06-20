@@ -7,7 +7,7 @@ spec:
   commonName: {{ .Values.clusterDomain }}
   dnsNames:
     - {{ .Values.clusterDomain }}
-    - *.{{ .Values.clusterDomain }}
+    - "*.{{ .Values.clusterDomain }}"
   duration: 2160h0m0s
   issuerRef:
     group: cert-manager.io

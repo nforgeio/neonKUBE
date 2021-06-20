@@ -307,7 +307,7 @@ spec:
             var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
             var cluster            = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var clusterLogin       = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
-
+            
             master.InvokeIdempotent("setup/cluster-init",
                 () =>
                 {
