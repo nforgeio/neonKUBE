@@ -132,7 +132,7 @@ namespace Neon.Kube
             InvokeIdempotent("base/dns-ipv4",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "configure", message: "dns ipv4 prepference");
+                    controller.LogProgress(this, verb: "configure", message: "dns ipv4 preference");
 
                     var script =
 @"
@@ -814,7 +814,7 @@ chmod 750 {KubeNodeFolders.State}/setup
                     // the [*.sh] file type (if present) and then setting execute
                     // permissions.
 
-                    var scriptsFolder = KubeHelper.Resources.GetDirectory("/Scripts");    // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1121
+                    var scriptsFolder = KubeHelper.Resources.GetDirectory("/Tools");    // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1121
 
                     foreach (var file in scriptsFolder.GetFiles())
                     {
