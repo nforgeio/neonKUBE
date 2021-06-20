@@ -236,7 +236,7 @@ namespace Neon.Kube
 
             xenController.AddWaitUntilOnlineStep();
             xenController.AddNodeStep("verify readiness", (controller, node) => VerifyReady(node));
-            xenController.AddNodeStep("virtual machine template", (controller, node) => CheckVmTemplate(node), parallelLimit: 1);
+            xenController.AddNodeStep("virtual machine template", (controller, node) => CheckVmTemplateAsync(node), parallelLimit: 1);
             xenController.AddNodeStep("create virtual machines", (controller, node) => ProvisionVM(node));
 
             controller.AddControllerStep(xenController);
@@ -372,7 +372,7 @@ namespace Neon.Kube
         /// Install the virtual machine template on the XenServer if it's not already present.
         /// </summary>
         /// <param name="xenSshProxy">The XenServer SSH proxy.</param>
-        private void CheckVmTemplate(NodeSshProxy<XenClient> xenSshProxy)
+        private async Task CheckVmTemplateAsync(NodeSshProxy<XenClient> xenSshProxy)
         {
             var xenHost      = xenSshProxy.Metadata;
             var templateName = $"neonkube-{KubeVersions.NeonKubeVersion}";
@@ -384,10 +384,6 @@ namespace Neon.Kube
             {
                 xenSshProxy.Status = "download: vm template (slow)";
 
-                // Download the GZIPed XVA template if it's not already present.  Note that we're 
-                // going to name the file the same as the file name from the URI and also that 
-                // templates are considered to be invariant.
-
                 var driveTemplateUri  = new Uri(KubeDownloads.GetNodeImageUri(this.HostingEnvironment, xenController));
                 var driveTemplateName = driveTemplateUri.Segments.Last();
 
@@ -395,76 +391,15 @@ namespace Neon.Kube
 
                 if (!File.Exists(driveTemplatePath))
                 {
-                    xenController.SetGlobalStepStatus($"Download node image VHDX: [{nodeImageUri}]");
+                    xenController.SetGlobalStepStatus($"Download node image XVA: [{nodeImageUri}]");
 
-                    Task.Run(
-                        async () =>
+                    await KubeHelper.DownloadNodeImageAsync(nodeImageUri, driveTemplatePath,
+                        progress =>
                         {
-                            using (var client = new HttpClient())
-                            {
-                                // Download the file.
+                            xenController.SetGlobalStepStatus($"Downloading VHDX: [{progress}%] [{nodeImageUri}]");
+                        });
 
-                                var response = await client.GetAsync(nodeImageUri, HttpCompletionOption.ResponseHeadersRead);
-
-                                response.EnsureSuccessStatusCode();
-
-                                var contentLength   = response.Content.Headers.ContentLength;
-                                var contentEncoding = response.Content.Headers.ContentEncoding.SingleOrDefault();
-
-                                if (string.IsNullOrEmpty(contentEncoding) || !contentEncoding.Equals("gzip", StringComparison.InvariantCultureIgnoreCase))
-                                {
-                                    throw new KubeException($"[{nodeImageUri}] has unsupported [Content-Encoding={contentEncoding}].  Expecting [gzip]");
-                                }
-
-                                try
-                                {
-                                    using (var fileStream = new FileStream(driveTemplatePath, FileMode.Create, FileAccess.ReadWrite))
-                                    {
-                                        using (var downloadStream = await response.Content.ReadAsStreamAsync())
-                                        {
-                                            var buffer = new byte[64 * 1024];
-                                            int cb;
-
-                                            while (true)
-                                            {
-                                                cb = await downloadStream.ReadAsync(buffer, 0, buffer.Length);
-
-                                                if (cb == 0)
-                                                {
-                                                    break;
-                                                }
-
-                                                await fileStream.WriteAsync(buffer, 0, cb);
-
-                                                if (contentLength.HasValue)
-                                                {
-                                                    var percentComplete = (int)(((double)fileStream.Length / (double)contentLength) * 100.0);
-
-                                                    xenController.SetGlobalStepStatus($"Downloading VHDX: [{percentComplete}%] [{nodeImageUri}]");
-                                                }
-                                                else
-                                                {
-                                                    xenController.SetGlobalStepStatus($"Downloading VHDX: [{fileStream.Length} bytes] [{nodeImageUri}]");
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                                catch
-                                {
-                                    // Ensure that the template file is are deleted if there were any
-                                    // errors to help avoid using a corrupted template.
-
-                                    if (File.Exists(driveTemplatePath))
-                                    {
-                                        File.Delete(driveTemplatePath);
-                                    }
-
-                                    throw;
-                                }
-                            }
-
-                        }).Wait();
+                    xenController.SetGlobalStepStatus();
                 }
 
                 xenController.SetGlobalStepStatus();

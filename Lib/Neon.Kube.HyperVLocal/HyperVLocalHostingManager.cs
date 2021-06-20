@@ -169,7 +169,7 @@ namespace Neon.Kube
                     this.secureSshPassword = clusterLogin.SshPassword;
                 });
 
-            controller.AddGlobalStep("prepare hyper-v", controller => PrepareHyperV());
+            controller.AddGlobalStep("prepare hyper-v", controller => PrepareHyperVAsync());
             controller.AddNodeStep("create virtual machines", (controller, node) => ProvisionVM(node));
         }
 
@@ -305,7 +305,8 @@ namespace Neon.Kube
         /// <summary>
         /// Performs any required Hyper-V initialization before cluster nodes can be provisioned.
         /// </summary>
-        private void PrepareHyperV()
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task PrepareHyperVAsync()
         {
             // Determine where we're going to place the VM hard drive files and
             // ensure that the directory exists.
@@ -336,74 +337,11 @@ namespace Neon.Kube
 
                 controller.SetGlobalStepStatus($"Download node image VHDX: [{nodeImageUri}]");
 
-                Task.Run(
-                    async () =>
+                await KubeHelper.DownloadNodeImageAsync(nodeImageUri, driveTemplatePath,
+                    progress =>
                     {
-                        using (var client = new HttpClient())
-                        {
-                            // Download the file.
-
-                            var response = await client.GetAsync(nodeImageUri, HttpCompletionOption.ResponseHeadersRead);
-
-                            response.EnsureSuccessStatusCode();
-
-                            var contentLength   = response.Content.Headers.ContentLength;
-                            var contentEncoding = response.Content.Headers.ContentEncoding.SingleOrDefault();
-
-                            if (string.IsNullOrEmpty(contentEncoding) || !contentEncoding.Equals("gzip", StringComparison.InvariantCultureIgnoreCase))
-                            {
-                                throw new KubeException($"[{nodeImageUri}] has unsupported [Content-Encoding={contentEncoding}].  Expecting [gzip]");
-                            }
-
-                            try
-                            {
-                                using (var fileStream = new FileStream(driveTemplatePath, FileMode.Create, FileAccess.ReadWrite))
-                                {
-                                    using (var downloadStream = await response.Content.ReadAsStreamAsync())
-                                    {
-                                        var buffer = new byte[64 * 1024];
-                                        int cb;
-
-                                        while (true)
-                                        {
-                                            cb = await downloadStream.ReadAsync(buffer, 0, buffer.Length);
-
-                                            if (cb == 0)
-                                            {
-                                                break;
-                                            }
-
-                                            await fileStream.WriteAsync(buffer, 0, cb);
-
-                                            if (contentLength.HasValue)
-                                            {
-                                                var percentComplete = (int)(((double)fileStream.Length / (double)contentLength) * 100.0);
-
-                                                controller.SetGlobalStepStatus($"Downloading VHDX: [{percentComplete}%] [{nodeImageUri}]");
-                                            }
-                                            else
-                                            {
-                                                controller.SetGlobalStepStatus($"Downloading VHDX: [{fileStream.Length} bytes] [{nodeImageUri}]");
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            catch
-                            {
-                                // Ensure that the template file is are deleted if there were any
-                                // errors to help avoid using a corrupted template.
-
-                                if (File.Exists(driveTemplatePath))
-                                {
-                                    File.Delete(driveTemplatePath);
-                                }
-
-                                throw;
-                            }
-                        }
-
-                    }).Wait();
+                        controller.SetGlobalStepStatus($"Downloading VHDX: [{progress}%] [{nodeImageUri}]");
+                    });
 
                 controller.SetGlobalStepStatus();
             }

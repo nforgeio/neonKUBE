@@ -48,6 +48,7 @@ using k8s.Models;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Data;
+using Neon.Deployment;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube.Models.Headend;
@@ -870,7 +871,7 @@ namespace Neon.Kube
                     return cachedNodeImageFolder;
                 }
 
-                var path = Path.Combine(GetNeonKubeUserFolder(), "node-images");
+                var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "neonFORGE", "neonKUBE", "node-images");
 
                 Directory.CreateDirectory(path);
 
@@ -2496,6 +2497,139 @@ TCPKeepAlive yes
 
                 throw new NotImplementedException();
             }
+        }
+
+        /// <summary>
+        /// Downloads a single part node image from a URI or a multi-part download to a local folder.
+        /// </summary>
+        /// <param name="imageUri">The node image URI.</param>
+        /// <param name="imagePath">The target local image file path.</param>
+        /// <param name="progressAction">Optional progress action that will be called with operation percent complete.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <remarks>
+        /// <para>
+        /// This supports source URIs referencing a single node image file as well
+        /// as URIs referencing a multi-part <see cref="Download"/> serialized as 
+        /// JSON and with the <see cref="DeploymentHelper.DownloadContentType"/>
+        /// Content-Type.
+        /// </para>
+        /// </remarks>
+        public async static Task DownloadNodeImageAsync(string imageUri, string imagePath, Action<int> progressAction = null)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(imageUri), nameof(imageUri));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(imagePath), nameof(imagePath));
+
+            Directory.CreateDirectory(Path.GetDirectoryName(imagePath));
+
+            using (var client = new HttpClient())
+            {
+                // Execute a HEAD request on the source URI to obtain the content type.  We'll
+                // use this to decide whether to download a single or multi-part file.
+
+                var request  = new HttpRequestMessage(HttpMethod.Head, imageUri);
+                var response = await client.SendAsync(request);
+
+                response.EnsureSuccessStatusCode();
+
+                if (string.Equals(response.Content.Headers.ContentType.MediaType, StringComparer.InvariantCultureIgnoreCase))
+                {
+                    // Multi-part download.
+
+                    await DownloadNodeImageAsync(imageUri, imagePath, progressAction);
+                    return;
+                }
+
+                // Download the single part file.
+
+                if (File.Exists(imagePath))
+                {
+                    return;
+                }
+
+                response = await client.GetAsync(imageUri, HttpCompletionOption.ResponseHeadersRead);
+
+                response.EnsureSuccessStatusCode();
+
+                var contentLength   = response.Content.Headers.ContentLength;
+                var contentEncoding = response.Content.Headers.ContentEncoding.SingleOrDefault();
+
+                if (string.IsNullOrEmpty(contentEncoding) || !contentEncoding.Equals("gzip", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    throw new KubeException($"[{imageUri}] has unsupported [Content-Encoding={contentEncoding}].  Expecting [gzip]");
+                }
+
+                try
+                {
+                    progressAction?.Invoke(0);
+
+                    using (var fileStream = new FileStream(imagePath, FileMode.Create, FileAccess.ReadWrite))
+                    {
+                        using (var downloadStream = await response.Content.ReadAsStreamAsync())
+                        {
+                            var buffer = new byte[64 * 1024];
+                            int cb;
+
+                            while (true)
+                            {
+                                cb = await downloadStream.ReadAsync(buffer, 0, buffer.Length);
+
+                                if (cb == 0)
+                                {
+                                    break;
+                                }
+
+                                await fileStream.WriteAsync(buffer, 0, cb);
+
+                                if (contentLength.HasValue)
+                                {
+                                    var percentComplete = (int)(((double)fileStream.Length / (double)contentLength) * 100.0);
+
+                                    progressAction?.Invoke(percentComplete);
+                                }
+                            }
+                        }
+                    }
+
+                    progressAction?.Invoke(100);
+                }
+                catch
+                {
+                    // Ensure that the template file is are deleted if there were any
+                    // errors to help avoid using a corrupted template.
+
+                    if (File.Exists(imagePath))
+                    {
+                        File.Delete(imagePath);
+                    }
+
+                    throw;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Downloads a multi-part node image to a local folder.
+        /// </summary>
+        /// <param name="download">The node image multi-part download information.</param>
+        /// <param name="folder">The target folder.</param>
+        /// <param name="progressAction">Optional progress action that will be called with operation percent complete.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <remarks>
+        /// <para>
+        /// This checks to see if the target file already exists and will download
+        /// only what's required to update the file to match the source.  This means
+        /// that partially completed downloads can restart essentially where they
+        /// left off.
+        /// </para>
+        /// </remarks>
+        public async static Task DownloadNodeImageAsync(Download download, string folder, Action<int> progressAction = null)
+        {
+            Covenant.Requires<ArgumentNullException>(download != null, nameof(download));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(folder), nameof(folder));
+
+            Directory.CreateDirectory(folder);
+
+            await GitHub.Release.DownloadAsync(download, folder, progressAction);
         }
     }
 }
