@@ -477,7 +477,7 @@ touch /etc/cloud/cloud-init.disabled
 @"
 set -euo pipefail
 
-apt-get purge snapd -yq
+safe-apt-get purge snapd -yq
 
 rm -rf ~/snap
 rm -rf /var/cache/snapd
@@ -814,9 +814,9 @@ chmod 750 {KubeNodeFolders.State}/setup
                     // the [*.sh] file type (if present) and then setting execute
                     // permissions.
 
-                    var toolsFolder = KubeHelper.Resources.GetDirectory("/Tools");      // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1121
+                    var scriptsFolder = KubeHelper.Resources.GetDirectory("/Scripts");    // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1121
 
-                    foreach (var file in toolsFolder.GetFiles())
+                    foreach (var file in scriptsFolder.GetFiles())
                     {
                         var targetName = file.Name;
 
