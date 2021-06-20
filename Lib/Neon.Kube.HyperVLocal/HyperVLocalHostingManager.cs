@@ -72,6 +72,7 @@ namespace Neon.Kube
         private const string defaultSwitchName = "external";
 
         private ClusterProxy                        cluster;
+        private string                              nodeImageUri;
         private SetupController<NodeDefinition>     controller;
         private string                              driveTemplatePath;
         private string                              vmDriveFolder;
@@ -89,19 +90,21 @@ namespace Neon.Kube
         /// <summary>
         /// Creates an instance that is capable of provisioning a cluster on the local machine using Hyper-V.
         /// </summary>
-        /// <param name="cluster">The cluster being managed.
-        /// </param>
+        /// <param name="cluster">The cluster being managed.</param>
+        /// <param name="nodeImageUri">The node image URI.</param>
         /// <param name="logFolder">
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
-        public HyperVLocalHostingManager(ClusterProxy cluster, string logFolder = null)
+        public HyperVLocalHostingManager(ClusterProxy cluster, string nodeImageUri, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeImageUri), nameof(nodeImageUri));
 
             cluster.HostingManager = this;
 
-            this.cluster = cluster;
+            this.cluster      = cluster;
+            this.nodeImageUri = nodeImageUri;
         }
 
         /// <inheritdoc/>
@@ -326,14 +329,14 @@ namespace Neon.Kube
             // going to name the file the same as the file name from the URI and also that 
             // templates are considered to be invariant.
 
-            var driveTemplateUri  = new Uri(KubeDownloads.GetNodeImageUri(this.HostingEnvironment, controller));
+            var driveTemplateUri  = new Uri(KubeDownloads.GetDefaultNodeImageUri(this.HostingEnvironment));
             var driveTemplateName = driveTemplateUri.Segments.Last();
 
             driveTemplatePath = Path.Combine(KubeHelper.NodeImageFolder, driveTemplateName);
 
             if (!File.Exists(driveTemplatePath))
             {
-                var nodeImageUri = KubeDownloads.GetNodeImageUri(this.HostingEnvironment, controller);
+                var nodeImageUri = KubeDownloads.GetDefaultNodeImageUri(this.HostingEnvironment);
 
                 controller.SetGlobalStepStatus($"Download node image VHDX: [{nodeImageUri}]");
 

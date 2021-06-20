@@ -29,8 +29,8 @@ using Neon.Kube.Xunit;
 using Neon.IO;
 using Neon.Xunit;
 
-using Xunit;
 using NeonCli;
+using Xunit;
 
 // $todo(jefflill): 
 //

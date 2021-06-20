@@ -62,6 +62,7 @@ namespace Neon.Kube
         /// Returns the <see cref="HostingManager"/> for provisioning a specific environment.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
+        /// <param name="nodeImageUri">The node image URI.</param>
         /// <param name="logFolder">
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
@@ -71,7 +72,7 @@ namespace Neon.Kube
         /// could be located for the specified cluster environment.
         /// </returns>
         /// <exception cref="KubeException">Thrown if the multiple managers implement support for the same hosting environment.</exception>
-        HostingManager GetManager(ClusterProxy cluster, string logFolder = null);
+        HostingManager GetManager(ClusterProxy cluster,  string nodeImageUri, string logFolder = null);
 
         /// <summary>
         /// Determines whether a hosting environment is hosted in the cloud.
