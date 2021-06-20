@@ -101,9 +101,30 @@ $neonkubeVersion = $(& "$nfToolBin\neon-build" read-version "$nfLib/Neon.Common/
 # We need to do a release solution build to ensure that any tools or other
 # dependencies are built before we build and publish the individual packages.
 
+Write-Info ""
+Write-Info "********************************************************************************"
+Write-Info "***                            CLEAN SOLUTION                                ***"
+Write-Info "********************************************************************************"
+Write-Info ""
+
+& "$msbuild" "$nfSolution" $buildConfig -t:Clean -m -verbosity:quiet
+
+if (-not $?)
+{
+    throw "ERROR: CLEAN FAILED"
+}
+
+Write-Info ""
+Write-Info "********************************************************************************"
+Write-Info "***                           RESTORE PACKAGES                               ***"
+Write-Info "********************************************************************************"
+Write-Info ""
+
+& "$msbuild" "$nfSolution" -t:restore -verbosity:quiet
+
 Write-Info  ""
 Write-Info  "*******************************************************************************"
-Write-Info  "***                            BUILD SOLUTION                               ***"
+Write-Info  "***                           BUILD SOLUTION                                ***"
 Write-Info  "*******************************************************************************"
 Write-Info  ""
 
