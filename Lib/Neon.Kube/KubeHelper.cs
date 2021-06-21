@@ -86,6 +86,7 @@ namespace Neon.Kube
         private static IStaticDirectory     cachedResources;
         private static string               cachedNodeImageFolder;
         private static string               cachedAutomationFolder;
+        private static string               cacheDashboardStateFolder;
 
         /// <summary>
         /// CURL command common options.
@@ -114,25 +115,26 @@ namespace Neon.Kube
         /// </summary>
         private static void ClearCachedItems()
         {
-            cachedConfig             = null;
-            cachedContext            = null;
-            cachedNeonKubeUserFolder = null;
-            cachedKubeUserFolder     = null;
-            cachedRunFolder          = null;
-            cachedLogFolder          = null;
-            cachedTempFolder         = null;
-            cachedLoginsFolder       = null;
-            cachedPasswordsFolder    = null;
-            cachedCacheFolder        = null;
-            cachedDesktopFolder      = null;
-            cachedDesktopWsl2Folder  = null;
-            cachedClientConfig       = null;
-            cachedClusterCertificate = null;
-            cachedProgramFolder      = null;
-            cachedPwshPath           = null;
-            cachedResources          = null;
-            cachedNodeImageFolder    = null;
-            cachedAutomationFolder   = null;
+            cachedConfig              = null;
+            cachedContext             = null;
+            cachedNeonKubeUserFolder  = null;
+            cachedKubeUserFolder      = null;
+            cachedRunFolder           = null;
+            cachedLogFolder           = null;
+            cachedTempFolder          = null;
+            cachedLoginsFolder        = null;
+            cachedPasswordsFolder     = null;
+            cachedCacheFolder         = null;
+            cachedDesktopFolder       = null;
+            cachedDesktopWsl2Folder   = null;
+            cachedClientConfig        = null;
+            cachedClusterCertificate  = null;
+            cachedProgramFolder       = null;
+            cachedPwshPath            = null;
+            cachedResources           = null;
+            cachedNodeImageFolder     = null;
+            cachedAutomationFolder    = null;
+            cacheDashboardStateFolder = null;
         }
 
         /// <summary>
@@ -889,7 +891,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Creates an new automation folder named by a UUID for the current user.  
+        /// Creates a new automation folder named by a UUID for the current user.  
         /// This is where automated cluster deployment related files such as 
         /// logins, kubeconfigs, and logs will be persisted for automated cluster
         /// deployments.
@@ -961,6 +963,35 @@ namespace Neon.Kube
             Directory.CreateDirectory(Path.Combine(subfolder, "log"));
 
             return subfolder;
+        }
+
+        /// <summary>
+        /// Creates a new folder for holding neonDESKTOP dashboard browser state
+        /// if it doesn't exist and returns its path.
+        /// </summary>
+        /// <returns>Path to the folder.</returns>
+        public static string CreateDashboardStateFolder()
+        {
+            if (cacheDashboardStateFolder != null)
+            {
+                return cacheDashboardStateFolder;
+            }
+
+            cacheDashboardStateFolder = Path.Combine(GetNeonKubeUserFolder(), "dashboards");
+
+            Directory.CreateDirectory(cacheDashboardStateFolder);
+
+            return cacheDashboardStateFolder;
+        }
+
+        /// <summary>
+        /// Clears the contents of the dashboard state folder.
+        /// </summary>
+        public static void ClearDashboardStateFolder()
+        {
+            var dashboardStateFolder = CreateDashboardStateFolder();
+
+            NeonHelper.DeleteFolderContents(dashboardStateFolder);
         }
 
         /// <summary>

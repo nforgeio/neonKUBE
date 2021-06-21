@@ -204,15 +204,36 @@ function Publish
 # We need to do a solution build to ensure that any tools or other dependencies 
 # are built before we build and publish the individual packages.
 
-Write-Info  ""
-Write-Info  "*******************************************************************************"
-Write-Info  "***                            BUILD SOLUTION                               ***"
-Write-Info  "*******************************************************************************"
-Write-Info  ""
-
 $msbuild     = $env:MSBUILDPATH
 $nfRoot      = "$env:NF_ROOT"
 $nfSolution  = "$nfRoot\neonKUBE.sln"
+
+Write-Info ""
+Write-Info "********************************************************************************"
+Write-Info "***                            CLEAN SOLUTION                                ***"
+Write-Info "********************************************************************************"
+Write-Info ""
+
+& "$msbuild" "$nfSolution" $buildConfig -t:Clean -m -verbosity:quiet
+
+if (-not $?)
+{
+    throw "ERROR: CLEAN FAILED"
+}
+
+Write-Info ""
+Write-Info "********************************************************************************"
+Write-Info "***                           RESTORE PACKAGES                               ***"
+Write-Info "********************************************************************************"
+Write-Info ""
+
+& "$msbuild" "$nfSolution" -t:restore -verbosity:quiet
+
+Write-Info  ""
+Write-Info  "*******************************************************************************"
+Write-Info  "***                           BUILD SOLUTION                                ***"
+Write-Info  "*******************************************************************************"
+Write-Info  ""
 
 & "$msbuild" "$nfSolution" -p:Configuration=$config -restore -m -verbosity:quiet
 
