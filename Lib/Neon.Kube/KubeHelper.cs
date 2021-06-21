@@ -977,7 +977,7 @@ namespace Neon.Kube
                 return cacheDashboardStateFolder;
             }
 
-            cacheDashboardStateFolder = Path.Combine(GetNeonKubeUserFolder(), "dashboard-state");
+            cacheDashboardStateFolder = Path.Combine(GetNeonKubeUserFolder(), "dashboards");
 
             Directory.CreateDirectory(cacheDashboardStateFolder);
 
