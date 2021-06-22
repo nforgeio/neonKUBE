@@ -108,6 +108,8 @@ OPTIONS:
                                   used for automated deployments that can proceed while
                                   neonDESKTOP is doing other things.
 
+    --headend-uri               - Set the URI for the headend service.
+
 Server Requirements:
 --------------------
 
@@ -123,7 +125,7 @@ Server Requirements:
         public override string[] Words => new string[] { "cluster", "prepare" };
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions => new string[] { "--node-image-uri", "--package-caches", "--unredacted", "--remove-templates", "--debug", "--base-image-name", "--automate" };
+        public override string[] ExtendedOptions => new string[] { "--node-image-uri", "--package-caches", "--unredacted", "--remove-templates", "--debug", "--base-image-name", "--automate", "--headend-uri" };
 
         /// <inheritdoc/>
         public override bool NeedsSshCredentials(CommandLine commandLine) => !commandLine.HasOption("--remove-templates");
@@ -165,6 +167,7 @@ Server Requirements:
             var debug         = commandLine.HasOption("--debug");
             var baseImageName = commandLine.GetOption("--base-image-name");
             var automate      = commandLine.HasOption("--automate");
+            var headendUri    = commandLine.GetOption("--headend-uri") ?? "https://headend.neoncloud.io";
 
             if (debug && string.IsNullOrEmpty(baseImageName))
             {
@@ -189,7 +192,7 @@ Server Requirements:
             // Obtain the cluster definition.
 
             var clusterDefPath    = commandLine.Arguments[0];
-            var clusterDefinition = (ClusterDefinition)null;
+            var clusterDefinition = (ClusterDefinition)null;            
 
             if (clusterDefPath.Equals("WSL2", StringComparison.InvariantCultureIgnoreCase))
             {
@@ -245,7 +248,8 @@ Server Requirements:
                 unredacted:             commandLine.HasOption("--unredacted"),
                 debugMode:              debug,
                 baseImageName:          baseImageName,
-                automate:               automate);
+                automate:               automate,
+                headendUri:             headendUri);
 
             controller.StatusChangedEvent +=
                 status =>

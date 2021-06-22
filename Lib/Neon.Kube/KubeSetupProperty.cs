@@ -113,5 +113,11 @@ namespace Neon.Kube
         /// </note>
         /// </remarks>
         public const string AutomationFolder = "automation-folder";
+
+        /// <summary>
+        /// Property for accessing the headend service base URI. This can be overridden
+        /// for development purposes.
+        /// </summary>
+        public const string HeadendUri = "headend-uri";
     }
 }
