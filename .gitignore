@@ -82,7 +82,7 @@ wwwroot/
 /Build-Cache/**
 **/bin/**
 **/obj/**
-GeneratedModels.cs
+*.mg.cs
 GeneratedEntities.cs
 GeneratedTypes.cs
 GeneratedUxTypes.cs
