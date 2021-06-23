@@ -28,19 +28,27 @@ https://docs.microsoft.com/en-us/nuget/consume-packages/package-references-in-pr
 STEP 2: Add a pre-build target that uses [neon-modelgen] to generate your models:
 ---------------------------------------------------------------------------------
 
-  <Target Name="ModelGen" BeforeTargets="Compile">
-    <Exec Command="&quot;$(PkgNeon_ModelGenerator)\contentFiles\any\netstandard2.0\win-x64\neon-modelgen&quot; -ux foo.dll foo.cs" />
+  <Target Name="ModelGen" BeforeTargets="CoreCompile">
+    <Exec Command="&quot;$(PkgNeon_ModelGenerator)\contentFiles\any\netstandard2.0\win-x64\neon-modelgen&quot; PATH-TO-MODEL-PROJECT/models.dll models/models.g.cs" />
+    <ItemGroup>
+      <Compile Include="models/*.cs" />
+    </ItemGroup>
   </Target>
 
+This example reads an already built [models.dll] file (probably from another project in
+the solution) and generates the [models/models.g.cs] source file within the current project.
+We add <Compile/> element, telling the build system to include the generated model file in
+the current project build.
+
 This example executes the [win-x64] version of [neon-modelgen] located in the cached package
-directory, having it read model definitions from [foo.dll] and write the generated models 
-to [foo.cs].  Note that you'll generally reference the source assembly from another project's
-build output and you'll need to configure your build dependencies such that the source
+directory, having it read model definitions from [models.dll] and write the generated models 
+to [models/models.g.cs].  Note that you'll generally reference the source assembly from another
+project's build output and you'll need to configure your build dependencies such that the source
 project builds first.
 
-We add surround the command path with [&quot;] to handle the case where path may include
-spaces.  The $(PkgNeon_ModelGenerator) variable will expand into a reference to the folder
-where the package is cached.  The remaining path references a specific build of [neon-modelgen].
+We surround the command path with [&quot;] to handle the case where path may include spaces.
+The $(PkgNeon_ModelGenerator) variable will expand into a reference to the folder where the 
+package is cached.  The remaining path references a specific build of [neon-modelgen].
 
 The [Neon.ModelGenerator] includes three versions [neon-modelgen] for [linux-x64], [osx-x64] and [win-x64].
 You need to select the correct one for your build environment by editing the last directory name.
