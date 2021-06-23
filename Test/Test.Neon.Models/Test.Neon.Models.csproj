@@ -23,10 +23,12 @@
     <ProjectReference Include="..\Test.Neon.Models.Temporal\Test.Neon.Models.Temporal.csproj" />
   </ItemGroup>
 
-  <Target Name="ModelGen" BeforeTargets="BeforeCompile" Condition="Exists('$(NF_ROOT)\Tools\neon-modelgen\bin\$(Configuration)\netcoreapp3.1\neon-modelgen.dll')">
-    <Exec Command="echo dotnet &quot;%NF_ROOT%\Tools\neon-modelgen\bin\$(Configuration)\netcoreapp3.1\neon-modelgen.dll&quot; --target-namespace=Test.Neon.Models --persisted --debug-allow-stepinto &quot;$(SolutionDir)Test\Test.Neon.Models.Definitions\bin\$(Configuration)\netstandard2.0\Test.Neon.Models.Definitions.dll&quot; &quot;$(ProjectDir)GeneratedTypes.mg.cs&quot;" />
-    <Exec Command="dotnet &quot;%NF_ROOT%\Tools\neon-modelgen\bin\$(Configuration)\netcoreapp3.1\neon-modelgen.dll&quot; --target-namespace=Test.Neon.Models --persisted --debug-allow-stepinto &quot;$(SolutionDir)Test\Test.Neon.Models.Definitions\bin\$(Configuration)\netstandard2.0\Test.Neon.Models.Definitions.dll&quot; &quot;$(ProjectDir)GeneratedTypes.mg.cs&quot;" />
-    <Exec Command="dotnet &quot;%NF_ROOT%\Tools\neon-modelgen\bin\$(Configuration)\netcoreapp3.1\neon-modelgen.dll&quot; --target-namespace=Test.Neon.UxModels --persisted --ux=xaml &quot;$(SolutionDir)Test\Test.Neon.Models.Definitions\bin\$(Configuration)\netstandard2.0\Test.Neon.Models.Definitions.dll&quot; &quot;$(ProjectDir)GeneratedUxTypes.mg.cs&quot;" />
+  <Target Name="ModelGen" BeforeTargets="CoreCompile" Condition="Exists('$(NF_ROOT)\Tools\neon-modelgen\bin\$(Configuration)\netcoreapp3.1\neon-modelgen.dll')">
+    <Exec Command="dotnet &quot;%NF_ROOT%\Tools\neon-modelgen\bin\$(Configuration)\netcoreapp3.1\neon-modelgen.dll&quot; --target-namespace=Test.Neon.Models --persisted --debug-allow-stepinto &quot;$(SolutionDir)Test\Test.Neon.Models.Definitions\bin\$(Configuration)\netstandard2.0\Test.Neon.Models.Definitions.dll&quot; &quot;$(ProjectDir)Models\GeneratedTypes.mg.cs&quot;" />
+    <Exec Command="dotnet &quot;%NF_ROOT%\Tools\neon-modelgen\bin\$(Configuration)\netcoreapp3.1\neon-modelgen.dll&quot; --target-namespace=Test.Neon.UxModels --persisted --ux=xaml &quot;$(SolutionDir)Test\Test.Neon.Models.Definitions\bin\$(Configuration)\netstandard2.0\Test.Neon.Models.Definitions.dll&quot; &quot;$(ProjectDir)Models\GeneratedUxTypes.mg.cs&quot;" />
+    <ItemGroup>
+      <Compile Include="Models/*.cs" />
+    </ItemGroup>
   </Target>
 
 </Project>
