@@ -176,12 +176,12 @@ function New-GitHubIssue
             $list        = $(ConvertFrom-Json $json -AsHashTable)
             $issueNumber = -1
 
-            ForEach ($issue in $list)
+            foreach ($issue in $list)
             {
                 if ($issue.title -eq $title)
                 {
                     $issueNumber = $issue.number
-                    Break
+                    break
                 }
             }
 
@@ -204,7 +204,7 @@ function New-GitHubIssue
 
             $request.assignees = @()
 
-            ForEach ($assignee in $assignees)
+            foreach ($assignee in $assignees)
             {
                 $request.assignees += $assignee
             }
@@ -213,7 +213,7 @@ function New-GitHubIssue
 
             $request.labels = @()
 
-            ForEach ($label in $labels)
+            foreach ($label in $labels)
             {
                 $request.labels += $label
             }
@@ -700,7 +700,7 @@ function Write-ActionOutputFile
     $buildLogSHFBErrorRegex     = New-Object "System.Text.RegularExpressions.Regex" -ArgumentList "^\s*SHFB\s\:\serror"
     $buildLogSHFBWarningRegex   = New-Object "System.Text.RegularExpressions.Regex" -ArgumentList "^\s*SHFB\s\:\swarning"
 
-    ForEach ($line in $lines)
+    foreach ($line in $lines)
     {
         $color = $null
 

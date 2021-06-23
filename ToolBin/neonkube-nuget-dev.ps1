@@ -253,10 +253,10 @@ if ($local -and $localVersion)
 
     if (![System.IO.File]::Exists("$nfVersionPath") -or ![System.IO.File]::Exists("$nlVersionPath"))
     {
-        Write-Error "You'll need to manually initialize the local version files at:" -ErrorAction Continue
-        Write-Error ""                   -ErrorAction Continue
-        Write-Error "    $nfVersionPath" -ErrorAction Continue
-        Write-Error "    $nlVersionPath" -ErrorAction Continue
+        Write-Error "You'll need to manually initialize the local version files at:" -ErrorAction continue
+        Write-Error ""                   -ErrorAction continue
+        Write-Error "    $nfVersionPath" -ErrorAction continue
+        Write-Error "    $nlVersionPath" -ErrorAction continue
         exit 1
     }
 

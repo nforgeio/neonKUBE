@@ -123,13 +123,13 @@ function PublishCore
 
     $targetPath = $null
 
-    ForEach ($path in $potentialTargets)
+    foreach ($path in $potentialTargets)
     {
         if ([System.IO.File]::Exists($path))
         {
             $targetPath = $path
             Write-Output("*** Publish target exists at: $path")
-            Break
+            break
         }
         else
         {
