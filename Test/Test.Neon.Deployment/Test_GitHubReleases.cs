@@ -463,7 +463,7 @@ namespace TestDeployment
         }
 
         [Fact]
-        public async Task Download_Continue()
+        public async Task Download_Restart()
         {
             // Upload file as a multi-part release, simulate a partial download and then verify
             // that downloading it again completes the download.

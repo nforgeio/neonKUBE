@@ -82,6 +82,7 @@ namespace Neon.Kube
         private static KubeClientConfig     cachedClientConfig;
         private static X509Certificate2     cachedClusterCertificate;
         private static string               cachedProgramFolder;
+        private static string               cachedProgramDataFolder;
         private static string               cachedPwshPath;
         private static IStaticDirectory     cachedResources;
         private static string               cachedNodeImageFolder;
@@ -130,6 +131,7 @@ namespace Neon.Kube
             cachedClientConfig        = null;
             cachedClusterCertificate  = null;
             cachedProgramFolder       = null;
+            cachedProgramDataFolder   = null;
             cachedPwshPath            = null;
             cachedResources           = null;
             cachedNodeImageFolder     = null;
@@ -881,7 +883,7 @@ namespace Neon.Kube
                     return cachedNodeImageFolder;
                 }
 
-                var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "neonFORGE", "neonKUBE", "node-images");
+                var path = Path.Combine(GetNeonKubeUserFolder(), "node-images");
 
                 Directory.CreateDirectory(path);
 
@@ -1027,6 +1029,34 @@ namespace Neon.Kube
                 }
 
                 return cachedProgramFolder;
+            }
+        }
+
+        /// <summary>
+        /// Returns the path to the neon program data folder.
+        /// </summary>
+        public static string ProgramDataFolder
+        {
+            get
+            {
+                if (cachedProgramDataFolder != null)
+                {
+                    return cachedProgramDataFolder;
+                }
+
+                cachedProgramDataFolder = Environment.GetEnvironmentVariable("NEONDESKTOP_PROGRAM_FOLDER");
+
+                if (cachedProgramDataFolder == null)
+                {
+                    cachedProgramDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "neonFORGE", "neonDESKTOP");
+                }
+
+                if (!Directory.Exists(cachedProgramDataFolder))
+                {
+                    Directory.CreateDirectory(cachedProgramDataFolder);
+                }
+
+                return cachedProgramDataFolder;
             }
         }
 
