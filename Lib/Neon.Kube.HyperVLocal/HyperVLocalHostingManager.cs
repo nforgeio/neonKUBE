@@ -330,8 +330,7 @@ namespace Neon.Kube
             Directory.CreateDirectory(vmDriveFolder);
 
             // Download the GZIPed VHDX template if it's not already present.  Note that we're 
-            // going to name the file the same as the file name from the URI and also that 
-            // templates are considered to be invariant.
+            // going to name the file the same as the file name from the URI.
 
             var driveTemplateUri  = new Uri(KubeDownloads.GetDefaultNodeImageUri(this.HostingEnvironment));
             var driveTemplateName = driveTemplateUri.Segments.Last();
@@ -347,7 +346,7 @@ namespace Neon.Kube
                 await KubeHelper.DownloadNodeImageAsync(nodeImageUri, driveTemplatePath,
                     progress =>
                     {
-                        controller.SetGlobalStepStatus($"Downloading VHDX: [{progress}%] [{nodeImageUri}]");
+                        controller.SetGlobalStepStatus($"Downloading VHDX: [{progress}%] [{driveTemplateName}]");
                     });
 
                 controller.SetGlobalStepStatus();

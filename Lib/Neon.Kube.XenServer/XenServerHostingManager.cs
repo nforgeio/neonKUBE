@@ -403,7 +403,7 @@ namespace Neon.Kube
                     await KubeHelper.DownloadNodeImageAsync(nodeImageUri, driveTemplatePath,
                         progress =>
                         {
-                            xenController.SetGlobalStepStatus($"Downloading VHDX: [{progress}%] [{nodeImageUri}]");
+                            xenController.SetGlobalStepStatus($"Downloading VHDX: [{progress}%] [{driveTemplateName}]");
                         });
 
                     xenController.SetGlobalStepStatus();

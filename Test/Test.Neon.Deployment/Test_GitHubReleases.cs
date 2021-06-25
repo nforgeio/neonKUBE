@@ -415,16 +415,19 @@ namespace TestDeployment
 
                 using (var tempFolder = new TempFolder())
                 {
-                    await GitHub.Release.DownloadAsync(download, tempFolder.Path);
+                    var targetPath = Path.Combine(tempFolder.Path, download.Filename);
+                    var path       = await GitHub.Release.DownloadAsync(download, targetPath);
 
-                    using (var stream = File.OpenRead(Path.Combine(tempFolder.Path, download.Name)))
+                    Assert.Equal(targetPath, path);
+
+                    using (var stream = File.OpenRead(targetPath))
                     {
                         Assert.Equal(download.Md5, CryptoHelper.ComputeMD5String(stream));
                     }
 
                     // Verify that the MD5 file was written and that it's correct.
 
-                    var md5Path = Path.Combine(tempFolder.Path, "test.dat.md5");
+                    var md5Path = targetPath + ".md5";
 
                     Assert.True(File.Exists(md5Path));
                     Assert.Equal(download.Md5, File.ReadAllText(md5Path, Encoding.ASCII).Trim());
@@ -439,7 +442,9 @@ namespace TestDeployment
 
                 using (var tempFolder = new TempFolder())
                 {
-                    await GitHub.Release.DownloadAsync(download, tempFolder.Path, progress => progressValues.Add(progress));
+                    var targetPath = Path.Combine(tempFolder.Path, download.Filename);
+
+                    await GitHub.Release.DownloadAsync(download, targetPath, progress => progressValues.Add(progress));
                 }
 
                 Assert.Equal(partCount + 2, progressValues.Count);
@@ -482,9 +487,11 @@ namespace TestDeployment
 
                 using (var tempFolder = new TempFolder())
                 {
-                    await GitHub.Release.DownloadAsync(download, tempFolder.Path);
+                    var targetPath = Path.Combine(tempFolder.Path, download.Name);
 
-                    using (var stream = File.OpenRead(Path.Combine(tempFolder.Path, download.Name)))
+                    await GitHub.Release.DownloadAsync(download, targetPath);
+
+                    using (var stream = File.OpenRead(targetPath))
                     {
                         Assert.Equal(download.Md5, CryptoHelper.ComputeMD5String(stream));
                     }
@@ -494,16 +501,16 @@ namespace TestDeployment
                     //
                     // Note that we're using the progress action to count how many parts were downloaded.
 
-                    using (var stream = new FileStream(Path.Combine(tempFolder.Path, download.Name), System.IO.FileMode.Open, FileAccess.ReadWrite))
+                    using (var stream = new FileStream(targetPath, System.IO.FileMode.Open, FileAccess.ReadWrite))
                     {
                         stream.SetLength(0);
                     }
 
                     progressValues.Clear();
 
-                    await GitHub.Release.DownloadAsync(download, tempFolder.Path, progress => progressValues.Add(progress));
+                    await GitHub.Release.DownloadAsync(download, targetPath, progress => progressValues.Add(progress));
 
-                    using (var stream = File.OpenRead(Path.Combine(tempFolder.Path, download.Name)))
+                    using (var stream = File.OpenRead(targetPath))
                     {
                         Assert.Equal(download.Md5, CryptoHelper.ComputeMD5String(stream));
                     }
@@ -513,16 +520,16 @@ namespace TestDeployment
                     // Set the file size to just the first part and 1/2 of the second part and then download
                     // again to fetch the missing parts.
 
-                    using (var stream = new FileStream(Path.Combine(tempFolder.Path, download.Name), System.IO.FileMode.Open, FileAccess.ReadWrite))
+                    using (var stream = new FileStream(targetPath, System.IO.FileMode.Open, FileAccess.ReadWrite))
                     {
                         stream.SetLength(partSize + partSize/2);
                     }
 
                     progressValues.Clear();
 
-                    await GitHub.Release.DownloadAsync(download, tempFolder.Path, progress => progressValues.Add(progress));
+                    await GitHub.Release.DownloadAsync(download, targetPath, progress => progressValues.Add(progress));
 
-                    using (var stream = File.OpenRead(Path.Combine(tempFolder.Path, download.Name)))
+                    using (var stream = File.OpenRead(targetPath))
                     {
                         Assert.Equal(download.Md5, CryptoHelper.ComputeMD5String(stream));
                     }
@@ -531,16 +538,16 @@ namespace TestDeployment
 
                     // Set the file size to cut the last part in half and then download again to fetch the missing part.
 
-                    using (var stream = new FileStream(Path.Combine(tempFolder.Path, download.Name), System.IO.FileMode.Open, FileAccess.ReadWrite))
+                    using (var stream = new FileStream(targetPath, System.IO.FileMode.Open, FileAccess.ReadWrite))
                     {
                         stream.SetLength(download.Size - partSize / 2);
                     }
 
                     progressValues.Clear();
 
-                    await GitHub.Release.DownloadAsync(download, tempFolder.Path, progress => progressValues.Add(progress));
+                    await GitHub.Release.DownloadAsync(download, targetPath, progress => progressValues.Add(progress));
 
-                    using (var stream = File.OpenRead(Path.Combine(tempFolder.Path, download.Name)))
+                    using (var stream = File.OpenRead(targetPath))
                     {
                         Assert.Equal(download.Md5, CryptoHelper.ComputeMD5String(stream));
                     }
@@ -580,7 +587,9 @@ namespace TestDeployment
 
                 using (var tempFolder = new TempFolder())
                 {
-                    await Assert.ThrowsAsync<IOException>(async () => await GitHub.Release.DownloadAsync(download, tempFolder.Path));
+                    var targetPath = Path.Combine(tempFolder.Path, download.Filename);
+
+                    await Assert.ThrowsAsync<IOException>(async () => await GitHub.Release.DownloadAsync(download, targetPath));
                 }
             }
             finally
@@ -616,7 +625,9 @@ namespace TestDeployment
 
                 using (var tempFolder = new TempFolder())
                 {
-                    await Assert.ThrowsAsync<IOException>(async () => await GitHub.Release.DownloadAsync(download, tempFolder.Path));
+                    var targetPath = Path.Combine(tempFolder.Path, download.Filename);
+
+                    await Assert.ThrowsAsync<IOException>(async () => await GitHub.Release.DownloadAsync(download, targetPath));
                 }
             }
             finally
@@ -652,7 +663,9 @@ namespace TestDeployment
 
                 using (var tempFolder = new TempFolder())
                 {
-                    await Assert.ThrowsAsync<IOException>(async () => await GitHub.Release.DownloadAsync(download, tempFolder.Path));
+                    var targetPath = Path.Combine(tempFolder.Path, download.Filename);
+
+                    await Assert.ThrowsAsync<IOException>(async () => await GitHub.Release.DownloadAsync(download, targetPath));
                 }
             }
             finally
@@ -697,7 +710,7 @@ namespace TestDeployment
                     }
                 }
 
-                return GitHub.Release.UploadMultipartAsset(repo, release, tempFile.Path, version: version, name: name, partSize);
+                return GitHub.Release.UploadMultipartAsset(repo, release, tempFile.Path, version: version, name: name, maxPartSize: partSize);
             }
         }
     }

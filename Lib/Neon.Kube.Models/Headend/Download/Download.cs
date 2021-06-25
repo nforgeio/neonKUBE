@@ -38,7 +38,7 @@ namespace Neon.Kube.Models.Headend
         }
 
         /// <summary>
-        /// Identifies the download file name.
+        /// Identifies the download.
         /// </summary>
         [JsonProperty(PropertyName = "Name")]
         public string Name { get; set; }
@@ -48,6 +48,12 @@ namespace Neon.Kube.Models.Headend
         /// </summary>
         [JsonProperty(PropertyName = "Version")]
         public string Version { get; set; }
+
+        /// <summary>
+        /// The download fiole name.
+        /// </summary>
+        [JsonProperty(PropertyName = "Filename")]
+        public string Filename { get; set; }
 
         /// <summary>
         /// The overall size of the download.

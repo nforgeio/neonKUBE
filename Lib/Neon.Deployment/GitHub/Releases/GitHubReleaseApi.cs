@@ -368,6 +368,7 @@ namespace Neon.Deployment
         /// <param name="path">Path to the file being uploaded.</param>
         /// <param name="version">The download version.</param>
         /// <param name="name">Optionally overrides the download file name specified by <paramref name="path"/>.</param>
+        /// <param name="filename">Optionally overrides the download file name specified by <paramref name="path"/>.</param>
         /// <param name="maxPartSize">Optionally overrides the maximum part size (defailts to 100 MiB).</param>
         /// <returns>The <see cref="Download"/> information.</returns>
         /// <remarks>
@@ -379,14 +380,15 @@ namespace Neon.Deployment
         /// part names, which will be formatted like: <b>part-##</b>
         /// </note>
         /// </remarks>
-        public Download UploadMultipartAsset(string repo, Release release, string path, string version, string name = null, long maxPartSize = (long)(100 * ByteUnits.MebiBytes))
+        public Download UploadMultipartAsset(string repo, Release release, string path, string version, string name = null, string filename = null, long maxPartSize = (long)(100 * ByteUnits.MebiBytes))
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(repo), nameof(repo));
             Covenant.Requires<ArgumentNullException>(release != null, nameof(release));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path), nameof(path));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(version), nameof(version));
 
-            name = name ?? Path.GetFileName(path);
+            name     = name ?? Path.GetFileName(path);
+            filename = filename ?? Path.GetFileName(path);
 
             using (var input = File.OpenRead(path))
             {
@@ -396,7 +398,7 @@ namespace Neon.Deployment
                 }
 
                 var assetPartMap = new List<Tuple<ReleaseAsset, DownloadPart>>();
-                var download     = new Download() { Name = name, Version = version };
+                var download     = new Download() { Name = name, Version = version, Filename = filename };
                 var partCount    = NeonHelper.PartitionCount(input.Length, maxPartSize);
                 var partNumber   = 0;
                 var partStart    = 0L;
@@ -462,22 +464,23 @@ namespace Neon.Deployment
         /// Synchronously downloads and assembles a multi-part file from assets in a GitHub release.
         /// </summary>
         /// <param name="download">The download information.</param>
-        /// <param name="folder">The target folder.</param>
+        /// <param name="targetPath">The target file path.</param>
         /// <param name="progressAction">Optionally specifies an action to be called with the the percentage downloaded.</param>
         /// <param name="partTimeout">Optionally specifies the HTTP download timeout for each part (defaults to 10 minutes).</param>
-        public void Download(Download download, string folder, Action<int> progressAction = null, TimeSpan partTimeout = default)
+        public void Download(Download download, string targetPath, Action<int> progressAction = null, TimeSpan partTimeout = default)
         {
-            DownloadAsync(download, folder, progressAction, partTimeout).Wait();
+            DownloadAsync(download, targetPath, progressAction, partTimeout).Wait();
         }
 
         /// <summary>
         /// Asynchronously downloads and assembles a multi-part file from assets in a GitHub release.
         /// </summary>
         /// <param name="download">The download information.</param>
-        /// <param name="folder">The target folder.</param>
+        /// <param name="targetPath">The target file path.</param>
         /// <param name="progressAction">Optionally specifies an action to be called with the the percentage downloaded.</param>
         /// <param name="partTimeout">Optionally specifies the HTTP download timeout for each part (defaults to 10 minutes).</param>
         /// <param name="cancellationToken">Optionally specifies the operation cancellation token.</param>
+        /// <returns>The path to the downloaded file.</returns>
         /// <exception cref="IOException">Thrown when the download is corrupt.</exception>
         /// <remarks>
         /// <para>
@@ -496,25 +499,39 @@ namespace Neon.Deployment
         /// The target files (output and MD5) will be deleted when download appears to be corrupt.
         /// </note>
         /// </remarks>
-        public async Task DownloadAsync(Download download, string folder, Action<int> progressAction = null, TimeSpan partTimeout = default, CancellationToken cancellationToken = default)
+        public async Task<string> DownloadAsync(Download download, string targetPath, Action<int> progressAction = null, TimeSpan partTimeout = default, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(download != null, nameof(download));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(folder), nameof(folder));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(targetPath), nameof(targetPath));
 
             if (partTimeout <= TimeSpan.Zero)
             {
                 partTimeout = TimeSpan.FromMinutes(10);
             }
 
-            Directory.CreateDirectory(folder);
+            var targetFolder = Path.GetDirectoryName(targetPath);
 
-            var targetPath     = Path.Combine(folder, download.Name);
-            var targetMd5Path  = Path.Combine(folder, download.Name + ".md5");
+            Directory.CreateDirectory(targetFolder);
+
+            var targetMd5Path  = Path.Combine(Path.GetDirectoryName(targetPath), Path.GetFileName(targetPath) + ".md5");
             var nextPartNumber = 0;
 
-            // Delete any existing MD5 file; we'll regenerate this on success.
+            // If the target file already exists along with its MD5 hash file, then compare the
+            // existing MD5 against the download's MD5 as well as the computed MD5 for the current
+            // file and skip the download when the match.
 
-            NeonHelper.DeleteFile(targetMd5Path);
+            if (File.Exists(targetPath) && File.Exists(targetMd5Path) && File.ReadAllText(targetMd5Path).Trim() == download.Md5)
+            {
+                using (var input = File.OpenRead(targetPath))
+                {
+                    if (CryptoHelper.ComputeMD5String(input) == download.Md5)
+                    {
+                        return targetPath;
+                    }
+                }
+            }
+
+            NeonHelper.DeleteFile(targetMd5Path);   // We'll recompute this below
 
             // Validate the parts of any existing target file to determine where
             // to start downloading missing parts.
@@ -565,7 +582,7 @@ namespace Neon.Deployment
             if (nextPartNumber > download.Parts.Count)
             {
                 progressAction?.Invoke(100);
-                return;
+                return targetPath;
             }
 
             try
@@ -629,6 +646,8 @@ namespace Neon.Deployment
 
                     progressAction?.Invoke(100);
                     File.WriteAllText(targetMd5Path, download.Md5, Encoding.ASCII);
+
+                    return targetPath;
                 }
             }
             catch (IOException)

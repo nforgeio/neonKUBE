@@ -65,7 +65,10 @@ OPTIONS:
                                   reference a single-part gzip encoded image or
                                   multi-part download metadata.
 
-                                  This is ignored for [--debug] mode.
+                                  NOTE: This defaults to the multi-part image
+                                        hosted as a GuitHub release.
+
+                                  NOTE: This is ignored for [--debug] mode.
 
     --package-caches=HOST:PORT  - Optionally specifies one or more APT Package cache
                                   servers by hostname and port for use by the new cluster. 
