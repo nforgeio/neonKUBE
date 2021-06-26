@@ -56,8 +56,9 @@ namespace Neon.Kube
         /// Performs low-level initialization of a cluster.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
-        /// <param name="upgradeLinux">Optionally upgrade the node's Linux distribution.  This defaults to <c>false</c>.</param>
-        public void BaseInitialize(ISetupController controller, bool upgradeLinux = false)
+        /// <param name="upgradeLinux">Optionally upgrade the node's Linux distribution (defaults to <c>false</c>).</param>
+        /// <param name="patchLinux">Optionally apply any available Linux security patches (defaults to <c>true</c>).</param>
+        public void BaseInitialize(ISetupController controller, bool upgradeLinux = false, bool patchLinux = true)
         {
             Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
 
@@ -78,7 +79,12 @@ namespace Neon.Kube
             BaseConfigureDnsIPv4Preference(controller);
             BaseRemoveSnap(controller);
             BaseRemovePackages(controller);
-            BasePatchLinux(controller);
+
+            if (patchLinux)
+            {
+                BasePatchLinux(controller);
+            }
+
             BaseCreateKubeFolders(controller);
 
             if (upgradeLinux)
