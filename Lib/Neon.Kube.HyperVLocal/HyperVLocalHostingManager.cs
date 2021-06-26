@@ -429,7 +429,7 @@ namespace Neon.Kube
 
                 stopwatch.Start();
 
-                // Copy the VHDX template file to the virtual machine's
+                // Decompress the VHDX template file to the virtual machine's
                 // virtual hard drive file.
 
                 var driveTemplateInfoPath = driveTemplatePath + ".info";

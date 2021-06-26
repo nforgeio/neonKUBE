@@ -150,11 +150,11 @@ namespace Neon.Kube
                     {
                         if (useSinglePartFile)
                         {
-                            return $"{NeonPublicBucketUri}/vm-images/hyperv/node/neonkube-{KubeVersions.NeonKubeVersion}.hyperv.vhdx";
+                            return $"{NeonPublicBucketUri}/vm-images/hyperv/node/neonkube-{KubeVersions.NeonKubeVersion}.hyperv.vhdx.gz";
                         }
                         else
                         {
-                            return $"{NeonPublicBucketUri}/downloads/neonkube-hypervlocal-{KubeVersions.NeonKubeVersion}.hyperv.vhdx";
+                            return $"{NeonPublicBucketUri}/downloads/neonkube-hypervlocal-{KubeVersions.NeonKubeVersion}.hyperv.vhdx.gz";
                         }
                     }
 
@@ -168,11 +168,11 @@ namespace Neon.Kube
                     {
                         if (useSinglePartFile)
                         {
-                            return $"{NeonPublicBucketUri}/vm-images/xenserver/node/neonkube-{KubeVersions.NeonKubeVersion}.xenserver.xva";
+                            return $"{NeonPublicBucketUri}/vm-images/xenserver/node/neonkube-{KubeVersions.NeonKubeVersion}.xenserver.xva.gz";
                         }
                         else
                         {
-                            return $"{NeonPublicBucketUri}/downloads/neonkube-xenserver-{KubeVersions.NeonKubeVersion}.xenserver.xva";
+                            return $"{NeonPublicBucketUri}/downloads/neonkube-xenserver-{KubeVersions.NeonKubeVersion}.xenserver.xva.gz";
                         }
                     }
 
@@ -186,11 +186,11 @@ namespace Neon.Kube
                     {
                         if (useSinglePartFile)
                         {
-                            return $"{NeonPublicBucketUri}/vm-images/wsl2/node/neonkube-{KubeVersions.NeonKubeVersion}.wsl2.tar";
+                            return $"{NeonPublicBucketUri}/vm-images/wsl2/node/neonkube-{KubeVersions.NeonKubeVersion}.wsl2.tar.gz";
                         }
                         else
                         {
-                            return $"{NeonPublicBucketUri}/downloads/neonkube-wsl2-{KubeVersions.NeonKubeVersion}.wsl2.tar";
+                            return $"{NeonPublicBucketUri}/downloads/neonkube-wsl2-{KubeVersions.NeonKubeVersion}.wsl2.tar.gz";
                         }
                     }
 
