@@ -45,25 +45,25 @@ namespace Neon.Kube.Models.Headend
         /// The zero-based index specifying where this part will be assembled
         /// back into the reconsitituted download.
         /// </summary>
-        [JsonProperty(PropertyName = "Number")]
+        [JsonProperty(PropertyName = "Number", Required = Required.Always)]
         public int Number { get; set; }
 
         /// <summary>
         /// The URI to the part data.
         /// </summary>
-        [JsonProperty(PropertyName = "Uri")]
+        [JsonProperty(PropertyName = "Uri", Required = Required.Always)]
         public string Uri { get; set; }
 
         /// <summary>
-        /// Actual size of the part in bytes after being downloaded and potentially decompressed. 
+        /// Actual size of the part in bytes after being downloaded. 
         /// </summary>
-        [JsonProperty(PropertyName = "Size")]
+        [JsonProperty(PropertyName = "Size", Required = Required.Always)]
         public long Size { get; set; }
 
         /// <summary>
         /// Optionally set to the MD5 hash of the part data (without any compression).
         /// </summary>
-        [JsonProperty(PropertyName = "Md5")]
+        [JsonProperty(PropertyName = "Md5", Required = Required.Always)]
         public string Md5 { get; set; }
     }
 }
