@@ -5,6 +5,7 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>NeonIdentityOperator</RootNamespace>
     <Configurations>Debug;Release;CodeDoc</Configurations>
+    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

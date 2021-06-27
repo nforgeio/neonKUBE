@@ -8,6 +8,7 @@
     <RootNamespace>Test.Neon.Web</RootNamespace>
     <Configurations>Debug;Release;CodeDoc</Configurations>
     <OutputType>Library</OutputType>
+    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
