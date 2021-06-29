@@ -50,9 +50,9 @@ namespace Neon.Kube.Models.Headend
         public string Version { get; set; }
 
         /// <summary>
-        /// The download fiole name.
+        /// The download file name.
         /// </summary>
-        [JsonProperty(PropertyName = "Filename", Required = Required.Always)]
+        [JsonProperty(PropertyName = "Filename", Required = Required.AllowNull)]
         public string Filename { get; set; }
 
         /// <summary>

@@ -367,8 +367,8 @@ namespace Neon.Deployment
         /// <param name="release">The target release.</param>
         /// <param name="path">Path to the file being uploaded.</param>
         /// <param name="version">The download version.</param>
-        /// <param name="name">Optionally overrides the download file name specified by <paramref name="path"/>.</param>
-        /// <param name="filename">Optionally overrides the download file name specified by <paramref name="path"/>.</param>
+        /// <param name="name">Optionally overrides the download file name specified by <paramref name="path"/> to initialize <see cref="Download.Name"/>.</param>
+        /// <param name="filename">Optionally overrides the download file name specified by <paramref name="path"/> to initialize <see cref="Download.Filename"/>.</param>
         /// <param name="maxPartSize">Optionally overrides the maximum part size (defailts to 100 MiB).</param>
         /// <returns>The <see cref="Download"/> information.</returns>
         /// <remarks>
