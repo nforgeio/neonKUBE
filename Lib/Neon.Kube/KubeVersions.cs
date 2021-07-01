@@ -29,6 +29,8 @@ namespace Neon.Kube
     /// <summary>
     /// Specifies deployment related component versions for the current
     /// neonKUBE release.
+    /// 
+    /// Kubernetes versions can be found here: https://github.com/kubernetes/kubernetes/blob/v1.21.2/cmd/kubeadm/app/constants/constants.go
     /// </summary>
     public static class KubeVersions
     {
