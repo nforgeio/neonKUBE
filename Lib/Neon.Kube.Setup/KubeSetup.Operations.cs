@@ -398,6 +398,10 @@ apiServer:
     default-not-ready-toleration-seconds: ""30"" # default 300
     default-unreachable-toleration-seconds: ""30"" #default  300
     allow-privileged: ""true""
+    api-audiences: api
+    service-account-issuer: kubernetes.default.svc
+    service-account-key-file: /etc/kubernetes/pki/sa.key
+    service-account-signing-key-file: /etc/kubernetes/pki/sa.key
   certSANs:
 {sbCertSANs}
 controlPlaneEndpoint: ""{controlPlaneEndpoint}""
@@ -412,7 +416,10 @@ controllerManager:
     pod-eviction-timeout: 30s #default 5m0s
 scheduler:
   extraArgs:
-    logging-format: json");
+    logging-format: json
+kubeProxy:
+  config:
+    mode: ipvs");
 
                             clusterConfig.AppendLine($@"
 ---
@@ -1074,6 +1081,7 @@ spec:
         level: ""default:info""
       logAsJson: true
       imagePullPolicy: IfNotPresent
+      jwtPolicy: third-party-jwt
       proxy:
         holdApplicationUntilProxyStarts: true
         resources:

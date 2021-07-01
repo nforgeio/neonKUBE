@@ -45,12 +45,12 @@ namespace Neon.Kube
         /// <summary>
         /// The version of the Kubernetes dashboard to be installed.
         /// </summary>
-        public const string KubernetesDashboardVersion = "2.1.0";
+        public const string KubernetesDashboardVersion = "2.3.1";
 
         /// <summary>
         /// The version of the Kubernetes dashboard metrics scraper to be installed.
         /// </summary>
-        public const string KubernetesDashboardMetricsVersion = "v1.0.1";
+        public const string KubernetesDashboardMetricsVersion = "v1.0.6";
 
         /// <summary>
         /// The package version for Kubernetes admin service.
