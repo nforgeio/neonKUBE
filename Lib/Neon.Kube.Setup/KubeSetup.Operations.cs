@@ -416,7 +416,10 @@ controllerManager:
     pod-eviction-timeout: 30s #default 5m0s
 scheduler:
   extraArgs:
-    logging-format: json");
+    logging-format: json
+kubeProxy:
+  config:
+    mode: ipvs");
 
                             clusterConfig.AppendLine($@"
 ---

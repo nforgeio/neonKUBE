@@ -673,7 +673,13 @@ EOF
 #options nf_conntrack hashsize = 393216
 #EOF
 
-echo nf_conntrack > /etc/modules
+cat > /etc/modules <<EOF
+ip_vs
+ip_vs_rr
+ip_vs_wrr
+ip_vs_sh
+nf_conntrack
+EOF
 
 #------------------------------------------------------------------------------
 # Databases are generally not compatible with transparent huge pages.  It appears
@@ -939,6 +945,31 @@ systemctl daemon-reload
 
                     SudoCommand("systemctl disable neon-init.service", RunOptions.Defaults | RunOptions.FaultOnError);
                 });
+        }
+
+        /// <summary>
+        /// Installs the necessary packages and configures setup for <b>IPVS</b>.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        public void NodeInstallIPVS(ISetupController controller)
+        {
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+
+            var hostEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
+
+            InvokeIdempotent("setup/ipvs",
+                () =>
+                {
+                    controller.LogProgress(this, verb: "install", message: "ipvs");
+
+                    var setupScript =
+$@"
+{KubeNodeFolders.Bin}/safe-apt-get update -y
+{KubeNodeFolders.Bin}/safe-apt-get install -y ipset ipvsadm
+";
+                    SudoCommand(CommandBundle.FromScript(setupScript), RunOptions.Defaults | RunOptions.FaultOnError);
+                });
+                
         }
 
         /// <summary>
