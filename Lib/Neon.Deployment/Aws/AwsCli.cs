@@ -273,7 +273,7 @@ namespace Neon.Deployment
                         case "content-language":
                         case "expires":
 
-                            args.Add(name.ToLowerInvariant());
+                            args.Add("--" + name.ToLowerInvariant());
                             args.Add(value);
                             break;
 
