@@ -6,6 +6,7 @@
     <RootNamespace>TestIdentity</RootNamespace>
     <LangVersion>latest</LangVersion>
     <Configurations>Debug;Release;CodeDoc</Configurations>
+    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netcoreapp3.1|AnyCPU'">

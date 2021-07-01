@@ -611,6 +611,7 @@ namespace Neon.Kube
 
         private ClusterProxy                            cluster;
         private string                                  clusterName;
+        private string                                  nodeImageUri;
         private SetupController<NodeDefinition>         controller;
         private string                                  clusterEnvironment;
         private string                                  nodeUsername;
@@ -661,11 +662,12 @@ namespace Neon.Kube
         /// Creates an instance that is capable of provisioning a cluster on Azure.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
+        /// <param name="nodeImageUri">Optionally specifies the node image URI when preparing clusters.</param>
         /// <param name="logFolder">
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
-        public AzureHostingManager(ClusterProxy cluster, string logFolder = null)
+        public AzureHostingManager(ClusterProxy cluster, string nodeImageUri = null, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
 
@@ -674,6 +676,7 @@ namespace Neon.Kube
             this.cluster               = cluster;
             this.clusterName           = cluster.Name;
             this.clusterEnvironment    = NeonHelper.EnumToString(cluster.Definition.Environment);
+            this.nodeImageUri          = nodeImageUri;
             this.hostingOptions        = cluster.Definition.Hosting;
             this.cloudOptions          = hostingOptions.Cloud;
             this.azureOptions          = hostingOptions.Azure;
@@ -1633,7 +1636,7 @@ namespace Neon.Kube
             node.WaitForBoot();
 
             node.Status = "install: packages";
-            node.SudoCommand("apt-get install -yq unzip", RunOptions.FaultOnError);
+            node.SudoCommand("safe-apt-get install -yq unzip", RunOptions.FaultOnError);
         }
 
         /// <summary>

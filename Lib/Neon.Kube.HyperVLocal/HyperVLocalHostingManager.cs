@@ -72,6 +72,7 @@ namespace Neon.Kube
         private const string defaultSwitchName = "external";
 
         private ClusterProxy                        cluster;
+        private string                              nodeImageUri;
         private SetupController<NodeDefinition>     controller;
         private string                              driveTemplatePath;
         private string                              vmDriveFolder;
@@ -89,19 +90,20 @@ namespace Neon.Kube
         /// <summary>
         /// Creates an instance that is capable of provisioning a cluster on the local machine using Hyper-V.
         /// </summary>
-        /// <param name="cluster">The cluster being managed.
-        /// </param>
+        /// <param name="cluster">The cluster being managed.</param>
+        /// <param name="nodeImageUri">Optionally specifies the node image URI when preparing clusters.</param>
         /// <param name="logFolder">
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
-        public HyperVLocalHostingManager(ClusterProxy cluster, string logFolder = null)
+        public HyperVLocalHostingManager(ClusterProxy cluster, string nodeImageUri = null, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
 
             cluster.HostingManager = this;
 
-            this.cluster = cluster;
+            this.cluster      = cluster;
+            this.nodeImageUri = nodeImageUri;
         }
 
         /// <inheritdoc/>
@@ -169,7 +171,7 @@ namespace Neon.Kube
                     this.secureSshPassword = clusterLogin.SshPassword;
                 });
 
-            controller.AddGlobalStep("prepare hyper-v", controller => PrepareHyperV());
+            controller.AddGlobalStep("prepare hyper-v", controller => PrepareHyperVAsync());
             controller.AddNodeStep("create virtual machines", (controller, node) => ProvisionVM(node));
         }
 
@@ -305,8 +307,14 @@ namespace Neon.Kube
         /// <summary>
         /// Performs any required Hyper-V initialization before cluster nodes can be provisioned.
         /// </summary>
-        private void PrepareHyperV()
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task PrepareHyperVAsync()
         {
+            if (string.IsNullOrEmpty(nodeImageUri))
+            {
+                throw new InvalidOperationException($"[{nameof(nodeImageUri)}] was not passed to the hosting manager's constructor which is required for preparing a cluster.");
+            }
+
             // Determine where we're going to place the VM hard drive files and
             // ensure that the directory exists.
 
@@ -322,88 +330,24 @@ namespace Neon.Kube
             Directory.CreateDirectory(vmDriveFolder);
 
             // Download the GZIPed VHDX template if it's not already present.  Note that we're 
-            // going to name the file the same as the file name from the URI and also that 
-            // templates are considered to be invariant.
+            // going to name the file the same as the file name from the URI.
 
-            var driveTemplateUri  = new Uri(KubeDownloads.GetNodeImageUri(this.HostingEnvironment, controller));
+            var driveTemplateUri  = new Uri(KubeDownloads.GetDefaultNodeImageUri(this.HostingEnvironment));
             var driveTemplateName = driveTemplateUri.Segments.Last();
 
             driveTemplatePath = Path.Combine(KubeHelper.NodeImageFolder, driveTemplateName);
 
             if (!File.Exists(driveTemplatePath))
             {
-                var nodeImageUri = KubeDownloads.GetNodeImageUri(this.HostingEnvironment, controller);
+                var nodeImageUri = KubeDownloads.GetDefaultNodeImageUri(this.HostingEnvironment);
 
                 controller.SetGlobalStepStatus($"Download node image VHDX: [{nodeImageUri}]");
 
-                Task.Run(
-                    async () =>
+                await KubeHelper.DownloadNodeImageAsync(nodeImageUri, driveTemplatePath,
+                    progress =>
                     {
-                        using (var client = new HttpClient())
-                        {
-                            // Download the file.
-
-                            var response = await client.GetAsync(nodeImageUri, HttpCompletionOption.ResponseHeadersRead);
-
-                            response.EnsureSuccessStatusCode();
-
-                            var contentLength   = response.Content.Headers.ContentLength;
-                            var contentEncoding = response.Content.Headers.ContentEncoding.SingleOrDefault();
-
-                            if (string.IsNullOrEmpty(contentEncoding) || !contentEncoding.Equals("gzip", StringComparison.InvariantCultureIgnoreCase))
-                            {
-                                throw new KubeException($"[{nodeImageUri}] has unsupported [Content-Encoding={contentEncoding}].  Expecting [gzip]");
-                            }
-
-                            try
-                            {
-                                using (var fileStream = new FileStream(driveTemplatePath, FileMode.Create, FileAccess.ReadWrite))
-                                {
-                                    using (var downloadStream = await response.Content.ReadAsStreamAsync())
-                                    {
-                                        var buffer = new byte[64 * 1024];
-                                        int cb;
-
-                                        while (true)
-                                        {
-                                            cb = await downloadStream.ReadAsync(buffer, 0, buffer.Length);
-
-                                            if (cb == 0)
-                                            {
-                                                break;
-                                            }
-
-                                            await fileStream.WriteAsync(buffer, 0, cb);
-
-                                            if (contentLength.HasValue)
-                                            {
-                                                var percentComplete = (int)(((double)fileStream.Length / (double)contentLength) * 100.0);
-
-                                                controller.SetGlobalStepStatus($"Downloading VHDX: [{percentComplete}%] [{nodeImageUri}]");
-                                            }
-                                            else
-                                            {
-                                                controller.SetGlobalStepStatus($"Downloading VHDX: [{fileStream.Length} bytes] [{nodeImageUri}]");
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            catch
-                            {
-                                // Ensure that the template file is are deleted if there were any
-                                // errors to help avoid using a corrupted template.
-
-                                if (File.Exists(driveTemplatePath))
-                                {
-                                    File.Delete(driveTemplatePath);
-                                }
-
-                                throw;
-                            }
-                        }
-
-                    }).Wait();
+                        controller.SetGlobalStepStatus($"Downloading VHDX: [{progress}%] [{driveTemplateName}]");
+                    });
 
                 controller.SetGlobalStepStatus();
             }
@@ -485,7 +429,7 @@ namespace Neon.Kube
 
                 stopwatch.Start();
 
-                // Copy the VHDX template file to the virtual machine's
+                // Decompress the VHDX template file to the virtual machine's
                 // virtual hard drive file.
 
                 var driveTemplateInfoPath = driveTemplatePath + ".info";

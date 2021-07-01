@@ -53,7 +53,7 @@ namespace Neon.Kube
         /// <summary>
         /// <para>
         /// Loads the known cluster hosting manager assemblies so they'll be available
-        /// to <see cref="HostingManagerFactory.GetManager(ClusterProxy, string)"/>, 
+        /// to <see cref="HostingManagerFactory.GetManager(ClusterProxy, string, string)"/>, 
         /// and <see cref="HostingManager.Validate(ClusterDefinition)"/> when
         /// they are called.
         /// </para>
@@ -181,14 +181,14 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public HostingManager GetManager(ClusterProxy cluster, string logFolder = null)
+        public HostingManager GetManager(ClusterProxy cluster, string nodeImageUri, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
             Covenant.Assert(environmentToHostingManager != null, $"[{nameof(HostingLoader)}] is not initialized.  You must call [{nameof(HostingLoader)}.{nameof(HostingLoader.Initialize)}()] first.");
 
             if (environmentToHostingManager.TryGetValue(cluster.Definition.Hosting.Environment, out var managerType))
             {
-                return (HostingManager)Activator.CreateInstance(managerType, cluster, logFolder);
+                return (HostingManager)Activator.CreateInstance(managerType, cluster, nodeImageUri, logFolder);
             }
 
             var enterpriseHelper = NeonHelper.ServiceContainer.GetService<IEnterpriseHelper>();
@@ -198,7 +198,7 @@ namespace Neon.Kube
                 return null;
             }
 
-            return enterpriseHelper.GetHostingManager(cluster, logFolder);
+            return enterpriseHelper.GetHostingManager(cluster, nodeImageUri, logFolder);
         }
     }
 }

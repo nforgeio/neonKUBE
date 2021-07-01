@@ -48,8 +48,10 @@ using k8s.Models;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Data;
+using Neon.Deployment;
 using Neon.Diagnostics;
 using Neon.IO;
+using Neon.Kube.Models.Headend;
 using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
@@ -80,10 +82,12 @@ namespace Neon.Kube
         private static KubeClientConfig     cachedClientConfig;
         private static X509Certificate2     cachedClusterCertificate;
         private static string               cachedProgramFolder;
+        private static string               cachedProgramDataFolder;
         private static string               cachedPwshPath;
         private static IStaticDirectory     cachedResources;
         private static string               cachedNodeImageFolder;
         private static string               cachedAutomationFolder;
+        private static string               cacheDashboardStateFolder;
 
         /// <summary>
         /// CURL command common options.
@@ -112,25 +116,27 @@ namespace Neon.Kube
         /// </summary>
         private static void ClearCachedItems()
         {
-            cachedConfig             = null;
-            cachedContext            = null;
-            cachedNeonKubeUserFolder = null;
-            cachedKubeUserFolder     = null;
-            cachedRunFolder          = null;
-            cachedLogFolder          = null;
-            cachedTempFolder         = null;
-            cachedLoginsFolder       = null;
-            cachedPasswordsFolder    = null;
-            cachedCacheFolder        = null;
-            cachedDesktopFolder      = null;
-            cachedDesktopWsl2Folder  = null;
-            cachedClientConfig       = null;
-            cachedClusterCertificate = null;
-            cachedProgramFolder      = null;
-            cachedPwshPath           = null;
-            cachedResources          = null;
-            cachedNodeImageFolder    = null;
-            cachedAutomationFolder   = null;
+            cachedConfig              = null;
+            cachedContext             = null;
+            cachedNeonKubeUserFolder  = null;
+            cachedKubeUserFolder      = null;
+            cachedRunFolder           = null;
+            cachedLogFolder           = null;
+            cachedTempFolder          = null;
+            cachedLoginsFolder        = null;
+            cachedPasswordsFolder     = null;
+            cachedCacheFolder         = null;
+            cachedDesktopFolder       = null;
+            cachedDesktopWsl2Folder   = null;
+            cachedClientConfig        = null;
+            cachedClusterCertificate  = null;
+            cachedProgramFolder       = null;
+            cachedProgramDataFolder   = null;
+            cachedPwshPath            = null;
+            cachedResources           = null;
+            cachedNodeImageFolder     = null;
+            cachedAutomationFolder    = null;
+            cacheDashboardStateFolder = null;
         }
 
         /// <summary>
@@ -334,20 +340,29 @@ namespace Neon.Kube
             if (NeonHelper.IsWindows)
             {
                 var userFolderPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                var neonFolderPath = GetNeonKubeUserFolder();
 
                 var sensitiveFolders = new string[]
                 {
                     Path.Combine(userFolderPath, ".kube"),
-                    Path.Combine(userFolderPath, ".neonkube"),
-                    Path.Combine(userFolderPath, "OpenVPN")
+                    Path.Combine(neonFolderPath, "logins"),
+                    Path.Combine(neonFolderPath, "log")
                 };
 
                 foreach (var sensitiveFolder in sensitiveFolders)
                 {
-                    if (Directory.Exists(sensitiveFolder))
-                    {
-                        NeonHelper.EncryptFile(sensitiveFolder);
-                    }
+                    Directory.CreateDirectory(sensitiveFolder);
+                }
+
+                // We used to encrypt the entire [.neonkube] folder but that caused problems
+                // with WSL2, so we're going to decrypt the folder before encrypting special
+                // subfolders.
+
+                NeonHelper.DecryptFile(neonFolderPath);
+
+                foreach (var sensitiveFolder in sensitiveFolders)
+                {
+                    NeonHelper.EncryptFile(sensitiveFolder);
                 }
             }
             else
@@ -609,8 +624,7 @@ namespace Neon.Kube
         /// <returns>The folder path.</returns>
         /// <remarks>
         /// This folder will exist on developer/operator workstations that have used the <b>neon-cli</b>
-        /// to deploy and manage clusters.  The client will use this to store temporary files that may
-        /// include sensitive information because these folders are encrypted on disk.
+        /// to deploy and manage clusters.
         /// </remarks>
         public static string TempFolder
         {
@@ -879,7 +893,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Creates an new automation folder named by a UUID for the current user.  
+        /// Creates a new automation folder named by a UUID for the current user.  
         /// This is where automated cluster deployment related files such as 
         /// logins, kubeconfigs, and logs will be persisted for automated cluster
         /// deployments.
@@ -954,6 +968,35 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Creates a new folder for holding neonDESKTOP dashboard browser state
+        /// if it doesn't exist and returns its path.
+        /// </summary>
+        /// <returns>Path to the folder.</returns>
+        public static string CreateDashboardStateFolder()
+        {
+            if (cacheDashboardStateFolder != null)
+            {
+                return cacheDashboardStateFolder;
+            }
+
+            cacheDashboardStateFolder = Path.Combine(GetNeonKubeUserFolder(), "dashboards");
+
+            Directory.CreateDirectory(cacheDashboardStateFolder);
+
+            return cacheDashboardStateFolder;
+        }
+
+        /// <summary>
+        /// Clears the contents of the dashboard state folder.
+        /// </summary>
+        public static void ClearDashboardStateFolder()
+        {
+            var dashboardStateFolder = CreateDashboardStateFolder();
+
+            NeonHelper.DeleteFolderContents(dashboardStateFolder);
+        }
+
+        /// <summary>
         /// Returns the path to the neon program folder.
         /// </summary>
         public static string ProgramFolder
@@ -986,6 +1029,34 @@ namespace Neon.Kube
                 }
 
                 return cachedProgramFolder;
+            }
+        }
+
+        /// <summary>
+        /// Returns the path to the neon program data folder.
+        /// </summary>
+        public static string ProgramDataFolder
+        {
+            get
+            {
+                if (cachedProgramDataFolder != null)
+                {
+                    return cachedProgramDataFolder;
+                }
+
+                cachedProgramDataFolder = Environment.GetEnvironmentVariable("NEONDESKTOP_PROGRAM_FOLDER");
+
+                if (cachedProgramDataFolder == null)
+                {
+                    cachedProgramDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "neonFORGE", "neonDESKTOP");
+                }
+
+                if (!Directory.Exists(cachedProgramDataFolder))
+                {
+                    Directory.CreateDirectory(cachedProgramDataFolder);
+                }
+
+                return cachedProgramDataFolder;
             }
         }
 
@@ -2494,6 +2565,159 @@ TCPKeepAlive yes
                 // $todo(jefflill): Implement this?
 
                 throw new NotImplementedException();
+            }
+        }
+
+        /// <summary>
+        /// Downloads a single part node image from a URI or a multi-part download to a local folder.
+        /// </summary>
+        /// <param name="imageUri">The node image URI.</param>
+        /// <param name="imagePath">The local path where the image will be written.</param>
+        /// <param name="progressAction">Optional progress action that will be called with operation percent complete.</param>
+        /// <returns>The path to the downloaded file.</returns>
+        /// <remarks>
+        /// <para>
+        /// This supports source URIs referencing a single node image file as well
+        /// as URIs referencing a multi-part <see cref="Download"/> serialized as 
+        /// JSON and with the <see cref="DeploymentHelper.DownloadContentType"/>
+        /// Content-Type.
+        /// </para>
+        /// </remarks>
+        public async static Task<string> DownloadNodeImageAsync(string imageUri, string imagePath, Action<int> progressAction = null)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(imageUri), nameof(imageUri));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(imagePath), nameof(imagePath));
+
+            var imageFolder = Path.GetDirectoryName(imagePath);
+
+            Directory.CreateDirectory(imageFolder);
+
+            using (var client = new HttpClient())
+            {
+                // Execute a HEAD request on the source URI to obtain the content type.  We'll
+                // use this to decide whether to download a single or multi-part file.
+
+                var request  = new HttpRequestMessage(HttpMethod.Head, imageUri);
+                var response = await client.SendAsync(request);
+
+                response.EnsureSuccessStatusCode();
+
+                if (string.Equals(response.Content.Headers.ContentType.MediaType, DeploymentHelper.DownloadContentType, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    // Multi-part download.
+
+                    return await DownloadMultiPartNodeImageAsync(imageUri, imagePath, progressAction);
+                }
+
+                // Download the single part file.
+
+                if (File.Exists(imagePath))
+                {
+                    return imagePath;
+                }
+
+                response = await client.GetAsync(imageUri, HttpCompletionOption.ResponseHeadersRead);
+
+                response.EnsureSuccessStatusCode();
+
+                var contentLength = response.Content.Headers.ContentLength;
+
+                try
+                {
+                    progressAction?.Invoke(0);
+
+                    using (var fileStream = new FileStream(imagePath, FileMode.Create, FileAccess.ReadWrite))
+                    {
+                        using (var downloadStream = await response.Content.ReadAsStreamAsync())
+                        {
+                            var buffer = new byte[64 * 1024];
+                            int cb;
+
+                            while (true)
+                            {
+                                cb = await downloadStream.ReadAsync(buffer, 0, buffer.Length);
+
+                                if (cb == 0)
+                                {
+                                    break;
+                                }
+
+                                await fileStream.WriteAsync(buffer, 0, cb);
+
+                                if (contentLength.HasValue)
+                                {
+                                    var percentComplete = (int)(((double)fileStream.Length / (double)contentLength) * 100.0);
+
+                                    progressAction?.Invoke(percentComplete);
+                                }
+                            }
+                        }
+                    }
+
+                    progressAction?.Invoke(100);
+
+                    return imagePath;
+                }
+                catch
+                {
+                    // Ensure that the template file is are deleted if there were any
+                    // errors to help avoid using a corrupted template.
+
+                    if (File.Exists(imagePath))
+                    {
+                        File.Delete(imagePath);
+                    }
+
+                    throw;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Downloads a multi-part node image to a local folder.
+        /// </summary>
+        /// <param name="imageUri">The node image multi-part download information URI.</param>
+        /// <param name="imagePath">The local path where the image will be written.</param>
+        /// <param name="progressAction">Optional progress action that will be called with operation percent complete.</param>
+        /// <returns>The path to the downloaded file.</returns>
+        /// <remarks>
+        /// <para>
+        /// This checks to see if the target file already exists and will download
+        /// only what's required to update the file to match the source.  This means
+        /// that partially completed downloads can restart essentially where they
+        /// left off.
+        /// </para>
+        /// </remarks>
+        public async static Task<string> DownloadMultiPartNodeImageAsync(string imageUri, string imagePath, Action<int> progressAction = null)
+        {
+            Covenant.Requires<ArgumentNullException>(imageUri != null, nameof(imageUri));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(imagePath), nameof(imagePath));
+
+            var imageFolder = Path.GetDirectoryName(imagePath);
+
+            Directory.CreateDirectory(imageFolder);
+
+            // Download the URI and parse a [Download] instance from it.
+
+            using (var client = new HttpClient())
+            {
+                var request     = new HttpRequestMessage(HttpMethod.Get, imageUri);
+                var response    = await client.SendAsync(request);
+                var contentType = response.Content.Headers.ContentType.MediaType;
+
+                response.EnsureSuccessStatusCode();
+
+                if (!string.Equals(contentType, DeploymentHelper.DownloadContentType, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    throw new KubeException($"[{imageUri}] has unsupported [Content-Type={contentType}].  [{DeploymentHelper.DownloadContentType}] is expected.");
+                }
+
+                var jsonText = await response.Content.ReadAsStringAsync();
+                var download = NeonHelper.JsonDeserialize<Download>(jsonText);
+
+                // Download the multi-part file.
+
+                return await GitHub.Release.DownloadAsync(download, imagePath, progressAction);
             }
         }
     }

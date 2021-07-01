@@ -143,6 +143,16 @@ function Write-Exception
     $scriptName = $info.ScriptName
     $scriptLine = $info.ScriptLineNumber
 
+    # $hack(jefflill): 
+    #
+    # Powershell stream redirection seems very inconsistent so we're going to write
+    # the exception information out as Info (to STDOUT) as well as to the standard 
+    # Powershell output stream in the hope that at least one of these will make it
+    # into redirected log files.
+
+    #--------------------------------------------------------------------------
+    # Write as INFO
+
     Write-Info ""
     Write-Info "***************************************************************************"
     Write-Info "EXCEPTION:   $err"
@@ -160,6 +170,27 @@ function Write-Exception
         Write-Info $exception.StackTrace
     }
     Write-Info "***************************************************************************"
+
+    #--------------------------------------------------------------------------
+    # Write as OUTPUT
+
+    Write-Output ""
+    Write-Output "***************************************************************************"
+    Write-Output "EXCEPTION:   $err"
+    Write-Output "MESSAGE:     $message"
+    Write-Output "SCRIPT NAME: $scriptName"
+    Write-Output "SCRIPT LINE: $scriptLine"
+    Write-Output "SCRIPT STACK TRACE"
+    Write-Output "------------------"
+    Write-Output $err.ScriptStackTrace
+
+    if (![System.String]::IsNullOrEmpty($exception.StackTrace))
+    {
+        Write-Output ".NET STACK TRACE"
+        Write-Output "----------------"
+        Write-Output $exception.StackTrace
+    }
+    Write-Output "***************************************************************************"
 }
 
 #------------------------------------------------------------------------------
@@ -191,7 +222,7 @@ function EscapeDoubleQuotes
 #------------------------------------------------------------------------------
 # Executes a command and captures the stdout and/or stderr outputs.
 #
-# IMPORTANT: REDIRECTION IN COMMANDS IS NOT SUPPORTED
+# IMPORTANT: REDIRECTION BY COMMANDS IS NOT SUPPORTED!
 #
 # ARGUMENTS:
 #
@@ -203,7 +234,7 @@ function EscapeDoubleQuotes
 #
 # RETURNS:
 #
-#   A three element hash table with these properties:
+#   A three element hashtable with these properties:
 #
 #       exitcode    - the command's integer exit code
 #       stdout      - the captured standard output
@@ -409,7 +440,7 @@ function Log-DebugLine
 }
 
 #------------------------------------------------------------------------------
-# Converts YAML text into a hash table.
+# Converts YAML text into a hashtable.
 #
 # ARGUMENTS:
 #
@@ -417,7 +448,7 @@ function Log-DebugLine
 #
 # RETURNS
 #
-#   The parsed hash table.
+#   The parsed hashtable.
 #
 # REMARKS:
 #
@@ -441,11 +472,11 @@ function ConvertFrom-Yaml
 }
 
 #------------------------------------------------------------------------------
-# Converts a hash table into YAML.
+# Converts a hashtable into YAML.
 #
 # ARGUMENTS:
 #
-#   table   - the hash table
+#   table   - the hashtable
 #
 # RETURNS
 #
@@ -514,6 +545,12 @@ function Login-Docker
         [string]$credentials
     )
 
+    # Logout if we are already logged in (for CI/CD)
+
+    Logout-Docker $server -CIOnly
+
+    # Login
+
     $username = $(Get-SecretValue "$credentials[username]")
     $password = $(Get-SecretValue "$credentials[password]")
     
@@ -539,8 +576,8 @@ function Login-Docker
 #                       ghcr.io
 #
 #   CIOnly      - optionally logs out only when the current script is running
-#                 a CI job.  This is nice to avoit logging develepers out on
-#                 their own workstations when runing local CI tests.
+#                 a CI job.  This is nice to avoid logging develepers out on
+#                 their own workstations when running local CI tests.
 
 function Logout-Docker
 {

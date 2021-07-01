@@ -26,6 +26,7 @@ using Newtonsoft.Json.Linq;
 
 using Neon.Common;
 using Neon.IO;
+using Neon.Kube.Models.Headend;
 
 namespace Neon.Deployment
 {
@@ -40,6 +41,11 @@ namespace Neon.Deployment
         /// information as well as secrets.
         /// </summary>
         public const string NeonProfileServicePipe = "neon-profile-service";
+
+        /// <summary>
+        /// The HTTP Content-Type used for <see cref="Download"/> metadata.
+        /// </summary>
+        public const string DownloadContentType = "application/vnd+neonforge.download+json";
 
         /// <summary>
         /// Clears the Powershell command history.  It's possible that scripts and

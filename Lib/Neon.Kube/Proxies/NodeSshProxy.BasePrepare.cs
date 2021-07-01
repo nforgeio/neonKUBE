@@ -56,8 +56,9 @@ namespace Neon.Kube
         /// Performs low-level initialization of a cluster.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
-        /// <param name="upgradeLinux">Optionally upgrade the node's Linux distribution.  This defaults to <c>false</c>.</param>
-        public void BaseInitialize(ISetupController controller, bool upgradeLinux = false)
+        /// <param name="upgradeLinux">Optionally upgrade the node's Linux distribution (defaults to <c>false</c>).</param>
+        /// <param name="patchLinux">Optionally apply any available Linux security patches (defaults to <c>true</c>).</param>
+        public void BaseInitialize(ISetupController controller, bool upgradeLinux = false, bool patchLinux = true)
         {
             Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
 
@@ -78,7 +79,12 @@ namespace Neon.Kube
             BaseConfigureDnsIPv4Preference(controller);
             BaseRemoveSnap(controller);
             BaseRemovePackages(controller);
-            BasePatchLinux(controller);
+
+            if (patchLinux)
+            {
+                BasePatchLinux(controller);
+            }
+
             BaseCreateKubeFolders(controller);
 
             if (upgradeLinux)
@@ -132,7 +138,7 @@ namespace Neon.Kube
             InvokeIdempotent("base/dns-ipv4",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "configure", message: "dns ipv4 prepference");
+                    controller.LogProgress(this, verb: "configure", message: "dns ipv4 preference");
 
                     var script =
 @"
@@ -477,7 +483,7 @@ touch /etc/cloud/cloud-init.disabled
 @"
 set -euo pipefail
 
-apt-get purge snapd -yq
+safe-apt-get purge snapd -yq
 
 rm -rf ~/snap
 rm -rf /var/cache/snapd
@@ -814,9 +820,9 @@ chmod 750 {KubeNodeFolders.State}/setup
                     // the [*.sh] file type (if present) and then setting execute
                     // permissions.
 
-                    var toolsFolder = KubeHelper.Resources.GetDirectory("/Tools");      // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1121
+                    var scriptsFolder = KubeHelper.Resources.GetDirectory("/Tools");    // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1121
 
-                    foreach (var file in toolsFolder.GetFiles())
+                    foreach (var file in scriptsFolder.GetFiles())
                     {
                         var targetName = file.Name;
 

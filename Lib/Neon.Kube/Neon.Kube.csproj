@@ -25,6 +25,7 @@
     <PackageIcon>nuget-icon.png</PackageIcon>
     <PackageTags>kubernetes</PackageTags>
     <NoDefaultExcludes>true</NoDefaultExcludes>
+    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)'=='netcoreapp3.1'">
@@ -75,13 +76,71 @@
   <ItemGroup>
     <Compile Remove="Extensions\**" />
     <Compile Remove="Properties\**" />
+    <Compile Remove="Resources\Helm\cert-manager\crds\**" />
     <EmbeddedResource Remove="Extensions\**" />
     <EmbeddedResource Remove="Properties\**" />
+    <EmbeddedResource Remove="Resources\Helm\cert-manager\crds\**" />
     <None Remove="Extensions\**" />
     <None Remove="Properties\**" />
+    <None Remove="Resources\Helm\cert-manager\crds\**" />
   </ItemGroup>
 
   <ItemGroup>
+
+    <None Remove="Resources\Helm\cert-manager\Chart.yaml" />
+
+    <None Remove="Resources\Helm\cert-manager\README.md" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\cainjector-deployment.yaml" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\cainjector-psp-clusterrole.yaml" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\cainjector-psp-clusterrolebinding.yaml" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\cainjector-psp.yaml" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\cainjector-rbac.yaml" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\cainjector-serviceaccount.yaml" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\crds.yaml" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\deployment.yaml" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\NOTES.txt" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\psp-clusterrole.yaml" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\psp-clusterrolebinding.yaml" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\psp.yaml" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\service.yaml" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\serviceaccount.yaml" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\servicemonitor.yaml" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\webhook-deployment.yaml" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\webhook-mutating-webhook.yaml" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\webhook-psp-clusterrole.yaml" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\webhook-psp-clusterrolebinding.yaml" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\webhook-psp.yaml" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\webhook-rbac.yaml" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\webhook-service.yaml" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\webhook-serviceaccount.yaml" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\webhook-validating-webhook.yaml" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\_helpers.tpl" />
+
     <None Remove="Resources\Helm\kiali\templates\service-nodeport.yaml" />
     <None Remove="Resources\Helm\metrics-server\Chart.yaml" />
     <None Remove="Resources\Helm\metrics-server\README.md" />
@@ -337,6 +396,10 @@
     <None Remove="Resources\Helm\minio\templates\_helpers.tpl" />
     <None Remove="Resources\Helm\minio\templates\_helper_create_bucket.txt" />
     <None Remove="Resources\Helm\minio\values.yaml" />
+    <None Remove="Resources\Helm\neon-acme\.helmignore" />
+    <None Remove="Resources\Helm\neon-acme\Chart.yaml" />
+    <None Remove="Resources\Helm\neon-acme\templates\api-service.yaml" />
+    <None Remove="Resources\Helm\neon-acme\values.yaml" />
     <None Remove="Resources\Helm\neon-cluster-operator\.helmignore" />
     <None Remove="Resources\Helm\neon-cluster-operator\Chart.yaml" />
     <None Remove="Resources\Helm\neon-cluster-operator\templates\_helpers.tpl" />
@@ -676,6 +739,48 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Resources\Helm\cert-manager\Chart.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\README.md" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\cainjector-deployment.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\cainjector-psp-clusterrole.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\cainjector-psp-clusterrolebinding.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\cainjector-psp.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\cainjector-rbac.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\cainjector-serviceaccount.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\crds.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\deployment.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\NOTES.txt" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\psp-clusterrole.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\psp-clusterrolebinding.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\psp.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\service.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\serviceaccount.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\servicemonitor.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\webhook-deployment.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\webhook-mutating-webhook.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\webhook-psp-clusterrole.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\webhook-psp-clusterrolebinding.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\webhook-psp.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\webhook-rbac.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\webhook-service.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\webhook-serviceaccount.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\webhook-validating-webhook.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\_helpers.tpl" />
+    <EmbeddedResource Include="Resources\Helm\neon-acme\.helmignore" />
+    <EmbeddedResource Include="Resources\Helm\neon-acme\Chart.yaml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Helm\neon-acme\templates\certificate-cluster.yaml" />
+    <EmbeddedResource Include="Resources\Helm\neon-acme\templates\api-service.yaml" />
+    <EmbeddedResource Include="Resources\Helm\neon-acme\templates\certificate-neon-acme.yaml" />
+    <EmbeddedResource Include="Resources\Helm\neon-acme\templates\deployment-neon-acme.yaml" />
+    <EmbeddedResource Include="Resources\Helm\neon-acme\templates\gateway-cluster.yaml" />
+    <EmbeddedResource Include="Resources\Helm\neon-acme\templates\issuer-neon-acme.yaml" />
+    <EmbeddedResource Include="Resources\Helm\neon-acme\templates\rbac-neon-acme.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\rbac.yaml" />
+    <EmbeddedResource Include="Resources\Helm\neon-acme\templates\service-neon-acme.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\values.yaml" />
     <EmbeddedResource Include="Resources\Helm\kiali\templates\service-nodeport.yaml" />
     <EmbeddedResource Include="Resources\Helm\metrics-server\Chart.yaml" />
     <EmbeddedResource Include="Resources\Helm\metrics-server\README.md" />
@@ -757,6 +862,7 @@
     <EmbeddedResource Include="Resources\Helm\minio\templates\_helpers.tpl" />
     <EmbeddedResource Include="Resources\Helm\minio\templates\_helper_create_bucket.txt" />
     <EmbeddedResource Include="Resources\Helm\minio\values.yaml" />
+    <EmbeddedResource Include="Resources\Helm\neon-acme\values.yaml" />
     <EmbeddedResource Include="Resources\Helm\neon-cluster-operator\.helmignore" />
     <EmbeddedResource Include="Resources\Helm\neon-cluster-operator\Chart.yaml" />
     <EmbeddedResource Include="Resources\Helm\neon-cluster-operator\values.yaml" />
@@ -1276,12 +1382,22 @@
   <ItemGroup>
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
     <ProjectReference Include="..\Neon.Cryptography\Neon.Cryptography.csproj" />
+    <ProjectReference Include="..\Neon.Deployment\Neon.Deployment.csproj" />
+    <ProjectReference Include="..\Neon.Kube.Models\Neon.Kube.Models.csproj" />
     <ProjectReference Include="..\Neon.SSH\Neon.SSH.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
     <None Include="..\..\LICENSE" Pack="True" PackagePath="" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\Helm\cert-manager\templates\cainjector-deployment.yaml" />
+    <Resource Include="Resources\Helm\cert-manager\templates\cainjector-psp-clusterrole.yaml" />
+    <Resource Include="Resources\Helm\cert-manager\templates\cainjector-psp-clusterrolebinding.yaml" />
+    <Resource Include="Resources\Helm\cert-manager\templates\cainjector-psp.yaml" />
+    <Resource Include="Resources\Helm\cert-manager\templates\cainjector-serviceaccount.yaml" />
   </ItemGroup>
 
   <Target Name="ModelGen" BeforeTargets="BeforeCompile" Condition="Exists('$(NF_ROOT)\Tools\prebuilder\bin\$(Configuration)\netcoreapp3.1\prebuilder.exe')">

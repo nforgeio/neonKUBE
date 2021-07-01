@@ -1,0 +1,28 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: neoncluster-gateway
+  namespace: neon-ingress
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - hosts:
+        - {{ .Values.clusterDomain }}
+        - "*.{{ .Values.clusterDomain }}"
+      port:
+        name: http-neoncluster
+        number: 8080
+        protocol: HTTP
+      tls:
+        httpsRedirect: true
+    - hosts:
+        - {{ .Values.clusterDomain }}
+        - "*.{{ .Values.clusterDomain }}"
+      port:
+        name: https-neoncluster
+        number: 8443
+        protocol: HTTPS
+      tls:
+        credentialName: "{{ .Values.clusterDomain }}"
+        mode: SIMPLE

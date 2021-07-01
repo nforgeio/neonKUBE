@@ -284,8 +284,11 @@ namespace Neon.Common
         {
             var folder = Path.GetDirectoryName(DebugLogPath);
 
+            line  = line ?? string.Empty;
+            line += Environment.NewLine;
+
             Directory.CreateDirectory(folder);
-            File.AppendAllText(DebugLogPath, line ?? string.Empty + Environment.NewLine);
+            File.AppendAllText(DebugLogPath, line);
         }
     }
 }

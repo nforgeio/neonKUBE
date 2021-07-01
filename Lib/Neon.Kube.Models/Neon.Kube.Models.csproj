@@ -26,6 +26,7 @@
     <PackageTags></PackageTags>
     <NoDefaultExcludes>true</NoDefaultExcludes>
     <PackageIconUrl />
+    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

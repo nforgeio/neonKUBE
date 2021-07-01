@@ -47,7 +47,7 @@ namespace Neon.Xunit
     /// </para>
     /// <note>
     /// <see cref="CodeFixture"/> really doesn't do anything by itself.  It's purpose is simply 
-    /// to provide a mechanism for adding and executing your custom code to the <see cref="ComposedFixture"/>.
+    /// to provide a mechanism for adding and executing your custom code to <see cref="ComposedFixture"/>.
     /// </note>
     /// <para>
     /// You action code can then do things like initialize the database schema and test data

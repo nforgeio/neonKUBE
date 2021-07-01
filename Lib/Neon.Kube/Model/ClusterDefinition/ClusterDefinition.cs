@@ -232,6 +232,18 @@ namespace Neon.Kube
         public string Name { get; set; }
 
         /// <summary>
+        /// <para>
+        /// The cluster domain. This will be used for accessing dashboards.
+        /// </para>
+        /// <note>
+        /// The domain 
+        /// </note>
+        /// </summary>
+        [JsonProperty(PropertyName = "Domain", Required = Required.Always)]
+        [YamlMember(Alias = "domain", ApplyNamingConventions = false)]
+        public string Domain { get; set; }
+
+        /// <summary>
         /// Optionally specifies the semantic version of the neonKUBE cluster being created.
         /// This defaults to <c>null</c> which indicates that the latest supported cluster
         /// version will be created.

@@ -7,6 +7,7 @@ metadata:
   namespace: {{ .Values.query.serviceMonitor.namespace }}
   {{- end }}
   labels:
+    instance: neon-monitor
     {{- include "jaeger.labels" . | nindent 4 }}
     app.kubernetes.io/component: query
     {{- if .Values.query.serviceMonitor.additionalLabels }}

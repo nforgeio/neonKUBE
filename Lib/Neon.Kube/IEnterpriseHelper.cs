@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -61,12 +62,20 @@ namespace Neon.Kube
 
         /// <summary>
         /// Returns the enterprise hosting manager for the hosting environment specified by the cluster definition
-        /// within a cluster procy.
+        /// within a cluster proxy.
         /// </summary>
         /// <param name="cluster">The cluster proxy,</param>
+        /// <param name="nodeImageUri">The node image URI.</param>
         /// <param name="logFolder">Optionally specifies the log folder where the hosting manager will log progress.</param>
         /// <returns>The hosting manager for the environment.</returns>
         /// <exception cref="KubeException">Thrown if the environment is not implemented by an enterprise hosting manager.</exception>
-        HostingManager GetHostingManager(ClusterProxy cluster, string logFolder = null);
+        HostingManager GetHostingManager(ClusterProxy cluster, string nodeImageUri, string logFolder = null);
+
+        /// <summary>
+        /// Gets the current WSL2 cluster IP address.
+        /// </summary>
+        /// <returns>The <see cref="IPAddress"/>.</returns>
+        /// <exception cref="KubeException">Thrown if the environment is not implemented.</exception>
+        IPAddress GetWsl2Address();
     }
 }

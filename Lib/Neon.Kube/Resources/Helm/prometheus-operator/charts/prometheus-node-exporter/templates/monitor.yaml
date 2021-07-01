@@ -5,6 +5,7 @@ metadata:
   name: {{ template "prometheus-node-exporter.fullname" . }}
   namespace: {{ template "prometheus-node-exporter.namespace" . }}
   labels: {{ include "prometheus-node-exporter.labels" . | indent 4 }}
+    instance: neon-monitor
   {{- if .Values.prometheus.monitor.additionalLabels }}
 {{ toYaml .Values.prometheus.monitor.additionalLabels | indent 4 }}
   {{- end }}

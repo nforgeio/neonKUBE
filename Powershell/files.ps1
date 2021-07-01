@@ -58,7 +58,7 @@ function Clear-Directory
             return
         }
 
-        ForEach ($filePath in [System.IO.Directory]::GetFiles($path))
+        foreach ($filePath in [System.IO.Directory]::GetFiles($path))
         {
             try
             {
@@ -70,7 +70,7 @@ function Clear-Directory
             }
         }
 
-        ForEach ($folderPath in [System.IO.Directory]::GetDirectories($path))
+        foreach ($folderPath in [System.IO.Directory]::GetDirectories($path))
         {
             try
             {
@@ -89,12 +89,12 @@ function Clear-Directory
             return
         }
 
-        ForEach ($filePath in [System.IO.Directory]::GetFiles($path))
+        foreach ($filePath in [System.IO.Directory]::GetFiles($path))
         {
             [System.IO.File]::Delete($filePath)
         }
 
-        ForEach ($folderPath in [System.IO.Directory]::GetDirectories($path))
+        foreach ($folderPath in [System.IO.Directory]::GetDirectories($path))
         {
             [System.IO.Directory]::Delete($folderPath, $true)
         }

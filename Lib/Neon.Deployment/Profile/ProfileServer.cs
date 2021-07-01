@@ -206,8 +206,8 @@ namespace Neon.Deployment
         /// </note>
         /// </summary>
         /// <param name="pipeName">The server named pipe name.  This defaults to <see cref="DeploymentHelper.NeonProfileServicePipe"/>.</param>
-        /// <param name="threadCount">Optionally specifies the number of threads to create to handle inbound requests.  This defaults to <b>1</b>.</param>
-        public ProfileServer(string pipeName = DeploymentHelper.NeonProfileServicePipe, int threadCount = 1)
+        /// <param name="threadCount">Optionally specifies the number of threads to create to handle inbound requests.  This defaults to <b>10</b>.</param>
+        public ProfileServer(string pipeName = DeploymentHelper.NeonProfileServicePipe, int threadCount = 10)
         {
             Covenant.Requires<NotSupportedException>(NeonHelper.IsWindows, $"[{nameof(ProfileServer)}] currently only supports Windows.");
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(pipeName));
@@ -280,13 +280,14 @@ namespace Neon.Deployment
             // $hack(jefflill):
             //
             // The [NamedPipeStream.WaitForConnection()] doesn't throw an exception
-            // when the underlying pipe id disposed.  I was hoping to catch an
+            // when the underlying pipe is disposed.  I was hoping to catch an
             // [ObjectDisposedException] in the server threads as the signal for 
             // the thread to exit.
             //
             // The simple alternative is to establish a (fake) client connection
-            // for each thread.  This will cause the [WaitForConnection()] to return
-            // and then the thread will use [disposing] to know when to exit.
+            // for each thread.  This will cause the [NamedPipeServerStream.WaitForConnection()]
+            // to return in the thread method instances which will use [disposing] to know when
+            // to exit.
 
             for (int i = 0; i < threads.Length; i++)
             {
@@ -296,7 +297,7 @@ namespace Neon.Deployment
                     {
                         clientPipe.Connect(100);
                     }
-                    catch (TimeoutException)
+                    catch
                     {
                         // Ignoring these
                     }

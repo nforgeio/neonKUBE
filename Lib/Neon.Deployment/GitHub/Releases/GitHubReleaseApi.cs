@@ -22,11 +22,16 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 
 using Neon.Common;
+using Neon.Cryptography;
+using Neon.IO;
+using Neon.Kube.Models.Headend;
 using Neon.Net;
 
 using Octokit;
@@ -66,8 +71,8 @@ namespace Neon.Deployment
         /// <remarks>
         /// <para>
         /// If the <paramref name="tagName"/> doesn't already exist in the repo, this method will
-        /// tag the latest commit on the specified (or default) <paramref name="branch"/> in the 
-        /// target repo and before creating the release.
+        /// tag the latest commit on the specified <paramref name="branch"/> or else the defailt branch
+        /// in the target repo and before creating the release.
         /// </para>
         /// </remarks>
         public Release Create(string repo, string tagName, string releaseName = null, string body = null, bool draft = false, bool prerelease = false, string branch = null)
@@ -353,6 +358,305 @@ namespace Neon.Deployment
             var client   = GitHub.CreateGitHubClient(repo);
 
             client.Repository.Release.Delete(repoPath.Owner, repoPath.Repo, release.Id).Wait();
+        }
+
+        /// <summary>
+        /// Uploads a multi-part download to a release and then publishes the release.
+        /// </summary>
+        /// <param name="repo">Identifies the target repository.</param>
+        /// <param name="release">The target release.</param>
+        /// <param name="path">Path to the file being uploaded.</param>
+        /// <param name="version">The download version.</param>
+        /// <param name="name">Optionally overrides the download file name specified by <paramref name="path"/> to initialize <see cref="Download.Name"/>.</param>
+        /// <param name="filename">Optionally overrides the download file name specified by <paramref name="path"/> to initialize <see cref="Download.Filename"/>.</param>
+        /// <param name="maxPartSize">Optionally overrides the maximum part size (defailts to 100 MiB).</param>
+        /// <returns>The <see cref="Download"/> information.</returns>
+        /// <remarks>
+        /// <para>
+        /// The release passed must be unpublished and you may upload other assets before calling this.
+        /// </para>
+        /// <note>
+        /// Take care that any assets already published have names that won't conflict with the asset
+        /// part names, which will be formatted like: <b>part-##</b>
+        /// </note>
+        /// </remarks>
+        public Download UploadMultipartAsset(string repo, Release release, string path, string version, string name = null, string filename = null, long maxPartSize = (long)(100 * ByteUnits.MebiBytes))
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(repo), nameof(repo));
+            Covenant.Requires<ArgumentNullException>(release != null, nameof(release));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path), nameof(path));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(version), nameof(version));
+
+            name     = name ?? Path.GetFileName(path);
+            filename = filename ?? Path.GetFileName(path);
+
+            using (var input = File.OpenRead(path))
+            {
+                if (input.Length == 0)
+                {
+                    throw new IOException($"Asset at [{path}] cannot be empty.");
+                }
+
+                var assetPartMap = new List<Tuple<ReleaseAsset, DownloadPart>>();
+                var download     = new Download() { Name = name, Version = version, Filename = filename };
+                var partCount    = NeonHelper.PartitionCount(input.Length, maxPartSize);
+                var partNumber   = 0;
+                var partStart    = 0L;
+                var cbRemaining  = input.Length;
+
+                download.Md5   = CryptoHelper.ComputeMD5String(input);
+                input.Position = 0;
+
+                while (cbRemaining > 0)
+                {
+                    var partSize = Math.Min(cbRemaining, maxPartSize);
+                    var part     = new DownloadPart()
+                    {
+                        Number = partNumber,
+                        Size   = partSize,
+                    };
+
+                    // We're going to use a substream to compute the MD5 hash for the part
+                    // as well as to actually upload the part to the GitHub release.
+
+                    using (var partStream = new SubStream(input, partStart, partSize))
+                    {
+                        part.Md5 = CryptoHelper.ComputeMD5String(partStream);
+                        partStream.Position = 0;
+
+                        var asset = GitHub.Release.UploadAsset(repo, release, partStream, $"part-{partNumber:0#}");
+
+                        assetPartMap.Add(new Tuple<ReleaseAsset, DownloadPart>(asset, part));
+                    }
+
+                    download.Parts.Add(part);
+
+                    // Loop to handle the next part (if any).
+
+                    partNumber++;
+                    partStart += partSize;
+                    cbRemaining -= partSize;
+                }
+
+                download.Size = download.Parts.Sum(part => part.Size);
+
+                // Publish the release.
+
+                var releaseUpdate = release.ToUpdate();
+
+                releaseUpdate.Draft = false;
+
+                release = GitHub.Release.Update(repo, release, releaseUpdate);
+
+                // Now that the release has been published, we can go back and fill in
+                // the asset URIs for each of the download parts.
+
+                foreach (var item in assetPartMap)
+                {
+                    item.Item2.Uri = GitHub.Release.GetAssetUri(release, item.Item1);
+                }
+
+                return download;
+            }
+        }
+
+        /// <summary>
+        /// Synchronously downloads and assembles a multi-part file from assets in a GitHub release.
+        /// </summary>
+        /// <param name="download">The download information.</param>
+        /// <param name="targetPath">The target file path.</param>
+        /// <param name="progressAction">Optionally specifies an action to be called with the the percentage downloaded.</param>
+        /// <param name="partTimeout">Optionally specifies the HTTP download timeout for each part (defaults to 10 minutes).</param>
+        public void Download(Download download, string targetPath, Action<int> progressAction = null, TimeSpan partTimeout = default)
+        {
+            DownloadAsync(download, targetPath, progressAction, partTimeout).Wait();
+        }
+
+        /// <summary>
+        /// Asynchronously downloads and assembles a multi-part file from assets in a GitHub release.
+        /// </summary>
+        /// <param name="download">The download information.</param>
+        /// <param name="targetPath">The target file path.</param>
+        /// <param name="progressAction">Optionally specifies an action to be called with the the percentage downloaded.</param>
+        /// <param name="partTimeout">Optionally specifies the HTTP download timeout for each part (defaults to 10 minutes).</param>
+        /// <param name="cancellationToken">Optionally specifies the operation cancellation token.</param>
+        /// <returns>The path to the downloaded file.</returns>
+        /// <exception cref="IOException">Thrown when the download is corrupt.</exception>
+        /// <remarks>
+        /// <para>
+        /// This method downloads the file specified by <paramref name="download"/> to the folder specified, creating 
+        /// the folder first when required.  The file will be downloaded in parts, where each part will be validated
+        /// by comparing the part's MD5 hash (when present) with the computed value.  The output file will be named 
+        /// <see cref="Download.Name"/> and the overall MD5 hash will also be saved using the same file name but
+        /// <b>adding</b> the <b>.md5</b> extension.
+        /// </para>
+        /// <para>
+        /// This method will continue downloading a partially downloaded file.  This works by validating the already
+        /// downloaded parts against their MD5 hashes and then continuing part downloads after the last valid part.
+        /// Nothing will be downloaded when the existing file is fully formed.
+        /// </para>
+        /// <note>
+        /// The target files (output and MD5) will be deleted when download appears to be corrupt.
+        /// </note>
+        /// </remarks>
+        public async Task<string> DownloadAsync(Download download, string targetPath, Action<int> progressAction = null, TimeSpan partTimeout = default, CancellationToken cancellationToken = default)
+        {
+            Covenant.Requires<ArgumentNullException>(download != null, nameof(download));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(targetPath), nameof(targetPath));
+
+            if (partTimeout <= TimeSpan.Zero)
+            {
+                partTimeout = TimeSpan.FromMinutes(10);
+            }
+
+            var targetFolder = Path.GetDirectoryName(targetPath);
+
+            Directory.CreateDirectory(targetFolder);
+
+            var targetMd5Path  = Path.Combine(Path.GetDirectoryName(targetPath), Path.GetFileName(targetPath) + ".md5");
+            var nextPartNumber = 0;
+
+            // If the target file already exists along with its MD5 hash file, then compare the
+            // existing MD5 against the download's MD5 as well as the computed MD5 for the current
+            // file and skip the download when the match.
+
+            if (File.Exists(targetPath) && File.Exists(targetMd5Path) && File.ReadAllText(targetMd5Path).Trim() == download.Md5)
+            {
+                using (var input = File.OpenRead(targetPath))
+                {
+                    if (CryptoHelper.ComputeMD5String(input) == download.Md5)
+                    {
+                        return targetPath;
+                    }
+                }
+            }
+
+            NeonHelper.DeleteFile(targetMd5Path);   // We'll recompute this below
+
+            // Validate the parts of any existing target file to determine where
+            // to start downloading missing parts.
+
+            if (File.Exists(targetPath))
+            {
+                using (var output = new FileStream(targetPath, System.IO.FileMode.Open, FileAccess.ReadWrite))
+                {
+                    var pos = 0L;
+
+                    foreach (var part in download.Parts.OrderBy(part => part.Number))
+                    {
+                        // Handle a partially downloaded part.  We're going to truncate the file to
+                        // remove the partial part and then break to start re-downloading the part.
+
+                        if (output.Length < pos + part.Size)
+                        {
+                            output.SetLength(pos);
+
+                            nextPartNumber = part.Number;
+                            break;
+                        }
+
+                        // Validate the part MD5.  We're going to truncate the file to remove the
+                        // partial part and then break to start re-downloading the part.
+
+                        using (var partStream = new SubStream(output, pos, part.Size))
+                        {
+                            if (CryptoHelper.ComputeMD5String(partStream) != part.Md5)
+                            {
+                                output.SetLength(pos);
+
+                                nextPartNumber = part.Number;
+                                break;
+                            }
+                        }
+
+                        pos           += part.Size;
+                        nextPartNumber = part.Number + 1;
+                    }
+                }
+            }
+
+            // Download any remaining parts.
+
+            progressAction?.Invoke(0);
+
+            if (nextPartNumber > download.Parts.Count)
+            {
+                progressAction?.Invoke(100);
+                return targetPath;
+            }
+
+            try
+            {
+                using (var httpClient = new HttpClient())
+                {
+                    using (var output = new FileStream(targetPath, System.IO.FileMode.OpenOrCreate, FileAccess.ReadWrite))
+                    {
+                        // Determine the starting position of the next part.
+
+                        var pos = download.Parts
+                            .Where(part => part.Number < nextPartNumber)
+                            .Sum(part => part.Size);
+
+                        // Download the remaining parts.
+
+                        foreach (var part in download.Parts
+                            .Where(part => part.Number >= nextPartNumber)
+                            .OrderBy(part => part.Number))
+                        {
+                            output.Position = pos;
+
+                            var response = await httpClient.GetAsync(part.Uri);
+
+                            response.EnsureSuccessStatusCode();
+
+                            using (var contentStream = await response.Content.ReadAsStreamAsync())
+                            {
+                                await contentStream.CopyToAsync(output);
+                            }
+
+                            // Ensure that the downloaded part size matches the specification.
+
+                            if (output.Position - pos != part.Size)
+                            {
+                                throw new IOException($"[{download.Name}]: Part [{part.Number}] actual size [{output.Position - pos}] does not match the expected size [{part.Size}].");
+                            }
+
+                            // Ensure that the downloaded part MD5 matches the specification.
+
+                            using (var subStream = new SubStream(output, pos, part.Size))
+                            {
+                                var actualMd5 = CryptoHelper.ComputeMD5String(subStream);
+
+                                if (actualMd5 != part.Md5)
+                                {
+                                    throw new IOException($"[{download.Name}]: Part [{part.Number}] actual MD5 [{actualMd5}] does not match the expected MD5 [{part.Md5}].");
+                                }
+                            }
+
+                            pos += part.Size;
+
+                            progressAction?.Invoke((int)(100.0 * ((double)part.Number / (double)download.Parts.Count)));
+                        }
+
+                        if (output.Length != download.Size)
+                        {
+                            throw new IOException($"[{download.Name}]: Expected size [{download.Size}] got [{output.Length}].");
+                        }
+                    }
+
+                    progressAction?.Invoke(100);
+                    File.WriteAllText(targetMd5Path, download.Md5, Encoding.ASCII);
+
+                    return targetPath;
+                }
+            }
+            catch (IOException)
+            {
+                NeonHelper.DeleteFile(targetPath);
+                NeonHelper.DeleteFile(targetMd5Path);
+
+                throw;
+            }
         }
     }
 }

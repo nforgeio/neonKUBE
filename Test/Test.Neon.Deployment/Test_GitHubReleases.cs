@@ -17,8 +17,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -27,12 +29,13 @@ using Newtonsoft.Json.Linq;
 using Xunit;
 
 using Neon.Common;
+using Neon.Cryptography;
 using Neon.Deployment;
 using Neon.IO;
+using Neon.Kube.Models.Headend;
 using Neon.Xunit;
 
 using Octokit;
-using System.Net.Http;
 
 namespace TestDeployment
 {
@@ -384,6 +387,330 @@ namespace TestDeployment
                 Assert.NotNull(match);
                 Assert.Equal(tagName2, match.TagName);
                 Assert.False(match.Draft);
+            }
+        }
+
+        [Fact]
+        public async Task Download()
+        {
+            // Upload file as a multi-part release and verify that we can download it.
+
+            var tagName = Guid.NewGuid().ToString("d");
+            var release = GitHub.Release.Create(repo, tagName);
+
+            try
+            {
+                var partCount = 10;
+                var partSize  = 1024;
+                var download  = PublishMultipartAsset(release, "test.dat", "v1.0", partCount, partSize);
+
+                Assert.Equal("test.dat", download.Name);
+                Assert.Equal("v1.0", download.Version);
+                Assert.NotNull(download.Md5);
+                Assert.Equal(10, download.Parts.Count);
+                Assert.Equal(partCount * partSize, download.Parts.Sum(part => part.Size));
+                Assert.Equal(partCount * partSize, download.Size);
+
+                // Verify basic downloading.
+
+                using (var tempFolder = new TempFolder())
+                {
+                    var targetPath = Path.Combine(tempFolder.Path, download.Filename);
+                    var path       = await GitHub.Release.DownloadAsync(download, targetPath);
+
+                    Assert.Equal(targetPath, path);
+
+                    using (var stream = File.OpenRead(targetPath))
+                    {
+                        Assert.Equal(download.Md5, CryptoHelper.ComputeMD5String(stream));
+                    }
+
+                    // Verify that the MD5 file was written and that it's correct.
+
+                    var md5Path = targetPath + ".md5";
+
+                    Assert.True(File.Exists(md5Path));
+                    Assert.Equal(download.Md5, File.ReadAllText(md5Path, Encoding.ASCII).Trim());
+                }
+
+                // Verify that the progress callback is invoked.
+                //
+                // We're expecting progress = 0 to start and progress = 100 at the end
+                // and then a progress call for each downloaded part.
+
+                var progressValues = new List<int>();
+
+                using (var tempFolder = new TempFolder())
+                {
+                    var targetPath = Path.Combine(tempFolder.Path, download.Filename);
+
+                    await GitHub.Release.DownloadAsync(download, targetPath, progress => progressValues.Add(progress));
+                }
+
+                Assert.Equal(partCount + 2, progressValues.Count);
+                Assert.Equal(0, progressValues.First());
+                Assert.Equal(100, progressValues.Last());
+
+                for (int i = 1; i < progressValues.Count; i++)
+                {
+                    Assert.True(progressValues[i - 1] <= progressValues[i]);
+                }
+            }
+            finally
+            {
+                GitHub.Release.Remove(repo, release);
+            }
+        }
+
+        [Fact]
+        public async Task Download_Restart()
+        {
+            // Upload file as a multi-part release, simulate a partial download and then verify
+            // that downloading it again completes the download.
+
+            var tagName = Guid.NewGuid().ToString("d");
+            var release = GitHub.Release.Create(repo, tagName);
+
+            try
+            {
+                var partCount      = 10;
+                var partSize       = 1024;
+                var download       = PublishMultipartAsset(release, "test.dat", "v1.0", partCount, partSize);
+                var progressValues = new List<int>();
+
+                Assert.Equal("test.dat", download.Name);
+                Assert.Equal("v1.0", download.Version);
+                Assert.NotNull(download.Md5);
+                Assert.Equal(10, download.Parts.Count);
+                Assert.Equal(partCount * partSize, download.Parts.Sum(part => part.Size));
+                Assert.Equal(partCount * partSize, download.Size);
+
+                using (var tempFolder = new TempFolder())
+                {
+                    var targetPath = Path.Combine(tempFolder.Path, download.Name);
+
+                    await GitHub.Release.DownloadAsync(download, targetPath);
+
+                    using (var stream = File.OpenRead(targetPath))
+                    {
+                        Assert.Equal(download.Md5, CryptoHelper.ComputeMD5String(stream));
+                    }
+
+                    // Set the file size to zero and verify that downloading it again downloads
+                    // all of the parts.
+                    //
+                    // Note that we're using the progress action to count how many parts were downloaded.
+
+                    using (var stream = new FileStream(targetPath, System.IO.FileMode.Open, FileAccess.ReadWrite))
+                    {
+                        stream.SetLength(0);
+                    }
+
+                    progressValues.Clear();
+
+                    await GitHub.Release.DownloadAsync(download, targetPath, progress => progressValues.Add(progress));
+
+                    using (var stream = File.OpenRead(targetPath))
+                    {
+                        Assert.Equal(download.Md5, CryptoHelper.ComputeMD5String(stream));
+                    }
+
+                    Assert.Equal(partCount + 2, progressValues.Count);
+
+                    // Set the file size to just the first part and 1/2 of the second part and then download
+                    // again to fetch the missing parts.
+
+                    using (var stream = new FileStream(targetPath, System.IO.FileMode.Open, FileAccess.ReadWrite))
+                    {
+                        stream.SetLength(partSize + partSize/2);
+                    }
+
+                    progressValues.Clear();
+
+                    await GitHub.Release.DownloadAsync(download, targetPath, progress => progressValues.Add(progress));
+
+                    using (var stream = File.OpenRead(targetPath))
+                    {
+                        Assert.Equal(download.Md5, CryptoHelper.ComputeMD5String(stream));
+                    }
+
+                    Assert.Equal((partCount - 1) + 2, progressValues.Count);
+
+                    // Set the file size to cut the last part in half and then download again to fetch the missing part.
+
+                    using (var stream = new FileStream(targetPath, System.IO.FileMode.Open, FileAccess.ReadWrite))
+                    {
+                        stream.SetLength(download.Size - partSize / 2);
+                    }
+
+                    progressValues.Clear();
+
+                    await GitHub.Release.DownloadAsync(download, targetPath, progress => progressValues.Add(progress));
+
+                    using (var stream = File.OpenRead(targetPath))
+                    {
+                        Assert.Equal(download.Md5, CryptoHelper.ComputeMD5String(stream));
+                    }
+
+                    Assert.Equal(3, progressValues.Count);
+                }
+            }
+            finally
+            {
+                GitHub.Release.Remove(repo, release);
+            }
+        }
+
+        [Fact]
+        public async Task DownloadError_Md5()
+        {
+            // Upload file as a multi-part release, mess with a part's MD5 and
+            // verify that we detect the problem when downloading.
+
+            var tagName = Guid.NewGuid().ToString("d");
+            var release = GitHub.Release.Create(repo, tagName);
+
+            try
+            {
+                var partCount = 10;
+                var partSize  = 1024;
+                var download  = PublishMultipartAsset(release, "test.dat", "v1.0", partCount, partSize);
+
+                Assert.Equal("test.dat", download.Name);
+                Assert.Equal("v1.0", download.Version);
+                Assert.NotNull(download.Md5);
+                Assert.Equal(10, download.Parts.Count);
+                Assert.Equal(partCount * partSize, download.Parts.Sum(part => part.Size));
+                Assert.Equal(partCount * partSize, download.Size);
+
+                download.Parts[0].Md5 += "222";
+
+                using (var tempFolder = new TempFolder())
+                {
+                    var targetPath = Path.Combine(tempFolder.Path, download.Filename);
+
+                    await Assert.ThrowsAsync<IOException>(async () => await GitHub.Release.DownloadAsync(download, targetPath));
+                }
+            }
+            finally
+            {
+                GitHub.Release.Remove(repo, release);
+            }
+        }
+
+        [Fact]
+        public async Task DownloadError_TooLong()
+        {
+            // Upload file as a multi-part release and then remove a part
+            // from the download and verify that we detect that the downloaded
+            // data is longer than we expected.
+
+            var tagName = Guid.NewGuid().ToString("d");
+            var release = GitHub.Release.Create(repo, tagName);
+
+            try
+            {
+                var partCount = 10;
+                var partSize  = 1024;
+                var download  = PublishMultipartAsset(release, "test.dat", "v1.0", partCount, partSize);
+
+                Assert.Equal("test.dat", download.Name);
+                Assert.Equal("v1.0", download.Version);
+                Assert.NotNull(download.Md5);
+                Assert.Equal(10, download.Parts.Count);
+                Assert.Equal(partCount * partSize, download.Parts.Sum(part => part.Size));
+                Assert.Equal(partCount * partSize, download.Size);
+
+                download.Parts.Remove(download.Parts.Last());
+
+                using (var tempFolder = new TempFolder())
+                {
+                    var targetPath = Path.Combine(tempFolder.Path, download.Filename);
+
+                    await Assert.ThrowsAsync<IOException>(async () => await GitHub.Release.DownloadAsync(download, targetPath));
+                }
+            }
+            finally
+            {
+                GitHub.Release.Remove(repo, release);
+            }
+        }
+
+        [Fact]
+        public async Task DownloadError_TooShort()
+        {
+            // Upload file as a multi-part release and then add a fake part
+            // to the download and verify that we detect that the downloaded
+            // data is shorter than we expected.
+
+            var tagName = Guid.NewGuid().ToString("d");
+            var release = GitHub.Release.Create(repo, tagName);
+
+            try
+            {
+                var partCount = 10;
+                var partSize  = 1024;
+                var download  = PublishMultipartAsset(release, "test.dat", "v1.0", partCount, partSize);
+
+                Assert.Equal("test.dat", download.Name);
+                Assert.Equal("v1.0", download.Version);
+                Assert.NotNull(download.Md5);
+                Assert.Equal(10, download.Parts.Count);
+                Assert.Equal(partCount * partSize, download.Parts.Sum(part => part.Size));
+                Assert.Equal(partCount * partSize, download.Size);
+
+                download.Parts.Add(download.Parts.First());
+
+                using (var tempFolder = new TempFolder())
+                {
+                    var targetPath = Path.Combine(tempFolder.Path, download.Filename);
+
+                    await Assert.ThrowsAsync<IOException>(async () => await GitHub.Release.DownloadAsync(download, targetPath));
+                }
+            }
+            finally
+            {
+                GitHub.Release.Remove(repo, release);
+            }
+        }
+
+        /// <summary>
+        /// Uploads a file as multilpe assets to a release, publishes the release and then 
+        /// return the <see cref="Download"/> details.
+        /// </summary>
+        /// <param name="release">The target brelease.</param>
+        /// <param name="name">The download name.</param>
+        /// <param name="version">The download version.</param>
+        /// <param name="partCount">The number of parts to be uploaded.</param>
+        /// <param name="partSize">The size of each part.</param>
+        /// <returns>The <see cref="Download"/> describing how to download the parts.</returns>
+        /// <remarks>
+        /// Each part will be filled with bytes where the byte of each part will start
+        /// with the part number and the following bytes will increment the previous byte
+        /// value.
+        /// </remarks>
+        private Download PublishMultipartAsset(Release release, string name, string version, int partCount, long partSize)
+        {
+            Covenant.Requires<ArgumentNullException>(release != null, nameof(release));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(version), nameof(version));
+            Covenant.Requires<ArgumentException>(partCount > 0, nameof(release));
+            Covenant.Requires<ArgumentException>(partSize > 0, nameof(release));
+
+            using (var tempFile = new TempFile())
+            {
+                using (var output = new FileStream(tempFile.Path, System.IO.FileMode.Create, FileAccess.ReadWrite))
+                {
+                    for (int partNumber = 0; partNumber < partCount; partNumber++)
+                    {
+                        for (long i = 0; i < partSize; i++)
+                        {
+                            output.WriteByte((byte)i);
+                        }
+                    }
+                }
+
+                return GitHub.Release.UploadMultipartAsset(repo, release, tempFile.Path, version: version, name: name, maxPartSize: partSize);
             }
         }
     }

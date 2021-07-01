@@ -61,9 +61,19 @@ ARGUMENTS:
 
 OPTIONS:
 
+    --node-image-uri            - Overrides the default node image URI.  This can
+                                  reference a single-part gzip encoded image or
+                                  multi-part download metadata.
+
+                                  NOTE: This defaults to the multi-part image
+                                        hosted as a GuitHub release.
+
+                                  NOTE: This is ignored for [--debug] mode.
+
     --package-caches=HOST:PORT  - Optionally specifies one or more APT Package cache
-                                  servers by hostname and port.  Specify multiple
-                                  servers by separating the endpoints with spaces.
+                                  servers by hostname and port for use by the new cluster. 
+                                  Specify multiple servers by separating the endpoints 
+                                  with spaces.
 
     --unredacted                - Runs commands with potential secrets without 
                                   redacting logs.  This is useful for debugging 
@@ -101,6 +111,8 @@ OPTIONS:
                                   used for automated deployments that can proceed while
                                   neonDESKTOP is doing other things.
 
+    --headend-uri               - Set the URI for the headend service.
+
 Server Requirements:
 --------------------
 
@@ -116,7 +128,7 @@ Server Requirements:
         public override string[] Words => new string[] { "cluster", "prepare" };
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions => new string[] { "--package-caches", "--unredacted", "--remove-templates", "--debug", "--base-image-name", "--automate" };
+        public override string[] ExtendedOptions => new string[] { "--node-image-uri", "--package-caches", "--unredacted", "--remove-templates", "--debug", "--base-image-name", "--automate", "--headend-uri" };
 
         /// <inheritdoc/>
         public override bool NeedsSshCredentials(CommandLine commandLine) => !commandLine.HasOption("--remove-templates");
@@ -153,10 +165,12 @@ Server Requirements:
                     File.Delete(fileName);
                 }
             }
-
+           
+            var nodeImageUri  = commandLine.GetOption("--node-image-uri");
             var debug         = commandLine.HasOption("--debug");
             var baseImageName = commandLine.GetOption("--base-image-name");
             var automate      = commandLine.HasOption("--automate");
+            var headendUri    = commandLine.GetOption("--headend-uri") ?? "https://headend.neoncloud.io";
 
             if (debug && string.IsNullOrEmpty(baseImageName))
             {
@@ -181,7 +195,7 @@ Server Requirements:
             // Obtain the cluster definition.
 
             var clusterDefPath    = commandLine.Arguments[0];
-            var clusterDefinition = (ClusterDefinition)null;
+            var clusterDefinition = (ClusterDefinition)null;            
 
             if (clusterDefPath.Equals("WSL2", StringComparison.InvariantCultureIgnoreCase))
             {
@@ -199,6 +213,13 @@ Server Requirements:
                 ClusterDefinition.ValidateFile(clusterDefPath, strict: true);
 
                 clusterDefinition = ClusterDefinition.FromFile(clusterDefPath, strict: true);
+            }
+
+            // Use the default node image for the hosting environment unless [--node-image-uri] was specified.
+
+            if (string.IsNullOrEmpty(nodeImageUri))
+            {
+                nodeImageUri = KubeDownloads.GetDefaultNodeImageUri(clusterDefinition.Hosting.Environment);
             }
 
             // Parse any specified package cache endpoints.
@@ -224,12 +245,14 @@ Server Requirements:
 
             var controller = KubeSetup.CreateClusterPrepareController(
                 clusterDefinition, 
+                nodeImageUri,
                 maxParallel:            Program.MaxParallel,
                 packageCacheEndpoints:  packageCacheEndpoints,
                 unredacted:             commandLine.HasOption("--unredacted"),
                 debugMode:              debug,
                 baseImageName:          baseImageName,
-                automate:               automate);
+                automate:               automate,
+                headendUri:             headendUri);
 
             controller.StatusChangedEvent +=
                 status =>

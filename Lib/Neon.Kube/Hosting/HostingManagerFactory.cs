@@ -90,13 +90,13 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public HostingManager GetManager(ClusterProxy cluster, string logFolder = null)
+        public HostingManager GetManager(ClusterProxy cluster, string nodeImageUri = null, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
 
             CheckInitialized();
 
-            return Loader.GetManager(cluster, logFolder);
+            return Loader.GetManager(cluster, nodeImageUri, logFolder);
         }
 
         /// <inheritdoc/>

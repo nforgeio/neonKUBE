@@ -57,6 +57,17 @@ else
     $config = "Release"
 }
 
+#------------------------------------------------------------------------------
+# $todo(jefflill):
+#
+# Code documentation builds are temporarily disabled until we 
+# port to DocFX.  SHFB doesn't work for multi-targeted projects.
+#
+#   https://github.com/nforgeio/neonKUBE/issues/1206
+
+$codedoc = $false
+#------------------------------------------------------------------------------
+
 $msbuild     = $env:MSBUILDPATH
 $nfRoot      = $env:NF_ROOT
 $nfSolution  = "$nfRoot\neonKUBE.sln"
@@ -112,13 +123,13 @@ function PublishCore
 
     $targetPath = $null
 
-    ForEach ($path in $potentialTargets)
+    foreach ($path in $potentialTargets)
     {
         if ([System.IO.File]::Exists($path))
         {
             $targetPath = $path
             Write-Output("*** Publish target exists at: $path")
-            Break
+            break
         }
         else
         {
@@ -183,9 +194,9 @@ try
         # Clean and build the solution.
 
         Write-Info ""
-        Write-Info "**********************************************************************"
-        Write-Info "***                         CLEAN SOLUTION                         ***"
-        Write-Info "**********************************************************************"
+        Write-Info "*******************************************************************************"
+        Write-Info "***                           CLEAN SOLUTION                                ***"
+        Write-Info "*******************************************************************************"
         Write-Info ""
 
         & "$msbuild" "$nfSolution" $buildConfig -t:Clean -m -verbosity:quiet
@@ -196,9 +207,22 @@ try
         }
 
         Write-Info ""
-        Write-Info "**********************************************************************"
-        Write-Info "***                         BUILD SOLUTION                         ***"
-        Write-Info "**********************************************************************"
+        Write-Info "*******************************************************************************"
+        Write-Info "***                           RESTORE PACKAGES                              ***"
+        Write-Info "*******************************************************************************"
+        Write-Info ""
+
+        & "$msbuild" "$nfSolution" -t:restore -verbosity:quiet
+
+        if (-not $?)
+        {
+            throw "ERROR: RESTORE FAILED"
+        }
+
+        Write-Info ""
+        Write-Info "*******************************************************************************"
+        Write-Info "***                           BUILD SOLUTION                                ***"
+        Write-Info "*******************************************************************************"
         Write-Info ""
 
         & "$msbuild" "$nfSolution" $buildConfig -restore -m -verbosity:quiet

@@ -65,8 +65,9 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Instance members
 
-        private ClusterProxy                    cluster;
-        private SetupController<NodeDefinition> controller;
+        private ClusterProxy                        cluster;
+        private string                              nodeImageUri;
+        private SetupController<NodeDefinition>     controller;
 
         /// <summary>
         /// Creates an instance that is only capable of validating the hosting
@@ -80,17 +81,19 @@ namespace Neon.Kube
         /// Creates an instance that is capable of provisioning a cluster on Google Cloud.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
+        /// <param name="nodeImageUri">Optionally specifies the node image URI when preparing clusters.</param>
         /// <param name="logFolder">
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
-        public GoogleHostingManager(ClusterProxy cluster, string logFolder = null)
+        public GoogleHostingManager(ClusterProxy cluster, string nodeImageUri = null, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
 
             cluster.HostingManager = this;
 
-            this.cluster = cluster;
+            this.cluster      = cluster;
+            this.nodeImageUri = nodeImageUri;
         }
 
         /// <inheritdoc/>
