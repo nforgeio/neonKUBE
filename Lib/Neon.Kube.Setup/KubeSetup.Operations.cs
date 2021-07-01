@@ -398,6 +398,10 @@ apiServer:
     default-not-ready-toleration-seconds: ""30"" # default 300
     default-unreachable-toleration-seconds: ""30"" #default  300
     allow-privileged: ""true""
+    api-audiences: api
+    service-account-issuer: kubernetes.default.svc
+    service-account-key-file: /etc/kubernetes/pki/sa.key
+    service-account-signing-key-file: /etc/kubernetes/pki/sa.key
   certSANs:
 {sbCertSANs}
 controlPlaneEndpoint: ""{controlPlaneEndpoint}""
@@ -1074,6 +1078,7 @@ spec:
         level: ""default:info""
       logAsJson: true
       imagePullPolicy: IfNotPresent
+      jwtPolicy: third-party-jwt
       proxy:
         holdApplicationUntilProxyStarts: true
         resources:
