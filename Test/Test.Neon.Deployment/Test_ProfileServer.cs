@@ -163,7 +163,7 @@ namespace TestDeployment
 
             var client = new ProfileClient(pipeName);
 
-            using (var server = new ProfileServer(pipeName))
+            using (var server = new ProfileServer(pipeName, threadCount: 1))
             {
                 SetDefaultHandlers(server);
                 server.Start();

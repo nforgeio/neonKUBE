@@ -285,8 +285,9 @@ namespace Neon.Deployment
             // the thread to exit.
             //
             // The simple alternative is to establish a (fake) client connection
-            // for each thread.  This will cause the [WaitForConnection()] to return
-            // and then the thread will use [disposing] to know when to exit.
+            // for each thread.  This will cause the [NamedPipeServerStream.WaitForConnection()]
+            // to return in the thread method instances which will use [disposing] to know when
+            // to exit.
 
             for (int i = 0; i < threads.Length; i++)
             {
@@ -296,7 +297,7 @@ namespace Neon.Deployment
                     {
                         clientPipe.Connect(100);
                     }
-                    catch (TimeoutException)
+                    catch
                     {
                         // Ignoring these
                     }
