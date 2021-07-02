@@ -70,7 +70,6 @@ namespace Neon.Kube
         // Instance members
 
         private ClusterProxy                        cluster;
-        private string                              nodeImageUri;
         private SetupController<NodeDefinition>     controller;
 
         /// <summary>
@@ -86,19 +85,17 @@ namespace Neon.Kube
         /// servers or virtual machines.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
-        /// <param name="nodeImageUri">Optionally specifies the node image URI when preparing clusters.</param>
         /// <param name="logFolder">
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
-        public BareMetalHostingManager(ClusterProxy cluster, string nodeImageUri = null, string logFolder = null)
+        public BareMetalHostingManager(ClusterProxy cluster, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
 
             cluster.HostingManager = this;
 
-            this.cluster      = cluster;
-            this.nodeImageUri = nodeImageUri;
+            this.cluster = cluster;
         }
 
         /// <inheritdoc/>
