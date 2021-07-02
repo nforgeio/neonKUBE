@@ -131,7 +131,8 @@ namespace Neon.Kube
         public override void AddProvisioningSteps(SetupController<NodeDefinition> controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-            Covenant.Assert(cluster != null, $"[{nameof(HyperVLocalHostingManager)}] was created with the wrong constructor.");
+            Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(HyperVLocalHostingManager)}] was created with the wrong constructor.");
+            Covenant.Requires<NotSupportedException>(!string.IsNullOrEmpty(nodeImageUri), $"[[{nameof(nodeImageUri)}] was must be passed to the constructor.");
 
             var clusterLogin = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
 
@@ -332,15 +333,13 @@ namespace Neon.Kube
             // Download the GZIPed VHDX template if it's not already present.  Note that we're 
             // going to name the file the same as the file name from the URI.
 
-            var driveTemplateUri  = new Uri(KubeDownloads.GetDefaultNodeImageUri(this.HostingEnvironment));
+            var driveTemplateUri  = new Uri(nodeImageUri);
             var driveTemplateName = driveTemplateUri.Segments.Last();
 
             driveTemplatePath = Path.Combine(KubeHelper.NodeImageFolder, driveTemplateName);
 
             if (!File.Exists(driveTemplatePath))
             {
-                var nodeImageUri = KubeDownloads.GetDefaultNodeImageUri(this.HostingEnvironment);
-
                 controller.SetGlobalStepStatus($"Download node image VHDX: [{nodeImageUri}]");
 
                 await KubeHelper.DownloadNodeImageAsync(nodeImageUri, driveTemplatePath,

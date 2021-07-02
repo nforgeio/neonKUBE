@@ -162,6 +162,7 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Assert(cluster != null, $"[{nameof(XenServerHostingManager)}] was created with the wrong constructor.");
+            Covenant.Requires<NotSupportedException>(!string.IsNullOrEmpty(nodeImageUri), $"[[{nameof(nodeImageUri)}] must be passed to the constructor.");
 
             // We need to ensure that the cluster has at least one ingress node.
 
@@ -377,11 +378,6 @@ namespace Neon.Kube
         /// <param name="xenSshProxy">The XenServer SSH proxy.</param>
         private async Task CheckVmTemplateAsync(NodeSshProxy<XenClient> xenSshProxy)
         {
-            if (string.IsNullOrEmpty(nodeImageUri))
-            {
-                throw new InvalidOperationException($"[{nameof(nodeImageUri)}] was not passed to the hosting manager's constructor which is required for preparing a cluster.");
-            }
-
             var xenHost      = xenSshProxy.Metadata;
             var templateName = $"neonkube-{KubeVersions.NeonKubeVersion}";
 
@@ -391,7 +387,7 @@ namespace Neon.Kube
             {
                 xenSshProxy.Status = "download: vm template (slow)";
 
-                var driveTemplateUri  = new Uri(KubeDownloads.GetDefaultNodeImageUri(this.HostingEnvironment));
+                var driveTemplateUri  = new Uri(nodeImageUri);
                 var driveTemplateName = driveTemplateUri.Segments.Last();
 
                 driveTemplatePath = Path.Combine(KubeHelper.NodeImageFolder, driveTemplateName);
