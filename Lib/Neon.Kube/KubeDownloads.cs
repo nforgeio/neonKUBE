@@ -154,7 +154,7 @@ namespace Neon.Kube
                         }
                         else
                         {
-                            return $"{NeonPublicBucketUri}/downloads/neonkube-hypervlocal-{KubeVersions.NeonKubeVersion}.hyperv.amd64.vhdx.gz";
+                            return $"{NeonPublicBucketUri}/downloads/neonkube-{KubeVersions.NeonKubeVersion}.hyperv.amd64.vhdx.gz";
                         }
                     }
 
@@ -172,7 +172,7 @@ namespace Neon.Kube
                         }
                         else
                         {
-                            return $"{NeonPublicBucketUri}/downloads/neonkube-xenserver-{KubeVersions.NeonKubeVersion}.xenserver.amd64.xva.gz";
+                            return $"{NeonPublicBucketUri}/downloads/neonkube-{KubeVersions.NeonKubeVersion}.xenserver.amd64.xva.gz";
                         }
                     }
 
@@ -190,7 +190,7 @@ namespace Neon.Kube
                         }
                         else
                         {
-                            return $"{NeonPublicBucketUri}/downloads/neonkube-wsl2-{KubeVersions.NeonKubeVersion}.wsl2.amd64.tar.gz";
+                            return $"{NeonPublicBucketUri}/downloads/neonkube-{KubeVersions.NeonKubeVersion}.wsl2.amd64.tar.gz";
                         }
                     }
 
