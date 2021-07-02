@@ -282,7 +282,6 @@ namespace Neon.Deployment
                             sbMetadata.AppendWithSeparator($"{name}={value}", ",");
                             break;
                     }
-
                 }
             }
 
