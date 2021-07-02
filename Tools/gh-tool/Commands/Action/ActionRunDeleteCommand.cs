@@ -98,11 +98,11 @@ ARGUMENTS:
             var repoPath     = GitHubRepoPath.Parse(repoArg);
             var workflowName = nameArg;
             var maxAge       = TimeSpan.FromDays(Math.Max(int.Parse(ageArg), 0));
-            var deletedCount = await GitHub.Actions.DeleteRunsAsync(repoPath.ToString(), workflowName, maxAge);
+            var deleted      = await GitHub.Actions.DeleteRunsAsync(repoPath.ToString(), workflowName, maxAge);
 
             Console.WriteLine();
+            Console.WriteLine($"[{deleted}] workflow runs deleted");
             Console.WriteLine();
-            Console.WriteLine($"[{deletedCount}] workflow runs deleted");
         }
     }
 }

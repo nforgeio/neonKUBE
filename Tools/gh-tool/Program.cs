@@ -258,12 +258,12 @@ COMMANDS:
         /// <summary>
         /// Returns the program name.
         /// </summary>
-        public static string Name => "gh-tools";
+        public static string Name => "gh-tool";
 
         /// <summary>
         /// Returns the program version.
         /// </summary>
-        public static string Version => "0.1.0";
+        public static string Version => "0.2.0";
 
         /// <summary>
         /// Returns the orignal program <see cref="CommandLine"/>.
