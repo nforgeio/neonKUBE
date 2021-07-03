@@ -1387,7 +1387,7 @@ global_auth_file = """"
 
 # The image used to instantiate infra containers.
 # This option supports live configuration reload.
-pause_image = ""{KubeConst.LocalClusterRegistry}/pause:3.2""
+pause_image = ""{KubeConst.LocalClusterRegistry}/pause:{KubeVersions.PauseVersion}""
 
 # The path to a file containing credentials specific for pulling the pause_image from
 # above. The file is similar to that of /var/lib/kubelet/config.json
