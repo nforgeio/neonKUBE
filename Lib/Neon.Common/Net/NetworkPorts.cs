@@ -314,6 +314,47 @@ namespace Neon.Net
         /// </summary>
         public const int PrometheusDashboard = 9090;
 
+        //---------------------------------------------------------------------
+        // Istio related ports
+
+        /// <summary>
+        /// Envoy sidecar admin port.
+        /// </summary>
+        public const int IstioEnvoyAdmin = 15000;
+
+        /// <summary>
+        /// Envoy sidecar outbound port.
+        /// </summary>
+        public const int IstioEnvoyOutbound = 15001;
+
+        /// <summary>
+        /// Envoy sidecar inbound port.
+        /// </summary>
+        public const int IstioEnvoyInbound = 15006;
+
+        /// <summary>
+        /// Envoy sidecar tunnel port (inbound).
+        /// </summary>
+        public const int IstioEnvoyTunnel = 15008;
+
+        /// <summary>
+        /// Merged Prometheus telemetry.
+        /// </summary>
+        public const int IstioIstioTelemetry = 15020;
+
+        /// <summary>
+        /// Istio health check.
+        /// </summary>
+        public const int IstioIstioHealth = 15021;
+
+        /// <summary>
+        /// Envoy sidecar Prometheus telemetry. 
+        /// </summary>
+        public const int IstioEnvoyTelemetry = 15090;
+
+        //---------------------------------------------------------------------
+        // Implementation
+
         private static Dictionary<string, int> wellKnownMap;
 
         private struct Map
@@ -393,7 +434,14 @@ namespace Neon.Net
                 new Map("neon-prometheusscrape", NeonPrometheusScrape),
                 new Map("grafana-dashboard", GrafanaDashboard),
                 new Map("cortex-dashboard", CortexDashboard),
-                new Map("prometheus-dashboard", PrometheusDashboard)
+                new Map("prometheus-dashboard", PrometheusDashboard),
+                new Map("istio-envoyadmin", IstioEnvoyAdmin),
+                new Map("istio-envoyoutbound", IstioEnvoyOutbound),
+                new Map("istio-envoyinbound", IstioEnvoyInbound),
+                new Map("istio-envoytunnel", IstioEnvoyTunnel),
+                new Map("istio-istiotelemetry", IstioIstioTelemetry),
+                new Map("istio-istiohealth", IstioIstioHealth),
+                new Map("istio-envoytelemetry", IstioEnvoyTelemetry)
             };
 
             // $note(jefflill):

@@ -21,6 +21,7 @@ using System.Data;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Net;
+using System.Net.Http;
 using System.Net.Sockets;
 using System.Linq;
 using System.Text;
@@ -262,6 +263,16 @@ namespace Neon.Service
     /// to give them a chance to perform additional internal initialization.
     /// </para>
     /// <code source="..\..\Snippets\Snippets.NeonService\Program-Dependencies.cs" language="c#" title="Waiting for service dependencies:"/>
+    /// <para><b>CRON JOBS</b></para>
+    /// <para>
+    /// <see cref="NeonService"/>s that implement Kubernetes CRON jobs should consider setting 
+    /// <see cref="AutoTerminateIstioSidecar"/><c>=true</c>.  This ensures that the pod scheduled
+    /// for the job is terminated cleanly when it has Istio injected sidecars.  This is generally
+    /// safe to set when running in a Kubernetes cluster.  Additional information:
+    /// </para>
+    /// <para>
+    /// https://github.com/nforgeio/neonKUBE/issues/1233
+    /// </para>
     /// <para><b>PROMETHEUS METRICS</b></para>
     /// <para>
     /// <see cref="NeonService"/> can enable services to publish Prometheus metrics with a
@@ -661,6 +672,43 @@ namespace Neon.Service
         /// uncomitted changes (e.g. was dirty).
         /// </summary>
         public string GitVersion { get; private set; }
+
+        /// <summary>
+        /// Controls whether any Istio sidecars (Envoy) will be terminated automatically
+        /// when the service exits normally.  This is useful for services like CRON jobs
+        /// that don't get rescheduled after they exit.  This defaults to <c>false</c>.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// You should consider setting this property to <c>true</c> for services implementing
+        /// a Kubernetes CRON job that has injected Istio sidecars.  The problem here is that
+        /// after the main pod container exits, the Envoy sidecar containers reamin running and
+        /// the pod never gets terminated:
+        /// </para>
+        /// <para>
+        /// https://github.com/istio/istio/issues/11659#issuecomment-809372980
+        /// </para>
+        /// <para>
+        /// This isn't an general issue for other deployments because the Kubernetes scheduler
+        /// will terminate and reschedule pods after the main container exists.  CRON jobs are
+        /// different because they won't get rescheduled when the main container exits.
+        /// </para>
+        /// <para>
+        /// When you set <see cref="AutoTerminateIstioSidecar"/><c>true</c>, the <see cref="NeonService"/>
+        /// class will POST a request to the Envoy sidecar's admin API at <b>http://localhost:15000/quitquitquit</b>
+        /// to explicitly terminate any sidecars when the service exits normally.  Note that we won't
+        /// post this request when the service receives a termination signal.
+        /// </para>
+        /// <para>
+        /// We recommend that you set this property before calling <see cref="SetRunningAsync"/>
+        /// in your service initialization code.
+        /// </para>
+        /// <note>
+        /// This class generally tolerates the situation where the service does not have injected
+        /// Istio sidecars by ignoring any network errors when posting to the Envoy admin endpoint.
+        /// </note>
+        /// </remarks>
+        public bool AutoTerminateIstioSidecar { get; set; } = false;
 
         /// <summary>
         /// Returns the dictionary mapping case sensitive service endpoint names to endpoint information.
@@ -1078,6 +1126,8 @@ namespace Neon.Service
                     metricCollector = null;
                 }
 
+                TerminateAnySidecars();
+
                 return ExitCode = 1;
             }
 
@@ -1107,6 +1157,8 @@ namespace Neon.Service
                 {
                     ExitCode = e.ExitCode;
                 }
+
+                TerminateAnySidecars();
             }
             catch (Exception e)
             {
@@ -1120,6 +1172,7 @@ namespace Neon.Service
                 ExitCode      = 1;
 
                 Log.LogError(e);
+                TerminateAnySidecars();
             }
 
             // Perform last rights for the service before it passes away.
@@ -1184,6 +1237,36 @@ namespace Neon.Service
             }
 
             Terminator.Signal();
+        }
+
+        /// <summary>
+        /// <para>
+        /// Calls the Envoy sidecar admin API when <see cref="AutoTerminateIstioSidecar"/><c>=true</c>
+        /// to ensure that the sidecar containers are terminated.  This tolerates situations where no
+        /// sidecars have been injected.
+        /// </para>
+        /// <para>
+        /// https://github.com/nforgeio/neonKUBE/issues/1233
+        /// </para>
+        /// </summary>
+        private void TerminateAnySidecars()
+        {
+            if (!AutoTerminateIstioSidecar)
+            {
+                return;
+            }
+
+            using (var httpClient = new HttpClient())
+            {
+                try
+                {
+                    httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Post, $"http://localhost:{NetworkPorts.IstioEnvoyAdmin}/quitquitquit")).Wait();
+                }
+                catch 
+                {
+                    // Ignore any errors. 
+                }
+            }
         }
 
         /// <summary>
