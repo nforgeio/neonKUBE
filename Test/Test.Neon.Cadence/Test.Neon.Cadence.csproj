@@ -9,7 +9,7 @@
     <AssemblyName>Test.Neon.Cadence</AssemblyName>
     <Configurations>Debug;Release;CodeDoc</Configurations>
     <EnableDefaultContentItems>false</EnableDefaultContentItems>
-    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

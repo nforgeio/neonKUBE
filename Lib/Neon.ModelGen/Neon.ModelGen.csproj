@@ -24,7 +24,7 @@ Most people should reference the [Neon.ModelGenerator] library since it includes
     <PackageIcon>nuget-icon.png</PackageIcon>
     <PackageTags>data utility</PackageTags>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)'=='netcoreapp3.1'">
