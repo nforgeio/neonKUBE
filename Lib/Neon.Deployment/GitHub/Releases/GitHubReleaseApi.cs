@@ -589,6 +589,8 @@ namespace Neon.Deployment
             {
                 using (var httpClient = new HttpClient())
                 {
+                    httpClient.Timeout = partTimeout;
+
                     using (var output = new FileStream(targetPath, System.IO.FileMode.OpenOrCreate, FileAccess.ReadWrite))
                     {
                         // Determine the starting position of the next part.
