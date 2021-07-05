@@ -8,9 +8,6 @@
 
 PATH=${PATH}:/
 
-# container init
-. ./container-init.sh
-
 # Launch the service.
 
 exec neon-setup-grafana
