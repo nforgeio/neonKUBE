@@ -293,6 +293,11 @@ containers:
     env:
       - name: PROMETHEUS_ENDPOINT
         value: {{ .Values.prometheusEndpoint }}
+      - name: DATABASE_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: {{ .Values.neon.passwordSecret }}
+            key: password
       {{- if not .Values.env.GF_SECURITY_ADMIN_USER }}
       - name: GF_SECURITY_ADMIN_USER
         valueFrom:
