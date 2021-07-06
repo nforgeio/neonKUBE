@@ -24,6 +24,7 @@
     <PackageTags>kubernetes</PackageTags>
     <RootNamespace>Neon.Kube</RootNamespace>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)'=='netcoreapp3.1'">

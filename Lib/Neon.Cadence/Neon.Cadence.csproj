@@ -27,6 +27,7 @@
     <PackageIcon>nuget-icon.png</PackageIcon>
     <PackageTags>uber cadence workflow client</PackageTags>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)'=='netcoreapp3.1'">

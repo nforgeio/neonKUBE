@@ -13,6 +13,7 @@
     <Description>Manage neonKUBE clusters from the command line</Description>
     <Copyright>Copyright © 2005-2021 by neonFORGE LLC.  All rights reserved.</Copyright>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

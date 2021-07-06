@@ -5,6 +5,8 @@
     <LangVersion>latest</LangVersion>
     <Configurations>Debug;Release;CodeDoc</Configurations>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 
   <ItemGroup>

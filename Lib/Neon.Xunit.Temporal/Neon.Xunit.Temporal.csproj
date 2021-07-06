@@ -26,6 +26,7 @@
     <PackageIcon>nuget-icon.png</PackageIcon>
     <PackageTags>xunit temporal workflow agent</PackageTags>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)'=='netcoreapp3.1'">

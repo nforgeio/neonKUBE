@@ -26,6 +26,7 @@
     <PackageTags>kubernetes</PackageTags>
     <NoDefaultExcludes>true</NoDefaultExcludes>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)'=='netcoreapp3.1'">

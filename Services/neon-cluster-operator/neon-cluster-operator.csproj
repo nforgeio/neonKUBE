@@ -12,6 +12,7 @@
     <AssemblyName>neon-cluster-operator</AssemblyName>
     <Configurations>Debug;Release;CodeDoc</Configurations>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 
   <ItemGroup>

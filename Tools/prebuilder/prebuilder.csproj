@@ -6,6 +6,7 @@
     <RootNamespace>Prebuilder</RootNamespace>
     <Configurations>Debug;Release;CodeDoc</Configurations>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

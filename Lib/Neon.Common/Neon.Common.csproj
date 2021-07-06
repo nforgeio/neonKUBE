@@ -25,6 +25,7 @@
     <PackageIcon>nuget-icon.png</PackageIcon>
     <PackageTags>utility classes</PackageTags>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)'=='netcoreapp3.1'">

@@ -21,6 +21,7 @@
     <Configurations>Debug;Release;CodeDoc</Configurations>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)'=='netcoreapp3.1'">
