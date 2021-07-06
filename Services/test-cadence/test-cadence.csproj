@@ -5,7 +5,8 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>CadenceService</RootNamespace>
     <Configurations>Debug;Release;CodeDoc</Configurations>
-    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 
   <ItemGroup>

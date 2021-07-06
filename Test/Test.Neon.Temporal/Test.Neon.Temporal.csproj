@@ -8,7 +8,8 @@
     <RootNamespace>TestTemporal</RootNamespace>
     <AssemblyName>Test.Neon.Temporal</AssemblyName>
     <Configurations>Debug;Release;CodeDoc</Configurations>
-    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

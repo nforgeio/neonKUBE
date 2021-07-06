@@ -118,5 +118,10 @@ namespace Neon.Kube
         /// The version of AlertManager to be installed.
         /// </summary>
         public const string AlertManagerVersion = "v0.21.0";
+
+        /// <summary>
+        /// The version of pause image to beused.
+        /// </summary>
+        public const string PauseVersion = "3.4.1";
     }
 }

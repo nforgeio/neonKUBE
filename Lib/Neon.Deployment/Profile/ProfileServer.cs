@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.IO.Pipes;
@@ -390,7 +391,9 @@ namespace Neon.Deployment
                             pipes[pipeIndex] = null;
                         }
 
+#pragma warning disable CA1416
                         pipes[pipeIndex] = new NamedPipeServerStream(pipeName, PipeDirection.InOut, maxNumberOfServerInstances: threads.Length, PipeTransmissionMode.Message, PipeOptions.CurrentUserOnly);
+#pragma warning restore CA1416
                     }
 
                     var pipe = pipes[pipeIndex];
@@ -431,7 +434,9 @@ namespace Neon.Deployment
                         if (handlerResult != null)
                         {
                             writer.WriteLine(handlerResult.ToResponse());
+#pragma warning disable CA1416
                             pipe.WaitForPipeDrain();
+#pragma warning restore CA1416
                             pipe.Close();
                             continue;
                         }
@@ -502,7 +507,9 @@ namespace Neon.Deployment
                     }
 
                     writer.WriteLine(handlerResult.ToResponse());
+#pragma warning disable CA1416
                     pipe.WaitForPipeDrain();
+#pragma warning restore CA1416
                     pipe.Disconnect();
                 }
             }

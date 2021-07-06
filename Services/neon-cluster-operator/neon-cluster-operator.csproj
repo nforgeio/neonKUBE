@@ -11,7 +11,8 @@
     <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
     <AssemblyName>neon-cluster-operator</AssemblyName>
     <Configurations>Debug;Release;CodeDoc</Configurations>
-    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 
   <ItemGroup>

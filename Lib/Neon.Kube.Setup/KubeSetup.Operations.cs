@@ -418,10 +418,7 @@ controllerManager:
     pod-eviction-timeout: 30s #default 5m0s
 scheduler:
   extraArgs:
-    logging-format: json
-kubeProxy:
-  config:
-    mode: ipvs");
+    logging-format: json");
 
                             clusterConfig.AppendLine($@"
 ---
@@ -433,6 +430,12 @@ nodeStatusReportFrequency: 4s
 volumePluginDir: /var/lib/kubelet/volume-plugins
 {kubeletFailSwapOnLine}
 ");
+
+                            clusterConfig.AppendLine($@"
+---
+apiVersion: kubeproxy.config.k8s.io/v1alpha1
+kind: KubeProxyConfiguration
+mode: ipvs");
 
                             var kubeInitScript =
 $@"
