@@ -67,7 +67,7 @@ namespace NeonSetupGrafana
             await SetRunningAsync();
             await GetConnectionStringAsync();
             await SetupGrafanaAsync();
-
+            
             return 0;
         }
 
