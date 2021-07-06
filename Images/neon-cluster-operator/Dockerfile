@@ -15,41 +15,41 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM        marcusbooyah/neon-cluster-manager:latest
+FROM        mcr.microsoft.com/dotnet/aspnet:3.1
 MAINTAINER  marcus@euarctos.com
 STOPSIGNAL  SIGTERM
 ARG         APPNAME
+
+# Environment
+
+ENV TZ=UTC
+ENV DEBIAN_FRONTEND noninteractive
+ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
+
+COPY _common/*              /
+
+# Add the application files in two layers.  The first will contain the dependencies
+# and the second will contain the application files.  This should result in more
+# efficient images because depdencies tend to be more stable than application files.
 #
-## Environment
-#
-#ENV TZ=UTC
-#ENV DEBIAN_FRONTEND noninteractive
-#ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
-#
-#COPY _common/*              /
-#
-## Add the application files in two layers.  The first will contain the dependencies
-## and the second will contain the application files.  This should result in more
-## efficient images because depdencies tend to be more stable than application files.
-##
-## Note that we used the [core-layers] tool to separate the binary files before
-## building the container.
-#
-## Dependencies
-#
-#COPY bin/__dep              /usr/bin/$APPNAME.dotnet/
-#RUN echo **NEW LAYER**
-#
-## App files.
-#
-#COPY bin/__app              /usr/bin/$APPNAME.dotnet/
-#COPY docker-entrypoint.sh   /
-#
-#RUN chmod 700 /*.sh \
-    #&& echo "exec dotnet /usr/bin/$APPNAME.dotnet/$APPNAME.dll \"\$@\"" >> /usr/bin/$APPNAME \
-    #&& chmod 770 /usr/bin/$APPNAME \
-    #&& ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
-    #&& sed -i 's!^#precedence ::ffff:0:0/96  10$!precedence ::ffff:0:0/96  100!g' /etc/gai.conf
-#
-#ENTRYPOINT ["/docker-entrypoint.sh"]
-#
+# Note that we used the [core-layers] tool to separate the binary files before
+# building the container.
+
+# Dependencies
+
+COPY bin/__dep              /usr/bin/$APPNAME.dotnet/
+RUN echo **NEW LAYER**
+
+# App files.
+
+COPY bin/__app              /usr/bin/$APPNAME.dotnet/
+COPY docker-entrypoint.sh   /
+
+RUN chmod 700 /*.sh \
+    && echo "exec dotnet /usr/bin/$APPNAME.dotnet/$APPNAME.dll \"\$@\"" >> /usr/bin/$APPNAME \
+    && chmod 770 /usr/bin/$APPNAME \
+    && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
+    && sed -i 's!^#precedence ::ffff:0:0/96  10$!precedence ::ffff:0:0/96  100!g' /etc/gai.conf
+
+ENTRYPOINT ["/docker-entrypoint.sh"]
+
