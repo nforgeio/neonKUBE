@@ -3,7 +3,7 @@ prometheusScrape: true
 
 image:
   organization: neon-registry.node.local
-  repository: kube-state-metrics/kube-state-metrics
+  repository: kube-state-metrics
   tag: v2.1.0
   pullPolicy: IfNotPresent
   pullSecrets: []
@@ -16,7 +16,7 @@ imagePullSecrets: []
 # autodiscovery feature: https://github.com/kubernetes/kube-state-metrics#automated-sharding
 # This is an experimental feature and there are no stability guarantees.
 autosharding:
-  enabled: false
+  enabled: true
 
 replicas: 1
 

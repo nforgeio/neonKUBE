@@ -5,8 +5,8 @@ metadata:
   namespace: {{ .Release.Namespace | quote }}
 spec:
   imageSource: # Optional
-    repository: ghcr.io/neonrelease-dev # Required
-    imagePullPolicy: Always # Optional, default = IfNotPresent
+    repository: ghcr.io/goharbor # Required
+    imagePullPolicy: IfNotPresent # Optional, default = IfNotPresent
     imagePullSecrets: []
   logLevel: debug
   database:
