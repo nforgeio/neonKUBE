@@ -16,6 +16,6 @@
 # limitations under the License.
 
 FROM        ghcr.io/neonrelease-dev/neon-acme:latest
-MAINTAINER  marcus@euarctos.com
+MAINTAINER  marcus@neonforge.com
 STOPSIGNAL  SIGTERM
 ARG         APPNAME
