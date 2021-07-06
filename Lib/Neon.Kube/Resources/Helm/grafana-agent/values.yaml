@@ -7,14 +7,14 @@ shards: 1
 agent:
   image:
     organization: neon-registry.node.local
-    repository: agent
+    repository: grafana-agent
     tag: v0.15.0
     pullPolicy: IfNotPresent
 
 operator:
   image:
     organization: neon-registry.node.local
-    repository: agent-operator
+    repository: grafana-agent-operator
     tag: v0.16.1
     pullPolicy: IfNotPresent
 
