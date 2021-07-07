@@ -1,0 +1,48 @@
+apiVersion: integreatly.org/v1alpha1
+kind: Grafana
+metadata:
+  name: example-grafana
+spec:
+  ingress:
+    enabled: False
+  config:
+    log:
+      mode: "console"
+      level: "warn"
+    auth:
+      disable_login_form: True
+      disable_signout_menu: True
+    auth.anonymous:
+      enabled: True
+      org_name: Main Org.
+      org_role: Admin
+    database:
+      type: postgres
+      host: db-citus-postgresql.neon-system.svc.cluster.local
+      name: grafana
+      user: neon_service
+      password: $__env{DATABASE_PASSWORD}
+  service:
+    name: "grafana"
+    labels:
+      app: "grafana"
+      type: "grafana-service"
+  dashboardLabelSelector:
+    - matchExpressions:
+        - { key: app, operator: In, values: [ grafana ] }
+  # initResources:
+  #   # Optionally specify initResources
+  #   limits:
+  #     cpu: 1000m
+  #     memory: 512Mi
+  #   requests:
+  #     cpu: 250m
+  #     memory: 128Mi
+  resources:
+    # Optionally specify container resources
+    limits:
+      cpu: 2000m
+      memory: 8000Mi
+    requests:
+      cpu: 100m
+      memory: 200Mi

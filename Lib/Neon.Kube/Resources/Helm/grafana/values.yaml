@@ -49,9 +49,9 @@ livenessProbe:
 # schedulerName: "default-scheduler"
 
 image:
-  organization: neon-registry.node.local
+  organization: ghcr.io/neonrelease-dev
   repository: grafana-grafana
-  tag: 7.3.6
+  tag: 8.0.4
   sha: ""
   pullPolicy: IfNotPresent
   ## Optionally specify an array of imagePullSecrets.
