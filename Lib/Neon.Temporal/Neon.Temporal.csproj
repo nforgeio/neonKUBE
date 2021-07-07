@@ -27,7 +27,7 @@
     <PackageIcon>nuget-icon.png</PackageIcon>
     <PackageTags>temporal workflow client</PackageTags>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)'=='netcoreapp3.1'">
@@ -94,7 +94,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Hosting.Abstractions" Version="2.2.0" Condition="'$(TargetFrameworkVersion)'!='v4.8'" />
     <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.2.0" Condition="'$(TargetFrameworkVersion)'!='v4.8'" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.9.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.10.0" />
     <PackageReference Include="Microsoft.Net.Http.Server" Version="1.1.4" Condition="'$(TargetFrameworkVersion)'=='v4.8'" />
     <PackageReference Include="System.Runtime" Version="4.3.1" />
     <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
