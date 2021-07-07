@@ -26,7 +26,7 @@
     <PackageIcon>nuget-icon.png</PackageIcon>
     <PackageTags>xunit uber cadence workflow agent</PackageTags>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)'=='netcoreapp3.1'">
