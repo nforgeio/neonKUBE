@@ -467,7 +467,7 @@ namespace Neon.Deployment
         /// <param name="targetPath">The target file path.</param>
         /// <param name="progressAction">Optionally specifies an action to be called with the the percentage downloaded.</param>
         /// <param name="partTimeout">Optionally specifies the HTTP download timeout for each part (defaults to 10 minutes).</param>
-        public void Download(Download download, string targetPath, Action<int> progressAction = null, TimeSpan partTimeout = default)
+        public void Download(Download download, string targetPath, GitHubDownloadProgressDelegate progressAction = null, TimeSpan partTimeout = default)
         {
             DownloadAsync(download, targetPath, progressAction, partTimeout).Wait();
         }
@@ -499,7 +499,7 @@ namespace Neon.Deployment
         /// The target files (output and MD5) will be deleted when download appears to be corrupt.
         /// </note>
         /// </remarks>
-        public async Task<string> DownloadAsync(Download download, string targetPath, Action<int> progressAction = null, TimeSpan partTimeout = default, CancellationToken cancellationToken = default)
+        public async Task<string> DownloadAsync(Download download, string targetPath, GitHubDownloadProgressDelegate progressAction = null, TimeSpan partTimeout = default, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(download != null, nameof(download));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(targetPath), nameof(targetPath));
@@ -577,7 +577,10 @@ namespace Neon.Deployment
 
             // Download any remaining parts.
 
-            progressAction?.Invoke(0);
+            if (progressAction != null && !progressAction.Invoke(0))
+            {
+                return targetPath;
+            }
 
             if (nextPartNumber > download.Parts.Count)
             {
@@ -635,7 +638,10 @@ namespace Neon.Deployment
 
                             pos += part.Size;
 
-                            progressAction?.Invoke((int)(100.0 * ((double)part.Number / (double)download.Parts.Count)));
+                            if (progressAction != null && !progressAction.Invoke((int)(100.0 * ((double)part.Number / (double)download.Parts.Count))))
+                            {
+                                return targetPath;
+                            }
                         }
 
                         if (output.Length != download.Size)

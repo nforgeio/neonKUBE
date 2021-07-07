@@ -2583,7 +2583,7 @@ TCPKeepAlive yes
         /// Content-Type.
         /// </para>
         /// </remarks>
-        public async static Task<string> DownloadNodeImageAsync(string imageUri, string imagePath, Action<int> progressAction = null)
+        public async static Task<string> DownloadNodeImageAsync(string imageUri, string imagePath, GitHubDownloadProgressDelegate progressAction = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(imageUri), nameof(imageUri));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(imagePath), nameof(imagePath));
@@ -2688,7 +2688,7 @@ TCPKeepAlive yes
         /// left off.
         /// </para>
         /// </remarks>
-        public async static Task<string> DownloadMultiPartNodeImageAsync(string imageUri, string imagePath, Action<int> progressAction = null)
+        public async static Task<string> DownloadMultiPartNodeImageAsync(string imageUri, string imagePath, GitHubDownloadProgressDelegate progressAction = null)
         {
             Covenant.Requires<ArgumentNullException>(imageUri != null, nameof(imageUri));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(imagePath), nameof(imagePath));

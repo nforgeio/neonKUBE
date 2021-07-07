@@ -444,7 +444,13 @@ namespace TestDeployment
                 {
                     var targetPath = Path.Combine(tempFolder.Path, download.Filename);
 
-                    await GitHub.Release.DownloadAsync(download, targetPath, progress => progressValues.Add(progress));
+                    await GitHub.Release.DownloadAsync(download, targetPath,
+                        progress =>
+                        {
+                            progressValues.Add(progress);
+
+                            return true;
+                        });
                 }
 
                 Assert.Equal(partCount + 2, progressValues.Count);
@@ -508,7 +514,13 @@ namespace TestDeployment
 
                     progressValues.Clear();
 
-                    await GitHub.Release.DownloadAsync(download, targetPath, progress => progressValues.Add(progress));
+                    await GitHub.Release.DownloadAsync(download, targetPath, 
+                        progress =>
+                        {
+                            progressValues.Add(progress);
+
+                            return true;
+                        });
 
                     using (var stream = File.OpenRead(targetPath))
                     {
@@ -527,7 +539,13 @@ namespace TestDeployment
 
                     progressValues.Clear();
 
-                    await GitHub.Release.DownloadAsync(download, targetPath, progress => progressValues.Add(progress));
+                    await GitHub.Release.DownloadAsync(download, targetPath, 
+                        progress =>
+                        {
+                            progressValues.Add(progress);
+
+                            return true;
+                        });
 
                     using (var stream = File.OpenRead(targetPath))
                     {
@@ -545,7 +563,13 @@ namespace TestDeployment
 
                     progressValues.Clear();
 
-                    await GitHub.Release.DownloadAsync(download, targetPath, progress => progressValues.Add(progress));
+                    await GitHub.Release.DownloadAsync(download, targetPath,
+                        progress =>
+                        {
+                            progressValues.Add(progress);
+
+                            return true;
+                        });
 
                     using (var stream = File.OpenRead(targetPath))
                     {
