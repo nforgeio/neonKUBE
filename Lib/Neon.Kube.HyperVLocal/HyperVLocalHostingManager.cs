@@ -347,7 +347,7 @@ namespace Neon.Kube
                     {
                         controller.SetGlobalStepStatus($"Downloading VHDX: [{progress}%] [{driveTemplateName}]");
 
-                        return true;
+                        return !controller.CancelPending;
                     });
 
                 controller.SetGlobalStepStatus();
