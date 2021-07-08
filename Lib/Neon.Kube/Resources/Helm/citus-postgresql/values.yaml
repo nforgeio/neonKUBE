@@ -360,7 +360,7 @@ prometheus:
 
 ## Secrets
 superuser:
-  password: "0987654321"
+  password: "postgres"
   username: "postgres"
   database: "postgres"
   port: 5432

@@ -108,6 +108,8 @@ namespace Neon.Kube
         {
             serviceMaps["production"] = new NeonServiceMap();
             serviceMaps["production"].AddServiceDescription(NeonServices.ClusterOperator, new ServiceEndpoint());
+            serviceMaps["production"].AddServiceDescription(NeonServices.SetupGrafana, new ServiceEndpoint());
+            serviceMaps["production"].AddServiceDescription(NeonServices.SetupHarbor, new ServiceEndpoint());
             serviceMaps["production"].AddServiceDescription(NeonServices.TestCadence, new ServiceEndpoint());
             serviceMaps["production"].AddServiceDescription(NeonServices.TestTemporal, new ServiceEndpoint());
 

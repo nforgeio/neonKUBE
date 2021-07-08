@@ -24,7 +24,7 @@ ARG         ORGANIZATION
 ARG         BASE_ORGANIZATION
 ARG         CLUSTER_VERSION
 FROM        mcr.microsoft.com/dotnet/aspnet:3.1
-MAINTAINER  marcus@euarctos.com
+MAINTAINER  marcus@neonforge.com
 STOPSIGNAL  SIGTERM
 ARG         APPNAME
 

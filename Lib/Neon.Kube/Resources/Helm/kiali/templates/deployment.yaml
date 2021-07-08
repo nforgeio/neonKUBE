@@ -40,7 +40,7 @@ spec:
       containers:
       - name: operator
         image: "{{ .Values.image.organization }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-        imagePullPolicy: {{ .Values.image.pullPolicy | default "Always" }}
+        imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
         args:
         - "--zap-level=info"
         volumeMounts:

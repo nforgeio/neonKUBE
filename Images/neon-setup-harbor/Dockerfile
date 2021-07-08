@@ -16,7 +16,7 @@
 # limitations under the License.
 
 FROM        mcr.microsoft.com/dotnet/aspnet:3.1
-MAINTAINER  marcus@euarctos.com
+MAINTAINER  marcus@neonforge.com
 STOPSIGNAL  SIGTERM
 ARG         APPNAME
 
