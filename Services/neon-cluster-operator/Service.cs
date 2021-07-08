@@ -86,6 +86,8 @@ namespace NeonClusterOperator
         /// <returns></returns>
         private async Task ConnectDatabaseAsync()
         {
+            Log.LogInfo($"Connecting to citus...");
+
             var secret = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbAdminSecret, KubeNamespaces.NeonSystem);
 
             var username = Encoding.UTF8.GetString(secret.Data["username"]);
@@ -98,6 +100,9 @@ namespace NeonClusterOperator
             await using (NpgsqlConnection conn = new NpgsqlConnection(connString))
             {
                 conn.Open();
+
+                Log.LogInfo($"Connected.");
+
                 await using (var createTableCmd = new NpgsqlCommand($@"
 SELECT
 1
@@ -110,11 +115,14 @@ AND table_name = '{StateTable}'
                 {
                     if (createTableCmd.ExecuteScalar() == null)
                     {
+                        Log.LogInfo($"State table doesn't exist, creating...");
+
                         await using (var createDbCmd = new NpgsqlCommand($@"
 CREATE TABLE {StateTable}( KEY TEXT, value TEXT, PRIMARY KEY(KEY) )
 ", conn))
                         {
                             await createDbCmd.ExecuteNonQueryAsync();
+                            Log.LogInfo($"State table created.");
                         }
                     }
                 }
@@ -170,10 +178,14 @@ CREATE TABLE {StateTable}( KEY TEXT, value TEXT, PRIMARY KEY(KEY) )
                     var result = await cmd.ExecuteScalarAsync();
                     if ((string)result != "complete")
                     {
+                        Log.LogInfo($"Grafana setup incomplete [{(string)result}].");
+
                         var jobs = await k8s.ListNamespacedJobAsync(KubeNamespaces.NeonSystem);
 
                         if (!jobs.Items.Any(j => j.Metadata.Name == KubeConst.NeonJobSetupGrafana))
                         {
+                            Log.LogInfo($"Creating Grafana setup job.");
+
                             await k8s.CreateNamespacedJobAsync(
                                 new V1Job()
                                 {
@@ -202,59 +214,73 @@ CREATE TABLE {StateTable}( KEY TEXT, value TEXT, PRIMARY KEY(KEY) )
                                     },
                                 },
                                 KubeNamespaces.NeonSystem);
+
+                            Log.LogInfo($"Created Grafana setup job.");
                         }
+                        else
+                        {
+                            Log.LogInfo($"Grafana setup job is running.");
                         }
                     }
+                    }
                 }
-            }
+        }
 
-            public async Task SetupHarborAsync()
+        public async Task SetupHarborAsync()
+        {
+            await using (NpgsqlConnection conn = new NpgsqlConnection(connString))
             {
-                await using (NpgsqlConnection conn = new NpgsqlConnection(connString))
+                conn.Open();
+                await using (NpgsqlCommand cmd = new NpgsqlCommand($"SELECT value FROM {StateTable} WHERE key='{KubeConst.NeonJobSetupHarbor}'", conn))
                 {
-                    conn.Open();
-                    await using (NpgsqlCommand cmd = new NpgsqlCommand($"SELECT value FROM {StateTable} WHERE key='{KubeConst.NeonJobSetupHarbor}'", conn))
+                    var result = await cmd.ExecuteScalarAsync();
+                    if ((string)result != "complete")
                     {
-                        var result = await cmd.ExecuteScalarAsync();
-                        if ((string)result != "complete")
-                        {
-                            var jobs = await k8s.ListNamespacedJobAsync(KubeNamespaces.NeonSystem);
+                        Log.LogInfo($"Harbor setup incomplete [{(string)result}].");
 
-                            if (!jobs.Items.Any(j => j.Metadata.Name == KubeConst.NeonJobSetupHarbor))
-                            {
-                                await k8s.CreateNamespacedJobAsync(
-                                    new V1Job()
+                        var jobs = await k8s.ListNamespacedJobAsync(KubeNamespaces.NeonSystem);
+
+                        if (!jobs.Items.Any(j => j.Metadata.Name == KubeConst.NeonJobSetupHarbor))
+                        {
+                            Log.LogInfo($"Creating Harbor setup job.");
+
+                            await k8s.CreateNamespacedJobAsync(
+                                new V1Job()
+                                {
+                                    Metadata = new V1ObjectMeta()
                                     {
-                                        Metadata = new V1ObjectMeta()
+                                        Name = KubeConst.NeonJobSetupHarbor,
+                                        NamespaceProperty = KubeNamespaces.NeonSystem
+                                    },
+                                    Spec = new V1JobSpec()
+                                    {
+                                        Template = new V1PodTemplateSpec()
                                         {
-                                            Name = KubeConst.NeonJobSetupHarbor,
-                                            NamespaceProperty = KubeNamespaces.NeonSystem
-                                        },
-                                        Spec = new V1JobSpec()
-                                        {
-                                            Template = new V1PodTemplateSpec()
+                                            Spec = new V1PodSpec()
                                             {
-                                                Spec = new V1PodSpec()
+                                                Containers = new List<V1Container>()
                                                 {
-                                                    Containers = new List<V1Container>()
-                                                    {
                                                     new V1Container()
                                                     {
                                                         Name  = KubeConst.NeonJobSetupHarbor,
                                                         Image = $"ghcr.io/neonkube-dev/neon-setup-harbor:latest"
                                                     },
-                                                    },
-                                                    RestartPolicy = "OnFailure"
                                                 },
+                                                RestartPolicy = "OnFailure"
                                             },
                                         },
                                     },
-                                    KubeNamespaces.NeonSystem);
-                            }
+                                },
+                                KubeNamespaces.NeonSystem);
+                            Log.LogInfo($"Created Harbor setup job.");
+                        }
+                        else
+                        {
+                            Log.LogInfo($"Harbor setup job is running.");
                         }
                     }
                 }
-
             }
+        }
     }
 }
