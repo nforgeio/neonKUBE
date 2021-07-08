@@ -170,19 +170,15 @@ Push-Cwd $nfRoot | Out-Null
 
 try
 {
-    # We see somewhat random build problems when Visual Studio has the solution open,
-    # so have the user close Visual Studio instances first.
-
-    Ensure-VisualStudioNotRunning
-
-    # Ensure that all of the referenced nuget packages are restored.
-
-    dotnet restore
-
     # Build the solution.
 
     if (-not $nobuild)
     {
+        # We see somewhat random build problems when Visual Studio has the solution open,
+        # so have the user close Visual Studio instances first.
+
+        Ensure-VisualStudioNotRunning
+
         # Clear the NF_BUILD folder and delete any [bin] or [obj] folders
         # to be really sure we're doing a clean build.  I've run into 
         # situations where I've upgraded SDKs or Visual Studio and Files
@@ -212,6 +208,8 @@ try
         Write-Info "*******************************************************************************"
         Write-Info ""
 
+        dotnet restore
+
         & "$msbuild" "$nfSolution" -t:restore -verbosity:quiet
 
         if (-not $?)
@@ -231,6 +229,19 @@ try
         {
             throw "ERROR: BUILD FAILED"
         }
+
+        # The build generates source files like [.NETCoreApp,Version=v5.0.AssemblyAttributes.cs] within
+        # project [obj] configuration subdirectorties.  This can result in duplicate attribute compiler
+        # errors because Visual Studio seems to be including these files from all of the configuration
+        # subfolders rather than just for the current build configuration.  This isn't reproducable for 
+        # simple solutions, so we haven't reported this to MSFT.
+        #
+        # We mostly run into this issue after performing a script based RELEASE build and then go back 
+        # and try to build DEBUG with Visual Studio.  The workaround is to simply remove all of these
+        # generated files here.
+
+        & $nfToolBin\neon-build clean-attr "$nfRoot"
+        ThrowOnExitCode
     }
 
     # Build the Neon tools.
