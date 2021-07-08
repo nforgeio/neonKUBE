@@ -64,10 +64,14 @@ namespace NeonClusterOperator
             // Let KubeService know that we're running.
 
             await SetRunningAsync();
+
+            // Wait for Citus and make sure it's initialized.
             await WaitForCitusAsync();
             await ConnectDatabaseAsync();
 
+            // Initialize Grafana and Harbor.
             await SetupGrafanaAsync();
+            await SetupHarborAsync();
 
             // Launch the sub-tasks.  These will run until the service is terminated.
 
@@ -208,7 +212,9 @@ CREATE TABLE {StateTable}( KEY TEXT, value TEXT, PRIMARY KEY(KEY) )
                                                         Image = $"ghcr.io/neonkube-dev/neon-setup-grafana:latest"
                                                     },
                                                 },
-                                                RestartPolicy = "OnFailure"
+                                                RestartPolicy = "OnFailure",
+                                                ServiceAccount = NeonServices.ClusterOperator,
+                                                ServiceAccountName = NeonServices.ClusterOperator
                                             },
                                         },
                                     },
@@ -266,7 +272,9 @@ CREATE TABLE {StateTable}( KEY TEXT, value TEXT, PRIMARY KEY(KEY) )
                                                         Image = $"ghcr.io/neonkube-dev/neon-setup-harbor:latest"
                                                     },
                                                 },
-                                                RestartPolicy = "OnFailure"
+                                                RestartPolicy = "OnFailure",
+                                                ServiceAccount = NeonServices.ClusterOperator,
+                                                ServiceAccountName = NeonServices.ClusterOperator
                                             },
                                         },
                                     },

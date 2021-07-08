@@ -78,7 +78,7 @@ namespace NeonSetupHarbor
         /// <returns></returns>
         private async Task GetConnectionStringAsync()
         {
-            var secret = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespaces.NeonSystem);
+            var secret = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbAdminSecret, KubeNamespaces.NeonSystem);
 
             var username = Encoding.UTF8.GetString(secret.Data["username"]);
             var password = Encoding.UTF8.GetString(secret.Data["password"]);
@@ -116,7 +116,7 @@ namespace NeonSetupHarbor
 
             foreach (var db in databases)
             {
-                await CreateDatabaseAsync($"{KubeConst.NeonSystemDbHarborPrefix}-{db}", KubeConst.NeonSystemDbServiceUser, secret.StringData["password"]);
+                await CreateDatabaseAsync($"{KubeConst.NeonSystemDbHarborPrefix}-{db}", KubeConst.NeonSystemDbServiceUser, Encoding.UTF8.GetString(secret.Data["password"]));
             }
             
             await UpdateStatusAsync("complete");
