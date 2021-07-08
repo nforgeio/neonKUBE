@@ -28,7 +28,9 @@ namespace NeonSetupHarbor
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task Main(string[] args)
         {
-            await new Service(NeonServices.SetupHarbor, serviceMap: NeonServiceMap.Production).RunAsync();
+            var service = new Service(NeonServices.SetupHarbor, serviceMap: NeonServiceMap.Production);
+            service.AutoTerminateIstioSidecar = true;
+            await service.RunAsync();
         }
     }
 }

@@ -31,4 +31,8 @@
     <ProjectReference Include="..\..\Lib\Neon.Service\Neon.Service.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Templates\" />
+  </ItemGroup>
+
 </Project>

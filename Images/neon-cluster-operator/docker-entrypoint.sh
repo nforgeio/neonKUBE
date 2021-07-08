@@ -8,10 +8,6 @@
 
 PATH=${PATH}:/
 
-# Initialize
-
-. ./container-init.sh
-
 # Launch the service.
 
 exec neon-cluster-operator

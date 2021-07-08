@@ -324,5 +324,60 @@ namespace Neon.Kube
         /// release branches and <see cref="NeonKubeDevRegistry"/> for all other branches.
         /// </summary>
         public static string NeonKubeBranchRegistry => ThisAssembly.Git.Branch.StartsWith("release-", StringComparison.InvariantCultureIgnoreCase) ? NeonKubeProdRegistry : NeonKubeDevRegistry;
+
+        /// <summary>
+        /// Identifies the username of the neon-system-db superuser.
+        /// </summary>
+        public static string NeonSystemDbAdminUser = "neon_admin";
+
+        /// <summary>
+        /// Identifies the secret containing the password for the <see cref="NeonSystemDbAdminUser"/>.
+        /// </summary>
+        public static string NeonSystemDbAdminSecret = "neon-system-db-admin";
+
+        /// <summary>
+        /// Identifies the neon-system-db superuser database.
+        /// </summary>
+        public static string NeonClusterOperatorDatabase = "neon_cluster_operator";
+
+        /// <summary>
+        /// Identifies the neon-system-db username used by neon services.
+        /// </summary>
+        public static string NeonSystemDbServiceUser = "neon_service";
+
+        /// <summary>
+        /// Identifies the secret containing the password for the <see cref="NeonSystemDbServiceUser"/>.
+        /// </summary>
+        public static string NeonSystemDbServiceSecret = "neon-system-db-service";
+
+        /// <summary>
+        /// Identifies the prefix to be used by the Harbor Operator when creating Harbor related databases in neon-system-db.
+        /// </summary>
+        public static string NeonSystemDbHarborPrefix = "harbor";
+
+        /// <summary>
+        /// Identifies the database name to be used by Grafana.
+        /// </summary>
+        public static string NeonSystemDbGrafanaDatabase = "grafana";
+
+        /// <summary>
+        /// Identifies the secret name where the harbor credentials are stored.
+        /// </summary>
+        public static string RegistrySecretKey = "registry";
+
+        /// <summary>
+        /// Identifies the neon cluster operator config map.
+        /// </summary>
+        public static string NeonClusterOperatorConfigMap = "neon-cluster-operator";
+
+        /// <summary>
+        /// Identifies the Kubernetes Job that is deployed to setup Grafana.
+        /// </summary>
+        public static string NeonJobSetupGrafana = "neon-setup-grafana";
+
+        /// <summary>
+        /// Identifies the Kubernetes Job that is deployed to setup Harbor.
+        /// </summary>
+        public static string NeonJobSetupHarbor = "neon-setup-harbor";
     }
 }

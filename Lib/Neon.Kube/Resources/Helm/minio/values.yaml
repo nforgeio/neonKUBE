@@ -1,357 +1,150 @@
-## Provide a name in place of minio for `app:` labels
-##
-nameOverride: ""
+# Default values for minio-operator.
 
-## Provide a name to substitute for the full names of resources
-##
-fullnameOverride: ""
-
-## set kubernetes cluster domain where minio is running
-##
-clusterDomain: cluster.local
-
-## Set default image, imageTag, and imagePullPolicy. mode is used to indicate the
-##
-image:
-  organization: neon-registry.node.local
-  repository: minio-minio
-  tag: RELEASE.2021-01-08T21-18-21Z
-  pullPolicy: IfNotPresent
-
-## Set default image, imageTag, and imagePullPolicy for the `mc` (the minio
-## client used to create a default bucket).
-##
-mcImage:
-  organization: neon-registry.node.local
-  repository: minio-mc
-  tag: RELEASE.2021-01-05T05-03-58Z
-  pullPolicy: IfNotPresent
-
-## Set default image, imageTag, and imagePullPolicy for the `jq` (the JSON
-## process used to create secret for prometheus ServiceMonitor).
-##
-helmKubectlJqImage:
-  organization: neon-registry.node.local
-  repository: bskim45-helm-kubectl-jq
-  tag: 3.1.0
-  pullPolicy: IfNotPresent
-
-## minio server mode, i.e. standalone or distributed.
-## Distributed Minio ref: https://docs.minio.io/docs/distributed-minio-quickstart-guide
-##
-mode: standalone
-
-## Additional labels to include with deployment or statefulset
-additionalLabels: []
-
-## Additional annotations to include with deployment or statefulset
-additionalAnnotations: []
-
-## Additional arguments to pass to minio binary
-extraArgs: []
-
-## Update strategy for Deployments
-DeploymentUpdate:
-  type: RollingUpdate
-  maxUnavailable: 0
-  maxSurge: 100%
-
-## Update strategy for StatefulSets
-StatefulSetUpdate:
-  updateStrategy: RollingUpdate
-
-## Pod priority settings
-## ref: https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/
-##
-priorityClassName: ""
-
-## Set default accesskey, secretkey, Minio config file path, volume mount path and
-## number of nodes (only used for Minio distributed mode)
-## AccessKey and secretKey is generated when not set
-## Distributed Minio ref: https://docs.minio.io/docs/distributed-minio-quickstart-guide
-##
-accessKey: ""
-secretKey: ""
-certsPath: "/etc/minio/certs/"
-configPathmc: "/etc/minio/mc/"
-mountPath: "/export"
-
-## Use existing Secret that store following variables:
-##
-## | Chart var             | .data.<key> in Secret    |
-## |:----------------------|:-------------------------|
-## | accessKey             | accesskey                |
-## | secretKey             | secretkey                |
-## | gcsgateway.gcsKeyJson | gcs_key.json             |
-## | s3gateway.accessKey   | awsAccessKeyId           |
-## | s3gateway.secretKey   | awsSecretAccessKey       |
-## | etcd.clientCert       | etcd_client_cert.pem     |
-## | etcd.clientCertKey    | etcd_client_cert_key.pem |
-##
-## All mentioned variables will be ignored in values file.
-## .data.accesskey and .data.secretkey are mandatory,
-## others depend on enabled status of corresponding sections.
-existingSecret: ""
-
-## Override the root directory which the minio server should serve from.
-## If left empty, it defaults to the value of {{ .Values.mountPath }}
-## If defined, it must be a sub-directory of the path specified in {{ .Values.mountPath }}
-bucketRoot: ""
-
-# Number of drives attached to a node
-drivesPerNode: 1
-# Number of MinIO containers running
-replicas: 4
-# Number of expanded MinIO clusters
-zones: 1
-
-## TLS Settings for Minio
-tls:
-  enabled: false
-  ## Create a secret with private.key and public.crt files and pass that here. Ref: https://github.com/minio/minio/tree/master/docs/tls/kubernetes#2-create-kubernetes-secret
-  certSecret: ""
-  publicCrt: public.crt
-  privateKey: private.key
-
-## Trusted Certificates Settings for Minio. Ref: https://docs.minio.io/docs/how-to-secure-access-to-minio-server-with-tls#install-certificates-from-third-party-cas
-## Bundle multiple trusted certificates into one secret and pass that here. Ref: https://github.com/minio/minio/tree/master/docs/tls/kubernetes#2-create-kubernetes-secret
-## When using self-signed certificates, remember to include Minio's own certificate in the bundle with key public.crt.
-## If certSecret is left empty and tls is enabled, this chart installs the public certificate from .Values.tls.certSecret.
-trustedCertsSecret: ""
-
-## Enable persistence using Persistent Volume Claims
-## ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
-## 
-persistence:
-  enabled: true
-
-  ## A manually managed Persistent Volume and Claim
-  ## Requires persistence.enabled: true
-  ## If defined, PVC must be created manually before volume will be bound
-  existingClaim: ""
-
-  storageClass: "neon-internal-minio"
-  VolumeName: ""
-  accessMode: ReadWriteOnce
-  size: 16Gi
-
-  ## If subPath is set mount a sub folder of a volume instead of the root of the volume.
-  ## This is especially handy for volume plugins that don't natively support sub mounting (like glusterfs).
-  ##
-  subPath: ""
-
-## Expose the Minio service to be accessed from outside the cluster (LoadBalancer service).
-## or access it from within the cluster (ClusterIP service). Set the service type and the port to serve it.
-## ref: http://kubernetes.io/docs/user-guide/services/
-##
-
-service:
-  type: ClusterIP
-  clusterIP: ~
-  port: 9000
-  nodePort: 30006
-
-  ## List of IP addresses at which the Prometheus server service is available
-  ## Ref: https://kubernetes.io/docs/user-guide/services/#external-ips
-  ##
-  externalIPs: []
-  #   - externalIp1
-
-  annotations: {}
-    # prometheus.io/scrape: 'true'
-    # prometheus.io/path:   '/minio/prometheus/metrics'
-    # prometheus.io/port:   '9000'
-
-## Configure Ingress based on the documentation here: https://kubernetes.io/docs/concepts/services-networking/ingress/
-##
-
-imagePullSecrets: []
-# - name: "image-pull-secret"
-
-ingress:
-  enabled: false
-  labels: {}
-    # node-role.kubernetes.io/ingress: platform
-
-  annotations: {}
-    # kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
-    # kubernetes.io/ingress.allow-http: "false"
-    # kubernetes.io/ingress.global-static-ip-name: ""
-    # nginx.ingress.kubernetes.io/secure-backends: "true"
-    # nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
-    # nginx.ingress.kubernetes.io/whitelist-source-range: 0.0.0.0/0
-  path: /
-  hosts:
-    - chart-example.local
-  tls: []
-  #  - secretName: chart-example-tls
-  #    hosts:
-  #      - chart-example.local
-
-## Node labels for pod assignment
-## Ref: https://kubernetes.io/docs/user-guide/node-selection/
-##
-nodeSelector: {}
-tolerations: []
-affinity: {}
-
-## Add stateful containers to have security context, if enabled MinIO will run as this
-## user and group NOTE: securityContext is only enabled if persistence.enabled=true
-securityContext:
-  enabled: true
-  runAsUser: 1000
-  runAsGroup: 1000
-  fsGroup: 1000
-
-# Additational pod annotations
-podAnnotations: {}
-
-# Additional pod labels
-podLabels: {}
-
-## Configure resource requests and limits
-## ref: http://kubernetes.io/docs/user-guide/compute-resources/
-##
-resources:
-  requests:
-    memory: 128Mi
-
-## Create a bucket after minio install
-##
-defaultBucket:
-  enabled: false
-  ## If enabled, must be a string with length > 0
-  name: bucket
-  ## Can be one of none|download|upload|public
-  policy: none
-  ## Purge if bucket exists already
-  purge: false
-  ## set versioning for bucket true|false
-  # versioning: false
-
-## Create multiple buckets after minio install
-## Enabling `defaultBucket` will take priority over this list
-##
-buckets:
-  - name: cortex
-    policy: none
-    purge: false
-  - name: loki
-    policy: none
-    purge: false
-  - name: tempo
-    policy: none
-    purge: false
-  - name: harbor
-    policy: none
-    purge: false
-
-## Additional Annotations for the Kubernetes Batch (make-bucket-job)
-makeBucketJob:
-  podAnnotations:
-    sidecar.istio.io/inject: "false"
-  annotations:
+operator:
+  clusterDomain: ""
+  nsToWatch: ""
+  image:
+    organization: neon-registry.node.local
+    repository: minio-operator
+    tag: v4.1.2
+    pullPolicy: IfNotPresent
+  imagePullSecrets: []
+  replicaCount: 1
   securityContext:
-    enabled: false
     runAsUser: 1000
     runAsGroup: 1000
+    runAsNonRoot: true
     fsGroup: 1000
+  nodeSelector: {}
+  affinity: {}
+  tolerations: []
   resources:
     requests:
-      memory: 128Mi
+      cpu: 200m
+      memory: 256Mi
+      ephemeral-storage: 500Mi
 
-## Additional Annotations for the Kubernetes Batch (update-prometheus-secret)
-updatePrometheusJob:
-  podAnnotations:
-    sidecar.istio.io/inject: "false"
-  annotations:
-  securityContext:
+console:
+  image:
+    organization: neon-registry.node.local
+    repository: minio-console
+    tag: v0.7.4
+    pullPolicy: IfNotPresent
+  imagePullSecrets: []
+  replicaCount: 1
+  nodeSelector: {}
+  affinity: {}
+  tolerations: []
+  resources: {}
+  ingress:
     enabled: false
-    runAsUser: 1000
-    runAsGroup: 1000
-    fsGroup: 1000
+    labels: {}
+    annotations: {}
+    tls: []
+    host: console.local
+    path: /
 
-s3gateway:
-  enabled: false
-  replicas: 4
-  serviceEndpoint: ""
-  accessKey: ""
-  secretKey: ""
-
-## Use minio as an azure blob gateway, you should disable data persistence so no volume claim are created.
-## https://docs.minio.io/docs/minio-gateway-for-azure
-azuregateway:
-  enabled: false
-  # Number of parallel instances
-  replicas: 4
-
-## Use minio as GCS (Google Cloud Storage) gateway, you should disable data persistence so no volume claim are created.
-## https://docs.minio.io/docs/minio-gateway-for-gcs
-
-gcsgateway:
-  enabled: false
-  # Number of parallel instances
-  replicas: 4
-  # credential json file of service account key
-  gcsKeyJson: ""
-  # Google cloud project-id
-  projectId: ""
-
-## Use minio on NAS backend
-## https://docs.minio.io/docs/minio-gateway-for-nas
-
-nasgateway:
-  enabled: false
-  # Number of parallel instances
-  replicas: 4
-  # For NAS Gateway, you may want to bind the PVC to a specific PV. To ensure that happens, PV to bind to should have
-  # a label like "pv: <value>", use value here.
-  pv: ~
-
-## Use this field to add environment variables relevant to Minio server. These fields will be passed on to Minio container(s)
-## when Chart is deployed
-environment:
-  ## Please refer for comprehensive list https://docs.minio.io/docs/minio-server-configuration-guide.html
-  ## MINIO_DOMAIN: "chart-example.local"
-  ## MINIO_BROWSER: "off"
-  MINIO_REGION_NAME: neon
-
-networkPolicy:
-  enabled: false
-  allowExternal: true
-
-## PodDisruptionBudget settings
-## ref: https://kubernetes.io/docs/concepts/workloads/pods/disruptions/
-##
-podDisruptionBudget:
-  enabled: false
-  maxUnavailable: 1
-
-## Specify the service account to use for the Minio pods. If 'create' is set to 'false'
-## and 'name' is left unspecified, the account 'default' will be used.
-serviceAccount:
-  create: true
-  ## The name of the service account to use. If 'create' is 'true', a service account with that name
-  ## will be created. Otherwise, a name will be auto-generated.
-  name:
-
-metrics:
-  # Metrics can not be disabled yet: https://github.com/minio/minio/issues/7493
-  serviceMonitor:
-    enabled: true
-    additionalLabels: {}
-    relabelConfigs: {}
-    # namespace: monitoring
-    interval: 1m
-    # scrapeTimeout: 10s
-
-## ETCD settings: https://github.com/minio/minio/blob/master/docs/sts/etcd.md
-## Define endpoints to enable this section.
-etcd:
-  endpoints:
-    - neon-system-etcd:2379
-  pathPrefix: ""
-  corednsPathPrefix: ""
-  clientCert: ""
-  clientCertKey: ""
+## MinIO Tenant Definition
+tenants:
+  # Tenant name
+  - name: minio
+    ## Registry location and Tag to download MinIO Server image
+    image:
+      organization: neon-registry.node.local
+      repository: minio-minio
+      tag: RELEASE.2021-06-17T00-10-46Z
+      pullPolicy: IfNotPresent
+    ## Customize namespace for tenant deployment
+    namespace: neon-system
+    ## Customize any private registry image pull secret.
+    ## currently only one secret registry is supported
+    imagePullSecret: {}
+    ## If a scheduler is specified here, Tenant pods will be dispatched by specified scheduler.
+    ## If not specified, the Tenant pods will be dispatched by default scheduler.
+    scheduler: {}
+    ## Specification for MinIO Pool(s) in this Tenant.
+    pools:
+      ## Servers specifies the number of MinIO Tenant Pods / Servers in this pool.
+      ## For standalone mode, supply 1. For distributed mode, supply 4 or more.
+      ## Note that the operator does not support upgrading from standalone to distributed mode.
+      - servers: 4
+        ## volumesPerServer specifies the number of volumes attached per MinIO Tenant Pod / Server.
+        volumesPerServer: 4
+        ## size specifies the capacity per volume
+        size: 10Gi
+        ## storageClass specifies the storage class name to be used for this pool
+        storageClassName: neon-internal-minio
+        ## Used to specify a toleration for a pod
+        tolerations: {}
+        ## nodeSelector parameters for MinIO Pods. It specifies a map of key-value pairs. For the pod to be
+        ## eligible to run on a node, the node must have each of the
+        ## indicated key-value pairs as labels.
+        ## Read more here: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+        nodeSelector: {}
+        ## Affinity settings for MinIO pods. Read more about affinity
+        ## here: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity.
+        affinity: {}
+        ## Configure resource requests and limits for MinIO containers
+        resources: {}
+        ## Configure security context
+        securityContext: {}
+    ## Mount path where PV will be mounted inside container(s).
+    mountPath: /export
+    ## Sub path inside Mount path where MinIO stores data.
+    subPath: /data
+    # pool secrets
+    secrets:
+      enabled: true
+      name: minio
+      accessKey: minio
+      secretKey: minio123
+    # pool metrics to be read by Prometheus
+    metrics:
+      enabled: false
+      port: 9000
+    certificate:
+      ## Use this field to provide a list of Secrets with external certificates. This can be used to to configure
+      ## TLS for MinIO Tenant pods. Create secrets as explained here:
+      ## https://github.com/minio/minio/tree/master/docs/tls/kubernetes#2-create-kubernetes-secret
+      externalCertSecret: {}
+      ## Enable automatic Kubernetes based certificate generation and signing as explained in
+      ## https://kubernetes.io/docs/tasks/tls/managing-tls-in-a-cluster
+      requestAutoCert: false
+      ## This field is used only when "requestAutoCert" is set to true. Use this field to set CommonName
+      ## for the auto-generated certificate. Internal DNS name for the pod will be used if CommonName is
+      ## not provided. DNS name format is *.minio.default.svc.cluster.local
+      certConfig: {}
+    ## Enable S3 specific features such as Bucket DNS which would allow `buckets` to be
+    ## accessible as DNS entries of form `<bucketname>.minio.default.svc.cluster.local`
+    s3:
+      ## This feature is turned off by default
+      bucketDNS: true
+    ## PodManagement policy for MinIO Tenant Pods. Can be "OrderedReady" or "Parallel"
+    ## Refer https://kubernetes.io/docs/tutorials/stateful-application/basic-stateful-set/#pod-management-policy
+    ## for details.
+    podManagementPolicy: Parallel
+    ## serviceMetadata allows passing additional labels and annotations to MinIO and Console specific
+    ## services created by the operator.
+    serviceMetadata: {}
+    ## Add environment variables to be set in MinIO container (https://github.com/minio/minio/tree/master/docs/config)
+    env: {}
+    ## PriorityClassName indicates the Pod priority and hence importance of a Pod relative to other Pods.
+    ## This is applied to MinIO pods only.
+    ## Refer Kubernetes documentation for details https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/#priorityclass/
+    priorityClassName : ""
+    ## Define configuration for Console (Graphical user interface for MinIO)
+    ## Refer https://github.com/minio/console
+    console:
+      image:
+        organization: neon-registry.node.local
+        repository: minio-console
+        tag: v0.7.4
+        pullPolicy: IfNotPresent
+      replicaCount: 1
+      secrets:
+        enabled: true
+        name: minio-console
+        passphrase: SECRET
+        salt: SECRET
+        accessKey: YOURCONSOLEACCESS
+        secretKey: YOURCONSOLESECRET

@@ -19,7 +19,7 @@ spec:
       containers:
         - name: neon-acme
           image: ghcr.io/neonrelease-dev/neon-acme:latest
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           args:
             - --tls-cert-file=/tls/tls.crt
             - --tls-private-key-file=/tls/tls.key

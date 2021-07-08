@@ -76,6 +76,8 @@ namespace Neon.Kube
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.Cortex, CalculateCortexAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.EtcdCluster, CalculateEtcdClusterAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.Grafana, CalculateGrafanaAdvice(cluster));
+            clusterAdvice.AddServiceAdvice(KubeClusterAdvice.GrafanaAgent, CalculateGrafanaAgentAdvice(cluster));
+            clusterAdvice.AddServiceAdvice(KubeClusterAdvice.GrafanaAgentOperator, CalculateGrafanaAgentOperatorAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.HarborChartmuseum, CalculateHarborChartmuseumAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.HarborClair, CalculateHarborClairAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.HarborCore, CalculateHarborCoreAdvice(cluster));
@@ -90,6 +92,7 @@ namespace Neon.Kube
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.Jaeger, CalculateJaegerAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.Kiali, CalculateKialiAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.KubernetesDashboard, CalculateKubernetesDashboardAdvice(cluster));
+            clusterAdvice.AddServiceAdvice(KubeClusterAdvice.KubeStateMetrics, CalculateKubeStateMetricsAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.Loki, CalculateLokiAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.MetricsServer, CalculateMetricsServerAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.Minio, CalculateMinioAdvice(cluster));
@@ -215,6 +218,20 @@ namespace Neon.Kube
             return advice;
         }
 
+        private static KubeServiceAdvice CalculateGrafanaAgentAdvice(ClusterProxy cluster)
+        {
+            var advice = new KubeServiceAdvice(KubeClusterAdvice.GrafanaAgent);
+
+            return advice;
+        }
+
+        private static KubeServiceAdvice CalculateGrafanaAgentOperatorAdvice(ClusterProxy cluster)
+        {
+            var advice = new KubeServiceAdvice(KubeClusterAdvice.GrafanaAgentOperator);
+
+            return advice;
+        }
+
         private static KubeServiceAdvice CalculateHarborChartmuseumAdvice(ClusterProxy cluster)
         {
             var advice = new KubeServiceAdvice(KubeClusterAdvice.HarborChartmuseum);
@@ -321,6 +338,15 @@ namespace Neon.Kube
         private static KubeServiceAdvice CalculateKubernetesDashboardAdvice(ClusterProxy cluster)
         {
             var advice = new KubeServiceAdvice(KubeClusterAdvice.KubernetesDashboard);
+
+            advice.ReplicaCount = Math.Max(1, cluster.Definition.Nodes.Count() / 10);
+
+            return advice;
+        }
+
+        private static KubeServiceAdvice CalculateKubeStateMetricsAdvice(ClusterProxy cluster)
+        {
+            var advice = new KubeServiceAdvice(KubeClusterAdvice.KubeStateMetrics);
 
             advice.ReplicaCount = Math.Max(1, cluster.Definition.Nodes.Count() / 10);
 
