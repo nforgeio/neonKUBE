@@ -2720,17 +2720,5 @@ TCPKeepAlive yes
                 return await GitHub.Release.DownloadAsync(download, imagePath, progressAction);
             }
         }
-
-        /// <summary>
-        /// Gets string data from a <see cref="V1Secret"/>. Secret data is stored as base64 encoded strings.
-        /// The <see cref="V1Secret.StringData"/> property is read-only
-        /// </summary>
-        /// <param name="secret"></param>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        public static string GetStringData(this V1Secret secret, string key)
-        {
-            return Encoding.UTF8.GetString(Convert.FromBase64String(Encoding.UTF8.GetString(secret.Data[key])));
-        }
     }
 }

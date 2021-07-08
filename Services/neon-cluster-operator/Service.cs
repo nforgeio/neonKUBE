@@ -11,6 +11,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Net;
 using System.IO.Compression;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Net.Sockets;
@@ -87,8 +88,8 @@ namespace NeonClusterOperator
         {
             var secret = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbAdminSecret, KubeNamespaces.NeonSystem);
 
-            var username = secret.GetStringData("username");
-            var password = secret.GetStringData("password");
+            var username = Encoding.UTF8.GetString(secret.Data["username"]);
+            var password = Encoding.UTF8.GetString(secret.Data["password"]);
 
             var dbHost = $"db-citus-postgresql.{KubeNamespaces.NeonSystem}";
 
