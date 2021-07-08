@@ -50,6 +50,12 @@ namespace Neon.Common
     /// <b>"**"</b> matches zero or more directories.
     /// </item>
     /// </list>
+    /// <note>
+    /// This class works only for file paths using either Linux style forward slashes (/) or
+    /// Windows style backslashes by converting any backslashes to forward slashes in 
+    /// <see cref="IsMatch(string)"/> before performing the match.  The <see cref="Regex"/>
+    /// handles forward slash matching only.
+    /// </note>
     /// </remarks>
     public class GlobPattern
     {
@@ -75,20 +81,21 @@ namespace Neon.Common
         /// Parses a <see cref="GlobPattern"/> from a pattern string.
         /// </summary>
         /// <param name="pattern">The pattern.</param>
+        /// <param name="caseInsensitive">Optionally uses case insensitive that matching.</param>
         /// <returns>The created <see cref="GlobPattern"/>.</returns>
         /// <exception cref="ArgumentNullException">Thrown if the pattern is <c>null</c> or empty.</exception>
         /// <exception cref="FormatException">Thrown if the pattern is invalid.</exception>
-        public static GlobPattern Parse(string pattern)
+        public static GlobPattern Parse(string pattern, bool caseInsensitive = false)
         {
             Covenant.Requires<ArgumentNullException>(pattern != null, nameof(pattern));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(pattern.Trim()), nameof(pattern));
             Covenant.Requires<FormatException>(!pattern.Contains("//"), nameof(pattern));
 
-            return new GlobPattern(pattern);
+            return new GlobPattern(pattern, caseInsensitive);
         }
 
         /// <summary>
-        /// Attempts to parse a <see cref="GlobPattern"/>.
+        /// Attempts to parse a case insensitive <see cref="GlobPattern"/>.
         /// </summary>
         /// <param name="pattern">The pattern string.</param>
         /// <param name="globPattern">Returns as the parsed <see cref="GlobPattern"/>.</param>
@@ -114,10 +121,40 @@ namespace Neon.Common
             }
         }
 
+        /// <summary>
+        /// Attempts to parse a <see cref="GlobPattern"/> where case sensitivity can
+        /// be controlled.
+        /// </summary>
+        /// <param name="pattern">The pattern string.</param>
+        /// <param name="caseInsenstive">Controls whether the mactching is case insensitive.</param>
+        /// <param name="globPattern">Returns as the parsed <see cref="GlobPattern"/>.</param>
+        /// <returns><c>true</c> if the pattern was parsed successfully.</returns>
+        public static bool TryParse(string pattern, bool caseInsenstive, out GlobPattern globPattern)
+        {
+            // $todo(jefflill):
+            //
+            // Catching the exceptions here is a bit of a hack.  I should reverse
+            // the Create() and TryParse() implementations so that Create()
+            // depends on TryParse().
+
+            try
+            {
+                globPattern = Parse(pattern, caseInsenstive);
+
+                return true;
+            }
+            catch
+            {
+                globPattern = null;
+                return false;
+            }
+        }
+
         //---------------------------------------------------------------------
         // Instance members
 
         private string  pattern;
+        private bool    caseInsensitive;
         private string  regexPattern;
         private Regex   regex;
 
@@ -125,9 +162,13 @@ namespace Neon.Common
         /// Private constructor.
         /// </summary>
         /// <param name="pattern">The glob pattern.</param>
-        private GlobPattern(string pattern)
+        /// <param name="caseSensitive">Optionally uses case insensitive that matching.</param>
+        private GlobPattern(string pattern, bool caseInsensitive = false)
         {
-            this.pattern = pattern = pattern.Trim();
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(pattern), nameof(pattern));
+
+            this.pattern         = pattern = pattern.Trim();
+            this.caseInsensitive = caseInsensitive;
 
             // Split the pattern into segments separated by forward slashes.
 
@@ -280,7 +321,14 @@ namespace Neon.Common
                     return regex;
                 }
 
-                return regex = new Regex(regexPattern);
+                var options = RegexOptions.None;
+
+                if (caseInsensitive)
+                {
+                    options |= RegexOptions.IgnoreCase;
+                }
+
+                return regex = new Regex(regexPattern, options);
             }
         }
 
@@ -292,6 +340,11 @@ namespace Neon.Common
         public bool IsMatch(string input)
         {
             Covenant.Requires<ArgumentNullException>(input != null, nameof(input));
+
+            if (input.Contains('\\'))
+            {
+                input = input.Replace('\\', '/');
+            }
 
             return Regex.IsMatch(input);
         }
