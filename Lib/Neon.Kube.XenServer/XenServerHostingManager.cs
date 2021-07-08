@@ -89,6 +89,7 @@ namespace Neon.Kube
 
         private ClusterProxy                cluster;
         private string                      nodeImageUri;
+        private string                      nodeImagePath;
         private SetupController<XenClient>  xenController;
         private string                      driveTemplatePath;
         private string                      logFolder;
@@ -109,16 +110,24 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
         /// <param name="nodeImageUri">Optionally specifies the node image URI when preparing clusters.</param>
+        /// <param name="nodeImagePath">Optionally specifies the path to the local node image file.</param>
         /// <param name="logFolder">
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
-        public XenServerHostingManager(ClusterProxy cluster, string nodeImageUri = null, string logFolder = null)
+        /// <remarks>
+        /// <note>
+        /// One of <paramref name="nodeImageUri"/> or <paramref name="nodeImagePath"/> must be specified.
+        /// </note>
+        /// </remarks>
+        public XenServerHostingManager(ClusterProxy cluster, string nodeImageUri = null, string nodeImagePath = null, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeImageUri) || !string.IsNullOrEmpty(nodeImagePath), $"{nameof(nodeImageUri)}/{nodeImagePath}");
 
             this.cluster                = cluster;
             this.nodeImageUri           = nodeImageUri;
+            this.nodeImagePath          = nodeImagePath;
             this.cluster.HostingManager = this;
             this.logFolder              = logFolder;
             this.maxVmNameWidth         = cluster.Definition.Nodes.Max(node => node.Name.Length) + cluster.Definition.Hosting.Vm.GetVmNamePrefix(cluster.Definition).Length;
@@ -385,26 +394,35 @@ namespace Neon.Kube
 
             if (xenHost.Template.Find(templateName) == null)
             {
-                xenSshProxy.Status = "download: vm template (slow)";
-
-                var driveTemplateUri  = new Uri(nodeImageUri);
-                var driveTemplateName = driveTemplateUri.Segments.Last();
-
-                driveTemplatePath = Path.Combine(KubeHelper.NodeImageFolder, driveTemplateName);
-
-                if (!File.Exists(driveTemplatePath))
+                if (nodeImagePath != null)
                 {
-                    xenController.SetGlobalStepStatus($"Download node image XVA: [{nodeImageUri}]");
+                    Covenant.Assert(File.Exists(nodeImagePath));
 
-                    await KubeHelper.DownloadNodeImageAsync(nodeImageUri, driveTemplatePath,
-                        progress =>
-                        {
-                            xenController.SetGlobalStepStatus($"Downloading VHDX: [{progress}%] [{driveTemplateName}]");
+                    driveTemplatePath = nodeImagePath;
+                }
+                else
+                {
+                    xenSshProxy.Status = "download: vm template";
 
-                            return true;
-                        });
+                    var driveTemplateUri  = new Uri(nodeImageUri);
+                    var driveTemplateName = driveTemplateUri.Segments.Last();
 
-                    xenController.SetGlobalStepStatus();
+                    driveTemplatePath = Path.Combine(KubeHelper.NodeImageFolder, driveTemplateName);
+
+                    if (!File.Exists(driveTemplatePath))
+                    {
+                        xenController.SetGlobalStepStatus($"Download node image XVA: [{nodeImageUri}]");
+
+                        await KubeHelper.DownloadNodeImageAsync(nodeImageUri, driveTemplatePath,
+                            progress =>
+                            {
+                                xenController.SetGlobalStepStatus($"Downloading VHDX: [{progress}%] [{driveTemplateName}]");
+
+                                return !xenController.CancelPending;
+                            });
+
+                        xenController.SetGlobalStepStatus();
+                    }
                 }
 
                 xenController.SetGlobalStepStatus();

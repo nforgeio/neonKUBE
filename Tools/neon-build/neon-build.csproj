@@ -12,7 +12,7 @@
     <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
     <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
     <Configurations>Debug;Release;CodeDoc</Configurations>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 

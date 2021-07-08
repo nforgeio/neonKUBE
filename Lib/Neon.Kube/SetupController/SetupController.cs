@@ -80,6 +80,7 @@ namespace Neon.Kube
         private List<Step>                          steps;
         private Step                                currentStep;
         private bool                                isFaulted;
+        private bool                                cancelPending;
 
         /// <summary>
         /// Constructor.
@@ -927,7 +928,8 @@ namespace Neon.Kube
                     ProgressEvent.Invoke(
                         new SetupProgressMessage()
                         {
-                            Message = message
+                            Message       = message,
+                            CancelPending = cancelPending
                         });
                 }
             }
@@ -946,8 +948,9 @@ namespace Neon.Kube
                     ProgressEvent.Invoke(
                         new SetupProgressMessage()
                         {
-                            Verb    = verb,
-                            Message = message
+                            Verb          = verb,
+                            Message       = message,
+                            CancelPending = cancelPending
                         });
                 }
             }
@@ -968,8 +971,9 @@ namespace Neon.Kube
                     ProgressEvent.Invoke(
                         new SetupProgressMessage()
                         {
-                            Node    = node,
-                            Message = message
+                            Node          = node,
+                            Message       = message,
+                            CancelPending = cancelPending
                         });
                 }
             }
@@ -991,9 +995,10 @@ namespace Neon.Kube
                     ProgressEvent.Invoke(
                         new SetupProgressMessage()
                         {
-                            Node    = node,
-                            Verb    = verb,
-                            Message = message
+                            Node          = node,
+                            Verb          = verb,
+                            Message       = message,
+                            CancelPending = cancelPending
                         });
                 }
             }
@@ -1014,8 +1019,9 @@ namespace Neon.Kube
                     ProgressEvent.Invoke(
                         new SetupProgressMessage()
                         {
-                            Message = message,
-                            IsError = true
+                            Message       = message,
+                            IsError       = true,
+                            CancelPending = cancelPending
                         });
                 }
             }
@@ -1037,9 +1043,10 @@ namespace Neon.Kube
                     ProgressEvent.Invoke(
                         new SetupProgressMessage()
                         {
-                            Node    = node,
-                            Message = message,
-                            IsError = true
+                            Node          = node,
+                            Message       = message,
+                            IsError       = true,
+                            CancelPending = cancelPending
                         });
                 }
             }
@@ -1124,7 +1131,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public bool Run(bool leaveNodesConnected = false)
+        public SetupDisposition Run(bool leaveNodesConnected = false)
         {
             var cluster = Get<ClusterProxy>(KubeSetupProperty.ClusterProxy, null);
 
@@ -1155,12 +1162,17 @@ namespace Neon.Kube
                     }
                 }
 
-                // We don't display node status if there aren't any node specific steps.
+                // NOTE: We don't display node status if there aren't any node specific steps.
 
                 try
                 {
                     foreach (var step in steps)
                     {
+                        if (cancelPending)
+                        {
+                            return SetupDisposition.Cancelled;
+                        }
+
                         if (!ExecuteStep(step))
                         {
                             break;
@@ -1171,7 +1183,7 @@ namespace Neon.Kube
                     {
                         cluster?.LogLine(LogFailedMarker);
 
-                        return false;
+                        return SetupDisposition.Failed;
                     }
 
                     foreach (var node in nodes)
@@ -1181,7 +1193,7 @@ namespace Neon.Kube
 
                     cluster?.LogLine(LogEndMarker);
 
-                    return true;
+                    return SetupDisposition.Success;
                 }
                 finally
                 {
@@ -1214,6 +1226,24 @@ namespace Neon.Kube
                 {
                     StatusChangedEvent.Invoke(new SetupClusterStatus(this));
                     Thread.Sleep(TimeSpan.FromSeconds(0.5));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Indicates that setup should be cancelled.  Setting this will request
+        /// cancellation.  Note that once this has been set to <c>true</c>, subsequent
+        /// <c>false</c> assignments will be ignored.
+        /// </summary>
+        public bool CancelPending
+        {
+            get => cancelPending;
+
+            set
+            {
+                if (value == true)
+                {
+                    cancelPending = true;
                 }
             }
         }

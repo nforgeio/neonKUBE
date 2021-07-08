@@ -214,19 +214,35 @@ OPTIONS:
                     status.WriteToConsole();
                 };
 
-            if (controller.Run())
+            switch (controller.Run())
             {
-                Console.WriteLine();
-                Console.WriteLine($" [{clusterDefinition.Name}] cluster is ready.");
-                Console.WriteLine();
-                Program.Exit(0);
-            }
-            else
-            {
-                Console.WriteLine();
-                Console.WriteLine(" *** ERROR: One or more configuration steps failed.");
-                Console.WriteLine();
-                Program.Exit(1);
+                case SetupDisposition.Success:
+
+                    Console.WriteLine();
+                    Console.WriteLine($" [{clusterDefinition.Name}] cluster is ready.");
+                    Console.WriteLine();
+                    Program.Exit(0);
+                    break;
+
+                case SetupDisposition.Cancelled:
+
+                    Console.WriteLine();
+                    Console.WriteLine(" *** ERROR: One or more setup steps failed.");
+                    Console.WriteLine();
+                    Program.Exit(1);
+                    break;
+
+                case SetupDisposition.Failed:
+
+                    Console.WriteLine();
+                    Console.WriteLine(" *** CANCELLED: Setup was cancelled.");
+                    Console.WriteLine();
+                    Program.Exit(1);
+                    break;
+
+                default:
+
+                    throw new NotImplementedException();
             }
 
             await Task.CompletedTask;

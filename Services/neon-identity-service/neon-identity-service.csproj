@@ -7,7 +7,7 @@
     <AssemblyName>neon-identity-service</AssemblyName>
     <Configurations>Debug;Release;CodeDoc</Configurations>
     <LangVersion>latest</LangVersion>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 
