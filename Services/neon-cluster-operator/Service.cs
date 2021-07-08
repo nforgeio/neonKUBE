@@ -93,7 +93,7 @@ namespace NeonClusterOperator
 
             var dbHost = $"db-citus-postgresql.{KubeNamespaces.NeonSystem}";
 
-            connString = $"Host={dbHost};Port=30543;Username={username};Password={password};Database={KubeConst.NeonClusterOperatorDatabase}";
+            connString = $"Host={dbHost};Username={username};Password={password};Database={KubeConst.NeonClusterOperatorDatabase}";
 
             await using (NpgsqlConnection conn = new NpgsqlConnection(connString))
             {
