@@ -193,7 +193,7 @@ CREATE TABLE {StateTable}( KEY TEXT, value TEXT, PRIMARY KEY(KEY) )
                                                     new V1Container()
                                                     {
                                                         Name  = KubeConst.NeonJobSetupGrafana,
-                                                        Image = $"{KubeConst.LocalClusterRegistry}/neon-setup-grafana:{KubeVersions.NeonKubeVersion}"
+                                                        Image = $"ghcr.io/neonkube-dev/neon-setup-grafana:latest"
                                                     },
                                                 },
                                                 RestartPolicy = "OnFailure"
@@ -241,7 +241,7 @@ CREATE TABLE {StateTable}( KEY TEXT, value TEXT, PRIMARY KEY(KEY) )
                                                     new V1Container()
                                                     {
                                                         Name  = KubeConst.NeonJobSetupHarbor,
-                                                        Image = $"{KubeConst.LocalClusterRegistry}/neon-setup-harbor:{KubeVersions.NeonKubeVersion}"
+                                                        Image = $"ghcr.io/neonkube-dev/neon-setup-harbor:latest"
                                                     },
                                                     },
                                                     RestartPolicy = "OnFailure"
