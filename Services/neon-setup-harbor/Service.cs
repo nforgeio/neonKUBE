@@ -51,7 +51,7 @@ namespace NeonSetupHarbor
         public Service(string name, ServiceMap serviceMap = null)
             : base(name, serviceMap: serviceMap)
         {
-            k8s = new Kubernetes(KubernetesClientConfiguration.InClusterConfig());
+            k8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig());
         }
 
         /// <inheritdoc/>
@@ -214,10 +214,10 @@ namespace NeonSetupHarbor
 
         private async Task UpdateStatusAsync(string status)
         {
-            await using (NpgsqlConnection conn = new NpgsqlConnection(connString))
+            await using var conn = new NpgsqlConnection(connString);
             {
-                conn.Open();
-                using (var cmd = new NpgsqlCommand($@"
+                await conn.OpenAsync();
+                await using (var cmd = new NpgsqlCommand($@"
 INSERT
     INTO
     {StateTable} (KEY, value)
@@ -225,11 +225,11 @@ VALUES (@k, @v) ON
 CONFLICT (KEY) DO
 UPDATE
 SET
-    value = @v"))
+    value = @v", conn))
                 {
                     cmd.Parameters.AddWithValue("k", KubeConst.NeonJobSetupHarbor);
                     cmd.Parameters.AddWithValue("v", status);
-                    cmd.ExecuteNonQuery();
+                    await cmd.ExecuteNonQueryAsync();
                 }
             }
         }
