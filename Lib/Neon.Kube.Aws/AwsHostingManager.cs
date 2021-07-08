@@ -736,7 +736,6 @@ namespace Neon.Kube
 
         private ClusterProxy                        cluster;
         private string                              clusterName;
-        private string                              nodeImageUri;
         private SetupController<NodeDefinition>     controller;
         private string                              clusterEnvironment;
         private HostingOptions                      hostingOptions;
@@ -829,20 +828,22 @@ namespace Neon.Kube
         /// Creates an instance that is capable of provisioning a cluster on AWS.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
-        /// <param name="nodeImageUri">Optionally specifies the node image URI when preparing clusters.</param>
+        /// <param name="nodeImageUri">Ignored: must be <c>null</c>.</param>
+        /// <param name="nodeImagePath">Ignored: must be <c>null</c>.</param>
         /// <param name="logFolder">
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
-        public AwsHostingManager(ClusterProxy cluster, string nodeImageUri = null, string logFolder = null)
+        public AwsHostingManager(ClusterProxy cluster, string nodeImageUri = null, string nodeImagePath = null, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
+            Covenant.Requires<ArgumentException>(nodeImageUri == null, nameof(nodeImageUri));
+            Covenant.Requires<ArgumentException>(nodeImagePath == null, nameof(nodeImagePath));
 
             cluster.HostingManager  = this;
 
             this.cluster            = cluster;
             this.clusterName        = cluster.Name;
-            this.nodeImageUri       = nodeImageUri;
             this.clusterEnvironment = NeonHelper.EnumToString(cluster.Definition.Environment);
             this.hostingOptions     = cluster.Definition.Hosting;
             this.cloudOptions       = hostingOptions.Cloud;

@@ -26,6 +26,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Common;
+using Neon.Kube.Models.Headend;
 
 using Renci.SshNet;
 
@@ -61,15 +62,27 @@ namespace Neon.Kube
         HostingManager GetHostingManager(HostingEnvironment environment);
 
         /// <summary>
-        /// Returns the enterprise hosting manager for the hosting environment specified by the cluster definition
-        /// within a cluster proxy.
+        /// Returns the enterprise <see cref="HostingManager"/> for provisioning a cluster by
+        /// downloading a node image from a URI that references a single image 
+        /// file or a multi-part <see cref="Download"/> image.
         /// </summary>
         /// <param name="cluster">The cluster proxy,</param>
         /// <param name="nodeImageUri">The node image URI.</param>
         /// <param name="logFolder">Optionally specifies the log folder where the hosting manager will log progress.</param>
         /// <returns>The hosting manager for the environment.</returns>
         /// <exception cref="KubeException">Thrown if the environment is not implemented by an enterprise hosting manager.</exception>
-        HostingManager GetHostingManager(ClusterProxy cluster, string nodeImageUri, string logFolder = null);
+        HostingManager GetManagerWithNodeImageUri(ClusterProxy cluster, string nodeImageUri, string logFolder = null);
+
+        /// <summary>
+        /// Returns the enterprise <see cref="HostingManager"/> for provisioning a cluster from
+        /// an already downloaded image file already downloaded.
+        /// </summary>
+        /// <param name="cluster">The cluster proxy,</param>
+        /// <param name="nodeImagePath">Specifies the path to the local node image file.</param>
+        /// <param name="logFolder">Optionally specifies the log folder where the hosting manager will log progress.</param>
+        /// <returns>The hosting manager for the environment.</returns>
+        /// <exception cref="KubeException">Thrown if the environment is not implemented by an enterprise hosting manager.</exception>
+        HostingManager GetManagerWithNodeImageFile(ClusterProxy cluster, string nodeImagePath, string logFolder = null);
 
         /// <summary>
         /// Gets the current WSL2 cluster IP address.
