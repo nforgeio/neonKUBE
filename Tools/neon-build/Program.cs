@@ -51,9 +51,9 @@ OPTIONS:
 -----------------------
 neon-build clean-attr REPO-PATH
 
-Deletes any [**/obj/**/*.AssemblyAttributes.cs] files.  These can cause
-duplicate definition errors because Visual Studio doesn't seem to clear
-these when switching between build configurations.
+Deletes any [**/obj/**/*.AssemblyAttributes.cs] and [**/obj/**/*.AssemblyInfo.cs]
+files.  These can cause duplicate definition errors because Visual Studio seems
+to include these for all build configurations, not just the current config.
 
 ---------------------------------------------------------------------
 neon-build gzip SOURCE TARGET
@@ -270,6 +270,20 @@ standard output as one line.
                         //      .NETStandard,Version=v2.0.AssemblyAttributes.cs
 
                         var globPattern = GlobPattern.Parse("**/obj/**/*.AssemblyAttributes.cs", caseInsensitive: true);
+
+                        foreach (var file in Directory.GetFiles(repoRoot, "*.cs", SearchOption.AllDirectories))
+                        {
+                            if (globPattern.IsMatch(file.Replace("\\", "/")))
+                            {
+                                File.Delete(file);
+                            }
+                        }
+
+                        // Remove files named like:
+                        // 
+                        //      Test.Neon.Models.AssemblyInfo.cs
+
+                        globPattern = GlobPattern.Parse("**/obj/**/*.AssemblyInfo.cs", caseInsensitive: true);
 
                         foreach (var file in Directory.GetFiles(repoRoot, "*.cs", SearchOption.AllDirectories))
                         {
