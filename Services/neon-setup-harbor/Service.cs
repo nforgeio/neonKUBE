@@ -102,7 +102,7 @@ namespace NeonSetupHarbor
 
             if (!harborSecret.StringData.ContainsKey("harbor-database-password"))
             {
-                harborSecret.StringData["harbor-database-password"] = secret.StringData["password"];
+                harborSecret.Data["harbor-database-password"] = secret.Data["password"];
                 await k8s.ReplaceNamespacedSecretAsync(harborSecret, KubeConst.RegistrySecretKey, KubeNamespaces.NeonSystem);
             }
 
