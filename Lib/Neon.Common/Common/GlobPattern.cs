@@ -162,7 +162,7 @@ namespace Neon.Common
         /// Private constructor.
         /// </summary>
         /// <param name="pattern">The glob pattern.</param>
-        /// <param name="caseSensitive">Optionally uses case insensitive that matching.</param>
+        /// <param name="caseInsensitive">Optionally uses case insensitive that matching.</param>
         private GlobPattern(string pattern, bool caseInsensitive = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(pattern), nameof(pattern));
