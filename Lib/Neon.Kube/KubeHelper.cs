@@ -733,7 +733,7 @@ namespace Neon.Kube
             {
                 if (cachedDesktopWsl2Folder != null)
                 {
-                    return cachedDesktopFolder;
+                    return cachedDesktopWsl2Folder;
                 }
 
                 var path = Path.Combine(GetNeonKubeUserFolder(), "desktop", "wsl2");
