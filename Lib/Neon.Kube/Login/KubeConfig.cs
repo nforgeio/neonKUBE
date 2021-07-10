@@ -42,11 +42,10 @@ namespace Neon.Kube
     /// <a href="https://github.com/eBay/Kubernetes/blob/master/docs/user-guide/kubeconfig-file.md">more information</a>.
     /// </summary>
     /// <remarks>
-    /// <note>
-    /// This implementation currently supports only the a single kubeconfig
-    /// located at <c>$HOME/.kube/config</c> (within the current user's
-    /// HOME folder).  The <c>KUBECONFIG</c> environment variable is ignored.
-    /// </note>
+    /// <para>
+    /// neonKUBE client side tools like <b>neon-cli</b> and <b>neonDESKTOP</b> maintain 
+    /// cluster login information within 
+    /// </para>
     /// </remarks>
     public class KubeConfig
     {
