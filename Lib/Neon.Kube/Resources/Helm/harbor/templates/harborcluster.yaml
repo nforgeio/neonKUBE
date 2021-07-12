@@ -26,7 +26,7 @@ spec:
       s3:
         region: neon
         bucket: harbor
-        regionendpoint: http://minio.neon-system:9000
+        regionendpoint: http://minio.neon-system
   cache:
     kind: Redis
     spec:

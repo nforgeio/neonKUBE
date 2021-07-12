@@ -1174,6 +1174,21 @@ kubectl apply -f istio-cni.yaml
                     await master.InstallHelmChartAsync(controller, "cert_manager", releaseName: "cert-manager", @namespace: KubeNamespaces.NeonIngress, values: values);
 
                 });
+
+
+            await master.InvokeIdempotentAsync("setup/cert-manager-ready",
+                async () =>
+                {
+                    controller.LogProgress(master, verb: "wait", message: "for grafana agent");
+
+                    await NeonHelper.WaitAllAsync(
+                        new List<Task>()
+                        {
+                            WaitForDeploymentAsync(controller, KubeNamespaces.NeonIngress, "cert-manager"),
+                            WaitForDeploymentAsync(controller, KubeNamespaces.NeonIngress, "cert-manager-cainjector"),
+                            WaitForDeploymentAsync(controller, KubeNamespaces.NeonIngress, "cert-manager-webhook"),
+                        });
+                });
         }
 
         /// <summary>
@@ -2135,7 +2150,7 @@ $@"- name: StorageType
                         i++;
                     }
 
-                    await master.InstallHelmChartAsync(controller, "grafana_agent", releaseName: "grafana_agent", @namespace: KubeNamespaces.NeonMonitor, values: values);
+                    await master.InstallHelmChartAsync(controller, "grafana_agent", releaseName: "grafana-agent", @namespace: KubeNamespaces.NeonMonitor, values: values);
                 });
         }
 
@@ -2152,7 +2167,7 @@ $@"- name: StorageType
 
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
-            await master.InvokeIdempotentAsync("setup/monitoring-prometheus-ready",
+            await master.InvokeIdempotentAsync("setup/monitoring-grafana-agent-ready",
                 async () =>
                 {
                     controller.LogProgress(master, verb: "wait", message: "for grafana agent");
@@ -2161,7 +2176,7 @@ $@"- name: StorageType
                         new List<Task>()
                         {
                             WaitForDeploymentAsync(controller, KubeNamespaces.NeonMonitor, "grafana-agent-operator"),
-                            WaitForDaemonsetAsync(controller, KubeNamespaces.NeonMonitor, "grafana-agent"),
+                            WaitForDaemonsetAsync(controller, KubeNamespaces.NeonMonitor, "grafana-agent-node"),
                             WaitForStatefulSetAsync(controller, KubeNamespaces.NeonMonitor, "grafana-agent"),
                         });
                 });
@@ -2288,27 +2303,27 @@ $@"- name: StorageType
         }
 
         /// <summary>
-        /// Installs Promtail to the monitoring namespace.
+        /// Installs Tempo to the monitoring namespace.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InstallPromtailAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
+        public static async Task InstallTempoAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var advice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice).GetServiceAdvice(KubeClusterAdvice.Promtail);
+            var advice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice).GetServiceAdvice(KubeClusterAdvice.Tempo);
 
-            await master.InvokeIdempotentAsync("setup/monitoring-promtail",
+            await master.InvokeIdempotentAsync("setup/monitoring-tempo",
                 async () =>
                 {
-                    controller.LogProgress(master, verb: "deploy", message: "promtail");
+                    controller.LogProgress(master, verb: "deploy", message: "tempo");
 
                     var values = new Dictionary<string, object>();
 
-                    values.Add("image.organization", KubeConst.LocalClusterRegistry);
+                    //values.Add("tempo.organization", KubeConst.LocalClusterRegistry);
 
                     values.Add($"replicas", advice.ReplicaCount);
 
@@ -2324,15 +2339,15 @@ $@"- name: StorageType
                         values.Add($"resources.limits.memory", ToSiString(advice.PodMemoryLimit.Value));
                     }
 
-                    await master.InstallHelmChartAsync(controller, "promtail", releaseName: "promtail", @namespace: KubeNamespaces.NeonMonitor, values: values);
+                    await master.InstallHelmChartAsync(controller, "tempo", releaseName: "tempo", @namespace: KubeNamespaces.NeonMonitor, values: values);
                 });
 
-            await master.InvokeIdempotentAsync("setup/monitoring-promtail-ready",
+            await master.InvokeIdempotentAsync("setup/monitoring-tempo-ready",
                 async () =>
                 {
-                    controller.LogProgress(master, verb: "wait", message: "for promtail");
+                    controller.LogProgress(master, verb: "wait", message: "for tempo");
 
-                    await WaitForDaemonsetAsync(controller, KubeNamespaces.NeonMonitor, "promtail");
+                    await WaitForStatefulSetAsync(controller, KubeNamespaces.NeonMonitor, "tempo");
                 });
         }
 
@@ -2392,7 +2407,7 @@ $@"- name: StorageType
                     var values = new Dictionary<string, object>();
 
 
-                    await master.InstallHelmChartAsync(controller, "reloader", releaseName: "reloader", @namespace: KubeNamespaces.NeonMonitor, values: values);
+                    await master.InstallHelmChartAsync(controller, "reloader", releaseName: "reloader", @namespace: KubeNamespaces.NeonSystem, values: values);
                 });
 
             await master.InvokeIdempotentAsync("setup/reloader-ready",
@@ -2511,7 +2526,7 @@ $@"- name: StorageType
                             }
 
                             values.Add($"tenants[0].secrets.accessKey", NeonHelper.GetCryptoRandomPassword(20));
-                            values.Add($"tenants[0].secrets.accessKey", NeonHelper.GetCryptoRandomPassword(20));
+                            values.Add($"tenants[0].secrets.secretKey", NeonHelper.GetCryptoRandomPassword(20));
 
                             values.Add($"tenants[0].console.secrets.passphrase", NeonHelper.GetCryptoRandomPassword(10));
                             values.Add($"tenants[0].console.secrets.salt", NeonHelper.GetCryptoRandomPassword(10));
@@ -2569,7 +2584,7 @@ $@"- name: StorageType
 
             tasks.Add(InstallLokiAsync(controller, master));
             tasks.Add(InstallKubeStateMetricsAsync(controller, master));
-            tasks.Add(InstallPromtailAsync(controller, master));
+            tasks.Add(InstallTempoAsync(controller, master));
             tasks.Add(InstallGrafanaAsync(controller, master));
 
             return tasks;

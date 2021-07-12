@@ -235,7 +235,8 @@ redis:
   lifecycle: {}
 
   ## annotations for the redis statefulset
-  annotations: {}
+  annotations:
+    reloader.stakater.com/auto: "true"
 
 ## Sentinel specific configuration options
 sentinel:

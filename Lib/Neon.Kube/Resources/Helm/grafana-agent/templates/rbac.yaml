@@ -97,3 +97,48 @@ subjects:
 - kind: ServiceAccount
   name: grafana-agent
   namespace: neon-monitor
+
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: grafana-agent-node
+  namespace: neon-monitor
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: grafana-agent-node
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  - nodes/proxy
+  - services
+  - endpoints
+  - pods
+  verbs:
+  - get
+  - list
+  - watch
+- nonResourceURLs:
+  - /metrics
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: grafana-agent-node
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: grafana-agent-node
+subjects:
+- kind: ServiceAccount
+  name: grafana-agent-node
+  namespace: neon-monitor

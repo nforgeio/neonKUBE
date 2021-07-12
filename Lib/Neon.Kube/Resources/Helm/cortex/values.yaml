@@ -59,7 +59,7 @@ cortexConfig:
       sync_dir: /tmp/cortex/tsdb-sync
     s3:
       bucket_name: cortex
-      endpoint: minio.neon-system:9000
+      endpoint: minio.neon-system
       access_key_id: ${ACCESS_KEY_ID}
       secret_access_key: ${SECRET_ACCESS_KEY}
       insecure: true
@@ -116,7 +116,8 @@ strategy:
     maxSurge: 0
     maxUnavailable: 1
 
-annotations: {}
+annotations:
+  reloader.stakater.com/auto: "true"
 nodeSelector:
   neonkube.io/monitor.metrics-internal: 'true'
 

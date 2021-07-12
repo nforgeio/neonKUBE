@@ -5,6 +5,9 @@ global:
   ##
   imagePullSecrets: []
 
+nameOverride: reloader
+fullnameOverride: reloader
+
 kubernetes:
   host: https://kubernetes.default
 
@@ -54,7 +57,7 @@ reloader:
       group: com.stakater.platform
       version: v0.0.95
     image:
-      name: stakater/reloader
+      name: ghcr.io/neonrelease-dev/stakater-reloader
       tag: v0.0.95
       pullPolicy: IfNotPresent
     # Support for extra environment variables.
