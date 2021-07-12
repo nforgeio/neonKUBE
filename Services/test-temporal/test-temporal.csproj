@@ -5,6 +5,8 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>TemporalService</RootNamespace>
     <Configurations>Debug;Release;CodeDoc</Configurations>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 
   <ItemGroup>

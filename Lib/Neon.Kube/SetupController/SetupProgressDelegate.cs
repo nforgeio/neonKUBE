@@ -55,6 +55,12 @@ namespace Neon.Kube
         /// Indicates whether the message describes an error.
         /// </summary>
         public bool IsError { get; internal set; }
+
+        /// <summary>
+        /// Indicates whether the setup controller has been signalled to
+        /// cancel thje entire operation.
+        /// </summary>
+        public bool CancelPending { get; internal set; }
     }
 
     /// <summary>

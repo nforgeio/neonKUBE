@@ -25,6 +25,8 @@
     <PackageIcon>nuget-icon.png</PackageIcon>
     <PackageTags>xunit kubernetes</PackageTags>
     <Company>neonFORGE LLC</Company>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)'=='netcoreapp3.1'">

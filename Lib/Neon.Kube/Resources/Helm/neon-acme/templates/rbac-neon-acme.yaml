@@ -1,0 +1,112 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: neon-acme
+  namespace: neon-ingress
+  labels:
+    app: neon-acme
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: neon-acme
+  namespace: neon-ingress
+  labels:
+    app: neon-acme
+rules:
+  - apiGroups:
+      - ''
+    resources:
+      - 'secrets'
+    verbs:
+      - 'get'
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: neon-acme
+  namespace: neon-ingress
+  labels:
+    app: neon-acme
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: neon-acme
+subjects:
+  - apiGroup: ""
+    kind: ServiceAccount
+    name: neon-acme
+    namespace: neon-ingress
+
+---
+# Grant the webhook permission to read the ConfigMap containing the Kubernetes
+# apiserver's requestheader-ca-certificate.
+# This ConfigMap is automatically created by the Kubernetes apiserver.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: neon-acme:webhook-authentication-reader
+  namespace: kube-system
+  labels:
+    app: neon-acme
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: extension-apiserver-authentication-reader
+subjects:
+  - apiGroup: ""
+    kind: ServiceAccount
+    name: neon-acme
+    namespace: neon-ingress
+---
+# apiserver gets the auth-delegator role to delegate auth decisions to
+# the core apiserver
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: neon-acme:auth-delegator
+  namespace: neon-ingress
+  labels:
+    app: neon-acme
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:auth-delegator
+subjects:
+  - apiGroup: ""
+    kind: ServiceAccount
+    name: neon-acme
+    namespace: neon-ingress
+---
+# Grant cert-manager permission to validate using our apiserver
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: neon-acme:domain-solver
+  labels:
+    app: neon-acme
+rules:
+  - apiGroups:
+      - acme.neoncloud.io
+    resources:
+      - '*'
+    verbs:
+      - 'create'
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: neon-acme:domain-solver
+  labels:
+    app: neon-acme
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: neon-acme:domain-solver
+subjects:
+  - apiGroup: ""
+    kind: ServiceAccount
+    name: cert-manager
+    namespace: neon-ingress

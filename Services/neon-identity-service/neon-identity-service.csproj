@@ -7,6 +7,8 @@
     <AssemblyName>neon-identity-service</AssemblyName>
     <Configurations>Debug;Release;CodeDoc</Configurations>
     <LangVersion>latest</LangVersion>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

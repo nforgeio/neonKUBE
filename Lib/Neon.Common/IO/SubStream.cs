@@ -272,6 +272,40 @@ namespace Neon.IO
         }
 
         //---------------------------------------------------------------------
+        // Async methods:
+        
+        // $todo(jefflill): We're actually going to implement these synchronously for now.
+
+        /// <inheritdoc/>
+        public override async Task CopyToAsync(Stream destination, int bufferSize, CancellationToken cancellationToken)
+        {
+            CopyTo(destination, bufferSize);
+            await Task.CompletedTask;
+        }
+
+        /// <inheritdoc/>
+        public override async Task FlushAsync(CancellationToken cancellationToken)
+        {
+            Flush();
+            await Task.CompletedTask;
+        }
+
+        /// <inheritdoc/>
+        public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            return await Task.FromResult(Read(buffer, offset, count));
+        }
+
+#if !NETFRAMEWORK && !NETSTANDARD2_0
+        /// <inheritdoc/>
+        public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            Write(buffer, offset, count);
+            await Task.CompletedTask;
+        }
+#endif
+
+        //---------------------------------------------------------------------
         // These methods are not implemented:
 
         /// <summary>
@@ -305,18 +339,6 @@ namespace Neon.IO
         /// <summary>
         /// <b>Not Implemented</b>
         /// </summary>
-        /// <param name="destination"></param>
-        /// <param name="bufferSize"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        public override Task CopyToAsync(Stream destination, int bufferSize, CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// <b>Not Implemented</b>
-        /// </summary>
         /// <param name="asyncResult"></param>
         /// <returns></returns>
         public override int EndRead(IAsyncResult asyncResult)
@@ -329,16 +351,6 @@ namespace Neon.IO
         /// </summary>
         /// <param name="asyncResult"></param>
         public override void EndWrite(IAsyncResult asyncResult)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// <b>Not Implemented</b>
-        /// </summary>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        public override Task FlushAsync(CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }
@@ -368,19 +380,6 @@ namespace Neon.IO
         }
 #endif
 
-        /// <summary>
-        /// <b>Not Implemented</b>
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="count"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
-        }
-
 #if !NETFRAMEWORK && !NETSTANDARD2_0
         /// <summary>
         /// <b>Not Implemented</b>
@@ -396,36 +395,21 @@ namespace Neon.IO
         /// <summary>
         /// <b>Not Implemented</b>
         /// </summary>
-        /// <returns></returns>
-        public override ValueTask DisposeAsync()
-        {
-            throw new NotImplementedException();
-        }
-#endif
-
-#if !NETFRAMEWORK && !NETSTANDARD2_0
-        /// <summary>
-        /// <b>Not Implemented</b>
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="count"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
-        }
-#endif
-
-#if !NETFRAMEWORK && !NETSTANDARD2_0
-        /// <summary>
-        /// <b>Not Implemented</b>
-        /// </summary>
         /// <param name="buffer"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+#endif
+
+#if !NETFRAMEWORK && !NETSTANDARD2_0
+        /// <summary>
+        /// <b>Not Implemented</b>
+        /// </summary>
+        /// <returns></returns>
+        public override ValueTask DisposeAsync()
         {
             throw new NotImplementedException();
         }

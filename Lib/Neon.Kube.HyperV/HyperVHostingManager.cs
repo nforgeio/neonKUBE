@@ -69,11 +69,13 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Instance members
 
-        private ClusterProxy                    cluster;
-        private SetupController<NodeDefinition> controller;
-        private string                          driveTemplatePath;
-        private string                          vmDriveFolder;
-        private string                          switchName;
+        private ClusterProxy                        cluster;
+        private string                              nodeImageUri;
+        private string                              nodeImagePath;
+        private SetupController<NodeDefinition>     controller;
+        private string                              driveTemplatePath;
+        private string                              vmDriveFolder;
+        private string                              switchName;
 
         /// <summary>
         /// Creates an instance that is only capable of validating the hosting
@@ -87,17 +89,26 @@ namespace Neon.Kube
         /// Creates an instance that is capable of provisioning a cluster on Hyper-V servers.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
+        /// <param name="nodeImageUri">Optionally specifies the node image URI when preparing clusters.</param>
+        /// <param name="nodeImagePath">Optionally specifies the path to the local node image file.</param>
         /// <param name="logFolder">
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
-        public HyperVHostingManager(ClusterProxy cluster, string logFolder = null)
+        /// <remarks>
+        /// <note>
+        /// One of <paramref name="nodeImageUri"/> or <paramref name="nodeImagePath"/> must be specified.
+        /// </note>
+        /// </remarks>
+        public HyperVHostingManager(ClusterProxy cluster, string nodeImageUri = null, string nodeImagePath = null, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
 
             cluster.HostingManager = this;
 
-            this.cluster = cluster;
+            this.cluster       = cluster;
+            this.nodeImageUri  = nodeImageUri;
+            this.nodeImagePath = nodeImagePath;
         }
 
         /// <inheritdoc/>

@@ -11,6 +11,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Net;
 using System.IO.Compression;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Net.Sockets;
@@ -37,7 +38,10 @@ namespace NeonSetupGrafana
 {
     public partial class Service : NeonService
     {
+        public const string StateTable = "state";
+
         private static Kubernetes k8s;
+        private static string connString;
 
         /// <summary>
         /// Constructor.
@@ -47,6 +51,7 @@ namespace NeonSetupGrafana
         public Service(string name, ServiceMap serviceMap = null)
             : base(name, serviceMap: serviceMap)
         {
+            k8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig());
         }
 
         /// <inheritdoc/>
@@ -59,54 +64,26 @@ namespace NeonSetupGrafana
         protected async override Task<int> OnRunAsync()
         {
             // Let NeonService know that we're running.
-
+            
             await SetRunningAsync();
-            await WaitForCitusAsync();
+            await GetConnectionStringAsync();
             await SetupGrafanaAsync();
-
+            
             return 0;
         }
 
-        private static string connString = $"Host=db-citus-postgresql.{KubeNamespaces.NeonSystem};Username=postgres;Password=0987654321;Database=postgres";
-
-
         /// <summary>
-        /// Method to wait for neon-system Citus database to be ready.
+        /// Gets the connection string used to connect to the neon-system database.
         /// </summary>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task WaitForCitusAsync()
+        /// <returns></returns>
+        private async Task GetConnectionStringAsync()
         {
-            Log.LogInfo($"[{KubeNamespaces.NeonSystem}-db] Waiting for {KubeNamespaces.NeonSystem} database to be ready.");
+            var secret = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbAdminSecret, KubeNamespaces.NeonSystem);
 
-            await NeonHelper.WaitForAsync(
-                async () =>
-                {
-                    var statefulsets = await k8s.ListNamespacedStatefulSetAsync(KubeNamespaces.NeonSystem, labelSelector: "release=db");
-                    if (statefulsets == null || statefulsets.Items.Count < 2)
-                    {
-                        return false;
-                    }
+            var username = Encoding.UTF8.GetString(secret.Data["username"]);
+            var password = Encoding.UTF8.GetString(secret.Data["password"]);
 
-                    return statefulsets.Items.All(@set => @set.Status.ReadyReplicas == @set.Spec.Replicas);
-                },
-                timeout: TimeSpan.FromMinutes(30),
-                pollInterval: TimeSpan.FromSeconds(10));
-
-            await NeonHelper.WaitForAsync(
-                async () =>
-                {
-                    var deployments = await k8s.ListNamespacedDeploymentAsync(KubeNamespaces.NeonSystem, labelSelector: "release=db");
-                    if (deployments == null || deployments.Items.Count == 0)
-                    {
-                        return false;
-                    }
-
-                    return deployments.Items.All(deployment => deployment.Status.AvailableReplicas == deployment.Spec.Replicas);
-                },
-                timeout: TimeSpan.FromMinutes(30),
-                pollInterval: TimeSpan.FromSeconds(10));
-
-            Log.LogInfo($"[{KubeNamespaces.NeonSystem}-db] {KubeNamespaces.NeonSystem} database is ready.");
+            connString = $"Host=db-citus-postgresql.{KubeNamespaces.NeonSystem};Username={username};Password={password};Database={KubeConst.NeonClusterOperatorDatabase}";
         }
 
         /// <summary>
@@ -117,7 +94,13 @@ namespace NeonSetupGrafana
         {
             Log.LogInfo($"[{KubeNamespaces.NeonSystem}-db] Configuring for Grafana.");
 
-            await CreateDatabaseAsync("grafana", "grafana");
+            await UpdateStatusAsync("in-progress");
+
+            var secret = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespaces.NeonSystem);
+
+            await CreateDatabaseAsync("grafana", KubeConst.NeonSystemDbServiceUser, Encoding.UTF8.GetString(secret.Data["password"]));
+
+            await UpdateStatusAsync("complete");
 
             Log.LogInfo($"[{KubeNamespaces.NeonSystem}-db] Finished setup for Grafana.");
         }
@@ -207,6 +190,28 @@ namespace NeonSetupGrafana
             catch (Exception e)
             {
                 Log.LogError(e);
+            }
+        }
+
+        private async Task UpdateStatusAsync(string status)
+        {
+            await using var conn = new NpgsqlConnection(connString);
+            {
+                await conn.OpenAsync();
+                await using (var cmd = new NpgsqlCommand($@"
+    INSERT
+        INTO
+        {StateTable} (KEY, value)
+    VALUES (@k, @v) ON
+    CONFLICT (KEY) DO
+    UPDATE
+    SET
+        value = @v", conn))
+                {
+                    cmd.Parameters.AddWithValue("k", KubeConst.NeonJobSetupHarbor);
+                    cmd.Parameters.AddWithValue("v", status);
+                    await cmd.ExecuteNonQueryAsync();
+                }
             }
         }
     }

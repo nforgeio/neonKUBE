@@ -88,6 +88,8 @@ namespace Neon.Kube
         // Instance members
 
         private ClusterProxy                cluster;
+        private string                      nodeImageUri;
+        private string                      nodeImagePath;
         private SetupController<XenClient>  xenController;
         private string                      driveTemplatePath;
         private string                      logFolder;
@@ -107,15 +109,25 @@ namespace Neon.Kube
         /// Creates an instance that is capable of provisioning a cluster on XenServer/XCP-ng servers.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
+        /// <param name="nodeImageUri">Optionally specifies the node image URI when preparing clusters.</param>
+        /// <param name="nodeImagePath">Optionally specifies the path to the local node image file.</param>
         /// <param name="logFolder">
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
-        public XenServerHostingManager(ClusterProxy cluster, string logFolder = null)
+        /// <remarks>
+        /// <note>
+        /// One of <paramref name="nodeImageUri"/> or <paramref name="nodeImagePath"/> must be specified.
+        /// </note>
+        /// </remarks>
+        public XenServerHostingManager(ClusterProxy cluster, string nodeImageUri = null, string nodeImagePath = null, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeImageUri) || !string.IsNullOrEmpty(nodeImagePath), $"{nameof(nodeImageUri)}/{nodeImagePath}");
 
             this.cluster                = cluster;
+            this.nodeImageUri           = nodeImageUri;
+            this.nodeImagePath          = nodeImagePath;
             this.cluster.HostingManager = this;
             this.logFolder              = logFolder;
             this.maxVmNameWidth         = cluster.Definition.Nodes.Max(node => node.Name.Length) + cluster.Definition.Hosting.Vm.GetVmNamePrefix(cluster.Definition).Length;
@@ -159,6 +171,7 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Assert(cluster != null, $"[{nameof(XenServerHostingManager)}] was created with the wrong constructor.");
+            Covenant.Requires<NotSupportedException>(!string.IsNullOrEmpty(nodeImageUri), $"[[{nameof(nodeImageUri)}] must be passed to the constructor.");
 
             // We need to ensure that the cluster has at least one ingress node.
 
@@ -236,7 +249,7 @@ namespace Neon.Kube
 
             xenController.AddWaitUntilOnlineStep();
             xenController.AddNodeStep("verify readiness", (controller, node) => VerifyReady(node));
-            xenController.AddNodeStep("virtual machine template", (controller, node) => CheckVmTemplate(node), parallelLimit: 1);
+            xenController.AddNodeStep("virtual machine template", (controller, node) => CheckVmTemplateAsync(node), parallelLimit: 1);
             xenController.AddNodeStep("create virtual machines", (controller, node) => ProvisionVM(node));
 
             controller.AddControllerStep(xenController);
@@ -372,99 +385,44 @@ namespace Neon.Kube
         /// Install the virtual machine template on the XenServer if it's not already present.
         /// </summary>
         /// <param name="xenSshProxy">The XenServer SSH proxy.</param>
-        private void CheckVmTemplate(NodeSshProxy<XenClient> xenSshProxy)
+        private async Task CheckVmTemplateAsync(NodeSshProxy<XenClient> xenSshProxy)
         {
             var xenHost      = xenSshProxy.Metadata;
             var templateName = $"neonkube-{KubeVersions.NeonKubeVersion}";
-            var nodeImageUri = KubeDownloads.GetNodeImageUri(this.HostingEnvironment, xenController);
 
             xenSshProxy.Status = "check: template";
 
             if (xenHost.Template.Find(templateName) == null)
             {
-                xenSshProxy.Status = "download: vm template (slow)";
-
-                // Download the GZIPed XVA template if it's not already present.  Note that we're 
-                // going to name the file the same as the file name from the URI and also that 
-                // templates are considered to be invariant.
-
-                var driveTemplateUri  = new Uri(KubeDownloads.GetNodeImageUri(this.HostingEnvironment, xenController));
-                var driveTemplateName = driveTemplateUri.Segments.Last();
-
-                driveTemplatePath = Path.Combine(KubeHelper.NodeImageFolder, driveTemplateName);
-
-                if (!File.Exists(driveTemplatePath))
+                if (nodeImagePath != null)
                 {
-                    xenController.SetGlobalStepStatus($"Download node image VHDX: [{nodeImageUri}]");
+                    Covenant.Assert(File.Exists(nodeImagePath));
 
-                    Task.Run(
-                        async () =>
-                        {
-                            using (var client = new HttpClient())
+                    driveTemplatePath = nodeImagePath;
+                }
+                else
+                {
+                    xenSshProxy.Status = "download: vm template";
+
+                    var driveTemplateUri  = new Uri(nodeImageUri);
+                    var driveTemplateName = driveTemplateUri.Segments.Last();
+
+                    driveTemplatePath = Path.Combine(KubeHelper.NodeImageFolder, driveTemplateName);
+
+                    if (!File.Exists(driveTemplatePath))
+                    {
+                        xenController.SetGlobalStepStatus($"Download node image XVA: [{nodeImageUri}]");
+
+                        await KubeHelper.DownloadNodeImageAsync(nodeImageUri, driveTemplatePath,
+                            progress =>
                             {
-                                // Download the file.
+                                xenController.SetGlobalStepStatus($"Downloading VHDX: [{progress}%] [{driveTemplateName}]");
 
-                                var response = await client.GetAsync(nodeImageUri, HttpCompletionOption.ResponseHeadersRead);
+                                return !xenController.CancelPending;
+                            });
 
-                                response.EnsureSuccessStatusCode();
-
-                                var contentLength   = response.Content.Headers.ContentLength;
-                                var contentEncoding = response.Content.Headers.ContentEncoding.SingleOrDefault();
-
-                                if (string.IsNullOrEmpty(contentEncoding) || !contentEncoding.Equals("gzip", StringComparison.InvariantCultureIgnoreCase))
-                                {
-                                    throw new KubeException($"[{nodeImageUri}] has unsupported [Content-Encoding={contentEncoding}].  Expecting [gzip]");
-                                }
-
-                                try
-                                {
-                                    using (var fileStream = new FileStream(driveTemplatePath, FileMode.Create, FileAccess.ReadWrite))
-                                    {
-                                        using (var downloadStream = await response.Content.ReadAsStreamAsync())
-                                        {
-                                            var buffer = new byte[64 * 1024];
-                                            int cb;
-
-                                            while (true)
-                                            {
-                                                cb = await downloadStream.ReadAsync(buffer, 0, buffer.Length);
-
-                                                if (cb == 0)
-                                                {
-                                                    break;
-                                                }
-
-                                                await fileStream.WriteAsync(buffer, 0, cb);
-
-                                                if (contentLength.HasValue)
-                                                {
-                                                    var percentComplete = (int)(((double)fileStream.Length / (double)contentLength) * 100.0);
-
-                                                    xenController.SetGlobalStepStatus($"Downloading VHDX: [{percentComplete}%] [{nodeImageUri}]");
-                                                }
-                                                else
-                                                {
-                                                    xenController.SetGlobalStepStatus($"Downloading VHDX: [{fileStream.Length} bytes] [{nodeImageUri}]");
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                                catch
-                                {
-                                    // Ensure that the template file is are deleted if there were any
-                                    // errors to help avoid using a corrupted template.
-
-                                    if (File.Exists(driveTemplatePath))
-                                    {
-                                        File.Delete(driveTemplatePath);
-                                    }
-
-                                    throw;
-                                }
-                            }
-
-                        }).Wait();
+                        xenController.SetGlobalStepStatus();
+                    }
                 }
 
                 xenController.SetGlobalStepStatus();

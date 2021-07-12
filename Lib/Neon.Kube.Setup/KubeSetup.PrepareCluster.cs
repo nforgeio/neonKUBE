@@ -39,6 +39,7 @@ using Neon.Collections;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
+using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
 using Neon.Tasks;
@@ -51,6 +52,7 @@ namespace Neon.Kube
         /// Constructs the <see cref="ISetupController"/> to be used for preparing a cluster.
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="nodeImageUri">The node image URI.</param>
         /// <param name="maxParallel">
         /// Optionally specifies the maximum number of node operations to be performed in parallel.
         /// This <b>defaults to 500</b> which is effectively infinite.
@@ -75,18 +77,22 @@ namespace Neon.Kube
         /// Optionally specifies that the operation is to be performed in <b>automation mode</b>, where the
         /// current neonDESKTOP state will not be impacted.
         /// </param>
+        /// <param name="headendUri">Optionally override the headend service URI</param>
         /// <returns>The <see cref="ISetupController"/>.</returns>
         /// <exception cref="KubeException">Thrown when there's a problem.</exception>
         public static ISetupController CreateClusterPrepareController(
-            ClusterDefinition           clusterDefinition, 
+            ClusterDefinition           clusterDefinition,
+            string                      nodeImageUri,
             int                         maxParallel           = 500,
             IEnumerable<IPEndPoint>     packageCacheEndpoints = null,
             bool                        unredacted            = false, 
             bool                        debugMode             = false, 
             string                      baseImageName         = null,
-            bool                        automate              = false)
+            bool                        automate              = false,
+            string                      headendUri            = "https://headend.neoncloud.io")
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeImageUri), nameof(nodeImageUri));
             Covenant.Requires<ArgumentException>(maxParallel > 0, nameof(maxParallel));
             Covenant.Requires<ArgumentNullException>(!debugMode || !string.IsNullOrEmpty(baseImageName), nameof(baseImageName));
 
@@ -148,7 +154,7 @@ namespace Neon.Kube
 
             // Configure the hosting manager.
 
-            var hostingManager = new HostingManagerFactory(() => HostingLoader.Initialize()).GetManager(cluster);
+            var hostingManager = new HostingManagerFactory(() => HostingLoader.Initialize()).GetManagerWithNodeImageUri(cluster, nodeImageUri);
 
             if (hostingManager == null)
             {
@@ -187,6 +193,7 @@ namespace Neon.Kube
             controller.Add(KubeSetupProperty.HostingManager, hostingManager);
             controller.Add(KubeSetupProperty.HostingEnvironment, hostingManager.HostingEnvironment);
             controller.Add(KubeSetupProperty.AutomationFolder, automationFolder);
+            controller.Add(KubeSetupProperty.HeadendUri, headendUri);
 
             // Configure the cluster preparation steps.
 
@@ -330,6 +337,26 @@ namespace Neon.Kube
                 (state, node) =>
                 {
                     node.PrepareNode(controller);
+                });
+
+            controller.AddGlobalStep("generate neoncluster.io domain",
+                async (controller) =>
+                {
+                    var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
+
+                    if (hostingEnvironment == HostingEnvironment.Wsl2)
+                    {
+                        var enterpriseHelper = NeonHelper.ServiceContainer.GetService<IEnterpriseHelper>();
+                        var dnsAddress = enterpriseHelper.GetWsl2Address().ToString();
+
+                        using (var jsonClient = new JsonClient())
+                        {
+                            var headendUri = new Uri(controller.Get<string>(KubeSetupProperty.HeadendUri));
+                            jsonClient.BaseAddress = headendUri;
+                            clusterLogin.ClusterDefinition.Domain = await jsonClient.GetAsync<string>($"/cluster/domain?ipAddress={dnsAddress}");
+                            clusterLogin.Save();
+                        }
+                    }
                 });
 
             // Some hosting managers may have to some additional work after

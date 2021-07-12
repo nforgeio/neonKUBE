@@ -29,6 +29,8 @@ namespace Neon.Kube
     /// <summary>
     /// Specifies deployment related component versions for the current
     /// neonKUBE release.
+    /// 
+    /// Kubernetes versions can be found here: https://github.com/kubernetes/kubernetes/blob/v1.21.2/cmd/kubeadm/app/constants/constants.go
     /// </summary>
     public static class KubeVersions
     {
@@ -40,32 +42,32 @@ namespace Neon.Kube
         /// <summary>
         /// The version of Kubernetes to be installed.
         /// </summary>
-        public const string KubernetesVersion = "1.19.5";
+        public const string KubernetesVersion = "1.21.2";
 
         /// <summary>
         /// The version of the Kubernetes dashboard to be installed.
         /// </summary>
-        public const string KubernetesDashboardVersion = "2.1.0";
+        public const string KubernetesDashboardVersion = "2.3.1";
 
         /// <summary>
         /// The version of the Kubernetes dashboard metrics scraper to be installed.
         /// </summary>
-        public const string KubernetesDashboardMetricsVersion = "v1.0.1";
+        public const string KubernetesDashboardMetricsVersion = "v1.0.6";
 
         /// <summary>
         /// The package version for Kubernetes admin service.
         /// </summary>
-        public const string KubeAdminPackageVersion = "1.19.5-00";
+        public const string KubeAdminPackageVersion = "1.21.2-00";
 
         /// <summary>
         /// The package version for the Kubernetes cli.
         /// </summary>
-        public const string KubeCtlPackageVersion = "1.19.5-00";
+        public const string KubeCtlPackageVersion = "1.21.2-00";
 
         /// <summary>
         /// The package version for the Kubelet service.
         /// </summary>
-        public const string KubeletPackageVersion = "1.19.5-00";
+        public const string KubeletPackageVersion = "1.21.2-00";
 
         /// <summary>
         /// The version of CRI-O container runtime to be installed.
@@ -116,5 +118,10 @@ namespace Neon.Kube
         /// The version of AlertManager to be installed.
         /// </summary>
         public const string AlertManagerVersion = "v0.21.0";
+
+        /// <summary>
+        /// The version of pause image to beused.
+        /// </summary>
+        public const string PauseVersion = "3.4.1";
     }
 }

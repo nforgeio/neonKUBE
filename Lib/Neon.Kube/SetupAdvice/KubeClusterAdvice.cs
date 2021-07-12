@@ -170,6 +170,16 @@ namespace Neon.Kube
         public static string Grafana = "grafana";
 
         /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Grafana Agent</b> service.
+        /// </summary>
+        public static string GrafanaAgent = "grafana-agent";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Grafana Agent</b> service.
+        /// </summary>
+        public static string GrafanaAgentOperator = "grafana-agent-operator";
+
+        /// <summary>
         /// Identifies the neonKUBE cluster's <b>Harbor</b> service.
         /// </summary>
         public static string Harbor = "harbor";
@@ -238,6 +248,11 @@ namespace Neon.Kube
         /// Identifies the neonKUBE cluster's <b>Kubernetes Dashboard</b> service.
         /// </summary>
         public static string KubernetesDashboard = "kubernetes-dashboard";
+
+        /// <summary>
+        /// Identifies the <b>Kube State Metrics</b> service.
+        /// </summary>
+        public static string KubeStateMetrics = "kube-state-metrics";
 
         /// <summary>
         /// Identifies the neonKUBE cluster's <b>Kaili</b> service.

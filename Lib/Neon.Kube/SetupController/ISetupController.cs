@@ -205,8 +205,8 @@ namespace Neon.Kube
         /// Performs the setup operation steps in the in the order they were added to the controller.
         /// </summary>
         /// <param name="leaveNodesConnected">Optionally leave the node proxies connected after setup completed.</param>
-        /// <returns><c>true</c> if all steps completed successfully.</returns>
-        bool Run(bool leaveNodesConnected = false);
+        /// <returns>The final disposition of the setup run.</returns>
+        SetupDisposition Run(bool leaveNodesConnected = false);
 
         /// <summary>
         /// Adds an <see cref="IDisposable"/> instance to the controller so that they

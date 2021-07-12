@@ -38,21 +38,39 @@ namespace Neon.Kube.Models.Headend
         }
 
         /// <summary>
-        /// Identifies the download by name.
+        /// Identifies the download.
         /// </summary>
-        [JsonProperty(PropertyName = "Name")]
+        [JsonProperty(PropertyName = "Name", Required = Required.Always)]
         public string Name { get; set; }
 
         /// <summary>
         /// The download version (this may be <c>null</c>).
         /// </summary>
-        [JsonProperty(PropertyName = "Version")]
+        [JsonProperty(PropertyName = "Version", Required = Required.Always)]
         public string Version { get; set; }
+
+        /// <summary>
+        /// The download file name.
+        /// </summary>
+        [JsonProperty(PropertyName = "Filename", Required = Required.AllowNull)]
+        public string Filename { get; set; }
+
+        /// <summary>
+        /// The overall size of the download.
+        /// </summary>
+        [JsonProperty(PropertyName = "Size", Required = Required.Always)]
+        public long Size { get; set; }
+
+        /// <summary>
+        /// The MD5 hash for the entire download.
+        /// </summary>
+        [JsonProperty(PropertyName = "Md5", Required = Required.Always)]
+        public string Md5 { get; set; }
 
         /// <summary>
         /// The download parts.
         /// </summary>
-        [JsonProperty(PropertyName = "Parts")]
-        public List<DownloadPart> Parts { get; set; }
+        [JsonProperty(PropertyName = "Parts", Required = Required.Always)]
+        public List<DownloadPart> Parts { get; set; } = new List<DownloadPart>();
     }
 }

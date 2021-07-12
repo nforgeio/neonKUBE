@@ -57,6 +57,17 @@ else
     $config = "Release"
 }
 
+#------------------------------------------------------------------------------
+# $todo(jefflill):
+#
+# Code documentation builds are temporarily disabled until we 
+# port to DocFX.  SHFB doesn't work for multi-targeted projects.
+#
+#   https://github.com/nforgeio/neonKUBE/issues/1206
+
+$codedoc = $false
+#------------------------------------------------------------------------------
+
 $msbuild     = $env:MSBUILDPATH
 $nfRoot      = $env:NF_ROOT
 $nfSolution  = "$nfRoot\neonKUBE.sln"
@@ -112,13 +123,13 @@ function PublishCore
 
     $targetPath = $null
 
-    ForEach ($path in $potentialTargets)
+    foreach ($path in $potentialTargets)
     {
         if ([System.IO.File]::Exists($path))
         {
             $targetPath = $path
             Write-Output("*** Publish target exists at: $path")
-            Break
+            break
         }
         else
         {
@@ -159,19 +170,15 @@ Push-Cwd $nfRoot | Out-Null
 
 try
 {
-    # We see somewhat random build problems when Visual Studio has the solution open,
-    # so have the user close Visual Studio instances first.
-
-    Ensure-VisualStudioNotRunning
-
-    # Ensure that all of the referenced nuget packages are restored.
-
-    dotnet restore
-
     # Build the solution.
 
     if (-not $nobuild)
     {
+        # We see somewhat random build problems when Visual Studio has the solution open,
+        # so have the user close Visual Studio instances first.
+
+        Ensure-VisualStudioNotRunning
+
         # Clear the NF_BUILD folder and delete any [bin] or [obj] folders
         # to be really sure we're doing a clean build.  I've run into 
         # situations where I've upgraded SDKs or Visual Studio and Files
@@ -183,9 +190,9 @@ try
         # Clean and build the solution.
 
         Write-Info ""
-        Write-Info "**********************************************************************"
-        Write-Info "***                         CLEAN SOLUTION                         ***"
-        Write-Info "**********************************************************************"
+        Write-Info "*******************************************************************************"
+        Write-Info "***                           CLEAN SOLUTION                                ***"
+        Write-Info "*******************************************************************************"
         Write-Info ""
 
         & "$msbuild" "$nfSolution" $buildConfig -t:Clean -m -verbosity:quiet
@@ -196,9 +203,24 @@ try
         }
 
         Write-Info ""
-        Write-Info "**********************************************************************"
-        Write-Info "***                         BUILD SOLUTION                         ***"
-        Write-Info "**********************************************************************"
+        Write-Info "*******************************************************************************"
+        Write-Info "***                           RESTORE PACKAGES                              ***"
+        Write-Info "*******************************************************************************"
+        Write-Info ""
+
+        dotnet restore
+
+        & "$msbuild" "$nfSolution" -t:restore -verbosity:quiet
+
+        if (-not $?)
+        {
+            throw "ERROR: RESTORE FAILED"
+        }
+
+        Write-Info ""
+        Write-Info "*******************************************************************************"
+        Write-Info "***                           BUILD SOLUTION                                ***"
+        Write-Info "*******************************************************************************"
         Write-Info ""
 
         & "$msbuild" "$nfSolution" $buildConfig -restore -m -verbosity:quiet
@@ -207,6 +229,19 @@ try
         {
             throw "ERROR: BUILD FAILED"
         }
+
+        # The build generates source files like [.NETCoreApp,Version=v5.0.AssemblyAttributes.cs] within
+        # project [obj] configuration subdirectorties.  This can result in duplicate attribute compiler
+        # errors because Visual Studio seems to be including these files from all of the configuration
+        # subfolders rather than just for the current build configuration.  This isn't reproducable for 
+        # simple solutions, so we haven't reported this to MSFT.
+        #
+        # We mostly run into this issue after performing a script based RELEASE build and then go back 
+        # and try to build DEBUG with Visual Studio.  The workaround is to simply remove all of these
+        # generated files here.
+
+        & $nfToolBin\neon-build clean-attr "$nfRoot"
+        ThrowOnExitCode
     }
 
     # Build the Neon tools.

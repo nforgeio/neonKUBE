@@ -245,6 +245,13 @@ namespace Neon.Deployment
                     var name  = fields[0].Trim();
                     var value = fields[1].Trim();
 
+                    if (value == string.Empty)
+                    {
+                        // Ignore metadata with empty values.
+
+                        continue;
+                    }
+
                     if (name.StartsWith(customPrefix))
                     {
                         name = name.Substring(customPrefix.Length);
@@ -252,7 +259,29 @@ namespace Neon.Deployment
                         metadata = $"{name}={value}";
                     }
 
-                    sbMetadata.AppendWithSeparator($"{name}={value}", ",");
+                    // Some headers are considered to be "system defined" and need to be 
+                    // passed as command line options.  We'll separate those out, add the
+                    // necessary options to the arguments and add any remaining headers
+                    // to the metadata builder.
+
+                    switch (name.ToLowerInvariant())
+                    {
+                        case "content-type":
+                        case "cache-control":
+                        case "content-disposition":
+                        case "content-encoding":
+                        case "content-language":
+                        case "expires":
+
+                            args.Add("--" + name.ToLowerInvariant());
+                            args.Add(value);
+                            break;
+
+                        default:
+
+                            sbMetadata.AppendWithSeparator($"{name}={value}", ",");
+                            break;
+                    }
                 }
             }
 

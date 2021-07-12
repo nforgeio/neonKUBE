@@ -609,6 +609,7 @@ EOF
                     UpdateHostname();
                     NodeInitialize(controller);
                     NodeInstallCriO(controller);
+                    NodeInstallIPVS(controller);
                     NodeInstallPodman(controller);
                     NodeInstallKubernetes(controller);
                     SetupKublet(controller);

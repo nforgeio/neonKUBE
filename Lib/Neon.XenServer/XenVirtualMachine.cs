@@ -38,10 +38,12 @@ namespace Neon.XenServer
             {
                 this.Uuid = uuid;
             }
+
             if (rawProperties.TryGetValue("name-label", out var nameLabel))
             {
                 this.NameLabel = nameLabel;
             }
+
             if (rawProperties.TryGetValue("power-state", out var powerState))
             {
                 this.PowerState = powerState;

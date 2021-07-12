@@ -26,6 +26,8 @@
     <PackageTags></PackageTags>
     <NoDefaultExcludes>true</NoDefaultExcludes>
     <PackageIconUrl />
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -54,6 +56,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="..\..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
     <None Include="..\nuget-icon.png">
       <Pack>True</Pack>
       <PackagePath></PackagePath>

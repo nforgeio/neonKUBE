@@ -60,6 +60,7 @@ namespace Neon.Kube
         /// Returns the <see cref="HostingManager"/> for provisioning a specific environment.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
+        /// <param name="nodeImageUri">The node image URI.</param>
         /// <param name="logFolder">
         /// <para>
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
@@ -74,7 +75,24 @@ namespace Neon.Kube
         /// could be located for the specified cluster environment.
         /// </returns>
         /// <exception cref="KubeException">Thrown if the multiple managers implement support for the same hosting environment.</exception>
-        HostingManager GetManager(ClusterProxy cluster, string logFolder = null);
+        HostingManager GetManagerWithNodeImageUri(ClusterProxy cluster, string nodeImageUri, string logFolder = null);
+
+        /// <summary>
+        /// Returns the <see cref="HostingManager"/> for provisioning a cluster from
+        /// an already downloaded image file already downloaded.
+        /// </summary>
+        /// <param name="cluster">The cluster being managed.</param>
+        /// <param name="nodeImagePath">Specifies the path to the local node image file.</param>
+        /// <param name="logFolder">
+        /// The folder where log files are to be written, otherwise or <c>null</c> or 
+        /// empty if logging is disabled.
+        /// </param>
+        /// <returns>
+        /// The <see cref="HostingManager"/> or <c>null</c> if no hosting manager
+        /// could be located for the specified cluster environment.
+        /// </returns>
+        /// <exception cref="KubeException">Thrown if the multiple managers implement support for the same hosting environment.</exception>
+        HostingManager GetManagerWithNodeImageFile(ClusterProxy cluster, string nodeImagePath = null, string logFolder = null);
 
         /// <summary>
         /// Determines whether a hosting environment is hosted in the cloud.

@@ -34,6 +34,7 @@ using System.Threading.Tasks;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
+using Neon.Kube.Models.Headend;
 using Neon.Net;
 using Neon.Time;
 
@@ -59,9 +60,15 @@ namespace Neon.Kube
         HostingManager GetManager(HostingEnvironment environment);
 
         /// <summary>
-        /// Returns the <see cref="HostingManager"/> for provisioning a specific environment.
+        /// Returns the <see cref="HostingManager"/> for provisioning a cluster by
+        /// downloading a node image from a URI that references a single image 
+        /// file or a multi-part <see cref="Download"/> image.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
+        /// <param name="nodeImageUri">
+        /// Optionally specifies the node image URI.  This is required when
+        /// creating a hosting manager for provisioning a cluster.
+        /// </param>
         /// <param name="logFolder">
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
@@ -71,7 +78,24 @@ namespace Neon.Kube
         /// could be located for the specified cluster environment.
         /// </returns>
         /// <exception cref="KubeException">Thrown if the multiple managers implement support for the same hosting environment.</exception>
-        HostingManager GetManager(ClusterProxy cluster, string logFolder = null);
+        HostingManager GetManagerWithNodeImageUri(ClusterProxy cluster, string nodeImageUri, string logFolder = null);
+
+        /// <summary>
+        /// Returns the <see cref="HostingManager"/> for provisioning a cluster from
+        /// an already downloaded image file already downloaded.
+        /// </summary>
+        /// <param name="cluster">The cluster being managed.</param>
+        /// <param name="nodeImagePath">Specifies the path to the local node image file.</param>
+        /// <param name="logFolder">
+        /// The folder where log files are to be written, otherwise or <c>null</c> or 
+        /// empty if logging is disabled.
+        /// </param>
+        /// <returns>
+        /// The <see cref="HostingManager"/> or <c>null</c> if no hosting manager
+        /// could be located for the specified cluster environment.
+        /// </returns>
+        /// <exception cref="KubeException">Thrown if the multiple managers implement support for the same hosting environment.</exception>
+        HostingManager GetManagerWithNodeImageFile(ClusterProxy cluster, string nodeImagePath = null, string logFolder = null);
 
         /// <summary>
         /// Determines whether a hosting environment is hosted in the cloud.

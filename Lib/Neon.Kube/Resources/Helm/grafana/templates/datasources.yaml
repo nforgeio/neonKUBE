@@ -1,0 +1,29 @@
+apiVersion: integreatly.org/v1alpha1
+kind: GrafanaDataSource
+metadata:
+  name: Prometheus
+spec:
+  name: Prometheus
+  datasources:
+    - name: Prometheus
+      type: prometheus
+      access: proxy
+      url: http://cortex:9009/api/prom
+      isDefault: true
+      version: 1
+      editable: false
+      jsonData:
+        tlsSkipVerify: true
+        timeInterval: "5s"
+---
+apiVersion: integreatly.org/v1alpha1
+kind: GrafanaDataSource
+metadata:
+  name: Loki
+spec:
+  name: Loki
+  datasources:
+    - name: Loki
+      type: loki
+      access: proxy
+      url: http://loki:3100

@@ -2420,6 +2420,74 @@ $@"- name: StorageType
         }
 
         /// <summary>
+        /// Installs Kube State Metrics to the monitoring namespace.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        /// <param name="master">The master node where the operation will be performed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task InstallKubeStateMetricsAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
+        {
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
+
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var advice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice).GetServiceAdvice(KubeClusterAdvice.KubeStateMetrics);
+
+            await master.InvokeIdempotentAsync("setup/monitoring-kube-state-metrics",
+                async () =>
+                {
+                    controller.LogProgress(master, verb: "deploy", message: "kube-state-metrics");
+
+                    var values = new Dictionary<string, object>();
+
+
+                    await master.InstallHelmChartAsync(controller, "kube_state_metrics", releaseName: "kube-state-metrics", @namespace: KubeNamespaces.NeonMonitor, values: values);
+                });
+
+            await master.InvokeIdempotentAsync("setup/monitoring-kube-state-metrics-ready",
+                async () =>
+                {
+                    controller.LogProgress(master, verb: "wait", message: "for kube-state-metrics");
+
+                    await WaitForStatefulSetAsync(controller, KubeNamespaces.NeonMonitor, "kube-state-metrics");
+                });
+        }
+
+        /// <summary>
+        /// Installs Reloader to the Neon system nnamespace.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        /// <param name="master">The master node where the operation will be performed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task InstallReloaderAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
+        {
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
+
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var advice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice).GetServiceAdvice(KubeClusterAdvice.KubeStateMetrics);
+
+            await master.InvokeIdempotentAsync("setup/reloader",
+                async () =>
+                {
+                    controller.LogProgress(master, verb: "deploy", message: "reloader");
+
+                    var values = new Dictionary<string, object>();
+
+
+                    await master.InstallHelmChartAsync(controller, "reloader", releaseName: "reloader", @namespace: KubeNamespaces.NeonMonitor, values: values);
+                });
+
+            await master.InvokeIdempotentAsync("setup/reloader-ready",
+                async () =>
+                {
+                    controller.LogProgress(master, verb: "wait", message: "for reloader");
+
+                    await WaitForDeploymentAsync(controller, KubeNamespaces.NeonSystem, "reloader");
+                });
+        }
+
+        /// <summary>
         /// Installs Grafana to the monitoring namespace.
         /// </summary>
         /// <param name="controller">The setup controller.</param>

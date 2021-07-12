@@ -41,17 +41,6 @@ Push-Location $scriptFolder | Out-Null
 Pop-Location | Out-Null
 
 #------------------------------------------------------------------------------
-# Call this after native commands to check for non-zero exit codes.
-
-function ThrowOnExitCode 
-{
-    if ($LastExitCode -ne 0)
-    {
-        throw "ERROR: exitcode=$LastExitCode"
-    }
-}
-
-#------------------------------------------------------------------------------
 # Logs into GitHub using a GITHUB_PAT.
 #
 # ARGUMENTS:
@@ -187,12 +176,12 @@ function New-GitHubIssue
             $list        = $(ConvertFrom-Json $json -AsHashTable)
             $issueNumber = -1
 
-            ForEach ($issue in $list)
+            foreach ($issue in $list)
             {
                 if ($issue.title -eq $title)
                 {
                     $issueNumber = $issue.number
-                    Break
+                    break
                 }
             }
 
@@ -215,7 +204,7 @@ function New-GitHubIssue
 
             $request.assignees = @()
 
-            ForEach ($assignee in $assignees)
+            foreach ($assignee in $assignees)
             {
                 $request.assignees += $assignee
             }
@@ -224,7 +213,7 @@ function New-GitHubIssue
 
             $request.labels = @()
 
-            ForEach ($label in $labels)
+            foreach ($label in $labels)
             {
                 $request.labels += $label
             }
@@ -385,7 +374,7 @@ function Parse-GitHubRepo
 }
 
 #==============================================================================
-# GitHub Action utilities
+# GitHub Action utilities                                                     #
 #==============================================================================
 
 #------------------------------------------------------------------------------
@@ -711,7 +700,7 @@ function Write-ActionOutputFile
     $buildLogSHFBErrorRegex     = New-Object "System.Text.RegularExpressions.Regex" -ArgumentList "^\s*SHFB\s\:\serror"
     $buildLogSHFBWarningRegex   = New-Object "System.Text.RegularExpressions.Regex" -ArgumentList "^\s*SHFB\s\:\swarning"
 
-    ForEach ($line in $lines)
+    foreach ($line in $lines)
     {
         $color = $null
 
@@ -860,6 +849,7 @@ function Add-ActionPath
 #
 #   name        - the value name.
 #   required    - optionally indicates that the value is required
+#   default     - optionally specifies the default value
 
 function Get-ActionInput
 {
@@ -868,7 +858,9 @@ function Get-ActionInput
         [Parameter(Position=0, Mandatory=$true)]
         [string]$name,
         [Parameter(Position=1, Mandatory=$false)]
-        [bool]$required = $false
+        [bool]$required = $false,
+        [Parameter(Position=2, Mandatory=$false)]
+        [string]$default = $null
     )
 
     if ([System.String]::IsNullOrEmpty($name))
@@ -879,9 +871,16 @@ function Get-ActionInput
     $name  = "INPUT_$name"
     $value = [System.Environment]::GetEnvironmentVariable($name)
 
-    if ($required -and [System.String]::IsNullOrEmpty($value))
+    if ([System.String]::IsNullOrEmpty($value))
     {
-        throw "[$name] input is required."
+        if (!$required)
+        {
+            return $default
+        }
+        else
+        {
+            throw "[$name] input is required."
+        }
     }
 
     return $value
@@ -895,6 +894,7 @@ function Get-ActionInput
 #
 #   name        - the value name.
 #   required    - optionally indicates that the value is required
+#   default     - optionally specifies the default value
 
 function Get-ActionInputBool
 {
@@ -903,7 +903,9 @@ function Get-ActionInputBool
         [Parameter(Position=0, Mandatory=$true)]
         [string]$name,
         [Parameter(Position=1, Mandatory=$false)]
-        [bool]$required = $false
+        [bool]$required = $false,
+        [Parameter(Position=2, Mandatory=$false)]
+        [bool]$default = $false
     )
 
     if ([System.String]::IsNullOrEmpty($name))
@@ -914,9 +916,16 @@ function Get-ActionInputBool
     $name  = "INPUT_$name"
     $value = [System.Environment]::GetEnvironmentVariable($name)
 
-    if ($required -and [System.String]::IsNullOrEmpty($value))
+    if ([System.String]::IsNullOrEmpty($value))
     {
-        throw "[$name] input is required."
+        if (!$required)
+        {
+            return $default
+        }
+        else
+        {
+            throw "[$name] input is required."
+        }
     }
 
     return $value -eq "true"
@@ -929,6 +938,7 @@ function Get-ActionInputBool
 #
 #   name        - the value name.
 #   required    - optionally indicates that the value is required
+#   default     - optionally specifies the default value
 
 function Get-ActionInputInt32
 {
@@ -937,7 +947,9 @@ function Get-ActionInputInt32
         [Parameter(Position=0, Mandatory=$true)]
         [string]$name,
         [Parameter(Position=1, Mandatory=$false)]
-        [bool]$required = $false
+        [bool]$required = $false,
+        [Parameter(Position=2, Mandatory=$false)]
+        [int]$default = 0
     )
 
     if ([System.String]::IsNullOrEmpty($name))
@@ -948,9 +960,16 @@ function Get-ActionInputInt32
     $name  = "INPUT_$name"
     $value = [System.Environment]::GetEnvironmentVariable($name)
 
-    if ($required -and [System.String]::IsNullOrEmpty($value))
+    if ([System.String]::IsNullOrEmpty($value))
     {
-        throw "[$name] input is required."
+        if (!$required)
+        {
+            return $default
+        }
+        else
+        {
+            throw "[$name] input is required."
+        }
     }
 
     return [System.Int32]::Parse($value)
@@ -1020,4 +1039,249 @@ function Invoke-ActionWorkflow
     {
         Logout-GitHubUser
     }
+}
+
+#==============================================================================
+# GitHub Release utilities                                                    #
+#==============================================================================
+
+#------------------------------------------------------------------------------
+# Creates a new GitHub release.
+#
+# ARGUMENTS:
+#
+#   repo        - Identifies the target repo (like: "OWNER/REPO" or "github.com/OWNER/REPO")
+#   tagName     - Specifies the tag to be referenced by the release
+#   releaseName - Optionally specifies the release name (defaults to [tagName])
+#   body        - Optionally specifies the markdown formatted release notes
+#   draft       - Optionally indicates that the release won't be published immediately
+#   prerelease  - Optionally indicates that the release is not production ready
+#   branch      - Optionally identifies the branch to be tagged.  This defaults to [master] 
+#                 or [main] when either of those branches are already present
+#
+# RETURNS:
+#
+#   The [Octokit.Release] object.
+
+function New-GitHubRelease
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$repo,
+        [Parameter(Position=1, Mandatory=$true)]
+        [string]$tagName,
+        [Parameter(Mandatory=$false)]
+        [string]$releaseName = $null,
+        [Parameter(Mandatory=$false)]
+        [string]$body = $null,
+        [Parameter(Mandatory=$false)]
+        [switch]$draft = $false,
+        [Parameter(Mandatory=$false)]
+        [switch]$prerelease = $false,
+        [Parameter(Mandatory=$false)]
+        [string]$branch = $null
+    )
+
+    return [Neon.Deployment.GitHub]::Release.Create($repo, $tagName, $releaseName, $body, $draft, $prerelease, $branch)
+}
+
+#------------------------------------------------------------------------------
+# Updates a GitHub release.
+#
+# ARGUMENTS:
+#
+#   repo            - Identifies the target repo (like: "OWNER/REPO" or "github.com/OWNER/REPO")
+#   release         - Specifies the [Octokit.Release] being modified
+#   releaseUpdate   - Specifies the [Octokit.ReleaseUpdate] with the revisions
+#
+# RETURNS:
+#
+#   The updated [Octokit.Release] object.
+
+function Update-GitHubRelease
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$repo,
+        [Parameter(Position=1, Mandatory=$true)]
+        [object]$release,
+        [Parameter(Position=2, Mandatory=$true)]
+        [object]$releaseUpdate
+    )
+
+    return [Neon.Deployment.GitHub]::Release.Update($repo, $release, $releaseUpdate)
+}
+
+#------------------------------------------------------------------------------
+# Lists the releases for a GitHub repo.
+#
+# ARGUMENTS:
+#
+#   repo        - Identifies the target repo (like: "OWNER/REPO" or "github.com/OWNER/REPO")
+#
+# RETURNS:
+#
+#   A list of [Octokit.Release] instances.
+
+function Get-GitHubReleases
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$repo
+    )
+
+    return [Neon.Deployment.GitHub]::Release.List($repo)
+}
+
+#------------------------------------------------------------------------------
+# Obtains a specific for a GitHub repo release.
+#
+# ARGUMENTS:
+#
+#   repo        - Identifies the target repo (like: "OWNER/REPO" or "github.com/OWNER/REPO")
+#   tagName     - Identifies the release by its assocated tag
+#
+# RETURNS:
+#
+#   The requested [Octokit.Release] or $null when the release doesn't exist.
+
+function Get-GitHubRelease
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$repo,
+        [Parameter(Position=1, Mandatory=$true)]
+        [string]$tagName
+    )
+
+    return [Neon.Deployment.GitHub]::Release.Get($repo, $tagName)
+}
+
+#------------------------------------------------------------------------------
+# Uploads an asset file to a GitHub release.  Any existing asset with same
+# name will be replaced.
+#
+# ARGUMENTS:
+#
+#   repo            - Identifies the target repo (like: "OWNER/REPO" or "github.com/OWNER/REPO")
+#   release         - Specifies the target release [Octokit:Release]
+#   assetPath       - Path to the source asset file
+#   assetName       - Optionally specifies the file name to assign to the asset.
+#                     This defaults to the file name from [assetPath] 
+#   contentType     - Optionally specifies the asset's Content-Type
+#
+# RETURNS:
+#
+#   The new [Octokit.ReleaseAsset] object.
+
+function New-GitHubReleaseAssetFromFile
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$repo,
+        [Parameter(Position=1, Mandatory=$true)]
+        [object]$release,
+        [Parameter(Position=2, Mandatory=$true)]
+        [string]$assetPath,
+        [Parameter(Mandatory=$false)]
+        [string]$assetName = $null,
+        [Parameter(Mandatory=$false)]
+        [string]$contentType = $null
+    )
+
+    return [Neon.Deployment.GitHub]::Release.UploadAsset($repo, $release, $assetPath, $assetName, $contentType)
+}
+
+#------------------------------------------------------------------------------
+# Uploads asset data from a stream to a GitHub release.  Any existing asset 
+# with same name will be replaced.
+#
+# ARGUMENTS:
+#
+#   repo            - Identifies the target repo (like: "OWNER/REPO" or "github.com/OWNER/REPO")
+#   release         - Specifies the target release [Octokit:Release]
+#   assetStream     - The [System.IO.Stream] holding the asset data
+#   assetName       - Optionally specifies the file name to assign to the asset.
+#                     This defaults to the file name from [assetPath] 
+#   contentType     - Optionally specifies the asset's Content-Type
+#
+# RETURNS:
+#
+#   The new [Octokit.ReleaseAsset] object.
+
+function New-GitHubReleaseAssetFromStream
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$repo,
+        [Parameter(Position=1, Mandatory=$true)]
+        [object]$release,
+        [Parameter(Position=2, Mandatory=$true)]
+        [object]$assetStream,
+        [Parameter(Mandatory=$false)]
+        [string]$assetName = $null,
+        [Parameter(Mandatory=$false)]
+        [string]$contentType = $null
+    )
+
+    return [Neon.Deployment.GitHub]::Release.UploadAsset($repo, $release, $assetStream, $assetName, $contentType)
+}
+
+#------------------------------------------------------------------------------
+# Obtains the URI to be used to download an asset from a GitHub release.
+#
+# ARGUMENTS:
+#
+#   repo        - Identifies the target repo (like: "OWNER/REPO" or "github.com/OWNER/REPO")
+#   release     - Specifies the target release [Octokit:Release]
+#   asset       - Identifies the target release asset [OctoKit.ReleaseAsset]
+#
+# RETURNS:
+#
+#   The asset's download URI.
+
+function Get-GitHubReleaseAssetUri
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$repo,
+        [Parameter(Position=1, Mandatory=$true)]
+        [object]$release,
+        [Parameter(Position=2, Mandatory=$true)]
+        [object]$asset
+    )
+
+    return [Neon.Deployment.GitHub]::Release.GetAssetUri($repo, $release, $asset)
+}
+
+#------------------------------------------------------------------------------
+# Deletes a GitHub release.
+#
+# ARGUMENTS:
+#
+#   repo        - Identifies the target repo (like: "OWNER/REPO" or "github.com/OWNER/REPO")
+#   release     - Specifies the target release [Octokit:Release]
+#
+# REMARKS:
+#
+#   This fails silently when the target release doesn't exist.
+
+function Remove-GitHubRelease
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$repo,
+        [Parameter(Position=1, Mandatory=$true)]
+        [object]$release
+    )
+
+    return [Neon.Deployment.GitHub]::Release.Remove($repo, $release)
 }

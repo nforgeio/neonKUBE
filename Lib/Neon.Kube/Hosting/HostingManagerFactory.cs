@@ -16,26 +16,7 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
 using System.Diagnostics.Contracts;
-using System.Dynamic;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Reflection;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-
-using Neon.Common;
-using Neon.Cryptography;
-using Neon.IO;
-using Neon.Net;
-using Neon.Time;
 
 namespace Neon.Kube
 {
@@ -90,13 +71,23 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public HostingManager GetManager(ClusterProxy cluster, string logFolder = null)
+        public HostingManager GetManagerWithNodeImageUri(ClusterProxy cluster, string nodeImageUri = null, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
 
             CheckInitialized();
 
-            return Loader.GetManager(cluster, logFolder);
+            return Loader.GetManagerWithNodeImageUri(cluster, nodeImageUri, logFolder);
+        }
+
+        /// <inheritdoc/>
+        public HostingManager GetManagerWithNodeImageFile(ClusterProxy cluster, string nodeImagePath = null, string logFolder = null)
+        {
+            Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
+
+            CheckInitialized();
+
+            return Loader.GetManagerWithNodeImageFile(cluster, nodeImagePath, logFolder);
         }
 
         /// <inheritdoc/>

@@ -17,10 +17,66 @@
 # limitations under the License.
 
 # Publishes DEBUG builds of the NeonForge Nuget packages to the repo
-# at http://nuget-dev.neoncloud.io so intermediate builds can be shared 
+# at https://nuget-dev.neoncloud.io so intermediate builds can be shared 
 # by maintainers.
 #
+# USAGE: pwsh -file ,/neonkube-nuget-dev.ps1 [OPTIONS]
+#
+# OPTIONS:
+#
+#       -local          - Publishes to C:\nc-nuget-local
+#       -localversion   - Use the local version number
+#
+# Generally, you'll use this script without any options to publish to the private
+# feed in the neonCLOUD headend using the atomic counter there to update VERSION
+# numbers, especially for shared branches and especially the master branch.
+#
+# During development on private branches, you may wish to use a local feed
+# instead, which is simply the C:\nc-nuget-local folder.  This will be much 
+# faster and will reduce the accumulation of packages in our private feed.
+# Use the [-local] option for this.
+#
+# EMERGENCY USE:
+# 
+# By default, [-local] will still use the atomic versioner service in the
+# headend to increment counters so that these versions monotonically increase
+# across all packages published by all developers.  In an emergency such as
+# when the headend services are down or when you're trying to work offline
+# or on a poor connection, you can combine [-local-version] with [-local].
+#
+# This indicates that version numbers will be obtained from local counter files
+# within the local feed folder:
+#
+#   C:\nc-nuget-local\neonKUBE.version.txt
+#   C:\nc-nuget-local\neonLIBRARY.version.txt
+#
+# These simply hold the next version as an integer on the first line for 
+# each set of packages.  You'll need to manually initialize these files
+# with reasonable version numbers greater than any previously published
+# packages.
+#
+# Once the emergency is over, you must to manually update the versions
+# on the headend to be greater than any version published locally by any
+# developer on the team and then republish all packages using the new
+# version.
+#
 # NOTE: This is script works only for maintainers with proper credentials.
+
+# $todo(jefflill):
+#
+# We should update the versioner to manager the entire version, not just
+# incrementing the PATCH part of the version.  This would make it easier
+# to recover from emergency use of the [-local-version] switch by simply
+# needing to increment the MINOR component of the versions without needing
+# to coordinate with developers to determine the maximum versions published.
+#
+#   https://app.zenhub.com/workspaces/neonforge-6042ead6ec0efa0012c5facf/issues/nforgeio/neoncloud/173
+
+param 
+(
+    [switch]$local        = $false,
+    [switch]$localVersion = $false
+)
 
 # Import the global solution include file.
 
@@ -116,9 +172,16 @@ function Publish
         [string]$version
     )
 
+    $localIndicator = ""
+
+    if ($local)
+    {
+        $localIndicator = " (local)"
+    }
+
     ""
     "==============================================================================="
-    "* Publishing: ${project}:${version}"
+    "* Publishing: ${project}:${version}${localIndicator}"
     "==============================================================================="
 
     $projectPath = [io.path]::combine($env:NF_ROOT, "Lib", "$project", "$project" + ".csproj")
@@ -126,22 +189,51 @@ function Publish
     dotnet pack $projectPath -c $config -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg -o "$env:NF_BUILD\nuget"
     ThrowOnExitCode
 
-    nuget push -Source $env:NC_NUGET_DEVFEED -ApiKey $devFeedApiKey "$env:NF_BUILD\nuget\$project.$version.nupkg"
-    ThrowOnExitCode
+    if ($local)
+    {
+        nuget add -Source $env:NC_NUGET_LOCAL "$env:NF_BUILD\nuget\$project.$version.nupkg"
+        ThrowOnExitCode
+    }
+    else
+    {
+        nuget push -Source $env:NC_NUGET_DEVFEED -ApiKey $devFeedApiKey "$env:NF_BUILD\nuget\$project.$version.nupkg" -SkipDuplicate -Timeout 600
+        ThrowOnExitCode
+    }
 }
 
-# We need to do a  solution build to ensure that any tools or other dependencies 
+# We need to do a solution build to ensure that any tools or other dependencies 
 # are built before we build and publish the individual packages.
-
-Write-Info  ""
-Write-Info  "*******************************************************************************"
-Write-Info  "***                            BUILD SOLUTION                               ***"
-Write-Info  "*******************************************************************************"
-Write-Info  ""
 
 $msbuild     = $env:MSBUILDPATH
 $nfRoot      = "$env:NF_ROOT"
 $nfSolution  = "$nfRoot\neonKUBE.sln"
+
+Write-Info ""
+Write-Info "********************************************************************************"
+Write-Info "***                            CLEAN SOLUTION                                ***"
+Write-Info "********************************************************************************"
+Write-Info ""
+
+& "$msbuild" "$nfSolution" $buildConfig -t:Clean -m -verbosity:quiet
+
+if (-not $?)
+{
+    throw "ERROR: CLEAN FAILED"
+}
+
+Write-Info ""
+Write-Info "********************************************************************************"
+Write-Info "***                           RESTORE PACKAGES                               ***"
+Write-Info "********************************************************************************"
+Write-Info ""
+
+& "$msbuild" "$nfSolution" -t:restore -verbosity:quiet
+
+Write-Info  ""
+Write-Info  "*******************************************************************************"
+Write-Info  "***                           BUILD SOLUTION                                ***"
+Write-Info  "*******************************************************************************"
+Write-Info  ""
 
 & "$msbuild" "$nfSolution" -p:Configuration=$config -restore -m -verbosity:quiet
 
@@ -150,39 +242,64 @@ if (-not $?)
     throw "ERROR: BUILD FAILED"
 }
 
-# We're going to call the neonCLOUD nuget versioner service to atomically increment the 
-# dev package version counters for the solution and then generate the full version for
-# the packages we'll be publishing.  We'll use separate counters for the neonLIBRARY
-# and neonKUBE packages.
-#
-# The package versions will also include the current branch appended to the preview tag
-# so a typical package version will look like:
-#
-#       10000.0.VERSION-dev-master
-#
-# where we use major version 10000 as a value that will never be exceeded by a real
-# release, VERSION is automatically incremented for every package published, [master]
-# in this case is the current branch at the time of publishing and [-dev] indicates
-# that this is a non-production release.
-#
-# NOTE: We could have used a separate counter for each published branch but we felt it
-# would this would be easier to manage by having all recent packages published from all
-# branches have versions near each other.
-
 $branch = GitBranch $env:NF_ROOT
 
-# Get the nuget versioner API key from the environment and convert it into a base-64 string.
+if ($local -and $localVersion)
+{
+    # EMERGENCY MODE: Use the local counters.
 
-$versionerKeyBase64 = [Convert]::ToBase64String(([System.Text.Encoding]::UTF8.GetBytes($versionerKey)))
+    $nfVersionPath = [System.IO.Path]::Combine($env:NC_NUGET_LOCAL, "neonKUBE.version.txt")
+    $nlVersionPath = [System.IO.Path]::Combine($env:NC_NUGET_LOCAL, "neonLIBRARY.version.txt")
 
-# Submit PUTs request to the versioner service, specifying the counter name.  The service will
-# atomically increment the counter and return the next value.
+    if (![System.IO.File]::Exists("$nfVersionPath") -or ![System.IO.File]::Exists("$nlVersionPath"))
+    {
+        Write-Error "You'll need to manually initialize the local version files at:" -ErrorAction continue
+        Write-Error ""                   -ErrorAction continue
+        Write-Error "    $nfVersionPath" -ErrorAction continue
+        Write-Error "    $nlVersionPath" -ErrorAction continue
+        exit 1
+    }
 
-$reply          = Invoke-WebRequest -Uri "$env:NC_NUGET_VERSIONER/counter/neonLIBRARY-dev" -Method 'PUT' -Headers @{ 'Authorization' = "Bearer $versionerKeyBase64" } 
-$libraryVersion = "10000.0.$reply-dev-$branch"
+    $version = [int](Get-Content -TotalCount 1 $nlVersionPath).Trim()
+    $version++
+    [System.IO.File]::WriteAllText($nlVersionPath, $version)
+    $libraryVersion = "10000.0.$version-dev-$branch"
 
-$reply          = Invoke-WebRequest -Uri "$env:NC_NUGET_VERSIONER/counter/neonKUBE-dev" -Method 'PUT' -Headers @{ 'Authorization' = "Bearer $versionerKeyBase64" } 
-$kubeVersion    = "10000.0.$reply-dev-$branch"
+    $version = [int](Get-Content -TotalCount 1 $nfVersionPath).Trim()
+    $version++
+    [System.IO.File]::WriteAllText($nfVersionPath, $version)
+    $kubeVersion = "10000.0.$version-dev-$branch"
+}
+else
+{
+    # We're going to call the neonCLOUD nuget versioner service to atomically increment the 
+    # dev package version counters for the solution and then generate the full version for
+    # the packages we'll be publishing.  We'll use separate counters for the neonLIBRARY
+    # and neonKUBE packages.
+    #
+    # The package versions will also include the current branch appended to the preview tag
+    # so a typical package version will look like:
+    #
+    #       10000.0.VERSION-dev-master
+    #
+    # where we use major version 10000 as a value that will never be exceeded by a real
+    # release, VERSION is automatically incremented for every package published, [master]
+    # in this case is the current branch at the time of publishing and [-dev] indicates
+    # that this is a non-production release.
+
+    # Get the nuget versioner API key from the environment and convert it into a base-64 string.
+
+    $versionerKeyBase64 = [Convert]::ToBase64String(([System.Text.Encoding]::UTF8.GetBytes($versionerKey)))
+
+    # Submit PUTs request to the versioner service, specifying the counter name.  The service will
+    # atomically increment the counter and return the next value.
+
+    $reply          = Invoke-WebRequest -Uri "$env:NC_NUGET_VERSIONER/counter/neonLIBRARY-dev" -Method 'PUT' -Headers @{ 'Authorization' = "Bearer $versionerKeyBase64" } 
+    $libraryVersion = "10000.0.$reply-dev-$branch"
+
+    $reply          = Invoke-WebRequest -Uri "$env:NC_NUGET_VERSIONER/counter/neonKUBE-dev" -Method 'PUT' -Headers @{ 'Authorization' = "Bearer $versionerKeyBase64" } 
+    $kubeVersion    = "10000.0.$reply-dev-$branch"
+}
 
 # We need to set the version first in all of the project files so that
 # implicit package dependencies will work for external projects importing

@@ -33,7 +33,7 @@
         </para>
         <para>
           After referencing this package in your project, you'll need to manually edit
-          your project file adding <codeInline>GeneratePathProperty=true</codeInline> to the\
+          your project file adding <codeInline>GeneratePathProperty=true</codeInline> to the
           package reference and then add a build target to call <b>neon-modelgen</b> to have
           it generate the model source code.
         </para>
@@ -59,11 +59,10 @@
             </para>
             <code source="Content/Neon.ModelGen/Snippet.PrebuildTarget.xml" language="xml" tabSize="2"/>
             <para>
-              This example executes the <b>win-x64</b> version of <b>neon-modelgen</b> located in the cached package
-              directory, having it read model definitions from <b>foo.dll</b> and write the generated models 
-              to <b>foo.cs</b>.  Note that you'll generally reference the source assembly from another project's
-              build output and you'll need to configure your build dependencies such that the source
-              project builds first.
+              This example reads an already built [models.dll] file (probably from another project in
+              the solution) and generates the [models/models.g.cs] source file within the current project.
+              We add <Compile/> element, telling the build system to include the generated model file in
+              the current project build.
             </para>
             <para>
               We add surround the command path with <b>&amp;quot;</b> to handle the case where path may include

@@ -36,7 +36,7 @@ try
 {
     # Ensure that the build output folder exists and remove any existing log file.
 
-    [System.IO.Directory]::CreateDirectory($buildPath);
+    [System.IO.Directory]::CreateDirectory($buildPath) | Out-Null
 
     if ([System.IO.File]::Exists($logPath))
     {

@@ -95,31 +95,29 @@ namespace Neon.Kube
         public const string NeonPublicBucketUri = "https://neon-public.s3-us-west-2.amazonaws.com";
 
         /// <summary>
-        /// <para>
-        /// Returns the HTTPS URI to be used for downloading the prepared neonKUBE virtual machine image 
+        /// The GitHub repository path where public node images will be published.
+        /// </summary>
+        public const string PublicNodeImageRepo = "nforgeio/neonKUBE-images";
+
+        /// <summary>
+        /// The GitHub repository path where pre-release node images will be published.
+        /// </summary>
+        public const string PrivateNodeImagesRepo = "nforgeio/neonKUBE-images-dev";
+
+        /// <summary>
+        /// Returns the default URI to be used for downloading the prepared neonKUBE virtual machine image 
         /// for the current neonKUBE cluster version.
-        /// </para>
-        /// <note>
-        /// The HTTPS URI returned may be converted into an S3 URI via <see cref="NetHelper.ToAwsS3Uri(string)"/>.
-        /// </note>
-        /// <note>
-        /// This will return <c>null</c> for cloud and bare metal environments because we don't
-        /// download images for those situations.
-        /// </note>
         /// </summary>
         /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
-        /// <param name="controller">The setup controller.</param>
+        /// <param name="setupDebugMode">Optionally indicates that we'll be provisioning in debug mode.</param>
+        /// <param name="baseImageName">Specifies the base image name when <paramref name="setupDebugMode"/><c>==true</c></param>
+        /// <param name="useSinglePartFile">Optionally download the old single-part image file rather than the new multi-part file hosted as a GitHub Release.</param>
         /// <returns>The download URI or <c>null</c>.</returns>
-        public static string GetNodeImageUri(HostingEnvironment hostingEnvironment, ISetupController controller)
+        public static string GetDefaultNodeImageUri(HostingEnvironment hostingEnvironment, bool setupDebugMode = false, string baseImageName = null, bool useSinglePartFile = false)
         {
-            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-
-            var setupDebugMode = controller.Get<bool>(KubeSetupProperty.DebugMode, false);
-            var baseImageName  = controller.Get<string>(KubeSetupProperty.BaseImageName, null);
-
             if (setupDebugMode && string.IsNullOrEmpty(baseImageName))
             {
-                throw new NotSupportedException($"[{nameof(controller)}] must include [{KubeSetupProperty.BaseImageName}] when [{KubeSetupProperty.DebugMode}=true].");
+                throw new NotSupportedException($"[{KubeSetupProperty.BaseImageName}] must be passed when [{nameof(setupDebugMode)}=true].");
             }
 
             var imageType = setupDebugMode ? "base" : "node";
@@ -139,7 +137,7 @@ namespace Neon.Kube
                         throw new NotSupportedException("Cluster setup debug mode is not supported for cloud environments.");
                     }
 
-                    return null;
+                    throw new NotImplementedException($"Node images are not implemented for the [{hostingEnvironment}] environment.");
 
                 case HostingEnvironment.HyperV:
                 case HostingEnvironment.HyperVLocal:
@@ -150,7 +148,14 @@ namespace Neon.Kube
                     }
                     else
                     {
-                        return $"{NeonPublicBucketUri}/vm-images/hyperv/node/neonkube-{KubeVersions.NeonKubeVersion}.hyperv.vhdx";
+                        if (useSinglePartFile)
+                        {
+                            return $"{NeonPublicBucketUri}/vm-images/hyperv/node/neonkube-{KubeVersions.NeonKubeVersion}.hyperv.amd64.vhdx.gz";
+                        }
+                        else
+                        {
+                            return $"{NeonPublicBucketUri}/downloads/neonkube-{KubeVersions.NeonKubeVersion}.hyperv.amd64.vhdx.gz";
+                        }
                     }
 
                 case HostingEnvironment.XenServer:
@@ -161,7 +166,14 @@ namespace Neon.Kube
                     }
                     else
                     {
-                        return $"{NeonPublicBucketUri}/vm-images/xenserver/node/neonkube-{KubeVersions.NeonKubeVersion}.xenserver.xva";
+                        if (useSinglePartFile)
+                        {
+                            return $"{NeonPublicBucketUri}/vm-images/xenserver/node/neonkube-{KubeVersions.NeonKubeVersion}.xenserver.amd64.xva.gz";
+                        }
+                        else
+                        {
+                            return $"{NeonPublicBucketUri}/downloads/neonkube-{KubeVersions.NeonKubeVersion}.xenserver.amd64.xva.gz";
+                        }
                     }
 
                 case HostingEnvironment.Wsl2:
@@ -172,12 +184,19 @@ namespace Neon.Kube
                     }
                     else
                     {
-                        return $"{NeonPublicBucketUri}/vm-images/wsl2/node/neonkube-{KubeVersions.NeonKubeVersion}.wsl2.tar";
+                        if (useSinglePartFile)
+                        {
+                            return $"{NeonPublicBucketUri}/vm-images/wsl2/node/neonkube-{KubeVersions.NeonKubeVersion}.wsl2.amd64.tar.gz";
+                        }
+                        else
+                        {
+                            return $"{NeonPublicBucketUri}/downloads/neonkube-{KubeVersions.NeonKubeVersion}.wsl2.amd64.tar.gz";
+                        }
                     }
 
                 default:
 
-                    throw new NotImplementedException();
+                    throw new NotImplementedException($"Node images are not implemented for the [{hostingEnvironment}] environment.");
             }
         }
     }

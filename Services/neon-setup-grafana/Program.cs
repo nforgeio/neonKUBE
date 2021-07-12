@@ -28,7 +28,9 @@ namespace NeonSetupGrafana
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task Main(string[] args)
         {
-            await new Service(NeonServices.SetupGrafana, serviceMap: NeonServiceMap.Production).RunAsync();
+            var service = new Service(NeonServices.SetupGrafana, serviceMap: NeonServiceMap.Production);
+            service.AutoTerminateIstioSidecar = true;
+            await service.RunAsync();
         }
     }
 }
