@@ -67,6 +67,7 @@ namespace Neon.Kube
 
         private ClusterProxy                        cluster;
         private string                              nodeImageUri;
+        private string                              nodeImagePath;
         private SetupController<NodeDefinition>     controller;
 
         /// <summary>
@@ -82,18 +83,26 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
         /// <param name="nodeImageUri">Optionally specifies the node image URI when preparing clusters.</param>
+        /// <param name="nodeImagePath">Optionally specifies the path to the local node image file.</param>
         /// <param name="logFolder">
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
-        public GoogleHostingManager(ClusterProxy cluster, string nodeImageUri = null, string logFolder = null)
+        /// <remarks>
+        /// <note>
+        /// One of <paramref name="nodeImageUri"/> or <paramref name="nodeImagePath"/> must be specified.
+        /// </note>
+        /// </remarks>
+        public GoogleHostingManager(ClusterProxy cluster, string nodeImageUri = null, string nodeImagePath = null, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeImageUri) || !string.IsNullOrEmpty(nodeImagePath), $"{nameof(nodeImageUri)}/{nodeImagePath}");
 
             cluster.HostingManager = this;
 
-            this.cluster      = cluster;
-            this.nodeImageUri = nodeImageUri;
+            this.cluster       = cluster;
+            this.nodeImageUri  = nodeImageUri;
+            this.nodeImagePath = nodeImagePath;
         }
 
         /// <inheritdoc/>

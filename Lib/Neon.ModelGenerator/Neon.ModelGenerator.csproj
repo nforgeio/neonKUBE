@@ -26,7 +26,7 @@
     <FileVersion>0.0.0.0</FileVersion>
     <Configurations>Debug;Release;CodeDoc</Configurations>
     <DevelopmentDependency>true</DevelopmentDependency>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 

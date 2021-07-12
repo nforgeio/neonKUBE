@@ -23,7 +23,7 @@
     <PackageIcon>nuget-icon.png</PackageIcon>
     <PackageTags>l</PackageTags>
     <RootNamespace>Neon.Kube</RootNamespace>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 

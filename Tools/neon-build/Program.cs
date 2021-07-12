@@ -48,6 +48,13 @@ OPTIONS:
 
     --all           - Clears the [Build-cache] folder too.
 
+-----------------------
+neon-build clean-attr REPO-PATH
+
+Deletes any [**/obj/**/*.AssemblyAttributes.cs] and [**/obj/**/*.AssemblyInfo.cs]
+files.  These can cause duplicate definition errors because Visual Studio seems
+to include these for all build configurations, not just the current config.
+
 ---------------------------------------------------------------------
 neon-build gzip SOURCE TARGET
 
@@ -164,6 +171,9 @@ standard output as one line.
         /// <param name="args">The command line arguments.</param>
         public static void Main(string[] args)
         {
+            string      repoRoot;
+            string      buildFolder;
+
             commandLine = new CommandLine(args);
 
             var command = commandLine.Arguments.FirstOrDefault();
@@ -195,7 +205,7 @@ standard output as one line.
                 {
                     case "clean":
 
-                        var repoRoot = commandLine.Arguments.ElementAtOrDefault(1);
+                        repoRoot = commandLine.Arguments.ElementAtOrDefault(1);
 
                         if (string.IsNullOrEmpty(repoRoot))
                         {
@@ -203,7 +213,7 @@ standard output as one line.
                             Program.Exit(1);
                         }
 
-                        var buildFolder = Path.Combine(repoRoot, "Build");
+                        buildFolder = Path.Combine(repoRoot, "Build");
 
                         if (Directory.Exists(buildFolder))
                         {
@@ -240,6 +250,46 @@ standard output as one line.
                             if (Directory.Exists(folder))
                             {
                                 NeonHelper.DeleteFolder(folder);
+                            }
+                        }
+
+                        break;
+
+                    case "clean-attr":
+
+                        repoRoot = commandLine.Arguments.ElementAtOrDefault(1);
+
+                        if (string.IsNullOrEmpty(repoRoot))
+                        {
+                            Console.Error.WriteLine("*** ERROR: REPO-ROOT argument is required.");
+                            Program.Exit(1);
+                        }
+
+                        // Remove files named like:
+                        // 
+                        //      .NETStandard,Version=v2.0.AssemblyAttributes.cs
+
+                        var globPattern = GlobPattern.Parse("**/obj/**/*.AssemblyAttributes.cs", caseInsensitive: true);
+
+                        foreach (var file in Directory.GetFiles(repoRoot, "*.cs", SearchOption.AllDirectories))
+                        {
+                            if (globPattern.IsMatch(file.Replace("\\", "/")))
+                            {
+                                File.Delete(file);
+                            }
+                        }
+
+                        // Remove files named like:
+                        // 
+                        //      Test.Neon.Models.AssemblyInfo.cs
+
+                        globPattern = GlobPattern.Parse("**/obj/**/*.AssemblyInfo.cs", caseInsensitive: true);
+
+                        foreach (var file in Directory.GetFiles(repoRoot, "*.cs", SearchOption.AllDirectories))
+                        {
+                            if (globPattern.IsMatch(file.Replace("\\", "/")))
+                            {
+                                File.Delete(file);
                             }
                         }
 

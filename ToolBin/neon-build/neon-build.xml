@@ -1,0 +1,95 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>neon-build</name>
+    </assembly>
+    <members>
+        <member name="T:NeonBuild.Program">
+            <summary>
+            Hosts the program entrypoint.
+            </summary>
+        </member>
+        <member name="M:NeonBuild.Program.Main(System.String[])">
+            <summary>
+            This is the program entrypoint.
+            </summary>
+            <param name="args">The command line arguments.</param>
+        </member>
+        <member name="P:NeonBuild.Program.RepoRootFolder">
+            <summary>
+            Returns the path to the neonKUBE local repository root folder.
+            </summary>
+        </member>
+        <member name="M:NeonBuild.Program.Exit(System.Int32)">
+            <summary>
+            Terminates the program with a specified exit code.
+            </summary>
+            <param name="exitCode">The exit code.</param>
+        </member>
+        <member name="M:NeonBuild.Program.ReadVersion(System.String,System.String)">
+            <summary>
+            Reads a version number from a C# source file.
+            </summary>
+            <param name="csPath">Path to the C# source file.</param>
+            <param name="name">Name of the version constant.</param>
+            <returns>The version string.</returns>
+        </member>
+        <member name="M:NeonBuild.Program.Dotnet(Neon.Common.CommandLine)">
+            <summary>
+            Executes the <b>dotnet</b> tool passing the <paramref name="commandLine"/> while
+            limiting the environment variables passed to the <b>dotnet</b> tool to avoid
+            conflicts.
+            </summary>
+            <param name="commandLine">The command line.</param>
+        </member>
+        <member name="M:NeonBuild.Program.EmbedCheck(Neon.Common.CommandLine)">
+            <summary>
+            Ensures that all of the files within a specified directory are also 
+            explicitly referenced as <b>embedded resources</b> in a C# project
+            file.
+            </summary>
+            <param name="commandLine">The command line.</param>
+        </member>
+        <member name="M:NeonBuild.Program.Gzip(Neon.Common.CommandLine)">
+            <summary>
+            GZIPs a file as required.
+            </summary>
+            <param name="commandLine">The command line.</param>
+        </member>
+        <member name="M:NeonBuild.Program.PackVersion(Neon.Common.CommandLine)">
+            <summary>
+            Reads a Nuget package version string from the first line of a text file and
+            then updates the version section in a CSPROJ file or NUSPEC with the version.  
+            This is useful for batch publishing multiple libraries.
+            </summary>
+            <param name="commandLine">The command line.</param>
+        </member>
+        <member name="M:NeonBuild.Program.ReadVersion(Neon.Common.CommandLine)">
+            <summary>
+            Reads named version constant from a C# source file and writes it to SDTOUT.
+            </summary>
+            <param name="commandLine">The command line.</param>
+        </member>
+        <member name="P:NeonBuild.Program.ContentFile.TopicId">
+            <summary>
+            The SHFB generated topic ID.
+            </summary>
+        </member>
+        <member name="P:NeonBuild.Program.ContentFile.ContentPath">
+            <summary>
+            Path to the content [*.aml] file in the source repo.
+            </summary>
+        </member>
+        <member name="P:NeonBuild.Program.ContentFile.FileName">
+            <summary>
+            HTML file name to be generated for this for this topic.
+            </summary>
+        </member>
+        <member name="M:NeonBuild.Program.Shfb(Neon.Common.CommandLine)">
+            <summary>
+            Handles post-processing of a SHFB generated documentation site.
+            </summary>
+            <param name="commandLine">The command line.</param>
+        </member>
+    </members>
+</doc>

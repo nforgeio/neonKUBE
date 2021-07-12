@@ -157,6 +157,55 @@ namespace TestCommon
         }
 
         [Fact]
+        public void Backslash()
+        {
+            var glob = GlobPattern.Parse("/**/test.jpg");
+
+            Assert.True(glob.IsMatch(@"\test.jpg"));
+            Assert.True(glob.IsMatch(@"\foo\test.jpg"));
+            Assert.True(glob.IsMatch(@"\foo\bar\test.jpg"));
+            Assert.True(glob.IsMatch(@"\foo\bar\foobar\test.jpg"));
+
+            Assert.False(glob.IsMatch("test.jpg"));
+            Assert.False(glob.IsMatch("bad.jpg"));
+            Assert.False(glob.IsMatch(@"\bad.jpg"));
+            Assert.False(glob.IsMatch(@"\foo\bad.jpg"));
+            Assert.False(glob.IsMatch(@"\foo\bar\bad.jpg"));
+            Assert.False(glob.IsMatch(@"\foo\bar\foobar\bad.jpg"));
+
+            glob = GlobPattern.Parse(@"**/test.jpg");
+
+            Assert.True(glob.IsMatch("test.jpg"));
+            Assert.True(glob.IsMatch(@"\test.jpg"));
+            Assert.True(glob.IsMatch(@"\foo\test.jpg"));
+            Assert.True(glob.IsMatch(@"\foo\bar\test.jpg"));
+            Assert.True(glob.IsMatch(@"\foo\bar\foobar\test.jpg"));
+            Assert.False(glob.IsMatch(@"bad.jpg"));
+            Assert.False(glob.IsMatch(@"\bad.jpg"));
+            Assert.False(glob.IsMatch(@"\foo\bad.jpg"));
+            Assert.False(glob.IsMatch(@"\foo\bar\bad.jpg"));
+            Assert.False(glob.IsMatch(@"\foo\bar\foobar\bad.jpg"));
+
+            glob = GlobPattern.Parse(@"/foo/**");
+
+            Assert.True(glob.IsMatch(@"\foo"));
+            Assert.True(glob.IsMatch(@"\foo\test.jpg"));
+            Assert.True(glob.IsMatch(@"\foo\bar\test.jpg"));
+            Assert.False(glob.IsMatch(@"\test.jpg"));
+            Assert.False(glob.IsMatch(@"\bar\test.jpg"));
+            Assert.False(glob.IsMatch(@"\bar\foo\test.jpg"));
+
+            glob = GlobPattern.Parse(@"foo/**");
+
+            Assert.True(glob.IsMatch(@"foo"));
+            Assert.True(glob.IsMatch(@"foo\test.jpg"));
+            Assert.True(glob.IsMatch(@"foo\bar\test.jpg"));
+            Assert.False(glob.IsMatch(@"test.jpg"));
+            Assert.False(glob.IsMatch(@"bar\test.jpg"));
+            Assert.False(glob.IsMatch(@"bar\foo\test.jpg"));
+        }
+
+        [Fact]
         public void Errors()
         {
             Assert.Throws<ArgumentNullException>(() => GlobPattern.Parse(null));
@@ -196,6 +245,24 @@ namespace TestCommon
             Assert.Equal("^\\($", GlobPattern.Parse("(").RegexPattern);
             Assert.Equal("^\\)$", GlobPattern.Parse(")").RegexPattern);
             Assert.Equal("^\\.$", GlobPattern.Parse(".").RegexPattern);
+        }
+
+        [Fact]
+        public void CaseInsensitive()
+        {
+            var glob = GlobPattern.Parse("test.jpg", caseInsensitive: true);
+
+            Assert.True(glob.IsMatch("test.jpg"));
+            Assert.True(glob.IsMatch("TEST.JPG"));
+        }
+
+        [Fact]
+        public void CaseSensitive()
+        {
+            var glob = GlobPattern.Parse("test.jpg", caseInsensitive: false);
+
+            Assert.True(glob.IsMatch("test.jpg"));
+            Assert.False(glob.IsMatch("TEST.JPG"));
         }
     }
 }

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    GitHubDownloadProgressDelegate.cs
+// FILE:	    SetupDisposition.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -15,13 +15,39 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Neon.Deployment
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.Contracts;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+
+using Newtonsoft.Json;
+
+using Neon.Common;
+
+namespace Neon.Kube
 {
     /// <summary>
-    /// Describes the callback used to monitor and possibly cancel the download
-    /// of file composed from one or more assets from a GitHub Release.
+    /// Enumerates the final disposition of a <see cref="SetupController{NodeMetadata}"/> run.
     /// </summary>
-    /// <param name="percentComplete">Passed as the approximate percentage of the file downloaded (between 0..100).</param>
-    /// <returns><c>true</c> if the download is to continue or <c>false</c> to cancel it.</returns>
-    public delegate bool GitHubDownloadProgressDelegate(int percentComplete);
+    public enum SetupDisposition
+    {
+        /// <summary>
+        /// The setup run completed successfully.
+        /// </summary>
+        Success,
+
+        /// <summary>
+        /// The setup run was cancelled.
+        /// </summary>
+        Cancelled,
+
+        /// <summary>
+        /// The setup run failed.
+        /// </summary>
+        Failed
+    }
 }
