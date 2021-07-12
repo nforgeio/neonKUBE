@@ -109,7 +109,7 @@ namespace Neon.Kube
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.OpenEbsWebhook, CalculateOpenEbsWebhookAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.Prometheus, CalculatePrometheusAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.PrometheusOperator, CalculatePrometheusOperatorAdvice(cluster));
-            clusterAdvice.AddServiceAdvice(KubeClusterAdvice.Promtail, CalculatePromtailAdvice(cluster));
+            clusterAdvice.AddServiceAdvice(KubeClusterAdvice.Tempo, CalculatePromtailAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.RedisHA, CalculateRedisHAAdvice(cluster));
 
 
@@ -499,7 +499,7 @@ namespace Neon.Kube
 
         private static KubeServiceAdvice CalculatePromtailAdvice(ClusterProxy cluster)
         {
-            var advice = new KubeServiceAdvice(KubeClusterAdvice.Promtail);
+            var advice = new KubeServiceAdvice(KubeClusterAdvice.Tempo);
 
             advice.ReplicaCount = Math.Min(3, (cluster.Definition.Nodes.Where(n => n.Labels.MetricsInternal).Count()));
 

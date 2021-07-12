@@ -342,7 +342,7 @@ namespace Neon.Kube
         /// <summary>
         /// Identifies the neonKUBE cluster's <b>PromTail</b> service.
         /// </summary>
-        public static string Promtail = "promtail";
+        public static string Tempo = "promtail";
 
         /// <summary>
         /// Identifies the neonKUBE cluster's <b>Redis HA</b> service.

@@ -11,6 +11,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Net;
 using System.IO.Compression;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Net.Sockets;
@@ -37,7 +38,10 @@ namespace NeonSetupHarbor
 {
     public partial class Service : NeonService
     {
+        public const string StateTable = "state";
+     
         private static Kubernetes k8s;
+        private static string connString;
 
         /// <summary>
         /// Constructor.
@@ -47,6 +51,7 @@ namespace NeonSetupHarbor
         public Service(string name, ServiceMap serviceMap = null)
             : base(name, serviceMap: serviceMap)
         {
+            k8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig());
         }
 
         /// <inheritdoc/>
@@ -61,63 +66,60 @@ namespace NeonSetupHarbor
             // Let NeonService know that we're running.
 
             await SetRunningAsync();
-            await WaitForCitusAsync();
+            await GetConnectionStringAsync();
             await SetupHarborAsync();
 
             return 0;
         }
 
-        private static string connString = $"Host=db-citus-postgresql.{KubeNamespaces.NeonSystem};Username=postgres;Password=0987654321;Database=postgres";
-
         /// <summary>
-        /// Method to wait for neon-system Citus database to be ready.
+        /// Gets the connection string used to connect to the neon-system database.
         /// </summary>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task WaitForCitusAsync()
+        /// <returns></returns>
+        private async Task GetConnectionStringAsync()
         {
-            Log.LogInfo($"[{KubeNamespaces.NeonSystem}-db] Waiting for {KubeNamespaces.NeonSystem} database to be ready.");
+            var secret = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbAdminSecret, KubeNamespaces.NeonSystem);
 
-            await NeonHelper.WaitForAsync(
-                async () =>
-                {
-                    var statefulsets = await k8s.ListNamespacedStatefulSetAsync(KubeNamespaces.NeonSystem, labelSelector: "release=db");
-                    if (statefulsets == null || statefulsets.Items.Count < 2)
-                    {
-                        return false;
-                    }
+            var username = Encoding.UTF8.GetString(secret.Data["username"]);
+            var password = Encoding.UTF8.GetString(secret.Data["password"]);
 
-                    return statefulsets.Items.All(@set => @set.Status.ReadyReplicas == @set.Spec.Replicas);
-                },
-                timeout: TimeSpan.FromMinutes(30),
-                pollInterval: TimeSpan.FromSeconds(10));
-
-            await NeonHelper.WaitForAsync(
-                async () =>
-                {
-                    var deployments = await k8s.ListNamespacedDeploymentAsync(KubeNamespaces.NeonSystem, labelSelector: "release=db");
-                    if (deployments == null || deployments.Items.Count == 0)
-                    {
-                        return false;
-                    }
-
-                    return deployments.Items.All(deployment => deployment.Status.AvailableReplicas == deployment.Spec.Replicas);
-                },
-                timeout: TimeSpan.FromMinutes(30),
-                pollInterval: TimeSpan.FromSeconds(10));
-
-            Log.LogInfo($"[{KubeNamespaces.NeonSystem}-db] {KubeNamespaces.NeonSystem} database is ready.");
+            connString = $"Host=db-citus-postgresql.{KubeNamespaces.NeonSystem};Username={username};Password={password};Database={KubeConst.NeonClusterOperatorDatabase}";
         }
 
         private async Task SetupHarborAsync()
         {
             Log.LogInfo($"[{KubeNamespaces.NeonSystem}-db] Configuring for Harbor.");
 
-            var databases = new string[] { "registry", "clair", "notary_server", "notary_signer" };
+            await UpdateStatusAsync("in-progress");
+
+            var secret = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespaces.NeonSystem);
+
+            var harborSecret = new V1Secret();
+            if ((await k8s.ListNamespacedSecretAsync(KubeNamespaces.NeonSystem)).Items.Any(s => s.Metadata.Name == KubeConst.RegistrySecretKey))
+            {
+                harborSecret = await k8s.ReadNamespacedSecretAsync(KubeConst.RegistrySecretKey, KubeNamespaces.NeonSystem);
+            }
+
+            if (!harborSecret.Data.ContainsKey("harbor-database-password"))
+            {
+                harborSecret.Data["harbor-database-password"] = secret.Data["password"];
+                await k8s.ReplaceNamespacedSecretAsync(harborSecret, KubeConst.RegistrySecretKey, KubeNamespaces.NeonSystem);
+            }
+
+            if (!harborSecret.Data.ContainsKey("secret"))
+            {
+                harborSecret.StringData["secret"] = NeonHelper.GetCryptoRandomPassword(20);
+                await k8s.ReplaceNamespacedSecretAsync(harborSecret, KubeConst.RegistrySecretKey, KubeNamespaces.NeonSystem);
+            }
+
+            var databases = new string[] { "core", "clair", "notaryserver", "notarysigner" };
 
             foreach (var db in databases)
             {
-                await CreateDatabaseAsync(db, "harbor", "harbor");
+                await CreateDatabaseAsync($"{KubeConst.NeonSystemDbHarborPrefix}-{db}", KubeConst.NeonSystemDbServiceUser, Encoding.UTF8.GetString(secret.Data["password"]));
             }
+            
+            await UpdateStatusAsync("complete");
 
             Log.LogInfo($"[{KubeNamespaces.NeonSystem}-db] Finished setup for Harbor.");
         }
@@ -207,6 +209,28 @@ namespace NeonSetupHarbor
             catch (Exception e)
             {
                 Log.LogError(e);
+            }
+        }
+
+        private async Task UpdateStatusAsync(string status)
+        {
+            await using var conn = new NpgsqlConnection(connString);
+            {
+                await conn.OpenAsync();
+                await using (var cmd = new NpgsqlCommand($@"
+INSERT
+    INTO
+    {StateTable} (KEY, value)
+VALUES (@k, @v) ON
+CONFLICT (KEY) DO
+UPDATE
+SET
+    value = @v", conn))
+                {
+                    cmd.Parameters.AddWithValue("k", KubeConst.NeonJobSetupHarbor);
+                    cmd.Parameters.AddWithValue("v", status);
+                    await cmd.ExecuteNonQueryAsync();
+                }
             }
         }
     }

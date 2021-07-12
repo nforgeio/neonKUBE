@@ -25,6 +25,8 @@
     <PackageIcon>nuget-icon.png</PackageIcon>
     <PackageTags>kubernetes</PackageTags>
     <NoDefaultExcludes>true</NoDefaultExcludes>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)'=='netcoreapp3.1'">
@@ -75,14 +77,282 @@
   <ItemGroup>
     <Compile Remove="Extensions\**" />
     <Compile Remove="Properties\**" />
+    <Compile Remove="Resources\Helm\cert-manager\crds\**" />
     <EmbeddedResource Remove="Extensions\**" />
     <EmbeddedResource Remove="Properties\**" />
+    <EmbeddedResource Remove="Resources\Helm\cert-manager\crds\**" />
     <None Remove="Extensions\**" />
     <None Remove="Properties\**" />
+    <None Remove="Resources\Helm\cert-manager\crds\**" />
   </ItemGroup>
 
   <ItemGroup>
+
+    <None Remove="Resources\Helm\cert-manager\Chart.yaml" />
+
+    <None Remove="Resources\Helm\cert-manager\README.md" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\cainjector-deployment.yaml" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\cainjector-psp-clusterrole.yaml" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\cainjector-psp-clusterrolebinding.yaml" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\cainjector-psp.yaml" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\cainjector-rbac.yaml" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\cainjector-serviceaccount.yaml" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\crds.yaml" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\deployment.yaml" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\NOTES.txt" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\psp-clusterrole.yaml" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\psp-clusterrolebinding.yaml" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\psp.yaml" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\service.yaml" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\serviceaccount.yaml" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\servicemonitor.yaml" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\webhook-deployment.yaml" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\webhook-mutating-webhook.yaml" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\webhook-psp-clusterrole.yaml" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\webhook-psp-clusterrolebinding.yaml" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\webhook-psp.yaml" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\webhook-rbac.yaml" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\webhook-service.yaml" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\webhook-serviceaccount.yaml" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\webhook-validating-webhook.yaml" />
+
+    <None Remove="Resources\Helm\cert-manager\templates\_helpers.tpl" />
+
+    <None Remove="Resources\Helm\grafana-agent\.helmignore" />
+
+    <None Remove="Resources\Helm\grafana-agent\Chart.yaml" />
+
+    <None Remove="Resources\Helm\grafana-agent\templates\configmap.yaml" />
+
+    <None Remove="Resources\Helm\grafana-agent\templates\crds.yaml" />
+
+    <None Remove="Resources\Helm\grafana-agent\templates\daemonset.yaml" />
+
+    <None Remove="Resources\Helm\grafana-agent\templates\deployment.yaml" />
+
+    <None Remove="Resources\Helm\grafana-agent\templates\grafanaagent.yaml" />
+
+    <None Remove="Resources\Helm\grafana-agent\templates\prometheusinstance.yaml" />
+
+    <None Remove="Resources\Helm\grafana-agent\templates\rbac.yaml" />
+
+    <None Remove="Resources\Helm\grafana-agent\templates\service.yaml" />
+
+    <None Remove="Resources\Helm\grafana-agent\templates\_helpers.tpl" />
+
+    <None Remove="Resources\Helm\grafana-agent\values.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\cluster_role_aggregate_grafana_admin_edit.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\cluster_role_aggregate_grafana_view.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\cluster_role_binding_grafana_operator.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\cluster_role_grafana_operator.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\crd-grafana.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\crd-grafanadashboard.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\crd-grafanadatasource.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\1-node-exporter.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\alertmanager-overview.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\apiserver.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\cert-manager.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\cluster-total.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\controller-manager.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\cortex.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\etcd.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\harbor.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\istio-control-plane.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\istio-mesh.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\istio-service.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\istio-wasm-extension.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\istio-workload.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\k8s-coredns.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\k8s-resources-cluster.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\k8s-resources-namespace.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\k8s-resources-node.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\k8s-resources-pod.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\k8s-resources-workload.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\k8s-resources-workloads-namespace.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\kubelet.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\loki-promtail.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\loki.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\minio.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\namespace-by-pod.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\namespace-by-workload.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\node-cluster-rsrc-use.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\node-rsrc-use.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\nodes.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\openebs.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\persistentvolumesusage.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\pod-total.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\postgresql.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\prometheus-net-controllers.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\prometheus-net.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\prometheus-remote-write.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\prometheus.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\proxy.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\redis.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\scheduler.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\statefulset.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\workload-total.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\datasources.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\grafana.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\operator.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\role.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\role_binding.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\service_account.yaml" />
+
+    <None Remove="Resources\Helm\harbor\README.md.gotmpl" />
+
+    <None Remove="Resources\Helm\harbor\templates\certificate.yaml" />
+
+    <None Remove="Resources\Helm\harbor\templates\clusterrole.yaml" />
+
+    <None Remove="Resources\Helm\harbor\templates\clusterrolebinding.yaml" />
+
+    <None Remove="Resources\Helm\harbor\templates\configmap.yaml" />
+
+    <None Remove="Resources\Helm\harbor\templates\crds.yaml" />
+
+    <None Remove="Resources\Helm\harbor\templates\deployment.yaml" />
+
+    <None Remove="Resources\Helm\harbor\templates\harborcluster.yaml" />
+
+    <None Remove="Resources\Helm\harbor\templates\hpa.yaml" />
+
+    <None Remove="Resources\Helm\harbor\templates\mutatingwebhookconfiguration.yaml" />
+
+    <None Remove="Resources\Helm\harbor\templates\persistentvolumes.yaml" />
+
+    <None Remove="Resources\Helm\harbor\templates\role.yaml" />
+
+    <None Remove="Resources\Helm\harbor\templates\rolebinding.yaml" />
+
+    <None Remove="Resources\Helm\harbor\templates\service.yaml" />
+
+    <None Remove="Resources\Helm\harbor\templates\serviceaccount.yaml" />
+
+    <None Remove="Resources\Helm\harbor\templates\validatingwebhookconfiguration.yaml" />
+
     <None Remove="Resources\Helm\kiali\templates\service-nodeport.yaml" />
+
+    <None Remove="Resources\Helm\kube-state-metrics\.helmignore" />
+
+    <None Remove="Resources\Helm\kube-state-metrics\Chart.yaml" />
+
+    <None Remove="Resources\Helm\kube-state-metrics\OWNERS" />
+
+    <None Remove="Resources\Helm\kube-state-metrics\README.md" />
+
+    <None Remove="Resources\Helm\kube-state-metrics\templates\clusterrolebinding.yaml" />
+
+    <None Remove="Resources\Helm\kube-state-metrics\templates\deployment.yaml" />
+
+    <None Remove="Resources\Helm\kube-state-metrics\templates\kubeconfig-secret.yaml" />
+
+    <None Remove="Resources\Helm\kube-state-metrics\templates\NOTES.txt" />
+
+    <None Remove="Resources\Helm\kube-state-metrics\templates\pdb.yaml" />
+
+    <None Remove="Resources\Helm\kube-state-metrics\templates\podsecuritypolicy.yaml" />
+
+    <None Remove="Resources\Helm\kube-state-metrics\templates\psp-clusterrole.yaml" />
+
+    <None Remove="Resources\Helm\kube-state-metrics\templates\psp-clusterrolebinding.yaml" />
+
+    <None Remove="Resources\Helm\kube-state-metrics\templates\role.yaml" />
+
+    <None Remove="Resources\Helm\kube-state-metrics\templates\rolebinding.yaml" />
+
+    <None Remove="Resources\Helm\kube-state-metrics\templates\service.yaml" />
+
+    <None Remove="Resources\Helm\kube-state-metrics\templates\serviceaccount.yaml" />
+
+    <None Remove="Resources\Helm\kube-state-metrics\templates\servicemonitor.yaml" />
+
+    <None Remove="Resources\Helm\kube-state-metrics\templates\stsdiscovery-role.yaml" />
+
+    <None Remove="Resources\Helm\kube-state-metrics\templates\stsdiscovery-rolebinding.yaml" />
+
+    <None Remove="Resources\Helm\kube-state-metrics\templates\_helpers.tpl" />
+
+    <None Remove="Resources\Helm\kube-state-metrics\values.yaml" />
     <None Remove="Resources\Helm\metrics-server\Chart.yaml" />
     <None Remove="Resources\Helm\metrics-server\README.md" />
     <None Remove="Resources\Helm\metrics-server\templates\apiService.yaml" />
@@ -149,111 +419,18 @@
     <None Remove="Resources\Helm\etcd-cluster\values.yaml" />
     <None Remove="Resources\Helm\grafana\.helmignore" />
     <None Remove="Resources\Helm\grafana\Chart.yaml" />
-    <None Remove="Resources\Helm\grafana\ci\default-values.yaml" />
-    <None Remove="Resources\Helm\grafana\ci\with-dashboard-json-values.yaml" />
-    <None Remove="Resources\Helm\grafana\ci\with-dashboard-values.yaml" />
-    <None Remove="Resources\Helm\grafana\dashboards\cortex-performance_rev1.json" />
-    <None Remove="Resources\Helm\grafana\dashboards\custom-dashboard.json" />
-    <None Remove="Resources\Helm\grafana\dashboards\istio-mesh-dashboard.json" />
-    <None Remove="Resources\Helm\grafana\dashboards\istio-performance-dashboard.json" />
-    <None Remove="Resources\Helm\grafana\dashboards\istio-service-dashboard.json" />
-    <None Remove="Resources\Helm\grafana\dashboards\istio-workload-dashboard.json" />
-    <None Remove="Resources\Helm\grafana\dashboards\k8s-cluster-summary_rev1.json" />
-    <None Remove="Resources\Helm\grafana\dashboards\node-exporter-en_rev4.json" />
-    <None Remove="Resources\Helm\grafana\dashboards\node-exporter-full_rev21.json" />
     <None Remove="Resources\Helm\grafana\OWNERS._" />
     <None Remove="Resources\Helm\grafana\README.md" />
-    <None Remove="Resources\Helm\grafana\templates\clusterrole.yaml" />
-    <None Remove="Resources\Helm\grafana\templates\clusterrolebinding.yaml" />
-    <None Remove="Resources\Helm\grafana\templates\configmap-dashboard-provider.yaml" />
-    <None Remove="Resources\Helm\grafana\templates\configmap.yaml" />
-    <None Remove="Resources\Helm\grafana\templates\dashboards-json-configmap.yaml" />
-    <None Remove="Resources\Helm\grafana\templates\deployment.yaml" />
-    <None Remove="Resources\Helm\grafana\templates\headless-service.yaml" />
-    <None Remove="Resources\Helm\grafana\templates\ingress.yaml" />
-    <None Remove="Resources\Helm\grafana\templates\NOTES.txt" />
-    <None Remove="Resources\Helm\grafana\templates\poddisruptionbudget.yaml" />
-    <None Remove="Resources\Helm\grafana\templates\podsecuritypolicy.yaml" />
-    <None Remove="Resources\Helm\grafana\templates\pvc.yaml" />
-    <None Remove="Resources\Helm\grafana\templates\role.yaml" />
-    <None Remove="Resources\Helm\grafana\templates\rolebinding.yaml" />
-    <None Remove="Resources\Helm\grafana\templates\secret-env.yaml" />
-    <None Remove="Resources\Helm\grafana\templates\secret.yaml" />
-    <None Remove="Resources\Helm\grafana\templates\service.yaml" />
-    <None Remove="Resources\Helm\grafana\templates\serviceaccount.yaml" />
-    <None Remove="Resources\Helm\grafana\templates\statefulset.yaml" />
-    <None Remove="Resources\Helm\grafana\templates\_helpers.tpl" />
-    <None Remove="Resources\Helm\grafana\templates\_pod.tpl" />
     <None Remove="Resources\Helm\grafana\values.yaml" />
     <None Remove="Resources\Helm\harbor\.gitignore" />
     <None Remove="Resources\Helm\harbor\.helmignore" />
     <None Remove="Resources\Helm\harbor\Chart.yaml" />
-    <None Remove="Resources\Helm\harbor\conf\clair.yaml" />
-    <None Remove="Resources\Helm\harbor\conf\notary-server.json" />
-    <None Remove="Resources\Helm\harbor\conf\notary-signer.json" />
     <None Remove="Resources\Helm\harbor\CONTRIBUTING.md" />
     <None Remove="Resources\Helm\harbor\LICENSE._" />
     <None Remove="Resources\Helm\harbor\README.md" />
-    <None Remove="Resources\Helm\harbor\templates\chartmuseum\chartmuseum-cm.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\chartmuseum\chartmuseum-dpl.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\chartmuseum\chartmuseum-pvc.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\chartmuseum\chartmuseum-secret.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\chartmuseum\chartmuseum-svc.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\chartmuseum\chartmuseum-tls.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\clair\clair-dpl.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\clair\clair-secret.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\clair\clair-svc.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\clair\clair-tls.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\core\core-cm.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\core\core-dpl.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\core\core-secret.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\core\core-svc.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\core\core-tls.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\database\database-secret.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\database\database-ss.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\database\database-svc.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\ingress\ingress.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\ingress\secret.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\internal\auto-tls.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\jobservice\jobservice-cm-env.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\jobservice\jobservice-cm.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\jobservice\jobservice-dpl.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\jobservice\jobservice-pvc.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\jobservice\jobservice-secrets.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\jobservice\jobservice-svc.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\jobservice\jobservice-tls.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\nginx\configmap-http.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\nginx\configmap-https.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\nginx\deployment.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\nginx\secret.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\nginx\service.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\notary\notary-secret.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\notary\notary-server.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\notary\notary-signer.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\notary\notary-svc.yaml" />
     <None Remove="Resources\Helm\harbor\templates\NOTES.txt" />
-    <None Remove="Resources\Helm\harbor\templates\portal\configmap.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\portal\deployment.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\portal\service.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\portal\tls.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\redis\service.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\redis\statefulset.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\registry\registry-cm.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\registry\registry-dpl.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\registry\registry-pvc.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\registry\registry-secret.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\registry\registry-svc.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\registry\registry-tls.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\trivy\trivy-secret.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\trivy\trivy-sts.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\trivy\trivy-svc.yaml" />
-    <None Remove="Resources\Helm\harbor\templates\trivy\trivy-tls.yaml" />
     <None Remove="Resources\Helm\harbor\templates\_helpers.tpl" />
     <None Remove="Resources\Helm\harbor\values.yaml" />
-    <None Remove="Resources\Helm\istio-prometheus\Chart.yaml" />
-    <None Remove="Resources\Helm\istio-prometheus\templates\servicemonitors.yaml" />
-    <None Remove="Resources\Helm\istio-prometheus\templates\_affinity.tpl" />
-    <None Remove="Resources\Helm\istio-prometheus\values.yaml" />
     <None Remove="Resources\Helm\jaeger\.helmignore" />
     <None Remove="Resources\Helm\jaeger\Chart.yaml" />
     <None Remove="Resources\Helm\jaeger\README.md" />
@@ -312,14 +489,23 @@
     <None Remove="Resources\Helm\loki\values.yaml" />
     <None Remove="Resources\Helm\minio\.helmignore" />
     <None Remove="Resources\Helm\minio\Chart.yaml" />
-    <None Remove="Resources\Helm\minio\ci\distributed-values.yaml" />
+    <None Remove="Resources\Helm\minio\crds\minio.min.io_tenants.yaml" />
     <None Remove="Resources\Helm\minio\README.md" />
+    <None Remove="Resources\Helm\minio\templates\cluster-role-binding.yaml" />
+    <None Remove="Resources\Helm\minio\templates\cluster-role.yaml" />
     <None Remove="Resources\Helm\minio\templates\clusterroles.yaml" />
     <None Remove="Resources\Helm\minio\templates\configmap.yaml" />
+    <None Remove="Resources\Helm\minio\templates\console-deployment.yaml" />
+    <None Remove="Resources\Helm\minio\templates\console-ingress.yaml" />
+    <None Remove="Resources\Helm\minio\templates\console-secret.yaml" />
+    <None Remove="Resources\Helm\minio\templates\console-service.yaml" />
+    <None Remove="Resources\Helm\minio\templates\console-ui.yaml" />
     <None Remove="Resources\Helm\minio\templates\deployment.yaml" />
     <None Remove="Resources\Helm\minio\templates\ingress.yaml" />
     <None Remove="Resources\Helm\minio\templates\networkpolicy.yaml" />
     <None Remove="Resources\Helm\minio\templates\NOTES.txt" />
+    <None Remove="Resources\Helm\minio\templates\operator-deployment.yaml" />
+    <None Remove="Resources\Helm\minio\templates\operator-service.yaml" />
     <None Remove="Resources\Helm\minio\templates\poddisruptionbudget.yaml" />
     <None Remove="Resources\Helm\minio\templates\post-install-create-bucket-job.yaml" />
     <None Remove="Resources\Helm\minio\templates\post-install-prometheus-metrics-job.yaml" />
@@ -334,9 +520,15 @@
     <None Remove="Resources\Helm\minio\templates\serviceaccount.yaml" />
     <None Remove="Resources\Helm\minio\templates\servicemonitor.yaml" />
     <None Remove="Resources\Helm\minio\templates\statefulset.yaml" />
+    <None Remove="Resources\Helm\minio\templates\tenant-secret.yaml" />
+    <None Remove="Resources\Helm\minio\templates\tenant.yaml" />
     <None Remove="Resources\Helm\minio\templates\_helpers.tpl" />
     <None Remove="Resources\Helm\minio\templates\_helper_create_bucket.txt" />
     <None Remove="Resources\Helm\minio\values.yaml" />
+    <None Remove="Resources\Helm\neon-acme\.helmignore" />
+    <None Remove="Resources\Helm\neon-acme\Chart.yaml" />
+    <None Remove="Resources\Helm\neon-acme\templates\api-service.yaml" />
+    <None Remove="Resources\Helm\neon-acme\values.yaml" />
     <None Remove="Resources\Helm\neon-cluster-operator\.helmignore" />
     <None Remove="Resources\Helm\neon-cluster-operator\Chart.yaml" />
     <None Remove="Resources\Helm\neon-cluster-operator\templates\_helpers.tpl" />
@@ -671,11 +863,195 @@
     <None Remove="Resources\Helm\redis-ha\templates\_configs.tpl" />
     <None Remove="Resources\Helm\redis-ha\templates\_helpers.tpl" />
     <None Remove="Resources\Helm\redis-ha\values.yaml" />
+    <None Remove="Resources\Helm\reloader\.helmignore" />
+    <None Remove="Resources\Helm\reloader\Chart.yaml" />
+    <None Remove="Resources\Helm\reloader\OWNERS" />
+    <None Remove="Resources\Helm\reloader\templates\clusterrole.yaml" />
+    <None Remove="Resources\Helm\reloader\templates\clusterrolebinding.yaml" />
+    <None Remove="Resources\Helm\reloader\templates\deployment.yaml" />
+    <None Remove="Resources\Helm\reloader\templates\NOTES.txt" />
+    <None Remove="Resources\Helm\reloader\templates\podmonitor.yaml" />
+    <None Remove="Resources\Helm\reloader\templates\role.yaml" />
+    <None Remove="Resources\Helm\reloader\templates\rolebinding.yaml" />
+    <None Remove="Resources\Helm\reloader\templates\service.yaml" />
+    <None Remove="Resources\Helm\reloader\templates\serviceaccount.yaml" />
+    <None Remove="Resources\Helm\reloader\templates\servicemonitor.yaml" />
+    <None Remove="Resources\Helm\reloader\templates\_helpers.tpl" />
+    <None Remove="Resources\Helm\reloader\values.yaml" />
+    <None Remove="Resources\Helm\tempo\.helmignore" />
+    <None Remove="Resources\Helm\tempo\Chart.yaml" />
+    <None Remove="Resources\Helm\tempo\README.md" />
+    <None Remove="Resources\Helm\tempo\templates\configmap-tempo-query.yaml" />
+    <None Remove="Resources\Helm\tempo\templates\configmap-tempo.yaml" />
+    <None Remove="Resources\Helm\tempo\templates\service.yaml" />
+    <None Remove="Resources\Helm\tempo\templates\serviceaccount.yaml" />
+    <None Remove="Resources\Helm\tempo\templates\statefulset.yaml" />
+    <None Remove="Resources\Helm\tempo\templates\_helpers.tpl" />
+    <None Remove="Resources\Helm\tempo\values.yaml" />
     <None Remove="Resources\Scripts\wsl2-cgroup-setup.sh" />
     <None Remove="Resources\Tools\safe-apt-get.sh" />
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Resources\Helm\cert-manager\Chart.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\README.md" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\cainjector-deployment.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\cainjector-psp-clusterrole.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\cainjector-psp-clusterrolebinding.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\cainjector-psp.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\cainjector-rbac.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\cainjector-serviceaccount.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\crds.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\deployment.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\NOTES.txt" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\psp-clusterrole.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\psp-clusterrolebinding.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\psp.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\service.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\serviceaccount.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\servicemonitor.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\webhook-deployment.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\webhook-mutating-webhook.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\webhook-psp-clusterrole.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\webhook-psp-clusterrolebinding.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\webhook-psp.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\webhook-rbac.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\webhook-service.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\webhook-serviceaccount.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\webhook-validating-webhook.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\_helpers.tpl" />
+    <EmbeddedResource Include="Resources\Helm\grafana-agent\.helmignore" />
+    <EmbeddedResource Include="Resources\Helm\grafana-agent\Chart.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana-agent\crds\crds.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana-agent\templates\configmap.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana-agent\templates\service.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana-agent\templates\daemonset.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana-agent\templates\deployment.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana-agent\templates\grafanaagent.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana-agent\templates\prometheusinstance.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana-agent\templates\rbac.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana-agent\templates\_helpers.tpl" />
+    <EmbeddedResource Include="Resources\Helm\grafana-agent\values.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\cluster_role_aggregate_grafana_admin_edit.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\cluster_role_aggregate_grafana_view.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\cluster_role_binding_grafana_operator.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\cluster_role_grafana_operator.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\crd-grafana.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\crd-grafanadashboard.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\crd-grafanadatasource.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\1-node-exporter.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\alertmanager-overview.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\apiserver.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\cert-manager.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\cluster-total.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\controller-manager.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\cortex.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\etcd.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\harbor.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\istio-control-plane.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\istio-mesh.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\istio-service.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\istio-wasm-extension.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\istio-workload.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\k8s-coredns.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\k8s-resources-cluster.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\k8s-resources-namespace.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\k8s-resources-node.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\k8s-resources-pod.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\k8s-resources-workload.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\k8s-resources-workloads-namespace.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\kubelet.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\loki-promtail.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\loki.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\minio.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\namespace-by-pod.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\namespace-by-workload.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\node-cluster-rsrc-use.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\node-rsrc-use.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\nodes.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\openebs.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\persistentvolumesusage.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\pod-total.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\postgresql.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\prometheus-net-controllers.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\prometheus-net.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\prometheus-remote-write.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\prometheus.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\proxy.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\redis.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\scheduler.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\statefulset.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\workload-total.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\datasources.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\grafana.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\operator.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\role.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\role_binding.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\service_account.yaml" />
+    <EmbeddedResource Include="Resources\Helm\harbor\README.md.gotmpl" />
+    <EmbeddedResource Include="Resources\Helm\harbor\templates\certificate.yaml" />
+    <EmbeddedResource Include="Resources\Helm\harbor\templates\clusterrole.yaml" />
+    <EmbeddedResource Include="Resources\Helm\harbor\templates\clusterrolebinding.yaml" />
+    <EmbeddedResource Include="Resources\Helm\harbor\templates\configmap.yaml" />
+    <EmbeddedResource Include="Resources\Helm\harbor\templates\crds.yaml" />
+    <EmbeddedResource Include="Resources\Helm\harbor\templates\deployment.yaml" />
+    <EmbeddedResource Include="Resources\Helm\harbor\templates\harborcluster.yaml" />
+    <EmbeddedResource Include="Resources\Helm\harbor\templates\hpa.yaml" />
+    <EmbeddedResource Include="Resources\Helm\harbor\templates\mutatingwebhookconfiguration.yaml" />
+    <EmbeddedResource Include="Resources\Helm\harbor\templates\persistentvolumes.yaml" />
+    <EmbeddedResource Include="Resources\Helm\harbor\templates\role.yaml" />
+    <EmbeddedResource Include="Resources\Helm\harbor\templates\rolebinding.yaml" />
+    <EmbeddedResource Include="Resources\Helm\harbor\templates\service.yaml" />
+    <EmbeddedResource Include="Resources\Helm\harbor\templates\serviceaccount.yaml" />
+    <EmbeddedResource Include="Resources\Helm\harbor\templates\validatingwebhookconfiguration.yaml" />
+    <EmbeddedResource Include="Resources\Helm\kube-state-metrics\.helmignore" />
+    <EmbeddedResource Include="Resources\Helm\kube-state-metrics\Chart.yaml" />
+    <EmbeddedResource Include="Resources\Helm\kube-state-metrics\OWNERS" />
+    <EmbeddedResource Include="Resources\Helm\kube-state-metrics\README.md" />
+    <EmbeddedResource Include="Resources\Helm\kube-state-metrics\templates\clusterrolebinding.yaml" />
+    <EmbeddedResource Include="Resources\Helm\kube-state-metrics\templates\deployment.yaml" />
+    <EmbeddedResource Include="Resources\Helm\kube-state-metrics\templates\kubeconfig-secret.yaml" />
+    <EmbeddedResource Include="Resources\Helm\kube-state-metrics\templates\NOTES.txt" />
+    <EmbeddedResource Include="Resources\Helm\kube-state-metrics\templates\pdb.yaml" />
+    <EmbeddedResource Include="Resources\Helm\kube-state-metrics\templates\podsecuritypolicy.yaml" />
+    <EmbeddedResource Include="Resources\Helm\kube-state-metrics\templates\psp-clusterrole.yaml" />
+    <EmbeddedResource Include="Resources\Helm\kube-state-metrics\templates\psp-clusterrolebinding.yaml" />
+    <EmbeddedResource Include="Resources\Helm\kube-state-metrics\templates\role.yaml" />
+    <EmbeddedResource Include="Resources\Helm\kube-state-metrics\templates\rolebinding.yaml" />
+    <EmbeddedResource Include="Resources\Helm\kube-state-metrics\templates\service.yaml" />
+    <EmbeddedResource Include="Resources\Helm\kube-state-metrics\templates\serviceaccount.yaml" />
+    <EmbeddedResource Include="Resources\Helm\kube-state-metrics\templates\servicemonitor.yaml" />
+    <EmbeddedResource Include="Resources\Helm\kube-state-metrics\templates\stsdiscovery-role.yaml" />
+    <EmbeddedResource Include="Resources\Helm\kube-state-metrics\templates\stsdiscovery-rolebinding.yaml" />
+    <EmbeddedResource Include="Resources\Helm\kube-state-metrics\templates\_helpers.tpl" />
+    <EmbeddedResource Include="Resources\Helm\kube-state-metrics\values.yaml" />
+    <EmbeddedResource Include="Resources\Helm\minio\crds\minio.min.io_tenants.yaml" />
+    <EmbeddedResource Include="Resources\Helm\minio\templates\cluster-role-binding.yaml" />
+    <EmbeddedResource Include="Resources\Helm\minio\templates\cluster-role.yaml" />
+    <EmbeddedResource Include="Resources\Helm\minio\templates\console-deployment.yaml" />
+    <EmbeddedResource Include="Resources\Helm\minio\templates\console-ingress.yaml" />
+    <EmbeddedResource Include="Resources\Helm\minio\templates\console-secret.yaml" />
+    <EmbeddedResource Include="Resources\Helm\minio\templates\console-service.yaml" />
+    <EmbeddedResource Include="Resources\Helm\minio\templates\console-ui.yaml" />
+    <EmbeddedResource Include="Resources\Helm\minio\templates\operator-deployment.yaml" />
+    <EmbeddedResource Include="Resources\Helm\minio\templates\operator-service.yaml" />
+    <EmbeddedResource Include="Resources\Helm\minio\templates\tenant-secret.yaml" />
+    <EmbeddedResource Include="Resources\Helm\minio\templates\tenant.yaml" />
+    <EmbeddedResource Include="Resources\Helm\neon-acme\.helmignore" />
+    <EmbeddedResource Include="Resources\Helm\neon-acme\Chart.yaml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Helm\neon-acme\templates\certificate-cluster.yaml" />
+    <EmbeddedResource Include="Resources\Helm\neon-acme\templates\api-service.yaml" />
+    <EmbeddedResource Include="Resources\Helm\neon-acme\templates\certificate-neon-acme.yaml" />
+    <EmbeddedResource Include="Resources\Helm\neon-acme\templates\deployment-neon-acme.yaml" />
+    <EmbeddedResource Include="Resources\Helm\neon-acme\templates\gateway-cluster.yaml" />
+    <EmbeddedResource Include="Resources\Helm\neon-acme\templates\issuer-neon-acme.yaml" />
+    <EmbeddedResource Include="Resources\Helm\neon-acme\templates\rbac-neon-acme.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\templates\rbac.yaml" />
+    <EmbeddedResource Include="Resources\Helm\neon-acme\templates\service-neon-acme.yaml" />
+    <EmbeddedResource Include="Resources\Helm\cert-manager\values.yaml" />
     <EmbeddedResource Include="Resources\Helm\kiali\templates\service-nodeport.yaml" />
     <EmbeddedResource Include="Resources\Helm\metrics-server\Chart.yaml" />
     <EmbeddedResource Include="Resources\Helm\metrics-server\README.md" />
@@ -695,22 +1071,8 @@
     <EmbeddedResource Include="Resources\Helm\calico\templates\deployment.yaml" />
     <EmbeddedResource Include="Resources\Helm\calico\templates\calico-config.yaml" />
     <EmbeddedResource Include="Resources\Helm\calico\values.yaml" />
-    <EmbeddedResource Include="Resources\Helm\grafana\ci\default-values.yaml" />
-    <EmbeddedResource Include="Resources\Helm\grafana\ci\with-dashboard-json-values.yaml" />
-    <EmbeddedResource Include="Resources\Helm\grafana\ci\with-dashboard-values.yaml" />
-    <EmbeddedResource Include="Resources\Helm\grafana\dashboards\cortex-performance_rev1.json" />
-    <EmbeddedResource Include="Resources\Helm\grafana\dashboards\custom-dashboard.json" />
-    <EmbeddedResource Include="Resources\Helm\grafana\dashboards\istio-mesh-dashboard.json" />
-    <EmbeddedResource Include="Resources\Helm\grafana\dashboards\istio-performance-dashboard.json" />
-    <EmbeddedResource Include="Resources\Helm\grafana\dashboards\istio-service-dashboard.json" />
-    <EmbeddedResource Include="Resources\Helm\grafana\dashboards\istio-workload-dashboard.json" />
-    <EmbeddedResource Include="Resources\Helm\grafana\dashboards\k8s-cluster-summary_rev1.json" />
-    <EmbeddedResource Include="Resources\Helm\grafana\dashboards\node-exporter-en_rev4.json" />
-    <EmbeddedResource Include="Resources\Helm\grafana\dashboards\node-exporter-full_rev21.json" />
-    <EmbeddedResource Include="Resources\Helm\harbor\conf\clair.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\conf\notary-server.json" />
-    <EmbeddedResource Include="Resources\Helm\harbor\conf\notary-signer.json" />
-    <EmbeddedResource Include="Resources\Helm\harbor\LICENSE._" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\kubernetes-cluster.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\node-exporter-full.yaml" />
     <EmbeddedResource Include="Resources\Helm\loki\.helmignore" />
     <EmbeddedResource Include="Resources\Helm\loki\Chart.yaml" />
     <EmbeddedResource Include="Resources\Helm\loki\README.md" />
@@ -732,31 +1094,12 @@
     <EmbeddedResource Include="Resources\Helm\loki\values.yaml" />
     <EmbeddedResource Include="Resources\Helm\minio\.helmignore" />
     <EmbeddedResource Include="Resources\Helm\minio\Chart.yaml" />
-    <EmbeddedResource Include="Resources\Helm\minio\ci\distributed-values.yaml" />
     <EmbeddedResource Include="Resources\Helm\minio\README.md" />
-    <EmbeddedResource Include="Resources\Helm\minio\templates\clusterroles.yaml" />
-    <EmbeddedResource Include="Resources\Helm\minio\templates\configmap.yaml" />
-    <EmbeddedResource Include="Resources\Helm\minio\templates\deployment.yaml" />
-    <EmbeddedResource Include="Resources\Helm\minio\templates\ingress.yaml" />
-    <EmbeddedResource Include="Resources\Helm\minio\templates\networkpolicy.yaml" />
     <EmbeddedResource Include="Resources\Helm\minio\templates\NOTES.txt" />
-    <EmbeddedResource Include="Resources\Helm\minio\templates\poddisruptionbudget.yaml" />
-    <EmbeddedResource Include="Resources\Helm\minio\templates\post-install-create-bucket-job.yaml" />
-    <EmbeddedResource Include="Resources\Helm\minio\templates\post-install-prometheus-metrics-job.yaml" />
-    <EmbeddedResource Include="Resources\Helm\minio\templates\post-install-prometheus-metrics-role.yaml" />
-    <EmbeddedResource Include="Resources\Helm\minio\templates\post-install-prometheus-metrics-rolebinding.yaml" />
-    <EmbeddedResource Include="Resources\Helm\minio\templates\post-install-prometheus-metrics-serviceaccount.yaml" />
-    <EmbeddedResource Include="Resources\Helm\minio\templates\pvc.yaml" />
-    <EmbeddedResource Include="Resources\Helm\minio\templates\rolebindings.yaml" />
-    <EmbeddedResource Include="Resources\Helm\minio\templates\secrets.yaml" />
-    <EmbeddedResource Include="Resources\Helm\minio\templates\securitycontextconstraints.yaml" />
-    <EmbeddedResource Include="Resources\Helm\minio\templates\service.yaml" />
     <EmbeddedResource Include="Resources\Helm\minio\templates\serviceaccount.yaml" />
-    <EmbeddedResource Include="Resources\Helm\minio\templates\servicemonitor.yaml" />
-    <EmbeddedResource Include="Resources\Helm\minio\templates\statefulset.yaml" />
     <EmbeddedResource Include="Resources\Helm\minio\templates\_helpers.tpl" />
-    <EmbeddedResource Include="Resources\Helm\minio\templates\_helper_create_bucket.txt" />
     <EmbeddedResource Include="Resources\Helm\minio\values.yaml" />
+    <EmbeddedResource Include="Resources\Helm\neon-acme\values.yaml" />
     <EmbeddedResource Include="Resources\Helm\neon-cluster-operator\.helmignore" />
     <EmbeddedResource Include="Resources\Helm\neon-cluster-operator\Chart.yaml" />
     <EmbeddedResource Include="Resources\Helm\neon-cluster-operator\values.yaml" />
@@ -1031,93 +1374,13 @@
     <EmbeddedResource Include="Resources\Helm\grafana\Chart.yaml" />
     <EmbeddedResource Include="Resources\Helm\grafana\OWNERS._" />
     <EmbeddedResource Include="Resources\Helm\grafana\README.md" />
-    <EmbeddedResource Include="Resources\Helm\grafana\templates\clusterrole.yaml" />
-    <EmbeddedResource Include="Resources\Helm\grafana\templates\clusterrolebinding.yaml" />
-    <EmbeddedResource Include="Resources\Helm\grafana\templates\configmap-dashboard-provider.yaml" />
-    <EmbeddedResource Include="Resources\Helm\grafana\templates\configmap.yaml" />
-    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards-json-configmap.yaml" />
-    <EmbeddedResource Include="Resources\Helm\grafana\templates\deployment.yaml" />
-    <EmbeddedResource Include="Resources\Helm\grafana\templates\headless-service.yaml" />
-    <EmbeddedResource Include="Resources\Helm\grafana\templates\ingress.yaml" />
-    <EmbeddedResource Include="Resources\Helm\grafana\templates\NOTES.txt" />
-    <EmbeddedResource Include="Resources\Helm\grafana\templates\poddisruptionbudget.yaml" />
-    <EmbeddedResource Include="Resources\Helm\grafana\templates\podsecuritypolicy.yaml" />
-    <EmbeddedResource Include="Resources\Helm\grafana\templates\pvc.yaml" />
-    <EmbeddedResource Include="Resources\Helm\grafana\templates\role.yaml" />
-    <EmbeddedResource Include="Resources\Helm\grafana\templates\rolebinding.yaml" />
-    <EmbeddedResource Include="Resources\Helm\grafana\templates\secret-env.yaml" />
-    <EmbeddedResource Include="Resources\Helm\grafana\templates\secret.yaml" />
-    <EmbeddedResource Include="Resources\Helm\grafana\templates\service.yaml" />
-    <EmbeddedResource Include="Resources\Helm\grafana\templates\serviceaccount.yaml" />
-    <EmbeddedResource Include="Resources\Helm\grafana\templates\statefulset.yaml" />
-    <EmbeddedResource Include="Resources\Helm\grafana\templates\_helpers.tpl" />
-    <EmbeddedResource Include="Resources\Helm\grafana\templates\_pod.tpl" />
     <EmbeddedResource Include="Resources\Helm\grafana\values.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\.gitignore" />
     <EmbeddedResource Include="Resources\Helm\harbor\.helmignore" />
     <EmbeddedResource Include="Resources\Helm\harbor\Chart.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\CONTRIBUTING.md" />
     <EmbeddedResource Include="Resources\Helm\harbor\README.md" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\chartmuseum\chartmuseum-cm.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\chartmuseum\chartmuseum-dpl.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\chartmuseum\chartmuseum-pvc.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\chartmuseum\chartmuseum-secret.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\chartmuseum\chartmuseum-svc.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\chartmuseum\chartmuseum-tls.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\clair\clair-dpl.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\clair\clair-secret.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\clair\clair-svc.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\clair\clair-tls.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\core\core-cm.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\core\core-dpl.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\core\core-secret.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\core\core-svc.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\core\core-tls.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\database\database-secret.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\database\database-ss.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\database\database-svc.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\ingress\ingress.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\ingress\secret.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\internal\auto-tls.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\jobservice\jobservice-cm-env.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\jobservice\jobservice-cm.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\jobservice\jobservice-dpl.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\jobservice\jobservice-pvc.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\jobservice\jobservice-secrets.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\jobservice\jobservice-svc.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\jobservice\jobservice-tls.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\nginx\configmap-http.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\nginx\configmap-https.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\nginx\deployment.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\nginx\secret.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\nginx\service.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\notary\notary-secret.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\notary\notary-server.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\notary\notary-signer.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\notary\notary-svc.yaml" />
     <EmbeddedResource Include="Resources\Helm\harbor\templates\NOTES.txt" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\portal\configmap.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\portal\deployment.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\portal\service.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\portal\tls.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\redis\service.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\redis\statefulset.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\registry\registry-cm.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\registry\registry-dpl.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\registry\registry-pvc.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\registry\registry-secret.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\registry\registry-svc.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\registry\registry-tls.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\trivy\trivy-secret.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\trivy\trivy-sts.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\trivy\trivy-svc.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\trivy\trivy-tls.yaml" />
     <EmbeddedResource Include="Resources\Helm\harbor\templates\_helpers.tpl" />
     <EmbeddedResource Include="Resources\Helm\harbor\values.yaml" />
-    <EmbeddedResource Include="Resources\Helm\istio-prometheus\Chart.yaml" />
-    <EmbeddedResource Include="Resources\Helm\istio-prometheus\templates\servicemonitors.yaml" />
-    <EmbeddedResource Include="Resources\Helm\istio-prometheus\templates\_affinity.tpl" />
-    <EmbeddedResource Include="Resources\Helm\istio-prometheus\values.yaml" />
     <EmbeddedResource Include="Resources\Helm\jaeger\.helmignore" />
     <EmbeddedResource Include="Resources\Helm\jaeger\Chart.yaml" />
     <EmbeddedResource Include="Resources\Helm\jaeger\README.md" />
@@ -1243,6 +1506,31 @@
     <EmbeddedResource Include="Resources\Helm\redis-ha\templates\_configs.tpl" />
     <EmbeddedResource Include="Resources\Helm\redis-ha\templates\_helpers.tpl" />
     <EmbeddedResource Include="Resources\Helm\redis-ha\values.yaml" />
+    <EmbeddedResource Include="Resources\Helm\reloader\.helmignore" />
+    <EmbeddedResource Include="Resources\Helm\reloader\Chart.yaml" />
+    <EmbeddedResource Include="Resources\Helm\reloader\OWNERS" />
+    <EmbeddedResource Include="Resources\Helm\reloader\templates\clusterrole.yaml" />
+    <EmbeddedResource Include="Resources\Helm\reloader\templates\clusterrolebinding.yaml" />
+    <EmbeddedResource Include="Resources\Helm\reloader\templates\deployment.yaml" />
+    <EmbeddedResource Include="Resources\Helm\reloader\templates\NOTES.txt" />
+    <EmbeddedResource Include="Resources\Helm\reloader\templates\podmonitor.yaml" />
+    <EmbeddedResource Include="Resources\Helm\reloader\templates\role.yaml" />
+    <EmbeddedResource Include="Resources\Helm\reloader\templates\rolebinding.yaml" />
+    <EmbeddedResource Include="Resources\Helm\reloader\templates\service.yaml" />
+    <EmbeddedResource Include="Resources\Helm\reloader\templates\serviceaccount.yaml" />
+    <EmbeddedResource Include="Resources\Helm\reloader\templates\servicemonitor.yaml" />
+    <EmbeddedResource Include="Resources\Helm\reloader\templates\_helpers.tpl" />
+    <EmbeddedResource Include="Resources\Helm\reloader\values.yaml" />
+    <EmbeddedResource Include="Resources\Helm\tempo\.helmignore" />
+    <EmbeddedResource Include="Resources\Helm\tempo\Chart.yaml" />
+    <EmbeddedResource Include="Resources\Helm\tempo\README.md" />
+    <EmbeddedResource Include="Resources\Helm\tempo\templates\configmap-tempo-query.yaml" />
+    <EmbeddedResource Include="Resources\Helm\tempo\templates\configmap-tempo.yaml" />
+    <EmbeddedResource Include="Resources\Helm\tempo\templates\service.yaml" />
+    <EmbeddedResource Include="Resources\Helm\tempo\templates\serviceaccount.yaml" />
+    <EmbeddedResource Include="Resources\Helm\tempo\templates\statefulset.yaml" />
+    <EmbeddedResource Include="Resources\Helm\tempo\templates\_helpers.tpl" />
+    <EmbeddedResource Include="Resources\Helm\tempo\values.yaml" />
     <EmbeddedResource Include="Resources\Scripts\wsl2-cgroup-setup.sh" />
     <EmbeddedResource Include="Resources\Tools\safe-apt-get.sh">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
@@ -1276,12 +1564,22 @@
   <ItemGroup>
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
     <ProjectReference Include="..\Neon.Cryptography\Neon.Cryptography.csproj" />
+    <ProjectReference Include="..\Neon.Deployment\Neon.Deployment.csproj" />
+    <ProjectReference Include="..\Neon.Kube.Models\Neon.Kube.Models.csproj" />
     <ProjectReference Include="..\Neon.SSH\Neon.SSH.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
     <None Include="..\..\LICENSE" Pack="True" PackagePath="" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\Helm\cert-manager\templates\cainjector-deployment.yaml" />
+    <Resource Include="Resources\Helm\cert-manager\templates\cainjector-psp-clusterrole.yaml" />
+    <Resource Include="Resources\Helm\cert-manager\templates\cainjector-psp-clusterrolebinding.yaml" />
+    <Resource Include="Resources\Helm\cert-manager\templates\cainjector-psp.yaml" />
+    <Resource Include="Resources\Helm\cert-manager\templates\cainjector-serviceaccount.yaml" />
   </ItemGroup>
 
   <Target Name="ModelGen" BeforeTargets="BeforeCompile" Condition="Exists('$(NF_ROOT)\Tools\prebuilder\bin\$(Configuration)\netcoreapp3.1\prebuilder.exe')">

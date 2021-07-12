@@ -1,0 +1,17 @@
+apiVersion: monitoring.grafana.com/v1alpha1
+kind: GrafanaAgent
+metadata:
+  name: grafana-agent
+  namespace: neon-monitor
+  labels:
+    app: grafana-agent
+spec:
+  image: "{{ .Values.agent.image.organization }}/{{ .Values.agent.image.repository }}:{{ .Values.agent.image.tag }}"
+  logLevel: info
+  logFormat: json
+  serviceAccountName: grafana-agent
+  prometheus:
+    shards: {{ .Values.shards }}
+    instanceSelector:
+      matchLabels:
+        agent: grafana-agent

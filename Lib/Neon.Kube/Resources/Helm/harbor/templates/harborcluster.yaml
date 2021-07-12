@@ -1,0 +1,83 @@
+﻿apiVersion: goharbor.io/v1beta1
+kind: HarborCluster
+metadata:
+  name: registry
+  namespace: {{ .Release.Namespace | quote }}
+spec:
+  imageSource: # Optional
+    repository: ghcr.io/goharbor # Required
+    imagePullPolicy: IfNotPresent # Optional, default = IfNotPresent
+    imagePullSecrets: []
+  logLevel: debug
+  database:
+    kind: PostgreSQL
+    spec:
+      postgresql:
+        hosts:
+          - host: db-citus-postgresql.neon-system
+            port: 5432
+        passwordRef: registry
+        sslMode: disable
+        username: neon_service
+        prefix: harbor
+  storage:
+    kind: S3
+    spec:
+      s3:
+        region: neon
+        bucket: harbor
+        regionendpoint: http://minio.neon-system
+  cache:
+    kind: Redis
+    spec:
+      redis:
+        host: {{ .Values.redis.external.addr }}
+        port: 26379
+        sentinelMasterSet: {{ .Values.redis.external.sentinelMasterSet }}
+  version: 2.2.1
+  chartmuseum: {}
+  core:
+    tokenIssuer:
+      kind: Issuer
+      name: neon-system-selfsigned-issuer
+  expose: 
+    core: # Required
+      # TLS setting
+      # Expose service with ingress way
+      ingress:
+        # Host of the exposed service
+        host: registry.{{ .Values.neon.clusterDomain }} # Required
+        # Ingress controller type, support ["gce","ncp","default"]
+        controller: default # Optional, default value = "default"
+        # Annotations applied to the ingress
+        annotations: # Optional
+          key: value
+    notary: # Required
+      # TLS setting
+      tls: # Optional
+        # Certificate reference
+        certificateRef: {{ .Values.neon.clusterDomain }} # Optional
+      # Expose service with ingress way
+      ingress:
+        # Host of the exposed service
+        host: notary.{{ .Values.neon.clusterDomain }} # Required
+        # Ingress controller type, support ["gce","ncp","default"]
+        controller: default # Optional, default value = "default"
+        # Annotations applied to the ingress
+        annotations: # Optional
+          key: value
+  externalURL: https://registry.{{ .Values.neon.clusterDomain }}
+  harborAdminPasswordRef: registry
+  internalTLS:
+    enabled: false
+  notary:
+    migrationEnabled: true
+  portal: {}
+  registry: {}
+  trivy:
+    skipUpdate: false
+    storage:
+      cachePersistentVolume:
+        claimName: registry-trivy-cache
+      reportsPersistentVolume:
+        claimName: registry-trivy-reports
