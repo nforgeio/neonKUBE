@@ -75,7 +75,7 @@ namespace Neon.Net
         }
 
         /// <summary>
-        /// Constructs an exception message using an inner <see cref="HttpException"/> if passed or 
+        /// Constructs the exception message using the parameters passed.
         /// </summary>
         /// <param name="reasonPhrase">The HTTP response peason phrase (or <c>null</c>).</param>
         /// <param name="requestUri">Optionally specifies the request URL.</param>
@@ -120,7 +120,28 @@ namespace Neon.Net
             this.RequestUri    = requestUri;
             this.RequestMethod = requestMethod;
             this.ReasonPhrase  = requestException.Message;
+
+#if NET_FRAMEWORK
+            this.StatusCode    = requestException.StatusCode ?? (HttpStatusCode)0;
+#else
             this.StatusCode    = (HttpStatusCode)0;
+#endif
+        }
+
+        /// <summary>
+        /// Constructs an exception from an <see cref="HttpResponseMessage"/>.
+        /// </summary>
+        /// <param name="response"></param>
+        /// <exception cref="InvalidOperationException">Thrown when the response message does not indicate an error.</exception>
+        public HttpException(HttpResponseMessage response)
+            : base(GetMessage(response.ReasonPhrase, response.RequestMessage.RequestUri.ToString(), response.RequestMessage.Method.ToString(), response.StatusCode))
+        {
+            Covenant.Requires<ArgumentNullException>(response != null, nameof(response));
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new InvalidOperationException("Respons message does not indicate an error.");
+            }
         }
 
         /// <summary>
