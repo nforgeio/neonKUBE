@@ -6,8 +6,7 @@ metadata:
   labels:
     app: grafana-agent
 spec:
-  image: "{{ .Values.agent.image.organization }}/{{ .Values.agent.image.repository }}:{{ .Values.agentimage.tag }}"
-  imagePullPolicy: {{ .Values.agent.image.pullPolicy | default "IfNotPresent" }}
+  image: "{{ .Values.agent.image.organization }}/{{ .Values.agent.image.repository }}:{{ .Values.agent.image.tag }}"
   logLevel: info
   logFormat: json
   serviceAccountName: grafana-agent

@@ -146,6 +146,8 @@
 
     <None Remove="Resources\Helm\grafana-agent\Chart.yaml" />
 
+    <None Remove="Resources\Helm\grafana-agent\templates\configmap.yaml" />
+
     <None Remove="Resources\Helm\grafana-agent\templates\crds.yaml" />
 
     <None Remove="Resources\Helm\grafana-agent\templates\daemonset.yaml" />
@@ -157,6 +159,8 @@
     <None Remove="Resources\Helm\grafana-agent\templates\prometheusinstance.yaml" />
 
     <None Remove="Resources\Helm\grafana-agent\templates\rbac.yaml" />
+
+    <None Remove="Resources\Helm\grafana-agent\templates\service.yaml" />
 
     <None Remove="Resources\Helm\grafana-agent\templates\_helpers.tpl" />
 
@@ -874,6 +878,16 @@
     <None Remove="Resources\Helm\reloader\templates\servicemonitor.yaml" />
     <None Remove="Resources\Helm\reloader\templates\_helpers.tpl" />
     <None Remove="Resources\Helm\reloader\values.yaml" />
+    <None Remove="Resources\Helm\tempo\.helmignore" />
+    <None Remove="Resources\Helm\tempo\Chart.yaml" />
+    <None Remove="Resources\Helm\tempo\README.md" />
+    <None Remove="Resources\Helm\tempo\templates\configmap-tempo-query.yaml" />
+    <None Remove="Resources\Helm\tempo\templates\configmap-tempo.yaml" />
+    <None Remove="Resources\Helm\tempo\templates\service.yaml" />
+    <None Remove="Resources\Helm\tempo\templates\serviceaccount.yaml" />
+    <None Remove="Resources\Helm\tempo\templates\statefulset.yaml" />
+    <None Remove="Resources\Helm\tempo\templates\_helpers.tpl" />
+    <None Remove="Resources\Helm\tempo\values.yaml" />
     <None Remove="Resources\Scripts\wsl2-cgroup-setup.sh" />
     <None Remove="Resources\Tools\safe-apt-get.sh" />
   </ItemGroup>
@@ -908,7 +922,9 @@
     <EmbeddedResource Include="Resources\Helm\cert-manager\templates\_helpers.tpl" />
     <EmbeddedResource Include="Resources\Helm\grafana-agent\.helmignore" />
     <EmbeddedResource Include="Resources\Helm\grafana-agent\Chart.yaml" />
-    <EmbeddedResource Include="Resources\Helm\grafana-agent\templates\crds.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana-agent\crds\crds.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana-agent\templates\configmap.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana-agent\templates\service.yaml" />
     <EmbeddedResource Include="Resources\Helm\grafana-agent\templates\daemonset.yaml" />
     <EmbeddedResource Include="Resources\Helm\grafana-agent\templates\deployment.yaml" />
     <EmbeddedResource Include="Resources\Helm\grafana-agent\templates\grafanaagent.yaml" />
@@ -1505,6 +1521,16 @@
     <EmbeddedResource Include="Resources\Helm\reloader\templates\servicemonitor.yaml" />
     <EmbeddedResource Include="Resources\Helm\reloader\templates\_helpers.tpl" />
     <EmbeddedResource Include="Resources\Helm\reloader\values.yaml" />
+    <EmbeddedResource Include="Resources\Helm\tempo\.helmignore" />
+    <EmbeddedResource Include="Resources\Helm\tempo\Chart.yaml" />
+    <EmbeddedResource Include="Resources\Helm\tempo\README.md" />
+    <EmbeddedResource Include="Resources\Helm\tempo\templates\configmap-tempo-query.yaml" />
+    <EmbeddedResource Include="Resources\Helm\tempo\templates\configmap-tempo.yaml" />
+    <EmbeddedResource Include="Resources\Helm\tempo\templates\service.yaml" />
+    <EmbeddedResource Include="Resources\Helm\tempo\templates\serviceaccount.yaml" />
+    <EmbeddedResource Include="Resources\Helm\tempo\templates\statefulset.yaml" />
+    <EmbeddedResource Include="Resources\Helm\tempo\templates\_helpers.tpl" />
+    <EmbeddedResource Include="Resources\Helm\tempo\values.yaml" />
     <EmbeddedResource Include="Resources\Scripts\wsl2-cgroup-setup.sh" />
     <EmbeddedResource Include="Resources\Tools\safe-apt-get.sh">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>

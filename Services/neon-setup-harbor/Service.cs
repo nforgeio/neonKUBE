@@ -100,13 +100,13 @@ namespace NeonSetupHarbor
                 harborSecret = await k8s.ReadNamespacedSecretAsync(KubeConst.RegistrySecretKey, KubeNamespaces.NeonSystem);
             }
 
-            if (!harborSecret.StringData.ContainsKey("harbor-database-password"))
+            if (!harborSecret.Data.ContainsKey("harbor-database-password"))
             {
                 harborSecret.Data["harbor-database-password"] = secret.Data["password"];
                 await k8s.ReplaceNamespacedSecretAsync(harborSecret, KubeConst.RegistrySecretKey, KubeNamespaces.NeonSystem);
             }
 
-            if (!harborSecret.StringData.ContainsKey("secret"))
+            if (!harborSecret.Data.ContainsKey("secret"))
             {
                 harborSecret.StringData["secret"] = NeonHelper.GetCryptoRandomPassword(20);
                 await k8s.ReplaceNamespacedSecretAsync(harborSecret, KubeConst.RegistrySecretKey, KubeNamespaces.NeonSystem);

@@ -172,6 +172,10 @@ CREATE TABLE {StateTable}( KEY TEXT, value TEXT, PRIMARY KEY(KEY) )
             Log.LogInfo($"[{KubeNamespaces.NeonSystem}-db] {KubeNamespaces.NeonSystem} database is ready.");
         }
 
+        /// <summary>
+        /// Deploys a Kubernetes job that runs Grafana setup.
+        /// </summary>
+        /// <returns></returns>
         public async Task SetupGrafanaAsync()
         {
             await using (NpgsqlConnection conn = new NpgsqlConnection(connString))
@@ -227,11 +231,23 @@ CREATE TABLE {StateTable}( KEY TEXT, value TEXT, PRIMARY KEY(KEY) )
                         {
                             Log.LogInfo($"Grafana setup job is running.");
                         }
-                    }
+
+                        var job = await k8s.ReadNamespacedJobAsync(KubeConst.NeonJobSetupGrafana, KubeNamespaces.NeonSystem);
+
+                        while (job.Status.Succeeded < 1)
+                        {
+                            await Task.Delay(1000);
+                            job = await k8s.ReadNamespacedJobAsync(KubeConst.NeonJobSetupGrafana, KubeNamespaces.NeonSystem);
+                        }
                     }
                 }
+            }
         }
 
+        /// <summary>
+        /// Deploys a Kubernetes job that runs Harbor setup.
+        /// </summary>
+        /// <returns></returns>
         public async Task SetupHarborAsync()
         {
             await using (NpgsqlConnection conn = new NpgsqlConnection(connString))
@@ -285,6 +301,14 @@ CREATE TABLE {StateTable}( KEY TEXT, value TEXT, PRIMARY KEY(KEY) )
                         else
                         {
                             Log.LogInfo($"Harbor setup job is running.");
+                        }
+
+                        var job = await k8s.ReadNamespacedJobAsync(KubeConst.NeonJobSetupHarbor, KubeNamespaces.NeonSystem);
+
+                        while (job.Status.Succeeded < 1)
+                        {
+                            await Task.Delay(1000);
+                            job = await k8s.ReadNamespacedJobAsync(KubeConst.NeonJobSetupHarbor, KubeNamespaces.NeonSystem);
                         }
                     }
                 }
