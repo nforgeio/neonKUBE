@@ -106,8 +106,15 @@ namespace Neon.Net
         }
 
         /// <summary>
+        /// <para>
         /// Constructs an exception from a <see cref="HttpRequestException"/> and optional
         /// request details.
+        /// </para>
+        /// <note>
+        /// This constructor does not initialize the <see cref="StatusCode"/> property for 
+        /// .NET Standard 2.x, .NET Core 3.x, and .NET Framework and the <see cref="ReasonPhrase"/>
+        /// is set to the message from <paramref name="requestException"/>.
+        /// </note>
         /// </summary>
         /// <param name="requestException">The <see cref="HttpRequestException"/>.</param>
         /// <param name="requestUri">Optionally specifies the request URL.</param>
@@ -121,7 +128,7 @@ namespace Neon.Net
             this.RequestMethod = requestMethod;
             this.ReasonPhrase  = requestException.Message;
 
-#if NET_FRAMEWORK
+#if NET5_0_OR_GREATER
             this.StatusCode    = requestException.StatusCode ?? (HttpStatusCode)0;
 #else
             this.StatusCode    = (HttpStatusCode)0;
