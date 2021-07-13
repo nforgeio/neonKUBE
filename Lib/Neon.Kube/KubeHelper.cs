@@ -2611,6 +2611,11 @@ TCPKeepAlive yes
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(imageUri), nameof(imageUri));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(imagePath), nameof(imagePath));
 
+            // $note(jefflill):
+            //
+            // We're not going to use a retry policy here because restarting a multi-GB download potentially several
+            // times is not likely to be what the user wants and the mult-part download is restartable and does retry.
+
             var imageFolder = Path.GetDirectoryName(imagePath);
 
             Directory.CreateDirectory(imageFolder);
