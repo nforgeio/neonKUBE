@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_Helper.Json.cs
+// FILE:	    Test_NeonHelper.Json.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -16,14 +16,13 @@
 // limitations under the License.
 
 using System;
-
-using Newtonsoft.Json;
+using System.Text;
 
 using Neon.Common;
 using Neon.Xunit;
 
+using Newtonsoft.Json;
 using Xunit;
-using System.Text;
 
 namespace TestCommon
 {

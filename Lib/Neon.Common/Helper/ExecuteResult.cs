@@ -18,12 +18,13 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 
 namespace Neon.Common
 {
     /// <summary>
     /// Holds the process exit code and captured standard output from a process launched by any of the
-    /// <see cref="NeonHelper.ExecuteCapture(string, object[], TimeSpan?, Process, string, System.Collections.Generic.Dictionary{string, string}, Action{string}, Action{string}, TextReader)"/>
+    /// <see cref="NeonHelper.ExecuteCapture(string, object[], TimeSpan?, Process, string, System.Collections.Generic.Dictionary{string, string}, Action{string}, Action{string}, TextReader, Encoding)"/>
     /// related methods.
     /// </summary>
     public class ExecuteResponse
