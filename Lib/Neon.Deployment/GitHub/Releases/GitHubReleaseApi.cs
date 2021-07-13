@@ -33,6 +33,7 @@ using Neon.Cryptography;
 using Neon.IO;
 using Neon.Kube.Models.Headend;
 using Neon.Net;
+using Neon.Retry;
 
 using Octokit;
 
@@ -260,7 +261,7 @@ namespace Neon.Deployment
 
             if (!release.Draft)
             {
-                throw new NotSupportedException("Cannut upload asset to already published release.");
+                throw new NotSupportedException("Cannot upload asset to already published release.");
             }
 
             var repoPath = GitHubRepoPath.Parse(repo);
@@ -466,10 +467,16 @@ namespace Neon.Deployment
         /// <param name="download">The download information.</param>
         /// <param name="targetPath">The target file path.</param>
         /// <param name="progressAction">Optionally specifies an action to be called with the the percentage downloaded.</param>
+        /// <param name="retry">Optionally specifies the retry policy.  This defaults to a reasonable policy.</param>
         /// <param name="partTimeout">Optionally specifies the HTTP download timeout for each part (defaults to 10 minutes).</param>
-        public void Download(Download download, string targetPath, GitHubDownloadProgressDelegate progressAction = null, TimeSpan partTimeout = default)
+        public void Download(
+          Download                          download, 
+          string                            targetPath, 
+          GitHubDownloadProgressDelegate    progressAction = null, 
+          IRetryPolicy                      retry          = null,
+          TimeSpan                          partTimeout    = default)
         {
-            DownloadAsync(download, targetPath, progressAction, partTimeout).Wait();
+            DownloadAsync(download, targetPath, progressAction, partTimeout, retry).Wait();
         }
 
         /// <summary>
@@ -479,6 +486,7 @@ namespace Neon.Deployment
         /// <param name="targetPath">The target file path.</param>
         /// <param name="progressAction">Optionally specifies an action to be called with the the percentage downloaded.</param>
         /// <param name="partTimeout">Optionally specifies the HTTP download timeout for each part (defaults to 10 minutes).</param>
+        /// <param name="retry">Optionally specifies the retry policy.  This defaults to a reasonable policy.</param>
         /// <param name="cancellationToken">Optionally specifies the operation cancellation token.</param>
         /// <returns>The path to the downloaded file.</returns>
         /// <exception cref="IOException">Thrown when the download is corrupt.</exception>
@@ -499,10 +507,18 @@ namespace Neon.Deployment
         /// The target files (output and MD5) will be deleted when download appears to be corrupt.
         /// </note>
         /// </remarks>
-        public async Task<string> DownloadAsync(Download download, string targetPath, GitHubDownloadProgressDelegate progressAction = null, TimeSpan partTimeout = default, CancellationToken cancellationToken = default)
+        public async Task<string> DownloadAsync(
+            Download                        download, 
+            string                          targetPath, 
+            GitHubDownloadProgressDelegate  progressAction    = null, 
+            TimeSpan                        partTimeout       = default, 
+            IRetryPolicy                    retry             = null,
+            CancellationToken               cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(download != null, nameof(download));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(targetPath), nameof(targetPath));
+
+            retry = retry ?? new ExponentialRetryPolicy(TransientDetector.NetworkOrHttp, maxAttempts: 5);
 
             if (partTimeout <= TimeSpan.Zero)
             {
@@ -608,16 +624,20 @@ namespace Neon.Deployment
                             .Where(part => part.Number >= nextPartNumber)
                             .OrderBy(part => part.Number))
                         {
-                            output.Position = pos;
+                            await retry.InvokeAsync(
+                                async () =>
+                                {
+                                    output.Position = pos;
 
-                            var response = await httpClient.GetAsync(part.Uri);
+                                    var response = await httpClient.GetAsync(part.Uri, cancellationToken);
 
-                            response.EnsureSuccessStatusCode();
+                                    response.EnsureSuccessStatusCode();
 
-                            using (var contentStream = await response.Content.ReadAsStreamAsync())
-                            {
-                                await contentStream.CopyToAsync(output);
-                            }
+                                    using (var contentStream = await response.Content.ReadAsStreamAsync())
+                                    {
+                                        await contentStream.CopyToAsync(output, cancellationToken);
+                                    }
+                                });
 
                             // Ensure that the downloaded part size matches the specification.
 
