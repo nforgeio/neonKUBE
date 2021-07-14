@@ -145,9 +145,9 @@ namespace Neon.Net
         {
             Covenant.Requires<ArgumentNullException>(response != null, nameof(response));
 
-            if (!response.IsSuccessStatusCode)
+            if (response.IsSuccessStatusCode)
             {
-                throw new InvalidOperationException("Respons message does not indicate an error.");
+                throw new InvalidOperationException("Response does not indicate an error.");
             }
         }
 
