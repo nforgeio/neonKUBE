@@ -5,6 +5,9 @@ metadata:
   labels:
     app: grafana
 spec:
+  datasources:
+    - inputName: "DS_PROMETHEUS"
+      datasourceName: "Cortex"
   json: >
     {
       "__inputs": [
@@ -358,7 +361,7 @@ spec:
               "expr": "sum (promtail_encoded_bytes_total{pod=~'.*'}) by (pod)",
               "format": "time_series",
               "instant": false,
-              "legendFormat": "{{ pod }}",
+              "legendFormat": "{{"{{"}}pod{{"}}"}}",
               "refId": "A"
             }
           ],

@@ -5,6 +5,9 @@ metadata:
   labels:
     app: grafana
 spec:
+  datasources:
+    - inputName: "DS_PROMETHEUS"
+      datasourceName: "Cortex"
   json: >
     {
         "annotations": {
@@ -1047,7 +1050,7 @@ spec:
                         "value": "prod"
                     },
                     "datasource": "$datasource",
-                    "hide": {{ if .Values.grafana.sidecar.dashboards.multicluster }}0{{ else }}2{{ end }},
+                    "hide": 2,
                     "includeAll": false,
                     "label": "cluster",
                     "multi": false,

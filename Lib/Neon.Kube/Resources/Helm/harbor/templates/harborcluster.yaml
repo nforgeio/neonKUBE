@@ -5,7 +5,7 @@ metadata:
   namespace: {{ .Release.Namespace | quote }}
 spec:
   imageSource: # Optional
-    repository: ghcr.io/goharbor # Required
+    repository: neon-registry.node.local # Required
     imagePullPolicy: IfNotPresent # Optional, default = IfNotPresent
     imagePullSecrets: []
   logLevel: debug
@@ -19,24 +19,31 @@ spec:
         passwordRef: registry
         sslMode: disable
         username: neon_service
-        prefix: harbor
+        prefix: harbor_
   storage:
     kind: S3
     spec:
       s3:
         region: neon
         bucket: harbor
-        regionendpoint: http://minio.neon-system
+        regionendpoint: minio.neon-system
+        accesskey: {{ .Values.storage.s3.accessKey }}
+        secretkeyRef: {{ .Values.storage.s3.secretKeyRef }}
+
   cache:
     kind: Redis
     spec:
       redis:
-        host: {{ .Values.redis.external.addr }}
+        host: registry-redis
         port: 26379
-        sentinelMasterSet: {{ .Values.redis.external.sentinelMasterSet }}
-  version: 2.2.1
-  chartmuseum: {}
+        sentinelMasterSet: master
+  version: 2.3.0
+  chartmuseum:
+    image: goharbor-harbor-chartmuseum-photon
+    imagePullPolicy: IfNotPresent
   core:
+    image: goharbor-harbor-core
+    imagePullPolicy: IfNotPresent
     tokenIssuer:
       kind: Issuer
       name: neon-system-selfsigned-issuer
@@ -46,7 +53,7 @@ spec:
       # Expose service with ingress way
       ingress:
         # Host of the exposed service
-        host: registry.{{ .Values.neon.clusterDomain }} # Required
+        host: registry.{{ .Values.clusterDomain }} # Required
         # Ingress controller type, support ["gce","ncp","default"]
         controller: default # Optional, default value = "default"
         # Annotations applied to the ingress
@@ -54,30 +61,47 @@ spec:
           key: value
     notary: # Required
       # TLS setting
-      tls: # Optional
-        # Certificate reference
-        certificateRef: {{ .Values.neon.clusterDomain }} # Optional
-      # Expose service with ingress way
       ingress:
         # Host of the exposed service
-        host: notary.{{ .Values.neon.clusterDomain }} # Required
+        host: notary.{{ .Values.clusterDomain }} # Required
         # Ingress controller type, support ["gce","ncp","default"]
         controller: default # Optional, default value = "default"
         # Annotations applied to the ingress
         annotations: # Optional
           key: value
-  externalURL: https://registry.{{ .Values.neon.clusterDomain }}
+      tls: # Optional
+        # Certificate reference\
+        certificateRef: {{ .Values.clusterDomain }} # Optional
+  externalURL: https://registry.{{ .Values.clusterDomain }}
   harborAdminPasswordRef: registry
   internalTLS:
     enabled: false
   notary:
+    server:
+      image: goharbor-notary-server-photon
+      imagePullPolicy: IfNotPresent
+    signer:
+      image: goharbor-notary-signer-photon
+      imagePullPolicy: IfNotPresent
     migrationEnabled: true
-  portal: {}
-  registry: {}
+  portal:
+    image: goharbor-harbor-portal
+    imagePullPolicy: IfNotPresent
+  registry:
+    image: goharbor-registry-photon
+    imagePullPolicy: IfNotPresent
+  registryctl:
+    image: goharbor-harbor-registryctl
+    imagePullPolicy: IfNotPresent
   trivy:
+    image: goharbor-trivy-adapter-photon
+    imagePullPolicy: IfNotPresent
     skipUpdate: false
     storage:
       cachePersistentVolume:
         claimName: registry-trivy-cache
       reportsPersistentVolume:
         claimName: registry-trivy-reports
+  jobservice:
+    image: goharbor-harbor-jobservice
+    imagePullPolicy: IfNotPresent

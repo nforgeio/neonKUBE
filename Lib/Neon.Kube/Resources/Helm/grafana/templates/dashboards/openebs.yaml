@@ -5,6 +5,9 @@ metadata:
   labels:
     app: grafana
 spec:
+  datasources:
+    - inputName: "DS_PROMETHEUS"
+      datasourceName: "Cortex"
   json: >
     {
       "__inputs": [
@@ -162,7 +165,7 @@ spec:
               "expr": "abs(openebs_maya_exporter_version{cluster=\"$cluster\"})",
               "format": "table",
               "interval": "",
-              "legendFormat": "{{version}}",
+              "legendFormat": "{{"{{"}}version{{"}}"}}",
               "refId": "A"
             }
           ],
@@ -400,7 +403,7 @@ spec:
               "expr": "(kube_pod_container_status_ready{cluster=\"$cluster\",namespace=\"openebs\"})",
               "instant": true,
               "interval": "",
-              "legendFormat": "{{pod}}::{{container}}",
+              "legendFormat": "{{"{{"}}pod{{"}}"}}::{{"{{"}}container{{"}}"}}",
               "refId": "A"
             }
           ],
@@ -493,7 +496,7 @@ spec:
               "hide": false,
               "instant": false,
               "interval": "",
-              "legendFormat": "{{pod}}",
+              "legendFormat": "{{"{{"}}pod{{"}}"}}",
               "refId": "A"
             },
             {
@@ -590,7 +593,7 @@ spec:
               "expr": "count(kube_pod_container_status_waiting{cluster=\"$cluster\",namespace=\"$namespace\"} !=0 ) or vector(0)",
               "hide": false,
               "instant": false,
-              "legendFormat": "{{pod}}",
+              "legendFormat": "{{"{{"}}pod{{"}}"}}",
               "refId": "A"
             },
             {
@@ -687,7 +690,7 @@ spec:
               "expr": "count(kube_pod_container_status_terminated{cluster=\"$cluster\",namespace=\"$namespace\"} !=0 ) or vector(0)",
               "hide": false,
               "instant": false,
-              "legendFormat": "{{pod}}",
+              "legendFormat": "{{"{{"}}pod{{"}}"}}",
               "refId": "A"
             },
             {
@@ -882,7 +885,7 @@ spec:
               "expr": "count(kube_persistentvolumeclaim_info{cluster=\"$cluster\",namespace=\"$namespace\"}) ",
               "hide": false,
               "instant": false,
-              "legendFormat": "{{pod}}",
+              "legendFormat": "{{"{{"}}pod{{"}}"}}",
               "refId": "A"
             },
             {
@@ -979,7 +982,7 @@ spec:
               "expr": "count(kube_pod_spec_volumes_persistentvolumeclaims_readonly{cluster=\"$cluster\",namespace=\"$namespace\"} != 0) ",
               "hide": false,
               "instant": false,
-              "legendFormat": "{{pod}}",
+              "legendFormat": "{{"{{"}}pod{{"}}"}}",
               "refId": "A"
             },
             {
@@ -1077,7 +1080,7 @@ spec:
               "hide": false,
               "instant": false,
               "interval": "",
-              "legendFormat": "{{pod}}",
+              "legendFormat": "{{"{{"}}pod{{"}}"}}",
               "refId": "A"
             },
             {
@@ -1175,7 +1178,7 @@ spec:
               "hide": false,
               "instant": false,
               "interval": "",
-              "legendFormat": "{{pod}}",
+              "legendFormat": "{{"{{"}}pod{{"}}"}}",
               "refId": "A"
             },
             {
@@ -1386,7 +1389,7 @@ spec:
               "expr": "kubelet_volume_stats_available_bytes{namespace=\"$namespace\"}\n  / kubelet_volume_stats_capacity_bytes{namespace=\"$namespace\"}",
               "instant": true,
               "interval": "",
-              "legendFormat": "{{persistentvolumeclaim}}",
+              "legendFormat": "{{"{{"}}persistentvolumeclaim{{"}}"}}",
               "refId": "B"
             }
           ],
@@ -1677,7 +1680,7 @@ spec:
               "instant": false,
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "{{pod_name}}",
+              "legendFormat": "{{"{{"}}pod_name{{"}}"}}",
               "refId": "A"
             }
           ],
@@ -1781,7 +1784,7 @@ spec:
               "instant": false,
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "{{pod}}",
+              "legendFormat": "{{"{{"}}pod{{"}}"}}",
               "refId": "A"
             }
           ],
@@ -1882,7 +1885,7 @@ spec:
             {
               "expr": "count by (node)(kube_pod_info{cluster=\"$cluster\",namespace=\"$namespace\"})",
               "hide": false,
-              "legendFormat": "{{node}}",
+              "legendFormat": "{{"{{"}}node{{"}}"}}",
               "refId": "A"
             }
           ],
@@ -1991,7 +1994,7 @@ spec:
               "expr": "increase(kube_pod_container_status_restarts_total{cluster=\"$cluster\",namespace=\"$namespace\"}[2m]) ",
               "format": "time_series",
               "interval": "",
-              "legendFormat": "{{pod}}",
+              "legendFormat": "{{"{{"}}pod{{"}}"}}",
               "refId": "A",
               "units": "none",
               "valueHandler": "Number Threshold"
@@ -2097,14 +2100,14 @@ spec:
               "hide": false,
               "instant": false,
               "interval": "",
-              "legendFormat": "TERMINATED::{{reason}}::{{pod}}",
+              "legendFormat": "TERMINATED::{{"{{"}}reason{{"}}"}}::{{"{{"}}pod{{"}}"}}",
               "refId": "A"
             },
             {
               "expr": "count by(pod,reason) (kube_pod_container_status_waiting_reason{cluster=\"$cluster\",namespace=\"$namespace\"} !=0 )",
               "hide": false,
               "interval": "",
-              "legendFormat": "WAITING::{{reason}}::{{pod}}",
+              "legendFormat": "WAITING::{{"{{"}}reason{{"}}"}}::{{"{{"}}pod{{"}}"}}",
               "refId": "B"
             },
             {
@@ -2257,7 +2260,7 @@ spec:
               "format": "table",
               "instant": true,
               "interval": "",
-              "legendFormat": "{{persistentvolumeclaim}}:{{phase}}",
+              "legendFormat": "{{"{{"}}persistentvolumeclaim{{"}}"}}:{{"{{"}}phase{{"}}"}}",
               "refId": "A"
             }
           ],
@@ -2359,7 +2362,7 @@ spec:
               "expr": "(openebs_total_replica_count{cluster=\"$cluster\"})",
               "instant": true,
               "interval": "",
-              "legendFormat": "{{pod}}",
+              "legendFormat": "{{"{{"}}pod{{"}}"}}",
               "refId": "B"
             }
           ],

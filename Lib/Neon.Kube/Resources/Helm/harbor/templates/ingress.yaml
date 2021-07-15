@@ -1,0 +1,69 @@
+﻿---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: harbor-virtual-service
+  namespace: neon-ingress
+spec:
+  gateways:
+    - neoncluster-gateway
+  hosts:
+    - registry.{{ .Values.clusterDomain }}
+    - notary.{{ .Values.clusterDomain }}
+  http:
+    - match:
+        - uri:
+            prefix: /c/
+      route:
+        - destination:
+            host: registry-harbor-harbor-core.neon-system.svc.cluster.local
+            port:
+              number: 80
+    - match:
+        - uri:
+            prefix: /api/
+      route:
+        - destination:
+            host: registry-harbor-harbor-core.neon-system.svc.cluster.local
+            port:
+              number: 80
+    - match:
+        - uri:
+            prefix: /v2/
+      route:
+        - destination:
+            host: registry-harbor-harbor-registry.neon-system.svc.cluster.local
+            port:
+              number: 80
+    - fault:
+        abort:
+          httpStatus: 404
+      match:
+        - uri:
+            prefix: /v1/
+      route:
+        - destination:
+            host: registry-harbor-harbor-registry.neon-system.svc.cluster.local
+            port:
+              number: 80
+    - match:
+        - uri:
+            prefix: /service/
+      route:
+        - destination:
+            host: registry-harbor-harbor-core.neon-system.svc.cluster.local
+            port:
+              number: 80
+    - match:
+        - uri:
+            prefix: /chartrepo/
+      route:
+        - destination:
+            host: registry-harbor-harbor-core.neon-system.svc.cluster.local
+            port:
+              number: 80
+    - route:
+        - destination:
+            host: registry-harbor-harbor-portal.neon-system.svc.cluster.local
+            port:
+              number: 80

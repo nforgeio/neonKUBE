@@ -5,6 +5,8 @@ metadata:
   namespace: neon-monitor
   labels:
     app: grafana-agent-operator
+  annotations:
+    reloader.stakater.com/auto: true
 spec:
   replicas: 1
   selector:

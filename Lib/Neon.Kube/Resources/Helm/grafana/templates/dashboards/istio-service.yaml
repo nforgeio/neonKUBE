@@ -5,6 +5,9 @@ metadata:
   labels:
     app: grafana
 spec:
+  datasources:
+    - inputName: "DS_PROMETHEUS"
+      datasourceName: "Cortex"
   json: >
     {
       "__inputs": [
@@ -1027,7 +1030,7 @@ spec:
                   "expr": "round(sum(irate(istio_requests_total{connection_security_policy=\"mutual_tls\",destination_service=~\"$service\",reporter=\"$qrep\",source_workload=~\"$srcwl\",source_workload_namespace=~\"$srcns\"}[5m])) by (source_workload, source_workload_namespace, response_code), 0.001)",
                   "format": "time_series",
                   "intervalFactor": 1,
-                  "legendFormat": "{{ source_workload }}.{{ source_workload_namespace }} : {{ response_code }} (🔐mTLS)",
+                  "legendFormat": "{{"{{"}}source_workload{{"}}"}}.{{"{{"}}source_workload_namespace{{"}}"}} : {{"{{"}}response_code{{"}}"}} (🔐mTLS)",
                   "refId": "A",
                   "step": 2
                 },
@@ -1036,7 +1039,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{ source_workload }}.{{ source_workload_namespace }} : {{ response_code }}",
+                  "legendFormat": "{{"{{"}}source_workload{{"}}"}}.{{"{{"}}source_workload_namespace{{"}}"}} : {{"{{"}}response_code{{"}}"}}",
                   "refId": "B",
                   "step": 2
                 }
@@ -1136,7 +1139,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{ source_workload }}.{{ source_workload_namespace }} (🔐mTLS)",
+                  "legendFormat": "{{"{{"}}source_workload{{"}}"}}.{{"{{"}}source_workload_namespace{{"}}"}} (🔐mTLS)",
                   "refId": "A",
                   "step": 2
                 },
@@ -1145,7 +1148,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{ source_workload }}.{{ source_workload_namespace }}",
+                  "legendFormat": "{{"{{"}}source_workload{{"}}"}}.{{"{{"}}source_workload_namespace{{"}}"}}",
                   "refId": "B",
                   "step": 2
                 }
@@ -1246,7 +1249,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{source_workload}}.{{source_workload_namespace}} P50 (🔐mTLS)",
+                  "legendFormat": "{{"{{"}}source_workload{{"}}"}}.{{"{{"}}source_workload_namespace{{"}}"}} P50 (🔐mTLS)",
                   "refId": "A",
                   "step": 2
                 },
@@ -1255,7 +1258,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{source_workload}}.{{source_workload_namespace}} P90 (🔐mTLS)",
+                  "legendFormat": "{{"{{"}}source_workload{{"}}"}}.{{"{{"}}source_workload_namespace{{"}}"}} P90 (🔐mTLS)",
                   "refId": "B",
                   "step": 2
                 },
@@ -1264,7 +1267,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{source_workload}}.{{source_workload_namespace}} P95 (🔐mTLS)",
+                  "legendFormat": "{{"{{"}}source_workload{{"}}"}}.{{"{{"}}source_workload_namespace{{"}}"}} P95 (🔐mTLS)",
                   "refId": "C",
                   "step": 2
                 },
@@ -1273,7 +1276,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{source_workload}}.{{source_workload_namespace}} P99 (🔐mTLS)",
+                  "legendFormat": "{{"{{"}}source_workload{{"}}"}}.{{"{{"}}source_workload_namespace{{"}}"}} P99 (🔐mTLS)",
                   "refId": "D",
                   "step": 2
                 },
@@ -1282,7 +1285,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{source_workload}}.{{source_workload_namespace}} P50",
+                  "legendFormat": "{{"{{"}}source_workload{{"}}"}}.{{"{{"}}source_workload_namespace{{"}}"}} P50",
                   "refId": "E",
                   "step": 2
                 },
@@ -1291,7 +1294,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{source_workload}}.{{source_workload_namespace}} P90",
+                  "legendFormat": "{{"{{"}}source_workload{{"}}"}}.{{"{{"}}source_workload_namespace{{"}}"}} P90",
                   "refId": "F",
                   "step": 2
                 },
@@ -1300,7 +1303,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{source_workload}}.{{source_workload_namespace}} P95",
+                  "legendFormat": "{{"{{"}}source_workload{{"}}"}}.{{"{{"}}source_workload_namespace{{"}}"}} P95",
                   "refId": "G",
                   "step": 2
                 },
@@ -1309,7 +1312,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{source_workload}}.{{source_workload_namespace}} P99",
+                  "legendFormat": "{{"{{"}}source_workload{{"}}"}}.{{"{{"}}source_workload_namespace{{"}}"}} P99",
                   "refId": "H",
                   "step": 2
                 }
@@ -1408,7 +1411,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{source_workload}}.{{source_workload_namespace}} P50 (🔐mTLS)",
+                  "legendFormat": "{{"{{"}}source_workload{{"}}"}}.{{"{{"}}source_workload_namespace{{"}}"}} P50 (🔐mTLS)",
                   "refId": "A",
                   "step": 2
                 },
@@ -1417,7 +1420,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{source_workload}}.{{source_workload_namespace}}  P90 (🔐mTLS)",
+                  "legendFormat": "{{"{{"}}source_workload{{"}}"}}.{{"{{"}}source_workload_namespace{{"}}"}}  P90 (🔐mTLS)",
                   "refId": "B",
                   "step": 2
                 },
@@ -1426,7 +1429,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{source_workload}}.{{source_workload_namespace}} P95 (🔐mTLS)",
+                  "legendFormat": "{{"{{"}}source_workload{{"}}"}}.{{"{{"}}source_workload_namespace{{"}}"}} P95 (🔐mTLS)",
                   "refId": "C",
                   "step": 2
                 },
@@ -1435,7 +1438,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{source_workload}}.{{source_workload_namespace}}  P99 (🔐mTLS)",
+                  "legendFormat": "{{"{{"}}source_workload{{"}}"}}.{{"{{"}}source_workload_namespace{{"}}"}}  P99 (🔐mTLS)",
                   "refId": "D",
                   "step": 2
                 },
@@ -1444,7 +1447,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{source_workload}}.{{source_workload_namespace}} P50",
+                  "legendFormat": "{{"{{"}}source_workload{{"}}"}}.{{"{{"}}source_workload_namespace{{"}}"}} P50",
                   "refId": "E",
                   "step": 2
                 },
@@ -1453,7 +1456,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{source_workload}}.{{source_workload_namespace}} P90",
+                  "legendFormat": "{{"{{"}}source_workload{{"}}"}}.{{"{{"}}source_workload_namespace{{"}}"}} P90",
                   "refId": "F",
                   "step": 2
                 },
@@ -1462,7 +1465,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{source_workload}}.{{source_workload_namespace}} P95",
+                  "legendFormat": "{{"{{"}}source_workload{{"}}"}}.{{"{{"}}source_workload_namespace{{"}}"}} P95",
                   "refId": "G",
                   "step": 2
                 },
@@ -1471,7 +1474,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{source_workload}}.{{source_workload_namespace}} P99",
+                  "legendFormat": "{{"{{"}}source_workload{{"}}"}}.{{"{{"}}source_workload_namespace{{"}}"}} P99",
                   "refId": "H",
                   "step": 2
                 }
@@ -1570,7 +1573,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{source_workload}}.{{source_workload_namespace}} P50 (🔐mTLS)",
+                  "legendFormat": "{{"{{"}}source_workload{{"}}"}}.{{"{{"}}source_workload_namespace{{"}}"}} P50 (🔐mTLS)",
                   "refId": "A",
                   "step": 2
                 },
@@ -1579,7 +1582,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{source_workload}}.{{source_workload_namespace}}  P90 (🔐mTLS)",
+                  "legendFormat": "{{"{{"}}source_workload{{"}}"}}.{{"{{"}}source_workload_namespace{{"}}"}}  P90 (🔐mTLS)",
                   "refId": "B",
                   "step": 2
                 },
@@ -1588,7 +1591,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{source_workload}}.{{source_workload_namespace}} P95 (🔐mTLS)",
+                  "legendFormat": "{{"{{"}}source_workload{{"}}"}}.{{"{{"}}source_workload_namespace{{"}}"}} P95 (🔐mTLS)",
                   "refId": "C",
                   "step": 2
                 },
@@ -1597,7 +1600,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{source_workload}}.{{source_workload_namespace}}  P99 (🔐mTLS)",
+                  "legendFormat": "{{"{{"}}source_workload{{"}}"}}.{{"{{"}}source_workload_namespace{{"}}"}}  P99 (🔐mTLS)",
                   "refId": "D",
                   "step": 2
                 },
@@ -1606,7 +1609,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{source_workload}}.{{source_workload_namespace}} P50",
+                  "legendFormat": "{{"{{"}}source_workload{{"}}"}}.{{"{{"}}source_workload_namespace{{"}}"}} P50",
                   "refId": "E",
                   "step": 2
                 },
@@ -1615,7 +1618,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{source_workload}}.{{source_workload_namespace}} P90",
+                  "legendFormat": "{{"{{"}}source_workload{{"}}"}}.{{"{{"}}source_workload_namespace{{"}}"}} P90",
                   "refId": "F",
                   "step": 2
                 },
@@ -1624,7 +1627,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{source_workload}}.{{source_workload_namespace}} P95",
+                  "legendFormat": "{{"{{"}}source_workload{{"}}"}}.{{"{{"}}source_workload_namespace{{"}}"}} P95",
                   "refId": "G",
                   "step": 2
                 },
@@ -1633,7 +1636,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{source_workload}}.{{source_workload_namespace}} P99",
+                  "legendFormat": "{{"{{"}}source_workload{{"}}"}}.{{"{{"}}source_workload_namespace{{"}}"}} P99",
                   "refId": "H",
                   "step": 2
                 }
@@ -1729,7 +1732,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{ source_workload }}.{{ source_workload_namespace}} (🔐mTLS)",
+                  "legendFormat": "{{"{{"}}source_workload{{"}}"}}.{{"{{"}}source_workload_namespace{{"}}"}} (🔐mTLS)",
                   "refId": "A",
                   "step": 2
                 },
@@ -1737,7 +1740,7 @@ spec:
                   "expr": "round(sum(irate(istio_tcp_received_bytes_total{reporter=\"$qrep\", connection_security_policy!=\"mutual_tls\", destination_service=~\"$service\", source_workload=~\"$srcwl\", source_workload_namespace=~\"$srcns\"}[1m])) by (source_workload, source_workload_namespace), 0.001)",
                   "format": "time_series",
                   "intervalFactor": 1,
-                  "legendFormat": "{{ source_workload }}.{{ source_workload_namespace}}",
+                  "legendFormat": "{{"{{"}}source_workload{{"}}"}}.{{"{{"}}source_workload_namespace{{"}}"}}",
                   "refId": "B",
                   "step": 2
                 }
@@ -1832,7 +1835,7 @@ spec:
                   "expr": "round(sum(irate(istio_tcp_sent_bytes_total{connection_security_policy=\"mutual_tls\", reporter=\"$qrep\", destination_service=~\"$service\", source_workload=~\"$srcwl\", source_workload_namespace=~\"$srcns\"}[1m])) by (source_workload, source_workload_namespace), 0.001)",
                   "format": "time_series",
                   "intervalFactor": 1,
-                  "legendFormat": "{{ source_workload }}.{{ source_workload_namespace}} (🔐mTLS)",
+                  "legendFormat": "{{"{{"}}source_workload{{"}}"}}.{{"{{"}}source_workload_namespace{{"}}"}} (🔐mTLS)",
                   "refId": "A",
                   "step": 2
                 },
@@ -1840,7 +1843,7 @@ spec:
                   "expr": "round(sum(irate(istio_tcp_sent_bytes_total{connection_security_policy!=\"mutual_tls\", reporter=\"$qrep\", destination_service=~\"$service\", source_workload=~\"$srcwl\", source_workload_namespace=~\"$srcns\"}[1m])) by (source_workload, source_workload_namespace), 0.001)",
                   "format": "time_series",
                   "intervalFactor": 1,
-                  "legendFormat": "{{ source_workload }}.{{ source_workload_namespace}}",
+                  "legendFormat": "{{"{{"}}source_workload{{"}}"}}.{{"{{"}}source_workload_namespace{{"}}"}}",
                   "refId": "B",
                   "step": 2
                 }
@@ -1976,7 +1979,7 @@ spec:
                   "expr": "round(sum(irate(istio_requests_total{connection_security_policy=\"mutual_tls\",destination_service=~\"$service\",reporter=\"destination\",destination_workload=~\"$dstwl\",destination_workload_namespace=~\"$dstns\"}[5m])) by (destination_workload, destination_workload_namespace, response_code), 0.001)",
                   "format": "time_series",
                   "intervalFactor": 1,
-                  "legendFormat": "{{ destination_workload }}.{{ destination_workload_namespace }} : {{ response_code }} (🔐mTLS)",
+                  "legendFormat": "{{"{{"}}destination_workload{{"}}"}}.{{"{{"}}destination_workload_namespace{{"}}"}} : {{"{{"}}response_code{{"}}"}} (🔐mTLS)",
                   "refId": "A",
                   "step": 2
                 },
@@ -1985,7 +1988,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{ destination_workload }}.{{ destination_workload_namespace }} : {{ response_code }}",
+                  "legendFormat": "{{"{{"}}destination_workload{{"}}"}}.{{"{{"}}destination_workload_namespace{{"}}"}} : {{"{{"}}response_code{{"}}"}}",
                   "refId": "B",
                   "step": 2
                 }
@@ -2085,7 +2088,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{ destination_workload }}.{{ destination_workload_namespace }} (🔐mTLS)",
+                  "legendFormat": "{{"{{"}}destination_workload{{"}}"}}.{{"{{"}}destination_workload_namespace{{"}}"}} (🔐mTLS)",
                   "refId": "A",
                   "step": 2
                 },
@@ -2094,7 +2097,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{ destination_workload }}.{{ destination_workload_namespace }}",
+                  "legendFormat": "{{"{{"}}destination_workload{{"}}"}}.{{"{{"}}destination_workload_namespace{{"}}"}}",
                   "refId": "B",
                   "step": 2
                 }
@@ -2195,7 +2198,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{ destination_workload }}.{{ destination_workload_namespace }} P50 (🔐mTLS)",
+                  "legendFormat": "{{"{{"}}destination_workload{{"}}"}}.{{"{{"}}destination_workload_namespace{{"}}"}} P50 (🔐mTLS)",
                   "refId": "A",
                   "step": 2
                 },
@@ -2204,7 +2207,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{ destination_workload }}.{{ destination_workload_namespace }} P90 (🔐mTLS)",
+                  "legendFormat": "{{"{{"}}destination_workload{{"}}"}}.{{"{{"}}destination_workload_namespace{{"}}"}} P90 (🔐mTLS)",
                   "refId": "B",
                   "step": 2
                 },
@@ -2213,7 +2216,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{ destination_workload }}.{{ destination_workload_namespace }} P95 (🔐mTLS)",
+                  "legendFormat": "{{"{{"}}destination_workload{{"}}"}}.{{"{{"}}destination_workload_namespace{{"}}"}} P95 (🔐mTLS)",
                   "refId": "C",
                   "step": 2
                 },
@@ -2222,7 +2225,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{ destination_workload }}.{{ destination_workload_namespace }} P99 (🔐mTLS)",
+                  "legendFormat": "{{"{{"}}destination_workload{{"}}"}}.{{"{{"}}destination_workload_namespace{{"}}"}} P99 (🔐mTLS)",
                   "refId": "D",
                   "step": 2
                 },
@@ -2231,7 +2234,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{ destination_workload }}.{{ destination_workload_namespace }} P50",
+                  "legendFormat": "{{"{{"}}destination_workload{{"}}"}}.{{"{{"}}destination_workload_namespace{{"}}"}} P50",
                   "refId": "E",
                   "step": 2
                 },
@@ -2240,7 +2243,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{ destination_workload }}.{{ destination_workload_namespace }} P90",
+                  "legendFormat": "{{"{{"}}destination_workload{{"}}"}}.{{"{{"}}destination_workload_namespace{{"}}"}} P90",
                   "refId": "F",
                   "step": 2
                 },
@@ -2249,7 +2252,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{ destination_workload }}.{{ destination_workload_namespace }} P95",
+                  "legendFormat": "{{"{{"}}destination_workload{{"}}"}}.{{"{{"}}destination_workload_namespace{{"}}"}} P95",
                   "refId": "G",
                   "step": 2
                 },
@@ -2258,7 +2261,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{ destination_workload }}.{{ destination_workload_namespace }} P99",
+                  "legendFormat": "{{"{{"}}destination_workload{{"}}"}}.{{"{{"}}destination_workload_namespace{{"}}"}} P99",
                   "refId": "H",
                   "step": 2
                 }
@@ -2357,7 +2360,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{ destination_workload }}.{{ destination_workload_namespace }} P50 (🔐mTLS)",
+                  "legendFormat": "{{"{{"}}destination_workload{{"}}"}}.{{"{{"}}destination_workload_namespace{{"}}"}} P50 (🔐mTLS)",
                   "refId": "A",
                   "step": 2
                 },
@@ -2366,7 +2369,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{ destination_workload }}.{{ destination_workload_namespace }}  P90 (🔐mTLS)",
+                  "legendFormat": "{{"{{"}}destination_workload{{"}}"}}.{{"{{"}}destination_workload_namespace{{"}}"}}  P90 (🔐mTLS)",
                   "refId": "B",
                   "step": 2
                 },
@@ -2375,7 +2378,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{ destination_workload }}.{{ destination_workload_namespace }} P95 (🔐mTLS)",
+                  "legendFormat": "{{"{{"}}destination_workload{{"}}"}}.{{"{{"}}destination_workload_namespace{{"}}"}} P95 (🔐mTLS)",
                   "refId": "C",
                   "step": 2
                 },
@@ -2384,7 +2387,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{ destination_workload }}.{{ destination_workload_namespace }}  P99 (🔐mTLS)",
+                  "legendFormat": "{{"{{"}}destination_workload{{"}}"}}.{{"{{"}}destination_workload_namespace{{"}}"}}  P99 (🔐mTLS)",
                   "refId": "D",
                   "step": 2
                 },
@@ -2393,7 +2396,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{ destination_workload }}.{{ destination_workload_namespace }} P50",
+                  "legendFormat": "{{"{{"}}destination_workload{{"}}"}}.{{"{{"}}destination_workload_namespace{{"}}"}} P50",
                   "refId": "E",
                   "step": 2
                 },
@@ -2402,7 +2405,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{ destination_workload }}.{{ destination_workload_namespace }} P90",
+                  "legendFormat": "{{"{{"}}destination_workload{{"}}"}}.{{"{{"}}destination_workload_namespace{{"}}"}} P90",
                   "refId": "F",
                   "step": 2
                 },
@@ -2411,7 +2414,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{ destination_workload }}.{{ destination_workload_namespace }} P95",
+                  "legendFormat": "{{"{{"}}destination_workload{{"}}"}}.{{"{{"}}destination_workload_namespace{{"}}"}} P95",
                   "refId": "G",
                   "step": 2
                 },
@@ -2420,7 +2423,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{ destination_workload }}.{{ destination_workload_namespace }} P99",
+                  "legendFormat": "{{"{{"}}destination_workload{{"}}"}}.{{"{{"}}destination_workload_namespace{{"}}"}} P99",
                   "refId": "H",
                   "step": 2
                 }
@@ -2519,7 +2522,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{ destination_workload }}.{{ destination_workload_namespace }} P50 (🔐mTLS)",
+                  "legendFormat": "{{"{{"}}destination_workload{{"}}"}}.{{"{{"}}destination_workload_namespace{{"}}"}} P50 (🔐mTLS)",
                   "refId": "A",
                   "step": 2
                 },
@@ -2528,7 +2531,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{ destination_workload }}.{{ destination_workload_namespace }}  P90 (🔐mTLS)",
+                  "legendFormat": "{{"{{"}}destination_workload{{"}}"}}.{{"{{"}}destination_workload_namespace{{"}}"}}  P90 (🔐mTLS)",
                   "refId": "B",
                   "step": 2
                 },
@@ -2537,7 +2540,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{ destination_workload }}.{{ destination_workload_namespace }} P95 (🔐mTLS)",
+                  "legendFormat": "{{"{{"}}destination_workload{{"}}"}}.{{"{{"}}destination_workload_namespace{{"}}"}} P95 (🔐mTLS)",
                   "refId": "C",
                   "step": 2
                 },
@@ -2546,7 +2549,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{ destination_workload }}.{{ destination_workload_namespace }}  P99 (🔐mTLS)",
+                  "legendFormat": "{{"{{"}}destination_workload{{"}}"}}.{{"{{"}}destination_workload_namespace{{"}}"}}  P99 (🔐mTLS)",
                   "refId": "D",
                   "step": 2
                 },
@@ -2555,7 +2558,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{ destination_workload }}.{{ destination_workload_namespace }} P50",
+                  "legendFormat": "{{"{{"}}destination_workload{{"}}"}}.{{"{{"}}destination_workload_namespace{{"}}"}} P50",
                   "refId": "E",
                   "step": 2
                 },
@@ -2564,7 +2567,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{ destination_workload }}.{{ destination_workload_namespace }} P90",
+                  "legendFormat": "{{"{{"}}destination_workload{{"}}"}}.{{"{{"}}destination_workload_namespace{{"}}"}} P90",
                   "refId": "F",
                   "step": 2
                 },
@@ -2573,7 +2576,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{ destination_workload }}.{{ destination_workload_namespace }} P95",
+                  "legendFormat": "{{"{{"}}destination_workload{{"}}"}}.{{"{{"}}destination_workload_namespace{{"}}"}} P95",
                   "refId": "G",
                   "step": 2
                 },
@@ -2582,7 +2585,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{ destination_workload }}.{{ destination_workload_namespace }} P99",
+                  "legendFormat": "{{"{{"}}destination_workload{{"}}"}}.{{"{{"}}destination_workload_namespace{{"}}"}} P99",
                   "refId": "H",
                   "step": 2
                 }
@@ -2678,7 +2681,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{ destination_workload }}.{{ destination_workload_namespace}} (🔐mTLS)",
+                  "legendFormat": "{{"{{"}}destination_workload{{"}}"}}.{{"{{"}}destination_workload_namespace{{"}}"}} (🔐mTLS)",
                   "refId": "A",
                   "step": 2
                 },
@@ -2686,7 +2689,7 @@ spec:
                   "expr": "round(sum(irate(istio_tcp_received_bytes_total{reporter=\"destination\", connection_security_policy!=\"mutual_tls\", destination_service=~\"$service\", destination_workload=~\"$dstwl\", destination_workload_namespace=~\"$dstns\"}[1m])) by (destination_workload, destination_workload_namespace), 0.001)",
                   "format": "time_series",
                   "intervalFactor": 1,
-                  "legendFormat": "{{ destination_workload }}.{{ destination_workload_namespace}}",
+                  "legendFormat": "{{"{{"}}destination_workload{{"}}"}}.{{"{{"}}destination_workload_namespace{{"}}"}}",
                   "refId": "B",
                   "step": 2
                 }
@@ -2781,7 +2784,7 @@ spec:
                   "expr": "round(sum(irate(istio_tcp_sent_bytes_total{connection_security_policy=\"mutual_tls\", reporter=\"destination\", destination_service=~\"$service\", destination_workload=~\"$dstwl\", destination_workload_namespace=~\"$dstns\"}[1m])) by (destination_workload, destination_workload_namespace), 0.001)",
                   "format": "time_series",
                   "intervalFactor": 1,
-                  "legendFormat": "{{ destination_workload }}.{{destination_workload_namespace }} (🔐mTLS)",
+                  "legendFormat": "{{"{{"}}destination_workload{{"}}"}}.{{"{{"}}destination_workload_namespace{{"}}"}} (🔐mTLS)",
                   "refId": "A",
                   "step": 2
                 },
@@ -2789,7 +2792,7 @@ spec:
                   "expr": "round(sum(irate(istio_tcp_sent_bytes_total{connection_security_policy!=\"mutual_tls\", reporter=\"destination\", destination_service=~\"$service\", destination_workload=~\"$dstwl\", destination_workload_namespace=~\"$dstns\"}[1m])) by (destination_workload, destination_workload_namespace), 0.001)",
                   "format": "time_series",
                   "intervalFactor": 1,
-                  "legendFormat": "{{ destination_workload }}.{{destination_workload_namespace }}",
+                  "legendFormat": "{{"{{"}}destination_workload{{"}}"}}.{{"{{"}}destination_workload_namespace{{"}}"}}",
                   "refId": "B",
                   "step": 2
                 }

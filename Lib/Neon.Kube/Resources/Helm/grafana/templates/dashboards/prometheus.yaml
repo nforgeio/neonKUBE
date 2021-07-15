@@ -5,6 +5,9 @@ metadata:
   labels:
     app: grafana
 spec:
+  datasources:
+    - inputName: "DS_PROMETHEUS"
+      datasourceName: "Cortex"
   json: >
     {
         "annotations": {

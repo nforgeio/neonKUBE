@@ -13,6 +13,20 @@ data:
         enabled: true
       node_exporter:
         enabled: true
+		  postgres_exporter:
+		    enabled: true
+		    scrape_interval: 1m
+		    disable_settings_metrics: false
+		  redis_exporter:
+		    enabled: true
+		    redis_addr: \"registry-redis.neon-system:6379\"
+		    scrape_interval: 1m
+		    include_exporter_metrics: true
+		    incl_system_metrics: true
+		    relabel_configs:
+		    - source_labels: [__address__]
+		      target_label: instance
+		      replacement: registry-redis
     prometheus:
       global:
         scrape_interval: 15s

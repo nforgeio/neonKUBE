@@ -5,6 +5,9 @@ metadata:
   labels:
     app: grafana
 spec:
+  datasources:
+    - inputName: "DS_PROMETHEUS"
+      datasourceName: "Cortex"
   json: >
     {
       "__inputs": [
@@ -1425,7 +1428,7 @@ spec:
               "hide": false,
               "instant": true,
               "intervalFactor": 1,
-              "legendFormat": "{{ destination_workload}}.{{ destination_workload_namespace }}",
+              "legendFormat": "{{"{{"}}destination_workload{{"}}"}}.{{"{{"}}destination_workload_namespace{{"}}"}}",
               "refId": "A"
             },
             {
@@ -1434,7 +1437,7 @@ spec:
               "hide": false,
               "instant": true,
               "intervalFactor": 1,
-              "legendFormat": "{{ destination_workload}}.{{ destination_workload_namespace }}",
+              "legendFormat": "{{"{{"}}destination_workload{{"}}"}}.{{"{{"}}destination_workload_namespace{{"}}"}}",
               "refId": "B"
             },
             {
@@ -1443,7 +1446,7 @@ spec:
               "hide": false,
               "instant": true,
               "intervalFactor": 1,
-              "legendFormat": "{{ destination_workload }}.{{ destination_workload_namespace }}",
+              "legendFormat": "{{"{{"}}destination_workload{{"}}"}}.{{"{{"}}destination_workload_namespace{{"}}"}}",
               "refId": "C"
             },
             {
@@ -1452,7 +1455,7 @@ spec:
               "hide": false,
               "instant": true,
               "intervalFactor": 1,
-              "legendFormat": "{{ destination_workload }}.{{ destination_workload_namespace }}",
+              "legendFormat": "{{"{{"}}destination_workload{{"}}"}}.{{"{{"}}destination_workload_namespace{{"}}"}}",
               "refId": "D"
             },
             {
@@ -1462,7 +1465,7 @@ spec:
               "instant": true,
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "{{ destination_workload }}.{{ destination_workload_namespace }}",
+              "legendFormat": "{{"{{"}}destination_workload{{"}}"}}.{{"{{"}}destination_workload_namespace{{"}}"}}",
               "refId": "E"
             }
           ],
@@ -1620,7 +1623,7 @@ spec:
               "hide": false,
               "instant": true,
               "intervalFactor": 1,
-              "legendFormat": "{{ destination_workload }}",
+              "legendFormat": "{{"{{"}}destination_workload{{"}}"}}",
               "refId": "A"
             },
             {
@@ -1629,7 +1632,7 @@ spec:
               "hide": false,
               "instant": true,
               "intervalFactor": 1,
-              "legendFormat": "{{ destination_workload }}",
+              "legendFormat": "{{"{{"}}destination_workload{{"}}"}}",
               "refId": "B"
             }
           ],
@@ -1680,7 +1683,7 @@ spec:
               "expr": "sum(istio_build) by (component, tag)",
               "format": "time_series",
               "intervalFactor": 1,
-              "legendFormat": "{{ component }}: {{ tag }}",
+              "legendFormat": "{{"{{"}}component{{"}}"}}: {{"{{"}}tag{{"}}"}}",
               "refId": "A"
             }
           ],

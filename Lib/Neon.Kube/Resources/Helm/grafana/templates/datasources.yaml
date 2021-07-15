@@ -1,11 +1,11 @@
 apiVersion: integreatly.org/v1alpha1
 kind: GrafanaDataSource
 metadata:
-  name: Prometheus
+  name: cortex
 spec:
-  name: Prometheus
+  name: Cortex
   datasources:
-    - name: Prometheus
+    - name: Cortex
       type: prometheus
       access: proxy
       url: http://cortex:9009/api/prom
@@ -19,7 +19,7 @@ spec:
 apiVersion: integreatly.org/v1alpha1
 kind: GrafanaDataSource
 metadata:
-  name: Loki
+  name: loki
 spec:
   name: Loki
   datasources:

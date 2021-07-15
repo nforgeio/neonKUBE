@@ -15,9 +15,10 @@ spec:
         name: grafana-operator
     spec:
       serviceAccountName: grafana-operator
+      serviceAccount: grafana-operator
       containers:
         - name: grafana-operator
-          image: quay.io/integreatly/grafana-operator:v3.10.2
+          image: {{ .Values.operator.image.organization }}/{{ .Values.operator.image.repository }}:{{ .Values.operator.image.tag }}
           ports:
             - containerPort: 60000
               name: metrics
