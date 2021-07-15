@@ -316,6 +316,11 @@ namespace Neon.Postgres
                 {
                     var trimmed = line.Trim();
 
+                    if (string.IsNullOrEmpty(trimmed))
+                    {
+                        continue;
+                    }
+
                     if (trimmed.Equals("go", StringComparison.InvariantCultureIgnoreCase))
                     {
                         command = sb.ToString();
