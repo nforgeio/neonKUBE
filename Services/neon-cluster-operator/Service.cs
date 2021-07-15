@@ -22,6 +22,7 @@ using Neon.Diagnostics;
 using Neon.Kube;
 using Neon.Net;
 using Neon.Service;
+using Neon.Postgres;
 
 using Helm.Helm;
 using Newtonsoft.Json;
@@ -30,6 +31,7 @@ using YamlDotNet.RepresentationModel;
 using k8s;
 using k8s.Models;
 using Npgsql;
+using System.Reflection;
 
 namespace NeonClusterOperator
 {
@@ -38,8 +40,6 @@ namespace NeonClusterOperator
         private const string StateTable = "state";
         
         private static Kubernetes k8s;
-        private static string connString;
-
 
         /// <summary>
         /// Constructor.
@@ -67,7 +67,7 @@ namespace NeonClusterOperator
 
             // Wait for Citus and make sure it's initialized.
             await WaitForCitusAsync();
-            await ConnectDatabaseAsync();
+            await InitializeDatabaseAsync();
 
             // Initialize Grafana and Harbor.
             await SetupGrafanaAsync();
@@ -85,13 +85,12 @@ namespace NeonClusterOperator
         }
 
         /// <summary>
-        /// Gets the connection string used to connect to the neon-system database.
+        /// Gets a connection string for connecting to Citus.
         /// </summary>
+        /// <param name="database"></param>
         /// <returns></returns>
-        private async Task ConnectDatabaseAsync()
+        public async Task<string> GetConnectionStringAsync(string database = "postgres")
         {
-            Log.LogInfo($"Connecting to citus...");
-
             var secret = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbAdminSecret, KubeNamespaces.NeonSystem);
 
             var username = Encoding.UTF8.GetString(secret.Data["username"]);
@@ -99,35 +98,88 @@ namespace NeonClusterOperator
 
             var dbHost = $"db-citus-postgresql.{KubeNamespaces.NeonSystem}";
 
-            connString = $"Host={dbHost};Username={username};Password={password};Database={KubeConst.NeonClusterOperatorDatabase}";
+            return $"Host={dbHost};Username={username};Password={password};Database={database}";
+        }
+
+        /// <summary>
+        /// Gets the connection string used to connect to the neon-system database.
+        /// </summary>
+        /// <returns></returns>
+        private async Task InitializeDatabaseAsync()
+        {
+            Log.LogInfo($"Connecting to citus...");
+
+            var connString = await GetConnectionStringAsync();
+            //connString = $"Host=10.100.32.254;Port=30123;Username={username};Password={password};Database={KubeConst.NeonClusterOperatorDatabase}";
+
+            var schemaDirectory = Assembly.GetExecutingAssembly().GetResourceFileSystem("NeonClusterOperator.Schema");
+
+            var serviceUserSecret = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespaces.NeonSystem);
+
+            var variables = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase)
+            {
+                { "database", KubeConst.NeonClusterOperatorDatabase },
+                { "service_user", Encoding.UTF8.GetString(serviceUserSecret.Data["username"]) },
+                { "service_password", Encoding.UTF8.GetString(serviceUserSecret.Data["password"]) },
+                { "state_table", StateTable }
+            };
 
             await using (NpgsqlConnection conn = new NpgsqlConnection(connString))
             {
-                conn.Open();
+                await conn.OpenAsync();
 
-                Log.LogInfo($"Connected.");
-
-                await using (var createTableCmd = new NpgsqlCommand($@"
-SELECT
-1
-FROM
-information_schema.tables
-WHERE
-table_schema = 'public'
-AND table_name = '{StateTable}'
-", conn))
+                using (var schemaManager = new SchemaManager(conn, KubeConst.NeonClusterOperatorDatabase, schemaDirectory, variables))
                 {
-                    if (createTableCmd.ExecuteScalar() == null)
-                    {
-                        Log.LogInfo($"State table doesn't exist, creating...");
+                    var status = await schemaManager.GetStatusAsync();
+                    var message = (string)null;
 
-                        await using (var createDbCmd = new NpgsqlCommand($@"
-CREATE TABLE {StateTable}( KEY TEXT, value TEXT, PRIMARY KEY(KEY) )
-", conn))
-                        {
-                            await createDbCmd.ExecuteNonQueryAsync();
-                            Log.LogInfo($"State table created.");
-                        }
+                    switch (status.SchemaStatus)
+                    {
+                        case SchemaStatus.ExistsNoSchema:
+
+                            Log.LogInfo($"[{KubeConst.NeonClusterOperatorDatabase}] database exists but is not initialized.");
+                            break;
+
+                        case SchemaStatus.ExistsWithSchema:
+
+                            Log.LogInfo($"[{KubeConst.NeonClusterOperatorDatabase}] database exists with [version={status.Version}].");
+                            break;
+
+                        case SchemaStatus.NotFound:
+                            Log.LogInfo($"[{KubeConst.NeonClusterOperatorDatabase}] database does not exist.");
+
+                            await schemaManager.CreateDatabaseAsync();
+
+                            break;
+
+                        case SchemaStatus.Updating:
+
+                            message = $"[{KubeConst.NeonClusterOperatorDatabase}] database is currently being updated by [updater={status.Updater}].";
+
+                            Log.LogWarn(message);
+                            throw new SchemaManagerException(message);
+
+                        case SchemaStatus.UpgradeError:
+
+                            message = $"[{KubeConst.NeonClusterOperatorDatabase}] database is in an inconsistent state due to a previous update failure [updater={status.Updater}] [error={status.Error}].  This will require manual intervention.";
+
+                            Log.LogError(message);
+                            throw new SchemaManagerException(message);
+
+                        default:
+
+                            throw new NotImplementedException();
+                    }
+
+                    var version = await schemaManager.UpgradeDatabaseAsync();
+
+                    if (version == status.Version)
+                    {
+                        Log.LogInfo($"[{KubeConst.NeonClusterOperatorDatabase}] database is up to date at [version={version}]");
+                    }
+                    else
+                    {
+                        Log.LogInfo($"[{KubeConst.NeonClusterOperatorDatabase}] database is upgraded from [version={status.Version}] to [version={version}].");
                     }
                 }
             }
@@ -178,6 +230,8 @@ CREATE TABLE {StateTable}( KEY TEXT, value TEXT, PRIMARY KEY(KEY) )
         /// <returns></returns>
         public async Task SetupGrafanaAsync()
         {
+            var connString = await GetConnectionStringAsync(KubeConst.NeonClusterOperatorDatabase);
+
             await using (NpgsqlConnection conn = new NpgsqlConnection(connString))
             {
                 conn.Open();
@@ -213,7 +267,7 @@ CREATE TABLE {StateTable}( KEY TEXT, value TEXT, PRIMARY KEY(KEY) )
                                                     new V1Container()
                                                     {
                                                         Name  = KubeConst.NeonJobSetupGrafana,
-                                                        Image = $"ghcr.io/neonkube-dev/neon-setup-grafana:latest"
+                                                        Image = $"{KubeConst.LocalClusterRegistry}/neon-setup-grafana:{KubeConst.NeonKubeVersion}"
                                                     },
                                                 },
                                                 RestartPolicy = "OnFailure",
@@ -250,6 +304,8 @@ CREATE TABLE {StateTable}( KEY TEXT, value TEXT, PRIMARY KEY(KEY) )
         /// <returns></returns>
         public async Task SetupHarborAsync()
         {
+            var connString = await GetConnectionStringAsync(KubeConst.NeonClusterOperatorDatabase);
+
             await using (NpgsqlConnection conn = new NpgsqlConnection(connString))
             {
                 conn.Open();
@@ -285,7 +341,7 @@ CREATE TABLE {StateTable}( KEY TEXT, value TEXT, PRIMARY KEY(KEY) )
                                                     new V1Container()
                                                     {
                                                         Name  = KubeConst.NeonJobSetupHarbor,
-                                                        Image = $"ghcr.io/neonkube-dev/neon-setup-harbor:latest"
+                                                        Image = $"{KubeConst.LocalClusterRegistry}/neon-setup-harbor:{KubeConst.NeonKubeVersion}"
                                                     },
                                                 },
                                                 RestartPolicy = "OnFailure",
