@@ -54,7 +54,7 @@ namespace System.Net.Http
 
             if (!response.IsSuccessStatusCode)
             {
-                throw new HttpException($"{response.StatusCode}: {response.ReasonPhrase}", requestUri: response.RequestMessage.RequestUri.ToString());
+                throw new HttpException(response);
             }
 
             return response;

@@ -636,7 +636,11 @@ namespace Neon.Common
         /// <param name="errorAction">Optional action that will be called when the process outputs some error text.</param>
         /// <param name="input">
         /// Optionally specifies a <see cref="TextReader"/> with text to be sent 
-        /// to the process as input.
+        /// to the process as standard input.
+        /// </param>
+        /// <param name="outputEncoding">
+        /// Optionally specifies the expected standard output/error encoding.  This defaults to 
+        /// <c>null</c> which sets the default system codepage.
         /// </param>
         /// <returns>
         /// The <see cref="ExecuteResponse"/> including the process exit code and capture 
@@ -666,9 +670,10 @@ namespace Neon.Common
             Dictionary<string, string>  environmentVariables = null,
             Action<string>              outputAction         = null,
             Action<string>              errorAction          = null,
-            TextReader                  input                = null)
+            TextReader                  input                = null,
+            Encoding                    outputEncoding       = null)
         {
-            return ExecuteCapture(path, NormalizeExecArgs(args), timeout, process, workingDirectory, environmentVariables, outputAction, errorAction, input);
+            return ExecuteCapture(path, NormalizeExecArgs(args), timeout, process, workingDirectory, environmentVariables, outputAction, errorAction, input, outputEncoding);
         }
 
         /// <summary>
@@ -695,7 +700,11 @@ namespace Neon.Common
         /// <param name="errorAction">Optional action that will be called when the process outputs some error text.</param>
         /// <param name="input">
         /// Optionally specifies a <see cref="TextReader"/> with text to be sent 
-        /// to the process as input.
+        /// to the process as standard input.
+        /// </param>
+        /// <param name="outputEncoding">
+        /// Optionally specifies the expected standard output/error encoding.  This defaults to 
+        /// <c>null</c> which sets the default system codepage.
         /// </param>
         /// <returns>
         /// The <see cref="ExecuteResponse"/> including the process exit code and capture 
@@ -725,7 +734,8 @@ namespace Neon.Common
             Dictionary<string, string>  environmentVariables = null,
             Action<string>              outputAction         = null,
             Action<string>              errorAction          = null,
-            TextReader                  input                = null)
+            TextReader                  input                = null,
+            Encoding                    outputEncoding       = null)
         {       
             var processInfo     = new ProcessStartInfo(GetProgramPath(path), args ?? string.Empty);
             var externalProcess = process != null;
@@ -748,6 +758,12 @@ namespace Neon.Common
                 processInfo.RedirectStandardOutput = true;
                 processInfo.CreateNoWindow         = true;
                 processInfo.WorkingDirectory       = !string.IsNullOrEmpty(workingDirectory) ? workingDirectory : Environment.CurrentDirectory;
+
+                if (outputEncoding != null)
+                {
+                    processInfo.StandardOutputEncoding = outputEncoding;
+                    processInfo.StandardErrorEncoding  = outputEncoding;
+                }
 
                 if (environmentVariables != null)
                 {
@@ -850,6 +866,10 @@ namespace Neon.Common
         /// Optionally specifies a <see cref="TextReader"/> with text to be sent 
         /// to the process as input.
         /// </param>
+        /// <param name="outputEncoding">
+        /// Optionally specifies the expected standard output/error encoding.  This defaults to 
+        /// <c>null</c> which sets the default system codepage.
+        /// </param>
         /// <returns>
         /// The <see cref="ExecuteResponse"/> including the process exit code and capture 
         /// standard output and error streams.
@@ -870,11 +890,12 @@ namespace Neon.Common
             Dictionary<string, string>  environmentVariables = null,
             TimeSpan?                   timeout              = null, 
             Process                     process              = null,
-            TextReader                  input                = null)
+            TextReader                  input                = null,
+            Encoding                    outputEncoding       = null)
         {
             await SyncContext.ClearAsync;
 
-            return await ExecuteCaptureAsync(path, NormalizeExecArgs(args), timeout, process, workingDirectory, environmentVariables, input);
+            return await ExecuteCaptureAsync(path, NormalizeExecArgs(args), timeout, process, workingDirectory, environmentVariables, input, outputEncoding);
         }
 
         /// <summary>
@@ -901,6 +922,10 @@ namespace Neon.Common
         /// Optionally specifies a <see cref="TextReader"/> with text to be sent 
         /// to the process as input.
         /// </param>
+        /// <param name="outputEncoding">
+        /// Optionally specifies the expected standard output/error encoding.  This defaults to 
+        /// <c>null</c> which sets the default system codepage.
+        /// </param>
         /// <returns>
         /// The <see cref="ExecuteResponse"/> including the process exit code and capture 
         /// standard output and error streams.
@@ -921,11 +946,12 @@ namespace Neon.Common
             Process                     process              = null, 
             string                      workingDirectory     = null,
             Dictionary<string, string>  environmentVariables = null,
-            TextReader                  input                = null)
+            TextReader                  input                = null,
+            Encoding                    outputEncoding       = null)
         {
             await SyncContext.ClearAsync;
 
-            return await Task.Run(() => ExecuteCapture(path, args, timeout, process, workingDirectory, environmentVariables, input: input));
+            return await Task.Run(() => ExecuteCapture(path, args, timeout, process, workingDirectory, environmentVariables, input: input, outputEncoding: outputEncoding));
         }
 
         /// <summary>

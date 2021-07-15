@@ -166,9 +166,10 @@ namespace Neon.Deployment
         /// </remarks>
         public static void Signin(string account, string masterPassword, string defaultVault)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(account), nameof(account));;
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(masterPassword), nameof(masterPassword));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(account), nameof(account));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(defaultVault), nameof(defaultVault));
+
+            masterPassword = masterPassword ?? string.Empty;
 
             lock (syncLock)
             {

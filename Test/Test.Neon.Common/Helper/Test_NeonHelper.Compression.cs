@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_Helper.Compression.cs
+// FILE:	    Test_NeonHelper.Compression.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -19,12 +19,11 @@ using System;
 using System.IO;
 using System.Text;
 
-using Newtonsoft.Json;
-
 using Neon.Common;
 using Neon.IO;
 using Neon.Xunit;
 
+using Newtonsoft.Json;
 using Xunit;
 
 namespace TestCommon

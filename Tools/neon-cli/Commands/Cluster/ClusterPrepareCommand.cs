@@ -202,7 +202,7 @@ Server Requirements:
                 // This special-case argument indicates that we should use the built-in 
                 // WSL2 cluster definition.
 
-                using (var tempFile = new TempFile(KubeHelper.TempFolder))
+                using (var tempFile = new TempFile(folder: KubeHelper.TempFolder))
                 {
                     File.WriteAllText(tempFile.Path, KubeSetup.GetWsl2ClusterDefintion(), Encoding.UTF8);
                     clusterDefinition = ClusterDefinition.FromFile(tempFile.Path, strict: true);
