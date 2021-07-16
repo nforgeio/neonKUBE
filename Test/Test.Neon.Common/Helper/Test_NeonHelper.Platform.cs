@@ -53,6 +53,11 @@ namespace TestCommon
             var features = NeonHelper.GetWindowsOptionalFeatures();
 
             Assert.NotEmpty(features);
+            Assert.True(features.ContainsKey("Microsoft-Hyper-V-Hypervisor"));
+
+            var status = GetWindowsOptionalFeatures("Microsoft-Hyper-V-Hypervisor");
+
+            Assert.Equal(features["Microsoft-Hyper-V-Hypervisor"], status);
         }
     }
 }
