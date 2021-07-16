@@ -157,9 +157,9 @@ namespace TestNeonService
             var service    = new TestService();
             var stopWatch  = new Stopwatch();
             var startDelay = 2.0;
-            var port0      = NetHelper.GetUnusedIpPort(IPAddress.Loopback);
-            var port1      = NetHelper.GetUnusedIpPort(IPAddress.Loopback);
-            var port2      = NetHelper.GetUnusedIpPort(IPAddress.Loopback);
+            var port0      = NetHelper.GetUnusedTcpPort(IPAddress.Loopback);
+            var port1      = NetHelper.GetUnusedTcpPort(IPAddress.Loopback);
+            var port2      = NetHelper.GetUnusedTcpPort(IPAddress.Loopback);
 
             service.Dependencies.Uris.Add(new Uri($"http://127.0.0.1:{port0}"));
             service.Dependencies.Uris.Add(new Uri($"https://127.0.0.1:{port1}"));
@@ -215,9 +215,9 @@ namespace TestNeonService
             // Verify that a service will wait for service dependencies for each
             // supported URI scheme set via an environment variable.
 
-            var port0 = NetHelper.GetUnusedIpPort(IPAddress.Loopback);
-            var port1 = NetHelper.GetUnusedIpPort(IPAddress.Loopback);
-            var port2 = NetHelper.GetUnusedIpPort(IPAddress.Loopback);
+            var port0 = NetHelper.GetUnusedTcpPort(IPAddress.Loopback);
+            var port1 = NetHelper.GetUnusedTcpPort(IPAddress.Loopback);
+            var port2 = NetHelper.GetUnusedTcpPort(IPAddress.Loopback);
 
             Environment.SetEnvironmentVariable("NEON_SERVICE_DEPENDENCIES_URIS", $"http://127.0.0.1:{port0}; https://127.0.0.1:{port1}/; tcp://127.0.0.1:{port2}/");
 
@@ -280,9 +280,9 @@ namespace TestNeonService
             // supported URI scheme set via an environment variable while 
             // ignorning an invalid URI and unsupported URI scheme.
 
-            var port0 = NetHelper.GetUnusedIpPort(IPAddress.Loopback);
-            var port1 = NetHelper.GetUnusedIpPort(IPAddress.Loopback);
-            var port2 = NetHelper.GetUnusedIpPort(IPAddress.Loopback);
+            var port0 = NetHelper.GetUnusedTcpPort(IPAddress.Loopback);
+            var port1 = NetHelper.GetUnusedTcpPort(IPAddress.Loopback);
+            var port2 = NetHelper.GetUnusedTcpPort(IPAddress.Loopback);
 
             Environment.SetEnvironmentVariable("NEON_SERVICE_DEPENDENCIES_URIS", $"http://127.0.0.1:{port0}; https://127.0.0.1:{port1}/; tcp://127.0.0.1:{port2}/; mailto://notsupported:80; BAD-URI");
 
@@ -345,7 +345,7 @@ namespace TestNeonService
             // that is never available when the timeout is configured
             // explicitly.
 
-            var port    = NetHelper.GetUnusedIpPort(IPAddress.Loopback);
+            var port    = NetHelper.GetUnusedTcpPort(IPAddress.Loopback);
             var timeout = TimeSpan.FromSeconds(2);
 
             var service   = new TestService();
@@ -367,7 +367,7 @@ namespace TestNeonService
             // that is never available when the timeout is configured
             // via an environment variable.
 
-            var port    = NetHelper.GetUnusedIpPort(IPAddress.Loopback);
+            var port    = NetHelper.GetUnusedTcpPort(IPAddress.Loopback);
             var timeout = TimeSpan.FromSeconds(2);
 
             Environment.SetEnvironmentVariable("NEON_SERVICE_DEPENDENCIES_URIS", $"http://127.0.0.1:{port};");
@@ -392,7 +392,7 @@ namespace TestNeonService
             // Verify that a service will ignore an invalid timeout specified
             // as an environment variable.
 
-            var port    = NetHelper.GetUnusedIpPort(IPAddress.Loopback);
+            var port    = NetHelper.GetUnusedTcpPort(IPAddress.Loopback);
             var timeout = TimeSpan.FromSeconds(2);
 
             Environment.SetEnvironmentVariable("NEON_SERVICE_DEPENDENCIES_URIS", $"http://127.0.0.1:{port};");

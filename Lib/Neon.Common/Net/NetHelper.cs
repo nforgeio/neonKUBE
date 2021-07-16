@@ -932,12 +932,31 @@ namespace Neon.Net
         }
 
         /// <summary>
-        /// Returns a free TCP/UDP port for a local IP address.
+        /// Returns a free TCP port for a local network interface.
         /// </summary>
-        /// <param name="address">The IP address.</param>
+        /// <param name="address">The target interface's IP address.</param>
         /// <returns>The free port number.</returns>
         /// <exception cref="NetworkException">Thrown when there are no available ports.</exception>
-        public static int GetUnusedIpPort(IPAddress address)
+        /// <remarks>
+        /// <note>
+        /// <para>
+        /// The behavior when <see cref="GetUnusedTcpPort(IPAddress)"/> is called multiple times
+        /// without actually listening on the ports is somewhat undefined.
+        /// </para>
+        /// <para>
+        /// We believe most operating systems won't return the same port again for
+        /// a while (perhaps a few minutes) so you're probably safe retrieving a few
+        /// unused ports before using them for testing and other non-production purposes.
+        /// </para>
+        /// <para>
+        /// Production code should begin listening on and unused ports immediately after
+        /// retrieving one.  This will ensure that the unused ports returned will be unique
+        /// and also help avoid having another application grab the port before you have
+        /// a chance to listen on it.
+        /// </para>
+        /// </note>
+        /// </remarks>
+        public static int GetUnusedTcpPort(IPAddress address)
         {
             Covenant.Requires<ArgumentNullException>(address != null, nameof(address));
 

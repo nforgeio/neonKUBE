@@ -39,7 +39,7 @@ namespace TestCommon
     [Trait(TestTrait.Category, TestArea.NeonCommon)]
     public partial class Test_JsonClient
     {
-        private readonly string baseUri = $"http://127.0.0.1:{NetHelper.GetUnusedIpPort(IPAddress.Loopback)}/";
+        private readonly string baseUri = $"http://127.0.0.1:{NetHelper.GetUnusedTcpPort(IPAddress.Loopback)}/";
 
         public class RequestDoc
         {
