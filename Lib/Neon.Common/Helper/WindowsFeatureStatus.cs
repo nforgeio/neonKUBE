@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_NeonHelper.Platform.cs
+// FILE:	    WindowsFeatureStatus.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -17,42 +17,36 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-using Neon.Common;
-using Neon.Xunit;
-
-using Xunit;
-
-namespace TestCommon
+namespace Neon.Common
 {
-    public partial class Test_NeonHelper
+    /// <summary>
+    /// Enumerates the possible states of an optional Windows feature.
+    /// </summary>
+    public enum WindowsFeatureStatus
     {
-        [Fact]
-        public void WindowsPlatform()
-        {
-            // Ensure that detecting the current Windows edition doesn't barf.
+        /// <summary>
+        /// The feature status couldn't be determined.
+        /// </summary>
+        Unknown = 0,
 
-            if (!NeonHelper.IsWindows)
-            {
-                return;     // This test works only on Windows.
-            }
+        /// <summary>
+        /// The feature is disabled.
+        /// </summary>
+        Disabled,
 
-            Assert.NotEqual(WindowsEdition.Unknown, NeonHelper.WindowsEdition);
-        }
+        /// <summary>
+        /// The feature is enabled.
+        /// </summary>
+        Enabled,
 
-        [Fact]
-        public void GetWindowsOptionalFeatures()
-        {
-            var features = NeonHelper.GetWindowsOptionalFeatures();
-
-            Assert.NotEmpty(features);
-        }
+        /// <summary>
+        /// The feature is currently partially installed and will be enabled after
+        /// Windows is restarted.
+        /// </summary>
+        EnabledPending
     }
 }

@@ -220,6 +220,17 @@ namespace Neon.Common
         }
 
         /// <summary>
+        /// Ensures that the Windows is the current operating system.
+        /// </summary>
+        private static void EnsureWindows()
+        {
+            if (!isWindows)
+            {
+                throw new NotSupportedException("This property works only on Windows.");
+            }
+        }
+
+        /// <summary>
         /// Identifies the current Windows edition (home, pro, server,...).
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown when not running on Windows.</exception>
@@ -227,19 +238,14 @@ namespace Neon.Common
         {
             get
             {
+                EnsureWindows();
+
                 if (!osChecked)
                 {
                     DetectOS();
                 }
 
-                if (IsWindows)
-                {
-                    return windowsEdition;
-                }
-                else
-                {
-                    throw new NotSupportedException("This property works only on Windows.");
-                }
+                return windowsEdition;
             }
         }
 
@@ -305,6 +311,228 @@ namespace Neon.Common
                 }
 
                 return isKubernetes.Value;
+            }
+        }
+
+        /// <summary>
+        /// Returns a dictionary mapping optional Windows feature names to a <see cref="WindowsFeatureStatus"/>
+        /// indicating feature installation status.
+        /// </summary>
+        /// <returns>The feature dictionary.</returns>
+        /// <exception cref="InvalidOperationException">Thrown when not running on Windows.</exception>
+        /// <remarks>
+        /// <note>
+        /// The feature names are in English and the lookup is case-insensitive.
+        /// </note>
+        /// </remarks>
+        public static Dictionary<string, WindowsFeatureStatus> GetWindowsOptionalFeatures()
+        {
+            EnsureWindows();
+
+            // We're going to use the DSIM.EXE app to list these.  The table output
+            // will look like:
+            //
+            //      Deployment Image Servicing and Management tool
+            //      Version: 10.0.19041.844
+            //
+            //      Image Version: 10.0.19042.1083
+            //
+            //      Features listing for package : Microsoft-Windows-Foundation-Package~31bf3856ad364e35~amd64~~10.0.19041.1
+            //
+            //
+            //      ------------------------------------------- | --------
+            //      Feature Name                                | State
+            //      ------------------------------------------- | --------
+            //      Printing - PrintToPDFServices-Features      | Enabled
+            //      Printing - XPSServices-Features             | Enabled
+            //      TelnetClient                                | Disabled
+            //      TFTP                                        | Disabled
+            //      LegacyComponents                            | Disabled
+            //      DirectPlay                                  | Disabled
+            //      Printing-Foundation-Features                | Enabled
+            //      Printing-Foundation-InternetPrinting-Client | Enabled
+            //
+            //      ...
+            //
+            // We're simply going to parse the lines with a pipe ("|").
+
+            var response = NeonHelper.ExecuteCapture("dism.exe",
+                new object[]
+                {
+                    "/Online",
+                    "/English",
+                    "/Get-Features",
+                    "/Format:table"
+                });
+
+            response.EnsureSuccess();
+
+            var featureMap = new Dictionary<string, WindowsFeatureStatus>(StringComparer.InvariantCultureIgnoreCase);
+
+            foreach (var line in response.OutputText.ToLines())
+            {
+                if (!line.StartsWith("----") && line.Contains('|'))
+                {
+                    var fields = line.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
+                    var status = WindowsFeatureStatus.Unknown;
+
+                    fields[0] = fields[0].Trim();
+                    fields[1] = fields[1].Trim();
+
+                    if (fields[0] == "Feature Name")
+                    {
+                        continue;   // Ignore column headers
+                    }
+
+                    switch (fields[1].ToLowerInvariant())
+                    {
+                        case "disabled":
+
+                            status = WindowsFeatureStatus.Disabled;
+                            break;
+
+                        case "enabled":
+
+                            status = WindowsFeatureStatus.Enabled;
+                            break;
+
+                        case "enable pending":
+
+                            status = WindowsFeatureStatus.EnabledPending;
+                            break;
+                    }
+
+                    featureMap[fields[0]] = status;
+                }
+            }
+
+            return featureMap;
+        }
+
+        /// <summary>
+        /// Returns the installation status for the named feature.
+        /// </summary>
+        /// <param name="feature">Specifies the <b>English</b> name for the feature.</param>
+        /// <returns>The <see cref="WindowsFeatureStatus"/> for the feature.</returns>
+        /// <remarks>
+        /// <para>
+        /// You'll need to pass the feature name in English.  You can list possible feature
+        /// names by executing this in your command shell:
+        /// </para>
+        /// <example>
+        /// dism /Online /English /Get-Features /Format:table
+        /// </example>
+        /// <note>
+        /// <see cref="WindowsFeatureStatus.Unknown"/> will be returned for unknown features.
+        /// </note>
+        /// </remarks>
+        public static WindowsFeatureStatus GetWindowsOptionalFeatureStatus(string feature)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(feature), nameof(feature));
+
+            if (GetWindowsOptionalFeatures().TryGetValue(feature, out var status))
+            {
+                return status;
+            }
+            else
+            {
+                return WindowsFeatureStatus.Unknown;
+            }
+        }
+
+        /// <summary>
+        /// Enables an optional Windows feature, returning an indication of whether a 
+        /// Windows restart is required to complete the installation.
+        /// </summary>
+        /// <returns><c>true</c> if a restart is required.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if the feature does't exist.</exception>
+        /// <remarks>
+        /// This method does nothing when the feature is already enabled
+        /// or has been enabled but is waiting for a restart.
+        /// </remarks>
+        public static bool EnableOptionalWindowsFeature(string feature)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(feature), nameof(feature));
+
+            switch (GetWindowsOptionalFeatureStatus(feature))
+            {
+                case WindowsFeatureStatus.Unknown:
+
+                    throw new InvalidOperationException($"Unknown Windows Feature: {feature}");
+
+                case WindowsFeatureStatus.Enabled:
+
+                    var response = NeonHelper.ExecuteCapture("dism.exe",
+                        new object[]
+                        {
+                            "/Online",
+                            "/English",
+                            "/Enable-Feature",
+                            $"/FeatureName:{feature}"
+                        });
+
+                    response.EnsureSuccess();
+
+                    return GetWindowsOptionalFeatureStatus(feature) == WindowsFeatureStatus.EnabledPending;
+
+                case WindowsFeatureStatus.EnabledPending:
+
+                    return true;
+
+                case WindowsFeatureStatus.Disabled:
+
+                    return false;
+
+                default:
+
+                    throw new NotImplementedException();
+            }
+        }
+
+        /// <summary>
+        /// Disables an optional Windows feature.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown if the feature does't exist or is enabled and waiting for a Windows restart.
+        /// </exception>
+        /// <remarks>
+        /// This method does nothing when the feature is already disabled.
+        /// </remarks>
+        public static void DisableOptionalWindowsFeature(string feature)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(feature), nameof(feature));
+
+            switch (GetWindowsOptionalFeatureStatus(feature))
+            {
+                case WindowsFeatureStatus.Unknown:
+
+                    throw new InvalidOperationException($"Unknown Windows Feature: {feature}");
+
+                case WindowsFeatureStatus.Enabled:
+
+                    var response = NeonHelper.ExecuteCapture("dism.exe",
+                        new object[]
+                        {
+                            "/Online",
+                            "/English",
+                            "/Disable-Feature",
+                            $"/FeatureName:{feature}"
+                        });
+
+                    response.EnsureSuccess();
+                    break;
+
+                case WindowsFeatureStatus.EnabledPending:
+
+                    throw new InvalidOperationException($"Windows Feature install is pending: {feature}");
+
+                case WindowsFeatureStatus.Disabled:
+
+                    return;
+
+                default:
+
+                    throw new NotImplementedException();
             }
         }
     }
