@@ -25,6 +25,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Microsoft.Win32;
+
 namespace Neon.Common
 {
     public static partial class NeonHelper
@@ -34,9 +36,10 @@ namespace Neon.Common
         private static NetFramework?    netFramework = null;
         private static string           frameworkDescription;
         private static bool             isWindows;
+        private static WindowsEdition   windowsEdition;
         private static bool             isLinux;
         private static bool             isOSX;
-        private static bool?            is64Bit;
+        private static bool?            is64BitBuild;
         private static bool?            isDevWorkstation;
         private static bool?            isKubernetes;
 
@@ -47,7 +50,7 @@ namespace Neon.Common
         {
             if (osChecked)
             {
-                return;     // Already did a detect
+                return;     // Already competed detection.
             }
 
             try
@@ -57,6 +60,49 @@ namespace Neon.Common
                 isWindows            = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
                 isLinux              = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
                 isOSX                = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+
+                if (isWindows)
+                {
+                    // Examine registry to detect the Windows Edition.
+
+                    var key       = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, Is64BitOS ? RegistryView.Registry64 : RegistryView.Registry32);
+                    var editionID = key.OpenSubKey(@"SOFTWARE\Microsoft\Windows NT\CurrentVersion").GetValue("EditionID").ToString();
+
+                    // $todo(jefflill): We're guessing at the server edition IDs here.
+
+                    switch (editionID.ToLowerInvariant())
+                    {
+                        case "home":
+
+                            windowsEdition = WindowsEdition.Home;
+                            break;
+
+                        case "professional":
+
+                            windowsEdition = WindowsEdition.Professional;
+                            break;
+
+                        case "serverstandard":
+
+                            windowsEdition = WindowsEdition.ServerStandard;
+                            break;
+
+                        case "serverenterprise":
+
+                            windowsEdition = WindowsEdition.ServerEnterprise;
+                            break;
+
+                        case "serverdatacenter":
+
+                            windowsEdition = WindowsEdition.ServerDatacenter;
+                            break;
+
+                        default:
+
+                            windowsEdition = WindowsEdition.Unknown;
+                            break;
+                    }
+                }
             }
             finally
             {
@@ -69,7 +115,7 @@ namespace Neon.Common
         /// <summary>
         /// Returns the operation system description.
         /// </summary>
-        public static string OsDescription
+        public static string OSDescription
         {
             get
             {
@@ -82,6 +128,16 @@ namespace Neon.Common
                 return osDescription;
             }
         }
+
+        /// <summary>
+        /// Returns <c>true</c> for 32-bit operating systems.
+        /// </summary>
+        public static bool Is32BitOS => !Environment.Is64BitOperatingSystem;
+
+        /// <summary>
+        /// Returns <c>true</c> for 64-bit operating systems.
+        /// </summary>
+        public static bool Is64BitOS => Environment.Is64BitOperatingSystem;
 
         /// <summary>
         /// Returns the .NET runtime description.
@@ -103,18 +159,18 @@ namespace Neon.Common
         /// <summary>
         /// Returns <c>true</c> if the application was built as 64-bit.
         /// </summary>
-        public static bool Is64Bit
+        public static bool Is64BitBuild
         {
             get
             {
-                if (is64Bit.HasValue)
+                if (is64BitBuild.HasValue)
                 {
-                    return is64Bit.Value;
+                    return is64BitBuild.Value;
                 }
 
-                is64Bit = System.Runtime.InteropServices.Marshal.SizeOf<IntPtr>() == 8;
+                is64BitBuild = System.Runtime.InteropServices.Marshal.SizeOf<IntPtr>() == 8;
 
-                return is64Bit.Value;
+                return is64BitBuild.Value;
             }
         }
 
@@ -123,7 +179,7 @@ namespace Neon.Common
         /// </summary>
         public static bool Is32BitBuild
         {
-            get { return !Is64Bit; }
+            get { return !Is64BitBuild; }
         }
 
         /// <summary>
@@ -160,6 +216,30 @@ namespace Neon.Common
 
                 DetectOS();
                 return isWindows;
+            }
+        }
+
+        /// <summary>
+        /// Identifies the current Windows edition (home, pro, server,...).
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown when not running on Windows.</exception>
+        public static WindowsEdition WindowsEdition
+        {
+            get
+            {
+                if (!osChecked)
+                {
+                    DetectOS();
+                }
+
+                if (IsWindows)
+                {
+                    return windowsEdition;
+                }
+                else
+                {
+                    throw new NotSupportedException("This property works only on Windows.");
+                }
             }
         }
 
