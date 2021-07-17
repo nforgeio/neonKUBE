@@ -107,12 +107,12 @@ busybox:
   
 ## Monitoring: Prometheus Exporter Configuration
 ## ref: https://prometheus.io/docs/instrumenting/exporters/
-prometheus:
+metrics:
   enabled: true
   image: 
     organization: neon-registry.node.local
-    repository: wrouesnel-postgres-exporter
-    tag: v0.5.1
+    repository: prometheuscommunity-postgres-exporter
+    tag: v0.10.0
   port: 9187
   resources: {}
   disableDefaultMetrics: false

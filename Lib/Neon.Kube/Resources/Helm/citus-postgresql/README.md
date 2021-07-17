@@ -185,13 +185,13 @@ The [Citus Membership Mamanger](https://github.com/bakdata/citus-k8s-membership-
 
 | Parameter | Description | Default |
 | --------- | ----------- | ------- |
-| `prometheus.enabled` | Whether or not to install Prometheus Exporter as a sidecar container and expose metrics to Prometheus. | `true` |
-| `prometheus.image` | Docker Image for Prometheus Exporter container. | `wrouesnel/postgres_exporter` |
-| `prometheus.imageTag` | Docker Image Tag for Prometheus Exporter container. | `v0.4.7` |
-| `prometheus.port` | Exporter Port which exposes metrics in Prometheus format for scraping. | `9187` |
-| `prometheus.logLevel` | Logging level. Can be one of debug, info, warn, error, fatal | `info` |
-| `prometheus.disableDefaultMetrics` | If yes, only metrics supplied from queries.yaml via --extend.query-path will be reported. | `false` |
-| `prometheus.queries` | Queries for custom metrics | see [here](https://github.com/wrouesnel/postgres_exporter/blob/master/queries.yaml) for an example |
+| `metrics.enabled` | Whether or not to install Prometheus Exporter as a sidecar container and expose metrics to Prometheus. | `true` |
+| `metrics.image` | Docker Image for Prometheus Exporter container. | `wrouesnel/postgres_exporter` |
+| `metrics.imageTag` | Docker Image Tag for Prometheus Exporter container. | `v0.4.7` |
+| `metrics.port` | Exporter Port which exposes metrics in Prometheus format for scraping. | `9187` |
+| `metrics.logLevel` | Logging level. Can be one of debug, info, warn, error, fatal | `info` |
+| `metrics.disableDefaultMetrics` | If yes, only metrics supplied from queries.yaml via --extend.query-path will be reported. | `false` |
+| `metrics.queries` | Queries for custom metrics | see [here](https://github.com/wrouesnel/postgres_exporter/blob/master/queries.yaml) for an example |
 
 
 ### Secret Configuration

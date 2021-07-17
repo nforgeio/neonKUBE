@@ -4,6 +4,7 @@ metadata:
   name: registry
   namespace: {{ .Release.Namespace | quote }}
 spec:
+  version: 2.3.0
   imageSource: # Optional
     repository: neon-registry.node.local # Required
     imagePullPolicy: IfNotPresent # Optional, default = IfNotPresent
@@ -37,16 +38,6 @@ spec:
         host: registry-redis
         port: 26379
         sentinelMasterSet: master
-  version: 2.3.0
-  chartmuseum:
-    image: goharbor-harbor-chartmuseum-photon
-    imagePullPolicy: IfNotPresent
-  core:
-    image: goharbor-harbor-core
-    imagePullPolicy: IfNotPresent
-    tokenIssuer:
-      kind: Issuer
-      name: neon-system-selfsigned-issuer
   expose: 
     core: # Required
       # TLS setting
@@ -76,32 +67,34 @@ spec:
   harborAdminPasswordRef: registry
   internalTLS:
     enabled: false
+  chartmuseum:
+    image: goharbor-harbor-chartmuseum-photon
+  core:
+    image: goharbor-harbor-core
+    tokenIssuer:
+      kind: Issuer
+      name: neon-system-selfsigned-issuer
+  exporter:
+    image: goharbor-harbor-exporter
+  jobservice:
+    image: goharbor-harbor-jobservice
   notary:
     server:
       image: goharbor-notary-server-photon
-      imagePullPolicy: IfNotPresent
     signer:
       image: goharbor-notary-signer-photon
-      imagePullPolicy: IfNotPresent
     migrationEnabled: true
   portal:
     image: goharbor-harbor-portal
-    imagePullPolicy: IfNotPresent
   registry:
     image: goharbor-registry-photon
-    imagePullPolicy: IfNotPresent
   registryctl:
     image: goharbor-harbor-registryctl
-    imagePullPolicy: IfNotPresent
   trivy:
     image: goharbor-trivy-adapter-photon
-    imagePullPolicy: IfNotPresent
     skipUpdate: false
     storage:
       cachePersistentVolume:
         claimName: registry-trivy-cache
       reportsPersistentVolume:
         claimName: registry-trivy-reports
-  jobservice:
-    image: goharbor-harbor-jobservice
-    imagePullPolicy: IfNotPresent
