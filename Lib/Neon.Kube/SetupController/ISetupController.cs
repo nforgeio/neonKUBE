@@ -119,8 +119,8 @@ namespace Neon.Kube
         /// displayed or logged.
         /// </para>
         /// <note>
-        /// This event will be raised on the same thread that logged progress, typically
-        /// the thread running the step.
+        /// This event will be raised on the same thread that logged the progress, typically
+        /// the thread executing the step.
         /// </note>
         /// </summary>
         event SetupProgressDelegate ProgressEvent;
