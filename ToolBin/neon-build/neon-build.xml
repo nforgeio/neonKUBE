@@ -15,7 +15,7 @@
             </summary>
             <param name="args">The command line arguments.</param>
         </member>
-        <member name="P:NeonBuild.Program.RepoRootFolder">
+        <member name="P:NeonBuild.Program.NeonKubeRepoPath">
             <summary>
             Returns the path to the neonKUBE local repository root folder.
             </summary>

@@ -45,7 +45,7 @@ namespace NeonBuild
             var versionConstantName = commandLine.Arguments[0];
             var csprojPath          = Environment.ExpandEnvironmentVariables(commandLine.Arguments[1]);
             var localVersionPath    = Path.Combine(Path.GetDirectoryName(csprojPath), "prerelease.txt");
-            var rawSolutionVersion  = ReadVersion(Path.Combine(Program.RepoRootFolder, "Lib", "Neon.Common", "Build.cs"), versionConstantName);
+            var rawSolutionVersion  = ReadVersion(Path.Combine(Program.NeonKubeRepoPath, "Lib", "Neon.Common", "Build.cs"), versionConstantName);
             var solutionVersion     = SemanticVersion.Parse(rawSolutionVersion.Trim());
             var localPrerelease     = (string)null;
 
