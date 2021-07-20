@@ -1018,19 +1018,16 @@ set -euo pipefail
 
 # Configure the CRI-O package respository.
 
-OS=xUbuntu_20.04
-VERSION={KubeVersions.CrioVersion}
-
 cat <<EOF > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
-deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/${{OS}}/ /
+deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/ /
 EOF
 
-cat <<EOF > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable:cri-o:${{VERSION}}.list
-deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/${{VERSION}}/${{OS}}/ /
+cat <<EOF > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable:cri-o:{KubeVersions.CrioVersion}:{KubeVersions.KubernetesVersion}.list
+deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/{KubeVersions.CrioVersion}:/{KubeVersions.KubernetesVersion}/xUbuntu_20.04/ /
 EOF
 
-curl {KubeHelper.CurlOptions} https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/${{OS}}/Release.key | apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers.gpg add -
-curl {KubeHelper.CurlOptions} https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable:cri-o:${{VERSION}}/${{OS}}/Release.key | apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers-cri-o.gpg add -
+curl {KubeHelper.CurlOptions} https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/Release.key | apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers.gpg add -
+curl {KubeHelper.CurlOptions} https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable:cri-o:{KubeVersions.CrioVersion}/xUbuntu_20.04/Release.key | apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers-cri-o.gpg add -
 
 # Install the CRI-O packages.
 
