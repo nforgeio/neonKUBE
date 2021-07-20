@@ -51,8 +51,8 @@ livenessProbe:
 operator:
   image:
     organization: neon-registry.node.local
-    repository: grafana-grafana
-    tag: 8.0.4
+    repository: integreatly-grafana-operator
+    tag: v3.10.2
     sha: ""
     pullPolicy: IfNotPresent
 

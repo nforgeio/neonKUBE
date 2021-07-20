@@ -10,6 +10,8 @@ spec:
   logLevel: info
   logFormat: json
   serviceAccountName: grafana-agent
+  nodeSelector:
+  {{- toYaml .Values.nodeSelector | nindent 4 }}
   prometheus:
     shards: {{ .Values.shards }}
     instanceSelector:

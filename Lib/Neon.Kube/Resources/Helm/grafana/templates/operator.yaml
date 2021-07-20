@@ -16,6 +16,8 @@ spec:
     spec:
       serviceAccountName: grafana-operator
       serviceAccount: grafana-operator
+      nodeSelector:
+      {{- toYaml .Values.nodeSelector | nindent 8 }}
       containers:
         - name: grafana-operator
           image: {{ .Values.operator.image.organization }}/{{ .Values.operator.image.repository }}:{{ .Values.operator.image.tag }}

@@ -127,6 +127,9 @@ tolerations:
   - key: "neonkube.io/metrics"
     operator: Exists
     effect: NoSchedule
+  - key: "neonkube.io/metrics-internal"
+    operator: Exists
+    effect: NoSchedule
 
 resources: {}
 

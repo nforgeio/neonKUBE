@@ -68,30 +68,48 @@ spec:
   internalTLS:
     enabled: false
   chartmuseum:
-    image: goharbor-harbor-chartmuseum-photon
+    image: harbor-chartmuseum-photon
+    nodeSelector:
+    {{- toYaml .Values.nodeSelector | nindent 6 }}
   core:
-    image: goharbor-harbor-core
+    image: harbor-core
     tokenIssuer:
       kind: Issuer
       name: neon-system-selfsigned-issuer
   exporter:
-    image: goharbor-harbor-exporter
+    image: harbor-exporter
+    nodeSelector:
+    {{- toYaml .Values.nodeSelector | nindent 6 }}
   jobservice:
-    image: goharbor-harbor-jobservice
+    image: harbor-jobservice
+    nodeSelector:
+    {{- toYaml .Values.nodeSelector | nindent 6 }}
   notary:
     server:
-      image: goharbor-notary-server-photon
+      image: harbor-notary-server-photon
+      nodeSelector:
+      {{- toYaml .Values.nodeSelector | nindent 8 }}
     signer:
-      image: goharbor-notary-signer-photon
+      image: harbor-notary-signer-photon
+      nodeSelector:
+      {{- toYaml .Values.nodeSelector | nindent 8 }}
     migrationEnabled: true
   portal:
-    image: goharbor-harbor-portal
+    image: harbor-portal
+    nodeSelector:
+    {{- toYaml .Values.nodeSelector | nindent 6 }}
   registry:
-    image: goharbor-registry-photon
+    image: harbor-registry-photon
+    nodeSelector:
+    {{- toYaml .Values.nodeSelector | nindent 6 }}
   registryctl:
-    image: goharbor-harbor-registryctl
+    image: harbor-registryctl
+    nodeSelector:
+    {{- toYaml .Values.nodeSelector | nindent 6 }}
   trivy:
-    image: goharbor-trivy-adapter-photon
+    image: harbor-trivy-adapter-photon
+    nodeSelector:
+    {{- toYaml .Values.nodeSelector | nindent 6 }}
     skipUpdate: false
     storage:
       cachePersistentVolume:

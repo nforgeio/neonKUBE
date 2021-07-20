@@ -45,6 +45,9 @@ spec:
         port: 3001
         nodePort: 30001
         targetPort: grafana-http
+  deployment:
+    nodeSelector:
+      {{- toYaml .Values.nodeSelector | nindent 8 }}
   dashboardLabelSelector:
     - matchExpressions:
         - { key: app, operator: In, values: [ grafana ] }

@@ -2547,6 +2547,22 @@ $@"- name: StorageType
                             values.Add($"tenants[0].console.secrets.accessKey", NeonHelper.GetCryptoRandomPassword(20));
                             values.Add($"tenants[0].console.secrets.secretKey", NeonHelper.GetCryptoRandomPassword(20));
 
+                            int i = 0;
+                            foreach (var t in await GetTaintsAsync(controller, NodeLabels.LabelMetricsInternal, "true"))
+                            {
+                                values.Add($"tenants[0].pools[0].tolerations[{i}].key", advice.ReplicaCount);
+                                values.Add($"tenants[0].pools[0].tolerations[{i}].effect", advice.ReplicaCount);
+                                values.Add($"tenants[0].pools[0].tolerations[{i}].operator", advice.ReplicaCount);
+
+                                values.Add($"console.tolerations[{i}].key", $"{t.Key.Split("=")[0]}");
+                                values.Add($"console.tolerations[{i}].effect", t.Effect);
+                                values.Add($"console.tolerations[{i}].operator", "Exists");
+
+                                values.Add($"operator.tolerations[{i}].key", $"{t.Key.Split("=")[0]}");
+                                values.Add($"operator.tolerations[{i}].effect", t.Effect);
+                                values.Add($"operator.tolerations[{i}].operator", "Exists");
+                                i++;
+                            }
 
                             await master.InstallHelmChartAsync(controller, "minio", releaseName: "minio", @namespace: KubeNamespaces.NeonSystem, values: values);
                         });

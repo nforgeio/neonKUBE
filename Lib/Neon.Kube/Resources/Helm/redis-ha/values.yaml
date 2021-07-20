@@ -357,9 +357,11 @@ affinity: |
 # Prometheus exporter specific configuration options
 exporter:
   enabled: true
-  image: oliver006/redis_exporter
-  tag: v1.13.1
-  pullPolicy: IfNotPresent
+  image:
+    organization: neon-registry.node.local
+    repository: oliver006-redis_exporter
+    tag: v1.13.1
+    pullPolicy: IfNotPresent
 
   # prometheus port & scrape path
   port: 9121

@@ -133,15 +133,16 @@ podAnnotations: []
 # -- Volumes to add
 extraVolumes: []
 
-## Node labels for pod assignment
-## ref: https://kubernetes.io/docs/user-guide/node-selection/
-#
-nodeSelector: {}
+nodeSelector:
+  neonkube.io/monitor.metrics-internal: 'true'
 
-## Tolerations for pod assignment
-## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
-##
-tolerations: []
+tolerations:
+  - key: "neonkube.io/metrics"
+    operator: Exists
+    effect: NoSchedule
+  - key: "neonkube.io/metrics-internal"
+    operator: Exists
+    effect: NoSchedule
 
 ## Affinity for pod assignment
 ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
