@@ -267,7 +267,7 @@ namespace NeonClusterOperator
                                                     new V1Container()
                                                     {
                                                         Name  = KubeConst.NeonJobSetupGrafana,
-                                                        Image = $"{KubeConst.LocalClusterRegistry}/neon-setup-grafana:{KubeConst.NeonKubeVersion}"
+                                                        Image = $"{KubeConst.LocalClusterRegistry}/neon-setup-grafana:neonkube-{KubeConst.NeonKubeVersion}"
                                                     },
                                                 },
                                                 RestartPolicy = "OnFailure",
@@ -341,7 +341,7 @@ namespace NeonClusterOperator
                                                     new V1Container()
                                                     {
                                                         Name  = KubeConst.NeonJobSetupHarbor,
-                                                        Image = $"{KubeConst.LocalClusterRegistry}/neon-setup-harbor:{KubeConst.NeonKubeVersion}"
+                                                        Image = $"{KubeConst.LocalClusterRegistry}/neon-setup-harbor:neonkube-{KubeConst.NeonKubeVersion}"
                                                     },
                                                 },
                                                 RestartPolicy = "OnFailure",
