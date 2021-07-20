@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -490,6 +491,9 @@ namespace Neon.Deployment
         /// <param name="cancellationToken">Optionally specifies the operation cancellation token.</param>
         /// <returns>The path to the downloaded file.</returns>
         /// <exception cref="IOException">Thrown when the download is corrupt.</exception>
+        /// <exception cref="SocketException">Thrown for network errors.</exception>
+        /// <exception cref="HttpException">Thrown for HTTP network errors.</exception>
+        /// <exception cref="OperationCanceledException">Thrown when the operation was cancelled.</exception>
         /// <remarks>
         /// <para>
         /// This method downloads the file specified by <paramref name="download"/> to the folder specified, creating 

@@ -262,5 +262,12 @@ namespace Neon.Kube
         /// </summary>
         /// <returns>The status information for any host nodes.</returns>
         IEnumerable<SetupNodeStatus> GetHostStatus();
+
+        /// <summary>
+        /// Indicates that setup should be cancelled.  Setting this will request
+        /// cancellation.  Note that once this has been set to <c>true</c>, subsequent
+        /// <c>false</c> assignments will be ignored.
+        /// </summary>
+        bool CancelPending { get; set; }
     }
 }

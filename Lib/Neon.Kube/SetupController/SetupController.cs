@@ -928,7 +928,7 @@ namespace Neon.Kube
                     ProgressEvent.Invoke(
                         new SetupProgressMessage()
                         {
-                            Message       = message,
+                            Text       = message,
                             CancelPending = cancelPending
                         });
                 }
@@ -949,7 +949,7 @@ namespace Neon.Kube
                         new SetupProgressMessage()
                         {
                             Verb          = verb,
-                            Message       = message,
+                            Text       = message,
                             CancelPending = cancelPending
                         });
                 }
@@ -972,7 +972,7 @@ namespace Neon.Kube
                         new SetupProgressMessage()
                         {
                             Node          = node,
-                            Message       = message,
+                            Text       = message,
                             CancelPending = cancelPending
                         });
                 }
@@ -997,7 +997,7 @@ namespace Neon.Kube
                         {
                             Node          = node,
                             Verb          = verb,
-                            Message       = message,
+                            Text       = message,
                             CancelPending = cancelPending
                         });
                 }
@@ -1019,7 +1019,7 @@ namespace Neon.Kube
                     ProgressEvent.Invoke(
                         new SetupProgressMessage()
                         {
-                            Message       = message,
+                            Text       = message,
                             IsError       = true,
                             CancelPending = cancelPending
                         });
@@ -1044,7 +1044,7 @@ namespace Neon.Kube
                         new SetupProgressMessage()
                         {
                             Node          = node,
-                            Message       = message,
+                            Text       = message,
                             IsError       = true,
                             CancelPending = cancelPending
                         });
@@ -1230,11 +1230,7 @@ namespace Neon.Kube
             }
         }
 
-        /// <summary>
-        /// Indicates that setup should be cancelled.  Setting this will request
-        /// cancellation.  Note that once this has been set to <c>true</c>, subsequent
-        /// <c>false</c> assignments will be ignored.
-        /// </summary>
+        /// <inheritdoc/>
         public bool CancelPending
         {
             get => cancelPending;

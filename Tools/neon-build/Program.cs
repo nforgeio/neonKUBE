@@ -258,7 +258,7 @@ standard output as one line.
                         // during cluster image builds.  These files are within [.gitignore] and should really
                         // be cleaned before builds etc.
                         
-                        // $hack)jefflill):
+                        // $hack(jefflill):
                         // 
                         // This is a bit of a hack since only the neonCLOUD repo currently generates these files,
                         // but this is somewhat carefully coded to not cause a problem for the other repos.  Just

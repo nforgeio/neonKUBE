@@ -256,7 +256,7 @@ namespace Neon.Kube
         public const string NeonKubeImageTag = "neonkube-" + NeonKubeVersion;
 
         /// <summary>
-        /// Lists thje supported neonKUBE cluster versions.
+        /// Lists the supported neonKUBE cluster versions.
         /// </summary>
         public static IReadOnlyList<string> SupportedClusterVersions =
             new List<string>()

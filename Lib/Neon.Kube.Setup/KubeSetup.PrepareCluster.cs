@@ -52,7 +52,8 @@ namespace Neon.Kube
         /// Constructs the <see cref="ISetupController"/> to be used for preparing a cluster.
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
-        /// <param name="nodeImageUri">The node image URI.</param>
+        /// <param name="nodeImageUri">Optionally specifies the node image URI (one of <paramref name="nodeImageUri"/> or <paramref name="nodeImagePath"/> must be specified).</param>
+        /// <param name="nodeImagePath">Optionally specifies the node image path (one of <paramref name="nodeImageUri"/> or <paramref name="nodeImagePath"/> must be specified).</param>
         /// <param name="maxParallel">
         /// Optionally specifies the maximum number of node operations to be performed in parallel.
         /// This <b>defaults to 500</b> which is effectively infinite.
@@ -82,7 +83,8 @@ namespace Neon.Kube
         /// <exception cref="KubeException">Thrown when there's a problem.</exception>
         public static ISetupController CreateClusterPrepareController(
             ClusterDefinition           clusterDefinition,
-            string                      nodeImageUri,
+            string                      nodeImageUri          = null,
+            string                      nodeImagePath         = null,
             int                         maxParallel           = 500,
             IEnumerable<IPEndPoint>     packageCacheEndpoints = null,
             bool                        unredacted            = false, 
@@ -92,7 +94,7 @@ namespace Neon.Kube
             string                      headendUri            = "https://headend.neoncloud.io")
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeImageUri), nameof(nodeImageUri));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeImageUri) && !string.IsNullOrEmpty(nodeImagePath), $"{nameof(nodeImageUri)}/{nameof(nodeImagePath)}");
             Covenant.Requires<ArgumentException>(maxParallel > 0, nameof(maxParallel));
             Covenant.Requires<ArgumentNullException>(!debugMode || !string.IsNullOrEmpty(baseImageName), nameof(baseImageName));
 
@@ -154,7 +156,16 @@ namespace Neon.Kube
 
             // Configure the hosting manager.
 
-            var hostingManager = new HostingManagerFactory(() => HostingLoader.Initialize()).GetManagerWithNodeImageUri(cluster, nodeImageUri);
+            HostingManager hostingManager;
+
+            if (!string.IsNullOrEmpty(nodeImageUri))
+            {
+                hostingManager = new HostingManagerFactory(() => HostingLoader.Initialize()).GetManagerWithNodeImageUri(cluster, nodeImageUri);
+            }
+            else
+            {
+                hostingManager = new HostingManagerFactory(() => HostingLoader.Initialize()).GetManagerWithNodeImageFile(cluster, nodeImagePath);
+            }
 
             if (hostingManager == null)
             {

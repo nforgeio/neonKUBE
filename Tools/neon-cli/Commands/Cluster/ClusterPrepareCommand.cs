@@ -245,7 +245,7 @@ Server Requirements:
 
             var controller = KubeSetup.CreateClusterPrepareController(
                 clusterDefinition, 
-                nodeImageUri,
+                nodeImageUri:           nodeImageUri,
                 maxParallel:            Program.MaxParallel,
                 packageCacheEndpoints:  packageCacheEndpoints,
                 unredacted:             commandLine.HasOption("--unredacted"),

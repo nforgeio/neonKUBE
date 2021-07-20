@@ -2597,7 +2597,11 @@ TCPKeepAlive yes
         /// <param name="imageUri">The node image URI.</param>
         /// <param name="imagePath">The local path where the image will be written.</param>
         /// <param name="progressAction">Optional progress action that will be called with operation percent complete.</param>
+        /// <param name="cancellationToken">Optional cancellation token.</param>
         /// <returns>The path to the downloaded file.</returns>
+        /// <exception cref="SocketException">Thrown for network errors.</exception>
+        /// <exception cref="HttpException">Thrown for HTTP network errors.</exception>
+        /// <exception cref="OperationCanceledException">Thrown when the operation was cancelled.</exception>
         /// <remarks>
         /// <para>
         /// This supports source URIs referencing a single node image file as well
@@ -2606,7 +2610,11 @@ TCPKeepAlive yes
         /// Content-Type.
         /// </para>
         /// </remarks>
-        public static async Task<string> DownloadNodeImageAsync(string imageUri, string imagePath, GitHubDownloadProgressDelegate progressAction = null)
+        public static async Task<string> DownloadNodeImageAsync(
+            string                          imageUri, 
+            string                          imagePath,
+            GitHubDownloadProgressDelegate  progressAction    = null, 
+            CancellationToken               cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(imageUri), nameof(imageUri));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(imagePath), nameof(imagePath));
@@ -2644,7 +2652,7 @@ TCPKeepAlive yes
                     return imagePath;
                 }
 
-                response = await client.GetAsync(imageUri, HttpCompletionOption.ResponseHeadersRead);
+                response = await client.GetAsync(imageUri, HttpCompletionOption.ResponseHeadersRead, cancellationToken: cancellationToken);
 
                 response.EnsureSuccessStatusCode();
 
@@ -2707,7 +2715,11 @@ TCPKeepAlive yes
         /// <param name="imageUri">The node image multi-part download information URI.</param>
         /// <param name="imagePath">The local path where the image will be written.</param>
         /// <param name="progressAction">Optional progress action that will be called with operation percent complete.</param>
+        /// <param name="cancellationToken">Optional cancellation token.</param>
         /// <returns>The path to the downloaded file.</returns>
+        /// <exception cref="SocketException">Thrown for network errors.</exception>
+        /// <exception cref="HttpException">Thrown for HTTP network errors.</exception>
+        /// <exception cref="OperationCanceledException">Thrown when the operation was cancelled.</exception>
         /// <remarks>
         /// <para>
         /// This checks to see if the target file already exists and will download
@@ -2716,7 +2728,11 @@ TCPKeepAlive yes
         /// left off.
         /// </para>
         /// </remarks>
-        public static async Task<string> DownloadMultiPartNodeImageAsync(string imageUri, string imagePath, GitHubDownloadProgressDelegate progressAction = null)
+        public static async Task<string> DownloadMultiPartNodeImageAsync(
+            string                          imageUri, 
+            string                          imagePath,
+            GitHubDownloadProgressDelegate  progressAction    = null,
+            CancellationToken               cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(imageUri != null, nameof(imageUri));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(imagePath), nameof(imagePath));
@@ -2730,7 +2746,7 @@ TCPKeepAlive yes
             using (var client = new HttpClient())
             {
                 var request     = new HttpRequestMessage(HttpMethod.Get, imageUri);
-                var response    = await client.SendAsync(request);
+                var response    = await client.SendAsync(request, cancellationToken: cancellationToken);
                 var contentType = response.Content.Headers.ContentType.MediaType;
 
                 response.EnsureSuccessStatusCode();
@@ -2745,7 +2761,7 @@ TCPKeepAlive yes
 
                 // Download the multi-part file.
 
-                return await GitHub.Release.DownloadAsync(download, imagePath, progressAction);
+                return await GitHub.Release.DownloadAsync(download, imagePath, progressAction, cancellationToken: cancellationToken);
             }
         }
     }
