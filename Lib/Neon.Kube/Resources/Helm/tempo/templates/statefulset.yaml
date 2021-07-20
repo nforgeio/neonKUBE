@@ -32,7 +32,7 @@ spec:
       - args:
         - -config.file=/conf/tempo.yaml
         - -mem-ballast-size-mbs={{ .Values.tempo.memBallastSizeMbs }}
-        - --config.expand-env
+        - -config.expand-env=true
         {{- range $key, $value := .Values.tempo.extraArgs }}
         - "-{{ $key }}={{ $value }}"
         {{- end }}

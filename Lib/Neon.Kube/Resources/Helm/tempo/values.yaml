@@ -8,7 +8,7 @@ replicas: 1
 tempo:
   organization: neon-registry.node.local
   repository: grafana-tempo
-  tag: 1.0.1
+  tag: 99217c5e
   pullPolicy: IfNotPresent
   ## Optionally specify an array of imagePullSecrets.
   ## Secrets must be manually created in the namespace.
