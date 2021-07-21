@@ -258,6 +258,7 @@ namespace NeonClusterOperator
                                     },
                                     Spec = new V1JobSpec()
                                     {
+                                        TtlSecondsAfterFinished = 100,
                                         Template = new V1PodTemplateSpec()
                                         {
                                             Spec = new V1PodSpec()
@@ -275,6 +276,7 @@ namespace NeonClusterOperator
                                                 ServiceAccountName = NeonServices.ClusterOperator
                                             },
                                         },
+                                        BackoffLimit = 5,
                                     },
                                 },
                                 KubeNamespaces.NeonSystem);
@@ -332,6 +334,7 @@ namespace NeonClusterOperator
                                     },
                                     Spec = new V1JobSpec()
                                     {
+                                        TtlSecondsAfterFinished = 100,
                                         Template = new V1PodTemplateSpec()
                                         {
                                             Spec = new V1PodSpec()
@@ -349,6 +352,7 @@ namespace NeonClusterOperator
                                                 ServiceAccountName = NeonServices.ClusterOperator
                                             },
                                         },
+                                        BackoffLimit = 5,
                                     },
                                 },
                                 KubeNamespaces.NeonSystem);
