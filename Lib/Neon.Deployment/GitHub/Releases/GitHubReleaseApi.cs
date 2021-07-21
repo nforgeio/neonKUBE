@@ -23,6 +23,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -539,15 +540,47 @@ namespace Neon.Deployment
             // If the target file already exists along with its MD5 hash file, then compare the
             // existing MD5 against the download's MD5 as well as the computed MD5 for the current
             // file and skip the download when the match.
+            //
+            // We're going to use the new .NET 5.0 [IncrementalHash] class to report progress 
+            // for .NET 5+ builds.
 
             if (File.Exists(targetPath) && File.Exists(targetMd5Path) && File.ReadAllText(targetMd5Path).Trim() == download.Md5)
             {
                 using (var input = File.OpenRead(targetPath))
                 {
+#if NET5_0_OR_GREATER
+                    using (var hasher = IncrementalHash.CreateHash(HashAlgorithmName.MD5))
+                    {
+                        var buffer = new byte[8192];
+
+                        progressAction?.Invoke(GetHubDownloadProgressType.Checking, 0);
+
+                        while (true)
+                        {
+                            var cb = input.Read(buffer, 0, buffer.Length);
+
+                            if (cb == 0)
+                            {
+                                break;
+                            }
+
+                            hasher.AppendData(buffer, 0, cb);
+                            progressAction?.Invoke(GetHubDownloadProgressType.Checking, (int)((double)input.Position/(double)input.Length * 100.0));
+                        }
+
+                        progressAction?.Invoke(GetHubDownloadProgressType.Checking, 100);
+
+                        if (NeonHelper.ToHex(hasher.GetCurrentHash()) == download.Md5)
+                        {
+                            return targetPath;
+                        }
+                    }
+#else
                     if (CryptoHelper.ComputeMD5String(input) == download.Md5)
                     {
                         return targetPath;
                     }
+#endif
                 }
             }
 
