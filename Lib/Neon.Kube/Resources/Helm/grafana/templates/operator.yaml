@@ -30,7 +30,7 @@ spec:
             - --grafana-image={{ .Values.image.organization }}/{{ .Values.image.repository }}
             - --grafana-image-tag={{ .Values.image.tag }}
             - --scan-all
-          imagePullPolicy: Always
+          imagePullPolicy: {{ .Values.operator.image.pullPolicy }}
           env:
             - name: TEMPLATE_PATH
               value: /usr/local/bin/templates
