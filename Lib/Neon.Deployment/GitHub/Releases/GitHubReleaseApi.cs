@@ -471,11 +471,11 @@ namespace Neon.Deployment
         /// <param name="retry">Optionally specifies the retry policy.  This defaults to a reasonable policy.</param>
         /// <param name="partTimeout">Optionally specifies the HTTP download timeout for each part (defaults to 10 minutes).</param>
         public void Download(
-          Download                          download, 
-          string                            targetPath, 
-          GitHubDownloadProgressDelegate    progressAction = null, 
-          IRetryPolicy                      retry          = null,
-          TimeSpan                          partTimeout    = default)
+            Download                        download, 
+            string                          targetPath, 
+            GitHubDownloadProgressDelegate  progressAction = null, 
+            IRetryPolicy                    retry          = null,
+            TimeSpan                        partTimeout    = default)
         {
             DownloadAsync(download, targetPath, progressAction, partTimeout, retry).Wait();
         }
@@ -564,6 +564,8 @@ namespace Neon.Deployment
 
                     foreach (var part in download.Parts.OrderBy(part => part.Number))
                     {
+                        progressAction?.Invoke(GetHubDownloadProgressType.Checking, (int)((double)pos / (double)download.Size * 100.0));
+
                         // Handle a partially downloaded part.  We're going to truncate the file to
                         // remove the partial part and then break to start re-downloading the part.
 
