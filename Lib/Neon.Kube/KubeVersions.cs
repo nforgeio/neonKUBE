@@ -42,7 +42,7 @@ namespace Neon.Kube
         /// <summary>
         /// The version of Kubernetes to be installed.
         /// </summary>
-        public const string KubernetesVersion = "1.21.0";
+        public const string KubernetesVersion = "1.21.2";
 
         /// <summary>
         /// The version of the Kubernetes dashboard to be installed.
@@ -71,8 +71,11 @@ namespace Neon.Kube
 
         /// <summary>
         /// The version of CRI-O container runtime to be installed.
+        /// 
+        /// Versions can be seen here: https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/
+        /// Make sure the package has actually been uploaded.
         /// </summary>
-        public const string CrioVersion = "1.21";
+        public const string CrioVersion = "1.21.0";
 
         /// <summary>
         /// The version of Calico to install.
