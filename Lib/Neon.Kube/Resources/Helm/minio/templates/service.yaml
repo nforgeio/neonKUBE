@@ -1,7 +1,7 @@
 kind: Service
 apiVersion: v1
 metadata:
-  name: console-nodeport
+  name: minio-nodeport
   namespace: neon-system
   labels:
     {{- include "minio-operator.labels" . | nindent 4 }}
@@ -9,10 +9,9 @@ spec:
   ports:
     - name: http
       protocol: TCP
-      port: 9090
-      targetPort: 9090
+      port: 80
+      targetPort: 9000
       nodePort: 30006
   selector:
-    app.kubernetes.io/instance: minio-console
-    app.kubernetes.io/name: minio-operator
+    v1.min.io/tenant: neon-system
   type: NodePort
