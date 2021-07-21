@@ -38,6 +38,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="xunit.extensibility.core" Version="2.4.1" />
+    <PackageReference Include="xunit.extensibility.execution" Version="2.4.1" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
     <ProjectReference Include="..\Neon.Postgres\Neon.Postgres.csproj" />
     <ProjectReference Include="..\Neon.Xunit\Neon.Xunit.csproj" />
