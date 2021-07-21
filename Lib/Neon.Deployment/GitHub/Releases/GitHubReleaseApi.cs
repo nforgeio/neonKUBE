@@ -597,14 +597,14 @@ namespace Neon.Deployment
 
             // Download any remaining parts.
 
-            if (progressAction != null && !progressAction.Invoke(0))
+            if (progressAction != null && !progressAction.Invoke(GetHubDownloadProgressType.Downloading, 0))
             {
                 return targetPath;
             }
 
             if (nextPartNumber > download.Parts.Count)
             {
-                progressAction?.Invoke(100);
+                progressAction?.Invoke(GetHubDownloadProgressType.Downloading, 100);
                 return targetPath;
             }
 
@@ -664,7 +664,7 @@ namespace Neon.Deployment
 
                             pos += part.Size;
 
-                            if (progressAction != null && !progressAction.Invoke((int)(100.0 * ((double)part.Number / (double)download.Parts.Count))))
+                            if (progressAction != null && !progressAction.Invoke(GetHubDownloadProgressType.Downloading, (int)(100.0 * ((double)part.Number / (double)download.Parts.Count))))
                             {
                                 return targetPath;
                             }
@@ -676,7 +676,7 @@ namespace Neon.Deployment
                         }
                     }
 
-                    progressAction?.Invoke(100);
+                    progressAction?.Invoke(GetHubDownloadProgressType.Downloading, 100);
                     File.WriteAllText(targetMd5Path, download.Md5, Encoding.ASCII);
 
                     return targetPath;

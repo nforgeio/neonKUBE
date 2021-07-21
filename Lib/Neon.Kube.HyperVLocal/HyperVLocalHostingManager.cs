@@ -92,8 +92,8 @@ namespace Neon.Kube
         /// Creates an instance that is capable of provisioning a cluster on the local machine using Hyper-V.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
-        /// <param name="nodeImageUri">Optionally specifies the node image URI when preparing clusters.</param>
-        /// <param name="nodeImagePath">Optionally specifies the path to the local node image file.</param>
+        /// <param name="nodeImageUri">Optionally specifies the node image URI (one of <paramref name="nodeImageUri"/> or <paramref name="nodeImagePath"/> must be passed).</param>
+        /// <param name="nodeImagePath">Optionally specifies the path to the local node image file (one of <paramref name="nodeImageUri"/> or <paramref name="nodeImagePath"/> must be passed).</param>
         /// <param name="logFolder">
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
@@ -141,7 +141,6 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(HyperVLocalHostingManager)}] was created with the wrong constructor.");
-            Covenant.Requires<NotSupportedException>(!string.IsNullOrEmpty(nodeImageUri), $"[[{nameof(nodeImageUri)}] was must be passed to the constructor.");
 
             var clusterLogin = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
 
@@ -352,17 +351,29 @@ namespace Neon.Kube
                 // Download the GZIPed VHDX template if it's not already present.  Note that we're 
                 // going to name the file the same as the file name from the URI.
 
-                var driveTemplateUri  = new Uri(nodeImageUri);
-                var driveTemplateName = driveTemplateUri.Segments.Last();
+                string      driveTemplateName;
 
-                driveTemplatePath = Path.Combine(KubeHelper.NodeImageFolder, driveTemplateName);
+                if (!string.IsNullOrEmpty(nodeImageUri))
+                {
+                    var driveTemplateUri  = new Uri(nodeImageUri);
+                    
+                    driveTemplateName = driveTemplateUri.Segments.Last();
+                    driveTemplatePath = Path.Combine(KubeHelper.NodeImageFolder, driveTemplateName);
+                }
+                else
+                {
+                    Covenant.Assert(File.Exists(nodeImagePath), $"Missing file: {nodeImagePath}");
 
+                    driveTemplateName = Path.GetFileName(nodeImagePath);
+                    driveTemplatePath = nodeImagePath;
+                }
+                
                 if (!File.Exists(driveTemplatePath))
                 {
                     controller.SetGlobalStepStatus($"Download node image VHDX: [{nodeImageUri}]");
 
                     await KubeHelper.DownloadNodeImageAsync(nodeImageUri, driveTemplatePath,
-                        progress =>
+                        (type, progress) =>
                         {
                             controller.SetGlobalStepStatus($"Downloading VHDX: [{progress}%] [{driveTemplateName}]");
 

@@ -423,16 +423,6 @@ namespace Neon.Service
 
                 Directory.CreateDirectory(path);
 
-                try
-                {
-                    NeonHelper.EncryptFile(path);
-                }
-                catch
-                {
-                    // Encryption is not available on all platforms (e.g. Windows Home, or non-NTFS
-                    // file systems).  The secrets won't be encrypted for these situations.
-                }
-
                 return cachedNeonKubeUserFolder = path;
             }
             else if (NeonHelper.IsLinux || NeonHelper.IsOSX)

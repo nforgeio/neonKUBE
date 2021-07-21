@@ -65,6 +65,12 @@ namespace Neon.Kube
             public int                                                          ParallelLimit;
             public bool                                                         WasExecuted;
             public TimeSpan                                                     RunTime;
+
+            /// <inheritdoc/>
+            public override string ToString()
+            {
+                return string.IsNullOrEmpty(Label) ? "*** unlabeled step ***" : Label;
+            }
         }
 
         //---------------------------------------------------------------------
@@ -1219,7 +1225,7 @@ namespace Neon.Kube
                     disposable.Dispose();
                 }
 
-                // Raise one more status changed an wait for a bit so any
+                // Raise one more status changed and wait for a bit so any
                 // listening UI can display the status.
 
                 if (StatusChangedEvent != null)

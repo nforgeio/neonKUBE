@@ -65,6 +65,17 @@ namespace Neon.Kube
         public const string ReservedLabelPrefix = "neonkube.io/";
 
         /// <summary>
+        /// Parses and validates a YAML cluster definition file.
+        /// </summary>
+        /// <param name="path">The file path.</param>
+        /// <param name="strict">Optionally require that all input properties map to <see cref="ClusterDefinition"/> properties.</param>
+        /// <exception cref="ArgumentException">Thrown if the definition is not valid.</exception>
+        public static void ValidateFile(string path, bool strict = false)
+        {
+            FromFile(path, strict: strict);
+        }
+
+        /// <summary>
         /// Parses a cluster definition from YAML text.
         /// </summary>
         /// <param name="yaml">The JSON text.</param>
@@ -88,22 +99,12 @@ namespace Neon.Kube
 
                     var clusterDefinition = NeonHelper.YamlDeserialize<ClusterDefinition>(preprocessReader.ReadToEnd(), strict: strict);
 
+                    PopulateNodeNames(clusterDefinition);
                     clusterDefinition.Validate();
 
                     return clusterDefinition;
                 }
             }
-        }
-
-        /// <summary>
-        /// Parses and validates a YAML cluster definition file.
-        /// </summary>
-        /// <param name="path">The file path.</param>
-        /// <param name="strict">Optionally require that all input properties map to <see cref="ClusterDefinition"/> properties.</param>
-        /// <exception cref="ArgumentException">Thrown if the definition is not valid.</exception>
-        public static void ValidateFile(string path, bool strict = false)
-        {
-            FromFile(path, strict: strict);
         }
 
         /// <summary>
@@ -140,26 +141,32 @@ namespace Neon.Kube
                             throw new ArgumentException($"Invalid cluster definition in [{path}].", nameof(path));
                         }
 
-                        // Populate the [node.Name] properties from the dictionary name.
-
-                        foreach (var item in clusterDefinition.NodeDefinitions)
-                        {
-                            var node = item.Value;
-
-                            if (string.IsNullOrEmpty(node.Name))
-                            {
-                                node.Name = item.Key;
-                            }
-                            else if (item.Key != node.Name)
-                            {
-                                throw new FormatException($"The node names don't match [\"{item.Key}\" != \"{node.Name}\"].");
-                            }
-                        }
-
+                        PopulateNodeNames(clusterDefinition);
                         clusterDefinition.Validate();
 
                         return clusterDefinition;
                     }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Populates the <see cref="NodeDefinition.Name"/> properties from its dictionary name.
+        /// </summary>
+        /// <param name="clusterDefinition"></param>
+        private static void PopulateNodeNames(ClusterDefinition clusterDefinition)
+        {
+            foreach (var item in clusterDefinition.NodeDefinitions)
+            {
+                var node = item.Value;
+
+                if (string.IsNullOrEmpty(node.Name))
+                {
+                    node.Name = item.Key;
+                }
+                else if (item.Key != node.Name)
+                {
+                    throw new FormatException($"The node names don't match [\"{item.Key}\" != \"{node.Name}\"].");
                 }
             }
         }

@@ -109,8 +109,8 @@ namespace Neon.Kube
         /// Creates an instance that is capable of provisioning a cluster on XenServer/XCP-ng servers.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
-        /// <param name="nodeImageUri">Optionally specifies the node image URI when preparing clusters.</param>
-        /// <param name="nodeImagePath">Optionally specifies the path to the local node image file.</param>
+        /// <param name="nodeImageUri">Optionally specifies the node image URI (one of <paramref name="nodeImageUri"/> or <paramref name="nodeImagePath"/> must be passed).</param>
+        /// <param name="nodeImagePath">Optionally specifies the path to the local node image file (one of <paramref name="nodeImageUri"/> or <paramref name="nodeImagePath"/> must be passed).</param>
         /// <param name="logFolder">
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
@@ -171,7 +171,6 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Assert(cluster != null, $"[{nameof(XenServerHostingManager)}] was created with the wrong constructor.");
-            Covenant.Requires<NotSupportedException>(!string.IsNullOrEmpty(nodeImageUri), $"[[{nameof(nodeImageUri)}] must be passed to the constructor.");
 
             // We need to ensure that the cluster has at least one ingress node.
 
@@ -404,17 +403,29 @@ namespace Neon.Kube
                 {
                     xenSshProxy.Status = "download: vm template";
 
-                    var driveTemplateUri  = new Uri(nodeImageUri);
-                    var driveTemplateName = driveTemplateUri.Segments.Last();
+                    string      driveTemplateName;
 
-                    driveTemplatePath = Path.Combine(KubeHelper.NodeImageFolder, driveTemplateName);
+                    if (!string.IsNullOrEmpty(nodeImageUri))
+                    {
+                        var driveTemplateUri  = new Uri(nodeImageUri);
+                        
+                        driveTemplateName = driveTemplateUri.Segments.Last();
+                        driveTemplatePath = Path.Combine(KubeHelper.NodeImageFolder, driveTemplateName);
+                    }
+                    else
+                    {
+                        Covenant.Assert(File.Exists(nodeImagePath), $"Missing file: {nodeImagePath}");
+
+                        driveTemplateName = Path.GetFileName(nodeImagePath);
+                        driveTemplatePath = nodeImagePath;
+                    }
 
                     if (!File.Exists(driveTemplatePath))
                     {
                         xenController.SetGlobalStepStatus($"Download node image XVA: [{nodeImageUri}]");
 
                         await KubeHelper.DownloadNodeImageAsync(nodeImageUri, driveTemplatePath,
-                            progress =>
+                            (type, progress) =>
                             {
                                 xenController.SetGlobalStepStatus($"Downloading VHDX: [{progress}%] [{driveTemplateName}]");
 

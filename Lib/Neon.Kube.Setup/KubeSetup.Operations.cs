@@ -3211,12 +3211,12 @@ $@"- name: StorageType
         }
 
         /// <summary>
-        /// Returns the built-in cluster definition (as text) for a cluster provisioned on WSL2.
+        /// Returns the built-in cluster definition for a local neonDESKTOP cluster provisioned on WSL2.
         /// </summary>
         /// <returns>The cluster definition text.</returns>
-        public static string GetWsl2ClusterDefintion()
+        public static ClusterDefinition GetLocalWsl2ClusterDefintion()
         {
-            var definition =
+            var yaml =
 @"
 name: wsl2
 datacenter: wsl2
@@ -3232,7 +3232,7 @@ nodes:
   master-0:
     role: master
 ";
-            return definition;
+            return ClusterDefinition.FromYaml(yaml);
         }
     }
 }

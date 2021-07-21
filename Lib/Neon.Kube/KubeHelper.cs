@@ -55,6 +55,7 @@ using Neon.Kube.Models.Headend;
 using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
+using Neon.Tasks;
 using Neon.Windows;
 
 namespace Neon.Kube
@@ -333,49 +334,6 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Ensures that sensitive folders and files on the local workstation are encrypted at rest
-        /// for security purposes.  These include the users <b>.kube</b>, <b>.neonkube</b>, and any
-        /// the <b>OpenVPN</b> if it exists.
-        /// </summary>
-        public static void EncryptSensitiveFiles()
-        {
-            if (NeonHelper.IsWindows)
-            {
-                var userFolderPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-                var neonFolderPath = GetNeonKubeUserFolder();
-
-                var sensitiveFolders = new string[]
-                {
-                    Path.Combine(userFolderPath, ".kube"),
-                    Path.Combine(neonFolderPath, "logins"),
-                    Path.Combine(neonFolderPath, "log")
-                };
-
-                foreach (var sensitiveFolder in sensitiveFolders)
-                {
-                    Directory.CreateDirectory(sensitiveFolder);
-                }
-
-                // We used to encrypt the entire [.neonkube] folder but that caused problems
-                // with WSL2, so we're going to decrypt the folder before encrypting special
-                // subfolders.
-
-                NeonHelper.DecryptFile(neonFolderPath);
-
-                foreach (var sensitiveFolder in sensitiveFolders)
-                {
-                    NeonHelper.EncryptFile(sensitiveFolder);
-                }
-            }
-            else
-            {
-                // $todo(jefflill): Implement this for OS/X
-
-                // throw new NotImplementedException();
-            }
-        }
-
-        /// <summary>
         /// Returns the <see cref="KubeClientPlatform"/> for the current workstation.
         /// </summary>
         public static KubeClientPlatform HostPlatform
@@ -509,16 +467,6 @@ namespace Neon.Kube
 
                 Directory.CreateDirectory(path);
 
-                try
-                {
-                    NeonHelper.EncryptFile(path);
-                }
-                catch
-                {
-                    // Encryption is not available on all platforms (e.g. Windows Home, or non-NTFS
-                    // file systems).  The secrets won't be encrypted for these situations.
-                }
-
                 return cachedNeonKubeUserFolder = path;
             }
             else if (NeonHelper.IsLinux || NeonHelper.IsOSX)
@@ -560,7 +508,6 @@ namespace Neon.Kube
                 var path = Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"), ".kube");
 
                 Directory.CreateDirectory(path);
-                NeonHelper.EncryptFile(path);
 
                 return cachedKubeUserFolder = path;
             }
@@ -2619,6 +2566,8 @@ TCPKeepAlive yes
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(imageUri), nameof(imageUri));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(imagePath), nameof(imagePath));
 
+            await SyncContext.ClearAsync;
+
             // $note(jefflill):
             //
             // We're not going to use a retry policy here because restarting a multi-GB download potentially several
@@ -2660,7 +2609,7 @@ TCPKeepAlive yes
 
                 try
                 {
-                    progressAction?.Invoke(0);
+                    progressAction?.Invoke(GetHubDownloadProgressType.Downloading, 0);
 
                     using (var fileStream = new FileStream(imagePath, FileMode.Create, FileAccess.ReadWrite))
                     {
@@ -2684,13 +2633,13 @@ TCPKeepAlive yes
                                 {
                                     var percentComplete = (int)(((double)fileStream.Length / (double)contentLength) * 100.0);
 
-                                    progressAction?.Invoke(percentComplete);
+                                    progressAction?.Invoke(GetHubDownloadProgressType.Downloading, percentComplete);
                                 }
                             }
                         }
                     }
 
-                    progressAction?.Invoke(100);
+                    progressAction?.Invoke(GetHubDownloadProgressType.Downloading, 100);
 
                     return imagePath;
                 }
@@ -2736,6 +2685,8 @@ TCPKeepAlive yes
         {
             Covenant.Requires<ArgumentNullException>(imageUri != null, nameof(imageUri));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(imagePath), nameof(imagePath));
+
+            await SyncContext.ClearAsync;
 
             var imageFolder = Path.GetDirectoryName(imagePath);
 

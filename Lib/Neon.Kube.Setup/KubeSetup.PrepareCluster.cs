@@ -94,7 +94,7 @@ namespace Neon.Kube
             string                      headendUri            = "https://headend.neoncloud.io")
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeImageUri) && !string.IsNullOrEmpty(nodeImagePath), $"{nameof(nodeImageUri)}/{nameof(nodeImagePath)}");
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeImageUri) || !string.IsNullOrEmpty(nodeImagePath), $"{nameof(nodeImageUri)}/{nameof(nodeImagePath)}");
             Covenant.Requires<ArgumentException>(maxParallel > 0, nameof(maxParallel));
             Covenant.Requires<ArgumentNullException>(!debugMode || !string.IsNullOrEmpty(baseImageName), nameof(baseImageName));
 
