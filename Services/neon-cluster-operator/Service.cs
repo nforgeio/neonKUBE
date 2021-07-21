@@ -67,6 +67,7 @@ namespace NeonClusterOperator
 
             // Wait for Citus and make sure it's initialized.
             await WaitForCitusAsync();
+            await WaitForMinioAsync();
             await InitializeDatabaseAsync();
 
             // Initialize Grafana and Harbor.
@@ -222,6 +223,27 @@ namespace NeonClusterOperator
                 pollInterval: TimeSpan.FromSeconds(10));
 
             Log.LogInfo($"[{KubeNamespaces.NeonSystem}-db] {KubeNamespaces.NeonSystem} database is ready.");
+        }
+
+        /// <summary>
+        /// Method to wait for neon-system minio to be ready.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public async Task WaitForMinioAsync()
+        {
+            Log.LogInfo($"[{KubeNamespaces.NeonSystem}-minio] Waiting for Minio to be ready.");
+
+            await NeonHelper.WaitForAsync(
+                async () =>
+                {
+                    var statefulsets = await k8s.ListNamespacedStatefulSetAsync(KubeNamespaces.NeonSystem, labelSelector: "app=minio");
+
+                    return statefulsets.Items.All(@set => @set.Status.ReadyReplicas == @set.Spec.Replicas);
+                },
+                timeout: TimeSpan.FromMinutes(30),
+                pollInterval: TimeSpan.FromSeconds(10));
+
+            Log.LogInfo($"[{KubeNamespaces.NeonSystem}-minio] Minio is ready.");
         }
 
         /// <summary>

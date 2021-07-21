@@ -287,11 +287,11 @@ spec:
             await InstallKialiAsync(controller, master);
             await InstallKubeDashboardAsync(controller, master);
             await InstallOpenEBSAsync(controller, master);
+            await InstallReloaderAsync(controller, master);
             await InstallPrometheusAsync(controller, master);
             await InstallSystemDbAsync(controller, master);
             await InstallMinioAsync(controller, master);
             await InstallClusterOperatorAsync(controller, master);
-            await InstallReloaderAsync(controller, master);
             await InstallContainerRegistryAsync(controller, master);
             await NeonHelper.WaitAllAsync(await SetupMonitoringAsync(controller));
         }
@@ -2493,7 +2493,8 @@ $@"- name: StorageType
                 {
                     controller.LogProgress(master, verb: "wait", message: "for grafana");
 
-                    await WaitForDeploymentAsync(controller, KubeNamespaces.NeonMonitor, "grafana");
+                    await WaitForDeploymentAsync(controller, KubeNamespaces.NeonMonitor, "grafana-operator");
+                    await WaitForDeploymentAsync(controller, KubeNamespaces.NeonMonitor, "grafana-deployment");
                 });
         }
 
@@ -2808,8 +2809,6 @@ $@"- name: StorageType
                 async () =>
                 {
                     controller.LogProgress(master, verb: "wait", message: "for harbor");
-
-                    var startUtc = DateTime.UtcNow;
 
                     await NeonHelper.WaitAllAsync(
                         new List<Task>()

@@ -68,46 +68,46 @@ spec:
   internalTLS:
     enabled: false
   chartmuseum:
-    image: harbor-chartmuseum-photon
+    image: neon-registry.node.local/harbor-chartmuseum-photon:v2.3.0
     nodeSelector:
     {{- toYaml .Values.nodeSelector | nindent 6 }}
   core:
-    image: harbor-core
+    image: neon-registry.node.local/harbor-core:v2.3.0
     tokenIssuer:
       kind: Issuer
       name: neon-system-selfsigned-issuer
-  exporter:
-    image: harbor-exporter
-    nodeSelector:
-    {{- toYaml .Values.nodeSelector | nindent 6 }}
+  #exporter:
+  #  image: neon-registry.node.local/harbor-exporter:v2.3.0
+  #  nodeSelector:
+  #  {{- toYaml .Values.nodeSelector | nindent 6 }}
   jobservice:
-    image: harbor-jobservice
+    image: neon-registry.node.local/harbor-jobservice:v2.3.0
     nodeSelector:
     {{- toYaml .Values.nodeSelector | nindent 6 }}
   notary:
     server:
-      image: harbor-notary-server-photon
+      image: neon-registry.node.local/harbor-notary-server-photon:v2.3.0
       nodeSelector:
       {{- toYaml .Values.nodeSelector | nindent 8 }}
     signer:
-      image: harbor-notary-signer-photon
+      image: neon-registry.node.local/harbor-notary-signer-photon:v2.3.0
       nodeSelector:
       {{- toYaml .Values.nodeSelector | nindent 8 }}
     migrationEnabled: true
   portal:
-    image: harbor-portal
+    image: neon-registry.node.local/harbor-portal:v2.3.0
     nodeSelector:
     {{- toYaml .Values.nodeSelector | nindent 6 }}
   registry:
-    image: harbor-registry-photon
+    image: neon-registry.node.local/harbor-registry-photon:v2.3.0
     nodeSelector:
     {{- toYaml .Values.nodeSelector | nindent 6 }}
   registryctl:
-    image: harbor-registryctl
+    image: neon-registry.node.local/harbor-registryctl:v2.3.0
     nodeSelector:
     {{- toYaml .Values.nodeSelector | nindent 6 }}
   trivy:
-    image: harbor-trivy-adapter-photon
+    image: neon-registry.node.local/harbor-trivy-adapter-photon:v2.3.0
     nodeSelector:
     {{- toYaml .Values.nodeSelector | nindent 6 }}
     skipUpdate: false
