@@ -2813,14 +2813,15 @@ $@"- name: StorageType
                     await NeonHelper.WaitAllAsync(
                         new List<Task>()
                         {
-                            WaitForDeploymentAsync(controller, KubeNamespaces.NeonSystem, "registry-harbor-chartmuseum"),
-                            WaitForDeploymentAsync(controller, KubeNamespaces.NeonSystem, "registry-harbor-clair"),
-                            WaitForDeploymentAsync(controller, KubeNamespaces.NeonSystem, "registry-harbor-core"),
-                            WaitForDeploymentAsync(controller, KubeNamespaces.NeonSystem, "registry-harbor-jobservice"),
-                            WaitForDeploymentAsync(controller, KubeNamespaces.NeonSystem, "registry-harbor-notary-server"),
-                            WaitForDeploymentAsync(controller, KubeNamespaces.NeonSystem, "registry-harbor-notary-signer"),
-                            WaitForDeploymentAsync(controller, KubeNamespaces.NeonSystem, "registry-harbor-portal"),
-                            WaitForDeploymentAsync(controller, KubeNamespaces.NeonSystem, "registry-harbor-registry")
+                            WaitForDeploymentAsync(controller, KubeNamespaces.NeonSystem, "registry-harbor-harbor-chartmuseum"),
+                            WaitForDeploymentAsync(controller, KubeNamespaces.NeonSystem, "registry-harbor-harbor-core"),
+                            WaitForDeploymentAsync(controller, KubeNamespaces.NeonSystem, "registry-harbor-harbor-jobservice"),
+                            WaitForDeploymentAsync(controller, KubeNamespaces.NeonSystem, "registry-harbor-harbor-notaryserver"),
+                            WaitForDeploymentAsync(controller, KubeNamespaces.NeonSystem, "registry-harbor-harbor-notarysigner"),
+                            WaitForDeploymentAsync(controller, KubeNamespaces.NeonSystem, "registry-harbor-harbor-portal"),
+                            WaitForDeploymentAsync(controller, KubeNamespaces.NeonSystem, "registry-harbor-harbor-registry"),
+                            WaitForDeploymentAsync(controller, KubeNamespaces.NeonSystem, "registry-harbor-harbor-registryctl"),
+                            WaitForDeploymentAsync(controller, KubeNamespaces.NeonSystem, "registry-harbor-harbor-trivy")
                         });
                 });
         }

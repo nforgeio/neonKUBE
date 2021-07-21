@@ -30,7 +30,8 @@ spec:
         regionendpoint: minio.neon-system
         accesskey: {{ .Values.storage.s3.accessKey }}
         secretkeyRef: {{ .Values.storage.s3.secretKeyRef }}
-
+        secure: false
+        skipverify: true
   cache:
     kind: Redis
     spec:
