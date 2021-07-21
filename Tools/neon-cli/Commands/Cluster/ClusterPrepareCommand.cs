@@ -258,7 +258,7 @@ Server Requirements:
 
             switch (controller.Run())
             {
-                case SetupDisposition.Success:
+                case SetupDisposition.Succeeded:
 
                     Console.WriteLine();
                     Console.WriteLine($" [{clusterDefinition.Name}] cluster is prepared.");

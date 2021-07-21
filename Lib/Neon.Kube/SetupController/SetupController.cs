@@ -1199,7 +1199,7 @@ namespace Neon.Kube
 
                     cluster?.LogLine(LogEndMarker);
 
-                    return SetupDisposition.Success;
+                    return SetupDisposition.Succeeded;
                 }
                 finally
                 {
