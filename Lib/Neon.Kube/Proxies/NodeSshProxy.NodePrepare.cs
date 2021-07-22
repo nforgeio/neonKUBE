@@ -1043,7 +1043,7 @@ NEON_REGISTRY={KubeConst.LocalClusterRegistry}
 cat <<EOF > /etc/containers/registries.conf
 [[registry]]
 prefix = ""${{NEON_REGISTRY}}""
-insecure = false
+insecure = true
 blocked = false
 location = ""${{NEON_REGISTRY}}""
 
