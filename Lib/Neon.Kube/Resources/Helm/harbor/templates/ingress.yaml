@@ -1,4 +1,21 @@
-﻿---
+﻿apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: registry-gateway
+  namespace: neon-ingress
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - hosts:
+        - neon-registry.node.local
+      port:
+        name: http-neoncluster
+        number: 8080
+        protocol: HTTP
+      tls:
+        httpsRedirect: false
+---
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
@@ -7,9 +24,11 @@ metadata:
 spec:
   gateways:
     - neoncluster-gateway
+    - registry-gateway
   hosts:
     - registry.{{ .Values.clusterDomain }}
     - notary.{{ .Values.clusterDomain }}
+    - neon-registry.node.local
   http:
     - match:
         - uri:
