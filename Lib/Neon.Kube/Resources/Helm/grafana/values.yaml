@@ -56,6 +56,14 @@ operator:
     sha: ""
     pullPolicy: IfNotPresent
 
+pluginsInit:
+  image:
+    organization: neon-registry.node.local
+    repository: integreatly-grafana_plugins_init
+    tag: 0.0.3
+    sha: ""
+    pullPolicy: IfNotPresent
+
 image:
   organization: neon-registry.node.local
   repository: grafana-grafana

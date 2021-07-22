@@ -11,22 +11,19 @@ spec:
     log:
       mode: "console"
       level: "debug"
-    auth:
-      proxy:
-        enabled: true
-        # HTTP Header name that will contain the username or email
-        header_name: X-WEBAUTH-USER
-        # HTTP Header property, defaults to `username` but can also be `email`
-        header_property: username
-        # Set to `true` to enable auto sign up of users who do not exist in Grafana DB. Defaults to `true`.
-        auto_sign_up: true
-        # Define cache time to live in minutes
-        # If combined with Grafana LDAP integration it is also the sync interval
-        sync_ttl: 60
-        # Check out docs on this for more details on the below setting
-        enable_login_token: false
-      disable_login_form: False
-      disable_signout_menu: True
+    auth.proxy:
+      enabled: true
+      # HTTP Header name that will contain the username or email
+      header_name: X-WEBAUTH-USER
+      # HTTP Header property, defaults to `username` but can also be `email`
+      header_property: username
+      # Set to `true` to enable auto sign up of users who do not exist in Grafana DB. Defaults to `true`.
+      auto_sign_up: true
+      # Define cache time to live in minutes
+      # If combined with Grafana LDAP integration it is also the sync interval
+      sync_ttl: 60
+      # Check out docs on this for more details on the below setting
+      enable_login_token: false
     database:
       type: postgres
       host: db-citus-postgresql.neon-system.svc.cluster.local
