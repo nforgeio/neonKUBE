@@ -2587,6 +2587,23 @@ $@"- name: StorageType
                             };
                             await GetK8sClient(controller).CreateNamespacedSecretAsync(monitoringSecret, KubeNamespaces.NeonMonitor);
                         });
+
+                    await master.InvokeIdempotentAsync("setup/harbor-ready",
+                        async () =>
+                        {
+                            controller.LogProgress(master, verb: "wait", message: "for harbor");
+
+                            await NeonHelper.WaitAllAsync(
+                                new List<Task>()
+                                {
+                                    WaitForStatefulSetAsync(controller, KubeNamespaces.NeonSystem, labelSelector: "app=minio"),
+                                    WaitForDeploymentAsync(controller, KubeNamespaces.NeonSystem, "neon-system-console"),
+                                    WaitForDeploymentAsync(controller, KubeNamespaces.NeonSystem, "minio-console"),
+                                    WaitForDeploymentAsync(controller, KubeNamespaces.NeonSystem, "minio-operator"),
+                                });
+                        });
+
+                    await Task.CompletedTask;
                 });
         }
 
