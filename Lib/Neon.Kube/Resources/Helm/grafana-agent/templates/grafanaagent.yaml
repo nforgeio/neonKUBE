@@ -7,6 +7,9 @@ metadata:
     app: grafana-agent
 spec:
   image: "{{ .Values.agent.image.organization }}/{{ .Values.agent.image.repository }}:{{ .Values.agent.image.tag }}"
+  containers:
+  - name: config-reloader 
+    image: "{{ .Values.configReloader.image.organization }}/{{ .Values.configReloader.image.repository }}:{{ .Values.configReloader.image.tag }}"
   logLevel: info
   logFormat: json
   serviceAccountName: grafana-agent
