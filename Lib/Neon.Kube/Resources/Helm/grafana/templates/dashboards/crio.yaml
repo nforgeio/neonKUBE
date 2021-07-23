@@ -1,7 +1,7 @@
 apiVersion: integreatly.org/v1alpha1
 kind: GrafanaDashboard
 metadata:
-  name: CRI-O
+  name: cri-o
   labels:
     app: grafana
 spec:
@@ -116,7 +116,7 @@ spec:
               "format": "time_series",
               "instant": false,
               "interval": "",
-              "legendFormat": "{{instance}} - {{operation_type}}",
+              "legendFormat": "{{"{{"}}instance{{"}}"}} - {{"{{"}}operation_type{{"}}"}}",
               "refId": "A"
             }
           ],
@@ -217,7 +217,7 @@ spec:
               "format": "time_series",
               "instant": false,
               "interval": "",
-              "legendFormat": "{{instance}} - {{operation_type}}",
+              "legendFormat": "{{"{{"}}instance{{"}}"}} - {{"{{"}}operation_type{{"}}"}}",
               "refId": "A"
             }
           ],
@@ -318,7 +318,7 @@ spec:
               "format": "time_series",
               "instant": false,
               "interval": "",
-              "legendFormat": "{{instance}} - {{operation_type}}",
+              "legendFormat": "{{"{{"}}instance{{"}}"}} - {{"{{"}}operation_type{{"}}"}}",
               "refId": "A"
             }
           ],
