@@ -30,7 +30,9 @@ data:
                   names:
                   - istio-system
               relabel_configs:
-              - source_labels: [__meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
+              - source_labels:
+                  - __meta_kubernetes_service_name
+                  - __meta_kubernetes_endpoint_port_name
                 action: keep
                 regex: istiod;http-monitoring
             - job_name: 'envoy-stats'
@@ -39,7 +41,8 @@ data:
               - role: pod
 
               relabel_configs:
-              - source_labels: [__meta_kubernetes_pod_container_port_name]
+              - source_labels: 
+                  - __meta_kubernetes_pod_container_port_name
                 action: keep
                 regex: '.*-envoy-prom'
             - job_name: kubernetes-pods
@@ -157,7 +160,7 @@ data:
                 - replacement: https
                   target_label: __scheme__
                 - regex: (.+)
-                  replacement: /api/v1/nodes/${1}/proxy/metrics
+                  replacement: /api/v1/nodes/$1/proxy/metrics
                   source_labels:
                     - __meta_kubernetes_node_name
                   target_label: __metrics_path__
@@ -170,7 +173,7 @@ data:
                 - role: node
               metric_relabel_configs:
                 - action: drop
-                  regex: container_([a-z_]+);
+                  regex: 'container_([a-z_]+);'
                   source_labels:
                     - __name__
                     - image
@@ -182,7 +185,7 @@ data:
                 - replacement: kubernetes.default.svc.cluster.local:443
                   target_label: __address__
                 - regex: (.+)
-                  replacement: /api/v1/nodes/${1}/proxy/metrics/cadvisor
+                  replacement: /api/v1/nodes/$1/proxy/metrics/cadvisor
                   source_labels:
                     - __meta_kubernetes_node_name
                   target_label: __metrics_path__
@@ -190,6 +193,13 @@ data:
               tls_config:
                   ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
                   insecure_skip_verify: false
+            - job_name: "cri-o"
+              scrape_interval: 1m
+              metrics_path: /metrics
+              static_configs:
+                - targets: ["${HOST_IP}:9090"]
+                  labels:
+                    instance: "${HOSTNAME}"
     loki:
       configs:
         - clients:

@@ -90,7 +90,7 @@ spec:
   priorityClassName: {{ .priorityClassName }}
   {{ end }}
   console:
-    image: {{ .console.image.repository }}:{{ .console.image.tag }}
+    image: {{ .console.image.organization }}/{{ .console.image.repository }}:{{ .console.image.tag }}
     replicas: {{ .console.replicaCount }}
     consoleSecret:
       name: {{ .console.secrets.name }}

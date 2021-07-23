@@ -200,6 +200,8 @@
 
     <None Remove="Resources\Helm\grafana\templates\dashboards\cortex.yaml" />
 
+    <None Remove="Resources\Helm\grafana\templates\dashboards\crio.yaml" />
+
     <None Remove="Resources\Helm\grafana\templates\dashboards\etcd.yaml" />
 
     <None Remove="Resources\Helm\grafana\templates\dashboards\harbor.yaml" />
@@ -955,6 +957,7 @@
     <EmbeddedResource Include="Resources\Helm\grafana\crds\crd-grafana.yaml" />
     <EmbeddedResource Include="Resources\Helm\grafana\crds\crd-grafanadashboard.yaml" />
     <EmbeddedResource Include="Resources\Helm\grafana\crds\crd-grafanadatasource.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\crio.yaml" />
     <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\1-node-exporter.yaml" />
     <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\alertmanager-overview.yaml" />
     <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\apiserver.yaml" />
