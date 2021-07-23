@@ -2588,10 +2588,10 @@ $@"- name: StorageType
                             await GetK8sClient(controller).CreateNamespacedSecretAsync(monitoringSecret, KubeNamespaces.NeonMonitor);
                         });
 
-                    await master.InvokeIdempotentAsync("setup/harbor-ready",
+                    await master.InvokeIdempotentAsync("setup/minio-ready",
                         async () =>
                         {
-                            controller.LogProgress(master, verb: "wait", message: "for harbor");
+                            controller.LogProgress(master, verb: "wait", message: "for minio");
 
                             await NeonHelper.WaitAllAsync(
                                 new List<Task>()
